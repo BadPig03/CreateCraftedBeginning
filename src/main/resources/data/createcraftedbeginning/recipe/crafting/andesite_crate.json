@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "create:andesite_casing"
+    },
+    {
+      "item": "minecraft:barrel"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:andesite_crate"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "createcraftedbeginning:block/crate/sturdy/single"
+    },
+    "facing=east": {
+      "model": "createcraftedbeginning:block/crate/sturdy/single"
+    },
+    "facing=north": {
+      "model": "createcraftedbeginning:block/crate/sturdy/single"
+    },
+    "facing=south": {
+      "model": "createcraftedbeginning:block/crate/sturdy/single"
+    },
+    "facing=up": {
+      "model": "createcraftedbeginning:block/crate/sturdy/single"
+    },
+    "facing=west": {
+      "model": "createcraftedbeginning:block/crate/sturdy/single"
+    }
+  }
+}

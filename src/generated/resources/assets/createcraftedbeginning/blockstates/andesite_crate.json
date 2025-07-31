@@ -1,0 +1,22 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "createcraftedbeginning:block/crate/andesite/single"
+    },
+    "facing=east": {
+      "model": "createcraftedbeginning:block/crate/andesite/single"
+    },
+    "facing=north": {
+      "model": "createcraftedbeginning:block/crate/andesite/single"
+    },
+    "facing=south": {
+      "model": "createcraftedbeginning:block/crate/andesite/single"
+    },
+    "facing=up": {
+      "model": "createcraftedbeginning:block/crate/andesite/single"
+    },
+    "facing=west": {
+      "model": "createcraftedbeginning:block/crate/andesite/single"
+    }
+  }
+}

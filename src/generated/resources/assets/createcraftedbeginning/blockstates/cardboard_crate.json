@@ -1,0 +1,22 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "createcraftedbeginning:block/crate/cardboard/single"
+    },
+    "facing=east": {
+      "model": "createcraftedbeginning:block/crate/cardboard/single"
+    },
+    "facing=north": {
+      "model": "createcraftedbeginning:block/crate/cardboard/single"
+    },
+    "facing=south": {
+      "model": "createcraftedbeginning:block/crate/cardboard/single"
+    },
+    "facing=up": {
+      "model": "createcraftedbeginning:block/crate/cardboard/single"
+    },
+    "facing=west": {
+      "model": "createcraftedbeginning:block/crate/cardboard/single"
+    }
+  }
+}

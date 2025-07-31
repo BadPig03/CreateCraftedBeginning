@@ -1,0 +1,53 @@
+{
+  "item.createcraftedbeginning.cinder_dough": "余烬面团",
+
+  "block.createcraftedbeginning.cardboard_crate": "纸板板条箱",
+  "block.createcraftedbeginning.andesite_crate": "安山板条箱",
+  "block.createcraftedbeginning.brass_crate": "黄铜板条箱",
+  "block.createcraftedbeginning.sturdy_crate": "坚固板条箱",
+  "block.createcraftedbeginning.pneumatic_engine": "气动引擎",
+
+  "logistics.brass_crate.filter": "过滤器",
+  "logistics.sturdy_crate.filter": "过滤器",
+
+  "creativetab.createcraftedbeginning.creative_tab": "机械动力：机巧新生",
+
+  "createcraftedbeginning.ponder.andesite_crate.header": "在安山板条箱中储存物品",
+  "createcraftedbeginning.ponder.andesite_crate.text_1": "安山板条箱最多可储存32个相同物品",
+  "createcraftedbeginning.ponder.andesite_crate.text_2": "即便物品不可堆叠，依然有效",
+  "createcraftedbeginning.ponder.andesite_crate.text_3": "然而，不能手动添加或获取物品",
+  "createcraftedbeginning.ponder.andesite_crate.text_4": "被破坏后会掉落自身和内容物",
+
+  "createcraftedbeginning.ponder.brass_crate.header": "在黄铜板条箱中储存物品",
+  "createcraftedbeginning.ponder.brass_crate.text_1": "黄铜板条箱的储存容量为安山板条箱的两倍",
+  "createcraftedbeginning.ponder.brass_crate.text_2": "过滤槽可以使其仅储存指定的物品",
+  "createcraftedbeginning.ponder.brass_crate.text_3": "从而过滤无关物品的进入",
+  "createcraftedbeginning.ponder.brass_crate.text_4": "被破坏后会掉落自身和内容物",
+
+  "createcraftedbeginning.ponder.sturdy_crate.header": "在坚固板条箱中储存物品",
+  "createcraftedbeginning.ponder.sturdy_crate.text_1": "坚固板条箱的储存容量为安山板条箱的四倍",
+  "createcraftedbeginning.ponder.sturdy_crate.text_2": "过滤槽可以使其仅储存指定的物品",
+  "createcraftedbeginning.ponder.sturdy_crate.text_3": "无法储存潜影盒、工具箱或其他坚固板条箱",
+  "createcraftedbeginning.ponder.sturdy_crate.text_4": "被破坏后会掉落自身，并装着其中的内容物",
+
+  "createcraftedbeginning.ponder.cardboard_crate.header": "用纸板板条箱销毁物品",
+  "createcraftedbeginning.ponder.cardboard_crate.text_1": "纸板板条箱仅能临时储存1组物品",
+  "createcraftedbeginning.ponder.cardboard_crate.text_2": "每次输入物品时会销毁之前的物品",
+  "createcraftedbeginning.ponder.cardboard_crate.text_3": "纸板板条箱被破坏后仅会掉落自身",
+
+  "createcraftedbeginning.ponder.pneumatic_engine.header": "用气动引擎产生旋转力",
+  "createcraftedbeginning.ponder.pneumatic_engine.text_1": "气动引擎可吸收背罐中的压缩空气，并将其转化为旋转力",
+  "createcraftedbeginning.ponder.pneumatic_engine.text_2": "背罐必须放置在气动引擎正下方",
+  "createcraftedbeginning.ponder.pneumatic_engine.text_3": "使用扳手右击可以切换旋转方向",
+
+  "createcraftedbeginning.ponder.pneumatic_engine_limitation.header": "气动引擎的限制",
+  "createcraftedbeginning.ponder.pneumatic_engine_limitation.text_1": "气动引擎每秒钟消耗背罐内等效2秒的空气供给量",
+  "createcraftedbeginning.ponder.pneumatic_engine_limitation.text_2": "当压缩空气耗尽时，气动引擎将停止工作",
+  "createcraftedbeginning.ponder.pneumatic_engine_limitation.text_3": "空气已耗尽的铜背罐",
+  "createcraftedbeginning.ponder.pneumatic_engine_limitation.text_4": "当背罐含水时，气动引擎将停止工作",
+
+  "createcraftedbeginning.ponder.tag.crates": "板条箱",
+  "createcraftedbeginning.ponder.tag.crates.description": "板条箱只能储存同类物品，但无视堆叠上限",
+  "createcraftedbeginning.ponder.tag.kinetic_sources": "动力源",
+  "createcraftedbeginning.ponder.tag.kinetic_sources.description": "能够产生旋转力的组件"
+}
