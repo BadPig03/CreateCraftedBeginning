@@ -7,6 +7,8 @@ import com.simibubi.create.foundation.blockEntity.renderer.SmartBlockEntityRende
 import net.ty.createcraftedbeginning.content.andesitecrate.AndesiteCrateBlockEntity;
 import net.ty.createcraftedbeginning.content.brasscrate.BrassCrateBlockEntity;
 import net.ty.createcraftedbeginning.content.cardboardcrate.CardboardCrateBlockEntity;
+import net.ty.createcraftedbeginning.content.phohostressbearing.PhotoStressBearingBlockEntity;
+import net.ty.createcraftedbeginning.content.phohostressbearing.PhotoStressBearingRenderer;
 import net.ty.createcraftedbeginning.content.pneumaticengine.PneumaticEngineBlockEntity;
 import net.ty.createcraftedbeginning.content.pneumaticengine.PneumaticEngineRenderer;
 import net.ty.createcraftedbeginning.content.sturdycrate.SturdyCrateBlockEntity;
@@ -38,6 +40,12 @@ public class CCBBlockEntities {
             .validBlocks(CCBBlocks.PNEUMATIC_ENGINE_BLOCK)
             .renderer(() -> PneumaticEngineRenderer::new)
             .register();
+
+    public static final BlockEntityEntry<PhotoStressBearingBlockEntity> PHOTO_STRESS_BEARING = CREATE_REGISTRATE.blockEntity("photo-stress_bearing", PhotoStressBearingBlockEntity::new)
+            .validBlocks(CCBBlocks.PHOTO_STRESS_BEARING_BLOCK)
+            .renderer(() -> PhotoStressBearingRenderer::new)
+            .register();
+
 
     public static void register() {
     }

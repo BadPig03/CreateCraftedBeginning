@@ -1,0 +1,153 @@
+package net.ty.createcraftedbeginning.content.phohostressbearing;
+
+import com.simibubi.create.content.contraptions.bearing.WindmillBearingBlockEntity.RotationDirection;
+import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
+import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
+import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.ScrollOptionBehaviour;
+import com.simibubi.create.foundation.utility.CreateLang;
+import net.createmod.catnip.math.VecHelper;
+import net.createmod.ponder.api.level.PonderLevel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.particles.DustColorTransitionOptions;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+
+public class PhotoStressBearingBlockEntity extends GeneratingKineticBlockEntity {
+    protected ScrollOptionBehaviour<RotationDirection> movementDirection;
+    private final DustColorTransitionOptions particleColor = new DustColorTransitionOptions(Vec3.fromRGB24(16761855).toVector3f(), Vec3.fromRGB24(10185983).toVector3f(), 1.0F);
+    private int skyLight = 0;
+    private int lightTimer;
+    private boolean isClockwise = false;
+
+    public PhotoStressBearingBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
+    }
+
+    @Override
+    public void initialize() {
+        super.initialize();
+
+        updateGeneratedRotation();
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        if (!isOverStressed()) {
+            updateGeneratedRotation();
+        }
+
+        if (level != null && level instanceof PonderLevel) {
+            skyLight = getPonderSkyLight(level);
+        }
+
+        if (lightTimer > 15 - skyLight) {
+            spawnParticle();
+            lightTimer = 0;
+        }
+
+        updateSkyLight();
+        lightTimer++;
+    }
+
+    private int getPonderSkyLight(@NotNull Level level) {
+        CompoundTag compound = new CompoundTag();
+        saveAdditional(compound, level.registryAccess());
+        if (compound.contains("SkyLight")) {
+            return compound.getInt("SkyLight");
+        }
+        return 15;
+    }
+
+    private void updateSkyLight() {
+        int light;
+        if (level == null || level instanceof PonderLevel) {
+            return;
+        }
+        light = level.getBrightness(LightLayer.SKY, worldPosition.above());
+        skyLight = light;
+    }
+
+    private void spawnParticle() {
+        if (level == null || !level.isClientSide || speed == 0) {
+            return;
+        }
+        Vec3 centerOf = VecHelper.getCenterOf(worldPosition);
+        Vec3 v = VecHelper.offsetRandomly(centerOf, level.random, 0.95f);
+        Vec3 m = centerOf.subtract(v);
+        level.addParticle(particleColor, v.x, v.y, v.z, m.x, m.y, m.z);
+    }
+
+    @Override
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+        movementDirection = new ScrollOptionBehaviour<>(RotationDirection.class, CreateLang.translateDirect("contraptions.windmill.rotation_direction"), this, new PhotoStressBearingValueBox());
+        movementDirection.withCallback($ -> onDirectionChanged());
+        behaviours.add(movementDirection);
+    }
+
+    private void onDirectionChanged() {
+        isClockwise = !isClockwise;
+        updateGeneratedRotation();
+        setChanged();
+    }
+
+    @Override
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        super.addToGoggleTooltip(tooltip, isPlayerSneaking);
+        return true;
+    }
+
+    private boolean isInOverworld() {
+        return level != null && level.dimension() == Level.OVERWORLD;
+    }
+
+    private int getClockwise() {
+        return isClockwise ? 1 : -1;
+    }
+
+    @Override
+    public float getGeneratedSpeed() {
+        float speedFactor = 2.0F;
+        if (!isInOverworld() || level == null) {
+            return 0;
+        }
+        if (level.isRaining() || level.isThundering()) {
+            speedFactor = 1.0F;
+        }
+        return (skyLight + 1) * speedFactor * getClockwise();
+    }
+
+    @Override
+    protected void write(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
+        super.write(compound, registries, clientPacket);
+        if (!clientPacket) {
+            compound.putInt("SkyLight", skyLight);
+            compound.putBoolean("Clockwise", isClockwise);
+        }
+    }
+
+    @Override
+    protected void read(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
+        super.read(compound, registries, clientPacket);
+        if (clientPacket) {
+            return;
+        }
+        if (compound.contains("SkyLight")) {
+            skyLight = compound.getInt("SkyLight");
+        }
+        if (compound.contains("Clockwise")) {
+            isClockwise = compound.getBoolean("Clockwise");
+        }
+    }
+}

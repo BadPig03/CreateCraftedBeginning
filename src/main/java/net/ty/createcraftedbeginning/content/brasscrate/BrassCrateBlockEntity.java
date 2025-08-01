@@ -50,10 +50,22 @@ public class BrassCrateBlockEntity extends CrateBlockEntity {
 
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-            if (parent.filtering == null) {
-                return true;
+            if (parent.filtering != null && !parent.filtering.test(stack)) {
+                return false;
             }
-            return parent.filtering.test(stack);
+            if (!stack.isEmpty()) {
+                ItemStack reference = null;
+                for (int i = 0; i < getSlots(); i++) {
+                    ItemStack inSlot = getStackInSlot(i);
+                    if (!inSlot.isEmpty()) {
+                        reference = inSlot;
+                        break;
+                    }
+                }
+
+                return reference == null || ItemStack.isSameItemSameComponents(reference, stack);
+            }
+            return true;
         }
 
         @Override

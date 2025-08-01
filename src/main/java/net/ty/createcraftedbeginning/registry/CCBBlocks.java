@@ -7,9 +7,11 @@ import net.minecraft.world.level.material.MapColor;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.tterrag.registrate.util.entry.BlockEntry;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.config.CCBStress;
 import net.ty.createcraftedbeginning.content.andesitecrate.AndesiteCrateBlock;
 import net.ty.createcraftedbeginning.content.brasscrate.BrassCrateBlock;
 import net.ty.createcraftedbeginning.content.cardboardcrate.CardboardCrateBlock;
+import net.ty.createcraftedbeginning.content.phohostressbearing.PhotoStressBearingBlock;
 import net.ty.createcraftedbeginning.content.pneumaticengine.PneumaticEngineBlock;
 import net.ty.createcraftedbeginning.content.sturdycrate.SturdyCrateBlock;
 import net.ty.createcraftedbeginning.util.BuilderTransformer;
@@ -56,7 +58,16 @@ public class CCBBlocks {
             .initialProperties(SharedProperties::copperMetal)
             .transform(pickaxeOnly())
             .transform(BuilderTransformer.pneumatic_engine())
+            .transform(CCBStress.setCapacity(16.0F))
             .properties(p -> p.mapColor(MapColor.COLOR_ORANGE).noOcclusion())
+            .register();
+
+    public static final BlockEntry<PhotoStressBearingBlock> PHOTO_STRESS_BEARING_BLOCK = CREATE_REGISTRATE.block("photo-stress_bearing", PhotoStressBearingBlock::new)
+            .initialProperties(SharedProperties::stone)
+            .transform(CCBStress.setCapacity(12.0F))
+            .transform(pickaxeOnly())
+            .transform(BuilderTransformer.photo_stress_bearing())
+            .properties(p -> p.mapColor(MapColor.COLOR_PURPLE).noOcclusion())
             .register();
 
     public static void register() {

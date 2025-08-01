@@ -8,7 +8,7 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.ponder.CCBPonderPlugin;
 
-@EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID, value = Dist.CLIENT)
 public class CCBClientEvents {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {

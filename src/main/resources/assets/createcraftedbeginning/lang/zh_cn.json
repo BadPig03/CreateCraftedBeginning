@@ -1,11 +1,13 @@
 {
   "item.createcraftedbeginning.cinder_dough": "余烬面团",
+  "item.createcraftedbeginning.polished_amethyst_shard": "磨制紫水晶碎片",
 
   "block.createcraftedbeginning.cardboard_crate": "纸板板条箱",
   "block.createcraftedbeginning.andesite_crate": "安山板条箱",
   "block.createcraftedbeginning.brass_crate": "黄铜板条箱",
   "block.createcraftedbeginning.sturdy_crate": "坚固板条箱",
   "block.createcraftedbeginning.pneumatic_engine": "气动引擎",
+  "block.createcraftedbeginning.photo-stress_bearing": "光应力轴承",
 
   "logistics.brass_crate.filter": "过滤器",
   "logistics.sturdy_crate.filter": "过滤器",
@@ -36,7 +38,7 @@
   "createcraftedbeginning.ponder.cardboard_crate.text_3": "纸板板条箱被破坏后仅会掉落自身",
 
   "createcraftedbeginning.ponder.pneumatic_engine.header": "用气动引擎产生旋转力",
-  "createcraftedbeginning.ponder.pneumatic_engine.text_1": "气动引擎可吸收背罐中的压缩空气，并将其转化为旋转力",
+  "createcraftedbeginning.ponder.pneumatic_engine.text_1": "气动引擎可以吸收背罐中的压缩空气，并将其转化为旋转力",
   "createcraftedbeginning.ponder.pneumatic_engine.text_2": "背罐必须放置在气动引擎正下方",
   "createcraftedbeginning.ponder.pneumatic_engine.text_3": "使用扳手右击可以切换旋转方向",
 
@@ -45,6 +47,16 @@
   "createcraftedbeginning.ponder.pneumatic_engine_limitation.text_2": "当压缩空气耗尽时，气动引擎将停止工作",
   "createcraftedbeginning.ponder.pneumatic_engine_limitation.text_3": "空气已耗尽的铜背罐",
   "createcraftedbeginning.ponder.pneumatic_engine_limitation.text_4": "当背罐含水时，气动引擎将停止工作",
+
+  "createcraftedbeginning.ponder.photo-stress_bearing.header": "用光应力轴承产生旋转力",
+  "createcraftedbeginning.ponder.photo-stress_bearing.text_1": "光应力轴承可以吸收阳光，从而产生旋转力",
+  "createcraftedbeginning.ponder.photo-stress_bearing.text_2": "旋转速度与天空光照强度成正比",
+  "createcraftedbeginning.ponder.photo-stress_bearing.text_3": "即便天空光照等级为0，转速仍将保持最低2 RPM",
+  "createcraftedbeginning.ponder.photo-stress_bearing.text_4": "在雨天及雷暴天气下，转速会减半",
+  "createcraftedbeginning.ponder.photo-stress_bearing.text_5": "使用面板可以调整其旋转方向",
+
+  "createcraftedbeginning.ponder.photo-stress_bearing_other_dimension.header": "其他维度中的光应力轴承",
+  "createcraftedbeginning.ponder.photo-stress_bearing_other_dimension.text_1": "在其他维度中，光应力轴承将停止工作",
 
   "createcraftedbeginning.ponder.tag.crates": "板条箱",
   "createcraftedbeginning.ponder.tag.crates.description": "板条箱只能储存同类物品，但无视堆叠上限",

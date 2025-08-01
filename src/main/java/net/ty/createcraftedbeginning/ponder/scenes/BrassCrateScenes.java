@@ -47,7 +47,7 @@ public class BrassCrateScenes {
         List<ElementLink<EntityElement>> removes = new ArrayList<>();
 
         scene.world().setBlock(cratePos, CCBBlocks.BRASS_CRATE_BLOCK.getDefaultState(), false);
-        ElementLink<WorldSectionElement> crate = scene.world().showIndependentSection(util.select().fromTo(2, 1, 2, 2, 1, 2), Direction.DOWN);
+        ElementLink<WorldSectionElement> crate = scene.world().showIndependentSection(util.select().fromTo(cratePos, cratePos), Direction.DOWN);
 
         scene.idle(10);
         scene.overlay().showText(60)
@@ -74,7 +74,7 @@ public class BrassCrateScenes {
 
         scene.idle(60);
         scene.world().setBlock(chutePos, AllBlocks.CHUTE.getDefaultState(), false);
-        ElementLink<WorldSectionElement> chute = scene.world().showIndependentSection(util.select().fromTo(2, 2, 2, 2, 2, 2), Direction.DOWN);
+        ElementLink<WorldSectionElement> chute = scene.world().showIndependentSection(util.select().fromTo(chutePos, chutePos), Direction.DOWN);
 
         scene.idle(10);
         scene.overlay().showText(60)
@@ -117,9 +117,9 @@ public class BrassCrateScenes {
         scene.idle(10);
         scene.world().setBlock(cratePos, CCBBlocks.BRASS_CRATE_BLOCK.getDefaultState(), false);
         scene.world().setFilterData(util.select().position(cratePos), BrassCrateBlockEntity.class, ItemStack.EMPTY);
-        scene.world().showIndependentSection(util.select().fromTo(2, 1, 2, 2, 1, 2), Direction.DOWN);
+        scene.world().showIndependentSection(util.select().fromTo(cratePos, cratePos), Direction.DOWN);
         scene.world().setBlock(chutePos, AllBlocks.CHUTE.getDefaultState(), false);
-        ElementLink<WorldSectionElement> chute2 = scene.world().showIndependentSection(util.select().fromTo(2, 2, 2, 2, 2, 2), Direction.DOWN);
+        ElementLink<WorldSectionElement> chute2 = scene.world().showIndependentSection(util.select().fromTo(chutePos, chutePos), Direction.DOWN);
 
         scene.idle(10);
         ElementLink<EntityElement> remove = scene.world().createItemEntity(util.vector().centerOf(itemPos), util.vector().of(0, -0.1, 0), ironIngot);

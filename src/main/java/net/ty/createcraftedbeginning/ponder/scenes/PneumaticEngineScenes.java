@@ -35,11 +35,11 @@ public class PneumaticEngineScenes {
 
         scene.world().setBlock(tankPos, AllBlocks.COPPER_BACKTANK.getDefaultState(), false);
         scene.world().setBlock(enginePos, CCBBlocks.PNEUMATIC_ENGINE_BLOCK.getDefaultState(), false);
-        scene.world().showIndependentSection(util.select().fromTo(2, 1, 2, 2, 2, 2), Direction.DOWN);
+        scene.world().showIndependentSection(util.select().fromTo(tankPos, enginePos), Direction.DOWN);
 
         scene.idle(5);
-        scene.world().setKineticSpeed(util.select().fromTo(2, 2, 2, 2, 2, 2), 64);
-        scene.effects().rotationDirectionIndicator(enginePos);
+        scene.world().setKineticSpeed(util.select().fromTo(enginePos, enginePos), 64);
+        scene.effects().rotationSpeedIndicator(enginePos);
 
         scene.idle(5);
         scene.overlay().showText(60)
@@ -49,7 +49,7 @@ public class PneumaticEngineScenes {
             .attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().showOutline(PonderPalette.BLUE, new Object(), util.select().fromTo(2, 1, 2, 2, 1, 2), 60);
+        scene.overlay().showOutline(PonderPalette.BLUE, new Object(), util.select().fromTo(tankPos, tankPos), 60);
         scene.overlay().showText(60)
             .text("Backtanks must be placed directly below the pneumatic engine")
             .colored(PonderPalette.BLUE)
@@ -66,8 +66,8 @@ public class PneumaticEngineScenes {
         scene.overlay().showControls(util.vector().blockSurface(enginePos, Direction.NORTH), Pointing.RIGHT, 40).rightClick().withItem(wrench);
 
         scene.idle(7);
-        scene.world().setKineticSpeed(util.select().fromTo(2, 2, 2, 2, 2, 2), -64);
-        scene.effects().rotationDirectionIndicator(enginePos);
+        scene.world().setKineticSpeed(util.select().fromTo(enginePos, enginePos), -64);
+        scene.effects().rotationSpeedIndicator(enginePos);
 
         scene.idle(53);
         scene.markAsFinished();
@@ -83,8 +83,8 @@ public class PneumaticEngineScenes {
         BlockPos tankPos = util.grid().at(2, 1, 2);
         BlockPos enginePos = util.grid().at(2, 2, 2);
 
-        Selection tankSelection = util.select().fromTo(2, 1, 2, 2, 1, 2);
-        Selection engineSelection = util.select().fromTo(2, 2, 2, 2, 2, 2);
+        Selection tankSelection = util.select().fromTo(tankPos, tankPos);
+        Selection engineSelection = util.select().fromTo(enginePos, enginePos);
 
         ItemStack waterBucket = Items.WATER_BUCKET.getDefaultInstance();
 
@@ -95,7 +95,7 @@ public class PneumaticEngineScenes {
 
         scene.idle(5);
         scene.world().setKineticSpeed(engineSelection, 64);
-        scene.effects().rotationDirectionIndicator(enginePos);
+        scene.effects().rotationSpeedIndicator(enginePos);
 
         scene.idle(15);
         scene.overlay().showOutline(PonderPalette.BLUE, new Object(), tankSelection, 60);
@@ -117,7 +117,7 @@ public class PneumaticEngineScenes {
 
         scene.idle(80);
         scene.world().setKineticSpeed(engineSelection, 0);
-        scene.effects().rotationDirectionIndicator(enginePos);
+        scene.effects().rotationSpeedIndicator(enginePos);
         scene.overlay().showOutline(PonderPalette.RED, new Object(), tankSelection, 60);
         scene.overlay().showText(60)
             .colored(PonderPalette.RED)
@@ -136,9 +136,9 @@ public class PneumaticEngineScenes {
         scene.world().setBlock(tankPos, AllBlocks.NETHERITE_BACKTANK.getDefaultState(), false);
         scene.world().showSection(util.select().fromTo(1, 1, 1, 3, 1, 3), Direction.EAST);
 
-        scene.idle(5);
+        scene.idle(10);
         scene.world().setKineticSpeed(engineSelection, 64);
-        scene.effects().rotationDirectionIndicator(enginePos);
+        scene.effects().rotationSpeedIndicator(enginePos);
         scene.addKeyframe();
 
         scene.idle(20);
@@ -147,7 +147,7 @@ public class PneumaticEngineScenes {
         scene.idle(7);
         scene.world().modifyBlock(tankPos, s -> s.setValue(BlockStateProperties.WATERLOGGED, true), false);
         scene.world().setKineticSpeed(engineSelection, 0);
-        scene.effects().rotationDirectionIndicator(enginePos);
+        scene.effects().rotationSpeedIndicator(enginePos);
         scene.overlay().showOutline(PonderPalette.RED, new Object(), tankSelection, 60);
         scene.overlay().showText(60)
             .colored(PonderPalette.RED)

@@ -93,17 +93,32 @@ public class BrassCrateMountedStorage extends MountedItemStorage {
 
     @Override
     public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-        return canAcceptItem(stack);
+        if (!canAcceptItem(stack)) {
+            return false;
+        }
+
+        if (!stack.isEmpty()) {
+            ItemStack reference = null;
+            for (ItemStack storedStack : storedStacks) {
+                if (!storedStack.isEmpty()) {
+                    reference = storedStack;
+                    break;
+                }
+            }
+
+            return reference == null || ItemStack.isSameItemSameComponents(reference, stack);
+        }
+        return true;
     }
 
     @Override
     @NotNull
     public ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
-        if (!isValidSlot(slot) || stack.isEmpty()) {
+        if (!isItemValid(slot, stack)) {
             return stack;
         }
 
-        if (!canAcceptItem(stack)) {
+        if (!isValidSlot(slot) || stack.isEmpty()) {
             return stack;
         }
 

@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning;
 
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import net.minecraft.resources.ResourceLocation;
+import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.registry.*;
 import org.slf4j.Logger;
 
@@ -34,6 +35,8 @@ public class CreateCraftedBeginning
         CCBCreativeTabs.register(modEventBus);
         CCBPartialModels.register();
         CCBDataComponents.register(modEventBus);
+
+        CCBConfig.register(modContainer);
 
         NeoForge.EVENT_BUS.register(this);
         modEventBus.addListener(this::commonSetup);

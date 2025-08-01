@@ -41,7 +41,7 @@ public class CardboardCrateScenes {
         ItemStack cardboardCrate = new ItemStack(CCBBlocks.CARDBOARD_CRATE_BLOCK.asItem());
 
         scene.world().setBlock(cratePos, CCBBlocks.CARDBOARD_CRATE_BLOCK.getDefaultState(), false);
-        scene.world().showSection(util.select().fromTo(2, 1, 2, 2, 1, 2), Direction.DOWN);
+        scene.world().showSection(util.select().fromTo(cratePos, cratePos), Direction.DOWN);
 
         scene.idle(10);
         scene.overlay().showText(60)
@@ -52,13 +52,13 @@ public class CardboardCrateScenes {
 
         scene.idle(80);
         scene.world().setBlock(chutePos, AllBlocks.CHUTE.getDefaultState(), false);
-        ElementLink<WorldSectionElement> chute = scene.world().showIndependentSection(util.select().fromTo(2, 2, 2, 2, 2, 2), Direction.DOWN);
+        ElementLink<WorldSectionElement> chute = scene.world().showIndependentSection(util.select().fromTo(chutePos, chutePos), Direction.DOWN);
 
         scene.idle(10);
         scene.overlay().showText(60)
-                .text("Destroys existing items when new items are stored")
-                .pointAt(Vec3.atCenterOf(cratePos))
-                .placeNearTarget();
+            .text("Destroys existing items when new items are stored")
+            .pointAt(Vec3.atCenterOf(cratePos))
+            .placeNearTarget();
 
         scene.idle(10);
         ElementLink<EntityElement> remove = scene.world().createItemEntity(util.vector().centerOf(itemPos), util.vector().of(0, -0.1, 0), ironIngot);
@@ -98,10 +98,10 @@ public class CardboardCrateScenes {
 
         scene.idle(10);
         scene.overlay().showText(60)
-                .text("Cardboard Crate drops only itself when broken")
-                .pointAt(Vec3.atCenterOf(cratePos))
-                .placeNearTarget()
-                .attachKeyFrame();
+            .text("Cardboard Crate drops only itself when broken")
+            .pointAt(Vec3.atCenterOf(cratePos))
+            .placeNearTarget()
+            .attachKeyFrame();
         for (int i = 0; i < 10; i++) {
             scene.idle(2);
             scene.world().incrementBlockBreakingProgress(cratePos);

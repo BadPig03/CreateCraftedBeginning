@@ -46,4 +46,12 @@ public class BuilderTransformer {
             .item()
             .transform(ModelGen.customItemModel("pneumatic_engine", "item"));
     }
+
+    public static <B extends Block, P> NonNullUnaryOperator<BlockBuilder<B, P>> photo_stress_bearing() {
+        return b -> b
+            .addLayer(() -> RenderType::cutoutMipped)
+            .blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p)))
+            .item()
+            .transform(ModelGen.customItemModel("photo-stress_bearing", "item"));
+    }
 }

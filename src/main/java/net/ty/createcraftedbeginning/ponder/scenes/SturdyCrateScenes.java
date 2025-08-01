@@ -42,7 +42,7 @@ public class SturdyCrateScenes {
         ItemStack sturdyCrate = new ItemStack(CCBBlocks.STURDY_CRATE_BLOCK.value().asItem());
 
         scene.world().setBlock(cratePos, CCBBlocks.STURDY_CRATE_BLOCK.getDefaultState(), false);
-        scene.world().showIndependentSection(util.select().fromTo(2, 1, 2, 2, 1, 2), Direction.DOWN);
+        scene.world().showIndependentSection(util.select().fromTo(cratePos, cratePos), Direction.DOWN);
 
         scene.idle(10);
         scene.overlay().showText(60)
@@ -78,7 +78,7 @@ public class SturdyCrateScenes {
 
         scene.idle(20);
         scene.world().setBlock(chutePos, AllBlocks.CHUTE.getDefaultState(), false);
-        ElementLink<WorldSectionElement> chute = scene.world().showIndependentSection(util.select().fromTo(2, 2, 2, 2, 2, 2), Direction.DOWN);
+        ElementLink<WorldSectionElement> chute = scene.world().showIndependentSection(util.select().fromTo(chutePos, chutePos), Direction.DOWN);
 
         scene.idle(10);
         ElementLink<EntityElement> remove = scene.world().createItemEntity(util.vector().centerOf(itemPos), util.vector().of(0, -0.1, 0), diamond);

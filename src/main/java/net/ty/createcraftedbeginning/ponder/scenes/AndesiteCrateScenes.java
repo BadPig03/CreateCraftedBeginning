@@ -41,7 +41,7 @@ public class AndesiteCrateScenes {
         ItemStack brassHand = AllItems.BRASS_HAND.asStack();
 
         scene.world().setBlock(cratePos, CCBBlocks.ANDESITE_CRATE_BLOCK.getDefaultState(), false);
-        scene.world().showSection(util.select().fromTo(2, 1, 2, 2, 1, 2), Direction.DOWN);
+        scene.world().showSection(util.select().fromTo(cratePos, cratePos), Direction.DOWN);
 
         scene.idle(10);
         scene.overlay().showText(60)
@@ -52,7 +52,7 @@ public class AndesiteCrateScenes {
 
         scene.idle(80);
         scene.world().setBlock(chutePos, AllBlocks.CHUTE.getDefaultState(), false);
-        ElementLink<WorldSectionElement> chute = scene.world().showIndependentSection(util.select().fromTo(2, 2, 2, 2, 2, 2), Direction.DOWN);
+        ElementLink<WorldSectionElement> chute = scene.world().showIndependentSection(util.select().fromTo(chutePos, chutePos), Direction.DOWN);
 
         scene.idle(10);
         scene.overlay().showText(60)
@@ -87,10 +87,10 @@ public class AndesiteCrateScenes {
 
         scene.idle(80);
         scene.overlay().showText(60)
-                .text("Andesite Crate drops itself and contents when broken")
-                .pointAt(Vec3.atCenterOf(cratePos))
-                .placeNearTarget()
-                .attachKeyFrame();
+            .text("Andesite Crate drops itself and contents when broken")
+            .pointAt(Vec3.atCenterOf(cratePos))
+            .placeNearTarget()
+            .attachKeyFrame();
         for (int i = 0; i < 10; i++) {
             scene.idle(2);
             scene.world().incrementBlockBreakingProgress(cratePos);

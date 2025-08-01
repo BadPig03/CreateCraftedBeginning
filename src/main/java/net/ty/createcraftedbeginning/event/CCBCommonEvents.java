@@ -7,7 +7,8 @@ import net.ty.createcraftedbeginning.content.brasscrate.BrassCrateBlockEntity;
 import net.ty.createcraftedbeginning.content.cardboardcrate.CardboardCrateBlockEntity;
 import net.ty.createcraftedbeginning.content.sturdycrate.SturdyCrateBlockEntity;
 
-@EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
+
+@EventBusSubscriber()
 public class CCBCommonEvents {
     @SubscribeEvent
     public static void registerCapabilities(net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent event) {

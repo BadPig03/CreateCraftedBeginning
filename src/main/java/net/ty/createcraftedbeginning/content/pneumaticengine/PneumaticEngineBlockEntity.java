@@ -4,8 +4,11 @@ import com.simibubi.create.content.equipment.armor.BacktankBlockEntity;
 import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
 import com.simibubi.create.foundation.particle.AirParticleData;
 import net.createmod.catnip.math.VecHelper;
+import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -21,7 +24,6 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
     private boolean isActive = false;
     private boolean isClockwise = true;
     private int airTimer;
-    private final int TIMER_INTERVAL = 10;
 
     public PneumaticEngineBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -53,12 +55,24 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
             return;
         }
 
+        if (level != null && level instanceof PonderLevel) {
+            if (++airTimer >= 10) {
+                airTimer = 0;
+            }
+            if (airTimer % 3 == 0) {
+                spawnAirParticle();
+            }
+            return;
+        }
+
         if (currentActive) {
-            if (++airTimer >= TIMER_INTERVAL) {
+            if (++airTimer >= 10) {
                 airTimer = 0;
                 consumeTankAir();
             }
-            spawnAirParticle();
+            if (airTimer % 3 == 0) {
+                spawnAirParticle();
+            }
         }
 
         isActive = currentActive;
@@ -71,20 +85,19 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
     }
 
     private void spawnAirParticle() {
-        if (level == null || !level.isClientSide) {
+        if (level == null || !level.isClientSide || speed == 0) {
             return;
         }
         Vec3 centerOf = VecHelper.getCenterOf(worldPosition);
-        Vec3 v = VecHelper.offsetRandomly(centerOf, level.random, 1.35f);
-        Vec3 m = centerOf.subtract(v);
-        level.addParticle(new AirParticleData(1, .1f), v.x, v.y, v.z, m.x, m.y, m.z);
+        Vec3 v = VecHelper.offsetRandomly(centerOf, level.random, 1.25f);
+        Vec3 m = VecHelper.clamp(centerOf.subtract(v), .05F);
+        level.addParticle(ParticleTypes.CLOUD, v.x, v.y, v.z, m.x, m.y, m.z);
     }
 
     private void consumeTankAir() {
         if (level == null) {
             return;
         }
-
         BlockPos tankPos = worldPosition.below();
         BlockEntity tankBlockEntity = level.getBlockEntity(tankPos);
         if (!(tankBlockEntity instanceof BacktankBlockEntity tank)) {
@@ -126,11 +139,6 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
     @Override
     public float getGeneratedSpeed() {
         return isActive ? (getClockwise() * 64.0F) : 0;
-    }
-
-    @Override
-    public float calculateAddedStressCapacity() {
-        return 16.0F;
     }
 
     @Override
