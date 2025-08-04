@@ -75,7 +75,7 @@ public class PhotoStressBearingScenes {
         scene.overlay().showOutline(PonderPalette.OUTPUT, new Object(), util.select().fromTo(3, 5, 2, 3, 10, 2), 60);
         scene.overlay().showText(60)
             .colored(PonderPalette.OUTPUT)
-            .text("Rotational speed is proportional to sky light level")
+            .text("Rotation speed is proportional to sky light level")
             .pointAt(Vec3.atCenterOf(bearingPos))
             .placeNearTarget();
 
@@ -93,7 +93,7 @@ public class PhotoStressBearingScenes {
         scene.overlay().showOutline(PonderPalette.RED, new Object(), util.select().fromTo(3, 4, 2, 3, 10, 2), 60);
         scene.overlay().showText(60)
             .colored(PonderPalette.RED)
-            .text("Rotational speed maintains a minimum of 2 RPM even at sky light level 0")
+            .text("Rotation speed maintains a minimum of 2 RPM even at sky light level 0")
             .pointAt(Vec3.atCenterOf(bearingPos))
             .placeNearTarget()
             .attachKeyFrame();
@@ -119,7 +119,7 @@ public class PhotoStressBearingScenes {
         scene.idle(20);
         scene.overlay().showText(60)
             .colored(PonderPalette.OUTPUT)
-            .text("During rain or thunderstorms, the rotational speed of Photo-Stress Bearings is halved")
+            .text("During rain or thunderstorms, the rotation speed is halved")
             .pointAt(Vec3.atCenterOf(bearingPos))
             .placeNearTarget()
             .attachKeyFrame();

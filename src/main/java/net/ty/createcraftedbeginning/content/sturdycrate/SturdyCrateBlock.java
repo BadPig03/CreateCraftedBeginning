@@ -15,6 +15,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
+import net.ty.createcraftedbeginning.util.Helpers;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
@@ -97,5 +98,15 @@ public class SturdyCrateBlock extends CrateBlock implements IBE<SturdyCrateBlock
         }
 
         super.onRemove(state, level, pos, newState, isMoving);
+    }
+
+    @Override
+    public boolean hasAnalogOutputSignal(@NotNull BlockState state) {
+        return true;
+    }
+
+    @Override
+    public int getAnalogOutputSignal(@NotNull BlockState pState, @NotNull Level pLevel, @NotNull BlockPos pPos) {
+        return Helpers.calculateRedstoneSignal(this, pLevel, pPos);
     }
 }

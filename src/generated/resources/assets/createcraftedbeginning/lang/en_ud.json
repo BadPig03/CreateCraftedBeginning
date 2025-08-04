@@ -2,9 +2,11 @@
   "block.createcraftedbeginning.andesite_crate": "ǝʇɐɹƆ ǝʇısǝpuⱯ",
   "block.createcraftedbeginning.brass_crate": "ǝʇɐɹƆ ssɐɹᗺ",
   "block.createcraftedbeginning.cardboard_crate": "ǝʇɐɹƆ pɹɐoqpɹɐƆ",
+  "block.createcraftedbeginning.cinder_casing": "buısɐƆ ɹǝpuıƆ",
+  "block.createcraftedbeginning.cinder_nozzle": "ǝןzzoN ɹǝpuıƆ",
   "block.createcraftedbeginning.photo-stress_bearing": "buıɹɐǝᗺ ssǝɹʇs-oʇoɥԀ",
   "block.createcraftedbeginning.pneumatic_engine": "ǝuıbuƎ ɔıʇɐɯnǝuԀ",
   "block.createcraftedbeginning.sturdy_crate": "ǝʇɐɹƆ ʎpɹnʇS",
-  "item.createcraftedbeginning.cinder_dough": "ɥbnoᗡ ɹǝpuıƆ",
-  "item.createcraftedbeginning.polished_amethyst_shard": "pɹɐɥS ʇsʎɥʇǝɯⱯ pǝɥsıןoԀ"
+  "item.createcraftedbeginning.amethyst_crystal_sheet": "ʇǝǝɥS ןɐʇsʎɹƆ ʇsʎɥʇǝɯⱯ",
+  "item.createcraftedbeginning.cinder_alloy": "ʎoןןⱯ ɹǝpuıƆ"
 }

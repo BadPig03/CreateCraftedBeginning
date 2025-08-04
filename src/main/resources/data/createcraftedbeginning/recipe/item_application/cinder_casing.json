@@ -1,0 +1,16 @@
+{
+  "type": "create:item_application",
+  "ingredients": [
+    {
+      "tag": "createcraftedbeginning:cinder_casing_raw_materials"
+    },
+    {
+      "item": "createcraftedbeginning:cinder_alloy"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:cinder_casing"
+    }
+  ]
+}

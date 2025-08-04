@@ -2,7 +2,9 @@ package net.ty.createcraftedbeginning;
 
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import net.minecraft.resources.ResourceLocation;
+import net.neoforged.bus.api.EventPriority;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.data.CCBDataGen;
 import net.ty.createcraftedbeginning.registry.*;
 import org.slf4j.Logger;
 
@@ -13,7 +15,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 
@@ -28,26 +29,25 @@ public class CreateCraftedBeginning
     public CreateCraftedBeginning(IEventBus modEventBus, ModContainer modContainer) {
         CREATE_REGISTRATE.registerEventListeners(modEventBus);
 
-        CCBItems.register();
-        CCBBlocks.register();
-        CCBBlockEntities.register();
-        CCBMountedStorage.register();
+        CCBTags.register();
         CCBCreativeTabs.register(modEventBus);
-        CCBPartialModels.register();
+        CCBBlocks.register();
+        CCBItems.register();
+        CCBBlockEntities.register();
         CCBDataComponents.register(modEventBus);
+        CCBMountedStorage.register();
+        CCBPartialModels.register();
 
         CCBConfig.register(modContainer);
 
         NeoForge.EVENT_BUS.register(this);
-        modEventBus.addListener(this::commonSetup);
+        modEventBus.addListener(EventPriority.HIGHEST, CCBDataGen::gatherDataHighPriority);
+        modEventBus.addListener(EventPriority.LOWEST, CCBDataGen::gatherData);
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 
     public static ResourceLocation asResource(String path) {
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
-    }
-
-    private void commonSetup(FMLCommonSetupEvent event) {
     }
 
     public static CreateRegistrate registrate() {

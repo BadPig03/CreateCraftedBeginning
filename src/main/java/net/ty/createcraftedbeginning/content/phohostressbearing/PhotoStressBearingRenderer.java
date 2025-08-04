@@ -1,20 +1,17 @@
 package net.ty.createcraftedbeginning.content.phohostressbearing;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
-import dev.engine_room.flywheel.api.visualization.VisualizationManager;
 import net.createmod.catnip.render.CachedBuffers;
 import net.createmod.catnip.render.SuperByteBuffer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 
 public class PhotoStressBearingRenderer extends KineticBlockEntityRenderer<PhotoStressBearingBlockEntity> {
-    public PhotoStressBearingRenderer(BlockEntityRendererProvider.Context context) {
+    public PhotoStressBearingRenderer(Context context) {
         super(context);
     }
 

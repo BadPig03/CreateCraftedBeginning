@@ -78,12 +78,6 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
         isActive = currentActive;
     }
 
-    @Override
-    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        super.addToGoggleTooltip(tooltip, isPlayerSneaking);
-        return true;
-    }
-
     private void spawnAirParticle() {
         if (level == null || !level.isClientSide || speed == 0) {
             return;
@@ -132,13 +126,10 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
         setChanged();
     }
 
-    private int getClockwise() {
-        return isClockwise ? 1 : -1;
-    }
-
     @Override
     public float getGeneratedSpeed() {
-        return isActive ? (getClockwise() * 64.0F) : 0;
+        int speedDirection = isClockwise ? 1 : -1;
+        return isActive ? speedDirection * 64.0F : 0;
     }
 
     @Override

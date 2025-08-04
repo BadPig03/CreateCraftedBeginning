@@ -5,14 +5,17 @@ import com.tterrag.registrate.util.entry.ItemEntry;
 import net.minecraft.world.item.Item;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 
+import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
+
 public class CCBItems {
     private static final CreateRegistrate CREATE_REGISTRATE = CreateCraftedBeginning.registrate();
 
-    public static final ItemEntry<Item> CINDER_DOUGH = CREATE_REGISTRATE.item("cinder_dough", Item::new)
+    public static final ItemEntry<Item> CINDER_ALLOY = CREATE_REGISTRATE.item("cinder_alloy", Item::new)
         .properties(p -> p.stacksTo(64).fireResistant())
+        .tag(CCBItemTags.CINDER_ALLOY.tag)
         .register();
 
-    public static final ItemEntry<Item> POLISHED_AMETHYST_SHARD = CREATE_REGISTRATE.item("polished_amethyst_shard", Item::new)
+    public static final ItemEntry<Item> AMETHYST_CRYSTAL_SHEET = CREATE_REGISTRATE.item("amethyst_crystal_sheet", Item::new)
         .properties(p -> p.stacksTo(64))
         .register();
 

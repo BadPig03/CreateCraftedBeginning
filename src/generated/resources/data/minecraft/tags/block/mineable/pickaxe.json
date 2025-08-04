@@ -4,6 +4,8 @@
     "createcraftedbeginning:brass_crate",
     "createcraftedbeginning:sturdy_crate",
     "createcraftedbeginning:pneumatic_engine",
-    "createcraftedbeginning:photo-stress_bearing"
+    "createcraftedbeginning:photo-stress_bearing",
+    "createcraftedbeginning:cinder_casing",
+    "createcraftedbeginning:cinder_nozzle"
   ]
 }

@@ -20,5 +20,8 @@ public class CCBPonderScenes {
         ENTRY_HELPER.forComponents(CCBBlocks.PNEUMATIC_ENGINE_BLOCK).addStoryBoard("crates_story_board", PneumaticEngineScenes::limitation, CCBPonderTags.KINETIC_SOURCES_TAG_ID, AllCreatePonderTags.KINETIC_SOURCES);
         ENTRY_HELPER.forComponents(CCBBlocks.PHOTO_STRESS_BEARING_BLOCK).addStoryBoard("crates_story_board", PhotoStressBearingScenes::scene, CCBPonderTags.KINETIC_SOURCES_TAG_ID, AllCreatePonderTags.KINETIC_SOURCES);
         ENTRY_HELPER.forComponents(CCBBlocks.PHOTO_STRESS_BEARING_BLOCK).addStoryBoard("crates_story_board_nether_end", PhotoStressBearingScenes::other_dimension, CCBPonderTags.KINETIC_SOURCES_TAG_ID, AllCreatePonderTags.KINETIC_SOURCES);
+
+        ENTRY_HELPER.forComponents(CCBBlocks.CINDER_NOZZLE_BLOCK).addStoryBoard("crates_story_board_larger", CinderNozzleScenes::scene, CCBPonderTags.KINETIC_APPLIANCES_TAG_ID, AllCreatePonderTags.KINETIC_APPLIANCES);
+        ENTRY_HELPER.forComponents(CCBBlocks.CINDER_NOZZLE_BLOCK).addStoryBoard("crates_story_board_larger", CinderNozzleScenes::working_range, CCBPonderTags.KINETIC_APPLIANCES_TAG_ID, AllCreatePonderTags.KINETIC_APPLIANCES);
     }
 }

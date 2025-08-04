@@ -92,40 +92,28 @@ public class PhotoStressBearingBlockEntity extends GeneratingKineticBlockEntity 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         movementDirection = new ScrollOptionBehaviour<>(RotationDirection.class, CreateLang.translateDirect("contraptions.windmill.rotation_direction"), this, new PhotoStressBearingValueBox());
-        movementDirection.withCallback($ -> onDirectionChanged());
+        movementDirection.withCallback(this::onDirectionChanged);
         behaviours.add(movementDirection);
     }
 
-    private void onDirectionChanged() {
-        isClockwise = !isClockwise;
+    private void onDirectionChanged(int direction) {
+        isClockwise = direction != 1;
         updateGeneratedRotation();
         setChanged();
-    }
-
-    @Override
-    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        super.addToGoggleTooltip(tooltip, isPlayerSneaking);
-        return true;
     }
 
     private boolean isInOverworld() {
         return level != null && level.dimension() == Level.OVERWORLD;
     }
 
-    private int getClockwise() {
-        return isClockwise ? 1 : -1;
-    }
-
     @Override
     public float getGeneratedSpeed() {
-        float speedFactor = 2.0F;
         if (!isInOverworld() || level == null) {
             return 0;
         }
-        if (level.isRaining() || level.isThundering()) {
-            speedFactor = 1.0F;
-        }
-        return (skyLight + 1) * speedFactor * getClockwise();
+        int speedFactor = (level.isRaining() || level.isThundering()) ? 1 : 2;
+        int speedDirection = isClockwise ? 1 : -1;
+        return (skyLight + 1) * speedFactor * speedDirection;
     }
 
     @Override

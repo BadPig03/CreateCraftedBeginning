@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.util;
+package net.ty.createcraftedbeginning.data;
 
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.block.Block;

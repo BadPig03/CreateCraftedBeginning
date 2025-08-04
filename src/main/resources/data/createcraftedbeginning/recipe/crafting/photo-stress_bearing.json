@@ -1,14 +1,14 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern":
-  ["A",
+  [ "A",
     "B",
     "C"],
   "key":
   {
     "A":
     {
-      "item": "createcraftedbeginning:polished_amethyst_shard"
+      "item": "createcraftedbeginning:amethyst_crystal_sheet"
     },
     "B":
     {
