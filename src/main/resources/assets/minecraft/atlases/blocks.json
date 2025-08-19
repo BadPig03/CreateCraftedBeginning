@@ -1,0 +1,16 @@
+{
+  "sources": [
+	{
+      "type": "single",
+      "resource": "createcraftedbeginning:fluid/compressed_air"
+    },
+	{
+      "type": "single",
+      "resource": "createcraftedbeginning:fluid/slush"
+    },
+	{
+      "type": "single",
+      "resource": "createcraftedbeginning:entity/train_hat"
+    }
+  ]
+}

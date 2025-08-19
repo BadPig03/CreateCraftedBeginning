@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "priority": 1000,
+  "package": "net.ty.createcraftedbeginning.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "FluidTankBlockEntityMixin",
+	"PipeConnectionMixin",
+	"FluidInterfaceMixin",
+	"FluidTransportBehaviourMixin",
+	"BlockEntityBehaviourMixin",
+	"BasinBlockEntityMixin"
+  ],
+  "minVersion": "0.8.5"
+}

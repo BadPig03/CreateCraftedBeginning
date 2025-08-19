@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "createcraftedbeginning:block/airtight_tank/top",
+    "side": "createcraftedbeginning:block/airtight_tank/vertical"
+  }
+}

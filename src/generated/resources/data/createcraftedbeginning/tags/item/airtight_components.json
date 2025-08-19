@@ -1,0 +1,9 @@
+{
+  "values": [
+    "createcraftedbeginning:airtight_tank",
+    "createcraftedbeginning:airtight_pipe",
+    "createcraftedbeginning:airtight_pump",
+    "createcraftedbeginning:airtight_intake_port",
+    "createcraftedbeginning:air_compressor"
+  ]
+}

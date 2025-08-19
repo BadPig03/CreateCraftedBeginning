@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:cooling",
+  "ingredients": [
+    {
+      "item": "minecraft:snowball"
+    }
+  ],
+  "results": [
+    {
+      "amount": 5,
+      "id": "createcraftedbeginning:cooling_time"
+    }
+  ]
+}

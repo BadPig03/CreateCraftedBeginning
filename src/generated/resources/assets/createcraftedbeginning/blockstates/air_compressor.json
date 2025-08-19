@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "createcraftedbeginning:block/air_compressor/block",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "createcraftedbeginning:block/air_compressor/block"
+    },
+    "facing=south": {
+      "model": "createcraftedbeginning:block/air_compressor/block",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "createcraftedbeginning:block/air_compressor/block",
+      "y": 270
+    }
+  }
+}

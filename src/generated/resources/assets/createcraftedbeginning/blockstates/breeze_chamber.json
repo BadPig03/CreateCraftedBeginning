@@ -1,0 +1,100 @@
+{
+  "variants": {
+    "breeze=chilled,cooler=false,facing=east": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "breeze=chilled,cooler=false,facing=north": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "breeze=chilled,cooler=false,facing=south": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "breeze=chilled,cooler=false,facing=west": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "breeze=chilled,cooler=true,facing=east": {
+      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    },
+    "breeze=chilled,cooler=true,facing=north": {
+      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    },
+    "breeze=chilled,cooler=true,facing=south": {
+      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    },
+    "breeze=chilled,cooler=true,facing=west": {
+      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    },
+    "breeze=galling,cooler=false,facing=east": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "breeze=galling,cooler=false,facing=north": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "breeze=galling,cooler=false,facing=south": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "breeze=galling,cooler=false,facing=west": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "breeze=galling,cooler=true,facing=east": {
+      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    },
+    "breeze=galling,cooler=true,facing=north": {
+      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    },
+    "breeze=galling,cooler=true,facing=south": {
+      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    },
+    "breeze=galling,cooler=true,facing=west": {
+      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    },
+    "breeze=riming,cooler=false,facing=east": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "breeze=riming,cooler=false,facing=north": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "breeze=riming,cooler=false,facing=south": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "breeze=riming,cooler=false,facing=west": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "breeze=riming,cooler=true,facing=east": {
+      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    },
+    "breeze=riming,cooler=true,facing=north": {
+      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    },
+    "breeze=riming,cooler=true,facing=south": {
+      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    },
+    "breeze=riming,cooler=true,facing=west": {
+      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    },
+    "breeze=waning,cooler=false,facing=east": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "breeze=waning,cooler=false,facing=north": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "breeze=waning,cooler=false,facing=south": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "breeze=waning,cooler=false,facing=west": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "breeze=waning,cooler=true,facing=east": {
+      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    },
+    "breeze=waning,cooler=true,facing=north": {
+      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    },
+    "breeze=waning,cooler=true,facing=south": {
+      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    },
+    "breeze=waning,cooler=true,facing=west": {
+      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    }
+  }
+}

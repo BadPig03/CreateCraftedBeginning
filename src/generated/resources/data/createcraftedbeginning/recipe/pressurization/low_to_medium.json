@@ -1,0 +1,16 @@
+{
+  "type": "createcraftedbeginning:pressurization",
+  "ingredients": [
+    {
+      "type": "fluid_stack",
+      "amount": 20,
+      "fluid": "createcraftedbeginning:low_pressure_compressed_air"
+    }
+  ],
+  "results": [
+    {
+      "amount": 1,
+      "id": "createcraftedbeginning:medium_pressure_compressed_air"
+    }
+  ]
+}

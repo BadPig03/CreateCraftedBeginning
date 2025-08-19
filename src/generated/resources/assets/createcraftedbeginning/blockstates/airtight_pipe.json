@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "createcraftedbeginning:block/airtight_pipe/pipe",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y": {
+      "model": "createcraftedbeginning:block/airtight_pipe/pipe"
+    },
+    "axis=z": {
+      "model": "createcraftedbeginning:block/airtight_pipe/pipe",
+      "x": 90
+    }
+  }
+}

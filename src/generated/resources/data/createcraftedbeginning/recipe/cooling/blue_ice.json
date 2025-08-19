@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:cooling",
+  "ingredients": [
+    {
+      "item": "minecraft:blue_ice"
+    }
+  ],
+  "results": [
+    {
+      "amount": 14580,
+      "id": "createcraftedbeginning:cooling_time"
+    }
+  ]
+}

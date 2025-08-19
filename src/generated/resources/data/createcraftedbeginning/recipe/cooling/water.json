@@ -1,0 +1,16 @@
+{
+  "type": "createcraftedbeginning:cooling",
+  "ingredients": [
+    {
+      "type": "fluid_stack",
+      "amount": 200,
+      "fluid": "minecraft:water"
+    }
+  ],
+  "results": [
+    {
+      "amount": 3,
+      "id": "createcraftedbeginning:cooling_time"
+    }
+  ]
+}

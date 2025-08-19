@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "facing=north": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "facing=south": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    },
+    "facing=west": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    }
+  }
+}

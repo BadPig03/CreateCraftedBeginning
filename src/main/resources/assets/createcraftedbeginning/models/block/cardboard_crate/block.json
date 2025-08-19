@@ -1,0 +1,25 @@
+{
+	"credit": "Made with Blockbench",
+	"parent": "block/block",
+	"texture_size": [32, 32],
+	"textures": {
+		"0": "createcraftedbeginning:block/cardboard_crate",
+		"1": "createcraftedbeginning:block/cardboard_crate_mark",
+		"particle": "createcraftedbeginning:block/cardboard_crate_mark"
+	},
+	"elements": [
+		{
+			"from": [1, 0, 1],
+			"to": [15, 14, 15],
+			"rotation": {"angle": 0, "axis": "y", "origin": [1, 0, 1]},
+			"faces": {
+				"north": {"uv": [1, 1, 15, 15], "texture": "#1"},
+				"east": {"uv": [8.5, 8.5, 15.5, 15.5], "texture": "#0"},
+				"south": {"uv": [0.5, 8.5, 7.5, 15.5], "texture": "#0"},
+				"west": {"uv": [8.5, 8.5, 15.5, 15.5], "texture": "#0"},
+				"up": {"uv": [0.5, 0.5, 7.5, 7.5], "texture": "#0"},
+				"down": {"uv": [8.5, 0.5, 15.5, 7.5], "texture": "#0"}
+			}
+		}
+	]
+}

@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:cooling",
+  "ingredients": [
+    {
+      "item": "minecraft:water_bucket"
+    }
+  ],
+  "results": [
+    {
+      "amount": 15,
+      "id": "createcraftedbeginning:cooling_time"
+    }
+  ]
+}

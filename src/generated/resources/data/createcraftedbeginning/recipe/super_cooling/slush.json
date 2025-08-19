@@ -1,0 +1,16 @@
+{
+  "type": "createcraftedbeginning:super_cooling",
+  "ingredients": [
+    {
+      "type": "fluid_stack",
+      "amount": 5,
+      "fluid": "createcraftedbeginning:slush"
+    }
+  ],
+  "results": [
+    {
+      "amount": 12,
+      "id": "createcraftedbeginning:cooling_time"
+    }
+  ]
+}
