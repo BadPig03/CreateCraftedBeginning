@@ -1,12 +1,14 @@
 package net.ty.createcraftedbeginning.content.pneumaticengine;
 
+import com.simibubi.create.content.kinetics.base.KineticBlock;
 import com.simibubi.create.content.kinetics.simpleRelays.ICogWheel;
+import com.simibubi.create.foundation.block.IBE;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
-import com.simibubi.create.content.kinetics.base.HorizontalKineticBlock;
-import com.simibubi.create.foundation.block.IBE;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -18,10 +20,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.ty.createcraftedbeginning.advancement.AdvancementBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.NotNull;
 
-public class PneumaticEngineBlock extends HorizontalKineticBlock implements IBE<PneumaticEngineBlockEntity>, ICogWheel {
+public class PneumaticEngineBlock extends KineticBlock implements IBE<PneumaticEngineBlockEntity>, ICogWheel {
     public PneumaticEngineBlock(Properties properties) {
         super(properties);
     }
@@ -37,11 +40,6 @@ public class PneumaticEngineBlock extends HorizontalKineticBlock implements IBE<
     }
 
     @Override
-    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter worldIn, @NotNull BlockPos pos, @NotNull CollisionContext context) {
-        return Block.box(1, 0, 1, 15, 16, 15);
-    }
-
-    @Override
     public boolean hideStressImpact() {
         return true;
     }
@@ -49,6 +47,11 @@ public class PneumaticEngineBlock extends HorizontalKineticBlock implements IBE<
     @Override
     protected boolean isPathfindable(@NotNull BlockState state, @NotNull PathComputationType pathComputationType) {
         return false;
+    }
+
+    @Override
+    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter worldIn, @NotNull BlockPos pos, @NotNull CollisionContext context) {
+        return Block.box(1, 0, 1, 15, 16, 15);
     }
 
     @Override
@@ -62,6 +65,12 @@ public class PneumaticEngineBlock extends HorizontalKineticBlock implements IBE<
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.FAIL;
+    }
+
+    @Override
+    public void setPlacedBy(Level world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+        super.setPlacedBy(world, pos, state, placer, stack);
+        AdvancementBehaviour.setPlacedBy(world, pos, placer);
     }
 
     @Override

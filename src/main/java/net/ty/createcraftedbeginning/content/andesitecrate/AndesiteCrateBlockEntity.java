@@ -17,10 +17,6 @@ import static net.ty.createcraftedbeginning.content.andesitecrate.AndesiteCrateB
 import static net.ty.createcraftedbeginning.content.andesitecrate.AndesiteCrateBlock.SLOT_LIMIT;
 
 public class AndesiteCrateBlockEntity extends CrateBlockEntity {
-    public AndesiteCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
-        super(type, pos, state);
-    }
-
     public final ItemStackHandler inv = new ItemStackHandler(MAX_SLOT) {
         @Override
         protected void onContentsChanged(int slot) {
@@ -57,6 +53,14 @@ public class AndesiteCrateBlockEntity extends CrateBlockEntity {
         }
     };
 
+    public AndesiteCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
+    }
+
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CCBBlockEntities.ANDESITE_CRATE.get(), (be, context) -> be.inv);
+    }
+
     public void setStoredItems(ItemStack[] stacks) {
         for (int i = 0; i < MAX_SLOT && i < stacks.length; i++) {
             inv.setStackInSlot(i, stacks[i].copy());
@@ -78,11 +82,5 @@ public class AndesiteCrateBlockEntity extends CrateBlockEntity {
         if (!clientPacket && compound.contains("Inventory")) {
             inv.deserializeNBT(registries, compound.getCompound("Inventory"));
         }
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CCBBlockEntities.ANDESITE_CRATE.get(),
-                (be, context) -> be.inv
-        );
     }
 }

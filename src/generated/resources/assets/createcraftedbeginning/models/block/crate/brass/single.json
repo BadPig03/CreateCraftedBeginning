@@ -1,7 +1,0 @@
-{
-  "parent": "createcraftedbeginning:block/crate/single",
-  "textures": {
-    "casing": "createcraftedbeginning:block/brass_casing",
-    "crate": "createcraftedbeginning:block/crate_brass"
-  }
-}

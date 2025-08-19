@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern":
+  [ " A ",
+    "ABA",
+    " C "],
+  "key":
+  {
+    "A":
+    {
+      "tag": "c:plates/iron"
+    },
+    "B":
+    {
+      "item": "minecraft:chiseled_tuff"
+    },
+    "C":
+    {
+      "item": "createcraftedbeginning:airtight_sheet"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:empty_breeze_chamber"
+  }
+}

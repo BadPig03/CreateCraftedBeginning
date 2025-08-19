@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "B",
+    "A",
+    "B"
+  ],
+  "key": {
+    "A":
+    {
+      "item": "create:fluid_tank"
+    },
+    "B": {
+      "item": "createcraftedbeginning:airtight_sheet"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:airtight_tank"
+  }
+}

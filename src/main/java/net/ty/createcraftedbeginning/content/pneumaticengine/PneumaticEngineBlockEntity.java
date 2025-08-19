@@ -2,21 +2,22 @@ package net.ty.createcraftedbeginning.content.pneumaticengine;
 
 import com.simibubi.create.content.equipment.armor.BacktankBlockEntity;
 import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
-import com.simibubi.create.foundation.particle.AirParticleData;
+import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.Vec3;
+import net.ty.createcraftedbeginning.advancement.AdvancementBehaviour;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancement;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancements;
 
 import java.util.List;
 
@@ -37,6 +38,34 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
         if (!hasSource() || getGeneratedSpeed() > getTheoreticalSpeed()) {
             updateGeneratedRotation();
         }
+    }
+
+    @Override
+    protected void write(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
+        super.write(compound, registries, clientPacket);
+        if (!clientPacket) {
+            compound.putBoolean("Clockwise", isClockwise);
+        }
+    }
+
+    @Override
+    protected void read(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
+        super.read(compound, registries, clientPacket);
+        if (!clientPacket && compound.contains("Clockwise")) {
+            isClockwise = compound.getBoolean("Clockwise");
+        }
+    }
+
+    @Override
+    public float getGeneratedSpeed() {
+        int speedDirection = isClockwise ? 1 : -1;
+        return isActive ? speedDirection * 48.F : 0;
+    }
+
+    @Override
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+        super.addBehaviours(behaviours);
+        registerAwardables(behaviours, CCBAdvancements.PNEUMATIC_ENGINE);
     }
 
     @Override
@@ -83,9 +112,11 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
             return;
         }
         Vec3 centerOf = VecHelper.getCenterOf(worldPosition);
-        Vec3 v = VecHelper.offsetRandomly(centerOf, level.random, 1.25f);
-        Vec3 m = VecHelper.clamp(centerOf.subtract(v), .05F);
-        level.addParticle(ParticleTypes.CLOUD, v.x, v.y, v.z, m.x, m.y, m.z);
+        double angle = level.random.nextDouble() * Math.PI * 2;
+        double distance = 0.75 + level.random.nextDouble() * 0.75;
+        Vec3 targetPosition = centerOf.add(Math.cos(angle) * distance, Math.sin(angle) * distance, level.random.nextDouble() * 0.6 - 0.3);
+        Vec3 motion = targetPosition.subtract(centerOf).normalize().scale(.075F);
+        level.addParticle(ParticleTypes.CLOUD, centerOf.x, centerOf.y, centerOf.z, motion.x, motion.y, motion.z);
     }
 
     private void consumeTankAir() {
@@ -99,6 +130,8 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
         }
         tank.setAirLevel(Math.max(tank.getAirLevel() - 1, 0));
         tank.setChanged();
+
+        award();
     }
 
     private boolean isBelowTankAndHasAir() {
@@ -126,25 +159,20 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
         setChanged();
     }
 
-    @Override
-    public float getGeneratedSpeed() {
-        int speedDirection = isClockwise ? 1 : -1;
-        return isActive ? speedDirection * 64.0F : 0;
-    }
-
-    @Override
-    protected void write(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
-        super.write(compound, registries, clientPacket);
-        if (!clientPacket) {
-            compound.putBoolean("Clockwise", isClockwise);
+    private void registerAwardables(List<BlockEntityBehaviour> behaviours, CCBAdvancement... advancements) {
+        for (BlockEntityBehaviour behaviour : behaviours) {
+            if (behaviour instanceof AdvancementBehaviour ab) {
+                ab.add(advancements);
+                return;
+            }
         }
+        behaviours.add(new AdvancementBehaviour(this, advancements));
     }
 
-    @Override
-    protected void read(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
-        super.read(compound, registries, clientPacket);
-        if (!clientPacket && compound.contains("Clockwise")) {
-            isClockwise = compound.getBoolean("Clockwise");
+    private void award() {
+        AdvancementBehaviour behaviour = getBehaviour(AdvancementBehaviour.TYPE);
+        if (behaviour != null) {
+            behaviour.awardPlayer(CCBAdvancements.PNEUMATIC_ENGINE);
         }
     }
 }

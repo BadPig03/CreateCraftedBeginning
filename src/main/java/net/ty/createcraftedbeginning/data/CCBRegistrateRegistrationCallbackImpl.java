@@ -1,0 +1,25 @@
+package net.ty.createcraftedbeginning.data;
+
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.UnmodifiableView;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Consumer;
+
+public class CCBRegistrateRegistrationCallbackImpl {
+    private static final List<CallbackImpl<?>> CALLBACKS = new ArrayList<>();
+
+    @UnmodifiableView
+    public static final List<CallbackImpl<?>> CALLBACKS_VIEW = Collections.unmodifiableList(CALLBACKS);
+
+    public static <T> void register(ResourceKey<? extends Registry<T>> registry, ResourceLocation id, Consumer<T> callback) {
+        CALLBACKS.add(new CallbackImpl<>(registry, id, callback));
+    }
+
+    public record CallbackImpl<T>(ResourceKey<? extends Registry<T>> registry, ResourceLocation id, Consumer<T> callback) {
+    }
+}

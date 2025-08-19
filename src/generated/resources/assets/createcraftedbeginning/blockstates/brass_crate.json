@@ -1,22 +1,19 @@
 {
   "variants": {
-    "facing=down": {
-      "model": "createcraftedbeginning:block/crate/brass/single"
-    },
     "facing=east": {
-      "model": "createcraftedbeginning:block/crate/brass/single"
+      "model": "createcraftedbeginning:block/brass_crate/block",
+      "y": 90
     },
     "facing=north": {
-      "model": "createcraftedbeginning:block/crate/brass/single"
+      "model": "createcraftedbeginning:block/brass_crate/block"
     },
     "facing=south": {
-      "model": "createcraftedbeginning:block/crate/brass/single"
-    },
-    "facing=up": {
-      "model": "createcraftedbeginning:block/crate/brass/single"
+      "model": "createcraftedbeginning:block/brass_crate/block",
+      "y": 180
     },
     "facing=west": {
-      "model": "createcraftedbeginning:block/crate/brass/single"
+      "model": "createcraftedbeginning:block/brass_crate/block",
+      "y": 270
     }
   }
 }

@@ -27,40 +27,6 @@ public class CCBStress extends ConfigBase {
     protected final Map<ResourceLocation, ConfigValue<Double>> capacities = new HashMap<>();
     protected final Map<ResourceLocation, ConfigValue<Double>> impacts = new HashMap<>();
 
-    @Override
-    public void registerAll(ModConfigSpec.Builder builder) {
-        builder.comment(".", Comments.su, Comments.impact).push("impact");
-        DEFAULT_IMPACTS.forEach(
-                (id, value) -> this.impacts.put(id, builder.define(id.getPath(), value))
-        );
-        builder.pop();
-
-        builder.comment(".", Comments.su, Comments.capacity).push("capacity");
-        DEFAULT_CAPACITIES.forEach(
-                (id, value) -> this.capacities.put(id, builder.define(id.getPath(), value))
-        );
-        builder.pop();
-    }
-
-    @Override
-    public @NotNull String getName() {
-        return "stressValues.v" + VERSION;
-    }
-
-    @Nullable
-    public DoubleSupplier getImpact(Block block) {
-        ResourceLocation id = RegisteredObjectsHelper.getKeyOrThrow(block);
-        ConfigValue<Double> value = this.impacts.get(id);
-        return value == null ? null : value::get;
-    }
-
-    @Nullable
-    public DoubleSupplier getCapacity(Block block) {
-        ResourceLocation id = RegisteredObjectsHelper.getKeyOrThrow(block);
-        ConfigValue<Double> value = this.capacities.get(id);
-        return value == null ? null : value::get;
-    }
-
     public static <B extends Block, P> NonNullUnaryOperator<BlockBuilder<B, P>> setNoImpact() {
         return setImpact(0);
     }
@@ -87,6 +53,36 @@ public class CCBStress extends ConfigBase {
         if (!builder.getOwner().getModid().equals(CreateCraftedBeginning.MOD_ID)) {
             throw new IllegalStateException("Non-relative blocks cannot be added to Create Crafted Beginning's config.");
         }
+    }
+
+    @Override
+    public void registerAll(ModConfigSpec.Builder builder) {
+        builder.comment(".", Comments.su, Comments.impact).push("impact");
+        DEFAULT_IMPACTS.forEach((id, value) -> this.impacts.put(id, builder.define(id.getPath(), value)));
+        builder.pop();
+
+        builder.comment(".", Comments.su, Comments.capacity).push("capacity");
+        DEFAULT_CAPACITIES.forEach((id, value) -> this.capacities.put(id, builder.define(id.getPath(), value)));
+        builder.pop();
+    }
+
+    @Override
+    public @NotNull String getName() {
+        return "stressValues.v" + VERSION;
+    }
+
+    @Nullable
+    public DoubleSupplier getImpact(Block block) {
+        ResourceLocation id = RegisteredObjectsHelper.getKeyOrThrow(block);
+        ConfigValue<Double> value = this.impacts.get(id);
+        return value == null ? null : value::get;
+    }
+
+    @Nullable
+    public DoubleSupplier getCapacity(Block block) {
+        ResourceLocation id = RegisteredObjectsHelper.getKeyOrThrow(block);
+        ConfigValue<Double> value = this.capacities.get(id);
+        return value == null ? null : value::get;
     }
 
     private static class Comments {

@@ -14,7 +14,7 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
-import net.ty.createcraftedbeginning.content.cindernozzle.CinderNozzleBlockEntity;
+import net.ty.createcraftedbeginning.content.cinderincinerationblower.CinderIncinerationBlowerBlockEntity;
 import net.ty.createcraftedbeginning.ponder.CCBPonderPlugin;
 
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID, value = Dist.CLIENT)
@@ -52,8 +52,12 @@ public class CCBClientEvents {
             return;
         }
 
+         if (!AllItems.WRENCH.isIn(event.getEntity().getMainHandItem()) && !AllItems.WRENCH.isIn(event.getEntity().getOffhandItem())) {
+            return;
+        }
+
         BlockPos pos = event.getPos();
-        if (!(event.getLevel().getBlockEntity(pos) instanceof CinderNozzleBlockEntity nozzle)) {
+        if (!(event.getLevel().getBlockEntity(pos) instanceof CinderIncinerationBlowerBlockEntity)) {
             return;
         }
 

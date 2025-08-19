@@ -1,10 +1,7 @@
 package net.ty.createcraftedbeginning.content.brasscrate;
 
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorage;
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorageType;
 import net.minecraft.core.BlockPos;
@@ -12,6 +9,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 
@@ -19,14 +19,7 @@ import static net.ty.createcraftedbeginning.content.brasscrate.BrassCrateBlock.M
 import static net.ty.createcraftedbeginning.content.brasscrate.BrassCrateBlock.SLOT_LIMIT;
 
 public class BrassCrateMountedStorage extends MountedItemStorage {
-    public static final MapCodec<BrassCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(
-        instance -> instance.group(
-            ItemStack.CODEC.listOf().fieldOf("stacks").forGetter(storage -> Arrays.asList(storage.storedStacks)),
-            ItemStack.CODEC.fieldOf("filterItem").forGetter(storage -> storage.filterItem)
-        ).apply(instance, (stacks, filterItem) ->
-            new BrassCrateMountedStorage(stacks.toArray(new ItemStack[0]), filterItem)
-        )
-    );
+    public static final MapCodec<BrassCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(ItemStack.CODEC.listOf().fieldOf("stacks").forGetter(storage -> Arrays.asList(storage.storedStacks)), ItemStack.CODEC.fieldOf("filterItem").forGetter(storage -> storage.filterItem)).apply(instance, (stacks, filterItem) -> new BrassCrateMountedStorage(stacks.toArray(new ItemStack[0]), filterItem)));
 
     private final ItemStack[] storedStacks = new ItemStack[MAX_SLOT];
     private final ItemStack filterItem;

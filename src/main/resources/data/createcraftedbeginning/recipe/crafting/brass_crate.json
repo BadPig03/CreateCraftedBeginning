@@ -3,7 +3,7 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "create:brass_casing"
+      "tag": "c:plates/brass"
     },
     {
       "item": "minecraft:barrel"

@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern":
+  [ " A ",
+    "DBD",
+    " C "],
+  "key":
+  {
+    "A":
+    {
+      "item": "createcraftedbeginning:cinder_casing"
+    },
+    "B":
+    {
+      "item": "minecraft:magma_block"
+    },
+    "C":
+    {
+      "item": "create:shaft"
+    },
+    "D":
+    {
+      "tag": "c:nuggets/iron"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:cinder_incineration_blower"
+  }
+}

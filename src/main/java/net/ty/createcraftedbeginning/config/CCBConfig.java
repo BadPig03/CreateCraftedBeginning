@@ -4,7 +4,6 @@ import com.simibubi.create.api.stress.BlockStressValues;
 import net.createmod.catnip.config.ConfigBase;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.config.ModConfigEvent;
@@ -52,8 +51,9 @@ public class CCBConfig {
         common = register(CCBCommon::new, ModConfig.Type.COMMON);
         server = register(CCBServer::new, ModConfig.Type.SERVER);
 
-        for (Map.Entry<ModConfig.Type, ConfigBase> pair : CONFIGS.entrySet())
+        for (Map.Entry<ModConfig.Type, ConfigBase> pair : CONFIGS.entrySet()) {
             container.registerConfig(pair.getKey(), pair.getValue().specification);
+        }
 
         CCBStress stress = server().stressValues;
         BlockStressValues.IMPACTS.registerProvider(stress::getImpact);

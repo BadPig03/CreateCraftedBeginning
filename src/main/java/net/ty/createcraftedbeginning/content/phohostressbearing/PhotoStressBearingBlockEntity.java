@@ -11,8 +11,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.particles.DustColorTransitionOptions;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -23,8 +21,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class PhotoStressBearingBlockEntity extends GeneratingKineticBlockEntity {
-    protected ScrollOptionBehaviour<RotationDirection> movementDirection;
     private final DustColorTransitionOptions particleColor = new DustColorTransitionOptions(Vec3.fromRGB24(16761855).toVector3f(), Vec3.fromRGB24(10185983).toVector3f(), 1.0F);
+    protected ScrollOptionBehaviour<RotationDirection> movementDirection;
     private int skyLight = 0;
     private int lightTimer;
     private boolean isClockwise = false;

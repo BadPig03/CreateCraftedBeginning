@@ -50,21 +50,13 @@ public class BrassCrateScenes {
         ElementLink<WorldSectionElement> crate = scene.world().showIndependentSection(util.select().fromTo(cratePos, cratePos), Direction.DOWN);
 
         scene.idle(10);
-        scene.overlay().showText(60)
-            .text("Brass Crate has twice the storage capacity of Andesite Crate")
-            .pointAt(Vec3.atCenterOf(cratePos))
-            .placeNearTarget()
-            .attachKeyFrame();
+        scene.overlay().showText(60).text("Brass Crate has twice the storage capacity of Andesite Crate").pointAt(Vec3.atCenterOf(cratePos)).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.overlay().showFilterSlotInput(filter, Direction.UP, 70);
 
         scene.idle(10);
-        scene.overlay().showText(60)
-            .text("Items in the filter slot specify what to store")
-            .pointAt(filter.add(0, 0.125, 0))
-            .placeNearTarget()
-            .attachKeyFrame();
+        scene.overlay().showText(60).text("Items in the filter slot specify what to store").pointAt(filter.add(0, 0.125, 0)).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.overlay().showControls(filter.add(0, 0.125, 0), Pointing.DOWN, 40).rightClick().withItem(enderPearl);
@@ -77,12 +69,8 @@ public class BrassCrateScenes {
         ElementLink<WorldSectionElement> chute = scene.world().showIndependentSection(util.select().fromTo(chutePos, chutePos), Direction.DOWN);
 
         scene.idle(10);
-        scene.overlay().showText(60)
-            .text("Thus preventing unnecessary items from entering")
-            .pointAt(Vec3.atCenterOf(chutePos))
-            .placeNearTarget();
-        for (int i = 0; i < 5; i++)
-        {
+        scene.overlay().showText(60).text("Thus preventing unnecessary items from entering").pointAt(Vec3.atCenterOf(chutePos)).placeNearTarget();
+        for (int i = 0; i < 5; i++) {
             scene.idle(10);
             ElementLink<EntityElement> remove = scene.world().createItemEntity(util.vector().centerOf(itemPos), util.vector().of(0, -0.1, 0), ironIngot);
             scene.idle(2);
@@ -132,16 +120,13 @@ public class BrassCrateScenes {
         scene.world().hideIndependentSection(chute2, Direction.UP);
 
         scene.idle(10);
-        scene.overlay().showText(60)
-            .text("Brass Crate drops itself and contents when broken")
-            .pointAt(util.vector().centerOf(cratePos))
-            .placeNearTarget();
+        scene.overlay().showText(60).text("Brass Crate drops itself and contents when broken").pointAt(util.vector().centerOf(cratePos)).placeNearTarget();
         for (int i = 0; i < 10; i++) {
             scene.idle(2);
             scene.world().incrementBlockBreakingProgress(cratePos);
         }
         scene.world().createItemEntity(util.vector().centerOf(cratePos), generateItemDropVelocity(random), brassCrate);
-            scene.world().createItemEntity(util.vector().centerOf(cratePos), generateItemDropVelocity(random), ironIngot);
+        scene.world().createItemEntity(util.vector().centerOf(cratePos), generateItemDropVelocity(random), ironIngot);
 
         scene.idle(40);
         scene.markAsFinished();

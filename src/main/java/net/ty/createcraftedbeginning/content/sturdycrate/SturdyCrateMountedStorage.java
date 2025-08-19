@@ -19,14 +19,7 @@ import static net.ty.createcraftedbeginning.content.sturdycrate.SturdyCrateBlock
 import static net.ty.createcraftedbeginning.content.sturdycrate.SturdyCrateBlock.SLOT_LIMIT;
 
 public class SturdyCrateMountedStorage extends MountedItemStorage {
-    public static final MapCodec<SturdyCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(
-        instance -> instance.group(
-            ItemStack.CODEC.listOf().fieldOf("stacks").forGetter(storage -> Arrays.asList(storage.storedStacks)),
-            ItemStack.CODEC.fieldOf("filterItem").forGetter(storage -> storage.filterItem)
-        ).apply(instance, (stacks, filterItem) ->
-            new SturdyCrateMountedStorage(stacks.toArray(new ItemStack[0]), filterItem)
-        )
-    );
+    public static final MapCodec<SturdyCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(ItemStack.CODEC.listOf().fieldOf("stacks").forGetter(storage -> Arrays.asList(storage.storedStacks)), ItemStack.CODEC.fieldOf("filterItem").forGetter(storage -> storage.filterItem)).apply(instance, (stacks, filterItem) -> new SturdyCrateMountedStorage(stacks.toArray(new ItemStack[0]), filterItem)));
 
     private final ItemStack[] storedStacks = new ItemStack[MAX_SLOT];
     private final ItemStack filterItem;

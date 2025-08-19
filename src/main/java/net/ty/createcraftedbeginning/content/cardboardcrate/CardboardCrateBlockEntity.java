@@ -18,11 +18,6 @@ import static net.ty.createcraftedbeginning.content.cardboardcrate.CardboardCrat
 
 public class CardboardCrateBlockEntity extends CrateBlockEntity {
     private static final int STORAGE_SLOT = 0;
-
-    public CardboardCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
-        super(type, pos, state);
-    }
-
     private final ItemStackHandler inv = new ItemStackHandler(MAX_SLOT) {
         @Override
         protected void onContentsChanged(int slot) {
@@ -41,13 +36,47 @@ public class CardboardCrateBlockEntity extends CrateBlockEntity {
 
         @Override
         public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
-            int toInsert = Math.min(stack.getCount(), inv.getSlotLimit(STORAGE_SLOT));
-            if (!simulate) {
-                inv.setStackInSlot(STORAGE_SLOT, stack.copyWithCount(toInsert));
+            ItemStack current = getStackInSlot(STORAGE_SLOT);
+
+            if (current.isEmpty()) {
+                int maxInsert = Math.min(stack.getCount(), SLOT_LIMIT);
+                if (!simulate) {
+                    setStackInSlot(STORAGE_SLOT, stack.copyWithCount(maxInsert));
+                }
+                return maxInsert >= stack.getCount() ? ItemStack.EMPTY : stack.copyWithCount(stack.getCount() - maxInsert);
             }
-            return toInsert >= stack.getCount() ? ItemStack.EMPTY : stack.copyWithCount(stack.getCount() - toInsert);
+
+            if (ItemStack.isSameItemSameComponents(current, stack)) {
+                int maxStackSize = Math.min(current.getMaxStackSize(), SLOT_LIMIT);
+                int availableSpace = maxStackSize - current.getCount();
+
+                if (availableSpace <= 0) {
+                    return ItemStack.EMPTY;
+                }
+
+                int toInsert = Math.min(stack.getCount(), availableSpace);
+                if (!simulate) {
+                    current.grow(toInsert);
+                    setStackInSlot(STORAGE_SLOT, current);
+                }
+                return toInsert >= stack.getCount() ? ItemStack.EMPTY : stack.copyWithCount(stack.getCount() - toInsert);
+            }
+
+            if (!simulate) {
+                int maxInsert = Math.min(stack.getCount(), SLOT_LIMIT);
+                setStackInSlot(STORAGE_SLOT, stack.copyWithCount(maxInsert));
+            }
+            return ItemStack.EMPTY;
         }
     };
+
+    public CardboardCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
+    }
+
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CCBBlockEntities.CARDBOARD_CRATE.get(), (be, context) -> be.inv);
+    }
 
     public ItemStack getStoredItem() {
         return inv.getStackInSlot(STORAGE_SLOT).copy();
@@ -72,10 +101,5 @@ public class CardboardCrateBlockEntity extends CrateBlockEntity {
         if (!clientPacket && compound.contains("Inventory")) {
             inv.deserializeNBT(registries, compound.getCompound("Inventory"));
         }
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CCBBlockEntities.CARDBOARD_CRATE.get(),
-            (be, context) -> be.inv);
     }
 }

@@ -1,0 +1,16 @@
+[
+  {
+    "type": "item",
+    "id": "minecraft:powder_snow_bucket",
+    "remaining": "minecraft:bucket",
+    "time": 2400,
+    "coolant": "powerful"
+  },
+  {
+    "type": "fluid",
+    "id": "createcraftedbeginning:slush",
+    "amount": 500,
+    "time": 1200,
+    "coolant": "powerful"
+  }
+]

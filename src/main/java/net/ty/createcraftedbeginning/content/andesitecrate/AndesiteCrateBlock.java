@@ -1,25 +1,35 @@
 package net.ty.createcraftedbeginning.content.andesitecrate;
 
-import com.simibubi.create.content.logistics.crate.CrateBlock;
+import com.mojang.serialization.MapCodec;
+import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
+import net.ty.createcraftedbeginning.registry.CCBShapes;
 import net.ty.createcraftedbeginning.util.Helpers;
 import org.jetbrains.annotations.NotNull;
 
-public class AndesiteCrateBlock extends CrateBlock implements IBE<AndesiteCrateBlockEntity> {
+public class AndesiteCrateBlock extends HorizontalDirectionalBlock implements IBE<AndesiteCrateBlockEntity>, IWrenchable {
     public static final int MAX_SLOT = 32;
     public static final int SLOT_LIMIT = 1;
 
-    public AndesiteCrateBlock(BlockBehaviour.Properties p) {
-        super(p);
+    public static final MapCodec<AndesiteCrateBlock> CODEC = simpleCodec(AndesiteCrateBlock::new);
+
+    public AndesiteCrateBlock(BlockBehaviour.Properties properties) {
+        super(properties);
     }
 
     @Override
@@ -64,4 +74,20 @@ public class AndesiteCrateBlock extends CrateBlock implements IBE<AndesiteCrateB
     public int getAnalogOutputSignal(@NotNull BlockState pState, @NotNull Level pLevel, @NotNull BlockPos pPos) {
         return Helpers.calculateRedstoneSignal(this, pLevel, pPos);
     }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.@NotNull Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder);
+        builder.add(FACING);
+    }
+
+    @Override
+	public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter worldIn, @NotNull BlockPos pos, @NotNull CollisionContext context) {
+		return CCBShapes.CRATE;
+	}
+
+    @Override
+	protected @NotNull MapCodec<? extends HorizontalDirectionalBlock> codec() {
+		return CODEC;
+	}
 }

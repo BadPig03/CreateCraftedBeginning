@@ -9,11 +9,9 @@ import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.LevelAccessor;
@@ -32,43 +30,15 @@ import static net.ty.createcraftedbeginning.content.sturdycrate.SturdyCrateBlock
 import static net.ty.createcraftedbeginning.content.sturdycrate.SturdyCrateBlock.SLOT_LIMIT;
 
 public class SturdyCrateBlockEntity extends CrateBlockEntity {
-    FilteringBehaviour filtering;
-
     final ItemStackHandler inv = new SafeItemStackHandler(this);
+    FilteringBehaviour filtering;
 
     public SturdyCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
 
-    private static class SafeItemStackHandler extends ItemStackHandler {
-        private final SturdyCrateBlockEntity parent;
-
-        SafeItemStackHandler(SturdyCrateBlockEntity parent) {
-            super(MAX_SLOT);
-            this.parent = parent;
-        }
-
-        @Override
-        protected void onContentsChanged(int slot) {
-            parent.setChanged();
-        }
-
-        @Override
-        public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-            if (!stack.getItem().canFitInsideContainerItems()) {
-                return false;
-            }
-
-            if (parent.filtering == null) {
-                return true;
-            }
-            return parent.filtering.test(stack);
-        }
-
-        @Override
-        public int getSlotLimit(int slot) {
-            return SLOT_LIMIT;
-        }
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CCBBlockEntities.STURDY_CRATE.get(), (be, context) -> be.inv);
     }
 
     @Override
@@ -173,9 +143,34 @@ public class SturdyCrateBlockEntity extends CrateBlockEntity {
         }
     }
 
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CCBBlockEntities.STURDY_CRATE.get(),
-            (be, context) -> be.inv
-        );
+    private static class SafeItemStackHandler extends ItemStackHandler {
+        private final SturdyCrateBlockEntity parent;
+
+        SafeItemStackHandler(SturdyCrateBlockEntity parent) {
+            super(MAX_SLOT);
+            this.parent = parent;
+        }
+
+        @Override
+        protected void onContentsChanged(int slot) {
+            parent.setChanged();
+        }
+
+        @Override
+        public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+            if (!stack.getItem().canFitInsideContainerItems()) {
+                return false;
+            }
+
+            if (parent.filtering == null) {
+                return true;
+            }
+            return parent.filtering.test(stack);
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            return SLOT_LIMIT;
+        }
     }
 }

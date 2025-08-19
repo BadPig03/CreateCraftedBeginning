@@ -19,9 +19,7 @@ import static net.ty.createcraftedbeginning.content.andesitecrate.AndesiteCrateB
 import static net.ty.createcraftedbeginning.content.andesitecrate.AndesiteCrateBlock.SLOT_LIMIT;
 
 public class AndesiteCrateMountedStorage extends MountedItemStorage {
-    public static final MapCodec<AndesiteCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(ItemStack.CODEC.listOf().fieldOf("stacks").forGetter(
-            storage -> Arrays.asList(storage.storedStacks))).apply(instance,
-            stacks -> new AndesiteCrateMountedStorage(stacks.toArray(new ItemStack[0]))));
+    public static final MapCodec<AndesiteCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(ItemStack.CODEC.listOf().fieldOf("stacks").forGetter(storage -> Arrays.asList(storage.storedStacks))).apply(instance, stacks -> new AndesiteCrateMountedStorage(stacks.toArray(new ItemStack[0]))));
 
     private final ItemStack[] storedStacks = new ItemStack[MAX_SLOT];
 

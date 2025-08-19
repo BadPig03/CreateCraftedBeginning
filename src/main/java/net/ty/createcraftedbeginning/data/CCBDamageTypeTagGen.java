@@ -8,7 +8,6 @@ import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageType;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.registry.CCBDamageTypes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,7 +20,7 @@ public class CCBDamageTypeTagGen extends TagsProvider<DamageType> {
 
     @Override
     protected void addTags(HolderLookup.@NotNull Provider provider) {
-        tag(DamageTypeTags.IS_FIRE).add(CCBDamageTypes.CINDER_NOZZLE_FIRE);
+        tag(DamageTypeTags.IS_FIRE).add(CCBDamageTypes.CINDER_INCINERATION_BLOWER_FIRE_FIRE);
     }
 
     @Override

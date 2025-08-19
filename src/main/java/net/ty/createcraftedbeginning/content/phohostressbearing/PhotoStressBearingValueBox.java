@@ -11,7 +11,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 public class PhotoStressBearingValueBox extends ValueBoxTransform.Sided {
-
     @Override
     protected Vec3 getSouthLocation() {
         return Vec3.ZERO;
@@ -29,8 +28,9 @@ public class PhotoStressBearingValueBox extends ValueBoxTransform.Sided {
 
         float roll = 0;
         for (Pointing p : Pointing.values()) {
-            if (p.getCombinedDirection(facing) == side)
+            if (p.getCombinedDirection(facing) == side) {
                 roll = p.getXRotation();
+            }
         }
         roll += 180;
 

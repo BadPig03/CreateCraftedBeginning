@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " C ",
+    "ADA",
+    " B "
+  ],
+  "key": {
+    "A":
+    {
+      "item": "createcraftedbeginning:airtight_pump"
+    },
+    "B": {
+      "item": "createcraftedbeginning:airtight_tank"
+    },
+    "C": {
+      "item": "create:shaft"
+    },
+    "D": {
+      "item": "createcraftedbeginning:airtight_pipe"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:air_compressor"
+  }
+}

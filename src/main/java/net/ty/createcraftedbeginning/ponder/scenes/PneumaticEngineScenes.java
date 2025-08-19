@@ -2,7 +2,6 @@ package net.ty.createcraftedbeginning.ponder.scenes;
 
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
-import com.simibubi.create.foundation.gui.AllIcons;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.api.PonderPalette;
@@ -42,27 +41,14 @@ public class PneumaticEngineScenes {
         scene.effects().rotationSpeedIndicator(enginePos);
 
         scene.idle(5);
-        scene.overlay().showText(60)
-            .text("Pneumatic Engine can absorb compressed air from Backtanks to generate kinetic stress")
-            .pointAt(Vec3.atCenterOf(enginePos))
-            .placeNearTarget()
-            .attachKeyFrame();
+        scene.overlay().showText(60).text("Pneumatic Engine can absorb compressed air from Backtanks to generate kinetic stress").pointAt(Vec3.atCenterOf(enginePos)).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.overlay().showOutline(PonderPalette.BLUE, new Object(), util.select().fromTo(tankPos, tankPos), 60);
-        scene.overlay().showText(60)
-            .text("Backtanks must be placed directly below the pneumatic engine")
-            .colored(PonderPalette.BLUE)
-            .pointAt(Vec3.atCenterOf(tankPos))
-            .placeNearTarget();
+        scene.overlay().showText(60).text("Backtanks must be placed directly below the Pneumatic Engine").colored(PonderPalette.BLUE).pointAt(Vec3.atCenterOf(tankPos)).placeNearTarget();
 
         scene.idle(80);
-        scene.overlay().showText(60)
-            .text("Using a Wrench, the rotation direction can be toggled")
-            .colored(PonderPalette.BLUE)
-            .pointAt(Vec3.atCenterOf(tankPos))
-            .placeNearTarget()
-            .attachKeyFrame();
+        scene.overlay().showText(60).text("Using a Wrench, the rotation direction can be toggled").colored(PonderPalette.BLUE).pointAt(Vec3.atCenterOf(tankPos)).placeNearTarget().attachKeyFrame();
         scene.overlay().showControls(util.vector().blockSurface(enginePos, Direction.NORTH), Pointing.RIGHT, 40).rightClick().withItem(wrench);
 
         scene.idle(7);
@@ -99,31 +85,17 @@ public class PneumaticEngineScenes {
 
         scene.idle(15);
         scene.overlay().showOutline(PonderPalette.BLUE, new Object(), tankSelection, 60);
-        scene.overlay().showText(60)
-            .colored(PonderPalette.BLUE)
-            .text("Pneumatic Engine consumes 2 seconds worth of compressed air supply per second from the backtank")
-            .pointAt(Vec3.atCenterOf(tankPos))
-            .placeNearTarget()
-            .attachKeyFrame();
+        scene.overlay().showText(60).colored(PonderPalette.BLUE).text("Pneumatic Engine consumes 2 seconds worth of compressed air supply per second from the backtank").pointAt(Vec3.atCenterOf(tankPos)).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.overlay().showOutline(PonderPalette.OUTPUT, new Object(), tankSelection, 60);
-        scene.overlay().showText(60)
-            .text("Pneumatic Engine stops working when compressed air is depleted")
-            .colored(PonderPalette.OUTPUT)
-            .pointAt(Vec3.atCenterOf(tankPos))
-            .placeNearTarget()
-            .attachKeyFrame();
+        scene.overlay().showText(60).text("Pneumatic Engine stops working when compressed air is depleted").colored(PonderPalette.OUTPUT).pointAt(Vec3.atCenterOf(tankPos)).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().setKineticSpeed(engineSelection, 0);
         scene.effects().rotationSpeedIndicator(enginePos);
         scene.overlay().showOutline(PonderPalette.RED, new Object(), tankSelection, 60);
-        scene.overlay().showText(60)
-            .colored(PonderPalette.RED)
-            .text("Copper Backtank with depleted air")
-            .pointAt(Vec3.atCenterOf(tankPos))
-            .placeNearTarget();
+        scene.overlay().showText(60).colored(PonderPalette.RED).text("Copper Backtank with depleted air").pointAt(Vec3.atCenterOf(tankPos)).placeNearTarget();
 
         scene.idle(80);
         scene.world().hideIndependentSection(tank, Direction.NORTH);
@@ -149,11 +121,7 @@ public class PneumaticEngineScenes {
         scene.world().setKineticSpeed(engineSelection, 0);
         scene.effects().rotationSpeedIndicator(enginePos);
         scene.overlay().showOutline(PonderPalette.RED, new Object(), tankSelection, 60);
-        scene.overlay().showText(60)
-            .colored(PonderPalette.RED)
-            .text("Pneumatic Engine stops working when the backtank is waterlogged")
-            .pointAt(Vec3.atCenterOf(tankPos))
-            .placeNearTarget();
+        scene.overlay().showText(60).colored(PonderPalette.RED).text("Pneumatic Engine stops working when the backtank is waterlogged").pointAt(Vec3.atCenterOf(tankPos)).placeNearTarget();
 
         scene.idle(60);
         scene.markAsFinished();

@@ -1,22 +1,19 @@
 {
   "variants": {
-    "facing=down": {
-      "model": "createcraftedbeginning:block/crate/andesite/single"
-    },
     "facing=east": {
-      "model": "createcraftedbeginning:block/crate/andesite/single"
+      "model": "createcraftedbeginning:block/andesite_crate/block",
+      "y": 90
     },
     "facing=north": {
-      "model": "createcraftedbeginning:block/crate/andesite/single"
+      "model": "createcraftedbeginning:block/andesite_crate/block"
     },
     "facing=south": {
-      "model": "createcraftedbeginning:block/crate/andesite/single"
-    },
-    "facing=up": {
-      "model": "createcraftedbeginning:block/crate/andesite/single"
+      "model": "createcraftedbeginning:block/andesite_crate/block",
+      "y": 180
     },
     "facing=west": {
-      "model": "createcraftedbeginning:block/crate/andesite/single"
+      "model": "createcraftedbeginning:block/andesite_crate/block",
+      "y": 270
     }
   }
 }

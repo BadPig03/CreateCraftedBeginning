@@ -12,7 +12,6 @@ import net.minecraft.tags.TagBuilder;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.block.Block;
-import net.ty.createcraftedbeginning.registry.CCBTags;
 
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -78,7 +77,7 @@ public class CCBTagGen {
 
         @SafeVarargs
         public final CCBTagAppender<T> add(T... entries) {
-            Stream.<T>of(entries).map(this.keyExtractor).forEach(this::add);
+            Stream.of(entries).map(this.keyExtractor).forEach(this::add);
             return this;
         }
     }

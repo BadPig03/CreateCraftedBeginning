@@ -11,10 +11,10 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.items.ItemStackHandler;
@@ -27,51 +27,15 @@ import static net.ty.createcraftedbeginning.content.brasscrate.BrassCrateBlock.M
 import static net.ty.createcraftedbeginning.content.brasscrate.BrassCrateBlock.SLOT_LIMIT;
 
 public class BrassCrateBlockEntity extends CrateBlockEntity {
-    FilteringBehaviour filtering;
-
     final ItemStackHandler inv = new SafeItemStackHandler(this);
+    FilteringBehaviour filtering;
 
     public BrassCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
 
-    private static class SafeItemStackHandler extends ItemStackHandler {
-        private final BrassCrateBlockEntity parent;
-
-        SafeItemStackHandler(BrassCrateBlockEntity parent) {
-            super(MAX_SLOT);
-            this.parent = parent;
-        }
-
-        @Override
-        protected void onContentsChanged(int slot) {
-            parent.setChanged();
-        }
-
-        @Override
-        public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-            if (parent.filtering != null && !parent.filtering.test(stack)) {
-                return false;
-            }
-            if (!stack.isEmpty()) {
-                ItemStack reference = null;
-                for (int i = 0; i < getSlots(); i++) {
-                    ItemStack inSlot = getStackInSlot(i);
-                    if (!inSlot.isEmpty()) {
-                        reference = inSlot;
-                        break;
-                    }
-                }
-
-                return reference == null || ItemStack.isSameItemSameComponents(reference, stack);
-            }
-            return true;
-        }
-
-        @Override
-        public int getSlotLimit(int slot) {
-            return SLOT_LIMIT;
-        }
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CCBBlockEntities.BRASS_CRATE.get(), (be, context) -> be.inv);
     }
 
     @Override
@@ -132,9 +96,42 @@ public class BrassCrateBlockEntity extends CrateBlockEntity {
         }
     }
 
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CCBBlockEntities.BRASS_CRATE.get(),
-            (be, context) -> be.inv
-        );
+    private static class SafeItemStackHandler extends ItemStackHandler {
+        private final BrassCrateBlockEntity parent;
+
+        SafeItemStackHandler(BrassCrateBlockEntity parent) {
+            super(MAX_SLOT);
+            this.parent = parent;
+        }
+
+        @Override
+        protected void onContentsChanged(int slot) {
+            parent.setChanged();
+        }
+
+        @Override
+        public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+            if (parent.filtering != null && !parent.filtering.test(stack)) {
+                return false;
+            }
+            if (!stack.isEmpty()) {
+                ItemStack reference = null;
+                for (int i = 0; i < getSlots(); i++) {
+                    ItemStack inSlot = getStackInSlot(i);
+                    if (!inSlot.isEmpty()) {
+                        reference = inSlot;
+                        break;
+                    }
+                }
+
+                return reference == null || ItemStack.isSameItemSameComponents(reference, stack);
+            }
+            return true;
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            return SLOT_LIMIT;
+        }
     }
 }

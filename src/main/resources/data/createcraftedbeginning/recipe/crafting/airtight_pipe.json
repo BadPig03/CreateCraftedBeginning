@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern":
+  [ " A ",
+    "ABA",
+    " A "],
+  "key":
+  {
+    "A":
+    {
+      "item": "create:fluid_pipe"
+    },
+    "B":
+    {
+      "item": "createcraftedbeginning:airtight_sheet"
+    }
+  },
+  "result": {
+    "count": 4,
+    "id": "createcraftedbeginning:airtight_pipe"
+  }
+}

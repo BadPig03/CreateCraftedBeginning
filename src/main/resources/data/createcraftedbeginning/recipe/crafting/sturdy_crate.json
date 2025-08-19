@@ -3,7 +3,7 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "create:railway_casing"
+      "tag": "c:plates/obsidian"
     },
     {
       "item": "minecraft:barrel"

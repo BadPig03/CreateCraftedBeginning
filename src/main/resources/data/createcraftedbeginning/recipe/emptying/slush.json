@@ -1,0 +1,17 @@
+{
+  "type": "create:emptying",
+  "ingredients": [
+    {
+      "tag": "c:buckets/powder_snow"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:bucket"
+    },
+    {
+      "amount": 1000,
+      "id": "createcraftedbeginning:slush"
+    }
+  ]
+}

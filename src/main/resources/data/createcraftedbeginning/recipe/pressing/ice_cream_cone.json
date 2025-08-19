@@ -1,0 +1,13 @@
+{
+  "type": "create:pressing",
+  "ingredients": [
+    {
+      "tag": "c:foods/bread"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:ice_cream_cone"
+    }
+  ]
+}

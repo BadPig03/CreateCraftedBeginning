@@ -18,17 +18,11 @@ public class Helpers {
     private static final double DISTRIBUTION_DEVIATION = 0.11485000171139836;
 
     public static Vec3 generateItemDropVelocity(RandomSource random) {
-        return new Vec3(
-            random.triangle(0.0, DISTRIBUTION_DEVIATION),
-            random.triangle(0.2, DISTRIBUTION_DEVIATION),
-            random.triangle(0.0, DISTRIBUTION_DEVIATION));
+        return new Vec3(random.triangle(0.0, DISTRIBUTION_DEVIATION), random.triangle(0.2, DISTRIBUTION_DEVIATION), random.triangle(0.0, DISTRIBUTION_DEVIATION));
     }
 
     public static <T extends IBE<? extends BlockEntity>> int calculateRedstoneSignal(T ibe, Level level, BlockPos pos) {
-        return ibe.getBlockEntityOptional(level, pos)
-            .map(be -> level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null))
-            .map(Helpers::calculateRedstoneFromInventory)
-            .orElse(0);
+        return ibe.getBlockEntityOptional(level, pos).map(be -> level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null)).map(Helpers::calculateRedstoneFromInventory).orElse(0);
     }
 
     public static int calculateRedstoneFromInventory(@Nullable IItemHandler inv) {
@@ -59,5 +53,9 @@ public class Helpers {
 
         f /= totalSlots;
         return Mth.floor(f * 14.0F) + (i > 0 ? 1 : 0);
+    }
+
+    public static boolean isBlockPosEqual(BlockPos pos1, BlockPos pos2) {
+        return pos1.getX() == pos2.getX() && pos1.getY() == pos2.getY() && pos1.getZ() == pos2.getZ();
     }
 }

@@ -1,22 +1,19 @@
 {
   "variants": {
-    "facing=down": {
-      "model": "createcraftedbeginning:block/crate/sturdy/single"
-    },
     "facing=east": {
-      "model": "createcraftedbeginning:block/crate/sturdy/single"
+      "model": "createcraftedbeginning:block/sturdy_crate/block",
+      "y": 90
     },
     "facing=north": {
-      "model": "createcraftedbeginning:block/crate/sturdy/single"
+      "model": "createcraftedbeginning:block/sturdy_crate/block"
     },
     "facing=south": {
-      "model": "createcraftedbeginning:block/crate/sturdy/single"
-    },
-    "facing=up": {
-      "model": "createcraftedbeginning:block/crate/sturdy/single"
+      "model": "createcraftedbeginning:block/sturdy_crate/block",
+      "y": 180
     },
     "facing=west": {
-      "model": "createcraftedbeginning:block/crate/sturdy/single"
+      "model": "createcraftedbeginning:block/sturdy_crate/block",
+      "y": 270
     }
   }
 }

@@ -1,13 +1,17 @@
 package net.ty.createcraftedbeginning.data;
 
+import com.tterrag.registrate.providers.ProviderType;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancements;
+import net.ty.createcraftedbeginning.registry.CCBRegistrateTags;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 
 public class CCBDataGen {
     public static void gatherDataHighPriority(GatherDataEvent event) {
@@ -30,9 +34,20 @@ public class CCBDataGen {
         generator.addProvider(event.includeServer(), generatedEntriesProvider);
 
         generator.addProvider(event.includeServer(), new CCBDamageTypeTagGen(output, lookupProvider, existingFileHelper));
+        generator.addProvider(event.includeServer(), new CCBAdvancements(output, lookupProvider));
+
+        if (event.includeServer()) {
+			CCBRecipeProvider.registerAllProcessing(generator, output, lookupProvider);
+		}
     }
 
     private static void addExtraRegistrateData() {
         CCBRegistrateTags.addGenerators();
+
+        CreateCraftedBeginning.registrate().addDataGenerator(ProviderType.LANG, provider -> {
+            BiConsumer<String, String> langConsumer = provider::add;
+
+            CCBAdvancements.provideLang(langConsumer);
+        });
     }
 }

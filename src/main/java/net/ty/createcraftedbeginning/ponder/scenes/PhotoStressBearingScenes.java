@@ -12,7 +12,6 @@ import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
@@ -57,12 +56,7 @@ public class PhotoStressBearingScenes {
 
         scene.idle(20);
         scene.overlay().showOutline(PonderPalette.BLUE, new Object(), util.select().fromTo(3, 3, 2, 3, 10, 2), 60);
-        scene.overlay().showText(60)
-            .colored(PonderPalette.BLUE)
-            .text("Photo-Stress Bearing can absorb direct sunlight to generate kinetic stress")
-            .pointAt(Vec3.atCenterOf(bearingPos))
-            .placeNearTarget()
-            .attachKeyFrame();
+        scene.overlay().showText(60).colored(PonderPalette.BLUE).text("Photo-Stress Bearing can absorb direct sunlight to generate kinetic stress").pointAt(Vec3.atCenterOf(bearingPos)).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().setBlocks(ironBlocksSelection, AllBlocks.INDUSTRIAL_IRON_BLOCK.getDefaultState(), false);
@@ -73,11 +67,7 @@ public class PhotoStressBearingScenes {
         scene.world().setKineticSpeed(allSelection, -28);
         scene.effects().rotationSpeedIndicator(bearingPos);
         scene.overlay().showOutline(PonderPalette.OUTPUT, new Object(), util.select().fromTo(3, 5, 2, 3, 10, 2), 60);
-        scene.overlay().showText(60)
-            .colored(PonderPalette.OUTPUT)
-            .text("Rotation speed is proportional to sky light level")
-            .pointAt(Vec3.atCenterOf(bearingPos))
-            .placeNearTarget();
+        scene.overlay().showText(60).colored(PonderPalette.OUTPUT).text("Rotation speed is proportional to sky light level").pointAt(Vec3.atCenterOf(bearingPos)).placeNearTarget();
 
         scene.idle(80);
         scene.world().hideIndependentSection(ironBlocks, Direction.UP);
@@ -91,12 +81,7 @@ public class PhotoStressBearingScenes {
         scene.world().setKineticSpeed(allSelection, -2);
         scene.effects().rotationSpeedIndicator(bearingPos);
         scene.overlay().showOutline(PonderPalette.RED, new Object(), util.select().fromTo(3, 4, 2, 3, 10, 2), 60);
-        scene.overlay().showText(60)
-            .colored(PonderPalette.RED)
-            .text("Rotation speed maintains a minimum of 2 RPM even at sky light level 0")
-            .pointAt(Vec3.atCenterOf(bearingPos))
-            .placeNearTarget()
-            .attachKeyFrame();
+        scene.overlay().showText(60).colored(PonderPalette.RED).text("Rotation speed maintains a minimum of 2 RPM even at sky light level 0").pointAt(Vec3.atCenterOf(bearingPos)).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().hideIndependentSection(ironBlock, Direction.UP);
@@ -117,12 +102,7 @@ public class PhotoStressBearingScenes {
         });
 
         scene.idle(20);
-        scene.overlay().showText(60)
-            .colored(PonderPalette.OUTPUT)
-            .text("During rain or thunderstorms, the rotation speed is halved")
-            .pointAt(Vec3.atCenterOf(bearingPos))
-            .placeNearTarget()
-            .attachKeyFrame();
+        scene.overlay().showText(60).colored(PonderPalette.OUTPUT).text("During rain or thunderstorms, the rotation speed is halved").pointAt(Vec3.atCenterOf(bearingPos)).placeNearTarget().attachKeyFrame();
 
         scene.idle(20);
         scene.world().modifyEntity(lightningBolt, Entity::discard);
@@ -133,11 +113,7 @@ public class PhotoStressBearingScenes {
         scene.overlay().showFilterSlotInput(surface, Direction.WEST, 50);
         scene.world().setKineticSpeed(allSelection, 16);
         scene.effects().rotationSpeedIndicator(bearingPos);
-        scene.overlay().showText(60)
-            .text("Use the value panel to configure its rotation direction")
-            .pointAt(surface)
-            .placeNearTarget()
-            .attachKeyFrame();
+        scene.overlay().showText(60).text("Use the value panel to configure its rotation direction").pointAt(surface).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();
@@ -163,12 +139,7 @@ public class PhotoStressBearingScenes {
 
         scene.idle(20);
         scene.overlay().showOutline(PonderPalette.RED, new Object(), util.select().fromTo(2, 2, 2, 2, 10, 2), 60);
-        scene.overlay().showText(60)
-            .colored(PonderPalette.RED)
-            .text("In other dimensions, Photo-Stress Bearings will stop working")
-            .pointAt(Vec3.atCenterOf(bearingPos))
-            .placeNearTarget()
-            .attachKeyFrame();
+        scene.overlay().showText(60).colored(PonderPalette.RED).text("In other dimensions, Photo-Stress Bearings will stop working").pointAt(Vec3.atCenterOf(bearingPos)).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();

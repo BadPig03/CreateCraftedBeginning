@@ -1,9 +1,9 @@
 package net.ty.createcraftedbeginning.ponder.scenes;
 
 import com.simibubi.create.AllBlocks;
-import com.simibubi.create.foundation.gui.AllIcons;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 import net.createmod.catnip.math.Pointing;
+import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.element.ElementLink;
 import net.createmod.ponder.api.element.EntityElement;
 import net.createmod.ponder.api.element.WorldSectionElement;
@@ -33,6 +33,7 @@ public class CardboardCrateScenes {
         BlockPos chutePos = util.grid().at(2, 2, 2);
         BlockPos itemPos = util.grid().at(2, 3, 2);
 
+        ItemStack coal = new ItemStack(Items.COAL);
         ItemStack copperIngot = new ItemStack(Items.COPPER_INGOT);
         ItemStack ironIngot = new ItemStack(Items.IRON_INGOT);
         ItemStack goldIngot = new ItemStack(Items.GOLD_INGOT);
@@ -44,27 +45,26 @@ public class CardboardCrateScenes {
         scene.world().showSection(util.select().fromTo(cratePos, cratePos), Direction.DOWN);
 
         scene.idle(10);
-        scene.overlay().showText(60)
-            .text("Cardboard Crate temporarily stores only one stack of items")
-            .pointAt(Vec3.atCenterOf(cratePos))
-            .placeNearTarget()
-            .attachKeyFrame();
+        scene.overlay().showText(60).text("Cardboard Crate temporarily stores only one stack of items").pointAt(Vec3.atCenterOf(cratePos)).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().setBlock(chutePos, AllBlocks.CHUTE.getDefaultState(), false);
         ElementLink<WorldSectionElement> chute = scene.world().showIndependentSection(util.select().fromTo(chutePos, chutePos), Direction.DOWN);
 
         scene.idle(10);
-        scene.overlay().showText(60)
-            .text("Destroys existing items when new items are stored")
-            .pointAt(Vec3.atCenterOf(cratePos))
-            .placeNearTarget();
+        scene.overlay().showText(60).colored(PonderPalette.RED).text("When storing different items, items within the crate will be destroyed").pointAt(Vec3.atCenterOf(cratePos)).placeNearTarget().attachKeyFrame();
 
         scene.idle(10);
-        ElementLink<EntityElement> remove = scene.world().createItemEntity(util.vector().centerOf(itemPos), util.vector().of(0, -0.1, 0), ironIngot);
+        ElementLink<EntityElement> remove = scene.world().createItemEntity(util.vector().centerOf(itemPos), util.vector().of(0, -0.1, 0), coal);
+        scene.idle(2);
+        scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, coal);
+        scene.world().modifyEntity(remove, Entity::discard);
+
+        scene.idle(10);
+        ElementLink<EntityElement> remove1 = scene.world().createItemEntity(util.vector().centerOf(itemPos), util.vector().of(0, -0.1, 0), ironIngot);
         scene.idle(2);
         scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, ironIngot);
-        scene.world().modifyEntity(remove, Entity::discard);
+        scene.world().modifyEntity(remove1, Entity::discard);
 
         scene.idle(10);
         ElementLink<EntityElement> remove2 = scene.world().createItemEntity(util.vector().centerOf(itemPos), util.vector().of(0, -0.1, 0), copperIngot.copyWithCount(16));
@@ -84,6 +84,9 @@ public class CardboardCrateScenes {
         scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, goldIngot);
         scene.world().modifyEntity(remove4, Entity::discard);
 
+        scene.idle(20);
+        scene.overlay().showText(74).colored(PonderPalette.RED).text("When storing identical items, any excess beyond the stack limit will be destroyed").pointAt(Vec3.atCenterOf(cratePos)).placeNearTarget().attachKeyFrame();
+
         scene.idle(10);
         ElementLink<EntityElement> remove5 = scene.world().createItemEntity(util.vector().centerOf(itemPos), util.vector().of(0, -0.1, 0), minecart);
         scene.idle(2);
@@ -91,17 +94,19 @@ public class CardboardCrateScenes {
         scene.world().modifyEntity(remove5, Entity::discard);
 
         scene.idle(10);
+        ElementLink<EntityElement> remove6 = scene.world().createItemEntity(util.vector().centerOf(itemPos), util.vector().of(0, -0.1, 0), minecart);
+        scene.idle(2);
+        scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, minecart);
+        scene.world().modifyEntity(remove6, Entity::discard);
+
+        scene.idle(10);
         scene.overlay().showControls(util.vector().blockSurface(cratePos, Direction.NORTH), Pointing.RIGHT, 40).withItem(minecart);
 
-        scene.idle(60);
+        scene.idle(50);
         scene.world().hideIndependentSection(chute, Direction.UP);
 
         scene.idle(10);
-        scene.overlay().showText(60)
-            .text("Cardboard Crate drops only itself when broken")
-            .pointAt(Vec3.atCenterOf(cratePos))
-            .placeNearTarget()
-            .attachKeyFrame();
+        scene.overlay().showText(60).text("Cardboard Crate drops only itself when broken").pointAt(Vec3.atCenterOf(cratePos)).placeNearTarget().attachKeyFrame();
         for (int i = 0; i < 10; i++) {
             scene.idle(2);
             scene.world().incrementBlockBreakingProgress(cratePos);

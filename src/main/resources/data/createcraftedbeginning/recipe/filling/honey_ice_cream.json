@@ -1,0 +1,18 @@
+{
+  "type": "create:filling",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:ice_cream"
+    },
+    {
+      "type": "fluid_stack",
+      "amount": 250,
+      "fluid": "create:honey"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:honey_ice_cream"
+    }
+  ]
+}

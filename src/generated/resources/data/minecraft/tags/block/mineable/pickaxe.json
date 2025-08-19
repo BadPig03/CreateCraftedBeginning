@@ -5,7 +5,16 @@
     "createcraftedbeginning:sturdy_crate",
     "createcraftedbeginning:pneumatic_engine",
     "createcraftedbeginning:photo-stress_bearing",
+    "createcraftedbeginning:cinder_alloy_block",
     "createcraftedbeginning:cinder_casing",
-    "createcraftedbeginning:cinder_nozzle"
+    "createcraftedbeginning:cinder_incineration_blower",
+    "createcraftedbeginning:airtight_tank",
+    "createcraftedbeginning:airtight_pipe",
+    "createcraftedbeginning:airtight_pump",
+    "createcraftedbeginning:airtight_intake_port",
+    "createcraftedbeginning:air_compressor",
+    "createcraftedbeginning:empty_breeze_chamber",
+    "createcraftedbeginning:breeze_chamber",
+    "createcraftedbeginning:gas_injection_chamber"
   ]
 }

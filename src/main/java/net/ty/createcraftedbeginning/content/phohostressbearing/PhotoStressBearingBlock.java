@@ -1,6 +1,6 @@
 package net.ty.createcraftedbeginning.content.phohostressbearing;
 
-import com.simibubi.create.content.kinetics.base.HorizontalKineticBlock;
+import com.simibubi.create.content.kinetics.base.KineticBlock;
 import com.simibubi.create.foundation.block.IBE;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -15,7 +15,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.NotNull;
 
-public class PhotoStressBearingBlock extends HorizontalKineticBlock implements IBE<PhotoStressBearingBlockEntity> {
+public class PhotoStressBearingBlock extends KineticBlock implements IBE<PhotoStressBearingBlockEntity> {
     public PhotoStressBearingBlock(Properties properties) {
         super(properties);
     }

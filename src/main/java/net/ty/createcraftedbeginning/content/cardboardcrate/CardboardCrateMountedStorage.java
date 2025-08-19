@@ -16,8 +16,7 @@ import static net.ty.createcraftedbeginning.content.cardboardcrate.CardboardCrat
 import static net.ty.createcraftedbeginning.content.cardboardcrate.CardboardCrateBlock.SLOT_LIMIT;
 
 public class CardboardCrateMountedStorage extends MountedItemStorage {
-    public static final MapCodec<CardboardCrateMountedStorage> CODEC = ItemStack.OPTIONAL_CODEC.xmap(CardboardCrateMountedStorage::new,
-            storage -> storage.storedStack.copy()).fieldOf("value");
+    public static final MapCodec<CardboardCrateMountedStorage> CODEC = ItemStack.OPTIONAL_CODEC.xmap(CardboardCrateMountedStorage::new, storage -> storage.storedStack.copy()).fieldOf("value");
 
     private static final int STORAGE_SLOT = 0;
     private ItemStack storedStack;
@@ -64,16 +63,34 @@ public class CardboardCrateMountedStorage extends MountedItemStorage {
     @Override
     @NotNull
     public ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
-        if (stack.isEmpty()) {
-            return stack;
+        if (storedStack.isEmpty()) {
+            int maxInsert = Math.min(stack.getCount(), SLOT_LIMIT);
+            if (!simulate) {
+                storedStack = stack.copyWithCount(maxInsert);
+            }
+            return maxInsert >= stack.getCount() ? ItemStack.EMPTY : stack.copyWithCount(stack.getCount() - maxInsert);
         }
 
-        int toInsert = Math.min(stack.getCount(), stack.getMaxStackSize());
+        if (ItemStack.isSameItemSameComponents(storedStack, stack)) {
+            int maxStackSize = Math.min(storedStack.getMaxStackSize(), SLOT_LIMIT);
+            int availableSpace = maxStackSize - storedStack.getCount();
+
+            if (availableSpace <= 0) {
+                return ItemStack.EMPTY;
+            }
+
+            int toInsert = Math.min(stack.getCount(), availableSpace);
+            if (!simulate) {
+                storedStack.grow(toInsert);
+            }
+            return toInsert >= stack.getCount() ? ItemStack.EMPTY : stack.copyWithCount(stack.getCount() - toInsert);
+        }
+
         if (!simulate) {
-            storedStack = stack.copyWithCount(toInsert);
+            int maxInsert = Math.min(stack.getCount(), SLOT_LIMIT);
+            storedStack = stack.copyWithCount(maxInsert);
         }
-
-        return toInsert >= stack.getCount() ? ItemStack.EMPTY : stack.copyWithCount(stack.getCount() - toInsert);
+        return ItemStack.EMPTY;
     }
 
     @Override

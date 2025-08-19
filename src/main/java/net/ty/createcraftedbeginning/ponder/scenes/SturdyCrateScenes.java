@@ -45,28 +45,16 @@ public class SturdyCrateScenes {
         scene.world().showIndependentSection(util.select().fromTo(cratePos, cratePos), Direction.DOWN);
 
         scene.idle(10);
-        scene.overlay().showText(60)
-            .text("Sturdy Crate has four times the storage capacity of Andesite Crate")
-            .pointAt(Vec3.atCenterOf(cratePos))
-            .placeNearTarget()
-            .attachKeyFrame();
+        scene.overlay().showText(60).text("Sturdy Crate has four times the storage capacity of Andesite Crate").pointAt(Vec3.atCenterOf(cratePos)).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.overlay().showFilterSlotInput(filter, Direction.UP, 70);
 
         scene.idle(10);
-        scene.overlay().showText(60)
-            .text("Items in the filter slot specify what to store")
-            .pointAt(filter.add(0, 0.125, 0))
-            .placeNearTarget()
-            .attachKeyFrame();
+        scene.overlay().showText(60).text("Items in the filter slot specify what to store").pointAt(filter.add(0, 0.125, 0)).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().showText(60)
-            .text("Sturdy Crate can't store Shulker Boxes, Toolboxes, or other Sturdy Crates")
-            .pointAt(filter.add(0, 0.125, 0))
-            .placeNearTarget()
-            .attachKeyFrame();
+        scene.overlay().showText(60).text("Sturdy Crate can't store Shulker Boxes, Toolboxes, or other Sturdy Crates").pointAt(filter.add(0, 0.125, 0)).placeNearTarget().attachKeyFrame();
 
         scene.idle(10);
         scene.overlay().showControls(util.vector().blockSurface(cratePos, Direction.UP), Pointing.DOWN, 40).showing(AllIcons.I_MTD_CLOSE).withItem(shulkerBox);
@@ -91,10 +79,7 @@ public class SturdyCrateScenes {
         scene.world().hideIndependentSection(chute, Direction.UP);
 
         scene.idle(10);
-        scene.overlay().showText(60)
-                .text("Sturdy Crate drops itself with contents stored when broken")
-                .pointAt(util.vector().centerOf(cratePos))
-                .placeNearTarget();
+        scene.overlay().showText(60).text("Sturdy Crate drops itself with contents stored when broken").pointAt(util.vector().centerOf(cratePos)).placeNearTarget();
         for (int i = 0; i < 10; i++) {
             scene.idle(2);
             scene.world().incrementBlockBreakingProgress(cratePos);

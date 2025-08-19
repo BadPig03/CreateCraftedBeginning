@@ -1,18 +1,20 @@
 package net.ty.createcraftedbeginning.registry;
 
-import java.util.function.Supplier;
-
+import com.simibubi.create.api.contraption.storage.fluid.MountedFluidStorageType;
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorageType;
-import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.tterrag.registrate.util.entry.RegistryEntry;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.content.andesitecrate.AndesiteCrateMountedStorageType;
 import net.ty.createcraftedbeginning.content.brasscrate.BrassCrateMountedStorageType;
 import net.ty.createcraftedbeginning.content.cardboardcrate.CardboardCrateMountedStorageType;
+import net.ty.createcraftedbeginning.content.airtighttank.AirtightTankMountedStorageType;
 import net.ty.createcraftedbeginning.content.sturdycrate.SturdyCrateMountedStorageType;
+import net.ty.createcraftedbeginning.data.CCBRegistrate;
+
+import java.util.function.Supplier;
 
 public class CCBMountedStorage {
-    private static final CreateRegistrate CREATE_REGISTRATE = CreateCraftedBeginning.registrate();
+    private static final CCBRegistrate CCB_REGISTRATE = CreateCraftedBeginning.registrate();
 
     public static final RegistryEntry<MountedItemStorageType<?>, AndesiteCrateMountedStorageType> ANDESITE_CRATE = simpleItem("andesite_crate", AndesiteCrateMountedStorageType::new);
 
@@ -22,8 +24,14 @@ public class CCBMountedStorage {
 
     public static final RegistryEntry<MountedItemStorageType<?>, SturdyCrateMountedStorageType> STURDY_CRATE = simpleItem("sturdy_crate", SturdyCrateMountedStorageType::new);
 
+    public static final RegistryEntry<MountedFluidStorageType<?>, AirtightTankMountedStorageType> AIRTIGHT_TANK = simpleFluid("airtight_tank", AirtightTankMountedStorageType::new);
+
     private static <T extends MountedItemStorageType<?>> RegistryEntry<MountedItemStorageType<?>, T> simpleItem(String name, Supplier<T> supplier) {
-        return CREATE_REGISTRATE.mountedItemStorage(name, supplier).register();
+        return CCB_REGISTRATE.mountedItemStorage(name, supplier).register();
+    }
+
+    private static <T extends MountedFluidStorageType<?>> RegistryEntry<MountedFluidStorageType<?>, T> simpleFluid(String name, Supplier<T> supplier) {
+        return CCB_REGISTRATE.mountedFluidStorage(name, supplier).register();
     }
 
     public static void register() {

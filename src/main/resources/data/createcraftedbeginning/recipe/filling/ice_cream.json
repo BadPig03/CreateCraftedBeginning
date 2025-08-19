@@ -1,0 +1,18 @@
+{
+  "type": "create:filling",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:ice_cream_cone"
+    },
+    {
+      "type": "fluid_stack",
+      "amount": 250,
+      "fluid": "createcraftedbeginning:slush"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:ice_cream"
+    }
+  ]
+}
