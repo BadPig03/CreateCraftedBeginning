@@ -11,11 +11,14 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.RegisterItemDecorationsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
+import net.ty.createcraftedbeginning.content.airtightcannon.AirtightCannonItemRenderer;
 import net.ty.createcraftedbeginning.content.cinderincinerationblower.CinderIncinerationBlowerBlockEntity;
 import net.ty.createcraftedbeginning.ponder.CCBPonderPlugin;
+import net.ty.createcraftedbeginning.registry.CCBItems;
 
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID, value = Dist.CLIENT)
 public class CCBClientEvents {
@@ -39,7 +42,17 @@ public class CCBClientEvents {
             return;
         }
 
-        CreateCraftedBeginningClient.CINDER_NOZZLE_HANDLER.tick();
+        if (isPreEvent) {
+			return;
+		}
+
+        CreateCraftedBeginningClient.AIRTIGHT_CANNON_RENDER_HANDLER.tick();
+        CreateCraftedBeginningClient.CINDER_INCINERATION_BLOWER_OUTLINER.tick();
+    }
+
+    @SubscribeEvent
+    public static void registerItemDecorations(RegisterItemDecorationsEvent event) {
+        event.register(CCBItems.AIRTIGHT_CANNON, AirtightCannonItemRenderer.DECORATOR);
     }
 
     @SubscribeEvent
@@ -52,7 +65,7 @@ public class CCBClientEvents {
             return;
         }
 
-         if (!AllItems.WRENCH.isIn(event.getEntity().getMainHandItem()) && !AllItems.WRENCH.isIn(event.getEntity().getOffhandItem())) {
+        if (!AllItems.WRENCH.isIn(event.getEntity().getMainHandItem()) && !AllItems.WRENCH.isIn(event.getEntity().getOffhandItem())) {
             return;
         }
 
@@ -61,7 +74,7 @@ public class CCBClientEvents {
             return;
         }
 
-        CreateCraftedBeginningClient.CINDER_NOZZLE_HANDLER.toggleOutline(pos);
+        CreateCraftedBeginningClient.CINDER_INCINERATION_BLOWER_OUTLINER.toggleOutline(pos);
         event.setCanceled(true);
     }
 }

@@ -30,9 +30,6 @@ public abstract class FluidTankBlockEntityMixin {
     @Unique
     private static final Map<ResourceLocation, Queue<DelayedExplosion>> DIMENSION_EXPLOSION_QUEUES = new HashMap<>();
 
-    @Unique
-    private static final float EXPLOSION_POWER = 4.0f;
-
     @Shadow
     public abstract boolean isController();
 
@@ -43,7 +40,9 @@ public abstract class FluidTankBlockEntityMixin {
 
         Level level = tank.getLevel();
 
-        if (level == null || level.isClientSide() || !isController() || isCreativeTank(level, tank) || !isCompressedAir(newFluidStack) || !isOverloaded(newFluidStack)) {
+        float explosionPower = getExplosionPower();
+
+        if (level == null || level.isClientSide() || explosionPower == 0 || !isController() || isCreativeTank(level, tank) || !isCompressedAir(newFluidStack) || !isOverloaded(newFluidStack)) {
             return;
         }
 
@@ -51,7 +50,7 @@ public abstract class FluidTankBlockEntityMixin {
         BlockPos centerPos = tank.getBlockPos();
         if (level instanceof ServerLevel serverLevel) {
             Queue<DelayedExplosion> queue = getDimensionQueue(serverLevel);
-            queue.add(new DelayedExplosion(centerPos, EXPLOSION_POWER));
+            queue.add(new DelayedExplosion(centerPos, explosionPower));
         }
     }
 
@@ -103,7 +102,7 @@ public abstract class FluidTankBlockEntityMixin {
 
     @Unique
     private boolean isOverloaded(FluidStack fluidStack) {
-        return fluidStack.getAmount() > CCBConfig.server().safeAirAmount.get() * 1000;
+        return fluidStack.getAmount() > CCBConfig.server().compressedAir.safeAirAmount.get() * 1000;
     }
 
     @Unique
@@ -113,6 +112,11 @@ public abstract class FluidTankBlockEntityMixin {
             return false;
         }
         return tankCapability instanceof CreativeFluidTankBlockEntity.CreativeSmartFluidTank;
+    }
+
+    @Unique
+    private float getExplosionPower() {
+        return CCBConfig.server().compressedAir.explosionPower.getF();
     }
 
     @Unique

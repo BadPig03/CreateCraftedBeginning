@@ -1,0 +1,14 @@
+{
+  "type": "create:crushing",
+  "ingredients": [
+    {
+      "item": "minecraft:amethyst_shard"
+    }
+  ],
+  "processing_time": 250,
+  "results": [
+    {
+      "id": "createcraftedbeginning:powdered_amethyst"
+    }
+  ]
+}

@@ -30,6 +30,7 @@ import static net.ty.createcraftedbeginning.advancement.CCBAdvancement.TaskType.
 import static net.ty.createcraftedbeginning.advancement.CCBAdvancement.TaskType.SECRET;
 import static net.ty.createcraftedbeginning.advancement.CCBAdvancement.TaskType.SILENT;
 
+@SuppressWarnings("unused")
 public class CCBAdvancements implements DataProvider {
     public static final List<CCBAdvancement> ENTRIES = new ArrayList<>();
     public static final CCBAdvancement START = null,
@@ -50,7 +51,7 @@ public class CCBAdvancements implements DataProvider {
 
     ICE_CREAM_NEW = create("ice_cream_new", b -> b.icon(CCBItems.CHOCOLATE_ICE_CREAM).title("Infusion!").description("Create an ice cream with exotic flavors using a Spout").whenItemCollected(CCBTags.CCBItemTags.ICE_CREAM_WITH_FLAVOR.tag).after(ICE_CREAM).special(NOISY)),
 
-    ICE_CREAM_ALL = create("ice_cream_all", b -> b.icon(CCBItems.CREATIVE_ICE_CREAM).title("Perfect Glacialist").description("Acquire all ice cream varieties").whenItemCollected(CCBItems.ICE_CREAM).whenItemCollected(CCBItems.MILK_ICE_CREAM).whenItemCollected(CCBItems.CHOCOLATE_ICE_CREAM).whenItemCollected(CCBItems.HONEY_ICE_CREAM).after(ICE_CREAM_NEW).special(CHALLENGE)),
+    ICE_CREAM_ALL = create("ice_cream_all", b -> b.icon(CCBItems.CREATIVE_ICE_CREAM).title("Perfect Glacialist").description("Acquire all ice cream varieties").whenItemCollected(CCBItems.ICE_CREAM).whenItemCollected(CCBItems.MILK_ICE_CREAM).whenItemCollected(CCBItems.CHOCOLATE_ICE_CREAM).whenItemCollected(CCBItems.HONEY_ICE_CREAM).whenItemCollected(CCBItems.AMETHYST_ICE_CREAM).after(ICE_CREAM_NEW).special(CHALLENGE)),
 
     AIRTIGHT_COMPONENTS = create("airtight_components", b -> b.icon(CCBBlocks.AIRTIGHT_TANK_BLOCK).title("Fluid Dynamics Revolution").description("Craft any airtight component with Airtight Sheets to withstand immense pressures in Compressed Air systems").whenItemCollected(CCBTags.CCBItemTags.AIRTIGHT_COMPONENTS.tag).after(AIRTIGHT_SHEET).special(NOISY)),
 
@@ -63,6 +64,12 @@ public class CCBAdvancements implements DataProvider {
     AIR_COMPRESSOR = create("air_compressor", b -> b.icon(CCBBlocks.AIR_COMPRESSOR_BLOCK).title("Intense Pressure").description("Pressurize Compressed Air using an Air Compressor").after(AIRTIGHT_COMPONENTS).special(NOISY)),
 
     AIR_COMPRESSOR_EXPLOSION = create("air_compressor_explosion", b -> b.icon(CCBBlocks.AIR_COMPRESSOR_BLOCK).title("Pressure Overload").description("Attempt to re-pressurize High-Pressure Compressed Air\n§7(Hidden Advancement)").after(AIR_COMPRESSOR).special(SECRET)),
+
+    GAS_INJECTION_CHAMBER = create("gas_injection_chamber", b -> b.icon(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK).title("Poof!").description("Process any item using the Gas Injection Chamber").after(AIRTIGHT_COMPONENTS).special(NOISY)),
+
+    AIRTIGHT_ENCASED_PIPE_SEALED = create("airtight_encased_pipe_sealed", b -> b.icon(CCBBlocks.AIRTIGHT_ENCASED_PIPE_BLOCK).title("Airtightness 600%").description("Fully seal an Airtight Encased Pipe with airtight sheets, and then reevaluate your life choices\n§7(Hidden Advancement)").after(AIRTIGHT_COMPONENTS).special(SECRET)),
+
+    AIRTIGHT_ENCASED_PIPE_EXPLOSION = create("airtight_encased_pipe_explosion", b -> b.icon(CCBBlocks.AIRTIGHT_ENCASED_PIPE_BLOCK).title("Goodnight, Terra").description("Ignite an epic explosion using Airtight Encased Pipes\n§7(Hidden Advancement)").after(AIRTIGHT_COMPONENTS).special(SECRET)),
 
     END = null;
 

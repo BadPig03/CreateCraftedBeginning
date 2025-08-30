@@ -1,8 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtightintakeport;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
-import com.simibubi.create.content.fluids.pipes.FluidPipeBlockEntity;
-import com.simibubi.create.content.fluids.pipes.StraightPipeBlockEntity;
 import com.simibubi.create.content.fluids.pump.PumpBlockEntity;
 import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
@@ -15,9 +13,8 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
@@ -26,85 +23,38 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 import net.ty.createcraftedbeginning.advancement.AdvancementBehaviour;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancement;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancements;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtightpump.AirtightPumpBlock;
 import net.ty.createcraftedbeginning.content.airtightpump.AirtightPumpBlockEntity;
+import net.ty.createcraftedbeginning.content.compressedair.CompressedAirTankBehaviour;
 import net.ty.createcraftedbeginning.data.CCBLang;
-import net.ty.createcraftedbeginning.content.compressedair.CompressedAirOnlyFluidTank;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBFluids;
-import org.jetbrains.annotations.NotNull;
+import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
 
 import java.util.List;
 
 public class AirtightIntakePortBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
-    private final IntakePortFluidHandler intakePortFluidHandler;
-    protected FluidTank tankInventory;
+    protected CompressedAirTankBehaviour tankBehaviour;
 
     public AirtightIntakePortBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
-        tankInventory = new CompressedAirOnlyFluidTank(4000, this::onFluidStackChanged);
-        intakePortFluidHandler = new IntakePortFluidHandler(tankInventory);
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_INTAKE_PORT.get(), (be, context) -> be.intakePortFluidHandler);
-    }
-
-    private boolean isConnectionValid(BlockPos pos) {
-        if (level == null) {
-            return false;
-        }
-
-        if (!(level.getBlockState(pos).getBlock() instanceof AirtightPumpBlock)) {
-            return false;
-        }
-
-        return level.getBlockState(pos).getValue(AirtightPumpBlock.FACING).getOpposite() == level.getBlockState(worldPosition).getValue(AirtightIntakePortBlock.FACING);
-    }
-
-    private boolean isBlockValid(BlockPos pos) {
-        if (level == null) {
-            return false;
-        }
-
-        BlockEntity be = level.getBlockEntity(pos);
-
-        return be instanceof PumpBlockEntity || be instanceof FluidPipeBlockEntity || be instanceof StraightPipeBlockEntity;
-    }
-
-    private boolean isPumpFastEnough(BlockPos pos) {
-        if (level == null) {
-            return false;
-        }
-        if (!(level.getBlockEntity(pos) instanceof AirtightPumpBlockEntity pump)) {
-            return false;
-        }
-        return Mth.abs(pump.getSpeed()) >= IRotate.SpeedLevel.MEDIUM.getSpeedValue();
-    }
-
-    private boolean isFrontObstructed() {
-        if (level == null) {
-            return true;
-        }
-
-        Block airBlock = level.getBlockState(worldPosition.relative(getBlockState().getValue(AirtightIntakePortBlock.FACING))).getBlock();
-
-        return !(airBlock instanceof AirBlock);
+        event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_INTAKE_PORT.get(), (be, context) -> be.tankBehaviour.getCapability());
     }
 
     private boolean canProduceCompressedAir() {
-        if (level == null) {
+        if (level == null || isWaterlogged()) {
             return false;
         }
 
@@ -113,37 +63,11 @@ public class AirtightIntakePortBlockEntity extends SmartBlockEntity implements I
         Block pumpBlock = pumpState.getBlock();
 
         Block airBlock = level.getBlockState(worldPosition.relative(getBlockState().getValue(AirtightIntakePortBlock.FACING))).getBlock();
-
         if (!(airBlock instanceof AirBlock) || !(pumpBlock instanceof AirtightPumpBlock)) {
             return false;
         }
 
         return isConnectionValid(pumpPos) && isPumpFastEnough(pumpPos);
-    }
-
-    private int getAmountPerSecond() {
-        return CCBConfig.server().airAmountFromIntakePort.get();
-    }
-
-    private int getProductionRate(BlockPos pos) {
-        if (level == null) {
-            return 0;
-        }
-        if (!(level.getBlockEntity(pos) instanceof AirtightPumpBlockEntity pump)) {
-            return 0;
-        }
-        if (!isPumpFastEnough(pos) || !isConnectionValid(pos) || isFrontObstructed()) {
-            return 0;
-        }
-        return Math.round((Mth.abs(pump.getSpeed()) * getAmountPerSecond()));
-    }
-
-    private void setCanFillIn(boolean state) {
-        intakePortFluidHandler.canFillIn = state;
-    }
-
-    private void setCanDrain(boolean state) {
-        intakePortFluidHandler.canDrain = state;
     }
 
     private boolean intakePortTooltip(List<Component> tooltip, IFluidHandler handler) {
@@ -156,19 +80,29 @@ public class AirtightIntakePortBlockEntity extends SmartBlockEntity implements I
         boolean notFastEnough = !isPumpFastEnough(pos);
         boolean isBlockInvalid = !isBlockValid(pos);
         boolean isFrontObstructed = isFrontObstructed();
+        boolean isWaterlogged = isWaterlogged();
 
         CCBLang.translate("gui.goggles.intake_port").forGoggles(tooltip);
 
         CCBLang.builder().add(CCBLang.translate("gui.goggles.intake_port.production_rate")).style(ChatFormatting.GRAY).forGoggles(tooltip);
-        CCBLang.builder().add(CCBLang.number(getProductionRate(pos)).add(CCBLang.translate("gui.goggles.unit.milli_buckets_per_second")).style(ChatFormatting.AQUA)).forGoggles(tooltip, 1);
+        CCBLang.builder().add(CCBLang.number(getProductionRate(pos) * 20).add(CCBLang.translate("gui.goggles.unit.milli_buckets_per_second")).style(ChatFormatting.AQUA)).forGoggles(tooltip, 1);
 
-        if (invalidConnection || notFastEnough || isBlockInvalid || isFrontObstructed) {
-            CCBLang.text("").forGoggles(tooltip);
+        if (invalidConnection || notFastEnough || isBlockInvalid || isFrontObstructed || isWaterlogged) {
+            tooltip.add(CommonComponents.EMPTY);
             CCBLang.translate("gui.goggles.warning").style(ChatFormatting.GOLD).forGoggles(tooltip);
         }
 
         if (isBlockInvalid && invalidConnection) {
             MutableComponent hint = CCBLang.translateDirect("gui.goggles.intake_port.no_connection");
+            List<Component> cutString = TooltipHelper.cutTextComponent(hint, FontHelper.Palette.GRAY_AND_WHITE);
+            for (Component component : cutString) {
+                CCBLang.builder().add(component.copy()).forGoggles(tooltip);
+            }
+            return true;
+        }
+
+        if (isWaterlogged) {
+            MutableComponent hint = CCBLang.translateDirect("gui.goggles.intake_port.waterlogged");
             List<Component> cutString = TooltipHelper.cutTextComponent(hint, FontHelper.Palette.GRAY_AND_WHITE);
             for (Component component : cutString) {
                 CCBLang.builder().add(component.copy()).forGoggles(tooltip);
@@ -205,12 +139,60 @@ public class AirtightIntakePortBlockEntity extends SmartBlockEntity implements I
         return true;
     }
 
-    @Override
-    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+    private boolean isBlockValid(BlockPos pos) {
         if (level == null) {
             return false;
         }
-        return intakePortTooltip(tooltip, level.getCapability(Capabilities.FluidHandler.BLOCK, worldPosition, null));
+
+        BlockEntity be = level.getBlockEntity(pos);
+        return be instanceof PumpBlockEntity;
+    }
+
+    private boolean isConnectionValid(BlockPos pos) {
+        if (level == null) {
+            return false;
+        }
+
+        BlockState state = level.getBlockState(pos);
+        if (!(state.getBlock() instanceof AirtightPumpBlock)) {
+            return false;
+        }
+
+        return state.getValue(AirtightPumpBlock.FACING).getOpposite() == level.getBlockState(worldPosition).getValue(AirtightIntakePortBlock.FACING);
+    }
+
+    private boolean isFrontObstructed() {
+        if (level == null) {
+            return true;
+        }
+
+        Block airBlock = level.getBlockState(worldPosition.relative(getBlockState().getValue(AirtightIntakePortBlock.FACING))).getBlock();
+        return !(airBlock instanceof AirBlock);
+    }
+
+    private boolean isPumpFastEnough(BlockPos pos) {
+        if (level == null || !(level.getBlockEntity(pos) instanceof AirtightPumpBlockEntity pump)) {
+            return false;
+        }
+        return Mth.abs(pump.getSpeed()) >= IRotate.SpeedLevel.MEDIUM.getSpeedValue();
+    }
+
+    private boolean isWaterlogged() {
+        return getBlockState().getValue(AirtightIntakePortBlock.WATERLOGGED);
+    }
+
+    private float getAmountPerTick() {
+        return CCBConfig.server().compressedAir.airAmountFromIntakePort.getF();
+    }
+
+    private int getProductionRate(BlockPos pos) {
+        if (level == null || !(level.getBlockEntity(pos) instanceof AirtightPumpBlockEntity pump)) {
+            return 0;
+        }
+        if (!isPumpFastEnough(pos) || !isConnectionValid(pos) || isFrontObstructed() || isWaterlogged()) {
+            return 0;
+        }
+        return Math.round((Mth.abs(pump.getSpeed()) * getAmountPerTick()));
     }
 
     private void generateCompressedAir() {
@@ -225,18 +207,14 @@ public class AirtightIntakePortBlockEntity extends SmartBlockEntity implements I
         }
 
         FluidStack airStack = new FluidStack(CCBFluids.MEDIUM_PRESSURE_COMPRESSED_AIR.get(), amount);
+        CompressedAirTankBehaviour.InternalFluidHandler fluidHandler = (CompressedAirTankBehaviour.InternalFluidHandler) tankBehaviour.getCapability();
 
-        setCanFillIn(true);
-        int space = tankInventory.fill(airStack, IFluidHandler.FluidAction.SIMULATE);
-        setCanFillIn(false);
+        int space = fluidHandler.forceFill(airStack, IFluidHandler.FluidAction.SIMULATE);
         if (space <= 0) {
             return;
         }
 
-        setCanFillIn(true);
-        tankInventory.fill(airStack.copyWithAmount(space), IFluidHandler.FluidAction.EXECUTE);
-        setCanFillIn(false);
-
+        fluidHandler.forceFill(airStack.copyWithAmount(space), IFluidHandler.FluidAction.EXECUTE);
         award();
 
         if (!(level.getBlockEntity(pumpPos) instanceof AirtightPumpBlockEntity be)) {
@@ -260,11 +238,22 @@ public class AirtightIntakePortBlockEntity extends SmartBlockEntity implements I
         Vec3 spawnPos = center.add(Vec3.atLowerCornerOf(facing.getOpposite().getNormal()).scale(0.8));
         Vec3 motion = Vec3.atLowerCornerOf(facing.getNormal()).scale(0.05).add((level.random.nextDouble() - 0.5) * 0.02, (level.random.nextDouble() - 0.5) * 0.02, (level.random.nextDouble() - 0.5) * 0.02);
 
-        level.addParticle(ParticleTypes.CLOUD, spawnPos.x, spawnPos.y, spawnPos.z, motion.x, motion.y, motion.z);
+        level.addParticle((SimpleParticleType) CCBParticleTypes.COMPRESSED_AIR_INTAKE.get(), spawnPos.x, spawnPos.y, spawnPos.z, motion.x, motion.y, motion.z);
+    }
+
+    @Override
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        if (level == null) {
+            return false;
+        }
+        return intakePortTooltip(tooltip, level.getCapability(Capabilities.FluidHandler.BLOCK, worldPosition, null));
     }
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+        int capacity = CCBConfig.server().compressedAir.airtightTankCapacity.get() * 500;
+        tankBehaviour = CompressedAirTankBehaviour.single(this, capacity).forbidInsertion();
+        behaviours.add(tankBehaviour);
         registerAwardables(behaviours, CCBAdvancements.AIRTIGHT_INTAKE_PORT);
         registerAwardables(behaviours, CCBAdvancements.AIRTIGHT_INTAKE_PORT_MAXED);
     }
@@ -285,41 +274,16 @@ public class AirtightIntakePortBlockEntity extends SmartBlockEntity implements I
             return;
         }
 
-        boolean canProduceAir = canProduceCompressedAir();
-        setCanDrain(canProduceAir);
-        if (!canProduceAir || getBlockState().getValue(AirtightIntakePortBlock.WATERLOGGED)) {
+        if (!canProduceCompressedAir()) {
             return;
         }
 
-        if (tankInventory.getSpace() > 0) {
+        if (tankBehaviour.getPrimaryHandler().getSpace() > 0) {
             spawnAirParticle();
         }
-        if (level.getGameTime() % 20 == 0) {
-            generateCompressedAir();
-        }
+
+        generateCompressedAir();
         sendData();
-    }
-
-    @Override
-    public void write(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
-        super.write(compound, registries, clientPacket);
-        compound.put("Tank", tankInventory.writeToNBT(registries, new CompoundTag()));
-    }
-
-    @Override
-    protected void read(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
-        super.read(compound, registries, clientPacket);
-        if (compound.contains("Tank")) {
-            tankInventory.readFromNBT(registries, compound.getCompound("Tank"));
-        }
-    }
-
-    protected void onFluidStackChanged(FluidStack newFluidStack) {
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
-        setChanged();
     }
 
     private void registerAwardables(List<BlockEntityBehaviour> behaviours, CCBAdvancement... advancements) {
@@ -343,56 +307,6 @@ public class AirtightIntakePortBlockEntity extends SmartBlockEntity implements I
         AdvancementBehaviour behaviour = getBehaviour(AdvancementBehaviour.TYPE);
         if (behaviour != null) {
             behaviour.awardPlayer(CCBAdvancements.AIRTIGHT_INTAKE_PORT_MAXED);
-        }
-    }
-
-    @Override
-    protected AABB createRenderBoundingBox() {
-        return super.createRenderBoundingBox();
-    }
-
-    private static class IntakePortFluidHandler implements IFluidHandler {
-        private final IFluidHandler handler;
-        private boolean canFillIn = false;
-        private boolean canDrain = false;
-
-        public IntakePortFluidHandler(IFluidHandler handler) {
-            this.handler = handler;
-        }
-
-        @Override
-        public int getTanks() {
-            return handler.getTanks();
-        }
-
-        @Override
-        public @NotNull FluidStack getFluidInTank(int tank) {
-            return handler.getFluidInTank(tank);
-        }
-
-        @Override
-        public int getTankCapacity(int tank) {
-            return handler.getTankCapacity(tank);
-        }
-
-        @Override
-        public boolean isFluidValid(int tank, @NotNull FluidStack stack) {
-            return handler.isFluidValid(tank, stack);
-        }
-
-        @Override
-        public int fill(@NotNull FluidStack resource, @NotNull FluidAction action) {
-            return canFillIn ? handler.fill(resource, action) : 0;
-        }
-
-        @Override
-        public @NotNull FluidStack drain(@NotNull FluidStack resource, @NotNull FluidAction action) {
-            return canDrain ? handler.drain(resource, action) : FluidStack.EMPTY;
-        }
-
-        @Override
-        public @NotNull FluidStack drain(int maxDrain, @NotNull FluidAction action) {
-            return canDrain ? handler.drain(maxDrain, action) : FluidStack.EMPTY;
         }
     }
 }

@@ -30,6 +30,7 @@ import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.fluids.CompressedAirFakeFluid;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.NotNull;
@@ -37,7 +38,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class CompressedAirCanisterItem extends Item {
-    public static final int BAR_COLOR = 0xEFEFEF;
     public TagKey<Fluid> tagKey;
     public CompressedAirFakeFluid fluid;
 
@@ -87,7 +87,7 @@ public class CompressedAirCanisterItem extends Item {
             }
         }
 
-        return CCBConfig.server().canisterCapacity.get() * 1000 * (1 + enchantLevel);
+        return CCBConfig.server().compressedAir.canisterCapacity.get() * 1000 * (1 + enchantLevel);
     }
 
     @SuppressWarnings("deprecation")
@@ -153,12 +153,17 @@ public class CompressedAirCanisterItem extends Item {
 
     @Override
     public int getBarWidth(@NotNull ItemStack stack) {
-        return Math.round(13.0F * Mth.clamp(get(stack) / (float) getCapacity(stack), 0, 1));
+        return Math.round(13f * Mth.clamp(get(stack) / (float) getCapacity(stack), 0, 1));
     }
 
     @Override
     public int getBarColor(@NotNull ItemStack stack) {
-        return BAR_COLOR;
+        float airRatio = (float) CanisterUtil.getAir(stack) / CanisterUtil.maxAir(stack);
+        if (airRatio > 0.1f) {
+            return 0xFF71C7D5;
+        } else {
+            return 0xFFEFEFEF;
+        }
     }
 
     @Override

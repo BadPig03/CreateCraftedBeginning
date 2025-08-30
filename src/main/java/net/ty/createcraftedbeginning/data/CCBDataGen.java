@@ -9,6 +9,7 @@ import net.neoforged.neoforge.data.event.GatherDataEvent;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBRegistrateTags;
+import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
@@ -29,6 +30,9 @@ public class CCBDataGen {
         PackOutput output = generator.getPackOutput();
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
         ExistingFileHelper existingFileHelper = event.getExistingFileHelper();
+
+        generator.addProvider(event.includeClient(), CCBSoundEvents.provider(generator));
+
         CCBGeneratedEntriesProvider generatedEntriesProvider = new CCBGeneratedEntriesProvider(output, lookupProvider);
         lookupProvider = generatedEntriesProvider.getRegistryProvider();
         generator.addProvider(event.includeServer(), generatedEntriesProvider);
@@ -48,6 +52,7 @@ public class CCBDataGen {
             BiConsumer<String, String> langConsumer = provider::add;
 
             CCBAdvancements.provideLang(langConsumer);
+            CCBSoundEvents.provideLang(langConsumer);
         });
     }
 }

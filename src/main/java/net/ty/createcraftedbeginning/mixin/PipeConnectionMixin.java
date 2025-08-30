@@ -9,6 +9,7 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.ty.createcraftedbeginning.advancement.AdvancementBehaviour;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancements;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.airtightencasedpipe.AirtightEncasedPipeBlockEntity;
 import net.ty.createcraftedbeginning.content.airtightpipe.AirtightPipeBlockEntity;
 import net.ty.createcraftedbeginning.content.airtightpump.AirtightPumpBlockEntity;
 import net.ty.createcraftedbeginning.data.CCBTags;
@@ -22,15 +23,17 @@ import java.util.function.Predicate;
 
 @Mixin(PipeConnection.class)
 public abstract class PipeConnectionMixin {
-    @Unique
-    private static final float EXPLOSION_POWER = 4.0f;
-
     @SuppressWarnings("all")
     @Inject(method = "manageFlows", at = @At("HEAD"), cancellable = true)
     private void checkForExplosion(Level level, BlockPos pos, FluidStack internalFluid, Predicate<FluidStack> extractionPredicate, CallbackInfoReturnable<Boolean> ci) {
         PipeConnection pipe = (PipeConnection) (Object) this;
 
         if (!isValidBlockEntity(level, pos)) {
+            return;
+        }
+
+        float explosionPower = getExplosionPower();
+        if (explosionPower == 0) {
             return;
         }
 
@@ -44,7 +47,7 @@ public abstract class PipeConnectionMixin {
 
         if (!level.isClientSide) {
             BlockPos pipePos = pos.relative(pipe.side);
-            level.explode(null, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, EXPLOSION_POWER, Level.ExplosionInteraction.NONE);
+            level.explode(null, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, explosionPower, Level.ExplosionInteraction.NONE);
             level.destroyBlock(pos, true);
 
             AdvancementBehaviour.tryAwardToNearbyPlayersWithLooking(level, pos, CCBAdvancements.COMPRESSED_AIR_EXPLOSION, 64, 15);
@@ -57,11 +60,16 @@ public abstract class PipeConnectionMixin {
     @Unique
     private boolean isValidBlockEntity(Level level, BlockPos pos) {
         BlockEntity be = level.getBlockEntity(pos);
-        return !(be instanceof AirtightPipeBlockEntity || be instanceof AirtightPumpBlockEntity);
+        return !(be instanceof AirtightPipeBlockEntity || be instanceof AirtightPumpBlockEntity || be instanceof AirtightEncasedPipeBlockEntity);
     }
 
     @Unique
     private boolean isOverloaded(float pressure) {
-        return pressure > CCBConfig.server().safeRotationSpeed.get();
+        return pressure > CCBConfig.server().compressedAir.safeRotationSpeed.get();
+    }
+
+    @Unique
+    private float getExplosionPower() {
+        return CCBConfig.server().compressedAir.explosionPower.getF();
     }
 }

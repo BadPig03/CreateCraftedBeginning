@@ -19,8 +19,6 @@ import java.util.Map;
 import java.util.function.DoubleSupplier;
 
 public class CCBStress extends ConfigBase {
-    private static final int VERSION = 2;
-
     private static final Object2DoubleMap<ResourceLocation> DEFAULT_IMPACTS = new Object2DoubleOpenHashMap<>();
     private static final Object2DoubleMap<ResourceLocation> DEFAULT_CAPACITIES = new Object2DoubleOpenHashMap<>();
 
@@ -68,7 +66,7 @@ public class CCBStress extends ConfigBase {
 
     @Override
     public @NotNull String getName() {
-        return "stressValues.v" + VERSION;
+        return "stressValues";
     }
 
     @Nullable

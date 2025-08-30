@@ -6,10 +6,9 @@ import com.simibubi.create.foundation.fluid.FluidIngredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.material.FlowingFluid;
-import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
+import net.ty.createcraftedbeginning.util.Helpers;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -19,18 +18,9 @@ public class PressurizationRecipe extends StandardProcessingRecipe<SingleRecipeI
         super(CCBRecipeTypes.PRESSURIZATION, params);
     }
 
-    public static FluidStack getSourceFluidStack(FluidStack fluidStack) {
-        Fluid fluid = fluidStack.getFluid();
-        int amount = fluidStack.getAmount();
-        if (fluid instanceof FlowingFluid flowingFluid) {
-            return new FluidStack(flowingFluid.getSource(), amount);
-        }
-        return fluidStack;
-    }
 
-    public static FluidStack getResultingFluidStack(@NotNull Level level, FluidStack fluidStack) {
-        FluidStack sourceFluidStack = getSourceFluidStack(fluidStack);
 
+    public static FluidStack getIngredientFluidStack(@NotNull Level level, FluidStack fluidStack) {
         List<RecipeHolder<PressurizationRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.PRESSURIZATION.getType());
         for (RecipeHolder<PressurizationRecipe> holder : recipes) {
             PressurizationRecipe recipe = holder.value();
@@ -43,7 +33,7 @@ public class PressurizationRecipe extends StandardProcessingRecipe<SingleRecipeI
             FluidStack ingredientFluidStack = fluidIngredient.getMatchingFluidStacks().getFirst();
             FluidStack resultFluidStack = recipe.getResultingFluid();
 
-            if (FluidStack.isSameFluidSameComponents(ingredientFluidStack, sourceFluidStack)) {
+            if (Helpers.isFluidTheSame(ingredientFluidStack, fluidStack)) {
                 return resultFluidStack.copyWithAmount(ingredientFluidStack.getAmount());
             }
         }

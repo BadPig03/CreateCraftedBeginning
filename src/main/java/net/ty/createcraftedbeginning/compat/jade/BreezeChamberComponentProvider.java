@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.compat.jade;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -9,6 +8,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.content.breezechamber.BreezeChamberBlock.FrostLevel;
 import net.ty.createcraftedbeginning.content.breezechamber.BreezeChamberBlockEntity;
+import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IBlockComponentProvider;
@@ -27,8 +27,8 @@ public enum BreezeChamberComponentProvider implements IBlockComponentProvider, I
         CompoundTag data = accessor.getServerData();
 
         FrostLevel frostLevel = FrostLevel.values()[data.getInt("frostLevel")];
-        boolean isCreative = data.getBoolean("isCreative");
         int coolTimeRemaining = data.getInt("coolTimeRemaining");
+        boolean isCreative = data.getBoolean("isCreative");
 
         if (!frostLevel.isAtLeast(FrostLevel.WANING)) {
             return;
@@ -36,10 +36,9 @@ public enum BreezeChamberComponentProvider implements IBlockComponentProvider, I
 
         ItemStack item = new ItemStack(frostLevel.isAtLeast(FrostLevel.GALLING) ? Items.POWDER_SNOW_BUCKET : Items.SNOWBALL);
         tooltip.add(IElementHelper.get().smallItem(item));
-
         if (isCreative) {
-            tooltip.append(IThemeHelper.get().info(Component.translatable("jade.infinity")));
-        } else {
+			tooltip.append(IThemeHelper.get().info(CCBLang.translateDirect("gui.goggles.breeze_chamber.infinity_mark")));
+		} else {
             tooltip.append(IThemeHelper.get().seconds(coolTimeRemaining, 20));
         }
     }
@@ -47,9 +46,9 @@ public enum BreezeChamberComponentProvider implements IBlockComponentProvider, I
     @Override
     public void appendServerData(CompoundTag data, BlockAccessor accessor) {
         BreezeChamberBlockEntity bcbe = (BreezeChamberBlockEntity) accessor.getBlockEntity();
-        data.putBoolean("isCreative", bcbe.isCreative());
         data.putInt("frostLevel", bcbe.getFrostLevelFromBlock().ordinal());
         data.putInt("coolTimeRemaining", bcbe.getCoolRemainingTime());
+        data.putBoolean("isCreative", bcbe.isCreative());
     }
 
     @Override

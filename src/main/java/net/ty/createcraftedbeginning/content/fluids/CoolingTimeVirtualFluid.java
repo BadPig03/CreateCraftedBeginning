@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.content.breezechamber;
+package net.ty.createcraftedbeginning.content.fluids;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -9,20 +9,20 @@ import net.minecraft.world.level.material.FluidState;
 import net.neoforged.neoforge.fluids.BaseFlowingFluid;
 import org.jetbrains.annotations.NotNull;
 
-public class SlushVirtualFluid extends BaseFlowingFluid {
+public class CoolingTimeVirtualFluid extends BaseFlowingFluid {
     private final boolean source;
 
-    public SlushVirtualFluid(Properties properties, boolean source) {
+    public CoolingTimeVirtualFluid(Properties properties, boolean source) {
         super(properties);
         this.source = source;
     }
 
-    public static SlushVirtualFluid createSource(Properties properties) {
-        return new SlushVirtualFluid(properties, true);
+    public static CoolingTimeVirtualFluid createSource(Properties properties) {
+        return new CoolingTimeVirtualFluid(properties, true);
     }
 
-    public static SlushVirtualFluid createFlowing(Properties properties) {
-        return new SlushVirtualFluid(properties, false);
+    public static CoolingTimeVirtualFluid createFlowing(Properties properties) {
+        return new CoolingTimeVirtualFluid(properties, false);
     }
 
     @Override
@@ -43,12 +43,12 @@ public class SlushVirtualFluid extends BaseFlowingFluid {
 
     @Override
     public @NotNull Item getBucket() {
-        return Items.POWDER_SNOW_BUCKET;
+        return Items.AIR;
     }
 
     @Override
     protected @NotNull BlockState createLegacyBlock(@NotNull FluidState state) {
-        return Blocks.POWDER_SNOW.defaultBlockState();
+        return Blocks.AIR.defaultBlockState();
     }
 
     @Override

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " C ",
+    "ADA",
+    " B "
+  ],
+  "key": {
+    "A":
+    {
+      "item": "createcraftedbeginning:airtight_sheet"
+    },
+    "B": {
+      "item": "createcraftedbeginning:airtight_sheet_block"
+    },
+    "C": {
+      "item": "create:andesite_alloy"
+    },
+    "D": {
+      "item": "createcraftedbeginning:airtight_pump"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:airtight_engine"
+  }
+}

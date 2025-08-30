@@ -35,7 +35,7 @@ public enum BreezeChamberProvider implements IServerExtensionProvider<CompoundTa
 			return null;
 		}
 
-        IFluidHandler fluidHandler = entity.getIFluidHandler();
+        IFluidHandler fluidHandler = entity.getFluidHandler();
 
         return new ArrayList<>(JadeForgeUtils.fromFluidHandler(fluidHandler));
     }

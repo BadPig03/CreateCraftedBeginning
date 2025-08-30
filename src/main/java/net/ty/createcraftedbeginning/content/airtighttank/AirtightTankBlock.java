@@ -4,34 +4,52 @@ import com.simibubi.create.api.connectivity.ConnectivityHandler;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
 import net.minecraft.core.BlockPos;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.neoforged.neoforge.common.util.DeferredSoundType;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.NotNull;
 
 public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEntity>, IWrenchable {
     public static final BooleanProperty TOP = BooleanProperty.create("top");
     public static final BooleanProperty BOTTOM = BooleanProperty.create("bottom");
-    public static final SoundType SILENCED_METAL = new DeferredSoundType(0.1F, 1.5F, () -> SoundEvents.METAL_BREAK, () -> SoundEvents.METAL_STEP, () -> SoundEvents.METAL_PLACE, () -> SoundEvents.METAL_HIT, () -> SoundEvents.METAL_FALL);
 
     public AirtightTankBlock(Properties properties) {
         super(properties);
         registerDefaultState(defaultBlockState().setValue(TOP, true).setValue(BOTTOM, true));
     }
 
+    public static void updateTankState(Level level, BlockPos tankPos) {
+        BlockState tankState = level.getBlockState(tankPos);
+        if (!(tankState.getBlock() instanceof AirtightTankBlock tank)) {
+            return;
+        }
+        AirtightTankBlockEntity tankBlockEntity = tank.getBlockEntity(level, tankPos);
+        if (tankBlockEntity == null) {
+            return;
+        }
+        AirtightTankBlockEntity controller = tankBlockEntity.getControllerBE();
+        if (controller == null) {
+            return;
+        }
+        controller.updateTankState();
+    }
+
+    public static boolean isTank(BlockState state) {
+		return state.getBlock() instanceof AirtightTankBlock;
+	}
+
     @Override
     protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
         builder.add(TOP, BOTTOM);
+        super.createBlockStateDefinition(builder);
     }
 
     @Override
@@ -44,14 +62,20 @@ public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEnt
 
     @Override
     public void onRemove(BlockState state, @NotNull Level world, @NotNull BlockPos pos, @NotNull BlockState newState, boolean isMoving) {
-        if (state.hasBlockEntity() && (state.getBlock() != newState.getBlock() || !newState.hasBlockEntity())) {
-            BlockEntity be = world.getBlockEntity(pos);
-            if (!(be instanceof AirtightTankBlockEntity tankBE)) {
-                return;
-            }
-            world.removeBlockEntity(pos);
-            ConnectivityHandler.splitMulti(tankBE);
+        if (!state.hasBlockEntity() || (state.getBlock() == newState.getBlock() && newState.hasBlockEntity())) {
+            return;
         }
+        BlockEntity be = world.getBlockEntity(pos);
+        if (!(be instanceof AirtightTankBlockEntity tank)) {
+            return;
+        }
+        world.removeBlockEntity(pos);
+        ConnectivityHandler.splitMulti(tank);
+    }
+
+    @Override
+    public @NotNull VoxelShape getBlockSupportShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos) {
+        return Shapes.block();
     }
 
     @Override
@@ -62,14 +86,5 @@ public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEnt
     @Override
     public BlockEntityType<? extends AirtightTankBlockEntity> getBlockEntityType() {
         return CCBBlockEntities.AIRTIGHT_TANK.get();
-    }
-
-    @Override
-    public @NotNull SoundType getSoundType(@NotNull BlockState state, @NotNull LevelReader world, @NotNull BlockPos pos, Entity entity) {
-        SoundType soundType = super.getSoundType(state, world, pos, entity);
-        if (entity != null && entity.getPersistentData().contains("SilenceTankSound")) {
-            return SILENCED_METAL;
-        }
-        return soundType;
     }
 }

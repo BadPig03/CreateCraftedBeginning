@@ -20,10 +20,13 @@ public class CreativeIceCreamItem extends Item {
 
     @Override
     public @NotNull ItemStack finishUsingItem(@NotNull ItemStack stack, @NotNull Level level, @NotNull LivingEntity entityLiving) {
+        ItemStack result = super.finishUsingItem(stack, level, entityLiving);
+
         if (!level.isClientSide && entityLiving instanceof ServerPlayer player && !player.isCreative()) {
             player.setGameMode(GameType.CREATIVE);
         }
-        return stack;
+
+        return result;
     }
 
     @Override

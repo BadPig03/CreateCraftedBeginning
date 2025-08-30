@@ -90,7 +90,7 @@ public class AirtightIntakePortScenes {
         scene.world().modifyBlock(pumpPos, s -> s.setValue(PumpBlock.FACING, Direction.WEST), false);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Condition 2: \nThe direction of the Airtight Pump must oppose the intake direction of the Airtight Intake Port").colored(PonderPalette.BLUE).pointAt(Vec3.atCenterOf(portPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Condition 2: \nThe direction of the Airtight Pump must oppose the intake direction of the Airtight Intake Port").colored(PonderPalette.RED).pointAt(Vec3.atCenterOf(portPos)).placeNearTarget().attachKeyFrame();
         scene.overlay().showControls(util.vector().blockSurface(pumpPos, Direction.NORTH), Pointing.RIGHT, 60).showing(AllIcons.I_MTD_CLOSE);
 
         scene.idle(80);

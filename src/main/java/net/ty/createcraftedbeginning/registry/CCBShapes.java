@@ -3,21 +3,22 @@ package net.ty.createcraftedbeginning.registry;
 import net.createmod.catnip.math.VoxelShaper;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.function.BiFunction;
 
-import static net.minecraft.core.Direction.UP;
-
 public class CCBShapes {
     public static final VoxelShaper AIRTIGHT_PUMP = shape(2, 0, 2, 14, 16, 14).forDirectional(Direction.UP);
     public static final VoxelShaper AIRTIGHT_INTAKE_PORT = shape(0, 0, 0, 16, 11, 16).forDirectional(Direction.UP);
+    public static final VoxelShaper AIRTIGHT_ENGINE = shape(0, 0, 0, 16, 2, 16).add(2, 2, 2, 14, 6, 14).add(0, 6, 0, 16, 10, 16).add(2, 10, 2, 14, 14, 14).forDirectional(Direction.UP);
+    public static final VoxelShaper CONDENSATE_DRAIN = shape(0, 0, 0, 16, 2, 16).add(3, 2, 3, 13, 13, 13).forDirectional(Direction.UP);
+
     public static final VoxelShape CRATE = shape(1, 0, 1, 15, 14, 15).build();
     public static final VoxelShape CHAMBER_BLOCK_SHAPE = shape(1, 0, 1, 15, 14, 15).build();
     public static final VoxelShape CHAMBER_BLOCK_COOLER_SHAPE = shape(1, 0, 1, 15, 12, 15).add(0, 12, 0, 16, 16, 16).build();
     public static final VoxelShape CHAMBER_BLOCK_SPECIAL_COLLISION_SHAPE = shape(0, 0, 0, 16, 4, 16).build();
+    public static final VoxelShape GAS_INJECTION_CHAMBER_SHAPE = shape(1, 1, 1, 15, 15, 15).add(2, 15, 2, 14, 16, 14).build();
 
     private static Builder shape(VoxelShape shape) {
         return new Builder(shape);
@@ -47,11 +48,6 @@ public class CCBShapes {
             return add(cuboid(x1, y1, z1, x2, y2, z2));
         }
 
-        public Builder erase(double x1, double y1, double z1, double x2, double y2, double z2) {
-            this.shape = Shapes.join(shape, cuboid(x1, y1, z1, x2, y2, z2), BooleanOp.ONLY_FIRST);
-            return this;
-        }
-
         public VoxelShape build() {
             return shape;
         }
@@ -67,22 +63,5 @@ public class CCBShapes {
         public VoxelShaper forDirectional(Direction direction) {
             return build(VoxelShaper::forDirectional, direction);
         }
-
-        public VoxelShaper forAxis() {
-            return build(VoxelShaper::forAxis, Direction.Axis.Y);
-        }
-
-        public VoxelShaper forHorizontalAxis() {
-            return build(VoxelShaper::forHorizontalAxis, Direction.Axis.Z);
-        }
-
-        public VoxelShaper forHorizontal(Direction direction) {
-            return build(VoxelShaper::forHorizontal, direction);
-        }
-
-        public VoxelShaper forDirectional() {
-            return forDirectional(UP);
-        }
-
     }
 }

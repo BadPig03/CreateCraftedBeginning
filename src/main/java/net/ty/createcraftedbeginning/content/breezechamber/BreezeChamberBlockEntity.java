@@ -3,11 +3,14 @@ package net.ty.createcraftedbeginning.content.breezechamber;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
+import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
+import com.simibubi.create.foundation.fluid.SmartFluidTank;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import dev.engine_room.flywheel.api.visualization.VisualizationManager;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.lang.FontHelper;
+import net.createmod.catnip.lang.LangBuilder;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.ChatFormatting;
@@ -18,19 +21,25 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -38,37 +47,38 @@ import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 import net.ty.createcraftedbeginning.advancement.AdvancementBehaviour;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancement;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancements;
 import net.ty.createcraftedbeginning.content.aircompressor.AirCompressorBlockEntity;
 import net.ty.createcraftedbeginning.content.breezechamber.BreezeChamberBlock.FrostLevel;
-import net.ty.createcraftedbeginning.content.compressedair.LiquidOnlyFluidTank;
 import net.ty.createcraftedbeginning.data.CCBLang;
-import net.ty.createcraftedbeginning.data.CoolantDataManager;
+import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Objects;
 
 public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
-    public static final int MAX_COOLANT_CAPACITY = 50000;
     public static final int INSERTION_THRESHOLD = 500;
-    private final BreezeFluidHandler breezeFluidHandler;
-    public LerpedFloat headAnimation;
-    public boolean isCreative;
+    public static final int MAX_COOLANT_CAPACITY = 50000;
+
     public boolean goggles;
     public boolean hat;
     public boolean wind;
     public float windRotationSpeed = 0;
+    public LerpedFloat headAnimation;
+
     protected CoolantType activeCoolant;
     protected int coolRemainingTime;
     protected LerpedFloat headAngle;
-    protected FluidTank fluidInventory;
 
+    private SmartFluidTankBehaviour tankBehaviour;
     private boolean lastCoolerState = false;
+    private boolean isCreative = false;
 
     public BreezeChamberBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -76,38 +86,18 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         coolRemainingTime = 0;
         headAnimation = LerpedFloat.linear();
         headAngle = LerpedFloat.angular();
-        isCreative = false;
         goggles = false;
         wind = false;
 
         headAngle.startWithValue((AngleHelper.horizontalAngle(state.getOptionalValue(BreezeChamberBlock.FACING).orElse(Direction.SOUTH)) + 180) % 360);
-
-        fluidInventory = new LiquidOnlyFluidTank(4000, this::onFluidStackChanged);
-        breezeFluidHandler = new BreezeFluidHandler(fluidInventory);
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, CCBBlockEntities.BREEZE_CHAMBER.get(), (be, context) -> be.breezeFluidHandler);
-    }
-
-    protected void onFluidStackChanged(FluidStack newFluidStack) {
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
-        setChanged();
-    }
-
-    public IFluidHandler getIFluidHandler() {
-        return breezeFluidHandler;
+        event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, CCBBlockEntities.BREEZE_CHAMBER.get(), (be, context) -> be.tankBehaviour.getCapability());
     }
 
     public int getCoolRemainingTime() {
         return coolRemainingTime;
-    }
-
-    public boolean isCreative() {
-        return isCreative;
     }
 
     private void fillWaterFromWaterloggedState() {
@@ -121,8 +111,9 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         }
 
         FluidStack waterStack = new FluidStack(Fluids.WATER, 1000);
-        int space = fluidInventory.fill(waterStack, IFluidHandler.FluidAction.SIMULATE);
-        fluidInventory.fill(waterStack.copyWithAmount(space), IFluidHandler.FluidAction.EXECUTE);
+        IFluidHandler handler = tankBehaviour.getPrimaryHandler();
+        int space = handler.fill(waterStack, IFluidHandler.FluidAction.SIMULATE);
+        handler.fill(waterStack.copyWithAmount(space), IFluidHandler.FluidAction.EXECUTE);
 
         BlockState newState = state.setValue(BreezeChamberBlock.WATERLOGGED, false);
         level.setBlock(worldPosition, newState, 3);
@@ -173,8 +164,10 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+        tankBehaviour = SmartFluidTankBehaviour.single(this, 4000);
         registerAwardables(behaviours, CCBAdvancements.BREEZE_CHAMBER_GALLING);
         registerAwardables(behaviours, CCBAdvancements.BREEZE_CHAMBER_LAVA);
+        behaviours.add(tankBehaviour);
     }
 
     @Override
@@ -194,6 +187,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
                 wind = false;
                 windRotationSpeed = 0;
             }
+            notifyUpdate();
         }
 
         if (level.isClientSide) {
@@ -208,18 +202,15 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             if (coolRemainingTime > 0 && level.getGameTime() % 10 == 0) {
                 notifyUpdate();
             }
+            applyFrozenEffects(level);
             updateCoolerState();
         }
 
-        if (getFrostLevel().isAtLeast(FrostLevel.RIMING) && fluidInventory.getSpace() > 0) {
+        if (getFrostLevel().isAtLeast(FrostLevel.RIMING) && tankBehaviour.getPrimaryHandler().getSpace() > 0) {
             fillWaterFromWaterloggedState();
         }
 
-        if (isCreative) {
-            return;
-        }
-
-        if (coolRemainingTime > 0) {
+        if (!isCreative && coolRemainingTime > 0) {
             coolRemainingTime--;
         }
 
@@ -244,12 +235,11 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     protected void write(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
         compound.putInt("coolantLevel", activeCoolant.ordinal());
         compound.putInt("coolTimeRemaining", coolRemainingTime);
-        compound.putBoolean("isCreative", isCreative);
         compound.putBoolean("Goggles", goggles);
         compound.putBoolean("TrainHat", hat);
         compound.putBoolean("Wind", wind);
         compound.putFloat("WindSpeed", windRotationSpeed);
-        compound.put("Fluid", fluidInventory.writeToNBT(registries, new CompoundTag()));
+        compound.putBoolean("isCreative", isCreative);
         super.write(compound, registries, clientPacket);
     }
 
@@ -261,9 +251,6 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         if (compound.contains("coolTimeRemaining")) {
             coolRemainingTime = compound.getInt("coolTimeRemaining");
         }
-        if (compound.contains("coolTimeRemaining")) {
-            isCreative = compound.getBoolean("isCreative");
-        }
         if (compound.contains("Goggles")) {
             goggles = compound.getBoolean("Goggles");
         }
@@ -274,8 +261,8 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             wind = compound.getBoolean("Wind");
             windRotationSpeed = compound.getFloat("WindSpeed");
         }
-        if (compound.contains("Fluid")) {
-            fluidInventory.readFromNBT(registries, compound.getCompound("Fluid"));
+        if (compound.contains("isCreative")) {
+            isCreative = compound.getBoolean("isCreative");
         }
         super.read(compound, registries, clientPacket);
     }
@@ -288,14 +275,34 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         return breezeChamberTooltip(tooltip);
     }
 
+    private void applyFrozenEffects(@NotNull Level level) {
+        if (level.isClientSide) {
+            return;
+        }
+
+        Vec3 center = Vec3.atCenterOf(worldPosition);
+        double halfEdge = 0.5f * (1 + getFrostLevel().ordinal());
+        AABB area = new AABB(center.x - halfEdge, center.y - halfEdge, center.z - halfEdge, center.x + halfEdge, center.y + halfEdge, center.z + halfEdge);
+        for (Entity entity : level.getEntities(null, area)) {
+            if (!(entity instanceof LivingEntity) || !entity.isAlive()) {
+                continue;
+            }
+            if (!(entity instanceof Mob livingEntity) || !entity.canFreeze()) {
+                continue;
+            }
+
+            livingEntity.setTicksFrozen(Math.min(livingEntity.getTicksRequiredToFreeze(), livingEntity.getTicksFrozen()) + entity.getTicksRequiredToFreeze() / 20);
+        }
+    }
+
     private boolean isLiquidValid() {
-        if (fluidInventory.isEmpty()) {
+        if (tankBehaviour.getPrimaryHandler().isEmpty() || level == null) {
             return true;
         }
 
-        Fluid fluid = fluidInventory.getFluid().getFluid();
-        CoolantDataManager.FluidCoolantData data = CoolantDataManager.getFluidCoolantData(fluid);
-        return data != null;
+        FluidStack fluidStack = tankBehaviour.getPrimaryHandler().getFluid();
+        CoolingRecipe.CoolingData data = CoolingRecipe.getResultingCoolingTime(level, null, fluidStack);
+        return !Objects.equals(data.type(), "none") && data.time() != 0 && data.amount() != 0;
     }
 
     private void updateCoolerState() {
@@ -322,18 +329,36 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         FrostLevel frostLevel = getFrostLevel();
 
         CCBLang.translate("gui.goggles.breeze_chamber").forGoggles(tooltip);
-        CCBLang.builder().add(CCBLang.translate("gui.goggles.breeze_chamber.current_state").style(ChatFormatting.YELLOW)).add(CCBLang.translate(frostLevel.getTranslatable()).style(frostLevel.getChatFormatting())).forGoggles(tooltip);
+        CCBLang.builder().add(CCBLang.translate("gui.goggles.breeze_chamber.current_state").style(ChatFormatting.GRAY)).forGoggles(tooltip);
+        CCBLang.builder().add(CCBLang.translate(frostLevel.getTranslatable()).style(frostLevel.getChatFormatting())).forGoggles(tooltip, 1);
 
         boolean hasRemainingTime = coolRemainingTime > 0;
-        boolean isEmpty = fluidInventory.isEmpty();
+        boolean isEmpty = tankBehaviour.getPrimaryHandler().isEmpty();
         boolean isLiquidInvalid = !isLiquidValid();
 
         if (hasRemainingTime) {
-            CCBLang.builder().add(CCBLang.translate("gui.goggles.breeze_chamber.remaining_time")).add(CCBLang.seconds(coolRemainingTime, 20)).style(ChatFormatting.GREEN).forGoggles(tooltip);
+            CCBLang.builder().add(CCBLang.translate("gui.goggles.breeze_chamber.remaining_time")).style(ChatFormatting.GRAY).forGoggles(tooltip);
+            if (isCreative) {
+                CCBLang.builder().add(CCBLang.translateDirect("gui.goggles.breeze_chamber.infinite")).style(ChatFormatting.GREEN).forGoggles(tooltip, 1);
+            } else {
+                CCBLang.builder().add(CCBLang.seconds(coolRemainingTime, 20)).style(ChatFormatting.GREEN).forGoggles(tooltip, 1);
+            }
+        }
+
+        LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
+        IFluidHandler handler = tankBehaviour.getPrimaryHandler();
+        FluidStack fluidStack = handler.getFluidInTank(0);
+        if (!fluidStack.isEmpty()) {
+            CCBLang.translate("gui.goggles.fluid_container.capacity").style(ChatFormatting.GRAY).forGoggles(tooltip);
+            CCBLang.fluidName(fluidStack).style(ChatFormatting.WHITE).forGoggles(tooltip, 1);
+            CCBLang.builder().add(CCBLang.number(fluidStack.getAmount()).add(mb).style(ChatFormatting.GOLD)).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(handler.getTankCapacity(0)).add(mb).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+        } else {
+            CCBLang.translate("gui.goggles.fluid_container.capacity").style(ChatFormatting.GRAY).forGoggles(tooltip);
+            CCBLang.builder().add(CCBLang.number(handler.getTankCapacity(0)).add(mb)).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
         }
 
         if ((!hasRemainingTime && isEmpty) || isLiquidInvalid) {
-            CCBLang.text("").forGoggles(tooltip);
+            tooltip.add(CommonComponents.EMPTY);
             CCBLang.translate("gui.goggles.warning").style(ChatFormatting.GOLD).forGoggles(tooltip);
         }
 
@@ -357,6 +382,14 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         return true;
     }
 
+    public boolean isCreative() {
+        return isCreative;
+    }
+
+    public IFluidHandler getFluidHandler() {
+        return tankBehaviour.getCapability();
+    }
+
     public FrostLevel getFrostLevelForRender() {
         return getFrostLevelFromBlock();
     }
@@ -366,21 +399,60 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     protected boolean tryUpdateCoolantByItem(ItemStack itemStack, boolean forceOverflow, boolean simulate) {
-        CoolantDataManager.CoolantData data = CoolantDataManager.getItemCoolantData(itemStack);
-
-        if (data == null) {
+        if (level == null) {
             return false;
         }
 
-        return handleCoolantType(data.getCoolantType(), data.time, forceOverflow, simulate, 1);
+        if (itemStack.getItem() == CCBItems.CREATIVE_ICE_CREAM.asItem()) {
+            return handleCreativeIceCream(simulate);
+        }
+
+        CoolingRecipe.CoolingData data = CoolingRecipe.getResultingCoolingTime(level, itemStack, null);
+        if (Objects.equals(data.type(), "none") || data.time() == 0 || data.amount() == 0) {
+            return false;
+        }
+
+        return handleCoolantType(CoolantType.getCoolantType(data.type()), data.time(), forceOverflow, simulate, 2);
     }
 
-    boolean handleCoolantType(CoolantType newCoolant, int newCoolTime, boolean forceOverflow, boolean simulate, float thresholdMultiplier) {
+    private boolean handleCreativeIceCream(boolean simulate) {
+        CoolantType newCoolant = switch (activeCoolant) {
+            case POWERFUL -> CoolantType.NONE;
+            case NORMAL -> CoolantType.POWERFUL;
+            case NONE -> CoolantType.NORMAL;
+        };
+
+        if (!simulate) {
+            activeCoolant = newCoolant;
+            coolRemainingTime = activeCoolant == CoolantType.NONE ? 0 : MAX_COOLANT_CAPACITY;
+            isCreative = activeCoolant != CoolantType.NONE;
+            updateBlockState();
+
+            if (level != null) {
+                if (!level.isClientSide) {
+                    playSound();
+                } else if (newCoolant == CoolantType.POWERFUL) {
+                    spawnParticleBurst();
+                }
+            }
+
+            if (activeCoolant == CoolantType.POWERFUL) {
+                awardGalling();
+            }
+        }
+        return true;
+    }
+
+    private boolean handleCoolantType(CoolantType newCoolant, int newCoolTime, boolean forceOverflow, boolean simulate, float thresholdMultiplier) {
         if (newCoolant == CoolantType.NONE) {
             return false;
         }
         if (newCoolant.ordinal() < activeCoolant.ordinal()) {
             return false;
+        }
+
+        if (newCoolant == CoolantType.POWERFUL) {
+            thresholdMultiplier *= 5;
         }
 
         if (newCoolant == activeCoolant) {
@@ -421,13 +493,13 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         setBlockCoolant(getFrostLevel());
     }
 
-    protected void playSound() {
+    private void playSound() {
         if (level != null) {
             level.playSound(null, worldPosition, SoundEvents.BREEZE_SHOOT, SoundSource.BLOCKS, .125f + level.random.nextFloat() * .125f, .75f - level.random.nextFloat() * .25f);
         }
     }
 
-    protected void setBlockCoolant(FrostLevel frost) {
+    private void setBlockCoolant(FrostLevel frost) {
         FrostLevel inBlockState = getFrostLevelFromBlock();
         if (inBlockState == frost || level == null) {
             return;
@@ -436,7 +508,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         notifyUpdate();
     }
 
-    protected FrostLevel getFrostLevel() {
+    public FrostLevel getFrostLevel() {
         FrostLevel level = FrostLevel.RIMING;
         switch (activeCoolant) {
             case POWERFUL:
@@ -453,8 +525,9 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         return level;
     }
 
-    protected void tryUpdateCoolantByFluid() {
-        Fluid fluid = fluidInventory.getFluid().getFluid();
+    private void tryUpdateCoolantByFluid() {
+        SmartFluidTank fluidTank = tankBehaviour.getPrimaryHandler();
+        Fluid fluid = fluidTank.getFluid().getFluid();
         if (fluid == Fluids.EMPTY || level == null) {
             return;
         }
@@ -473,16 +546,16 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             return;
         }
 
-        CoolantDataManager.FluidCoolantData data = CoolantDataManager.getFluidCoolantData(fluid);
-        if (data == null) {
+        CoolingRecipe.CoolingData data = CoolingRecipe.getResultingCoolingTime(level, null, fluidTank.getFluid());
+        if (Objects.equals(data.type(), "none") || data.time() == 0 || data.amount() == 0) {
             return;
         }
 
-        CoolantType coolantType = data.getCoolantType();
-        int newCoolTime = data.time;
-        int newAmount = data.amount;
+        CoolantType coolantType = CoolantType.getCoolantType(data.type());
+        int newCoolTime = data.time();
+        int newAmount = data.amount();
 
-        int left = fluidInventory.getFluidAmount() - newAmount;
+        int left = fluidTank.getFluidAmount() - newAmount;
         if (left < 0) {
             return;
         }
@@ -492,7 +565,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             return;
         }
 
-        fluidInventory.drain(newAmount, IFluidHandler.FluidAction.EXECUTE);
+        fluidTank.drain(newAmount, IFluidHandler.FluidAction.EXECUTE);
         handleCoolantType(coolantType, newCoolTime, false, false, 5);
 
         notifyUpdate();
@@ -524,7 +597,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         return be instanceof AirCompressorBlockEntity;
     }
 
-    protected void spawnParticles(FrostLevel frostLevel) {
+    private void spawnParticles(FrostLevel frostLevel) {
         if (level == null) {
             return;
         }
@@ -575,43 +648,10 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     public enum CoolantType {
         NONE,
         NORMAL,
-        POWERFUL
-    }
+        POWERFUL;
 
-    private record BreezeFluidHandler(IFluidHandler handler) implements IFluidHandler {
-        @Override
-        public int getTanks() {
-            return handler.getTanks();
-        }
-
-        @Override
-        public @NotNull FluidStack getFluidInTank(int tank) {
-            return handler.getFluidInTank(tank);
-        }
-
-        @Override
-        public int getTankCapacity(int tank) {
-            return handler.getTankCapacity(tank);
-        }
-
-        @Override
-        public boolean isFluidValid(int tank, @NotNull FluidStack stack) {
-            return handler.isFluidValid(tank, stack);
-        }
-
-        @Override
-        public int fill(@NotNull FluidStack resource, @NotNull FluidAction action) {
-            return handler.fill(resource, action);
-        }
-
-        @Override
-        public @NotNull FluidStack drain(@NotNull FluidStack resource, @NotNull FluidAction action) {
-            return handler.drain(resource, action);
-        }
-
-        @Override
-        public @NotNull FluidStack drain(int maxDrain, @NotNull FluidAction action) {
-            return handler.drain(maxDrain, action);
+        public static CoolantType getCoolantType(String coolant) {
+            return "powerful".equalsIgnoreCase(coolant) ? CoolantType.POWERFUL : CoolantType.NORMAL;
         }
     }
 }

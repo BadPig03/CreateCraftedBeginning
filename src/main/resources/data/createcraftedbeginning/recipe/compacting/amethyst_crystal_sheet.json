@@ -1,8 +1,9 @@
 {
   "type": "create:compacting",
+  "heat_requirement": "heated",
   "ingredients": [
     {
-      "item": "minecraft:amethyst_shard"
+      "item": "createcraftedbeginning:powdered_amethyst_block"
     },
     {
       "item": "minecraft:quartz"

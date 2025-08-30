@@ -10,7 +10,7 @@ import net.createmod.catnip.lang.Lang;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.critereon.StatePropertiesPredicate;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
@@ -21,11 +21,13 @@ import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
+import net.minecraft.world.item.DispensibleContainerItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
@@ -53,11 +55,13 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.ty.createcraftedbeginning.advancement.AdvancementBehaviour;
-import net.ty.createcraftedbeginning.data.CoolantDataManager;
+import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBShapes;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IBE<BreezeChamberBlockEntity>, SimpleWaterloggedBlock, IWrenchable {
     public static final EnumProperty<FrostLevel> FROST_LEVEL = EnumProperty.create("breeze", FrostLevel.class);
@@ -102,10 +106,9 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
 
         if (!doNotConsume) {
             ItemStack container;
-            CoolantDataManager.CoolantData data = CoolantDataManager.getItemCoolantData(stack);
-            if (data != null && data.getRemainingId() != null) {
-                Item containerItem = BuiltInRegistries.ITEM.get(data.getRemainingId());
-                container = new ItemStack(containerItem);
+            CoolingRecipe.CoolingData data = CoolingRecipe.getResultingCoolingTime(world, stack, null);
+            if (!Objects.equals(data.type(), "none") && stack.getItem() instanceof DispensibleContainerItem) {
+                container = new ItemStack(Items.BUCKET);
             } else {
                 container = stack.hasCraftingRemainingItem() ? stack.getCraftingRemainingItem() : ItemStack.EMPTY;
             }
@@ -130,6 +133,14 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     @Override
     protected boolean isPathfindable(@NotNull BlockState state, @NotNull PathComputationType pathComputationType) {
         return false;
+    }
+
+    @Override
+    public @NotNull BlockState updateShape(BlockState state, @NotNull Direction direction, @NotNull BlockState neighbourState, @NotNull LevelAccessor world, @NotNull BlockPos pos, @NotNull BlockPos neighbourPos) {
+        if (state.getValue(WATERLOGGED)) {
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
+        }
+        return state;
     }
 
     @Override
@@ -209,16 +220,15 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
         if (!state.getValue(FROST_LEVEL).isAtLeast(FrostLevel.RIMING)) {
             return;
         }
-        world.playLocalSound((float) pos.getX() + 0.5F, (float) pos.getY() + 0.5F, (float) pos.getZ() + 0.5F, SoundEvents.BREEZE_IDLE_GROUND, SoundSource.BLOCKS, 0.1F, random.nextFloat() * 0.7F + 0.6F, false);
+        world.playLocalSound((float) pos.getX() + 0.5f, (float) pos.getY() + 0.5f, (float) pos.getZ() + 0.5f, SoundEvents.BREEZE_IDLE_GROUND, SoundSource.BLOCKS, 0.1f, random.nextFloat() * 0.7f + 0.6f, false);
     }
 
     @Override
     public BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
         ItemStack stack = context.getItemInHand();
-        Item item = stack.getItem();
         BlockState defaultState = super.getStateForPlacement(context);
 
-        if (!(item instanceof BreezeChamberBlockItem) || defaultState == null) {
+        if (defaultState == null) {
             return defaultState;
         }
 
@@ -277,5 +287,13 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
                 case GALLING -> ChatFormatting.AQUA;
             };
         }
+
+        public static FrostLevel byIndex(int index) {
+			return values()[index];
+		}
+
+        public FrostLevel nextActiveLevel() {
+			return byIndex(ordinal() % (values().length - 1) + 1);
+		}
     }
 }

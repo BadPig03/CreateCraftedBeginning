@@ -18,12 +18,13 @@ public class HoneyIceCreamItem extends Item {
 
     @Override
     public @NotNull ItemStack finishUsingItem(@NotNull ItemStack stack, @NotNull Level level, @NotNull LivingEntity entityLiving) {
+        ItemStack result = super.finishUsingItem(stack, level, entityLiving);
+
         if (!level.isClientSide) {
             entityLiving.removeEffectsCuredBy(net.neoforged.neoforge.common.EffectCures.MILK);
         }
 
-        stack.consume(1, entityLiving);
-        return stack;
+        return result;
     }
 
     @Override

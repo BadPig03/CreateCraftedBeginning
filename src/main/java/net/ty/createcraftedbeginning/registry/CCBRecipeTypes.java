@@ -19,6 +19,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.recipe.ConversionRecipe;
+import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 import net.ty.createcraftedbeginning.recipe.SuperCoolingRecipe;
@@ -33,7 +34,8 @@ public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
     CONVERSION(ConversionRecipe::new),
     PRESSURIZATION(PressurizationRecipe::new),
     COOLING(CoolingRecipe::new),
-    SUPER_COOLING(SuperCoolingRecipe::new);
+    SUPER_COOLING(SuperCoolingRecipe::new),
+    GAS_INJECTION(GasInjectionRecipe::new);
 
     public static final Codec<CCBRecipeTypes> CODEC = StringRepresentable.fromEnum(CCBRecipeTypes::values);
     public final ResourceLocation id;

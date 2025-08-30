@@ -9,9 +9,11 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -21,6 +23,7 @@ import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.ty.createcraftedbeginning.advancement.AdvancementBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBShapes;
 import net.ty.createcraftedbeginning.util.Helpers;
@@ -77,6 +80,7 @@ public class SturdyCrateBlock extends HorizontalDirectionalBlock implements IBE<
     @Override
     public void setPlacedBy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, LivingEntity placer, @NotNull ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
+		AdvancementBehaviour.setPlacedBy(level, pos, placer);
         BlockEntity blockEntity = level.getBlockEntity(pos);
         if (blockEntity instanceof SturdyCrateBlockEntity crate) {
             crate.loadFromItem(stack);
@@ -122,8 +126,14 @@ public class SturdyCrateBlock extends HorizontalDirectionalBlock implements IBE<
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.@NotNull Builder<Block, BlockState> builder) {
-        super.createBlockStateDefinition(builder);
         builder.add(FACING);
+        super.createBlockStateDefinition(builder);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
+        BlockState toPlace = super.getStateForPlacement(context);
+        return toPlace == null ? Blocks.AIR.defaultBlockState() : toPlace.setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
 
     @Override

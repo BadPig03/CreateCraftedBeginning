@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "AA",
+    "AA"
+  ],
+  "key": {
+    "A":
+    {
+      "item": "createcraftedbeginning:airtight_sheet"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:airtight_sheet_block"
+  }
+}

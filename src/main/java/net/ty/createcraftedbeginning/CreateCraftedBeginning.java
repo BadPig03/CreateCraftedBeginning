@@ -12,12 +12,16 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancements;
 import net.ty.createcraftedbeginning.advancement.CCBTriggers;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.airtightcannon.CCBAirtightCannonProjectileBlockHitActions;
+import net.ty.createcraftedbeginning.content.airtightcannon.CCBAirtightCannonProjectileEntityHitActions;
+import net.ty.createcraftedbeginning.content.airtightcannon.CCBAirtightCannonProjectileRenderModes;
 import net.ty.createcraftedbeginning.data.CCBDataGen;
 import net.ty.createcraftedbeginning.data.CCBRegistrate;
 import net.ty.createcraftedbeginning.data.CCBTags;
@@ -26,11 +30,15 @@ import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabs;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
+import net.ty.createcraftedbeginning.registry.CCBEntityTypes;
 import net.ty.createcraftedbeginning.registry.CCBFluids;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
+import net.ty.createcraftedbeginning.registry.CCBPackets;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
+import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
+import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 import org.slf4j.Logger;
 
 @Mod(CreateCraftedBeginning.MOD_ID)
@@ -43,17 +51,21 @@ public class CreateCraftedBeginning {
     public CreateCraftedBeginning(IEventBus modEventBus, ModContainer modContainer) {
         CCB_REGISTRATE.registerEventListeners(modEventBus);
 
-        CCBTags.register();
-        CCBCreativeTabs.register(modEventBus);
-        CCBBlocks.register();
-        CCBItems.register();
-        CCBFluids.register(modEventBus);
-        CCBBlockEntities.register();
-        CCBDataComponents.register(modEventBus);
-        CCBMountedStorage.register();
-        CCBPartialModels.register();
-        CCBRecipeTypes.register(modEventBus);
         CCBArmInteractionPointTypes.register(modEventBus);
+        CCBBlockEntities.register();
+        CCBBlocks.register();
+        CCBCreativeTabs.register(modEventBus);
+        CCBDataComponents.register(modEventBus);
+        CCBEntityTypes.register();
+        CCBFluids.register(modEventBus);
+        CCBItems.register();
+        CCBMountedStorage.register();
+        CCBPackets.register();
+        CCBPartialModels.register();
+        CCBParticleTypes.register(modEventBus);
+        CCBRecipeTypes.register(modEventBus);
+        CCBSoundEvents.prepare();
+        CCBTags.register();
 
         CCBConfig.register(modContainer);
 
@@ -61,6 +73,8 @@ public class CreateCraftedBeginning {
         modEventBus.addListener(CreateCraftedBeginning::onRegister);
         modEventBus.addListener(EventPriority.HIGHEST, CCBDataGen::gatherDataHighPriority);
         modEventBus.addListener(EventPriority.LOWEST, CCBDataGen::gatherData);
+        modEventBus.addListener(EventPriority.NORMAL, false, RegisterParticleProvidersEvent.class, CCBParticleTypes::registerFactories);
+        modEventBus.addListener(CCBSoundEvents::register);
     }
 
     public static ResourceLocation asResource(String path) {
@@ -72,6 +86,10 @@ public class CreateCraftedBeginning {
     }
 
     public static void onRegister(final RegisterEvent event) {
+        CCBAirtightCannonProjectileRenderModes.init();
+		CCBAirtightCannonProjectileEntityHitActions.init();
+		CCBAirtightCannonProjectileBlockHitActions.init();
+
         if (event.getRegistry() == BuiltInRegistries.TRIGGER_TYPES) {
             CCBAdvancements.register();
             CCBTriggers.register();

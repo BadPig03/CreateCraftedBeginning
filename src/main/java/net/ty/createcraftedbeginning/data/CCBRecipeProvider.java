@@ -9,6 +9,7 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.ty.createcraftedbeginning.recipe.CCBCoolingRecipes;
+import net.ty.createcraftedbeginning.recipe.CCBGasInjectionRecipes;
 import net.ty.createcraftedbeginning.recipe.CCBPressurizationRecipes;
 import net.ty.createcraftedbeginning.recipe.CCBSuperCoolingRecipes;
 import org.jetbrains.annotations.NotNull;
@@ -28,6 +29,7 @@ public class CCBRecipeProvider extends RecipeProvider {
         GENERATORS.add(new CCBPressurizationRecipes(output, registries));
         GENERATORS.add(new CCBCoolingRecipes(output, registries));
         GENERATORS.add(new CCBSuperCoolingRecipes(output, registries));
+        GENERATORS.add(new CCBGasInjectionRecipes(output, registries));
 
         gen.addProvider(true, new DataProvider() {
 

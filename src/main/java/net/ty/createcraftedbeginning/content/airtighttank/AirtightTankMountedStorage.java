@@ -34,7 +34,6 @@ public class AirtightTankMountedStorage extends WrapperMountedFluidStorage<Airti
 
     public static AirtightTankMountedStorage fromTank(AirtightTankBlockEntity tank) {
         FluidTank inv = tank.getTankInventory();
-        System.out.println("fromTank: inv -> " + inv.getCapacity() + ", " + inv.getFluid() + ", " + tank.getController());
         return new AirtightTankMountedStorage(inv.getCapacity(), inv.getFluid().copy());
     }
 

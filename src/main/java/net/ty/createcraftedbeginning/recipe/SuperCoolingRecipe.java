@@ -35,6 +35,14 @@ public class SuperCoolingRecipe extends StandardProcessingRecipe<SingleRecipeInp
         return fluidResults.getFirst().getAmount();
     }
 
+    public int getRequiredAmount() {
+        if (isIngredientsFluid()) {
+            return fluidIngredients.getFirst().getRequiredAmount();
+        } else {
+            return 1;
+        }
+    }
+
     @Override
     protected int getMaxInputCount() {
         return 1;

@@ -3,13 +3,13 @@
   "ingredients": [
     {
       "type": "fluid_stack",
-      "amount": 5,
+      "amount": 500,
       "fluid": "createcraftedbeginning:slush"
     }
   ],
   "results": [
     {
-      "amount": 12,
+      "amount": 1200,
       "id": "createcraftedbeginning:cooling_time"
     }
   ]

@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.content.cinderincinerationblower;
 
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
+import com.simibubi.create.infrastructure.config.AllConfigs;
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -39,7 +40,7 @@ public class CinderIncinerationBlowerBlockEntity extends KineticBlockEntity {
         super.tick();
 
         float absSpeed = Mth.abs(speed);
-        if (level == null || absSpeed < 32) {
+        if (level == null || absSpeed < AllConfigs.server().kinetics.mediumSpeed.get()) {
             return;
         }
 
@@ -94,7 +95,7 @@ public class CinderIncinerationBlowerBlockEntity extends KineticBlockEntity {
         }
 
         Vec3 center = Vec3.atCenterOf(worldPosition);
-        double halfEdge = edgeLength / 2F;
+        double halfEdge = edgeLength / 2f;
         AABB area = new AABB(center.x - halfEdge, center.y - halfEdge, center.z - halfEdge, center.x + halfEdge, center.y + halfEdge, center.z + halfEdge);
         for (Entity entity : level.getEntities(null, area)) {
             if (!(entity instanceof LivingEntity) || !entity.isAlive()) {
@@ -112,9 +113,10 @@ public class CinderIncinerationBlowerBlockEntity extends KineticBlockEntity {
         entity.igniteForSeconds((float) 2);
         entity.hurt(CCBDamageSources.cinderNozzleFire(level), 2);
 
-        if (entity instanceof SnowGolem) {
-            entity.die(CCBDamageSources.cinderNozzleFire(level));
+        if (!(entity instanceof SnowGolem golem)) {
+            return;
         }
+        golem.die(CCBDamageSources.cinderNozzleFire(level));
     }
 
     @Override

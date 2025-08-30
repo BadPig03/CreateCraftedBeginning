@@ -1,0 +1,93 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {
+    "tag": "c:obsidians/crying"
+  },
+  "loops": 4,
+  "results": [
+    {
+      "chance": 85.0,
+      "id": "minecraft:heavy_core"
+    },
+    {
+      "chance": 6.0,
+      "id": "minecraft:netherite_scrap"
+    },
+    {
+      "chance": 6.0,
+      "id": "minecraft:airtight_sheet"
+    },
+    {
+      "chance": 3.0,
+      "id": "minecraft:lodestone"
+    }
+  ],
+  "sequence": [
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_heavy_core"
+        },
+        {
+          "item": "minecraft:netherite_scrap"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:high_pressure_compressed_air"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_heavy_core"
+        },
+        {
+          "item": "createcraftedbeginning:airtight_sheet"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:high_pressure_compressed_air"
+        }
+      ]
+    },
+    {
+      "type": "createcraftedbeginning:gas_injection",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_heavy_core"
+        },
+        {
+          "type": "fluid_stack",
+          "amount": 250,
+          "fluid": "createcraftedbeginning:high_pressure_compressed_air"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_heavy_core"
+        }
+      ]
+    },
+    {
+      "type": "create:pressing",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_heavy_core"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_heavy_core"
+        }
+      ]
+    }
+  ],
+  "transitional_item": {
+    "id": "createcraftedbeginning:incomplete_heavy_core"
+  }
+}

@@ -30,10 +30,6 @@ public class CCBConfig {
         return server;
     }
 
-    public static ConfigBase byType(ModConfig.Type type) {
-        return CONFIGS.get(type);
-    }
-
     private static <T extends ConfigBase> T register(Supplier<T> factory, ModConfig.Type side) {
         Pair<T, ModConfigSpec> specPair = new ModConfigSpec.Builder().configure(builder -> {
             T config = factory.get();

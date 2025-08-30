@@ -1,20 +1,23 @@
 {
   "values": [
-    "createcraftedbeginning:andesite_crate",
-    "createcraftedbeginning:brass_crate",
-    "createcraftedbeginning:sturdy_crate",
     "createcraftedbeginning:pneumatic_engine",
-    "createcraftedbeginning:photo-stress_bearing",
+    "createcraftedbeginning:airtight_sheet_block",
+    "createcraftedbeginning:airtight_pipe",
+    "createcraftedbeginning:airtight_encased_pipe",
+    "createcraftedbeginning:airtight_pump",
+    "createcraftedbeginning:airtight_intake_port",
+    "createcraftedbeginning:airtight_tank",
+    "createcraftedbeginning:air_compressor",
+    "createcraftedbeginning:airtight_engine",
+    "createcraftedbeginning:empty_breeze_chamber",
+    "createcraftedbeginning:breeze_chamber",
+    "createcraftedbeginning:gas_injection_chamber",
     "createcraftedbeginning:cinder_alloy_block",
     "createcraftedbeginning:cinder_casing",
     "createcraftedbeginning:cinder_incineration_blower",
-    "createcraftedbeginning:airtight_tank",
-    "createcraftedbeginning:airtight_pipe",
-    "createcraftedbeginning:airtight_pump",
-    "createcraftedbeginning:airtight_intake_port",
-    "createcraftedbeginning:air_compressor",
-    "createcraftedbeginning:empty_breeze_chamber",
-    "createcraftedbeginning:breeze_chamber",
-    "createcraftedbeginning:gas_injection_chamber"
+    "createcraftedbeginning:photo-stress_bearing",
+    "createcraftedbeginning:andesite_crate",
+    "createcraftedbeginning:brass_crate",
+    "createcraftedbeginning:sturdy_crate"
   ]
 }

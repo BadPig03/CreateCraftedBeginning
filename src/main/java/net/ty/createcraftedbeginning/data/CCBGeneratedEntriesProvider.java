@@ -6,13 +6,15 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.DatapackBuiltinEntriesProvider;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.content.airtightcannon.CCBAirtightCannonProjectileTypes;
+import net.ty.createcraftedbeginning.registry.CCBRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 public class CCBGeneratedEntriesProvider extends DatapackBuiltinEntriesProvider {
-    private static final RegistrySetBuilder BUILDER = new RegistrySetBuilder().add(Registries.DAMAGE_TYPE, CCBDamageTypes::bootstrap);
+    private static final RegistrySetBuilder BUILDER = new RegistrySetBuilder().add(Registries.DAMAGE_TYPE, CCBDamageTypes::bootstrap).add(CCBRegistries.AIRTIGHT_CANNON_PROJECTILE_TYPE, CCBAirtightCannonProjectileTypes::bootstrap);
 
     public CCBGeneratedEntriesProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
         super(output, registries, BUILDER, Set.of(CreateCraftedBeginning.MOD_ID));

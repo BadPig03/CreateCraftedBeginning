@@ -10,6 +10,10 @@
     },
 	{
       "type": "single",
+      "resource": "createcraftedbeginning:fluid/amethyst_suspension"
+    },
+	{
+      "type": "single",
       "resource": "createcraftedbeginning:entity/train_hat"
     }
   ]

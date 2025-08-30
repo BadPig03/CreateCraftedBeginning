@@ -21,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class PhotoStressBearingBlockEntity extends GeneratingKineticBlockEntity {
-    private final DustColorTransitionOptions particleColor = new DustColorTransitionOptions(Vec3.fromRGB24(16761855).toVector3f(), Vec3.fromRGB24(10185983).toVector3f(), 1.0F);
+    private final DustColorTransitionOptions particleColor = new DustColorTransitionOptions(Vec3.fromRGB24(16761855).toVector3f(), Vec3.fromRGB24(10185983).toVector3f(), 1f);
     protected ScrollOptionBehaviour<RotationDirection> movementDirection;
     private int skyLight = 0;
     private int lightTimer;

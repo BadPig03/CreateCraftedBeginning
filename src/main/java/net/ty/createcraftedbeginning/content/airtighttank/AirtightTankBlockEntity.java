@@ -26,8 +26,9 @@ import net.neoforged.neoforge.fluids.IFluidTank;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.content.airtightengine.GasControllerData;
 import net.ty.createcraftedbeginning.content.compressedair.CompressedAirOnlyFluidTank;
+import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.util.Helpers;
 
@@ -38,6 +39,7 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IMultiB
     private static final int MAX_LENGTH = 4;
     private static final int MAX_WIDTH = 3;
     private static final int SYNC_RATE = 4;
+    public GasControllerData gasController;
     protected IFluidHandler fluidCapability;
     protected FluidTank tankInventory;
     protected BlockPos controller;
@@ -56,11 +58,12 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IMultiB
         updateCapability = false;
         height = 1;
         width = 1;
+        gasController = new GasControllerData();
         refreshCapability();
     }
 
     public static int getCapacityMultiplier() {
-        return CCBConfig.server().airtightTankCapacity.get() * 1000;
+        return CCBConfig.server().compressedAir.airtightTankCapacity.get() * 1000;
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
@@ -76,16 +79,13 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IMultiB
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
     }
 
-    protected SmartFluidTank createInventory() {
-        return new CompressedAirOnlyFluidTank(getCapacityMultiplier(), this::onFluidStackChanged);
-    }
-
-    protected void updateConnectivity() {
-        updateConnectivity = false;
-        if (level == null || level.isClientSide || !isController()) {
-            return;
+    @Override
+    public void initialize() {
+        super.initialize();
+        sendData();
+        if (level != null && level.isClientSide) {
+            invalidateRenderBoundingBox();
         }
-        ConnectivityHandler.formMulti(this);
     }
 
     @Override
@@ -112,25 +112,102 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IMultiB
         if (updateConnectivity) {
             updateConnectivity();
         }
-    }
-
-    @Override
-    public BlockPos getLastKnownPos() {
-        return lastKnownPos;
-    }
-
-    @Override
-    public boolean isController() {
-        return controller == null || Helpers.isBlockPosEqual(worldPosition, controller);
-    }
-
-    @Override
-    public void initialize() {
-        super.initialize();
-        sendData();
-        if (level != null && level.isClientSide) {
-            invalidateRenderBoundingBox();
+        if (isController()) {
+            gasController.tick(this);
         }
+    }
+
+
+    @Override
+    public void write(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
+        compound.put("GasController", gasController.write(registries));
+        if (updateConnectivity) {
+            compound.putBoolean("Uninitialized", true);
+        }
+        if (lastKnownPos != null) {
+            compound.put("LastKnownPos", NbtUtils.writeBlockPos(lastKnownPos));
+        }
+        if (!isController()) {
+            compound.put("Controller", NbtUtils.writeBlockPos(controller));
+        }
+        if (isController()) {
+            compound.put("TankContent", tankInventory.writeToNBT(registries, new CompoundTag()));
+            compound.putInt("Size", width);
+            compound.putInt("Height", height);
+        }
+        super.write(compound, registries, clientPacket);
+    }
+
+    @Override
+    public void writeSafe(CompoundTag compound, HolderLookup.Provider registries) {
+        if (!isController()) {
+            return;
+        }
+        compound.putInt("Size", width);
+        compound.putInt("Height", height);
+    }
+
+    @Override
+    protected void read(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
+        super.read(compound, registries, clientPacket);
+
+        BlockPos controllerBefore = controller;
+        int prevSize = width;
+        int prevHeight = height;
+
+        updateConnectivity = compound.contains("Uninitialized");
+        lastKnownPos = null;
+
+        if (compound.contains("LastKnownPos")) {
+            lastKnownPos = NBTHelper.readBlockPos(compound, "LastKnownPos");
+        }
+
+        controller = null;
+        if (compound.contains("Controller")) {
+            controller = NBTHelper.readBlockPos(compound, "Controller");
+        }
+
+        if (isController()) {
+            width = compound.getInt("Size");
+            height = compound.getInt("Height");
+            tankInventory.setCapacity(getTotalTankSize() * getCapacityMultiplier());
+            tankInventory.readFromNBT(registries, compound.getCompound("TankContent"));
+        }
+
+        gasController.read(compound.getCompound("GasController"), registries);
+        updateCapability = true;
+
+        if (!clientPacket) {
+            return;
+        }
+
+        boolean changed = !Objects.equals(controllerBefore, controller);
+        if (!changed && prevSize == width && prevHeight == height) {
+            return;
+        }
+        if (level != null) {
+            level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 16);
+        }
+        if (isController()) {
+            tankInventory.setCapacity(getCapacityMultiplier() * getTotalTankSize());
+        }
+        invalidateRenderBoundingBox();
+    }
+
+    protected SmartFluidTank createInventory() {
+        return new CompressedAirOnlyFluidTank(getCapacityMultiplier(), this::onFluidStackChanged);
+    }
+
+    public IFluidHandler getFluidCapability() {
+        return fluidCapability;
+    }
+
+    protected void updateConnectivity() {
+        updateConnectivity = false;
+        if (level == null || level.isClientSide || !isController()) {
+            return;
+        }
+        ConnectivityHandler.formMulti(this);
     }
 
     private void onPositionChanged() {
@@ -162,52 +239,38 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IMultiB
         }
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public AirtightTankBlockEntity getControllerBE() {
-        if (isController() || level == null) {
-            return this;
-        }
-        BlockEntity blockEntity = level.getBlockEntity(controller);
-        if (!(blockEntity instanceof AirtightTankBlockEntity)) {
-            return null;
-        }
-        return (AirtightTankBlockEntity) blockEntity;
-    }
-
     public void applyFluidTankSize(int blocks) {
         tankInventory.setCapacity(blocks * getCapacityMultiplier());
         int overflow = tankInventory.getFluidAmount() - tankInventory.getCapacity();
-        if (overflow > 0) {
-            tankInventory.drain(overflow, IFluidHandler.FluidAction.EXECUTE);
+        if (overflow <= 0) {
+            return;
         }
+        tankInventory.drain(overflow, IFluidHandler.FluidAction.EXECUTE);
     }
 
-    @Override
-    public void removeController(boolean keepFluids) {
-        if (level == null || level.isClientSide) {
+    public void updateTankState() {
+        if (!isController() || level == null) {
             return;
         }
 
-        updateConnectivity = true;
-        if (!keepFluids) {
-            applyFluidTankSize(1);
+        boolean wasGasController = gasController.isActive();
+        boolean changed = gasController.evaluate(this);
+
+        if (wasGasController != gasController.isActive()) {
+            for (int yOffset = 0; yOffset < height; yOffset++) {
+                for (int xOffset = 0; xOffset < width; xOffset++) {
+                    for (int zOffset = 0; zOffset < width; zOffset++) {
+                        if (level.getBlockEntity(worldPosition.offset(xOffset, yOffset, zOffset)) instanceof AirtightTankBlockEntity atbe) {
+                            atbe.refreshCapability();
+                        }
+                    }
+                }
+            }
         }
-        controller = null;
-        width = 1;
-        height = 1;
 
-        onFluidStackChanged(tankInventory.getFluid());
-
-        BlockState state = getBlockState();
-        if (state.getBlock() instanceof AirtightTankBlock) {
-            state = state.setValue(AirtightTankBlock.TOP, true).setValue(AirtightTankBlock.BOTTOM, true);
-            level.setBlock(worldPosition, state, 22);
+        if (changed) {
+            notifyUpdate();
         }
-
-        refreshCapability();
-        setChanged();
-        sendData();
     }
 
     @Override
@@ -227,12 +290,33 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IMultiB
     }
 
     private IFluidHandler handlerForCapability() {
-        return isController() ? tankInventory : getControllerBE() != null ? getControllerBE().handlerForCapability() : new FluidTank(0);
+        if (isController()) {
+            return gasController.isActive() ? gasController.createHandler() : tankInventory;
+        }
+        return getControllerBE() != null ? getControllerBE().handlerForCapability() : new FluidTank(0);
     }
 
     @Override
     public BlockPos getController() {
         return isController() ? worldPosition : controller;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public AirtightTankBlockEntity getControllerBE() {
+        if (isController() || level == null) {
+            return this;
+        }
+        BlockEntity blockEntity = level.getBlockEntity(controller);
+        if (!(blockEntity instanceof AirtightTankBlockEntity)) {
+            return null;
+        }
+        return (AirtightTankBlockEntity) blockEntity;
+    }
+
+    @Override
+    public boolean isController() {
+        return controller == null || Helpers.isBlockPosEqual(worldPosition, controller);
     }
 
     @Override
@@ -248,142 +332,35 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IMultiB
     }
 
     @Override
-    protected AABB createRenderBoundingBox() {
-        if (isController()) {
-            return super.createRenderBoundingBox().expandTowards(width - 1, height - 1, width - 1);
-        } else {
-            return super.createRenderBoundingBox();
-        }
-    }
-
-    @Override
-    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        if (level == null) {
-            return false;
-        }
-        return tankTooltip(tooltip, isPlayerSneaking, fluidCapability);
-    }
-
-    private boolean tankTooltip(List<Component> tooltip, boolean isPlayerSneaking, IFluidHandler handler) {
-        if (handler == null) {
-            return false;
-        }
-
-        if (handler.getTanks() == 0) {
-            return false;
-        }
-
-        LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
-        CCBLang.translate("gui.goggles.gas_container").forGoggles(tooltip);
-
-        boolean isEmpty = true;
-        for (int i = 0; i < handler.getTanks(); i++) {
-            FluidStack fluidStack = handler.getFluidInTank(i);
-            if (fluidStack.isEmpty()) {
-                continue;
-            }
-
-            CCBLang.fluidName(fluidStack).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-
-            CCBLang.builder().add(CCBLang.number(fluidStack.getAmount()).add(mb).style(ChatFormatting.GOLD)).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(handler.getTankCapacity(i)).add(mb).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
-
-            isEmpty = false;
-        }
-
-        if (handler.getTanks() > 1) {
-            if (isEmpty) {
-                tooltip.removeLast();
-            }
-            return true;
-        }
-
-        if (!isEmpty) {
-            return true;
-        }
-
-        CCBLang.translate("gui.goggles.gas_container.capacity").add(CCBLang.number(handler.getTankCapacity(0)).add(mb).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-
-        return true;
-    }
-
-    @Override
-    protected void read(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
-        super.read(compound, registries, clientPacket);
-
-        BlockPos controllerBefore = controller;
-        int prevSize = width;
-        int prevHeight = height;
-
-        updateConnectivity = compound.contains("Uninitialized");
-        lastKnownPos = null;
-
-        if (compound.contains("LastKnownPos")) {
-            lastKnownPos = NBTHelper.readBlockPos(compound, "LastKnownPos");
-        }
-
-        controller = null;
-        if (compound.contains("Controller")) {
-            controller = NBTHelper.readBlockPos(compound, "Controller");
-        }
-
-        if (isController()) {
-            width = compound.getInt("Size");
-            height = compound.getInt("Height");
-            tankInventory.setCapacity(getTotalTankSize() * getCapacityMultiplier());
-            tankInventory.readFromNBT(registries, compound.getCompound("TankContent"));
-        }
-
-        updateCapability = true;
-
-        if (!clientPacket) {
+    public void removeController(boolean keepFluids) {
+        if (level == null || level.isClientSide) {
             return;
         }
 
-        boolean changeOfController = !Objects.equals(controllerBefore, controller);
-        if (changeOfController || prevSize != width || prevHeight != height) {
-            if (level != null) {
-                level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 16);
-            }
-            if (isController()) {
-                tankInventory.setCapacity(getCapacityMultiplier() * getTotalTankSize());
-            }
-            invalidateRenderBoundingBox();
+        updateConnectivity = true;
+        if (!keepFluids) {
+            applyFluidTankSize(1);
         }
+        controller = null;
+        width = 1;
+        height = 1;
+        gasController.clear();
+        onFluidStackChanged(tankInventory.getFluid());
+
+        BlockState state = getBlockState();
+        if (state.getBlock() instanceof AirtightTankBlock) {
+            state = state.setValue(AirtightTankBlock.TOP, true).setValue(AirtightTankBlock.BOTTOM, true);
+            level.setBlock(worldPosition, state, 22);
+        }
+
+        refreshCapability();
+        setChanged();
+        sendData();
     }
 
     @Override
-    public void write(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
-        if (updateConnectivity) {
-            compound.putBoolean("Uninitialized", true);
-        }
-        if (lastKnownPos != null) {
-            compound.put("LastKnownPos", NbtUtils.writeBlockPos(lastKnownPos));
-        }
-        if (!isController()) {
-            compound.put("Controller", NbtUtils.writeBlockPos(controller));
-        }
-        if (isController()) {
-            compound.put("TankContent", tankInventory.writeToNBT(registries, new CompoundTag()));
-            compound.putInt("Size", width);
-            compound.putInt("Height", height);
-        }
-        super.write(compound, registries, clientPacket);
-    }
-
-    @Override
-    public void writeSafe(CompoundTag compound, HolderLookup.Provider registries) {
-        if (isController()) {
-            compound.putInt("Size", width);
-            compound.putInt("Height", height);
-        }
-    }
-
-    public FluidTank getTankInventory() {
-        return tankInventory;
-    }
-
-    public int getTotalTankSize() {
-        return width * width * height;
+    public BlockPos getLastKnownPos() {
+        return lastKnownPos;
     }
 
     @Override
@@ -405,6 +382,7 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IMultiB
         }
 
         onFluidStackChanged(tankInventory.getFluid());
+        updateTankState();
         setChanged();
     }
 
@@ -441,6 +419,75 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IMultiB
     @Override
     public void setWidth(int width) {
         this.width = width;
+    }
+
+    @Override
+    protected AABB createRenderBoundingBox() {
+        if (isController()) {
+            return super.createRenderBoundingBox().expandTowards(width - 1, height - 1, width - 1);
+        } else {
+            return super.createRenderBoundingBox();
+        }
+    }
+
+    @Override
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        if (level == null) {
+            return false;
+        }
+
+        AirtightTankBlockEntity controller = getControllerBE();
+        if (controller == null) {
+            return false;
+        }
+        if (controller.gasController.addToGoggleTooltip(tooltip, controller.getTotalTankSize())) {
+            return true;
+        }
+        return tankTooltip(tooltip, fluidCapability);
+    }
+
+    private boolean tankTooltip(List<Component> tooltip, IFluidHandler handler) {
+        if (handler == null || handler.getTanks() == 0) {
+            return false;
+        }
+
+        LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
+        CCBLang.translate("gui.goggles.gas_container").forGoggles(tooltip);
+
+        boolean isEmpty = true;
+        for (int i = 0; i < handler.getTanks(); i++) {
+            FluidStack fluidStack = handler.getFluidInTank(i);
+            if (fluidStack.isEmpty()) {
+                continue;
+            }
+
+            CCBLang.fluidName(fluidStack).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+            CCBLang.builder().add(CCBLang.number(fluidStack.getAmount()).add(mb).style(ChatFormatting.GOLD)).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(handler.getTankCapacity(i)).add(mb).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+            isEmpty = false;
+        }
+
+        if (handler.getTanks() > 1) {
+            if (isEmpty) {
+                tooltip.removeLast();
+            }
+            return true;
+        }
+
+        if (!isEmpty) {
+            return true;
+        }
+
+        CCBLang.translate("gui.goggles.gas_container.capacity").add(CCBLang.number(handler.getTankCapacity(0)).add(mb).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+
+        return true;
+    }
+
+    public FluidTank getTankInventory() {
+        return tankInventory;
+    }
+
+    public int getTotalTankSize() {
+        return width * width * height;
     }
 
     @Override

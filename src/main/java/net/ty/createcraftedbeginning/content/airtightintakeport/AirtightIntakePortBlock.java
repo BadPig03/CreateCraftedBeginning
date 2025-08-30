@@ -5,19 +5,14 @@ import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
-import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -29,59 +24,38 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.neoforge.common.util.DeferredSoundType;
 import net.ty.createcraftedbeginning.advancement.AdvancementBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBShapes;
 import org.jetbrains.annotations.NotNull;
 
 public class AirtightIntakePortBlock extends Block implements IBE<AirtightIntakePortBlockEntity>, SimpleWaterloggedBlock, IWrenchable {
-    public static final SoundType SILENCED_METAL = new DeferredSoundType(0.1F, 1.5F, () -> SoundEvents.METAL_BREAK, () -> SoundEvents.METAL_STEP, () -> SoundEvents.METAL_PLACE, () -> SoundEvents.METAL_HIT, () -> SoundEvents.METAL_FALL);
     public static final DirectionProperty FACING = BlockStateProperties.FACING;
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     public AirtightIntakePortBlock(Properties properties) {
         super(properties);
-        registerDefaultState(defaultBlockState().setValue(BlockStateProperties.WATERLOGGED, false));
+        registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false));
     }
 
-    @Override
-    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING, BlockStateProperties.WATERLOGGED);
-        super.createBlockStateDefinition(builder);
+    public static boolean isValidDirection(Direction.Axis pipeAxis, Direction connectionDirection, BlockState portState) {
+        Direction portFacing = portState.getValue(FACING).getOpposite();
+        return switch (pipeAxis) {
+            case X -> (connectionDirection == Direction.WEST && portFacing == Direction.EAST) || (connectionDirection == Direction.EAST && portFacing == Direction.WEST);
+            case Z -> (connectionDirection == Direction.NORTH && portFacing == Direction.SOUTH) || (connectionDirection == Direction.SOUTH && portFacing == Direction.NORTH);
+            case Y -> (connectionDirection == Direction.DOWN && portFacing == Direction.UP) || (connectionDirection == Direction.UP && portFacing == Direction.DOWN);
+        };
     }
 
     @Override
     public BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
-        BlockState toPlace = super.getStateForPlacement(context);
-        Level level = context.getLevel();
-        BlockPos pos = context.getClickedPos();
-        Player player = context.getPlayer();
-
-        if (player == null) {
-            return toPlace;
+        BlockState state = super.getStateForPlacement(context);
+        if (state == null) {
+            return null;
         }
 
-        toPlace = ProperWaterloggedBlock.withWater(level, toPlace, pos);
-
-        Direction nearestLookingDirection = context.getNearestLookingDirection();
-        Direction facing = nearestLookingDirection.getOpposite();
-
-        if (toPlace != null) {
-            return toPlace.setValue(FACING, facing);
-        }
-
-        return Blocks.AIR.defaultBlockState();
-    }
-
-    @Override
-    public @NotNull VoxelShape getShape(BlockState state, @NotNull BlockGetter level, @NotNull BlockPos blockPos, @NotNull CollisionContext collisionContext) {
-        return CCBShapes.AIRTIGHT_INTAKE_PORT.get(state.getValue(FACING));
-    }
-
-    @Override
-    public @NotNull FluidState getFluidState(BlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.defaultFluidState() : super.getFluidState(state);
+        state = ProperWaterloggedBlock.withWater(context.getLevel(), state, context.getClickedPos());
+        return state.setValue(FACING, context.getClickedFace());
     }
 
     @Override
@@ -91,17 +65,32 @@ public class AirtightIntakePortBlock extends Block implements IBE<AirtightIntake
     }
 
     @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(FACING, WATERLOGGED);
+        super.createBlockStateDefinition(builder);
+    }
+
+    @Override
     protected boolean isPathfindable(@NotNull BlockState state, @NotNull PathComputationType pathComputationType) {
         return false;
     }
 
     @Override
-    public @NotNull SoundType getSoundType(@NotNull BlockState state, @NotNull LevelReader world, @NotNull BlockPos pos, Entity entity) {
-        SoundType soundType = super.getSoundType(state, world, pos, entity);
-        if (entity != null && entity.getPersistentData().contains("SilenceTankSound")) {
-            return SILENCED_METAL;
+    public @NotNull BlockState updateShape(BlockState state, @NotNull Direction direction, @NotNull BlockState neighbourState, @NotNull LevelAccessor world, @NotNull BlockPos pos, @NotNull BlockPos neighbourPos) {
+        if (state.getValue(WATERLOGGED)) {
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
         }
-        return soundType;
+        return state;
+    }
+
+    @Override
+    public @NotNull FluidState getFluidState(BlockState state) {
+        return state.getValue(WATERLOGGED) ? Fluids.WATER.defaultFluidState() : super.getFluidState(state);
+    }
+
+    @Override
+    public @NotNull VoxelShape getShape(BlockState state, @NotNull BlockGetter level, @NotNull BlockPos blockPos, @NotNull CollisionContext collisionContext) {
+        return CCBShapes.AIRTIGHT_INTAKE_PORT.get(state.getValue(FACING));
     }
 
     @Override

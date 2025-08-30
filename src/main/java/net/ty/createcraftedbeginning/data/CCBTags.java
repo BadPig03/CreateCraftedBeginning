@@ -106,9 +106,15 @@ public class CCBTags {
     public enum CCBItemTags {
         CRATES,
         CINDER_CASING_RAW_MATERIALS,
+        CRYING_OBSIDIAN(COMMON, "dusts/crying_obsidian"),
+        AMETHYST(COMMON, "dusts/amethyst"),
         CINDER_ALLOY(COMMON, "ingots/cinder"),
         AMETHYST_CRYSTAL_PLATE(COMMON, "plates/amethyst_crystal"),
         AIRTIGHT_COMPONENTS,
+        COMPRESSED_AIR_CANISTER,
+        LOW_PRESSURE_COMPRESSED_AIR_CANISTER,
+        MEDIUM_PRESSURE_COMPRESSED_AIR_CANISTER,
+        HIGH_PRESSURE_COMPRESSED_AIR_CANISTER,
         ICE_CREAM_WITH_FLAVOR;
 
         public final TagKey<Item> tag;

@@ -1,8 +1,8 @@
 {
   "values": [
+    "createcraftedbeginning:cinder_casing",
     "createcraftedbeginning:andesite_crate",
     "createcraftedbeginning:brass_crate",
-    "createcraftedbeginning:cardboard_crate",
-    "createcraftedbeginning:cinder_casing"
+    "createcraftedbeginning:cardboard_crate"
   ]
 }

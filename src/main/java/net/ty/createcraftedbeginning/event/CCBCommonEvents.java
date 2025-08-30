@@ -9,6 +9,7 @@ import net.ty.createcraftedbeginning.content.andesitecrate.AndesiteCrateBlockEnt
 import net.ty.createcraftedbeginning.content.brasscrate.BrassCrateBlockEntity;
 import net.ty.createcraftedbeginning.content.breezechamber.BreezeChamberBlockEntity;
 import net.ty.createcraftedbeginning.content.cardboardcrate.CardboardCrateBlockEntity;
+import net.ty.createcraftedbeginning.content.condensatedrain.CondensateDrainBlockEntity;
 import net.ty.createcraftedbeginning.content.gasinjectionchamber.GasInjectionChamberBlockEntity;
 import net.ty.createcraftedbeginning.content.sturdycrate.SturdyCrateBlockEntity;
 
@@ -16,14 +17,15 @@ import net.ty.createcraftedbeginning.content.sturdycrate.SturdyCrateBlockEntity;
 public class CCBCommonEvents {
     @SubscribeEvent
     public static void registerCapabilities(net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent event) {
+        AirCompressorBlockEntity.registerCapabilities(event);
+        AirtightIntakePortBlockEntity.registerCapabilities(event);
+        AirtightTankBlockEntity.registerCapabilities(event);
         AndesiteCrateBlockEntity.registerCapabilities(event);
         BrassCrateBlockEntity.registerCapabilities(event);
-        CardboardCrateBlockEntity.registerCapabilities(event);
-        SturdyCrateBlockEntity.registerCapabilities(event);
-        AirtightTankBlockEntity.registerCapabilities(event);
-        AirtightIntakePortBlockEntity.registerCapabilities(event);
-        AirCompressorBlockEntity.registerCapabilities(event);
         BreezeChamberBlockEntity.registerCapabilities(event);
+        CardboardCrateBlockEntity.registerCapabilities(event);
+        CondensateDrainBlockEntity.registerCapabilities(event);
         GasInjectionChamberBlockEntity.registerCapabilities(event);
+        SturdyCrateBlockEntity.registerCapabilities(event);
     }
 }

@@ -3,13 +3,13 @@
   "ingredients": [
     {
       "type": "fluid_stack",
-      "amount": 200,
+      "amount": 500,
       "fluid": "minecraft:water"
     }
   ],
   "results": [
     {
-      "amount": 3,
+      "amount": 8,
       "id": "createcraftedbeginning:cooling_time"
     }
   ]

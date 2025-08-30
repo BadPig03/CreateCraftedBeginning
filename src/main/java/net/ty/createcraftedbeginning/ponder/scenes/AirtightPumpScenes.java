@@ -76,7 +76,7 @@ public class AirtightPumpScenes {
         scene.idle(80);
         scene.world().replaceBlocks(leftPipeSelection, AllBlocks.GLASS_FLUID_PIPE.getDefaultState().setValue(GlassFluidPipeBlock.AXIS, Direction.Axis.X), true);
         scene.world().replaceBlocks(rightPipeSelection, AllBlocks.GLASS_FLUID_PIPE.getDefaultState().setValue(GlassFluidPipeBlock.AXIS, Direction.Axis.X), true);
-        scene.overlay().showControls(util.vector().blockSurface(upperCreativeTankPos, Direction.UP).subtract(0, 1 / 8F, 0), Pointing.DOWN, 60).rightClick().withItem(lavaBucket);
+        scene.overlay().showControls(util.vector().blockSurface(upperCreativeTankPos, Direction.UP).subtract(0, 1 / 8f, 0), Pointing.DOWN, 60).rightClick().withItem(lavaBucket);
 
         scene.idle(5);
         scene.world().modifyBlockEntity(lowerCreativeTankPos, CreativeFluidTankBlockEntity.class, be -> ((CreativeFluidTankBlockEntity.CreativeSmartFluidTank) be.getTankInventory()).setContainedFluid(lava));

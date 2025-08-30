@@ -3,9 +3,9 @@ package net.ty.createcraftedbeginning.data;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.content.decoration.encasing.CasingBlock;
 import com.simibubi.create.content.decoration.encasing.EncasedCTBehaviour;
+import com.simibubi.create.content.processing.AssemblyOperatorBlockItem;
 import com.simibubi.create.foundation.block.connected.CTSpriteShiftEntry;
 import com.simibubi.create.foundation.data.AssetLookup;
-import com.simibubi.create.foundation.data.ModelGen;
 import com.simibubi.create.foundation.data.SharedProperties;
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.providers.DataGenContext;
@@ -17,6 +17,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
@@ -29,6 +30,7 @@ import net.ty.createcraftedbeginning.content.breezechamber.BreezeChamberBlock;
 import net.ty.createcraftedbeginning.content.breezechamber.BreezeChamberBlockItem;
 import net.ty.createcraftedbeginning.content.breezechamber.BreezeChamberConductor;
 import net.ty.createcraftedbeginning.content.breezechamber.BreezeChamberMovementBehaviour;
+import net.ty.createcraftedbeginning.content.gasinjectionchamber.GasInjectionChamberBlock;
 import net.ty.createcraftedbeginning.content.sturdycrate.UncontainableBlockItem;
 import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
 
@@ -41,6 +43,7 @@ import static com.simibubi.create.api.behaviour.movement.MovementBehaviour.movem
 import static com.simibubi.create.api.contraption.storage.fluid.MountedFluidStorageType.mountedFluidStorage;
 import static com.simibubi.create.foundation.data.CreateRegistrate.casingConnectivity;
 import static com.simibubi.create.foundation.data.CreateRegistrate.connectedTextures;
+import static com.simibubi.create.foundation.data.ModelGen.customItemModel;
 
 @SuppressWarnings("removal")
 public class CCBBuilderTransformer {
@@ -101,15 +104,15 @@ public class CCBBuilderTransformer {
     }
 
     public static <B extends Block, P> NonNullUnaryOperator<BlockBuilder<B, P>> pneumatic_engine() {
-        return b -> b.addLayer(() -> RenderType::cutoutMipped).blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().transform(ModelGen.customItemModel("pneumatic_engine", "item"));
+        return b -> b.addLayer(() -> RenderType::cutoutMipped).blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().transform(customItemModel("pneumatic_engine", "item"));
     }
 
     public static <B extends Block, P> NonNullUnaryOperator<BlockBuilder<B, P>> photo_stress_bearing() {
-        return b -> b.addLayer(() -> RenderType::cutoutMipped).blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().transform(ModelGen.customItemModel("photo-stress_bearing", "item"));
+        return b -> b.addLayer(() -> RenderType::cutoutMipped).blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().transform(customItemModel("photo-stress_bearing", "item"));
     }
 
     public static <B extends Block, P> NonNullUnaryOperator<BlockBuilder<B, P>> cinder_incineration_blower() {
-        return b -> b.addLayer(() -> RenderType::cutoutMipped).blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().transform(ModelGen.customItemModel("cinder_incineration_blower", "item"));
+        return b -> b.addLayer(() -> RenderType::cutoutMipped).blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().transform(customItemModel("cinder_incineration_blower", "item"));
     }
 
     public static <B extends CasingBlock> NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> casing(Supplier<CTSpriteShiftEntry> ct) {
@@ -129,6 +132,10 @@ public class CCBBuilderTransformer {
             Direction.Axis axis = state.getValue(BlockStateProperties.AXIS);
             return ConfiguredModel.builder().modelFile(p.models().getExistingFile(p.modLoc("block/airtight_pipe/pipe"))).uvLock(false).rotationX(axis == Direction.Axis.Y ? 0 : 90).rotationY(axis == Direction.Axis.X ? 90 : 0).build();
         }, BlockStateProperties.WATERLOGGED)).onRegister(CCBRegistrate.blockModel(() -> AirtightPipeAttachmentModel::withAO)).item().transform(ib -> ib.model(AssetLookup::customItemModel)).tag(CCBTags.CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+    }
+
+    public static <B extends Block> NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtight_encased_pipe() {
+        return b -> b.addLayer(() -> RenderType::cutoutMipped).blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().tag(CCBTags.CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(customItemModel("airtight_encased_pipe", "item"));
     }
 
     public static <B extends Block> NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtight_pump() {
@@ -200,6 +207,18 @@ public class CCBBuilderTransformer {
         }).item().tag(CCBTags.CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(ib -> ib.model(AssetLookup::customItemModel)).build();
     }
 
+    public static <B extends Block> NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtight_engine() {
+        return b -> b.addLayer(() -> RenderType::cutoutMipped).blockstate((c, p) -> {
+            ModelFile model = p.models().getExistingFile(p.modLoc("block/airtight_engine/block"));
+            Block block = c.get();
+            p.getVariantBuilder(block).forAllStatesExcept(state -> {
+                int rotationX = state.getValue(BlockStateProperties.ATTACH_FACE).ordinal() * 90;
+                int rotationY = (((int) state.getValue(BlockStateProperties.HORIZONTAL_FACING).toYRot()) + (state.getValue(BlockStateProperties.ATTACH_FACE) == AttachFace.CEILING ? 180 : 0)) % 360;
+                return ConfiguredModel.builder().modelFile(model).rotationX(rotationX).rotationY(rotationY).build();
+            }, BlockStateProperties.WATERLOGGED);
+        }).item().tag(CCBTags.CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(ib -> ib.model(AssetLookup::customItemModel)).build();
+    }
+
     public static <B extends Block> NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> empty_breeze_chamber() {
         return b -> b.addLayer(() -> RenderType::cutoutMipped).blockstate((c, p) -> {
             ModelFile model = p.models().getExistingFile(p.modLoc("block/breeze_chamber/block"));
@@ -214,7 +233,7 @@ public class CCBBuilderTransformer {
                 boolean cooler = state.getValue(BreezeChamberBlock.COOLER);
                 if (cooler) {
                     model.set(p.models().getExistingFile(p.modLoc("block/breeze_chamber/cooler")));
-                }else {
+                } else {
                     model.set(p.models().getExistingFile(p.modLoc("block/breeze_chamber/block")));
                 }
                 return ConfiguredModel.builder().modelFile(model.get()).build();
@@ -223,10 +242,41 @@ public class CCBBuilderTransformer {
     }
 
     public static <B extends Block> NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> gas_injection_chamber() {
-        return b -> b.addLayer(() -> RenderType::translucent).blockstate((c, p) -> {
+        return b -> b.addLayer(() -> RenderType::cutoutMipped).blockstate((c, p) -> {
             ModelFile model = p.models().getExistingFile(p.modLoc("block/gas_injection_chamber/block"));
-            p.getVariantBuilder(c.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(model).build());
-        }).item().transform(ib -> ib.model(AssetLookup::customItemModel)).build();
+            p.getVariantBuilder(c.getEntry()).forAllStatesExcept(state -> {
+                Direction facing = state.getValue(GasInjectionChamberBlock.FACING);
+
+                int rotationY = 0;
+                switch (facing) {
+                    case SOUTH:
+                        rotationY = 180;
+                        break;
+                    case WEST:
+                        rotationY = 270;
+                        break;
+                    case EAST:
+                        rotationY = 90;
+                        break;
+                    default:
+                        break;
+                }
+
+                return ConfiguredModel.builder().modelFile(model).rotationY(rotationY).build();
+            });
+        }).item(AssemblyOperatorBlockItem::new).tag(CCBTags.CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(ib -> ib.model(AssetLookup::customItemModel)).build();
+    }
+
+    public static <B extends Block> NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> condensate_drain() {
+        return b -> b.addLayer(() -> RenderType::cutoutMipped).blockstate((c, p) -> {
+            ModelFile model = p.models().getExistingFile(p.modLoc("block/condensate_drain/block"));
+            Block block = c.get();
+            p.getVariantBuilder(block).forAllStatesExcept(state -> {
+                int rotationX = state.getValue(BlockStateProperties.ATTACH_FACE).ordinal() * 90;
+                int rotationY = (((int) state.getValue(BlockStateProperties.HORIZONTAL_FACING).toYRot()) + (state.getValue(BlockStateProperties.ATTACH_FACE) == AttachFace.CEILING ? 180 : 0)) % 360;
+                return ConfiguredModel.builder().modelFile(model).rotationX(rotationX).rotationY(rotationY).build();
+            }, BlockStateProperties.WATERLOGGED);
+        }).item().tag(CCBTags.CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(ib -> ib.model(AssetLookup::customItemModel)).build();
     }
 
     private static <T extends Block> Function<BlockState, ModelFile> getBlockModel(DataGenContext<Block, T> c, RegistrateBlockstateProvider p) {

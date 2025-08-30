@@ -4,9 +4,11 @@ import com.mojang.serialization.MapCodec;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -40,14 +42,6 @@ public class CardboardCrateBlock extends HorizontalDirectionalBlock implements I
     }
 
     @Override
-    public void onRemove(BlockState state, @NotNull Level level, @NotNull BlockPos pos, BlockState newState, boolean isMoving) {
-        if (state.is(newState.getBlock())) {
-            return;
-        }
-        super.onRemove(state, level, pos, newState, isMoving);
-    }
-
-    @Override
     public boolean hasAnalogOutputSignal(@NotNull BlockState state) {
         return true;
     }
@@ -59,8 +53,14 @@ public class CardboardCrateBlock extends HorizontalDirectionalBlock implements I
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.@NotNull Builder<Block, BlockState> builder) {
-        super.createBlockStateDefinition(builder);
         builder.add(FACING);
+        super.createBlockStateDefinition(builder);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
+        BlockState toPlace = super.getStateForPlacement(context);
+        return toPlace == null ? Blocks.AIR.defaultBlockState() : toPlace.setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
 
     @Override

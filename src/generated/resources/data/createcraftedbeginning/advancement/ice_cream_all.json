@@ -40,6 +40,16 @@
         ]
       },
       "trigger": "minecraft:inventory_changed"
+    },
+    "4": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:amethyst_ice_cream"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
     }
   },
   "display": {
@@ -68,6 +78,9 @@
     ],
     [
       "3"
+    ],
+    [
+      "4"
     ]
   ],
   "sends_telemetry_event": true

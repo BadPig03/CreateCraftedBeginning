@@ -29,6 +29,10 @@ public class CCBTagGen {
         return b -> b.tag(BlockTags.MINEABLE_WITH_PICKAXE);
     }
 
+    public static <T extends Block, P> NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> mineableWithShovel() {
+        return b -> b.tag(BlockTags.MINEABLE_WITH_SHOVEL);
+    }
+
     public static <T extends Block, P> NonNullFunction<BlockBuilder<T, P>, ItemBuilder<BlockItem, BlockBuilder<T, P>>> tagBlockAndItem(String... path) {
         return b -> {
             for (String p : path) {

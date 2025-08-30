@@ -1,2 +1,5 @@
-// 1.21.1	2025-08-04T21:36:46.499999	Create Crafted Beginning's Generated Registry Entries
+// 1.21.1	2025-08-29T20:48:14.6965572	Create Crafted Beginning's Generated Registry Entries
+e3ab3c4bd70ad742d37091ae05774aadffb1d1d5 data/createcraftedbeginning/createcraftedbeginning/airtight_cannon_projectile/type/fallback.json
+ecf3377d0f23211e56bac25d35b4bf9ef8ce16a2 data/createcraftedbeginning/createcraftedbeginning/airtight_cannon_projectile/type/gold_nugget.json
+d4b997c8f2695fc0e02145c7f69cf84d75064458 data/createcraftedbeginning/createcraftedbeginning/airtight_cannon_projectile/type/iron_nugget.json
 3cd99df8d5d6be1d74886e437794ca9b60870a16 data/createcraftedbeginning/damage_type/cinder_incineration_blower_fire.json

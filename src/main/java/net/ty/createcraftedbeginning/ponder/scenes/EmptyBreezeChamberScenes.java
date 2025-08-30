@@ -1,9 +1,9 @@
 package net.ty.createcraftedbeginning.ponder.scenes;
 
-import com.simibubi.create.foundation.gui.AllIcons;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.api.ParticleEmitter;
+import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.element.ElementLink;
 import net.createmod.ponder.api.element.EntityElement;
 import net.createmod.ponder.api.scene.SceneBuilder;
@@ -12,7 +12,6 @@ import net.createmod.ponder.api.scene.Selection;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.breeze.Breeze;
@@ -24,7 +23,6 @@ import net.ty.createcraftedbeginning.registry.CCBBlocks;
 public class EmptyBreezeChamberScenes {
     public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
-        RandomSource randomSource = RandomSource.create();
 
         scene.title("empty_breeze_chamber", "Using Empty Breeze Chambers");
         scene.configureBasePlate(0, 0, 5);
@@ -36,7 +34,8 @@ public class EmptyBreezeChamberScenes {
 
         Selection spawnerSelection = util.select().fromTo(spawnerPos, spawnerPos);
 
-        ItemStack emptyChamber = new ItemStack(CCBBlocks.EMPTY_BREEZE_CHAMBER_BLOCK.asItem());
+        ItemStack emptyChamber = new ItemStack(CCBBlocks.EMPTY_BREEZE_CHAMBER_BLOCK);
+        ItemStack chamber = new ItemStack(CCBBlocks.BREEZE_CHAMBER_BLOCK);
 
         ParticleEmitter gust = scene.effects().simpleParticleEmitter(ParticleTypes.GUST, Vec3.ZERO);
 
@@ -69,12 +68,15 @@ public class EmptyBreezeChamberScenes {
         scene.world().showSection(spawnerSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("However, Breezes cannot be collected from the Trial Spawners directly").pointAt(util.vector().blockSurface(spawnerPos, Direction.WEST)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Breezes can also be collected from the Trial Spawners directly").colored(PonderPalette.BLUE).pointAt(util.vector().blockSurface(spawnerPos, Direction.WEST)).placeNearTarget().attachKeyFrame();
 
         scene.idle(10);
-        scene.overlay().showControls(util.vector().topOf(spawnerPos), Pointing.DOWN, 40).rightClick().showing(AllIcons.I_MTD_CLOSE).withItem(emptyChamber);
+        scene.overlay().showControls(util.vector().topOf(spawnerPos), Pointing.DOWN, 40).rightClick().withItem(emptyChamber);
 
-        scene.idle(60);
+        scene.idle(7);
+        scene.effects().emitParticles(util.vector().centerOf(spawnerPos), gust, 1, 1);
+
+        scene.idle(53);
         scene.markAsFinished();
     }
 }

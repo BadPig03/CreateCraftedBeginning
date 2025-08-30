@@ -7,6 +7,7 @@ import net.ty.createcraftedbeginning.registry.CCBFluids;
 
 import java.util.concurrent.CompletableFuture;
 
+@SuppressWarnings("unused")
 public class CCBPressurizationRecipes extends PressurizationRecipeGen {
     GeneratedRecipe
 

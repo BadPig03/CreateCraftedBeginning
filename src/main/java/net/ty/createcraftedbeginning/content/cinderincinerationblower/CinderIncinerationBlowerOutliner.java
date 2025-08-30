@@ -47,7 +47,7 @@ public class CinderIncinerationBlowerOutliner {
     }
 
     private AABB calculateSelectionBox(BlockPos center, int edge) {
-        double halfEdge = edge / 2F;
+        double halfEdge = edge / 2f;
         Vec3 centerVec = Vec3.atCenterOf(center);
         return new AABB(centerVec.x - halfEdge, centerVec.y - halfEdge, centerVec.z - halfEdge, centerVec.x + halfEdge, centerVec.y + halfEdge, centerVec.z + halfEdge);
     }

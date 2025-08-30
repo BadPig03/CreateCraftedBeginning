@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "AA",
+    "AA"
+  ],
+  "key": {
+    "A":
+    {
+      "item": "createcraftedbeginning:powdered_amethyst"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:powdered_amethyst_block"
+  }
+}

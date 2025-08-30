@@ -4,12 +4,13 @@
   "package": "net.ty.createcraftedbeginning.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+	"BuiltInRegistriesMixin",
     "FluidTankBlockEntityMixin",
-	"PipeConnectionMixin",
-	"FluidInterfaceMixin",
-	"FluidTransportBehaviourMixin",
-	"BlockEntityBehaviourMixin",
-	"BasinBlockEntityMixin"
+    "PipeConnectionMixin",
+    "FluidInterfaceMixin",
+    "FluidTransportBehaviourMixin",
+    "BlockEntityBehaviourMixin",
+    "BasinBlockEntityMixin"
   ],
   "minVersion": "0.8.5"
 }

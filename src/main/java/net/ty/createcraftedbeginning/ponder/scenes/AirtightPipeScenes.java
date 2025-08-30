@@ -48,9 +48,9 @@ public class AirtightPipeScenes {
         FluidStack water = new FluidStack(Fluids.WATER, 8000);
 
 		AABB bb = new AABB(util.vector().centerOf(rightPipePos), util.vector().centerOf(rightPipePos)).inflate(1 / 6f);
-		AABB bb1 = bb.move(0, 1 / 2F, 0);
-        AABB bb2 = bb.move(0, 0, -1 / 2F);
-        AABB bb3 = bb.move(0, -1 / 2F, 0);
+		AABB bb1 = bb.move(0, 1 / 2f, 0);
+        AABB bb2 = bb.move(0, 0, -1 / 2f);
+        AABB bb3 = bb.move(0, -1 / 2f, 0);
 
         scene.world().setBlock(leftPipePos, AllBlocks.GLASS_FLUID_PIPE.getDefaultState().setValue(GlassFluidPipeBlock.AXIS, Direction.Axis.X), false);
         scene.world().setBlock(pumpPos, AllBlocks.MECHANICAL_PUMP.getDefaultState().setValue(PumpBlock.FACING, Direction.WEST), false);

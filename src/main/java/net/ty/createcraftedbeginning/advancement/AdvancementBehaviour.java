@@ -63,8 +63,8 @@ public class AdvancementBehaviour extends BlockEntityBehaviour {
                 continue;
             }
 
-            Vec3 playerPos = player.getEyePosition(1.0F);
-            Vec3 lookDirection = player.getViewVector(1.0F);
+            Vec3 playerPos = player.getEyePosition(1f);
+            Vec3 lookDirection = player.getViewVector(1f);
             Vec3 toTarget = targetPos.subtract(playerPos).normalize();
 
             double dotProduct = lookDirection.dot(toTarget);

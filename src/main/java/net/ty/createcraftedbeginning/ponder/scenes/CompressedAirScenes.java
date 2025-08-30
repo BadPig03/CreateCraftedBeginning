@@ -82,7 +82,7 @@ public class CompressedAirScenes {
         scene.world().showSection(sourceSelection, Direction.DOWN);
 
         scene.idle(10);
-        scene.overlay().showControls(util.vector().blockSurface(upperCreativeTankPos, Direction.UP).subtract(0, 1 / 8F, 0), Pointing.DOWN, 60).withItem(emptyBucket);
+        scene.overlay().showControls(util.vector().blockSurface(upperCreativeTankPos, Direction.UP).subtract(0, 1 / 8f, 0), Pointing.DOWN, 60).withItem(emptyBucket);
         scene.overlay().showText(60).text("Transporting Compressed Air poses a greater hazard than handling ordinary fluids").colored(PonderPalette.RED).pointAt(Vec3.atCenterOf(lowerCreativeTankPos)).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
@@ -99,7 +99,7 @@ public class CompressedAirScenes {
         scene.idle(80);
         scene.world().setBlock(pumpPos, AllBlocks.MECHANICAL_PUMP.getDefaultState().setValue(PumpBlock.FACING, Direction.WEST), false);
         scene.world().showSection(pumpSelection, Direction.DOWN);
-        scene.world().multiplyKineticSpeed(everywhere, 0.25F);
+        scene.world().multiplyKineticSpeed(everywhere, 0.25f);
         scene.world().setKineticSpeed(pumpSelection, -32);
         scene.effects().rotationSpeedIndicator(motorPos);
         scene.effects().rotationSpeedIndicator(pumpPos);

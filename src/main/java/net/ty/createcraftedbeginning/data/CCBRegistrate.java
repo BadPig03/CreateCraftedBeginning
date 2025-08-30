@@ -21,6 +21,9 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -32,9 +35,10 @@ import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtension
 import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.content.breezechamber.CoolingTimeVirtualFluid;
-import net.ty.createcraftedbeginning.content.compressedair.CompressedAirFakeFluid;
-import net.ty.createcraftedbeginning.content.breezechamber.SlushVirtualFluid;
+import net.ty.createcraftedbeginning.content.fluids.AmethystSuspensionVirtualFluid;
+import net.ty.createcraftedbeginning.content.fluids.CompressedAirFakeFluid;
+import net.ty.createcraftedbeginning.content.fluids.CoolingTimeVirtualFluid;
+import net.ty.createcraftedbeginning.content.fluids.SlushVirtualFluid;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -132,6 +136,16 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
     }
 
     @Override
+    public <T extends Entity> @NotNull CCBEntityBuilder<T, CCBRegistrate> entity(@NotNull String name, EntityType.@NotNull EntityFactory<T> factory, @NotNull MobCategory classification) {
+        return this.entity(self(), name, factory, classification);
+    }
+
+    @Override
+    public <T extends Entity, P> @NotNull CCBEntityBuilder<T, P> entity(@NotNull P parent, @NotNull String name, EntityType.@NotNull EntityFactory<T> factory, @NotNull MobCategory classification) {
+        return (CCBEntityBuilder<T, P>) this.entry(name, (callback) -> CCBEntityBuilder.create(this, parent, name, callback, factory, classification));
+    }
+
+    @Override
     public <T extends BlockEntity> @NotNull CCBBlockEntityBuilder<T, CCBRegistrate> blockEntity(@NotNull String name, @NotNull BlockEntityBuilder.BlockEntityFactory<T> factory) {
         return blockEntity(self(), name, factory);
     }
@@ -155,6 +169,10 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
 
     public FluidBuilder<SlushVirtualFluid, CCBRegistrate> slush_fluid(String name) {
         return entry(name, c -> new CCBVirtualFluidBuilder<>(self(), self(), name, c, ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, "fluid/slush"), ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, "fluid/slush"), CCBRegistrate::defaultFluidType, SlushVirtualFluid::createSource, SlushVirtualFluid::createFlowing));
+    }
+
+    public FluidBuilder<AmethystSuspensionVirtualFluid, CCBRegistrate> amethyst_suspension_fluid(String name) {
+        return entry(name, c -> new CCBVirtualFluidBuilder<>(self(), self(), name, c, ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, "fluid/amethyst_suspension"), ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, "fluid/amethyst_suspension"), CCBRegistrate::defaultFluidType, AmethystSuspensionVirtualFluid::createSource, AmethystSuspensionVirtualFluid::createFlowing));
     }
 
     public FluidBuilder<CoolingTimeVirtualFluid, CCBRegistrate> cooling_time(String name) {

@@ -41,20 +41,18 @@ public class BreezeChamberHandler {
         projectile.setDeltaMovement(Vec3.ZERO);
         projectile.discard();
 
-        Level world = projectile.level();
-        if (world.isClientSide) {
+        Level level = projectile.level();
+        if (level.isClientSide) {
             return;
         }
 
-        if (!chamber.isCreative()) {
-            if (chamber.activeCoolant != CoolantType.POWERFUL) {
-                chamber.activeCoolant = CoolantType.NORMAL;
-                chamber.coolRemainingTime = Mth.clamp(chamber.coolRemainingTime + 10, 0, BreezeChamberBlockEntity.MAX_COOLANT_CAPACITY);
-                chamber.updateBlockState();
-                chamber.notifyUpdate();
-            }
+        if (chamber.activeCoolant != CoolantType.POWERFUL) {
+            chamber.activeCoolant = CoolantType.NORMAL;
+            chamber.coolRemainingTime = Mth.clamp(chamber.coolRemainingTime + 10, 0, BreezeChamberBlockEntity.MAX_COOLANT_CAPACITY);
+            chamber.updateBlockState();
+            chamber.notifyUpdate();
         }
 
-        world.playSound(null, chamber.getBlockPos(), SoundEvents.BREEZE_SHOOT, SoundSource.BLOCKS, .125f + world.random.nextFloat() * .125f, .75f - world.random.nextFloat() * .25f);
+        level.playSound(null, chamber.getBlockPos(), SoundEvents.BREEZE_SHOOT, SoundSource.BLOCKS, .125f + level.random.nextFloat() * .125f, .75f - level.random.nextFloat() * .25f);
     }
 }

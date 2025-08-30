@@ -108,7 +108,7 @@ public class PhotoStressBearingScenes {
         scene.world().modifyEntity(lightningBolt, Entity::discard);
 
         scene.idle(60);
-        Vec3 surface = util.vector().blockSurface(bearingPos, Direction.WEST).subtract(0, 2 / 16F, 0);
+        Vec3 surface = util.vector().blockSurface(bearingPos, Direction.WEST).subtract(0, 1 / 8f, 0);
         scene.overlay().showControls(surface, Pointing.DOWN, 60).rightClick();
         scene.overlay().showFilterSlotInput(surface, Direction.WEST, 50);
         scene.world().setKineticSpeed(allSelection, 16);

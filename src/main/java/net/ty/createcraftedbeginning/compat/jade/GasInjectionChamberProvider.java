@@ -35,7 +35,7 @@ public enum GasInjectionChamberProvider implements IServerExtensionProvider<Comp
 			return null;
 		}
 
-        IFluidHandler gasFluidHandler = entity.getGasFluidHandler();
-        return new ArrayList<>(JadeForgeUtils.fromFluidHandler(gasFluidHandler));
+        IFluidHandler fluidHandler = entity.getFluidHandler();
+        return new ArrayList<>(JadeForgeUtils.fromFluidHandler(fluidHandler));
     }
 }

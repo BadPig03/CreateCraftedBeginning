@@ -1,0 +1,18 @@
+{
+  "type": "create:filling",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:ice_cream"
+    },
+    {
+      "type": "fluid_stack",
+      "amount": 250,
+      "fluid": "createcraftedbeginning:amethyst_suspension"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:amethyst_ice_cream"
+    }
+  ]
+}

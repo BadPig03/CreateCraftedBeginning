@@ -9,8 +9,7 @@ import net.createmod.catnip.lang.FontHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
@@ -23,38 +22,26 @@ import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 import net.ty.createcraftedbeginning.advancement.AdvancementBehaviour;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancement;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancements;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.breezechamber.BreezeChamberBlockEntity;
-import net.ty.createcraftedbeginning.content.compressedair.CompressedAirOnlyFluidTank;
+import net.ty.createcraftedbeginning.content.compressedair.CompressedAirTankBehaviour;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.data.CCBTags;
 import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 public class AirCompressorBlockEntity extends KineticBlockEntity implements IHaveGoggleInformation {
     private static final float EXPLOSION_POWER = 8.0f;
-    private static boolean canPressurization;
-    private final InputFluidHandler inputFluidHandler;
-    private final OutputFluidHandler outputFluidHandler;
-    protected FluidTank inputFluidInventory;
-    protected FluidTank outputFluidInventory;
+    protected CompressedAirTankBehaviour inputTankBehaviour;
+    protected CompressedAirTankBehaviour outputTankBehaviour;
 
     public AirCompressorBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
-        inputFluidInventory = new CompressedAirOnlyFluidTank(4000, this::onFluidStackChanged);
-        inputFluidHandler = new InputFluidHandler(inputFluidInventory);
-
-        outputFluidInventory = new CompressedAirOnlyFluidTank(1000, this::onFluidStackChanged);
-        outputFluidHandler = new OutputFluidHandler(outputFluidInventory);
-
-        canPressurization = false;
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
@@ -62,9 +49,9 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
             Direction inputDir = be.getBlockState().getValue(AirCompressorBlock.HORIZONTAL_FACING).getClockWise();
             Direction outputDir = inputDir.getOpposite();
             if (context == inputDir) {
-                return be.inputFluidHandler;
+                return be.inputTankBehaviour.getCapability();
             } else if (context == outputDir) {
-                return be.outputFluidHandler;
+                return be.outputTankBehaviour.getCapability();
             }
             return null;
         });
@@ -80,31 +67,16 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         if (level.getGameTime() % 20 == 0) {
             pressurizeTheFluid();
         }
-
         sendData();
     }
 
     @Override
-    public void write(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
-        super.write(compound, registries, clientPacket);
-        compound.put("InputTank", inputFluidInventory.writeToNBT(registries, new CompoundTag()));
-        compound.put("OutputTank", outputFluidInventory.writeToNBT(registries, new CompoundTag()));
-    }
-
-    @Override
-    protected void read(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
-        super.read(compound, registries, clientPacket);
-        if (compound.contains("InputTank")) {
-            inputFluidInventory.readFromNBT(registries, compound.getCompound("InputTank"));
-        }
-        if (compound.contains("OutputTank")) {
-            outputFluidInventory.readFromNBT(registries, compound.getCompound("OutputTank"));
-        }
-    }
-
-    @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        super.addBehaviours(behaviours);
+        int capacity = CCBConfig.server().compressedAir.airtightTankCapacity.get() * 500;
+        inputTankBehaviour = new CompressedAirTankBehaviour(CompressedAirTankBehaviour.INPUT, this, 1, capacity, false).allowInsertion().forbidExtraction();
+        outputTankBehaviour = new CompressedAirTankBehaviour(CompressedAirTankBehaviour.OUTPUT, this, 1, capacity, false).allowExtraction().forbidInsertion();
+        behaviours.add(inputTankBehaviour);
+        behaviours.add(outputTankBehaviour);
         registerAwardables(behaviours, CCBAdvancements.AIR_COMPRESSOR);
         registerAwardables(behaviours, CCBAdvancements.AIR_COMPRESSOR_EXPLOSION);
     }
@@ -147,20 +119,20 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         };
     }
 
-    private int getPressurizeAmountPerSecond() {
-        return CCBConfig.server().pressurizationAmount.get();
+    private float getPressurizeAmountPerTick() {
+        return CCBConfig.server().compressedAir.pressurizationAmount.getF();
     }
 
     private int getConvertAmount() {
         if (isCompressorNotFastEnough() || isBeneathNotBreezeChamber()) {
             return 0;
         }
-        return Math.round((Mth.abs(speed) * getPressurizeAmountPerSecond() * getCoolingEfficiency()));
+        return (int) (Mth.abs(speed) * getPressurizeAmountPerTick() * 20 * getCoolingEfficiency());
     }
 
     private boolean isInputEmpty() {
         int amount = getConvertAmount();
-        return inputFluidInventory.isEmpty() || inputFluidInventory.getFluidAmount() < amount;
+        return inputTankBehaviour.getPrimaryHandler().isEmpty() || inputTankBehaviour.getPrimaryHandler().getFluidAmount() < amount;
     }
 
     private boolean isOutputFull() {
@@ -168,14 +140,15 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
             return false;
         }
 
-        FluidStack resultFluidStack = PressurizationRecipe.getResultingFluidStack(level, inputFluidInventory.getFluid());
+        FluidStack inputFluidStack = inputTankBehaviour.getPrimaryHandler().getFluid();
+        FluidStack ingredientFluidStack = PressurizationRecipe.getIngredientFluidStack(level, inputFluidStack);
 
-        if (resultFluidStack == FluidStack.EMPTY || resultFluidStack.getAmount() == 0) {
+        if (ingredientFluidStack == FluidStack.EMPTY || ingredientFluidStack.getAmount() == 0) {
             return false;
         }
 
-        int amount = Math.round((float) getConvertAmount() / resultFluidStack.getAmount());
-        return outputFluidInventory.getSpace() == 0 || outputFluidInventory.getSpace() < amount;
+        int amount = Math.round((float) getConvertAmount() / ingredientFluidStack.getAmount());
+        return outputTankBehaviour.getPrimaryHandler().getSpace() == 0 || outputTankBehaviour.getPrimaryHandler().getSpace() < amount;
     }
 
     private void pressurizeTheFluid() {
@@ -183,7 +156,7 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
             return;
         }
 
-        FluidStack fluidStack = inputFluidInventory.getFluid();
+        FluidStack fluidStack = inputTankBehaviour.getPrimaryHandler().getFluid();
 
         if (fluidStack.is(CCBTags.CCBFluidTags.HIGH_PRESSURE_COMPRESSED_AIR.tag)) {
             awardExplosion();
@@ -193,40 +166,28 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
             return;
         }
 
-        FluidStack resultFluidStack = PressurizationRecipe.getResultingFluidStack(level, fluidStack);
-        if (resultFluidStack.getFluid() == Fluids.EMPTY || resultFluidStack.getAmount() == 0) {
+        FluidStack ingredientFluidStack = PressurizationRecipe.getIngredientFluidStack(level, fluidStack);
+        if (ingredientFluidStack.getFluid() == Fluids.EMPTY || ingredientFluidStack.getAmount() == 0) {
             return;
         }
 
         int amount = getConvertAmount();
-        int convertedAmount = Math.round((float) amount / resultFluidStack.getAmount());
+        int convertedAmount = amount / ingredientFluidStack.getAmount();
 
-        setCanPressurization(true);
-        inputFluidInventory.drain(amount, IFluidHandler.FluidAction.EXECUTE);
-        outputFluidInventory.fill(new FluidStack(resultFluidStack.getFluid(), convertedAmount), IFluidHandler.FluidAction.EXECUTE);
-        setCanPressurization(false);
+        var inputFluidHandler = (CompressedAirTankBehaviour.InternalFluidHandler) inputTankBehaviour.getCapability();
+        inputFluidHandler.forceDrain(amount, IFluidHandler.FluidAction.EXECUTE);
+        var outputFluidHandler = (CompressedAirTankBehaviour.InternalFluidHandler) outputTankBehaviour.getCapability();
+        outputFluidHandler.forceFill(new FluidStack(ingredientFluidStack.getFluid(), convertedAmount), IFluidHandler.FluidAction.EXECUTE);
 
         award();
     }
 
-    public InputFluidHandler getInputFluidHandler() {
-        return inputFluidHandler;
+    public IFluidHandler getInputFluidHandler() {
+        return inputTankBehaviour.getPrimaryHandler();
     }
 
-    public OutputFluidHandler getOutputFluidHandler() {
-        return outputFluidHandler;
-    }
-
-    private void setCanPressurization(boolean state) {
-        canPressurization = state;
-    }
-
-    protected void onFluidStackChanged(FluidStack newFluidStack) {
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
-        setChanged();
+    public IFluidHandler getOutputFluidHandler() {
+        return outputTankBehaviour.getPrimaryHandler();
     }
 
     private boolean airCompressorTooltip(List<Component> tooltip) {
@@ -246,7 +207,7 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         CCBLang.builder().add(CCBLang.number(getConvertAmount()).add(CCBLang.translate("gui.goggles.unit.milli_buckets_per_second")).style(ChatFormatting.AQUA)).forGoggles(tooltip, 1);
 
         if (noBreezeChamber || notFastEnough || inputEmpty || outputFull) {
-            CCBLang.text("").forGoggles(tooltip);
+            tooltip.add(CommonComponents.EMPTY);
             CCBLang.translate("gui.goggles.warning").style(ChatFormatting.GOLD).forGoggles(tooltip);
         }
 
@@ -307,80 +268,6 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         AdvancementBehaviour behaviour = getBehaviour(AdvancementBehaviour.TYPE);
         if (behaviour != null) {
             behaviour.awardPlayer(CCBAdvancements.AIR_COMPRESSOR_EXPLOSION);
-        }
-    }
-
-    public record InputFluidHandler(IFluidHandler handler) implements IFluidHandler {
-        @Override
-        public int getTanks() {
-            return handler.getTanks();
-        }
-
-        @Override
-        public @NotNull FluidStack getFluidInTank(int tank) {
-            return handler.getFluidInTank(tank);
-        }
-
-        @Override
-        public int getTankCapacity(int tank) {
-            return handler.getTankCapacity(tank);
-        }
-
-        @Override
-        public boolean isFluidValid(int tank, @NotNull FluidStack stack) {
-            return handler.isFluidValid(tank, stack);
-        }
-
-        @Override
-        public int fill(@NotNull FluidStack resource, @NotNull FluidAction action) {
-            return handler.fill(resource, action);
-        }
-
-        @Override
-        public @NotNull FluidStack drain(@NotNull FluidStack resource, @NotNull FluidAction action) {
-            return canPressurization ? handler.drain(resource, action) : FluidStack.EMPTY;
-        }
-
-        @Override
-        public @NotNull FluidStack drain(int maxDrain, @NotNull FluidAction action) {
-            return canPressurization ? handler.drain(maxDrain, action) : FluidStack.EMPTY;
-        }
-    }
-
-    public record OutputFluidHandler(IFluidHandler handler) implements IFluidHandler {
-        @Override
-        public int getTanks() {
-            return handler.getTanks();
-        }
-
-        @Override
-        public @NotNull FluidStack getFluidInTank(int tank) {
-            return handler.getFluidInTank(tank);
-        }
-
-        @Override
-        public int getTankCapacity(int tank) {
-            return handler.getTankCapacity(tank);
-        }
-
-        @Override
-        public boolean isFluidValid(int tank, @NotNull FluidStack stack) {
-            return handler.isFluidValid(tank, stack);
-        }
-
-        @Override
-        public int fill(@NotNull FluidStack resource, @NotNull FluidAction action) {
-            return canPressurization ? handler.fill(resource, action) : 0;
-        }
-
-        @Override
-        public @NotNull FluidStack drain(@NotNull FluidStack resource, @NotNull FluidAction action) {
-            return handler.drain(resource, action);
-        }
-
-        @Override
-        public @NotNull FluidStack drain(int maxDrain, @NotNull FluidAction action) {
-            return handler.drain(maxDrain, action);
         }
     }
 }

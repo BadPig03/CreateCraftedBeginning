@@ -6,13 +6,15 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.content.breezechamber.CoolingTimeVirtualFluid;
+import net.ty.createcraftedbeginning.content.fluids.AmethystSuspensionVirtualFluid;
+import net.ty.createcraftedbeginning.content.fluids.CompressedAirFakeFluid;
+import net.ty.createcraftedbeginning.content.fluids.CoolingTimeVirtualFluid;
+import net.ty.createcraftedbeginning.content.fluids.SlushVirtualFluid;
 import net.ty.createcraftedbeginning.data.CCBRegistrate;
 import net.ty.createcraftedbeginning.data.CCBTags;
-import net.ty.createcraftedbeginning.data.CompressedAirOpenPipeEffect;
-import net.ty.createcraftedbeginning.content.compressedair.CompressedAirFakeFluid;
-import net.ty.createcraftedbeginning.content.breezechamber.SlushVirtualFluid;
+import net.ty.createcraftedbeginning.content.compressedair.CompressedAirOpenPipeEffect;
 
+@SuppressWarnings("unused")
 public class CCBFluids {
     private static final CCBRegistrate CCB_REGISTRATE = CreateCraftedBeginning.registrate();
 
@@ -23,6 +25,8 @@ public class CCBFluids {
     public static final FluidEntry<CompressedAirFakeFluid> HIGH_PRESSURE_COMPRESSED_AIR = CCB_REGISTRATE.compressed_air_fluid("high_pressure_compressed_air").lang("High-Pressure Compressed Air").tag(CCBTags.commonFluidTag("compressed_air")).tag(CCBTags.CCBFluidTags.HIGH_PRESSURE_COMPRESSED_AIR.tag).register();
 
     public static final FluidEntry<SlushVirtualFluid> SLUSH = CCB_REGISTRATE.slush_fluid("slush").lang("Slush").tag(CCBTags.commonFluidTag("snow")).register();
+
+    public static final FluidEntry<AmethystSuspensionVirtualFluid> AMETHYST_SUSPENSION = CCB_REGISTRATE.amethyst_suspension_fluid("amethyst_suspension").lang("Amethyst Suspension").bucket().build().register();
 
     public static final FluidEntry<CoolingTimeVirtualFluid> COOLING_TIME = CCB_REGISTRATE.cooling_time("cooling_time").lang("Cooling Time").register();
 
@@ -41,9 +45,13 @@ public class CCBFluids {
 
     public static class Reactions {
         static void registerOpenPipeEffects() {
-            OpenPipeEffectHandler.REGISTRY.register(LOW_PRESSURE_COMPRESSED_AIR.getSource(), new CompressedAirOpenPipeEffect());
-            OpenPipeEffectHandler.REGISTRY.register(MEDIUM_PRESSURE_COMPRESSED_AIR.getSource(), new CompressedAirOpenPipeEffect());
-            OpenPipeEffectHandler.REGISTRY.register(HIGH_PRESSURE_COMPRESSED_AIR.getSource(), new CompressedAirOpenPipeEffect());
+            var effect = new CompressedAirOpenPipeEffect();
+            OpenPipeEffectHandler.REGISTRY.register(LOW_PRESSURE_COMPRESSED_AIR.getSource().getSource(), effect);
+            OpenPipeEffectHandler.REGISTRY.register(LOW_PRESSURE_COMPRESSED_AIR.getSource().getFlowing(), effect);
+            OpenPipeEffectHandler.REGISTRY.register(MEDIUM_PRESSURE_COMPRESSED_AIR.getSource().getSource(), effect);
+            OpenPipeEffectHandler.REGISTRY.register(MEDIUM_PRESSURE_COMPRESSED_AIR.getSource().getFlowing(), effect);
+            OpenPipeEffectHandler.REGISTRY.register(HIGH_PRESSURE_COMPRESSED_AIR.getSource().getSource(), effect);
+            OpenPipeEffectHandler.REGISTRY.register(HIGH_PRESSURE_COMPRESSED_AIR.getSource().getFlowing(), effect);
         }
     }
 }
