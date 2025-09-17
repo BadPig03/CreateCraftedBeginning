@@ -12,6 +12,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
+import org.jetbrains.annotations.NotNull;
 
 public class PhotoStressBearingRenderer extends KineticBlockEntityRenderer<PhotoStressBearingBlockEntity> {
     public PhotoStressBearingRenderer(Context context) {
@@ -19,7 +20,7 @@ public class PhotoStressBearingRenderer extends KineticBlockEntityRenderer<Photo
     }
 
     @Override
-    protected void renderSafe(PhotoStressBearingBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
+    protected void renderSafe(@NotNull PhotoStressBearingBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         BlockState state = be.getBlockState();
         SuperByteBuffer model = getRotatedModel(be, state);
 

@@ -10,33 +10,24 @@ import net.neoforged.neoforge.registries.RegistryBuilder;
 import net.ty.createcraftedbeginning.api.airtightcannon.AirtightCannonProjectileBlockHitAction;
 import net.ty.createcraftedbeginning.api.airtightcannon.AirtightCannonProjectileEntityHitAction;
 import net.ty.createcraftedbeginning.api.airtightcannon.AirtightCannonProjectileRenderMode;
+import net.ty.createcraftedbeginning.api.gas.MountedGasStorageType;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 
 public class CCBBuiltInRegistries {
+    public static final Registry<MountedGasStorageType<?>> MOUNTED_GAS_STORAGE_TYPE = simple(CCBRegistries.MOUNTED_GAS_STORAGE_TYPE);
     public static final Registry<MapCodec<? extends AirtightCannonProjectileRenderMode>> POTATO_PROJECTILE_RENDER_MODE = simple(CCBRegistries.AIRTIGHT_CANNON_PROJECTILE_RENDER_MODE);
     public static final Registry<MapCodec<? extends AirtightCannonProjectileEntityHitAction>> POTATO_PROJECTILE_ENTITY_HIT_ACTION = simple(CCBRegistries.AIRTIGHT_CANNON_PROJECTILE_ENTITY_HIT_ACTION);
     public static final Registry<MapCodec<? extends AirtightCannonProjectileBlockHitAction>> POTATO_PROJECTILE_BLOCK_HIT_ACTION = simple(CCBRegistries.AIRTIGHT_CANNON_PROJECTILE_BLOCK_HIT_ACTION);
 
-    private static <T> Registry<T> simple(ResourceKey<Registry<T>> key) {
-        return register(key, false, () -> {
+    private static <T> @NotNull Registry<T> simple(ResourceKey<Registry<T>> key) {
+        return register(key, () -> {
         });
     }
 
-    private static <T> Registry<T> simpleWithFreezeCallback(ResourceKey<Registry<T>> key, Runnable onBakeCallback) {
-		return register(key, false, onBakeCallback);
-	}
-
-	private static <T> Registry<T> withIntrusiveHolders(ResourceKey<Registry<T>> key) {
-		return register(key, true, () -> {});
-	}
-
-    @SuppressWarnings({"deprecation", "unchecked", "rawtypes"})
-    private static <T> Registry<T> register(ResourceKey<Registry<T>> key, boolean hasIntrusiveHolders, Runnable onBakeCallback) {
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static <T> @NotNull Registry<T> register(ResourceKey<Registry<T>> key, Runnable onBakeCallback) {
         RegistryBuilder<T> builder = new RegistryBuilder<>(key).sync(true);
-
-        if (hasIntrusiveHolders) {
-            builder.withIntrusiveHolders();
-        }
 
         builder.onBake(r -> onBakeCallback.run());
 

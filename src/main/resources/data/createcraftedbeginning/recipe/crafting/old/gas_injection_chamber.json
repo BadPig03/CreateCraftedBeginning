@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "A",
+    "C",
+    "B"
+  ],
+  "key": {
+    "A": {
+      "item": "createcraftedbeginning:airtight_pipe"
+    },
+    "B": {
+      "item": "minecraft:dried_kelp"
+    },
+    "C": {
+      "item": "createcraftedbeginning:airtight_tank"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:gas_injection_chamber"
+  }
+}

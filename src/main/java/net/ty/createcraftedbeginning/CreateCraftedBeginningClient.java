@@ -17,10 +17,10 @@ public class CreateCraftedBeginningClient {
     public static final AirtightCannonRenderHandler AIRTIGHT_CANNON_RENDER_HANDLER = new AirtightCannonRenderHandler();
 
     public CreateCraftedBeginningClient(IEventBus modEventBus) {
-		onCtorClient(modEventBus);
+		onClient(modEventBus);
 	}
 
-    public static void onCtorClient(IEventBus modEventBus) {
+    public static void onClient(IEventBus modEventBus) {
 		IEventBus neoEventBus = NeoForge.EVENT_BUS;
 
 		AIRTIGHT_CANNON_RENDER_HANDLER.registerListeners(neoEventBus);

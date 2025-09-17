@@ -18,6 +18,7 @@ import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.advancement.AdvancementBehaviour;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancement;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancements;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -160,7 +161,7 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
         setChanged();
     }
 
-    private void registerAwardables(List<BlockEntityBehaviour> behaviours, CCBAdvancement... advancements) {
+    private void registerAwardables(@NotNull List<BlockEntityBehaviour> behaviours, CCBAdvancement... advancements) {
         for (BlockEntityBehaviour behaviour : behaviours) {
             if (behaviour instanceof AdvancementBehaviour ab) {
                 ab.add(advancements);

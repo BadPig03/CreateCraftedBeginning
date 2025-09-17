@@ -15,15 +15,17 @@ import net.neoforged.neoforge.client.event.RegisterItemDecorationsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
+import net.ty.createcraftedbeginning.api.gas.GasFilteringRenderer;
 import net.ty.createcraftedbeginning.content.airtightcannon.AirtightCannonItemRenderer;
 import net.ty.createcraftedbeginning.content.cinderincinerationblower.CinderIncinerationBlowerBlockEntity;
 import net.ty.createcraftedbeginning.ponder.CCBPonderPlugin;
 import net.ty.createcraftedbeginning.registry.CCBItems;
+import org.jetbrains.annotations.NotNull;
 
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID, value = Dist.CLIENT)
 public class CCBClientEvents {
     @SubscribeEvent
-    public static void onClientSetup(FMLClientSetupEvent event) {
+    public static void onClientSetup(@NotNull FMLClientSetupEvent event) {
         event.enqueueWork(() -> PonderIndex.addPlugin(new CCBPonderPlugin()));
     }
 
@@ -46,17 +48,18 @@ public class CCBClientEvents {
 			return;
 		}
 
+        GasFilteringRenderer.tick();
         CreateCraftedBeginningClient.AIRTIGHT_CANNON_RENDER_HANDLER.tick();
         CreateCraftedBeginningClient.CINDER_INCINERATION_BLOWER_OUTLINER.tick();
     }
 
     @SubscribeEvent
-    public static void registerItemDecorations(RegisterItemDecorationsEvent event) {
+    public static void registerItemDecorations(@NotNull RegisterItemDecorationsEvent event) {
         event.register(CCBItems.AIRTIGHT_CANNON, AirtightCannonItemRenderer.DECORATOR);
     }
 
     @SubscribeEvent
-    public static void onBlockRightClick(PlayerInteractEvent.RightClickBlock event) {
+    public static void onBlockRightClick(PlayerInteractEvent.@NotNull RightClickBlock event) {
         if (!event.getLevel().isClientSide() || event.getHand() != InteractionHand.MAIN_HAND) {
             return;
         }

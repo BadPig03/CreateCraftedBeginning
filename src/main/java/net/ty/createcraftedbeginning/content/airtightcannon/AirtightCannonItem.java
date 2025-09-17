@@ -59,7 +59,7 @@ public class AirtightCannonItem extends ProjectileWeaponItem implements CustomAr
     }
 
     @Nullable
-    public static Ammo getAmmo(Player player, ItemStack heldStack) {
+    public static Ammo getAmmo(@NotNull Player player, ItemStack heldStack) {
         ItemStack ammoStack = player.getProjectile(heldStack);
         if (ammoStack.isEmpty()) {
             return null;
@@ -79,7 +79,12 @@ public class AirtightCannonItem extends ProjectileWeaponItem implements CustomAr
     }
 
     @Override
-    public @NotNull InteractionResult useOn(UseOnContext context) {
+    public boolean mineBlock(@NotNull ItemStack stack, @NotNull Level level, @NotNull BlockState state, @NotNull BlockPos pos, @NotNull LivingEntity miningEntity) {
+        return false;
+    }
+
+    @Override
+    public @NotNull InteractionResult useOn(@NotNull UseOnContext context) {
         if (context.getPlayer() != null) {
             return use(context.getLevel(), context.getPlayer(), context.getHand()).getResult();
         }
@@ -87,7 +92,7 @@ public class AirtightCannonItem extends ProjectileWeaponItem implements CustomAr
     }
 
     @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, Player player, @NotNull InteractionHand hand) {
+    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
         ItemStack heldStack = player.getItemInHand(hand);
         if (ShootableGadgetItemMethods.shouldSwap(player, heldStack, hand, s -> s.getItem() instanceof AirtightCannonItem)) {
             return InteractionResultHolder.fail(heldStack);
@@ -234,7 +239,7 @@ public class AirtightCannonItem extends ProjectileWeaponItem implements CustomAr
     @Override
     @SuppressWarnings("removal")
     @OnlyIn(Dist.CLIENT)
-    public void initializeClient(Consumer<IClientItemExtensions> consumer) {
+    public void initializeClient(@NotNull Consumer<IClientItemExtensions> consumer) {
         consumer.accept(SimpleCustomRenderer.create(this, new AirtightCannonItemRenderer()));
     }
 
@@ -262,7 +267,7 @@ public class AirtightCannonItem extends ProjectileWeaponItem implements CustomAr
     }
 
     @Override
-    public boolean supportsEnchantment(@NotNull ItemStack stack, Holder<Enchantment> enchantment) {
+    public boolean supportsEnchantment(@NotNull ItemStack stack, @NotNull Holder<Enchantment> enchantment) {
         if (enchantment.is(Enchantments.INFINITY)) {
             return false;
         }
@@ -279,7 +284,7 @@ public class AirtightCannonItem extends ProjectileWeaponItem implements CustomAr
 
     @Override
     @Nullable
-    public HumanoidModel.ArmPose getArmPose(ItemStack stack, AbstractClientPlayer player, InteractionHand hand) {
+    public HumanoidModel.ArmPose getArmPose(ItemStack stack, @NotNull AbstractClientPlayer player, InteractionHand hand) {
         if (!player.swinging) {
             return HumanoidModel.ArmPose.CROSSBOW_HOLD;
         }

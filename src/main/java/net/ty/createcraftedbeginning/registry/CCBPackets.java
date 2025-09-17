@@ -6,12 +6,14 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.gas.MountedStorageSyncPacketWithGas;
 import net.ty.createcraftedbeginning.content.airtightcannon.AirtightCannonPacket;
 
 import java.util.Locale;
 
 public enum CCBPackets implements BasePacketPayload.PacketTypeProvider {
-    AIRTIGHT_CANNON(AirtightCannonPacket.class, AirtightCannonPacket.STREAM_CODEC);
+    AIRTIGHT_CANNON(AirtightCannonPacket.class, AirtightCannonPacket.STREAM_CODEC),
+    MOUNTED_STORAGE_SYNC_WITH_GAS(MountedStorageSyncPacketWithGas.class, MountedStorageSyncPacketWithGas.STREAM_CODEC);
 
     private final CatnipPacketRegistry.PacketType<?> type;
 

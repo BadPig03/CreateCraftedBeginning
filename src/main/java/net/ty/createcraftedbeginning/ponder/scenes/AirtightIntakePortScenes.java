@@ -19,14 +19,15 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.content.airtightintakeport.AirtightIntakePortBlock;
-import net.ty.createcraftedbeginning.content.airtightpipe.AirtightPipeBlock;
-import net.ty.createcraftedbeginning.content.airtightpump.AirtightPumpBlock;
-import net.ty.createcraftedbeginning.content.airtightpump.AirtightPumpBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.airtightintakeport.AirtightIntakePortBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import org.jetbrains.annotations.NotNull;
 
 public class AirtightIntakePortScenes {
-    public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("airtight_intake_port", "Producing Compressed Air using Airtight Intake Ports");

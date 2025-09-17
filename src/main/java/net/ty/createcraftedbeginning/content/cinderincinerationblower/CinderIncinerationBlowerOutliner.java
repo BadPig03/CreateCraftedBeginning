@@ -11,6 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
 
 public class CinderIncinerationBlowerOutliner {
     private final Object outline = new Object();
@@ -46,7 +47,7 @@ public class CinderIncinerationBlowerOutliner {
         outliner.chaseAABB(outline, selectionBox).colored(0xddc166).withFaceTextures(AllSpecialTextures.CHECKERED, AllSpecialTextures.HIGHLIGHT_CHECKERED).lineWidth(1 / 16f);
     }
 
-    private AABB calculateSelectionBox(BlockPos center, int edge) {
+    private @NotNull AABB calculateSelectionBox(BlockPos center, int edge) {
         double halfEdge = edge / 2f;
         Vec3 centerVec = Vec3.atCenterOf(center);
         return new AABB(centerVec.x - halfEdge, centerVec.y - halfEdge, centerVec.z - halfEdge, centerVec.x + halfEdge, centerVec.y + halfEdge, centerVec.z + halfEdge);

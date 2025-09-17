@@ -17,7 +17,7 @@ public class ConversionRecipe extends StandardProcessingRecipe<RecipeWrapper> {
         super(CCBRecipeTypes.CONVERSION, params);
     }
 
-    public static RecipeHolder<ConversionRecipe> create(ItemStack from, ItemStack to, String name) {
+    public static @NotNull RecipeHolder<ConversionRecipe> create(ItemStack from, ItemStack to, String name) {
         ResourceLocation recipeId = CreateCraftedBeginning.asResource("conversion_" + name);
         ConversionRecipe recipe = new Builder<>(ConversionRecipe::new, recipeId).withItemIngredients(Ingredient.of(from)).withSingleItemOutput(to).build();
         return new RecipeHolder<>(recipeId, recipe);

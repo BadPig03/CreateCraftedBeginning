@@ -19,9 +19,10 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.phohostressbearing.PhotoStressBearingBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import org.jetbrains.annotations.NotNull;
 
 public class PhotoStressBearingScenes {
-    public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("photo-stress_bearing", "Generates Rotational Force using Photo-Stress Bearings");

@@ -21,9 +21,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.fluids.FluidStack;
+import org.jetbrains.annotations.NotNull;
 
 public class AirtightTankScenes {
-    public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("airtight_tank", "Storing Compressed Air using Airtight Tanks");

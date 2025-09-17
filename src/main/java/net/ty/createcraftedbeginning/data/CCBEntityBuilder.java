@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.function.Predicate;
 
+@SuppressWarnings("unused")
 public class CCBEntityBuilder<T extends Entity, P> extends EntityBuilder<T, P> {
     @Nullable
     private NonNullSupplier<SimpleEntityVisualizer.Factory<T>> visualFactory;
@@ -25,7 +26,7 @@ public class CCBEntityBuilder<T extends Entity, P> extends EntityBuilder<T, P> {
         super(owner, parent, name, callback, factory, classification);
     }
 
-    public static <T extends Entity, P> EntityBuilder<T, P> create(AbstractRegistrate<?> owner, P parent, String name, BuilderCallback callback, EntityType.EntityFactory<T> factory, MobCategory classification) {
+    public static <T extends Entity, P> @NotNull EntityBuilder<T, P> create(@NotNull AbstractRegistrate<?> owner, @NotNull P parent, @NotNull String name, @NotNull BuilderCallback callback, EntityType.@NotNull EntityFactory<T> factory, @NotNull MobCategory classification) {
         return (new CCBEntityBuilder<>(owner, parent, name, callback, factory, classification)).defaultLang();
     }
 

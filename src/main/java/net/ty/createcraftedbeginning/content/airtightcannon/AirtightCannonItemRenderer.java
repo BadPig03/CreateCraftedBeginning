@@ -18,6 +18,7 @@ import net.neoforged.neoforge.client.IItemDecorator;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
 import net.ty.createcraftedbeginning.registry.CCBItems;
+import org.jetbrains.annotations.NotNull;
 
 public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer {
     public static final IItemDecorator DECORATOR = (guiGraphics, font, stack, xOffset, yOffset) -> {
@@ -43,7 +44,7 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
     protected static final PartialModel COG = PartialModel.of(CreateCraftedBeginning.asResource("item/airtight_cannon/cog"));
 
     @Override
-    protected void render(ItemStack stack, CustomRenderedItemModel model, PartialItemModelRenderer renderer, ItemDisplayContext transformType, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
+    protected void render(ItemStack stack, @NotNull CustomRenderedItemModel model, @NotNull PartialItemModelRenderer renderer, ItemDisplayContext transformType, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         renderer.render(model.getOriginalModel(), light);
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;

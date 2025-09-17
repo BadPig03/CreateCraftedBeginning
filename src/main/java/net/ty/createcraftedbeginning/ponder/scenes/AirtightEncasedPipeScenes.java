@@ -6,7 +6,6 @@ import com.simibubi.create.content.kinetics.motor.CreativeMotorBlock;
 import com.simibubi.create.content.kinetics.simpleRelays.CogWheelBlock;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 import net.createmod.catnip.math.Pointing;
-import net.createmod.ponder.api.ParticleEmitter;
 import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.element.ElementLink;
 import net.createmod.ponder.api.element.WorldSectionElement;
@@ -15,18 +14,16 @@ import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.content.airtightencasedpipe.AirtightEncasedPipeBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightencasedpipe.AirtightEncasedPipeBlock;
 import net.ty.createcraftedbeginning.registry.CCBItems;
+import org.jetbrains.annotations.NotNull;
 
 public class AirtightEncasedPipeScenes {
-    public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
-
-        ParticleEmitter explosion = scene.effects().simpleParticleEmitter(ParticleTypes.EXPLOSION, Vec3.ZERO);
 
         scene.title("airtight_encased_pipe", "Moving Compressed Air using Airtight Encased Pipes");
         scene.configureBasePlate(0, 0, 5);

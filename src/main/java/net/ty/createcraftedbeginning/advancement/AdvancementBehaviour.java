@@ -15,6 +15,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.util.FakePlayer;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+@SuppressWarnings("unused")
 public class AdvancementBehaviour extends BlockEntityBehaviour {
     public static final BehaviourType<AdvancementBehaviour> TYPE = new BehaviourType<>();
     private final Set<CCBAdvancement> advancements;
@@ -40,7 +43,7 @@ public class AdvancementBehaviour extends BlockEntityBehaviour {
         }
     }
 
-    public static void tryAwardToNearbyPlayers(Level level, BlockPos pos, CCBAdvancement advancement, int radius) {
+    public static void tryAwardToNearbyPlayers(@NotNull Level level, BlockPos pos, CCBAdvancement advancement, int radius) {
         List<Player> players = level.getEntitiesOfClass(Player.class, new AABB(pos).inflate(radius));
         for (Player player : players) {
             if (!(player instanceof FakePlayer) && player instanceof ServerPlayer) {
@@ -49,7 +52,7 @@ public class AdvancementBehaviour extends BlockEntityBehaviour {
         }
     }
 
-    public static void tryAwardToNearbyPlayersWithLooking(Level level, BlockPos pos, CCBAdvancement advancement, int radius, float maxAngleDegrees) {
+    public static void tryAwardToNearbyPlayersWithLooking(@NotNull Level level, BlockPos pos, CCBAdvancement advancement, int radius, float maxAngleDegrees) {
         List<Player> players = level.getEntitiesOfClass(Player.class, new AABB(pos).inflate(radius));
 
         Vec3 targetPos = Vec3.atCenterOf(pos);
@@ -137,7 +140,7 @@ public class AdvancementBehaviour extends BlockEntityBehaviour {
         removeAwarded();
     }
 
-    private Player getPlayer() {
+    private @Nullable Player getPlayer() {
         if (playerId == null) {
             return null;
         }

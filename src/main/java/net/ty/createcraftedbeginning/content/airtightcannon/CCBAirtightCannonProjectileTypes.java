@@ -6,6 +6,7 @@ import net.minecraft.world.item.Items;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.airtightcannon.AirtightCannonProjectileType;
 import net.ty.createcraftedbeginning.registry.CCBRegistries;
+import org.jetbrains.annotations.NotNull;
 
 public class CCBAirtightCannonProjectileTypes {
     public static final ResourceKey<AirtightCannonProjectileType> FALLBACK = ResourceKey.create(CCBRegistries.AIRTIGHT_CANNON_PROJECTILE_TYPE, CreateCraftedBeginning.asResource("fallback"));
@@ -18,7 +19,7 @@ public class CCBAirtightCannonProjectileTypes {
         register(ctx, "iron_nugget", new AirtightCannonProjectileType.Builder().damage(5).reloadTicks(15).velocity(1.25f).knockback(1.5f).renderTumbling().addItems(Items.IRON_NUGGET).build());
     }
 
-    private static void register(BootstrapContext<AirtightCannonProjectileType> ctx, String name, AirtightCannonProjectileType type) {
+    private static void register(@NotNull BootstrapContext<AirtightCannonProjectileType> ctx, String name, AirtightCannonProjectileType type) {
 		ctx.register(ResourceKey.create(CCBRegistries.AIRTIGHT_CANNON_PROJECTILE_TYPE, CreateCraftedBeginning.asResource(name)), type);
 	}
 }

@@ -13,20 +13,20 @@ import net.ty.createcraftedbeginning.ponder.scenes.AirtightPumpScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.AirtightTankScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.AndesiteCrateScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.BrassCrateScenes;
-import net.ty.createcraftedbeginning.ponder.scenes.BreezeChamberScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.BreezeCoolerScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.CardboardCrateScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.CinderIncinerationBlowerScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.CompressedAirScenes;
-import net.ty.createcraftedbeginning.ponder.scenes.CondensateDrainScenes;
-import net.ty.createcraftedbeginning.ponder.scenes.EmptyBreezeChamberScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.EmptyBreezeCoolerScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.GasInjectionChamberScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.PhotoStressBearingScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.PneumaticEngineScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.SturdyCrateScenes;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import org.jetbrains.annotations.NotNull;
 
 public class CCBPonderScenes {
-    public static void register(PonderSceneRegistrationHelper<ResourceLocation> helper) {
+    public static void register(@NotNull PonderSceneRegistrationHelper<ResourceLocation> helper) {
         PonderSceneRegistrationHelper<RegistryEntry<?, ?>> ENTRY_HELPER = helper.withKeyFunction(RegistryEntry::getId);
 
         ENTRY_HELPER.forComponents(CCBBlocks.ANDESITE_CRATE_BLOCK).addStoryBoard("crates_story_board", AndesiteCrateScenes::scene, CCBPonderTags.CRATES_TAG_ID);
@@ -49,9 +49,9 @@ public class CCBPonderScenes {
         ENTRY_HELPER.forComponents(CCBBlocks.AIR_COMPRESSOR_BLOCK).addStoryBoard("crates_story_board", AirCompressorScenes::scene, CCBPonderTags.COMPRESSED_AIR_MANIPULATORS_TAG_ID, AllCreatePonderTags.KINETIC_SOURCES);
         ENTRY_HELPER.forComponents(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK).addStoryBoard("crates_story_board_gas_injection_chamber", GasInjectionChamberScenes::scene, CCBPonderTags.COMPRESSED_AIR_MANIPULATORS_TAG_ID);
         ENTRY_HELPER.forComponents(CCBBlocks.AIRTIGHT_ENGINE_BLOCK).addStoryBoard("crates_story_board_larger_airtight_engine", AirtightEngineScenes::scene, CCBPonderTags.COMPRESSED_AIR_MANIPULATORS_TAG_ID);
-        ENTRY_HELPER.forComponents(CCBBlocks.CONDENSATE_DRAIN_BLOCK).addStoryBoard("crates_story_board_larger", CondensateDrainScenes::scene, CCBPonderTags.COMPRESSED_AIR_MANIPULATORS_TAG_ID);
+        ENTRY_HELPER.forComponents(CCBBlocks.CONDENSATE_DRAIN_BLOCK).addStoryBoard("crates_story_board_larger_airtight_engine", AirtightEngineScenes::scene, CCBPonderTags.COMPRESSED_AIR_MANIPULATORS_TAG_ID);
 
-        ENTRY_HELPER.forComponents(CCBBlocks.EMPTY_BREEZE_CHAMBER_BLOCK).addStoryBoard("crates_story_board_empty_breeze_chamber", EmptyBreezeChamberScenes::scene);
-        ENTRY_HELPER.forComponents(CCBBlocks.BREEZE_CHAMBER_BLOCK).addStoryBoard("crates_story_board_breeze_chamber", BreezeChamberScenes::scene);
+        ENTRY_HELPER.forComponents(CCBBlocks.EMPTY_BREEZE_COOLER_BLOCK).addStoryBoard("crates_story_board_empty_breeze_cooler", EmptyBreezeCoolerScenes::scene);
+        ENTRY_HELPER.forComponents(CCBBlocks.BREEZE_COOLER_BLOCK).addStoryBoard("crates_story_board_breeze_cooler", BreezeCoolerScenes::scene);
     }
 }

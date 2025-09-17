@@ -51,7 +51,7 @@ public abstract class CriterionTriggerBase<T extends CriterionTriggerBase.Instan
         return id;
     }
 
-    protected void trigger(ServerPlayer player, @Nullable List<Supplier<Object>> suppliers) {
+    protected void trigger(@NotNull ServerPlayer player, @Nullable List<Supplier<Object>> suppliers) {
         PlayerAdvancements playerAdvancements = player.getAdvancements();
         Set<Listener<T>> playerListeners = this.listeners.get(playerAdvancements);
         if (playerListeners != null) {

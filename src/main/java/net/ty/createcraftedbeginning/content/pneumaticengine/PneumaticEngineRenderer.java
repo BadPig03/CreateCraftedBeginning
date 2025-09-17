@@ -12,6 +12,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
+import org.jetbrains.annotations.NotNull;
 
 public class PneumaticEngineRenderer extends KineticBlockEntityRenderer<PneumaticEngineBlockEntity> {
     public PneumaticEngineRenderer(Context context) {
@@ -19,7 +20,7 @@ public class PneumaticEngineRenderer extends KineticBlockEntityRenderer<Pneumati
     }
 
     @Override
-    protected void renderSafe(PneumaticEngineBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
+    protected void renderSafe(@NotNull PneumaticEngineBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         BlockState state = be.getBlockState();
         SuperByteBuffer model = getRotatedModel(be, state);
 

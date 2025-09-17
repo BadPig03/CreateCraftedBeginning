@@ -2,21 +2,16 @@ package net.ty.createcraftedbeginning.compat.jade;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.content.breezechamber.BreezeChamberBlock.FrostLevel;
-import net.ty.createcraftedbeginning.content.breezechamber.BreezeChamberBlockEntity;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
+import org.jetbrains.annotations.NotNull;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IBlockComponentProvider;
 import snownee.jade.api.IServerDataProvider;
 import snownee.jade.api.ITooltip;
 import snownee.jade.api.config.IPluginConfig;
-import snownee.jade.api.theme.IThemeHelper;
-import snownee.jade.api.ui.IElementHelper;
 
 public enum BreezeChamberComponentProvider implements IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
     INSTANCE;
@@ -24,35 +19,18 @@ public enum BreezeChamberComponentProvider implements IBlockComponentProvider, I
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
-        CompoundTag data = accessor.getServerData();
-
-        FrostLevel frostLevel = FrostLevel.values()[data.getInt("frostLevel")];
-        int coolTimeRemaining = data.getInt("coolTimeRemaining");
-        boolean isCreative = data.getBoolean("isCreative");
-
-        if (!frostLevel.isAtLeast(FrostLevel.WANING)) {
-            return;
-        }
-
-        ItemStack item = new ItemStack(frostLevel.isAtLeast(FrostLevel.GALLING) ? Items.POWDER_SNOW_BUCKET : Items.SNOWBALL);
-        tooltip.add(IElementHelper.get().smallItem(item));
-        if (isCreative) {
-			tooltip.append(IThemeHelper.get().info(CCBLang.translateDirect("gui.goggles.breeze_chamber.infinity_mark")));
-		} else {
-            tooltip.append(IThemeHelper.get().seconds(coolTimeRemaining, 20));
-        }
     }
 
     @Override
-    public void appendServerData(CompoundTag data, BlockAccessor accessor) {
+    public void appendServerData(@NotNull CompoundTag data, @NotNull BlockAccessor accessor) {
         BreezeChamberBlockEntity bcbe = (BreezeChamberBlockEntity) accessor.getBlockEntity();
-        data.putInt("frostLevel", bcbe.getFrostLevelFromBlock().ordinal());
-        data.putInt("coolTimeRemaining", bcbe.getCoolRemainingTime());
-        data.putBoolean("isCreative", bcbe.isCreative());
+        data.putInt("windLevel", bcbe.getWindLevelFromBlock().ordinal());
+        data.putInt("windTimeRemaining", bcbe.getWindRemainingTime());
+        data.putBoolean("isCreative", bcbe.isCreative);
     }
 
     @Override
-    public ResourceLocation getUid() {
+    public @NotNull ResourceLocation getUid() {
         return CCBBlockEntities.BREEZE_CHAMBER.getId();
     }
 }

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " A ",
+    "ABA",
+    " A "
+  ],
+  "key": {
+    "A": {
+      "item": "createcraftedbeginning:airtight_sheet"
+    },
+    "B": {
+      "item": "minecraft:bucket"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:high_pressure_compressed_air_canister"
+  }
+}

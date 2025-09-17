@@ -18,9 +18,10 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import org.jetbrains.annotations.NotNull;
 
 public class PneumaticEngineScenes {
-    public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("pneumatic_engine", "Generates Rotational Force using Pneumatic Engines");

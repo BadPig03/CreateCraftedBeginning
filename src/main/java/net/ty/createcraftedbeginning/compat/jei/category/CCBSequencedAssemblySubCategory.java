@@ -10,6 +10,7 @@ import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import net.minecraft.client.gui.GuiGraphics;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedGasInjectionChamber;
+import org.jetbrains.annotations.NotNull;
 
 import static net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory.getRenderedSlot;
 
@@ -27,7 +28,7 @@ public abstract class CCBSequencedAssemblySubCategory extends SequencedAssemblyS
         }
 
         @Override
-        public void setRecipe(IRecipeLayoutBuilder builder, SequencedRecipe<?> recipe, IFocusGroup focuses, int x) {
+        public void setRecipe(@NotNull IRecipeLayoutBuilder builder, @NotNull SequencedRecipe<?> recipe, IFocusGroup focuses, int x) {
             FluidIngredient fluidIngredient = recipe.getRecipe().getFluidIngredients().getFirst();
 
             int amount = fluidIngredient.getRequiredAmount();
@@ -35,7 +36,7 @@ public abstract class CCBSequencedAssemblySubCategory extends SequencedAssemblyS
         }
 
         @Override
-        public void draw(SequencedRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int index) {
+        public void draw(SequencedRecipe<?> recipe, @NotNull GuiGraphics graphics, double mouseX, double mouseY, int index) {
             PoseStack ms = graphics.pose();
             chamber.offset = index;
             ms.pushPose();

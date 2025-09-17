@@ -11,7 +11,7 @@ import net.minecraft.data.recipes.RecipeProvider;
 import net.ty.createcraftedbeginning.recipe.CCBCoolingRecipes;
 import net.ty.createcraftedbeginning.recipe.CCBGasInjectionRecipes;
 import net.ty.createcraftedbeginning.recipe.CCBPressurizationRecipes;
-import net.ty.createcraftedbeginning.recipe.CCBSuperCoolingRecipes;
+import net.ty.createcraftedbeginning.recipe.CCBWindChargingRecipes;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -25,11 +25,11 @@ public class CCBRecipeProvider extends RecipeProvider {
         super(output, registries);
     }
 
-    public static void registerAllProcessing(DataGenerator gen, PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
-        GENERATORS.add(new CCBPressurizationRecipes(output, registries));
+    public static void registerAllProcessing(@NotNull DataGenerator gen, PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
         GENERATORS.add(new CCBCoolingRecipes(output, registries));
-        GENERATORS.add(new CCBSuperCoolingRecipes(output, registries));
         GENERATORS.add(new CCBGasInjectionRecipes(output, registries));
+        GENERATORS.add(new CCBPressurizationRecipes(output, registries));
+        GENERATORS.add(new CCBWindChargingRecipes(output, registries));
 
         gen.addProvider(true, new DataProvider() {
 

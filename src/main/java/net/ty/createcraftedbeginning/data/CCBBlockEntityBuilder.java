@@ -9,6 +9,7 @@ import dev.engine_room.flywheel.lib.visualization.SimpleBlockEntityVisualizer;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,7 +24,8 @@ public class CCBBlockEntityBuilder<T extends BlockEntity, P> extends BlockEntity
         super(owner, parent, name, callback, factory);
     }
 
-    public static <T extends BlockEntity, P> BlockEntityBuilder<T, P> create(@NotNull AbstractRegistrate<?> owner, @NotNull P parent, @NotNull String name, @NotNull BuilderCallback callback, @NotNull BlockEntityFactory<T> factory) {
+    @Contract("_, _, _, _, _ -> new")
+    public static <T extends BlockEntity, P> @NotNull BlockEntityBuilder<T, P> create(@NotNull AbstractRegistrate<?> owner, @NotNull P parent, @NotNull String name, @NotNull BuilderCallback callback, @NotNull BlockEntityFactory<T> factory) {
         return new CCBBlockEntityBuilder<>(owner, parent, name, callback, factory);
     }
 

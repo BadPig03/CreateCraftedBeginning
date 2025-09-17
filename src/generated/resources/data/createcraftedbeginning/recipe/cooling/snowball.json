@@ -7,8 +7,8 @@
   ],
   "results": [
     {
-      "amount": 5,
-      "id": "createcraftedbeginning:cooling_time"
+      "amount": 1,
+      "id": "createcraftedbeginning:virtual_time"
     }
   ]
 }

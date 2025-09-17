@@ -15,6 +15,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.ty.createcraftedbeginning.content.airtightcannon.CCBAirtightCannonProjectileRenderModes;
 import net.ty.createcraftedbeginning.registry.CCBRegistries;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,7 @@ public record AirtightCannonProjectileType(HolderSet<Item> items, int reloadTick
     public static final Codec<AirtightCannonProjectileType> CODEC = RecordCodecBuilder.create(i -> i.group(RegistryCodecs.homogeneousList(Registries.ITEM).fieldOf("items").forGetter(AirtightCannonProjectileType::items), Codec.INT.optionalFieldOf("reload_ticks", 10).forGetter(AirtightCannonProjectileType::reloadTicks), Codec.INT.optionalFieldOf("damage", 1).forGetter(AirtightCannonProjectileType::damage), Codec.INT.optionalFieldOf("split", 1).forGetter(AirtightCannonProjectileType::split), Codec.FLOAT.optionalFieldOf("knockback", 1f).forGetter(AirtightCannonProjectileType::knockback), Codec.FLOAT.optionalFieldOf("drag", .99f).forGetter(AirtightCannonProjectileType::drag), Codec.FLOAT.optionalFieldOf("velocity_multiplier", 1f).forGetter(AirtightCannonProjectileType::velocityMultiplier), Codec.FLOAT.optionalFieldOf("gravity_multiplier", 1f).forGetter(AirtightCannonProjectileType::gravityMultiplier), Codec.FLOAT.optionalFieldOf("sound_pitch", 1f).forGetter(AirtightCannonProjectileType::soundPitch), Codec.BOOL.optionalFieldOf("sticky", false).forGetter(AirtightCannonProjectileType::sticky), ItemStack.CODEC.optionalFieldOf("drop_stack", ItemStack.EMPTY).forGetter(AirtightCannonProjectileType::dropStack), AirtightCannonProjectileRenderMode.CODEC.optionalFieldOf("render_mode", CCBAirtightCannonProjectileRenderModes.Billboard.INSTANCE).forGetter(AirtightCannonProjectileType::renderMode), AirtightCannonProjectileEntityHitAction.CODEC.optionalFieldOf("pre_entity_hit").forGetter(p -> p.preEntityHit), AirtightCannonProjectileEntityHitAction.CODEC.optionalFieldOf("on_entity_hit").forGetter(p -> p.onEntityHit), AirtightCannonProjectileBlockHitAction.CODEC.optionalFieldOf("on_block_hit").forGetter(p -> p.onBlockHit)).apply(i, AirtightCannonProjectileType::new));
 
     @SuppressWarnings("deprecation")
-    public static Optional<Holder.Reference<AirtightCannonProjectileType>> getTypeForItem(RegistryAccess registryAccess, Item item) {
+    public static @NotNull Optional<Holder.Reference<AirtightCannonProjectileType>> getTypeForItem(@NotNull RegistryAccess registryAccess, Item item) {
         return registryAccess.lookupOrThrow(CCBRegistries.AIRTIGHT_CANNON_PROJECTILE_TYPE).listElements().filter(ref -> ref.value().items.contains(item.builtInRegistryHolder())).findFirst();
     }
 
@@ -43,7 +44,7 @@ public record AirtightCannonProjectileType(HolderSet<Item> items, int reloadTick
     }
 
     @Override
-    public ItemStack dropStack() {
+    public @NotNull ItemStack dropStack() {
         return dropStack.copy();
     }
 
@@ -114,9 +115,8 @@ public record AirtightCannonProjectileType(HolderSet<Item> items, int reloadTick
             return this;
         }
 
-        public Builder renderMode(AirtightCannonProjectileRenderMode renderMode) {
+        public void renderMode(AirtightCannonProjectileRenderMode renderMode) {
             this.renderMode = renderMode;
-            return this;
         }
 
         public Builder renderBillboard() {
@@ -150,7 +150,7 @@ public record AirtightCannonProjectileType(HolderSet<Item> items, int reloadTick
         }
 
         @SuppressWarnings("deprecation")
-        public Builder addItems(ItemLike... items) {
+        public Builder addItems(ItemLike @NotNull ... items) {
             for (ItemLike provider : items) {
                 this.items.add(provider.asItem().builtInRegistryHolder());
             }

@@ -13,6 +13,7 @@ import net.minecraft.world.item.Items;
 import net.ty.createcraftedbeginning.data.CCBTags;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBItems;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
@@ -35,19 +36,19 @@ public class CCBAdvancements implements DataProvider {
     public static final List<CCBAdvancement> ENTRIES = new ArrayList<>();
     public static final CCBAdvancement START = null,
 
-    ROOT = create("root", b -> b.icon(CCBBlocks.EMPTY_BREEZE_CHAMBER_BLOCK).title("Welcome to Create: Crafted Beginning").description("A Brand New Experience").awardedForFree().special(SILENT)),
+    ROOT = create("root", b -> b.icon(CCBBlocks.EMPTY_BREEZE_COOLER_BLOCK).title("Welcome to Create: Crafted Beginning").description("A Brand New Experience").awardedForFree().special(SILENT)),
 
     PNEUMATIC_ENGINE = create("pneumatic_engine", b -> b.icon(CCBBlocks.PNEUMATIC_ENGINE_BLOCK).title("Stress Battery").description("Place a Pneumatic Engine, then power it using Compressed Air from a Backtank").after(ROOT).special(NOISY)),
 
     AIRTIGHT_SHEET = create("airtight_sheet", b -> b.icon(CCBItems.AIRTIGHT_SHEET).title("Materials Science Marvel").description("Assemble an Airtight Sheet").whenIconCollected().after(PNEUMATIC_ENGINE).special(NOISY)),
 
-    BREEZE_CHAMBER = create("breeze_chamber", b -> b.icon(CCBBlocks.BREEZE_CHAMBER_BLOCK).title("Fairy Spin").description("Find a frosty new home for your Breeze friend").whenIconCollected().after(AIRTIGHT_SHEET).special(NOISY)),
+    BREEZE_COOLER = create("breeze_cooler", b -> b.icon(CCBBlocks.BREEZE_COOLER_BLOCK).title("Fairy Spin").description("Find a frosty new home for your Breeze friend").whenIconCollected().after(AIRTIGHT_SHEET).special(NOISY)),
 
-    BREEZE_CHAMBER_GALLING = create("breeze_chamber_galling", b -> b.icon(Items.POWDER_SNOW_BUCKET).title("Perfect Freeze").description("Pour slush into the Breeze Chamber to trigger your Breeze's Galling state").after(BREEZE_CHAMBER).special(EXPERT)),
+    BREEZE_COOLER_GALLING = create("breeze_cooler_galling", b -> b.icon(Items.POWDER_SNOW_BUCKET).title("Perfect Freeze").description("Pour slush into the Breeze Cooler to trigger your Breeze's Galling state").after(BREEZE_COOLER).special(EXPERT)),
 
-    BREEZE_CHAMBER_LAVA = create("breeze_chamber_lava", b -> b.icon(Items.LAVA_BUCKET).title("An Engine Murder").description("Flood the Breeze Chamber with lava—accidentally or intentionally\n§7(Hidden Advancement)").after(BREEZE_CHAMBER).special(SECRET)),
+    BREEZE_COOLER_LAVA = create("breeze_cooler_lava", b -> b.icon(Items.LAVA_BUCKET).title("An Engine Murder").description("Flood the Breeze Cooler with lava—accidentally or intentionally\n§7(Hidden Advancement)").after(BREEZE_COOLER).special(SECRET)),
 
-    ICE_CREAM = create("ice_cream", b -> b.icon(CCBItems.ICE_CREAM).title("Ambrosia Gelida").description("Make yourself an ice cream treat using slush").whenIconCollected().after(BREEZE_CHAMBER).special(NOISY)),
+    ICE_CREAM = create("ice_cream", b -> b.icon(CCBItems.ICE_CREAM).title("Ambrosia Gelida").description("Make yourself an ice cream treat using slush").whenIconCollected().after(BREEZE_COOLER).special(NOISY)),
 
     ICE_CREAM_NEW = create("ice_cream_new", b -> b.icon(CCBItems.CHOCOLATE_ICE_CREAM).title("Infusion!").description("Create an ice cream with exotic flavors using a Spout").whenItemCollected(CCBTags.CCBItemTags.ICE_CREAM_WITH_FLAVOR.tag).after(ICE_CREAM).special(NOISY)),
 
@@ -59,7 +60,7 @@ public class CCBAdvancements implements DataProvider {
 
     AIRTIGHT_INTAKE_PORT_MAXED = create("airtight_intake_port_maxed", b -> b.icon(CCBBlocks.AIRTIGHT_INTAKE_PORT_BLOCK).title("Take a Deep Breath").description("Operate an Airtight Intake Port at maximum intake rate").after(AIRTIGHT_INTAKE_PORT).special(EXPERT)),
 
-    COMPRESSED_AIR_EXPLOSION = create("compressed_air_explosion", b -> b.icon(AllBlocks.FLUID_TANK).title("Is It a Firecracker?").description("Witness a copper fluid component being blown up by excessive pressure\n§7(Hidden Advancement)").after(AIRTIGHT_COMPONENTS).special(SECRET)),
+    COMPRESSED_AIR_EXPLOSION = create("compressed_air_explosion", b -> b.icon(AllBlocks.FLUID_TANK).title("Is It a Firecracker?").description("Witness a copper gas component being blown up by excessive pressure\n§7(Hidden Advancement)").after(AIRTIGHT_COMPONENTS).special(SECRET)),
 
     AIR_COMPRESSOR = create("air_compressor", b -> b.icon(CCBBlocks.AIR_COMPRESSOR_BLOCK).title("Intense Pressure").description("Pressurize Compressed Air using an Air Compressor").after(AIRTIGHT_COMPONENTS).special(NOISY)),
 
@@ -81,7 +82,8 @@ public class CCBAdvancements implements DataProvider {
         this.registries = registries;
     }
 
-    private static CCBAdvancement create(String id, UnaryOperator<CCBAdvancement.Builder> b) {
+    @Contract("_, _ -> new")
+    private static @NotNull CCBAdvancement create(String id, UnaryOperator<CCBAdvancement.Builder> b) {
         return new CCBAdvancement(id, b);
     }
 

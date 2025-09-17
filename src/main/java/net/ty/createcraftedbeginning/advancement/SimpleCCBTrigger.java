@@ -30,17 +30,16 @@ public class SimpleCCBTrigger extends CriterionTriggerBase<SimpleCCBTrigger.Inst
         return Instance.CODEC;
     }
 
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     public static class Instance extends CriterionTriggerBase.Instance {
         private static final Codec<Instance> CODEC = RecordCodecBuilder.create(instance -> instance.group(EntityPredicate.ADVANCEMENT_CODEC.optionalFieldOf("player").forGetter(Instance::player)).apply(instance, Instance::new));
 
-        @SuppressWarnings("all")
         private final Optional<ContextAwarePredicate> player;
 
         public Instance() {
             player = Optional.empty();
         }
 
-        @SuppressWarnings("all")
         public Instance(Optional<ContextAwarePredicate> player) {
             this.player = player;
         }

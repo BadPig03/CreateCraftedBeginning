@@ -1,9 +1,13 @@
 package net.ty.createcraftedbeginning.ponder.scenes;
 
 import com.simibubi.create.AllBlocks;
+import com.simibubi.create.content.fluids.pipes.GlassFluidPipeBlock;
+import com.simibubi.create.content.fluids.pump.PumpBlock;
 import com.simibubi.create.content.kinetics.motor.CreativeMotorBlock;
 import com.simibubi.create.content.kinetics.simpleRelays.CogWheelBlock;
+import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
+import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.element.ElementLink;
 import net.createmod.ponder.api.element.WorldSectionElement;
@@ -12,14 +16,22 @@ import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.properties.AttachFace;
-import net.ty.createcraftedbeginning.content.airtightengine.AirtightEngineBlock;
-import net.ty.createcraftedbeginning.content.airtightpipe.AirtightPipeBlock;
-import net.ty.createcraftedbeginning.content.airtightpump.AirtightPumpBlock;
+import net.minecraft.world.level.material.Fluids;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
+import net.ty.createcraftedbeginning.content.airtights.condensatedrain.CondensateDrainBlock;
+import net.ty.createcraftedbeginning.content.airtights.condensatedrain.CondensateDrainBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import net.ty.createcraftedbeginning.registry.CCBItems;
+import org.jetbrains.annotations.NotNull;
 
 public class AirtightEngineScenes {
-    public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("airtight_engine", "Setting up Airtight Engines");
@@ -35,6 +47,11 @@ public class AirtightEngineScenes {
         BlockPos pipe2Pos = util.grid().at(3, 1, 0);
         BlockPos cog2Pos = util.grid().at(4, 1, 1);
         BlockPos motorPos = util.grid().at(4, 1, 0);
+        BlockPos newEnginePos = util.grid().at(3, 5, 3);
+        BlockPos drainPos = util.grid().at(2, 5, 2);
+        BlockPos pipe3Pos = util.grid().at(1, 5, 2);
+        BlockPos pump2Pos = util.grid().at(0, 5, 2);
+        BlockPos cog3Pos = util.grid().at(0, 4, 2);
 
         Selection tankSelection = util.select().fromTo(lowerTankPos, upperTankPos);
         Selection engineSelection = util.select().fromTo(enginePos, enginePos);
@@ -42,8 +59,14 @@ public class AirtightEngineScenes {
         Selection pumpSelection = util.select().fromTo(pumpPos, pipe2Pos);
         Selection sourceSelection = util.select().fromTo(cog2Pos, motorPos);
         Selection pipeSelection = util.select().fromTo(pipePos, pipePos);
+        Selection drainSelection = util.select().fromTo(drainPos, drainPos);
         Selection largeTankSelection = util.select().fromTo(util.grid().at(2, 1, 4), util.grid().at(0, 4, 6));
+        Selection newEngineSelection = util.select().fromTo(enginePos, newEnginePos);
         Selection newLargeTankSelection = util.select().fromTo(util.grid().at(4, 1, 2), util.grid().at(2, 4, 4));
+        Selection newPumpSelection = util.select().fromTo(pipe3Pos, cog3Pos);
+
+        ItemStack canister = new ItemStack(CCBItems.COMPRESSED_AIR_CANISTER.asItem());
+        ItemStack highCanister = new ItemStack(CCBItems.HIGH_PRESSURE_COMPRESSED_AIR_CANISTER.asItem());
 
         scene.world().setBlock(enginePos, CCBBlocks.AIRTIGHT_ENGINE_BLOCK.getDefaultState().setValue(AirtightEngineBlock.AXIS, Direction.Axis.Y).setValue(AirtightEngineBlock.FACE, AttachFace.FLOOR).setValue(AirtightEngineBlock.FACING, Direction.NORTH), false);
         scene.world().setBlock(cogPos, AllBlocks.COGWHEEL.getDefaultState().setValue(CogWheelBlock.AXIS, Direction.Axis.Y), false);
@@ -52,6 +75,7 @@ public class AirtightEngineScenes {
         scene.world().setBlock(pipe2Pos, CCBBlocks.AIRTIGHT_PIPE_BLOCK.getDefaultState().setValue(AirtightPipeBlock.AXIS, Direction.Axis.Z), false);
         scene.world().setBlock(cog2Pos, AllBlocks.COGWHEEL.getDefaultState().setValue(CogWheelBlock.AXIS, Direction.Axis.Z), false);
         scene.world().setBlock(motorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.SOUTH), false);
+        scene.world().setBlock(drainPos, CCBBlocks.CONDENSATE_DRAIN_BLOCK.getDefaultState().setValue(CondensateDrainBlock.FACE, AttachFace.FLOOR).setValue(CondensateDrainBlock.FACING, Direction.NORTH), false);
 
         scene.idle(10);
         ElementLink<WorldSectionElement> tank = scene.world().showIndependentSection(tankSelection, Direction.DOWN);
@@ -98,6 +122,10 @@ public class AirtightEngineScenes {
         scene.idle(10);
         scene.world().moveSection(engine, util.vector().of(0, 1, 0), 10);
 
+        scene.idle(10);
+        scene.world().setBlock(newEnginePos, CCBBlocks.AIRTIGHT_ENGINE_BLOCK.getDefaultState().setValue(AirtightEngineBlock.AXIS, Direction.Axis.Y).setValue(AirtightEngineBlock.FACE, AttachFace.FLOOR).setValue(AirtightEngineBlock.FACING, Direction.NORTH), false);
+        scene.world().setKineticSpeed(newEngineSelection, 8);
+
         scene.idle(5);
         ElementLink<WorldSectionElement> largeTank = scene.world().showIndependentSection(largeTankSelection, Direction.EAST);
         scene.world().moveSection(largeTank, util.vector().of(2, 0, -2), 0);
@@ -110,10 +138,90 @@ public class AirtightEngineScenes {
         scene.world().multiplyKineticSpeed(sourceSelection, 3);
         scene.world().multiplyKineticSpeed(pumpSelection, 3);
         scene.effects().rotationSpeedIndicator(pumpPos);
-        scene.effects().rotationSpeedIndicator(motorPos);
-        scene.overlay().showText(60).text("If supplied with Compressed Air, the Airtight Drive Assembly will remain passive state regardless of input quantity").colored(PonderPalette.RED).pointAt(util.vector().centerOf(pumpPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showControls(util.vector().blockSurface(pumpPos, Direction.UP), Pointing.DOWN, 60).withItem(canister);
+        scene.overlay().showText(60).text("If supplied with Compressed Air, the Airtight Drive Assembly will remain passive state regardless of input quantity").colored(PonderPalette.RED).pointAt(util.vector().centerOf(newEnginePos)).placeNearTarget().attachKeyFrame();
 
-        scene.idle(60);
+        scene.idle(80);
+        scene.world().setKineticSpeed(newEngineSelection, 16);
+        scene.effects().rotationSpeedIndicator(newEnginePos);
+        scene.overlay().showControls(util.vector().blockSurface(pumpPos, Direction.UP), Pointing.DOWN, 60).withItem(highCanister);
+        scene.overlay().showText(60).text("If supplied with High Pressure Compressed Air, it will generate additional Stress").colored(PonderPalette.OUTPUT).pointAt(util.vector().centerOf(newEnginePos)).placeNearTarget().attachKeyFrame();
+
+        scene.idle(20);
+        scene.world().setKineticSpeed(newEngineSelection, 24);
+
+        scene.idle(20);
+        scene.world().setKineticSpeed(newEngineSelection, 32);
+        scene.effects().rotationSpeedIndicator(newEnginePos);
+
+        scene.idle(20);
+        scene.world().setKineticSpeed(newEngineSelection, 40);
+
+        scene.idle(20);
+        scene.world().setKineticSpeed(newEngineSelection, 48);
+        scene.effects().rotationSpeedIndicator(newEnginePos);
+
+        scene.idle(20);
+        scene.world().setKineticSpeed(newEngineSelection, 32);
+        scene.effects().rotationSpeedIndicator(newEnginePos);
+        scene.overlay().showText(60).text("It will also generate Condensate, and excessive accumulation of Condensate will limit the maximum level").colored(PonderPalette.RED).pointAt(util.vector().centerOf(newEnginePos)).placeNearTarget();
+
+        scene.idle(20);
+        scene.world().setKineticSpeed(newEngineSelection, 16);
+
+        scene.idle(20);
+        scene.world().setKineticSpeed(newEngineSelection, 8);
+        scene.effects().rotationSpeedIndicator(newEnginePos);
+
+        scene.idle(20);
+        scene.world().setKineticSpeed(newEngineSelection, 0);
+
+        scene.idle(20);
+        scene.world().setBlock(pipe3Pos, AllBlocks.GLASS_FLUID_PIPE.getDefaultState().setValue(GlassFluidPipeBlock.AXIS, Direction.Axis.X), false);
+        scene.world().setBlock(pump2Pos, AllBlocks.MECHANICAL_PUMP.getDefaultState().setValue(PumpBlock.FACING, Direction.WEST), false);
+        scene.world().setBlock(cog3Pos, AllBlocks.COGWHEEL.getDefaultState().setValue(CogWheelBlock.AXIS, Direction.Axis.X), false);
+        scene.world().showSection(drainSelection, Direction.DOWN);
+        scene.world().showSection(newPumpSelection, Direction.DOWN);
+
+        scene.idle(10);
+        scene.world().modifyBlockEntity(drainPos, CondensateDrainBlockEntity.class, be -> {
+            SmartFluidTankBehaviour.InternalFluidHandler fluidHandler = (SmartFluidTankBehaviour.InternalFluidHandler) be.getTankBehaviour().getCapability();
+            fluidHandler.forceFill(new FluidStack(Fluids.WATER, 2000), IFluidHandler.FluidAction.EXECUTE);
+		});
+        scene.world().setKineticSpeed(newPumpSelection, 64);
+        scene.effects().rotationSpeedIndicator(pump2Pos);
+        scene.effects().rotationSpeedIndicator(cog3Pos);
+        scene.world().propagatePipeChange(pump2Pos);
+
+        scene.idle(10);
+        scene.overlay().showOutline(PonderPalette.OUTPUT, new Object(), drainSelection, 60);
+        scene.overlay().showText(60).text("Condensate can be drained by pumping out the Condensate Drain").colored(PonderPalette.OUTPUT).pointAt(util.vector().centerOf(drainPos)).placeNearTarget().attachKeyFrame();
+
+        scene.idle(20);
+        scene.world().setKineticSpeed(newEngineSelection, 16);
+        scene.effects().rotationSpeedIndicator(newEnginePos);
+
+        scene.idle(20);
+        scene.world().setKineticSpeed(newEngineSelection, 24);
+
+        scene.idle(20);
+        scene.world().setKineticSpeed(newEngineSelection, 32);
+        scene.effects().rotationSpeedIndicator(newEnginePos);
+
+        scene.idle(20);
+        scene.world().setKineticSpeed(newEngineSelection, 40);
+        scene.overlay().showText(60).text("The higher the level of the Airtight Drive Assembly, the faster the Condensate generation rate").colored(PonderPalette.OUTPUT).pointAt(util.vector().centerOf(drainPos)).placeNearTarget();
+
+        scene.idle(20);
+        scene.world().setKineticSpeed(newEngineSelection, 48);
+        scene.effects().rotationSpeedIndicator(newEnginePos);
+
+        scene.idle(20);
+        scene.world().setKineticSpeed(newEngineSelection, 56);
+
+        scene.idle(20);
+        scene.world().setKineticSpeed(newEngineSelection, 64);
+        scene.effects().rotationSpeedIndicator(newEnginePos);
         scene.markAsFinished();
     }
 }

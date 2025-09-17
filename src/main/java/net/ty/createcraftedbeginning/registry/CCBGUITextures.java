@@ -17,17 +17,15 @@ public enum CCBGUITextures implements ScreenElement, TextureSheetSegment {
     JEI_LONG_ARROW("jei/widgets", 19, 0, 71, 10),
     JEI_QUESTION_MARK("jei/widgets", 0, 178, 12, 16),
     JEI_COOLING("jei/widgets", 12, 178, 16, 16),
-    JEI_COOLING_BACKGROUND("jei/widgets", 28, 178, 16, 16);
+    JEI_COOLING_BACKGROUND("jei/widgets", 28, 178, 16, 16),
+	JEI_WIND_CHARGING("jei/widgets", 44, 178, 16, 16),
+    JEI_WIND_CHARGING_BACKGROUND("jei/widgets", 60, 178, 16, 16);
 
     public final ResourceLocation location;
 	private final int width;
 	private final int height;
 	private final int startX;
 	private final int startY;
-
-    CCBGUITextures(String location, int width, int height) {
-		this(location, 0, 0, width, height);
-	}
 
 	CCBGUITextures(String location, int startX, int startY, int width, int height) {
 		this(CreateCraftedBeginning.MOD_ID, location, startX, startY, width, height);
@@ -47,7 +45,7 @@ public enum CCBGUITextures implements ScreenElement, TextureSheetSegment {
 	}
 
 	@OnlyIn(Dist.CLIENT)
-	public void render(GuiGraphics graphics, int x, int y) {
+	public void render(@NotNull GuiGraphics graphics, int x, int y) {
 		graphics.blit(location, x, y, startX, startY, width, height);
 	}
 

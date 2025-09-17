@@ -7,6 +7,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.neoforged.neoforge.fluids.BaseFlowingFluid;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 public class CompressedAirFakeFluid extends BaseFlowingFluid {
@@ -17,11 +18,13 @@ public class CompressedAirFakeFluid extends BaseFlowingFluid {
         this.source = source;
     }
 
-    public static CompressedAirFakeFluid createSource(Properties properties) {
+    @Contract("_ -> new")
+    public static @NotNull CompressedAirFakeFluid createSource(Properties properties) {
         return new CompressedAirFakeFluid(properties, true);
     }
 
-    public static CompressedAirFakeFluid createFlowing(Properties properties) {
+    @Contract("_ -> new")
+    public static @NotNull CompressedAirFakeFluid createFlowing(Properties properties) {
         return new CompressedAirFakeFluid(properties, false);
     }
 

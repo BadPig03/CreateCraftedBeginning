@@ -7,6 +7,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.neoforged.neoforge.fluids.BaseFlowingFluid;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 public class SlushVirtualFluid extends BaseFlowingFluid {
@@ -17,11 +18,13 @@ public class SlushVirtualFluid extends BaseFlowingFluid {
         this.source = source;
     }
 
-    public static SlushVirtualFluid createSource(Properties properties) {
+    @Contract("_ -> new")
+    public static @NotNull SlushVirtualFluid createSource(Properties properties) {
         return new SlushVirtualFluid(properties, true);
     }
 
-    public static SlushVirtualFluid createFlowing(Properties properties) {
+    @Contract("_ -> new")
+    public static @NotNull SlushVirtualFluid createFlowing(Properties properties) {
         return new SlushVirtualFluid(properties, false);
     }
 

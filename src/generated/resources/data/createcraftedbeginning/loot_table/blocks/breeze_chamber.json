@@ -3,69 +3,14 @@
   "pools": [
     {
       "bonus_rolls": 0.0,
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
       "entries": [
         {
           "type": "minecraft:item",
-          "conditions": [
-            {
-              "condition": "minecraft:survives_explosion"
-            },
-            {
-              "block": "createcraftedbeginning:breeze_chamber",
-              "condition": "minecraft:block_state_property",
-              "properties": {
-                "breeze": "riming"
-              }
-            }
-          ],
-          "name": "createcraftedbeginning:breeze_chamber"
-        },
-        {
-          "type": "minecraft:item",
-          "conditions": [
-            {
-              "condition": "minecraft:survives_explosion"
-            },
-            {
-              "block": "createcraftedbeginning:breeze_chamber",
-              "condition": "minecraft:block_state_property",
-              "properties": {
-                "breeze": "waning"
-              }
-            }
-          ],
-          "name": "createcraftedbeginning:breeze_chamber"
-        },
-        {
-          "type": "minecraft:item",
-          "conditions": [
-            {
-              "condition": "minecraft:survives_explosion"
-            },
-            {
-              "block": "createcraftedbeginning:breeze_chamber",
-              "condition": "minecraft:block_state_property",
-              "properties": {
-                "breeze": "chilled"
-              }
-            }
-          ],
-          "name": "createcraftedbeginning:breeze_chamber"
-        },
-        {
-          "type": "minecraft:item",
-          "conditions": [
-            {
-              "condition": "minecraft:survives_explosion"
-            },
-            {
-              "block": "createcraftedbeginning:breeze_chamber",
-              "condition": "minecraft:block_state_property",
-              "properties": {
-                "breeze": "galling"
-              }
-            }
-          ],
           "name": "createcraftedbeginning:breeze_chamber"
         }
       ],

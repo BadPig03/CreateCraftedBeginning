@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:powdered_amethyst_block"
+    }
+  ],
+  "result": {
+    "count": 4,
+    "id": "createcraftedbeginning:powdered_amethyst"
+  }
+}

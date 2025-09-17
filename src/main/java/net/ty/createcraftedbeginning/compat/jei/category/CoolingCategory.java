@@ -11,25 +11,25 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedBreezeChamber;
-import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
+import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedBreezeCooler;
 import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 import net.ty.createcraftedbeginning.registry.CCBGUITextures;
 import org.jetbrains.annotations.NotNull;
 
 public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
-    private final AnimatedBreezeChamber chamber = new AnimatedBreezeChamber().withFrost(false);
+    private static final int COLOR = 0x888888;
+    private final AnimatedBreezeCooler cooler = new AnimatedBreezeCooler();
 
     public CoolingCategory(Info<CoolingRecipe> info) {
         super(info);
     }
 
     @Override
-    public void setRecipe(IRecipeLayoutBuilder builder, CoolingRecipe recipe, @NotNull IFocusGroup focuses) {
+    public void setRecipe(IRecipeLayoutBuilder builder, @NotNull CoolingRecipe recipe, @NotNull IFocusGroup focuses) {
         if (recipe.isIngredientsFluid()) {
             addFluidInputSlot(builder, recipe.getIngredientsFluid());
-        }
-        else {
+        } else {
             addItemInputSlot(builder, recipe.getIngredientsItem());
         }
     }
@@ -40,24 +40,29 @@ public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
 
         CCBGUITextures.JEI_SHADOW.render(graphics, 122, 37);
         CCBGUITextures.JEI_LONG_ARROW.render(graphics, 42, 30);
-        CCBGUITextures.JEI_COOLING.render(graphics, 16, 8);
-		CCBGUITextures.JEI_COOLING_BACKGROUND.render(graphics, 16, 8);
+        CCBGUITextures.JEI_COOLING_BACKGROUND.render(graphics, 16, 8);
 
         if (getBackground() == null) {
             return;
         }
 
-        MutableComponent time = CCBLang.secondsWithGameTicks(recipe.getResultTime(), 20).component();
-        graphics.drawString(font, time, getBackground().getWidth() / 2 - font.width(time) / 2 - 12, 22, 0x888888, false);
+        if (!recipe.isIngredientsFluid() && recipe.isCreativeIceCream()) {
+            MutableComponent text = CCBLang.translateDirect("gui.goggles.infinity_mark");
+            graphics.drawString(font, text, getBackground().getWidth() / 2 - font.width(text) / 2 - 12, 22, COLOR, false);
+            cooler.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
+            return;
+        }
 
-        chamber.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
+        MutableComponent time = CCBLang.secondsWithGameTicks(recipe.getResultTime(), 20).component();
+        graphics.drawString(font, time, getBackground().getWidth() / 2 - font.width(time) / 2 - 12, 22, COLOR, false);
+        cooler.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
     }
 
-    private void addItemInputSlot(IRecipeLayoutBuilder builder, Ingredient ingredient) {
+    private void addItemInputSlot(@NotNull IRecipeLayoutBuilder builder, Ingredient ingredient) {
         builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setBackground(getRenderedSlot(), -1, -1).addIngredients(ingredient);
     }
 
-    private void addFluidInputSlot(IRecipeLayoutBuilder builder, FluidIngredient fluidIngredient) {
+    private void addFluidInputSlot(@NotNull IRecipeLayoutBuilder builder, @NotNull FluidIngredient fluidIngredient) {
         builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setFluidRenderer(1000, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredients(NeoForgeTypes.FLUID_STACK, fluidIngredient.getMatchingFluidStacks());
     }
 }

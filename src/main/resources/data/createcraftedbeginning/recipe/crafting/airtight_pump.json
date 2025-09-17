@@ -1,14 +1,21 @@
 {
-  "type": "minecraft:crafting_shapeless",
-  "category": "misc",
-  "ingredients": [
-    {
-      "item": "create:mechanical_pump"
-    },
-    {
-      "item": "createcraftedbeginning:airtight_sheet"
-    }
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "A",
+    "B",
+    "C"
   ],
+  "key": {
+    "A": {
+      "tag": "c:ingots/zinc"
+    },
+    "B": {
+      "item": "create:cogwheel"
+    },
+    "C": {
+      "item": "createcraftedbeginning:airtight_pipe"
+    }
+  },
   "result": {
     "count": 1,
     "id": "createcraftedbeginning:airtight_pump"

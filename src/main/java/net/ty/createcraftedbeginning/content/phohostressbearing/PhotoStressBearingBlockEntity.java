@@ -88,7 +88,7 @@ public class PhotoStressBearingBlockEntity extends GeneratingKineticBlockEntity 
     }
 
     @Override
-    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+    public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
         movementDirection = new ScrollOptionBehaviour<>(RotationDirection.class, CreateLang.translateDirect("contraptions.windmill.rotation_direction"), this, new PhotoStressBearingValueBox());
         movementDirection.withCallback(this::onDirectionChanged);
         behaviours.add(movementDirection);

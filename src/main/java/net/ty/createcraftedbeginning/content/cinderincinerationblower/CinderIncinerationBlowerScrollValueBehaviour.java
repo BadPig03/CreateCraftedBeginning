@@ -11,6 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.BlockHitResult;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +34,7 @@ public class CinderIncinerationBlowerScrollValueBehaviour extends ScrollValueBeh
     }
 
     @Override
-    public void setValueSettings(Player player, ValueSettings valueSetting, boolean ctrlHeld) {
+    public void setValueSettings(Player player, @NotNull ValueSettings valueSetting, boolean ctrlHeld) {
         int value = valueSetting.value();
         if (!valueSetting.equals(getValueSettings())) {
             playFeedbackSound(this);
@@ -46,7 +47,7 @@ public class CinderIncinerationBlowerScrollValueBehaviour extends ScrollValueBeh
         return super.getValueSettings();
     }
 
-    public MutableComponent formatSettings(ValueSettings settings) {
+    public MutableComponent formatSettings(@NotNull ValueSettings settings) {
         return CreateLang.number(settings.value()).add(Component.translatable("appliances.cinder_incineration_blower.working_range_unit")).style(ChatFormatting.BOLD).component();
     }
 

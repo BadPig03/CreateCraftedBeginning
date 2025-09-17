@@ -1,100 +1,64 @@
 {
   "variants": {
-    "breeze=chilled,cooler=false,facing=east": {
+    "facing=east,wind_level=breeze": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block",
+      "y": 90
+    },
+    "facing=east,wind_level=calm": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block",
+      "y": 90
+    },
+    "facing=east,wind_level=gale": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block",
+      "y": 90
+    },
+    "facing=east,wind_level=ill": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block",
+      "y": 90
+    },
+    "facing=north,wind_level=breeze": {
       "model": "createcraftedbeginning:block/breeze_chamber/block"
     },
-    "breeze=chilled,cooler=false,facing=north": {
+    "facing=north,wind_level=calm": {
       "model": "createcraftedbeginning:block/breeze_chamber/block"
     },
-    "breeze=chilled,cooler=false,facing=south": {
+    "facing=north,wind_level=gale": {
       "model": "createcraftedbeginning:block/breeze_chamber/block"
     },
-    "breeze=chilled,cooler=false,facing=west": {
+    "facing=north,wind_level=ill": {
       "model": "createcraftedbeginning:block/breeze_chamber/block"
     },
-    "breeze=chilled,cooler=true,facing=east": {
-      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    "facing=south,wind_level=breeze": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block",
+      "y": 180
     },
-    "breeze=chilled,cooler=true,facing=north": {
-      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    "facing=south,wind_level=calm": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block",
+      "y": 180
     },
-    "breeze=chilled,cooler=true,facing=south": {
-      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    "facing=south,wind_level=gale": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block",
+      "y": 180
     },
-    "breeze=chilled,cooler=true,facing=west": {
-      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    "facing=south,wind_level=ill": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block",
+      "y": 180
     },
-    "breeze=galling,cooler=false,facing=east": {
-      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    "facing=west,wind_level=breeze": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block",
+      "y": 270
     },
-    "breeze=galling,cooler=false,facing=north": {
-      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    "facing=west,wind_level=calm": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block",
+      "y": 270
     },
-    "breeze=galling,cooler=false,facing=south": {
-      "model": "createcraftedbeginning:block/breeze_chamber/block"
+    "facing=west,wind_level=gale": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block",
+      "y": 270
     },
-    "breeze=galling,cooler=false,facing=west": {
-      "model": "createcraftedbeginning:block/breeze_chamber/block"
-    },
-    "breeze=galling,cooler=true,facing=east": {
-      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
-    },
-    "breeze=galling,cooler=true,facing=north": {
-      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
-    },
-    "breeze=galling,cooler=true,facing=south": {
-      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
-    },
-    "breeze=galling,cooler=true,facing=west": {
-      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
-    },
-    "breeze=riming,cooler=false,facing=east": {
-      "model": "createcraftedbeginning:block/breeze_chamber/block"
-    },
-    "breeze=riming,cooler=false,facing=north": {
-      "model": "createcraftedbeginning:block/breeze_chamber/block"
-    },
-    "breeze=riming,cooler=false,facing=south": {
-      "model": "createcraftedbeginning:block/breeze_chamber/block"
-    },
-    "breeze=riming,cooler=false,facing=west": {
-      "model": "createcraftedbeginning:block/breeze_chamber/block"
-    },
-    "breeze=riming,cooler=true,facing=east": {
-      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
-    },
-    "breeze=riming,cooler=true,facing=north": {
-      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
-    },
-    "breeze=riming,cooler=true,facing=south": {
-      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
-    },
-    "breeze=riming,cooler=true,facing=west": {
-      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
-    },
-    "breeze=waning,cooler=false,facing=east": {
-      "model": "createcraftedbeginning:block/breeze_chamber/block"
-    },
-    "breeze=waning,cooler=false,facing=north": {
-      "model": "createcraftedbeginning:block/breeze_chamber/block"
-    },
-    "breeze=waning,cooler=false,facing=south": {
-      "model": "createcraftedbeginning:block/breeze_chamber/block"
-    },
-    "breeze=waning,cooler=false,facing=west": {
-      "model": "createcraftedbeginning:block/breeze_chamber/block"
-    },
-    "breeze=waning,cooler=true,facing=east": {
-      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
-    },
-    "breeze=waning,cooler=true,facing=north": {
-      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
-    },
-    "breeze=waning,cooler=true,facing=south": {
-      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
-    },
-    "breeze=waning,cooler=true,facing=west": {
-      "model": "createcraftedbeginning:block/breeze_chamber/cooler"
+    "facing=west,wind_level=ill": {
+      "model": "createcraftedbeginning:block/breeze_chamber/block",
+      "y": 270
     }
   }
 }

@@ -23,6 +23,7 @@ import net.ty.createcraftedbeginning.data.CCBTags;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 import net.ty.createcraftedbeginning.util.Helpers;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -151,7 +152,8 @@ public class GasInjectionRecipe extends StandardProcessingRecipe<SingleRecipeInp
         return true;
     }
 
-    private static Predicate<RecipeHolder<GasInjectionRecipe>> matchItemAndFluid(Level level, FluidStack fluidStack, SingleRecipeInput input) {
+    @Contract(pure = true)
+    private static @NotNull Predicate<RecipeHolder<GasInjectionRecipe>> matchItemAndFluid(Level level, FluidStack fluidStack, SingleRecipeInput input) {
         return r -> r.value().matches(input, level) && Helpers.isFluidTheSame(r.value().getRequiredFluid().getMatchingFluidStacks().getFirst(), fluidStack);
     }
 
@@ -177,7 +179,7 @@ public class GasInjectionRecipe extends StandardProcessingRecipe<SingleRecipeInp
 
     public FluidIngredient getRequiredFluid() {
         if (fluidIngredients.isEmpty()) {
-            throw new IllegalStateException("Filling Recipe has no fluid ingredient!");
+            throw new IllegalStateException("Filling Recipe has no gas ingredient!");
         }
         return fluidIngredients.getFirst();
     }
@@ -197,7 +199,7 @@ public class GasInjectionRecipe extends StandardProcessingRecipe<SingleRecipeInp
     }
 
     @Override
-    public void addRequiredMachines(Set<ItemLike> list) {
+    public void addRequiredMachines(@NotNull Set<ItemLike> list) {
         list.add(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK.get());
     }
 
@@ -206,7 +208,7 @@ public class GasInjectionRecipe extends StandardProcessingRecipe<SingleRecipeInp
     }
 
     @Override
-    public void addAssemblyFluidIngredients(List<FluidIngredient> list) {
+    public void addAssemblyFluidIngredients(@NotNull List<FluidIngredient> list) {
         list.add(getRequiredFluid());
     }
 

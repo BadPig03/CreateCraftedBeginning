@@ -33,7 +33,7 @@ public class CCBRegistrateTags {
     private static void genBlockTags(RegistrateTagsProvider<Block> provIn) {
         CCBTagsProvider<Block> prov = new CCBTagsProvider<>(provIn, Block::builtInRegistryHolder);
 
-        prov.tag(BlockTags.create(Mods.DRAGONS_PLUS.asResource("passive_block_freezers"))).add(CCBBlocks.BREEZE_CHAMBER_BLOCK.get());
+        prov.tag(BlockTags.create(Mods.DRAGONS_PLUS.asResource("passive_block_freezers"))).add(CCBBlocks.BREEZE_COOLER_BLOCK.get());
 
         for (CCBBlockTags tag : CCBBlockTags.values()) {
             if (tag.alwaysDataGen) {

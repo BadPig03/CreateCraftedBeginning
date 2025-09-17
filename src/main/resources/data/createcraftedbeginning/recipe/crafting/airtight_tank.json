@@ -6,9 +6,8 @@
     "B"
   ],
   "key": {
-    "A":
-    {
-      "item": "create:fluid_tank"
+    "A": {
+      "tag": "c:buckets/empty"
     },
     "B": {
       "item": "createcraftedbeginning:airtight_sheet"

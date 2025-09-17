@@ -11,6 +11,7 @@ import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.common.ModConfigSpec.ConfigValue;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,11 +26,14 @@ public class CCBStress extends ConfigBase {
     protected final Map<ResourceLocation, ConfigValue<Double>> capacities = new HashMap<>();
     protected final Map<ResourceLocation, ConfigValue<Double>> impacts = new HashMap<>();
 
-    public static <B extends Block, P> NonNullUnaryOperator<BlockBuilder<B, P>> setNoImpact() {
+    @SuppressWarnings("unused")
+    @Contract(pure = true)
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> setNoImpact() {
         return setImpact(0);
     }
 
-    public static <B extends Block, P> NonNullUnaryOperator<BlockBuilder<B, P>> setImpact(double value) {
+    @Contract(pure = true)
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> setImpact(double value) {
         return builder -> {
             assertFromCreateCraftedBeginning(builder);
             ResourceLocation id = CreateCraftedBeginning.asResource(builder.getName());
@@ -38,7 +42,8 @@ public class CCBStress extends ConfigBase {
         };
     }
 
-    public static <B extends Block, P> NonNullUnaryOperator<BlockBuilder<B, P>> setCapacity(double value) {
+    @Contract(pure = true)
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> setCapacity(double value) {
         return builder -> {
             assertFromCreateCraftedBeginning(builder);
             ResourceLocation id = CreateCraftedBeginning.asResource(builder.getName());
@@ -47,14 +52,14 @@ public class CCBStress extends ConfigBase {
         };
     }
 
-    private static void assertFromCreateCraftedBeginning(BlockBuilder<?, ?> builder) {
+    private static void assertFromCreateCraftedBeginning(@NotNull BlockBuilder<?, ?> builder) {
         if (!builder.getOwner().getModid().equals(CreateCraftedBeginning.MOD_ID)) {
             throw new IllegalStateException("Non-relative blocks cannot be added to Create Crafted Beginning's config.");
         }
     }
 
     @Override
-    public void registerAll(ModConfigSpec.Builder builder) {
+    public void registerAll(ModConfigSpec.@NotNull Builder builder) {
         builder.comment(".", Comments.su, Comments.impact).push("impact");
         DEFAULT_IMPACTS.forEach((id, value) -> this.impacts.put(id, builder.define(id.getPath(), value)));
         builder.pop();

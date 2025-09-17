@@ -10,6 +10,7 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedGasInjectionChamber;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.registry.CCBGUITextures;
+import org.jetbrains.annotations.NotNull;
 
 public class GasInjectionCategory extends CCBRecipeCategory<GasInjectionRecipe> {
     private final AnimatedGasInjectionChamber chamber = new AnimatedGasInjectionChamber();
@@ -19,7 +20,7 @@ public class GasInjectionCategory extends CCBRecipeCategory<GasInjectionRecipe> 
     }
 
     @Override
-    public void setRecipe(IRecipeLayoutBuilder builder, GasInjectionRecipe recipe, IFocusGroup focuses) {
+    public void setRecipe(@NotNull IRecipeLayoutBuilder builder, @NotNull GasInjectionRecipe recipe, IFocusGroup focuses) {
         builder.addSlot(RecipeIngredientRole.INPUT, 27, 51).setBackground(getRenderedSlot(), -1, -1).addIngredients(recipe.getIngredients().getFirst());
 
         FluidStack fluidStack = recipe.getRequiredFluid().getMatchingFluidStacks().getFirst();

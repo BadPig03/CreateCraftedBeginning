@@ -23,9 +23,10 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
 
 public class CompressedAirScenes {
-    public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("compressed_air", "Moving Compressed Air using Copper Fluid Pipes");
@@ -124,7 +125,7 @@ public class CompressedAirScenes {
         scene.world().destroyBlock(rightPipePos);
         scene.world().hideSection(rightPumpSelection, Direction.UP);
         ElementLink<EntityElement> pipe = scene.world().createItemEntity(util.vector().centerOf(rightPipePos), util.vector().of(0, -0.1, 0), pipeItem);
-        scene.overlay().showText(60).text("Excessive pressure within fluid pipelines will also result in explosions").colored(PonderPalette.RED).pointAt(Vec3.atCenterOf(rightPipePos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Excessive pressure within gas pipelines will also result in explosions").colored(PonderPalette.RED).pointAt(Vec3.atCenterOf(rightPipePos)).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().hideSection(newPumpsSelection, Direction.UP);

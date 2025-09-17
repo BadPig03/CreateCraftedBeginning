@@ -17,7 +17,7 @@ public class AirtightCannonProjectileRenderer extends EntityRenderer<AirtightCan
     }
 
     @Override
-    public void render(AirtightCannonProjectileEntity entity, float yaw, float pt, @NotNull PoseStack ms, @NotNull MultiBufferSource buffer, int light) {
+    public void render(@NotNull AirtightCannonProjectileEntity entity, float yaw, float pt, @NotNull PoseStack ms, @NotNull MultiBufferSource buffer, int light) {
         ItemStack item = entity.getItem();
         if (item.isEmpty()) {
             return;
@@ -30,7 +30,7 @@ public class AirtightCannonProjectileRenderer extends EntityRenderer<AirtightCan
         ms.popPose();
     }
 
-    @SuppressWarnings("all")
+    @SuppressWarnings("DataFlowIssue")
     @Override
     public @NotNull ResourceLocation getTextureLocation(@NotNull AirtightCannonProjectileEntity entity) {
         return null;

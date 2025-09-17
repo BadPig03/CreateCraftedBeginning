@@ -12,6 +12,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
 
 public class AirtightCannonRenderHandler extends ShootableGadgetRenderHandler {
     private float nextPitch;
@@ -22,24 +23,24 @@ public class AirtightCannonRenderHandler extends ShootableGadgetRenderHandler {
     }
 
     @Override
-    protected boolean appliesTo(ItemStack stack) {
+    protected boolean appliesTo(@NotNull ItemStack stack) {
         return stack.getItem() instanceof AirtightCannonItem;
     }
 
     @Override
-    protected void transformTool(PoseStack ms, float flip, float equipProgress, float recoil, float pt) {
+    protected void transformTool(@NotNull PoseStack ms, float flip, float equipProgress, float recoil, float pt) {
         ms.translate(flip * -.1f, 0, .14f);
         ms.scale(.75f, .75f, .75f);
         TransformStack.of(ms).rotateXDegrees(recoil * 80);
     }
 
     @Override
-    protected void transformHand(PoseStack ms, float flip, float equipProgress, float recoil, float pt) {
+    protected void transformHand(@NotNull PoseStack ms, float flip, float equipProgress, float recoil, float pt) {
         ms.translate(flip * -.09, -.275, -.25);
         TransformStack.of(ms).rotateZDegrees(flip * -10);
     }
 
-    public void beforeShoot(float nextPitch, Vec3 location, Vec3 motion, ItemStack stack) {
+    public void beforeShoot(float nextPitch, Vec3 location, Vec3 motion, @NotNull ItemStack stack) {
         this.nextPitch = nextPitch;
         ClientLevel world = Minecraft.getInstance().level;
         if (stack.isEmpty() || world == null) {

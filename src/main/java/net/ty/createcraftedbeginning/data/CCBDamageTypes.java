@@ -7,11 +7,13 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.damagesource.DamageEffects;
 import net.minecraft.world.damagesource.DamageType;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import org.jetbrains.annotations.NotNull;
 
 public class CCBDamageTypes {
     public static final ResourceKey<DamageType> CINDER_INCINERATION_BLOWER_FIRE_FIRE = key("cinder_incineration_blower_fire");
 
-    private static ResourceKey<DamageType> key(String name) {
+    @SuppressWarnings("SameParameterValue")
+    private static @NotNull ResourceKey<DamageType> key(String name) {
         return ResourceKey.create(Registries.DAMAGE_TYPE, CreateCraftedBeginning.asResource(name));
     }
 

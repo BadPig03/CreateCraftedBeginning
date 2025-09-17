@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:airtight_sheet_block"
+    },
+    {
+      "item": "create:chute"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:portable_gas_interface"
+  }
+}

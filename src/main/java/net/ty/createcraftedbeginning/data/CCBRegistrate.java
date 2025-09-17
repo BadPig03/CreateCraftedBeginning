@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.data;
 
 import com.simibubi.create.CreateClient;
-import com.simibubi.create.api.contraption.storage.fluid.MountedFluidStorageType;
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorageType;
 import com.simibubi.create.api.registry.CreateRegistries;
 import com.simibubi.create.api.registry.registrate.SimpleBuilder;
@@ -35,10 +34,14 @@ import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtension
 import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.gas.MountedGasStorageType;
+import net.ty.createcraftedbeginning.content.fluids.AirFakeFluid;
 import net.ty.createcraftedbeginning.content.fluids.AmethystSuspensionVirtualFluid;
 import net.ty.createcraftedbeginning.content.fluids.CompressedAirFakeFluid;
-import net.ty.createcraftedbeginning.content.fluids.CoolingTimeVirtualFluid;
 import net.ty.createcraftedbeginning.content.fluids.SlushVirtualFluid;
+import net.ty.createcraftedbeginning.content.fluids.VirtualTimeVirtualFluid;
+import net.ty.createcraftedbeginning.registry.CCBRegistries;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -62,12 +65,14 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
         super(modId);
     }
 
-    public static CCBRegistrate create(String modId) {
+    @Contract("_ -> new")
+    public static @NotNull CCBRegistrate create(String modId) {
         return new CCBRegistrate(modId);
     }
 
+    @Contract("_, _, _ -> new")
     @SuppressWarnings("removal")
-    public static FluidType defaultFluidType(FluidType.Properties properties, ResourceLocation stillTexture, ResourceLocation flowingTexture) {
+    public static @NotNull FluidType defaultFluidType(FluidType.Properties properties, ResourceLocation stillTexture, ResourceLocation flowingTexture) {
         return new FluidType(properties) {
             @Override
             public void initializeClient(@NotNull Consumer<IClientFluidTypeExtensions> consumer) {
@@ -86,12 +91,13 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
         };
     }
 
-    public static <T extends Block> NonNullConsumer<? super T> blockModel(Supplier<NonNullFunction<BakedModel, ? extends BakedModel>> func) {
+    @Contract(pure = true)
+    public static <T extends Block> @NotNull NonNullConsumer<? super T> blockModel(Supplier<NonNullFunction<BakedModel, ? extends BakedModel>> func) {
         return entry -> CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> registerBlockModel(entry, func));
     }
 
     @OnlyIn(Dist.CLIENT)
-    private static void registerBlockModel(Block entry, Supplier<NonNullFunction<BakedModel, ? extends BakedModel>> func) {
+    private static void registerBlockModel(Block entry, @NotNull Supplier<NonNullFunction<BakedModel, ? extends BakedModel>> func) {
         CreateClient.MODEL_SWAPPER.getCustomBlockModels().register(RegisteredObjectsHelper.getKeyOrThrow(entry), func.get());
     }
 
@@ -159,23 +165,27 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
         return this.entry(name, callback -> new SimpleBuilder<>(this, this, name, callback, CreateRegistries.MOUNTED_ITEM_STORAGE_TYPE, supplier).byBlock(MountedItemStorageType.REGISTRY));
     }
 
-    public <T extends MountedFluidStorageType<?>> SimpleBuilder<MountedFluidStorageType<?>, T, CCBRegistrate> mountedFluidStorage(String name, Supplier<T> supplier) {
-        return this.entry(name, callback -> new SimpleBuilder<>(this, this, name, callback, CreateRegistries.MOUNTED_FLUID_STORAGE_TYPE, supplier).byBlock(MountedFluidStorageType.REGISTRY));
+    public <T extends MountedGasStorageType<?>> SimpleBuilder<MountedGasStorageType<?>, T, CCBRegistrate> mountedGasStorage(String name, Supplier<T> supplier) {
+        return this.entry(name, callback -> new SimpleBuilder<>(this, this, name, callback, CCBRegistries.MOUNTED_GAS_STORAGE_TYPE, supplier).byBlock(MountedGasStorageType.REGISTRY));
+    }
+
+    public FluidBuilder<AirFakeFluid, CCBRegistrate> air_fluid(String name) {
+        return entry(name, c -> new CCBVirtualFluidBuilder<>(self(), self(), name, c, CreateCraftedBeginning.asResource("fluid/air"), CreateCraftedBeginning.asResource("fluid/air"), CCBRegistrate::defaultFluidType, AirFakeFluid::createSource, AirFakeFluid::createFlowing));
     }
 
     public FluidBuilder<CompressedAirFakeFluid, CCBRegistrate> compressed_air_fluid(String name) {
-        return entry(name, c -> new CCBVirtualFluidBuilder<>(self(), self(), name, c, ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, "fluid/compressed_air"), ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, "fluid/compressed_air"), CCBRegistrate::defaultFluidType, CompressedAirFakeFluid::createSource, CompressedAirFakeFluid::createFlowing));
+        return entry(name, c -> new CCBVirtualFluidBuilder<>(self(), self(), name, c, CreateCraftedBeginning.asResource("fluid/compressed_air"), CreateCraftedBeginning.asResource("fluid/compressed_air"), CCBRegistrate::defaultFluidType, CompressedAirFakeFluid::createSource, CompressedAirFakeFluid::createFlowing));
     }
 
     public FluidBuilder<SlushVirtualFluid, CCBRegistrate> slush_fluid(String name) {
-        return entry(name, c -> new CCBVirtualFluidBuilder<>(self(), self(), name, c, ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, "fluid/slush"), ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, "fluid/slush"), CCBRegistrate::defaultFluidType, SlushVirtualFluid::createSource, SlushVirtualFluid::createFlowing));
+        return entry(name, c -> new CCBVirtualFluidBuilder<>(self(), self(), name, c, CreateCraftedBeginning.asResource("fluid/slush"), CreateCraftedBeginning.asResource("fluid/slush"), CCBRegistrate::defaultFluidType, SlushVirtualFluid::createSource, SlushVirtualFluid::createFlowing));
     }
 
     public FluidBuilder<AmethystSuspensionVirtualFluid, CCBRegistrate> amethyst_suspension_fluid(String name) {
-        return entry(name, c -> new CCBVirtualFluidBuilder<>(self(), self(), name, c, ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, "fluid/amethyst_suspension"), ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, "fluid/amethyst_suspension"), CCBRegistrate::defaultFluidType, AmethystSuspensionVirtualFluid::createSource, AmethystSuspensionVirtualFluid::createFlowing));
+        return entry(name, c -> new CCBVirtualFluidBuilder<>(self(), self(), name, c, CreateCraftedBeginning.asResource("fluid/amethyst_suspension"), CreateCraftedBeginning.asResource("fluid/amethyst_suspension"), CCBRegistrate::defaultFluidType, AmethystSuspensionVirtualFluid::createSource, AmethystSuspensionVirtualFluid::createFlowing));
     }
 
-    public FluidBuilder<CoolingTimeVirtualFluid, CCBRegistrate> cooling_time(String name) {
-        return entry(name, c -> new CCBVirtualFluidBuilder<>(self(), self(), name, c, ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, "fluid/compressed_air"), ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, "fluid/compressed_air"), CCBRegistrate::defaultFluidType, CoolingTimeVirtualFluid::createSource, CoolingTimeVirtualFluid::createFlowing));
+    public FluidBuilder<VirtualTimeVirtualFluid, CCBRegistrate> virtual_time(String name) {
+        return entry(name, c -> new CCBVirtualFluidBuilder<>(self(), self(), name, c, CreateCraftedBeginning.asResource("fluid/air"), CreateCraftedBeginning.asResource("fluid/air"), CCBRegistrate::defaultFluidType, VirtualTimeVirtualFluid::createSource, VirtualTimeVirtualFluid::createFlowing));
     }
 }

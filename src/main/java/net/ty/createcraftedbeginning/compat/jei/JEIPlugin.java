@@ -2,7 +2,9 @@ package net.ty.createcraftedbeginning.compat.jei;
 
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
+import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
+import mezz.jei.api.registration.IModIngredientRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
@@ -13,30 +15,40 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.gas.Gas;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.CoolingCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.GasInjectionCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.MysteriousItemConversionCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.PressurizationCategory;
-import net.ty.createcraftedbeginning.compat.jei.category.SuperCoolingCategory;
+import net.ty.createcraftedbeginning.compat.jei.category.WindChargingCategory;
+import net.ty.createcraftedbeginning.compat.jei.category.gas.GasStackHelper;
+import net.ty.createcraftedbeginning.compat.jei.category.gas.GasStackRenderer;
+import net.ty.createcraftedbeginning.data.CCBGasRegistry;
 import net.ty.createcraftedbeginning.recipe.ConversionRecipe;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
-import net.ty.createcraftedbeginning.recipe.SuperCoolingRecipe;
+import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+@SuppressWarnings("unused")
 @JeiPlugin
 public class JEIPlugin implements IModPlugin {
-    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("jei_plugin");
+    public static final IIngredientType<GasStack> TYPE_GAS = () -> GasStack.class;
+    public static final GasStackHelper GAS_STACK_HELPER = new GasStackHelper();
+
     public static IJeiRuntime runtime;
     private final List<CCBRecipeCategory<?>> allCategories = new ArrayList<>();
 
@@ -54,11 +66,18 @@ public class JEIPlugin implements IModPlugin {
 
     @Override
     public @NotNull ResourceLocation getPluginUid() {
-        return ID;
+        return CreateCraftedBeginning.asResource("jei_plugin");
     }
 
     @Override
-    public void registerCategories(IRecipeCategoryRegistration registration) {
+    public void registerIngredients(@NotNull IModIngredientRegistration registry) {
+        List<GasStack> types = CCBGasRegistry.GAS_REGISTRY.holders().filter(gas -> !gas.is(CCBGasRegistry.EMPTY_GAS_KEY)).map(gas -> new GasStack(gas, FluidType.BUCKET_VOLUME)).toList();
+        GAS_STACK_HELPER.setColorHelper(registry.getColorHelper());
+        registry.register(TYPE_GAS, types, GAS_STACK_HELPER, new GasStackRenderer(), Gas.HOLDER_CODEC.xmap(gas -> new GasStack(gas, FluidType.BUCKET_VOLUME), GasStack::getGasHolder));
+    }
+
+    @Override
+    public void registerCategories(@NotNull IRecipeCategoryRegistration registration) {
         loadCategories();
         registration.addRecipeCategories(allCategories.toArray(IRecipeCategory[]::new));
     }
@@ -69,9 +88,9 @@ public class JEIPlugin implements IModPlugin {
     }
 
     @Override
-	public void registerRecipeCatalysts(@NotNull IRecipeCatalystRegistration registration) {
-		allCategories.forEach(c -> c.registerCatalysts(registration));
-	}
+    public void registerRecipeCatalysts(@NotNull IRecipeCatalystRegistration registration) {
+        allCategories.forEach(c -> c.registerCatalysts(registration));
+    }
 
     @Override
     public void onRuntimeAvailable(@NotNull IJeiRuntime runtime) {
@@ -81,14 +100,15 @@ public class JEIPlugin implements IModPlugin {
     private void loadCategories() {
         allCategories.clear();
 
-        CCBRecipeCategory<?> mysteryConversion = builder(ConversionRecipe.class).addRecipes(() -> MysteriousItemConversionCategory.RECIPES).itemIcon(CCBBlocks.EMPTY_BREEZE_CHAMBER_BLOCK.get()).emptyBackground(177, 50).build("mystery_conversion", MysteriousItemConversionCategory::new);
-        CCBRecipeCategory<?> pressurization = builder(PressurizationRecipe.class).addTypedRecipes(CCBRecipeTypes.PRESSURIZATION).catalyst(CCBBlocks.AIR_COMPRESSOR_BLOCK::get).catalyst(CCBBlocks.BREEZE_CHAMBER_BLOCK::get).itemIcon(CCBBlocks.AIR_COMPRESSOR_BLOCK.get()).emptyBackground(177, 70).build("pressurization", PressurizationCategory::new);
-        CCBRecipeCategory<?> cooling = builder(CoolingRecipe.class).addTypedRecipes(CCBRecipeTypes.COOLING).catalyst(CCBBlocks.BREEZE_CHAMBER_BLOCK::get).itemIcon(CCBBlocks.BREEZE_CHAMBER_BLOCK.get()).emptyBackground(177, 50).build("cooling", CoolingCategory::new);
-        CCBRecipeCategory<?> super_cooling = builder(SuperCoolingRecipe.class).addTypedRecipes(CCBRecipeTypes.SUPER_COOLING).catalyst(CCBBlocks.BREEZE_CHAMBER_BLOCK::get).itemIcon(CCBBlocks.BREEZE_CHAMBER_BLOCK.get()).emptyBackground(177, 50).build("super_cooling", SuperCoolingCategory::new);
+        CCBRecipeCategory<?> mysteryConversion = builder(ConversionRecipe.class).addRecipes(() -> MysteriousItemConversionCategory.RECIPES).itemIcon(CCBBlocks.EMPTY_BREEZE_COOLER_BLOCK.get()).emptyBackground(177, 50).build("mystery_conversion", MysteriousItemConversionCategory::new);
+        CCBRecipeCategory<?> pressurization = builder(PressurizationRecipe.class).addTypedRecipes(CCBRecipeTypes.PRESSURIZATION).catalyst(CCBBlocks.AIR_COMPRESSOR_BLOCK::get).catalyst(CCBBlocks.BREEZE_COOLER_BLOCK::get).itemIcon(CCBBlocks.AIR_COMPRESSOR_BLOCK.get()).emptyBackground(177, 70).build("pressurization", PressurizationCategory::new);
+        CCBRecipeCategory<?> cooling = builder(CoolingRecipe.class).addTypedRecipes(CCBRecipeTypes.COOLING).catalyst(CCBBlocks.BREEZE_COOLER_BLOCK::get).itemIcon(CCBBlocks.BREEZE_COOLER_BLOCK.get()).emptyBackground(177, 50).build("cooling", CoolingCategory::new);
+        CCBRecipeCategory<?> wind_charging = builder(WindChargingRecipe.class).addTypedRecipes(CCBRecipeTypes.WIND_CHARGING).catalyst(CCBBlocks.BREEZE_CHAMBER_BLOCK::get).itemIcon(CCBBlocks.BREEZE_CHAMBER_BLOCK.get()).emptyBackground(177, 50).build("wind_charging", WindChargingCategory::new);
         CCBRecipeCategory<?> gas_injection = builder(GasInjectionRecipe.class).addTypedRecipes(CCBRecipeTypes.GAS_INJECTION).catalyst(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK::get).doubleItemIcon(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK.get(), CCBItems.COMPRESSED_AIR_CANISTER).emptyBackground(177, 70).build("gas_injection", GasInjectionCategory::new);
     }
 
-    private <T extends Recipe<? extends RecipeInput>> CategoryBuilder<T> builder(Class<T> recipeClass) {
+    @Contract("_ -> new")
+    private <T extends Recipe<? extends RecipeInput>> @NotNull CategoryBuilder<T> builder(Class<T> recipeClass) {
         return new CategoryBuilder<>(recipeClass);
     }
 

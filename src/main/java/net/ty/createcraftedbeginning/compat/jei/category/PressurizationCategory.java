@@ -21,7 +21,7 @@ public class PressurizationCategory extends CCBRecipeCategory<PressurizationReci
     }
 
     @Override
-    public void setRecipe(IRecipeLayoutBuilder builder, PressurizationRecipe recipe, @NotNull IFocusGroup focuses) {
+    public void setRecipe(IRecipeLayoutBuilder builder, @NotNull PressurizationRecipe recipe, @NotNull IFocusGroup focuses) {
         addFluidInputSlot(builder, recipe.getIngredientsFluid());
 
         addFluidOutputSlot(builder, recipe.getResultingFluid());
@@ -39,11 +39,11 @@ public class PressurizationCategory extends CCBRecipeCategory<PressurizationReci
         compressor.draw(graphics, getBackground().getWidth() / 2 - 17, 24);
     }
 
-    private void addFluidInputSlot(IRecipeLayoutBuilder builder, FluidIngredient fluidIngredient) {
+    private void addFluidInputSlot(@NotNull IRecipeLayoutBuilder builder, @NotNull FluidIngredient fluidIngredient) {
         builder.addSlot(RecipeIngredientRole.INPUT, 27, 51).setFluidRenderer(1000, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredients(NeoForgeTypes.FLUID_STACK, fluidIngredient.getMatchingFluidStacks());
     }
 
-    private void addFluidOutputSlot(IRecipeLayoutBuilder builder, FluidStack outputFluid) {
+    private void addFluidOutputSlot(@NotNull IRecipeLayoutBuilder builder, FluidStack outputFluid) {
         builder.addSlot(RecipeIngredientRole.OUTPUT, 131, 50).setFluidRenderer(1000, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredient(NeoForgeTypes.FLUID_STACK, outputFluid);
     }
 }

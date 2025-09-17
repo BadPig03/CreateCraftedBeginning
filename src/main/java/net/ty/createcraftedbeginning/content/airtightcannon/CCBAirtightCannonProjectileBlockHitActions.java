@@ -17,7 +17,9 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.airtightcannon.AirtightCannonProjectileBlockHitAction;
 import net.ty.createcraftedbeginning.registry.CCBBuiltInRegistries;
+import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("unused")
 public class CCBAirtightCannonProjectileBlockHitActions {
     static {
         register("place_block_on_ground", PlaceBlockOnGround.CODEC);
@@ -26,6 +28,7 @@ public class CCBAirtightCannonProjectileBlockHitActions {
     public static void init() {
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static void register(String name, MapCodec<? extends AirtightCannonProjectileBlockHitAction> codec) {
         Registry.register(CCBBuiltInRegistries.POTATO_PROJECTILE_BLOCK_HIT_ACTION, CreateCraftedBeginning.asResource(name), codec);
     }
@@ -34,12 +37,12 @@ public class CCBAirtightCannonProjectileBlockHitActions {
         public static final MapCodec<PlaceBlockOnGround> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(BuiltInRegistries.BLOCK.holderByNameCodec().fieldOf("block").forGetter(PlaceBlockOnGround::block)).apply(instance, PlaceBlockOnGround::new));
 
         @SuppressWarnings("deprecation")
-        public PlaceBlockOnGround(Block block) {
+        public PlaceBlockOnGround(@NotNull Block block) {
             this(block.builtInRegistryHolder());
         }
 
         @Override
-        public boolean execute(LevelAccessor levelAccessor, ItemStack projectile, BlockHitResult ray) {
+        public boolean execute(@NotNull LevelAccessor levelAccessor, ItemStack projectile, BlockHitResult ray) {
             if (levelAccessor.isClientSide()) {
                 return true;
             }

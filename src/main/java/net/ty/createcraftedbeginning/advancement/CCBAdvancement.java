@@ -19,12 +19,15 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Block;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
+@SuppressWarnings("unused")
 public class CCBAdvancement {
     static final ResourceLocation BACKGROUND = CreateCraftedBeginning.asResource("textures/gui/advancements.png");
     static final String LANG = "advancement." + CreateCraftedBeginning.MOD_ID + ".";
@@ -38,7 +41,7 @@ public class CCBAdvancement {
     private String title;
     private String description;
 
-    public CCBAdvancement(String id, UnaryOperator<Builder> b) {
+    public CCBAdvancement(String id, @NotNull UnaryOperator<Builder> b) {
         this.id = id;
 
         b.apply(ccbBuilder);
@@ -51,26 +54,28 @@ public class CCBAdvancement {
         CCBAdvancements.ENTRIES.add(this);
     }
 
-    private String titleKey() {
+    @Contract(pure = true)
+    private @NotNull String titleKey() {
         return LANG + id;
     }
 
-    private String descriptionKey() {
+    @Contract(pure = true)
+    private @NotNull String descriptionKey() {
         return titleKey() + ".desc";
     }
 
     boolean isAlreadyAwardedTo(Player player) {
-		if (!(player instanceof ServerPlayer sp)) {
+		if (!(player instanceof ServerPlayer serverPlayer)) {
 			return true;
 		}
-        if (sp.getServer() == null) {
+        if (serverPlayer.getServer() == null) {
             return false;
         }
-        AdvancementHolder advancement = sp.getServer().getAdvancements().get(CreateCraftedBeginning.asResource(id));
+        AdvancementHolder advancement = serverPlayer.getServer().getAdvancements().get(CreateCraftedBeginning.asResource(id));
 		if (advancement == null) {
 			return true;
 		}
-        return sp.getAdvancements().getOrStartProgress(advancement).isDone();
+        return serverPlayer.getAdvancements().getOrStartProgress(advancement).isDone();
     }
 
     void awardTo(Player player) {
@@ -97,7 +102,7 @@ public class CCBAdvancement {
         dataGenResult = mcBuilder.save(t, CreateCraftedBeginning.asResource(id).toString());
     }
 
-    void provideLang(BiConsumer<String, String> consumer) {
+    void provideLang(@NotNull BiConsumer<String, String> consumer) {
         consumer.accept(titleKey(), title);
         consumer.accept(descriptionKey(), description);
     }
@@ -142,7 +147,7 @@ public class CCBAdvancement {
             return this;
         }
 
-        CCBAdvancement.Builder icon(ItemProviderEntry<?, ?> item) {
+        CCBAdvancement.Builder icon(@NotNull ItemProviderEntry<?, ?> item) {
             return icon(item.asStack());
         }
 
@@ -178,7 +183,7 @@ public class CCBAdvancement {
             return externalTrigger(InventoryChangeTrigger.TriggerInstance.hasItems(icon.getItem()));
         }
 
-        CCBAdvancement.Builder whenItemCollected(ItemProviderEntry<?, ?> item) {
+        CCBAdvancement.Builder whenItemCollected(@NotNull ItemProviderEntry<?, ?> item) {
             return whenItemCollected(item.asStack().getItem());
         }
 

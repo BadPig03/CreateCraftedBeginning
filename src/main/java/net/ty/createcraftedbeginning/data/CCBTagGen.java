@@ -12,28 +12,36 @@ import net.minecraft.tags.TagBuilder;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.block.Block;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class CCBTagGen {
-    public static <T extends Block, P> NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> axeOrPickaxe() {
+    @Contract(pure = true)
+    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> axeOrPickaxe() {
         return b -> b.tag(BlockTags.MINEABLE_WITH_AXE).tag(BlockTags.MINEABLE_WITH_PICKAXE);
     }
 
-    public static <T extends Block, P> NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> axeOnly() {
+    @Contract(pure = true)
+    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> axeOnly() {
         return b -> b.tag(BlockTags.MINEABLE_WITH_AXE);
     }
 
-    public static <T extends Block, P> NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> pickaxeOnly() {
+    @Contract(pure = true)
+    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> pickaxeOnly() {
         return b -> b.tag(BlockTags.MINEABLE_WITH_PICKAXE);
     }
 
-    public static <T extends Block, P> NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> mineableWithShovel() {
+    @Contract(pure = true)
+    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> mineableWithShovel() {
         return b -> b.tag(BlockTags.MINEABLE_WITH_SHOVEL);
     }
 
-    public static <T extends Block, P> NonNullFunction<BlockBuilder<T, P>, ItemBuilder<BlockItem, BlockBuilder<T, P>>> tagBlockAndItem(String... path) {
+    @SuppressWarnings("unused")
+    @Contract(pure = true)
+    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, ItemBuilder<BlockItem, BlockBuilder<T, P>>> tagBlockAndItem(String... path) {
         return b -> {
             for (String p : path) {
                 b.tag(CCBTags.commonBlockTag(p));
@@ -50,7 +58,8 @@ public class CCBTagGen {
         private final RegistrateTagsProvider<T> provider;
         private final Function<T, ResourceKey<T>> keyExtractor;
 
-        public CCBTagsProvider(RegistrateTagsProvider<T> provider, Function<T, Holder.Reference<T>> refExtractor) {
+        @Contract(pure = true)
+        public CCBTagsProvider(RegistrateTagsProvider<T> provider, @NotNull Function<T, Holder.Reference<T>> refExtractor) {
             this.provider = provider;
             this.keyExtractor = refExtractor.andThen(Holder.Reference::key);
         }

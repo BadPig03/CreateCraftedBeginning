@@ -2,15 +2,12 @@
   "required": true,
   "priority": 1000,
   "package": "net.ty.createcraftedbeginning.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_17",
   "mixins": [
 	"BuiltInRegistriesMixin",
-    "FluidTankBlockEntityMixin",
-    "PipeConnectionMixin",
-    "FluidInterfaceMixin",
-    "FluidTransportBehaviourMixin",
-    "BlockEntityBehaviourMixin",
-    "BasinBlockEntityMixin"
+    "MountedStorageManagerMixin",
+    "MountedStorageManagerAccessor",
+	"TrainCargoManagerMixin"
   ],
   "minVersion": "0.8.5"
 }

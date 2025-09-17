@@ -3,8 +3,10 @@ package net.ty.createcraftedbeginning.compat.jade;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.ty.createcraftedbeginning.content.aircompressor.AirCompressorBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import snownee.jade.api.Accessor;
 import snownee.jade.api.view.ClientViewGroup;
 import snownee.jade.api.view.FluidView;
@@ -20,7 +22,7 @@ public enum AirCompressorProvider implements IServerExtensionProvider<CompoundTa
     INSTANCE;
 
     @Override
-    public ResourceLocation getUid() {
+    public @NotNull ResourceLocation getUid() {
         return CCBBlocks.AIR_COMPRESSOR_BLOCK.getId();
     }
 
@@ -30,7 +32,7 @@ public enum AirCompressorProvider implements IServerExtensionProvider<CompoundTa
     }
 
     @Override
-    public List<ViewGroup<CompoundTag>> getGroups(Accessor<?> accessor) {
+    public @Nullable List<ViewGroup<CompoundTag>> getGroups(@NotNull Accessor<?> accessor) {
         if (!(accessor.getTarget() instanceof AirCompressorBlockEntity entity)) {
 			return null;
 		}

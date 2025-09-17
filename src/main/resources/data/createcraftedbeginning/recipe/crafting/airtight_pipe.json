@@ -1,18 +1,14 @@
 {
   "type": "minecraft:crafting_shaped",
-  "pattern":
-  [ " A ",
-    "ABA",
-    " A "],
-  "key":
-  {
-    "A":
-    {
-      "item": "create:fluid_pipe"
-    },
-    "B":
-    {
+  "pattern": [
+    "ABA"
+  ],
+  "key": {
+    "A": {
       "item": "createcraftedbeginning:airtight_sheet"
+    },
+    "B": {
+      "tag": "c:plates/iron"
     }
   },
   "result": {

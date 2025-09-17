@@ -17,18 +17,18 @@ config="${mod_id}.mixins.json"
     type="required"
     versionRange="${neo_version_range}"
     ordering="NONE"
-    side="BOTH"
+    direction="BOTH"
 
 [[dependencies.${mod_id}]]
     modId="minecraft"
     type="required"
     versionRange="${minecraft_version_range}"
     ordering="NONE"
-    side="BOTH"
+    direction="BOTH"
 
 [[dependencies.${mod_id}]]
     modId="create"
     type="required"
     versionRange="[6.0.6]"
     ordering="NONE"
-    side="BOTH"
+    direction="BOTH"

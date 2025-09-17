@@ -9,10 +9,11 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
+import org.jetbrains.annotations.NotNull;
 
 public class AnimatedGasInjectionChamber extends AnimatedKinetics {
     @Override
-    public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
+    public void draw(@NotNull GuiGraphics graphics, int xOffset, int yOffset) {
         PoseStack matrixStack = graphics.pose();
         matrixStack.pushPose();
         matrixStack.translate(xOffset, yOffset, 100);

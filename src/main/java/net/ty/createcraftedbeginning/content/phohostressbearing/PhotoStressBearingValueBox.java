@@ -9,6 +9,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
 
 public class PhotoStressBearingValueBox extends ValueBoxTransform.Sided {
     @Override
@@ -17,7 +18,7 @@ public class PhotoStressBearingValueBox extends ValueBoxTransform.Sided {
     }
 
     @Override
-    protected boolean isSideActive(BlockState state, Direction side) {
+    protected boolean isSideActive(BlockState state, @NotNull Direction side) {
         return side.getAxis() != Direction.Axis.Y;
     }
 

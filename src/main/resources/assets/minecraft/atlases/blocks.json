@@ -2,6 +2,10 @@
   "sources": [
 	{
       "type": "single",
+      "resource": "createcraftedbeginning:fluid/air"
+    },
+	{
+      "type": "single",
       "resource": "createcraftedbeginning:fluid/compressed_air"
     },
 	{
@@ -15,6 +19,22 @@
 	{
       "type": "single",
       "resource": "createcraftedbeginning:entity/train_hat"
+    },
+	{
+      "type": "single",
+      "resource": "createcraftedbeginning:gas/empty"
+    },
+	{
+      "type": "single",
+      "resource": "createcraftedbeginning:gas/gas"
+    },
+	{
+      "type": "single",
+      "resource": "createcraftedbeginning:gas/vortices"
+    },
+	{
+      "type": "single",
+      "resource": "createcraftedbeginning:gas/vortices_glint"
     }
   ]
 }

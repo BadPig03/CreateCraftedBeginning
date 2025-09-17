@@ -10,6 +10,7 @@ import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -30,7 +31,7 @@ public class CCBConfig {
         return server;
     }
 
-    private static <T extends ConfigBase> T register(Supplier<T> factory, ModConfig.Type side) {
+    private static <T extends ConfigBase> @NotNull T register(Supplier<T> factory, ModConfig.Type side) {
         Pair<T, ModConfigSpec> specPair = new ModConfigSpec.Builder().configure(builder -> {
             T config = factory.get();
             config.registerAll(builder);

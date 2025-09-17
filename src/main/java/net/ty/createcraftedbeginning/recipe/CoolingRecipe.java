@@ -9,8 +9,10 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.ty.createcraftedbeginning.content.icecreams.CreativeIceCreamItem;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -19,87 +21,56 @@ public class CoolingRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
         super(CCBRecipeTypes.COOLING, params);
     }
 
-
-
-    private static FluidIngredient getFluidIngredient(Object recipe) {
-        if (recipe instanceof CoolingRecipe cooling) {
-            return cooling.getIngredientsFluid();
-        } else if (recipe instanceof SuperCoolingRecipe superCooling) {
-            return superCooling.getIngredientsFluid();
-        }
-        return FluidIngredient.EMPTY;
+    private static FluidIngredient getFluidIngredient(@NotNull CoolingRecipe recipe) {
+        return recipe.getIngredientsFluid();
     }
 
-    private static Ingredient getItemIngredient(Object recipe) {
-        if (recipe instanceof CoolingRecipe cooling) {
-            return cooling.getIngredientsItem();
-        } else if (recipe instanceof SuperCoolingRecipe superCooling) {
-            return superCooling.getIngredientsItem();
-        }
-        return Ingredient.EMPTY;
+    private static Ingredient getItemIngredient(@NotNull CoolingRecipe recipe) {
+        return recipe.getIngredientsItem();
     }
 
-    private static CoolingData processCoolingRecipe(Object recipe, ItemStack itemStack, FluidStack fluidStack) {
-        boolean isFluidRecipe = false;
-        int resultTime = 0;
-        int requiredAmount = 0;
+    private static CoolingData processCoolingRecipe(@NotNull CoolingRecipe recipe) {
+        int resultTime = recipe.getResultTime();
+        int requiredAmount = recipe.getRequiredAmount();
 
-        if (recipe instanceof CoolingRecipe cooling) {
-            isFluidRecipe = cooling.isIngredientsFluid();
-            resultTime = cooling.getResultTime();
-            requiredAmount = cooling.getRequiredAmount();
-        } else if (recipe instanceof SuperCoolingRecipe superCooling) {
-            isFluidRecipe = superCooling.isIngredientsFluid();
-            resultTime = superCooling.getResultTime();
-            requiredAmount = superCooling.getRequiredAmount();
-        }
+        return new CoolingData(resultTime, requiredAmount);
+    }
 
-        CoolingData coolingData = new CoolingData(recipe instanceof SuperCoolingRecipe ? "powerful" : "normal", resultTime, requiredAmount);
-        if (isFluidRecipe && fluidStack != null) {
-            FluidIngredient fluidIngredient = getFluidIngredient(recipe);
-            for (FluidStack ingredientFluid : fluidIngredient.getMatchingFluidStacks()) {
-                if (FluidStack.isSameFluidSameComponents(fluidStack, ingredientFluid)) {
-                    return coolingData;
+    public static CoolingData getResultingCoolingTime(@NotNull Level level, @Nullable ItemStack itemStack, @Nullable FluidStack fluidStack) {
+        List<RecipeHolder<CoolingRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.COOLING.getType());
+        for (RecipeHolder<CoolingRecipe> holder : recipes) {
+            CoolingRecipe recipe = holder.value();
+
+            if (recipe.isIngredientsFluid()) {
+                if (itemStack != null || fluidStack == null) {
+                    continue;
                 }
-            }
-        } else if (!isFluidRecipe && itemStack != null) {
-            Ingredient ingredient = getItemIngredient(recipe);
-            if (ingredient.test(itemStack)) {
-                return coolingData;
+
+                FluidStack currentFluidStack = getFluidIngredient(recipe).getMatchingFluidStacks().getFirst();
+                if (!FluidStack.isSameFluid(currentFluidStack, fluidStack)) {
+                    continue;
+                }
+
+                return processCoolingRecipe(recipe);
+            } else {
+                if (itemStack == null || fluidStack != null) {
+                    continue;
+                }
+
+                ItemStack currentItemStack = getItemIngredient(recipe).getItems()[0];
+                if (currentItemStack.getItem() != itemStack.getItem()) {
+                    continue;
+                }
+
+                return processCoolingRecipe(recipe);
             }
         }
 
-        return new CoolingData("none", 0, 0);
+        return new CoolingData(0, 0);
     }
 
-    private static CoolingData getCoolingDataFromRecipe(RecipeHolder<?> holder, ItemStack itemStack, FluidStack fluidStack) {
-        if (holder.value() instanceof CoolingRecipe coolingRecipe) {
-            return processCoolingRecipe(coolingRecipe, itemStack, fluidStack);
-        } else if (holder.value() instanceof SuperCoolingRecipe superCoolingRecipe) {
-            return processCoolingRecipe(superCoolingRecipe, itemStack, fluidStack);
-        }
-        return new CoolingData("none", 0, 0);
-    }
-
-    public static CoolingData getResultingCoolingTime(Level level, ItemStack itemStack, FluidStack fluidStack) {
-        List<RecipeHolder<CoolingRecipe>> normalRecipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.COOLING.getType());
-        List<RecipeHolder<SuperCoolingRecipe>> superRecipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.SUPER_COOLING.getType());
-
-        for (RecipeHolder<SuperCoolingRecipe> holder : superRecipes) {
-            CoolingData data = getCoolingDataFromRecipe(holder, itemStack, fluidStack);
-            if (!"none".equals(data.type)) {
-                return data;
-            }
-        }
-
-        for (RecipeHolder<CoolingRecipe> holder : normalRecipes) {
-            CoolingData data = getCoolingDataFromRecipe(holder, itemStack, fluidStack);
-            if (!"none".equals(data.type)) {
-                return data;
-            }
-        }
-
-        return new CoolingData("none", 0, 0);
+    public boolean isCreativeIceCream() {
+        return getIngredientsItem().getItems()[0].getItem() instanceof CreativeIceCreamItem;
     }
 
     @Override
@@ -151,6 +122,6 @@ public class CoolingRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
         return 1;
     }
 
-    public record CoolingData(String type, int time, int amount) {
+    public record CoolingData(int time, int amount) {
     }
 }

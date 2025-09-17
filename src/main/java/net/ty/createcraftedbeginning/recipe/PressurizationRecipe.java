@@ -18,8 +18,6 @@ public class PressurizationRecipe extends StandardProcessingRecipe<SingleRecipeI
         super(CCBRecipeTypes.PRESSURIZATION, params);
     }
 
-
-
     public static FluidStack getIngredientFluidStack(@NotNull Level level, FluidStack fluidStack) {
         List<RecipeHolder<PressurizationRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.PRESSURIZATION.getType());
         for (RecipeHolder<PressurizationRecipe> holder : recipes) {
@@ -51,14 +49,14 @@ public class PressurizationRecipe extends StandardProcessingRecipe<SingleRecipeI
 
     public FluidIngredient getIngredientsFluid() {
         if (isIngredientEmpty()) {
-            throw new IllegalStateException("Pressurization Recipe has no fluid ingredient!");
+            throw new IllegalStateException("Pressurization Recipe has no gas ingredient!");
         }
         return fluidIngredients.getFirst();
     }
 
     public FluidStack getResultingFluid() {
         if (fluidResults.isEmpty()) {
-            throw new IllegalStateException("Pressurization Recipe has no fluid result!");
+            throw new IllegalStateException("Pressurization Recipe has no gas result!");
         }
         return fluidResults.getFirst();
     }

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " A ",
+    "ABA",
+    " A "
+  ],
+  "key": {
+    "A": {
+      "tag": "c:plates/iron"
+    },
+    "B": {
+      "item": "minecraft:chiseled_tuff"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:empty_breeze_cooler"
+  }
+}

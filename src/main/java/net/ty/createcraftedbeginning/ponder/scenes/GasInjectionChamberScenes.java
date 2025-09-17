@@ -23,19 +23,20 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.content.airtightintakeport.AirtightIntakePortBlock;
-import net.ty.createcraftedbeginning.content.airtightpipe.AirtightPipeBlock;
-import net.ty.createcraftedbeginning.content.airtightpump.AirtightPumpBlock;
-import net.ty.createcraftedbeginning.content.gasinjectionchamber.GasInjectionChamberBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.airtightintakeport.AirtightIntakePortBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
+import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import org.jetbrains.annotations.NotNull;
 
-import static net.ty.createcraftedbeginning.content.gasinjectionchamber.GasInjectionChamberBlockEntity.NOZZLE_IDLE_TIME;
-import static net.ty.createcraftedbeginning.content.gasinjectionchamber.GasInjectionChamberBlockEntity.NOZZLE_PART_TIME;
-import static net.ty.createcraftedbeginning.content.gasinjectionchamber.GasInjectionChamberBlockEntity.NOZZLE_TIME;
-import static net.ty.createcraftedbeginning.content.gasinjectionchamber.GasInjectionChamberBlockEntity.PROCESSING_TIME;
+import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity.NOZZLE_IDLE_TIME;
+import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity.NOZZLE_PART_TIME;
+import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity.NOZZLE_TIME;
+import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity.PROCESSING_TIME;
 
 public class GasInjectionChamberScenes {
-    public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
         RandomSource random = RandomSource.create();
 

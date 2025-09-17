@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:breeze_chamber",
+  "parent": "createcraftedbeginning:breeze_cooler",
   "criteria": {
     "0": {
       "conditions": {

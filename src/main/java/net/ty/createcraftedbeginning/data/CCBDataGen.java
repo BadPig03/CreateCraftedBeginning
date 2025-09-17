@@ -8,6 +8,7 @@ import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancements;
+import net.ty.createcraftedbeginning.registry.CCBGases;
 import net.ty.createcraftedbeginning.registry.CCBRegistrateTags;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 
@@ -52,6 +53,7 @@ public class CCBDataGen {
             BiConsumer<String, String> langConsumer = provider::add;
 
             CCBAdvancements.provideLang(langConsumer);
+            CCBGases.provideLang(langConsumer);
             CCBSoundEvents.provideLang(langConsumer);
         });
     }

@@ -18,7 +18,7 @@ public class MysteriousItemConversionCategory extends CCBRecipeCategory<Conversi
     public static final List<RecipeHolder<ConversionRecipe>> RECIPES = new ArrayList<>();
 
     static {
-        RECIPES.add(ConversionRecipe.create(CCBBlocks.EMPTY_BREEZE_CHAMBER_BLOCK.asStack(), CCBBlocks.BREEZE_CHAMBER_BLOCK.asStack(), "breeze_chamber"));
+        RECIPES.add(ConversionRecipe.create(CCBBlocks.EMPTY_BREEZE_COOLER_BLOCK.asStack(), CCBBlocks.BREEZE_COOLER_BLOCK.asStack(), "breeze_cooler"));
     }
 
     public MysteriousItemConversionCategory(Info<ConversionRecipe> info) {
@@ -26,7 +26,7 @@ public class MysteriousItemConversionCategory extends CCBRecipeCategory<Conversi
     }
 
     @Override
-    public void setRecipe(IRecipeLayoutBuilder builder, ConversionRecipe recipe, @NotNull IFocusGroup focuses) {
+    public void setRecipe(@NotNull IRecipeLayoutBuilder builder, @NotNull ConversionRecipe recipe, @NotNull IFocusGroup focuses) {
         builder.addSlot(RecipeIngredientRole.INPUT, 27, 17).setBackground(getRenderedSlot(), -1, -1).addIngredients(recipe.getIngredients().getFirst());
         builder.addSlot(RecipeIngredientRole.OUTPUT, 132, 17).setBackground(getRenderedSlot(), -1, -1).addItemStack(recipe.getRollableResults().getFirst().getStack());
     }

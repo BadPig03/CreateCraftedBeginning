@@ -3,8 +3,10 @@ package net.ty.createcraftedbeginning.compat.jade;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.ty.createcraftedbeginning.content.gasinjectionchamber.GasInjectionChamberBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import snownee.jade.api.Accessor;
 import snownee.jade.api.view.ClientViewGroup;
 import snownee.jade.api.view.FluidView;
@@ -20,7 +22,7 @@ public enum GasInjectionChamberProvider implements IServerExtensionProvider<Comp
     INSTANCE;
 
     @Override
-    public ResourceLocation getUid() {
+    public @NotNull ResourceLocation getUid() {
         return CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK.getId();
     }
 
@@ -30,7 +32,7 @@ public enum GasInjectionChamberProvider implements IServerExtensionProvider<Comp
     }
 
     @Override
-    public List<ViewGroup<CompoundTag>> getGroups(Accessor<?> accessor) {
+    public @Nullable List<ViewGroup<CompoundTag>> getGroups(@NotNull Accessor<?> accessor) {
         if (!(accessor.getTarget() instanceof GasInjectionChamberBlockEntity entity)) {
 			return null;
 		}

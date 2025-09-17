@@ -55,7 +55,7 @@ public class PneumaticEngineBlock extends KineticBlock implements IBE<PneumaticE
     }
 
     @Override
-    public InteractionResult onWrenched(BlockState state, UseOnContext context) {
+    public InteractionResult onWrenched(BlockState state, @NotNull UseOnContext context) {
         BlockPos pos = context.getClickedPos();
         Level level = context.getLevel();
         BlockEntity be = level.getBlockEntity(pos);

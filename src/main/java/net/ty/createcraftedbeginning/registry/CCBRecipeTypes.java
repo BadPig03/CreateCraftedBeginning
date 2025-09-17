@@ -9,70 +9,48 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.crafting.Recipe;
-import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.recipe.ConversionRecipe;
+import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
-import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
-import net.ty.createcraftedbeginning.recipe.SuperCoolingRecipe;
+import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Optional;
 import java.util.function.Supplier;
 
 public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
     CONVERSION(ConversionRecipe::new),
-    PRESSURIZATION(PressurizationRecipe::new),
     COOLING(CoolingRecipe::new),
-    SUPER_COOLING(SuperCoolingRecipe::new),
-    GAS_INJECTION(GasInjectionRecipe::new);
+    GAS_INJECTION(GasInjectionRecipe::new),
+    PRESSURIZATION(PressurizationRecipe::new),
+    WIND_CHARGING(WindChargingRecipe::new);
 
     public static final Codec<CCBRecipeTypes> CODEC = StringRepresentable.fromEnum(CCBRecipeTypes::values);
     public final ResourceLocation id;
     public final Supplier<RecipeSerializer<?>> serializerSupplier;
     private final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<?>> serializerObject;
-    @Nullable
-    private final DeferredHolder<RecipeType<?>, RecipeType<?>> typeObject;
     private final Supplier<RecipeType<?>> type;
-    private boolean isProcessingRecipe;
-
-    CCBRecipeTypes(Supplier<RecipeSerializer<?>> serializerSupplier, Supplier<RecipeType<?>> typeSupplier, boolean registerType) {
-        String name = Lang.asId(name());
-        id = CreateCraftedBeginning.asResource(name);
-        this.serializerSupplier = serializerSupplier;
-        serializerObject = Registers.SERIALIZER_REGISTER.register(name, serializerSupplier);
-        if (registerType) {
-            typeObject = Registers.TYPE_REGISTER.register(name, typeSupplier);
-            type = typeObject;
-        } else {
-            typeObject = null;
-            type = typeSupplier;
-        }
-        isProcessingRecipe = false;
-    }
 
     CCBRecipeTypes(Supplier<RecipeSerializer<?>> serializerSupplier) {
         String name = Lang.asId(name());
         id = CreateCraftedBeginning.asResource(name);
         this.serializerSupplier = serializerSupplier;
         serializerObject = Registers.SERIALIZER_REGISTER.register(name, serializerSupplier);
-        typeObject = Registers.TYPE_REGISTER.register(name, () -> RecipeType.simple(id));
+        @Nullable DeferredHolder<RecipeType<?>, RecipeType<?>> typeObject = Registers.TYPE_REGISTER.register(name, () -> RecipeType.simple(id));
         type = typeObject;
     }
 
     CCBRecipeTypes(StandardProcessingRecipe.Factory<?> processingFactory) {
         this(() -> new StandardProcessingRecipe.Serializer<>(processingFactory));
-        isProcessingRecipe = true;
     }
 
     @ApiStatus.Internal
@@ -88,7 +66,7 @@ public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends RecipeSerializer<?>> T getSerializer() {
+    public <T extends RecipeSerializer<?>> @NotNull T getSerializer() {
         return (T) serializerObject.get();
     }
 
@@ -101,10 +79,6 @@ public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
     @Override
     public @NotNull String getSerializedName() {
         return id.toString();
-    }
-
-    public <I extends RecipeInput, R extends Recipe<I>> Optional<RecipeHolder<R>> find(I inv, Level world) {
-        return world.getRecipeManager().getRecipeFor(getType(), inv, world);
     }
 
     private static class Registers {

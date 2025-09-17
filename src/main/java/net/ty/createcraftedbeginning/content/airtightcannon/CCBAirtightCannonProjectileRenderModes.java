@@ -16,6 +16,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.airtightcannon.AirtightCannonProjectileRenderMode;
 import net.ty.createcraftedbeginning.registry.CCBBuiltInRegistries;
+import org.jetbrains.annotations.NotNull;
 
 public class CCBAirtightCannonProjectileRenderModes {
     static {
@@ -37,6 +38,7 @@ public class CCBAirtightCannonProjectileRenderModes {
 
         public static final MapCodec<Billboard> CODEC = MapCodec.unit(INSTANCE);
 
+        @SuppressWarnings("SuspiciousNameCombination")
         @Override
         @OnlyIn(Dist.CLIENT)
         public void transform(PoseStack ms, AirtightCannonProjectileEntity entity, float pt) {
@@ -79,9 +81,10 @@ public class CCBAirtightCannonProjectileRenderModes {
     public record TowardMotion(int spriteAngleOffset, float spin) implements AirtightCannonProjectileRenderMode {
         public static final MapCodec<TowardMotion> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(Codec.INT.fieldOf("sprite_angle_offset").forGetter(i -> i.spriteAngleOffset), Codec.FLOAT.fieldOf("spin").forGetter(i -> i.spin)).apply(instance, TowardMotion::new));
 
+        @SuppressWarnings("SuspiciousNameCombination")
         @Override
         @OnlyIn(Dist.CLIENT)
-        public void transform(PoseStack ms, AirtightCannonProjectileEntity entity, float pt) {
+        public void transform(PoseStack ms, @NotNull AirtightCannonProjectileEntity entity, float pt) {
             Vec3 diff = entity.getDeltaMovement();
             TransformStack.of(ms).rotateYDegrees(AngleHelper.deg(Mth.atan2(diff.x, diff.z))).rotateXDegrees(270 + AngleHelper.deg(Mth.atan2(diff.y, -Mth.sqrt((float) (diff.x * diff.x + diff.z * diff.z)))));
             TransformStack.of(ms).rotateYDegrees((entity.tickCount + pt) * 20 * spin + entityRandom(entity, 360)).rotateZDegrees(-spriteAngleOffset);
@@ -96,6 +99,7 @@ public class CCBAirtightCannonProjectileRenderModes {
     public record StuckToEntity(Vec3 offset) implements AirtightCannonProjectileRenderMode {
         public static final MapCodec<StuckToEntity> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(Vec3.CODEC.fieldOf("offset").forGetter(i -> i.offset)).apply(instance, StuckToEntity::new));
 
+        @SuppressWarnings("SuspiciousNameCombination")
         @Override
         @OnlyIn(Dist.CLIENT)
         public void transform(PoseStack ms, AirtightCannonProjectileEntity entity, float pt) {

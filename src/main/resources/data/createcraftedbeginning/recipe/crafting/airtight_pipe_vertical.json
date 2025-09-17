@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "A",
+    "B",
+    "A"
+  ],
+  "key": {
+    "A": {
+      "item": "createcraftedbeginning:airtight_sheet"
+    },
+    "B": {
+      "tag": "c:plates/iron"
+    }
+  },
+  "result": {
+    "count": 4,
+    "id": "createcraftedbeginning:airtight_pipe"
+  }
+}

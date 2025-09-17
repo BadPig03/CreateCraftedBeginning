@@ -2,12 +2,14 @@
   "values": [
     "createcraftedbeginning:airtight_pipe",
     "createcraftedbeginning:airtight_encased_pipe",
+    "createcraftedbeginning:check_valve",
+    "createcraftedbeginning:smart_airtight_pipe",
     "createcraftedbeginning:airtight_pump",
-    "createcraftedbeginning:airtight_intake_port",
     "createcraftedbeginning:airtight_tank",
-    "createcraftedbeginning:air_compressor",
     "createcraftedbeginning:airtight_engine",
     "createcraftedbeginning:condensate_drain",
-    "createcraftedbeginning:gas_injection_chamber"
+    "createcraftedbeginning:air_compressor",
+    "createcraftedbeginning:gas_injection_chamber",
+    "createcraftedbeginning:airtight_intake_port"
   ]
 }

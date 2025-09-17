@@ -5,6 +5,7 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.neoforged.neoforge.fluids.BaseFlowingFluid;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 public class AmethystSuspensionVirtualFluid extends BaseFlowingFluid {
@@ -15,11 +16,13 @@ public class AmethystSuspensionVirtualFluid extends BaseFlowingFluid {
         this.source = source;
     }
 
-    public static AmethystSuspensionVirtualFluid createSource(Properties properties) {
+    @Contract("_ -> new")
+    public static @NotNull AmethystSuspensionVirtualFluid createSource(Properties properties) {
         return new AmethystSuspensionVirtualFluid(properties, true);
     }
 
-    public static AmethystSuspensionVirtualFluid createFlowing(Properties properties) {
+    @Contract("_ -> new")
+    public static @NotNull AmethystSuspensionVirtualFluid createFlowing(Properties properties) {
         return new AmethystSuspensionVirtualFluid(properties, false);
     }
 

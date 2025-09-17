@@ -4,10 +4,13 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.neoforged.fml.ModList;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 import java.util.function.Supplier;
 
+@SuppressWarnings("unused")
 public enum Mods {
     DRAGONS_PLUS("create_dragons_plus");
 
@@ -21,15 +24,16 @@ public enum Mods {
         return id;
     }
 
-    public ResourceLocation asResource(String path) {
+    @Contract("_ -> new")
+    public @NotNull ResourceLocation asResource(String path) {
         return ResourceLocation.fromNamespaceAndPath(id, path);
     }
 
-    public Item getItem(String id) {
+    public @NotNull Item getItem(String id) {
         return BuiltInRegistries.ITEM.get(asResource(id));
     }
 
-    public Item getItem(ResourceLocation id) {
+    public @NotNull Item getItem(ResourceLocation id) {
         return BuiltInRegistries.ITEM.get(id);
     }
 

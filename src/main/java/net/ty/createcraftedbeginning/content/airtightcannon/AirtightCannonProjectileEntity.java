@@ -35,6 +35,7 @@ import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 import net.ty.createcraftedbeginning.api.airtightcannon.AirtightCannonProjectileRenderMode;
 import net.ty.createcraftedbeginning.api.airtightcannon.AirtightCannonProjectileType;
 import net.ty.createcraftedbeginning.registry.CCBRegistries;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -64,12 +65,12 @@ public class AirtightCannonProjectileEntity extends AbstractHurtingProjectile im
     }
 
     @SuppressWarnings("unchecked")
-    public static EntityType.Builder<?> build(EntityType.Builder<?> builder) {
+    public static EntityType.@NotNull Builder<?> build(EntityType.Builder<?> builder) {
         EntityType.Builder<AirtightCannonProjectileEntity> entityBuilder = (EntityType.Builder<AirtightCannonProjectileEntity>) builder;
         return entityBuilder.sized(.25f, .25f);
     }
 
-    public void setEnchantmentEffectsFromCannon(ItemStack cannon) {
+    public void setEnchantmentEffectsFromCannon(@NotNull ItemStack cannon) {
         Registry<Enchantment> enchantmentRegistry = registryAccess().registryOrThrow(Registries.ENCHANTMENT);
 
         int recovery = cannon.getEnchantmentLevel(enchantmentRegistry.getHolderOrThrow(Enchantments.INFINITY));
@@ -82,7 +83,7 @@ public class AirtightCannonProjectileEntity extends AbstractHurtingProjectile im
         return stack;
     }
 
-    public void setItem(ItemStack stack) {
+    public void setItem(@NotNull ItemStack stack) {
         this.stack = stack;
         type = AirtightCannonProjectileType.getTypeForItem(level().registryAccess(), stack.getItem()).orElseGet(() -> level().registryAccess().registryOrThrow(CCBRegistries.AIRTIGHT_CANNON_PROJECTILE_TYPE).getHolderOrThrow(CCBAirtightCannonProjectileTypes.FALLBACK)).value();
     }
@@ -103,7 +104,7 @@ public class AirtightCannonProjectileEntity extends AbstractHurtingProjectile im
         return stuckEntity;
     }
 
-    public void setStuckEntity(Entity stuckEntity) {
+    public void setStuckEntity(@NotNull Entity stuckEntity) {
         this.stuckEntity = stuckEntity;
         this.stuckOffset = position().subtract(stuckEntity.position());
         this.stuckRenderer = new CCBAirtightCannonProjectileRenderModes.StuckToEntity(stuckOffset);
@@ -168,7 +169,7 @@ public class AirtightCannonProjectileEntity extends AbstractHurtingProjectile im
     }
 
     @Override
-    public void addAdditionalSaveData(CompoundTag compoundTag) {
+    public void addAdditionalSaveData(@NotNull CompoundTag compoundTag) {
         compoundTag.put("Item", stack.saveOptional(this.registryAccess()));
         compoundTag.putFloat("AdditionalDamage", additionalDamageMultiplier);
         compoundTag.putFloat("AdditionalKnockback", additionalKnockback);
@@ -177,7 +178,7 @@ public class AirtightCannonProjectileEntity extends AbstractHurtingProjectile im
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundTag compoundTag) {
+    public void readAdditionalSaveData(@NotNull CompoundTag compoundTag) {
         setItem(ItemStack.parseOptional(this.registryAccess(), compoundTag.getCompound("Item")));
         additionalDamageMultiplier = compoundTag.getFloat("AdditionalDamage");
         additionalKnockback = compoundTag.getFloat("AdditionalKnockback");
@@ -206,7 +207,7 @@ public class AirtightCannonProjectileEntity extends AbstractHurtingProjectile im
             ((LivingEntity) owner).setLastHurtMob(target);
         }
 
-        if (target instanceof AirtightCannonProjectileEntity acpe) {
+        if (target instanceof AirtightCannonProjectileEntity) {
             if (tickCount < 10 && target.tickCount < 10) {
                 return;
             }
@@ -280,7 +281,7 @@ public class AirtightCannonProjectileEntity extends AbstractHurtingProjectile im
     }
 
     @Override
-    protected void onHitBlock(BlockHitResult ray) {
+    protected void onHitBlock(@NotNull BlockHitResult ray) {
         Vec3 hit = ray.getLocation();
         pop(hit);
         if (!type.onBlockHit(level(), stack, ray) && !level().isClientSide) {
@@ -313,19 +314,20 @@ public class AirtightCannonProjectileEntity extends AbstractHurtingProjectile im
         }
     }
 
-    private DamageSource causePotatoDamage() {
+    @Contract(" -> new")
+    private @NotNull DamageSource causePotatoDamage() {
         return CreateDamageSources.potatoCannon(level(), this, getOwner());
     }
 
     @Override
-    public void writeSpawnData(RegistryFriendlyByteBuf buffer) {
+    public void writeSpawnData(@NotNull RegistryFriendlyByteBuf buffer) {
         CompoundTag compound = new CompoundTag();
         addAdditionalSaveData(compound);
         buffer.writeNbt(compound);
     }
 
     @Override
-    public void readSpawnData(RegistryFriendlyByteBuf additionalData) {
+    public void readSpawnData(@NotNull RegistryFriendlyByteBuf additionalData) {
         CompoundTag nbt = additionalData.readNbt();
         if (nbt != null) {
             readAdditionalSaveData(nbt);
