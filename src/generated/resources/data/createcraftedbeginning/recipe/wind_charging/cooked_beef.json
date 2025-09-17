@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "minecraft:cooked_beef"
+    }
+  ],
+  "results": [
+    {
+      "amount": 6886,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

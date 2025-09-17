@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "minecraft:enchanted_golden_apple"
+    }
+  ],
+  "results": [
+    {
+      "amount": 35558,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

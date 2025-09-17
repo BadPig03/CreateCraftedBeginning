@@ -1,0 +1,29 @@
+{
+  "injecting": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:entity.breeze.charge"
+      }
+    ],
+    "subtitle": "createcraftedbeginning.subtitle.injecting"
+  },
+  "sheet_added": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:entity.item_frame.add_item"
+      }
+    ],
+    "subtitle": "createcraftedbeginning.subtitle.sheet_added"
+  },
+  "sheet_removed": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:entity.item_frame.remove_item"
+      }
+    ],
+    "subtitle": "createcraftedbeginning.subtitle.sheet_removed"
+  }
+}

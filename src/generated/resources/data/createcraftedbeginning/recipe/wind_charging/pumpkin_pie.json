@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "minecraft:pumpkin_pie"
+    }
+  ],
+  "results": [
+    {
+      "amount": 2611,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

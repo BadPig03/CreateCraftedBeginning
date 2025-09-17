@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "createcraftedbeginning:portable_gas_interface"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "createcraftedbeginning:blocks/portable_gas_interface"
+}

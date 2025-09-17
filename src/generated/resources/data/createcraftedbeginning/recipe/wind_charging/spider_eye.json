@@ -1,0 +1,17 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "minecraft:spider_eye"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:poisonous_potato"
+    },
+    {
+      "amount": 3444,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

@@ -1,0 +1,163 @@
+{
+  "variants": {
+    "axis=x,face=ceiling,facing=east": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 180,
+      "y": 90
+    },
+    "axis=x,face=ceiling,facing=north": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 180
+    },
+    "axis=x,face=ceiling,facing=south": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 180,
+      "y": 180
+    },
+    "axis=x,face=ceiling,facing=west": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 180,
+      "y": 270
+    },
+    "axis=x,face=floor,facing=east": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "y": 270
+    },
+    "axis=x,face=floor,facing=north": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "y": 180
+    },
+    "axis=x,face=floor,facing=south": {
+      "model": "createcraftedbeginning:block/airtight_engine/block"
+    },
+    "axis=x,face=floor,facing=west": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "y": 90
+    },
+    "axis=x,face=wall,facing=east": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 90,
+      "y": 270
+    },
+    "axis=x,face=wall,facing=north": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 90,
+      "y": 180
+    },
+    "axis=x,face=wall,facing=south": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 90
+    },
+    "axis=x,face=wall,facing=west": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,face=ceiling,facing=east": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 180,
+      "y": 90
+    },
+    "axis=y,face=ceiling,facing=north": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 180
+    },
+    "axis=y,face=ceiling,facing=south": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 180,
+      "y": 180
+    },
+    "axis=y,face=ceiling,facing=west": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 180,
+      "y": 270
+    },
+    "axis=y,face=floor,facing=east": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "y": 270
+    },
+    "axis=y,face=floor,facing=north": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "y": 180
+    },
+    "axis=y,face=floor,facing=south": {
+      "model": "createcraftedbeginning:block/airtight_engine/block"
+    },
+    "axis=y,face=floor,facing=west": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "y": 90
+    },
+    "axis=y,face=wall,facing=east": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 90,
+      "y": 270
+    },
+    "axis=y,face=wall,facing=north": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 90,
+      "y": 180
+    },
+    "axis=y,face=wall,facing=south": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 90
+    },
+    "axis=y,face=wall,facing=west": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=z,face=ceiling,facing=east": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 180,
+      "y": 90
+    },
+    "axis=z,face=ceiling,facing=north": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 180
+    },
+    "axis=z,face=ceiling,facing=south": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 180,
+      "y": 180
+    },
+    "axis=z,face=ceiling,facing=west": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 180,
+      "y": 270
+    },
+    "axis=z,face=floor,facing=east": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "y": 270
+    },
+    "axis=z,face=floor,facing=north": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "y": 180
+    },
+    "axis=z,face=floor,facing=south": {
+      "model": "createcraftedbeginning:block/airtight_engine/block"
+    },
+    "axis=z,face=floor,facing=west": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "y": 90
+    },
+    "axis=z,face=wall,facing=east": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 90,
+      "y": 270
+    },
+    "axis=z,face=wall,facing=north": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,face=wall,facing=south": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 90
+    },
+    "axis=z,face=wall,facing=west": {
+      "model": "createcraftedbeginning:block/airtight_engine/block",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

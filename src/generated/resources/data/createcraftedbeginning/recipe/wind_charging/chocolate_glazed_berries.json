@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "create:chocolate_glazed_berries"
+    }
+  ],
+  "results": [
+    {
+      "amount": 5637,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

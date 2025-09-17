@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:amethyst_ice_cream"
+    }
+  ],
+  "results": [
+    {
+      "amount": 4157,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

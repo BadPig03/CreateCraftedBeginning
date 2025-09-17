@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "minecraft:golden_carrot"
+    }
+  ],
+  "results": [
+    {
+      "amount": 7259,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

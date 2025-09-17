@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "minecraft:mushroom_stew"
+    }
+  ],
+  "results": [
+    {
+      "amount": 3258,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "minecraft:potato"
+    }
+  ],
+  "results": [
+    {
+      "amount": 116,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

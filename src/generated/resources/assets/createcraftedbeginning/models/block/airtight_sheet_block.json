@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "createcraftedbeginning:block/airtight_sheet_block"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "minecraft:melon_slice"
+    }
+  ],
+  "results": [
+    {
+      "amount": 327,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

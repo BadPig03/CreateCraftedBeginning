@@ -1,0 +1,18 @@
+{
+	"credit": "Made with Blockbench",
+	"parent": "block/block",
+	"texture_size": [32, 32],
+	"textures": {
+		"0": "createcraftedbeginning:block/air_compressor"
+	},
+	"elements": [
+		{
+			"name": "inner",
+			"from": [0, 3, 3],
+			"to": [1, 13, 13],
+			"faces": {
+				"west": {"uv": [1.5, 1.5, 6.5, 6.5], "texture": "#0"}
+			}
+		}
+	]
+}

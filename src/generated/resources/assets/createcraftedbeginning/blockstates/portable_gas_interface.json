@@ -1,0 +1,30 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "createcraftedbeginning:block/portable_gas_interface/block",
+      "x": 180
+    },
+    "facing=east": {
+      "model": "createcraftedbeginning:block/portable_gas_interface/block",
+      "x": 90,
+      "y": 90
+    },
+    "facing=north": {
+      "model": "createcraftedbeginning:block/portable_gas_interface/block",
+      "x": 90
+    },
+    "facing=south": {
+      "model": "createcraftedbeginning:block/portable_gas_interface/block",
+      "x": 90,
+      "y": 180
+    },
+    "facing=up": {
+      "model": "createcraftedbeginning:block/portable_gas_interface/block"
+    },
+    "facing=west": {
+      "model": "createcraftedbeginning:block/portable_gas_interface/block",
+      "x": 90,
+      "y": 270
+    }
+  }
+}

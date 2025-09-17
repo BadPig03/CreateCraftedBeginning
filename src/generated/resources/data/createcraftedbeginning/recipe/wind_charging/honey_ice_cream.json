@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:honey_ice_cream"
+    }
+  ],
+  "results": [
+    {
+      "amount": 5985,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

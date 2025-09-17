@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:cooling",
+  "ingredients": [
+    {
+      "item": "minecraft:powder_snow_bucket"
+    }
+  ],
+  "results": [
+    {
+      "amount": 3200,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

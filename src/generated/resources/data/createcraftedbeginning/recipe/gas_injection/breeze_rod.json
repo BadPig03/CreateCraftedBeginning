@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "item": "minecraft:blaze_rod"
+    },
+    {
+      "type": "fluid_stack",
+      "amount": 500,
+      "fluid": "createcraftedbeginning:medium_pressure_compressed_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:breeze_rod"
+    }
+  ]
+}

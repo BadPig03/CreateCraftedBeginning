@@ -1,0 +1,94 @@
+{
+  "variants": {
+    "cooler=false,facing=east,frost_level=chilled": {
+      "model": "createcraftedbeginning:block/breeze_cooler/block",
+      "y": 90
+    },
+    "cooler=false,facing=east,frost_level=riming": {
+      "model": "createcraftedbeginning:block/breeze_cooler/block",
+      "y": 90
+    },
+    "cooler=false,facing=east,frost_level=waning": {
+      "model": "createcraftedbeginning:block/breeze_cooler/block",
+      "y": 90
+    },
+    "cooler=false,facing=north,frost_level=chilled": {
+      "model": "createcraftedbeginning:block/breeze_cooler/block"
+    },
+    "cooler=false,facing=north,frost_level=riming": {
+      "model": "createcraftedbeginning:block/breeze_cooler/block"
+    },
+    "cooler=false,facing=north,frost_level=waning": {
+      "model": "createcraftedbeginning:block/breeze_cooler/block"
+    },
+    "cooler=false,facing=south,frost_level=chilled": {
+      "model": "createcraftedbeginning:block/breeze_cooler/block",
+      "y": 180
+    },
+    "cooler=false,facing=south,frost_level=riming": {
+      "model": "createcraftedbeginning:block/breeze_cooler/block",
+      "y": 180
+    },
+    "cooler=false,facing=south,frost_level=waning": {
+      "model": "createcraftedbeginning:block/breeze_cooler/block",
+      "y": 180
+    },
+    "cooler=false,facing=west,frost_level=chilled": {
+      "model": "createcraftedbeginning:block/breeze_cooler/block",
+      "y": 270
+    },
+    "cooler=false,facing=west,frost_level=riming": {
+      "model": "createcraftedbeginning:block/breeze_cooler/block",
+      "y": 270
+    },
+    "cooler=false,facing=west,frost_level=waning": {
+      "model": "createcraftedbeginning:block/breeze_cooler/block",
+      "y": 270
+    },
+    "cooler=true,facing=east,frost_level=chilled": {
+      "model": "createcraftedbeginning:block/breeze_cooler/cooler",
+      "y": 90
+    },
+    "cooler=true,facing=east,frost_level=riming": {
+      "model": "createcraftedbeginning:block/breeze_cooler/cooler",
+      "y": 90
+    },
+    "cooler=true,facing=east,frost_level=waning": {
+      "model": "createcraftedbeginning:block/breeze_cooler/cooler",
+      "y": 90
+    },
+    "cooler=true,facing=north,frost_level=chilled": {
+      "model": "createcraftedbeginning:block/breeze_cooler/cooler"
+    },
+    "cooler=true,facing=north,frost_level=riming": {
+      "model": "createcraftedbeginning:block/breeze_cooler/cooler"
+    },
+    "cooler=true,facing=north,frost_level=waning": {
+      "model": "createcraftedbeginning:block/breeze_cooler/cooler"
+    },
+    "cooler=true,facing=south,frost_level=chilled": {
+      "model": "createcraftedbeginning:block/breeze_cooler/cooler",
+      "y": 180
+    },
+    "cooler=true,facing=south,frost_level=riming": {
+      "model": "createcraftedbeginning:block/breeze_cooler/cooler",
+      "y": 180
+    },
+    "cooler=true,facing=south,frost_level=waning": {
+      "model": "createcraftedbeginning:block/breeze_cooler/cooler",
+      "y": 180
+    },
+    "cooler=true,facing=west,frost_level=chilled": {
+      "model": "createcraftedbeginning:block/breeze_cooler/cooler",
+      "y": 270
+    },
+    "cooler=true,facing=west,frost_level=riming": {
+      "model": "createcraftedbeginning:block/breeze_cooler/cooler",
+      "y": 270
+    },
+    "cooler=true,facing=west,frost_level=waning": {
+      "model": "createcraftedbeginning:block/breeze_cooler/cooler",
+      "y": 270
+    }
+  }
+}

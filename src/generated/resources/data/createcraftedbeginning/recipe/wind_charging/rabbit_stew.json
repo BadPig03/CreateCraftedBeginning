@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "minecraft:rabbit_stew"
+    }
+  ],
+  "results": [
+    {
+      "amount": 7010,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

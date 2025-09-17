@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "create:bar_of_chocolate"
+    }
+  ],
+  "results": [
+    {
+      "amount": 1696,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

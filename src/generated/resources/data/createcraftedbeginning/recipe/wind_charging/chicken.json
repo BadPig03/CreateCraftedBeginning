@@ -1,0 +1,17 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "minecraft:chicken"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:poisonous_potato"
+    },
+    {
+      "amount": 1306,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

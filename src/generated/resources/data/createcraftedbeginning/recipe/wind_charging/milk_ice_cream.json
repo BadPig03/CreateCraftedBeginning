@@ -1,0 +1,17 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:milk_ice_cream"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:milk_bucket"
+    },
+    {
+      "amount": 32767,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

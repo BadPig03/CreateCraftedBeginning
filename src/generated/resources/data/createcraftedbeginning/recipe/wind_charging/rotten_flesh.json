@@ -1,0 +1,17 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "minecraft:rotten_flesh"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:poisonous_potato"
+    },
+    {
+      "amount": 1876,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

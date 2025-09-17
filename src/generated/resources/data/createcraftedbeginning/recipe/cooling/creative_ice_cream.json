@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:cooling",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:creative_ice_cream"
+    }
+  ],
+  "results": [
+    {
+      "amount": 32767,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

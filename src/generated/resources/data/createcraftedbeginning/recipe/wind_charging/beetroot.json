@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "minecraft:beetroot"
+    }
+  ],
+  "results": [
+    {
+      "amount": 222,
+      "id": "createcraftedbeginning:virtual_time"
+    }
+  ]
+}

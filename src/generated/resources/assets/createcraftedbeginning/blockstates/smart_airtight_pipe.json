@@ -1,0 +1,69 @@
+{
+  "variants": {
+    "axis=x,directional_facing=east": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,directional_facing=north": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,directional_facing=null": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,directional_facing=south": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,directional_facing=west": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,directional_facing=east": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block_east"
+    },
+    "axis=y,directional_facing=north": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block_north"
+    },
+    "axis=y,directional_facing=null": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block"
+    },
+    "axis=y,directional_facing=south": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block_south"
+    },
+    "axis=y,directional_facing=west": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block_west"
+    },
+    "axis=z,directional_facing=east": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,directional_facing=north": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,directional_facing=null": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,directional_facing=south": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,directional_facing=west": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
+      "x": 90,
+      "y": 180
+    }
+  }
+}
