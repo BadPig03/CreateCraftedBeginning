@@ -1,7 +1,8 @@
 package net.ty.createcraftedbeginning.api.gas;
 
-import net.minecraft.core.HolderLookup;
+import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.interfaces.IGasTank;
 import org.jetbrains.annotations.NotNull;
@@ -10,6 +11,8 @@ import java.util.function.Predicate;
 
 @SuppressWarnings("unused")
 public class GasTank implements IGasHandler, IGasTank {
+    private static final String COMPOUND_KEY_GAS = "Gas";
+
     protected Predicate<GasStack> validator;
     protected GasStack gas = GasStack.EMPTY;
     protected long capacity;
@@ -23,48 +26,24 @@ public class GasTank implements IGasHandler, IGasTank {
         this.validator = validator;
     }
 
-    public GasTank setValidator(Predicate<GasStack> validator) {
-        if (validator != null) {
-            this.validator = validator;
+    public GasTank setValidator(Predicate<GasStack> predicate) {
+        if (predicate != null) {
+            validator = predicate;
         }
         return this;
     }
 
-    public GasStack getGas() {
-        return gas;
-    }
-
-    public long getGasAmount() {
-        return gas.getAmount();
-    }
-
-    public long getCapacity() {
-        return capacity;
-    }
-
-    public boolean isGasValid(GasStack stack) {
-        return validator.test(stack);
-    }
-
-    public GasTank setCapacity(long capacity) {
-        this.capacity = capacity;
-        return this;
-    }
-
-    public void setGas(GasStack stack) {
-        this.gas = stack;
-    }
-
-    public void readFromNBT(HolderLookup.Provider lookupProvider, @NotNull CompoundTag nbt) {
-        gas = GasStack.parseOptional(lookupProvider, nbt.getCompound("Gas"));
-    }
-
-    public CompoundTag writeToNBT(HolderLookup.Provider lookupProvider, CompoundTag nbt) {
-        if (!gas.isEmpty()) {
-            nbt.put("Gas", gas.save(lookupProvider));
+    public void read(Provider lookupProvider, @NotNull CompoundTag compoundTag) {
+        if (!compoundTag.contains(COMPOUND_KEY_GAS)) {
+            return;
         }
 
-        return nbt;
+        gas = GasStack.parseOptional(lookupProvider, compoundTag.getCompound(COMPOUND_KEY_GAS));
+    }
+
+    public CompoundTag write(Provider lookupProvider, @NotNull CompoundTag compoundTag) {
+        compoundTag.put(COMPOUND_KEY_GAS, gas.saveOptional(lookupProvider));
+        return compoundTag;
     }
 
     @Override
@@ -74,20 +53,17 @@ public class GasTank implements IGasHandler, IGasTank {
 
     @Override
     public GasStack getGasInTank(int tank) {
-        return getGas();
+        return gas;
     }
 
     @Override
     public long getTankCapacity(int tank) {
-        return getCapacity();
+        return capacity;
     }
 
     @Override
     public boolean isGasValid(int tank, GasStack stack) {
-        if (isEmpty()) {
-            return true;
-        }
-        return isGasValid(stack);
+        return isEmpty() || isGasValid(stack);
     }
 
     @Override
@@ -101,10 +77,7 @@ public class GasTank implements IGasHandler, IGasTank {
                 return Math.min(capacity, resource.getAmount());
             }
 
-            if (!GasStack.isSameGas(gas, resource)) {
-                return 0;
-            }
-            return Math.min(capacity - gas.getAmount(), resource.getAmount());
+            return GasStack.isSameGas(gas, resource) ? Math.min(capacity - gas.getAmount(), resource.getAmount()) : 0;
         }
 
         if (gas.isEmpty()) {
@@ -130,10 +103,7 @@ public class GasTank implements IGasHandler, IGasTank {
 
     @Override
     public GasStack drain(@NotNull GasStack resource, GasAction action) {
-        if (resource.isEmpty() || !GasStack.isSameGas(resource, gas)) {
-            return GasStack.EMPTY;
-        }
-        return drain(resource.getAmount(), action);
+        return resource.isEmpty() || !GasStack.isSameGas(resource, gas) ? GasStack.EMPTY : drain(resource.getAmount(), action);
     }
 
     @Override
@@ -147,7 +117,37 @@ public class GasTank implements IGasHandler, IGasTank {
             gas.shrink(drained);
             onContentsChanged();
         }
+
         return stack;
+    }
+
+    @Override
+    public GasStack getGasStack() {
+        return gas;
+    }
+
+    @Override
+    public long getGasAmount() {
+        return gas.getAmount();
+    }
+
+    @Override
+    public long getCapacity() {
+        return capacity;
+    }
+
+    @Override
+    public boolean isGasValid(GasStack stack) {
+        return validator.test(stack);
+    }
+
+    public GasTank setCapacity(long newCapacity) {
+        capacity = newCapacity;
+        return this;
+    }
+
+    public void setGasStack(GasStack stack) {
+        gas = stack;
     }
 
     protected void onContentsChanged() {

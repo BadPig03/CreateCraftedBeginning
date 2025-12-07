@@ -1,0 +1,10 @@
+{
+  "values": [
+    "createcraftedbeginning:pressurized_natural_air",
+    "createcraftedbeginning:pressurized_ultrawarm_air",
+    "createcraftedbeginning:pressurized_ethereal_air",
+    "createcraftedbeginning:pressurized_energized_natural_air",
+    "createcraftedbeginning:pressurized_energized_ultrawarm_air",
+    "createcraftedbeginning:pressurized_energized_ethereal_air"
+  ]
+}

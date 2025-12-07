@@ -16,12 +16,23 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.gas.recipes.CuttingWithGasRecipe;
+import net.ty.createcraftedbeginning.api.gas.recipes.DeployerApplicationWithGasRecipe;
+import net.ty.createcraftedbeginning.api.gas.recipes.FillingWithGasRecipe;
+import net.ty.createcraftedbeginning.api.gas.recipes.ItemApplicationWithGasRecipe;
+import net.ty.createcraftedbeginning.api.gas.recipes.ItemApplicationWithGasRecipe.Serializer;
+import net.ty.createcraftedbeginning.api.gas.recipes.ItemApplicationWithGasRecipeParams;
+import net.ty.createcraftedbeginning.api.gas.recipes.PressingWithGasRecipe;
+import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipe.Factory;
+import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasRecipeSerializer;
+import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
 import net.ty.createcraftedbeginning.recipe.ConversionRecipe;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
+import net.ty.createcraftedbeginning.recipe.EnergizationRecipe;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
-import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,13 +43,24 @@ public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
     COOLING(CoolingRecipe::new),
     GAS_INJECTION(GasInjectionRecipe::new),
     PRESSURIZATION(PressurizationRecipe::new),
-    WIND_CHARGING(WindChargingRecipe::new);
+    WIND_CHARGING(WindChargingRecipe::new),
+    ENERGIZATION(EnergizationRecipe::new),
+
+    CUTTING_WITH_GAS(CuttingWithGasRecipe::new),
+    FILLING_WITH_GAS(FillingWithGasRecipe::new),
+    PRESSING_WITH_GAS(PressingWithGasRecipe::new),
+    DEPLOYING_WITH_GAS(DeployerApplicationWithGasRecipe::new),
+    SEQUENCED_ASSEMBLY_WITH_GAS(SequencedAssemblyWithGasRecipeSerializer::new);
 
     public static final Codec<CCBRecipeTypes> CODEC = StringRepresentable.fromEnum(CCBRecipeTypes::values);
     public final ResourceLocation id;
     public final Supplier<RecipeSerializer<?>> serializerSupplier;
     private final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<?>> serializerObject;
     private final Supplier<RecipeType<?>> type;
+
+    CCBRecipeTypes(StandardProcessingRecipe.Factory<?> processingFactory) {
+        this(() -> new StandardProcessingRecipe.Serializer<>(processingFactory));
+    }
 
     CCBRecipeTypes(Supplier<RecipeSerializer<?>> serializerSupplier) {
         String name = Lang.asId(name());
@@ -49,11 +71,15 @@ public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
         type = typeObject;
     }
 
-    CCBRecipeTypes(StandardProcessingRecipe.Factory<?> processingFactory) {
-        this(() -> new StandardProcessingRecipe.Serializer<>(processingFactory));
+    CCBRecipeTypes(StandardProcessingWithGasRecipe.Factory<?> processingFactory) {
+        this(() -> new StandardProcessingWithGasRecipe.Serializer<>(processingFactory));
     }
 
-    @ApiStatus.Internal
+    CCBRecipeTypes(Factory<ItemApplicationWithGasRecipeParams, ? extends ItemApplicationWithGasRecipe> itemApplicationFactory) {
+        this(() -> new Serializer<>(itemApplicationFactory));
+    }
+
+    @Internal
     public static void register(IEventBus modEventBus) {
         Registers.SERIALIZER_REGISTER.register(modEventBus);
         Registers.TYPE_REGISTER.register(modEventBus);

@@ -1,0 +1,35 @@
+{
+  "parent": "createcraftedbeginning:you_shall_not_pass",
+  "criteria": {
+    "0": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:smart_airtight_pipe"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.filtering_gas.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:smart_airtight_pipe"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.filtering_gas"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

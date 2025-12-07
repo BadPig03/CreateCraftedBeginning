@@ -20,11 +20,6 @@ public interface IDirectionalPipe {
 
         public static final Codec<DirectionalFacing> CODEC = StringRepresentable.fromEnum(DirectionalFacing::values);
 
-        @Override
-        public @NotNull String getSerializedName() {
-            return Lang.asId(name());
-        }
-
         @Contract(pure = true)
         public static int getYAngle(@NotNull DirectionalFacing facing) {
             return switch (facing) {
@@ -38,10 +33,10 @@ public interface IDirectionalPipe {
         @Contract(pure = true)
         public static DirectionalFacing getFacingDirection(@NotNull Direction direction) {
             return switch (direction) {
-                case Direction.NORTH -> NORTH;
-                case Direction.EAST -> EAST;
-                case Direction.SOUTH -> SOUTH;
-                case Direction.WEST -> WEST;
+                case NORTH -> NORTH;
+                case EAST -> EAST;
+                case SOUTH -> SOUTH;
+                case WEST -> WEST;
                 default -> NULL;
             };
         }
@@ -54,6 +49,11 @@ public interface IDirectionalPipe {
                 case WEST -> Direction.WEST;
                 default -> Direction.NORTH;
             };
+        }
+
+        @Override
+        public @NotNull String getSerializedName() {
+            return Lang.asId(name());
         }
     }
 }

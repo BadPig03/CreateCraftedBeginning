@@ -1,0 +1,31 @@
+{
+	"format_version": "1.21.6",
+	"credit": "Made with Blockbench",
+	"render_type": "minecraft:cutout_mipped",
+	"texture_size": [32, 32],
+	"textures": {
+		"1": "createcraftedbeginning:block/tesla_turbine/casing",
+		"2": "createcraftedbeginning:block/tesla_turbine/inner_casing",
+		"particle": "createcraftedbeginning:block/airtight_tank/top"
+	},
+	"elements": [
+		{
+			"from": [0, 1, 0],
+			"to": [16, 15, 16],
+			"rotation": {"angle": 0, "axis": "x", "origin": [8, 8, 8]},
+			"faces": {
+				"up": {"uv": [8, 8, 4, 12], "rotation": 180, "texture": "#1"},
+				"down": {"uv": [4, 8, 8, 12], "texture": "#1"}
+			}
+		},
+		{
+			"from": [0.1, 14.9, 0.1],
+			"to": [15.9, 1.1, 15.9],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"up": {"uv": [8, 8, 4, 12], "rotation": 180, "texture": "#2"},
+				"down": {"uv": [4, 8, 8, 12], "texture": "#2"}
+			}
+		}
+	]
+}

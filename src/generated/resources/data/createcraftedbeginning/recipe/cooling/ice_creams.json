@@ -1,0 +1,10 @@
+{
+  "type": "createcraftedbeginning:cooling",
+  "ingredients": [
+    {
+      "tag": "createcraftedbeginning:ice_creams"
+    }
+  ],
+  "processing_time": 450,
+  "results": []
+}

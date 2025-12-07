@@ -9,19 +9,19 @@ import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 import org.jetbrains.annotations.NotNull;
 
 public class AnimatedBreezeChamber extends AnimatedKinetics {
+    private static final int SCALE = 23;
+
     @Override
     public void draw(@NotNull GuiGraphics graphics, int xOffset, int yOffset) {
         PoseStack matrixStack = graphics.pose();
         matrixStack.pushPose();
+
         matrixStack.translate(xOffset, yOffset, 192);
         matrixStack.mulPose(Axis.XP.rotationDegrees(-15.5f));
         matrixStack.mulPose(Axis.YP.rotationDegrees(22.5f));
-
-        int scale = 23;
-
-        blockElement(CCBBlocks.BREEZE_CHAMBER_BLOCK.getDefaultState()).atLocal(0, 1, 0).scale(scale).render(graphics);
-        blockElement(CCBPartialModels.BREEZE_CHAMBER_WIND).rotateBlock(0, getCurrentAngle() * 4, 0).atLocal(0, 9 / 8d, 0).scale(scale).render(graphics);
-        blockElement(CCBPartialModels.BREEZE_GALE).rotateBlock(0, 180, 0).atLocal(0, 9 / 8d, 0).scale(scale).render(graphics);
+        blockElement(CCBBlocks.BREEZE_CHAMBER_BLOCK.getDefaultState()).atLocal(0, 1, 0).scale(SCALE).render(graphics);
+        blockElement(CCBPartialModels.BREEZE_CHAMBER_WIND).rotateBlock(0, getCurrentAngle() * 4, 0).atLocal(0, 9 / 8.0d, 0).scale(SCALE).render(graphics);
+        blockElement(CCBPartialModels.BREEZE_GALE).rotateBlock(0, 180, 0).atLocal(0, 9 / 8.0d, 0).scale(SCALE).render(graphics);
 
         matrixStack.popPose();
     }

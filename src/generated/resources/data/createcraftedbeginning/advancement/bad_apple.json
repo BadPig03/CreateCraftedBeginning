@@ -1,0 +1,28 @@
+{
+  "parent": "createcraftedbeginning:retrofit",
+  "criteria": {
+    "0": {
+      "trigger": "createcraftedbeginning:bad_apple_builtin"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.bad_apple.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:pufferfish"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.bad_apple"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

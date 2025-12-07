@@ -1,10 +1,11 @@
 {
+	"format_version": "1.21.6",
 	"credit": "Made with Blockbench",
 	"parent": "create:block/block",
 	"texture_size": [32, 32],
 	"textures": {
-		"4": "createcraftedbeginning:block/andesite_crate",
-		"particle": "createcraftedbeginning:block/andesite_crate"
+		"4": "createcraftedbeginning:block/crates/andesite_crate",
+		"particle": "createcraftedbeginning:block/crates/andesite_crate"
 	},
 	"elements": [
 		{

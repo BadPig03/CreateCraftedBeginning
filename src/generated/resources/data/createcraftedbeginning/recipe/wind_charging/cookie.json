@@ -5,10 +5,6 @@
       "item": "minecraft:cookie"
     }
   ],
-  "results": [
-    {
-      "amount": 166,
-      "id": "createcraftedbeginning:virtual_time"
-    }
-  ]
+  "processing_time": 166,
+  "results": []
 }

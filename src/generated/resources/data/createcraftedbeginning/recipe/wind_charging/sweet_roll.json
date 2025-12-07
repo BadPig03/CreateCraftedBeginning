@@ -5,10 +5,6 @@
       "item": "create:sweet_roll"
     }
   ],
-  "results": [
-    {
-      "amount": 4473,
-      "id": "createcraftedbeginning:virtual_time"
-    }
-  ]
+  "processing_time": 4473,
+  "results": []
 }

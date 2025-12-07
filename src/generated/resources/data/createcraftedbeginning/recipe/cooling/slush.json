@@ -2,15 +2,11 @@
   "type": "createcraftedbeginning:cooling",
   "ingredients": [
     {
-      "type": "fluid_stack",
+      "type": "neoforge:single",
       "amount": 1000,
       "fluid": "createcraftedbeginning:slush"
     }
   ],
-  "results": [
-    {
-      "amount": 3200,
-      "id": "createcraftedbeginning:virtual_time"
-    }
-  ]
+  "processing_time": 1800,
+  "results": []
 }

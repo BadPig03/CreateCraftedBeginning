@@ -1,114 +1,217 @@
 package net.ty.createcraftedbeginning.content.crates.cardboardcrate;
 
+import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
+import com.simibubi.create.content.logistics.box.PackageItem;
+import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
+import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
+import com.simibubi.create.foundation.utility.CreateLang;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
+import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import net.ty.createcraftedbeginning.content.crates.CustomCrateBlockEntity;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.crates.CrateItemStackHandler;
+import net.ty.createcraftedbeginning.content.crates.CratesBlockEntity;
+import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.NotNull;
 
-import static net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateBlock.MAX_SLOT;
-import static net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateBlock.SLOT_LIMIT;
+import java.util.List;
 
-public class CardboardCrateBlockEntity extends CustomCrateBlockEntity {
-    private static final int STORAGE_SLOT = 0;
-    private final ItemStackHandler inv;
+public class CardboardCrateBlockEntity extends CratesBlockEntity implements IHaveGoggleInformation, ThresholdSwitchObservable {
+    private static final String COMPOUND_KEY_INVENTORY = "Inventory";
+    private final CrateItemStackHandler handler;
+    private CCBAdvancementBehaviour advancementBehaviour;
 
     public CardboardCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
-        inv = new CardboardCrateItemHandler();
+        handler = new CardboardItemHandler();
     }
 
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CCBBlockEntities.CARDBOARD_CRATE.get(), (be, context) -> be.inv);
-    }
-
-    public ItemStack getStoredItem() {
-        return inv.getStackInSlot(STORAGE_SLOT).copy();
-    }
-
-    public void setStoredItem(ItemStack stack) {
-        inv.setStackInSlot(STORAGE_SLOT, stack);
-        setChanged();
+    public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.CARDBOARD_CRATE.get(), (be, context) -> be.handler);
     }
 
     @Override
-    protected void write(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
+    protected void write(CompoundTag compound, Provider registries, boolean clientPacket) {
         super.write(compound, registries, clientPacket);
-        if (clientPacket) {
-            return;
-        }
-        compound.put("Inventory", inv.serializeNBT(registries));
+        compound.put(COMPOUND_KEY_INVENTORY, handler.serializeNBT(registries));
     }
 
     @Override
-    protected void read(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
+    protected void read(CompoundTag compound, Provider registries, boolean clientPacket) {
         super.read(compound, registries, clientPacket);
-        if (clientPacket || !compound.contains("Inventory")) {
+        if (!compound.contains(COMPOUND_KEY_INVENTORY)) {
             return;
         }
-        inv.deserializeNBT(registries, compound.getCompound("Inventory"));
+
+        handler.deserializeNBT(registries, compound.getCompound(COMPOUND_KEY_INVENTORY));
     }
 
-    private class CardboardCrateItemHandler extends ItemStackHandler {
-        CardboardCrateItemHandler() {
-            super(MAX_SLOT);
+    @Override
+    public CrateItemStackHandler getHandler() {
+        return handler;
+    }
+
+    @Override
+	public void invalidate() {
+		super.invalidate();
+		invalidateCapabilities();
+	}
+
+    @Override
+    public void setStoredItems(ItemStack content, int count) {
+        handler.setStackInSlot(0, content);
+        handler.setCountInSlot(0, count);
+        notifyUpdate();
+    }
+
+    @Override
+    public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.BORN_FROM_THE_SAME_ROOT);
+        behaviours.add(advancementBehaviour);
+    }
+
+    @Override
+    public int getMaxValue() {
+        return handler.getSlotLimit(0);
+    }
+
+    @Override
+    public int getMinValue() {
+        return 0;
+    }
+
+    @Override
+    public int getCurrentValue() {
+        return handler.getCountInSlot(0);
+    }
+
+    @Override
+    public MutableComponent format(int value) {
+        return CreateLang.text(value + " ").add(CreateLang.translate("schedule.condition.threshold.items")).component();
+    }
+
+    private class CardboardItemHandler extends CrateItemStackHandler {
+        CardboardItemHandler() {
+            super(CCBConfig.server().crates.maxCardboardCapacity.get(), null);
+        }
+
+        private static boolean awardAdvancement(@NotNull ItemStack stack) {
+            return stack.getItem() instanceof PackageItem;
+        }
+
+        @Override
+        public int getSlots() {
+            return 2;
+        }
+
+        @Override
+        public @NotNull ItemStack getStackInSlot(int slot) {
+            validateSlotIndex(slot);
+            return slot == 1 || content.isEmpty() || count == 0 ? ItemStack.EMPTY : content.copyWithCount(count);
+        }
+
+        @Override
+        public void setStackInSlot(int slot, @NotNull ItemStack stack) {
+            validateSlotIndex(slot);
+            if (slot == 1) {
+                return;
+            }
+
+            content = stack;
+            count = stack.isEmpty() ? 0 : 1;
+            onContentsChanged(slot);
+        }
+
+        @Override
+        public int getCountInSlot(int slot) {
+            validateSlotIndex(slot);
+            return slot == 1 || content.isEmpty() ? 0 : count;
+        }
+
+        @Override
+        public void setCountInSlot(int slot, int newCount) {
+            validateSlotIndex(slot);
+            if (slot == 1 || content.isEmpty()) {
+                return;
+            }
+
+            count = newCount;
         }
 
         @Override
         public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
-            ItemStack current = getStackInSlot(STORAGE_SLOT);
-
-            if (current.isEmpty()) {
-                int maxInsert = Math.min(stack.getCount(), SLOT_LIMIT);
-                if (!simulate) {
-                    setStackInSlot(STORAGE_SLOT, stack.copyWithCount(maxInsert));
-                }
-                return maxInsert >= stack.getCount() ? ItemStack.EMPTY : stack.copyWithCount(stack.getCount() - maxInsert);
+            if (stack.isEmpty()) {
+                return ItemStack.EMPTY;
             }
 
-            if (ItemStack.isSameItemSameComponents(current, stack)) {
-                int maxStackSize = Math.min(current.getMaxStackSize(), SLOT_LIMIT);
-                int availableSpace = maxStackSize - current.getCount();
+            if (content.isEmpty()) {
+                int newCount = Math.min(stack.getCount(), maxCount);
+                if (!simulate) {
+                    content = stack.copyWithCount(1);
+                    count = newCount;
+                    onContentsChanged(slot);
+                }
+                return ItemStack.EMPTY;
+            }
 
-                if (availableSpace <= 0) {
+            if (ItemStack.isSameItemSameComponents(content, stack)) {
+                int space = maxCount - count;
+                if (space <= 0) {
                     return ItemStack.EMPTY;
                 }
 
-                int toInsert = Math.min(stack.getCount(), availableSpace);
+                int toInsert = Math.min(stack.getCount(), space);
                 if (!simulate) {
-                    current.grow(toInsert);
-                    setStackInSlot(STORAGE_SLOT, current);
+                    count += toInsert;
+                    onContentsChanged(slot);
                 }
-                return toInsert >= stack.getCount() ? ItemStack.EMPTY : stack.copyWithCount(stack.getCount() - toInsert);
+
+                return ItemStack.EMPTY;
             }
 
             if (!simulate) {
-                int maxInsert = Math.min(stack.getCount(), SLOT_LIMIT);
-                setStackInSlot(STORAGE_SLOT, stack.copyWithCount(maxInsert));
+                if (awardAdvancement(content)) {
+                    advancementBehaviour.awardPlayer(CCBAdvancements.BORN_FROM_THE_SAME_ROOT);
+                }
+                content = stack.copyWithCount(1);
+                count = Math.min(stack.getCount(), maxCount);
+                onContentsChanged(slot);
             }
             return ItemStack.EMPTY;
         }
 
         @Override
         public int getSlotLimit(int slot) {
-            return slot == STORAGE_SLOT ? SLOT_LIMIT : 0;
+            validateSlotIndex(slot);
+            return slot == 1 ? 0 : maxCount;
         }
 
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+            validateSlotIndex(slot);
             return true;
         }
 
         @Override
+        protected void validateSlotIndex(int slot) {
+            if (slot >= 0 && slot <= 1) {
+                return;
+            }
+
+            throw new RuntimeException("Slot " + slot + " not in valid range - [0,2)");
+        }
+
+        @Override
         protected void onContentsChanged(int slot) {
-            setChanged();
+            notifyUpdate();
         }
     }
 }

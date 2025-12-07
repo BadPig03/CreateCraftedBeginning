@@ -8,6 +8,8 @@ import net.createmod.catnip.math.BlockFace;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.api.gas.GasPipeConnection.AirFlow;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.interfaces.IGasHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,33 +27,43 @@ import java.util.function.Supplier;
 
 public class GasNetwork {
     private static final int CYCLES_PER_TICK = 16;
+    private static final int PAUSE_INTERVAL = 2;
+    private static final int TWO_SECONDS_IN_TICKS = 40;
 
-    Level world;
-    BlockFace start;
+    private final Level level;
+    private final BlockFace start;
+    private final List<BlockFace> queued;
+    private final Set<Pair<BlockFace, GasPipeConnection>> frontier;
+    private final Set<BlockPos> visited;
+    private final List<Pair<BlockFace, GasFlowSource>> targets;
+    private final Map<BlockPos, WeakReference<GasTransportBehaviour>> cache;
+    private final Supplier<@Nullable ICapabilityProvider<IGasHandler>> sourceSupplier;
+    private @Nullable ICapabilityProvider<IGasHandler> source;
+    private long transferSpeed;
+    private int pauseBeforePropagation;
+    private GasStack gas;
 
-    Supplier<@Nullable ICapabilityProvider<IGasHandler>> sourceSupplier;
-    @Nullable ICapabilityProvider<IGasHandler> source = null;
-    long transferSpeed;
-
-    int pauseBeforePropagation;
-    List<BlockFace> queued;
-    Set<Pair<BlockFace, GasPipeConnection>> frontier;
-    Set<BlockPos> visited;
-    GasStack gas;
-    List<Pair<BlockFace, GasFlowSource>> targets;
-    Map<BlockPos, WeakReference<GasTransportBehaviour>> cache;
-
-    public GasNetwork(Level world, BlockFace location, Supplier<@Nullable ICapabilityProvider<IGasHandler>> sourceSupplier) {
-        this.world = world;
-        this.start = location;
+    public GasNetwork(Level level, BlockFace location, Supplier<@Nullable ICapabilityProvider<IGasHandler>> sourceSupplier) {
+        this.level = level;
+        start = location;
         this.sourceSupplier = sourceSupplier;
-        this.gas = GasStack.EMPTY;
-        this.frontier = new HashSet<>();
-        this.visited = new HashSet<>();
-        this.targets = new ArrayList<>();
-        this.cache = new HashMap<>();
-        this.queued = new ArrayList<>();
+        gas = GasStack.EMPTY;
+        frontier = new HashSet<>();
+        visited = new HashSet<>();
+        targets = new ArrayList<>();
+        cache = new HashMap<>();
+        queued = new ArrayList<>();
         reset();
+    }
+
+    public void reset() {
+        frontier.clear();
+        visited.clear();
+        targets.clear();
+        queued.clear();
+        gas = GasStack.EMPTY;
+        queued.add(start);
+        pauseBeforePropagation = PAUSE_INTERVAL;
     }
 
     public void tick() {
@@ -71,7 +83,7 @@ public class GasNetwork {
                 GasPipeConnection connection = get(blockFace);
                 if (connection != null) {
                     if (blockFace.equals(start)) {
-                        transferSpeed = (int) Math.max(1, connection.pressure.get(true) / 2f);
+                        transferSpeed = (int) Math.max(1, connection.pressure.get(true) / 2.0f);
                     }
                     frontier.add(Pair.of(blockFace, connection));
                 }
@@ -87,7 +99,7 @@ public class GasNetwork {
                     continue;
                 }
 
-                GasPipeConnection.AirFlow flow = connection.flow.get();
+                AirFlow flow = connection.flow.get();
                 if (!gas.isEmpty() && !GasStack.isSameGas(flow.gas, gas)) {
                     iterator.remove();
                     continue;
@@ -122,7 +134,7 @@ public class GasNetwork {
                         continue;
                     }
 
-                    GasPipeConnection.AirFlow outFlow = adjacent.flow.get();
+                    AirFlow outFlow = adjacent.flow.get();
                     if (outFlow.inbound) {
                         if (adjacent.comparePressure() > 0) {
                             canRemove = false;
@@ -130,7 +142,7 @@ public class GasNetwork {
                         continue;
                     }
 
-                    if (adjacent.source.isEmpty() && !adjacent.determineSource(world, blockFace.getPos())) {
+                    if (adjacent.source.isEmpty() && !adjacent.determineSource(level, blockFace.getPos())) {
                         canRemove = false;
                         continue;
                     }
@@ -165,7 +177,7 @@ public class GasNetwork {
             return;
         }
         for (Pair<BlockFace, GasFlowSource> pair : targets) {
-            if (world.getGameTime() % 40 != 0) {
+            if (level.getGameTime() % TWO_SECONDS_IN_TICKS != 0) {
                 continue;
             }
 
@@ -272,16 +284,6 @@ public class GasNetwork {
         }
     }
 
-    public void reset() {
-        frontier.clear();
-        visited.clear();
-        targets.clear();
-        queued.clear();
-        gas = GasStack.EMPTY;
-        queued.add(start);
-        pauseBeforePropagation = 2;
-    }
-
     @Nullable
     private GasPipeConnection get(@NotNull BlockFace location) {
         BlockPos pos = location.getPos();
@@ -289,11 +291,8 @@ public class GasNetwork {
         if (transfer == null) {
             return null;
         }
-        return transfer.getConnection(location.getFace());
-    }
 
-    private boolean isPresent(@NotNull BlockFace location) {
-        return world.isLoaded(location.getPos());
+        return transfer.getConnection(location.getFace());
     }
 
     @Nullable
@@ -304,11 +303,15 @@ public class GasNetwork {
             behaviour = null;
         }
         if (behaviour == null) {
-            behaviour = BlockEntityBehaviour.get(world, pos, GasTransportBehaviour.TYPE);
+            behaviour = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
             if (behaviour != null) {
                 cache.put(pos, new WeakReference<>(behaviour));
             }
         }
         return behaviour;
+    }
+
+    private boolean isPresent(@NotNull BlockFace location) {
+        return level.isLoaded(location.getPos());
     }
 }

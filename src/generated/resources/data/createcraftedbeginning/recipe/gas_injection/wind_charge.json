@@ -5,9 +5,9 @@
       "item": "minecraft:blaze_powder"
     },
     {
-      "type": "fluid_stack",
+      "type": "createcraftedbeginning:gas_stack",
       "amount": 250,
-      "fluid": "createcraftedbeginning:medium_pressure_compressed_air"
+      "gas": "createcraftedbeginning:natural_air"
     }
   ],
   "results": [

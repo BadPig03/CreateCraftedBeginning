@@ -5,10 +5,6 @@
       "item": "create:honeyed_apple"
     }
   ],
-  "results": [
-    {
-      "amount": 6886,
-      "id": "createcraftedbeginning:virtual_time"
-    }
-  ]
+  "processing_time": 6886,
+  "results": []
 }

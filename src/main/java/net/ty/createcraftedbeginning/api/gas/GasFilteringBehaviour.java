@@ -1,21 +1,19 @@
 package net.ty.createcraftedbeginning.api.gas;
 
 import com.simibubi.create.AllBlocks;
-import com.simibubi.create.AllItems;
-import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.content.logistics.filter.FilterItemStack;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement;
+import com.simibubi.create.content.schematics.requirement.ItemRequirement.ItemUseType;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BehaviourType;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueSettingsBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueSettingsBoard;
+import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
-import net.minecraft.ChatFormatting;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
+import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.sounds.SoundEvents;
@@ -24,9 +22,13 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.common.Tags.Items;
+import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterExecuteUtils;
+import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterQueryUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterItem;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,9 +37,13 @@ import java.util.function.Predicate;
 
 public class GasFilteringBehaviour extends BlockEntityBehaviour implements ValueSettingsBehaviour {
     public static final BehaviourType<GasFilteringBehaviour> TYPE = new BehaviourType<>();
+    private static final String COMPOUND_KEY_FILTER = "Filter";
+    private static final String COMPOUND_KEY_FILTERING = "Filtering";
+
     private final Predicate<ItemStack> predicate = stack -> stack.getItem() instanceof GasCanisterItem;
+    private final ValueBoxTransform slotPositioning;
+
     protected FilterItemStack filter;
-    ValueBoxTransform slotPositioning;
     private Consumer<ItemStack> callback;
 
     public GasFilteringBehaviour(SmartBlockEntity be, ValueBoxTransform slot) {
@@ -53,35 +59,11 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
         return this;
     }
 
-    public boolean setFilter(Direction ignored, ItemStack stack) {
-        return setFilter(stack);
-    }
-
-    public boolean setFilter(@NotNull ItemStack stack) {
-        ItemStack filter = stack.copy();
-        if (!filter.isEmpty() && !predicate.test(filter)) {
-            return false;
-        }
-        this.filter = FilterItemStack.of(filter);
-        callback.accept(filter);
-        blockEntity.setChanged();
-        blockEntity.sendData();
-        return true;
-    }
-
-    public ItemStack getFilter(Direction ignored) {
-        return getFilter();
-    }
-
-    public ItemStack getFilter() {
-        return filter.item();
-    }
-
     public boolean test(GasStack stack) {
         return !isActive() || canGasPass(filter, stack);
     }
 
-    private boolean canGasPass(@NotNull FilterItemStack filterItem, GasStack stack) {
+    private static boolean canGasPass(@NotNull FilterItemStack filterItem, GasStack stack) {
         if (filterItem.isEmpty()) {
             return true;
         }
@@ -89,11 +71,8 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
             return false;
         }
 
-        GasStack filterGasStack = GasCanisterItem.getContent(filterItem.item());
-        if (filterGasStack.isEmpty()) {
-            return false;
-        }
-        return GasStack.isSameGas(filterGasStack, stack);
+        GasStack filterGasStack = GasCanisterQueryUtils.getCanisterContent(filterItem.item());
+        return !filterGasStack.isEmpty() && GasStack.isSameGas(filterGasStack, stack);
     }
 
     @Override
@@ -102,15 +81,15 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
     }
 
     @Override
-    public void read(@NotNull CompoundTag nbt, HolderLookup.Provider registries, boolean clientPacket) {
-        filter = FilterItemStack.of(registries, nbt.getCompound("Filter"));
-        super.read(nbt, registries, clientPacket);
+    public void read(@NotNull CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.read(compoundTag, provider, clientPacket);
+        filter = FilterItemStack.of(provider, compoundTag.getCompound(COMPOUND_KEY_FILTER));
     }
 
     @Override
-    public void write(@NotNull CompoundTag nbt, HolderLookup.Provider registries, boolean clientPacket) {
-        nbt.put("Filter", getFilter().saveOptional(registries));
-        super.write(nbt, registries, clientPacket);
+    public void write(@NotNull CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.write(compoundTag, provider, clientPacket);
+        compoundTag.put(COMPOUND_KEY_FILTER, getFilter().saveOptional(provider));
     }
 
     @Override
@@ -120,18 +99,16 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
 
     @Override
     public ItemRequirement getRequiredItems() {
-        if (filter.isFilterItem()) {
-            return new ItemRequirement(ItemRequirement.ItemUseType.CONSUME, filter.item());
-        }
+        return filter.isFilterItem() ? new ItemRequirement(ItemUseType.CONSUME, filter.item()) : ItemRequirement.NONE;
+    }
 
-        return ItemRequirement.NONE;
+    public ItemStack getFilter() {
+        return filter.item();
     }
 
     @Override
     public boolean testHit(@NotNull Vec3 hit) {
-        BlockState state = blockEntity.getBlockState();
-        Vec3 localHit = hit.subtract(Vec3.atLowerCornerOf(blockEntity.getBlockPos()));
-        return slotPositioning.testHit(getWorld(), getPos(), state, localHit);
+        return slotPositioning.testHit(getWorld(), getPos(), blockEntity.getBlockState(), hit.subtract(Vec3.atLowerCornerOf(blockEntity.getBlockPos())));
     }
 
     @Override
@@ -165,54 +142,44 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
 
     @Override
     public String getClipboardKey() {
-        return "Filtering";
+        return COMPOUND_KEY_FILTERING;
     }
 
     @Override
-    public boolean writeToClipboard(HolderLookup.@NotNull Provider registries, CompoundTag tag, Direction side) {
-        ValueSettingsBehaviour.super.writeToClipboard(registries, tag, side);
-        ItemStack filter = getFilter(side);
-        tag.put("Filter", filter.saveOptional(registries));
+    public boolean writeToClipboard(@NotNull Provider provider, CompoundTag compoundTag, Direction side) {
+        ValueSettingsBehaviour.super.writeToClipboard(provider, compoundTag, side);
+        compoundTag.put(COMPOUND_KEY_FILTER, getFilter(side).saveOptional(provider));
         return true;
     }
 
     @Override
-    public boolean readFromClipboard(HolderLookup.@NotNull Provider registries, CompoundTag tag, Player player, Direction side, boolean simulate) {
+    public boolean readFromClipboard(@NotNull Provider registries, CompoundTag compoundTag, Player player, Direction side, boolean simulate) {
         if (!mayInteract(player)) {
             return false;
         }
 
-        boolean upstreamResult = ValueSettingsBehaviour.super.readFromClipboard(registries, tag, player, side, simulate);
-        if (!tag.contains("Filter")) {
+        boolean upstreamResult = ValueSettingsBehaviour.super.readFromClipboard(registries, compoundTag, player, side, simulate);
+        if (!compoundTag.contains(COMPOUND_KEY_FILTER)) {
             return upstreamResult;
         }
 
-        if (simulate || getWorld().isClientSide) {
-            return true;
-        }
-
-        ItemStack copied = ItemStack.parseOptional(registries, tag.getCompound("Filter"));
-        return setFilter(side, copied);
+        return simulate || getWorld().isClientSide || setFilter(side, ItemStack.parseOptional(registries, compoundTag.getCompound(COMPOUND_KEY_FILTER)));
     }
 
     @Override
     public void onShortInteract(@NotNull Player player, InteractionHand hand, Direction side, BlockHitResult hitResult) {
         Level level = getWorld();
-        BlockPos pos = getPos();
-        ItemStack itemInHand = player.getItemInHand(hand);
-        ItemStack toApply = itemInHand.copy();
-
-        if (AllBlocks.MECHANICAL_ARM.isIn(toApply) || AllItems.WRENCH.isIn(toApply) || level.isClientSide()) {
+        ItemStack toApply = player.getItemInHand(hand).copy();
+        if (AllBlocks.MECHANICAL_ARM.isIn(toApply) || toApply.is(Items.TOOLS_WRENCH) || level.isClientSide) {
             return;
         }
 
         if (!setFilter(side, toApply)) {
-            player.displayClientMessage(CCBLang.translateDirect("logistics.filter.invalid_item").withStyle(ChatFormatting.RED), true);
-            AllSoundEvents.DENY.playOnServer(player.level(), player.blockPosition(), 1, 1);
+            GasCanisterExecuteUtils.displayCustomWarningHint(player, "gui.warnings.invalid_item", toApply.getHoverName());
             return;
         }
 
-        level.playSound(null, pos, SoundEvents.ITEM_FRAME_ADD_ITEM, SoundSource.BLOCKS, .25f, .1f);
+        level.playSound(null, getPos(), SoundEvents.ITEM_FRAME_ADD_ITEM, SoundSource.BLOCKS, 0.25f, 0.1f);
     }
 
     @Override
@@ -220,12 +187,33 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
         return 2;
     }
 
+    public ItemStack getFilter(Direction ignored) {
+        return getFilter();
+    }
+
+    public boolean setFilter(Direction ignored, ItemStack stack) {
+        return setFilter(stack);
+    }
+
+    public boolean setFilter(@NotNull ItemStack stack) {
+        ItemStack filterItem = stack.copy();
+        if (!filterItem.isEmpty() && !predicate.test(filterItem)) {
+            return false;
+        }
+
+        filter = FilterItemStack.of(filterItem);
+        callback.accept(filterItem);
+        blockEntity.setChanged();
+        blockEntity.sendData();
+        return true;
+    }
+
     public MutableComponent getLabel() {
-        return CCBLang.translateDirect("logistics.gas_filter");
+        return CCBLang.translateDirect("gui.gas_filter");
     }
 
     public MutableComponent getTip() {
-        return CCBLang.translateDirect(filter.isEmpty() ? "logistics.filter.click_to_set" : "logistics.filter.click_to_replace");
+        return CreateLang.translateDirect(filter.isEmpty() ? "logistics.filter.click_to_set" : "logistics.filter.click_to_replace");
     }
 
     public float getRenderDistance() {

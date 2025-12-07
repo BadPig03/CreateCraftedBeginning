@@ -1,0 +1,23 @@
+package net.ty.createcraftedbeginning.api.gas.armorhandlers.natural;
+
+import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.neoforged.neoforge.common.EffectCures;
+import org.jetbrains.annotations.NotNull;
+
+public class PressurizedEnergizedNaturalAirArmorsHandler extends NaturalAirArmorsHandler {
+    @Override
+    public boolean canCureEffect(@NotNull MobEffectInstance effectInstance) {
+        return effectInstance.getEffect().value().getCategory() != MobEffectCategory.BENEFICIAL && effectInstance.getCures().contains(EffectCures.MILK);
+    }
+
+    @Override
+    public float[] getConsumptionMultiplier() {
+        return new float[]{0.5f, 0.5f, 0.5f, 0.5f};
+    }
+
+    @Override
+    public float getMultiplierForBoostingElytra() {
+        return super.getMultiplierForBoostingElytra() * 3;
+    }
+}

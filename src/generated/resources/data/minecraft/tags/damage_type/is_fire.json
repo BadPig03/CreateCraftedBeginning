@@ -1,5 +1,7 @@
 {
   "values": [
-    "createcraftedbeginning:cinder_incineration_blower_fire"
+    "createcraftedbeginning:cinder_fire",
+    "createcraftedbeginning:brimstone",
+    "createcraftedbeginning:brimstone_fire"
   ]
 }

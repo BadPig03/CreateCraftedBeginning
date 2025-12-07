@@ -5,10 +5,6 @@
       "item": "minecraft:blue_ice"
     }
   ],
-  "results": [
-    {
-      "amount": 2916,
-      "id": "createcraftedbeginning:virtual_time"
-    }
-  ]
+  "processing_time": 8100,
+  "results": []
 }

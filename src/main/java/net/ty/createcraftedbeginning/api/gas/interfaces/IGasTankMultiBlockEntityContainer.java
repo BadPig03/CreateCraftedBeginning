@@ -1,10 +1,10 @@
 package net.ty.createcraftedbeginning.api.gas.interfaces;
 
 import com.simibubi.create.foundation.blockEntity.IMultiBlockEntityContainer;
-import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 
 public interface IGasTankMultiBlockEntityContainer extends IMultiBlockEntityContainer {
-    interface Gas extends IGasTankMultiBlockEntityContainer {
+    interface iGas extends IGasTankMultiBlockEntityContainer {
         default boolean hasTank() {
             return false;
         }

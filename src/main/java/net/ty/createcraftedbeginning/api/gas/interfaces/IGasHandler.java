@@ -1,7 +1,7 @@
 package net.ty.createcraftedbeginning.api.gas.interfaces;
 
 import net.ty.createcraftedbeginning.api.gas.GasAction;
-import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 
 @SuppressWarnings("unused")
 public interface IGasHandler {
@@ -11,7 +11,6 @@ public interface IGasHandler {
 
     long getTankCapacity(int tank);
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     boolean isGasValid(int tank, GasStack stack);
 
     long fill(GasStack resource, GasAction action);

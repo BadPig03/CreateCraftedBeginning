@@ -5,13 +5,5 @@
       "item": "minecraft:milk_bucket"
     }
   ],
-  "results": [
-    {
-      "id": "minecraft:milk_bucket"
-    },
-    {
-      "amount": 32767,
-      "id": "createcraftedbeginning:virtual_time"
-    }
-  ]
+  "results": []
 }

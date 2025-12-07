@@ -2,14 +2,6 @@
   "sources": [
 	{
       "type": "single",
-      "resource": "createcraftedbeginning:fluid/air"
-    },
-	{
-      "type": "single",
-      "resource": "createcraftedbeginning:fluid/compressed_air"
-    },
-	{
-      "type": "single",
       "resource": "createcraftedbeginning:fluid/slush"
     },
 	{
@@ -18,7 +10,11 @@
     },
 	{
       "type": "single",
-      "resource": "createcraftedbeginning:entity/train_hat"
+      "resource": "createcraftedbeginning:fluid/brimstone_still"
+    },
+	{
+      "type": "single",
+      "resource": "createcraftedbeginning:fluid/brimstone_flow"
     },
 	{
       "type": "single",
@@ -26,15 +22,41 @@
     },
 	{
       "type": "single",
-      "resource": "createcraftedbeginning:gas/gas"
+      "resource": "createcraftedbeginning:gas/full"
     },
 	{
       "type": "single",
-      "resource": "createcraftedbeginning:gas/vortices"
+      "resource": "createcraftedbeginning:gas/icon"
     },
 	{
       "type": "single",
-      "resource": "createcraftedbeginning:gas/vortices_glint"
+      "resource": "createcraftedbeginning:entity/train_hat"
+    },
+    {
+      "type": "paletted_permutations",
+      "textures": [
+        "createcraftedbeginning:trims/items/airtight_leggings_trim",
+        "createcraftedbeginning:trims/items/airtight_chestplate_trim",
+        "createcraftedbeginning:trims/items/airtight_helmet_trim",
+        "createcraftedbeginning:trims/items/airtight_boots_trim"
+      ],
+      "palette_key": "minecraft:trims/color_palettes/trim_palette",
+      "permutations": {
+        "quartz": "minecraft:trims/color_palettes/quartz",
+        "iron": "minecraft:trims/color_palettes/iron",
+        "gold": "minecraft:trims/color_palettes/gold",
+        "diamond": "minecraft:trims/color_palettes/diamond",
+        "netherite": "minecraft:trims/color_palettes/netherite",
+        "redstone": "minecraft:trims/color_palettes/redstone",
+        "copper": "minecraft:trims/color_palettes/copper",
+        "emerald": "minecraft:trims/color_palettes/emerald",
+        "lapis": "minecraft:trims/color_palettes/lapis",
+        "amethyst": "minecraft:trims/color_palettes/amethyst",
+        "iron_darker": "minecraft:trims/color_palettes/iron_darker",
+        "gold_darker": "minecraft:trims/color_palettes/gold_darker",
+        "diamond_darker": "minecraft:trims/color_palettes/diamond_darker",
+        "netherite_darker": "minecraft:trims/color_palettes/netherite_darker"
+      }
     }
   ]
 }

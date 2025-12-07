@@ -1,0 +1,121 @@
+{
+  "variants": {
+    "axis=x,rotor=0": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,rotor=1": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,rotor=2": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,rotor=3": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,rotor=4": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,rotor=5": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,rotor=6": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,rotor=7": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,rotor=8": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,rotor=0": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block"
+    },
+    "axis=y,rotor=1": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block"
+    },
+    "axis=y,rotor=2": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block"
+    },
+    "axis=y,rotor=3": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block"
+    },
+    "axis=y,rotor=4": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block"
+    },
+    "axis=y,rotor=5": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block"
+    },
+    "axis=y,rotor=6": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block"
+    },
+    "axis=y,rotor=7": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block"
+    },
+    "axis=y,rotor=8": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block"
+    },
+    "axis=z,rotor=0": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,rotor=1": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,rotor=2": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,rotor=3": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,rotor=4": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,rotor=5": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,rotor=6": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,rotor=7": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,rotor=8": {
+      "model": "createcraftedbeginning:block/tesla_turbine/block",
+      "x": 90,
+      "y": 180
+    }
+  }
+}

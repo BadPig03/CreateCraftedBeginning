@@ -7,7 +7,6 @@ import dev.engine_room.flywheel.api.visualization.VisualizationContext;
 import dev.engine_room.flywheel.lib.instance.InstanceTypes;
 import dev.engine_room.flywheel.lib.instance.TransformedInstance;
 import dev.engine_room.flywheel.lib.model.Models;
-import dev.engine_room.flywheel.lib.model.baked.PartialModel;
 import dev.engine_room.flywheel.lib.transform.Translate;
 import dev.engine_room.flywheel.lib.visual.AbstractBlockEntityVisual;
 import dev.engine_room.flywheel.lib.visual.SimpleDynamicVisual;
@@ -35,90 +34,72 @@ public class BreezeChamberVisual extends AbstractBlockEntityVisual<BreezeChamber
     @Nullable
     private TransformedInstance wind;
 
-    private boolean validBlockBelow;
+    private boolean controllerActive;
 
     public BreezeChamberVisual(VisualizationContext ctx, BreezeChamberBlockEntity blockEntity, float partialTick) {
         super(ctx, blockEntity, partialTick);
-
         windLevel = WindLevel.CALM;
-        validBlockBelow = blockEntity.isValidBlockBelow(false);
-
-        PartialModel breezeModel = BreezeChamberRenderer.getBreezeModel(windLevel, validBlockBelow);
-        isCalm = !blockEntity.getWindLevel().isAtLeast(WindLevel.BREEZE);
-
-        head = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(breezeModel)).createInstance();
+        controllerActive = blockEntity.isControllerActive();
+        isCalm = !blockEntity.getWindLevel().isAtLeast(WindLevel.GALE);
+        head = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(BreezeChamberRenderer.getBreezeModel(windLevel, controllerActive))).createInstance();
         head.light(LightTexture.FULL_BRIGHT);
-
         animate(partialTick);
     }
 
     private void animate(float partialTicks) {
-        float animation = blockEntity.headAnimation.getValue(partialTicks) * 0.175f;
-
-        boolean validBlockBelow = animation > 0.125f;
-        WindLevel windLevel = blockEntity.getWindLevelForRender();
-
-        if (validBlockBelow != this.validBlockBelow || windLevel != this.windLevel) {
-            this.validBlockBelow = validBlockBelow;
-
-            PartialModel breezeModel = BreezeChamberRenderer.getBreezeModel(windLevel, validBlockBelow);
-            instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(breezeModel)).stealInstance(head);
-
-            this.windLevel = windLevel;
+        float animation = blockEntity.getHeadAnimation().getValue(partialTicks) * 0.175f;
+        boolean active = animation > 0.125f;
+        WindLevel renderWindLevel = blockEntity.getWindLevelForRender();
+        if (active != controllerActive || renderWindLevel != windLevel) {
+            controllerActive = active;
+            instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(BreezeChamberRenderer.getBreezeModel(renderWindLevel, active))).stealInstance(head);
+            windLevel = renderWindLevel;
         }
 
-        boolean hasGoggles = blockEntity.goggles;
+        boolean hasGoggles = blockEntity.hasGoggles();
         if (hasGoggles && goggles == null) {
             goggles = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(isCalm ? CCBPartialModels.BREEZE_COOLER_GOGGLES_SMALL : CCBPartialModels.BREEZE_COOLER_GOGGLES)).createInstance();
             goggles.light(LightTexture.FULL_BRIGHT);
-        } else if (!hasGoggles && goggles != null) {
+        }
+        else if (!hasGoggles && goggles != null) {
             goggles.delete();
             goggles = null;
         }
 
-        boolean hatPresent = blockEntity.hat;
+        boolean hatPresent = blockEntity.hasTrainHat();
         if (hatPresent && hat == null) {
             hat = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.BREEZE_TRAIN_HAT)).createInstance();
             hat.light(LightTexture.FULL_BRIGHT);
-        } else if (!hatPresent && hat != null) {
+        }
+        else if (!hatPresent && hat != null) {
             hat.delete();
             hat = null;
         }
 
-        boolean hasWind = blockEntity.wind;
+        boolean hasWind = blockEntity.getWindLevel().isAtLeast(WindLevel.GALE);
         if (hasWind && wind == null) {
             wind = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.BREEZE_COOLER_WIND)).createInstance();
             wind.light(LightTexture.FULL_BRIGHT);
-        } else if (!hasWind && wind != null) {
+        }
+        else if (!hasWind && wind != null) {
             wind.delete();
             wind = null;
         }
 
-        var hashCode = blockEntity.hashCode();
-        float time = AnimationTickHolder.getRenderTime(level);
-        float renderTick = time + (hashCode % 13) * 16f;
-        float offsetMultiplier = windLevel.isAtLeast(WindLevel.BREEZE) ? 64 : 16;
-        float offset = Mth.sin((float) ((renderTick / 16f) % (2 * Math.PI))) / offsetMultiplier;
-        float headY = offset - (animation * 0.75f);
+        float renderTime = AnimationTickHolder.getRenderTime(level);
+        float headY = Mth.sin((renderTime + (blockEntity.hashCode() % 13) * 16.0f) / 16.0f % (2 * Mth.PI)) / (renderWindLevel.isAtLeast(WindLevel.GALE) ? 64 : 16) - animation * 0.75f;
         float horizontalAngle = AngleHelper.rad(blockEntity.headAngle.getValue(partialTicks));
-
         head.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle).translateBack(Translate.CENTER).setChanged();
-
         if (goggles != null) {
-            goggles.setIdentityTransform().translate(getVisualPosition()).translateY(headY + 1 / 2f).translate(Translate.CENTER).rotateY(horizontalAngle).translateBack(Translate.CENTER).setChanged();
+            goggles.setIdentityTransform().translate(getVisualPosition()).translateY(headY + 1 / 2.0f).translate(Translate.CENTER).rotateY(horizontalAngle).translateBack(Translate.CENTER).setChanged();
         }
-
         if (hat != null) {
             hat.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translateY(0.75f);
             hat.rotateCentered(horizontalAngle + Mth.PI, Direction.UP).translate(0.5f, 0, 0.5f).light(LightTexture.FULL_BRIGHT);
             hat.setChanged();
         }
-
         if (wind != null) {
-            float rotationSpeed = blockEntity.windRotationSpeed;
-            float windRotation = (AnimationTickHolder.getRenderTime(level) * rotationSpeed) % 360;
-            float totalRotation = horizontalAngle + AngleHelper.rad(windRotation);
-
+            float totalRotation = horizontalAngle + AngleHelper.rad(renderTime * (hasWind ? 24.0f : 0) % 360);
             wind.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(totalRotation).translateBack(Translate.CENTER).setChanged();
         }
     }
@@ -129,12 +110,12 @@ public class BreezeChamberVisual extends AbstractBlockEntityVisual<BreezeChamber
     }
 
     @Override
-    public void beginFrame(DynamicVisual.@NotNull Context ctx) {
-        if (!isVisible(ctx.frustum()) || doDistanceLimitThisFrame(ctx)) {
+    public void beginFrame(DynamicVisual.@NotNull Context context) {
+        if (!isVisible(context.frustum()) || doDistanceLimitThisFrame(context)) {
             return;
         }
 
-        animate(ctx.partialTick());
+        animate(context.partialTick());
     }
 
     @Override

@@ -13,6 +13,9 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.ty.createcraftedbeginning.api.gas.GasCapabilities.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.GasPipeConnection.AirFlow;
 import net.ty.createcraftedbeginning.api.gas.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
@@ -94,6 +97,24 @@ public class GasPropagator {
         discoveredPumps.forEach(p -> p.getFirst().updatePipesOnSide(p.getSecond()));
     }
 
+    public static GasTransportBehaviour getPipe(BlockGetter reader, BlockPos pos) {
+        return BlockEntityBehaviour.get(reader, pos, GasTransportBehaviour.TYPE);
+    }
+
+    public static @NotNull List<Direction> getPipeConnections(BlockState state, GasTransportBehaviour pipe) {
+        List<Direction> list = new ArrayList<>();
+        for (Direction direction : Iterate.directions) {
+            if (pipe.canHaveFlowToward(state, direction)) {
+                list.add(direction);
+            }
+        }
+        return list;
+    }
+
+    public static int getAirtightPumpRange() {
+        return CCBConfig.server().gas.airtightPumpRange.get();
+    }
+
     public static void resetAffectedNetworks(Level world, BlockPos start, Direction side) {
         Deque<BlockPos> frontier = new ArrayDeque<>();
         Set<BlockPos> visited = new HashSet<>();
@@ -111,7 +132,8 @@ public class GasPropagator {
             List<Direction> directionsToCheck = new ArrayList<>();
             if (pos.equals(start)) {
                 directionsToCheck.add(side);
-            } else {
+            }
+            else {
                 Collections.addAll(directionsToCheck, Iterate.directions);
             }
 
@@ -129,7 +151,7 @@ public class GasPropagator {
                     continue;
                 }
 
-                GasPipeConnection.AirFlow flow = connection.flow.get();
+                AirFlow flow = connection.flow.get();
                 if (!flow.inbound) {
                     continue;
                 }
@@ -161,14 +183,11 @@ public class GasPropagator {
         return null;
     }
 
-    public static GasTransportBehaviour getPipe(BlockGetter reader, BlockPos pos) {
-        return BlockEntityBehaviour.get(reader, pos, GasTransportBehaviour.TYPE);
-    }
-
-    public static boolean isOpenEnd(@NotNull BlockGetter reader, @NotNull BlockPos pos, Direction side) {
+    @SuppressWarnings("SimplifiableIfStatement")
+    public static boolean isOpenEnd(@NotNull BlockGetter level, @NotNull BlockPos pos, Direction side) {
         BlockPos connectedPos = pos.relative(side);
-        BlockState connectedState = reader.getBlockState(connectedPos);
-        GasTransportBehaviour pipe = GasPropagator.getPipe(reader, connectedPos);
+        BlockState connectedState = level.getBlockState(connectedPos);
+        GasTransportBehaviour pipe = getPipe(level, connectedPos);
 
         if (pipe != null && pipe.canHaveFlowToward(connectedState, side.getOpposite())) {
             return false;
@@ -176,36 +195,22 @@ public class GasPropagator {
         if (AirtightPumpBlock.isPump(connectedState) && connectedState.getValue(AirtightPumpBlock.FACING).getAxis() == side.getAxis()) {
             return false;
         }
-        if (BlockHelper.hasBlockSolidSide(connectedState, reader, connectedPos, side.getOpposite()) && !AllBlockTags.FAN_TRANSPARENT.matches(connectedState)) {
+        if (BlockHelper.hasBlockSolidSide(connectedState, level, connectedPos, side.getOpposite()) && !AllBlockTags.FAN_TRANSPARENT.matches(connectedState)) {
             return false;
         }
-        if (hasGasCapability(reader, connectedPos, side.getOpposite())) {
+        if (hasGasCapability(level, connectedPos, side.getOpposite())) {
             return false;
         }
-        return connectedState.isAir();
+        return connectedState.canBeReplaced() && connectedState.getDestroySpeed(level, connectedPos) != -1 || connectedState.hasProperty(BlockStateProperties.WATERLOGGED);
     }
 
-    public static @NotNull List<Direction> getPipeConnections(BlockState state, GasTransportBehaviour pipe) {
-        List<Direction> list = new ArrayList<>();
-        for (Direction d : Iterate.directions) {
-            if (pipe.canHaveFlowToward(state, d)) {
-                list.add(d);
-            }
-        }
-        return list;
-    }
-
-    public static int getAirtightPumpRange() {
-        return CCBConfig.server().compressedAir.airtightPumpRange.get();
-    }
-
-    public static boolean hasGasCapability(@NotNull BlockGetter world, BlockPos pos, Direction side) {
-        BlockEntity blockEntity = world.getBlockEntity(pos);
+    public static boolean hasGasCapability(@NotNull BlockGetter level, BlockPos pos, Direction side) {
+        BlockEntity blockEntity = level.getBlockEntity(pos);
         if (blockEntity == null || blockEntity.getLevel() == null) {
             return false;
         }
 
-        IGasHandler capability = blockEntity.getLevel().getCapability(GasCapabilities.GasHandler.BLOCK, blockEntity.getBlockPos(), side);
+        IGasHandler capability = blockEntity.getLevel().getCapability(GasHandler.BLOCK, blockEntity.getBlockPos(), side);
         return capability != null;
     }
 }

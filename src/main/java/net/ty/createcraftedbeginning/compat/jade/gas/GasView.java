@@ -1,10 +1,9 @@
 package net.ty.createcraftedbeginning.compat.jade.gas;
 
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import snownee.jade.api.ui.IElement;
-
-import java.util.Objects;
 
 public class GasView {
     public IElement overlay;
@@ -17,8 +16,7 @@ public class GasView {
     public Component overrideText;
     public boolean creative;
 
-    public GasView(IElement overlay) {
+    public GasView(@NotNull IElement overlay) {
         this.overlay = overlay;
-        Objects.requireNonNull(overlay);
     }
 }

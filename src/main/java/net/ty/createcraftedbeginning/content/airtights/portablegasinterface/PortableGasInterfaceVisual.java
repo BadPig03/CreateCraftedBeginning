@@ -7,45 +7,46 @@ import dev.engine_room.flywheel.api.visualization.VisualizationContext;
 import dev.engine_room.flywheel.lib.visual.AbstractBlockEntityVisual;
 import dev.engine_room.flywheel.lib.visual.SimpleDynamicVisual;
 import dev.engine_room.flywheel.lib.visual.SimpleTickableVisual;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
 public class PortableGasInterfaceVisual extends AbstractBlockEntityVisual<PortableGasInterfaceBlockEntity> implements SimpleDynamicVisual, SimpleTickableVisual {
     private final PortableGasInterfaceInstance instance;
 
-	public PortableGasInterfaceVisual(VisualizationContext visualizationContext, PortableGasInterfaceBlockEntity blockEntity, float partialTick) {
-		super(visualizationContext, blockEntity, partialTick);
+    public PortableGasInterfaceVisual(VisualizationContext visualizationContext, PortableGasInterfaceBlockEntity blockEntity, float partialTick) {
+        super(visualizationContext, blockEntity, partialTick);
 
-		instance = new PortableGasInterfaceInstance(visualizationContext.instancerProvider(), blockState, getVisualPosition(), isLit());
-		instance.beginFrame(blockEntity.getExtensionDistance(partialTick));
-	}
+        instance = new PortableGasInterfaceInstance(visualizationContext.instancerProvider(), blockState, getVisualPosition(), isLit());
+        instance.beginFrame(blockEntity.getExtensionDistance(partialTick));
+    }
 
-	@Override
-	public void tick(TickableVisual.Context ctx) {
-		instance.tick(isLit());
-	}
+    private boolean isLit() {
+        return blockEntity.isConnected();
+    }
 
-	@Override
-	public void beginFrame(DynamicVisual.Context ctx) {
-		instance.beginFrame(blockEntity.getExtensionDistance(ctx.partialTick()));
-	}
+    @Override
+    public void tick(TickableVisual.Context ctx) {
+        instance.tick(isLit());
+    }
 
-	@Override
-	public void updateLight(float partialTick) {
-		relight(instance.middle, instance.top);
-	}
+    @Override
+    public void beginFrame(DynamicVisual.@NotNull Context ctx) {
+        instance.beginFrame(blockEntity.getExtensionDistance(ctx.partialTick()));
+    }
 
-	@Override
-	protected void _delete() {
-		instance.remove();
-	}
+    @Override
+    public void updateLight(float partialTick) {
+        relight(instance.middle, instance.top);
+    }
 
-	private boolean isLit() {
-		return blockEntity.isConnected();
-	}
+    @Override
+    protected void _delete() {
+        instance.remove();
+    }
 
-	@Override
-	public void collectCrumblingInstances(Consumer<Instance> consumer) {
-		instance.collectCrumblingInstances(consumer);
-	}
+    @Override
+    public void collectCrumblingInstances(Consumer<Instance> consumer) {
+        instance.collectCrumblingInstances(consumer);
+    }
 }

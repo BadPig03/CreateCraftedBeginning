@@ -20,7 +20,7 @@ public class BuiltInRegistriesMixin {
 
     @WrapOperation(method = "validate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/Registry;forEach(Ljava/util/function/Consumer;)V"))
     private static <T extends Registry<?>> void create$ourRegistriesAreNotEmpty(Registry<T> instance, Consumer<T> consumer, @NotNull Operation<Void> original) {
-        Consumer<T> callback = (t) -> {
+        Consumer<T> callback = t -> {
             if (!t.key().location().getNamespace().equals(CreateCraftedBeginning.MOD_ID)) {
                 consumer.accept(t);
             }

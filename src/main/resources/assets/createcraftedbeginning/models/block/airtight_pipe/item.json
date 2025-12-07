@@ -1,9 +1,10 @@
 {
+	"format_version": "1.21.6",
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
 	"textures": {
-		"1": "createcraftedbeginning:block/airtight_pipe_detail",
-		"particle": "createcraftedbeginning:block/airtight_pipe_detail"
+		"1": "createcraftedbeginning:block/airtight_pipe/detail",
+		"particle": "createcraftedbeginning:block/airtight_pipe/detail"
 	},
 	"elements": [
 		{

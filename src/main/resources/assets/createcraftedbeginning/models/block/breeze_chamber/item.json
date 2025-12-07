@@ -1,12 +1,12 @@
 {
+	"format_version": "1.21.6",
 	"credit": "Made with Blockbench",
 	"parent": "create:block/block",
 	"texture_size": [32, 32],
 	"textures": {
-		"0": "createcraftedbeginning:block/breeze_chamber/breeze_chamber",
+		"0": "createcraftedbeginning:block/breeze_chamber/chamber",
 		"1": "createcraftedbeginning:block/breeze_chamber/gale",
-		"2": "createcraftedbeginning:block/breeze_chamber/wind",
-		"particle": "createcraftedbeginning:block/breeze_chamber/breeze_chamber"
+		"2": "createcraftedbeginning:block/breeze_chamber/wind"
 	},
 	"elements": [
 		{

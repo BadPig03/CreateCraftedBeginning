@@ -1,0 +1,35 @@
+{
+  "parent": "createcraftedbeginning:root",
+  "criteria": {
+    "0": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:airtight_sheet"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.plywood.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:airtight_sheet"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.plywood"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

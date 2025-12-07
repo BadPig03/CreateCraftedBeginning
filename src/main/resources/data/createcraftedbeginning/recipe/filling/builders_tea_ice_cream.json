@@ -1,0 +1,18 @@
+{
+  "type": "create:filling",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:ice_cream"
+    },
+    {
+      "type": "fluid_stack",
+      "amount": 250,
+      "fluid": "create:tea"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:builders_tea_ice_cream"
+    }
+  ]
+}

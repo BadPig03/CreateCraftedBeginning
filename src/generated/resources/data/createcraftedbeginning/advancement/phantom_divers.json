@@ -1,0 +1,74 @@
+{
+  "parent": "createcraftedbeginning:glaciologist",
+  "criteria": {
+    "0": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:airtight_helmet"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "1": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:airtight_chestplate"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "2": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:airtight_leggings"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "3": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:airtight_boots"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.phantom_divers.desc"
+    },
+    "frame": "goal",
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:airtight_helmet"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.phantom_divers"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ],
+    [
+      "1"
+    ],
+    [
+      "2"
+    ],
+    [
+      "3"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

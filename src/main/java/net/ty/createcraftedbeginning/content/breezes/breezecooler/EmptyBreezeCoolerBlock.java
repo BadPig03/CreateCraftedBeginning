@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.breezes.breezecooler;
 
 import com.mojang.serialization.MapCodec;
+import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -11,19 +12,18 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.ty.createcraftedbeginning.registry.CCBShapes;
+import net.ty.createcraftedbeginning.data.CCBShapes;
 import org.jetbrains.annotations.NotNull;
 
-public class EmptyBreezeCoolerBlock extends HorizontalDirectionalBlock implements SimpleWaterloggedBlock {
+public class EmptyBreezeCoolerBlock extends HorizontalDirectionalBlock implements SimpleWaterloggedBlock, IWrenchable {
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
-    public static final MapCodec<EmptyBreezeCoolerBlock> CODEC = simpleCodec(EmptyBreezeCoolerBlock::new);
 
     public EmptyBreezeCoolerBlock(Properties properties) {
         super(properties);
@@ -32,7 +32,7 @@ public class EmptyBreezeCoolerBlock extends HorizontalDirectionalBlock implement
 
     @Override
     protected @NotNull MapCodec<? extends HorizontalDirectionalBlock> codec() {
-        return CODEC;
+        return simpleCodec(EmptyBreezeCoolerBlock::new);
     }
 
     @Override
@@ -55,10 +55,7 @@ public class EmptyBreezeCoolerBlock extends HorizontalDirectionalBlock implement
 
     @Override
     public @NotNull VoxelShape getCollisionShape(@NotNull BlockState blockState, @NotNull BlockGetter level, @NotNull BlockPos blockPos, @NotNull CollisionContext context) {
-        if (context == CollisionContext.empty()) {
-            return CCBShapes.COOLER_BLOCK_SPECIAL_COLLISION_SHAPE;
-        }
-        return getShape(blockState, level, blockPos, context);
+        return context == CollisionContext.empty() ? CCBShapes.COOLER_BLOCK_SPECIAL_COLLISION_SHAPE : getShape(blockState, level, blockPos, context);
     }
 
     @Override
@@ -73,8 +70,8 @@ public class EmptyBreezeCoolerBlock extends HorizontalDirectionalBlock implement
     }
 
     @Override
-    protected void createBlockStateDefinition(StateDefinition.@NotNull Builder<Block, BlockState> builder) {
-        super.createBlockStateDefinition(builder);
+    protected void createBlockStateDefinition(@NotNull Builder<Block, BlockState> builder) {
         builder.add(WATERLOGGED, FACING);
+        super.createBlockStateDefinition(builder);
     }
 }

@@ -3,7 +3,7 @@ package net.ty.createcraftedbeginning.api.gas.interfaces;
 import com.simibubi.create.api.registry.SimpleRegistry;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
-import net.ty.createcraftedbeginning.api.gas.Gas;
+import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 
 @FunctionalInterface
 public interface GasOpenPipeEffectHandler {

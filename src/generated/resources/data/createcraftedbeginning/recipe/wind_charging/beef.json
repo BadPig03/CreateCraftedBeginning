@@ -5,10 +5,6 @@
       "item": "minecraft:beef"
     }
   ],
-  "results": [
-    {
-      "amount": 600,
-      "id": "createcraftedbeginning:virtual_time"
-    }
-  ]
+  "processing_time": 600,
+  "results": []
 }

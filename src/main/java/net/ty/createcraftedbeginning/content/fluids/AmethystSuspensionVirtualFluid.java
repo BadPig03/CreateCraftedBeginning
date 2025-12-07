@@ -27,19 +27,13 @@ public class AmethystSuspensionVirtualFluid extends BaseFlowingFluid {
     }
 
     @Override
-    public @NotNull Fluid getSource() {
-        if (source) {
-            return this;
-        }
-        return super.getSource();
+    public @NotNull Fluid getFlowing() {
+        return source ? super.getFlowing() : this;
     }
 
     @Override
-    public @NotNull Fluid getFlowing() {
-        if (source) {
-            return super.getFlowing();
-        }
-        return this;
+    public @NotNull Fluid getSource() {
+        return source ? this : super.getSource();
     }
 
     @Override

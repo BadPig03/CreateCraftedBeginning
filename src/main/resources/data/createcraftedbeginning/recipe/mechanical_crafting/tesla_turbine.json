@@ -1,0 +1,30 @@
+{
+  "type": "create:mechanical_crafting",
+  "accept_mirrored": true,
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "createcraftedbeginning:airtight_tank"
+    },
+    "B": {
+      "item": "createcraftedbeginning:airtight_sheet"
+    },
+    "C": {
+      "item": "minecraft:iron_bars"
+    },
+    "S": {
+      "item": "create:shaft"
+    }
+  },
+  "pattern": [
+    "BAAAB",
+    "ABCBA",
+    "ACSCA",
+    "ABCBA",
+    "BAAAB"
+  ],
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:tesla_turbine"
+  }
+}

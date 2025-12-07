@@ -18,46 +18,47 @@ public class CompressedAirIntakeParticle extends TextureSheetParticle {
 
     protected CompressedAirIntakeParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, SpriteSet sprites) {
         super(level, x, y, z, 0.0, 0.0, 0.0);
-        this.friction = 0.96f;
+        friction = 0.96f;
         this.sprites = sprites;
-        this.xd *= 0.1f;
-        this.yd *= 0.1f;
-        this.zd *= 0.1f;
-        this.xd += xSpeed;
-        this.yd += ySpeed;
-        this.zd += zSpeed;
-        float f1 = 1f - (float) (Math.random() * 0.3f);
-        this.rCol = f1;
-        this.gCol = f1;
-        this.bCol = f1;
-        this.quadSize *= 1.5f;
-        int i = (int) (8f / (Math.random() * 0.8 + 0.3));
-        this.lifetime = (int) Math.max((float) i * 2.5f, 1f);
-        this.hasPhysics = false;
-        this.setSpriteFromAge(sprites);
-
-        if (this.xd != 0 || this.zd != 0) {
-            this.targetRoll = (float) Math.atan2(this.zd, this.xd);
+        xd *= 0.1f;
+        yd *= 0.1f;
+        zd *= 0.1f;
+        xd += xSpeed;
+        yd += ySpeed;
+        zd += zSpeed;
+        float f1 = 1.0f - (float) (Math.random() * 0.3f);
+        rCol = f1;
+        gCol = f1;
+        bCol = f1;
+        quadSize *= 1.5f;
+        int i = (int) (8.0f / (Math.random() * 0.8 + 0.3));
+        lifetime = (int) Math.max((float) i * 2.5f, 1.0f);
+        hasPhysics = false;
+        setSpriteFromAge(sprites);
+        if (xd == 0 && zd == 0) {
+            return;
         }
+
+        targetRoll = (float) Math.atan2(zd, xd);
     }
 
     @Override
     public float getQuadSize(float scaleFactor) {
-        return this.quadSize * Mth.clamp(((float) this.age + scaleFactor) / (float) this.lifetime * 32f, 0f, 1f);
+        return quadSize * Mth.clamp(((float) age + scaleFactor) / (float) lifetime * 32.0f, 0.0f, 1.0f);
     }
 
     @Override
     public void tick() {
         super.tick();
-
-        this.oRoll = this.roll;
-        this.roll = Mth.lerp(0.03f, this.roll, this.targetRoll);
-        this.alpha = Mth.lerp((float) this.age / this.lifetime, 0.95f, 0.15f);
-        this.quadSize = this.quadSize * 0.95f;
-
-        if (!this.removed) {
-            this.setSpriteFromAge(this.sprites);
+        oRoll = roll;
+        roll = Mth.lerp(0.03f, roll, targetRoll);
+        alpha = Mth.lerp((float) age / lifetime, 0.95f, 0.15f);
+        quadSize = quadSize * 0.95f;
+        if (removed) {
+            return;
         }
+
+        setSpriteFromAge(sprites);
     }
 
     @Override
@@ -73,8 +74,9 @@ public class CompressedAirIntakeParticle extends TextureSheetParticle {
             this.sprites = sprites;
         }
 
+        @Override
         public Particle createParticle(@NotNull SimpleParticleType type, @NotNull ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
-            return new CompressedAirIntakeParticle(level, x, y, z, xSpeed, ySpeed, zSpeed, this.sprites);
+            return new CompressedAirIntakeParticle(level, x, y, z, xSpeed, ySpeed, zSpeed, sprites);
         }
     }
 }

@@ -2,14 +2,15 @@ package net.ty.createcraftedbeginning.content.airtights.airtightengine;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
-import net.createmod.catnip.animation.AnimationTickHolder;
 import net.createmod.catnip.render.CachedBuffers;
 import net.createmod.catnip.render.SuperByteBuffer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Direction.Axis;
+import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
@@ -18,48 +19,45 @@ import org.jetbrains.annotations.NotNull;
 import static net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineBlockEntity.DELTA_TIME;
 
 public class AirtightEngineRenderer extends KineticBlockEntityRenderer<AirtightEngineBlockEntity> {
-    public AirtightEngineRenderer(BlockEntityRendererProvider.Context context) {
+    public AirtightEngineRenderer(Context context) {
         super(context);
     }
 
     @Override
     protected void renderSafe(@NotNull AirtightEngineBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         BlockState state = be.getBlockState();
-        SuperByteBuffer cogsModel = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_ENGINE_COGS, state);
-        SuperByteBuffer pistonModel = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_ENGINE_PISTON, state);
-
-        Direction.Axis axis = state.getValue(AirtightEngineBlock.AXIS);
+        Axis axis = state.getValue(AirtightEngineBlock.AXIS);
         Direction direction = AirtightEngineBlock.getFacing(state);
-        final BlockPos pos = be.getBlockPos();
-        float speed = be.getSpeed();
-        float time = AnimationTickHolder.getRenderTime(be.getLevel());
-        float offset = getRotationOffsetForPosition(be, pos, axis);
-        float angle = (time * speed * 3 / 10f) % 360;
-        float degree = (float) (Math.PI / 2) * (direction.getAxisDirection() == Direction.AxisDirection.POSITIVE ? 1 : -1);
-
-        if (axis == Direction.Axis.X) {
-            pistonModel.rotateCentered(degree, Direction.Axis.Z);
-            cogsModel.rotateCentered(degree, Direction.Axis.Z);
-        } else if (axis == Direction.Axis.Z) {
-            pistonModel.rotateCentered(-degree, Direction.Axis.X);
-            cogsModel.rotateCentered(-degree, Direction.Axis.X);
-        } else if (direction == Direction.UP) {
-            pistonModel.rotateCentered((float) Math.PI, Direction.Axis.X);
-            cogsModel.rotateCentered((float) Math.PI, Direction.Axis.X);
+        BlockPos pos = be.getBlockPos();
+        SuperByteBuffer cogsModel = getRotatedModel(be, state);
+        SuperByteBuffer pistonModel = getPistonModel(state);
+        int directionModifier = direction.getAxisDirection() == AxisDirection.NEGATIVE ? 1 : -1;
+        if (axis == Axis.X) {
+            pistonModel.rotateCentered(-Mth.HALF_PI * directionModifier, Axis.Z);
+            cogsModel.rotateCentered(-Mth.HALF_PI * directionModifier, Axis.Z);
+        }
+        else if (axis == Axis.Z) {
+            pistonModel.rotateCentered(Mth.HALF_PI * directionModifier, Axis.X);
+            cogsModel.rotateCentered(Mth.HALF_PI * directionModifier, Axis.X);
+        }
+        else if (direction == Direction.UP) {
+            pistonModel.rotateCentered(Mth.PI, Axis.X);
+            cogsModel.rotateCentered(Mth.PI, Axis.X);
         }
 
-        if (speed != 0) {
-            angle += offset;
-            angle = angle / 180f * (float) Math.PI;
-        }
-        kineticRotationTransform(cogsModel, be, Direction.Axis.Y, angle, light);
-        cogsModel.renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
+        float newPhase = Mth.lerp(0.1f, be.getPistonPhase() + Mth.abs(be.getSpeed()) * partialTicks * DELTA_TIME, be.getPreviousPhase());
+        float distance = -0.2f * Mth.sin(newPhase) - 0.2f;
+        be.setPreviousPhase(newPhase);
+        pistonModel.translate(0, distance, 0).light(light).renderInto(ms, buffer.getBuffer(RenderType.solid()));
+        kineticRotationTransform(cogsModel, be, Axis.Y, getAngleForBe(be, pos, axis) * directionModifier, light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
+    }
 
-        if (speed != 0) {
-            float currentPhase = be.getPistonPhase() + (Mth.abs(speed) * partialTicks * DELTA_TIME);
-            float distance = (float) (-0.2 * Math.sin(currentPhase) - 0.2);
-            pistonModel.translate(0, distance, 0);
-        }
-        pistonModel.light(light).renderInto(ms, buffer.getBuffer(RenderType.solid()));
+    @Override
+    protected SuperByteBuffer getRotatedModel(AirtightEngineBlockEntity be, BlockState blockState) {
+        return CachedBuffers.partial(CCBPartialModels.AIRTIGHT_ENGINE_COGS, blockState);
+    }
+
+    protected SuperByteBuffer getPistonModel(BlockState blockState) {
+        return CachedBuffers.partial(CCBPartialModels.AIRTIGHT_ENGINE_PISTON, blockState);
     }
 }

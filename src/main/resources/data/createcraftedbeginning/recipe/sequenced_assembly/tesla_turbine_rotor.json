@@ -1,0 +1,64 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {
+    "item": "minecraft:netherite_scrap"
+  },
+  "loops": 3,
+  "results": [
+    {
+      "id": "createcraftedbeginning:tesla_turbine_rotor"
+    }
+  ],
+  "sequence": [
+    {
+      "type": "create:filling",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_tesla_turbine_rotor"
+        },
+        {
+          "type": "fluid_stack",
+          "amount": 500,
+          "fluid": "minecraft:lava"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_tesla_turbine_rotor"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_tesla_turbine_rotor"
+        },
+        {
+          "tag": "c:plates/iron"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_tesla_turbine_rotor"
+        }
+      ]
+    },
+    {
+      "type": "create:pressing",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_tesla_turbine_rotor"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_tesla_turbine_rotor"
+        }
+      ]
+    }
+  ],
+  "transitional_item": {
+    "id": "createcraftedbeginning:incomplete_tesla_turbine_rotor"
+  }
+}

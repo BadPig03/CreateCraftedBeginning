@@ -1,0 +1,38 @@
+{
+	"format_version": "1.21.6",
+	"credit": "Made with Blockbench",
+	"parent": "block/block",
+	"render_type": "minecraft:cutout_mipped",
+	"texture_size": [32, 32],
+	"textures": {
+		"0": "createcraftedbeginning:block/gas_canister/canister",
+		"particle": "createcraftedbeginning:block/airtight_tank/top"
+	},
+	"elements": [
+		{
+			"from": [4, 0, 4],
+			"to": [12, 12, 12],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 6, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 4, 6], "texture": "#0"},
+				"east": {"uv": [0, 0, 4, 6], "texture": "#0"},
+				"south": {"uv": [0, 0, 4, 6], "texture": "#0"},
+				"west": {"uv": [0, 0, 4, 6], "texture": "#0"},
+				"up": {"uv": [4, 0, 8, 4], "texture": "#0"},
+				"down": {"uv": [4, 4, 8, 8], "texture": "#0"}
+			}
+		},
+		{
+			"from": [6, 12, 6],
+			"to": [10, 13, 10],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"north": {"uv": [5, 2.5, 7, 3], "texture": "#0"},
+				"east": {"uv": [5, 1, 7, 1.5], "texture": "#0"},
+				"south": {"uv": [5, 2.5, 7, 3], "texture": "#0"},
+				"west": {"uv": [5, 1, 7, 1.5], "texture": "#0"},
+				"up": {"uv": [5, 1, 7, 3], "texture": "#0"}
+			}
+		}
+	]
+}

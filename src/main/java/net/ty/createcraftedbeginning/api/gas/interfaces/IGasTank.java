@@ -1,11 +1,11 @@
 package net.ty.createcraftedbeginning.api.gas.interfaces;
 
 import net.ty.createcraftedbeginning.api.gas.GasAction;
-import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 
 @SuppressWarnings("unused")
 public interface IGasTank {
-    GasStack getGas();
+    GasStack getGasStack();
 
     long getGasAmount();
 

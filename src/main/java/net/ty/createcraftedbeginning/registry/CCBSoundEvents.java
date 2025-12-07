@@ -19,6 +19,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.RegisterEvent;
+import net.neoforged.neoforge.registries.RegisterEvent.RegisterHelper;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -36,9 +38,17 @@ import java.util.function.Supplier;
 public class CCBSoundEvents {
     public static final Map<ResourceLocation, SoundEntry> ALL = new HashMap<>();
 
-    public static final SoundEntry INJECTING = create("injecting").playExisting(SoundEvents.BREEZE_CHARGE, .75f, 1.2f).subtitle("Gas injects").category(SoundSource.BLOCKS).build();
-    public static final SoundEntry SHEET_ADDED = create("sheet_added").playExisting(SoundEvents.ITEM_FRAME_ADD_ITEM, .75f, 1.2f).subtitle("Airtight Sheet added").category(SoundSource.BLOCKS).build();
-    public static final SoundEntry SHEET_REMOVED = create("sheet_removed").playExisting(SoundEvents.ITEM_FRAME_REMOVE_ITEM, .75f, 1.2f).subtitle("Airtight Sheet removed").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry DENY = create("deny").playExisting(SoundEvents.NOTE_BLOCK_BASS::value, 1.0f, 0.5f).subtitle("Declining boop").category(SoundSource.PLAYERS).build();
+    public static final SoundEntry INJECTING = create("injecting").playExisting(SoundEvents.BREEZE_CHARGE, 0.75f, 1.0f).subtitle("Gas injects").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry SHEET_ADDED = create("sheet_added").playExisting(SoundEvents.ITEM_FRAME_ADD_ITEM, 0.75f, 1.0f).subtitle("Airtight Sheet added").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry SHEET_REMOVED = create("sheet_removed").playExisting(SoundEvents.ITEM_FRAME_REMOVE_ITEM, 0.75f, 1.0f).subtitle("Airtight Sheet removed").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry ROTOR_ADDED = create("rotor_added").playExisting(SoundEvents.ITEM_FRAME_ADD_ITEM, 0.75f, 1.0f).playExisting(SoundEvents.HEAVY_CORE_PLACE, 0.75f, 1.0f).subtitle("Rotor added").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry ROTOR_REMOVED = create("rotor_removed").playExisting(SoundEvents.ITEM_FRAME_REMOVE_ITEM, 0.75f, 1.0f).playExisting(SoundEvents.HEAVY_CORE_BREAK, 0.75f, 1.0f).subtitle("Rotor removed").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry CANISTER_ADDED = create("canister_added").playExisting(SoundEvents.ITEM_FRAME_ADD_ITEM, 0.75f, 1.0f).playExisting(SoundEvents.HEAVY_CORE_PLACE, 0.75f, 1.25f).subtitle("Gas Canister added").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry CANISTER_REMOVED = create("canister_removed").playExisting(SoundEvents.ITEM_FRAME_REMOVE_ITEM, 0.75f, 1.0f).playExisting(SoundEvents.HEAVY_CORE_BREAK, 0.75f, 1.25f).subtitle("Gas Canister removed").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry WIND_CHARGE_LAUNCH = create("wind_charge_launch").playExisting(SoundEvents.WIND_CHARGE_THROW, 1.0f, 2.0f).subtitle("Wind charge launched").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry AIRTIGHT_ARMOR_EQUIP = create("airtight_armor_equip").playExisting(SoundEvents.ARMOR_EQUIP_NETHERITE.value(), 0.9f, 1.4f).playExisting(SoundEvents.HEAVY_CORE_HIT, 0.9f, 1.4f).subtitle("Airtight equipments clinks").category(SoundSource.PLAYERS).build();
+    public static final SoundEntry AIRTIGHT_JETPACK_LAUNCH = create("airtight_jetpack_launch").playExisting(SoundEvents.WIND_CHARGE_BURST.value(), 1.0f, 1.0f).subtitle("Airtight jetpack launches").category(SoundSource.BLOCKS).build();
 
     @Contract("_ -> new")
     private static @NotNull SoundEntryBuilder create(String name) {
@@ -50,26 +60,12 @@ public class CCBSoundEvents {
         return new SoundEntryBuilder(id);
     }
 
-    public static void prepare() {
-        for (SoundEntry entry : ALL.values()) {
-            entry.prepare();
-        }
-    }
-
     public static void register(@NotNull RegisterEvent event) {
-        event.register(Registries.SOUND_EVENT, helper -> {
-            for (SoundEntry entry : ALL.values()) {
-                entry.register(helper);
-            }
-        });
+        event.register(Registries.SOUND_EVENT, helper -> ALL.values().forEach(entry -> entry.register(helper)));
     }
 
     public static void provideLang(BiConsumer<String, String> consumer) {
-        for (SoundEntry entry : ALL.values()) {
-            if (entry.hasSubtitle()) {
-                consumer.accept(entry.getSubtitleKey(), entry.getSubtitle());
-            }
-        }
+        ALL.values().stream().filter(SoundEntry::hasSubtitle).forEach(entry -> consumer.accept(entry.getSubtitleKey(), entry.getSubtitle()));
     }
 
     @Contract("_ -> new")
@@ -78,10 +74,14 @@ public class CCBSoundEvents {
     }
 
     public static void playItemPickup(@NotNull Player player) {
-        player.level().playSound(null, player.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, .2f, 1f + player.level().random.nextFloat());
+        player.level().playSound(null, player.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1.0f + player.level().random.nextFloat());
     }
 
-    public static abstract class SoundEntry {
+    public static void prepare() {
+        ALL.values().forEach(SoundEntry::prepare);
+	}
+
+    public abstract static class SoundEntry {
         protected ResourceLocation id;
         protected String subtitle;
         protected SoundSource category;
@@ -96,7 +96,7 @@ public class CCBSoundEvents {
 
         public abstract void prepare();
 
-        public abstract void register(RegisterEvent.RegisterHelper<SoundEvent> registry);
+        public abstract void register(RegisterHelper<SoundEvent> registry);
 
         public abstract void write(JsonObject json);
 
@@ -128,6 +128,12 @@ public class CCBSoundEvents {
             play(world, null, pos, volume, pitch);
         }
 
+        public void play(Level world, Player entity, @NotNull Vec3i pos, float volume, float pitch) {
+            play(world, entity, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, volume, pitch);
+        }
+
+        public abstract void play(Level world, Player entity, double x, double y, double z, float volume, float pitch);
+
         public void play(Level world, Player entity, Vec3i pos) {
             play(world, entity, pos, 1, 1);
         }
@@ -137,31 +143,26 @@ public class CCBSoundEvents {
         }
 
         public void playFrom(@NotNull Entity entity, float volume, float pitch) {
-            if (!entity.isSilent()) {
-                play(entity.level(), null, entity.blockPosition(), volume, pitch);
+            if (entity.isSilent()) {
+                return;
             }
-        }
 
-        public void play(Level world, Player entity, @NotNull Vec3i pos, float volume, float pitch) {
-            play(world, entity, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, volume, pitch);
+            play(entity.level(), null, entity.blockPosition(), volume, pitch);
         }
 
         public void play(Level world, Player entity, @NotNull Vec3 pos, float volume, float pitch) {
             play(world, entity, pos.x(), pos.y(), pos.z(), volume, pitch);
         }
 
-        public abstract void play(Level world, Player entity, double x, double y, double z, float volume, float pitch);
-
         public void playAt(Level world, @NotNull Vec3i pos, float volume, float pitch, boolean fade) {
-            playAt(world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5, volume, pitch, fade);
-        }
-
-        public void playAt(Level world, @NotNull Vec3 pos, float volume, float pitch, boolean fade) {
-            playAt(world, pos.x(), pos.y(), pos.z(), volume, pitch, fade);
+            playAt(world, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, volume, pitch, fade);
         }
 
         public abstract void playAt(Level world, double x, double y, double z, float volume, float pitch, boolean fade);
 
+        public void playAt(Level world, @NotNull Vec3 pos, float volume, float pitch, boolean fade) {
+            playAt(world, pos.x(), pos.y(), pos.z(), volume, pitch, fade);
+        }
     }
 
     public static class SoundEntryProvider implements DataProvider {
@@ -185,17 +186,15 @@ public class CCBSoundEvents {
         public CompletableFuture<?> generate(Path path, CachedOutput cache) {
             path = path.resolve("assets/createcraftedbeginning");
             JsonObject json = new JsonObject();
-            ALL.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(entry -> entry.getValue().write(json));
+            ALL.entrySet().stream().sorted(Entry.comparingByKey()).forEach(entry -> entry.getValue().write(json));
             return DataProvider.saveStable(cache, json, path.resolve("sounds.json"));
         }
 
     }
 
-    public record ConfiguredSoundEvent(Supplier<SoundEvent> event, float volume, float pitch) {
-    }
+    public record ConfiguredSoundEvent(Supplier<SoundEvent> event, float volume, float pitch) {}
 
     public static class SoundEntryBuilder {
-
         protected ResourceLocation id;
         protected String subtitle = "unregistered";
         protected SoundSource category = SoundSource.BLOCKS;
@@ -209,23 +208,23 @@ public class CCBSoundEvents {
             this.id = id;
         }
 
-        public SoundEntryBuilder subtitle(String subtitle) {
-            this.subtitle = subtitle;
+        public SoundEntryBuilder subtitle(String newSubtitle) {
+            subtitle = newSubtitle;
             return this;
         }
 
         public SoundEntryBuilder attenuationDistance(int distance) {
-            this.attenuationDistance = distance;
+            attenuationDistance = distance;
             return this;
         }
 
         public SoundEntryBuilder noSubtitle() {
-            this.subtitle = null;
+            subtitle = null;
             return this;
         }
 
-        public SoundEntryBuilder category(SoundSource category) {
-            this.category = category;
+        public SoundEntryBuilder category(SoundSource newCategory) {
+            category = newCategory;
             return this;
         }
 
@@ -238,17 +237,17 @@ public class CCBSoundEvents {
             return this;
         }
 
-        public SoundEntryBuilder playExisting(Supplier<SoundEvent> event, float volume, float pitch) {
-            wrappedEvents.add(new ConfiguredSoundEvent(event, volume, pitch));
-            return this;
+        public SoundEntryBuilder playExisting(SoundEvent event) {
+            return playExisting(event, 1, 1);
         }
 
         public SoundEntryBuilder playExisting(SoundEvent event, float volume, float pitch) {
             return playExisting(() -> event, volume, pitch);
         }
 
-        public SoundEntryBuilder playExisting(SoundEvent event) {
-            return playExisting(event, 1, 1);
+        public SoundEntryBuilder playExisting(Supplier<SoundEvent> event, float volume, float pitch) {
+            wrappedEvents.add(new ConfiguredSoundEvent(event, volume, pitch));
+            return this;
         }
 
         public SoundEntryBuilder playExisting(@NotNull Holder<SoundEvent> event) {
@@ -260,7 +259,6 @@ public class CCBSoundEvents {
             ALL.put(entry.getId(), entry);
             return entry;
         }
-
     }
 
     private static class WrappedSoundEntry extends SoundEntry {
@@ -284,11 +282,8 @@ public class CCBSoundEvents {
         }
 
         @Override
-        public void register(RegisterEvent.RegisterHelper<SoundEvent> helper) {
-            for (CompiledSoundEvent compiledEvent : compiledEvents) {
-                ResourceLocation location = compiledEvent.event().getId();
-                helper.register(location, SoundEvent.createVariableRangeEvent(location));
-            }
+        public void register(RegisterHelper<SoundEvent> helper) {
+            compiledEvents.stream().map(compiledEvent -> compiledEvent.event().getId()).forEach(location -> helper.register(location, SoundEvent.createVariableRangeEvent(location)));
         }
 
         @Override
@@ -297,13 +292,13 @@ public class CCBSoundEvents {
                 ConfiguredSoundEvent event = wrappedEvents.get(i);
                 JsonObject entry = new JsonObject();
                 JsonArray list = new JsonArray();
-                JsonObject s = new JsonObject();
-                s.addProperty("name", event.event().get().getLocation().toString());
-                s.addProperty("type", "event");
+                JsonObject object = new JsonObject();
+                object.addProperty("name", event.event().get().getLocation().toString());
+                object.addProperty("type", "event");
                 if (attenuationDistance != 0) {
-                    s.addProperty("attenuation_distance", attenuationDistance);
+                    object.addProperty("attenuation_distance", attenuationDistance);
                 }
-                list.add(s);
+                list.add(object);
                 entry.add("sounds", list);
                 if (i == 0 && hasSubtitle()) {
                     entry.addProperty("subtitle", getSubtitleKey());
@@ -324,16 +319,12 @@ public class CCBSoundEvents {
 
         @Override
         public void play(Level world, Player entity, double x, double y, double z, float volume, float pitch) {
-            for (CompiledSoundEvent event : compiledEvents) {
-                world.playSound(entity, x, y, z, event.event().get(), category, event.volume() * volume, event.pitch() * pitch);
-            }
+            compiledEvents.forEach(event -> world.playSound(entity, x, y, z, event.event().get(), category, event.volume() * volume, event.pitch() * pitch));
         }
 
         @Override
         public void playAt(Level world, double x, double y, double z, float volume, float pitch, boolean fade) {
-            for (CompiledSoundEvent event : compiledEvents) {
-                world.playLocalSound(x, y, z, event.event().get(), category, event.volume() * volume, event.pitch() * pitch, fade);
-            }
+            compiledEvents.forEach(event -> world.playLocalSound(x, y, z, event.event().get(), category, event.volume() * volume, event.pitch() * pitch, fade));
         }
 
         @Contract("_ -> new")
@@ -341,13 +332,10 @@ public class CCBSoundEvents {
             return ResourceLocation.fromNamespaceAndPath(id.getNamespace(), i == 0 ? id.getPath() : id.getPath() + "_compounded_" + i);
         }
 
-        private record CompiledSoundEvent(DeferredHolder<SoundEvent, SoundEvent> event, float volume, float pitch) {
-        }
-
+        private record CompiledSoundEvent(DeferredHolder<SoundEvent, SoundEvent> event, float volume, float pitch) {}
     }
 
     private static class CustomSoundEntry extends SoundEntry {
-
         protected List<ResourceLocation> variants;
         protected DeferredHolder<SoundEvent, SoundEvent> event;
 
@@ -362,7 +350,7 @@ public class CCBSoundEvents {
         }
 
         @Override
-        public void register(RegisterEvent.@NotNull RegisterHelper<SoundEvent> helper) {
+        public void register(@NotNull RegisterHelper<SoundEvent> helper) {
             ResourceLocation location = event.getId();
             helper.register(location, SoundEvent.createVariableRangeEvent(location));
         }
@@ -371,23 +359,22 @@ public class CCBSoundEvents {
         public void write(JsonObject json) {
             JsonObject entry = new JsonObject();
             JsonArray list = new JsonArray();
-
-            JsonObject s = new JsonObject();
-            s.addProperty("name", id.toString());
-            s.addProperty("type", "file");
+            JsonObject object = new JsonObject();
+            object.addProperty("name", id.toString());
+            object.addProperty("type", "file");
             if (attenuationDistance != 0) {
-                s.addProperty("attenuation_distance", attenuationDistance);
+                object.addProperty("attenuation_distance", attenuationDistance);
             }
-            list.add(s);
+            list.add(object);
 
             for (ResourceLocation variant : variants) {
-                s = new JsonObject();
-                s.addProperty("name", variant.toString());
-                s.addProperty("type", "file");
+                object = new JsonObject();
+                object.addProperty("name", variant.toString());
+                object.addProperty("type", "file");
                 if (attenuationDistance != 0) {
-                    s.addProperty("attenuation_distance", attenuationDistance);
+                    object.addProperty("attenuation_distance", attenuationDistance);
                 }
-                list.add(s);
+                list.add(object);
             }
 
             entry.add("sounds", list);

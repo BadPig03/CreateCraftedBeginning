@@ -1,11 +1,13 @@
 {
+	"format_version": "1.21.6",
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
 	"texture_size": [32, 32],
 	"textures": {
-		"1": "createcraftedbeginning:block/cinder_incineration_blower_magma",
-		"2": "createcraftedbeginning:block/cinder_incineration_blower_detail",
-		"particle": "createcraftedbeginning:block/cinder_incineration_blower_magma"
+		"1": "createcraftedbeginning:block/cinder_incineration_blower/magma",
+		"2": "createcraftedbeginning:block/cinder_incineration_blower/detail",
+		"3": "createcraftedbeginning:block/shaft_axis",
+		"particle": "createcraftedbeginning:block/cinder_incineration_blower/magma"
 	},
 	"elements": [
 		{
@@ -13,11 +15,11 @@
 			"to": [10, 2, 10],
 			"rotation": {"angle": 0, "axis": "y", "origin": [0, -16, 0]},
 			"faces": {
-				"north": {"uv": [14, 15, 16, 16], "texture": "#2"},
-				"east": {"uv": [14, 15, 16, 16], "texture": "#2"},
-				"south": {"uv": [14, 15, 16, 16], "texture": "#2"},
-				"west": {"uv": [14, 15, 16, 16], "texture": "#2"},
-				"down": {"uv": [12, 14, 14, 16], "texture": "#2"}
+				"north": {"uv": [6, 0, 10, 2], "texture": "#3"},
+				"east": {"uv": [6, 0, 10, 2], "texture": "#3"},
+				"south": {"uv": [6, 0, 10, 2], "texture": "#3"},
+				"west": {"uv": [6, 0, 10, 2], "texture": "#3"},
+				"down": {"uv": [0, 0, 4, 4], "texture": "#3"}
 			}
 		},
 		{

@@ -1,11 +1,12 @@
 {
+	"format_version": "1.21.6",
 	"credit": "Made with Blockbench",
 	"parent": "create:block/block",
 	"texture_size": [32, 32],
 	"textures": {
-		"1": "createcraftedbeginning:block/cardboard_crate_mark",
-		"4": "createcraftedbeginning:block/cardboard_crate",
-		"particle": "createcraftedbeginning:block/cardboard_crate"
+		"1": "createcraftedbeginning:block/crates/cardboard_crate_mark",
+		"4": "createcraftedbeginning:block/crates/cardboard_crate",
+		"particle": "createcraftedbeginning:block/crates/cardboard_crate"
 	},
 	"elements": [
 		{

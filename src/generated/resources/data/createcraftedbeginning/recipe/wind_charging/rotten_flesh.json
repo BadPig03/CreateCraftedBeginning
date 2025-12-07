@@ -5,13 +5,6 @@
       "item": "minecraft:rotten_flesh"
     }
   ],
-  "results": [
-    {
-      "id": "minecraft:poisonous_potato"
-    },
-    {
-      "amount": 1876,
-      "id": "createcraftedbeginning:virtual_time"
-    }
-  ]
+  "processing_time": -1876,
+  "results": []
 }

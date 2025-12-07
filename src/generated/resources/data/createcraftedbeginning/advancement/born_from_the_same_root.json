@@ -1,0 +1,29 @@
+{
+  "parent": "createcraftedbeginning:item_tank",
+  "criteria": {
+    "0": {
+      "trigger": "createcraftedbeginning:born_from_the_same_root_builtin"
+    }
+  },
+  "display": {
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.born_from_the_same_root.desc"
+    },
+    "frame": "goal",
+    "hidden": true,
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:cardboard_crate"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.born_from_the_same_root"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

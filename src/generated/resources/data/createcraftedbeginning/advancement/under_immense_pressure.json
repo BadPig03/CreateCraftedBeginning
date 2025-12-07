@@ -1,0 +1,28 @@
+{
+  "parent": "createcraftedbeginning:filtering_gas",
+  "criteria": {
+    "0": {
+      "trigger": "createcraftedbeginning:under_immense_pressure_builtin"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.under_immense_pressure.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:air_compressor"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.under_immense_pressure"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

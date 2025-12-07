@@ -5,10 +5,6 @@
       "item": "minecraft:packed_ice"
     }
   ],
-  "results": [
-    {
-      "amount": 324,
-      "id": "createcraftedbeginning:virtual_time"
-    }
-  ]
+  "processing_time": 900,
+  "results": []
 }

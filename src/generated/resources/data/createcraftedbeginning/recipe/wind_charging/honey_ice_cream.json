@@ -5,10 +5,6 @@
       "item": "createcraftedbeginning:honey_ice_cream"
     }
   ],
-  "results": [
-    {
-      "amount": 5985,
-      "id": "createcraftedbeginning:virtual_time"
-    }
-  ]
+  "processing_time": 5985,
+  "results": []
 }

@@ -1,8 +1,10 @@
 {
+	"format_version": "1.21.6",
 	"credit": "Made with Blockbench",
+	"render_type": "minecraft:cutout_mipped",
 	"texture_size": [32, 32],
 	"textures": {
-		"2": "createcraftedbeginning:block/gas_injection_chamber",
+		"2": "createcraftedbeginning:block/gas_injection_chamber/main",
 		"particle": "createcraftedbeginning:block/airtight_tank/top"
 	},
 	"elements": [

@@ -5,7 +5,7 @@ import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.lang.Lang;
 import net.minecraft.core.Direction;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.api.gas.GasTransportBehaviour.AttachmentTypes.ComponentPartials;
 
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -18,7 +18,6 @@ public class CCBPartialModels {
     public static final PartialModel PHOTO_STRESS_BEARING_SHAFT = block("photo-stress_bearing/block_shaft");
     public static final PartialModel CINDER_INCINERATION_BLOWER_SHAFT = block("cinder_incineration_blower/block_shaft");
     public static final PartialModel AIRTIGHT_PUMP_COGS = block("airtight_pump/block_cogs");
-    public static final PartialModel AIR_COMPRESSOR_SHAFT = block("air_compressor/block_shaft");
     public static final PartialModel AIRTIGHT_ENGINE_COGS = block("airtight_engine/block_cogs");
     public static final PartialModel AIRTIGHT_ENGINE_PISTON = block("airtight_engine/block_piston");
 
@@ -45,6 +44,8 @@ public class CCBPartialModels {
     public static final PartialModel PORTABLE_GAS_INTERFACE_MIDDLE_POWERED = block("portable_gas_interface/block_middle_powered");
     public static final PartialModel PORTABLE_GAS_INTERFACE_TOP = block("portable_gas_interface/block_top");
 
+    public static final PartialModel TESLA_TURBINE_ROTOR = block("tesla_turbine/rotor");
+
     public static final PartialModel ENCASED_UP = block("airtight_encased_pipe/up");
     public static final PartialModel ENCASED_DOWN = block("airtight_encased_pipe/down");
     public static final PartialModel ENCASED_NORTH = block("airtight_encased_pipe/north");
@@ -52,17 +53,30 @@ public class CCBPartialModels {
     public static final PartialModel ENCASED_SOUTH = block("airtight_encased_pipe/south");
     public static final PartialModel ENCASED_WEST = block("airtight_encased_pipe/west");
 
-    public static final Map<GasTransportBehaviour.AttachmentTypes.ComponentPartials, Map<Direction, PartialModel>> AIRTIGHT_PIPE_ATTACHMENTS = new EnumMap<>(GasTransportBehaviour.AttachmentTypes.ComponentPartials.class);
+    public static final PartialModel AIRTIGHT_CANNON_BARREL = item("airtight_cannon/barrel");
+    public static final PartialModel AIRTIGHT_CANNON_PISTON_LEFT = item("airtight_cannon/piston_left");
+    public static final PartialModel AIRTIGHT_CANNON_PISTON_RIGHT = item("airtight_cannon/piston_right");
+    public static final PartialModel AIRTIGHT_HANDHELD_DRILL_FRONT = item("airtight_handheld_drill/front");
+    public static final PartialModel AIRTIGHT_JETPACK = item("airtight_jetpack");
+    public static final PartialModel AIRTIGHT_ELYTRA = item("airtight_elytra");
+    public static final PartialModel AIRTIGHT_SHIELD = item("airtight_shield");
+
+    public static final PartialModel SHAFT_HALF_UP = block("shaft_half_up");
+
+    public static final Map<ComponentPartials, Map<Direction, PartialModel>> AIRTIGHT_PIPE_ATTACHMENTS = new EnumMap<>(ComponentPartials.class);
 
     static {
-        for (GasTransportBehaviour.AttachmentTypes.ComponentPartials type : GasTransportBehaviour.AttachmentTypes.ComponentPartials.values()) {
+        for (ComponentPartials type : ComponentPartials.values()) {
             Map<Direction, PartialModel> map = new HashMap<>();
-            for (Direction d : Iterate.directions) {
-                String asId = Lang.asId(type.name());
-                map.put(d, block("airtight_pipe/" + asId + "/" + Lang.asId(d.getSerializedName())));
+            for (Direction direction : Iterate.directions) {
+                map.put(direction, block("airtight_pipe/" + Lang.asId(type.name()) + '/' + Lang.asId(direction.getSerializedName())));
             }
             AIRTIGHT_PIPE_ATTACHMENTS.put(type, map);
         }
+    }
+
+    private static PartialModel item(String path) {
+        return PartialModel.of(CreateCraftedBeginning.asResource("item/" + path));
     }
 
     private static PartialModel block(String path) {

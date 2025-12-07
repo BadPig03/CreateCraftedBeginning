@@ -1,4 +1,73 @@
 {
+  "airtight_armor_equip": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:item.armor.equip_netherite"
+      }
+    ],
+    "subtitle": "createcraftedbeginning.subtitle.airtight_armor_equip"
+  },
+  "airtight_armor_equip_compounded_1": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:block.heavy_core.hit"
+      }
+    ]
+  },
+  "airtight_jetpack_launch": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:entity.wind_charge.wind_burst"
+      }
+    ],
+    "subtitle": "createcraftedbeginning.subtitle.airtight_jetpack_launch"
+  },
+  "canister_added": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:entity.item_frame.add_item"
+      }
+    ],
+    "subtitle": "createcraftedbeginning.subtitle.canister_added"
+  },
+  "canister_added_compounded_1": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:block.heavy_core.place"
+      }
+    ]
+  },
+  "canister_removed": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:entity.item_frame.remove_item"
+      }
+    ],
+    "subtitle": "createcraftedbeginning.subtitle.canister_removed"
+  },
+  "canister_removed_compounded_1": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:block.heavy_core.break"
+      }
+    ]
+  },
+  "deny": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:block.note_block.bass"
+      }
+    ],
+    "subtitle": "createcraftedbeginning.subtitle.deny"
+  },
   "injecting": {
     "sounds": [
       {
@@ -7,6 +76,40 @@
       }
     ],
     "subtitle": "createcraftedbeginning.subtitle.injecting"
+  },
+  "rotor_added": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:entity.item_frame.add_item"
+      }
+    ],
+    "subtitle": "createcraftedbeginning.subtitle.rotor_added"
+  },
+  "rotor_added_compounded_1": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:block.heavy_core.place"
+      }
+    ]
+  },
+  "rotor_removed": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:entity.item_frame.remove_item"
+      }
+    ],
+    "subtitle": "createcraftedbeginning.subtitle.rotor_removed"
+  },
+  "rotor_removed_compounded_1": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:block.heavy_core.break"
+      }
+    ]
   },
   "sheet_added": {
     "sounds": [
@@ -25,5 +128,14 @@
       }
     ],
     "subtitle": "createcraftedbeginning.subtitle.sheet_removed"
+  },
+  "wind_charge_launch": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:entity.wind_charge.throw"
+      }
+    ],
+    "subtitle": "createcraftedbeginning.subtitle.wind_charge_launch"
   }
 }

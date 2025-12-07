@@ -1,0 +1,59 @@
+{
+	"format_version": "1.21.6",
+	"credit": "Made with Blockbench",
+	"parent": "createcraftedbeginning:item/airtight_cannon/item",
+	"texture_size": [32, 32],
+	"textures": {
+		"1": "createcraftedbeginning:item/airtight_cannon"
+	},
+	"elements": [
+		{
+			"name": "piston",
+			"from": [5, 7.5, 7.5],
+			"to": [7, 9.5, 9.5],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8.05, 8.25]},
+			"faces": {
+				"north": {"uv": [1.25, 14.25, 0.25, 15.25], "texture": "#1"},
+				"south": {"uv": [2.75, 14.25, 1.75, 15.25], "texture": "#1"},
+				"west": {"uv": [2, 14.25, 1, 15.25], "texture": "#1"},
+				"up": {"uv": [2.75, 14.25, 1.75, 15.25], "texture": "#1"},
+				"down": {"uv": [2.75, 14.25, 1.75, 15.25], "texture": "#1"}
+			}
+		}
+	],
+	"display": {
+		"thirdperson_righthand": {
+			"translation": [0, 2, 0]
+		},
+		"thirdperson_lefthand": {
+			"translation": [0, 2, 0]
+		},
+		"firstperson_righthand": {
+			"rotation": [5, 4, 5],
+			"translation": [0.25, 4, 0.75]
+		},
+		"firstperson_lefthand": {
+			"rotation": [5, 4, 5],
+			"translation": [0.25, 4, 0.75]
+		},
+		"ground": {
+			"rotation": [0, 0, 90],
+			"translation": [0, -1.3, 0],
+			"scale": [0.76914, 0.76914, 0.76914]
+		},
+		"gui": {
+			"rotation": [64, 47, -47],
+			"translation": [0.25, -0.25, 0],
+			"scale": [0.86, 0.86, 0.86]
+		},
+		"head": {
+			"translation": [0, 8, 0],
+			"scale": [1.4, 1.4, 1.4]
+		},
+		"fixed": {
+			"rotation": [0, 90, 0],
+			"translation": [0.5, 0.5, -1],
+			"scale": [0.72, 0.72, 0.72]
+		}
+	}
+}

@@ -11,8 +11,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.gas.interfaces.IMountedStorageManagerWithGas;
 import net.ty.createcraftedbeginning.registry.CCBPackets;
 
@@ -28,19 +29,21 @@ public record MountedStorageSyncPacketWithGas(int contraptionId, Map<BlockPos, M
     }
 
     @Override
+    @OnlyIn(Dist.CLIENT)
     public void handle(LocalPlayer player) {
         Level level = Minecraft.getInstance().level;
         if (level == null) {
             return;
         }
-        Entity entity = level.getEntity(this.contraptionId);
-        if (!(entity instanceof AbstractContraptionEntity contraption)) {
+        if (!(level.getEntity(contraptionId) instanceof AbstractContraptionEntity contraption)) {
             return;
         }
 
         MountedStorageManager storageManager = contraption.getContraption().getStorage();
-        if (storageManager instanceof IMountedStorageManagerWithGas withGas) {
-            withGas.handleSyncWithGas(this, contraption);
+        if (!(storageManager instanceof IMountedStorageManagerWithGas withGas)) {
+            return;
         }
+
+        withGas.handleSyncWithGas(this, contraption);
     }
 }

@@ -1,0 +1,19 @@
+{
+	"credit": "Made with Blockbench",
+	"texture_size": [32, 32],
+	"textures": {
+		"1": "createcraftedbeginning:block/tesla_turbine/rotor",
+		"particle": "createcraftedbeginning:block/tesla_turbine/rotor"
+	},
+	"elements": [
+		{
+			"from": [-16, 8, -16],
+			"to": [32, 8, 32],
+			"rotation": {"angle": 0, "axis": "x", "origin": [8, 8, 8]},
+			"faces": {
+				"up": {"uv": [0, 0, 16, 16], "rotation": 180, "texture": "#1"},
+				"down": {"uv": [0, 0, 16, 16], "texture": "#1"}
+			}
+		}
+	]
+}

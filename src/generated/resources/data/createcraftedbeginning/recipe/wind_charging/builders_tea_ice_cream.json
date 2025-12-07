@@ -1,0 +1,10 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:builders_tea_ice_cream"
+    }
+  ],
+  "processing_time": 3547,
+  "results": []
+}

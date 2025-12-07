@@ -6,8 +6,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.content.crates.CrateItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,11 +19,12 @@ public enum CardboardCrateUnpackingHandler implements UnpackingHandler {
 
     @Override
     public boolean unpack(@NotNull Level level, BlockPos pos, BlockState state, Direction side, List<ItemStack> items, @Nullable PackageOrderWithCrafts orderContext, boolean simulate) {
-        BlockEntity be = level.getBlockEntity(pos);
-        if (!(be instanceof CardboardCrateBlockEntity)) {
+        if (!(level.getBlockEntity(pos) instanceof CardboardCrateBlockEntity crate)) {
             return false;
         }
 
-        return UnpackingHandler.DEFAULT.unpack(level, pos, state, side, items, orderContext, simulate);
+        CrateItemStackHandler handler = crate.getHandler();
+        items.forEach(stack -> handler.insertItem(0, stack, simulate));
+        return true;
     }
 }

@@ -1,18 +1,35 @@
 package net.ty.createcraftedbeginning.recipe;
 
-import net.minecraft.core.HolderLookup;
+import net.minecraft.core.HolderLookup.Provider;
+import net.minecraft.core.HolderLookup.RegistryLookup;
 import net.minecraft.data.PackOutput;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.registry.CCBFluids;
+import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.registry.CCBRegistries;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("unused")
 public class CCBPressurizationRecipes extends PressurizationRecipeGen {
-    GeneratedRecipe LOW_TO_MEDIUM = create("low_to_medium", b -> b.require(CCBFluids.LOW_PRESSURE_COMPRESSED_AIR.get(), 20).output(CCBFluids.MEDIUM_PRESSURE_COMPRESSED_AIR.get(), 1));
-    GeneratedRecipe MEDIUM_TO_HIGH = create("medium_to_high", b -> b.require(CCBFluids.MEDIUM_PRESSURE_COMPRESSED_AIR.get(), 10).output(CCBFluids.HIGH_PRESSURE_COMPRESSED_AIR.get(), 1));
-
-    public CCBPressurizationRecipes(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
+    public CCBPressurizationRecipes(PackOutput output, CompletableFuture<Provider> registries) {
         super(output, registries, CreateCraftedBeginning.MOD_ID);
+        addGasRecipes(registries);
+    }
+
+    private void addGasRecipes(@NotNull CompletableFuture<Provider> registriesFuture) {
+        registriesFuture.thenAccept(registries -> {
+            RegistryLookup<Gas> gasLookup = registries.lookupOrThrow(CCBRegistries.GAS_REGISTRY_KEY);
+            gasLookup.listElements().forEach(holder -> {
+                Gas gas = holder.value();
+                if (gas.getPressurizedGas().isEmpty()) {
+                    return;
+                }
+
+                String gasName = Objects.requireNonNull(holder.getKey()).location().getPath();
+                create(gasName, b -> b.require(holder.value(), 10).output(gas.getPressurizedGas(), 1));
+            });
+        });
     }
 }

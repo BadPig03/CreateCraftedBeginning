@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.compat.jei.category;
 
-import com.simibubi.create.foundation.fluid.FluidIngredient;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.neoforge.NeoForgeTypes;
@@ -9,13 +8,17 @@ import mezz.jei.api.recipe.RecipeIngredientRole;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedBreezeCooler;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
-import net.ty.createcraftedbeginning.registry.CCBGUITextures;
+import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Arrays;
 
 public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
     private static final int COLOR = 0x888888;
@@ -26,28 +29,17 @@ public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
     }
 
     @Override
-    public void setRecipe(IRecipeLayoutBuilder builder, @NotNull CoolingRecipe recipe, @NotNull IFocusGroup focuses) {
-        if (recipe.isIngredientsFluid()) {
-            addFluidInputSlot(builder, recipe.getIngredientsFluid());
-        } else {
-            addItemInputSlot(builder, recipe.getIngredientsItem());
-        }
-    }
-
-    @Override
     public void draw(CoolingRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         Font font = Minecraft.getInstance().font;
-
         CCBGUITextures.JEI_SHADOW.render(graphics, 122, 37);
         CCBGUITextures.JEI_LONG_ARROW.render(graphics, 42, 30);
         CCBGUITextures.JEI_COOLING_BACKGROUND.render(graphics, 16, 8);
-
         if (getBackground() == null) {
             return;
         }
 
         if (!recipe.isIngredientsFluid() && recipe.isCreativeIceCream()) {
-            MutableComponent text = CCBLang.translateDirect("gui.goggles.infinity_mark");
+            MutableComponent text = Component.translatable("jade.gas.infinity_mark");
             graphics.drawString(font, text, getBackground().getWidth() / 2 - font.width(text) / 2 - 12, 22, COLOR, false);
             cooler.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
             return;
@@ -58,11 +50,21 @@ public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
         cooler.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
     }
 
-    private void addItemInputSlot(@NotNull IRecipeLayoutBuilder builder, Ingredient ingredient) {
+    @Override
+    public void setRecipe(IRecipeLayoutBuilder builder, @NotNull CoolingRecipe recipe, @NotNull IFocusGroup focuses) {
+        if (recipe.isIngredientsFluid()) {
+            addFluidInputSlot(builder, recipe.getIngredientsFluid());
+        }
+        else {
+            addItemInputSlot(builder, recipe.getIngredientsItem());
+        }
+    }
+
+    private static void addItemInputSlot(@NotNull IRecipeLayoutBuilder builder, Ingredient ingredient) {
         builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setBackground(getRenderedSlot(), -1, -1).addIngredients(ingredient);
     }
 
-    private void addFluidInputSlot(@NotNull IRecipeLayoutBuilder builder, @NotNull FluidIngredient fluidIngredient) {
-        builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setFluidRenderer(1000, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredients(NeoForgeTypes.FLUID_STACK, fluidIngredient.getMatchingFluidStacks());
+    private static void addFluidInputSlot(@NotNull IRecipeLayoutBuilder builder, @NotNull SizedFluidIngredient fluidIngredient) {
+        builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setFluidRenderer(1000, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredients(NeoForgeTypes.FLUID_STACK, Arrays.asList(fluidIngredient.getFluids()));
     }
 }

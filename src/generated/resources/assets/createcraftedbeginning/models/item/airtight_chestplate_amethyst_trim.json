@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "createcraftedbeginning:item/airtight_chestplate",
+    "layer1": "createcraftedbeginning:trims/items/airtight_chestplate_trim_amethyst"
+  }
+}

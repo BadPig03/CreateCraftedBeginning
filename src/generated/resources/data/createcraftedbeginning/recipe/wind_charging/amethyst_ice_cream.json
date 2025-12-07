@@ -5,10 +5,6 @@
       "item": "createcraftedbeginning:amethyst_ice_cream"
     }
   ],
-  "results": [
-    {
-      "amount": 4157,
-      "id": "createcraftedbeginning:virtual_time"
-    }
-  ]
+  "processing_time": 4157,
+  "results": []
 }

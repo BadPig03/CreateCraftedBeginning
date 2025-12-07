@@ -5,10 +5,6 @@
       "item": "minecraft:rabbit_stew"
     }
   ],
-  "results": [
-    {
-      "amount": 7010,
-      "id": "createcraftedbeginning:virtual_time"
-    }
-  ]
+  "processing_time": 7010,
+  "results": []
 }

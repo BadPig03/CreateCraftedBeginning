@@ -1,0 +1,16 @@
+{
+  "type": "createcraftedbeginning:pressurization",
+  "ingredients": [
+    {
+      "type": "createcraftedbeginning:gas_stack",
+      "amount": 10,
+      "gas": "createcraftedbeginning:energized_natural_air"
+    }
+  ],
+  "results": [
+    {
+      "amount": 1,
+      "id": "createcraftedbeginning:pressurized_energized_natural_air"
+    }
+  ]
+}

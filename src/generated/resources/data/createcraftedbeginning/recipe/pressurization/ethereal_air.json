@@ -1,0 +1,16 @@
+{
+  "type": "createcraftedbeginning:pressurization",
+  "ingredients": [
+    {
+      "type": "createcraftedbeginning:gas_stack",
+      "amount": 10,
+      "gas": "createcraftedbeginning:ethereal_air"
+    }
+  ],
+  "results": [
+    {
+      "amount": 1,
+      "id": "createcraftedbeginning:pressurized_ethereal_air"
+    }
+  ]
+}

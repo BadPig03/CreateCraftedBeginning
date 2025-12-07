@@ -5,10 +5,6 @@
       "item": "createcraftedbeginning:creative_ice_cream"
     }
   ],
-  "results": [
-    {
-      "amount": 35356,
-      "id": "createcraftedbeginning:virtual_time"
-    }
-  ]
+  "processing_time": 35356,
+  "results": []
 }

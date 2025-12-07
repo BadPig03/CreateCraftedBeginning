@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "createcraftedbeginning:item/airtight_helmet",
+    "layer1": "createcraftedbeginning:trims/items/airtight_helmet_trim_quartz"
+  }
+}

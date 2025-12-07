@@ -1,9 +1,11 @@
 {
+	"format_version": "1.21.6",
 	"credit": "Made with Blockbench",
+	"render_type": "minecraft:cutout_mipped",
 	"texture_size": [32, 32],
 	"textures": {
-		"1": "createcraftedbeginning:block/airtight_pipe_detail",
-		"2": "createcraftedbeginning:block/air_compressor",
+		"1": "createcraftedbeginning:block/airtight_pipe/detail",
+		"2": "createcraftedbeginning:block/air_compressor/compressor",
 		"particle": "createcraftedbeginning:block/airtight_tank/top"
 	},
 	"elements": [

@@ -3,11 +3,8 @@
   "ingredients": [
     {
       "type": "fluid_stack",
-      "amount": 250,
-      "fluid": "createcraftedbeginning:slush"
-    },
-    {
-      "item": "minecraft:ice"
+      "amount": 500,
+      "fluid": "minecraft:water"
     },
     {
       "item": "minecraft:snow_block"
@@ -15,7 +12,7 @@
   ],
   "results": [
     {
-      "amount": 500,
+      "amount": 1000,
       "id": "createcraftedbeginning:slush"
     }
   ]

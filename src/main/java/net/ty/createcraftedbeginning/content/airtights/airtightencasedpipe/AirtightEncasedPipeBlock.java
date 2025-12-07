@@ -4,17 +4,18 @@ import com.mojang.serialization.MapCodec;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
+import net.createmod.catnip.data.Iterate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.protocol.game.DebugPackets;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -22,29 +23,27 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.PipeBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.TickPriority;
-import net.ty.createcraftedbeginning.advancement.AdvancementBehaviour;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.GasPropagator;
+import net.ty.createcraftedbeginning.api.gas.interfaces.IAirtightComponent;
+import net.ty.createcraftedbeginning.data.CCBShapes;
+import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 import org.jetbrains.annotations.NotNull;
 
-public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightEncasedPipeBlockEntity>, IWrenchable {
-    public static final MapCodec<AirtightEncasedPipeBlock> CODEC = simpleCodec(AirtightEncasedPipeBlock::new);
-    private static final VoxelShape OCCLUSION_BOX = Block.box(0, 0, 0, 16, 16, 16);
+public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightEncasedPipeBlockEntity>, IWrenchable, IAirtightComponent {
+    private static final float PIPE_APOTHEM = 0.5f;
 
     public AirtightEncasedPipeBlock(Properties properties) {
-        super(0.5f, properties);
-    }
-
-    public static boolean isPipe(@NotNull BlockState state) {
-        return state.getBlock() instanceof AirtightEncasedPipeBlock;
+        super(PIPE_APOTHEM, properties);
     }
 
     public static boolean isOpenAt(@NotNull BlockState state, Direction direction) {
@@ -54,11 +53,11 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
     @Override
     public void setPlacedBy(@NotNull Level level, @NotNull BlockPos blockPos, @NotNull BlockState blockState, LivingEntity placer, @NotNull ItemStack itemStack) {
         super.setPlacedBy(level, blockPos, blockState, placer, itemStack);
-        AdvancementBehaviour.setPlacedBy(level, blockPos, placer);
+        CCBAdvancementBehaviour.setPlacedBy(level, blockPos, placer);
     }
 
     @Override
-    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(@NotNull Builder<Block, BlockState> builder) {
         builder.add(NORTH, EAST, SOUTH, WEST, UP, DOWN);
         super.createBlockStateDefinition(builder);
     }
@@ -72,89 +71,86 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
     }
 
     @Override
-    public void neighborChanged(@NotNull BlockState state, @NotNull Level world, @NotNull BlockPos blockPos, @NotNull Block otherBlock, @NotNull BlockPos neighborPos, boolean isMoving) {
-        DebugPackets.sendNeighborsUpdatePacket(world, blockPos);
-        Direction direction = GasPropagator.validateNeighbourChange(state, world, blockPos, neighborPos, isMoving);
+    public void neighborChanged(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Block otherBlock, @NotNull BlockPos neighborPos, boolean isMoving) {
+        super.neighborChanged(state, level, pos, otherBlock, neighborPos, isMoving);
+        Direction direction = GasPropagator.validateNeighbourChange(state, level, pos, neighborPos, isMoving);
         if (direction == null) {
             return;
         }
-        world.scheduleTick(blockPos, this, 1, TickPriority.HIGH);
+
+        level.scheduleTick(pos, this, 1, TickPriority.HIGH);
     }
 
     @Override
-    public void onPlace(@NotNull BlockState state, @NotNull Level world, @NotNull BlockPos blockPos, @NotNull BlockState oldState, boolean isMoving) {
-        if (world.isClientSide) {
+    public void onPlace(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos blockPos, @NotNull BlockState oldState, boolean isMoving) {
+        if (level.isClientSide || state == oldState) {
             return;
         }
-        if (state != oldState) {
-            world.scheduleTick(blockPos, this, 1, TickPriority.HIGH);
-        }
+
+        level.scheduleTick(blockPos, this, 1, TickPriority.HIGH);
     }
 
     @Override
     public void onRemove(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState newState, boolean isMoving) {
-        boolean changed = state.getBlock() != newState.getBlock();
+        boolean changed = !state.is(newState.getBlock());
         if (changed && !level.isClientSide) {
             GasPropagator.propagateChangedPipe(level, pos, state);
         }
-        if (state.hasBlockEntity() && (changed || !newState.hasBlockEntity())) {
-            level.removeBlockEntity(pos);
-        }
+        super.onRemove(state, level, pos, newState, isMoving);
     }
 
     @Override
     protected @NotNull ItemInteractionResult useItemOn(@NotNull ItemStack stack, @NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull InteractionHand hand, @NotNull BlockHitResult hitResult) {
-        boolean used = false;
-        boolean added = false;
-        Item sheet = CCBItems.AIRTIGHT_SHEET.asItem();
+        Direction direction = hitResult.getDirection();
+        Property<Boolean> property = PROPERTY_BY_DIRECTION.get(direction);
+        boolean isOpened = state.getValue(property);
+        ItemStack usedStack = player.getItemInHand(hand);
+        boolean isAddingSheet = isOpened && usedStack.is(CCBItems.AIRTIGHT_SHEET.asItem());
+        boolean isRemovingSheet = !isOpened && usedStack.is(AllItems.WRENCH.asItem());
+        if (!isAddingSheet && !isRemovingSheet) {
+            return ItemInteractionResult.FAIL;
+        }
 
-        if (!level.isClientSide()) {
-            Direction direction = hitResult.getDirection();
-            Property<Boolean> property = PROPERTY_BY_DIRECTION.get(direction);
+        if (level.isClientSide) {
+            return ItemInteractionResult.sidedSuccess(true);
+        }
 
-            boolean currentValue = state.getValue(property);
-            ItemStack usedStack = player.getItemInHand(hand);
+        BlockState newState = state.setValue(property, !isOpened);
+        level.setBlockAndUpdate(pos, newState);
+        level.scheduleTick(pos, this, 1, TickPriority.HIGH);
+        if (isAddingSheet) {
+            CCBSoundEvents.SHEET_ADDED.playOnServer(level, pos, 1.0f, 1.0f);
+        }
+        else {
+            CCBSoundEvents.SHEET_REMOVED.playOnServer(level, pos, 1.0f, 1.0f);
+        }
 
-            if (currentValue) {
-                if (!usedStack.is(sheet)) {
-                    return ItemInteractionResult.FAIL;
-                }
-                if (usedStack.is(AllItems.WRENCH)) {
-                    return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-                }
-                added = true;
-            } else {
-                if (!usedStack.is(AllItems.WRENCH)) {
-                    return ItemInteractionResult.FAIL;
-                }
-                if (usedStack.is(sheet)) {
-                    return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-                }
+        boolean noAdvancement = false;
+        for (Direction dir : Iterate.directions) {
+            if (newState.getValue(PROPERTY_BY_DIRECTION.get(dir))) {
+                noAdvancement = true;
+                break;
             }
-
-            BlockState newState = state.setValue(property, !currentValue);
-            level.setBlock(pos, newState, Block.UPDATE_ALL);
-            level.scheduleTick(pos, this, 1, TickPriority.HIGH);
-            used = true;
         }
-
-        if (added) {
-            CCBSoundEvents.SHEET_ADDED.playOnServer(level, pos, 1f, 1f);
-        } else {
-            CCBSoundEvents.SHEET_REMOVED.playOnServer(level, pos, 1f, 1f);
+        if (!noAdvancement) {
+            CCBAdvancements.HERMETIC_SEAL_600.awardTo(player);
         }
-
-        return used ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        return ItemInteractionResult.sidedSuccess(false);
     }
 
     @Override
     public @NotNull VoxelShape getOcclusionShape(@NotNull BlockState blockState, @NotNull BlockGetter level, @NotNull BlockPos blockPos) {
-        return OCCLUSION_BOX;
+        return CCBShapes.ENCASED_PIPE_SHAPE;
     }
 
     @Override
     public void tick(@NotNull BlockState blockState, @NotNull ServerLevel serverLevel, @NotNull BlockPos blockPos, @NotNull RandomSource random) {
         GasPropagator.propagateChangedPipe(serverLevel, blockPos, blockState);
+    }
+
+    @Override
+    public InteractionResult onWrenched(BlockState state, UseOnContext context) {
+        return InteractionResult.PASS;
     }
 
     @Override
@@ -169,6 +165,11 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
 
     @Override
     protected @NotNull MapCodec<? extends PipeBlock> codec() {
-        return CODEC;
+        return simpleCodec(AirtightEncasedPipeBlock::new);
+    }
+
+    @Override
+    public boolean isAirtight(BlockPos currentPos, @NotNull BlockState currentState, @NotNull Direction oppositeDirection) {
+        return currentState.getValue(PROPERTY_BY_DIRECTION.get(oppositeDirection.getOpposite()));
     }
 }

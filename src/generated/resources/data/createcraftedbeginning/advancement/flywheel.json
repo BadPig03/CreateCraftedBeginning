@@ -1,0 +1,28 @@
+{
+  "parent": "createcraftedbeginning:phantom_divers",
+  "criteria": {
+    "0": {
+      "trigger": "createcraftedbeginning:flywheel_builtin"
+    }
+  },
+  "display": {
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.flywheel.desc"
+    },
+    "frame": "goal",
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:airtight_engine"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.flywheel"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

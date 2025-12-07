@@ -18,10 +18,7 @@ public enum GasAction {
     }
 
     public static GasAction fromFluidAction(FluidAction action) {
-        if (action == FluidAction.EXECUTE) {
-            return EXECUTE;
-        }
-        return SIMULATE;
+        return action == FluidAction.EXECUTE ? EXECUTE : SIMULATE;
     }
 
     public boolean execute() {

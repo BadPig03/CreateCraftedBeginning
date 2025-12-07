@@ -1,0 +1,28 @@
+{
+  "parent": "createcraftedbeginning:bad_apple",
+  "criteria": {
+    "0": {
+      "trigger": "createcraftedbeginning:universal_antidote_builtin"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.universal_antidote.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:milk_bucket"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.universal_antidote"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

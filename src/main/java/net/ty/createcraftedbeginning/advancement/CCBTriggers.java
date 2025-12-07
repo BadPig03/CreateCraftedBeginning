@@ -19,8 +19,6 @@ public class CCBTriggers {
     }
 
     public static void register() {
-        triggers.forEach(trigger -> {
-            Registry.register(BuiltInRegistries.TRIGGER_TYPES, trigger.getId(), trigger);
-        });
+        triggers.forEach(trigger -> Registry.register(BuiltInRegistries.TRIGGER_TYPES, trigger.getId(), trigger));
     }
 }

@@ -3,7 +3,7 @@ package net.ty.createcraftedbeginning.mixin;
 import com.simibubi.create.content.contraptions.MountedStorageManager;
 import com.simibubi.create.content.contraptions.minecart.TrainCargoManager;
 import net.ty.createcraftedbeginning.api.gas.GasAction;
-import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.MountedGasStorageWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
@@ -31,7 +31,7 @@ public abstract class TrainCargoManagerMixin extends MountedStorageManager {
 
     @Unique
     class CargoGasWrapper extends MountedGasStorageWrapper {
-        CargoGasWrapper(MountedGasStorageWrapper wrapped) {
+        CargoGasWrapper(@NotNull MountedGasStorageWrapper wrapped) {
             super(wrapped.storages);
         }
 

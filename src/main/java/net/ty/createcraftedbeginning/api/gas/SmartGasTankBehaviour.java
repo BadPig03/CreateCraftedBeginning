@@ -4,10 +4,12 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BehaviourType;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.createmod.catnip.nbt.NBTHelper;
-import net.minecraft.core.HolderLookup;
+import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.interfaces.IGasHandler;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.jetbrains.annotations.Contract;
@@ -20,7 +22,7 @@ public class SmartGasTankBehaviour extends BlockEntityBehaviour {
     public static final BehaviourType<SmartGasTankBehaviour> TYPE = new BehaviourType<>();
     public static final BehaviourType<SmartGasTankBehaviour> INPUT = new BehaviourType<>("Input");
     public static final BehaviourType<SmartGasTankBehaviour> OUTPUT = new BehaviourType<>("Output");
-
+    private static final String COMPOUND_KEY_TANK_CONTENT = "TankContent";
     private static final int SYNC_RATE = 8;
     private final BehaviourType<SmartGasTankBehaviour> behaviourType;
     protected int syncCooldown;
@@ -31,7 +33,7 @@ public class SmartGasTankBehaviour extends BlockEntityBehaviour {
     protected boolean insertionAllowed;
     protected Runnable gasUpdateCallback;
 
-    public SmartGasTankBehaviour(BehaviourType<SmartGasTankBehaviour> type, SmartBlockEntity be, int tanks, int tankCapacity, boolean enforceVariety) {
+    public SmartGasTankBehaviour(BehaviourType<SmartGasTankBehaviour> type, SmartBlockEntity be, int tanks, long tankCapacity, boolean enforceVariety) {
         super(be);
         insertionAllowed = true;
         extractionAllowed = true;
@@ -49,7 +51,7 @@ public class SmartGasTankBehaviour extends BlockEntityBehaviour {
     }
 
     @Contract("_, _ -> new")
-    public static @NotNull SmartGasTankBehaviour single(SmartBlockEntity be, int capacity) {
+    public static @NotNull SmartGasTankBehaviour single(SmartBlockEntity be, long capacity) {
         return new SmartGasTankBehaviour(TYPE, be, 1, capacity, false);
     }
 
@@ -84,20 +86,21 @@ public class SmartGasTankBehaviour extends BlockEntityBehaviour {
         updateGases();
     }
 
+    protected void updateGases() {
+        gasUpdateCallback.run();
+        blockEntity.sendData();
+        blockEntity.setChanged();
+    }
+
     public void sendDataLazily() {
         if (syncCooldown > 0) {
             queuedSync = true;
             return;
         }
+
         updateGases();
         queuedSync = false;
         syncCooldown = SYNC_RATE;
-    }
-
-    protected void updateGases() {
-        gasUpdateCallback.run();
-        blockEntity.sendData();
-        blockEntity.setChanged();
     }
 
     public SmartGasTank getPrimaryHandler() {
@@ -114,21 +117,27 @@ public class SmartGasTankBehaviour extends BlockEntityBehaviour {
 
     public boolean isEmpty() {
         for (TankSegment tankSegment : tanks) {
-            if (!tankSegment.tank.isEmpty()) {
-                return false;
+            if (tankSegment.tank.isEmpty()) {
+                continue;
             }
+
+            return false;
         }
         return true;
+    }
+
+    public IGasHandler getCapability() {
+        return capability;
+    }
+
+    public InternalGasHandler getInternalGasHandler() {
+        return (InternalGasHandler) capability;
     }
 
     public void forEach(Consumer<TankSegment> action) {
         for (TankSegment tankSegment : tanks) {
             action.accept(tankSegment);
         }
-    }
-
-    public IGasHandler getCapability() {
-        return capability;
     }
 
     @Override
@@ -150,33 +159,38 @@ public class SmartGasTankBehaviour extends BlockEntityBehaviour {
     public void tick() {
         super.tick();
 
-        if (syncCooldown > 0) {
-            syncCooldown--;
-            if (syncCooldown == 0 && queuedSync) {
-                updateGases();
-            }
+        if (syncCooldown <= 0) {
+            return;
         }
+
+        syncCooldown--;
+        if (syncCooldown != 0 || !queuedSync) {
+            return;
+        }
+
+        updateGases();
     }
 
     @Override
-    public void read(CompoundTag nbt, HolderLookup.Provider registries, boolean clientPacket) {
-        super.read(nbt, registries, clientPacket);
+    public void read(CompoundTag compoundTag, Provider registries, boolean clientPacket) {
+        super.read(compoundTag, registries, clientPacket);
         MutableInt index = new MutableInt(0);
-        NBTHelper.iterateCompoundList(nbt.getList(getType().getName() + "Tanks", Tag.TAG_COMPOUND), c -> {
+        NBTHelper.iterateCompoundList(compoundTag.getList(getType().getName() + "Tanks", Tag.TAG_COMPOUND), c -> {
             if (index.intValue() >= tanks.length) {
                 return;
             }
-            tanks[index.intValue()].readNBT(c, registries, clientPacket);
+
+            tanks[index.intValue()].read(c, registries, clientPacket);
             index.increment();
         });
     }
 
     @Override
-    public void write(CompoundTag nbt, HolderLookup.Provider registries, boolean clientPacket) {
-        super.write(nbt, registries, clientPacket);
+    public void write(CompoundTag compoundTag, Provider registries, boolean clientPacket) {
+        super.write(compoundTag, registries, clientPacket);
         ListTag tanksNBT = new ListTag();
-        forEach(ts -> tanksNBT.add(ts.writeNBT(registries)));
-        nbt.put(getType().getName() + "Tanks", tanksNBT);
+        forEach(ts -> tanksNBT.add(ts.write(registries)));
+        compoundTag.put(getType().getName() + "Tanks", tanksNBT);
     }
 
     @Override
@@ -192,40 +206,33 @@ public class SmartGasTankBehaviour extends BlockEntityBehaviour {
     public class InternalGasHandler extends GasCombinedTankWrapper {
         public InternalGasHandler(IGasHandler[] handlers, boolean enforceVariety) {
             super(handlers);
-            if (enforceVariety) {
-                enforceVariety();
+            if (!enforceVariety) {
+                return;
             }
+
+            enforceVariety();
         }
 
         @Override
         public long fill(@NotNull GasStack resource, GasAction action) {
-            if (!insertionAllowed) {
-                return 0;
-            }
-            return super.fill(resource, action);
+            return insertionAllowed ? super.fill(resource, action) : 0;
         }
 
         @Override
         public GasStack drain(@NotNull GasStack resource, GasAction action) {
-            if (!extractionAllowed) {
-                return GasStack.EMPTY;
-            }
-            return super.drain(resource, action);
+            return extractionAllowed ? super.drain(resource, action) : GasStack.EMPTY;
         }
 
         @Override
         public GasStack drain(long maxDrain, GasAction action) {
-            if (!extractionAllowed) {
-                return GasStack.EMPTY;
-            }
-            return super.drain(maxDrain, action);
+            return extractionAllowed ? super.drain(maxDrain, action) : GasStack.EMPTY;
         }
 
-        @SuppressWarnings("UnusedReturnValue")
         public long forceFill(GasStack resource, GasAction action) {
             return super.fill(resource, action);
         }
 
+        @SuppressWarnings("UnusedReturnValue")
         public GasStack forceDrain(GasStack resource, GasAction action) {
             return super.drain(resource, action);
         }
@@ -243,22 +250,26 @@ public class SmartGasTankBehaviour extends BlockEntityBehaviour {
         }
 
         public void onGasStackChanged() {
-            if (!blockEntity.hasLevel()) {
+            Level level = getWorld();
+            if (level == null || level.isClientSide) {
                 return;
             }
-            if (!getWorld().isClientSide) {
-                sendDataLazily();
-            }
+
+            sendDataLazily();
         }
 
-        public CompoundTag writeNBT(HolderLookup.Provider registries) {
+        public CompoundTag write(Provider registries) {
             CompoundTag compound = new CompoundTag();
-            compound.put("TankContent", tank.writeToNBT(registries, new CompoundTag()));
+            compound.put(COMPOUND_KEY_TANK_CONTENT, tank.write(registries, new CompoundTag()));
             return compound;
         }
 
-        public void readNBT(@NotNull CompoundTag compound, HolderLookup.Provider registries, boolean ignored) {
-            tank.readFromNBT(registries, compound.getCompound("TankContent"));
+        public void read(@NotNull CompoundTag compound, Provider registries, boolean ignored) {
+            if (!compound.contains(COMPOUND_KEY_TANK_CONTENT)) {
+                return;
+            }
+
+            tank.read(registries, compound.getCompound(COMPOUND_KEY_TANK_CONTENT));
         }
     }
 }

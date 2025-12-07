@@ -1,9 +1,5 @@
 {
   "variants": {
-    "facing=east,wind_level=breeze": {
-      "model": "createcraftedbeginning:block/breeze_chamber/block",
-      "y": 90
-    },
     "facing=east,wind_level=calm": {
       "model": "createcraftedbeginning:block/breeze_chamber/block",
       "y": 90
@@ -16,9 +12,6 @@
       "model": "createcraftedbeginning:block/breeze_chamber/block",
       "y": 90
     },
-    "facing=north,wind_level=breeze": {
-      "model": "createcraftedbeginning:block/breeze_chamber/block"
-    },
     "facing=north,wind_level=calm": {
       "model": "createcraftedbeginning:block/breeze_chamber/block"
     },
@@ -27,10 +20,6 @@
     },
     "facing=north,wind_level=ill": {
       "model": "createcraftedbeginning:block/breeze_chamber/block"
-    },
-    "facing=south,wind_level=breeze": {
-      "model": "createcraftedbeginning:block/breeze_chamber/block",
-      "y": 180
     },
     "facing=south,wind_level=calm": {
       "model": "createcraftedbeginning:block/breeze_chamber/block",
@@ -43,10 +32,6 @@
     "facing=south,wind_level=ill": {
       "model": "createcraftedbeginning:block/breeze_chamber/block",
       "y": 180
-    },
-    "facing=west,wind_level=breeze": {
-      "model": "createcraftedbeginning:block/breeze_chamber/block",
-      "y": 270
     },
     "facing=west,wind_level=calm": {
       "model": "createcraftedbeginning:block/breeze_chamber/block",

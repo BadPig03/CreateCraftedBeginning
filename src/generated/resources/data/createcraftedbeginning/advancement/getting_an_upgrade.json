@@ -1,0 +1,35 @@
+{
+  "parent": "createcraftedbeginning:item_tank",
+  "criteria": {
+    "0": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:brass_crate"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.getting_an_upgrade.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:brass_crate"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.getting_an_upgrade"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

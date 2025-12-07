@@ -1,24 +1,38 @@
 package net.ty.createcraftedbeginning.event;
 
-import com.simibubi.create.AllItems;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.simibubi.create.infrastructure.config.AllConfigs;
+import net.createmod.catnip.animation.AnimationTickHolder;
+import net.createmod.catnip.render.DefaultSuperRenderTypeBuffer;
+import net.createmod.catnip.render.SuperRenderTypeBuffer;
 import net.createmod.ponder.foundation.PonderIndex;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent.Post;
+import net.neoforged.neoforge.client.event.ClientTickEvent.Pre;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent.AddLayers;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RegisterItemDecorationsEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent.Stage;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
 import net.ty.createcraftedbeginning.api.gas.GasFilteringRenderer;
-import net.ty.createcraftedbeginning.content.airtightcannon.AirtightCannonItemRenderer;
-import net.ty.createcraftedbeginning.content.cinderincinerationblower.CinderIncinerationBlowerBlockEntity;
+import net.ty.createcraftedbeginning.api.outliner.CCBOutliner;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightChestplateLayer;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightLeggingsLayer;
+import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonItemRenderer;
+import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillBlockRender;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlay;
 import net.ty.createcraftedbeginning.ponder.CCBPonderPlugin;
+import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,27 +44,22 @@ public class CCBClientEvents {
     }
 
     @SubscribeEvent
-    public static void onTickPre(ClientTickEvent.Pre event) {
+    public static void onTickPost(Post event) {
+        onTick(false);
+    }
+
+    @SubscribeEvent
+    public static void onTickPre(Pre event) {
         onTick(true);
     }
 
     @SubscribeEvent
-    public static void onTickPost(ClientTickEvent.Post event) {
-        onTick(false);
-    }
-
-    public static void onTick(boolean isPreEvent) {
-        if (Minecraft.getInstance().level == null || Minecraft.getInstance().player == null) {
+    public static void onRenderWorld(@NotNull RenderLevelStageEvent event) {
+        if (event.getStage() != Stage.AFTER_PARTICLES) {
             return;
         }
 
-        if (isPreEvent) {
-			return;
-		}
-
-        GasFilteringRenderer.tick();
-        CreateCraftedBeginningClient.AIRTIGHT_CANNON_RENDER_HANDLER.tick();
-        CreateCraftedBeginningClient.CINDER_INCINERATION_BLOWER_OUTLINER.tick();
+        onRenderWorld(event.getPoseStack());
     }
 
     @SubscribeEvent
@@ -59,25 +68,54 @@ public class CCBClientEvents {
     }
 
     @SubscribeEvent
-    public static void onBlockRightClick(PlayerInteractEvent.@NotNull RightClickBlock event) {
-        if (!event.getLevel().isClientSide() || event.getHand() != InteractionHand.MAIN_HAND) {
+    public static void addEntityRendererLayers(AddLayers event) {
+        EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
+        AirtightChestplateLayer.registerOnAll(dispatcher);
+        AirtightLeggingsLayer.registerOnAll(dispatcher);
+    }
+
+    @SubscribeEvent
+    public static void addToItemTooltip(ItemTooltipEvent event) {
+        if (!AllConfigs.client().tooltips.get()) {
+            return;
+        }
+        if (event.getEntity() == null) {
             return;
         }
 
-        if (!AllItems.GOGGLES.isIn(event.getEntity().getItemBySlot(EquipmentSlot.HEAD))) {
+        SequencedAssemblyWithGasRecipe.addToTooltip(event);
+    }
+
+    @SubscribeEvent
+    public static void registerGuiOverlays(@NotNull RegisterGuiLayersEvent event) {
+        event.registerAbove(VanillaGuiLayers.HOTBAR, GasCanisterOverlay.RESOURCE, GasCanisterOverlay.INSTANCE);
+    }
+
+    public static void onTick(boolean isPreEvent) {
+        if (Minecraft.getInstance().level == null || Minecraft.getInstance().player == null || isPreEvent) {
             return;
         }
 
-        if (!AllItems.WRENCH.isIn(event.getEntity().getMainHandItem()) && !AllItems.WRENCH.isIn(event.getEntity().getOffhandItem())) {
-            return;
-        }
+        GasFilteringRenderer.tick();
+        AirtightHandheldDrillBlockRender.tick();
 
-        BlockPos pos = event.getPos();
-        if (!(event.getLevel().getBlockEntity(pos) instanceof CinderIncinerationBlowerBlockEntity)) {
-            return;
-        }
+        CreateCraftedBeginningClient.AIRTIGHT_CANNON_RENDER_HANDLER.tick();
+        CreateCraftedBeginningClient.AIRTIGHT_HAND_DRILL_RENDER_HANDLER.tick();
+        CreateCraftedBeginningClient.CINDER_INCINERATION_BLOWER_OUTLINER.tick();
 
-        CreateCraftedBeginningClient.CINDER_INCINERATION_BLOWER_OUTLINER.toggleOutline(pos);
-        event.setCanceled(true);
+        CCBOutliner.INSTANCE.tickOutlines();
+    }
+
+    private static void onRenderWorld(@NotNull PoseStack ms) {
+        Vec3 cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+        float partialTicks = AnimationTickHolder.getPartialTicks();
+
+        ms.pushPose();
+        SuperRenderTypeBuffer buffer = DefaultSuperRenderTypeBuffer.getInstance();
+
+        CCBOutliner.INSTANCE.renderOutlines(ms, buffer, cameraPos, partialTicks);
+
+        buffer.draw();
+        ms.popPose();
     }
 }

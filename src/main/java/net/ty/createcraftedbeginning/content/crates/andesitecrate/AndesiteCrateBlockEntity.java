@@ -1,99 +1,99 @@
 package net.ty.createcraftedbeginning.content.crates.andesitecrate;
 
+import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
+import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
+import com.simibubi.create.foundation.utility.CreateLang;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
+import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import net.ty.createcraftedbeginning.content.crates.CustomCrateBlockEntity;
+import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.crates.CrateItemStackHandler;
+import net.ty.createcraftedbeginning.content.crates.CratesBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.NotNull;
 
-import static net.ty.createcraftedbeginning.content.crates.andesitecrate.AndesiteCrateBlock.MAX_SLOT;
-import static net.ty.createcraftedbeginning.content.crates.andesitecrate.AndesiteCrateBlock.SLOT_LIMIT;
+public class AndesiteCrateBlockEntity extends CratesBlockEntity implements IHaveGoggleInformation, ThresholdSwitchObservable {
+    private static final String COMPOUND_KEY_INVENTORY = "Inventory";
 
-public class AndesiteCrateBlockEntity extends CustomCrateBlockEntity {
-    private final ItemStackHandler inv;
+    private final CrateItemStackHandler handler;
 
     public AndesiteCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
-        inv = new AndesiteItemHandler();
+        handler = new AndesiteItemHandler();
     }
 
     public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CCBBlockEntities.ANDESITE_CRATE.get(), (be, context) -> be.inv);
-    }
-
-    public ItemStackHandler getInv() {
-        return inv;
-    }
-
-    public void setStoredItems(ItemStack[] stacks) {
-        for (int i = 0; i < MAX_SLOT && i < stacks.length; i++) {
-            inv.setStackInSlot(i, stacks[i].copy());
-        }
-        setChanged();
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.ANDESITE_CRATE.get(), (be, context) -> be.handler);
     }
 
     @Override
-    protected void write(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
+	public void invalidate() {
+		super.invalidate();
+		invalidateCapabilities();
+	}
+
+    @Override
+    public CrateItemStackHandler getHandler() {
+        return handler;
+    }
+
+    @Override
+    public void setStoredItems(ItemStack content, int count) {
+        handler.setStackInSlot(0, content);
+        handler.setCountInSlot(0, count);
+        notifyUpdate();
+    }
+
+    @Override
+    protected void write(CompoundTag compound, Provider registries, boolean clientPacket) {
         super.write(compound, registries, clientPacket);
-        if (clientPacket) {
-            return;
-        }
-        compound.put("Inventory", inv.serializeNBT(registries));
+        compound.put(COMPOUND_KEY_INVENTORY, handler.serializeNBT(registries));
     }
 
     @Override
-    protected void read(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
+    protected void read(CompoundTag compound, Provider registries, boolean clientPacket) {
         super.read(compound, registries, clientPacket);
-        if (clientPacket || !compound.contains("Inventory")) {
+        if (!compound.contains(COMPOUND_KEY_INVENTORY)) {
             return;
         }
-        inv.deserializeNBT(registries, compound.getCompound("Inventory"));
+
+        handler.deserializeNBT(registries, compound.getCompound(COMPOUND_KEY_INVENTORY));
     }
 
-    private class AndesiteItemHandler extends ItemStackHandler {
+    @Override
+    public int getMaxValue() {
+        return handler.getSlotLimit(0);
+    }
+
+    @Override
+    public int getMinValue() {
+        return 0;
+    }
+
+    @Override
+    public int getCurrentValue() {
+        return handler.getCountInSlot(0);
+    }
+
+    @Override
+    public MutableComponent format(int value) {
+        return CreateLang.text(value + " ").add(CreateLang.translate("schedule.condition.threshold.items")).component();
+    }
+
+    private class AndesiteItemHandler extends CrateItemStackHandler {
         AndesiteItemHandler() {
-            super(MAX_SLOT);
-        }
-
-        @Override
-        public int getSlotLimit(int slot) {
-            return SLOT_LIMIT;
-        }
-
-        @Override
-        protected int getStackLimit(int slot, @NotNull ItemStack stack) {
-            return SLOT_LIMIT;
-        }
-
-        @Override
-        public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-            if (stack.isEmpty()) {
-                return false;
-            }
-
-            ItemStack reference = null;
-            for (int i = 0; i < MAX_SLOT; i++) {
-                ItemStack current = getStackInSlot(i);
-                if (current.isEmpty()) {
-                    continue;
-                }
-                reference = current;
-                break;
-            }
-
-            return reference == null || ItemStack.isSameItemSameComponents(reference, stack);
+            super(CCBConfig.server().crates.maxAndesiteCapacity.get(), null);
         }
 
         @Override
         protected void onContentsChanged(int slot) {
-            setChanged();
+            notifyUpdate();
         }
     }
 }

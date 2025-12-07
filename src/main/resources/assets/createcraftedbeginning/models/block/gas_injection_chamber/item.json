@@ -1,11 +1,12 @@
 {
+	"format_version": "1.21.6",
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
 	"texture_size": [32, 32],
 	"textures": {
-		"1": "createcraftedbeginning:block/gas_injection_chamber_nozzle",
-		"5": "createcraftedbeginning:block/gas_injection_chamber",
-		"particle": "createcraftedbeginning:block/gas_injection_chamber_nozzle"
+		"1": "createcraftedbeginning:block/gas_injection_chamber/nozzle",
+		"5": "createcraftedbeginning:block/gas_injection_chamber/main",
+		"particle": "createcraftedbeginning:block/gas_injection_chamber/nozzle"
 	},
 	"elements": [
 		{

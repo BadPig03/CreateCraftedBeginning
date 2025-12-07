@@ -11,9 +11,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedBreezeChamber;
+import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
-import net.ty.createcraftedbeginning.registry.CCBGUITextures;
 import org.jetbrains.annotations.NotNull;
 
 public class WindChargingCategory extends CCBRecipeCategory<WindChargingRecipe> {
@@ -25,46 +25,42 @@ public class WindChargingCategory extends CCBRecipeCategory<WindChargingRecipe> 
         super(info);
     }
 
-    @Override
-    public void setRecipe(IRecipeLayoutBuilder builder, @NotNull WindChargingRecipe recipe, @NotNull IFocusGroup focuses) {
-        addItemInputSlot(builder, recipe.getIngredientsItem());
+    private static void addItemInputSlot(@NotNull IRecipeLayoutBuilder builder, Ingredient ingredient) {
+        builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setBackground(getRenderedSlot(), -1, -1).addIngredients(ingredient);
     }
 
     @Override
     public void draw(WindChargingRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         Font font = Minecraft.getInstance().font;
-
         CCBGUITextures.JEI_SHADOW.render(graphics, 122, 37);
         CCBGUITextures.JEI_LONG_ARROW.render(graphics, 42, 30);
         CCBGUITextures.JEI_WIND_CHARGING_BACKGROUND.render(graphics, 16, 8);
-
         if (getBackground() == null) {
             return;
         }
 
         if (recipe.isCreativeIceCream()) {
-            MutableComponent text = CCBLang.translateDirect("gui.goggles.infinity_mark");
+            MutableComponent text = Component.translatable("jade.gas.infinity_mark");
             graphics.drawString(font, text, getBackground().getWidth() / 2 - font.width(text) / 2 - 12, 22, COLOR_NORMAL, false);
             chamber.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
             return;
         }
 
         if (recipe.isMilkyItem()) {
-            MutableComponent text = CCBLang.translateDirect("gui.goggles.clear_negative_effects");
+            MutableComponent text = CCBLang.translateDirect("gui.clear_negative_effects");
             graphics.drawString(font, text, getBackground().getWidth() / 2 - font.width(text) / 2 - 15, 22, COLOR_NORMAL, false);
             chamber.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
             return;
         }
 
         boolean isBadFood = recipe.isBadFood();
-        MutableComponent negative = CCBLang.text("-").component();
-        MutableComponent time = CCBLang.secondsWithGameTicks(recipe.getResultTime(), 20).component();
-        MutableComponent realTime = (isBadFood ? negative : Component.empty()).append(time);
+        MutableComponent realTime = (isBadFood ? CCBLang.text("-").component() : Component.empty()).append(CCBLang.secondsWithGameTicks(Math.abs(recipe.getResultTime()), 20).component());
         graphics.drawString(font, realTime, getBackground().getWidth() / 2 - font.width(realTime) / 2 - 12, 22, isBadFood ? COLOR_BAD : COLOR_NORMAL, false);
         chamber.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
     }
 
-    private void addItemInputSlot(@NotNull IRecipeLayoutBuilder builder, Ingredient ingredient) {
-        builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setBackground(getRenderedSlot(), -1, -1).addIngredients(ingredient);
+    @Override
+    public void setRecipe(IRecipeLayoutBuilder builder, @NotNull WindChargingRecipe recipe, @NotNull IFocusGroup focuses) {
+        addItemInputSlot(builder, recipe.getIngredientsItem());
     }
 }

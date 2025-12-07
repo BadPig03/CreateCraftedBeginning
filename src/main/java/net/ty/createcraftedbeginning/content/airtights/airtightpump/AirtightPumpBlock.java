@@ -8,9 +8,11 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.protocol.game.DebugPackets;
+import net.minecraft.core.Direction.Axis;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.BlockGetter;
@@ -18,10 +20,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.FluidState;
@@ -31,18 +32,29 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.TickPriority;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.GasPropagator;
 import net.ty.createcraftedbeginning.api.gas.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.api.gas.interfaces.IAirtightComponent;
+import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import net.ty.createcraftedbeginning.registry.CCBShapes;
 import org.jetbrains.annotations.NotNull;
 
-public class AirtightPumpBlock extends DirectionalKineticBlock implements SimpleWaterloggedBlock, ICogWheel, IBE<AirtightPumpBlockEntity> {
-    public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
+public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<AirtightPumpBlockEntity>, SimpleWaterloggedBlock, ICogWheel, IAirtightComponent {
+    private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     public AirtightPumpBlock(Properties properties) {
         super(properties);
-        registerDefaultState(super.defaultBlockState().setValue(WATERLOGGED, false));
+        registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false));
+    }
+
+    public static boolean canConnectTo(BlockAndTintGetter world, BlockPos neighbourPos, BlockState neighbour, @NotNull Direction direction) {
+        if (GasPropagator.hasGasCapability(world, neighbourPos, direction.getOpposite())) {
+            return true;
+        }
+
+        GasTransportBehaviour transport = BlockEntityBehaviour.get(world, neighbourPos, GasTransportBehaviour.TYPE);
+        return transport != null && transport.canHaveFlowToward(neighbour, direction.getOpposite());
     }
 
     public static boolean isPump(@NotNull BlockState state) {
@@ -53,25 +65,13 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements Simple
         return direction.getAxis() == state.getValue(FACING).getAxis();
     }
 
-    public static boolean canConnectTo(BlockAndTintGetter world, BlockPos neighbourPos, BlockState neighbour, @NotNull Direction direction) {
-        if (GasPropagator.hasGasCapability(world, neighbourPos, direction.getOpposite())) {
-            return true;
-        }
-
-        GasTransportBehaviour transport = BlockEntityBehaviour.get(world, neighbourPos, GasTransportBehaviour.TYPE);
-        if (transport == null) {
-            return false;
-        }
-        return transport.canHaveFlowToward(neighbour, direction.getOpposite());
-    }
-
     @Override
     public BlockState getRotatedBlockState(@NotNull BlockState originalState, Direction targetedFace) {
         return originalState.setValue(FACING, originalState.getValue(FACING).getOpposite());
     }
 
     @Override
-    public Direction.Axis getRotationAxis(@NotNull BlockState state) {
+    public Axis getRotationAxis(@NotNull BlockState state) {
         return state.getValue(FACING).getAxis();
     }
 
@@ -81,7 +81,7 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements Simple
     }
 
     @Override
-    protected void createBlockStateDefinition(StateDefinition.@NotNull Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(@NotNull Builder<Block, BlockState> builder) {
         builder.add(WATERLOGGED);
         super.createBlockStateDefinition(builder);
     }
@@ -95,7 +95,6 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements Simple
 
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
-
         boolean isShiftKeyDown = context.getPlayer() != null && context.getPlayer().isShiftKeyDown();
         state = ProperWaterloggedBlock.withWater(level, state, pos);
 
@@ -103,54 +102,52 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements Simple
         Direction targetDirection = isShiftKeyDown ? nearestLookingDirection : nearestLookingDirection.getOpposite();
         Direction bestConnectedDirection = null;
         double bestDistance = Double.MAX_VALUE;
-
-        for (Direction d : Iterate.directions) {
-            BlockPos adjPos = pos.relative(d);
+        for (Direction direction : Iterate.directions) {
+            BlockPos adjPos = pos.relative(direction);
             BlockState adjState = level.getBlockState(adjPos);
-            if (!canConnectTo(level, adjPos, adjState, d)) {
+            if (!canConnectTo(level, adjPos, adjState, direction)) {
                 continue;
             }
-            double distance = Vec3.atLowerCornerOf(d.getNormal()).distanceTo(Vec3.atLowerCornerOf(targetDirection.getNormal()));
+
+            double distance = Vec3.atLowerCornerOf(direction.getNormal()).distanceTo(Vec3.atLowerCornerOf(targetDirection.getNormal()));
             if (distance > bestDistance) {
                 continue;
             }
+
             bestDistance = distance;
-            bestConnectedDirection = d;
+            bestConnectedDirection = direction;
         }
 
-        if (bestConnectedDirection != null && bestConnectedDirection.getAxis() != targetDirection.getAxis() && !isShiftKeyDown) {
-            return state.setValue(FACING, bestConnectedDirection);
-        }
-
-        return state;
+        return bestConnectedDirection != null && bestConnectedDirection.getAxis() != targetDirection.getAxis() && !isShiftKeyDown ? state.setValue(FACING, bestConnectedDirection) : state;
     }
 
     @Override
-    public void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean isMoving) {
-        super.onPlace(state, world, pos, oldState, isMoving);
-        if (world.isClientSide) {
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean isMoving) {
+        super.onPlace(state, level, pos, oldState, isMoving);
+        if (level.isClientSide) {
             return;
         }
+
         if (state != oldState) {
-            world.scheduleTick(pos, this, 1, TickPriority.HIGH);
+            level.scheduleTick(pos, this, 1, TickPriority.HIGH);
+        }
+        if (!isPump(state) || !isPump(oldState) || state.getValue(FACING) != oldState.getValue(FACING).getOpposite()) {
+            return;
+        }
+        if (!(level.getBlockEntity(pos) instanceof AirtightPumpBlockEntity pump)) {
+            return;
         }
 
-        if (isPump(state) && isPump(oldState) && state.getValue(FACING) == oldState.getValue(FACING).getOpposite()) {
-            BlockEntity blockEntity = world.getBlockEntity(pos);
-            if (!(blockEntity instanceof AirtightPumpBlockEntity pump)) {
-                return;
-            }
-            pump.pressureUpdate = true;
-        }
+        pump.markPressureUpdate();
     }
 
     @Override
-    public void onRemove(@NotNull BlockState state, Level world, BlockPos pos, @NotNull BlockState newState, boolean isMoving) {
+    public void onRemove(@NotNull BlockState state, Level level, BlockPos pos, @NotNull BlockState newState, boolean isMoving) {
         boolean changed = !state.is(newState.getBlock());
-        if (changed && !world.isClientSide) {
-            GasPropagator.propagateChangedPipe(world, pos, state);
+        if (changed && !level.isClientSide) {
+            GasPropagator.propagateChangedPipe(level, pos, state);
         }
-        super.onRemove(state, world, pos, newState, isMoving);
+        super.onRemove(state, level, pos, newState, isMoving);
     }
 
     @Override
@@ -167,16 +164,20 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements Simple
     }
 
     @Override
-    public void neighborChanged(@NotNull BlockState state, @NotNull Level world, @NotNull BlockPos pos, @NotNull Block otherBlock, @NotNull BlockPos neighborPos, boolean isMoving) {
-        DebugPackets.sendNeighborsUpdatePacket(world, pos);
-        Direction direction = GasPropagator.validateNeighbourChange(state, world, pos, neighborPos, isMoving);
-        if (direction == null) {
+    public void neighborChanged(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Block otherBlock, @NotNull BlockPos neighborPos, boolean isMoving) {
+        super.neighborChanged(state, level, pos, otherBlock, neighborPos, isMoving);
+        Direction direction = GasPropagator.validateNeighbourChange(state, level, pos, neighborPos, isMoving);
+        if (direction == null || !isOpenAt(state, direction)) {
             return;
         }
-        if (!isOpenAt(state, direction)) {
-            return;
-        }
-        world.scheduleTick(pos, this, 1, TickPriority.HIGH);
+
+        level.scheduleTick(pos, this, 1, TickPriority.HIGH);
+    }
+
+    @Override
+    public void setPlacedBy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, LivingEntity entity, @NotNull ItemStack stack) {
+        super.setPlacedBy(level, pos, state, entity, stack);
+        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
     }
 
     @Override
@@ -202,5 +203,10 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements Simple
     @Override
     public BlockEntityType<? extends AirtightPumpBlockEntity> getBlockEntityType() {
         return CCBBlockEntities.AIRTIGHT_PUMP.get();
+    }
+
+    @Override
+    public boolean isAirtight(BlockPos currentPos, @NotNull BlockState currentState, @NotNull Direction oppositeDirection) {
+        return currentState.getValue(FACING).getAxis() == oppositeDirection.getAxis();
     }
 }

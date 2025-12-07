@@ -5,7 +5,7 @@ import net.minecraft.world.entity.monster.hoglin.HoglinBase;
 import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
-import net.ty.createcraftedbeginning.api.gas.Gas;
+import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.interfaces.GasOpenPipeEffectHandler;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,7 +27,7 @@ public class UltrawarmAirEffectHandler implements GasOpenPipeEffectHandler {
         }
     }
 
-    private void modifyPiglinTime(AbstractPiglin piglin) {
+    private static void modifyPiglinTime(AbstractPiglin piglin) {
         try {
             Field timeField = AbstractPiglin.class.getDeclaredField("timeInOverworld");
             timeField.setAccessible(true);

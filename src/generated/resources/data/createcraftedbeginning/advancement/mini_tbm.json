@@ -1,0 +1,28 @@
+{
+  "parent": "createcraftedbeginning:wind_charger",
+  "criteria": {
+    "0": {
+      "trigger": "createcraftedbeginning:mini_tbm_builtin"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.mini_tbm.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:airtight_handheld_drill"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.mini_tbm"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

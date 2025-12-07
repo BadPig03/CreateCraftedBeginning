@@ -15,7 +15,7 @@ import net.createmod.catnip.math.VecHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.Direction;
-import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.Direction.Axis;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -28,9 +28,54 @@ import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
 import org.jetbrains.annotations.NotNull;
 
 public class BreezeChamberMovementBehaviour implements MovementBehaviour {
-    @Override
-    public ItemStack canBeDisabledVia(MovementContext context) {
-        return null;
+    private static final String COMPOUND_KEY_CONDUCTOR = "Conductor";
+
+    private static LerpedFloat getHeadAngle(@NotNull MovementContext context) {
+        if (!(context.temporaryData instanceof LerpedFloat)) {
+            context.temporaryData = LerpedFloat.angular().startWithValue(getTargetAngle(context));
+        }
+        return (LerpedFloat) context.temporaryData;
+    }
+
+    @SuppressWarnings("SuspiciousNameCombination")
+    private static float getTargetAngle(MovementContext context) {
+        if (shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0) && context.contraption.entity instanceof CarriageContraptionEntity cce) {
+            float angle = AngleHelper.deg(-Mth.atan2(context.relativeMotion.x, context.relativeMotion.z));
+            return cce.getInitialOrientation().getAxis() == Axis.X ? angle + 180 : angle;
+        }
+
+        Entity player = Minecraft.getInstance().cameraEntity;
+        if (player == null || player.isInvisible() || context.position == null) {
+            return 0;
+        }
+
+        Vec3 applyRotation = context.contraption.entity.reverseRotation(player.position().subtract(context.position), 1);
+        return AngleHelper.deg(-Mth.atan2(applyRotation.z, applyRotation.x)) - 90;
+    }
+
+    private static boolean shouldRenderHat(@NotNull MovementContext context) {
+        CompoundTag compoundTag = context.data;
+        if (!compoundTag.contains(COMPOUND_KEY_CONDUCTOR)) {
+            compoundTag.putBoolean(COMPOUND_KEY_CONDUCTOR, determineIfConducting(context));
+        }
+        return compoundTag.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity cce && cce.hasSchedule();
+    }
+
+    private static boolean determineIfConducting(@NotNull MovementContext context) {
+        Contraption contraption = context.contraption;
+        if (!(contraption instanceof CarriageContraption carriageContraption)) {
+            return false;
+        }
+
+        Direction assemblyDirection = carriageContraption.getAssemblyDirection();
+        for (Direction direction : Iterate.directionsInAxis(assemblyDirection.getAxis())) {
+            if (!carriageContraption.inControl(context.localPos, direction)) {
+                continue;
+            }
+            return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -39,63 +84,21 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
             return;
         }
 
-        RandomSource r = context.world.getRandom();
-        Vec3 c = context.position;
-        Vec3 v = c.add(VecHelper.offsetRandomly(Vec3.ZERO, r, 0.125f).multiply(1, 0, 1));
-        if (r.nextInt(3) == 0 && context.motion.length() < 1 / 64f) {
-            context.world.addParticle((ParticleOptions) CCBParticleTypes.BREEZE_CLOUD.get(), v.x, v.y, v.z, 0, 0, 0);
+        RandomSource random = context.world.getRandom();
+        Vec3 position = context.position;
+        Vec3 added = position.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125f).multiply(1, 0, 1));
+        if (random.nextInt(3) == 0 && context.motion.length() < 0.015625f) {
+            context.world.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), added.x, added.y, added.z, 0, 0, 0);
         }
-
         LerpedFloat headAngle = getHeadAngle(context);
         boolean quickTurn = shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0);
-        headAngle.chase(headAngle.getValue() + AngleHelper.getShortestAngleDiff(headAngle.getValue(), getTargetAngle(context)), .5f, quickTurn ? Chaser.EXP : Chaser.exp(5));
+        headAngle.chase(headAngle.getValue() + AngleHelper.getShortestAngleDiff(headAngle.getValue(), getTargetAngle(context)), 0.5f, quickTurn ? Chaser.EXP : Chaser.exp(5));
         headAngle.tickChaser();
     }
 
-    private LerpedFloat getHeadAngle(@NotNull MovementContext context) {
-        if (!(context.temporaryData instanceof LerpedFloat)) {
-            context.temporaryData = LerpedFloat.angular().startWithValue(getTargetAngle(context));
-        }
-        return (LerpedFloat) context.temporaryData;
-    }
-
-    @SuppressWarnings("SuspiciousNameCombination")
-    private float getTargetAngle(MovementContext context) {
-        if (shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0) && context.contraption.entity instanceof CarriageContraptionEntity cce) {
-            float angle = AngleHelper.deg(-Mth.atan2(context.relativeMotion.x, context.relativeMotion.z));
-            return cce.getInitialOrientation().getAxis() == Direction.Axis.X ? angle + 180 : angle;
-        }
-
-        Entity player = Minecraft.getInstance().cameraEntity;
-        if (player != null && !player.isInvisible() && context.position != null) {
-            Vec3 applyRotation = context.contraption.entity.reverseRotation(player.position().subtract(context.position), 1);
-            double dx = applyRotation.x;
-            double dz = applyRotation.z;
-            return AngleHelper.deg(-Mth.atan2(dz, dx)) - 90;
-        }
-        return 0;
-    }
-
-    private boolean shouldRenderHat(@NotNull MovementContext context) {
-        CompoundTag data = context.data;
-        if (!data.contains("Conductor")) {
-            data.putBoolean("Conductor", determineIfConducting(context));
-        }
-        return data.getBoolean("Conductor") && (context.contraption.entity instanceof CarriageContraptionEntity cce) && cce.hasSchedule();
-    }
-
-    private boolean determineIfConducting(@NotNull MovementContext context) {
-        Contraption contraption = context.contraption;
-        if (!(contraption instanceof CarriageContraption carriageContraption)) {
-            return false;
-        }
-        Direction assemblyDirection = carriageContraption.getAssemblyDirection();
-        for (Direction direction : Iterate.directionsInAxis(assemblyDirection.getAxis())) {
-            if (carriageContraption.inControl(context.localPos, direction)) {
-                return true;
-            }
-        }
-        return false;
+    @Override
+    public ItemStack canBeDisabledVia(MovementContext context) {
+        return null;
     }
 
     @Override

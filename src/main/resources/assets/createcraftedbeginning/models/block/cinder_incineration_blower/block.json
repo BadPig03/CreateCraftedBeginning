@@ -1,12 +1,14 @@
 {
+	"format_version": "1.21.6",
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
+	"render_type": "minecraft:cutout_mipped",
 	"texture_size": [32, 32],
 	"textures": {
-		"0": "createcraftedbeginning:block/cinder_incineration_blower",
-		"1": "createcraftedbeginning:block/cinder_incineration_blower_detail",
+		"0": "createcraftedbeginning:block/cinder_incineration_blower/frame",
+		"1": "createcraftedbeginning:block/cinder_incineration_blower/detail",
 		"2": "createcraftedbeginning:block/cinder_casing",
-		"particle": "createcraftedbeginning:block/cinder_incineration_blower"
+		"particle": "createcraftedbeginning:block/cinder_incineration_blower/frame"
 	},
 	"elements": [
 		{

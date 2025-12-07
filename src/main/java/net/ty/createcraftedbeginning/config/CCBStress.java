@@ -8,7 +8,7 @@ import net.createmod.catnip.config.ConfigBase;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
-import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec.Builder;
 import net.neoforged.neoforge.common.ModConfigSpec.ConfigValue;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import org.jetbrains.annotations.Contract;
@@ -42,6 +42,14 @@ public class CCBStress extends ConfigBase {
         };
     }
 
+    private static void assertFromCreateCraftedBeginning(@NotNull BlockBuilder<?, ?> builder) {
+        if (builder.getOwner().getModid().equals(CreateCraftedBeginning.MOD_ID)) {
+            return;
+        }
+
+        throw new IllegalStateException("Non-relative blocks cannot be added to Create Crafted Beginning's config.");
+    }
+
     @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> setCapacity(double value) {
         return builder -> {
@@ -52,20 +60,14 @@ public class CCBStress extends ConfigBase {
         };
     }
 
-    private static void assertFromCreateCraftedBeginning(@NotNull BlockBuilder<?, ?> builder) {
-        if (!builder.getOwner().getModid().equals(CreateCraftedBeginning.MOD_ID)) {
-            throw new IllegalStateException("Non-relative blocks cannot be added to Create Crafted Beginning's config.");
-        }
-    }
-
     @Override
-    public void registerAll(ModConfigSpec.@NotNull Builder builder) {
+    public void registerAll(@NotNull Builder builder) {
         builder.comment(".", Comments.su, Comments.impact).push("impact");
-        DEFAULT_IMPACTS.forEach((id, value) -> this.impacts.put(id, builder.define(id.getPath(), value)));
+        DEFAULT_IMPACTS.forEach((id, value) -> impacts.put(id, builder.define(id.getPath(), value)));
         builder.pop();
 
         builder.comment(".", Comments.su, Comments.capacity).push("capacity");
-        DEFAULT_CAPACITIES.forEach((id, value) -> this.capacities.put(id, builder.define(id.getPath(), value)));
+        DEFAULT_CAPACITIES.forEach((id, value) -> capacities.put(id, builder.define(id.getPath(), value)));
         builder.pop();
     }
 
@@ -77,14 +79,14 @@ public class CCBStress extends ConfigBase {
     @Nullable
     public DoubleSupplier getImpact(Block block) {
         ResourceLocation id = RegisteredObjectsHelper.getKeyOrThrow(block);
-        ConfigValue<Double> value = this.impacts.get(id);
+        ConfigValue<Double> value = impacts.get(id);
         return value == null ? null : value::get;
     }
 
     @Nullable
     public DoubleSupplier getCapacity(Block block) {
         ResourceLocation id = RegisteredObjectsHelper.getKeyOrThrow(block);
-        ConfigValue<Double> value = this.capacities.get(id);
+        ConfigValue<Double> value = capacities.get(id);
         return value == null ? null : value::get;
     }
 

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "create:fluid_tank"
+    },
+    {
+      "item": "createcraftedbeginning:airtight_sheet_block"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:residue_outlet"
+  }
+}

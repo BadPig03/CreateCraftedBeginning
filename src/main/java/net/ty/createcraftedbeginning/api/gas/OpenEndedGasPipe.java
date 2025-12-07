@@ -3,27 +3,32 @@ package net.ty.createcraftedbeginning.api.gas;
 import com.simibubi.create.foundation.ICapabilityProvider;
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
+import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.phys.AABB;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.interfaces.GasOpenPipeEffectHandler;
+import net.ty.createcraftedbeginning.api.gas.interfaces.GasOpenPipeExtractHandler;
 import net.ty.createcraftedbeginning.api.gas.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import net.ty.createcraftedbeginning.registry.CCBGases;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class OpenEndedGasPipe extends GasFlowSource {
+    private static final String COMPOUND_KEY_LOCATION = "Location";
+    private static final String COMPOUND_KEY_PULLING = "Pulling";
+    private static final int MAX_CAPACITY = 1000;
+
     private final BlockPos pos;
     private final BlockPos outputPos;
     private final AABB area;
-    private Level world;
+    private final Direction direction;
+    private Level level;
     private OpenEndGasHandler gasHandler;
     private final ICapabilityProvider<IGasHandler> gasHandlerProvider = ICapabilityProvider.of(() -> gasHandler);
     private boolean wasPulling;
@@ -33,20 +38,24 @@ public class OpenEndedGasPipe extends GasFlowSource {
         gasHandler = new OpenEndGasHandler();
         outputPos = face.getConnectedPos();
         pos = face.getPos();
-        area = new AABB(outputPos.relative(face.getFace())).inflate(2);
+        direction = face.getFace();
+        area = new AABB(outputPos.relative(direction)).inflate(2);
     }
 
-    public static @NotNull OpenEndedGasPipe fromNBT(@NotNull CompoundTag compound, HolderLookup.Provider registries, BlockPos blockEntityPos) {
-        BlockFace fromNBT = BlockFace.fromNBT(compound.getCompound("Location"));
-        OpenEndedGasPipe pipe = new OpenEndedGasPipe(new BlockFace(blockEntityPos, fromNBT.getFace()));
+    public static @NotNull OpenEndedGasPipe read(@NotNull CompoundTag compoundTag, Provider registries, BlockPos blockEntityPos) {
+        if (!compoundTag.contains(COMPOUND_KEY_LOCATION)) {
+            throw new IllegalStateException("Invalid compound tag!");
+        }
 
-        pipe.gasHandler.readFromNBT(registries, compound);
-        pipe.wasPulling = compound.getBoolean("Pulling");
+        BlockFace fromNBT = BlockFace.fromNBT(compoundTag.getCompound(COMPOUND_KEY_LOCATION));
+        OpenEndedGasPipe pipe = new OpenEndedGasPipe(new BlockFace(blockEntityPos, fromNBT.getFace()));
+        pipe.gasHandler.read(registries, compoundTag);
+        pipe.wasPulling = compoundTag.contains(COMPOUND_KEY_PULLING) && compoundTag.getBoolean(COMPOUND_KEY_PULLING);
         return pipe;
     }
 
-    public Level getWorld() {
-        return world;
+    public Level getLevel() {
+        return level;
     }
 
     public BlockPos getPos() {
@@ -62,83 +71,46 @@ public class OpenEndedGasPipe extends GasFlowSource {
     }
 
     @Override
-    public boolean isEndpoint() {
-        return true;
-    }
-
-    @Override
-    public void manageSource(Level world, BlockEntity networkBE) {
-        this.world = world;
-    }
-
-    @Override
     @Nullable
     public ICapabilityProvider<IGasHandler> provideHandler() {
         return gasHandlerProvider;
     }
 
-    public CompoundTag serializeNBT(HolderLookup.Provider registries) {
+    @Override
+    public boolean isEndpoint() {
+        return true;
+    }
+
+    @Override
+    public void manageSource(Level level, BlockEntity networkBE) {
+        this.level = level;
+    }
+
+    public CompoundTag write(Provider registries) {
         CompoundTag compound = new CompoundTag();
-        gasHandler.writeToNBT(registries, compound);
-        compound.putBoolean("Pulling", wasPulling);
-        compound.put("Location", location.serializeNBT());
+        gasHandler.write(registries, compound);
+        compound.putBoolean(COMPOUND_KEY_PULLING, wasPulling);
+        compound.put(COMPOUND_KEY_LOCATION, location.serializeNBT());
         return compound;
-    }
-
-    private GasStack getGasFromSpace(boolean simulate) {
-        GasStack empty = GasStack.EMPTY;
-        if (world == null || !world.isLoaded(outputPos)) {
-            return empty;
-        }
-
-        BlockState state = world.getBlockState(outputPos);
-        BlockState currentState = world.getBlockState(pos);
-        if (!currentState.is(CCBBlocks.AIRTIGHT_PIPE_BLOCK) || !state.isAir()) {
-            return empty;
-        }
-
-        if (!CCBConfig.server().compressedAir.canAbsorbAirFromWorld.get()) {
-            return empty;
-        }
-
-        DimensionType dimensionType = world.dimensionType();
-        GasType<Gas> gas;
-        if (dimensionType.ultraWarm()) {
-            gas = CCBGases.ULTRAWARM_AIR;
-        } else if (dimensionType.natural()) {
-            gas = CCBGases.NATURAL_AIR;
-        } else {
-            gas = CCBGases.ETHEREAL_AIR;
-        }
-
-        return new GasStack(gas, 1000);
-    }
-
-    private boolean isEmptySpace(GasStack gas) {
-        if (world == null || !world.isLoaded(outputPos)) {
-            return false;
-        }
-
-        return world.getBlockState(outputPos).isAir();
     }
 
     private class OpenEndGasHandler extends GasTank {
         public OpenEndGasHandler() {
-            super(1000);
+            super(MAX_CAPACITY);
         }
 
         @Override
         public long fill(@NotNull GasStack resource, @NotNull GasAction action) {
-            if (world == null || !world.isLoaded(outputPos)) {
+            if (level == null || !level.isLoaded(outputPos)) {
                 return 0;
             }
             if (resource.isEmpty() || !isEmptySpace(resource)) {
                 return 0;
             }
 
-            GasStack containedGasStack = getGas();
+            GasStack containedGasStack = getGasStack();
             if (!containedGasStack.isEmpty() && !GasStack.isSameGas(containedGasStack, resource)) {
-                setGas(GasStack.EMPTY);
+                setGasStack(GasStack.EMPTY);
             }
             if (wasPulling) {
                 wasPulling = false;
@@ -155,11 +127,11 @@ public class OpenEndedGasPipe extends GasFlowSource {
             }
 
             if (effectHandler != null && !resource.isEmpty()) {
-                effectHandler.apply(world, area, resource.copy().getGas());
+                effectHandler.apply(level, area, resource.copy().getGas());
             }
 
-            if (getGasAmount() == 1000 && isEmptySpace(containedGasStack)) {
-                setGas(GasStack.EMPTY);
+            if (getGasAmount() == MAX_CAPACITY && isEmptySpace(containedGasStack)) {
+                setGasStack(GasStack.EMPTY);
             }
             return fill;
         }
@@ -177,17 +149,15 @@ public class OpenEndedGasPipe extends GasFlowSource {
         private GasStack drainInner(long amount, @Nullable GasStack filter, GasAction action) {
             GasStack empty = GasStack.EMPTY;
             boolean filterPresent = filter != null;
-
-            if (world == null || !world.isLoaded(outputPos)) {
+            if (level == null || !level.isLoaded(outputPos)) {
                 return empty;
             }
-
             if (amount == 0) {
                 return empty;
             }
 
-            if (amount > 1000) {
-                amount = 1000;
+            if (amount > MAX_CAPACITY) {
+                amount = MAX_CAPACITY;
                 if (filterPresent) {
                     filter = filter.copyWithAmount(amount);
                 }
@@ -202,7 +172,7 @@ public class OpenEndedGasPipe extends GasFlowSource {
                 return drainedFromInternal;
             }
 
-            GasStack drainedFromWorld = getGasFromSpace(action.simulate());
+            GasStack drainedFromWorld = getGasFromSpace();
             if (drainedFromWorld.isEmpty()) {
                 return GasStack.EMPTY;
             }
@@ -212,14 +182,31 @@ public class OpenEndedGasPipe extends GasFlowSource {
 
             long remainder = drainedFromWorld.getAmount() - amount;
             drainedFromWorld.setAmount(amount);
-
             if (!action.simulate() && remainder > 0) {
-                if (!getGas().isEmpty() && !GasStack.isSameGas(getGas(), drainedFromWorld)) {
-                    setGas(GasStack.EMPTY);
+                if (!getGasStack().isEmpty() && !GasStack.isSameGas(getGasStack(), drainedFromWorld)) {
+                    setGasStack(GasStack.EMPTY);
                 }
                 super.fill(drainedFromWorld.copyWithAmount(remainder), GasAction.EXECUTE);
             }
             return drainedFromWorld;
+        }
+
+        private GasStack getGasFromSpace() {
+            GasStack empty = GasStack.EMPTY;
+            if (level == null || !level.isLoaded(outputPos)) {
+                return empty;
+            }
+            if (!CCBConfig.server().gas.canExtractAirFromWorld.get()) {
+                return empty;
+            }
+
+            BlockState currentState = level.getBlockState(pos);
+            GasOpenPipeExtractHandler extractHandler = GasOpenPipeExtractHandler.REGISTRY.get(currentState.getBlock());
+            return extractHandler != null ? extractHandler.extract(level, pos, currentState, direction) : empty;
+        }
+
+        private boolean isEmptySpace(GasStack gas) {
+            return level != null && level.isLoaded(outputPos) && level.getBlockState(outputPos).isAir();
         }
     }
 }

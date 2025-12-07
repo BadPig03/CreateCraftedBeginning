@@ -24,33 +24,32 @@ public enum Mods {
         return id;
     }
 
+    public @NotNull Item getItem(String id) {
+        return BuiltInRegistries.ITEM.get(asResource(id));
+    }
+
     @Contract("_ -> new")
     public @NotNull ResourceLocation asResource(String path) {
         return ResourceLocation.fromNamespaceAndPath(id, path);
-    }
-
-    public @NotNull Item getItem(String id) {
-        return BuiltInRegistries.ITEM.get(asResource(id));
     }
 
     public @NotNull Item getItem(ResourceLocation id) {
         return BuiltInRegistries.ITEM.get(id);
     }
 
+    public <T> Optional<T> runIfInstalled(Supplier<Supplier<T>> toRun) {
+        return isLoaded() ? Optional.of(toRun.get().get()) : Optional.empty();
+    }
+
     public boolean isLoaded() {
         return ModList.get().isLoaded(id);
     }
 
-    public <T> Optional<T> runIfInstalled(Supplier<Supplier<T>> toRun) {
-        if (isLoaded()) {
-            return Optional.of(toRun.get().get());
-        }
-        return Optional.empty();
-    }
-
     public void executeIfInstalled(Supplier<Runnable> toExecute) {
-        if (isLoaded()) {
-            toExecute.get().run();
+        if (!isLoaded()) {
+            return;
         }
+
+        toExecute.get().run();
     }
 }

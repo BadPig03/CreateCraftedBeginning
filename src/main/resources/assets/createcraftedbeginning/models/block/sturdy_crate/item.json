@@ -1,10 +1,11 @@
 {
+	"format_version": "1.21.6",
 	"credit": "Made with Blockbench",
 	"parent": "create:block/block",
 	"texture_size": [32, 32],
 	"textures": {
-		"4": "createcraftedbeginning:block/sturdy_crate",
-		"particle": "createcraftedbeginning:block/sturdy_crate"
+		"4": "createcraftedbeginning:block/crates/sturdy_crate",
+		"particle": "createcraftedbeginning:block/crates/sturdy_crate"
 	},
 	"elements": [
 		{

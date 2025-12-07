@@ -1,0 +1,35 @@
+{
+  "parent": "createcraftedbeginning:water_hammer_effect",
+  "criteria": {
+    "0": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:airtight_check_valve"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.you_shall_not_pass.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:airtight_check_valve"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.you_shall_not_pass"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -1,13 +1,15 @@
 {
+	"format_version": "1.21.6",
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
 	"texture_size": [32, 32],
 	"textures": {
-		"0": "createcraftedbeginning:block/cinder_incineration_blower",
-		"1": "createcraftedbeginning:block/cinder_incineration_blower_detail",
-		"3": "createcraftedbeginning:block/cinder_incineration_blower_magma",
+		"0": "createcraftedbeginning:block/cinder_incineration_blower/frame",
+		"1": "createcraftedbeginning:block/cinder_incineration_blower/detail",
+		"3": "createcraftedbeginning:block/cinder_incineration_blower/magma",
 		"4": "createcraftedbeginning:block/cinder_casing",
-		"particle": "createcraftedbeginning:block/cinder_incineration_blower"
+		"5": "createcraftedbeginning:block/shaft_axis",
+		"particle": "createcraftedbeginning:block/cinder_incineration_blower/frame"
 	},
 	"elements": [
 		{
@@ -166,18 +168,6 @@
 			}
 		},
 		{
-			"from": [6, 0, 6],
-			"to": [10, 2, 10],
-			"rotation": {"angle": 0, "axis": "y", "origin": [0, -16, 0]},
-			"faces": {
-				"north": {"uv": [14, 15, 16, 16], "texture": "#1"},
-				"east": {"uv": [14, 15, 16, 16], "texture": "#1"},
-				"south": {"uv": [14, 15, 16, 16], "texture": "#1"},
-				"west": {"uv": [14, 15, 16, 16], "texture": "#1"},
-				"down": {"uv": [12, 14, 14, 16], "texture": "#1"}
-			}
-		},
-		{
 			"from": [4, 2, 4],
 			"to": [12, 4, 12],
 			"faces": {
@@ -185,6 +175,18 @@
 				"east": {"uv": [8, 8, 16, 10], "texture": "#1"},
 				"south": {"uv": [8, 8, 16, 10], "texture": "#1"},
 				"west": {"uv": [8, 8, 16, 10], "texture": "#1"}
+			}
+		},
+		{
+			"from": [6, 0, 6],
+			"to": [10, 2, 10],
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, -16, 0]},
+			"faces": {
+				"north": {"uv": [6, 0, 10, 2], "texture": "#5"},
+				"east": {"uv": [6, 0, 10, 2], "texture": "#5"},
+				"south": {"uv": [6, 0, 10, 2], "texture": "#5"},
+				"west": {"uv": [6, 0, 10, 2], "texture": "#5"},
+				"down": {"uv": [0, 0, 4, 4], "texture": "#5"}
 			}
 		}
 	]

@@ -1,0 +1,36 @@
+{
+  "type": "create:mechanical_crafting",
+  "accept_mirrored": true,
+  "category": "misc",
+  "key": {
+    "T": {
+      "item": "createcraftedbeginning:airtight_tank"
+    },
+    "B": {
+      "item": "createcraftedbeginning:breeze_core"
+    },
+    "A": {
+      "item": "createcraftedbeginning:airtight_sheet"
+    },
+    "W": {
+      "item": "minecraft:wind_charge"
+    },
+    "O": {
+      "tag": "c:plates/obsidian"
+    },
+    "M": {
+      "item": "create:precision_mechanism"
+    }
+  },
+  "pattern": [
+    " AMA ",
+    "AWBWA",
+    "AO OA",
+    "AO OA",
+    "AT TA"
+  ],
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:airtight_leggings"
+  }
+}

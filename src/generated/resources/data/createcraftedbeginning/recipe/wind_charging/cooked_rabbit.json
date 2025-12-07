@@ -5,10 +5,6 @@
       "item": "minecraft:cooked_rabbit"
     }
   ],
-  "results": [
-    {
-      "amount": 2479,
-      "id": "createcraftedbeginning:virtual_time"
-    }
-  ]
+  "processing_time": 2479,
+  "results": []
 }

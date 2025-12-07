@@ -17,37 +17,38 @@ public class BreezeCloudParticle extends TextureSheetParticle {
 
     protected BreezeCloudParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, SpriteSet sprites) {
         super(level, x, y, z, 0.0, 0.0, 0.0);
-        this.friction = 0.96f;
+        friction = 0.96f;
         this.sprites = sprites;
-        this.xd *= 0.1f;
-        this.yd *= 0.1f;
-        this.zd *= 0.1f;
-        this.xd += xSpeed;
-        this.yd += ySpeed;
-        this.zd += zSpeed;
-        float f1 = 1f - (float) (Math.random() * 0.3f);
-        this.rCol = f1;
-        this.gCol = f1;
-        this.bCol = f1;
-        this.quadSize *= 1.875f;
+        xd *= 0.1f;
+        yd *= 0.1f;
+        zd *= 0.1f;
+        xd += xSpeed;
+        yd += ySpeed;
+        zd += zSpeed;
+        float f1 = 1.0f - (float) (Math.random() * 0.3f);
+        rCol = f1;
+        gCol = f1;
+        bCol = f1;
+        quadSize *= 1.875f;
         int i = (int) (8.0 / (Math.random() * 0.8 + 0.3));
-        this.lifetime = (int) Math.max((float) i * 2.5f, 1f);
-        this.hasPhysics = false;
-        this.setSpriteFromAge(sprites);
+        lifetime = (int) Math.max((float) i * 2.5f, 1.0f);
+        hasPhysics = false;
+        setSpriteFromAge(sprites);
     }
 
     @Override
     public float getQuadSize(float scaleFactor) {
-        return this.quadSize * Mth.clamp(((float) this.age + scaleFactor) / (float) this.lifetime * 32f, 0f, 1f);
+        return quadSize * Mth.clamp(((float) age + scaleFactor) / (float) lifetime * 32.0f, 0.0f, 1.0f);
     }
 
     @Override
     public void tick() {
         super.tick();
-        if (this.removed) {
+        if (removed) {
             return;
         }
-        this.setSpriteFromAge(this.sprites);
+
+        setSpriteFromAge(sprites);
     }
 
     @Override
@@ -63,8 +64,9 @@ public class BreezeCloudParticle extends TextureSheetParticle {
             this.sprites = sprites;
         }
 
+        @Override
         public Particle createParticle(@NotNull SimpleParticleType type, @NotNull ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
-            return new BreezeCloudParticle(level, x, y, z, xSpeed, ySpeed, zSpeed, this.sprites);
+            return new BreezeCloudParticle(level, x, y, z, xSpeed, ySpeed, zSpeed, sprites);
         }
     }
 }

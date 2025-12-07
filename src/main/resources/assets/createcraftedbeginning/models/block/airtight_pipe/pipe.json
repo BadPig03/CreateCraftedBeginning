@@ -1,9 +1,11 @@
 {
+	"format_version": "1.21.6",
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
+	"render_type": "minecraft:cutout_mipped",
 	"textures": {
-		"0": "createcraftedbeginning:block/airtight_pipe",
-		"particle": "createcraftedbeginning:block/airtight_tank/vertical"
+		"0": "createcraftedbeginning:block/airtight_pipe/pipe",
+		"particle": "createcraftedbeginning:block/airtight_tank/top"
 	},
 	"elements": [
 		{

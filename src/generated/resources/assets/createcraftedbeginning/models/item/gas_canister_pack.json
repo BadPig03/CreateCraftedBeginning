@@ -1,0 +1,104 @@
+{
+  "parent": "minecraft:item/generated",
+  "overrides": [
+    {
+      "model": "createcraftedbeginning:item/gas_canister_pack_0",
+      "predicate": {
+        "createcraftedbeginning:gas_canister_pack_type": 0.0
+      }
+    },
+    {
+      "model": "createcraftedbeginning:item/gas_canister_pack_1",
+      "predicate": {
+        "createcraftedbeginning:gas_canister_pack_type": 1.0
+      }
+    },
+    {
+      "model": "createcraftedbeginning:item/gas_canister_pack_2",
+      "predicate": {
+        "createcraftedbeginning:gas_canister_pack_type": 2.0
+      }
+    },
+    {
+      "model": "createcraftedbeginning:item/gas_canister_pack_3",
+      "predicate": {
+        "createcraftedbeginning:gas_canister_pack_type": 3.0
+      }
+    },
+    {
+      "model": "createcraftedbeginning:item/gas_canister_pack_4",
+      "predicate": {
+        "createcraftedbeginning:gas_canister_pack_type": 4.0
+      }
+    },
+    {
+      "model": "createcraftedbeginning:item/gas_canister_pack_5",
+      "predicate": {
+        "createcraftedbeginning:gas_canister_pack_type": 5.0
+      }
+    },
+    {
+      "model": "createcraftedbeginning:item/gas_canister_pack_6",
+      "predicate": {
+        "createcraftedbeginning:gas_canister_pack_type": 6.0
+      }
+    },
+    {
+      "model": "createcraftedbeginning:item/gas_canister_pack_7",
+      "predicate": {
+        "createcraftedbeginning:gas_canister_pack_type": 7.0
+      }
+    },
+    {
+      "model": "createcraftedbeginning:item/gas_canister_pack_8",
+      "predicate": {
+        "createcraftedbeginning:gas_canister_pack_type": 8.0
+      }
+    },
+    {
+      "model": "createcraftedbeginning:item/gas_canister_pack_9",
+      "predicate": {
+        "createcraftedbeginning:gas_canister_pack_type": 9.0
+      }
+    },
+    {
+      "model": "createcraftedbeginning:item/gas_canister_pack_10",
+      "predicate": {
+        "createcraftedbeginning:gas_canister_pack_type": 10.0
+      }
+    },
+    {
+      "model": "createcraftedbeginning:item/gas_canister_pack_11",
+      "predicate": {
+        "createcraftedbeginning:gas_canister_pack_type": 11.0
+      }
+    },
+    {
+      "model": "createcraftedbeginning:item/gas_canister_pack_12",
+      "predicate": {
+        "createcraftedbeginning:gas_canister_pack_type": 12.0
+      }
+    },
+    {
+      "model": "createcraftedbeginning:item/gas_canister_pack_13",
+      "predicate": {
+        "createcraftedbeginning:gas_canister_pack_type": 13.0
+      }
+    },
+    {
+      "model": "createcraftedbeginning:item/gas_canister_pack_14",
+      "predicate": {
+        "createcraftedbeginning:gas_canister_pack_type": 14.0
+      }
+    },
+    {
+      "model": "createcraftedbeginning:item/gas_canister_pack_15",
+      "predicate": {
+        "createcraftedbeginning:gas_canister_pack_type": 15.0
+      }
+    }
+  ],
+  "textures": {
+    "layer0": "createcraftedbeginning:item/gas_canister_pack"
+  }
+}

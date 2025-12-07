@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "A",
+    "B",
+    "C"
+  ],
+  "key": {
+    "A": {
+      "item": "createcraftedbeginning:airtight_sheet_block"
+    },
+    "B": {
+      "item": "minecraft:bucket"
+    },
+    "C": {
+      "item": "create:electron_tube"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:airtight_hatch"
+  }
+}

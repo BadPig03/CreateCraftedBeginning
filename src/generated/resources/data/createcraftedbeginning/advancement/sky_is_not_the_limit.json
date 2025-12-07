@@ -1,0 +1,29 @@
+{
+  "parent": "createcraftedbeginning:even_if_harder_than_obsidian",
+  "criteria": {
+    "0": {
+      "trigger": "createcraftedbeginning:sky_is_not_the_limit_builtin"
+    }
+  },
+  "display": {
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.sky_is_not_the_limit.desc"
+    },
+    "frame": "goal",
+    "hidden": true,
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:airtight_chestplate"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.sky_is_not_the_limit"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

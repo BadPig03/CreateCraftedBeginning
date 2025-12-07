@@ -1,10 +1,11 @@
 {
+	"format_version": "1.21.6",
 	"credit": "Made with Blockbench",
 	"parent": "create:block/block",
 	"texture_size": [32, 32],
 	"textures": {
-		"4": "createcraftedbeginning:block/airtight_pump",
-		"particle": "createcraftedbeginning:block/airtight_pump"
+		"4": "createcraftedbeginning:block/airtight_pump/pump",
+		"particle": "createcraftedbeginning:block/airtight_pump/pump"
 	},
 	"elements": [
 		{

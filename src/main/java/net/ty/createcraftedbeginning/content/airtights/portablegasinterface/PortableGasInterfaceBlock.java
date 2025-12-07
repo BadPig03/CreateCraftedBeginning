@@ -14,8 +14,9 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import net.ty.createcraftedbeginning.registry.CCBShapes;
+import net.ty.createcraftedbeginning.data.CCBShapes;
 import org.jetbrains.annotations.NotNull;
 
 public class PortableGasInterfaceBlock extends WrenchableDirectionalBlock implements IBE<PortableGasInterfaceBlockEntity> {
@@ -24,8 +25,8 @@ public class PortableGasInterfaceBlock extends WrenchableDirectionalBlock implem
     }
 
     @Override
-    public void neighborChanged(@NotNull BlockState state, @NotNull Level world, @NotNull BlockPos pos, @NotNull Block neighborBlock, @NotNull BlockPos neighborPos, boolean moving) {
-        withBlockEntityDo(world, pos, PortableGasInterfaceBlockEntity::neighbourChanged);
+    public void neighborChanged(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Block neighborBlock, @NotNull BlockPos neighborPos, boolean moving) {
+        withBlockEntityDo(level, pos, PortableGasInterfaceBlockEntity::neighbourChanged);
     }
 
     @Override
@@ -34,27 +35,30 @@ public class PortableGasInterfaceBlock extends WrenchableDirectionalBlock implem
     }
 
     @Override
-    public int getAnalogOutputSignal(@NotNull BlockState blockState, @NotNull Level worldIn, @NotNull BlockPos pos) {
-        return getBlockEntityOptional(worldIn, pos).map(be -> be.isConnected() ? 15 : 0).orElse(0);
+    public int getAnalogOutputSignal(@NotNull BlockState blockState, @NotNull Level level, @NotNull BlockPos pos) {
+        return getBlockEntityOptional(level, pos).map(be -> be.isConnected() ? 15 : 0).orElse(0);
     }
 
     @Override
-    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter worldIn, @NotNull BlockPos pos, @NotNull CollisionContext context) {
+    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos, @NotNull CollisionContext context) {
         return CCBShapes.PORTABLE_GAS_INTERFACE.get(state.getValue(FACING));
     }
 
     @Override
     public void setPlacedBy(@NotNull Level level, @NotNull BlockPos blockPos, @NotNull BlockState state, LivingEntity entity, @NotNull ItemStack itemStack) {
         super.setPlacedBy(level, blockPos, state, entity, itemStack);
+        CCBAdvancementBehaviour.setPlacedBy(level, blockPos, entity);
     }
 
     @Override
     public BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
-        Direction direction = context.getNearestLookingDirection();
-        if (context.getPlayer() != null && context.getPlayer().isShiftKeyDown()) {
-            direction = direction.getOpposite();
+        BlockState state = super.getStateForPlacement(context);
+        if (state == null) {
+            return null;
         }
-        return defaultBlockState().setValue(FACING, direction.getOpposite());
+
+        Direction direction = context.getNearestLookingDirection();
+        return context.getPlayer() != null && context.getPlayer().isShiftKeyDown() ? state.setValue(FACING, direction) : state.setValue(FACING, direction.getOpposite());
     }
 
     @Override

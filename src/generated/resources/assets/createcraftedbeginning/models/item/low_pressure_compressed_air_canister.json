@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "createcraftedbeginning:item/low_pressure_compressed_air_canister"
-  }
-}

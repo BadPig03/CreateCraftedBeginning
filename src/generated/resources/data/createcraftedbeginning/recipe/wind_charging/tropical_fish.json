@@ -5,10 +5,6 @@
       "item": "minecraft:tropical_fish"
     }
   ],
-  "results": [
-    {
-      "amount": 59,
-      "id": "createcraftedbeginning:virtual_time"
-    }
-  ]
+  "processing_time": 59,
+  "results": []
 }

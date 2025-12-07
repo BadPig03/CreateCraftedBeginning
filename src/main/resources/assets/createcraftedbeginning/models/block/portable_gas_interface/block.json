@@ -1,9 +1,11 @@
 {
+	"format_version": "1.21.6",
 	"credit": "Made with Blockbench",
+	"render_type": "minecraft:cutout_mipped",
 	"textures": {
 		"0": "createcraftedbeginning:block/portable_gas_interface/main",
-		"2": "createcraftedbeginning:block/airtight_sheet_block",
-		"particle": "createcraftedbeginning:block/airtight_sheet_block"
+		"2": "createcraftedbeginning:block/airtight_tank/top",
+		"particle": "createcraftedbeginning:block/airtight_tank/top"
 	},
 	"elements": [
 		{

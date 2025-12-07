@@ -1,11 +1,13 @@
 {
+	"format_version": "1.21.6",
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
+	"render_type": "minecraft:cutout_mipped",
 	"texture_size": [32, 32],
 	"textures": {
-		"0": "createcraftedbeginning:block/cardboard_crate",
-		"1": "createcraftedbeginning:block/cardboard_crate_mark",
-		"particle": "createcraftedbeginning:block/cardboard_crate_mark"
+		"0": "createcraftedbeginning:block/crates/cardboard_crate",
+		"1": "createcraftedbeginning:block/crates/cardboard_crate_mark",
+		"particle": "createcraftedbeginning:block/crates/cardboard_crate_mark"
 	},
 	"elements": [
 		{

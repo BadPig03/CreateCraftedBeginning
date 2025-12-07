@@ -1,0 +1,27 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "createcraftedbeginning:block/tesla_turbine_nozzle/block",
+      "x": 90
+    },
+    "facing=east": {
+      "model": "createcraftedbeginning:block/tesla_turbine_nozzle/block",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "createcraftedbeginning:block/tesla_turbine_nozzle/block"
+    },
+    "facing=south": {
+      "model": "createcraftedbeginning:block/tesla_turbine_nozzle/block",
+      "y": 180
+    },
+    "facing=up": {
+      "model": "createcraftedbeginning:block/tesla_turbine_nozzle/block",
+      "x": -90
+    },
+    "facing=west": {
+      "model": "createcraftedbeginning:block/tesla_turbine_nozzle/block",
+      "y": 270
+    }
+  }
+}

@@ -11,6 +11,5 @@ public class CCBCommon extends ConfigBase {
     }
 
     private static class Comments {
-
     }
 }

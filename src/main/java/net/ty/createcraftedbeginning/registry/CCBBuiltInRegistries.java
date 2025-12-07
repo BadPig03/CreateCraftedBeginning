@@ -1,42 +1,33 @@
 package net.ty.createcraftedbeginning.registry;
 
-import com.mojang.serialization.MapCodec;
 import net.minecraft.core.RegistrationInfo;
 import net.minecraft.core.Registry;
 import net.minecraft.core.WritableRegistry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.neoforged.neoforge.registries.RegistryBuilder;
-import net.ty.createcraftedbeginning.api.airtightcannon.AirtightCannonProjectileBlockHitAction;
-import net.ty.createcraftedbeginning.api.airtightcannon.AirtightCannonProjectileEntityHitAction;
-import net.ty.createcraftedbeginning.api.airtightcannon.AirtightCannonProjectileRenderMode;
 import net.ty.createcraftedbeginning.api.gas.MountedGasStorageType;
-import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 
 public class CCBBuiltInRegistries {
     public static final Registry<MountedGasStorageType<?>> MOUNTED_GAS_STORAGE_TYPE = simple(CCBRegistries.MOUNTED_GAS_STORAGE_TYPE);
-    public static final Registry<MapCodec<? extends AirtightCannonProjectileRenderMode>> POTATO_PROJECTILE_RENDER_MODE = simple(CCBRegistries.AIRTIGHT_CANNON_PROJECTILE_RENDER_MODE);
-    public static final Registry<MapCodec<? extends AirtightCannonProjectileEntityHitAction>> POTATO_PROJECTILE_ENTITY_HIT_ACTION = simple(CCBRegistries.AIRTIGHT_CANNON_PROJECTILE_ENTITY_HIT_ACTION);
-    public static final Registry<MapCodec<? extends AirtightCannonProjectileBlockHitAction>> POTATO_PROJECTILE_BLOCK_HIT_ACTION = simple(CCBRegistries.AIRTIGHT_CANNON_PROJECTILE_BLOCK_HIT_ACTION);
 
+    @SuppressWarnings("SameParameterValue")
     private static <T> @NotNull Registry<T> simple(ResourceKey<Registry<T>> key) {
-        return register(key, () -> {
-        });
+        return register(key, () -> {});
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static <T> @NotNull Registry<T> register(ResourceKey<Registry<T>> key, Runnable onBakeCallback) {
         RegistryBuilder<T> builder = new RegistryBuilder<>(key).sync(true);
-
-        builder.onBake(r -> onBakeCallback.run());
-
+        builder.onBake(registry -> onBakeCallback.run());
         Registry<T> registry = builder.create();
         ((WritableRegistry) BuiltInRegistries.REGISTRY).register(key, registry, RegistrationInfo.BUILT_IN);
         return registry;
     }
 
-    @ApiStatus.Internal
+    @Internal
     public static void init() {
     }
 }

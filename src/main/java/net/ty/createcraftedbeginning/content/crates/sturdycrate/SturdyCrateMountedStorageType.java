@@ -2,14 +2,11 @@ package net.ty.createcraftedbeginning.content.crates.sturdycrate;
 
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorageType;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import net.ty.createcraftedbeginning.content.crates.CrateItemStackHandler;
 import org.jetbrains.annotations.Nullable;
-
-import static net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlock.MAX_SLOT;
 
 public class SturdyCrateMountedStorageType extends MountedItemStorageType<SturdyCrateMountedStorage> {
     public SturdyCrateMountedStorageType() {
@@ -23,12 +20,7 @@ public class SturdyCrateMountedStorageType extends MountedItemStorageType<Sturdy
             return null;
         }
 
-        ItemStack[] storedItems = new ItemStack[MAX_SLOT];
-        ItemStackHandler inv = crate.getInv();
-        for (int i = 0; i < MAX_SLOT; i++) {
-            storedItems[i] = inv.getStackInSlot(i);
-        }
-        ItemStack filterItem = crate.getFiltering().getFilter();
-        return new SturdyCrateMountedStorage(storedItems, filterItem);
+        CrateItemStackHandler handler = crate.getHandler();
+        return new SturdyCrateMountedStorage(handler.getStackInSlot(0), handler.getCountInSlot(0), handler.getSlotLimit(0), crate.getFilteringBehaviour().getFilter());
     }
 }

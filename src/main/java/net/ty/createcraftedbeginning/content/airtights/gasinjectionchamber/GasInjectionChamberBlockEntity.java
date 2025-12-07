@@ -13,8 +13,7 @@ import net.createmod.catnip.math.VecHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -22,19 +21,18 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.ty.createcraftedbeginning.advancement.AdvancementBehaviour;
-import net.ty.createcraftedbeginning.advancement.CCBAdvancement;
-import net.ty.createcraftedbeginning.advancement.CCBAdvancements;
-import net.ty.createcraftedbeginning.content.compressedair.CompressedAirCanisterItem;
-import net.ty.createcraftedbeginning.content.compressedair.CanisterUtil;
-import net.ty.createcraftedbeginning.content.compressedair.CompressedAirTankBehaviour;
+import net.ty.createcraftedbeginning.api.gas.GasAction;
+import net.ty.createcraftedbeginning.api.gas.GasCapabilities.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterExecuteUtils;
+import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterQueryUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
+import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 import org.jetbrains.annotations.NotNull;
 
@@ -45,14 +43,19 @@ import static com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessing
 import static com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessingBehaviour.ProcessingResult.PASS;
 
 public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
+    public static final long MAX_CAPACITY = 1000;
     public static final int PROCESSING_TIME = 60;
     public static final int NOZZLE_TIME = 15;
     public static final int NOZZLE_PART_TIME = 15;
     public static final int NOZZLE_IDLE_TIME = 5;
+
+    private static final String COMPOUND_KEY_PROCESSING_TICKS = "ProcessingTicks";
+    private static final String COMPOUND_KEY_CLOUD = "Cloud";
+
     public int processingTicks = -1;
     public boolean sendCloud;
 
-    protected CompressedAirTankBehaviour tankBehaviour;
+    protected SmartGasTankBehaviour tankBehaviour;
     protected BeltProcessingBehaviour beltProcessing;
 
     public GasInjectionChamberBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState blockState) {
@@ -60,160 +63,116 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     }
 
     public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, CCBBlockEntities.GAS_INJECTION_CHAMBER.get(), (be, context) -> context == Direction.UP ? be.tankBehaviour.getCapability() : null);
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.GAS_INJECTION_CHAMBER.get(), (be, context) -> context == Direction.UP ? be.tankBehaviour.getCapability() : null);
     }
 
     @Override
     public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
-        tankBehaviour = CompressedAirTankBehaviour.single(this, 1000);
+        tankBehaviour = SmartGasTankBehaviour.single(this, MAX_CAPACITY);
         beltProcessing = new BeltProcessingBehaviour(this).whenItemEnters(this::onItemEntered).whileItemHeld(this::onItemHeld);
-        behaviours.add(beltProcessing);
         behaviours.add(tankBehaviour);
-        registerAwardables(behaviours, CCBAdvancements.GAS_INJECTION_CHAMBER);
+        behaviours.add(beltProcessing);
     }
+
+    @Override
+	public void invalidate() {
+		super.invalidate();
+		invalidateCapabilities();
+	}
 
     @Override
     public void tick() {
         super.tick();
-
-        if (processingTicks >= 0) {
-            processingTicks--;
+        if (processingTicks < 0) {
+            return;
         }
+
+        processingTicks--;
     }
 
     @Override
-    public void write(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
-        super.write(compound, registries, clientPacket);
-        compound.putInt("ProcessingTicks", processingTicks);
-        if (sendCloud && clientPacket) {
-            compound.putBoolean("Cloud", true);
-            sendCloud = false;
+    public void write(CompoundTag compound, Provider provider, boolean clientPacket) {
+        super.write(compound, provider, clientPacket);
+        compound.putInt(COMPOUND_KEY_PROCESSING_TICKS, processingTicks);
+        if (!sendCloud || !clientPacket) {
+            return;
         }
+
+        compound.putBoolean(COMPOUND_KEY_CLOUD, true);
+        sendCloud = false;
     }
 
     @Override
-    protected void read(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
-        super.read(compound, registries, clientPacket);
-        if (compound.contains("ProcessingTicks")) {
-            processingTicks = compound.getInt("ProcessingTicks");
+    public void read(CompoundTag compound, Provider provider, boolean clientPacket) {
+        super.read(compound, provider, clientPacket);
+        if (compound.contains(COMPOUND_KEY_PROCESSING_TICKS)) {
+            processingTicks = compound.getInt(COMPOUND_KEY_PROCESSING_TICKS);
         }
-        if (!clientPacket) {
+        if (!clientPacket || !compound.contains(COMPOUND_KEY_CLOUD)) {
             return;
         }
-        if (compound.contains("Cloud")) {
-            spawnCloud();
-        }
+
+        spawnCloud();
     }
 
-    private void registerAwardables(@NotNull List<BlockEntityBehaviour> behaviours, CCBAdvancement... advancements) {
-        for (BlockEntityBehaviour behaviour : behaviours) {
-            if (behaviour instanceof AdvancementBehaviour ab) {
-                ab.add(advancements);
-                return;
-            }
-        }
-        behaviours.add(new AdvancementBehaviour(this, advancements));
-    }
-
-    private void award() {
-        AdvancementBehaviour behaviour = getBehaviour(AdvancementBehaviour.TYPE);
-        if (behaviour != null) {
-            behaviour.awardPlayer(CCBAdvancements.GAS_INJECTION_CHAMBER);
-        }
-    }
-
-    protected void spawnCloud() {
-        if (isVirtual() || level == null) {
+    private void spawnCloud() {
+        if (level == null || !level.isClientSide || isVirtual()) {
             return;
         }
-        Vec3 vec = VecHelper.getCenterOf(worldPosition).subtract(0, 2 - 5 / 16f, 0);
+		
+        Vec3 subtracted = VecHelper.getCenterOf(worldPosition).subtract(0, 1.6875f, 0);
         for (int i = 0; i < level.random.nextInt(3, 6); i++) {
-            Vec3 m = VecHelper.offsetRandomly(Vec3.ZERO, level.random, 0.125f);
-            m = new Vec3(m.x, Math.abs(m.y), m.z);
-            level.addAlwaysVisibleParticle(ParticleTypes.CLOUD, vec.x, vec.y, vec.z, m.x, m.y, m.z);
+            Vec3 offset = VecHelper.offsetRandomly(Vec3.ZERO, level.random, 0.125f);
+            offset = new Vec3(offset.x, Math.abs(offset.y), offset.z);
+            level.addAlwaysVisibleParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), subtracted.x, subtracted.y, subtracted.z, offset.x, offset.y, offset.z);
         }
     }
 
-    public IFluidHandler getFluidHandler() {
-        return tankBehaviour.getCapability();
-    }
-
-    private @NotNull FluidStack getFluidInTank() {
-        return tankBehaviour.getPrimaryHandler().getFluid();
-    }
-
-    private void setFluidInTank(FluidStack fluidStack) {
-        tankBehaviour.getPrimaryHandler().setFluid(fluidStack);
-    }
-
-    @Override
-    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        if (level == null) {
-            return false;
-        }
-        return gasTankTooltip(tooltip, tankBehaviour.getCapability());
-    }
-
-    private boolean gasTankTooltip(List<Component> tooltip, IFluidHandler handler) {
-        if (handler == null) {
-            return false;
-        }
-
-        LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
-        CCBLang.translate("gui.goggles.gas_container").forGoggles(tooltip);
-
-        FluidStack fluidStack = handler.getFluidInTank(0);
-        if (!fluidStack.isEmpty()) {
-            CCBLang.fluidName(fluidStack).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-            CCBLang.builder().add(CCBLang.number(fluidStack.getAmount()).add(mb).style(ChatFormatting.GOLD)).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(handler.getTankCapacity(0)).add(mb).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
-        } else {
-            CCBLang.translate("gui.goggles.gas_container.capacity").add(CCBLang.number(handler.getTankCapacity(0)).add(mb).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-        }
-
-        return true;
-    }
-
-    @Override
-    protected AABB createRenderBoundingBox() {
-        return super.createRenderBoundingBox().expandTowards(0, -2, 0);
-    }
-
-    protected ProcessingResult onItemEntered(TransportedItemStack transported, @NotNull TransportedItemStackHandlerBehaviour handler) {
+    private ProcessingResult onItemEntered(TransportedItemStack transported, @NotNull TransportedItemStackHandlerBehaviour handler) {
         if (handler.blockEntity.isVirtual()) {
             return PASS;
         }
-        if (GasInjectionRecipe.isItemInvalidForInjection(level, transported.stack)) {
-            return PASS;
-        }
 
-        FluidStack tankFluid = getFluidInTank();
-        if (tankFluid.isEmpty()) {
+        GasStack tankGas = getGasInTank();
+        if (tankGas.isEmpty()) {
             return HOLD;
         }
-        if (GasInjectionRecipe.getRequiredFluidAmountForItem(level, transported.stack, tankFluid) == -1) {
+
+        if (GasInjectionRecipe.isItemInvalidForInjection(level, transported.stack, tankGas)) {
             return PASS;
         }
-        return HOLD;
+
+        return GasInjectionRecipe.getRequiredGasAmountForItem(level, transported.stack, tankGas) == -1 ? PASS : HOLD;
     }
 
-    protected ProcessingResult onItemHeld(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
+    private @NotNull GasStack getGasInTank() {
+        return tankBehaviour.getPrimaryHandler().getGasStack();
+    }
+
+    private void setGasInTank(GasStack gasStack) {
+        tankBehaviour.getPrimaryHandler().setGasStack(gasStack);
+    }
+
+    private ProcessingResult onItemHeld(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
         if (processingTicks != -1 && processingTicks != PROCESSING_TIME - NOZZLE_TIME - NOZZLE_PART_TIME - NOZZLE_IDLE_TIME) {
             return HOLD;
         }
-        if (GasInjectionRecipe.isItemInvalidForInjection(level, transported.stack)) {
-            return PASS;
-        }
 
-        FluidStack tankFluid = getFluidInTank();
-        if (tankFluid.isEmpty()) {
+        GasStack tankGas = getGasInTank();
+        if (tankGas.isEmpty()) {
             return HOLD;
         }
 
-        int requiredAmount = GasInjectionRecipe.getRequiredFluidAmountForItem(level, transported.stack, tankFluid);
+        if (GasInjectionRecipe.isItemInvalidForInjection(level, transported.stack, tankGas)) {
+            return PASS;
+        }
+
+        long requiredAmount = GasInjectionRecipe.getRequiredGasAmountForItem(level, transported.stack, tankGas);
         if (requiredAmount == -1) {
             return PASS;
         }
-        if (tankFluid.getAmount() < requiredAmount) {
+
+        if (tankGas.getAmount() < requiredAmount) {
             return HOLD;
         }
 
@@ -224,16 +183,24 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         }
 
         ItemStack resultItem;
-        if (CanisterUtil.isValidCanister(transported.stack, null)) {
-            CompressedAirCanisterItem.change(transported.stack, requiredAmount);
-            tankFluid.shrink(requiredAmount);
-            setFluidInTank(tankFluid);
-            notifyUpdate();
-            sendCloud = true;
+        if (GasCanisterQueryUtils.isValidCanister(transported.stack)) {
+            GasStack content = GasCanisterQueryUtils.getCanisterContent(transported.stack);
+            long amount;
+            if (content.isEmpty()) {
+                GasCanisterExecuteUtils.setCanisterContent(transported.stack, tankGas.copyWithAmount(requiredAmount));
+                amount = requiredAmount;
+            }
+            else {
+                amount = GasCanisterExecuteUtils.changeCanisterContent(transported.stack, requiredAmount);
+            }
+            tankBehaviour.getPrimaryHandler().drain(amount, GasAction.EXECUTE);
             CCBSoundEvents.INJECTING.playOnServer(level, worldPosition, 0.75f, 0.9f + 0.2f * level.random.nextFloat());
+            sendCloud = true;
+            notifyUpdate();
             return HOLD;
-        } else {
-            resultItem = GasInjectionRecipe.getResultItem(level, transported.stack, tankFluid);
+        }
+        else {
+            resultItem = GasInjectionRecipe.getResultItem(level, transported.stack, tankGas);
             if (!resultItem.isEmpty()) {
                 transported.stack.shrink(1);
             }
@@ -247,18 +214,40 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             if (!transported.stack.isEmpty()) {
                 held = transported.copy();
             }
-
             List<TransportedItemStack> resultList = new ArrayList<>();
             resultList.add(result);
             handler.handleProcessingOnItem(transported, TransportedResult.convertToAndLeaveHeld(resultList, held));
-            award();
         }
-
-        tankFluid.shrink(requiredAmount);
-        setFluidInTank(tankFluid);
+        tankGas.shrink(requiredAmount);
+        setGasInTank(tankGas);
         notifyUpdate();
         sendCloud = true;
         CCBSoundEvents.INJECTING.playOnServer(level, worldPosition, 0.75f, 0.9f + 0.2f * level.random.nextFloat());
         return HOLD;
+    }
+
+    @Override
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        if (level == null) {
+            return false;
+        }
+
+        IGasHandler gasHandler = tankBehaviour.getPrimaryHandler();
+        LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
+        CCBLang.translate("gui.goggles.gas_container").forGoggles(tooltip);
+        GasStack gasStack = gasHandler.getGasInTank(0);
+        if (gasStack.isEmpty()) {
+            CCBLang.translate("gui.goggles.gas_container.capacity").add(CCBLang.number(gasHandler.getTankCapacity(0)).add(mb).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+        }
+        else {
+            CCBLang.gasName(gasStack).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+            CCBLang.number(gasStack.getAmount()).add(mb).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(gasHandler.getTankCapacity(0)).add(mb).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+        }
+        return true;
+    }
+
+    @Override
+    protected AABB createRenderBoundingBox() {
+        return super.createRenderBoundingBox().expandTowards(0, -2, 0);
     }
 }

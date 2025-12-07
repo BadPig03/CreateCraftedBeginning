@@ -1,0 +1,35 @@
+{
+  "parent": "createcraftedbeginning:getting_an_upgrade",
+  "criteria": {
+    "0": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:sturdy_crate"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.final_upgrade.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:sturdy_crate"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.final_upgrade"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

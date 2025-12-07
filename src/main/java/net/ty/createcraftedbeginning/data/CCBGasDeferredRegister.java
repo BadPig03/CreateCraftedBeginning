@@ -1,34 +1,42 @@
 package net.ty.createcraftedbeginning.data;
 
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.Gas;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.GasBuilder;
-import net.ty.createcraftedbeginning.api.gas.GasType;
+import net.ty.createcraftedbeginning.api.gas.gases.GasHolder;
+import net.ty.createcraftedbeginning.registry.CCBRegistries;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class CCBGasDeferredRegister extends CCBDeferredRegister<Gas> {
+@SuppressWarnings("unchecked")
+public class CCBGasDeferredRegister extends DeferredRegister<Gas> {
+    private final Function<ResourceKey<Gas>, GasHolder<Gas, Gas>> holderCreator = GasHolder::new;
+
     public CCBGasDeferredRegister(String modId) {
-        super(CCBGasRegistry.GAS_REGISTRY_NAME, modId, GasType::new);
+        super(CCBRegistries.GAS_REGISTRY_KEY, modId);
     }
 
-    public GasType<Gas> register(String name, GasBuilder builder) {
+    public GasHolder<Gas, Gas> register(String name, GasBuilder builder) {
         return register(name, () -> new Gas(builder));
     }
 
-    public GasType<Gas> register(String name, int color, @Nullable String pressurizedGasName, @Nullable String depressurizedGasName, @Nullable String vortexedGasName) {
-        return register(name, () -> new Gas(GasBuilder.builder().tint(color).pressurizedGas(pressurizedGasName).depressurizedGas(depressurizedGasName).vortexedGas(vortexedGasName)));
-    }
-
-    public GasType<Gas> register(String name, String texture, int color, @Nullable String pressurizedGasName, @Nullable String depressurizedGasName, @Nullable String vortexedGasName) {
-        return register(name, () -> new Gas(GasBuilder.builder(CreateCraftedBeginning.asResource(texture)).tint(color).pressurizedGas(pressurizedGasName).depressurizedGas(depressurizedGasName).vortexedGas(vortexedGasName)));
+    @Override
+    public <I extends Gas> @NotNull GasHolder<Gas, I> register(@NotNull String name, @NotNull Supplier<? extends I> supplier) {
+        return (GasHolder<Gas, I>) super.register(name, supplier);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <T extends Gas> @NotNull GasType<T> register(@NotNull String name, @NotNull Supplier<? extends T> sup) {
-        return (GasType<T>) super.register(name, sup);
+    public <I extends Gas> @NotNull GasHolder<Gas, I> register(@NotNull String name, @NotNull Function<ResourceLocation, ? extends I> func) {
+        return (GasHolder<Gas, I>) super.register(name, func);
+    }
+
+    @Override
+    protected <I extends Gas> @NotNull GasHolder<Gas, I> createHolder(@NotNull ResourceKey<? extends Registry<Gas>> registryKey, @NotNull ResourceLocation key) {
+        return (GasHolder<Gas, I>) holderCreator.apply(ResourceKey.create(registryKey, key));
     }
 }

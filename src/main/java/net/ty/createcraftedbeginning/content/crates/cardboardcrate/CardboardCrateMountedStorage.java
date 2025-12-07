@@ -1,117 +1,82 @@
 package net.ty.createcraftedbeginning.content.crates.cardboardcrate;
 
 import com.mojang.serialization.MapCodec;
-import com.simibubi.create.api.contraption.storage.item.MountedItemStorage;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorageType;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.content.crates.CrateMountedItemStorage;
 import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateBlock.MAX_SLOT;
-import static net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateBlock.SLOT_LIMIT;
+public class CardboardCrateMountedStorage extends CrateMountedItemStorage {
+    public static final MapCodec<CardboardCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(ItemStack.CODEC.fieldOf("content").forGetter(storage -> storage.content), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("count").forGetter(storage -> storage.count), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("maxCount").forGetter(storage -> storage.maxCount)).apply(instance, CardboardCrateMountedStorage::new));
 
-public class CardboardCrateMountedStorage extends MountedItemStorage {
-    public static final MapCodec<CardboardCrateMountedStorage> CODEC = ItemStack.OPTIONAL_CODEC.xmap(CardboardCrateMountedStorage::new, storage -> storage.storedStack.copy()).fieldOf("value");
-
-    private static final int STORAGE_SLOT = 0;
-    private ItemStack storedStack;
-
-    protected CardboardCrateMountedStorage(MountedItemStorageType<?> type, @NotNull ItemStack storedStack) {
-        super(type);
-        this.storedStack = storedStack.copy();
+    public CardboardCrateMountedStorage(ItemStack content, int count, int maxCount) {
+        this(CCBMountedStorage.CARDBOARD_CRATE.get(), content, count, maxCount);
     }
 
-    public CardboardCrateMountedStorage(ItemStack storedStack) {
-        this(CCBMountedStorage.CARDBOARD_CRATE.get(), storedStack);
+    protected CardboardCrateMountedStorage(MountedItemStorageType<?> type, @NotNull ItemStack content, int count, int maxCount) {
+        super(type, content, count, maxCount);
     }
 
     @Override
     public void unmount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity be) {
-        if (be instanceof CardboardCrateBlockEntity crate) {
-            crate.setStoredItem(storedStack);
+        if (!(be instanceof CardboardCrateBlockEntity crate)) {
+            return;
         }
+
+        crate.setStoredItems(content, count);
     }
 
     @Override
     public int getSlots() {
-        return MAX_SLOT;
+        return 2;
     }
 
     @Override
-    @NotNull
-    public ItemStack getStackInSlot(int slot) {
-        return slot == STORAGE_SLOT ? storedStack.copy() : ItemStack.EMPTY;
-    }
-
-    @Override
-    public void setStackInSlot(int slot, @NotNull ItemStack stack) {
-        if (slot == STORAGE_SLOT) {
-            storedStack = stack.copy();
+    public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
+        if (stack.isEmpty()) {
+            return ItemStack.EMPTY;
         }
-    }
 
-    @Override
-    public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-        return slot == STORAGE_SLOT;
-    }
-
-    @Override
-    @NotNull
-    public ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
-        if (storedStack.isEmpty()) {
-            int maxInsert = Math.min(stack.getCount(), SLOT_LIMIT);
+        if (content.isEmpty()) {
+            int newCount = Math.min(stack.getCount(), maxCount);
             if (!simulate) {
-                storedStack = stack.copyWithCount(maxInsert);
+                content = stack.copyWithCount(1);
+                count = newCount;
             }
-            return maxInsert >= stack.getCount() ? ItemStack.EMPTY : stack.copyWithCount(stack.getCount() - maxInsert);
+            return ItemStack.EMPTY;
         }
 
-        if (ItemStack.isSameItemSameComponents(storedStack, stack)) {
-            int maxStackSize = Math.min(storedStack.getMaxStackSize(), SLOT_LIMIT);
-            int availableSpace = maxStackSize - storedStack.getCount();
-
-            if (availableSpace <= 0) {
+        if (ItemStack.isSameItemSameComponents(content, stack)) {
+            int space = maxCount - count;
+            if (space <= 0) {
                 return ItemStack.EMPTY;
             }
 
-            int toInsert = Math.min(stack.getCount(), availableSpace);
+            int toInsert = Math.min(stack.getCount(), space);
             if (!simulate) {
-                storedStack.grow(toInsert);
+                count += toInsert;
             }
-            return toInsert >= stack.getCount() ? ItemStack.EMPTY : stack.copyWithCount(stack.getCount() - toInsert);
+
+            return ItemStack.EMPTY;
         }
 
         if (!simulate) {
-            int maxInsert = Math.min(stack.getCount(), SLOT_LIMIT);
-            storedStack = stack.copyWithCount(maxInsert);
+            content = stack.copyWithCount(1);
+            count = Math.min(stack.getCount(), maxCount);
         }
         return ItemStack.EMPTY;
     }
 
     @Override
-    @NotNull
-    public ItemStack extractItem(int slot, int amount, boolean simulate) {
-        if (slot != STORAGE_SLOT || storedStack.isEmpty()) {
-            return ItemStack.EMPTY;
-        }
-
-        int toExtract = Math.min(amount, storedStack.getCount());
-        ItemStack extracted = storedStack.copyWithCount(toExtract);
-
-        if (!simulate) {
-            storedStack.shrink(toExtract);
-        }
-
-        return extracted;
-    }
-
-    @Override
-    public int getSlotLimit(int slot) {
-        return SLOT_LIMIT;
+    public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+        return slot == 0;
     }
 }

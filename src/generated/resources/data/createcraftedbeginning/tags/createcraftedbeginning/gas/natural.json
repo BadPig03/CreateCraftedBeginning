@@ -1,0 +1,8 @@
+{
+  "values": [
+    "createcraftedbeginning:natural_air",
+    "createcraftedbeginning:energized_natural_air",
+    "createcraftedbeginning:pressurized_natural_air",
+    "createcraftedbeginning:pressurized_energized_natural_air"
+  ]
+}

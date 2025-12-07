@@ -1,0 +1,196 @@
+{
+  "variants": {
+    "axis=x,structural_position=bottom_left,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/bottom_left",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,structural_position=bottom_left,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/bottom_left",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,structural_position=bottom_mid,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/bottom_mid",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,structural_position=bottom_mid,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/bottom_mid",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,structural_position=bottom_right,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/bottom_right",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,structural_position=bottom_right,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/bottom_right",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,structural_position=mid_left,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/mid_left",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,structural_position=mid_left,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/mid_left",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,structural_position=mid_right,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/mid_right",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,structural_position=mid_right,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/mid_right",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,structural_position=top_left,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/top_left",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,structural_position=top_left,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/top_left",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,structural_position=top_mid,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/top_mid",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,structural_position=top_mid,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/top_mid",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,structural_position=top_right,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/top_right",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,structural_position=top_right,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/top_right",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,structural_position=bottom_left,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/bottom_left"
+    },
+    "axis=y,structural_position=bottom_left,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/bottom_left"
+    },
+    "axis=y,structural_position=bottom_mid,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/bottom_mid"
+    },
+    "axis=y,structural_position=bottom_mid,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/bottom_mid"
+    },
+    "axis=y,structural_position=bottom_right,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/bottom_right"
+    },
+    "axis=y,structural_position=bottom_right,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/bottom_right"
+    },
+    "axis=y,structural_position=mid_left,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/mid_left"
+    },
+    "axis=y,structural_position=mid_left,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/mid_left"
+    },
+    "axis=y,structural_position=mid_right,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/mid_right"
+    },
+    "axis=y,structural_position=mid_right,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/mid_right"
+    },
+    "axis=y,structural_position=top_left,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/top_left"
+    },
+    "axis=y,structural_position=top_left,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/top_left"
+    },
+    "axis=y,structural_position=top_mid,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/top_mid"
+    },
+    "axis=y,structural_position=top_mid,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/top_mid"
+    },
+    "axis=y,structural_position=top_right,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/top_right"
+    },
+    "axis=y,structural_position=top_right,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/top_right"
+    },
+    "axis=z,structural_position=bottom_left,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/bottom_left",
+      "x": 90
+    },
+    "axis=z,structural_position=bottom_left,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/bottom_left",
+      "x": 90
+    },
+    "axis=z,structural_position=bottom_mid,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/bottom_mid",
+      "x": 90
+    },
+    "axis=z,structural_position=bottom_mid,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/bottom_mid",
+      "x": 90
+    },
+    "axis=z,structural_position=bottom_right,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/bottom_right",
+      "x": 90
+    },
+    "axis=z,structural_position=bottom_right,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/bottom_right",
+      "x": 90
+    },
+    "axis=z,structural_position=mid_left,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/mid_left",
+      "x": 90
+    },
+    "axis=z,structural_position=mid_left,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/mid_left",
+      "x": 90
+    },
+    "axis=z,structural_position=mid_right,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/mid_right",
+      "x": 90
+    },
+    "axis=z,structural_position=mid_right,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/mid_right",
+      "x": 90
+    },
+    "axis=z,structural_position=top_left,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/top_left",
+      "x": 90
+    },
+    "axis=z,structural_position=top_left,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/top_left",
+      "x": 90
+    },
+    "axis=z,structural_position=top_mid,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/top_mid",
+      "x": 90
+    },
+    "axis=z,structural_position=top_mid,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/top_mid",
+      "x": 90
+    },
+    "axis=z,structural_position=top_right,waterlogged=false": {
+      "model": "createcraftedbeginning:block/tesla_turbine/top_right",
+      "x": 90
+    },
+    "axis=z,structural_position=top_right,waterlogged=true": {
+      "model": "createcraftedbeginning:block/tesla_turbine/top_right",
+      "x": 90
+    }
+  }
+}

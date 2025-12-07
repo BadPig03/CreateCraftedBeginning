@@ -1,7 +1,7 @@
 package net.ty.createcraftedbeginning.data;
 
 import com.simibubi.create.foundation.item.TooltipHelper;
-import net.createmod.catnip.lang.FontHelper;
+import net.createmod.catnip.lang.FontHelper.Palette;
 import net.createmod.catnip.lang.Lang;
 import net.createmod.catnip.lang.LangBuilder;
 import net.createmod.catnip.lang.LangNumberFormat;
@@ -12,26 +12,23 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings("unused")
 public class CCBLang extends Lang {
-    public static @NotNull MutableComponent translateDirect(String key, Object... args) {
-        Object[] args1 = LangBuilder.resolveBuilders(args);
-        return Component.translatable(CreateCraftedBeginning.MOD_ID + "." + key, args1);
+    public static @NotNull LangBuilder blockName(@NotNull BlockState state) {
+        return builder().add(state.getBlock().getName());
     }
 
     @Contract(value = " -> new", pure = true)
     public static @NotNull LangBuilder builder() {
         return new LangBuilder(CreateCraftedBeginning.MOD_ID);
-    }
-
-    public static @NotNull LangBuilder blockName(@NotNull BlockState state) {
-        return builder().add(state.getBlock().getName());
     }
 
     public static @NotNull LangBuilder itemName(@NotNull ItemStack stack) {
@@ -44,6 +41,10 @@ public class CCBLang extends Lang {
 
     public static @NotNull LangBuilder gasName(@NotNull GasStack stack) {
         return builder().add(stack.getHoverName().copy());
+    }
+
+    public static @NotNull LangBuilder gasName(@NotNull Gas gas) {
+        return builder().add(Component.translatable(gas.getTranslationKey()).copy());
     }
 
     public static @NotNull LangBuilder number(double d) {
@@ -66,11 +67,7 @@ public class CCBLang extends Lang {
             int minutes = totalSeconds / 60;
             int seconds = totalSeconds % 60;
 
-            if (seconds == 0) {
-                return builder().translate("gui.minutes", minutes);
-            } else {
-                return builder().translate("gui.minutes_seconds", minutes, seconds);
-            }
+            return seconds == 0 ? builder().translate("gui.minutes", minutes) : builder().translate("gui.minutes_seconds", minutes, seconds);
         }
         return builder().translate("gui.seconds", totalSeconds);
     }
@@ -78,7 +75,7 @@ public class CCBLang extends Lang {
     public static @NotNull LangBuilder secondsWithGameTicks(int ticks, float tickRate) {
         float totalSeconds = ticks / tickRate;
 
-        if (totalSeconds < 1.f) {
+        if (totalSeconds < 1.0f) {
             return builder().translate("gui.ticks", ticks);
         }
 
@@ -88,20 +85,28 @@ public class CCBLang extends Lang {
             int minutes = wholeSeconds / 60;
             int seconds = wholeSeconds % 60;
 
-            if (seconds == 0) {
-                return builder().translate("gui.minutes", minutes);
-            } else {
-                return builder().translate("gui.minutes_seconds", minutes, seconds);
-            }
+            return seconds == 0 ? builder().translate("gui.minutes", minutes) : builder().translate("gui.minutes_seconds", minutes, seconds);
         }
         return builder().translate("gui.seconds", wholeSeconds);
     }
 
+    public static @NotNull MutableComponent translateDirect(String key, Object... args) {
+        return Component.translatable(CreateCraftedBeginning.MOD_ID + '.' + key, LangBuilder.resolveBuilders(args));
+    }
+
+    public static @NotNull List<Component> translatedOptions(String prefix, String @NotNull ... keys) {
+        List<Component> result = new ArrayList<>(keys.length);
+        for (String key : keys) {
+            result.add(translate((prefix != null ? prefix + '.' : "") + key).component());
+        }
+        return result;
+    }
+
     public static void addToGoggles(List<Component> tooltip, String text, Object... args) {
-        MutableComponent hint = CCBLang.translateDirect(text, args);
-        List<Component> cutString = TooltipHelper.cutTextComponent(hint, FontHelper.Palette.GRAY_AND_WHITE);
+        MutableComponent hint = translateDirect(text, args);
+        List<Component> cutString = TooltipHelper.cutTextComponent(hint, Palette.GRAY_AND_WHITE);
         for (Component component : cutString) {
-            CCBLang.builder().add(component.copy()).forGoggles(tooltip);
+            builder().add(component.copy()).forGoggles(tooltip);
         }
     }
 }

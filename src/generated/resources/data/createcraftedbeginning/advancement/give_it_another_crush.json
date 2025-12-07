@@ -1,0 +1,35 @@
+{
+  "parent": "createcraftedbeginning:root",
+  "criteria": {
+    "0": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:powdered_amethyst"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.give_it_another_crush.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:powdered_amethyst"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.give_it_another_crush"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

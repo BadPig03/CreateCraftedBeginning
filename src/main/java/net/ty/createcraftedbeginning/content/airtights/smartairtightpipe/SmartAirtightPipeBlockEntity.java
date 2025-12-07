@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.smartairtightpipe;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.simibubi.create.content.fluids.pipes.IAxisPipe;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform;
@@ -9,6 +10,7 @@ import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.LevelAccessor;
@@ -17,18 +19,17 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.api.gas.GasFilteringBehaviour;
-import net.ty.createcraftedbeginning.api.gas.GasStack;
-import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
-import net.ty.createcraftedbeginning.content.airtights.checkvalve.CheckValveBlock;
-import net.ty.createcraftedbeginning.api.gas.AxisGasPipeBlockEntity;
 import net.ty.createcraftedbeginning.api.gas.GasPropagator;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.api.gas.interfaces.IDirectionalPipe;
+import net.ty.createcraftedbeginning.api.gas.interfaces.IDirectionalPipe.DirectionalFacing;
+import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class SmartAirtightPipeBlockEntity extends AxisGasPipeBlockEntity {
+public class SmartAirtightPipeBlockEntity extends SmartBlockEntity {
     private GasFilteringBehaviour filter;
 
     public SmartAirtightPipeBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -38,14 +39,16 @@ public class SmartAirtightPipeBlockEntity extends AxisGasPipeBlockEntity {
     @Override
     public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
         filter = new GasFilteringBehaviour(this, new SmartPipeFilterSlot()).withCallback(this::onFilterChanged);
-        behaviours.add(new SmartPipeTransportBehaviour(this));
+        SmartPipeTransportBehaviour transportBehaviour = new SmartPipeTransportBehaviour(this);
         behaviours.add(filter);
+        behaviours.add(transportBehaviour);
     }
 
     private void onFilterChanged(ItemStack newFilter) {
         if (level == null || level.isClientSide) {
             return;
         }
+
         GasPropagator.propagateChangedPipe(level, worldPosition, getBlockState());
     }
 
@@ -55,44 +58,40 @@ public class SmartAirtightPipeBlockEntity extends AxisGasPipeBlockEntity {
         }
 
         @Override
-        public boolean canPullGasFrom(@NotNull GasStack gas, BlockState state, Direction direction) {
-            if (gas.isEmpty() || (filter != null && filter.test(gas))) {
-                return super.canPullGasFrom(gas, state, direction);
+        public boolean canHaveFlowToward(@NotNull BlockState state, @NotNull Direction direction) {
+            if (state.getValue(SmartAirtightPipeBlock.AXIS) != direction.getAxis()) {
+                return false;
             }
-            return false;
+
+            BlockPos otherPos = worldPosition.relative(direction);
+            BlockState otherState = getWorld().getBlockState(otherPos);
+            return isValidAirtightComponents(otherPos, otherState, direction);
         }
 
         @Override
-        public boolean canHaveFlowToward(@NotNull BlockState state, Direction direction) {
-            return state.hasProperty(SmartAirtightPipeBlock.AXIS) && state.getValue(SmartAirtightPipeBlock.AXIS) == direction.getAxis();
-        }
-
-        @Override
-        public AttachmentTypes getRenderedRimAttachment(BlockAndTintGetter world, BlockPos pos, BlockState state, Direction direction) {
-            if (!canHaveFlowToward(state, direction)) {
+        public AttachmentTypes getRenderedRimAttachment(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction direction) {
+            if (isIncorrectAxis(state, direction)) {
                 return AttachmentTypes.NONE;
             }
 
-            BlockState otherState = getWorld().getBlockState(getPos().relative(direction));
+            BlockState otherState = level.getBlockState(pos.relative(direction));
             Block otherBlock = otherState.getBlock();
-            Direction.Axis axis = state.getValue(SmartAirtightPipeBlock.AXIS);
+            Axis axis = state.getValue(AirtightCheckValveBlock.AXIS);
+            return otherBlock instanceof IAxisPipe axisPipe && axisPipe.getAxis(otherState) == axis ? AttachmentTypes.NONE : AttachmentTypes.RIM.withoutConnector();
+        }
 
-            return switch (otherBlock) {
-                case AirtightPipeBlock ignored when otherState.getValue(AirtightPipeBlock.AXIS) == axis -> AttachmentTypes.NONE;
-                case CheckValveBlock ignored when otherState.getValue(CheckValveBlock.AXIS) == axis -> AttachmentTypes.NONE;
-                case SmartAirtightPipeBlock ignored when otherState.getValue(SmartAirtightPipeBlock.AXIS) == axis -> AttachmentTypes.NONE;
-                default -> AttachmentTypes.RIM.withoutConnector();
-            };
+        @Override
+        public boolean canPullGasFrom(@NotNull GasStack gas, BlockState state, Direction direction) {
+            return (gas.isEmpty() || filter != null && filter.test(gas)) && super.canPullGasFrom(gas, state, direction);
         }
     }
 
     class SmartPipeFilterSlot extends ValueBoxTransform {
         @Override
         public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, @NotNull BlockState state) {
-            Direction.Axis axis = state.getValue(SmartAirtightPipeBlock.AXIS);
-            if (axis == Direction.Axis.Y) {
-                IDirectionalPipe.DirectionalFacing facing = state.getValue(IDirectionalPipe.DIRECTIONAL_FACING);
-
+            Axis axis = state.getValue(SmartAirtightPipeBlock.AXIS);
+            if (axis == Axis.Y) {
+                DirectionalFacing facing = state.getValue(IDirectionalPipe.DIRECTIONAL_FACING);
                 return switch (facing) {
                     case SOUTH -> VecHelper.voxelSpace(8, 8, 1.5f);
                     case WEST -> VecHelper.voxelSpace(14.5f, 8, 8);
@@ -100,20 +99,22 @@ public class SmartAirtightPipeBlockEntity extends AxisGasPipeBlockEntity {
                     default -> VecHelper.voxelSpace(8, 8, 14.5f);
                 };
             }
-            return VecHelper.rotateCentered(VecHelper.voxelSpace(8, 14.5f, 8), 90, Direction.Axis.Y);
+            return VecHelper.rotateCentered(VecHelper.voxelSpace(8, 14.5f, 8), 90, Axis.Y);
         }
 
         @Override
         public void rotate(LevelAccessor level, BlockPos pos, @NotNull BlockState state, PoseStack ms) {
-            Direction.Axis axis = state.getValue(SmartAirtightPipeBlock.AXIS);
+            Axis axis = state.getValue(SmartAirtightPipeBlock.AXIS);
+            DirectionalFacing facing = state.getValue(IDirectionalPipe.DIRECTIONAL_FACING);
             TransformStack<PoseTransformStack> transformStack = TransformStack.of(ms);
-            if (axis == Direction.Axis.Y) {
-                IDirectionalPipe.DirectionalFacing facing = state.getValue(IDirectionalPipe.DIRECTIONAL_FACING);
-                transformStack.rotateYDegrees(IDirectionalPipe.DirectionalFacing.getYAngle(facing));
-            } else if (axis == Direction.Axis.Z) {
-                transformStack.rotateYDegrees(0).rotateXDegrees(90);
-            } else {
-                transformStack.rotateYDegrees(90).rotateXDegrees(90);
+            if (axis == Axis.Y) {
+                transformStack.rotateYDegrees(DirectionalFacing.getYAngle(facing));
+            }
+            else if (axis == Axis.Z) {
+                transformStack.rotateYDegrees(DirectionalFacing.getYAngle(facing)).rotateXDegrees(90);
+            }
+            else {
+                transformStack.rotateYDegrees(DirectionalFacing.getYAngle(facing) + 90).rotateXDegrees(90);
             }
         }
 

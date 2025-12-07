@@ -6,6 +6,7 @@ import com.simibubi.create.CreateClient;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBox;
+import com.simibubi.create.foundation.blockEntity.behaviour.ValueBox.ItemValueBox;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxRenderer;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform;
 import net.createmod.catnip.data.Pair;
@@ -39,47 +40,38 @@ public class GasFilteringRenderer {
             return;
         }
 
-        ClientLevel world = mc.level;
-        if (world == null) {
+        ClientLevel level = mc.level;
+        if (level == null) {
             return;
         }
 
         BlockPos pos = result.getBlockPos();
-        BlockState state = world.getBlockState(pos);
-        LocalPlayer player = mc.player;
-
-        if (player == null || player.isShiftKeyDown()) {
+        if (!(level.getBlockEntity(pos) instanceof SmartBlockEntity smartBlockEntity)) {
             return;
         }
-        if (!(world.getBlockEntity(pos) instanceof SmartBlockEntity smartBlockEntity)) {
+
+        LocalPlayer player = mc.player;
+        if (player == null || player.isShiftKeyDown()) {
             return;
         }
 
         ItemStack mainHandItem = player.getItemInHand(InteractionHand.MAIN_HAND);
         for (BlockEntityBehaviour blockEntityBehaviour : smartBlockEntity.getAllBehaviours()) {
-            if (!(blockEntityBehaviour instanceof GasFilteringBehaviour behaviour)) {
-                continue;
-            }
-            if (!behaviour.isActive()) {
-                continue;
-            }
-            if (!behaviour.slotPositioning.shouldRender(world, pos, state)) {
-                continue;
-            }
-            if (!behaviour.mayInteract(player)) {
+            if (!(blockEntityBehaviour instanceof GasFilteringBehaviour behaviour) || !behaviour.isActive()) {
                 continue;
             }
 
-            ItemStack filter = behaviour.getFilter();
+            ValueBoxTransform slotPositioning = behaviour.getSlotPositioning();
+            BlockState state = level.getBlockState(pos);
+            if (!slotPositioning.shouldRender(level, pos, state) || !behaviour.mayInteract(player)) {
+                continue;
+            }
+
             Component label = behaviour.getLabel();
-            boolean hit = behaviour.slotPositioning.testHit(world, pos, state, target.getLocation().subtract(Vec3.atLowerCornerOf(pos)));
-            AABB bb = new AABB(Vec3.ZERO, Vec3.ZERO).inflate(.25f);
-
-            ValueBox box = new ValueBox.ItemValueBox(label, bb, pos, filter, Component.empty());
+            boolean hit = slotPositioning.testHit(level, pos, state, target.getLocation().subtract(Vec3.atLowerCornerOf(pos)));
+            ValueBox box = new ItemValueBox(label, new AABB(Vec3.ZERO, Vec3.ZERO).inflate(0.25f), pos, behaviour.getFilter(), Component.empty());
             box.passive(!hit || behaviour.bypassesInput(mainHandItem));
-
-            Outliner.getInstance().showOutline(Pair.of("filter" + behaviour.netId(), pos), box.transform(behaviour.slotPositioning)).lineWidth(1 / 64f).withFaceTexture(hit ? AllSpecialTextures.THIN_CHECKERED : null).highlightFace(result.getDirection());
-
+            Outliner.getInstance().showOutline(Pair.of("filter" + behaviour.netId(), pos), box.transform(slotPositioning)).lineWidth(0.015625f).withFaceTexture(hit ? AllSpecialTextures.THIN_CHECKERED : null).highlightFace(result.getDirection());
             if (!hit) {
                 continue;
             }
@@ -87,7 +79,6 @@ public class GasFilteringRenderer {
             List<MutableComponent> tip = new ArrayList<>();
             tip.add(label.copy());
             tip.add(behaviour.getTip());
-
             CreateClient.VALUE_SETTINGS_HANDLER.showHoverTip(tip);
         }
     }
@@ -99,38 +90,35 @@ public class GasFilteringRenderer {
 
         Level level = be.getLevel();
         BlockPos blockPos = be.getBlockPos();
-
-        for (BlockEntityBehaviour b : be.getAllBehaviours()) {
-            if (!(b instanceof GasFilteringBehaviour behaviour)) {
+        for (BlockEntityBehaviour behaviour : be.getAllBehaviours()) {
+            if (!(behaviour instanceof GasFilteringBehaviour filteringBehaviour)) {
                 continue;
             }
 
             if (!be.isVirtual()) {
                 Entity cameraEntity = Minecraft.getInstance().cameraEntity;
                 if (cameraEntity != null && level == cameraEntity.level()) {
-                    float max = behaviour.getRenderDistance();
-                    if (cameraEntity.position().distanceToSqr(VecHelper.getCenterOf(blockPos)) > (max * max)) {
+                    float max = filteringBehaviour.getRenderDistance();
+                    if (cameraEntity.position().distanceToSqr(VecHelper.getCenterOf(blockPos)) > max * max) {
                         continue;
                     }
                 }
             }
 
-            if (!behaviour.isActive()) {
-                continue;
-            }
-            if (behaviour.getFilter().isEmpty()) {
+            if (!filteringBehaviour.isActive() || filteringBehaviour.getFilter().isEmpty()) {
                 continue;
             }
 
-            ValueBoxTransform slotPositioning = behaviour.slotPositioning;
+            ValueBoxTransform slotPositioning = filteringBehaviour.getSlotPositioning();
             BlockState blockState = be.getBlockState();
-
-            if (slotPositioning.shouldRender(level, blockPos, blockState)) {
-                ms.pushPose();
-                slotPositioning.transform(level, blockPos, blockState, ms);
-                ValueBoxRenderer.renderItemIntoValueBox(behaviour.getFilter(), ms, buffer, light, overlay);
-                ms.popPose();
+            if (!slotPositioning.shouldRender(level, blockPos, blockState)) {
+                continue;
             }
+
+            ms.pushPose();
+            slotPositioning.transform(level, blockPos, blockState, ms);
+            ValueBoxRenderer.renderItemIntoValueBox(filteringBehaviour.getFilter(), ms, buffer, light, overlay);
+            ms.popPose();
         }
     }
 }

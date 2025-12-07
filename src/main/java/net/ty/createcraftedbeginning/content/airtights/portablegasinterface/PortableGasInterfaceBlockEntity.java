@@ -8,9 +8,9 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.gas.GasAction;
-import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
-import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.GasTank;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.mixin.MountedStorageManagerAccessor;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -26,16 +26,29 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
     }
 
     public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasCapabilities.GasHandler.BLOCK, CCBBlockEntities.PORTABLE_GAS_INTERFACE.get(), (be, context) -> be.capability);
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.PORTABLE_GAS_INTERFACE.get(), (be, context) -> be.capability);
+    }
+
+    @Override
+	public void invalidate() {
+		super.invalidate();
+		invalidateCapabilities();
+	}
+
+    @Contract(" -> new")
+    private @NotNull IGasHandler createEmptyHandler() {
+        return new InterfaceGasHandler(new GasTank(0));
     }
 
     @Override
     public void startTransferringTo(@NotNull Contraption contraption, float distance) {
-        if (contraption.getStorage() instanceof MountedStorageManagerAccessor accessor) {
-            capability = new InterfaceGasHandler(accessor.getGases());
-            invalidateCapability();
-            super.startTransferringTo(contraption, distance);
+        if (!(contraption.getStorage() instanceof MountedStorageManagerAccessor accessor)) {
+            return;
         }
+
+        capability = new InterfaceGasHandler(accessor.getGases());
+        invalidateCapability();
+        super.startTransferringTo(contraption, distance);
     }
 
     @Override
@@ -56,8 +69,8 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
     }
 
     public float getExtensionDistance(float partialTicks) {
-		return (float) (Math.pow(connectionAnimation.getValue(partialTicks), 2) * distance / 2);
-	}
+        return (float) (Math.pow(connectionAnimation.getValue(partialTicks), 2) * distance / 2);
+    }
 
     public Entity getConnectedEntity() {
         return connectedEntity;
@@ -69,11 +82,6 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
 
     public int getTransferTimer() {
         return transferTimer;
-    }
-
-    @Contract(" -> new")
-    private @NotNull IGasHandler createEmptyHandler() {
-        return new InterfaceGasHandler(new GasTank(0));
     }
 
     public class InterfaceGasHandler implements IGasHandler {
@@ -108,6 +116,7 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
             if (!isConnected()) {
                 return 0;
             }
+
             long fill = wrapped.fill(resource, action);
             if (fill > 0 && action.execute()) {
                 keepAlive();
@@ -120,6 +129,7 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
             if (!canTransfer()) {
                 return GasStack.EMPTY;
             }
+
             GasStack drain = wrapped.drain(resource, action);
             if (!drain.isEmpty() && action.execute()) {
                 keepAlive();
@@ -132,6 +142,7 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
             if (!canTransfer()) {
                 return GasStack.EMPTY;
             }
+
             GasStack drain = wrapped.drain(maxDrain, action);
             if (!drain.isEmpty() && action.execute()) {
                 keepAlive();

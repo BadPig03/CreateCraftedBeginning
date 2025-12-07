@@ -11,35 +11,34 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Con
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 public class AirtightEncasedPipeRenderer extends SafeBlockEntityRenderer<AirtightEncasedPipeBlockEntity> {
+    private static final Map<Direction, PartialModel> MODEL_CACHE = Arrays.stream(Direction.values()).collect(Collectors.toMap(dir -> dir, dir -> switch (dir) {
+        case DOWN -> CCBPartialModels.ENCASED_DOWN;
+        case UP -> CCBPartialModels.ENCASED_UP;
+        case NORTH -> CCBPartialModels.ENCASED_NORTH;
+        case SOUTH -> CCBPartialModels.ENCASED_SOUTH;
+        case WEST -> CCBPartialModels.ENCASED_WEST;
+        case EAST -> CCBPartialModels.ENCASED_EAST;
+    }));
+
     public AirtightEncasedPipeRenderer(Context ignored) {
-        super();
     }
 
     @Override
     protected void renderSafe(@NotNull AirtightEncasedPipeBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource bufferSource, int light, int overlay) {
         BlockState state = be.getBlockState();
-
         for (Direction direction : Iterate.directions) {
-            if (!state.getValue(AirtightEncasedPipeBlock.PROPERTY_BY_DIRECTION.get(direction))) {
-                PartialModel model = getModel(direction);
-                CachedBuffers.partial(model, state).light(light).renderInto(ms, bufferSource.getBuffer(RenderType.solid()));
+            if (AirtightEncasedPipeBlock.isOpenAt(state, direction)) {
+                continue;
             }
-        }
-    }
 
-    @Contract(pure = true)
-    private PartialModel getModel(@NotNull Direction direction) {
-        return switch (direction) {
-            case UP -> CCBPartialModels.ENCASED_UP;
-            case DOWN -> CCBPartialModels.ENCASED_DOWN;
-            case NORTH -> CCBPartialModels.ENCASED_NORTH;
-            case EAST -> CCBPartialModels.ENCASED_EAST;
-            case SOUTH -> CCBPartialModels.ENCASED_SOUTH;
-            case WEST -> CCBPartialModels.ENCASED_WEST;
-        };
+            CachedBuffers.partial(MODEL_CACHE.get(direction), state).light(light).renderInto(ms, bufferSource.getBuffer(RenderType.solid()));
+        }
     }
 }

@@ -5,10 +5,6 @@
       "item": "minecraft:mutton"
     }
   ],
-  "results": [
-    {
-      "amount": 327,
-      "id": "createcraftedbeginning:virtual_time"
-    }
-  ]
+  "processing_time": 327,
+  "results": []
 }

@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "createcraftedbeginning:item/airtight_leggings",
+    "layer1": "createcraftedbeginning:trims/items/airtight_leggings_trim_diamond"
+  }
+}

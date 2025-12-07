@@ -1,12 +1,10 @@
 package net.ty.createcraftedbeginning.api.gas;
 
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.interfaces.IGasHandler;
 
-public class EmptyGasHandler implements IGasHandler {
-    public static final EmptyGasHandler INSTANCE = new EmptyGasHandler();
-
-    protected EmptyGasHandler() {
-    }
+public enum EmptyGasHandler implements IGasHandler {
+    INSTANCE;
 
     @Override
     public int getTanks() {

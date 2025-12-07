@@ -8,18 +8,22 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.Direction.Axis;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.ty.createcraftedbeginning.content.airtights.airtightassemblydriver.AirtightAssemblyDriverCore;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import net.ty.createcraftedbeginning.util.Helpers;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
@@ -30,20 +34,37 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
     public static final float DELTA_TIME = 0.01f;
 
     private WeakReference<AirtightTankBlockEntity> source;
-    private boolean isClockwise;
     private float pistonPhase;
+    private float previousPhase;
+
+    private CCBAdvancementBehaviour advancementBehaviour;
 
     public AirtightEngineBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
         source = new WeakReference<>(null);
-        isClockwise = true;
         pistonPhase = 0;
+        setLazyTickRate(20);
+    }
+
+    @Override
+    public void lazyTick() {
+        super.lazyTick();
+        if (level == null || level.isClientSide) {
+            return;
+        }
+
+        BlockState state = getBlockState();
+        if (!(state.getBlock() instanceof AirtightEngineBlock engine) || !engine.canSurvive(state, level, getBlockPos()) || !AirtightEngineBlock.isStateValid(state)) {
+            level.destroyBlock(worldPosition, true);
+            return;
+        }
+
+        AirtightTankBlock.updateTankState(level, worldPosition.relative(AirtightEngineBlock.getFacing(state)));
     }
 
     @Override
     public void tick() {
         super.tick();
-
         if (level == null) {
             return;
         }
@@ -51,25 +72,32 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
         if (level.isClientSide) {
             pistonPhase += Mth.abs(getSpeed()) * DELTA_TIME;
             if (pistonPhase > 2 * Math.PI) {
-                pistonPhase -= (float) (2 * Math.PI);
+                pistonPhase -= Mth.TWO_PI;
             }
+            return;
         }
 
-        if (!isOverStressed()) {
-            updateGeneratedRotation();
+        if (isOverStressed()) {
+            return;
         }
 
-        if (!level.isClientSide && level.getGameTime() % Helpers.getActualTickRate(level) == 0) {
-            AirtightTankBlock.updateTankState(level, worldPosition.relative(AirtightEngineBlock.getFacing(getBlockState())));
-        }
+        updateGeneratedRotation();
     }
 
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         CCBLang.translate("gui.goggles.airtight_engine").forGoggles(tooltip);
-        CCBLang.translate("gui.goggles.stress_impact").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        CCBLang.number(BASE_ROTATION_SPEED * getCombinedCapacity()).translate("gui.goggles.unit.stress").style(ChatFormatting.AQUA).space().add(CCBLang.translate("gui.goggles.at_current_speed").style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+        CCBLang.translate("gui.goggles.airtight_engine.rotation_direction").style(ChatFormatting.GRAY).forGoggles(tooltip);
+        if (getBlockState().getValue(AirtightEngineBlock.CLOCKWISE)) {
+            CCBLang.translate("gui.goggles.airtight_engine.rotation_direction.clockwise").style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
+        }
+        else {
+            CCBLang.translate("gui.goggles.airtight_engine.rotation_direction.counter_clockwise").style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
+        }
 
+        tooltip.add(CommonComponents.EMPTY);
+        CCBLang.translate("gui.goggles.capacity_provided").style(ChatFormatting.GRAY).forGoggles(tooltip);
+        CCBLang.number(BASE_ROTATION_SPEED * getSpeedModifier() * BlockStressValues.getCapacity(CCBBlocks.AIRTIGHT_ENGINE_BLOCK.get())).translate("gui.goggles.unit.stress").style(ChatFormatting.AQUA).space().add(CCBLang.translate("gui.goggles.at_current_speed").style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
         return true;
     }
 
@@ -80,58 +108,30 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
     }
 
     @Override
-    public float calculateAddedStressCapacity() {
-        float speedModifier = getSpeedModifier();
-        if (speedModifier < 0) {
-            float capacity = 512f;
-            this.lastCapacityProvided = capacity;
-            return capacity;
-        }
-        return super.calculateAddedStressCapacity();
-    }
-
-    @Override
-    protected void write(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
-        super.write(compound, registries, clientPacket);
-        if (clientPacket) {
-            return;
-        }
-        compound.putBoolean("Clockwise", isClockwise);
-    }
-
-    @Override
-    protected void read(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
-        super.read(compound, registries, clientPacket);
-        if (!clientPacket && compound.contains("Clockwise")) {
-            isClockwise = compound.getBoolean("Clockwise");
-        }
-    }
-
-    @Override
     public float getGeneratedSpeed() {
-        int speedDirection = isClockwise ? 1 : -1;
-        return BASE_ROTATION_SPEED * Mth.abs(getSpeedModifier()) * speedDirection;
+        return BASE_ROTATION_SPEED * Mth.abs(getSpeedModifier()) * (getBlockState().getValue(AirtightEngineBlock.CLOCKWISE) ? 1 : -1);
     }
 
     @Override
-    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+    public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.RISING_FORCE, CCBAdvancements.FLYWHEEL);
+        behaviours.add(advancementBehaviour);
         super.addBehaviours(behaviours);
     }
 
     @Override
-    public List<BlockPos> addPropagationLocations(IRotate block, BlockState state, List<BlockPos> neighbours) {
+    public List<BlockPos> addPropagationLocations(@NotNull IRotate block, BlockState state, List<BlockPos> neighbours) {
+        Axis axis = block.getRotationAxis(state);
         BlockPos.betweenClosedStream(new BlockPos(-1, -1, -1), new BlockPos(1, 1, 1)).forEach(offset -> {
-            if (offset.distSqr(BlockPos.ZERO) == 2) {
-                neighbours.add(worldPosition.offset(offset));
+            if (axis.choose(offset.getX(), offset.getY(), offset.getZ()) != 0) {
+                return;
             }
+            if (offset.distSqr(BlockPos.ZERO) != 2) {
+                return;
+            }
+            neighbours.add(worldPosition.offset(offset));
         });
         return neighbours;
-    }
-
-    public void toggleDirection() {
-        isClockwise = !isClockwise;
-        updateGeneratedRotation();
-        setChanged();
     }
 
     private @Nullable AirtightTankBlockEntity getTank() {
@@ -141,65 +141,49 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
 
         AirtightTankBlockEntity tank = source.get();
         if (tank == null || tank.isRemoved()) {
-            source = new WeakReference<>(null);
-            Direction facing = AirtightEngineBlock.getFacing(getBlockState());
-            BlockEntity be = level.getBlockEntity(worldPosition.relative(facing));
-            if (be instanceof AirtightTankBlockEntity tankBe) {
-                source = new WeakReference<>(tank = tankBe);
-            }
+            tank = findController(level);
+            source = new WeakReference<>(tank);
         }
 
-        if (tank == null) {
-            return null;
-        }
-        return tank.getControllerBE();
+        return tank == null ? null : tank.getControllerBE();
     }
 
-    private @Nullable GasControllerData getGasController() {
-        AirtightTankBlockEntity controller = getTankController();
-        if (controller == null) {
-            return null;
-        }
+    private @Nullable AirtightTankBlockEntity findController(@NotNull Level level) {
+        Direction facing = AirtightEngineBlock.getFacing(getBlockState());
+        BlockEntity be = level.getBlockEntity(worldPosition.relative(facing));
+        return be instanceof AirtightTankBlockEntity tank ? tank : null;
+    }
 
-        return controller.gasController;
+    private @Nullable AirtightAssemblyDriverCore getCore() {
+        AirtightTankBlockEntity controller = getTankController();
+        return controller == null ? null : controller.getCore();
     }
 
     private @Nullable AirtightTankBlockEntity getTankController() {
         AirtightTankBlockEntity tank = getTank();
-        if (tank == null) {
-            return null;
-        }
-
-        return tank.getControllerBE();
+        return tank == null ? null : tank.getControllerBE();
     }
 
     private float getSpeedModifier() {
-        GasControllerData gasController = getGasController();
+        AirtightAssemblyDriverCore driverCore = getCore();
         AirtightTankBlockEntity controller = getTankController();
-        if (gasController == null || controller == null) {
+        if (driverCore == null || controller == null) {
             return 0;
         }
 
-        int attachedEngines = gasController.getAttachedEngines();
-        if (attachedEngines <= 0) {
-            return 0;
-        }
-
-        int size = controller.getTotalTankSize();
-        int level = gasController.getCurrentLevel(size);
-        return (float) level / attachedEngines;
-    }
-
-    private float getCombinedCapacity() {
-        float speedModifier = getSpeedModifier();
-        if (speedModifier < 0) {
-            return 512f;
-        }
-        double capacity = BlockStressValues.getCapacity(CCBBlocks.AIRTIGHT_ENGINE_BLOCK.get());
-        return (float) (speedModifier * capacity);
+        int engines = driverCore.getStructureManager().getAttachedEngines();
+        return engines == 0 ? 0 : (float) driverCore.getLevelCalculator().getCurrentLevel() / engines;
     }
 
     public float getPistonPhase() {
         return pistonPhase;
+    }
+
+    public float getPreviousPhase() {
+        return previousPhase;
+    }
+
+    public void setPreviousPhase(float previousPhase) {
+        this.previousPhase = previousPhase;
     }
 }

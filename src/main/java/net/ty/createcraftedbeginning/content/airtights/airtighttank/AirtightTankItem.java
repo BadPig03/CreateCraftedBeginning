@@ -19,6 +19,11 @@ import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.NotNull;
 
 public class AirtightTankItem extends BlockItem {
+    private static final String COMPOUND_KEY_WIDTH = "Width";
+    private static final String COMPOUND_KEY_HEIGHT = "Height";
+    private static final String COMPOUND_KEY_LAST_KNOWN_POS = "LastKnownPos";
+    private static final String COMPOUND_KEY_CONTROLLER_POS = "ControllerPos";
+
     public AirtightTankItem(Block block, Properties properties) {
         super(block, properties);
     }
@@ -40,14 +45,15 @@ public class AirtightTankItem extends BlockItem {
         if (server == null) {
             return false;
         }
+
         CustomData blockEntityData = itemStack.get(DataComponents.BLOCK_ENTITY_DATA);
         if (blockEntityData != null) {
-            CompoundTag nbt = blockEntityData.copyTag();
-            nbt.remove("Size");
-            nbt.remove("Height");
-            nbt.remove("Controller");
-            nbt.remove("LastKnownPos");
-            itemStack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(nbt));
+            CompoundTag compoundTag = blockEntityData.copyTag();
+            compoundTag.remove(COMPOUND_KEY_WIDTH);
+            compoundTag.remove(COMPOUND_KEY_HEIGHT);
+            compoundTag.remove(COMPOUND_KEY_CONTROLLER_POS);
+            compoundTag.remove(COMPOUND_KEY_LAST_KNOWN_POS);
+            itemStack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(compoundTag));
         }
         return super.updateCustomBlockEntityTag(blockPos, level, player, itemStack, blockState);
     }
@@ -64,16 +70,15 @@ public class AirtightTankItem extends BlockItem {
         }
 
         ItemStack stack = context.getItemInHand();
-        Level world = context.getLevel();
+        Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
         BlockPos placedOnPos = pos.relative(face.getOpposite());
-        BlockState placedOnState = world.getBlockState(placedOnPos);
-
+        BlockState placedOnState = level.getBlockState(placedOnPos);
         if (placedOnState.getBlock() != getBlock()) {
             return;
         }
 
-        AirtightTankBlockEntity tankAt = GasConnectivityHandler.partAt(CCBBlockEntities.AIRTIGHT_TANK.get(), world, placedOnPos);
+        AirtightTankBlockEntity tankAt = GasConnectivityHandler.partAt(CCBBlockEntities.AIRTIGHT_TANK.get(), level, placedOnPos);
         if (tankAt == null) {
             return;
         }
@@ -97,13 +102,15 @@ public class AirtightTankItem extends BlockItem {
         for (int xOffset = 0; xOffset < width; xOffset++) {
             for (int zOffset = 0; zOffset < width; zOffset++) {
                 BlockPos offsetPos = startPos.offset(xOffset, 0, zOffset);
-                BlockState blockState = world.getBlockState(offsetPos);
+                BlockState blockState = level.getBlockState(offsetPos);
                 if (blockState.getBlock() == getBlock()) {
                     continue;
                 }
+
                 if (!blockState.canBeReplaced()) {
                     return;
                 }
+
                 tanksToPlace++;
             }
         }
@@ -115,10 +122,11 @@ public class AirtightTankItem extends BlockItem {
         for (int xOffset = 0; xOffset < width; xOffset++) {
             for (int zOffset = 0; zOffset < width; zOffset++) {
                 BlockPos offsetPos = startPos.offset(xOffset, 0, zOffset);
-                BlockState blockState = world.getBlockState(offsetPos);
+                BlockState blockState = level.getBlockState(offsetPos);
                 if (blockState.getBlock() == getBlock()) {
                     continue;
                 }
+
                 super.place(BlockPlaceContext.at(context, offsetPos, face));
             }
         }

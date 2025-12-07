@@ -5,8 +5,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class CCBServer extends ConfigBase {
     public final CCBStress stressValues = nested(0, CCBStress::new, Comments.stress);
-    public final CCBCompressedAir compressedAir = nested(0, CCBCompressedAir::new, Comments.compressedAir);
-    public final CCBEquipment equipment = nested(0, CCBEquipment::new, Comments.equipment);
+    public final CCBCrates crates = nested(0, CCBCrates::new, Comments.crates);
+    public final CCBGas gas = nested(0, CCBGas::new, Comments.gas);
+    public final CCBEquipments equipments = nested(0, CCBEquipments::new, Comments.equipments);
 
     @Override
     public @NotNull String getName() {
@@ -15,7 +16,8 @@ public class CCBServer extends ConfigBase {
 
     private static class Comments {
         static String stress = "Fine tune the kinetic stats of individual components.";
-        static String compressedAir = "Everything related to Compressed Air.";
-        static String equipment = "Equipment and gadgets added by Create: Crafted Beginning.";
+        static String crates = "Everything related to crates.";
+        static String gas = "Everything related to gases.";
+        static String equipments = "Tools and weapons added by Create: Crafted Beginning.";
     }
 }

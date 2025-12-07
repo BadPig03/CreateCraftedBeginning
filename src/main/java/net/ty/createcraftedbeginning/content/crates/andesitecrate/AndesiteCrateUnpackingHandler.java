@@ -6,9 +6,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import net.ty.createcraftedbeginning.content.crates.CrateContainersUtils;
+import net.ty.createcraftedbeginning.content.crates.CrateItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,40 +20,26 @@ public enum AndesiteCrateUnpackingHandler implements UnpackingHandler {
 
     @Override
     public boolean unpack(@NotNull Level level, BlockPos pos, BlockState state, Direction side, List<ItemStack> items, @Nullable PackageOrderWithCrafts orderContext, boolean simulate) {
-        BlockEntity be = level.getBlockEntity(pos);
-        if (!(be instanceof AndesiteCrateBlockEntity crate)) {
+        if (!(level.getBlockEntity(pos) instanceof AndesiteCrateBlockEntity crate)) {
             return false;
         }
 
-        ItemStackHandler inv = crate.getInv();
-        ItemStack crateReference = null;
-        for (int i = 0; i < inv.getSlots(); i++) {
-            ItemStack inSlot = inv.getStackInSlot(i);
-            if (!inSlot.isEmpty()) {
-                crateReference = inSlot;
-                break;
-            }
+        CrateItemStackHandler handler = crate.getHandler();
+        ItemStack content = handler.getStackInSlot(0);
+        if (content.isEmpty()) {
+            content = items.getFirst();
         }
 
-        ItemStack packageReference = null;
         for (ItemStack stack : items) {
             if (stack.isEmpty()) {
                 continue;
             }
 
-            if (crateReference != null) {
-                if (!ItemStack.isSameItemSameComponents(crateReference, stack)) {
-                    return false;
-                }
-            } else {
-                if (packageReference == null) {
-                    packageReference = stack;
-                } else if (!ItemStack.isSameItemSameComponents(packageReference, stack)) {
-                    return false;
-                }
+            if (!ItemStack.isSameItemSameComponents(stack, content)) {
+                return false;
             }
         }
 
-        return UnpackingHandler.DEFAULT.unpack(level, pos, state, side, items, orderContext, simulate);
+        return CrateContainersUtils.defaultUnpack(level, pos, items, simulate);
     }
 }

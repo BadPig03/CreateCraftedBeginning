@@ -1,8 +1,9 @@
 {
+	"format_version": "1.21.6",
 	"credit": "Made with Blockbench",
 	"textures": {
 		"0": "createcraftedbeginning:block/portable_gas_interface/main",
-		"2": "createcraftedbeginning:block/airtight_sheet_block",
+		"2": "createcraftedbeginning:block/airtight_tank/top",
 		"3": "createcraftedbeginning:block/portable_gas_interface/chute_unpowered"
 	},
 	"elements": [

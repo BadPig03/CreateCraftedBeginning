@@ -1,0 +1,104 @@
+{
+  "type": "createcraftedbeginning:sequenced_assembly_with_gas",
+  "ingredient": {
+    "tag": "c:obsidians/crying"
+  },
+  "loops": 4,
+  "results": [
+    {
+      "chance": 75.0,
+      "id": "minecraft:heavy_core"
+    },
+    {
+      "chance": 25.0,
+      "count": 4,
+      "id": "minecraft:netherite_ingot"
+    }
+  ],
+  "sequence": [
+    {
+      "type": "createcraftedbeginning:deploying_with_gas",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_heavy_core"
+        },
+        {
+          "item": "minecraft:netherite_ingot"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_heavy_core"
+        }
+      ]
+    },
+    {
+      "type": "createcraftedbeginning:filling_with_gas",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_heavy_core"
+        },
+        {
+          "type": "neoforge:single",
+          "amount": 500,
+          "fluid": "minecraft:lava"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_heavy_core"
+        }
+      ]
+    },
+    {
+      "type": "createcraftedbeginning:deploying_with_gas",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_heavy_core"
+        },
+        {
+          "item": "createcraftedbeginning:airtight_sheet"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_heavy_core"
+        }
+      ]
+    },
+    {
+      "type": "createcraftedbeginning:gas_injection",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_heavy_core"
+        },
+        {
+          "type": "createcraftedbeginning:gas_stack",
+          "amount": 125,
+          "gas": "createcraftedbeginning:pressurized_energized_ultrawarm_air"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_heavy_core"
+        }
+      ]
+    },
+    {
+      "type": "createcraftedbeginning:pressing_with_gas",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_heavy_core"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_heavy_core"
+        }
+      ]
+    }
+  ],
+  "transitional_item": {
+    "id": "createcraftedbeginning:incomplete_heavy_core"
+  }
+}
