@@ -1,10 +1,10 @@
-package net.ty.createcraftedbeginning.recipe;
+package net.ty.createcraftedbeginning.data;
 
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.item.Items;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.data.CCBGases;
+import net.ty.createcraftedbeginning.recipe.generators.GasInjectionRecipeGen;
 
 import java.util.concurrent.CompletableFuture;
 

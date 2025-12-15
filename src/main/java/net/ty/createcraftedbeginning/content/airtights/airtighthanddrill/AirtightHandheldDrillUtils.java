@@ -58,6 +58,7 @@ import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
 import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterExecuteUtils;
 import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterSupplierUtils;
 import net.ty.createcraftedbeginning.api.gas.drillhandlers.AirtightHandheldDrillHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillMenu.DrillItemHandler;
@@ -269,9 +270,9 @@ public final class AirtightHandheldDrillUtils {
             return 1;
         }
 
-        GasStack availableGas = GasCanisterSupplierUtils.getFirstNonEmptyGasContent(player);
-        int requiredGas = calculateRequiredGasForMining(drill, level, basePos);
-        if (availableGas.getAmount() < requiredGas) {
+        GasStack gasStack = GasCanisterSupplierUtils.getFirstNonEmptyGasContent(player);
+        int requiredGas = calculateRequiredGasForMining(drill, level, basePos, gasStack.getGas());
+        if (gasStack.getAmount() < requiredGas) {
             return -1;
         }
 
@@ -298,9 +299,14 @@ public final class AirtightHandheldDrillUtils {
         return Mth.clamp(1 / (float) Math.pow(Math.log10(getDestructionPos(drill, basePos, level, false).size() + 9), 3), 0.01f, 1);
     }
 
-    public static int calculateRequiredGasForMining(ItemStack drill, Level level, BlockPos basePos) {
+    public static int calculateRequiredGasForMining(ItemStack drill, Level level, BlockPos basePos, Gas gas) {
         Set<BlockPos> destructionPos = getDestructionPos(drill, basePos, level, true);
         if (destructionPos.isEmpty()) {
+            return -1;
+        }
+
+        AirtightHandheldDrillHandler drillHandler = AirtightHandheldDrillHandler.REGISTRY.get(gas);
+        if (drillHandler == null) {
             return -1;
         }
 
@@ -308,9 +314,8 @@ public final class AirtightHandheldDrillUtils {
         boolean isMagnetEnabled = isMagnetEnabled(drill);
         boolean isConversionEnabled = isConversionEnabled(drill);
         boolean isLiquidReplacementEnabled = isLiquidReplacementEnabled(drill);
-
         double totalConsumption = destructionPos.stream().mapToDouble(pos -> calculateConsumptionForBlock(level, pos, isSilkTouchEnabled, isMagnetEnabled, isConversionEnabled, isLiquidReplacementEnabled)).sum();
-        return Mth.ceil(1.5 * Math.pow(totalConsumption, Math.log(2.25)));
+        return Mth.ceil(1.5 * drillHandler.getConsumptionMultiplier() * Math.pow(totalConsumption, Math.log(2.25)));
     }
 
     public static int @NotNull [] getMiningSizeParams(@NotNull ItemStack drill) {
@@ -530,7 +535,7 @@ public final class AirtightHandheldDrillUtils {
             return;
         }
 
-        int requiredGas = calculateRequiredGasForMining(drill, level, basePos);
+        int requiredGas = calculateRequiredGasForMining(drill, level, basePos, gasStack.getGas());
         if (requiredGas < 0) {
             return;
         }

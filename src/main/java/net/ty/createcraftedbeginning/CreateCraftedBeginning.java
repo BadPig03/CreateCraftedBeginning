@@ -24,6 +24,7 @@ import net.ty.createcraftedbeginning.advancement.CCBTriggers;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.GasBuilder;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.airtights.gas.GasWorldContentsDataManager;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackContentsDataManager;
 import net.ty.createcraftedbeginning.data.CCBDataGen;
 import net.ty.createcraftedbeginning.data.CCBGasRegistries;
@@ -44,6 +45,7 @@ import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabs;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBEntityTypes;
+import net.ty.createcraftedbeginning.registry.CCBFanProcessingTypes;
 import net.ty.createcraftedbeginning.registry.CCBFluids;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
@@ -64,6 +66,7 @@ public class CreateCraftedBeginning {
     public static final String MOD_ID = "createcraftedbeginning";
     public static final Logger LOGGER = LogUtils.getLogger();
     public static final GasCanisterPackContentsDataManager GAS_CANISTER_PACK_CONTENTS_DATA_MANAGER = new GasCanisterPackContentsDataManager();
+    public static final GasWorldContentsDataManager GAS_WORLD_CONTENTS_DATA_MANAGER = new GasWorldContentsDataManager();
 
     @SuppressWarnings("DataFlowIssue")
     public static final CCBRegistrate CCB_REGISTRATE = CCBRegistrate.create(MOD_ID).defaultCreativeTab((ResourceKey<CreativeModeTab>) null).setTooltipModifierFactory(item -> new Modifier(item, Palette.STANDARD_CREATE).andThen(TooltipModifier.mapNull(KineticStats.create(item))));
@@ -81,6 +84,7 @@ public class CreateCraftedBeginning {
         CCBDataComponents.register(modEventBus);
         CCBEntityTypes.register();
         CCBItems.register();
+        CCBFanProcessingTypes.register(modEventBus);
         CCBFluids.register();
         CCBMenuTypes.register();
         CCBMountedStorage.register();

@@ -58,10 +58,6 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
         event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.GAS_CANISTER.get(), (be, context) -> be.tankBehaviour.getCapability());
     }
 
-    public DataComponentPatch getComponentPatch() {
-        return componentPatch;
-    }
-
     @Override
     public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
         tankBehaviour = SmartGasTankBehaviour.single(this, getMaxCapacity()).forbidInsertion().forbidExtraction();
@@ -102,6 +98,10 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
         componentPatch = CatnipCodecUtils.decode(DataComponentPatch.CODEC, provider, compoundTag.getCompound(COMPOUND_KEY_COMPONENTS_PATCH)).orElse(DataComponentPatch.EMPTY);
         tankBehaviour.getPrimaryHandler().setCapacity(getMaxCapacity());
         notifyUpdate();
+    }
+
+    public DataComponentPatch getComponentPatch() {
+        return componentPatch;
     }
 
     public long getMaxCapacity() {

@@ -22,7 +22,9 @@ import java.util.List;
 
 public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implements IHaveGoggleInformation {
     private static final String COMPOUND_KEY_CORE = "Core";
+
     private static final int BASE_ROTATION_SPEED = 16;
+    private static final int LAZY_TICK_RATE = 4;
 
     private final TeslaTurbineCore core;
 
@@ -31,7 +33,7 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
     public TeslaTurbineBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
         core = new TeslaTurbineCore(this);
-        setLazyTickRate(4);
+        setLazyTickRate(LAZY_TICK_RATE);
     }
 
     @Override
@@ -64,6 +66,22 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
     }
 
     @Override
+    public void onSpeedChanged(float previousSpeed) {
+        super.onSpeedChanged(previousSpeed);
+        if (level == null || level.isClientSide) {
+            return;
+        }
+        if (getSpeed() == 0) {
+            return;
+        }
+        if (core == null || !core.getStructureManager().isActive() || core.getLevelCalculator().getCurrentLevel() != TeslaTurbineCore.MAX_LEVEL) {
+            return;
+        }
+
+        advancementBehaviour.awardPlayer(CCBAdvancements.MIRACLE_OF_ENGINEERING);
+    }
+
+    @Override
     public float calculateAddedStressCapacity() {
         float capacity = Mth.abs(getGeneratedSpeed()) * (float) BlockStressValues.getCapacity(CCBBlocks.TESLA_TURBINE_BLOCK.get()) / AllConfigs.server().kinetics.maxRotationSpeed.get();
         lastCapacityProvided = capacity;
@@ -71,24 +89,24 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
     }
 
     @Override
-    public void write(@NotNull CompoundTag compound, Provider registries, boolean clientPacket) {
-        super.write(compound, registries, clientPacket);
-        compound.put(COMPOUND_KEY_CORE, core.write(registries));
+    public void write(@NotNull CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.write(compoundTag, provider, clientPacket);
+        compoundTag.put(COMPOUND_KEY_CORE, core.write(provider));
     }
 
     @Override
-    protected void read(CompoundTag compound, Provider registries, boolean clientPacket) {
-        super.read(compound, registries, clientPacket);
-        if (!compound.contains(COMPOUND_KEY_CORE)) {
+    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.read(compoundTag, provider, clientPacket);
+        if (!compoundTag.contains(COMPOUND_KEY_CORE)) {
             return;
         }
 
-        core.read(compound.getCompound(COMPOUND_KEY_CORE), registries);
+        core.read(compoundTag.getCompound(COMPOUND_KEY_CORE), provider);
     }
 
     @Override
     public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
-        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.MIRACLE_OF_ENGINEERING);
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.MIRACLE_OF_ENGINEERING, CCBAdvancements.TESLA_TURBINE_EASY_AS_PIE);
         behaviours.add(advancementBehaviour);
         super.addBehaviours(behaviours);
     }

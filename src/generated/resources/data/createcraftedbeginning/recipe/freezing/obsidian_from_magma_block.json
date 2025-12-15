@@ -1,0 +1,13 @@
+{
+  "type": "createcraftedbeginning:freezing",
+  "ingredients": [
+    {
+      "item": "minecraft:magma_block"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:obsidian"
+    }
+  ]
+}

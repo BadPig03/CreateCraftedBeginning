@@ -85,4 +85,9 @@ public class CreativeCoolerState extends BaseCoolerState {
         }
         return InteractionResult.SUCCESS;
     }
+
+    @Override
+    public boolean onSnowballImpact(@NotNull BreezeCoolerBlockEntity cooler) {
+        return false;
+    }
 }

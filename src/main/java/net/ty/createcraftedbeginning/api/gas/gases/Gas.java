@@ -48,11 +48,11 @@ public class Gas {
     private final float teslaEfficiency;
 
     @Nullable
-    private final String pressurizedGasName;
+    private final ResourceLocation pressurizedGas;
     @Nullable
-    private final String depressurizedGasName;
+    private final ResourceLocation depressurizedGas;
     @Nullable
-    private final String energizedGasName;
+    private final ResourceLocation energizedGas;
     private final ItemStack outputItemStack;
     private final FluidStack outputFluidStack;
     private final Set<TagKey<Gas>> tags;
@@ -62,9 +62,9 @@ public class Gas {
     public Gas(@NotNull GasBuilder builder) {
         iconLocation = builder.getTexture();
         tint = builder.getTint();
-        pressurizedGasName = builder.getPressurizedGasName();
-        depressurizedGasName = builder.getDepressurizedGasName();
-        energizedGasName = builder.getEnergizedGasName();
+        pressurizedGas = builder.getPressurizedGas();
+        depressurizedGas = builder.getDepressurizedGas();
+        energizedGas = builder.getEnergizedGas();
         outputItemStack = builder.getOutputItemStack();
         outputFluidStack = builder.getOutputFluidStack();
         engineEfficiency = builder.getEngineEfficiency();
@@ -103,6 +103,14 @@ public class Gas {
         return Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(sprite);
     }
 
+    public static @NotNull Gas getGasByName(ResourceLocation location) {
+        if (location == null) {
+            return EMPTY_GAS_HOLDER.value();
+        }
+
+        return CCBGasRegistries.GAS_REGISTRY.get(location);
+    }
+
     public boolean is(TagKey<Gas> tag) {
         return getHolder().is(tag);
     }
@@ -139,15 +147,15 @@ public class Gas {
     }
 
     public @NotNull Gas getPressurizedGas() {
-        return Objects.requireNonNullElse(getGasByName(pressurizedGasName), EMPTY_GAS_HOLDER.value());
+        return Objects.requireNonNullElse(getGasByName(pressurizedGas), EMPTY_GAS_HOLDER.value());
     }
 
     public @NotNull Gas getDepressurizedGas() {
-        return Objects.requireNonNullElse(getGasByName(depressurizedGasName), EMPTY_GAS_HOLDER.value());
+        return Objects.requireNonNullElse(getGasByName(depressurizedGas), EMPTY_GAS_HOLDER.value());
     }
 
     public @NotNull Gas getEnergizedGas() {
-        return Objects.requireNonNullElse(getGasByName(energizedGasName), EMPTY_GAS_HOLDER.value());
+        return Objects.requireNonNullElse(getGasByName(energizedGas), EMPTY_GAS_HOLDER.value());
     }
 
     public @NotNull ItemStack getOutputItemStack() {
@@ -174,16 +182,12 @@ public class Gas {
         return tags.contains(tag);
     }
 
+    public ResourceLocation getResourceLocation() {
+        return builtInRegistryHolder.key().location();
+    }
+
     @Override
     public String toString() {
         return CCBGasRegistries.GAS_REGISTRY.wrapAsHolder(this).getRegisteredName();
-    }
-
-    private @NotNull Gas getGasByName(String gasName) {
-        if (gasName == null) {
-            return EMPTY_GAS_HOLDER.value();
-        }
-
-        return CCBGasRegistries.GAS_REGISTRY.get(ResourceLocation.fromNamespaceAndPath(builtInRegistryHolder.key().location().getNamespace(), gasName));
     }
 }

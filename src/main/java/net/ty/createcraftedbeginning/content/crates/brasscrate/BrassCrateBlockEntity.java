@@ -79,20 +79,19 @@ public class BrassCrateBlockEntity extends CratesBlockEntity implements Threshol
     }
 
     @Override
-    protected void write(CompoundTag compound, Provider registries, boolean clientPacket) {
-        super.write(compound, registries, clientPacket);
-
-        compound.put(COMPOUND_KEY_INVENTORY, handler.serializeNBT(registries));
+    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.write(compoundTag, provider, clientPacket);
+        compoundTag.put(COMPOUND_KEY_INVENTORY, handler.serializeNBT(provider));
     }
 
     @Override
-    protected void read(CompoundTag compound, Provider registries, boolean clientPacket) {
-        super.read(compound, registries, clientPacket);
-        if (!compound.contains(COMPOUND_KEY_INVENTORY)) {
+    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.read(compoundTag, provider, clientPacket);
+        if (!compoundTag.contains(COMPOUND_KEY_INVENTORY)) {
             return;
         }
 
-        handler.deserializeNBT(registries, compound.getCompound(COMPOUND_KEY_INVENTORY));
+        handler.deserializeNBT(provider, compoundTag.getCompound(COMPOUND_KEY_INVENTORY));
     }
 
     @Override

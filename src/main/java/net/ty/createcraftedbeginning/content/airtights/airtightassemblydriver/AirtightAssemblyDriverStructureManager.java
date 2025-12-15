@@ -69,8 +69,7 @@ public class AirtightAssemblyDriverStructureManager {
                         continue;
                     }
 
-                    BlockState blockState = level.getBlockState(pos);
-                    if (!AirtightTankBlock.isTank(blockState)) {
+                    if (!(level.getBlockState(pos).getBlock() instanceof AirtightTankBlock)) {
                         structureValid = false;
                         continue;
                     }

@@ -1,10 +1,11 @@
-package net.ty.createcraftedbeginning.recipe;
+package net.ty.createcraftedbeginning.data;
 
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.recipe.generators.CoolingRecipeGen;
 import net.ty.createcraftedbeginning.registry.CCBFluids;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;

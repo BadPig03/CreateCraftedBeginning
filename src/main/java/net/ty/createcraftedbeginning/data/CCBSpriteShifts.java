@@ -6,9 +6,9 @@ import com.simibubi.create.foundation.block.connected.CTSpriteShifter;
 import com.simibubi.create.foundation.block.connected.CTType;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 
-@SuppressWarnings("SameParameterValue")
 public class CCBSpriteShifts {
     public static final CTSpriteShiftEntry CINDER_CASING = omni("cinder_casing");
+    public static final CTSpriteShiftEntry AIR_VENT = omni("air_vent/air_vent");
 
     public static final CTSpriteShiftEntry AIRTIGHT_TANK_TOP = rectangle("airtight_tank/top");
     public static final CTSpriteShiftEntry AIRTIGHT_TANK = rectangle("airtight_tank/vertical");
@@ -19,6 +19,7 @@ public class CCBSpriteShifts {
         return getCT(AllCTTypes.OMNIDIRECTIONAL, name);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static CTSpriteShiftEntry getCT(CTType type, String blockTextureName) {
         return getCT(type, blockTextureName, blockTextureName);
     }

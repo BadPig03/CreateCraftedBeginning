@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.data;
 
 import com.tterrag.registrate.providers.ProviderType;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
@@ -14,7 +13,6 @@ import net.ty.createcraftedbeginning.provider.CCBGasTagsProvider;
 import net.ty.createcraftedbeginning.provider.CCBDatapackBuiltinEntriesProvider;
 import net.ty.createcraftedbeginning.provider.CCBRecipeProvider;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
-import net.ty.createcraftedbeginning.recipe.CCBSequencedAssemblyWithGasRecipes;
 import net.ty.createcraftedbeginning.registry.CCBRegistrateTags;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 import org.jetbrains.annotations.NotNull;

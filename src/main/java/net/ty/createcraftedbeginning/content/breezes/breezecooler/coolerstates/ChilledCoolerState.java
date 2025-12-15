@@ -42,6 +42,11 @@ public class ChilledCoolerState extends BaseCoolerState {
     }
 
     @Override
+    public CoolantType getCoolantType() {
+        return CoolantType.NORMAL;
+    }
+
+    @Override
     public InteractionResult onItemInsert(@NotNull BreezeCoolerBlockEntity cooler, ItemStack stack, boolean forceOverflow, boolean simulate) {
         Level level = cooler.getLevel();
         if (level == null) {
@@ -74,7 +79,20 @@ public class ChilledCoolerState extends BaseCoolerState {
     }
 
     @Override
-    public CoolantType getCoolantType() {
-        return CoolantType.NORMAL;
+    public boolean onSnowballImpact(@NotNull BreezeCoolerBlockEntity cooler) {
+        Level level = cooler.getLevel();
+        if (level == null || level.isClientSide) {
+            return false;
+        }
+
+        int newTime = remainingTime + 20;
+        if (Mth.abs(newTime) > OVERFLOW_THRESHOLD) {
+            return false;
+        }
+
+        remainingTime = Math.min(newTime, BreezeCoolerBlockEntity.MAX_COOLANT_CAPACITY);
+        cooler.playSound();
+        cooler.spawnParticleBurst();
+        return true;
     }
 }

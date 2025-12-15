@@ -1,10 +1,11 @@
-package net.ty.createcraftedbeginning.recipe;
+package net.ty.createcraftedbeginning.data;
 
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.core.HolderLookup.RegistryLookup;
 import net.minecraft.data.PackOutput;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.recipe.generators.PressurizationRecipeGen;
 import net.ty.createcraftedbeginning.registry.CCBRegistries;
 import org.jetbrains.annotations.NotNull;
 

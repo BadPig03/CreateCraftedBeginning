@@ -29,6 +29,7 @@ import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRe
 import net.ty.createcraftedbeginning.recipe.ConversionRecipe;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 import net.ty.createcraftedbeginning.recipe.EnergizationRecipe;
+import net.ty.createcraftedbeginning.recipe.FreezingRecipe;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
@@ -40,6 +41,7 @@ import java.util.function.Supplier;
 
 public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
     CONVERSION(ConversionRecipe::new),
+    FREEZING(FreezingRecipe::new),
     COOLING(CoolingRecipe::new),
     GAS_INJECTION(GasInjectionRecipe::new),
     PRESSURIZATION(PressurizationRecipe::new),

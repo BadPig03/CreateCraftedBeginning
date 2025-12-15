@@ -29,6 +29,7 @@ import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterExecuteUtils;
 import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterQueryUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -43,7 +44,6 @@ import static com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessing
 import static com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessingBehaviour.ProcessingResult.PASS;
 
 public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
-    public static final long MAX_CAPACITY = 1000;
     public static final int PROCESSING_TIME = 60;
     public static final int NOZZLE_TIME = 15;
     public static final int NOZZLE_PART_TIME = 15;
@@ -66,9 +66,13 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.GAS_INJECTION_CHAMBER.get(), (be, context) -> context == Direction.UP ? be.tankBehaviour.getCapability() : null);
     }
 
+    public static long getMaxCapacity() {
+        return CCBConfig.server().airtights.maxTankCapacity.get() * 500L;
+    }
+
     @Override
     public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
-        tankBehaviour = SmartGasTankBehaviour.single(this, MAX_CAPACITY);
+        tankBehaviour = SmartGasTankBehaviour.single(this, getMaxCapacity());
         beltProcessing = new BeltProcessingBehaviour(this).whenItemEnters(this::onItemEntered).whileItemHeld(this::onItemHeld);
         behaviours.add(tankBehaviour);
         behaviours.add(beltProcessing);
@@ -91,24 +95,24 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     }
 
     @Override
-    public void write(CompoundTag compound, Provider provider, boolean clientPacket) {
-        super.write(compound, provider, clientPacket);
-        compound.putInt(COMPOUND_KEY_PROCESSING_TICKS, processingTicks);
+    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.write(compoundTag, provider, clientPacket);
+        compoundTag.putInt(COMPOUND_KEY_PROCESSING_TICKS, processingTicks);
         if (!sendCloud || !clientPacket) {
             return;
         }
 
-        compound.putBoolean(COMPOUND_KEY_CLOUD, true);
+        compoundTag.putBoolean(COMPOUND_KEY_CLOUD, true);
         sendCloud = false;
     }
 
     @Override
-    public void read(CompoundTag compound, Provider provider, boolean clientPacket) {
-        super.read(compound, provider, clientPacket);
-        if (compound.contains(COMPOUND_KEY_PROCESSING_TICKS)) {
-            processingTicks = compound.getInt(COMPOUND_KEY_PROCESSING_TICKS);
+    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.read(compoundTag, provider, clientPacket);
+        if (compoundTag.contains(COMPOUND_KEY_PROCESSING_TICKS)) {
+            processingTicks = compoundTag.getInt(COMPOUND_KEY_PROCESSING_TICKS);
         }
-        if (!clientPacket || !compound.contains(COMPOUND_KEY_CLOUD)) {
+        if (!clientPacket || !compoundTag.contains(COMPOUND_KEY_CLOUD)) {
             return;
         }
 

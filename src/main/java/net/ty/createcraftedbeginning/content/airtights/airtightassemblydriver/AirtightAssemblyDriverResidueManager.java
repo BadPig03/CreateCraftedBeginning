@@ -9,22 +9,20 @@ import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletInventory.InternalStackHandler;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import static net.ty.createcraftedbeginning.content.airtights.airtightassemblydriver.AirtightAssemblyDriverCore.MAX_LEVEL;
 
 public class AirtightAssemblyDriverResidueManager {
-    private static final int FAILURE_MAX_COUNTDOWN = 100;
-    private static final int MAX_COUNTDOWN = 10;
-    private static final float LEVEL_MULTIPLIER = 20.0f;
-
-    private static final String COMPOUND_KEY_RESIDUE_COUNTDOWN = "ResidueCountdown";
-    private static final String COMPOUND_KEY_FAILURE_COUNTDOWN = "FailureCountdown";
+    private static final String COMPOUND_KEY_GENERATION_COOLDOWN = "GenerationCooldown";
+    private static final String COMPOUND_KEY_FAILURE_COOLDOWN = "FailureCooldown";
     private static final String COMPOUND_KEY_SUCCESS_COUNT = "SuccessCount";
     private static final String COMPOUND_KEY_OUTLETS_POSITIONS = "OutletsPositions";
 
@@ -32,16 +30,36 @@ public class AirtightAssemblyDriverResidueManager {
     private final Set<BlockPos> outletsPositions = new HashSet<>();
 
     private int successCount;
-    private int residueCountdown = MAX_COUNTDOWN;
-    private int failureCountdown = FAILURE_MAX_COUNTDOWN;
+    private int generationCooldown = getGenerationMaxCooldown();
+    private int failureCooldown = getFailureMaxCooldown();
 
     public AirtightAssemblyDriverResidueManager(AirtightAssemblyDriverCore driverCore) {
         this.driverCore = driverCore;
     }
 
+    private static int getFailureMaxCooldown() {
+        return CCBConfig.server().airtights.residueFailureCooldown.get();
+    }
+
+    private static int getGenerationMaxCooldown() {
+        return CCBConfig.server().airtights.residueGenerationCooldown.get();
+    }
+
+    private static int getConsecutiveSuccessesCount() {
+        return CCBConfig.server().airtights.consecutiveSuccessesCount.get();
+    }
+
+    private static int getItemQuantityMultiplier() {
+        return CCBConfig.server().airtights.itemQuantityMultiplier.get();
+    }
+
+    private static int getFluidQuantityMultiplier() {
+        return CCBConfig.server().airtights.fluidQuantityMultiplier.get();
+    }
+
     public void tick(Level level) {
-        if (failureCountdown > 0) {
-            failureCountdown--;
+        if (failureCooldown > 0) {
+            failureCooldown--;
         }
 
         if (outletsPositions.isEmpty() && driverCore.getLevelCalculator().getResidueLevel() > 0) {
@@ -49,19 +67,19 @@ public class AirtightAssemblyDriverResidueManager {
             return;
         }
 
-        if (residueCountdown > 0) {
-            residueCountdown--;
+        if (generationCooldown > 0) {
+            generationCooldown--;
             return;
         }
 
-        scanOutlets(level);
-        residueCountdown = MAX_COUNTDOWN;
+        scanAndGenerateResidues(level);
+        generationCooldown = getGenerationMaxCooldown();
     }
 
     public void reset() {
         successCount = 0;
-        residueCountdown = MAX_COUNTDOWN;
-        failureCountdown = FAILURE_MAX_COUNTDOWN;
+        generationCooldown = getGenerationMaxCooldown();
+        failureCooldown = getFailureMaxCooldown();
         driverCore.getLevelCalculator().update();
     }
 
@@ -76,19 +94,19 @@ public class AirtightAssemblyDriverResidueManager {
 
     public CompoundTag write() {
         CompoundTag compoundTag = new CompoundTag();
-        compoundTag.putInt(COMPOUND_KEY_RESIDUE_COUNTDOWN, residueCountdown);
-        compoundTag.putInt(COMPOUND_KEY_FAILURE_COUNTDOWN, failureCountdown);
+        compoundTag.putInt(COMPOUND_KEY_GENERATION_COOLDOWN, generationCooldown);
+        compoundTag.putInt(COMPOUND_KEY_FAILURE_COOLDOWN, failureCooldown);
         compoundTag.putInt(COMPOUND_KEY_SUCCESS_COUNT, successCount);
         compoundTag.putLongArray(COMPOUND_KEY_OUTLETS_POSITIONS, outletsPositions.stream().mapToLong(BlockPos::asLong).toArray());
         return compoundTag;
     }
 
     public void read(@NotNull CompoundTag compoundTag) {
-        if (compoundTag.contains(COMPOUND_KEY_RESIDUE_COUNTDOWN)) {
-            residueCountdown = compoundTag.getInt(COMPOUND_KEY_RESIDUE_COUNTDOWN);
+        if (compoundTag.contains(COMPOUND_KEY_GENERATION_COOLDOWN)) {
+            generationCooldown = compoundTag.getInt(COMPOUND_KEY_GENERATION_COOLDOWN);
         }
-        if (compoundTag.contains(COMPOUND_KEY_FAILURE_COUNTDOWN)) {
-            failureCountdown = compoundTag.getInt(COMPOUND_KEY_FAILURE_COUNTDOWN);
+        if (compoundTag.contains(COMPOUND_KEY_FAILURE_COOLDOWN)) {
+            failureCooldown = compoundTag.getInt(COMPOUND_KEY_FAILURE_COOLDOWN);
         }
         if (compoundTag.contains(COMPOUND_KEY_SUCCESS_COUNT)) {
             successCount = compoundTag.getInt(COMPOUND_KEY_SUCCESS_COUNT);
@@ -98,12 +116,10 @@ public class AirtightAssemblyDriverResidueManager {
         }
 
         outletsPositions.clear();
-        for (long posLong : compoundTag.getLongArray(COMPOUND_KEY_OUTLETS_POSITIONS)) {
-            outletsPositions.add(BlockPos.of(posLong));
-        }
+        Arrays.stream(compoundTag.getLongArray(COMPOUND_KEY_OUTLETS_POSITIONS)).mapToObj(BlockPos::of).forEach(outletsPositions::add);
     }
 
-    private void scanOutlets(@NotNull Level level) {
+    private void scanAndGenerateResidues(@NotNull Level level) {
         int attachedOutlets = outletsPositions.size();
         if (attachedOutlets == 0) {
             removeResidueLevel(true);
@@ -124,13 +140,13 @@ public class AirtightAssemblyDriverResidueManager {
                 addResidueLevel();
                 return;
             }
-            if (successCount >= MAX_COUNTDOWN * 2) {
+            if (successCount >= getConsecutiveSuccessesCount()) {
                 addResidueLevel();
             }
             return;
         }
 
-        if (failureCountdown != 0) {
+        if (failureCooldown != 0) {
             return;
         }
 
@@ -178,7 +194,7 @@ public class AirtightAssemblyDriverResidueManager {
             fluidSuccess = true;
         }
         else {
-            int fillAmount = getResidueGenerationRate();
+            int fillAmount = Mth.ceil(getResidueGenerationRate() * getFluidQuantityMultiplier());
             int filledAmount = fluidHandler.forceFill(outputFluidStack.copyWithAmount(fillAmount), FluidAction.EXECUTE);
             fluidSuccess = filledAmount >= fillAmount;
         }
@@ -189,15 +205,15 @@ public class AirtightAssemblyDriverResidueManager {
             itemSuccess = true;
         }
         else {
-            float itemCount = getResidueGenerationRate() / LEVEL_MULTIPLIER / MAX_LEVEL;
+            float itemCount = getResidueGenerationRate() / MAX_LEVEL / MAX_LEVEL * getItemQuantityMultiplier();
             itemSuccess = outlet.getInventory().addPartialItemCount(itemCount, outputItemStack);
         }
         return fluidSuccess && itemSuccess;
     }
 
-    private int getResidueGenerationRate() {
+    private float getResidueGenerationRate() {
         int currentLevel = driverCore.getLevelCalculator().getCurrentLevel();
         int count = outletsPositions.size();
-        return currentLevel == 0 || count == 0 ? 0 : (int) (currentLevel * LEVEL_MULTIPLIER / count);
+        return currentLevel == 0 || count == 0 ? 0 : (float) currentLevel / count;
     }
 }

@@ -7,9 +7,9 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterQueryUtils;
 import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterSupplierUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import org.jetbrains.annotations.NotNull;
 
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)

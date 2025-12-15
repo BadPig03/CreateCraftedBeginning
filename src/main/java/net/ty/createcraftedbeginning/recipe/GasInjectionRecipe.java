@@ -9,8 +9,8 @@ import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterQueryUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.interfaces.IAssemblyRecipeWithGas;
 import net.ty.createcraftedbeginning.api.gas.recipes.GasIngredient;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
@@ -81,7 +81,10 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
         }
 
         if (GasCanisterQueryUtils.isCanisterInjectable(itemStack, gasStack)) {
-            return Math.min(GasInjectionChamberBlockEntity.MAX_CAPACITY, GasCanisterQueryUtils.getCanisterCapacity(itemStack, gasStack.getGas()) - GasCanisterQueryUtils.getGasAmount(itemStack, gasStack.getGas()));
+            long maxCapacity = GasInjectionChamberBlockEntity.getMaxCapacity();
+            GasStack content = GasCanisterQueryUtils.getCanisterContent(itemStack);
+            long capacity = GasCanisterQueryUtils.getCanisterCapacity(itemStack, content.getGas());
+            return Math.min(maxCapacity, capacity - content.getAmount());
         }
 
         SingleRecipeInput input = new SingleRecipeInput(itemStack);

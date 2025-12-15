@@ -130,8 +130,7 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
             return null;
         }
 
-        state = state.setValue(FACING, direction).setValue(CLOCKWISE, isClockwise(level, direction, clickedPos));
-        return ProperWaterloggedBlock.withWater(level, state, clickedPos);
+        return ProperWaterloggedBlock.withWater(level, state.setValue(FACING, direction).setValue(CLOCKWISE, isClockwise(level, direction, clickedPos)), clickedPos);
     }
 
     @Override

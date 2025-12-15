@@ -1,0 +1,35 @@
+{
+  "parent": "createcraftedbeginning:plywood",
+  "criteria": {
+    "0": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:gas_canister"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.portable_energy_source.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:gas_canister"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.portable_energy_source"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

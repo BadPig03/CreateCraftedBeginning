@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:universal_antidote",
+  "parent": "createcraftedbeginning:new_energy_power_cell",
   "criteria": {
     "0": {
       "conditions": {

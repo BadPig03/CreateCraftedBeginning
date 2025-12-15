@@ -42,7 +42,6 @@ public class GasPropagator {
         frontier.add(Pair.of(0, pipePos));
         visited.add(pipePos);
         int pumpRange = getAirtightPumpRange();
-
         while (!frontier.isEmpty()) {
             Pair<Integer, BlockPos> pair = frontier.poll();
             int currentDistance = pair.getFirst();
@@ -112,7 +111,7 @@ public class GasPropagator {
     }
 
     public static int getAirtightPumpRange() {
-        return CCBConfig.server().gas.airtightPumpRange.get();
+        return CCBConfig.server().airtights.maxPumpRange.get();
     }
 
     public static void resetAffectedNetworks(Level world, BlockPos start, Direction side) {

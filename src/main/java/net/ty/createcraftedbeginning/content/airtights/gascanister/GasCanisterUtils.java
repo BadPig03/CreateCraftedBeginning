@@ -46,7 +46,7 @@ public final class GasCanisterUtils {
 
     public static int getBarColor(@NotNull ItemStack canister) {
         GasStack content = GasCanisterQueryUtils.getCanisterContent(canister);
-        return Color.mixColors(COLOR_CYAN, COLOR_WHITE, (float) content.getAmount() / GasCanisterQueryUtils.getCanisterCapacity(canister, content.getGas()));
+        return Color.mixColors(COLOR_CYAN, COLOR_WHITE, Mth.clamp((float) content.getAmount() / GasCanisterQueryUtils.getCanisterCapacity(canister, content.getGas()), 0, 1));
     }
 
     public static int getBarWidth(@NotNull ItemStack canister) {

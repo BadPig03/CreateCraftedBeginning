@@ -24,6 +24,7 @@ import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AirtightCheckValveSc
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AirtightPipeScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AirtightPumpScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.SmartAirtightPipeScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.other.AirVentScenes;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.NotNull;
 
@@ -56,6 +57,9 @@ public class CCBPonderScenes {
         entryHelper.forComponents(CCBBlocks.PORTABLE_GAS_INTERFACE_BLOCK).addStoryBoard("portable_gas_interface_transfer_story_board", PortableGasInterfaceScenes::transfer, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
         entryHelper.forComponents(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK).addStoryBoard("gas_injection_chamber_gas_injection_story_board", GasInjectionChamberScenes::gasInjection, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_HATCH_BLOCK).addStoryBoard("airtight_hatch_transfer_story_board", AirtightHatchScenes::transfer, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
+
+        entryHelper.forComponents(CCBBlocks.AIR_VENT_BLOCK).addStoryBoard("air_vent_placement_story_board", AirVentScenes::placement);
+
         /*entryHelper.forComponents(CCBBlocks.PNEUMATIC_ENGINE_BLOCK).addStoryBoard("crates_story_board", PneumaticEngineScenes::scene, CCBPonderTags.KINETIC_SOURCES_TAG_ID, CCBPonderTags.GAS_MANIPULATORS_TAG_ID, AllCreatePonderTags.KINETIC_SOURCES).addStoryBoard("crates_story_board", PneumaticEngineScenes::limitation, CCBPonderTags.KINETIC_SOURCES_TAG_ID, CCBPonderTags.GAS_MANIPULATORS_TAG_ID, AllCreatePonderTags.KINETIC_SOURCES);
         entryHelper.forComponents(CCBBlocks.PHOTO_STRESS_BEARING_BLOCK).addStoryBoard("crates_story_board", PhotoStressBearingScenes::scene, CCBPonderTags.KINETIC_SOURCES_TAG_ID, AllCreatePonderTags.KINETIC_SOURCES).addStoryBoard("crates_story_board_nether_end", PhotoStressBearingScenes::other_dimension, CCBPonderTags.KINETIC_SOURCES_TAG_ID, AllCreatePonderTags.KINETIC_SOURCES);
         entryHelper.forComponents(CCBBlocks.CINDER_INCINERATION_BLOWER_BLOCK).addStoryBoard("crates_story_board_larger", CinderIncinerationBlowerScenes::scene, CCBPonderTags.KINETIC_APPLIANCES_TAG_ID, AllCreatePonderTags.KINETIC_APPLIANCES).addStoryBoard("crates_story_board_larger", CinderIncinerationBlowerScenes::working_range, CCBPonderTags.KINETIC_APPLIANCES_TAG_ID, AllCreatePonderTags.KINETIC_APPLIANCES);*/

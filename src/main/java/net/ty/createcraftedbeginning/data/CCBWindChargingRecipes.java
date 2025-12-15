@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.recipe;
+package net.ty.createcraftedbeginning.data;
 
 import com.simibubi.create.content.equipment.BuildersTeaItem;
 import net.minecraft.core.HolderLookup;
@@ -15,6 +15,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.OminousBottleItem;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.content.icecreams.MilkIceCreamItem;
+import net.ty.createcraftedbeginning.recipe.generators.WindChargingRecipeGen;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
 

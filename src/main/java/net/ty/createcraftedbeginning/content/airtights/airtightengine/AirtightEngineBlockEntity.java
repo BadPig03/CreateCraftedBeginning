@@ -30,6 +30,7 @@ import java.lang.ref.WeakReference;
 import java.util.List;
 
 public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity implements IHaveGoggleInformation {
+    private static final int LAZY_TICK_RATE = 20;
     public static final int BASE_ROTATION_SPEED = 8;
     public static final float DELTA_TIME = 0.01f;
 
@@ -43,7 +44,7 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
         super(type, pos, state);
         source = new WeakReference<>(null);
         pistonPhase = 0;
-        setLazyTickRate(20);
+        setLazyTickRate(LAZY_TICK_RATE);
     }
 
     @Override
@@ -105,6 +106,29 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
     public void initialize() {
         super.initialize();
         updateGeneratedRotation();
+    }
+
+    @Override
+    public void onSpeedChanged(float previousSpeed) {
+        super.onSpeedChanged(previousSpeed);
+        if (level == null || level.isClientSide) {
+            return;
+        }
+        if (getSpeed() == 0) {
+            return;
+        }
+
+        AirtightAssemblyDriverCore driverCore = getCore();
+        if (driverCore == null || !driverCore.getStructureManager().isActive()) {
+            return;
+        }
+
+        advancementBehaviour.awardPlayer(CCBAdvancements.RISING_FORCE);
+        if (driverCore.getLevelCalculator().getCurrentLevel() != AirtightAssemblyDriverCore.MAX_LEVEL) {
+            return;
+        }
+
+        advancementBehaviour.awardPlayer(CCBAdvancements.FLYWHEEL);
     }
 
     @Override

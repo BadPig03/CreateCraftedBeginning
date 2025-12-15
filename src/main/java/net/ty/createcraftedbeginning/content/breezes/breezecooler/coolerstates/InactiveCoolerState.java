@@ -54,6 +54,19 @@ public class InactiveCoolerState extends BaseCoolerState {
     }
 
     @Override
+    public boolean onSnowballImpact(@NotNull BreezeCoolerBlockEntity cooler) {
+        Level level = cooler.getLevel();
+        if (level == null || level.isClientSide) {
+            return false;
+        }
+
+        cooler.setCoolerState(new ChilledCoolerState(20, false));
+        cooler.playSound();
+        cooler.spawnParticleBurst();
+        return true;
+    }
+
+    @Override
     public CoolantType getCoolantType() {
         return CoolantType.NONE;
     }

@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.recipe;
+package net.ty.createcraftedbeginning.recipe.generators;
 
 import com.simibubi.create.api.data.recipe.BaseRecipeProvider;
 import net.minecraft.core.HolderLookup.Provider;

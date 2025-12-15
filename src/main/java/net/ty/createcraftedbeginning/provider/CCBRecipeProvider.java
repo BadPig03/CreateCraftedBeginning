@@ -8,11 +8,12 @@ import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeGen;
-import net.ty.createcraftedbeginning.recipe.CCBCoolingRecipes;
-import net.ty.createcraftedbeginning.recipe.CCBEnergizationRecipes;
-import net.ty.createcraftedbeginning.recipe.CCBGasInjectionRecipes;
-import net.ty.createcraftedbeginning.recipe.CCBPressurizationRecipes;
-import net.ty.createcraftedbeginning.recipe.CCBWindChargingRecipes;
+import net.ty.createcraftedbeginning.data.CCBCoolingRecipes;
+import net.ty.createcraftedbeginning.data.CCBEnergizationRecipes;
+import net.ty.createcraftedbeginning.data.CCBFreezingRecipes;
+import net.ty.createcraftedbeginning.data.CCBGasInjectionRecipes;
+import net.ty.createcraftedbeginning.data.CCBPressurizationRecipes;
+import net.ty.createcraftedbeginning.data.CCBWindChargingRecipes;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ public class CCBRecipeProvider extends RecipeProvider {
 
     public static void registerAllProcessing(@NotNull DataGenerator generator, PackOutput output, CompletableFuture<Provider> registries) {
         GENERATORS.add(new CCBCoolingRecipes(output, registries));
+        GENERATORS.add(new CCBFreezingRecipes(output, registries));
         GENERATORS.add(new CCBWindChargingRecipes(output, registries));
         generator.addProvider(true, new DataProvider() {
             @Override

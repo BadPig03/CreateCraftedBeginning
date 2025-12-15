@@ -11,6 +11,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
 import net.neoforged.neoforge.event.level.LevelEvent.Load;
+import net.neoforged.neoforge.event.tick.LevelTickEvent.Post;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.recipes.DeployerApplicationWithGasRecipe;
@@ -62,9 +63,20 @@ public class CCBCommonEvents {
     }
 
     @SubscribeEvent
+    public static void onServerWorldTick(@NotNull Post event) {
+        Level level = event.getLevel();
+        if (level.isClientSide()) {
+            return;
+        }
+
+        CreateCraftedBeginning.GAS_WORLD_CONTENTS_DATA_MANAGER.tick(level);
+    }
+
+    @SubscribeEvent
     public static void onLevelLoad(@NotNull Load event) {
         LevelAccessor level = event.getLevel();
         CreateCraftedBeginning.GAS_CANISTER_PACK_CONTENTS_DATA_MANAGER.onLevelLoad(level);
+        CreateCraftedBeginning.GAS_WORLD_CONTENTS_DATA_MANAGER.onLevelLoad(level);
     }
 
     @SubscribeEvent

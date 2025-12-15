@@ -28,6 +28,7 @@ import net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory.Build
 import net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory.Factory;
 import net.ty.createcraftedbeginning.compat.jei.category.CoolingCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.EnergizationCategory;
+import net.ty.createcraftedbeginning.compat.jei.category.FreezingCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.GasInjectionCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.MysteriousItemConversionCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.PressurizationCategory;
@@ -40,6 +41,7 @@ import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 import net.ty.createcraftedbeginning.recipe.ConversionRecipe;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 import net.ty.createcraftedbeginning.recipe.EnergizationRecipe;
+import net.ty.createcraftedbeginning.recipe.FreezingRecipe;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
@@ -131,6 +133,7 @@ public class JEIPlugin implements IModPlugin {
         CCBRecipeCategory<?> mysteryConversion = builder(ConversionRecipe.class).addRecipes(() -> MysteriousItemConversionCategory.RECIPES).itemIcon(CCBBlocks.EMPTY_BREEZE_COOLER_BLOCK).emptyBackground(177, 50).build("mystery_conversion", MysteriousItemConversionCategory::new);
         CCBRecipeCategory<?> energization = builder(EnergizationRecipe.class).addTypedRecipes(CCBRecipeTypes.ENERGIZATION).catalyst(CCBBlocks.BREEZE_CHAMBER_BLOCK::get).catalyst(CCBBlocks.AIRTIGHT_TANK_BLOCK::get).doubleItemIcon(CCBBlocks.BREEZE_CHAMBER_BLOCK, CCBBlocks.AIRTIGHT_TANK_BLOCK).emptyBackground(177, 70).build("energization", EnergizationCategory::new);
         CCBRecipeCategory<?> pressurization = builder(PressurizationRecipe.class).addTypedRecipes(CCBRecipeTypes.PRESSURIZATION).catalyst(CCBBlocks.AIR_COMPRESSOR_BLOCK::get).catalyst(CCBBlocks.BREEZE_COOLER_BLOCK::get).doubleItemIcon(CCBBlocks.AIR_COMPRESSOR_BLOCK, CCBBlocks.BREEZE_COOLER_BLOCK).emptyBackground(177, 70).build("pressurization", PressurizationCategory::new);
+        CCBRecipeCategory<?> freezing = builder(FreezingRecipe.class).addTypedRecipes(CCBRecipeTypes.FREEZING).catalystStack(FreezingCategory.getCatalystStack()).doubleItemIcon(AllItems.PROPELLER.get(), CCBBlocks.BREEZE_COOLER_BLOCK).emptyBackground(178, 72).build("freezing", FreezingCategory::new);
         CCBRecipeCategory<?> cooling = builder(CoolingRecipe.class).addTypedRecipes(CCBRecipeTypes.COOLING).catalyst(CCBBlocks.BREEZE_COOLER_BLOCK::get).itemIcon(CCBBlocks.BREEZE_COOLER_BLOCK).emptyBackground(177, 50).build("cooling", CoolingCategory::new);
         CCBRecipeCategory<?> wind_charging = builder(WindChargingRecipe.class).addTypedRecipes(CCBRecipeTypes.WIND_CHARGING).catalyst(CCBBlocks.BREEZE_CHAMBER_BLOCK::get).itemIcon(CCBBlocks.BREEZE_CHAMBER_BLOCK).emptyBackground(177, 50).build("wind_charging", WindChargingCategory::new);
         CCBRecipeCategory<?> gas_injection = builder(GasInjectionRecipe.class).addTypedRecipes(CCBRecipeTypes.GAS_INJECTION).catalyst(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK::get).doubleItemIcon(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK, CCBItems.GAS_CANISTER).emptyBackground(177, 70).build("gas_injection", GasInjectionCategory::new);

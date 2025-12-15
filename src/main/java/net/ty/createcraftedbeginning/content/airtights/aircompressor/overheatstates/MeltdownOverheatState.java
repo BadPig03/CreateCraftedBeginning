@@ -5,6 +5,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.Level.ExplosionInteraction;
+import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlockEntity;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,6 +31,10 @@ public class MeltdownOverheatState implements IOverheatState {
         }
 
         level.destroyBlock(pos, false);
+        if (!CCBConfig.server().airtights.explodesOnMeltdown.get()) {
+            return;
+        }
+
         level.explode(null, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 8.0f, true, ExplosionInteraction.NONE);
     }
 

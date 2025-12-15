@@ -5,10 +5,10 @@ import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")
 public class CCBEquipments extends ConfigBase {
-    public final ConfigGroup airtightCannon = group(1, "airtight_cannon", "Airtight Cannon");
+    public final ConfigGroup airtightCannon = group(0, "airtight_cannon", "Airtight Cannon");
     public final ConfigInt gasCostPerShot = i(50, 0, "gas_cost_per_shot", Comments.cannonGasCostPerShot);
 
-    public final ConfigGroup airtightHandheldDrill = group(1, "airtight_handheld_drill", "Airtight Handheld Drill");
+    public final ConfigGroup airtightHandheldDrill = group(0, "airtight_handheld_drill", "Airtight Handheld Drill");
     public final ConfigInt drillGasCostPerBlock = i(10, 0, "gas_cost_per_block", Comments.drillGasCostPerBlock);
     public final ConfigInt drillGasCostPerLiquidBlock = i(5, 0, "gas_cost_per_liquid_block", Comments.drillGasCostPerLiquidBlock);
     public final ConfigInt drillGasCostPerEntityHit = i(5, 0, "gas_cost_per_entity_hit", Comments.drillGasCostPerEntityHit);
@@ -16,7 +16,7 @@ public class CCBEquipments extends ConfigBase {
     public final ConfigFloat drillGasMultiplierForMagnet = f(1.5f, 1, "gas_multiplier_for_magnet", Comments.drillGasMultiplierForMagnet);
     public final ConfigFloat drillGasMultiplierForConversion = f(3, 1, "gas_multiplier_for_conversion", Comments.drillGasMultiplierForConversion);
 
-    public final ConfigGroup airtightArmors = group(1, "airtight_armors", "Airtight Armors");
+    public final ConfigGroup airtightArmors = group(0, "airtight_armors", "Airtight Armors");
     public final ConfigInt helmetUnderwaterBreathing = i(20, 0, "helmet_underwater_breathing_gas_cost", Comments.helmetUnderwaterBreathing);
     public final ConfigInt chestplateCreativeFlight = i(40, 0, "chestplate_creative_flight_gas_cost", Comments.chestplateCreativeFlight);
     public final ConfigInt chestplateElytraGliding = i(10, 0, "chestplate_elytra_gliding_gas_cost", Comments.chestplateElytraGliding);

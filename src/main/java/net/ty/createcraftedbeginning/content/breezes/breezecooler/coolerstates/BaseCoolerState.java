@@ -151,4 +151,6 @@ public abstract class BaseCoolerState {
     public abstract CoolantType getCoolantType();
 
     public abstract InteractionResult onItemInsert(BreezeCoolerBlockEntity cooler, ItemStack stack, boolean forceOverflow, boolean simulate);
+
+    public abstract boolean onSnowballImpact(BreezeCoolerBlockEntity cooler);
 }

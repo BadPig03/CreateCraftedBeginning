@@ -1,4 +1,56 @@
 {
+  "air_vent_outlet_closed": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:entity.item_frame.remove_item"
+      }
+    ],
+    "subtitle": "createcraftedbeginning.subtitle.air_vent_outlet_closed"
+  },
+  "air_vent_outlet_closed_compounded_1": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:block.netherite_block.hit"
+      }
+    ]
+  },
+  "air_vent_outlet_opened": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:entity.item_frame.add_item"
+      }
+    ],
+    "subtitle": "createcraftedbeginning.subtitle.air_vent_outlet_opened"
+  },
+  "air_vent_outlet_opened_compounded_1": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:block.netherite_block.hit"
+      }
+    ]
+  },
+  "air_vent_outlet_placed": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:block.netherite_block.place"
+      }
+    ],
+    "subtitle": "createcraftedbeginning.subtitle.air_vent_outlet_placed"
+  },
+  "air_vent_outlet_removed": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:block.netherite_block.break"
+      }
+    ],
+    "subtitle": "createcraftedbeginning.subtitle.air_vent_outlet_removed"
+  },
   "airtight_armor_equip": {
     "sounds": [
       {

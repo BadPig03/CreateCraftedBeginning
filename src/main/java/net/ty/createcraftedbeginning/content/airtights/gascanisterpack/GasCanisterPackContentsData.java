@@ -29,6 +29,10 @@ public class GasCanisterPackContentsData extends SavedData {
         return new Factory<>(GasCanisterPackContentsData::new, GasCanisterPackContentsData::load);
     }
 
+    public static @NotNull GasCanisterPackContentsData load(@NotNull MinecraftServer server) {
+        return server.overworld().getDataStorage().computeIfAbsent(factory(), DATA_NAME);
+    }
+
     private static @NotNull GasCanisterPackContentsData load(@NotNull CompoundTag compoundTag, @NotNull Provider provider) {
         GasCanisterPackContentsData data = new GasCanisterPackContentsData();
         data.contentsMap = new HashMap<>();
@@ -38,10 +42,6 @@ public class GasCanisterPackContentsData extends SavedData {
             data.contentsMap.put(uuid, contents);
         });
         return data;
-    }
-
-    public static @NotNull GasCanisterPackContentsData load(@NotNull MinecraftServer server) {
-        return server.overworld().getDataStorage().computeIfAbsent(factory(), DATA_NAME);
     }
 
     @Override

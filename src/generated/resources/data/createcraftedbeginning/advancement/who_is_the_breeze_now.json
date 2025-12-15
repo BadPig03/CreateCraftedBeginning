@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:so_close",
+  "parent": "createcraftedbeginning:tesla_turbine_easy_as_pie",
   "criteria": {
     "0": {
       "trigger": "createcraftedbeginning:who_is_the_breeze_now_builtin"

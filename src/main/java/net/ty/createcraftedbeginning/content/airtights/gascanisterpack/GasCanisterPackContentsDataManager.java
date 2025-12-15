@@ -17,8 +17,8 @@ public class GasCanisterPackContentsDataManager {
             return;
         }
 
-        savedData = null;
-        loadData(server);
+        savedData = GasCanisterPackContentsData.load(server);
+        contentsMap = savedData.getContentsMap();
     }
 
     public GasCanisterPackContents getContents(@NotNull UUID uuid) {
@@ -27,6 +27,11 @@ public class GasCanisterPackContentsDataManager {
 
     public void addContents(@NotNull UUID uuid, GasCanisterPackContents contents) {
         contentsMap.put(uuid, contents);
+        markDirty();
+    }
+
+    public void removeContents(@NotNull UUID uuid) {
+        contentsMap.remove(uuid);
         markDirty();
     }
 
@@ -40,14 +45,5 @@ public class GasCanisterPackContentsDataManager {
         }
 
         savedData.setDirty();
-    }
-
-    private void loadData(MinecraftServer server) {
-        if (savedData != null) {
-            return;
-        }
-
-        savedData = GasCanisterPackContentsData.load(server);
-        contentsMap = savedData.getContentsMap();
     }
 }

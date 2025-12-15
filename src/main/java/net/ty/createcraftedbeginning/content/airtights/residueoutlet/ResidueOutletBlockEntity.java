@@ -30,6 +30,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
+    private static final int LAZY_TICK_RATE = 20;
     private static final String COMPOUND_KEY_INVENTORY = "Inventory";
 
     private final IItemHandlerModifiable itemCapability;
@@ -41,7 +42,7 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
         super(type, pos, state);
         inventory = new ResidueOutletInventory(this);
         itemCapability = new CombinedInvWrapper(inventory);
-        setLazyTickRate(20);
+        setLazyTickRate(LAZY_TICK_RATE);
     }
 
     public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
@@ -110,19 +111,19 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     @Override
-    protected void write(CompoundTag compound, Provider registries, boolean clientPacket) {
-        super.write(compound, registries, clientPacket);
-        compound.put(COMPOUND_KEY_INVENTORY, inventory.serializeNBT(registries));
+    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.write(compoundTag, provider, clientPacket);
+        compoundTag.put(COMPOUND_KEY_INVENTORY, inventory.serializeNBT(provider));
     }
 
     @Override
-    protected void read(CompoundTag compound, Provider registries, boolean clientPacket) {
-        super.read(compound, registries, clientPacket);
-        if (!compound.contains(COMPOUND_KEY_INVENTORY)) {
+    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.read(compoundTag, provider, clientPacket);
+        if (!compoundTag.contains(COMPOUND_KEY_INVENTORY)) {
             return;
         }
 
-        inventory.deserializeNBT(registries, compound.getCompound(COMPOUND_KEY_INVENTORY));
+        inventory.deserializeNBT(provider, compoundTag.getCompound(COMPOUND_KEY_INVENTORY));
     }
 
     @Override

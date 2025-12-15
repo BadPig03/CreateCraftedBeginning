@@ -98,17 +98,17 @@ public class TeslaTurbineCore {
         return counterClockwise ? COUNTER_CLOCKWISE_OFFSETS : CLOCKWISE_OFFSETS;
     }
 
-    public CompoundTag write(Provider lookupProvider) {
+    public CompoundTag write(Provider provider) {
         CompoundTag compoundTag = new CompoundTag();
-        compoundTag.put(COMPOUND_KEY_FLOW_METER, flowMeter.write(lookupProvider));
+        compoundTag.put(COMPOUND_KEY_FLOW_METER, flowMeter.write(provider));
         compoundTag.put(COMPOUND_KEY_LEVEL_CALCULATOR, levelCalculator.write());
         compoundTag.put(COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.write());
         return compoundTag;
     }
 
-    public void read(@NotNull CompoundTag compoundTag, Provider lookupProvider) {
+    public void read(@NotNull CompoundTag compoundTag, Provider provider) {
         if (compoundTag.contains(COMPOUND_KEY_FLOW_METER)) {
-            flowMeter.read(compoundTag.getCompound(COMPOUND_KEY_FLOW_METER), lookupProvider);
+            flowMeter.read(compoundTag.getCompound(COMPOUND_KEY_FLOW_METER), provider);
         }
         if (compoundTag.contains(COMPOUND_KEY_LEVEL_CALCULATOR)) {
             levelCalculator.read(compoundTag.getCompound(COMPOUND_KEY_LEVEL_CALCULATOR));

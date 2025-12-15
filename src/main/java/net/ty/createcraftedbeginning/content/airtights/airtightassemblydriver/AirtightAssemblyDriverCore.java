@@ -15,6 +15,7 @@ import java.util.List;
 
 public class AirtightAssemblyDriverCore {
     public static final int MAX_LEVEL = 8;
+
     private static final String COMPOUND_KEY_FLOW_METER = "FlowMeter";
     private static final String COMPOUND_KEY_STRUCTURE_MANAGER = "StructureManager";
     private static final String COMPOUND_KEY_LEVEL_CALCULATOR = "LevelCalculator";
@@ -86,18 +87,20 @@ public class AirtightAssemblyDriverCore {
         residueManager.reset();
     }
 
-    public CompoundTag write(Provider lookupProvider) {
+    public CompoundTag write(Provider provider, boolean clientPacket) {
         CompoundTag compoundTag = new CompoundTag();
-        compoundTag.put(COMPOUND_KEY_FLOW_METER, flowMeter.write(lookupProvider));
+        compoundTag.put(COMPOUND_KEY_FLOW_METER, flowMeter.write(provider));
         compoundTag.put(COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.write());
         compoundTag.put(COMPOUND_KEY_LEVEL_CALCULATOR, levelCalculator.write());
-        compoundTag.put(COMPOUND_KEY_RESIDUE_MANAGER, residueManager.write());
+        if (!clientPacket) {
+            compoundTag.put(COMPOUND_KEY_RESIDUE_MANAGER, residueManager.write());
+        }
         return compoundTag;
     }
 
-    public void read(@NotNull CompoundTag compoundTag, Provider lookupProvider) {
+    public void read(@NotNull CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         if (compoundTag.contains(COMPOUND_KEY_FLOW_METER)) {
-            flowMeter.read(compoundTag.getCompound(COMPOUND_KEY_FLOW_METER), lookupProvider);
+            flowMeter.read(compoundTag.getCompound(COMPOUND_KEY_FLOW_METER), provider);
         }
         if (compoundTag.contains(COMPOUND_KEY_STRUCTURE_MANAGER)) {
             structureManager.read(compoundTag.getCompound(COMPOUND_KEY_STRUCTURE_MANAGER));
@@ -105,7 +108,7 @@ public class AirtightAssemblyDriverCore {
         if (compoundTag.contains(COMPOUND_KEY_LEVEL_CALCULATOR)) {
             levelCalculator.read(compoundTag.getCompound(COMPOUND_KEY_LEVEL_CALCULATOR));
         }
-        if (compoundTag.contains(COMPOUND_KEY_RESIDUE_MANAGER)) {
+        if (compoundTag.contains(COMPOUND_KEY_RESIDUE_MANAGER) && !clientPacket) {
             residueManager.read(compoundTag.getCompound(COMPOUND_KEY_RESIDUE_MANAGER));
         }
         levelCalculator.update();
@@ -124,7 +127,7 @@ public class AirtightAssemblyDriverCore {
 
         @Override
         public long getTankCapacity(int tank) {
-            return CCBConfig.server().gas.airtightTankCapacity.get() * 100L;
+            return CCBConfig.server().airtights.maxTankCapacity.get() * 100L;
         }
 
         @Override

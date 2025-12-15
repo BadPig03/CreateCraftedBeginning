@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "A",
+    "B",
+    "A"
+  ],
+  "key": {
+    "A": {
+      "item": "create:industrial_iron_block"
+    },
+    "B": {
+      "item": "create:chute"
+    }
+  },
+  "result": {
+    "count": 3,
+    "id": "createcraftedbeginning:air_vent"
+  }
+}

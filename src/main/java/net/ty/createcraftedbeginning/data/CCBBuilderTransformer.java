@@ -7,7 +7,6 @@ import com.simibubi.create.content.decoration.encasing.EncasedCTBehaviour;
 import com.simibubi.create.content.processing.AssemblyOperatorBlockItem;
 import com.simibubi.create.foundation.block.connected.CTSpriteShiftEntry;
 import com.simibubi.create.foundation.data.AssetLookup;
-import com.simibubi.create.foundation.data.SharedProperties;
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.providers.DataGenContext;
 import com.tterrag.registrate.providers.RegistrateBlockstateProvider;
@@ -45,15 +44,8 @@ import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipe
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankCTBehavior;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankItem;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankMovementBehavior;
-import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.StructuralPosition;
-import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock;
-import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberConductor.BreezeChamber;
-import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberMovementBehaviour;
-import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock;
-import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockItem;
-import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerConductor;
-import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerMovementBehaviour;
-import net.ty.createcraftedbeginning.content.breezes.breezecooler.EmptyBreezeCoolerBlock;
+import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock;
+import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentCTBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankCTBehavior;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankItem;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankMovementBehavior;
@@ -62,7 +54,16 @@ import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.Port
 import net.ty.createcraftedbeginning.content.airtights.smartairtightpipe.SmartAirtightPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlockItem;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock;
+import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.StructuralPosition;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlock;
+import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock;
+import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberConductor.BreezeChamber;
+import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberMovementBehaviour;
+import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock;
+import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockItem;
+import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerConductor;
+import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerMovementBehaviour;
+import net.ty.createcraftedbeginning.content.breezes.breezecooler.EmptyBreezeCoolerBlock;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlockItem;
 import net.ty.createcraftedbeginning.content.obsolete.airtightintakeport.AirtightIntakePortBlock;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
@@ -151,12 +152,17 @@ public class CCBBuilderTransformer {
 
     @Contract(pure = true)
     public static <B extends CasingBlock> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> casing(Supplier<CTSpriteShiftEntry> ct) {
-        return b -> b.initialProperties(SharedProperties::stone).blockstate((c, p) -> p.simpleBlock(c.get())).onRegister(connectedTextures(() -> new EncasedCTBehaviour(ct.get()))).onRegister(casingConnectivity((block, cc) -> cc.makeCasing(block, ct.get()))).tag(AllBlockTags.CASING.tag).item().properties(Properties::fireResistant).tag(AllItemTags.CASING.tag).build();
+        return b -> b.blockstate((c, p) -> p.simpleBlock(c.get())).onRegister(connectedTextures(() -> new EncasedCTBehaviour(ct.get()))).onRegister(casingConnectivity((block, cc) -> cc.makeCasing(block, ct.get()))).tag(AllBlockTags.CASING.tag).item().tag(AllItemTags.CASING.tag).build();
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> simple_block(String path) {
         return b -> b.blockstate((c, p) -> p.simpleBlock(c.get(), p.models().cubeAll(c.getName(), p.modLoc("block/" + path)))).item().build();
+    }
+
+    @Contract(pure = true)
+    public static <B extends AirVentBlock> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> air_vent() {
+        return b -> b.blockstate((c, p) -> p.simpleBlock(c.getEntry(), p.models().getExistingFile(p.modLoc("block/air_vent/block")))).onRegister(connectedTextures(AirVentCTBehaviour::new)).properties(p -> p.mapColor(MapColor.DEEPSLATE).sound(SoundType.NETHERITE_BLOCK).requiresCorrectToolForDrops().dynamicShape()).item().build();
     }
 
     @Contract(pure = true)

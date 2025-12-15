@@ -90,9 +90,9 @@ public class AirtightAssemblyDriverFlowMeter {
         }
     }
 
-    public CompoundTag write(Provider lookupProvider) {
+    public CompoundTag write(Provider provider) {
         CompoundTag compoundTag = new CompoundTag();
-        compoundTag.put(COMPOUND_KEY_GAS, gasType.saveOptional(lookupProvider));
+        compoundTag.put(COMPOUND_KEY_GAS, gasType.saveOptional(provider));
         compoundTag.putFloat(COMPOUND_KEY_GAS_SUPPLY, gasSupply);
         compoundTag.putFloat(COMPOUND_KEY_PREVIOUS_GAS_SUPPLY, previousGasSupply);
         compoundTag.putInt(COMPOUND_KEY_CURRENT_INDEX, currentIndex);
@@ -105,7 +105,7 @@ public class AirtightAssemblyDriverFlowMeter {
         return compoundTag;
     }
 
-    public void read(@NotNull CompoundTag compoundTag, Provider lookupProvider) {
+    public void read(@NotNull CompoundTag compoundTag, Provider provider) {
         gatheredSupply = 0;
         if (compoundTag.contains(COMPOUND_KEY_CURRENT_INDEX)) {
             currentIndex = compoundTag.getInt(COMPOUND_KEY_CURRENT_INDEX);
@@ -114,7 +114,7 @@ public class AirtightAssemblyDriverFlowMeter {
             gasSupply = compoundTag.getFloat(COMPOUND_KEY_GAS_SUPPLY);
         }
         if (compoundTag.contains(COMPOUND_KEY_GAS)) {
-            gasType = GasStack.parseOptional(lookupProvider, compoundTag.getCompound(COMPOUND_KEY_GAS));
+            gasType = GasStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_GAS));
         }
         if (compoundTag.contains(COMPOUND_KEY_PREVIOUS_GAS_SUPPLY)) {
             previousGasSupply = compoundTag.getFloat(COMPOUND_KEY_PREVIOUS_GAS_SUPPLY);
@@ -122,13 +122,11 @@ public class AirtightAssemblyDriverFlowMeter {
         if (compoundTag.contains(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE)) {
             ticksUntilNextSample = compoundTag.getInt(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE);
         }
-        if (!compoundTag.contains(COMPOUND_KEY_SAMPLES, Tag.TAG_LIST)) {
-            return;
-        }
-
-        ListTag samplesTag = compoundTag.getList(COMPOUND_KEY_SAMPLES, Tag.TAG_FLOAT);
-        for (int i = 0; i < Math.min(SAMPLES_COUNT, samplesTag.size()); i++) {
-            supplyOverTime[i] = samplesTag.getFloat(i);
+        if (compoundTag.contains(COMPOUND_KEY_SAMPLES, Tag.TAG_LIST)) {
+            ListTag samplesTag = compoundTag.getList(COMPOUND_KEY_SAMPLES, Tag.TAG_FLOAT);
+            for (int i = 0; i < Math.min(SAMPLES_COUNT, samplesTag.size()); i++) {
+                supplyOverTime[i] = samplesTag.getFloat(i);
+            }
         }
     }
 

@@ -53,6 +53,7 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements iGas, I
     private static final String COMPOUND_KEY_HEIGHT = "Height";
 
     private final AirtightAssemblyDriverCore driverCore;
+
     protected IGasHandler gasCapability;
     protected GasTank tankInventory;
     protected BlockPos controllerPos;
@@ -85,7 +86,7 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements iGas, I
     }
 
     public static long getCapacityPerTank() {
-        return CCBConfig.server().gas.airtightTankCapacity.get() * 1000L;
+        return CCBConfig.server().airtights.maxTankCapacity.get() * 1000L;
     }
 
     @Override
@@ -136,44 +137,47 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements iGas, I
     }
 
     @Override
-    public void write(@NotNull CompoundTag compound, Provider registries, boolean clientPacket) {
-        super.write(compound, registries, clientPacket);
-        compound.put(COMPOUND_KEY_CORE, driverCore.write(registries));
-        compound.putBoolean(COMPOUND_KEY_UPDATE_CONNECTIVITY, updateConnectivity);
-        if (lastKnownPos != null) {
-            compound.put(COMPOUND_KEY_LAST_KNOWN_POS, NbtUtils.writeBlockPos(lastKnownPos));
-        }
-
+    public void write(@NotNull CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.write(compoundTag, provider, clientPacket);
+        compoundTag.put(COMPOUND_KEY_CORE, driverCore.write(provider, clientPacket));
         if (isController()) {
-            compound.put(COMPOUND_KEY_TANK_CONTENT, tankInventory.write(registries, new CompoundTag()));
-            compound.putInt(COMPOUND_KEY_WIDTH, width);
-            compound.putInt(COMPOUND_KEY_HEIGHT, height);
+            compoundTag.put(COMPOUND_KEY_TANK_CONTENT, tankInventory.write(provider, new CompoundTag()));
+            compoundTag.putInt(COMPOUND_KEY_WIDTH, width);
+            compoundTag.putInt(COMPOUND_KEY_HEIGHT, height);
         }
         else {
-            compound.put(COMPOUND_KEY_CONTROLLER_POS, NbtUtils.writeBlockPos(controllerPos));
+            compoundTag.put(COMPOUND_KEY_CONTROLLER_POS, NbtUtils.writeBlockPos(controllerPos));
+        }
+        if (clientPacket) {
+            return;
+        }
+
+        compoundTag.putBoolean(COMPOUND_KEY_UPDATE_CONNECTIVITY, updateConnectivity);
+        if (lastKnownPos != null) {
+            compoundTag.put(COMPOUND_KEY_LAST_KNOWN_POS, NbtUtils.writeBlockPos(lastKnownPos));
         }
     }
 
     @Override
-    public void writeSafe(CompoundTag compound, Provider registries) {
+    public void writeSafe(CompoundTag compoundTag, Provider provider) {
         if (!isController()) {
             return;
         }
 
-        compound.putInt(COMPOUND_KEY_WIDTH, width);
-        compound.putInt(COMPOUND_KEY_HEIGHT, height);
+        compoundTag.putInt(COMPOUND_KEY_WIDTH, width);
+        compoundTag.putInt(COMPOUND_KEY_HEIGHT, height);
     }
 
     @Override
-    protected void read(CompoundTag compoundTag, Provider registries, boolean clientPacket) {
-        super.read(compoundTag, registries, clientPacket);
+    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.read(compoundTag, provider, clientPacket);
         BlockPos controllerBefore = controllerPos;
         int previousSize = width;
         int previousHeight = height;
-        if (compoundTag.contains(COMPOUND_KEY_UPDATE_CONNECTIVITY)) {
+        if (!clientPacket) {
             updateConnectivity = compoundTag.getBoolean(COMPOUND_KEY_UPDATE_CONNECTIVITY);
+            lastKnownPos = compoundTag.contains(COMPOUND_KEY_LAST_KNOWN_POS) ? NBTHelper.readBlockPos(compoundTag, COMPOUND_KEY_LAST_KNOWN_POS) : null;
         }
-        lastKnownPos = compoundTag.contains(COMPOUND_KEY_LAST_KNOWN_POS) ? NBTHelper.readBlockPos(compoundTag, COMPOUND_KEY_LAST_KNOWN_POS) : null;
         controllerPos = compoundTag.contains(COMPOUND_KEY_CONTROLLER_POS) ? NBTHelper.readBlockPos(compoundTag, COMPOUND_KEY_CONTROLLER_POS) : null;
         if (isController()) {
             if (compoundTag.contains(COMPOUND_KEY_WIDTH)) {
@@ -184,12 +188,12 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements iGas, I
             }
             tankInventory.setCapacity(getTotalTankSize() * getCapacityPerTank());
             if (compoundTag.contains(COMPOUND_KEY_TANK_CONTENT)) {
-                tankInventory.read(registries, compoundTag.getCompound(COMPOUND_KEY_TANK_CONTENT));
+                tankInventory.read(provider, compoundTag.getCompound(COMPOUND_KEY_TANK_CONTENT));
             }
         }
 
         if (compoundTag.contains(COMPOUND_KEY_CORE)) {
-            driverCore.read(compoundTag.getCompound(COMPOUND_KEY_CORE), registries);
+            driverCore.read(compoundTag.getCompound(COMPOUND_KEY_CORE), provider, clientPacket);
         }
         updateCapability = true;
         if (!clientPacket) {

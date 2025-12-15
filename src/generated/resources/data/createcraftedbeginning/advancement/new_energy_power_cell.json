@@ -1,0 +1,35 @@
+{
+  "parent": "createcraftedbeginning:portable_energy_source",
+  "criteria": {
+    "0": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:gas_canister_pack"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.new_energy_power_cell.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:gas_canister_pack"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.new_energy_power_cell"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

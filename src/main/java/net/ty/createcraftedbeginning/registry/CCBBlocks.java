@@ -12,18 +12,16 @@ import net.minecraft.world.level.material.MapColor;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.config.CCBStress;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightencasedpipe.AirtightEncasedPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlock;
-import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.RenderProperties;
-import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock;
-import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock;
-import net.ty.createcraftedbeginning.content.breezes.breezecooler.EmptyBreezeCoolerBlock;
-import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
+import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankBlock;
+import net.ty.createcraftedbeginning.content.airtights.gas.GasBlock;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterBlock;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlock;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceBlock;
@@ -31,7 +29,11 @@ import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutl
 import net.ty.createcraftedbeginning.content.airtights.smartairtightpipe.SmartAirtightPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlock;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock;
+import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.RenderProperties;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlock;
+import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock;
+import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock;
+import net.ty.createcraftedbeginning.content.breezes.breezecooler.EmptyBreezeCoolerBlock;
 import net.ty.createcraftedbeginning.content.crates.andesitecrate.AndesiteCrateBlock;
 import net.ty.createcraftedbeginning.content.crates.brasscrate.BrassCrateBlock;
 import net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateBlock;
@@ -46,8 +48,8 @@ import net.ty.createcraftedbeginning.data.CCBSharedProperties;
 import net.ty.createcraftedbeginning.data.CCBSpriteShifts;
 
 import static com.simibubi.create.api.contraption.storage.item.MountedItemStorageType.mountedItemStorage;
-import static net.ty.createcraftedbeginning.data.CCBBuilderTransformer.airtightPropertiesWithoutOcclusion;
 import static net.ty.createcraftedbeginning.data.CCBBuilderTransformer.airtightPropertiesWithoutAirtightComponents;
+import static net.ty.createcraftedbeginning.data.CCBBuilderTransformer.airtightPropertiesWithoutOcclusion;
 import static net.ty.createcraftedbeginning.data.CCBBuilderTransformer.axeOnly;
 import static net.ty.createcraftedbeginning.data.CCBBuilderTransformer.axeOrPickaxe;
 import static net.ty.createcraftedbeginning.data.CCBBuilderTransformer.breezes;
@@ -57,6 +59,8 @@ import static net.ty.createcraftedbeginning.data.CCBBuilderTransformer.pickaxeOn
 @SuppressWarnings("unused")
 public class CCBBlocks {
     private static final CCBRegistrate CCB_REGISTRATE = CreateCraftedBeginning.registrate().setCreativeTab(CCBCreativeTabs.BASE_CREATIVE_TAB);
+
+    public static final BlockEntry<GasBlock> GAS_BLOCK = CCB_REGISTRATE.block("gas", GasBlock::new).item().build().register();
 
     public static final BlockEntry<AndesiteCrateBlock> ANDESITE_CRATE_BLOCK = CCB_REGISTRATE.block("andesite_crate", AndesiteCrateBlock::new).initialProperties(CCBSharedProperties::stone).transform(CCBBuilderTransformer.crate("andesite")).transform(axeOrPickaxe()).properties(p -> p.mapColor(MapColor.PODZOL).sound(SoundType.WOOD)).transform(mountedItemStorage(CCBMountedStorage.ANDESITE_CRATE)).register();
     public static final BlockEntry<BrassCrateBlock> BRASS_CRATE_BLOCK = CCB_REGISTRATE.block("brass_crate", BrassCrateBlock::new).initialProperties(CCBSharedProperties::stone).transform(CCBBuilderTransformer.crate("brass")).transform(axeOrPickaxe()).properties(p -> p.mapColor(MapColor.TERRACOTTA_BROWN).sound(SoundType.WOOD)).transform(mountedItemStorage(CCBMountedStorage.BRASS_CRATE)).register();
@@ -92,6 +96,8 @@ public class CCBBlocks {
     public static final BlockEntry<GasInjectionChamberBlock> GAS_INJECTION_CHAMBER_BLOCK = CCB_REGISTRATE.block("gas_injection_chamber", GasInjectionChamberBlock::new).transform(CCBBuilderTransformer.gas_injection_chamber()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<AirtightHatchBlock> AIRTIGHT_HATCH_BLOCK = CCB_REGISTRATE.block("airtight_hatch", AirtightHatchBlock::new).transform(CCBBuilderTransformer.airtight_hatch()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<GasCanisterBlock> GAS_CANISTER_BLOCK = CCB_REGISTRATE.block("gas_canister", GasCanisterBlock::new).transform(CCBBuilderTransformer.gas_canister()).transform(airtightPropertiesWithoutAirtightComponents()).register();
+
+    public static final BlockEntry<AirVentBlock> AIR_VENT_BLOCK = CCB_REGISTRATE.block("air_vent", AirVentBlock::new).initialProperties(CCBSharedProperties::softMetal).transform(pickaxeOnly()).transform(CCBBuilderTransformer.air_vent()).register();
 
     public static final BlockEntry<AirtightIntakePortBlock> AIRTIGHT_INTAKE_PORT_BLOCK = CCB_REGISTRATE.block("airtight_intake_port", AirtightIntakePortBlock::new).transform(CCBBuilderTransformer.airtight_intake_port()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<Block> CINDER_ALLOY_BLOCK = CCB_REGISTRATE.block("cinder_alloy_block", Block::new).initialProperties(CCBSharedProperties::softMetal).transform(pickaxeOnly()).transform(CCBBuilderTransformer.simple_block("cinder_alloy_block")).properties(p -> p.mapColor(MapColor.COLOR_BROWN)).register();

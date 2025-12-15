@@ -49,11 +49,6 @@ public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEnt
         controller.updateTankState();
     }
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    public static boolean isTank(@NotNull BlockState state) {
-        return state.getBlock() instanceof AirtightTankBlock;
-    }
-
     @Override
     protected void createBlockStateDefinition(@NotNull Builder<Block, BlockState> builder) {
         builder.add(TOP, BOTTOM);

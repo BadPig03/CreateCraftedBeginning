@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.recipe;
+package net.ty.createcraftedbeginning.data;
 
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.PackOutput;
@@ -9,7 +9,8 @@ import net.ty.createcraftedbeginning.api.gas.recipes.CuttingWithGasRecipe;
 import net.ty.createcraftedbeginning.api.gas.recipes.DeployerApplicationWithGasRecipe;
 import net.ty.createcraftedbeginning.api.gas.recipes.FillingWithGasRecipe;
 import net.ty.createcraftedbeginning.api.gas.recipes.PressingWithGasRecipe;
-import net.ty.createcraftedbeginning.data.CCBGases;
+import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
+import net.ty.createcraftedbeginning.recipe.generators.SequencedAssemblyWithGasRecipeGen;
 import net.ty.createcraftedbeginning.registry.CCBFluids;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBTags;

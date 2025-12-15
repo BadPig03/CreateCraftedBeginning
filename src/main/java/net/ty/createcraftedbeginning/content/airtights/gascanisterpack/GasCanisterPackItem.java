@@ -10,7 +10,9 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.MenuProvider;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -22,8 +24,8 @@ import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterQueryUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.NotNull;
@@ -67,6 +69,11 @@ public class GasCanisterPackItem extends Item implements MenuProvider {
         }
 
         GasCanisterPackUtils.resetCanisterPackUUID(pack);
+    }
+
+    @Override
+    public void onDestroyed(@NotNull ItemEntity itemEntity, @NotNull DamageSource damageSource) {
+        CreateCraftedBeginning.GAS_CANISTER_PACK_CONTENTS_DATA_MANAGER.removeContents(GasCanisterPackUtils.getCanisterPackUUID(itemEntity.getItem()));
     }
 
     @Override

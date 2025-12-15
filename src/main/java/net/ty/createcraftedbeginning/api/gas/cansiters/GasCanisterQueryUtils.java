@@ -29,23 +29,22 @@ public class GasCanisterQueryUtils {
     }
 
     /**
-     * Checks if the given ItemStack is a valid gas pack.
+     * Checks if the given ItemStack is a valid gas canister.
      * <p>
-     * A valid gas pack is defined as either:
+     * A valid gas canister is defined as either:
      * <ul>
-     *   <li>The specific gas pack item registered in {@link CCBItems#GAS_CANISTER}</li>
+     *   <li>The specific gas canister item registered in {@link CCBItems#GAS_CANISTER}</li>
      *   <li>Any item that is an instance of {@link GasCanisterItem}</li>
      * </ul>
-     * This allows for both the default pack and any custom pack implementations to be recognized.
+     * This allows for both the default canister and any custom canister implementations to be recognized.
      * </p>
      *
      * @param canister the ItemStack to check for validity (cannot be null)
-     * @return {@code true} if the ItemStack is a valid gas pack (not empty and matches the criteria),
+     * @return {@code true} if the ItemStack is a valid gas canister (not empty and matches the criteria),
      * {@code false} otherwise
      */
     public static boolean isValidCanister(@NotNull ItemStack canister) {
         return !canister.isEmpty() && (canister.is(CCBItems.GAS_CANISTER) || canister.getItem() instanceof GasCanisterItem);
-
     }
 
     /**
@@ -222,16 +221,17 @@ public class GasCanisterQueryUtils {
     }
 
     /**
-     * Retrieves the maximum gas capacity of a gas canister, filtered by gas type.
+     * Retrieves the maximum gas capacity of a gas canister, optionally filtered by gas type.
      * <p>
-     * The capacity is calculated only if the canister contains the specified gas type
-     * or if the filter is empty gas. The capacity includes bonuses from "Capacity" enchantments (from Create).
+     * The capacity is calculated based on the canister's base capacity and any "Capacity" enchantments.
+     * If the canister contains a gas that does not match the specified filter (and the filter is not empty),
+     * the method returns 0. This allows querying capacity only for specific gas types.
      * </p>
      *
      * @param canister  the gas canister ItemStack to check (cannot be null)
-     * @param filterGas the gas type to filter by; use empty gas to ignore filtering (cannot be null)
+     * @param filterGas the gas type to filter by; use an empty gas to ignore filtering (cannot be null)
      * @return the maximum gas capacity of the canister in millibuckets, or 0 if the ItemStack
-     * is not a valid canister or doesn't contain the specified gas type
+     * is not a valid canister or its contained gas does not match the filter
      * @see #isValidCanister(ItemStack)
      * @see #getCanisterContent(ItemStack)
      */
@@ -239,7 +239,9 @@ public class GasCanisterQueryUtils {
         if (!isValidCanister(canister)) {
             return 0;
         }
-        if (!filterGas.isEmpty() && !getCanisterContent(canister).is(filterGas)) {
+
+        GasStack content = getCanisterContent(canister);
+        if (!content.isEmpty() && !filterGas.isEmpty() && !content.is(filterGas)) {
             return 0;
         }
 
@@ -359,29 +361,28 @@ public class GasCanisterQueryUtils {
             return 0;
         }
 
-        float radio = (float) getTotalGasAmount(player, filterGas) / capacity;
-        return Mth.clamp(radio, 0, 1);
+        return Mth.clamp((float) getTotalGasAmount(player, filterGas) / capacity, 0, 1);
     }
 
     /**
-     * Checks if a gas canister can accept the specified gas stack for injection.
+     * Determines if a gas canister can accept injection of the specified gas.
      * <p>
-     * A canister is considered injectable with the specified gas stack if:
+     * A canister is injectable if it meets all the following conditions:
      * <ul>
-     *   <li>It is a valid gas canister</li>
-     *   <li>It has available capacity for the gas type</li>
-     *   <li>It is either empty or already contains the same type of gas as the source gas stack</li>
+     *   <li>The canister is a valid gas canister</li>
+     *   <li>Either the canister is empty, or it contains the same type of gas as the source gas</li>
+     *   <li>The canister is not at maximum capacity for the gas type</li>
      * </ul>
-     * This method ensures both capacity availability and gas type compatibility.
      * </p>
      *
-     * @param canister       the gas canister ItemStack to check
-     * @param sourceGasStack the gas stack to check for compatibility and capacity
-     * @return {@code true} if the canister can accept the specified gas stack,
-     * {@code false} otherwise
+     * @param canister       the gas canister to check
+     * @param sourceGasStack the gas to be injected (cannot be null)
+     * @return {@code true} if the canister can accept the gas, {@code false} otherwise
      * @see #isValidCanister(ItemStack)
      * @see #getCanisterContent(ItemStack)
      * @see #getCanisterCapacity(ItemStack, Gas)
+     * @see GasStack#isEmpty()
+     * @see GasStack#isSameGas(GasStack, GasStack)
      */
     public static boolean isCanisterInjectable(ItemStack canister, GasStack sourceGasStack) {
         if (!isValidCanister(canister)) {
@@ -389,8 +390,6 @@ public class GasCanisterQueryUtils {
         }
 
         GasStack content = getCanisterContent(canister);
-        long capacity = getCanisterCapacity(canister, sourceGasStack.getGas());
-        return content.getAmount() != capacity && (content.isEmpty() || GasStack.isSameGas(content, sourceGasStack));
-
+        return content.isEmpty() || GasStack.isSameGas(content, sourceGasStack) && content.getAmount() < getCanisterCapacity(canister, sourceGasStack.getGas());
     }
 }

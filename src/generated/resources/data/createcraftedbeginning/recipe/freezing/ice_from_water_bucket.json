@@ -1,0 +1,13 @@
+{
+  "type": "createcraftedbeginning:freezing",
+  "ingredients": [
+    {
+      "item": "minecraft:water_bucket"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:ice"
+    }
+  ]
+}

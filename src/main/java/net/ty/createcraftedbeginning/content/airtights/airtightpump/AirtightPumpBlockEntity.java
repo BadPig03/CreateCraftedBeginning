@@ -37,7 +37,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 public class AirtightPumpBlockEntity extends KineticBlockEntity {
-    private static final int PASSIVE_CHECK_INTERVAL = 10;
+    private static final int LAZY_TICK_RATE = 10;
 
     private final Couple<MutableBoolean> sidesToUpdate;
     private boolean pressureUpdate;
@@ -47,7 +47,7 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity {
     public AirtightPumpBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
         sidesToUpdate = Couple.create(MutableBoolean::new);
-        setLazyTickRate(PASSIVE_CHECK_INTERVAL);
+        setLazyTickRate(LAZY_TICK_RATE);
     }
 
     private static boolean searchForEndpointRecursively(@NotNull Map<BlockPos, Pair<Integer, Map<Direction, Boolean>>> pipeGraph, Set<BlockFace> targets, Map<Integer, Set<BlockFace>> validFaces, @NotNull BlockFace currentFace, boolean pull) {

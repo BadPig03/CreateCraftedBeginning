@@ -24,11 +24,11 @@ public class GasBuilder {
     private float teslaEfficiency;
 
     @Nullable
-    private String pressurizedGasName;
+    private ResourceLocation pressurizedGas;
     @Nullable
-    private String depressurizedGasName;
+    private ResourceLocation depressurizedGas;
     @Nullable
-    private String energizedGasName;
+    private ResourceLocation energizedGas;
     @Nullable
     private Supplier<FluidStack> outputFluidStackSupplier;
     @Nullable
@@ -59,19 +59,19 @@ public class GasBuilder {
         return this;
     }
 
-    public GasBuilder pressurizedGas(String pressurizedGasName) {
-        this.pressurizedGasName = pressurizedGasName;
+    public GasBuilder pressurizedGas(ResourceLocation pressurizedGas) {
+        this.pressurizedGas = pressurizedGas;
         return this;
     }
 
     @SuppressWarnings("unused")
-    public GasBuilder depressurizedGas(String depressurizedGasName) {
-        this.depressurizedGasName = depressurizedGasName;
+    public GasBuilder depressurizedGas(ResourceLocation depressurizedGas) {
+        this.depressurizedGas = depressurizedGas;
         return this;
     }
 
-    public GasBuilder energizedGas(String energizedGasName) {
-        this.energizedGasName = energizedGasName;
+    public GasBuilder energizedGas(ResourceLocation energizedGas) {
+        this.energizedGas = energizedGas;
         return this;
     }
 
@@ -108,18 +108,18 @@ public class GasBuilder {
     }
 
     @Nullable
-    public String getPressurizedGasName() {
-        return pressurizedGasName;
+    public ResourceLocation getPressurizedGas() {
+        return pressurizedGas;
     }
 
     @Nullable
-    public String getDepressurizedGasName() {
-        return depressurizedGasName;
+    public ResourceLocation getDepressurizedGas() {
+        return depressurizedGas;
     }
 
     @Nullable
-    public String getEnergizedGasName() {
-        return energizedGasName;
+    public ResourceLocation getEnergizedGas() {
+        return energizedGas;
     }
 
     @Nullable

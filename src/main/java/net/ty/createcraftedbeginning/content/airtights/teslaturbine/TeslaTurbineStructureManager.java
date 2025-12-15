@@ -9,6 +9,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.Level.ExplosionInteraction;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlock;
+import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
@@ -120,6 +121,7 @@ public class TeslaTurbineStructureManager {
         }
         level.setBlockAndUpdate(pos, newState);
         turbine.notifyUpdate();
+        turbine.getAdvancementBehaviour().awardPlayer(CCBAdvancements.TESLA_TURBINE_EASY_AS_PIE);
     }
 
     public boolean isActive() {

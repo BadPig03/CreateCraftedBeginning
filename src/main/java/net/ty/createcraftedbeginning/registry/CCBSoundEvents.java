@@ -49,6 +49,10 @@ public class CCBSoundEvents {
     public static final SoundEntry WIND_CHARGE_LAUNCH = create("wind_charge_launch").playExisting(SoundEvents.WIND_CHARGE_THROW, 1.0f, 2.0f).subtitle("Wind charge launched").category(SoundSource.BLOCKS).build();
     public static final SoundEntry AIRTIGHT_ARMOR_EQUIP = create("airtight_armor_equip").playExisting(SoundEvents.ARMOR_EQUIP_NETHERITE.value(), 0.9f, 1.4f).playExisting(SoundEvents.HEAVY_CORE_HIT, 0.9f, 1.4f).subtitle("Airtight equipments clinks").category(SoundSource.PLAYERS).build();
     public static final SoundEntry AIRTIGHT_JETPACK_LAUNCH = create("airtight_jetpack_launch").playExisting(SoundEvents.WIND_CHARGE_BURST.value(), 1.0f, 1.0f).subtitle("Airtight jetpack launches").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry AIR_VENT_OUTLET_OPENED = create("air_vent_outlet_opened").playExisting(SoundEvents.ITEM_FRAME_ADD_ITEM, 0.75f, 1.0f).playExisting(SoundEvents.NETHERITE_BLOCK_HIT, 0.75f, 1.0f).subtitle("Air Vent Outlet opened").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry AIR_VENT_OUTLET_CLOSED = create("air_vent_outlet_closed").playExisting(SoundEvents.ITEM_FRAME_REMOVE_ITEM, 0.75f, 1.0f).playExisting(SoundEvents.NETHERITE_BLOCK_HIT, 0.75f, 1.0f).subtitle("Air Vent Outlet closed").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry AIR_VENT_OUTLET_PLACED = create("air_vent_outlet_placed").playExisting(SoundEvents.NETHERITE_BLOCK_PLACE, 0.75f, 1.0f).subtitle("Air Vent Outlet placed").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry AIR_VENT_OUTLET_REMOVED = create("air_vent_outlet_removed").playExisting(SoundEvents.NETHERITE_BLOCK_BREAK, 0.75f, 1.0f).subtitle("Air Vent Outlet removed").category(SoundSource.BLOCKS).build();
 
     @Contract("_ -> new")
     private static @NotNull SoundEntryBuilder create(String name) {

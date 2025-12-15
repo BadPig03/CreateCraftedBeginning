@@ -345,6 +345,10 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         return currentState.getRemainingTime();
     }
 
+    public BaseCoolerState getCurrentState() {
+        return currentState;
+    }
+
     public LerpedFloat getHeadAnimation() {
         return headAnimation;
     }
@@ -356,6 +360,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     public SmartFluidTank getTankInventory() {
         return tankBehaviour.getPrimaryHandler();
     }
+
     public void playSound() {
         if (level == null) {
             return;

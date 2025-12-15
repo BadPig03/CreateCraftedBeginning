@@ -1,0 +1,13 @@
+{
+  "type": "createcraftedbeginning:freezing",
+  "ingredients": [
+    {
+      "item": "minecraft:lava_bucket"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:obsidian"
+    }
+  ]
+}

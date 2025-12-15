@@ -48,8 +48,6 @@ import java.util.List;
 public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ThresholdSwitchObservable {
     private static final int SYNC_RATE = 4;
     private static final int LAZY_TICK_RATE = 20;
-    private static final long MILLIBUCKETS_PER_BUCKET = 1000L;
-    private static final long MAX_TRANSFER_AMOUNT = 50L;
 
     private static final String COMPOUND_KEY_CAPACITY_ENCHANT_LEVEL = "CapacityEnchantLevel";
     private static final String COMPOUND_KEY_ECONOMIZE_ENCHANT_LEVEL = "EconomizeEnchantLevel";
@@ -73,12 +71,12 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_HATCH.get(), (be, context) -> be.getBlockState().getValue(AirtightHatchBlock.OCCUPIED) ? be.tankBehaviour.getCapability() : SmartGasTankBehaviour.single(be, 0).forbidInsertion().forbidExtraction().getCapability());
     }
 
-    private static int getMaxTransferAmount() {
-        return 0;
+    private static int getMaxTransferRate() {
+        return CCBConfig.server().airtights.maxTransferRate.get();
     }
 
-    private static boolean inputOnly(@NotNull InternalGasHandler internalHandler, @NotNull IGasHandler targetHandler, long transferAmount) {
-        GasStack drainedGasStack = targetHandler.drain(transferAmount, GasAction.SIMULATE);
+    private static boolean inputOnly(@NotNull InternalGasHandler internalHandler, @NotNull IGasHandler targetHandler, long maxTransferAmount) {
+        GasStack drainedGasStack = targetHandler.drain(maxTransferAmount, GasAction.SIMULATE);
         if (drainedGasStack.isEmpty()) {
             return false;
         }
@@ -94,8 +92,8 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         return true;
     }
 
-    private static boolean outputOnly(@NotNull InternalGasHandler internalHandler, @NotNull IGasHandler targetHandler, long transferAmount) {
-        GasStack drainedGasStack = internalHandler.forceDrain(transferAmount, GasAction.SIMULATE);
+    private static boolean outputOnly(@NotNull InternalGasHandler internalHandler, @NotNull IGasHandler targetHandler, long maxTransferAmount) {
+        GasStack drainedGasStack = internalHandler.forceDrain(maxTransferAmount, GasAction.SIMULATE);
         if (drainedGasStack.isEmpty()) {
             return false;
         }
@@ -111,11 +109,11 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         return true;
     }
 
-    private static boolean stayHalf(@NotNull InternalGasHandler internalHandler, @NotNull IGasHandler targetHandler) {
+    private static boolean stayHalf(@NotNull InternalGasHandler internalHandler, @NotNull IGasHandler targetHandler, long maxTransferAmount) {
         long currentAmount = internalHandler.getGasInTank(0).getAmount();
         long halfCapacity = internalHandler.getTankCapacity(0) / 2;
         long delta = halfCapacity - currentAmount;
-        long transferAmount = Math.min(Math.abs(delta), MAX_TRANSFER_AMOUNT);
+        long transferAmount = Math.min(Math.abs(delta), maxTransferAmount);
         if (delta == 0) {
             return false;
         }
@@ -168,30 +166,38 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     @Override
-    protected void write(CompoundTag compoundTag, Provider registries, boolean clientPacket) {
-        super.write(compoundTag, registries, clientPacket);
+    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.write(compoundTag, provider, clientPacket);
         compoundTag.putInt(COMPOUND_KEY_CAPACITY_ENCHANT_LEVEL, capacityEnchantLevel);
+        if (clientPacket) {
+            return;
+        }
+
         compoundTag.putInt(COMPOUND_KEY_ECONOMIZE_ENCHANT_LEVEL, economizeEnchantLevel);
         if (customName == null) {
             return;
         }
 
-        compoundTag.putString(COMPOUND_KEY_CUSTOM_NAME, Serializer.toJson(customName, registries));
+        compoundTag.putString(COMPOUND_KEY_CUSTOM_NAME, Serializer.toJson(customName, provider));
     }
 
     @Override
-    protected void read(CompoundTag compoundTag, Provider registries, boolean clientPacket) {
-        super.read(compoundTag, registries, clientPacket);
+    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.read(compoundTag, provider, clientPacket);
         if (compoundTag.contains(COMPOUND_KEY_CAPACITY_ENCHANT_LEVEL)) {
             capacityEnchantLevel = compoundTag.getInt(COMPOUND_KEY_CAPACITY_ENCHANT_LEVEL);
+            updateCapacity();
         }
+        if (clientPacket) {
+            return;
+        }
+
         if (compoundTag.contains(COMPOUND_KEY_ECONOMIZE_ENCHANT_LEVEL)) {
             economizeEnchantLevel = compoundTag.getInt(COMPOUND_KEY_ECONOMIZE_ENCHANT_LEVEL);
         }
         if (compoundTag.contains(COMPOUND_KEY_CUSTOM_NAME)) {
-            customName = Serializer.fromJson(compoundTag.getString(COMPOUND_KEY_CUSTOM_NAME), registries);
+            customName = Serializer.fromJson(compoundTag.getString(COMPOUND_KEY_CUSTOM_NAME), provider);
         }
-        updateCapacity();
     }
 
     @Override
@@ -254,15 +260,16 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
             return;
         }
 
+        int maxTransferRate = getMaxTransferRate();
         boolean result = false;
         if (currentMode == HatchTransferMode.INPUT_ONLY.ordinal()) {
-            result = inputOnly(internalHandler, targetHandler, MAX_TRANSFER_AMOUNT);
+            result = inputOnly(internalHandler, targetHandler, maxTransferRate);
         }
         else if (currentMode == HatchTransferMode.OUTPUT_ONLY.ordinal()) {
-            result = outputOnly(internalHandler, targetHandler, MAX_TRANSFER_AMOUNT);
+            result = outputOnly(internalHandler, targetHandler, maxTransferRate);
         }
         else if (currentMode == HatchTransferMode.STAY_HALF.ordinal()) {
-            result = stayHalf(internalHandler, targetHandler);
+            result = stayHalf(internalHandler, targetHandler, maxTransferRate);
         }
         if (!result) {
             return;
@@ -294,18 +301,16 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     private long getMaxCapacity() {
-        return CCBConfig.server().gas.canisterCapacity.get() * MILLIBUCKETS_PER_BUCKET * (1 + capacityEnchantLevel);
+        return CCBConfig.server().gas.canisterCapacity.get() * 1000L * (1 + capacityEnchantLevel);
     }
 
     private void updateCapacity() {
-        long oldCapacity = tankBehaviour.getPrimaryHandler().getCapacity();
         long newCapacity = getMaxCapacity();
-        if (oldCapacity == newCapacity) {
+        if (tankBehaviour.getPrimaryHandler().getCapacity() == newCapacity) {
             return;
         }
 
         tankBehaviour.getPrimaryHandler().setCapacity(newCapacity);
-        notifyUpdate();
     }
 
     private GasStack getContent() {

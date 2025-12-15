@@ -1,0 +1,20 @@
+{
+	"format_version": "1.21.6",
+	"credit": "Made with Blockbench",
+	"parent": "block/block",
+	"textures": {
+		"0": "createcraftedbeginning:block/air_vent/air_vent_opened",
+		"particle": "createcraftedbeginning:block/air_vent/air_vent_opened"
+	},
+	"elements": [
+		{
+			"name": "north",
+			"from": [0, 0, -0.003],
+			"to": [16, 16, 0.003],
+			"faces": {
+				"north": {"uv": [0, 0, 16, 16], "texture": "#0", "cullface": "north"},
+				"south": {"uv": [0, 0, 16, 16], "texture": "#0", "cullface": "north"}
+			}
+		}
+	]
+}

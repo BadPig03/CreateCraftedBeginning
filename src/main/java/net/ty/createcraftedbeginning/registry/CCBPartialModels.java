@@ -61,6 +61,9 @@ public class CCBPartialModels {
     public static final PartialModel AIRTIGHT_ELYTRA = item("airtight_elytra");
     public static final PartialModel AIRTIGHT_SHIELD = item("airtight_shield");
 
+    public static final PartialModel AIR_VENT_CLOSED = block("air_vent/closed");
+    public static final PartialModel AIR_VENT_OPENED = block("air_vent/opened");
+
     public static final PartialModel SHAFT_HALF_UP = block("shaft_half_up");
 
     public static final Map<ComponentPartials, Map<Direction, PartialModel>> AIRTIGHT_PIPE_ATTACHMENTS = new EnumMap<>(ComponentPartials.class);

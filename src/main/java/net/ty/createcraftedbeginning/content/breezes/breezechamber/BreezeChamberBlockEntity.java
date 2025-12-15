@@ -103,7 +103,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
 
     @Override
     public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
-        tankBehaviour = SmartGasTankBehaviour.single(this, CCBConfig.server().gas.airtightTankCapacity.get() * 500L).forbidInsertion().allowExtraction();
+        tankBehaviour = SmartGasTankBehaviour.single(this, CCBConfig.server().airtights.maxTankCapacity.get() * 500L).forbidInsertion().allowExtraction();
         advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.A_ROYAL_FEAST, CCBAdvancements.BAD_APPLE, CCBAdvancements.UNIVERSAL_ANTIDOTE);
         behaviours.add(tankBehaviour);
         behaviours.add(advancementBehaviour);

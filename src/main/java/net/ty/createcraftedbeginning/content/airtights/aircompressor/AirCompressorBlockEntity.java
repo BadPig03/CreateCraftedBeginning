@@ -41,10 +41,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class AirCompressorBlockEntity extends KineticBlockEntity implements IHaveGoggleInformation {
-    private static final int MAX_OVERHEAT_TIME = 1200;
-    private static final int INITIALIZED_OVERHEAT_TIME = MAX_OVERHEAT_TIME / 2;
-    private static final int PRESSURIZATION_INTERVAL = 5;
-    private static final int ROUNDING_FACTOR = 10;
+    private static final int LAZY_TICK_RATE = 5;
+    private static final int PRESSURIZATION_RATIO = 10;
     private static final int SLOW_SPEED_HEAT = 1;
     private static final int MEDIUM_SPEED_HEAT = 3;
     private static final int FAST_SPEED_HEAT = 5;
@@ -64,9 +62,9 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
 
     public AirCompressorBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
-        overheatTime = INITIALIZED_OVERHEAT_TIME;
+        overheatTime = getNextOverheatThreshold() / 2;
         ponderLevelCounter = 0;
-        setLazyTickRate(PRESSURIZATION_INTERVAL);
+        setLazyTickRate(LAZY_TICK_RATE);
     }
 
     public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
@@ -82,12 +80,16 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         });
     }
 
+    private static int getNextOverheatThreshold() {
+        return CCBConfig.server().airtights.nextOverheatThreshold.get();
+    }
+
     private static long getMaxCapacity() {
-        return CCBConfig.server().gas.airtightTankCapacity.get() * 500;
+        return CCBConfig.server().airtights.maxTankCapacity.get() * 500L;
     }
 
     private static int getPressurizationRateMultiplier() {
-        return CCBConfig.server().gas.pressurizationRateMultiplier.get();
+        return CCBConfig.server().airtights.pressurizationRateMultiplier.get();
     }
 
     private @NotNull Gas getPressurizedGas() {
@@ -104,7 +106,7 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
 
     private boolean isInputNotEnough() {
         float absSpeed = Mth.abs(getSpeed());
-        long requiredAmount = (long) (absSpeed * getPressurizationRateMultiplier() / PRESSURIZATION_INTERVAL);
+        long requiredAmount = (long) (absSpeed * getPressurizationRateMultiplier() / LAZY_TICK_RATE);
         return absSpeed != 0 && inputTankBehaviour.getPrimaryHandler().getGasAmount() < requiredAmount;
     }
 
@@ -133,7 +135,7 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
 
         float efficiency = overheatState.getEfficiency();
         long rawAmount = (long) (Mth.abs(getSpeed()) * getPressurizationRateMultiplier() * efficiency);
-        return rawAmount / ROUNDING_FACTOR * ROUNDING_FACTOR;
+        return rawAmount / PRESSURIZATION_RATIO * PRESSURIZATION_RATIO;
     }
 
     private void doPressurization() {
@@ -149,12 +151,12 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
             return;
         }
 
-        long drainAmount = Math.min(inputTankBehaviour.getPrimaryHandler().getGasAmount(), getMaxAmount()) / ROUNDING_FACTOR * ROUNDING_FACTOR;
-        if (drainAmount < ROUNDING_FACTOR) {
+        long drainAmount = Math.min(inputTankBehaviour.getPrimaryHandler().getGasAmount(), getMaxAmount()) / PRESSURIZATION_RATIO * PRESSURIZATION_RATIO;
+        if (drainAmount < PRESSURIZATION_RATIO) {
             return;
         }
 
-        long fillAmount = inputTankBehaviour.getInternalGasHandler().forceDrain(drainAmount, GasAction.EXECUTE).getAmount() / ROUNDING_FACTOR;
+        long fillAmount = inputTankBehaviour.getInternalGasHandler().forceDrain(drainAmount, GasAction.EXECUTE).getAmount() / PRESSURIZATION_RATIO;
         GasStack fillGasStack = new GasStack(pressurizedGas, fillAmount);
         outputTankBehaviour.getInternalGasHandler().forceFill(fillGasStack, GasAction.EXECUTE);
     }
@@ -249,28 +251,29 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
             return;
         }
 
+        int nextOverheatThreshold = getNextOverheatThreshold();
         if (level.isClientSide && level instanceof PonderLevel ponderLevel) {
-            ponderLevelCounter = (ponderLevelCounter + 1) % MAX_OVERHEAT_TIME;
+            ponderLevelCounter = (ponderLevelCounter + 1) % nextOverheatThreshold;
             overheatState.spawnParticlesInPonderLevel(ponderLevel, worldPosition, ponderLevelCounter);
         }
 
         overheatState.tick(this);
         int netHeat = overheatState.tryAddHeat(this);
         overheatTime += netHeat;
-        if (netHeat > 0 && overheatTime > MAX_OVERHEAT_TIME) {
+        if (netHeat > 0 && overheatTime > nextOverheatThreshold) {
             increaseHeat();
-            overheatTime = INITIALIZED_OVERHEAT_TIME;
+            overheatTime = nextOverheatThreshold / 2;
         }
         else if (netHeat < 0 && overheatTime < 0) {
             decreaseHeat();
-            overheatTime = INITIALIZED_OVERHEAT_TIME;
+            overheatTime = nextOverheatThreshold / 2;
         }
     }
 
     @Override
     protected void write(@NotNull CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        compoundTag.putString(COMPOUND_KEY_OVERHEAT_STATE, overheatState.getSerializedName());
         super.write(compoundTag, provider, clientPacket);
+        compoundTag.putString(COMPOUND_KEY_OVERHEAT_STATE, overheatState.getSerializedName());
         if (clientPacket) {
             return;
         }
