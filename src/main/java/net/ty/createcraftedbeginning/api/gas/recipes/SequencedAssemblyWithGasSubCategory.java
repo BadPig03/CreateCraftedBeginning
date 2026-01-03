@@ -17,6 +17,7 @@ import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.SizedGasIngredient;
 import net.ty.createcraftedbeginning.compat.jei.JEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedGasInjectionChamber;
 import net.ty.createcraftedbeginning.recipe.SequencedWithGasRecipe;
@@ -130,8 +131,8 @@ public abstract class SequencedAssemblyWithGasSubCategory {
 
         @Override
         public void setRecipe(@NotNull IRecipeLayoutBuilder builder, @NotNull SequencedWithGasRecipe<?> recipe, IFocusGroup focuses, int x) {
-            GasIngredient gasIngredient = recipe.getRecipe().getGasIngredients().getFirst();
-            List<GasStack> gasStackList = gasIngredient.getMatchingGasStacks();
+            SizedGasIngredient gasIngredient = recipe.getRecipe().getGasIngredients().getFirst();
+            List<GasStack> gasStackList = Arrays.asList(gasIngredient.getGases());
             List<GasStack> fullStacks = new ArrayList<>();
             for (GasStack stack : gasStackList) {
                 fullStacks.add(stack.copyWithAmount(FluidType.BUCKET_VOLUME));

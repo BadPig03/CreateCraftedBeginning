@@ -28,10 +28,11 @@ import net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory.Build
 import net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory.Factory;
 import net.ty.createcraftedbeginning.compat.jei.category.CoolingCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.EnergizationCategory;
-import net.ty.createcraftedbeginning.compat.jei.category.FreezingCategory;
+import net.ty.createcraftedbeginning.compat.jei.category.ChillingCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.GasInjectionCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.MysteriousItemConversionCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.PressurizationCategory;
+import net.ty.createcraftedbeginning.compat.jei.category.ReactorKettleCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.SequencedAssemblyWithGasCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.WindChargingCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.gas.GasStackHelper;
@@ -41,9 +42,10 @@ import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 import net.ty.createcraftedbeginning.recipe.ConversionRecipe;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 import net.ty.createcraftedbeginning.recipe.EnergizationRecipe;
-import net.ty.createcraftedbeginning.recipe.FreezingRecipe;
+import net.ty.createcraftedbeginning.recipe.ChillingRecipe;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
+import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -133,11 +135,12 @@ public class JEIPlugin implements IModPlugin {
         CCBRecipeCategory<?> mysteryConversion = builder(ConversionRecipe.class).addRecipes(() -> MysteriousItemConversionCategory.RECIPES).itemIcon(CCBBlocks.EMPTY_BREEZE_COOLER_BLOCK).emptyBackground(177, 50).build("mystery_conversion", MysteriousItemConversionCategory::new);
         CCBRecipeCategory<?> energization = builder(EnergizationRecipe.class).addTypedRecipes(CCBRecipeTypes.ENERGIZATION).catalyst(CCBBlocks.BREEZE_CHAMBER_BLOCK::get).catalyst(CCBBlocks.AIRTIGHT_TANK_BLOCK::get).doubleItemIcon(CCBBlocks.BREEZE_CHAMBER_BLOCK, CCBBlocks.AIRTIGHT_TANK_BLOCK).emptyBackground(177, 70).build("energization", EnergizationCategory::new);
         CCBRecipeCategory<?> pressurization = builder(PressurizationRecipe.class).addTypedRecipes(CCBRecipeTypes.PRESSURIZATION).catalyst(CCBBlocks.AIR_COMPRESSOR_BLOCK::get).catalyst(CCBBlocks.BREEZE_COOLER_BLOCK::get).doubleItemIcon(CCBBlocks.AIR_COMPRESSOR_BLOCK, CCBBlocks.BREEZE_COOLER_BLOCK).emptyBackground(177, 70).build("pressurization", PressurizationCategory::new);
-        CCBRecipeCategory<?> freezing = builder(FreezingRecipe.class).addTypedRecipes(CCBRecipeTypes.FREEZING).catalystStack(FreezingCategory.getCatalystStack()).doubleItemIcon(AllItems.PROPELLER.get(), CCBBlocks.BREEZE_COOLER_BLOCK).emptyBackground(178, 72).build("freezing", FreezingCategory::new);
+        CCBRecipeCategory<?> freezing = builder(ChillingRecipe.class).addTypedRecipes(CCBRecipeTypes.CHILLING).catalystStack(ChillingCategory.getCatalystStack()).doubleItemIcon(AllItems.PROPELLER.get(), CCBBlocks.BREEZE_COOLER_BLOCK).emptyBackground(178, 72).build("chilling", ChillingCategory::new);
         CCBRecipeCategory<?> cooling = builder(CoolingRecipe.class).addTypedRecipes(CCBRecipeTypes.COOLING).catalyst(CCBBlocks.BREEZE_COOLER_BLOCK::get).itemIcon(CCBBlocks.BREEZE_COOLER_BLOCK).emptyBackground(177, 50).build("cooling", CoolingCategory::new);
-        CCBRecipeCategory<?> wind_charging = builder(WindChargingRecipe.class).addTypedRecipes(CCBRecipeTypes.WIND_CHARGING).catalyst(CCBBlocks.BREEZE_CHAMBER_BLOCK::get).itemIcon(CCBBlocks.BREEZE_CHAMBER_BLOCK).emptyBackground(177, 50).build("wind_charging", WindChargingCategory::new);
-        CCBRecipeCategory<?> gas_injection = builder(GasInjectionRecipe.class).addTypedRecipes(CCBRecipeTypes.GAS_INJECTION).catalyst(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK::get).doubleItemIcon(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK, CCBItems.GAS_CANISTER).emptyBackground(177, 70).build("gas_injection", GasInjectionCategory::new);
-        CCBRecipeCategory<?> sequenced_assembly_with_gas = builder(SequencedAssemblyWithGasRecipe.class).addTypedRecipes(CCBRecipeTypes.SEQUENCED_ASSEMBLY_WITH_GAS).doubleItemIcon(AllItems.PRECISION_MECHANISM.get(), CCBItems.GAS_CANISTER).emptyBackground(180, 115).build("sequenced_assembly_with_gas", SequencedAssemblyWithGasCategory::new);
+        CCBRecipeCategory<?> windCharging = builder(WindChargingRecipe.class).addTypedRecipes(CCBRecipeTypes.WIND_CHARGING).catalyst(CCBBlocks.BREEZE_CHAMBER_BLOCK::get).itemIcon(CCBBlocks.BREEZE_CHAMBER_BLOCK).emptyBackground(177, 50).build("wind_charging", WindChargingCategory::new);
+        CCBRecipeCategory<?> gasInjection = builder(GasInjectionRecipe.class).addTypedRecipes(CCBRecipeTypes.GAS_INJECTION).catalyst(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK::get).doubleItemIcon(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK, CCBItems.GAS_CANISTER).emptyBackground(177, 70).build("gas_injection", GasInjectionCategory::new);
+        CCBRecipeCategory<?> reactorKettle = builder(ReactorKettleRecipe.class).addTypedRecipes(CCBRecipeTypes.REACTOR_KETTLE).catalyst(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK::get).emptyBackground(177, 103).build("reactor_kettle", ReactorKettleCategory::new);
+        CCBRecipeCategory<?> sequencedAssemblyWithGas = builder(SequencedAssemblyWithGasRecipe.class).addTypedRecipes(CCBRecipeTypes.SEQUENCED_ASSEMBLY_WITH_GAS).doubleItemIcon(AllItems.PRECISION_MECHANISM.get(), CCBItems.GAS_CANISTER).emptyBackground(180, 115).build("sequenced_assembly_with_gas", SequencedAssemblyWithGasCategory::new);
     }
 
     @Contract("_ -> new")

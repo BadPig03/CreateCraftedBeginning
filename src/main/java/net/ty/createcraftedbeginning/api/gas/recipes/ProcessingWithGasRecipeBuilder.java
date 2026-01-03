@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.api.gas.recipes;
 
 import com.google.common.base.Joiner;
-import com.simibubi.create.content.processing.recipe.HeatCondition;
 import com.simibubi.create.content.processing.recipe.ProcessingOutput;
 import com.simibubi.create.foundation.data.SimpleDatagenIngredient;
 import com.simibubi.create.foundation.data.recipe.Mods;
@@ -22,11 +21,15 @@ import net.neoforged.neoforge.common.conditions.ModLoadedCondition;
 import net.neoforged.neoforge.common.conditions.NotCondition;
 import net.neoforged.neoforge.common.crafting.ICustomIngredient;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.fluids.crafting.FluidIngredient;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gas.gases.GasIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.SizedGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.reactorkettle.TemperatureCondition;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipe.Factory;
 import org.jetbrains.annotations.NotNull;
 
@@ -74,7 +77,7 @@ public abstract class ProcessingWithGasRecipeBuilder<P extends ProcessingWithGas
     }
 
     public S withFluidIngredients(SizedFluidIngredient... ingredients) {
-        return withFluidIngredients(NonNullList.of(new SizedFluidIngredient(FluidIngredient.empty(), 1000), ingredients));
+        return withFluidIngredients(NonNullList.of(new SizedFluidIngredient(FluidIngredient.empty(), FluidType.BUCKET_VOLUME), ingredients));
     }
 
     public S withFluidIngredients(NonNullList<SizedFluidIngredient> ingredients) {
@@ -82,11 +85,11 @@ public abstract class ProcessingWithGasRecipeBuilder<P extends ProcessingWithGas
         return self();
     }
 
-    public S withGasIngredients(GasIngredient... ingredients) {
-        return withGasIngredients(NonNullList.of(GasIngredient.empty(), ingredients));
+    public S withGasIngredients(SizedGasIngredient... ingredients) {
+        return withGasIngredients(NonNullList.of(new SizedGasIngredient(GasIngredient.empty(), FluidType.BUCKET_VOLUME), ingredients));
     }
 
-    public S withGasIngredients(NonNullList<GasIngredient> ingredients) {
+    public S withGasIngredients(NonNullList<SizedGasIngredient> ingredients) {
         params.gasIngredients = ingredients;
         return self();
     }
@@ -118,8 +121,8 @@ public abstract class ProcessingWithGasRecipeBuilder<P extends ProcessingWithGas
         return self();
     }
 
-    public S requiresHeat(HeatCondition condition) {
-        params.requiredHeat = condition;
+    public S requiredTemperatureCondition(TemperatureCondition temperatureCondition) {
+        params.temperatureCondition = temperatureCondition;
         return self();
     }
 
@@ -175,17 +178,17 @@ public abstract class ProcessingWithGasRecipeBuilder<P extends ProcessingWithGas
         return self();
     }
 
-    public S require(Gas gas, int amount) {
-        return require(GasIngredient.fromGas(gas, amount));
+    public S require(Gas gas, long amount) {
+        return require(SizedGasIngredient.of(gas, amount));
     }
 
-    public S require(GasIngredient ingredient) {
+    public S require(SizedGasIngredient ingredient) {
         params.gasIngredients.add(ingredient);
         return self();
     }
 
-    public S requireGasTag(TagKey<Gas> gasTag, int amount) {
-        return require(GasIngredient.fromTag(gasTag, amount));
+    public S requireGasTag(TagKey<Gas> gasTag, long amount) {
+        return require(SizedGasIngredient.of(gasTag, amount));
     }
 
     public S output(ItemLike item) {

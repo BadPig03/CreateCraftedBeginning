@@ -23,6 +23,7 @@ public class TeslaTurbineLevelCalculator {
     private static final String COMPOUND_KEY_SPEED = "Speed";
 
     private final TeslaTurbineCore core;
+    private final TeslaTurbineBlockEntity turbine;
 
     private int currentLevel;
     private int maxLevelForSupply;
@@ -35,8 +36,9 @@ public class TeslaTurbineLevelCalculator {
     private int typeLevel;
     private float speed;
 
-    public TeslaTurbineLevelCalculator(TeslaTurbineCore core) {
+    public TeslaTurbineLevelCalculator(@NotNull TeslaTurbineCore core, TeslaTurbineBlockEntity turbine) {
         this.core = core;
+        this.turbine = turbine;
     }
 
     public void updateSupplyLevel(int newLevel) {
@@ -144,11 +146,10 @@ public class TeslaTurbineLevelCalculator {
             return;
         }
 
-        core.getTurbine().getAdvancementBehaviour().awardPlayer(CCBAdvancements.MIRACLE_OF_ENGINEERING);
+        turbine.getAdvancementBehaviour().awardPlayer(CCBAdvancements.MIRACLE_OF_ENGINEERING);
     }
 
     public void updateRotorLevel() {
-        TeslaTurbineBlockEntity turbine = core.getTurbine();
         rotorLevel = turbine.getBlockState().getValue(TeslaTurbineBlock.ROTOR) * 2;
         speed = turbine.getGeneratedSpeed();
     }

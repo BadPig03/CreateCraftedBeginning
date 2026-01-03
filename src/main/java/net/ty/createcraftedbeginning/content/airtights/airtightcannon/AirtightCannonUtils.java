@@ -28,13 +28,15 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
 import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterExecuteUtils;
 import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterSupplierUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.windcharge.AirtightCannonWindChargeProjectileEntity;
+import net.ty.createcraftedbeginning.content.airtights.weatherflares.IWeatherFlare;
+import net.ty.createcraftedbeginning.content.airtights.weatherflares.WeatherFlareProjectileEntity;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
@@ -103,7 +105,6 @@ public final class AirtightCannonUtils {
 
         tooltip.add(CommonComponents.EMPTY);
         tooltip.add(CCBLang.gasName(gasStack).add(CCBLang.translate("gui.tooltips.gas_tools.content")).style(ChatFormatting.GRAY).component());
-
         AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasStack.getGas());
         if (cannonHandler == null) {
             return;
@@ -113,6 +114,43 @@ public final class AirtightCannonUtils {
         float consumptionMultiplier = cannonHandler.getGasConsumptionMultiplier();
         MutableComponent advancedConsumptionMultiplier = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + cannonHandler.getRenderStr(consumptionMultiplier) + ']').component() : Component.empty();
         tooltip.add(CCBLang.translate("gui.tooltips.gas_tools.gas_consumption", cannonHandler.getRenderStr(consumptionMultiplier * 100)).add(advancedConsumptionMultiplier.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+    }
+
+    public static void fireFlares(Level level, @NotNull Player player, ItemStack flareItemStack, float chargedRatio) {
+        if (GasCanisterSupplierUtils.noUsableGasAvailable(player) || !(flareItemStack.getItem() instanceof IWeatherFlare)) {
+            return;
+        }
+
+        GasStack gasStack = GasCanisterSupplierUtils.getFirstNonEmptyGasContent(player);
+        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasStack.getGas());
+        if (cannonHandler == null) {
+            return;
+        }
+
+        InteractionHand hand = player.getUsedItemHand();
+        ItemStack cannon = player.getItemInHand(hand);
+        int gasConsumption = Mth.ceil(getGasConsumption(cannon, chargedRatio) * cannonHandler.getGasConsumptionMultiplier());
+        if (!GasCanisterExecuteUtils.tryGasConsumption(player, gasStack.getGas(), gasConsumption)) {
+            GasCanisterExecuteUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", gasStack.getHoverName());
+            return;
+        }
+
+        Vec3 eyePos = player.getEyePosition();
+        Vec3 lookVec = player.getLookAngle();
+        Vec3 barrelPos = eyePos.add(lookVec.scale(0.75));
+        Vec3 motion = lookVec.normalize().scale(chargedRatio);
+
+        boolean isCreative = player.isCreative();
+        WeatherFlareProjectileEntity flare = new WeatherFlareProjectileEntity(level, flareItemStack.getItem(), barrelPos.y);
+        flare.setPos(barrelPos);
+        flare.setOwner(player);
+        flare.setDeltaMovement(motion);
+        level.addFreshEntity(flare);
+        if (!isCreative) {
+            flareItemStack.shrink(1);
+        }
+        ShootableGadgetItemMethods.applyCooldown(player, cannon, hand, s -> s.getItem() instanceof AirtightCannonItem, getEfficientUseTime(cannon));
+        ShootableGadgetItemMethods.sendPackets(player, b -> new AirtightCannonPacket(player.getEyePosition().add(player.getLookAngle().scale(0.75)), player.getLookAngle().normalize(), ItemStack.EMPTY, hand, 1, b));
     }
 
     public static void spawnWindCharges(Level level, @NotNull Player player, float chargedRatio) {
@@ -141,7 +179,6 @@ public final class AirtightCannonUtils {
         int windChargesCount = multiShotLevel * 2 + 1;
         float sprayChange = 360.0f / windChargesCount;
         Holder<Gas> gasHolder = gasStack.getGasHolder();
-
         for (int i = 0; i < windChargesCount; i++) {
             Vec3 eyePos = player.getEyePosition();
             Vec3 lookVec = player.getLookAngle();

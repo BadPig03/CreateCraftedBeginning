@@ -36,10 +36,10 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.TickPriority;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.GasPropagator;
-import net.ty.createcraftedbeginning.api.gas.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.GasPropagator;
+import net.ty.createcraftedbeginning.api.gas.gases.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import org.jetbrains.annotations.NotNull;
 

@@ -6,7 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.gas.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.GasTransportBehaviour;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

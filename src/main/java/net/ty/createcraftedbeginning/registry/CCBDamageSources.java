@@ -21,6 +21,10 @@ public class CCBDamageSources {
         return register(CCBDamageTypes.BRIMSTONE, level);
     }
 
+    public static @NotNull DamageSource reactorKettleMixer(Level level) {
+		return register(CCBDamageTypes.REACTOR_KETTLE_MIXER, level);
+	}
+
     private static @NotNull DamageSource register(ResourceKey<DamageType> key, @NotNull LevelReader level) {
         return new DamageSource(level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(key));
     }

@@ -1,0 +1,102 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {
+    "item": "create:mechanical_drill"
+  },
+  "loops": 1,
+  "results": [
+    {
+      "chance": 75,
+      "id": "createcraftedbeginning:airtight_handheld_drill"
+    },
+    {
+      "chance": 25,
+      "id": "createcraftedbeginning:breeze_core"
+    }
+  ],
+  "sequence": [
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_handheld_drill"
+        },
+        {
+          "item": "createcraftedbeginning:breeze_core"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_handheld_drill"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_handheld_drill"
+        },
+        {
+          "item": "createcraftedbeginning:airtight_sheet_block"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_handheld_drill"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_handheld_drill"
+        },
+        {
+          "item": "createcraftedbeginning:gas_canister"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_handheld_drill"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_handheld_drill"
+        },
+        {
+          "item": "createcraftedbeginning:airtight_tank"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_handheld_drill"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_handheld_drill"
+        },
+        {
+          "item": "create:precision_mechanism"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_handheld_drill"
+        }
+      ]
+    }
+  ],
+  "transitional_item": {
+    "id": "createcraftedbeginning:incomplete_airtight_handheld_drill"
+  }
+}

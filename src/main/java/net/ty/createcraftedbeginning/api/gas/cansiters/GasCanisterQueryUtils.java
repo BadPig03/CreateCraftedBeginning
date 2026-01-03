@@ -64,7 +64,6 @@ public class GasCanisterQueryUtils {
      */
     public static boolean isValidCanisterPack(@NotNull ItemStack pack) {
         return !pack.isEmpty() && (pack.is(CCBItems.GAS_CANISTER_PACK) || pack.getItem() instanceof GasCanisterPackItem);
-
     }
 
     /**
@@ -82,7 +81,6 @@ public class GasCanisterQueryUtils {
      */
     public static boolean isValidCanisterNonEmpty(@NotNull ItemStack canister) {
         return isValidCanister(canister) && getGasAmount(canister, Gas.EMPTY_GAS_HOLDER.value()) > 0;
-
     }
 
     /**
@@ -129,7 +127,6 @@ public class GasCanisterQueryUtils {
      */
     public static boolean isValidCanisterPackNonEmpty(@NotNull ItemStack pack) {
         return isValidCanisterPack(pack) && getGasAmount(pack, Gas.EMPTY_GAS_HOLDER.value()) > 0;
-
     }
 
     /**
@@ -163,7 +160,6 @@ public class GasCanisterQueryUtils {
      */
     public static @NotNull GasStack getCanisterContent(@NotNull ItemStack canister) {
         return isValidCanister(canister) ? canister.getOrDefault(CCBDataComponents.CANISTER_CONTENT, GasStack.EMPTY) : GasStack.EMPTY;
-
     }
 
     /**
@@ -183,7 +179,6 @@ public class GasCanisterQueryUtils {
      */
     public static @NotNull @Unmodifiable List<GasStack> getCanisterPackContent(@NotNull ItemStack pack) {
         return isValidCanisterPack(pack) ? getNonEmptyCanistersFromPack(pack).stream().map(GasCanisterQueryUtils::getCanisterContent).toList() : List.of();
-
     }
 
     /**
@@ -268,7 +263,6 @@ public class GasCanisterQueryUtils {
      */
     public static long getCanisterPackCapacity(@NotNull ItemStack pack, @NotNull Gas filterGas) {
         return isValidCanisterPack(pack) ? getNonEmptyCanistersFromPack(pack).stream().mapToLong(canister -> getCanisterCapacity(canister, filterGas)).sum() : 0;
-
     }
 
     /**
@@ -296,48 +290,47 @@ public class GasCanisterQueryUtils {
         }
 
         return isValidCanister(gasSupplier) ? getCanisterCapacity(gasSupplier, filterGas) : 0;
-
     }
 
     /**
-     * Calculates the total amount of a specific gas type across all the player's gas suppliers.
+     * Calculates the total amount of a specific gas type across all the player's non-empty gas suppliers.
      * <p>
-     * This method searches through all gas suppliers (canisters and canister packs) in the player's inventory
-     * and sums up the amount of the specified gas type. If no gas suppliers are found, returns 0.
+     * This method searches through all non-empty gas suppliers (gas canisters and gas canister packs)
+     * in the player's inventory and sums up the amount of the given gas type. The calculation
+     * only includes suppliers that actually contain gas.
      * </p>
      *
      * @param player    the player whose gas suppliers will be checked (cannot be null)
-     * @param filterGas the specific gas type to calculate the total amount for;
-     *                  use the empty gas to count all gas types
-     * @return the total amount of the specified gas type found in all the player's gas suppliers
-     * @see GasCanisterSupplierUtils#getAllGasSuppliers(Player)
+     * @param filterGas the specific gas type to calculate the total amount for (cannot be null)
+     * @return the total amount of the specified gas type across all non-empty gas suppliers,
+     * or 0 if the player has no non-empty gas suppliers
+     * @see GasCanisterSupplierUtils#getAllGasSuppliersNonEmpty(Player)
      * @see #getGasAmount(ItemStack, Gas)
      */
     public static long getTotalGasAmount(@NotNull Player player, @NotNull Gas filterGas) {
-        List<ItemStack> gasSuppliers = GasCanisterSupplierUtils.getAllGasSuppliers(player);
+        List<ItemStack> gasSuppliers = GasCanisterSupplierUtils.getAllGasSuppliersNonEmpty(player);
         return gasSuppliers.isEmpty() ? 0 : gasSuppliers.stream().mapToLong(gasSupplier -> getGasAmount(gasSupplier, filterGas)).sum();
-
     }
 
     /**
-     * Calculates the total gas capacity for a specific gas type across all the player's gas suppliers.
+     * Calculates the total gas capacity for a specific gas type across all the player's non-empty gas suppliers.
      * <p>
-     * This method searches through all gas suppliers (canisters and canister packs) in the player's inventory
-     * and sums up the storage capacity for the specified gas type. The capacity is only calculated for
-     * suppliers that contain the specified gas type, or all types if using the empty gas.
+     * This method searches through all non-empty gas suppliers (gas canisters and gas canister packs)
+     * in the player's inventory and sums up the storage capacity for the specified gas type.
+     * The capacity is only calculated for suppliers that contain the specified gas type
+     * (or all types if using the empty gas placeholder) and are non-empty.
      * </p>
      *
      * @param player    the player whose gas suppliers will be checked (cannot be null)
      * @param filterGas the specific gas type to calculate the capacity for;
-     *                  use the empty gas to count capacity for all gas types (cannot be null)
-     * @return the total storage capacity available for the specified gas type across all compatible gas suppliers
-     * @see GasCanisterSupplierUtils#getAllGasSuppliers(Player)
+     *                  use {@link Gas#EMPTY_GAS_HOLDER} to count capacity for all gas types (cannot be null)
+     * @return the total storage capacity available for the specified gas type across all compatible non-empty gas suppliers
+     * @see GasCanisterSupplierUtils#getAllGasSuppliersNonEmpty(Player)
      * @see #getGasCapacity(ItemStack, Gas)
      */
     public static long getTotalGasCapacity(@NotNull Player player, @NotNull Gas filterGas) {
-        List<ItemStack> gasSuppliers = GasCanisterSupplierUtils.getAllGasSuppliers(player);
+        List<ItemStack> gasSuppliers = GasCanisterSupplierUtils.getAllGasSuppliersNonEmpty(player);
         return gasSuppliers.isEmpty() ? 0 : gasSuppliers.stream().mapToLong(gasSupplier -> getGasCapacity(gasSupplier, filterGas)).sum();
-
     }
 
     /**

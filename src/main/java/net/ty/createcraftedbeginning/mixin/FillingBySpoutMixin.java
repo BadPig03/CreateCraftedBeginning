@@ -53,10 +53,8 @@ public abstract class FillingBySpoutMixin {
 
     @Inject(method = "fillItem", at = @At("HEAD"), cancellable = true)
     private static void fillItemWithGas(Level level, int requiredAmount, ItemStack stack, @NotNull FluidStack availableFluid, CallbackInfoReturnable<ItemStack> cir) {
-        FluidStack toFill = availableFluid.copy();
-        toFill.setAmount(requiredAmount);
-
         SingleRecipeInput input = new SingleRecipeInput(stack);
+        FluidStack toFill = availableFluid.copyWithAmount(requiredAmount);
         Optional<RecipeHolder<FillingWithGasRecipe>> recipeWithGas = SequencedAssemblyWithGasRecipe.getRecipe(level, input, CCBRecipeTypes.FILLING_WITH_GAS.getType(), FillingWithGasRecipe.class, matchItemAndFluidWithGas(level, availableFluid, input)).filter(fr -> fr.value().getRequiredFluid().test(toFill));
         if (recipeWithGas.isPresent()) {
             List<ItemStack> results = recipeWithGas.get().value().rollResults(level.random);

@@ -17,12 +17,12 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.GasPipeConnection;
-import net.ty.createcraftedbeginning.api.gas.GasPropagator;
-import net.ty.createcraftedbeginning.api.gas.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.GasPipeConnection;
+import net.ty.createcraftedbeginning.api.gas.gases.GasPropagator;
+import net.ty.createcraftedbeginning.api.gas.gases.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.jetbrains.annotations.NotNull;
@@ -154,7 +154,7 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity {
             return;
         }
         if (speed >= SpeedLevel.MEDIUM.getSpeedValue()) {
-            advancementBehaviour.awardPlayer(CCBAdvancements.TAKE_A_DEEP_BREATHE);
+            advancementBehaviour.awardPlayer(CCBAdvancements.TAKE_A_DEEP_BREATH);
         }
 
         updatePressureChange();
@@ -163,7 +163,7 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity {
     @Override
     public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
         transportBehaviour = new GasPumpTransportBehaviour(this);
-        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.TAKE_A_DEEP_BREATHE);
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.TAKE_A_DEEP_BREATH);
         behaviours.add(transportBehaviour);
         behaviours.add(advancementBehaviour);
         super.addBehaviours(behaviours);
@@ -341,7 +341,7 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity {
         }
     }
 
-    class GasPumpTransportBehaviour extends GasTransportBehaviour {
+    private class GasPumpTransportBehaviour extends GasTransportBehaviour {
         public GasPumpTransportBehaviour(AirtightPumpBlockEntity be) {
             super(be);
         }

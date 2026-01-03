@@ -30,7 +30,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock;
-import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.StructuralPosition;
+import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.TeslaTurbineStructuralPosition;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.data.CCBShapes;
@@ -80,12 +80,12 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
             return true;
         }
 
-        StructuralPosition structuralPos = structuralState.getValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION);
-        if (StructuralPosition.isMid(structuralPos)) {
+        TeslaTurbineStructuralPosition structuralPos = structuralState.getValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION);
+        if (TeslaTurbineStructuralPosition.isMid(structuralPos)) {
             return true;
         }
 
-        Set<Direction> directionsToCheck = StructuralPosition.getPossiblePosition(structuralPos, structuralAxis);
+        Set<Direction> directionsToCheck = TeslaTurbineStructuralPosition.getPossiblePosition(structuralPos, structuralAxis);
         for (Direction direction : directionsToCheck) {
             BlockPos candidatePos = structurePos.relative(direction);
             if (candidatePos.equals(nozzlePos)) {

@@ -20,8 +20,8 @@ public class AnimatedBreezeChamber extends AnimatedKinetics {
         matrixStack.mulPose(Axis.XP.rotationDegrees(-15.5f));
         matrixStack.mulPose(Axis.YP.rotationDegrees(22.5f));
         blockElement(CCBBlocks.BREEZE_CHAMBER_BLOCK.getDefaultState()).atLocal(0, 1, 0).scale(SCALE).render(graphics);
-        blockElement(CCBPartialModels.BREEZE_CHAMBER_WIND).rotateBlock(0, getCurrentAngle() * 4, 0).atLocal(0, 9 / 8.0d, 0).scale(SCALE).render(graphics);
-        blockElement(CCBPartialModels.BREEZE_GALE).rotateBlock(0, 180, 0).atLocal(0, 9 / 8.0d, 0).scale(SCALE).render(graphics);
+        blockElement(CCBPartialModels.BREEZE_CHAMBER_WIND).rotateBlock(0, getCurrentAngle() * 4, 0).atLocal(0, 1.125, 0).scale(SCALE).render(graphics);
+        blockElement(CCBPartialModels.BREEZE_GALE).rotateBlock(0, 180, 0).atLocal(0, 1.125, 0).scale(SCALE).render(graphics);
 
         matrixStack.popPose();
     }

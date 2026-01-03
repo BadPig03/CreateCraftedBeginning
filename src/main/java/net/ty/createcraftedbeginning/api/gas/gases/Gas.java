@@ -21,7 +21,6 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.GasBuilder;
 import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 import net.ty.createcraftedbeginning.registry.CCBRegistries;
 import org.jetbrains.annotations.NotNull;

@@ -24,8 +24,9 @@ import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
-import net.ty.createcraftedbeginning.api.gas.GasFilteringRenderer;
+import net.ty.createcraftedbeginning.api.gas.gases.GasFilteringRenderer;
 import net.ty.createcraftedbeginning.api.outliner.CCBOutliner;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightChestplateFirstPersonRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightChestplateLayer;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightLeggingsLayer;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonItemRenderer;
@@ -92,12 +93,16 @@ public class CCBClientEvents {
     }
 
     public static void onTick(boolean isPreEvent) {
-        if (Minecraft.getInstance().level == null || Minecraft.getInstance().player == null || isPreEvent) {
+        if (Minecraft.getInstance().level == null || Minecraft.getInstance().player == null) {
+            return;
+        }
+        if (isPreEvent) {
             return;
         }
 
         GasFilteringRenderer.tick();
         AirtightHandheldDrillBlockRender.tick();
+        AirtightChestplateFirstPersonRenderer.tick();
 
         CreateCraftedBeginningClient.AIRTIGHT_CANNON_RENDER_HANDLER.tick();
         CreateCraftedBeginningClient.AIRTIGHT_HAND_DRILL_RENDER_HANDLER.tick();

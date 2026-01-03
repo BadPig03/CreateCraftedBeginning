@@ -16,6 +16,7 @@ import net.ty.createcraftedbeginning.ponder.scenes.crates.SturdyCrateScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gascontainers.AirtightTankScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gascontainers.CreativeAirtightTankScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.AirtightHatchScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.AirtightReactorKettleScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.GasInjectionChamberScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.PortableGasInterfaceScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.ResidueOutletScenes;
@@ -54,10 +55,10 @@ public class CCBPonderScenes {
         entryHelper.forComponents(CCBBlocks.RESIDUE_OUTLET_BLOCK).addStoryBoard("residue_outlet_expelling_residue_story_board", ResidueOutletScenes::generatingResidue, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
         entryHelper.forComponents(CCBBlocks.TESLA_TURBINE_BLOCK).addStoryBoard("tesla_turbine_setting_up_story_board", TeslaTurbineScenes::setting_up, CCBPonderTags.GAS_MANIPULATORS_TAG_ID, AllCreatePonderTags.KINETIC_SOURCES).addStoryBoard("tesla_turbine_generating_rotational_force_story_board", TeslaTurbineScenes::generating_rotational_force, CCBPonderTags.GAS_MANIPULATORS_TAG_ID, AllCreatePonderTags.KINETIC_SOURCES);
         entryHelper.forComponents(CCBBlocks.TESLA_TURBINE_NOZZLE_BLOCK).addStoryBoard("tesla_turbine_setting_up_story_board", TeslaTurbineScenes::setting_up, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
+        entryHelper.forComponents(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK).addStoryBoard("airtight_reactor_kettle_placement_story_board", AirtightReactorKettleScenes::placement, CCBPonderTags.GAS_MANIPULATORS_TAG_ID).addStoryBoard("airtight_reactor_kettle_processing_story_board", AirtightReactorKettleScenes::processing, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
         entryHelper.forComponents(CCBBlocks.PORTABLE_GAS_INTERFACE_BLOCK).addStoryBoard("portable_gas_interface_transfer_story_board", PortableGasInterfaceScenes::transfer, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
         entryHelper.forComponents(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK).addStoryBoard("gas_injection_chamber_gas_injection_story_board", GasInjectionChamberScenes::gasInjection, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_HATCH_BLOCK).addStoryBoard("airtight_hatch_transfer_story_board", AirtightHatchScenes::transfer, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
-
         entryHelper.forComponents(CCBBlocks.AIR_VENT_BLOCK).addStoryBoard("air_vent_placement_story_board", AirVentScenes::placement);
 
         /*entryHelper.forComponents(CCBBlocks.PNEUMATIC_ENGINE_BLOCK).addStoryBoard("crates_story_board", PneumaticEngineScenes::scene, CCBPonderTags.KINETIC_SOURCES_TAG_ID, CCBPonderTags.GAS_MANIPULATORS_TAG_ID, AllCreatePonderTags.KINETIC_SOURCES).addStoryBoard("crates_story_board", PneumaticEngineScenes::limitation, CCBPonderTags.KINETIC_SOURCES_TAG_ID, CCBPonderTags.GAS_MANIPULATORS_TAG_ID, AllCreatePonderTags.KINETIC_SOURCES);

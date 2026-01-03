@@ -6,8 +6,8 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.entity.projectile.windcharge.AbstractWindCharge;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import org.jetbrains.annotations.NotNull;
 
 @OnlyIn(Dist.CLIENT)

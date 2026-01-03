@@ -7,6 +7,7 @@ import com.simibubi.create.foundation.item.render.PartialItemModelRenderer;
 import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -21,9 +22,10 @@ import net.neoforged.neoforge.client.IItemDecorator;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
 import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterSupplierUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.weatherflares.WeatherFlareSupplierUtils;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 import org.jetbrains.annotations.NotNull;
@@ -46,6 +48,12 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
             return false;
         }
 
+        ItemStack flareItem = WeatherFlareSupplierUtils.getFirstFlare(player);
+        if (!flareItem.isEmpty()) {
+            renderItem(guiGraphics, xOffset, yOffset, flareItem);
+            return false;
+        }
+
         if (GasCanisterSupplierUtils.noUsableGasAvailable(player)) {
             return false;
         }
@@ -60,14 +68,18 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
             return false;
         }
 
+        renderItem(guiGraphics, xOffset, yOffset, cannonHandler.getRenderIcon(level));
+        return false;
+    };
+
+    private static void renderItem(@NotNull GuiGraphics guiGraphics, int xOffset, int yOffset, ItemStack icon) {
         PoseStack poseStack = guiGraphics.pose();
         poseStack.pushPose();
         poseStack.translate(xOffset, yOffset + 8, 100);
         poseStack.scale(0.5f, 0.5f, 0.5f);
-        guiGraphics.renderItem(cannonHandler.getRenderIcon(level), 0, 0);
+        guiGraphics.renderItem(icon, 0, 0);
         poseStack.popPose();
-        return false;
-    };
+    }
 
     @Override
     protected void render(ItemStack cannon, @NotNull CustomRenderedItemModel model, @NotNull PartialItemModelRenderer renderer, ItemDisplayContext transformType, @NotNull PoseStack ms, MultiBufferSource buffer, int light, int overlay) {

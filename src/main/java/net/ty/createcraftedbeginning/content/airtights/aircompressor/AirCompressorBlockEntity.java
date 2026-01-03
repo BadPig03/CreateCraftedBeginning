@@ -2,13 +2,17 @@ package net.ty.createcraftedbeginning.content.airtights.aircompressor;
 
 import com.mojang.serialization.Codec;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
+import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
+import com.simibubi.create.content.kinetics.base.IRotate.StressImpact;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
+import com.simibubi.create.infrastructure.config.AllConfigs;
 import net.createmod.catnip.lang.Lang;
 import net.createmod.catnip.lang.LangBuilder;
 import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup.Provider;
@@ -23,11 +27,11 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.GasAction;
-import net.ty.createcraftedbeginning.api.gas.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
+import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatstates.IOverheatState;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatstates.MeltdownOverheatState;
@@ -35,12 +39,14 @@ import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatsta
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
+import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class AirCompressorBlockEntity extends KineticBlockEntity implements IHaveGoggleInformation {
+public class AirCompressorBlockEntity extends KineticBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation {
+    private static final int SYNC_RATE = 4;
     private static final int LAZY_TICK_RATE = 5;
     private static final int PRESSURIZATION_RATIO = 10;
     private static final int SLOW_SPEED_HEAT = 1;
@@ -59,6 +65,8 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     private CoolantEfficiency coolantEfficiency = CoolantEfficiency.NONE;
     private IOverheatState overheatState = OverheatManager.NORMAL;
     private int ponderLevelCounter;
+    private int syncCooldown;
+    private boolean queuedSync;
 
     public AirCompressorBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -111,7 +119,7 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     }
 
     private boolean isNotFastEnough() {
-        return Mth.abs(getSpeed()) < SpeedLevel.MEDIUM.getSpeedValue();
+        return Mth.abs(getTheoreticalSpeed()) < SpeedLevel.MEDIUM.getSpeedValue();
     }
 
     private boolean isOutputFull() {
@@ -231,6 +239,18 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         invalidateCapabilities();
     }
 
+    @Override
+    public void sendData() {
+        if (syncCooldown > 0) {
+            queuedSync = true;
+            return;
+        }
+
+        super.sendData();
+        queuedSync = false;
+        syncCooldown = SYNC_RATE;
+    }
+
     public IOverheatState getOverheatState() {
         return overheatState;
     }
@@ -247,12 +267,15 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     @Override
     public void tick() {
         super.tick();
-        if (level == null) {
-            return;
+        if (syncCooldown > 0) {
+            syncCooldown--;
+            if (syncCooldown == 0 && queuedSync) {
+                sendData();
+            }
         }
 
         int nextOverheatThreshold = getNextOverheatThreshold();
-        if (level.isClientSide && level instanceof PonderLevel ponderLevel) {
+        if (level != null && level.isClientSide && level instanceof PonderLevel ponderLevel) {
             ponderLevelCounter = (ponderLevelCounter + 1) % nextOverheatThreshold;
             overheatState.spawnParticlesInPonderLevel(ponderLevel, worldPosition, ponderLevelCounter);
         }
@@ -268,6 +291,19 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
             decreaseHeat();
             overheatTime = nextOverheatThreshold / 2;
         }
+    }
+
+    @Override
+    public void onSpeedChanged(float previousSpeed) {
+        super.onSpeedChanged(previousSpeed);
+        if (level == null || level.isClientSide && !isVirtual()) {
+            return;
+        }
+        if (Mth.abs(speed) < SpeedLevel.MEDIUM.getSpeedValue()) {
+            return;
+        }
+
+        advancementBehaviour.awardPlayer(CCBAdvancements.UNDER_IMMENSE_PRESSURE);
     }
 
     @Override
@@ -305,24 +341,39 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         long maxCapacity = getMaxCapacity();
         inputTankBehaviour = new SmartGasTankBehaviour(SmartGasTankBehaviour.INPUT, this, 1, maxCapacity, false);
         outputTankBehaviour = new SmartGasTankBehaviour(SmartGasTankBehaviour.OUTPUT, this, 1, maxCapacity, false).forbidInsertion();
-        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.UNDER_IMMENSE_PRESSURE, CCBAdvancements.SO_CLOSE);
         behaviours.add(inputTankBehaviour);
         behaviours.add(outputTankBehaviour);
+
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.UNDER_IMMENSE_PRESSURE, CCBAdvancements.SO_CLOSE);
         behaviours.add(advancementBehaviour);
         super.addBehaviours(behaviours);
     }
 
     @Override
-    public void onSpeedChanged(float previousSpeed) {
-        super.onSpeedChanged(previousSpeed);
-        if (level == null || level.isClientSide && !isVirtual()) {
-            return;
+    public boolean addToTooltip(@NotNull List<Component> tooltip, boolean isPlayerSneaking) {
+        boolean added = false;
+        if (isInputGasInvalid()) {
+            CCBLang.translate("gui.goggles.invalid_ingredient").style(ChatFormatting.GOLD).forGoggles(tooltip);
+            CCBLang.addToGoggles(tooltip, "gui.goggles.air_compressor.invalid_gas", inputTankBehaviour.getPrimaryHandler().getGasStack().getHoverName());
+            added = true;
         }
-        if (!(Mth.abs(speed) >= SpeedLevel.MEDIUM.getSpeedValue())) {
-            return;
+        if (overStressed && AllConfigs.client().enableOverstressedTooltip.get()) {
+            if (added) {
+                tooltip.add(CommonComponents.EMPTY);
+            }
+            CCBLang.translate("gui.goggles.overstressed").style(ChatFormatting.GOLD).forGoggles(tooltip);
+            CCBLang.addToGoggles(tooltip, "gui.goggles.network_overstressed");
+            return true;
         }
-
-        advancementBehaviour.awardPlayer(CCBAdvancements.UNDER_IMMENSE_PRESSURE);
+        if (!isSpeedRequirementFulfilled() && getSpeed() != 0) {
+            if (added) {
+                tooltip.add(CommonComponents.EMPTY);
+            }
+            CCBLang.translate("gui.goggles.speed_requirement").style(ChatFormatting.GOLD).forGoggles(tooltip);
+            CCBLang.addToGoggles(tooltip, "gui.goggles.not_fast_enough", I18n.get(CCBBlocks.AIR_COMPRESSOR_BLOCK.getDefaultState().getBlock().getDescriptionId()));
+            added = true;
+        }
+        return added;
     }
 
     @Override
@@ -331,54 +382,40 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         CCBLang.translate("gui.goggles.air_compressor.overheat_state").style(ChatFormatting.GRAY).forGoggles(tooltip);
         CCBLang.translate(overheatState.getTranslationKey()).style(overheatState.getDisplayColor()).forGoggles(tooltip, 1);
 
-        tooltip.add(CommonComponents.EMPTY);
-        GasStack inputGasStack = inputTankBehaviour.getPrimaryHandler().getGasStack();
-        GasStack outputGasStack = outputTankBehaviour.getPrimaryHandler().getGasStack();
-        long maxCapacity = getMaxCapacity();
-        LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
-        CCBLang.translate("gui.goggles.air_compressor.input_capacity").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        if (inputGasStack.isEmpty()) {
-            CCBLang.gasName(GasStack.EMPTY).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-            CCBLang.number(maxCapacity).add(mb).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
-        }
-        else {
-            CCBLang.gasName(inputGasStack).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-            CCBLang.number(inputGasStack.getAmount()).add(mb).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(maxCapacity).add(mb).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
-        }
+        if (isPlayerSneaking) {
+            tooltip.add(CommonComponents.EMPTY);
+            GasStack inputGasStack = inputTankBehaviour.getPrimaryHandler().getGasStack();
+            GasStack outputGasStack = outputTankBehaviour.getPrimaryHandler().getGasStack();
+            long maxCapacity = getMaxCapacity();
+            LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
+            CCBLang.translate("gui.goggles.air_compressor.input_capacity").style(ChatFormatting.GRAY).forGoggles(tooltip);
+            if (inputGasStack.isEmpty()) {
+                CCBLang.gasName(GasStack.EMPTY).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+                CCBLang.number(maxCapacity).add(mb).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
+            }
+            else {
+                CCBLang.gasName(inputGasStack).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+                CCBLang.number(inputGasStack.getAmount()).add(mb).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(maxCapacity).add(mb).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+            }
 
-        tooltip.add(CommonComponents.EMPTY);
-        CCBLang.translate("gui.goggles.air_compressor.output_capacity").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        if (outputGasStack.isEmpty()) {
-            CCBLang.gasName(GasStack.EMPTY).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-            CCBLang.number(maxCapacity).add(mb).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);}
-        else {
-            CCBLang.gasName(outputGasStack).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-            CCBLang.number(outputGasStack.getAmount()).add(mb).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(maxCapacity).add(mb).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+            tooltip.add(CommonComponents.EMPTY);
+            CCBLang.translate("gui.goggles.air_compressor.output_capacity").style(ChatFormatting.GRAY).forGoggles(tooltip);
+            if (outputGasStack.isEmpty()) {
+                CCBLang.gasName(GasStack.EMPTY).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+                CCBLang.number(maxCapacity).add(mb).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
+            }
+            else {
+                CCBLang.gasName(outputGasStack).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+                CCBLang.number(outputGasStack.getAmount()).add(mb).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(maxCapacity).add(mb).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+            }
         }
-
-        tooltip.add(CommonComponents.EMPTY);
-        CCBLang.translate("gui.goggles.stress_impact").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        CCBLang.number(calculateStressApplied() * Mth.abs(getSpeed())).translate("gui.goggles.unit.stress").style(ChatFormatting.AQUA).space().add(CCBLang.translate("gui.goggles.at_current_speed").style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
-
-        boolean outputFailed = isOutputFull() || isOutputMismatched();
-        boolean invalidInputGas = isInputGasInvalid();
-        boolean notFastEnough = getSpeed() != 0 && isNotFastEnough();
-        boolean warning = outputFailed || invalidInputGas || notFastEnough;
-        if (!warning) {
+        if (!StressImpact.isEnabled()) {
             return true;
         }
 
         tooltip.add(CommonComponents.EMPTY);
-        CCBLang.translate("gui.goggles.warning").style(ChatFormatting.GOLD).forGoggles(tooltip);
-        if (notFastEnough) {
-            CCBLang.addToGoggles(tooltip, "gui.goggles.air_compressor.not_fast_enough");
-        }
-        if (invalidInputGas) {
-            CCBLang.addToGoggles(tooltip, "gui.goggles.air_compressor.invalid_gas", inputGasStack.getHoverName());
-        }
-        if (outputFailed) {
-            CCBLang.addToGoggles(tooltip, "gui.goggles.air_compressor.output_failed");
-        }
+        CCBLang.translate("gui.goggles.stress_impact").style(ChatFormatting.GRAY).forGoggles(tooltip);
+        CCBLang.number(calculateStressApplied() * Mth.abs(getTheoreticalSpeed())).translate("gui.goggles.unit.stress").style(ChatFormatting.AQUA).space().add(CCBLang.translate("gui.goggles.at_current_speed").style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
         return true;
     }
 

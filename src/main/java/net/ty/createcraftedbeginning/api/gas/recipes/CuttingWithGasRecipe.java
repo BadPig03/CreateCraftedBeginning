@@ -9,7 +9,7 @@ import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IAssemblyRecipeWithGas;
+import net.ty.createcraftedbeginning.api.gas.gases.IAssemblyRecipeWithGas;
 import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasSubCategory.AssemblyCutting;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 import org.jetbrains.annotations.NotNull;

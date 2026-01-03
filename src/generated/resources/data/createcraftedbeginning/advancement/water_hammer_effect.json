@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:take_a_deep_breathe",
+  "parent": "createcraftedbeginning:take_a_deep_breath",
   "criteria": {
     "0": {
       "conditions": {

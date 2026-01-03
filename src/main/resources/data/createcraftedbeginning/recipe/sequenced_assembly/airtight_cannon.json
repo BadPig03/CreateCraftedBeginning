@@ -1,0 +1,102 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {
+    "item": "create:potato_cannon"
+  },
+  "loops": 1,
+  "results": [
+    {
+      "chance": 75,
+      "id": "createcraftedbeginning:airtight_cannon"
+    },
+    {
+      "chance": 25,
+      "id": "createcraftedbeginning:breeze_core"
+    }
+  ],
+  "sequence": [
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_cannon"
+        },
+        {
+          "item": "createcraftedbeginning:breeze_core"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_cannon"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_cannon"
+        },
+        {
+          "item": "createcraftedbeginning:airtight_sheet_block"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_cannon"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_cannon"
+        },
+        {
+          "item": "createcraftedbeginning:gas_canister"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_cannon"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_cannon"
+        },
+        {
+          "item": "createcraftedbeginning:airtight_tank"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_cannon"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_cannon"
+        },
+        {
+          "item": "create:precision_mechanism"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_cannon"
+        }
+      ]
+    }
+  ],
+  "transitional_item": {
+    "id": "createcraftedbeginning:incomplete_airtight_cannon"
+  }
+}

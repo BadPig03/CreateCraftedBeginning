@@ -30,7 +30,6 @@ public final class GasCanisterClientUtils {
     public static boolean isBarVisible() {
         Player player = CCBDistExecutor.getClientPlayer();
         return player != null && !GasCanisterSupplierUtils.getFirstNonEmptyGasContent(player).isEmpty();
-
     }
 
     /**
@@ -50,7 +49,6 @@ public final class GasCanisterClientUtils {
     public static int getBarColor() {
         Player player = CCBDistExecutor.getClientPlayer();
         return player == null ? 0 : Color.mixColors(GasCanisterUtils.COLOR_CYAN, GasCanisterUtils.COLOR_WHITE, GasCanisterQueryUtils.getTotalGasRatio(player, GasCanisterSupplierUtils.getFirstNonEmptyGasContent(player).getGas()));
-
     }
 
     /**
@@ -70,6 +68,5 @@ public final class GasCanisterClientUtils {
     public static int getBarWidth() {
         Player player = CCBDistExecutor.getClientPlayer();
         return player == null ? 0 : Math.round(13 * GasCanisterQueryUtils.getTotalGasRatio(player, GasCanisterSupplierUtils.getFirstNonEmptyGasContent(player).getGas()));
-
     }
 }

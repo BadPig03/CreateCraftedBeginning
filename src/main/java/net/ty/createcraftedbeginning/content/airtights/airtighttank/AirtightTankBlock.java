@@ -16,8 +16,8 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.GasConnectivityHandler;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IAirtightComponent;
+import net.ty.createcraftedbeginning.api.gas.gases.GasConnectivityHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.IAirtightComponent;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.NotNull;
 

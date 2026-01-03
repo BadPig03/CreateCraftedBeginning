@@ -2,7 +2,7 @@
   "type": "createcraftedbeginning:energization",
   "ingredients": [
     {
-      "type": "createcraftedbeginning:gas_stack",
+      "type": "createcraftedbeginning:single",
       "amount": 1,
       "gas": "createcraftedbeginning:pressurized_ethereal_air"
     }

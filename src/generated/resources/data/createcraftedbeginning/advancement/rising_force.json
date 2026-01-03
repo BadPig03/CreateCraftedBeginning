@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:under_immense_pressure",
+  "parent": "createcraftedbeginning:industrial_autoclave",
   "criteria": {
     "0": {
       "trigger": "createcraftedbeginning:rising_force_builtin"

@@ -20,6 +20,8 @@ public enum CCBGUITextures implements ScreenElement, TextureSheetSegment {
     JEI_COOLING_BACKGROUND("jei/widgets", 28, 178, 16, 16),
     JEI_WIND_CHARGING("jei/widgets", 44, 178, 16, 16),
     JEI_WIND_CHARGING_BACKGROUND("jei/widgets", 60, 178, 16, 16),
+    JEI_HEAT_BAR("jei/widgets", 0, 201, 169, 19),
+	JEI_NO_HEAT_BAR("jei/widgets", 0, 221, 169, 19),
 
     HANDHELD_DRILL("handheld_drill", 0, 0, 215, 138),
     GAS_CANISTER_PACK("gas_canister_pack", 0, 0, 196, 144),

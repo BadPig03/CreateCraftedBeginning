@@ -2,9 +2,9 @@ package net.ty.createcraftedbeginning.mixin;
 
 import com.simibubi.create.content.contraptions.MountedStorageManager;
 import com.simibubi.create.content.contraptions.minecart.TrainCargoManager;
-import net.ty.createcraftedbeginning.api.gas.GasAction;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.MountedGasStorageWrapper;
+import net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorageWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

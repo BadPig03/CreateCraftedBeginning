@@ -179,7 +179,7 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
                 NonNullList<Ingredient> sequencedIngredients = sequencedRecipe.getRecipe().getIngredients();
                 sequencedIngredients.subList(1, sequencedIngredients.size()).forEach(ingredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(ingredient));
                 sequencedRecipe.getRecipe().getFluidIngredients().forEach(fluidIngredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(NeoForgeTypes.FLUID_STACK, Arrays.asList(fluidIngredient.getFluids())));
-                sequencedRecipe.getRecipe().getGasIngredients().forEach(gasIngredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(JEIPlugin.GAS_STACK, gasIngredient.getMatchingGasStacks()));
+                sequencedRecipe.getRecipe().getGasIngredients().forEach(gasIngredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(JEIPlugin.GAS_STACK, Arrays.asList(gasIngredient.getGases())));
             });
         }
     }

@@ -3,7 +3,7 @@ package net.ty.createcraftedbeginning.init;
 import com.simibubi.create.api.registry.SimpleRegistry;
 import net.minecraft.world.level.block.Block;
 import net.ty.createcraftedbeginning.api.gas.extracthandlers.AirtightPipeExtractHandler;
-import net.ty.createcraftedbeginning.api.gas.interfaces.GasOpenPipeExtractHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.GasOpenPipeExtractHandler;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 public class CCBOpenPipeExtractHandlers {

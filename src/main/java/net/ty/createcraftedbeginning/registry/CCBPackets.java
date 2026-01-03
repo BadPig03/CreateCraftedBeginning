@@ -9,7 +9,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.MountedStorageSyncPacketWithGas;
+import net.ty.createcraftedbeginning.api.gas.gases.MountedStorageSyncPacketWithGas;
 import net.ty.createcraftedbeginning.compat.jei.airtights.AirtightHandheldDrillGhostItemSubmitPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightBoostElytraPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonPacket;
@@ -17,6 +17,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.Airtigh
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillInventoryPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillScreenPacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlayPacket;
+import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackUUIDPacket;
 
 import java.util.Arrays;
@@ -32,6 +33,7 @@ public enum CCBPackets implements PacketTypeProvider {
 
     GAS_CANISTER_OVERLAY(GasCanisterOverlayPacket.class, GasCanisterOverlayPacket.STREAM_CODEC),
     GAS_CANISTER_PACK_UUID(GasCanisterPackUUIDPacket.class, GasCanisterPackUUIDPacket.STREAM_CODEC),
+    GAS_CANISTER_PACK_SYNC(GasCanisterPackSyncPacket.class, GasCanisterPackSyncPacket.STREAM_CODEC),
 
     MOUNTED_STORAGE_SYNC_WITH_GAS(MountedStorageSyncPacketWithGas.class, MountedStorageSyncPacketWithGas.STREAM_CODEC);
 

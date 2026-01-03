@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.api.gas.recipes;
 import com.google.common.base.Joiner;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;
-import com.simibubi.create.content.processing.recipe.HeatCondition;
 import com.simibubi.create.content.processing.recipe.ProcessingOutput;
 import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
 import net.minecraft.core.HolderLookup.Provider;
@@ -20,6 +19,8 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.SizedGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.reactorkettle.TemperatureCondition;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -37,10 +38,10 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
     protected NonNullList<ProcessingOutput> results;
     protected NonNullList<SizedFluidIngredient> fluidIngredients;
     protected NonNullList<FluidStack> fluidResults;
-    protected NonNullList<GasIngredient> gasIngredients;
+    protected NonNullList<SizedGasIngredient> gasIngredients;
     protected NonNullList<GasStack> gasResults;
     protected int processingDuration;
-    protected HeatCondition requiredHeat;
+    protected TemperatureCondition temperatureCondition;
     private Supplier<ItemStack> forcedResult;
 
     public ProcessingWithGasRecipe(@NotNull IRecipeTypeInfo typeInfo, @NotNull P params) {
@@ -53,7 +54,7 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
         fluidResults = params.fluidResults;
         gasResults = params.gasResults;
         processingDuration = params.processingDuration;
-        requiredHeat = params.requiredHeat;
+        temperatureCondition = params.temperatureCondition;
         type = typeInfo.getType();
         serializer = typeInfo.getSerializer();
         forcedResult = null;
@@ -78,45 +79,38 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
         List<String> errors = new ArrayList<>();
         int ingredientCount = ingredients.size();
         int outputCount = results.size();
-
         if (ingredientCount > getMaxInputCount()) {
             errors.add("Recipe has more item inputs (" + ingredientCount + ") than supported (" + getMaxInputCount() + ").");
         }
-
         if (outputCount > getMaxOutputCount()) {
             errors.add("Recipe has more item outputs (" + outputCount + ") than supported (" + getMaxOutputCount() + ").");
         }
 
         ingredientCount = fluidIngredients.size();
         outputCount = fluidResults.size();
-
         if (ingredientCount > getMaxFluidInputCount()) {
             errors.add("Recipe has more fluid inputs (" + ingredientCount + ") than supported (" + getMaxFluidInputCount() + ").");
         }
-
         if (outputCount > getMaxFluidOutputCount()) {
             errors.add("Recipe has more fluid outputs (" + outputCount + ") than supported (" + getMaxFluidOutputCount() + ").");
         }
 
         ingredientCount = gasIngredients.size();
         outputCount = gasResults.size();
-
         if (ingredientCount > getMaxGasInputCount()) {
-            errors.add("Recipe has more fluid inputs (" + ingredientCount + ") than supported (" + getMaxGasInputCount() + ").");
+            errors.add("Recipe has more gas inputs (" + ingredientCount + ") than supported (" + getMaxGasInputCount() + ").");
         }
-
         if (outputCount > getMaxGasOutputCount()) {
-            errors.add("Recipe has more fluid outputs (" + outputCount + ") than supported (" + getMaxGasOutputCount() + ").");
+            errors.add("Recipe has more gas outputs (" + outputCount + ") than supported (" + getMaxGasOutputCount() + ").");
         }
 
         if (processingDuration > 0 && !canSpecifyDuration()) {
             errors.add("Recipe specified a duration. Durations have no impact on this type of recipe.");
         }
 
-        if (requiredHeat != HeatCondition.NONE && !canRequireHeat()) {
-            errors.add("Recipe specified a heat condition. Heat conditions have no impact on this type of recipe.");
+        if (temperatureCondition != TemperatureCondition.NONE && !requireTemperatureCondition()) {
+            errors.add("Recipe specified a temperature condition. Temperature conditions have no impact on this type of recipe.");
         }
-
         return errors;
     }
 
@@ -124,7 +118,7 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
 
     protected abstract int getMaxOutputCount();
 
-    protected boolean canRequireHeat() {
+    protected boolean requireTemperatureCondition() {
         return false;
     }
 
@@ -156,7 +150,7 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
         return fluidIngredients;
     }
 
-    public NonNullList<GasIngredient> getGasIngredients() {
+    public NonNullList<SizedGasIngredient> getGasIngredients() {
         return gasIngredients;
     }
 
@@ -200,8 +194,8 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
         return processingDuration;
     }
 
-    public HeatCondition getRequiredHeat() {
-        return requiredHeat;
+    public TemperatureCondition getTemperatureCondition() {
+        return temperatureCondition;
     }
 
     @Override

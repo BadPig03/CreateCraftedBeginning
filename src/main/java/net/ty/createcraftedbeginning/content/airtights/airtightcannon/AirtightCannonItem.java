@@ -28,6 +28,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
 import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterClientUtils;
 import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterSupplierUtils;
+import net.ty.createcraftedbeginning.api.gas.weatherflares.WeatherFlareSupplierUtils;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -123,6 +124,12 @@ public class AirtightCannonItem extends ProjectileWeaponItem implements CustomAr
 
         float chargedRatio = AirtightCannonUtils.getChargedRatio(cannon, player, MAX_CHARGE_TIME - timeCharged);
         if (chargedRatio == -1) {
+            return;
+        }
+
+        ItemStack flareItem = WeatherFlareSupplierUtils.getFirstFlare(player);
+        if (!flareItem.isEmpty()) {
+            AirtightCannonUtils.fireFlares(level, player, flareItem, chargedRatio);
             return;
         }
 

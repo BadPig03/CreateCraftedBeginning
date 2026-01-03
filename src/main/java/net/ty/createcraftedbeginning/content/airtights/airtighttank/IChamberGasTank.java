@@ -1,7 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighttank;
 
-import net.ty.createcraftedbeginning.api.gas.GasTank;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.GasTank;
+import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
 
 public interface IChamberGasTank {
     GasTank getTankInventory();

@@ -4,7 +4,6 @@ import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.simibubi.create.content.processing.recipe.HeatCondition;
 import com.simibubi.create.content.processing.recipe.ProcessingOutput;
 import com.simibubi.create.foundation.codec.CreateCodecs;
 import net.createmod.catnip.codecs.stream.CatnipStreamCodecBuilders;
@@ -16,6 +15,8 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.SizedGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.reactorkettle.TemperatureCondition;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,10 +33,10 @@ public class ProcessingWithGasRecipeParams {
     protected NonNullList<ProcessingOutput> results;
     protected NonNullList<SizedFluidIngredient> fluidIngredients;
     protected NonNullList<FluidStack> fluidResults;
-    protected NonNullList<GasIngredient> gasIngredients;
+    protected NonNullList<SizedGasIngredient> gasIngredients;
     protected NonNullList<GasStack> gasResults;
     protected int processingDuration;
-    protected HeatCondition requiredHeat;
+    protected TemperatureCondition temperatureCondition;
 
     protected ProcessingWithGasRecipeParams() {
         ingredients = NonNullList.create();
@@ -45,18 +46,18 @@ public class ProcessingWithGasRecipeParams {
         gasIngredients = NonNullList.create();
         gasResults = NonNullList.create();
         processingDuration = 0;
-        requiredHeat = HeatCondition.NONE;
+        temperatureCondition = TemperatureCondition.NONE;
     }
 
     @SuppressWarnings({"removal", "UnstableApiUsage"})
     @Contract("_ -> new")
     protected static <P extends ProcessingWithGasRecipeParams> @NotNull MapCodec<P> codec(Supplier<P> factory) {
-        return RecordCodecBuilder.mapCodec(instance -> instance.group(Codec.either(Codec.either(CreateCodecs.SIZED_FLUID_INGREDIENT, GasIngredient.CODEC), Ingredient.CODEC).listOf().fieldOf("ingredients").forGetter(ProcessingWithGasRecipeParams::ingredients), Codec.either(Codec.either(FluidStack.CODEC, GasStack.CODEC), ProcessingOutput.CODEC).listOf().fieldOf("results").forGetter(ProcessingWithGasRecipeParams::results), Codec.INT.optionalFieldOf("processing_time", 0).forGetter(ProcessingWithGasRecipeParams::processingDuration), HeatCondition.CODEC.optionalFieldOf("heat_requirement", HeatCondition.NONE).forGetter(ProcessingWithGasRecipeParams::requiredHeat)).apply(instance, (ingredients, results, processingDuration, requiredHeat) -> {
+        return RecordCodecBuilder.mapCodec(instance -> instance.group(Codec.either(Codec.either(CreateCodecs.SIZED_FLUID_INGREDIENT, SizedGasIngredient.SIZED_GAS_INGREDIENT), Ingredient.CODEC).listOf().fieldOf("ingredients").forGetter(ProcessingWithGasRecipeParams::ingredients), Codec.either(Codec.either(FluidStack.CODEC, GasStack.CODEC), ProcessingOutput.CODEC).listOf().fieldOf("results").forGetter(ProcessingWithGasRecipeParams::results), Codec.INT.optionalFieldOf("processing_time", 0).forGetter(ProcessingWithGasRecipeParams::processingDuration), TemperatureCondition.CODEC.optionalFieldOf("temperature", TemperatureCondition.NONE).forGetter(ProcessingWithGasRecipeParams::temperatureCondition)).apply(instance, (ingredients, results, processingDuration, temperatureCondition) -> {
             P params = factory.get();
             ingredients.forEach(either -> either.ifRight(params.ingredients::add).ifLeft(innerEither -> innerEither.ifLeft(params.fluidIngredients::add).ifRight(params.gasIngredients::add)));
             results.forEach(either -> either.ifRight(params.results::add).ifLeft(innerEither -> innerEither.ifLeft(params.fluidResults::add).ifRight(params.gasResults::add)));
             params.processingDuration = processingDuration;
-            params.requiredHeat = requiredHeat;
+            params.temperatureCondition = temperatureCondition;
             return params;
         }));
     }
@@ -70,8 +71,8 @@ public class ProcessingWithGasRecipeParams {
         });
     }
 
-    protected final @NotNull List<Either<Either<SizedFluidIngredient, GasIngredient>, Ingredient>> ingredients() {
-        List<Either<Either<SizedFluidIngredient, GasIngredient>, Ingredient>> ingredients = new ArrayList<>(this.ingredients.size() + gasIngredients.size() + fluidIngredients.size());
+    protected final @NotNull List<Either<Either<SizedFluidIngredient, SizedGasIngredient>, Ingredient>> ingredients() {
+        List<Either<Either<SizedFluidIngredient, SizedGasIngredient>, Ingredient>> ingredients = new ArrayList<>(this.ingredients.size() + gasIngredients.size() + fluidIngredients.size());
         this.ingredients.forEach(ingredient -> ingredients.add(Either.right(ingredient)));
         fluidIngredients.forEach(ingredient -> ingredients.add(Either.left(Either.left(ingredient))));
         gasIngredients.forEach(ingredient -> ingredients.add(Either.left(Either.right(ingredient))));
@@ -90,29 +91,29 @@ public class ProcessingWithGasRecipeParams {
         return processingDuration;
     }
 
-    protected final HeatCondition requiredHeat() {
-        return requiredHeat;
+    protected final TemperatureCondition temperatureCondition() {
+        return temperatureCondition;
     }
 
     protected void encode(RegistryFriendlyByteBuf buffer) {
         CatnipStreamCodecBuilders.nonNullList(Ingredient.CONTENTS_STREAM_CODEC).encode(buffer, ingredients);
-        CatnipStreamCodecBuilders.nonNullList(GasIngredient.STREAM_CODEC).encode(buffer, gasIngredients);
+        CatnipStreamCodecBuilders.nonNullList(SizedGasIngredient.STREAM_CODEC).encode(buffer, gasIngredients);
         CatnipStreamCodecBuilders.nonNullList(SizedFluidIngredient.STREAM_CODEC).encode(buffer, fluidIngredients);
         CatnipStreamCodecBuilders.nonNullList(ProcessingOutput.STREAM_CODEC).encode(buffer, results);
         CatnipStreamCodecBuilders.nonNullList(GasStack.STREAM_CODEC).encode(buffer, gasResults);
         CatnipStreamCodecBuilders.nonNullList(FluidStack.STREAM_CODEC).encode(buffer, fluidResults);
         ByteBufCodecs.VAR_INT.encode(buffer, processingDuration);
-        HeatCondition.STREAM_CODEC.encode(buffer, requiredHeat);
+        TemperatureCondition.STREAM_CODEC.encode(buffer, temperatureCondition);
     }
 
     protected void decode(RegistryFriendlyByteBuf buffer) {
         ingredients = CatnipStreamCodecBuilders.nonNullList(Ingredient.CONTENTS_STREAM_CODEC).decode(buffer);
-        gasIngredients = CatnipStreamCodecBuilders.nonNullList(GasIngredient.STREAM_CODEC).decode(buffer);
+        gasIngredients = CatnipStreamCodecBuilders.nonNullList(SizedGasIngredient.STREAM_CODEC).decode(buffer);
         fluidIngredients = CatnipStreamCodecBuilders.nonNullList(SizedFluidIngredient.STREAM_CODEC).decode(buffer);
         results = CatnipStreamCodecBuilders.nonNullList(ProcessingOutput.STREAM_CODEC).decode(buffer);
         gasResults = CatnipStreamCodecBuilders.nonNullList(GasStack.STREAM_CODEC).decode(buffer);
         fluidResults = CatnipStreamCodecBuilders.nonNullList(FluidStack.STREAM_CODEC).decode(buffer);
         processingDuration = ByteBufCodecs.VAR_INT.decode(buffer);
-        requiredHeat = HeatCondition.STREAM_CODEC.decode(buffer);
+        temperatureCondition = TemperatureCondition.STREAM_CODEC.decode(buffer);
     }
 }

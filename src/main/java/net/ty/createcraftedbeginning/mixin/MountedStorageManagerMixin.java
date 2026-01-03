@@ -22,11 +22,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.MountedGasStorage;
-import net.ty.createcraftedbeginning.api.gas.MountedGasStorageType;
-import net.ty.createcraftedbeginning.api.gas.MountedGasStorageWrapper;
-import net.ty.createcraftedbeginning.api.gas.MountedStorageSyncPacketWithGas;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IMountedStorageManagerWithGas;
+import net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorage;
+import net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorageType;
+import net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorageWrapper;
+import net.ty.createcraftedbeginning.api.gas.gases.MountedStorageSyncPacketWithGas;
+import net.ty.createcraftedbeginning.api.gas.gases.IMountedStorageManagerWithGas;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -174,7 +174,6 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
     public void handleSyncWithGas(MountedStorageSyncPacketWithGas packet, AbstractContraptionEntity entity) {
         MountedGasStorageWrapper gases = getGases();
         Map<SyncedMountedStorage, BlockPos> syncedStorages = new IdentityHashMap<>();
-
         try {
             if (gasesBuilder != null) {
                 gasesBuilder.putAll(gases.storages);
@@ -208,24 +207,23 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
                 }
             });
         }
-
         if (!gases.isEmpty()) {
             compoundTag.put("gases", gases);
         }
-
-        if (clientPacket && getGases().storages != null) {
-            Set<BlockPos> positions = Sets.union(getGases().storages.keySet(), getGases().storages.keySet());
-
-            ListTag list = new ListTag();
-            for (BlockPos pos : positions) {
-                CompoundTag tag = new CompoundTag();
-                tag.putInt("X", pos.getX());
-                tag.putInt("Y", pos.getY());
-                tag.putInt("Z", pos.getZ());
-                list.add(tag);
-            }
-            compoundTag.put("interactable_positions", list);
+        if (!clientPacket || getGases().storages == null) {
+            return;
         }
+
+        Set<BlockPos> positions = Sets.union(getGases().storages.keySet(), getGases().storages.keySet());
+        ListTag list = new ListTag();
+        for (BlockPos pos : positions) {
+            CompoundTag tag = new CompoundTag();
+            tag.putInt("X", pos.getX());
+            tag.putInt("Y", pos.getY());
+            tag.putInt("Z", pos.getZ());
+            list.add(tag);
+        }
+        compoundTag.put("interactable_positions", list);
     }
 
     @Inject(method = "read", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/MountedStorageManager;initialize()V", shift = Shift.BEFORE))

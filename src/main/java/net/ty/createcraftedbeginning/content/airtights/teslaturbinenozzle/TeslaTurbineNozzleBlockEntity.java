@@ -11,11 +11,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.api.gas.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock;
-import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.StructuralPosition;
+import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.TeslaTurbineStructuralPosition;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.NotNull;
@@ -83,12 +83,12 @@ public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements I
             return null;
         }
 
-        StructuralPosition structuralPosition = structuralState.getValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION);
-        if (StructuralPosition.isMid(structuralPosition)) {
+        TeslaTurbineStructuralPosition structuralPosition = structuralState.getValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION);
+        if (TeslaTurbineStructuralPosition.isMid(structuralPosition)) {
             return null;
         }
 
-        Set<Direction> directionsToCheck = StructuralPosition.getPossiblePosition(structuralPosition, structuralAxis);
+        Set<Direction> directionsToCheck = TeslaTurbineStructuralPosition.getPossiblePosition(structuralPosition, structuralAxis);
         for (Direction direction : directionsToCheck) {
             BlockPos candidatePos = structuralPos.relative(direction);
             if (candidatePos.equals(worldPosition)) {

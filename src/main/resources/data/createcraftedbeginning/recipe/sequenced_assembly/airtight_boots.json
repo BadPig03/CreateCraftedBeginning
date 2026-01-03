@@ -1,0 +1,102 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {
+    "item": "create:netherite_diving_boots"
+  },
+  "loops": 1,
+  "results": [
+    {
+      "chance": 75,
+      "id": "createcraftedbeginning:airtight_boots"
+    },
+    {
+      "chance": 25,
+      "id": "createcraftedbeginning:breeze_core"
+    }
+  ],
+  "sequence": [
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_boots"
+        },
+        {
+          "item": "createcraftedbeginning:breeze_core"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_boots"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_boots"
+        },
+        {
+          "item": "createcraftedbeginning:airtight_sheet_block"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_boots"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_boots"
+        },
+        {
+          "item": "createcraftedbeginning:gas_canister"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_boots"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_boots"
+        },
+        {
+          "item": "createcraftedbeginning:airtight_tank"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_boots"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_boots"
+        },
+        {
+          "item": "create:precision_mechanism"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_boots"
+        }
+      ]
+    }
+  ],
+  "transitional_item": {
+    "id": "createcraftedbeginning:incomplete_airtight_boots"
+  }
+}

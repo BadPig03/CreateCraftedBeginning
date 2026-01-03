@@ -1,0 +1,102 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {
+    "item": "minecraft:netherite_leggings"
+  },
+  "loops": 1,
+  "results": [
+    {
+      "chance": 75,
+      "id": "createcraftedbeginning:airtight_leggings"
+    },
+    {
+      "chance": 25,
+      "id": "createcraftedbeginning:breeze_core"
+    }
+  ],
+  "sequence": [
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_leggings"
+        },
+        {
+          "item": "createcraftedbeginning:breeze_core"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_leggings"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_leggings"
+        },
+        {
+          "item": "createcraftedbeginning:airtight_sheet_block"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_leggings"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_leggings"
+        },
+        {
+          "item": "createcraftedbeginning:gas_canister"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_leggings"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_leggings"
+        },
+        {
+          "item": "createcraftedbeginning:airtight_tank"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_leggings"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_leggings"
+        },
+        {
+          "item": "create:precision_mechanism"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_leggings"
+        }
+      ]
+    }
+  ],
+  "transitional_item": {
+    "id": "createcraftedbeginning:incomplete_airtight_leggings"
+  }
+}

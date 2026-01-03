@@ -50,7 +50,7 @@
           "item": "createcraftedbeginning:incomplete_breeze_core"
         },
         {
-          "type": "createcraftedbeginning:gas_stack",
+          "type": "createcraftedbeginning:single",
           "amount": 250,
           "gas": "createcraftedbeginning:energized_natural_air"
         }

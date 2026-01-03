@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.material.Fluid;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.GasTags;
+import net.ty.createcraftedbeginning.api.gas.gases.GasTags;
 import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 import org.jetbrains.annotations.NotNull;
 
@@ -119,6 +119,7 @@ public class CCBTags {
         CINDER_CASING_RAW_MATERIALS,
         CRATES,
         CRYING_OBSIDIAN(COMMON, "dusts/crying_obsidian"),
+        WEATHER_FLARE,
         ICE_CREAMS,
         ICE_CREAM_WITH_FLAVOR;
 

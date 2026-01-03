@@ -11,6 +11,22 @@
   ],
   "sequence": [
     {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_gas_canister_pack"
+        },
+        {
+          "tag": "c:ingots/zinc"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_gas_canister_pack"
+        }
+      ]
+    },
+    {
       "type": "create:pressing",
       "ingredients": [
         {
@@ -31,22 +47,6 @@
         }
       ],
       "processing_time": 100,
-      "results": [
-        {
-          "id": "createcraftedbeginning:incomplete_gas_canister_pack"
-        }
-      ]
-    },
-    {
-      "type": "create:deploying",
-      "ingredients": [
-        {
-          "item": "createcraftedbeginning:incomplete_gas_canister_pack"
-        },
-        {
-          "tag": "c:ingots/zinc"
-        }
-      ],
       "results": [
         {
           "id": "createcraftedbeginning:incomplete_gas_canister_pack"

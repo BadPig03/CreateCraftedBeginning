@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:wind_charger",
+  "parent": "createcraftedbeginning:the_skies_are_clearing_up_now",
   "criteria": {
     "0": {
       "trigger": "createcraftedbeginning:mini_tbm_builtin"

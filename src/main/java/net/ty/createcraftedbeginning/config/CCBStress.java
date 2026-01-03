@@ -26,12 +26,6 @@ public class CCBStress extends ConfigBase {
     protected final Map<ResourceLocation, ConfigValue<Double>> capacities = new HashMap<>();
     protected final Map<ResourceLocation, ConfigValue<Double>> impacts = new HashMap<>();
 
-    @SuppressWarnings("unused")
-    @Contract(pure = true)
-    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> setNoImpact() {
-        return setImpact(0);
-    }
-
     @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> setImpact(double value) {
         return builder -> {

@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.GasTransportBehaviour;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

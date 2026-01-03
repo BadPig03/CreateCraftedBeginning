@@ -7,7 +7,7 @@ import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.GasBuilder;
+import net.ty.createcraftedbeginning.api.gas.gases.GasBuilder;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasHolder;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBGasTags;

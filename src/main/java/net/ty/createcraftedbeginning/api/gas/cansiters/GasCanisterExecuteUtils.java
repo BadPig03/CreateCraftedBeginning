@@ -103,7 +103,6 @@ public class GasCanisterExecuteUtils {
 
         GasStack content = GasCanisterQueryUtils.getCanisterContent(canister);
         return filterGas != Gas.EMPTY_GAS_HOLDER.value() && !content.is(filterGas) ? 0 : changeCanisterContent(canister, changeAmount);
-
     }
 
     /**
@@ -206,7 +205,7 @@ public class GasCanisterExecuteUtils {
      * @return {@code true} if the gas was successfully consumed (or in special cases),
      * {@code false} if the player has insufficient gas after event processing
      * @see GasConsumptionEvent
-     * @see GasCanisterSupplierUtils#getAllGasSuppliers(Player)
+     * @see GasCanisterSupplierUtils#getAllGasSuppliersNonEmpty(Player)
      * @see #changeCanisterPackContent(ItemStack, Gas, long)
      * @see #changeCanisterContent(ItemStack, Gas, long)
      */
@@ -225,7 +224,7 @@ public class GasCanisterExecuteUtils {
             return true;
         }
 
-        List<ItemStack> gasSuppliers = GasCanisterSupplierUtils.getAllGasSuppliers(player);
+        List<ItemStack> gasSuppliers = GasCanisterSupplierUtils.getAllGasSuppliersNonEmpty(player);
         long remainingAmount = actualAmountToConsume;
         for (ItemStack gasSupplier : gasSuppliers) {
             if (remainingAmount == 0) {

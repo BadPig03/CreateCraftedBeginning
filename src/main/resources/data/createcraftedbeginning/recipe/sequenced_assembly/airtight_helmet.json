@@ -1,0 +1,102 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {
+    "item": "create:netherite_diving_helmet"
+  },
+  "loops": 1,
+  "results": [
+    {
+      "chance": 75,
+      "id": "createcraftedbeginning:airtight_helmet"
+    },
+    {
+      "chance": 25,
+      "id": "createcraftedbeginning:breeze_core"
+    }
+  ],
+  "sequence": [
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_helmet"
+        },
+        {
+          "item": "createcraftedbeginning:breeze_core"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_helmet"
+        }
+      ]
+    },
+     {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_helmet"
+        },
+        {
+          "tag": "c:plates/amethyst_crystal"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_helmet"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_helmet"
+        },
+        {
+          "item": "createcraftedbeginning:gas_canister"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_helmet"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_helmet"
+        },
+        {
+          "item": "createcraftedbeginning:airtight_tank"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_helmet"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_helmet"
+        },
+        {
+          "item": "create:precision_mechanism"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_helmet"
+        }
+      ]
+    }
+  ],
+  "transitional_item": {
+    "id": "createcraftedbeginning:incomplete_airtight_helmet"
+  }
+}

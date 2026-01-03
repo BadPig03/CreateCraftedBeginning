@@ -9,7 +9,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.recipes.GasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.SizedGasIngredient;
 import net.ty.createcraftedbeginning.compat.jei.JEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirCompressor;
 import net.ty.createcraftedbeginning.data.CCBGUITextures;
@@ -17,6 +17,7 @@ import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class PressurizationCategory extends CCBRecipeCategory<PressurizationRecipe> {
@@ -27,12 +28,12 @@ public class PressurizationCategory extends CCBRecipeCategory<PressurizationReci
         super(info);
     }
 
-    private static void addGasInputSlot(@NotNull IRecipeLayoutBuilder builder, @NotNull GasIngredient gasIngredient) {
+    private static void addGasInputSlot(@NotNull IRecipeLayoutBuilder builder, @NotNull SizedGasIngredient gasIngredient) {
         List<GasStack> fullStacks = new ArrayList<>();
-        for (GasStack stack : gasIngredient.getMatchingGasStacks()) {
+        for (GasStack stack : gasIngredient.getGases()) {
             fullStacks.add(stack.copyWithAmount(MAX_CAPACITY));
         }
-        builder.addSlot(RecipeIngredientRole.INPUT, 27, 51).setFluidRenderer(MAX_CAPACITY, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredients(JEIPlugin.GAS_STACK, fullStacks).addRichTooltipCallback((recipeSlotView, tooltip) -> gasIngredient.getMatchingGasStacks().stream().map(stack -> Component.translatable("jei.tooltip.gas.amount", stack.getAmount()).withStyle(ChatFormatting.GRAY)).forEach(tooltip::add));
+        builder.addSlot(RecipeIngredientRole.INPUT, 27, 51).setFluidRenderer(MAX_CAPACITY, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredients(JEIPlugin.GAS_STACK, fullStacks).addRichTooltipCallback((recipeSlotView, tooltip) -> Arrays.stream(gasIngredient.getGases()).map(stack -> Component.translatable("jei.tooltip.gas.amount", stack.getAmount()).withStyle(ChatFormatting.GRAY)).forEach(tooltip::add));
     }
 
     private static void addGasOutputSlot(@NotNull IRecipeLayoutBuilder builder, @NotNull GasStack outputGas) {

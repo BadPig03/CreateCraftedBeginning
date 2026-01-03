@@ -45,10 +45,10 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.Tags.Items;
 import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.GasCapabilities.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterExecuteUtils;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IAirtightComponent;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.IAirtightComponent;
+import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -247,7 +247,7 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
         Direction direction = state.getValue(FACING);
         BlockPos relativePos = pos.relative(direction);
         BlockState relativeState = level.getBlockState(relativePos);
-        return canSupportCenter(level, relativePos, direction) && relativeState.getBlock() instanceof IAirtightComponent airtightComponent && airtightComponent.isAirtight(relativePos, relativeState, direction);
+        return canSupportCenter(level, relativePos, direction.getOpposite()) && relativeState.getBlock() instanceof IAirtightComponent airtightComponent && airtightComponent.isAirtight(relativePos, relativeState, direction);
     }
 
     @Override

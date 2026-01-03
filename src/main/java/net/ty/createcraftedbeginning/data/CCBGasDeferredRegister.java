@@ -5,7 +5,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.GasBuilder;
+import net.ty.createcraftedbeginning.api.gas.gases.GasBuilder;
 import net.ty.createcraftedbeginning.api.gas.gases.GasHolder;
 import net.ty.createcraftedbeginning.registry.CCBRegistries;
 import org.jetbrains.annotations.NotNull;

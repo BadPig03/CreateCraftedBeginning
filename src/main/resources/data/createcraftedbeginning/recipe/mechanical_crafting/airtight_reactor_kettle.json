@@ -1,0 +1,42 @@
+{
+  "type": "create:mechanical_crafting",
+  "accept_mirrored": true,
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "createcraftedbeginning:airtight_tank"
+    },
+    "S": {
+      "item": "createcraftedbeginning:airtight_sheet"
+    },
+    "B": {
+      "item": "createcraftedbeginning:airtight_sheet_block"
+    },
+    "C": {
+      "item": "create:cogwheel"
+    },
+    "L": {
+      "item": "create:large_cogwheel"
+    },
+    "P": {
+      "item": "create:propeller"
+    },
+    "I": {
+      "item": "create:basin"
+    },
+    "W": {
+      "item": "create:industrial_iron_window_pane"
+    }
+  },
+  "pattern": [
+    "BBBBB",
+    "SCLCS",
+    "SWPWS",
+    "SIIIS",
+    "BAAAB"
+  ],
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:airtight_reactor_kettle"
+  }
+}

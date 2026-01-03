@@ -37,7 +37,6 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.EntityCollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
@@ -198,10 +197,6 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
 
     @Override
     protected @NotNull VoxelShape getShape(@NotNull BlockState blockState, @NotNull BlockGetter level, @NotNull BlockPos blockPos, @NotNull CollisionContext context) {
-        if (context instanceof EntityCollisionContext entityCollisionContext && !(entityCollisionContext.getEntity() instanceof Player)) {
-            return Shapes.block();
-        }
-
         return getShape(blockState);
     }
 

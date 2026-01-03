@@ -12,10 +12,12 @@ import net.minecraft.world.entity.EntityType.Builder;
 import net.minecraft.world.entity.projectile.windcharge.AbstractWindCharge;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.registry.CCBEntityTypes;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 import org.jetbrains.annotations.NotNull;
@@ -28,6 +30,8 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
     private static final String COMPOUND_KEY_KNOCKBACK = "Knockback";
     private static final float DEFAULT_SIZE = 0.3125f;
 
+    @Nullable
+    @OnlyIn(Dist.CLIENT)
     private AirtightCannonWindChargeModel windChargeModel;
     private Holder<Gas> gasHolder = Gas.EMPTY_GAS_HOLDER;
     private float multiplier = 1.0f;
@@ -42,6 +46,10 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         super(CCBEntityTypes.AIRTIGHT_CANNON_WIND_CHARGE_PROJECTILE.get(), level);
         this.gasHolder = gasHolder;
         this.deltaMotion = deltaMotion;
+        if (!level.isClientSide) {
+            return;
+        }
+
         setModelFromGas(gasHolder.value());
     }
 
@@ -63,7 +71,6 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
     @Override
     public void tick() {
         super.tick();
-
         Vec3 pos = position();
         Level level = level();
         if (!level.isClientSide) {
@@ -95,6 +102,7 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
     }
 
     @Nullable
+    @OnlyIn(Dist.CLIENT)
     public AirtightCannonWindChargeModel getWindChargeModel() {
         return windChargeModel;
     }
@@ -130,7 +138,9 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         }
         if (compoundTag.contains(COMPOUND_KEY_GAS_HOLDER)) {
             Gas.HOLDER_CODEC.decode(NbtOps.INSTANCE, compoundTag.get(COMPOUND_KEY_GAS_HOLDER)).resultOrPartial(err -> CreateCraftedBeginning.LOGGER.error("Failed to decode gas holder: {}", err)).map(Pair::getFirst).ifPresent(holder -> gasHolder = holder);
-            setModelFromGas(gasHolder.value());
+            if (level().isClientSide) {
+                setModelFromGas(gasHolder.value());
+            }
         }
     }
 
@@ -142,18 +152,18 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
 
     @Override
     public void writeSpawnData(@NotNull RegistryFriendlyByteBuf buffer) {
-        CompoundTag compound = new CompoundTag();
-        addAdditionalSaveData(compound);
-        buffer.writeNbt(compound);
+        CompoundTag compoundTag = new CompoundTag();
+        addAdditionalSaveData(compoundTag);
+        buffer.writeNbt(compoundTag);
     }
 
     @Override
     public void readSpawnData(@NotNull RegistryFriendlyByteBuf additionalData) {
-        CompoundTag nbt = additionalData.readNbt();
-        if (nbt == null) {
+        CompoundTag compoundTag = additionalData.readNbt();
+        if (compoundTag == null) {
             return;
         }
-        readAdditionalSaveData(nbt);
+        readAdditionalSaveData(compoundTag);
     }
 
     private void explodeDirectly(Vec3 pos) {
@@ -167,6 +177,7 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         cannonHandler.explode(level, pos, this, multiplier);
     }
 
+    @OnlyIn(Dist.CLIENT)
     private void setModelFromGas(Gas gas) {
         AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gas);
         windChargeModel = cannonHandler != null ? new AirtightCannonWindChargeModel(cannonHandler.getLayerDefinition().bakeRoot()) : null;

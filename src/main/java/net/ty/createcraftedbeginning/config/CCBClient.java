@@ -9,6 +9,7 @@ public class CCBClient extends ConfigBase {
     public final ConfigBool enableCurrentGasInfo = b(true, "enable_current_gas_info", Comments.enableCurrentGasInfo);
     public final ConfigInt gasInfoXOffset = i(0, "gas_info_x_offset", Comments.gasInfoXOffset);
     public final ConfigInt gasInfoYOffset = i(0, "gas_info_y_offset", Comments.gasInfoYOffset);
+    public final ConfigInt maxItemStackDisplay = i(4, 1, 27, "max_item_stack_display", Comments.maxItemStackDisplay);
 
     @Override
     public @NotNull String getName() {
@@ -21,5 +22,6 @@ public class CCBClient extends ConfigBase {
         static String enableCurrentGasInfo = "Displays information about the gas currently being used by the player.";
         static String gasInfoXOffset = "X offset of the display showing the gas information currently used by the player.";
         static String gasInfoYOffset = "Y offset of the display showing the gas information currently used by the player.";
+        static String maxItemStackDisplay = "The maximum number of item stacks displayed for the Airtight Reactor Kettle with Engineers' Goggles.";
     }
 }

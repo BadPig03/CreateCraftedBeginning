@@ -18,18 +18,23 @@ import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEn
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlock.AirtightReactorKettleRenderProperties;
+import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralBlock.AirtightReactorKettleStructuralRenderProperties;
+import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralCogBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlock;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankBlock;
-import net.ty.createcraftedbeginning.content.airtights.gas.GasBlock;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterBlock;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlock;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceBlock;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlock;
 import net.ty.createcraftedbeginning.content.airtights.smartairtightpipe.SmartAirtightPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlock;
+import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlock.TeslaTurbineRenderProperties;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock;
-import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.RenderProperties;
+import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.TeslaTurbineStructuralRenderProperties;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock;
@@ -50,6 +55,7 @@ import net.ty.createcraftedbeginning.data.CCBSpriteShifts;
 import static com.simibubi.create.api.contraption.storage.item.MountedItemStorageType.mountedItemStorage;
 import static net.ty.createcraftedbeginning.data.CCBBuilderTransformer.airtightPropertiesWithoutAirtightComponents;
 import static net.ty.createcraftedbeginning.data.CCBBuilderTransformer.airtightPropertiesWithoutOcclusion;
+import static net.ty.createcraftedbeginning.data.CCBBuilderTransformer.airtightStructural;
 import static net.ty.createcraftedbeginning.data.CCBBuilderTransformer.axeOnly;
 import static net.ty.createcraftedbeginning.data.CCBBuilderTransformer.axeOrPickaxe;
 import static net.ty.createcraftedbeginning.data.CCBBuilderTransformer.breezes;
@@ -59,8 +65,6 @@ import static net.ty.createcraftedbeginning.data.CCBBuilderTransformer.pickaxeOn
 @SuppressWarnings("unused")
 public class CCBBlocks {
     private static final CCBRegistrate CCB_REGISTRATE = CreateCraftedBeginning.registrate().setCreativeTab(CCBCreativeTabs.BASE_CREATIVE_TAB);
-
-    public static final BlockEntry<GasBlock> GAS_BLOCK = CCB_REGISTRATE.block("gas", GasBlock::new).item().build().register();
 
     public static final BlockEntry<AndesiteCrateBlock> ANDESITE_CRATE_BLOCK = CCB_REGISTRATE.block("andesite_crate", AndesiteCrateBlock::new).initialProperties(CCBSharedProperties::stone).transform(CCBBuilderTransformer.crate("andesite")).transform(axeOrPickaxe()).properties(p -> p.mapColor(MapColor.PODZOL).sound(SoundType.WOOD)).transform(mountedItemStorage(CCBMountedStorage.ANDESITE_CRATE)).register();
     public static final BlockEntry<BrassCrateBlock> BRASS_CRATE_BLOCK = CCB_REGISTRATE.block("brass_crate", BrassCrateBlock::new).initialProperties(CCBSharedProperties::stone).transform(CCBBuilderTransformer.crate("brass")).transform(axeOrPickaxe()).properties(p -> p.mapColor(MapColor.TERRACOTTA_BROWN).sound(SoundType.WOOD)).transform(mountedItemStorage(CCBMountedStorage.BRASS_CRATE)).register();
@@ -88,9 +92,13 @@ public class CCBBlocks {
     public static final BlockEntry<ResidueOutletBlock> RESIDUE_OUTLET_BLOCK = CCB_REGISTRATE.block("residue_outlet", ResidueOutletBlock::new).transform(CCBBuilderTransformer.residue_outlet()).transform(airtightPropertiesWithoutOcclusion()).register();
 
     public static final BlockEntry<AirCompressorBlock> AIR_COMPRESSOR_BLOCK = CCB_REGISTRATE.block("air_compressor", AirCompressorBlock::new).transform(CCBBuilderTransformer.air_compressor()).transform(CCBStress.setImpact(16.0f)).transform(airtightPropertiesWithoutOcclusion()).register();
-    public static final BlockEntry<TeslaTurbineBlock> TESLA_TURBINE_BLOCK = CCB_REGISTRATE.block("tesla_turbine", TeslaTurbineBlock::new).clientExtension(() -> TeslaTurbineBlock.RenderProperties::new).transform(CCBBuilderTransformer.tesla_turbine()).transform(CCBStress.setCapacity(4096.0f)).onRegister(BlockStressValues.setGeneratorSpeed(256, true)).transform(airtightPropertiesWithoutOcclusion()).register();
+    public static final BlockEntry<TeslaTurbineBlock> TESLA_TURBINE_BLOCK = CCB_REGISTRATE.block("tesla_turbine", TeslaTurbineBlock::new).clientExtension(() -> TeslaTurbineRenderProperties::new).transform(CCBBuilderTransformer.tesla_turbine()).transform(CCBStress.setCapacity(4096.0f)).onRegister(BlockStressValues.setGeneratorSpeed(256, true)).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<TeslaTurbineNozzleBlock> TESLA_TURBINE_NOZZLE_BLOCK = CCB_REGISTRATE.block("tesla_turbine_nozzle", TeslaTurbineNozzleBlock::new).transform(CCBBuilderTransformer.tesla_turbine_nozzle()).transform(airtightPropertiesWithoutOcclusion()).register();
-    public static final BlockEntry<TeslaTurbineStructuralBlock> TESLA_TURBINE_STRUCTURAL_BLOCK = CCB_REGISTRATE.block("tesla_turbine_structural", TeslaTurbineStructuralBlock::new).clientExtension(() -> RenderProperties::new).transform(CCBBuilderTransformer.tesla_turbine_structural()).lang("Tesla Turbine").transform(airtightPropertiesWithoutOcclusion()).register();
+    public static final BlockEntry<TeslaTurbineStructuralBlock> TESLA_TURBINE_STRUCTURAL_BLOCK = CCB_REGISTRATE.block("tesla_turbine_structural", TeslaTurbineStructuralBlock::new).clientExtension(() -> TeslaTurbineStructuralRenderProperties::new).transform(CCBBuilderTransformer.tesla_turbine_structural()).lang("Tesla Turbine").transform(airtightStructural()).register();
+
+    public static final BlockEntry<AirtightReactorKettleBlock> AIRTIGHT_REACTOR_KETTLE_BLOCK = CCB_REGISTRATE.block("airtight_reactor_kettle", AirtightReactorKettleBlock::new).clientExtension(() -> AirtightReactorKettleRenderProperties::new).transform(CCBBuilderTransformer.airtight_reactor_kettle()).transform(airtightPropertiesWithoutOcclusion()).register();
+    public static final BlockEntry<AirtightReactorKettleStructuralBlock> AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK = CCB_REGISTRATE.block("airtight_reactor_kettle_structural", AirtightReactorKettleStructuralBlock::new).clientExtension(() -> AirtightReactorKettleStructuralRenderProperties::new).transform(CCBBuilderTransformer.airtight_reactor_kettle_structural()).lang("Airtight Reactor Kettle").transform(airtightStructural()).register();
+    public static final BlockEntry<AirtightReactorKettleStructuralCogBlock> AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG_BLOCK = CCB_REGISTRATE.block("airtight_reactor_kettle_structural_cog", AirtightReactorKettleStructuralCogBlock::new).clientExtension(() -> AirtightReactorKettleStructuralRenderProperties::new).transform(CCBStress.setImpact(16)).transform(CCBBuilderTransformer.airtight_reactor_kettle_structural_cog()).lang("Airtight Reactor Kettle").transform(airtightStructural()).register();
 
     public static final BlockEntry<PortableGasInterfaceBlock> PORTABLE_GAS_INTERFACE_BLOCK = CCB_REGISTRATE.block("portable_gas_interface", PortableGasInterfaceBlock::new).transform(CCBBuilderTransformer.portable_gas_interface()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<GasInjectionChamberBlock> GAS_INJECTION_CHAMBER_BLOCK = CCB_REGISTRATE.block("gas_injection_chamber", GasInjectionChamberBlock::new).transform(CCBBuilderTransformer.gas_injection_chamber()).transform(airtightPropertiesWithoutOcclusion()).register();

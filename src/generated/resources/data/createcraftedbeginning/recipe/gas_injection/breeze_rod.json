@@ -5,7 +5,7 @@
       "item": "minecraft:blaze_rod"
     },
     {
-      "type": "createcraftedbeginning:gas_stack",
+      "type": "createcraftedbeginning:single",
       "amount": 500,
       "gas": "createcraftedbeginning:natural_air"
     }

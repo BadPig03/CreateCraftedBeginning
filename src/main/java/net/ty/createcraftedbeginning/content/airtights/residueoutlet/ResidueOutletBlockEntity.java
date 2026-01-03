@@ -11,7 +11,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -57,28 +56,23 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         CCBLang.translate("gui.goggles.residue_outlet.header").forGoggles(tooltip);
+        boolean isEmpty = true;
         ItemStack itemStack = inventory.getStackInSlot(0);
-        if (itemStack.isEmpty()) {
-            CCBLang.translate("gui.goggles.residue_outlet.item.capacity").style(ChatFormatting.GRAY).add(CCBLang.number(64).style(ChatFormatting.GOLD)).forGoggles(tooltip);
-        }
-        else {
-            CCBLang.translate("gui.goggles.residue_outlet.item.capacity").style(ChatFormatting.GRAY).forGoggles(tooltip);
-            CCBLang.text(Component.translatable(itemStack.getDescriptionId()).getString()).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-            CCBLang.number(itemStack.getCount()).style(ChatFormatting.GOLD).add(CCBLang.text(" / ").style(ChatFormatting.GRAY)).add(CCBLang.number(itemStack.getMaxStackSize()).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+        if (!itemStack.isEmpty()) {
+            CCBLang.text("").add(Component.translatable(itemStack.getDescriptionId()).withStyle(ChatFormatting.GRAY)).add(CCBLang.text(" x" + itemStack.getCount()).style(ChatFormatting.GREEN)).forGoggles(tooltip, 1);
+            isEmpty = false;
         }
 
-        tooltip.add(CommonComponents.EMPTY);
         SmartFluidTank tank = fluidTankBehaviour.getPrimaryHandler();
         FluidStack fluidStack = tank.getFluidInTank(0);
         LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
-        int capacity = getMaxCapacity();
-        if (fluidStack.isEmpty()) {
-            CCBLang.translate("gui.goggles.residue_outlet.fluid.capacity").style(ChatFormatting.GRAY).add(CCBLang.number(capacity).add(mb).style(ChatFormatting.GOLD)).forGoggles(tooltip);
+        if (!fluidStack.isEmpty()) {
+            CCBLang.fluidName(fluidStack).add(CCBLang.text(" ")).style(ChatFormatting.GRAY).add(CCBLang.number(fluidStack.getAmount()).add(mb).style(ChatFormatting.BLUE)).forGoggles(tooltip, 1);
+            isEmpty = false;
         }
-        else {
-            CCBLang.translate("gui.goggles.residue_outlet.fluid.capacity").style(ChatFormatting.GRAY).forGoggles(tooltip);
-            CCBLang.fluidName(fluidStack).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-            CCBLang.number(fluidStack.getAmount()).add(mb).style(ChatFormatting.GOLD).add(CCBLang.text(" / ").style(ChatFormatting.GRAY)).add(CCBLang.number(capacity).add(mb).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+
+        if (isEmpty) {
+            tooltip.removeFirst();
         }
         return true;
     }

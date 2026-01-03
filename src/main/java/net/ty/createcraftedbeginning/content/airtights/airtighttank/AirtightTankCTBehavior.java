@@ -8,7 +8,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.gas.GasConnectivityHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.GasConnectivityHandler;
 import net.ty.createcraftedbeginning.data.CCBSpriteShifts;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,11 +16,6 @@ import org.jetbrains.annotations.Nullable;
 public class AirtightTankCTBehavior extends HorizontalCTBehaviour {
     public AirtightTankCTBehavior() {
         super(CCBSpriteShifts.AIRTIGHT_TANK, CCBSpriteShifts.AIRTIGHT_TANK_TOP);
-    }
-
-    @Override
-    public boolean buildContextForOccludedDirections() {
-        return true;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightassemblydriver;
 
 import com.simibubi.create.api.stress.BlockStressValues;
+import com.simibubi.create.content.kinetics.base.IRotate.StressImpact;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -86,11 +87,15 @@ public class AirtightAssemblyDriverTooltipBuilder {
         else {
             CCBLang.translate("gui.goggles.airtight_assembly_driver.via_outlets", outlets).style(ChatFormatting.GRAY).forGoggles(tooltip);
         }
+        if (!StressImpact.isEnabled()) {
+            return;
+        }
 
         tooltip.add(CommonComponents.EMPTY);
         CCBLang.translate("gui.goggles.capacity_provided").style(ChatFormatting.GRAY).forGoggles(tooltip);
         int engines = structureManager.getAttachedEngines();
-        MutableComponent stressText = CCBLang.number(BASE_ROTATION_SPEED * levelCalculator.getCurrentLevel() * BlockStressValues.getCapacity(CCBBlocks.AIRTIGHT_ENGINE_BLOCK.get())).translate("gui.goggles.unit.stress").style(ChatFormatting.AQUA).space().component();
+        double capacityProvided = BASE_ROTATION_SPEED * levelCalculator.getCurrentLevel() * BlockStressValues.getCapacity(CCBBlocks.AIRTIGHT_ENGINE_BLOCK.get());
+        MutableComponent stressText = CCBLang.number(capacityProvided).translate("gui.goggles.unit.stress").style(ChatFormatting.AQUA).space().component();
         stressText.append(engines == 1 ? CCBLang.translate("gui.goggles.airtight_assembly_driver.via_one_engine").style(ChatFormatting.DARK_GRAY).component() : CCBLang.translate("gui.goggles.airtight_assembly_driver.via_engines", engines).style(ChatFormatting.DARK_GRAY).component());
         CCBLang.builder().add(stressText).forGoggles(tooltip, 1);
     }

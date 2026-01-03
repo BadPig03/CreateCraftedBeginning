@@ -1,7 +1,7 @@
 package net.ty.createcraftedbeginning.mixin;
 
 import com.simibubi.create.content.contraptions.MountedStorageManager;
-import net.ty.createcraftedbeginning.api.gas.MountedGasStorageWrapper;
+import net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorageWrapper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 

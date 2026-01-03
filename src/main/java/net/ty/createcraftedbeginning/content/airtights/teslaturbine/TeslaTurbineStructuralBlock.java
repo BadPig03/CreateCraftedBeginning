@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.content.airtights.teslaturbine;
 
-import com.mojang.serialization.Codec;
 import com.simibubi.create.api.equipment.goggles.IProxyHoveringInformation;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.render.MultiPosDestructionHandler;
@@ -62,32 +61,24 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
     private static final int PLACEMENT_HELPER_ID = PlacementHelpers.register(new NozzlePlacementHelper());
 
-    public static final EnumProperty<StructuralPosition> STRUCTURAL_POSITION = EnumProperty.create("structural_position", StructuralPosition.class);
+    public static final EnumProperty<TeslaTurbineStructuralPosition> STRUCTURAL_POSITION = EnumProperty.create("structural_position", TeslaTurbineStructuralPosition.class);
 
     public TeslaTurbineStructuralBlock(Properties properties) {
         super(properties);
-        registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(STRUCTURAL_POSITION, StructuralPosition.TOP_MID));
+        registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(STRUCTURAL_POSITION, TeslaTurbineStructuralPosition.TOP_MID));
     }
 
     public static @NotNull BlockPos getMaster(@NotNull BlockPos pos, @NotNull BlockState state) {
-        return pos.subtract(calculateOffset(state.getValue(STRUCTURAL_POSITION), state.getValue(AXIS)));
-    }
-
-    @Contract(value = "_, _ -> new", pure = true)
-    private static @NotNull BlockPos calculateOffset(@NotNull StructuralPosition position, @NotNull Axis axis) {
+        TeslaTurbineStructuralPosition position = state.getValue(STRUCTURAL_POSITION);
         int u = position.u;
         int v = position.v;
-        switch (axis) {
-            case X -> {
-                return new BlockPos(0, v, u);
-            }
-            case Z -> {
-                return new BlockPos(u, v, 0);
-            }
-            default -> {
-                return new BlockPos(u, 0, v);
-            }
+        BlockPos result;
+        switch (state.getValue(AXIS)) {
+            case X -> result = new BlockPos(0, v, u);
+            case Z -> result = new BlockPos(u, v, 0);
+            default -> result = new BlockPos(u, 0, v);
         }
+        return pos.subtract(result);
     }
 
     @Override
@@ -214,7 +205,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         return stillValid(level, pos, state, false) ? getMaster(pos, state) : pos;
     }
 
-    public enum StructuralPosition implements StringRepresentable {
+    public enum TeslaTurbineStructuralPosition implements StringRepresentable {
         TOP_LEFT(-1, 1),
         TOP_MID(0, 1),
         TOP_RIGHT(1, 1),
@@ -224,46 +215,50 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         BOTTOM_MID(0, -1),
         BOTTOM_RIGHT(1, -1);
 
-        public static final Codec<StructuralPosition> CODEC = StringRepresentable.fromEnum(StructuralPosition::values);
-        public final int u;
-        public final int v;
+        private final int u;
+        private final int v;
 
-        StructuralPosition(int u, int v) {
+        TeslaTurbineStructuralPosition(int u, int v) {
             this.u = u;
             this.v = v;
         }
 
         @Contract(pure = true)
-        public static boolean isMid(@NotNull StructuralPosition pos) {
+        public static boolean isMid(@NotNull TeslaTurbineStructuralPosition pos) {
             return pos.u == 0 || pos.v == 0;
         }
 
-        public static StructuralPosition fromOffset(int u, int v) {
+        public static TeslaTurbineStructuralPosition fromOffset(int u, int v) {
             if (u == -1 && v == 1) {
                 return TOP_LEFT;
             }
-            if (u == 0 && v == 1) {
+            else if (u == 0 && v == 1) {
                 return TOP_MID;
             }
-            if (u == 1 && v == 1) {
+            else if (u == 1 && v == 1) {
                 return TOP_RIGHT;
             }
-            if (u == -1 && v == 0) {
+            else if (u == -1 && v == 0) {
                 return MID_LEFT;
             }
-            if (u == 1 && v == 0) {
+            else if (u == 1 && v == 0) {
                 return MID_RIGHT;
             }
-            if (u == -1 && v == -1) {
+            else if (u == -1 && v == -1) {
                 return BOTTOM_LEFT;
             }
-            if (u == 0 && v == -1) {
+            else if (u == 0 && v == -1) {
                 return BOTTOM_MID;
             }
-            return u == 1 && v == -1 ? BOTTOM_RIGHT : TOP_MID;
+            else if (u == 1 && v == -1) {
+                return BOTTOM_RIGHT;
+            }
+            else {
+                return TOP_MID;
+            }
         }
 
-        public static @NotNull Set<Direction> getPossiblePosition(@NotNull StructuralPosition pos, Axis axis) {
+        public static @NotNull Set<Direction> getPossiblePosition(@NotNull TeslaTurbineStructuralPosition pos, Axis axis) {
             Set<Direction> directionSet = new HashSet<>();
             int u = pos.u;
             int v = pos.v;
@@ -288,7 +283,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         }
     }
 
-    public static class RenderProperties implements IClientBlockExtensions, MultiPosDestructionHandler {
+    public static class TeslaTurbineStructuralRenderProperties implements IClientBlockExtensions, MultiPosDestructionHandler {
         @Override
         public boolean addHitEffects(@NotNull BlockState state, @NotNull Level level, @NotNull HitResult target, @NotNull ParticleEngine manager) {
             if (!(target instanceof BlockHitResult result)) {
@@ -303,11 +298,6 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
 
             manager.crack(getMaster(targetPos, state), result.getDirection());
             return IClientBlockExtensions.super.addHitEffects(state, level, target, manager);
-        }
-
-        @Override
-        public boolean addDestroyEffects(@NotNull BlockState state, @NotNull Level Level, @NotNull BlockPos pos, @NotNull ParticleEngine manager) {
-            return true;
         }
 
         @Override
@@ -327,11 +317,9 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
                         continue;
                     }
 
-                    BlockPos structurePos = calculateStructurePos(masterPos, axis, i, j);
-                    positions.add(structurePos);
+                    positions.add(calculateStructurePos(masterPos, axis, i, j));
                 }
             }
-
             positions.add(masterPos);
             return positions;
         }

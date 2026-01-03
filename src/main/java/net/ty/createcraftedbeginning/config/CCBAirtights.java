@@ -24,7 +24,7 @@ public class CCBAirtights extends ConfigBase {
     public final ConfigInt maxPumpRange = i(32, 1, "max_pump_range", Comments.blocks, Comments.maxPumpRange);
 
     public final ConfigGroup airtightTank = group(0, "airtight_tank", "Airtight Tank");
-    public final ConfigInt maxTankCapacity = i(80, 1, "max_tank_capacity", Comments.buckets, Comments.maxTankCapacity);
+    public final ConfigInt maxTankCapacity = i(20, 1, "max_tank_capacity", Comments.buckets, Comments.maxTankCapacity);
 
     @Override
     public @NotNull String getName() {

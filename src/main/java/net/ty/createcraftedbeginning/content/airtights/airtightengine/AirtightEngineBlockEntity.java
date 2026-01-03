@@ -4,6 +4,7 @@ import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.api.stress.BlockStressValues;
 import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
 import com.simibubi.create.content.kinetics.base.IRotate;
+import com.simibubi.create.content.kinetics.base.IRotate.StressImpact;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -30,10 +31,9 @@ import java.lang.ref.WeakReference;
 import java.util.List;
 
 public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity implements IHaveGoggleInformation {
-    private static final int LAZY_TICK_RATE = 20;
     public static final int BASE_ROTATION_SPEED = 8;
     public static final float DELTA_TIME = 0.01f;
-
+    private static final int LAZY_TICK_RATE = 20;
     private WeakReference<AirtightTankBlockEntity> source;
     private float pistonPhase;
     private float previousPhase;
@@ -95,10 +95,14 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
         else {
             CCBLang.translate("gui.goggles.airtight_engine.rotation_direction.counter_clockwise").style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
         }
+        if (!StressImpact.isEnabled()) {
+            return true;
+        }
 
         tooltip.add(CommonComponents.EMPTY);
         CCBLang.translate("gui.goggles.capacity_provided").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        CCBLang.number(BASE_ROTATION_SPEED * getSpeedModifier() * BlockStressValues.getCapacity(CCBBlocks.AIRTIGHT_ENGINE_BLOCK.get())).translate("gui.goggles.unit.stress").style(ChatFormatting.AQUA).space().add(CCBLang.translate("gui.goggles.at_current_speed").style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+        double capacityProvided = Mth.abs(getGeneratedSpeed()) * BlockStressValues.getCapacity(CCBBlocks.AIRTIGHT_ENGINE_BLOCK.get());
+        CCBLang.number(capacityProvided).translate("gui.goggles.unit.stress").style(ChatFormatting.AQUA).space().add(CCBLang.translate("gui.goggles.at_current_speed").style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
         return true;
     }
 
@@ -133,7 +137,7 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
 
     @Override
     public float getGeneratedSpeed() {
-        return BASE_ROTATION_SPEED * Mth.abs(getSpeedModifier()) * (getBlockState().getValue(AirtightEngineBlock.CLOCKWISE) ? 1 : -1);
+        return BASE_ROTATION_SPEED * getSpeedModifier() * (getBlockState().getValue(AirtightEngineBlock.CLOCKWISE) ? 1 : -1);
     }
 
     @Override

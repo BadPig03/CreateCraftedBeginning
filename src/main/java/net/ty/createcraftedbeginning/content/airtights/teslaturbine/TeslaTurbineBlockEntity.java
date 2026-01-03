@@ -56,7 +56,7 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
     @Override
     public void lazyTick() {
         super.lazyTick();
-        core.lazyTick(this);
+        core.lazyTick();
     }
 
     @Override

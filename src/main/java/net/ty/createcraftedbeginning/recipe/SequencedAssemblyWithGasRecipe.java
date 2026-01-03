@@ -27,7 +27,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
-import net.ty.createcraftedbeginning.api.gas.recipes.GasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.SizedGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipe;
 import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasRecipeSerializer;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
@@ -203,7 +203,7 @@ public class SequencedAssemblyWithGasRecipe implements Recipe<RecipeWrapper> {
         sequence.forEach(recipe -> recipe.getAsAssemblyRecipe().addAssemblyFluidIngredients(list));
     }
 
-    public void addAdditionalGasIngredients(List<GasIngredient> list) {
+    public void addAdditionalGasIngredients(List<SizedGasIngredient> list) {
         sequence.forEach(recipe -> recipe.getAsAssemblyRecipe().addAssemblyGasIngredients(list));
     }
 

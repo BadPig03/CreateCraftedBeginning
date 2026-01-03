@@ -18,7 +18,7 @@ import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IAirtightComponent;
+import net.ty.createcraftedbeginning.api.gas.gases.IAirtightComponent;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import org.jetbrains.annotations.NotNull;

@@ -53,6 +53,7 @@ public class CCBSoundEvents {
     public static final SoundEntry AIR_VENT_OUTLET_CLOSED = create("air_vent_outlet_closed").playExisting(SoundEvents.ITEM_FRAME_REMOVE_ITEM, 0.75f, 1.0f).playExisting(SoundEvents.NETHERITE_BLOCK_HIT, 0.75f, 1.0f).subtitle("Air Vent Outlet closed").category(SoundSource.BLOCKS).build();
     public static final SoundEntry AIR_VENT_OUTLET_PLACED = create("air_vent_outlet_placed").playExisting(SoundEvents.NETHERITE_BLOCK_PLACE, 0.75f, 1.0f).subtitle("Air Vent Outlet placed").category(SoundSource.BLOCKS).build();
     public static final SoundEntry AIR_VENT_OUTLET_REMOVED = create("air_vent_outlet_removed").playExisting(SoundEvents.NETHERITE_BLOCK_BREAK, 0.75f, 1.0f).subtitle("Air Vent Outlet removed").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry REACTOR_KETTLE_MIXING = create("reactor_kettle_mixing").subtitle("Reactor Kettle Mixing noises").playExisting(SoundEvents.GILDED_BLACKSTONE_BREAK, 0.125f, 0.5f).playExisting(SoundEvents.NETHERRACK_BREAK, 0.125f, 0.5f).playExisting(SoundEvents.NETHERITE_BLOCK_HIT, 0.125f, 0.5f).category(SoundSource.BLOCKS).build();
 
     @Contract("_ -> new")
     private static @NotNull SoundEntryBuilder create(String name) {
@@ -83,7 +84,7 @@ public class CCBSoundEvents {
 
     public static void prepare() {
         ALL.values().forEach(SoundEntry::prepare);
-	}
+    }
 
     public abstract static class SoundEntry {
         protected ResourceLocation id;

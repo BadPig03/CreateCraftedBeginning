@@ -36,7 +36,6 @@ public abstract class MechanicalPressBlockEntityMixin {
         MechanicalPressBlockEntity self = (MechanicalPressBlockEntity) (Object) this;
         ItemStack item = itemEntity.getItem();
         Level level = self.getLevel();
-
         Optional<RecipeHolder<PressingWithGasRecipe>> recipeWithGas = getRecipeWithGas(item, level);
         if (recipeWithGas.isPresent()) {
             if (simulate) {
@@ -75,10 +74,11 @@ public abstract class MechanicalPressBlockEntityMixin {
             }
             item.shrink(1);
         }
-
-        if (!itemCreated.isEmpty()) {
-            onItemPressed(itemCreated);
+        if (itemCreated.isEmpty()) {
+            return;
         }
+
+        onItemPressed(itemCreated);
     }
 
     @Shadow

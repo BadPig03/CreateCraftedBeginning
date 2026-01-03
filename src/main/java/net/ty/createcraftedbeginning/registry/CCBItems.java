@@ -26,6 +26,9 @@ import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterIt
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterItem.GasCanisterBlockItem;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackItem;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackOverrides;
+import net.ty.createcraftedbeginning.content.airtights.weatherflares.RainFlareItem;
+import net.ty.createcraftedbeginning.content.airtights.weatherflares.SunnyFlareItem;
+import net.ty.createcraftedbeginning.content.airtights.weatherflares.ThunderstormFlareItem;
 import net.ty.createcraftedbeginning.content.breezes.BreezeCoreItem;
 import net.ty.createcraftedbeginning.content.icecreams.AmethystIceCreamItem;
 import net.ty.createcraftedbeginning.content.icecreams.CreativeIceCreamItem;
@@ -59,12 +62,27 @@ public class CCBItems {
     public static final ItemEntry<GasCanisterBlockItem> GAS_CANISTER_PLACEABLE = CCB_REGISTRATE.item("gas_canister_placeable", p -> new GasCanisterBlockItem(CCBBlocks.GAS_CANISTER_BLOCK.get(), CCBItems.GAS_CANISTER::get, p)).model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/gas_canister"))).register();
     public static final ItemEntry<GasCanisterItem> GAS_CANISTER = CCB_REGISTRATE.item("gas_canister", p -> new GasCanisterItem(p, GAS_CANISTER_PLACEABLE)).properties(p -> p.stacksTo(1).fireResistant()).register();
 
-    public static final ItemEntry<AirtightCannonItem> AIRTIGHT_CANNON = CCB_REGISTRATE.item("airtight_cannon", AirtightCannonItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).model(AssetLookup.itemModelWithPartials()).tag(Items.ENCHANTABLES).register();
-    public static final ItemEntry<AirtightHandheldDrillItem> AIRTIGHT_HANDHELD_DRILL = CCB_REGISTRATE.item("airtight_handheld_drill", p -> new AirtightHandheldDrillItem(Tiers.NETHERITE, p)).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).model(AssetLookup.itemModelWithPartials()).tag(Items.ENCHANTABLES).register();
-    public static final ItemEntry<AirtightHelmetItem> AIRTIGHT_HELMET = CCB_REGISTRATE.item("airtight_helmet", AirtightHelmetItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).tag(ItemTags.HEAD_ARMOR).tag(CCBItemTags.AIRTIGHT_ARMOR.tag).model(AirtightArmorsTrimsModelGenerator::generate).register();
-    public static final ItemEntry<AirtightChestplateItem> AIRTIGHT_CHESTPLATE = CCB_REGISTRATE.item("airtight_chestplate", AirtightChestplateItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).tag(ItemTags.CHEST_ARMOR).tag(CCBItemTags.AIRTIGHT_ARMOR.tag).model(AirtightArmorsTrimsModelGenerator::generate).register();
-    public static final ItemEntry<AirtightLeggingsItem> AIRTIGHT_LEGGINGS = CCB_REGISTRATE.item("airtight_leggings", AirtightLeggingsItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).tag(ItemTags.LEG_ARMOR).tag(CCBItemTags.AIRTIGHT_ARMOR.tag).model(AirtightArmorsTrimsModelGenerator::generate).register();
-    public static final ItemEntry<AirtightBootsItem> AIRTIGHT_BOOTS = CCB_REGISTRATE.item("airtight_boots", AirtightBootsItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).tag(ItemTags.FOOT_ARMOR).tag(CCBItemTags.AIRTIGHT_ARMOR.tag).model(AirtightArmorsTrimsModelGenerator::generate).register();
+    public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_CANNON = CCB_REGISTRATE.item("incomplete_airtight_cannon", SequencedAssemblyItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).register();
+    public static final ItemEntry<AirtightCannonItem> AIRTIGHT_CANNON = CCB_REGISTRATE.item("airtight_cannon", AirtightCannonItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).model(AssetLookup.itemModelWithPartials()).tag(Items.ENCHANTABLES).register();
+
+    public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_HANDHELD_DRILL = CCB_REGISTRATE.item("incomplete_airtight_handheld_drill", SequencedAssemblyItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).register();
+    public static final ItemEntry<AirtightHandheldDrillItem> AIRTIGHT_HANDHELD_DRILL = CCB_REGISTRATE.item("airtight_handheld_drill", p -> new AirtightHandheldDrillItem(Tiers.NETHERITE, p)).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).model(AssetLookup.itemModelWithPartials()).tag(Items.ENCHANTABLES).register();
+
+    public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_HELMET = CCB_REGISTRATE.item("incomplete_airtight_helmet", SequencedAssemblyItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).register();
+    public static final ItemEntry<AirtightHelmetItem> AIRTIGHT_HELMET = CCB_REGISTRATE.item("airtight_helmet", AirtightHelmetItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).tag(ItemTags.HEAD_ARMOR).tag(CCBItemTags.AIRTIGHT_ARMOR.tag).model(AirtightArmorsTrimsModelGenerator::generate).register();
+
+    public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_CHESTPLATE = CCB_REGISTRATE.item("incomplete_airtight_chestplate", SequencedAssemblyItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).register();
+    public static final ItemEntry<AirtightChestplateItem> AIRTIGHT_CHESTPLATE = CCB_REGISTRATE.item("airtight_chestplate", AirtightChestplateItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).tag(ItemTags.CHEST_ARMOR).tag(CCBItemTags.AIRTIGHT_ARMOR.tag).model(AirtightArmorsTrimsModelGenerator::generate).register();
+
+    public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_LEGGINGS = CCB_REGISTRATE.item("incomplete_airtight_leggings", SequencedAssemblyItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).register();
+    public static final ItemEntry<AirtightLeggingsItem> AIRTIGHT_LEGGINGS = CCB_REGISTRATE.item("airtight_leggings", AirtightLeggingsItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).tag(ItemTags.LEG_ARMOR).tag(CCBItemTags.AIRTIGHT_ARMOR.tag).model(AirtightArmorsTrimsModelGenerator::generate).register();
+
+    public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_BOOTS = CCB_REGISTRATE.item("incomplete_airtight_boots", SequencedAssemblyItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).register();
+    public static final ItemEntry<AirtightBootsItem> AIRTIGHT_BOOTS = CCB_REGISTRATE.item("airtight_boots", AirtightBootsItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).tag(ItemTags.FOOT_ARMOR).tag(CCBItemTags.AIRTIGHT_ARMOR.tag).model(AirtightArmorsTrimsModelGenerator::generate).register();
+
+    public static final ItemEntry<SunnyFlareItem> SUNNY_FLARE = CCB_REGISTRATE.item("sunny_flare", SunnyFlareItem::new).properties(p -> p.stacksTo(16)).tag(CCBItemTags.WEATHER_FLARE.tag).register();
+    public static final ItemEntry<RainFlareItem> RAIN_FLARE = CCB_REGISTRATE.item("rain_flare", RainFlareItem::new).properties(p -> p.stacksTo(16)).tag(CCBItemTags.WEATHER_FLARE.tag).register();
+    public static final ItemEntry<ThunderstormFlareItem> THUNDERSTORM_FLARE = CCB_REGISTRATE.item("thunderstorm_flare", ThunderstormFlareItem::new).properties(p -> p.stacksTo(16)).tag(CCBItemTags.WEATHER_FLARE.tag).register();
 
     public static final ItemEntry<Item> ICE_CREAM_CONE = CCB_REGISTRATE.item("ice_cream_cone", Item::new).properties(p -> p.food(new Builder().nutrition(4).saturationModifier(0.6f).build())).register();
     public static final ItemEntry<Item> ICE_CREAM = CCB_REGISTRATE.item("ice_cream", Item::new).properties(p -> p.stacksTo(16).food(new Builder().nutrition(4).saturationModifier(0.6f).alwaysEdible().build())).tag(CCBItemTags.ICE_CREAMS.tag).register();

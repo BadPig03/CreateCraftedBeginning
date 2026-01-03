@@ -5,7 +5,7 @@ import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.lang.Lang;
 import net.minecraft.core.Direction;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.GasTransportBehaviour.AttachmentTypes.ComponentPartials;
+import net.ty.createcraftedbeginning.api.gas.gases.GasTransportBehaviour.AttachmentTypes.ComponentPartials;
 
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -17,6 +17,7 @@ public class CCBPartialModels {
     public static final PartialModel PNEUMATIC_ENGINE_COGS = block("pneumatic_engine/block_cogs");
     public static final PartialModel PHOTO_STRESS_BEARING_SHAFT = block("photo-stress_bearing/block_shaft");
     public static final PartialModel CINDER_INCINERATION_BLOWER_SHAFT = block("cinder_incineration_blower/block_shaft");
+
     public static final PartialModel AIRTIGHT_PUMP_COGS = block("airtight_pump/block_cogs");
     public static final PartialModel AIRTIGHT_ENGINE_COGS = block("airtight_engine/block_cogs");
     public static final PartialModel AIRTIGHT_ENGINE_PISTON = block("airtight_engine/block_piston");
@@ -60,6 +61,14 @@ public class CCBPartialModels {
     public static final PartialModel AIRTIGHT_JETPACK = item("airtight_jetpack");
     public static final PartialModel AIRTIGHT_ELYTRA = item("airtight_elytra");
     public static final PartialModel AIRTIGHT_SHIELD = item("airtight_shield");
+
+    public static final PartialModel AIRTIGHT_REACTOR_KETTLE_MIXER = block("airtight_reactor_kettle/mixer");
+    public static final PartialModel AIRTIGHT_REACTOR_KETTLE_COGS = block("airtight_reactor_kettle/cogs");
+    public static final PartialModel AIRTIGHT_REACTOR_KETTLE_LEFT_WINDOW = block("airtight_reactor_kettle/left_window");
+    public static final PartialModel AIRTIGHT_REACTOR_KETTLE_RIGHT_WINDOW = block("airtight_reactor_kettle/right_window");
+    public static final PartialModel AIRTIGHT_REACTOR_KETTLE_WINDOW_OPENED = block("airtight_reactor_kettle/windows_opened");
+    public static final PartialModel AIRTIGHT_REACTOR_KETTLE_WINDOW_CLOSED = block("airtight_reactor_kettle/windows_closed");
+
 
     public static final PartialModel AIR_VENT_CLOSED = block("air_vent/closed");
     public static final PartialModel AIR_VENT_OPENED = block("air_vent/opened");

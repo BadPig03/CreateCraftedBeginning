@@ -6,7 +6,7 @@ import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.interfaces.GasOpenPipeEffectHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.GasOpenPipeEffectHandler;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;

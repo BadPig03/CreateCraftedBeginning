@@ -36,7 +36,7 @@ public class GasInjectionCategory extends CCBRecipeCategory<GasInjectionRecipe> 
     @Override
     public void setRecipe(@NotNull IRecipeLayoutBuilder builder, @NotNull GasInjectionRecipe recipe, IFocusGroup focuses) {
         builder.addSlot(RecipeIngredientRole.INPUT, 27, 51).setBackground(getRenderedSlot(), -1, -1).addIngredients(recipe.getIngredients().getFirst());
-        GasStack gasStack = recipe.getRequiredGas().getMatchingGasStacks().getFirst().copyWithAmount(FluidType.BUCKET_VOLUME);
+        GasStack gasStack = recipe.getRequiredGas().getFirstGas().copyWithAmount(FluidType.BUCKET_VOLUME);
         builder.addSlot(RecipeIngredientRole.INPUT, 27, 32).setBackground(getRenderedSlot(), -1, -1).addIngredient(JEIPlugin.GAS_STACK, gasStack).setFluidRenderer(FluidType.BUCKET_VOLUME, false, 16, 16).addRichTooltipCallback((recipeSlotView, tooltip) -> tooltip.add(Component.translatable("jei.tooltip.gas.amount", gasStack.getAmount()).withStyle(ChatFormatting.GRAY)));
         builder.addSlot(RecipeIngredientRole.OUTPUT, 132, 51).setBackground(getRenderedSlot(), -1, -1).addItemStack(getResultItem(recipe));
     }

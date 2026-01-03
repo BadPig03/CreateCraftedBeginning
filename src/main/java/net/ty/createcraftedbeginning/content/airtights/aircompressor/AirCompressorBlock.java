@@ -38,8 +38,8 @@ import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.HitResult;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.coolantstrategy.CoolantStrategyHandler;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IAirtightComponent;
+import net.ty.createcraftedbeginning.api.gas.coolantstrategy.CoolantStrategyHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.IAirtightComponent;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlockEntity.CoolantEfficiency;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatstates.IOverheatState;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatstates.NormalOverheatState;
@@ -123,6 +123,11 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
                 return state.setValue(HORIZONTAL_FACING, horizontalDirection);
             }
         }
+    }
+
+    @Override
+    public SpeedLevel getMinimumRequiredSpeedLevel() {
+        return SpeedLevel.MEDIUM;
     }
 
     @Override

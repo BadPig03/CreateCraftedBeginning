@@ -73,7 +73,7 @@
           "item": "createcraftedbeginning:incomplete_heavy_core"
         },
         {
-          "type": "createcraftedbeginning:gas_stack",
+          "type": "createcraftedbeginning:single",
           "amount": 125,
           "gas": "createcraftedbeginning:pressurized_energized_ultrawarm_air"
         }

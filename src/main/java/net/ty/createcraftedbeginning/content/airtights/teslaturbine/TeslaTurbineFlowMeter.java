@@ -6,7 +6,7 @@ import net.minecraft.nbt.FloatTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.api.gas.GasAction;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,6 +31,7 @@ public class TeslaTurbineFlowMeter {
     private static final String COMPOUND_KEY_ABSOLUTE_SAMPLES = "AbsoluteSamples";
 
     private final TeslaTurbineCore core;
+    private final TeslaTurbineBlockEntity turbine;
     private final float[] netFlowOverTime = new float[SAMPLES_COUNT];
     private final float[] absoluteFlowOverTime = new float[SAMPLES_COUNT];
 
@@ -44,8 +45,9 @@ public class TeslaTurbineFlowMeter {
     private long gatheredClockwise;
     private long gatheredCounterClockwise;
 
-    public TeslaTurbineFlowMeter(TeslaTurbineCore core) {
+    public TeslaTurbineFlowMeter(TeslaTurbineCore core, TeslaTurbineBlockEntity turbine) {
         this.core = core;
+        this.turbine = turbine;
     }
 
     public long fill(@NotNull GasStack resource, @NotNull GasAction action, boolean clockwise) {
@@ -80,13 +82,14 @@ public class TeslaTurbineFlowMeter {
         return amount;
     }
 
-    public void tick(@NotNull Level level) {
-        if (level.isClientSide) {
+    public void tick() {
+        Level level = turbine.getLevel();
+        if (level == null || level.isClientSide) {
             return;
         }
 
         if (hasMixedGases) {
-            core.getStructureManager().triggerExplosion(level);
+            core.getStructureManager().triggerExplosion();
             reset(true);
             hasMixedGases = false;
             return;

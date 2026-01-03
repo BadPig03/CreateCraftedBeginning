@@ -4,7 +4,7 @@ import com.simibubi.create.api.registry.SimpleRegistry;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.effecthandlers.NaturalAirEffectHandler;
 import net.ty.createcraftedbeginning.api.gas.effecthandlers.UltrawarmAirEffectHandler;
-import net.ty.createcraftedbeginning.api.gas.interfaces.GasOpenPipeEffectHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.GasOpenPipeEffectHandler;
 import net.ty.createcraftedbeginning.data.CCBGases;
 
 public class CCBOpenPipeEffectHandlers {

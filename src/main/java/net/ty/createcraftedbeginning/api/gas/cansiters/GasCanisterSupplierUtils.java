@@ -142,18 +142,37 @@ public final class GasCanisterSupplierUtils {
     }
 
     /**
+     * Retrieves all non-empty gas suppliers (gas canisters and gas canister packs) from all registered suppliers for the specified player.
+     * <p>
+     * This method combines items from all registered supplier functions and filters
+     * the results to include only valid gas suppliers that contain gas. The returned list
+     * is unmodifiable and contains both individual gas canisters and gas canister packs
+     * that are both valid and contain at least some gas.
+     * </p>
+     *
+     * @param player the player to retrieve gas suppliers for (cannot be null)
+     * @return an unmodifiable list containing all valid, non-empty gas suppliers
+     * (gas canisters and gas canister packs) from all registered suppliers (never null)
+     * @see GasCanisterQueryUtils#isValidCanisterPackNonEmpty(ItemStack)
+     * @see GasCanisterQueryUtils#isValidCanisterNonEmpty(ItemStack)
+     */
+    public static @NotNull @Unmodifiable List<ItemStack> getAllGasSuppliersNonEmpty(@NotNull Player player) {
+        return CANISTER_SUPPLIERS.stream().flatMap(supplier -> supplier.apply(player).stream()).filter(stack -> GasCanisterQueryUtils.isValidCanisterPackNonEmpty(stack) || GasCanisterQueryUtils.isValidCanisterNonEmpty(stack)).toList();
+    }
+
+    /**
      * Retrieves the first non-empty gas supplier (gas canister pack or gas canister) from all registered suppliers.
      * <p>
      * This method searches through all items provided by registered supplier functions and returns
      * the first valid gas supplier that contains gas. The search order follows the registration order of the suppliers.
      * </p>
      *
-     * @param player the player to search for gas suppliers (can be null)
+     * @param player the player to search for gas suppliers (cannot be null)
      * @return the first valid non-empty gas supplier found, or {@link ItemStack#EMPTY} if no non-empty suppliers are found (never null)
      * @see GasCanisterQueryUtils#isValidCanisterPackNonEmpty(ItemStack)
      * @see GasCanisterQueryUtils#isValidCanisterNonEmpty(ItemStack)
      */
-    public static @NotNull ItemStack getFirstNonEmptyGasSupplier(@Nullable Player player) {
+    public static @NotNull ItemStack getFirstNonEmptyGasSupplier(@NotNull Player player) {
         return CANISTER_SUPPLIERS.stream().flatMap(supplier -> supplier.apply(player).stream()).filter(stack -> GasCanisterQueryUtils.isValidCanisterPackNonEmpty(stack) || GasCanisterQueryUtils.isValidCanisterNonEmpty(stack)).findFirst().orElse(ItemStack.EMPTY);
     }
 
@@ -184,7 +203,6 @@ public final class GasCanisterSupplierUtils {
         }
 
         return GasCanisterQueryUtils.isValidCanisterNonEmpty(gasSupplier) ? GasCanisterQueryUtils.getCanisterContent(gasSupplier) : GasStack.EMPTY;
-
     }
 
     /**
@@ -227,6 +245,5 @@ public final class GasCanisterSupplierUtils {
         Gas filterGas = gasStack.getGas();
         long amount = GasCanisterQueryUtils.getTotalGasAmount(player, filterGas);
         return amount == 0 ? GasStack.EMPTY : new GasStack(filterGas, amount);
-
     }
 }

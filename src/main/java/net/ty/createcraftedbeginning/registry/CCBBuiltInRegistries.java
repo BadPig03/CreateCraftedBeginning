@@ -6,19 +6,14 @@ import net.minecraft.core.WritableRegistry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.neoforged.neoforge.registries.RegistryBuilder;
-import net.ty.createcraftedbeginning.api.gas.MountedGasStorageType;
+import net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorageType;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 
 public class CCBBuiltInRegistries {
-    public static final Registry<MountedGasStorageType<?>> MOUNTED_GAS_STORAGE_TYPE = simple(CCBRegistries.MOUNTED_GAS_STORAGE_TYPE);
+    public static final Registry<MountedGasStorageType<?>> MOUNTED_GAS_STORAGE_TYPE = register(CCBRegistries.MOUNTED_GAS_STORAGE_TYPE, () -> {});
 
-    @SuppressWarnings("SameParameterValue")
-    private static <T> @NotNull Registry<T> simple(ResourceKey<Registry<T>> key) {
-        return register(key, () -> {});
-    }
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked", "rawtypes", "SameParameterValue"})
     private static <T> @NotNull Registry<T> register(ResourceKey<Registry<T>> key, Runnable onBakeCallback) {
         RegistryBuilder<T> builder = new RegistryBuilder<>(key).sync(true);
         builder.onBake(registry -> onBakeCallback.run());

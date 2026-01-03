@@ -42,11 +42,13 @@ public abstract class SawBlockEntityMixin {
 
         List<RecipeHolder<?>> originalRecipes = cir.getReturnValue();
         Optional<RecipeHolder<CuttingWithGasRecipe>> assemblyRecipe = SequencedAssemblyWithGasRecipe.getRecipe(level, inventory.getStackInSlot(0), CCBRecipeTypes.CUTTING_WITH_GAS.getType(), CuttingWithGasRecipe.class);
-        if (assemblyRecipe.isPresent() && filtering.test(assemblyRecipe.get().value().getResultItem(level.registryAccess()))) {
-            ArrayList<RecipeHolder<?>> newRecipes = new ArrayList<>(originalRecipes);
-            newRecipes.addFirst(assemblyRecipe.get());
-            cir.setReturnValue(newRecipes);
+        if (assemblyRecipe.isEmpty() || !filtering.test(assemblyRecipe.get().value().getResultItem(level.registryAccess()))) {
+            return;
         }
+
+        ArrayList<RecipeHolder<?>> newRecipes = new ArrayList<>(originalRecipes);
+        newRecipes.addFirst(assemblyRecipe.get());
+        cir.setReturnValue(newRecipes);
     }
 
     @SuppressWarnings("DataFlowIssue")
@@ -62,28 +64,29 @@ public abstract class SawBlockEntityMixin {
         if (recipes.isEmpty()) {
             return;
         }
+
         if (recipeIndex >= recipes.size()) {
             recipeIndex = 0;
         }
-
         Recipe<?> currentRecipe = recipes.get(recipeIndex).value();
-        if (currentRecipe instanceof CuttingWithGasRecipe recipe) {
-            ItemStack input = inventory.getStackInSlot(0);
-            int rolls = input.getCount();
-            inventory.clear();
-
-            List<ItemStack> results = new LinkedList<>();
-            for (int roll = 0; roll < rolls; roll++) {
-                List<ItemStack> rolledResults = recipe.rollResults(level.random);
-                results.addAll(rolledResults);
-            }
-
-            for (int slot = 0; slot < results.size() && slot + 1 < inventory.getSlots(); slot++) {
-                inventory.setStackInSlot(slot + 1, results.get(slot));
-            }
-
-            ci.cancel();
+        if (!(currentRecipe instanceof CuttingWithGasRecipe recipe)) {
+            return;
         }
+
+        ItemStack input = inventory.getStackInSlot(0);
+        int rolls = input.getCount();
+        inventory.clear();
+        List<ItemStack> results = new LinkedList<>();
+        for (int roll = 0; roll < rolls; roll++) {
+            List<ItemStack> rolledResults = recipe.rollResults(level.random);
+            results.addAll(rolledResults);
+        }
+
+        for (int slot = 0; slot < results.size() && slot + 1 < inventory.getSlots(); slot++) {
+            inventory.setStackInSlot(slot + 1, results.get(slot));
+        }
+
+        ci.cancel();
     }
 
     @Shadow

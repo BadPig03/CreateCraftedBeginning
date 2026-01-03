@@ -9,7 +9,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.recipes.GasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.SizedGasIngredient;
 import net.ty.createcraftedbeginning.compat.jei.JEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedBreezeChamberWithTank;
 import net.ty.createcraftedbeginning.recipe.EnergizationRecipe;
@@ -17,6 +17,7 @@ import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class EnergizationCategory extends CCBRecipeCategory<EnergizationRecipe> {
@@ -43,8 +44,8 @@ public class EnergizationCategory extends CCBRecipeCategory<EnergizationRecipe> 
         addGasOutputSlot(builder, recipe.getResultingGas());
     }
 
-    private static void addGasInputSlot(@NotNull IRecipeLayoutBuilder builder, @NotNull GasIngredient gasIngredient) {
-        List<GasStack> gasStackList = gasIngredient.getMatchingGasStacks();
+    private static void addGasInputSlot(@NotNull IRecipeLayoutBuilder builder, @NotNull SizedGasIngredient gasIngredient) {
+        List<GasStack> gasStackList = Arrays.asList(gasIngredient.getGases());
         List<GasStack> fullStacks = new ArrayList<>();
         for (GasStack stack : gasStackList) {
             fullStacks.add(stack.copyWithAmount(FluidType.BUCKET_VOLUME));

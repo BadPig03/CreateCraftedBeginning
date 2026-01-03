@@ -1,7 +1,9 @@
 package net.ty.createcraftedbeginning.compat.jade;
 
+import net.createmod.catnip.data.Iterate;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -10,10 +12,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.ty.createcraftedbeginning.api.gas.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.compat.jade.gas.DataProviderHelper;
+import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
 import net.ty.createcraftedbeginning.compat.jade.gas.GasConstants;
+import net.ty.createcraftedbeginning.compat.jade.gas.GasDataProvider;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlockEntity;
@@ -26,6 +28,9 @@ import snownee.jade.api.ITooltip;
 import snownee.jade.api.config.IPluginConfig;
 import snownee.jade.api.theme.IThemeHelper;
 import snownee.jade.api.ui.IElementHelper;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public enum GasTooltipProvider implements IServerDataProvider<BlockAccessor>, IComponentProvider<BlockAccessor> {
     INSTANCE;
@@ -63,15 +68,23 @@ public enum GasTooltipProvider implements IServerDataProvider<BlockAccessor>, IC
             return;
         }
 
-        DataProviderHelper.appendData(tooltip, compoundTag, accessor.showDetails());
+        GasDataProvider.appendData(tooltip, compoundTag, accessor.showDetails());
     }
 
     @Override
     public void appendServerData(CompoundTag data, @NotNull BlockAccessor blockAccessor) {
         Level level = blockAccessor.getLevel();
         BlockPos pos = blockAccessor.getPosition();
-        IGasHandler gasHandler = level.getCapability(GasHandler.BLOCK, pos, blockAccessor.getSide());
-        if (gasHandler == null) {
+        Set<IGasHandler> gasHandlers = new HashSet<>();
+        for (Direction direction : Iterate.directions) {
+            IGasHandler capability = level.getCapability(GasHandler.BLOCK, pos, direction);
+            if (capability == null) {
+                continue;
+            }
+
+            gasHandlers.add(capability);
+        }
+        if (gasHandlers.isEmpty()) {
             return;
         }
 
@@ -86,7 +99,7 @@ public enum GasTooltipProvider implements IServerDataProvider<BlockAccessor>, IC
             return;
         }
 
-        DataProviderHelper.getDataFromIGasHandler(data, gasHandler, JadePlugin.GAS_BLOCK_TOOLTIP, be instanceof CreativeAirtightTankBlockEntity);
+        GasDataProvider.readData(data, gasHandlers, JadePlugin.GAS_BLOCK_TOOLTIP, be instanceof CreativeAirtightTankBlockEntity);
     }
 
     @Override

@@ -44,7 +44,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.StructuralPosition;
+import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.TeslaTurbineStructuralPosition;
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -187,7 +187,7 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
                 }
 
                 BlockPos structurePos = calculateStructurePos(pos, axis, i, j);
-                StructuralPosition structuralPos = StructuralPosition.fromOffset(i, j);
+                TeslaTurbineStructuralPosition structuralPos = TeslaTurbineStructuralPosition.fromOffset(i, j);
                 BlockState structureState = ProperWaterloggedBlock.withWater(level, CCBBlocks.TESLA_TURBINE_STRUCTURAL_BLOCK.getDefaultState().setValue(TeslaTurbineStructuralBlock.AXIS, axis).setValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION, structuralPos), structurePos);
                 BlockState occupiedState = level.getBlockState(structurePos);
                 if (!occupiedState.canBeReplaced()) {
@@ -261,11 +261,10 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
                 }
             }
         }
-
         return ProperWaterloggedBlock.withWater(level, state, pos);
     }
 
-    public static class RenderProperties implements IClientBlockExtensions, MultiPosDestructionHandler {
+    public static class TeslaTurbineRenderProperties implements IClientBlockExtensions, MultiPosDestructionHandler {
         @Override
         @Nullable
         public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, @NotNull BlockState blockState, int progress) {
@@ -277,8 +276,7 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
                         continue;
                     }
 
-                    BlockPos structurePos = calculateStructurePos(pos, axis, i, j);
-                    positions.add(structurePos);
+                    positions.add(calculateStructurePos(pos, axis, i, j));
                 }
             }
             return positions;

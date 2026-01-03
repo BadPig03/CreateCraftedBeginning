@@ -16,6 +16,7 @@ public class CCBDamageTypes {
     public static final ResourceKey<DamageType> CINDER_FIRE = key("cinder_fire");
     public static final ResourceKey<DamageType> BRIMSTONE_FIRE = key("brimstone_fire");
     public static final ResourceKey<DamageType> BRIMSTONE = key("brimstone");
+    public static final ResourceKey<DamageType> REACTOR_KETTLE_MIXER = key("reactor_kettle_mixer");
 
     private static @NotNull ResourceKey<DamageType> key(String name) {
         return ResourceKey.create(Registries.DAMAGE_TYPE, CreateCraftedBeginning.asResource(name));
@@ -25,6 +26,7 @@ public class CCBDamageTypes {
         new DamageTypeBuilder(CINDER_FIRE).effects(DamageEffects.BURNING).register(ctx);
         new DamageTypeBuilder(BRIMSTONE_FIRE).effects(DamageEffects.BURNING).register(ctx);
         new DamageTypeBuilder(BRIMSTONE).effects(DamageEffects.HURT).register(ctx);
+        new DamageTypeBuilder(REACTOR_KETTLE_MIXER).register(ctx);
     }
 
     public static @NotNull DamageSource source(ResourceKey<DamageType> key, @NotNull Level level, Entity entity) {

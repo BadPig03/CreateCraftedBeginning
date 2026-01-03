@@ -2,7 +2,7 @@
   "type": "createcraftedbeginning:pressurization",
   "ingredients": [
     {
-      "type": "createcraftedbeginning:gas_stack",
+      "type": "createcraftedbeginning:single",
       "amount": 10,
       "gas": "createcraftedbeginning:ultrawarm_air"
     }

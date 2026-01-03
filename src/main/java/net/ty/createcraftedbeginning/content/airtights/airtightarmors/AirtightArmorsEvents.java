@@ -1,21 +1,11 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightarmors;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.PlayerModel;
-import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.player.PlayerRenderer;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageEffects;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ProjectileDeflection;
@@ -23,12 +13,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult.Type;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderArmEvent;
 import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
 import net.neoforged.neoforge.event.entity.living.LivingBreatheEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
@@ -37,15 +23,12 @@ import net.neoforged.neoforge.event.entity.living.MobEffectEvent.Applicable.Resu
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickEmpty;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
 
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
 public class AirtightArmorsEvents {
-    private static final ResourceLocation CHESTPLATE_ARM_LOCATION = CreateCraftedBeginning.asResource("textures/models/armor/airtight_chestplate_arm.png");
-
     @SubscribeEvent
     public static void onHelmetApplyMobEffects(@NotNull Applicable event) {
         if (!(event.getEntity() instanceof Player player)) {
@@ -85,34 +68,6 @@ public class AirtightArmorsEvents {
         }
 
         CCBAdvancements.SKY_IS_NOT_THE_LIMIT.awardTo(player);
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void onChestplateFirstPersonRender(@NotNull RenderArmEvent event) {
-        AbstractClientPlayer player = event.getPlayer();
-        if (!(Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(player) instanceof PlayerRenderer renderer)) {
-            return;
-        }
-        if (!CCBConfig.client().enableChestplateFirstPersonArm.get()) {
-            return;
-        }
-
-        ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
-        if (!chestplate.is(CCBItems.AIRTIGHT_CHESTPLATE)) {
-            return;
-        }
-
-        PlayerModel<AbstractClientPlayer> model = renderer.getModel();
-        model.attackTime = 0;
-        model.crouching = false;
-        model.swimAmount = 0;
-        model.setupAnim(player, 0, 0, 0, 0, 0);
-
-        ModelPart armPart = event.getArm() == HumanoidArm.LEFT ? model.leftSleeve : model.rightSleeve;
-        armPart.xRot = 0;
-        armPart.render(event.getPoseStack(), event.getMultiBufferSource().getBuffer(RenderType.entitySolid(CHESTPLATE_ARM_LOCATION)), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-        event.setCanceled(true);
     }
 
     @SubscribeEvent

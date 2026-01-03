@@ -4,9 +4,9 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.api.gas.GasAction;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
 import org.jetbrains.annotations.NotNull;
@@ -29,10 +29,10 @@ public class AirtightAssemblyDriverCore {
 
     public AirtightAssemblyDriverCore() {
         flowMeter = new AirtightAssemblyDriverFlowMeter(this);
-        levelCalculator = new AirtightAssemblyDriverLevelCalculator();
         residueManager = new AirtightAssemblyDriverResidueManager(this);
         structureManager = new AirtightAssemblyDriverStructureManager(this);
         tooltipBuilder = new AirtightAssemblyDriverTooltipBuilder(this);
+        levelCalculator = new AirtightAssemblyDriverLevelCalculator();
     }
 
     public boolean addToGoggleTooltip(List<Component> tooltip) {

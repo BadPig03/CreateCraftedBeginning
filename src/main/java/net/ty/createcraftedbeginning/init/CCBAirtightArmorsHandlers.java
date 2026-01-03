@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.init;
 
+import com.simibubi.create.api.registry.SimpleRegistry;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.AirtightArmorsHandler;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.creative.CreativeAirArmorsHandler;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.ethereal.EnergizedEtherealAirArmorsHandler;
@@ -15,11 +16,12 @@ import net.ty.createcraftedbeginning.api.gas.armorhandlers.ultrawarm.EnergizedUl
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.ultrawarm.PressurizedEnergizedUltrawarmAirArmorsHandler;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.ultrawarm.PressurizedUltrawarmAirArmorsHandler;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.ultrawarm.UltrawarmAirArmorsHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.data.CCBGases;
 
 public class CCBAirtightArmorsHandlers {
     public static void register() {
-        var registry = AirtightArmorsHandler.REGISTRY;
+        SimpleRegistry<Gas, AirtightArmorsHandler> registry = AirtightArmorsHandler.REGISTRY;
 
         registry.register(CCBGases.NATURAL_AIR.get(), new NaturalAirArmorsHandler());
         registry.register(CCBGases.ENERGIZED_NATURAL_AIR.get(), new EnergizedNaturalAirArmorsHandler());

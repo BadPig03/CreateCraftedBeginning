@@ -5,9 +5,9 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.api.gas.GasAction;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -17,11 +17,9 @@ public class TeslaTurbineCore {
     public static final int MAX_LEVEL = 16;
 
     private static final long INTERNAL_CAPACITY = 8000L;
-
     private static final Set<Pair<Integer, Integer>> ALL_OFFSETS = Set.of(Pair.of(2, 1), Pair.of(-1, 2), Pair.of(1, -2), Pair.of(-2, -1), Pair.of(-2, 1), Pair.of(-1, -2), Pair.of(1, 2), Pair.of(2, -1));
     private static final Set<Pair<Integer, Integer>> CLOCKWISE_OFFSETS = Set.of(Pair.of(2, 1), Pair.of(-1, 2), Pair.of(1, -2), Pair.of(-2, -1));
     private static final Set<Pair<Integer, Integer>> COUNTER_CLOCKWISE_OFFSETS = Set.of(Pair.of(-2, 1), Pair.of(-1, -2), Pair.of(1, 2), Pair.of(2, -1));
-
     private static final String COMPOUND_KEY_FLOW_METER = "FlowMeter";
     private static final String COMPOUND_KEY_LEVEL_CALCULATOR = "LevelCalculator";
     private static final String COMPOUND_KEY_STRUCTURE_MANAGER = "StructureManager";
@@ -34,14 +32,10 @@ public class TeslaTurbineCore {
 
     public TeslaTurbineCore(TeslaTurbineBlockEntity turbine) {
         this.turbine = turbine;
-        structureManager = new TeslaTurbineStructureManager(this);
-        levelCalculator = new TeslaTurbineLevelCalculator(this);
+        structureManager = new TeslaTurbineStructureManager(this, turbine);
+        levelCalculator = new TeslaTurbineLevelCalculator(this, turbine);
+        flowMeter = new TeslaTurbineFlowMeter(this, turbine);
         tooltipBuilder = new TeslaTurbineTooltipBuilder(this);
-        flowMeter = new TeslaTurbineFlowMeter(this);
-    }
-
-    public TeslaTurbineBlockEntity getTurbine() {
-        return turbine;
     }
 
     public void tick() {
@@ -50,19 +44,17 @@ public class TeslaTurbineCore {
             return;
         }
 
-        flowMeter.tick(level);
+        flowMeter.tick();
         levelCalculator.update();
-        turbine.notifyUpdate();
     }
 
-    public void lazyTick(@NotNull TeslaTurbineBlockEntity turbine) {
+    public void lazyTick() {
         Level level = turbine.getLevel();
         if (level == null || level.isClientSide) {
             return;
         }
 
         structureManager.tick();
-        turbine.notifyUpdate();
     }
 
     public boolean addToGoggleTooltip(List<Component> tooltip) {

@@ -129,6 +129,31 @@
     ],
     "subtitle": "createcraftedbeginning.subtitle.injecting"
   },
+  "reactor_kettle_mixing": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:block.gilded_blackstone.break"
+      }
+    ],
+    "subtitle": "createcraftedbeginning.subtitle.reactor_kettle_mixing"
+  },
+  "reactor_kettle_mixing_compounded_1": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:block.netherrack.break"
+      }
+    ]
+  },
+  "reactor_kettle_mixing_compounded_2": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:block.netherite_block.hit"
+      }
+    ]
+  },
   "rotor_added": {
     "sounds": [
       {

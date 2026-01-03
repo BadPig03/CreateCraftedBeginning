@@ -6,7 +6,6 @@ import com.simibubi.create.api.registry.CreateRegistries;
 import com.simibubi.create.api.registry.registrate.SimpleBuilder;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.tterrag.registrate.AbstractRegistrate;
-import com.tterrag.registrate.builders.BlockEntityBuilder;
 import com.tterrag.registrate.builders.BlockEntityBuilder.BlockEntityFactory;
 import com.tterrag.registrate.builders.Builder;
 import com.tterrag.registrate.builders.FluidBuilder;
@@ -23,7 +22,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityType.EntityFactory;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.CreativeModeTab;
@@ -33,11 +31,10 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.fluids.BaseFlowingFluid;
 import net.neoforged.neoforge.fluids.BaseFlowingFluid.Flowing;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.MountedGasStorageType;
+import net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorageType;
 import net.ty.createcraftedbeginning.content.fluids.AmethystSuspensionVirtualFluid;
 import net.ty.createcraftedbeginning.content.fluids.SlushVirtualFluid;
 import net.ty.createcraftedbeginning.registry.CCBRegistries;
@@ -100,6 +97,7 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
         return super.registerEventListeners(bus);
     }
 
+    @SuppressWarnings("ObjectEqualsCanBeEquality")
     @Override
     protected <R, T extends R> @NotNull RegistryEntry<R, T> accept(@NotNull String name, @NotNull ResourceKey<? extends Registry<R>> type, @NotNull Builder<R, T, ?, ?> builder, @NotNull NonNullSupplier<? extends T> creator, @NotNull NonNullFunction<DeferredHolder<R, T>, ? extends RegistryEntry<R, T>> entryFactory) {
         RegistryEntry<R, T> entry = super.accept(name, type, builder, creator, entryFactory);

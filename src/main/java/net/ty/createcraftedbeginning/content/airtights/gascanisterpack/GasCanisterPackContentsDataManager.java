@@ -4,12 +4,13 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.LevelAccessor;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class GasCanisterPackContentsDataManager {
     private GasCanisterPackContentsData savedData;
-    private Map<UUID, GasCanisterPackContents> contentsMap;
+    private Map<UUID, GasCanisterPackContents> contentsMap = new HashMap<>();
 
     public void onLevelLoad(@NotNull LevelAccessor level) {
         MinecraftServer server = level.getServer();

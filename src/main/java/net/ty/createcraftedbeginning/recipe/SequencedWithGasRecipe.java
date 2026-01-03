@@ -8,7 +8,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.neoforged.neoforge.common.crafting.CompoundIngredient;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IAssemblyRecipeWithGas;
+import net.ty.createcraftedbeginning.api.gas.gases.IAssemblyRecipeWithGas;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipe;
 
 public class SequencedWithGasRecipe<T extends ProcessingWithGasRecipe<?, ?>> {

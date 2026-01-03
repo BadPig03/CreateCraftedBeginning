@@ -3,7 +3,7 @@ package net.ty.createcraftedbeginning.recipe;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.recipes.GasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.SizedGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
 import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
@@ -19,10 +19,11 @@ public class PressurizationRecipe extends StandardProcessingWithGasRecipe<Single
         return true;
     }
 
-    public GasIngredient getIngredientsGas() {
+    public SizedGasIngredient getIngredientsGas() {
         if (isIngredientEmpty()) {
             throw new IllegalStateException("Pressurization Recipe has no gas ingredient!");
         }
+
         return gasIngredients.getFirst();
     }
 
@@ -34,6 +35,7 @@ public class PressurizationRecipe extends StandardProcessingWithGasRecipe<Single
         if (gasResults.isEmpty()) {
             throw new IllegalStateException("Pressurization Recipe has no gas result!");
         }
+
         return gasResults.getFirst();
     }
 

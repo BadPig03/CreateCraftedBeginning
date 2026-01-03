@@ -20,15 +20,15 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.api.gas.GasAction;
-import net.ty.createcraftedbeginning.api.gas.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.GasConnectivityHandler;
-import net.ty.createcraftedbeginning.api.gas.GasTank;
-import net.ty.createcraftedbeginning.api.gas.SmartGasTank;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
+import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.GasConnectivityHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.GasTank;
+import net.ty.createcraftedbeginning.api.gas.gases.SmartGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IGasTank;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IGasTankMultiBlockEntityContainer.iGas;
+import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.IGasTank;
+import net.ty.createcraftedbeginning.api.gas.gases.IGasTankMultiBlockEntityContainer.iGas;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightassemblydriver.AirtightAssemblyDriverCore;
 import net.ty.createcraftedbeginning.content.airtights.airtightassemblydriver.AirtightAssemblyDriverStructureManager;
@@ -381,7 +381,7 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements iGas, I
         }
         onGasStackChanged(tankInventory.getGasStack());
         updateTankState();
-        notifyUpdate();
+        setChanged();
     }
 
     @Override

@@ -18,12 +18,12 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.api.gas.GasFilteringBehaviour;
-import net.ty.createcraftedbeginning.api.gas.GasPropagator;
+import net.ty.createcraftedbeginning.api.gas.gases.GasFilteringBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.GasPropagator;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IDirectionalPipe;
-import net.ty.createcraftedbeginning.api.gas.interfaces.IDirectionalPipe.DirectionalFacing;
+import net.ty.createcraftedbeginning.api.gas.gases.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.IDirectionalPipe;
+import net.ty.createcraftedbeginning.api.gas.gases.IDirectionalPipe.DirectionalFacing;
 import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
 import org.jetbrains.annotations.NotNull;
 
