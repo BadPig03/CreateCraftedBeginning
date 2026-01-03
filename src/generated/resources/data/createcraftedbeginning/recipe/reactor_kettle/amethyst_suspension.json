@@ -1,0 +1,19 @@
+{
+  "type": "createcraftedbeginning:reactor_kettle",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:powdered_amethyst"
+    },
+    {
+      "type": "neoforge:tag",
+      "amount": 500,
+      "tag": "c:water"
+    }
+  ],
+  "results": [
+    {
+      "amount": 500,
+      "id": "createcraftedbeginning:amethyst_suspension"
+    }
+  ]
+}

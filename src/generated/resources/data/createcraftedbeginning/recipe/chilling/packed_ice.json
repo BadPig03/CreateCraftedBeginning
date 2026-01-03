@@ -1,0 +1,13 @@
+{
+  "type": "createcraftedbeginning:chilling",
+  "ingredients": [
+    {
+      "item": "minecraft:ice"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:packed_ice"
+    }
+  ]
+}

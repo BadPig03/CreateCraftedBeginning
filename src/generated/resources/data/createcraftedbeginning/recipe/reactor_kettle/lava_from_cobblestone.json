@@ -1,0 +1,15 @@
+{
+  "type": "createcraftedbeginning:reactor_kettle",
+  "ingredients": [
+    {
+      "tag": "c:cobblestones"
+    }
+  ],
+  "results": [
+    {
+      "amount": 100,
+      "id": "minecraft:lava"
+    }
+  ],
+  "temperature": "superheated"
+}

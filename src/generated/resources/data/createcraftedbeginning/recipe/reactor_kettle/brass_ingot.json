@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:reactor_kettle",
+  "ingredients": [
+    {
+      "tag": "c:ingots/copper"
+    },
+    {
+      "tag": "c:ingots/zinc"
+    }
+  ],
+  "results": [
+    {
+      "count": 2,
+      "id": "create:brass_ingot"
+    }
+  ],
+  "temperature": "heated"
+}

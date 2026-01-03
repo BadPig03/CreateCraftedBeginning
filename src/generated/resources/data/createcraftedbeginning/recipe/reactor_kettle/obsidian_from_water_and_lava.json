@@ -1,0 +1,21 @@
+{
+  "type": "createcraftedbeginning:reactor_kettle",
+  "ingredients": [
+    {
+      "type": "neoforge:tag",
+      "amount": 250,
+      "tag": "c:water"
+    },
+    {
+      "type": "neoforge:tag",
+      "amount": 750,
+      "tag": "c:lava"
+    }
+  ],
+  "processing_time": 200,
+  "results": [
+    {
+      "id": "minecraft:obsidian"
+    }
+  ]
+}

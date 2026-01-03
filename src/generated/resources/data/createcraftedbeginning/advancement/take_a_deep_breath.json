@@ -1,0 +1,28 @@
+{
+  "parent": "createcraftedbeginning:plywood",
+  "criteria": {
+    "0": {
+      "trigger": "createcraftedbeginning:take_a_deep_breath_builtin"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.take_a_deep_breath.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:airtight_pump"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.take_a_deep_breath"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -1,0 +1,82 @@
+{
+  "variants": {
+    "structural_position=bottom_center": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/bottom_center"
+    },
+    "structural_position=bottom_left_down": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/bottom_left_down"
+    },
+    "structural_position=bottom_left_mid": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/bottom_left_mid"
+    },
+    "structural_position=bottom_left_up": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/bottom_left_up"
+    },
+    "structural_position=bottom_mid_down": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/bottom_mid_down"
+    },
+    "structural_position=bottom_mid_up": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/bottom_mid_up"
+    },
+    "structural_position=bottom_right_down": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/bottom_right_down"
+    },
+    "structural_position=bottom_right_mid": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/bottom_right_mid"
+    },
+    "structural_position=bottom_right_up": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/bottom_right_up"
+    },
+    "structural_position=mid_left_down": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/mid_left_down"
+    },
+    "structural_position=mid_left_mid": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/mid_left_mid"
+    },
+    "structural_position=mid_left_up": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/mid_left_up"
+    },
+    "structural_position=mid_mid_down": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/mid_mid_down"
+    },
+    "structural_position=mid_mid_up": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/mid_mid_up"
+    },
+    "structural_position=mid_right_down": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/mid_right_down"
+    },
+    "structural_position=mid_right_mid": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/mid_right_mid"
+    },
+    "structural_position=mid_right_up": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/mid_right_up"
+    },
+    "structural_position=top_center": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/top_center"
+    },
+    "structural_position=top_left_down": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/top_left_down"
+    },
+    "structural_position=top_left_mid": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/top_left_mid"
+    },
+    "structural_position=top_left_up": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/top_left_up"
+    },
+    "structural_position=top_mid_down": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/top_mid_down"
+    },
+    "structural_position=top_mid_up": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/top_mid_up"
+    },
+    "structural_position=top_right_down": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/top_right_down"
+    },
+    "structural_position=top_right_mid": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/top_right_mid"
+    },
+    "structural_position=top_right_up": {
+      "model": "createcraftedbeginning:block/airtight_reactor_kettle/top_right_up"
+    }
+  }
+}

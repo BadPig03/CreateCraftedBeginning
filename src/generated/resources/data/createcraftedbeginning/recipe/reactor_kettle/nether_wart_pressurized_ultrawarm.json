@@ -1,0 +1,19 @@
+{
+  "type": "createcraftedbeginning:reactor_kettle",
+  "ingredients": [
+    {
+      "tag": "c:seeds"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 10,
+      "gas": "createcraftedbeginning:pressurized_ultrawarm_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:nether_wart"
+    }
+  ],
+  "temperature": "heated"
+}

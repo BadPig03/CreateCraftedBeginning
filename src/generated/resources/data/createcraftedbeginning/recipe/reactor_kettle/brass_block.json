@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:reactor_kettle",
+  "ingredients": [
+    {
+      "tag": "c:storage_blocks/copper"
+    },
+    {
+      "tag": "c:storage_blocks/zinc"
+    }
+  ],
+  "results": [
+    {
+      "count": 2,
+      "id": "create:brass_block"
+    }
+  ],
+  "temperature": "heated"
+}
