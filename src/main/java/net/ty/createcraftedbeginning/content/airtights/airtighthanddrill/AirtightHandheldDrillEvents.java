@@ -10,9 +10,9 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickB
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock.Action;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Pre;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerClients;
+import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterExecuteUtils;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterSupplierUtils;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
 
@@ -41,17 +41,17 @@ public class AirtightHandheldDrillEvents {
             return;
         }
 
-        GasStack gasStack = GasCanisterSupplierUtils.getFirstNonEmptyGasContent(player);
+        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
         float newSpeed = AirtightHandheldDrillUtils.calculateFinalBreakSpeed(1, player, drill, pos);
         if (newSpeed >= 0) {
             return;
         }
 
         if (newSpeed == -1) {
-            GasCanisterExecuteUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", gasStack.getHoverName());
+            CanisterContainerClients.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", gasContent.getHoverName());
         }
         else if (newSpeed == -2) {
-            GasCanisterExecuteUtils.displayCustomWarningHint(player, "gui.warnings.invalid_mining_target");
+            CanisterContainerClients.displayCustomWarningHint(player, "gui.warnings.invalid_mining_target");
         }
     }
 

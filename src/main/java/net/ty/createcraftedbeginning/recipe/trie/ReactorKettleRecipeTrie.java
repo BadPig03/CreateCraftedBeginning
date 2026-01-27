@@ -87,7 +87,7 @@ public class ReactorKettleRecipeTrie<R extends Recipe<?>> {
                     continue;
                 }
 
-                variants.add(new AbstractGas(gas.getGas()));
+                variants.add(new AbstractGas(gas.getGasType()));
             }
         }
 
@@ -172,8 +172,8 @@ public class ReactorKettleRecipeTrie<R extends Recipe<?>> {
             return variant;
         }
 
-        private AbstractVariant getOrAssignVariant(Gas gas) {
-            AbstractVariant variant = variantCache.computeIfAbsent(gas, $ -> new AbstractGas(gas));
+        private AbstractVariant getOrAssignVariant(Gas gasType) {
+            AbstractVariant variant = variantCache.computeIfAbsent(gasType, $ -> new AbstractGas(gasType));
             getOrAssignId(variant);
             return variant;
         }
@@ -235,7 +235,7 @@ public class ReactorKettleRecipeTrie<R extends Recipe<?>> {
 
                     Set<AbstractVariant> variants = new HashSet<>();
                     for (GasStack stack : ingredient.getGases()) {
-                        variants.add(getOrAssignVariant(stack.getGas()));
+                        variants.add(getOrAssignVariant(stack.getGasType()));
                     }
                     ingredients.add(new AbstractIngredient(variants));
                 }

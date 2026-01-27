@@ -121,7 +121,7 @@ public class BreezeCoolerBlockItem extends BlockItem {
     public @NotNull InteractionResult useOn(@NotNull UseOnContext context) {
         Level level = context.getLevel();
         BlockEntity be = level.getBlockEntity(context.getClickedPos());
-        if (!CCBConfig.server().gas.canCoolerGetFromSpawners.get()) {
+        if (!CCBConfig.server().airtights.canCoolerGetFromSpawners.get()) {
             return super.useOn(context);
         }
 

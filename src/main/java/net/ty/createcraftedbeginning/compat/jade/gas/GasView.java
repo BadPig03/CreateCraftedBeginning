@@ -38,7 +38,7 @@ public class GasView {
         }
 
         GasView gasView = new GasView(new GasStackElement(gasObject));
-        gasView.gasName = Component.translatable(gasObject.type().getTranslationKey());
+        gasView.gasName = Component.translatable(gasObject.gasType().getTranslationKey());
         gasView.current = getDecimalFormat(gasObject.amount());
         gasView.max = getDecimalFormat(capacity);
         gasView.ratio = (float) gasObject.amount() / capacity;

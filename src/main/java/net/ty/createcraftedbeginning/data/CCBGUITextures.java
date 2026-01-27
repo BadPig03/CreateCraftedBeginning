@@ -25,7 +25,8 @@ public enum CCBGUITextures implements ScreenElement, TextureSheetSegment {
 
     HANDHELD_DRILL("handheld_drill", 0, 0, 215, 138),
     GAS_CANISTER_PACK("gas_canister_pack", 0, 0, 196, 144),
-    GAS_CANISTER_PACK_CANISTER("gas_canister_pack", 0, 144, 16, 38);
+    GAS_CANISTER_PACK_CANISTER("gas_canister_pack", 0, 144, 16, 38),
+    GAS_FILTER("gas_filter", 0, 0, 214, 104);
 
     public final ResourceLocation location;
     private final int width;

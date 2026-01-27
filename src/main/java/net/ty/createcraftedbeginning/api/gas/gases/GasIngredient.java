@@ -115,7 +115,7 @@ public abstract class GasIngredient implements Predicate<GasStack> {
     }
 
     public static @NotNull GasIngredient of(GasStack... gases) {
-        return of(Arrays.stream(gases).map(GasStack::getGas));
+        return of(Arrays.stream(gases).map(GasStack::getGasType));
     }
 
     public static @NotNull GasIngredient of(Gas... gases) {
@@ -128,12 +128,12 @@ public abstract class GasIngredient implements Predicate<GasStack> {
 
     @Contract("_ -> new")
     public static @NotNull GasIngredient single(@NotNull GasStack stack) {
-        return single(stack.getGas());
+        return single(stack.getGasType());
     }
 
     @Contract("_ -> new")
-    public static @NotNull GasIngredient single(@NotNull Gas gas) {
-        return single(gas.getHolder());
+    public static @NotNull GasIngredient single(@NotNull Gas gasType) {
+        return single(gasType.getHolder());
     }
 
     @Contract("_ -> new")

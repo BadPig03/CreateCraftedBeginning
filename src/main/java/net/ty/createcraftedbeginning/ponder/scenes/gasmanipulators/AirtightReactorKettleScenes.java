@@ -150,7 +150,7 @@ public class AirtightReactorKettleScenes {
         scene.world().showSection(hatchSelection, Direction.EAST);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Items, in particular, can be fed via Funnels or dropped in directly").colored(PonderPalette.INPUT).pointAt(Vec3.atCenterOf(rightDownPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Items, in particular, can be fed via Funnels or dropped in directly").colored(PonderPalette.INPUT).pointAt(Vec3.atCenterOf(funnelPos)).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();

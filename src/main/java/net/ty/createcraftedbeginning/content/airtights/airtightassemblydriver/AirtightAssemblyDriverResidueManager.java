@@ -187,8 +187,8 @@ public class AirtightAssemblyDriverResidueManager {
             return fluidHandler.getFluidInTank(0).isEmpty() && itemStackHandler.getStackInSlot(0).isEmpty();
         }
 
-        Gas gas = flowMeter.getGasType().getGas();
-        FluidStack outputFluidStack = gas.getOutputFluidStack();
+        Gas gasType = flowMeter.getGasType().getGasType();
+        FluidStack outputFluidStack = gasType.getOutputFluidStack();
         boolean fluidSuccess;
         if (outputFluidStack.isEmpty()) {
             fluidSuccess = true;
@@ -199,7 +199,7 @@ public class AirtightAssemblyDriverResidueManager {
             fluidSuccess = filledAmount >= fillAmount;
         }
 
-        ItemStack outputItemStack = gas.getOutputItemStack();
+        ItemStack outputItemStack = gasType.getOutputItemStack();
         boolean itemSuccess;
         if (outputItemStack.isEmpty()) {
             itemSuccess = true;

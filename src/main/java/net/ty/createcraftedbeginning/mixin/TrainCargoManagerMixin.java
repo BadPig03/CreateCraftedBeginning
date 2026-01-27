@@ -5,6 +5,7 @@ import com.simibubi.create.content.contraptions.minecart.TrainCargoManager;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorageWrapper;
+import net.ty.createcraftedbeginning.mixin.accessor.MountedStorageManagerAccessor;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,7 +20,7 @@ public abstract class TrainCargoManagerMixin extends MountedStorageManager {
     abstract void changeDetected();
 
     @Inject(method = "initialize", at = @At("TAIL"))
-    private void onInitialize(CallbackInfo ci) {
+    private void ccb$initialize(CallbackInfo ci) {
         MountedStorageManagerAccessor accessor = (MountedStorageManagerAccessor) this;
         MountedGasStorageWrapper originalGases = accessor.getGases();
 

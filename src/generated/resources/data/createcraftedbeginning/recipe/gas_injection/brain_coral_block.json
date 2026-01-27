@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "item": "minecraft:brain_coral"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 100,
+      "gas": "createcraftedbeginning:energized_natural_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:brain_coral_block"
+    }
+  ]
+}

@@ -33,9 +33,9 @@ public abstract class SawBlockEntityMixin {
 
     @SuppressWarnings("DataFlowIssue")
     @Inject(method = "getRecipes", at = @At("RETURN"), cancellable = true, remap = false)
-    private void injectCuttingRecipeWithGas(CallbackInfoReturnable<List<RecipeHolder<?>>> cir) {
-        SawBlockEntity self = (SawBlockEntity) (Object) this;
-        Level level = self.getLevel();
+    private void ccb$getRecipes(CallbackInfoReturnable<List<RecipeHolder<?>>> cir) {
+        SawBlockEntity saw = (SawBlockEntity) (Object) this;
+        Level level = saw.getLevel();
         if (level == null) {
             return;
         }
@@ -53,9 +53,9 @@ public abstract class SawBlockEntityMixin {
 
     @SuppressWarnings("DataFlowIssue")
     @Inject(method = "applyRecipe", at = @At("HEAD"), cancellable = true, remap = false)
-    private void applyCuttingRecipeWithGas(CallbackInfo ci) {
-        SawBlockEntity self = (SawBlockEntity) (Object) this;
-        Level level = self.getLevel();
+    private void ccb$applyRecipe(CallbackInfo ci) {
+        SawBlockEntity saw = (SawBlockEntity) (Object) this;
+        Level level = saw.getLevel();
         if (level == null) {
             return;
         }

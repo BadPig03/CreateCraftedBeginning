@@ -32,7 +32,7 @@ public class CreativeSmartGasTank extends SmartGasTank {
     }
 
     @Override
-    public GasStack drain(long maxDrain, GasAction action) {
+    public GasStack drain(long maxDrain, @NotNull GasAction action) {
         return super.drain(maxDrain, GasAction.SIMULATE);
     }
 

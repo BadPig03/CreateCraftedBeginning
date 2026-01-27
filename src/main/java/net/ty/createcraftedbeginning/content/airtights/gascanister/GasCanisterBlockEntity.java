@@ -1,23 +1,15 @@
 package net.ty.createcraftedbeginning.content.airtights.gascanister;
 
-import com.simibubi.create.AllEnchantments;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
-import net.createmod.catnip.codecs.CatnipCodecUtils;
 import net.createmod.catnip.lang.LangBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
-import net.minecraft.core.component.DataComponentMap.Builder;
-import net.minecraft.core.component.DataComponentPatch;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Component.Serializer;
-import net.minecraft.world.Nameable;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
@@ -26,32 +18,20 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.SmartGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.SmartGasTankBehaviour;
-import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import net.ty.createcraftedbeginning.registry.CCBDataComponents;
-import net.ty.createcraftedbeginning.registry.CCBEnchantments;
-import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, Nameable {
-    private static final Component DEFAULT_NAME = CCBItems.GAS_CANISTER.get().getDescription();
-    private static final String COMPOUND_KEY_CAPACITY_ENCHANT_LEVEL = "CapacityEnchantLevel";
-    private static final String COMPOUND_KEY_ECONOMIZE_ENCHANT_LEVEL = "EconomizeEnchantLevel";
-    private static final String COMPOUND_KEY_CUSTOM_NAME = "CustomName";
-    private static final String COMPOUND_KEY_COMPONENTS_PATCH = "ComponentsPatch";
+public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
+    private static final String COMPOUND_KEY_CANISTER = "Canister";
 
-    private DataComponentPatch componentPatch;
+    private ItemStack canister = ItemStack.EMPTY;
     private SmartGasTankBehaviour tankBehaviour;
-    private Component customName;
-    private int capacityEnchantLevel;
-    private int economizeEnchantLevel;
 
     public GasCanisterBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
-        componentPatch = DataComponentPatch.EMPTY;
     }
 
     public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
@@ -60,7 +40,7 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
 
     @Override
     public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
-        tankBehaviour = SmartGasTankBehaviour.single(this, getMaxCapacity()).forbidInsertion().forbidExtraction();
+        tankBehaviour = SmartGasTankBehaviour.single(this, GasCanisterContainerContents.getDefaultCapacity()).forbidInsertion().forbidExtraction();
         behaviours.add(tankBehaviour);
     }
 
@@ -73,51 +53,28 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
     @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        compoundTag.putInt(COMPOUND_KEY_CAPACITY_ENCHANT_LEVEL, capacityEnchantLevel);
-        compoundTag.putInt(COMPOUND_KEY_ECONOMIZE_ENCHANT_LEVEL, economizeEnchantLevel);
-        compoundTag.put(COMPOUND_KEY_COMPONENTS_PATCH, CatnipCodecUtils.encode(DataComponentPatch.CODEC, provider, componentPatch).orElse(new CompoundTag()));
-        if (customName == null) {
-            return;
-        }
-
-        compoundTag.putString(COMPOUND_KEY_CUSTOM_NAME, Serializer.toJson(customName, provider));
+        compoundTag.put(COMPOUND_KEY_CANISTER, canister.saveOptional(provider));
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        if (compoundTag.contains(COMPOUND_KEY_CAPACITY_ENCHANT_LEVEL)) {
-            capacityEnchantLevel = compoundTag.getInt(COMPOUND_KEY_CAPACITY_ENCHANT_LEVEL);
+        if (!compoundTag.contains(COMPOUND_KEY_CANISTER)) {
+            return;
         }
-        if (compoundTag.contains(COMPOUND_KEY_ECONOMIZE_ENCHANT_LEVEL)) {
-            economizeEnchantLevel = compoundTag.getInt(COMPOUND_KEY_ECONOMIZE_ENCHANT_LEVEL);
-        }
-        if (compoundTag.contains(COMPOUND_KEY_CUSTOM_NAME)) {
-            customName = Serializer.fromJson(compoundTag.getString(COMPOUND_KEY_CUSTOM_NAME), provider);
-        }
-        componentPatch = CatnipCodecUtils.decode(DataComponentPatch.CODEC, provider, compoundTag.getCompound(COMPOUND_KEY_COMPONENTS_PATCH)).orElse(DataComponentPatch.EMPTY);
-        tankBehaviour.getPrimaryHandler().setCapacity(getMaxCapacity());
-        notifyUpdate();
+
+        canister = ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_CANISTER));
+        updateCapacity();
     }
 
-    public DataComponentPatch getComponentPatch() {
-        return componentPatch;
-    }
-
-    public long getMaxCapacity() {
-        return CCBConfig.server().gas.canisterCapacity.get() * 1000L * (1 + capacityEnchantLevel);
-    }
-
-    public void setContent(@NotNull ItemStack canister, @NotNull Level level) {
-        capacityEnchantLevel = canister.getEnchantmentLevel(level.holderOrThrow(AllEnchantments.CAPACITY));
-        economizeEnchantLevel = canister.getEnchantmentLevel(level.holderOrThrow(CCBEnchantments.ECONOMIZE));
-        componentPatch = canister.getComponentsPatch();
-        if (canister.has(DataComponents.CUSTOM_NAME)) {
-            customName = canister.getHoverName();
+    public void setCanisterContent(@NotNull ItemStack itemStack) {
+        canister = itemStack.copy();
+        if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
+            return;
         }
-        tankBehaviour.getPrimaryHandler().setCapacity(getMaxCapacity());
-        GasStack gasStack = canister.getOrDefault(CCBDataComponents.CANISTER_CONTENT, GasStack.EMPTY);
-        tankBehaviour.getInternalGasHandler().forceFill(gasStack, GasAction.EXECUTE);
+
+        tankBehaviour.getPrimaryHandler().setCapacity(canisterContents.getTankCapacity(0));
+        tankBehaviour.getInternalGasHandler().forceFill(canisterContents.getGasInTank(0), GasAction.EXECUTE);
         notifyUpdate();
     }
 
@@ -145,21 +102,20 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
         return true;
     }
 
-    @Override
-    public @NotNull Component getName() {
-        return customName == null ? DEFAULT_NAME : customName;
+    public ItemStack getCanister() {
+        return canister;
     }
 
-    @Override
-    protected void applyImplicitComponents(@NotNull DataComponentInput componentInput) {
-    }
+    private void updateCapacity() {
+        if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
+            return;
+        }
 
-    @Override
-    protected void collectImplicitComponents(@NotNull Builder components) {
-        components.set(CCBDataComponents.CANISTER_CONTENT, getContent());
-    }
+        long newCapacity = canisterContents.getTankCapacity(0);
+        if (tankBehaviour.getPrimaryHandler().getCapacity() == newCapacity) {
+            return;
+        }
 
-    public GasStack getContent() {
-        return tankBehaviour.getPrimaryHandler().getGasStack();
+        tankBehaviour.getPrimaryHandler().setCapacity(newCapacity);
     }
 }

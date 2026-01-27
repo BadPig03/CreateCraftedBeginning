@@ -163,13 +163,14 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         if (compoundTag == null) {
             return;
         }
+
         readAdditionalSaveData(compoundTag);
     }
 
     private void explodeDirectly(Vec3 pos) {
-        Gas gas = gasHolder.value();
+        Gas gasType = gasHolder.value();
         Level level = level();
-        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gas);
+        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasType);
         if (cannonHandler == null) {
             return;
         }
@@ -178,8 +179,8 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
     }
 
     @OnlyIn(Dist.CLIENT)
-    private void setModelFromGas(Gas gas) {
-        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gas);
+    private void setModelFromGas(Gas gasType) {
+        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasType);
         windChargeModel = cannonHandler != null ? new AirtightCannonWindChargeModel(cannonHandler.getLayerDefinition().bakeRoot()) : null;
     }
 }

@@ -7,7 +7,6 @@ import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObser
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform;
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
-import com.simibubi.create.foundation.utility.CreateLang;
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -26,6 +25,7 @@ import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.crates.CrateItemStackHandler;
 import net.ty.createcraftedbeginning.content.crates.CratesBlockEntity;
+import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
@@ -129,7 +129,7 @@ public class SturdyCrateBlockEntity extends CratesBlockEntity implements IHaveGo
 
     @Override
     public MutableComponent format(int value) {
-        return CreateLang.text(value + " ").add(CreateLang.translate("schedule.condition.threshold.items")).component();
+        return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.items")).component();
     }
 
     private class SturdySmartFilterSlot extends ValueBoxTransform {

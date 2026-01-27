@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "item": "minecraft:flowering_azalea"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 1,
+      "gas": "createcraftedbeginning:pressurized_energized_natural_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:flowering_azalea_leaves"
+    }
+  ]
+}

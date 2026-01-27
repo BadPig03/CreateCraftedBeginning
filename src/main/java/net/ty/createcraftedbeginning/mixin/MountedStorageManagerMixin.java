@@ -68,14 +68,14 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    private void onInit(CallbackInfo ci) {
+    private void ccb$init(CallbackInfo ci) {
         gases = null;
         gasesBuilder = new HashMap<>();
         syncedGasesBuilder = new HashMap<>();
     }
 
     @Inject(method = "initialize", at = @At("TAIL"))
-    private void onInitialize(CallbackInfo ci) {
+    private void ccb$initialize(CallbackInfo ci) {
         ImmutableMap<BlockPos, MountedGasStorage> gases = ImmutableMap.copyOf(gasesBuilder);
         this.gases = new MountedGasStorageWrapper(gases);
         gasesBuilder = null;
@@ -84,14 +84,14 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
     }
 
     @Inject(method = "reset", at = @At("TAIL"))
-    private void onReset(CallbackInfo ci) {
+    private void ccb$reset(CallbackInfo ci) {
         gases = null;
         gasesBuilder = new HashMap<>();
         syncedGasesBuilder = new HashMap<>();
     }
 
     @Inject(method = "addBlock", at = @At("TAIL"))
-    private void onAddBlock(Level level, @NotNull BlockState state, BlockPos globalPos, BlockPos localPos, BlockEntity be, CallbackInfo ci) {
+    private void ccb$addBlock(Level level, @NotNull BlockState state, BlockPos globalPos, BlockPos localPos, BlockEntity be, CallbackInfo ci) {
         MountedGasStorageType<?> gasType = MountedGasStorageType.REGISTRY.get(state.getBlock());
         if (gasType == null) {
             return;
@@ -116,7 +116,7 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
     }
 
     @Inject(method = "unmount", at = @At("TAIL"))
-    private void onUnmount(Level level, @NotNull StructureBlockInfo info, BlockPos globalPos, BlockEntity be, CallbackInfo ci) {
+    private void ccb$unmount(Level level, @NotNull StructureBlockInfo info, BlockPos globalPos, BlockEntity be, CallbackInfo ci) {
         BlockPos localPos = info.pos();
         BlockState state = info.state();
         MountedGasStorage gasStorage = getGases().storages.get(localPos);
@@ -147,7 +147,7 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
     abstract void assertInitialized();
 
     @Inject(method = "tick", at = @At("RETURN"))
-    private void onTick(AbstractContraptionEntity entity, CallbackInfo ci) {
+    private void ccb$tick(AbstractContraptionEntity entity, CallbackInfo ci) {
         if (syncCooldown > 0) {
             return;
         }
@@ -193,7 +193,7 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
     }
 
     @Inject(method = "write", at = @At("RETURN"))
-    private void onWrite(CompoundTag compoundTag, Provider registries, boolean clientPacket, CallbackInfo ci) {
+    private void ccb$write(CompoundTag compoundTag, Provider provider, boolean clientPacket, CallbackInfo ci) {
         ListTag gases = new ListTag();
         if (getGases().storages != null) {
             getGases().storages.forEach((pos, storage) -> {
@@ -227,7 +227,7 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
     }
 
     @Inject(method = "read", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/MountedStorageManager;initialize()V", shift = Shift.BEFORE))
-    private void onReadBeforeInitialize(CompoundTag nbt, Provider registries, boolean clientPacket, Contraption contraption, CallbackInfo ci) {
+    private void ccb$readOnInitialization(CompoundTag nbt, Provider provider, boolean clientPacket, Contraption contraption, CallbackInfo ci) {
         try {
             if (nbt.contains("gases")) {
                 NBTHelper.iterateCompoundList(nbt.getList("gases", Tag.TAG_COMPOUND), tag -> {
@@ -242,7 +242,7 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
     }
 
     @Inject(method = "read", at = @At("RETURN"))
-    private void onReadAfter(CompoundTag nbt, Provider registries, boolean clientPacket, Contraption contraption, CallbackInfo ci) {
+    private void ccb$readAtReturn(CompoundTag nbt, Provider registries, boolean clientPacket, Contraption contraption, CallbackInfo ci) {
         if (!clientPacket || contraption == null) {
             return;
         }

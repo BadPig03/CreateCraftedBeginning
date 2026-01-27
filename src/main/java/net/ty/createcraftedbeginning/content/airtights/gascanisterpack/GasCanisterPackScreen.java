@@ -14,12 +14,11 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterQueryUtils;
+import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackMenu.PackItemHandler;
 import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
 import java.util.List;
 
 @OnlyIn(Dist.CLIENT)
@@ -29,8 +28,6 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
     private static final CCBGUITextures BACKGROUND = CCBGUITextures.GAS_CANISTER_PACK;
     private static final CCBGUITextures CANISTER = CCBGUITextures.GAS_CANISTER_PACK_CANISTER;
     private static final AllGuiTextures PLAYER_INVENTORY = AllGuiTextures.PLAYER_INVENTORY;
-
-    private List<Rect2i> extraAreas = Collections.emptyList();
 
     public GasCanisterPackScreen(GasCanisterPackMenu container, Inventory inv, Component title) {
         super(container, inv, title);
@@ -61,7 +58,7 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
 
     @Override
     public List<Rect2i> getExtraAreas() {
-        return extraAreas;
+        return ImmutableList.of(new Rect2i(leftPos + BACKGROUND.getWidth(), topPos + BACKGROUND.getHeight() - 32, 64, 48));
     }
 
     @Override
@@ -71,46 +68,32 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
     }
 
     @Override
-    protected void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        int invX = getLeftOfCentered(PLAYER_INVENTORY.getWidth());
-        int invY = topPos + BACKGROUND.getHeight() + 4;
-        renderPlayerInventory(guiGraphics, invX, invY);
-
-        int x = leftPos;
-        int y = topPos;
-        int width = BACKGROUND.getWidth();
-        BACKGROUND.render(guiGraphics, x, y);
+    protected void renderBg(@NotNull GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+        renderPlayerInventory(graphics, getLeftOfCentered(PLAYER_INVENTORY.getWidth()), topPos + BACKGROUND.getHeight() + 4);
+        BACKGROUND.render(graphics, leftPos, topPos);
         Component drillHoverName = pack.getHoverName();
-        guiGraphics.drawString(font, drillHoverName, x + (width - 8) / 2 - font.width(drillHoverName) / 2, y + 4, 0xFFFFFF, false);
-        GuiGameElement.of(pack).scale(4).at(x + width + 11, y + BACKGROUND.getHeight() - 48, -200).render(guiGraphics);
+        graphics.drawString(font, drillHoverName, leftPos + (BACKGROUND.getWidth() - 8) / 2 - font.width(drillHoverName) / 2, topPos + 4, 0xFFFFFF, false);
+        GuiGameElement.of(pack).scale(4).at(leftPos + BACKGROUND.getWidth() + 11, topPos + BACKGROUND.getHeight() - 48, -200).render(graphics);
     }
 
     private void initButtons() {
-        int x = leftPos;
-        int y = topPos;
-        int width = BACKGROUND.getWidth();
-        int height = BACKGROUND.getHeight();
-
-        IconButton confirmButton = new IconButton(x + width - 33, y + height - 24, AllIcons.I_CONFIRM).withCallback(() -> menu.player.closeContainer());
+        IconButton confirmButton = new IconButton(leftPos + BACKGROUND.getWidth() - 33, topPos + BACKGROUND.getHeight() - 24, AllIcons.I_CONFIRM).withCallback(() -> menu.player.closeContainer());
         addRenderableWidget(confirmButton);
-        extraAreas = ImmutableList.of(new Rect2i(x + width, y + height - 32, 64, 48));
     }
 
     private void drawGasCanisters(GuiGraphics graphics) {
-        int x = leftPos;
-        int y = topPos + 27;
         PackItemHandler packInventory = menu.packInventory;
-        if (GasCanisterQueryUtils.isValidCanister(packInventory.getStackInSlot(GasCanisterPackMenu.I_SLOT_INDEX))) {
-            CANISTER.render(graphics, x + 23, y);
+        if (CanisterContainerSuppliers.isValidGasCanister(packInventory.getStackInSlot(GasCanisterPackMenu.I_SLOT_INDEX))) {
+            CANISTER.render(graphics, leftPos + 23, topPos + 27);
         }
-        if (GasCanisterQueryUtils.isValidCanister(packInventory.getStackInSlot(GasCanisterPackMenu.II_SLOT_INDEX))) {
-            CANISTER.render(graphics, x + 65, y);
+        if (CanisterContainerSuppliers.isValidGasCanister(packInventory.getStackInSlot(GasCanisterPackMenu.II_SLOT_INDEX))) {
+            CANISTER.render(graphics, leftPos + 65, topPos + 27);
         }
-        if (GasCanisterQueryUtils.isValidCanister(packInventory.getStackInSlot(GasCanisterPackMenu.III_SLOT_INDEX))) {
-            CANISTER.render(graphics, x + 107, y);
+        if (CanisterContainerSuppliers.isValidGasCanister(packInventory.getStackInSlot(GasCanisterPackMenu.III_SLOT_INDEX))) {
+            CANISTER.render(graphics, leftPos + 107, topPos + 27);
         }
-        if (GasCanisterQueryUtils.isValidCanister(packInventory.getStackInSlot(GasCanisterPackMenu.IV_SLOT_INDEX))) {
-            CANISTER.render(graphics, x + 149, y);
+        if (CanisterContainerSuppliers.isValidGasCanister(packInventory.getStackInSlot(GasCanisterPackMenu.IV_SLOT_INDEX))) {
+            CANISTER.render(graphics, leftPos + 149, topPos + 27);
         }
     }
 }

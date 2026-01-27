@@ -37,17 +37,17 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class CCBCreativeTabs {
-    private static final DeferredRegister<CreativeModeTab> TAB_REGISTRATE = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CreateCraftedBeginning.MOD_ID);
+    private static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CreateCraftedBeginning.MOD_ID);
 
     @Internal
-    public static void register(IEventBus modEventBus) {
-        TAB_REGISTRATE.register(modEventBus);
+    public static void register(IEventBus eventBus) {
+        TABS.register(eventBus);
     }
 
     private record RegistrateDisplayItemsGenerator(DeferredHolder<CreativeModeTab, CreativeModeTab> tabFilter) implements DisplayItemsGenerator {
         private static @NotNull Predicate<Item> makeExclusionPredicate() {
             Set<Item> exclusions = new ReferenceOpenHashSet<>();
-            List<ItemProviderEntry<?, ?>> itemsExclusions = List.of(CCBItems.INCOMPLETE_AIRTIGHT_SHEET, CCBItems.INCOMPLETE_GAS_CANISTER_PACK, CCBItems.INCOMPLETE_HEAVY_CORE, CCBItems.INCOMPLETE_TESLA_TURBINE_ROTOR, CCBItems.INCOMPLETE_BREEZE_CORE, CCBItems.INCOMPLETE_AIRTIGHT_CANNON, CCBItems.INCOMPLETE_AIRTIGHT_HANDHELD_DRILL, CCBItems.INCOMPLETE_AIRTIGHT_HELMET, CCBItems.INCOMPLETE_AIRTIGHT_CHESTPLATE, CCBItems.INCOMPLETE_AIRTIGHT_LEGGINGS, CCBItems.INCOMPLETE_AIRTIGHT_BOOTS, CCBItems.GAS_CANISTER_PLACEABLE, CCBItems.CINDER_ALLOY, CCBItems.NATURAL_WIND_CHARGE, CCBItems.ULTRAWARM_WIND_CHARGE, CCBItems.ETHEREAL_WIND_CHARGE, CCBItems.MOIST_WIND_CHARGE, CCBItems.ENERGIZED_NATURAL_WIND_CHARGE, CCBItems.ENERGIZED_ULTRAWARM_WIND_CHARGE, CCBItems.ENERGIZED_ETHEREAL_WIND_CHARGE);
+            List<ItemProviderEntry<?, ?>> itemsExclusions = List.of(CCBItems.INCOMPLETE_AIRTIGHT_SHEET, CCBItems.INCOMPLETE_GAS_CANISTER_PACK, CCBItems.INCOMPLETE_HEAVY_CORE, CCBItems.INCOMPLETE_TESLA_TURBINE_ROTOR, CCBItems.INCOMPLETE_BREEZE_CORE, CCBItems.INCOMPLETE_AIRTIGHT_CANNON, CCBItems.INCOMPLETE_AIRTIGHT_EXTEND_ARM, CCBItems.INCOMPLETE_AIRTIGHT_HANDHELD_DRILL, CCBItems.INCOMPLETE_AIRTIGHT_HELMET, CCBItems.INCOMPLETE_AIRTIGHT_CHESTPLATE, CCBItems.INCOMPLETE_AIRTIGHT_LEGGINGS, CCBItems.INCOMPLETE_AIRTIGHT_BOOTS, CCBItems.INCOMPLETE_WEATHER_FLARE, CCBItems.INCOMPLETE_ANCHOR_FLARE, CCBItems.GAS_CANISTER_PLACEABLE, CCBItems.NATURAL_WIND_CHARGE, CCBItems.ULTRAWARM_WIND_CHARGE, CCBItems.ETHEREAL_WIND_CHARGE, CCBItems.MOIST_WIND_CHARGE, CCBItems.SPORE_WIND_CHARGE, CCBItems.ENERGIZED_NATURAL_WIND_CHARGE, CCBItems.ENERGIZED_ULTRAWARM_WIND_CHARGE, CCBItems.ENERGIZED_ETHEREAL_WIND_CHARGE, CCBItems.GAS_VIRTUAL_ITEM);
             itemsExclusions.stream().map(ItemProviderEntry::asItem).forEach(exclusions::add);
 
             List<ItemProviderEntry<?, ?>> blocksExclusions = List.of(CCBBlocks.AIRTIGHT_INTAKE_PORT_BLOCK, CCBBlocks.CINDER_ALLOY_BLOCK, CCBBlocks.CINDER_CASING_BLOCK, CCBBlocks.CINDER_INCINERATION_BLOWER_BLOCK, CCBBlocks.PHOTO_STRESS_BEARING_BLOCK, CCBBlocks.PNEUMATIC_ENGINE_BLOCK);
@@ -160,5 +160,5 @@ public class CCBCreativeTabs {
         }
     }
 
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> BASE_CREATIVE_TAB = TAB_REGISTRATE.register("base", () -> CreativeModeTab.builder().title(CCBLang.translateDirect("item_groups.creative_tab")).withTabsBefore(CreativeModeTabs.SPAWN_EGGS).icon(CCBBlocks.BREEZE_COOLER_BLOCK::asStack).displayItems(new RegistrateDisplayItemsGenerator(CCBCreativeTabs.BASE_CREATIVE_TAB)).build());
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> BASE_CREATIVE_TAB = TABS.register("base", () -> CreativeModeTab.builder().title(CCBLang.translateDirect("item_groups.creative_tab")).withTabsBefore(CreativeModeTabs.SPAWN_EGGS).icon(CCBBlocks.BREEZE_COOLER_BLOCK::asStack).displayItems(new RegistrateDisplayItemsGenerator(CCBCreativeTabs.BASE_CREATIVE_TAB)).build());
 }

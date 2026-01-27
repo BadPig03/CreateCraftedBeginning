@@ -74,7 +74,7 @@ public class GasTank implements IGasHandler, IGasTank {
                 return Math.min(capacity, resource.getAmount());
             }
 
-            return GasStack.isSameGas(gas, resource) ? Math.min(capacity - gas.getAmount(), resource.getAmount()) : 0;
+            return GasStack.isSameGasSameComponents(gas, resource) ? Math.min(capacity - gas.getAmount(), resource.getAmount()) : 0;
         }
 
         if (gas.isEmpty()) {
@@ -84,7 +84,7 @@ public class GasTank implements IGasHandler, IGasTank {
             return amountToAdd;
         }
 
-        if (!GasStack.isSameGas(gas, resource)) {
+        if (!GasStack.isSameGasSameComponents(gas, resource)) {
             return 0;
         }
 
@@ -94,27 +94,22 @@ public class GasTank implements IGasHandler, IGasTank {
         if (amountToTransfer > 0) {
             onContentsChanged();
         }
-
         return amountToTransfer;
     }
 
     @Override
     public GasStack drain(@NotNull GasStack resource, GasAction action) {
-        return resource.isEmpty() || !GasStack.isSameGas(resource, gas) ? GasStack.EMPTY : drain(resource.getAmount(), action);
+        return resource.isEmpty() || !GasStack.isSameGasSameComponents(resource, gas) ? GasStack.EMPTY : drain(resource.getAmount(), action);
     }
 
     @Override
-    public GasStack drain(long maxDrain, GasAction action) {
-        long drained = maxDrain;
-        if (gas.getAmount() < drained) {
-            drained = gas.getAmount();
-        }
+    public GasStack drain(long maxDrain, @NotNull GasAction action) {
+        long drained = Math.min(maxDrain, gas.getAmount());
         GasStack stack = gas.copyWithAmount(drained);
         if (action.execute() && drained > 0) {
             gas.shrink(drained);
             onContentsChanged();
         }
-
         return stack;
     }
 

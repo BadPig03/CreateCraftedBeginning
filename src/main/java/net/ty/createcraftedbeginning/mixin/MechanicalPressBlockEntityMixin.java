@@ -32,7 +32,7 @@ public abstract class MechanicalPressBlockEntityMixin {
 
     @SuppressWarnings("DataFlowIssue")
     @Inject(method = "tryProcessInWorld", at = @At("HEAD"), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
-    private void injectTryProcessInWorld(@NotNull ItemEntity itemEntity, boolean simulate, CallbackInfoReturnable<Boolean> cir) {
+    private void ccb$tryProcessInWorld(@NotNull ItemEntity itemEntity, boolean simulate, CallbackInfoReturnable<Boolean> cir) {
         MechanicalPressBlockEntity self = (MechanicalPressBlockEntity) (Object) this;
         ItemStack item = itemEntity.getItem();
         Level level = self.getLevel();
@@ -89,7 +89,7 @@ public abstract class MechanicalPressBlockEntityMixin {
 
     @SuppressWarnings("DataFlowIssue")
     @Inject(method = "tryProcessOnBelt", at = @At("HEAD"), cancellable = true)
-    private void injectTryProcessOnBelt(@NotNull TransportedItemStack input, List<ItemStack> outputList, boolean simulate, CallbackInfoReturnable<Boolean> cir) {
+    private void ccb$tryProcessOnBelt(@NotNull TransportedItemStack input, List<ItemStack> outputList, boolean simulate, CallbackInfoReturnable<Boolean> cir) {
         MechanicalPressBlockEntity self = (MechanicalPressBlockEntity) (Object) this;
         Level level = self.getLevel();
 

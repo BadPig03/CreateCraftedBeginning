@@ -10,9 +10,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.MenuProvider;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -23,20 +20,24 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterQueryUtils;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.UUID;
 
 public class GasCanisterPackItem extends Item implements MenuProvider {
     public GasCanisterPackItem(Properties properties) {
         super(properties);
+    }
+
+    public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
+        event.registerItem(GasHandler.ITEM, (itemStack, context) -> new GasCanisterPackContainerContents(itemStack), CCBItems.GAS_CANISTER_PACK);
     }
 
     public void registerModelOverrides() {
@@ -51,60 +52,6 @@ public class GasCanisterPackItem extends Item implements MenuProvider {
     @Override
     public boolean shouldCauseBlockBreakReset(@NotNull ItemStack oldStack, @NotNull ItemStack newStack) {
         return GasCanisterPackUtils.shouldCauseBlockBreakReset(oldStack, newStack);
-    }
-
-    @Override
-    public void onCraftedPostProcess(@NotNull ItemStack pack, @NotNull Level level) {
-        if (level.isClientSide) {
-            return;
-        }
-
-        GasCanisterPackUtils.resetCanisterPackUUID(pack);
-    }
-
-    @Override
-    public void inventoryTick(@NotNull ItemStack pack, @NotNull Level level, @NotNull Entity entity, int slotId, boolean isSelected) {
-        if (level.isClientSide) {
-            return;
-        }
-
-        GasCanisterPackUtils.resetCanisterPackUUID(pack);
-    }
-
-    @Override
-    public void onDestroyed(@NotNull ItemEntity itemEntity, @NotNull DamageSource damageSource) {
-        CreateCraftedBeginning.GAS_CANISTER_PACK_CONTENTS_DATA_MANAGER.removeContents(GasCanisterPackUtils.getCanisterPackUUID(itemEntity.getItem()));
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(@NotNull ItemStack pack, @NotNull TooltipContext context, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null) {
-            return;
-        }
-
-        UUID uuid = GasCanisterPackUtils.getCanisterPackUUID(pack);
-        GasCanisterPackContents contents = CreateCraftedBeginning.GAS_CANISTER_PACK_CONTENTS_DATA_MANAGER.getContents(uuid);
-        for (int slot = 0; slot < 4; slot++) {
-            tooltip.add(CCBLang.translate("gui.tooltips.gas_canister_pack.number", slot + 1).style(ChatFormatting.GRAY).component());
-            ItemStack canister = contents.getStackInSlot(slot).copy();
-            if (canister.isEmpty()) {
-                tooltip.add(CCBLang.translate("gui.goggles.gas_container.empty").style(ChatFormatting.DARK_GRAY).component());
-                continue;
-            }
-
-            LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
-            GasStack gasContent = GasCanisterQueryUtils.getCanisterContent(canister);
-            long capacity = GasCanisterQueryUtils.getCanisterCapacity(canister, gasContent.getGas());
-            if (gasContent.isEmpty()) {
-                tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.capacity").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
-                continue;
-            }
-
-            tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.content").add(CCBLang.gasName(gasContent).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
-            tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.capacity").add(CCBLang.number(gasContent.getAmount()).add(mb).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.DARK_GRAY))).style(ChatFormatting.GRAY).component());
-        }
     }
 
     @NotNull
@@ -128,6 +75,29 @@ public class GasCanisterPackItem extends Item implements MenuProvider {
         player.openMenu(this, buf -> ItemStack.STREAM_CODEC.encode(buf, drill));
         player.getCooldowns().addCooldown(this, 10);
         return InteractionResultHolder.sidedSuccess(drill, false);
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void appendHoverText(@NotNull ItemStack pack, @NotNull TooltipContext context, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player == null || !(pack.getCapability(GasHandler.ITEM) instanceof GasCanisterPackContainerContents packContents)) {
+            return;
+        }
+
+        LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
+        for (int slot = 0; slot < 4; slot++) {
+            tooltip.add(CCBLang.translate("gui.tooltips.gas_canister_pack.number", slot + 1).style(ChatFormatting.GRAY).component());
+            GasStack gasContent = packContents.getGasInTank(slot);
+            long capacity = packContents.getTankCapacity(slot);
+            if (gasContent.isEmpty()) {
+                tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.capacity").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
+                continue;
+            }
+
+            tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.content").add(CCBLang.gasName(gasContent).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
+            tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.capacity").add(CCBLang.number(gasContent.getAmount()).add(mb).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.DARK_GRAY))).style(ChatFormatting.GRAY).component());
+        }
     }
 
     @Override

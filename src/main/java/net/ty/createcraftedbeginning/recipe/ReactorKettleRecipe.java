@@ -22,6 +22,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
 import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterItem;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
@@ -43,6 +44,11 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
         Level level = kettle.getLevel();
         if (filter == null || level == null) {
             return false;
+        }
+
+        ItemStack filterItem = filter.getFilter();
+        if (filterItem.getItem() instanceof GasFilterItem gasFilter && !recipe.getGasResults().isEmpty()) {
+            return gasFilter.test(filterItem, recipe.getGasResults().getFirst()) && apply(kettle, recipe, true);
         }
 
         boolean filterTest = filter.test(recipe.getResultItem(level.registryAccess()));

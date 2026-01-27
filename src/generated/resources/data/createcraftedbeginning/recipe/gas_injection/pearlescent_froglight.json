@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "item": "minecraft:ochre_froglight"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 100,
+      "gas": "createcraftedbeginning:energized_ethereal_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:pearlescent_froglight"
+    }
+  ]
+}

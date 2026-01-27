@@ -15,7 +15,8 @@
             {
               "function": "minecraft:copy_components",
               "include": [
-                "createcraftedbeginning:canister_content"
+                "createcraftedbeginning:canister_container_contents",
+                "createcraftedbeginning:canister_container_capacities"
               ],
               "source": "block_entity"
             }

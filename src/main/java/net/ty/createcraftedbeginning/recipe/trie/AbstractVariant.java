@@ -47,12 +47,12 @@ public sealed interface AbstractVariant {
     }
 
     final class AbstractGas implements AbstractVariant {
-        private final @NotNull Gas gas;
+        private final @NotNull Gas gasType;
         private final int hashCode;
 
-        public AbstractGas(@NotNull Gas gas) {
-            this.gas = gas;
-            hashCode = gas.hashCode();
+        public AbstractGas(@NotNull Gas gasType) {
+            this.gasType = gasType;
+            hashCode = gasType.hashCode();
         }
 
         @Override
@@ -62,7 +62,7 @@ public sealed interface AbstractVariant {
 
         @Override
         public boolean equals(Object obj) {
-            return obj instanceof AbstractGas other && gas == other.gas;
+            return obj instanceof AbstractGas other && gasType == other.gasType;
         }
     }
 }

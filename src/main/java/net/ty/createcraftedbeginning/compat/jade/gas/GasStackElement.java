@@ -30,7 +30,7 @@ public class GasStackElement extends Element {
     }
 
     private static void getGasSpriteAndColor(@NotNull GasObject gas, BiConsumer<@Nullable TextureAtlasSprite, Integer> consumer) {
-        int tint = gas.type().getTint();
+        int tint = gas.gasType().getTint();
         if (OverlayRenderer.alpha != 1) {
             tint = IConfigOverlay.applyAlpha(tint, OverlayRenderer.alpha);
         }

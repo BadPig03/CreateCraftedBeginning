@@ -18,21 +18,29 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterQueryUtils;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerClients;
+import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.IGasFilter;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBEnchantments;
+import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.function.Supplier;
 
-public class GasCanisterItem extends Item {
+public class GasCanisterItem extends Item implements IGasFilter {
     private final Supplier<GasCanisterBlockItem> blockItem;
 
     public GasCanisterItem(Properties properties, Supplier<GasCanisterBlockItem> placeable) {
         super(properties);
         blockItem = placeable;
+    }
+
+    public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
+        event.registerItem(GasHandler.ITEM, (itemStack, context) -> new GasCanisterContainerContents(itemStack), CCBItems.GAS_CANISTER);
     }
 
     @Override
@@ -62,12 +70,12 @@ public class GasCanisterItem extends Item {
 
     @Override
     public int getBarWidth(@NotNull ItemStack canister) {
-        return GasCanisterUtils.getBarWidth(canister);
+        return CanisterContainerClients.getBarWidth(canister);
     }
 
     @Override
     public int getBarColor(@NotNull ItemStack canister) {
-        return GasCanisterUtils.getBarColor(canister);
+        return CanisterContainerClients.getBarColor(canister);
     }
 
     @Override
@@ -79,12 +87,12 @@ public class GasCanisterItem extends Item {
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack canister, @NotNull TooltipContext context, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
         LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null) {
+        if (player == null || !(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
             return;
         }
 
-        GasStack gasContent = GasCanisterQueryUtils.getCanisterContent(canister);
-        long capacity = GasCanisterQueryUtils.getCanisterCapacity(canister, gasContent.getGas());
+        GasStack gasContent = canisterContents.getGasInTank(0);
+        long capacity = canisterContents.getTankCapacity(0);
         LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
         if (gasContent.isEmpty()) {
             tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.capacity").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
@@ -102,6 +110,16 @@ public class GasCanisterItem extends Item {
 
     public Block getBlock() {
         return blockItem.get().getBlock();
+    }
+
+    @Override
+    public boolean test(@NotNull ItemStack filterItem, GasStack filterGasStack) {
+        if (!(filterItem.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
+            return false;
+        }
+
+        GasStack gasContent = canisterContents.getGasInTank(0);
+        return !gasContent.isEmpty() && GasStack.isSameGasSameComponents(gasContent, filterGasStack);
     }
 
     public static class GasCanisterBlockItem extends BlockItem {

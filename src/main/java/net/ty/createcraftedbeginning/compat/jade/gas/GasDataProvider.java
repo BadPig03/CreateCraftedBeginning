@@ -57,7 +57,7 @@ public class GasDataProvider {
                 }
                 else {
                     GasStack gasStack = gasHandler.getGasInTank(i);
-                    return gasStack.isEmpty() ? null : new Tuple<>(GasObject.of(gasStack.getGas(), gasStack.getAmount(), gasStack.getComponentsPatch()), capacity);
+                    return gasStack.isEmpty() ? null : new Tuple<>(GasObject.of(gasStack.getGasType(), gasStack.getAmount(), gasStack.getComponentsPatch()), capacity);
                 }
             }).filter(Objects::nonNull);
         }

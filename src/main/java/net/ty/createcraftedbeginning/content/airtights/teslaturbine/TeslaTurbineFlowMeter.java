@@ -58,7 +58,7 @@ public class TeslaTurbineFlowMeter {
         long amount = resource.getAmount();
         if (action.execute()) {
             boolean empty = gasType.isEmpty();
-            boolean newGasType = !gasType.is(resource.getGas());
+            boolean newGasType = !gasType.is(resource.getGasType());
             if (!empty && newGasType && !hasMixedGases) {
                 hasMixedGases = true;
                 setGasType(GasStack.EMPTY);

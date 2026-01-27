@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "item": "minecraft:sponge"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 500,
+      "gas": "createcraftedbeginning:moist_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:wet_sponge"
+    }
+  ]
+}

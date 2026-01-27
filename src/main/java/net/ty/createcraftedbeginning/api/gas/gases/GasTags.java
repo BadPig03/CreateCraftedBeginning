@@ -18,11 +18,11 @@ public final class GasTags {
         return TagKey.create(CCBRegistries.GAS_REGISTRY_KEY, name);
     }
 
-    public static boolean isTag(@NotNull GasStack gas, TagKey<Gas> tag) {
-        return isTag(gas.getGas(), tag);
+    public static boolean isTag(@NotNull GasStack gasStack, TagKey<Gas> tag) {
+        return isTag(gasStack.getGasType(), tag);
     }
 
-    public static boolean isTag(@NotNull Gas gas, TagKey<Gas> tag) {
-        return gas.is(tag);
+    public static boolean isTag(@NotNull Gas gasType, TagKey<Gas> tag) {
+        return gasType.is(tag);
     }
 }

@@ -1,3 +1,4 @@
-// 1.21.1	2025-12-25T23:13:53.5250079	Recipes
-26ed7b7780e70162faae18d052f19aa6aa7df30f data/createcraftedbeginning/recipe/sequenced_assembly_with_gas/breeze_core.json
-f977880e28312ef65fa0301df72c1912fd72b4cb data/createcraftedbeginning/recipe/sequenced_assembly_with_gas/heavy_core.json
+// 1.21.1	2026-01-27T11:20:26.8684284	Recipes
+8ff1aae06dc9d821b9904fe31ad782aa6355c60a data/createcraftedbeginning/recipe/sequenced_assembly_with_gas/anchor_flare.json
+5a56586a3b47ae2ae42842bb189d97526356fc47 data/createcraftedbeginning/recipe/sequenced_assembly_with_gas/breeze_core.json
+79132cc90d91970a3876d6bd5d6c3e7a99b83133 data/createcraftedbeginning/recipe/sequenced_assembly_with_gas/heavy_core.json

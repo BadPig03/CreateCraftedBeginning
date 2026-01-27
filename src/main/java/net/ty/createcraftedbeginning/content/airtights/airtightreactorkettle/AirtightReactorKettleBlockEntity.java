@@ -386,32 +386,28 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         if (targetInventory == null && !outputItems.isEmpty() || !acceptItemOutputsIntoKettle(outputItems, simulate, targetInventory)) {
             return false;
         }
-
-        if (outputFluids.isEmpty()) {
-            return true;
+        if (!outputFluids.isEmpty() && targetFluidTank == null || !acceptFluidOutputsIntoKettle(outputFluids, simulate, targetFluidTank)) {
+            return false;
         }
-
-        if (targetFluidTank == null || !acceptFluidOutputsIntoKettle(outputFluids, simulate, targetFluidTank)) {
+        if (!outputGases.isEmpty() && targetGasTank == null || !acceptGasOutputsIntoKettle(outputGases, simulate, targetGasTank)) {
             return false;
         }
 
-        if (outputGases.isEmpty()) {
-            return true;
-        }
-
-        if (targetGasTank == null || !acceptGasOutputsIntoKettle(outputGases, simulate, targetGasTank)) {
-            return false;
-        }
         return true;
     }
 
     private void tickOperation() {
+        if (filterChanged) {
+            operating = false;
+            operatingTicks = 0;
+            processingTicks = -1;
+            kettleChecker.scheduleUpdate();
+            return;
+        }
+
         updateRotationSpeed(operating && operatingTicks <= PROCESSING_STARTED);
         updateWindowDistance();
-        float absSpeed = Mth.abs(core.getStructureManager().getSpeed());
-        if (level instanceof PonderLevel) {
-            absSpeed = SpeedLevel.FAST.getSpeedValue();
-        }
+        float absSpeed = level instanceof PonderLevel ? SpeedLevel.FAST.getSpeedValue() : Mth.abs(core.getStructureManager().getSpeed());
         if (operatingTicks >= OPERATING_FINISHED || absSpeed < AirtightReactorKettleUtils.getMinSpeedRequired()) {
             operating = false;
             operatingTicks = 0;

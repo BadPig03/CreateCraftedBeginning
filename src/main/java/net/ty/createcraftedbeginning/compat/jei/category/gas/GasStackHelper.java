@@ -45,12 +45,12 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
     @Override
     @SuppressWarnings("removal")
     public @NotNull String getUniqueId(@NotNull GasStack ingredient, @NotNull UidContext context) {
-        return "gas:" + ingredient.getGas();
+        return "gas:" + ingredient.getGasType();
     }
 
     @Override
     public @NotNull Object getUid(@NotNull GasStack ingredient, @NotNull UidContext context) {
-        return ingredient.getGas();
+        return ingredient.getGasType();
     }
 
     @Override

@@ -22,12 +22,11 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasConnectivityHandler;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterQueryUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.IAirtightComponent;
 import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
 
 public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirtightTankBlockEntity>, IWrenchable, IAirtightComponent {
@@ -75,7 +74,7 @@ public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirt
 
     @Override
     protected @NotNull ItemInteractionResult useItemOn(@NotNull ItemStack stack, @NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull InteractionHand hand, @NotNull BlockHitResult hitResult) {
-        if (player.isShiftKeyDown() || !stack.is(CCBItems.GAS_CANISTER)) {
+        if (player.isShiftKeyDown() || !(stack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
@@ -101,13 +100,13 @@ public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirt
             return ItemInteractionResult.sidedSuccess(true);
         }
 
-        GasStack gasStack = GasCanisterQueryUtils.getCanisterContent(stack);
-        if (gasStack.isEmpty()) {
+        GasStack gasContent = canisterContents.getGasInTank(0);
+        if (gasContent.isEmpty()) {
             creativeTankHandler.setContainedGas(GasStack.EMPTY);
             return ItemInteractionResult.sidedSuccess(false);
         }
 
-        creativeTankHandler.setContainedGas(gasStack.copy());
+        creativeTankHandler.setContainedGas(gasContent);
         return ItemInteractionResult.sidedSuccess(false);
     }
 

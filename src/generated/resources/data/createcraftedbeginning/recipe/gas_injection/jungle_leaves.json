@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "item": "minecraft:jungle_sapling"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 20,
+      "gas": "createcraftedbeginning:energized_natural_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:jungle_leaves"
+    }
+  ]
+}

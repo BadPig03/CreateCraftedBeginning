@@ -98,20 +98,20 @@ public final class GasStack implements MutableDataComponentHolder {
         this(gasHolder.value(), amount, PatchedDataComponentMap.fromPatch(DataComponentMap.EMPTY, patch));
     }
 
-    public GasStack(Gas gas, long amount, DataComponentPatch patch) {
-        this(gas, amount, PatchedDataComponentMap.fromPatch(DataComponentMap.EMPTY, patch));
+    public GasStack(Gas gasType, long amount, DataComponentPatch patch) {
+        this(gasType, amount, PatchedDataComponentMap.fromPatch(DataComponentMap.EMPTY, patch));
     }
 
     public GasStack(@NotNull Holder<Gas> gasHolder, long amount) {
         this(gasHolder.value(), amount, new PatchedDataComponentMap(DataComponentMap.EMPTY));
     }
 
-    public GasStack(Gas gas, long amount) {
-        this(gas, amount, new PatchedDataComponentMap(DataComponentMap.EMPTY));
+    public GasStack(Gas gasType, long amount) {
+        this(gasType, amount, new PatchedDataComponentMap(DataComponentMap.EMPTY));
     }
 
-    private GasStack(@NotNull Gas gas, long amount, PatchedDataComponentMap components) {
-        gasHolder = gas.getHolder();
+    private GasStack(@NotNull Gas gasType, long amount, PatchedDataComponentMap components) {
+        gasHolder = gasType.getHolder();
         this.amount = amount;
         this.components = components;
     }
@@ -168,7 +168,7 @@ public final class GasStack implements MutableDataComponentHolder {
      * @return true if both stacks have same gas type and components
      */
     public static boolean isSameGasSameComponents(@NotNull GasStack first, @NotNull GasStack second) {
-        return first.is(second.getGas()) && (first.isEmpty() && second.isEmpty() || Objects.equals(first.components, second.components));
+        return first.is(second.getGasType()) && (first.isEmpty() && second.isEmpty() || Objects.equals(first.components, second.components));
     }
 
     /**
@@ -193,7 +193,7 @@ public final class GasStack implements MutableDataComponentHolder {
             return 0;
         }
 
-        int i = 31 + stack.getGas().hashCode();
+        int i = 31 + stack.getGasType().hashCode();
         return 31 * i + stack.components.hashCode();
     }
 
@@ -221,11 +221,11 @@ public final class GasStack implements MutableDataComponentHolder {
         return is(holder.value());
     }
 
-    public boolean is(Gas gas) {
-        return getGas() == gas;
+    public boolean is(Gas gasType) {
+        return getGasType() == gasType;
     }
 
-    public @NotNull Gas getGas() {
+    public @NotNull Gas getGasType() {
         return isEmpty() ? Gas.EMPTY_GAS_HOLDER.value() : getGasHolder().value();
     }
 
@@ -320,15 +320,15 @@ public final class GasStack implements MutableDataComponentHolder {
 
     @Contract(" -> new")
     public @NotNull Component getHoverName() {
-        return Component.translatable(getGas().getTranslationKey());
+        return Component.translatable(getGasType().getTranslationKey());
     }
 
     public String getTranslationKey() {
-        return getGas().getTranslationKey();
+        return getGasType().getTranslationKey();
     }
 
     public int getHint() {
-        return getGas().getTint();
+        return getGasType().getTint();
     }
 
     @Override
@@ -343,6 +343,6 @@ public final class GasStack implements MutableDataComponentHolder {
 
     @Override
     public String toString() {
-        return getAmount() + " " + getGas();
+        return getAmount() + " " + getGasType();
     }
 }

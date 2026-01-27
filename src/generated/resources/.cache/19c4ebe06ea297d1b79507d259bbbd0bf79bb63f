@@ -1,4 +1,4 @@
-// 1.21.1	2025-12-20T23:06:06.6645167	Create Crafted Beginning's Processing Recipes
+// 1.21.1	2026-01-25T12:32:16.9327303	Create Crafted Beginning's Processing Recipes
 a625fc0cc13d34b551ddb1270ec34d6eebd7ebdb data/createcraftedbeginning/recipe/chilling/blue_ice.json
 8574d97987e6fefbb3b587141351d2cbec16b065 data/createcraftedbeginning/recipe/chilling/ice_from_snow_block.json
 81a1628bb98af74e4b77cec5419e9da9944c04af data/createcraftedbeginning/recipe/chilling/ice_from_water_bucket.json
@@ -42,6 +42,7 @@ ceac8b4bebed1cdb35e56ebec3c5ed18c26c75f3 data/createcraftedbeginning/recipe/wind
 8dd557f8382e42e82c9329ca40e3ba18b98ad91e data/createcraftedbeginning/recipe/wind_charging/glow_berries.json
 c1f235245e23eec9075657f67e4dee2c7668035d data/createcraftedbeginning/recipe/wind_charging/golden_apple.json
 cd06655de6636623dc6501c96d4c3cec24b46724 data/createcraftedbeginning/recipe/wind_charging/golden_carrot.json
+fc80f8094020073114be3068eb07fea5d944938b data/createcraftedbeginning/recipe/wind_charging/golden_ice_cream.json
 173bd332522e4b30a173333b9509ea691b50ff4c data/createcraftedbeginning/recipe/wind_charging/honeyed_apple.json
 d227ca9a85c0604f948e01a3a88c9d1de99eaf52 data/createcraftedbeginning/recipe/wind_charging/honey_bottle.json
 5e74dedb7bc2ee43acbc02c74b28da1a2065d9b1 data/createcraftedbeginning/recipe/wind_charging/honey_ice_cream.json

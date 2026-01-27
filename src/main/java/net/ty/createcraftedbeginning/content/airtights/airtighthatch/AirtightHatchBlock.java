@@ -45,8 +45,8 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.Tags.Items;
 import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerClients;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterExecuteUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.IAirtightComponent;
 import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
 import net.ty.createcraftedbeginning.data.CCBShapes;
@@ -119,7 +119,7 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
             getDrops(state, serverLevel, pos, blockEntity, player, context.getItemInHand()).forEach(itemStack -> player.getInventory().placeItemBackInInventory(itemStack));
         }
         else if (blockEntity instanceof AirtightHatchBlockEntity hatch && state.getValue(OCCUPIED)) {
-            hatch.giveCanisterToPlayer(player, serverLevel);
+            hatch.giveCanisterToPlayer(player);
         }
         state.spawnAfterBreak(serverLevel, pos, ItemStack.EMPTY, true);
         level.destroyBlock(pos, false);
@@ -148,22 +148,22 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
 
         Direction facing = state.getValue(FACING);
         BlockPos targetPos = pos.relative(facing);
-        BlockEntity targetBE = level.getBlockEntity(targetPos);
-        if (targetBE == null) {
-            GasCanisterExecuteUtils.displayCustomWarningHint(player, "gui.warnings.invalid_face");
+        BlockEntity blockEntity = level.getBlockEntity(targetPos);
+        if (blockEntity == null) {
+            CanisterContainerClients.displayCustomWarningHint(player, "gui.warnings.invalid_face");
             return ItemInteractionResult.FAIL;
         }
 
         IGasHandler targetHandler = level.getCapability(GasHandler.BLOCK, targetPos, facing.getOpposite());
         if (targetHandler == null) {
-            GasCanisterExecuteUtils.displayCustomWarningHint(player, "gui.warnings.invalid_face");
+            CanisterContainerClients.displayCustomWarningHint(player, "gui.warnings.invalid_face");
             return ItemInteractionResult.FAIL;
         }
 
         if (level.getBlockState(targetPos).getBlock() instanceof IAirtightComponent airtightComponent) {
             boolean isFaceAirtight = airtightComponent.isAirtight(targetPos, level.getBlockState(targetPos), facing.getOpposite());
             if (!isFaceAirtight) {
-                GasCanisterExecuteUtils.displayCustomWarningHint(player, "gui.warnings.invalid_face");
+                CanisterContainerClients.displayCustomWarningHint(player, "gui.warnings.invalid_face");
                 return ItemInteractionResult.FAIL;
             }
         }
@@ -178,21 +178,21 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
 
         if (occupied) {
             if (isWrench) {
-                withBlockEntityDo(level, pos, be -> be.giveCanisterToPlayer(player, level));
+                withBlockEntityDo(level, pos, be -> be.giveCanisterToPlayer(player));
                 level.setBlockAndUpdate(pos, state.setValue(OCCUPIED, false));
                 CCBSoundEvents.CANISTER_REMOVED.playOnServer(player.level(), player.blockPosition(), 1, 1);
                 return ItemInteractionResult.SUCCESS;
             }
             else {
                 if (!isEmpty) {
-                    GasCanisterExecuteUtils.displayCustomWarningHint(player, "gui.warnings.invalid_item", stack.getHoverName());
+                    CanisterContainerClients.displayCustomWarningHint(player, "gui.warnings.invalid_item", stack.getHoverName());
                 }
                 return ItemInteractionResult.FAIL;
             }
         }
         else {
             if (isGasCanister) {
-                withBlockEntityDo(level, pos, be -> be.setContent(stack, level));
+                withBlockEntityDo(level, pos, be -> be.setCanisterContent(stack));
                 level.setBlockAndUpdate(pos, state.setValue(OCCUPIED, true));
                 stack.shrink(1);
                 CCBSoundEvents.CANISTER_ADDED.playOnServer(player.level(), player.blockPosition(), 1, 1);
@@ -204,7 +204,7 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
                 }
 
                 if (!isEmpty) {
-                    GasCanisterExecuteUtils.displayCustomWarningHint(player, "gui.warnings.invalid_item", stack.getHoverName());
+                    CanisterContainerClients.displayCustomWarningHint(player, "gui.warnings.invalid_item", stack.getHoverName());
                 }
                 return ItemInteractionResult.FAIL;
             }
@@ -228,7 +228,7 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
         if (!(builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof AirtightHatchBlockEntity hatch) || !state.getValue(OCCUPIED)) {
             return lootDrops;
         }
-        lootDrops.add(hatch.createCanisterItemStack(builder.getLevel()));
+        lootDrops.add(hatch.createCanisterItemStack());
         return lootDrops;
     }
 

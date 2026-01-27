@@ -1,0 +1,76 @@
+{
+  "type": "createcraftedbeginning:sequenced_assembly_with_gas",
+  "ingredient": {
+    "item": "createcraftedbeginning:unfilled_weather_flare"
+  },
+  "loops": 4,
+  "results": [
+    {
+      "chance": 50.0,
+      "id": "createcraftedbeginning:anchor_flare"
+    },
+    {
+      "chance": 80.0,
+      "id": "createcraftedbeginning:unfilled_weather_flare"
+    }
+  ],
+  "sequence": [
+    {
+      "type": "createcraftedbeginning:gas_injection",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_anchor_flare"
+        },
+        {
+          "type": "createcraftedbeginning:single",
+          "amount": 500,
+          "gas": "createcraftedbeginning:ultrawarm_air"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_anchor_flare"
+        }
+      ]
+    },
+    {
+      "type": "createcraftedbeginning:gas_injection",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_anchor_flare"
+        },
+        {
+          "type": "createcraftedbeginning:single",
+          "amount": 500,
+          "gas": "createcraftedbeginning:moist_air"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_anchor_flare"
+        }
+      ]
+    },
+    {
+      "type": "createcraftedbeginning:gas_injection",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_anchor_flare"
+        },
+        {
+          "type": "createcraftedbeginning:single",
+          "amount": 500,
+          "gas": "createcraftedbeginning:ethereal_air"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_anchor_flare"
+        }
+      ]
+    }
+  ],
+  "transitional_item": {
+    "id": "createcraftedbeginning:incomplete_anchor_flare"
+  }
+}

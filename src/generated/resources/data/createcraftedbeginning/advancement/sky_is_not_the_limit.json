@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:even_if_harder_than_obsidian",
+  "parent": "createcraftedbeginning:three_way_handshake",
   "criteria": {
     "0": {
       "trigger": "createcraftedbeginning:sky_is_not_the_limit_builtin"

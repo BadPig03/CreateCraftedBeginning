@@ -63,7 +63,7 @@ public class CombinedGasTankWrapper implements IGasHandler {
         for (boolean searchPass : Iterate.trueAndFalse) {
             for (IGasHandler gasHandler : gasHandlers) {
                 for (int i = 0; i < gasHandler.getTanks(); i++) {
-                    if (searchPass && GasStack.isSameGas(gasHandler.getGasInTank(i), resource)) {
+                    if (searchPass && GasStack.isSameGasSameComponents(gasHandler.getGasInTank(i), resource)) {
                         fittingHandlerFound = true;
                     }
                 }
@@ -101,7 +101,7 @@ public class CombinedGasTankWrapper implements IGasHandler {
             long amount = drainedFromCurrent.getAmount();
             resource.shrink(amount);
 
-            if (!drainedFromCurrent.isEmpty() && (drained.isEmpty() || GasStack.isSameGas(drainedFromCurrent, drained))) {
+            if (!drainedFromCurrent.isEmpty() && (drained.isEmpty() || GasStack.isSameGasSameComponents(drainedFromCurrent, drained))) {
                 drained = new GasStack(drainedFromCurrent.getGasHolder(), amount + drained.getAmount());
             }
             if (resource.isEmpty()) {
@@ -120,7 +120,7 @@ public class CombinedGasTankWrapper implements IGasHandler {
             long amount = drainedFromCurrent.getAmount();
             maxDrain -= amount;
 
-            if (!drainedFromCurrent.isEmpty() && (drained.isEmpty() || GasStack.isSameGas(drainedFromCurrent, drained))) {
+            if (!drainedFromCurrent.isEmpty() && (drained.isEmpty() || GasStack.isSameGasSameComponents(drainedFromCurrent, drained))) {
                 drained = new GasStack(drainedFromCurrent.getGasHolder(), amount + drained.getAmount());
             }
             if (maxDrain == 0) {

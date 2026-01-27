@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "tag": "c:plates/amethyst_crystal"
+    },
+    "S": {
+      "item": "createcraftedbeginning:airtight_sheet"
+    }
+  },
+  "pattern": [
+    "ASA"
+  ],
+  "result": {
+    "count": 4,
+    "id": "createcraftedbeginning:gas_filter"
+  }
+}

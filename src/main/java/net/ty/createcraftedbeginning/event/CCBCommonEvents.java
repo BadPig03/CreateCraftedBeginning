@@ -2,19 +2,15 @@ package net.ty.createcraftedbeginning.event;
 
 import com.simibubi.create.content.kinetics.deployer.DeployerRecipeSearchEvent;
 import com.simibubi.create.foundation.item.ItemHelper;
-import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.util.Unit;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
-import net.neoforged.neoforge.event.level.LevelEvent.Load;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.recipes.DeployerApplicationWithGasRecipe;
@@ -28,10 +24,9 @@ import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.Air
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackContents;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterItem;
+import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackItem;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackOverrides.GasCanisterPackType;
-import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackSyncPacket;
-import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackUtils;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlockEntity;
@@ -48,9 +43,7 @@ import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.UUID;
+import java.util.List;
 
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
 public class CCBCommonEvents {
@@ -73,25 +66,9 @@ public class CCBCommonEvents {
         ResidueOutletBlockEntity.registerCapabilities(event);
         SturdyCrateBlockEntity.registerCapabilities(event);
         TeslaTurbineNozzleBlockEntity.registerCapabilities(event);
-    }
 
-    @SubscribeEvent
-    public static void onLevelLoad(@NotNull Load event) {
-        LevelAccessor level = event.getLevel();
-        CreateCraftedBeginning.GAS_CANISTER_PACK_CONTENTS_DATA_MANAGER.onLevelLoad(level);
-    }
-
-    @SubscribeEvent
-    public static void onPlayerLoggedIn(@NotNull PlayerLoggedInEvent event) {
-        Player player = event.getEntity();
-        if (!(player instanceof ServerPlayer serverPlayer)) {
-            return;
-        }
-
-        Map<UUID, GasCanisterPackContents> contentsMap = CreateCraftedBeginning.GAS_CANISTER_PACK_CONTENTS_DATA_MANAGER.getContentsMap();
-        for (Entry<UUID, GasCanisterPackContents> entry : contentsMap.entrySet()) {
-            CatnipServices.NETWORK.sendToClient(serverPlayer, new GasCanisterPackSyncPacket(entry.getKey(), entry.getValue()));
-        }
+        GasCanisterItem.registerCapabilities(event);
+        GasCanisterPackItem.registerCapabilities(event);
     }
 
     @SubscribeEvent
@@ -114,10 +91,11 @@ public class CCBCommonEvents {
             builder.set(CCBDataComponents.DRILL_MINING_RELATIVE_POSITION, new BlockPos(0, 0, 0));
             builder.set(CCBDataComponents.DRILL_INVENTORY, ItemHelper.containerContentsFromHandler(new DrillItemHandler()));
         });
-        event.modify(CCBItems.GAS_CANISTER, builder -> builder.set(CCBDataComponents.CANISTER_CONTENT, GasStack.EMPTY));
-        event.modify(CCBItems.GAS_CANISTER_PACK, builder -> {
-            builder.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, GasCanisterPackType._0000.getFlags());
-            builder.set(CCBDataComponents.GAS_CANISTER_PACK_UUID, GasCanisterPackUtils.FALLBACK_UUID);
+        event.modify(CCBItems.GAS_CANISTER, builder -> {
+            builder.set(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, List.of(GasStack.EMPTY));
+            builder.set(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES, List.of(0L));
         });
+        event.modify(CCBItems.GAS_CANISTER_PACK, builder -> builder.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, GasCanisterPackType._0000.getFlags()));
+        event.modify(CCBItems.GAS_VIRTUAL_ITEM, builder -> builder.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE));
     }
 }

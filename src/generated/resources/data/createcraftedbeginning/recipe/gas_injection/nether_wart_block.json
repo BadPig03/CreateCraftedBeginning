@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "item": "minecraft:crimson_fungus"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 20,
+      "gas": "createcraftedbeginning:energized_natural_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:nether_wart_block"
+    }
+  ]
+}

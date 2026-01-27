@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "item": "minecraft:chorus_fruit"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 500,
+      "gas": "createcraftedbeginning:spore_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:chorus_flower"
+    }
+  ]
+}

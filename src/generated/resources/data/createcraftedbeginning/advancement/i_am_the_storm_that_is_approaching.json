@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:sky_is_not_the_limit",
+  "parent": "createcraftedbeginning:even_if_harder_than_obsidian",
   "criteria": {
     "0": {
       "trigger": "createcraftedbeginning:i_am_the_storm_that_is_approaching_builtin"

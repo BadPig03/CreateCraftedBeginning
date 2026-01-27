@@ -6,12 +6,11 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.registry.CCBPackets;
 import org.jetbrains.annotations.NotNull;
 
 public record AirtightHandheldDrillAnimationPacket(float progress) implements ServerboundPacketPayload {
-    public static final String COMPOUND_KEY_ANIMATION = CreateCraftedBeginning.MOD_ID + ":airtight_handheld_drill_animation";
+    public static final String COMPOUND_KEY_ANIMATION = "CreateCraftedBeginningDrillAnimation";
     public static final StreamCodec<ByteBuf, AirtightHandheldDrillAnimationPacket> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.FLOAT, AirtightHandheldDrillAnimationPacket::progress, AirtightHandheldDrillAnimationPacket::new);
 
     @Override

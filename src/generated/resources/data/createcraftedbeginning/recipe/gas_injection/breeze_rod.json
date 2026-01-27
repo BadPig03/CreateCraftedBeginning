@@ -2,7 +2,7 @@
   "type": "createcraftedbeginning:gas_injection",
   "ingredients": [
     {
-      "item": "minecraft:blaze_rod"
+      "tag": "c:rods/blaze"
     },
     {
       "type": "createcraftedbeginning:single",

@@ -22,18 +22,18 @@ import java.util.stream.Collectors;
 
 @SuppressWarnings("SameParameterValue")
 public class CCBArmorMaterials {
-    private static final DeferredRegister<ArmorMaterial> ARMOR_MATERIALS = DeferredRegister.create(Registries.ARMOR_MATERIAL, CreateCraftedBeginning.MOD_ID);
+    private static final DeferredRegister<ArmorMaterial> MATERIALS = DeferredRegister.create(Registries.ARMOR_MATERIAL, CreateCraftedBeginning.MOD_ID);
     private static final ResourceLocation AIRTIGHT_LOCATION = CreateCraftedBeginning.asResource("airtight");
 
     public static final Holder<ArmorMaterial> AIRTIGHT = register("airtight", new int[]{4, 9, 7, 4, 11}, 15, CCBSoundEvents.AIRTIGHT_ARMOR_EQUIP.getMainEventHolder(), 6, 0.25f, Ingredient::of, List.of(new Layer(AIRTIGHT_LOCATION)));
 
     private static @NotNull Holder<ArmorMaterial> register(String name, int[] defense, int enchantmentValue, Holder<SoundEvent> equipSound, float toughness, float knockbackResistance, Supplier<Ingredient> repairIngredient, List<Layer> layers) {
         EnumMap<Type, Integer> enumMap = Arrays.stream(Type.values()).collect(Collectors.toMap(type -> type, type -> defense[type.ordinal()], (a, b) -> b, () -> new EnumMap<>(Type.class)));
-        return ARMOR_MATERIALS.register(name, () -> new ArmorMaterial(enumMap, enchantmentValue, equipSound, repairIngredient, layers, toughness, knockbackResistance));
+        return MATERIALS.register(name, () -> new ArmorMaterial(enumMap, enchantmentValue, equipSound, repairIngredient, layers, toughness, knockbackResistance));
     }
 
     @Internal
     public static void register(IEventBus eventBus) {
-        ARMOR_MATERIALS.register(eventBus);
+        MATERIALS.register(eventBus);
     }
 }

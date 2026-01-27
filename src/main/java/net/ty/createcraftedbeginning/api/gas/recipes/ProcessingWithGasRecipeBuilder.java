@@ -121,7 +121,7 @@ public abstract class ProcessingWithGasRecipeBuilder<P extends ProcessingWithGas
         return self();
     }
 
-    public S requiredTemperatureCondition(TemperatureCondition temperatureCondition) {
+    public S temperatureCondition(TemperatureCondition temperatureCondition) {
         params.temperatureCondition = temperatureCondition;
         return self();
     }
@@ -178,8 +178,8 @@ public abstract class ProcessingWithGasRecipeBuilder<P extends ProcessingWithGas
         return self();
     }
 
-    public S require(Gas gas, long amount) {
-        return require(SizedGasIngredient.of(gas, amount));
+    public S require(Gas gasType, long amount) {
+        return require(SizedGasIngredient.of(gasType, amount));
     }
 
     public S require(SizedGasIngredient ingredient) {
@@ -187,7 +187,7 @@ public abstract class ProcessingWithGasRecipeBuilder<P extends ProcessingWithGas
         return self();
     }
 
-    public S requireGasTag(TagKey<Gas> gasTag, long amount) {
+    public S require(TagKey<Gas> gasTag, long amount) {
         return require(SizedGasIngredient.of(gasTag, amount));
     }
 
@@ -245,8 +245,8 @@ public abstract class ProcessingWithGasRecipeBuilder<P extends ProcessingWithGas
         return self();
     }
 
-    public S output(Gas gas, long amount) {
-        return output(new GasStack(gas, amount));
+    public S output(Gas gasType, long amount) {
+        return output(new GasStack(gasType, amount));
     }
 
     public S output(GasStack gasStack) {

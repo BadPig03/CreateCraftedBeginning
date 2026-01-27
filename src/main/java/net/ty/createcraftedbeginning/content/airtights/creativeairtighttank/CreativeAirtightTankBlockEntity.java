@@ -4,7 +4,6 @@ import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
-import com.simibubi.create.foundation.utility.CreateLang;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -79,7 +78,7 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
     }
 
     public static long getCapacityPerTank() {
-        return CCBConfig.server().airtights.maxTankCapacity.get() * 1000L;
+        return CCBConfig.server().airtights.maxCanisterCapacity.get() * 4000L;
     }
 
     @Override
@@ -345,7 +344,7 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
 
     @Override
     public MutableComponent format(int value) {
-        return CreateLang.text(value + " ").add(CreateLang.translate("schedule.condition.threshold.buckets")).component();
+        return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.buckets")).component();
     }
 
     @Override

@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "item": "minecraft:stone"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 500,
+      "gas": "createcraftedbeginning:spore_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:moss_block"
+    }
+  ]
+}

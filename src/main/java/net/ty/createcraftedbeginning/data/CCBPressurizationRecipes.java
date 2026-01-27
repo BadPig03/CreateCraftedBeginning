@@ -12,7 +12,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-@SuppressWarnings("unused")
 public class CCBPressurizationRecipes extends PressurizationRecipeGen {
     public CCBPressurizationRecipes(PackOutput output, CompletableFuture<Provider> registries) {
         super(output, registries, CreateCraftedBeginning.MOD_ID);
@@ -23,13 +22,13 @@ public class CCBPressurizationRecipes extends PressurizationRecipeGen {
         registriesFuture.thenAccept(registries -> {
             RegistryLookup<Gas> gasLookup = registries.lookupOrThrow(CCBRegistries.GAS_REGISTRY_KEY);
             gasLookup.listElements().forEach(holder -> {
-                Gas gas = holder.value();
-                if (gas.getPressurizedGas().isEmpty()) {
+                Gas gasType = holder.value();
+                if (gasType.getPressurizedGasType().isEmpty()) {
                     return;
                 }
 
                 String gasName = Objects.requireNonNull(holder.getKey()).location().getPath();
-                create(gasName, b -> b.require(holder.value(), 10).output(gas.getPressurizedGas(), 1));
+                create(gasName, b -> b.require(holder.value(), 10).output(gasType.getPressurizedGasType(), 1));
             });
         });
     }

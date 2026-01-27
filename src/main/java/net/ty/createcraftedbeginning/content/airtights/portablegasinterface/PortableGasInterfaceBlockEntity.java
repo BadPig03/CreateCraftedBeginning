@@ -12,7 +12,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
-import net.ty.createcraftedbeginning.mixin.MountedStorageManagerAccessor;
+import net.ty.createcraftedbeginning.mixin.accessor.MountedStorageManagerAccessor;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;

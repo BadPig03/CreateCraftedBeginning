@@ -8,6 +8,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.content.fanprocessing.ChillingFanProcessingType;
 
+@SuppressWarnings("unused")
 public class CCBFanProcessingTypes {
     private static final DeferredRegister<FanProcessingType> TYPES = DeferredRegister.create(CreateRegistries.FAN_PROCESSING_TYPE, CreateCraftedBeginning.MOD_ID);
 

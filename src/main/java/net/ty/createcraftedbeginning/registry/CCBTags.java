@@ -115,7 +115,9 @@ public class CCBTags {
         AIRTIGHT_ARMOR,
         AMETHYST(COMMON, "dusts/amethyst"),
         AMETHYST_CRYSTAL_PLATE(COMMON, "plates/amethyst_crystal"),
+        CHORUS_FLOWER(COMMON, "dusts/chorus_flower"),
         CINDER_ALLOY(COMMON, "ingots/cinder"),
+        END_ALLOY(COMMON, "ingots/end"),
         CINDER_CASING_RAW_MATERIALS,
         CRATES,
         CRYING_OBSIDIAN(COMMON, "dusts/crying_obsidian"),
@@ -236,6 +238,7 @@ public class CCBTags {
         SPORE,
         ENERGIZED,
         PRESSURIZED,
+        PRESSURIZED_ENERGIZED,
         CREATIVE;
 
         public final TagKey<Gas> tag;

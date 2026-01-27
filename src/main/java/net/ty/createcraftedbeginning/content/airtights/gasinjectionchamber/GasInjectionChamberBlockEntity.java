@@ -24,12 +24,11 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.SmartGasTankBehaviour;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterExecuteUtils;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterQueryUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -67,7 +66,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     }
 
     public static long getMaxCapacity() {
-        return CCBConfig.server().airtights.maxTankCapacity.get() * 500L;
+        return CCBConfig.server().airtights.maxCanisterCapacity.get() * 500L;
     }
 
     @Override
@@ -187,17 +186,9 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         }
 
         ItemStack resultItem;
-        if (GasCanisterQueryUtils.isValidCanister(transported.stack)) {
-            GasStack content = GasCanisterQueryUtils.getCanisterContent(transported.stack);
-            long amount;
-            if (content.isEmpty()) {
-                GasCanisterExecuteUtils.setCanisterContent(transported.stack, tankGas.copyWithAmount(requiredAmount));
-                amount = requiredAmount;
-            }
-            else {
-                amount = GasCanisterExecuteUtils.changeCanisterContent(transported.stack, requiredAmount);
-            }
-            tankBehaviour.getPrimaryHandler().drain(amount, GasAction.EXECUTE);
+        if (transported.stack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents) {
+            long filled = canisterContents.fill(0, tankGas.copyWithAmount(requiredAmount), GasAction.EXECUTE);
+            tankBehaviour.getPrimaryHandler().drain(filled, GasAction.EXECUTE);
             CCBSoundEvents.INJECTING.playOnServer(level, worldPosition, 0.75f, 0.9f + 0.2f * level.random.nextFloat());
             sendCloud = true;
             notifyUpdate();

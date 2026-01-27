@@ -32,12 +32,15 @@ import net.minecraft.world.ticks.TickPriority;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.GasPropagator;
 import net.ty.createcraftedbeginning.api.gas.gases.IAirtightComponent;
+import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Arrays;
 
 public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightEncasedPipeBlockEntity>, IWrenchable, IAirtightComponent {
     private static final float PIPE_APOTHEM = 0.5f;
@@ -101,13 +104,12 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
 
     @Override
     protected @NotNull ItemInteractionResult useItemOn(@NotNull ItemStack stack, @NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull InteractionHand hand, @NotNull BlockHitResult hitResult) {
-        Direction direction = hitResult.getDirection();
-        Property<Boolean> property = PROPERTY_BY_DIRECTION.get(direction);
-        boolean isOpened = state.getValue(property);
-        ItemStack usedStack = player.getItemInHand(hand);
-        boolean isAddingSheet = isOpened && usedStack.is(CCBItems.AIRTIGHT_SHEET.asItem());
-        boolean isRemovingSheet = !isOpened && usedStack.is(AllItems.WRENCH.asItem());
-        if (!isAddingSheet && !isRemovingSheet) {
+        Property<Boolean> property = PROPERTY_BY_DIRECTION.get(hitResult.getDirection());
+        boolean opened = state.getValue(property);
+        ItemStack held = player.getItemInHand(hand);
+        boolean adding = opened && (CCBConfig.server().airtights.canSealWithoutSheets.get() && held.is(AllItems.WRENCH.asItem()) || held.is(CCBItems.AIRTIGHT_SHEET.asItem()));
+        boolean removing = !opened && held.is(AllItems.WRENCH.asItem());
+        if (!adding && !removing) {
             return ItemInteractionResult.FAIL;
         }
 
@@ -115,26 +117,20 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
             return ItemInteractionResult.sidedSuccess(true);
         }
 
-        BlockState newState = state.setValue(property, !isOpened);
+        BlockState newState = state.setValue(property, !opened);
         level.setBlockAndUpdate(pos, newState);
         level.scheduleTick(pos, this, 1, TickPriority.HIGH);
-        if (isAddingSheet) {
+        if (adding) {
             CCBSoundEvents.SHEET_ADDED.playOnServer(level, pos, 1.0f, 1.0f);
         }
         else {
             CCBSoundEvents.SHEET_REMOVED.playOnServer(level, pos, 1.0f, 1.0f);
         }
+        if (CCBAdvancements.HERMETIC_SEAL_600.isAlreadyAwardedTo(player) || Arrays.stream(Iterate.directions).anyMatch(dir -> newState.getValue(PROPERTY_BY_DIRECTION.get(dir)))) {
+            return ItemInteractionResult.sidedSuccess(false);
+        }
 
-        boolean noAdvancement = false;
-        for (Direction dir : Iterate.directions) {
-            if (newState.getValue(PROPERTY_BY_DIRECTION.get(dir))) {
-                noAdvancement = true;
-                break;
-            }
-        }
-        if (!noAdvancement) {
-            CCBAdvancements.HERMETIC_SEAL_600.awardTo(player);
-        }
+        CCBAdvancements.HERMETIC_SEAL_600.awardTo(player);
         return ItemInteractionResult.sidedSuccess(false);
     }
 

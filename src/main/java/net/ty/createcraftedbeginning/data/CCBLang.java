@@ -43,8 +43,8 @@ public class CCBLang extends Lang {
         return builder().add(stack.getHoverName().copy());
     }
 
-    public static @NotNull LangBuilder gasName(@NotNull Gas gas) {
-        return builder().add(Component.translatable(gas.getTranslationKey()).copy());
+    public static @NotNull LangBuilder gasName(@NotNull Gas gasType) {
+        return builder().add(Component.translatable(gasType.getTranslationKey()).copy());
     }
 
     public static @NotNull LangBuilder number(double d) {

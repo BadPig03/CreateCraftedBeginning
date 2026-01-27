@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:unfilled_weather_flare"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 500,
+      "gas": "createcraftedbeginning:ethereal_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:thunderstorm_flare"
+    }
+  ]
+}

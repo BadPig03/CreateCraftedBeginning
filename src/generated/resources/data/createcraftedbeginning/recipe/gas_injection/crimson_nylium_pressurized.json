@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "item": "minecraft:warped_nylium"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 5,
+      "gas": "createcraftedbeginning:pressurized_energized_ethereal_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:crimson_nylium"
+    }
+  ]
+}

@@ -127,12 +127,12 @@ public class AirtightAssemblyDriverCore {
 
         @Override
         public long getTankCapacity(int tank) {
-            return CCBConfig.server().airtights.maxTankCapacity.get() * 100L;
+            return CCBConfig.server().airtights.maxCanisterCapacity.get() * 100L;
         }
 
         @Override
         public boolean isGasValid(int tank, @NotNull GasStack gasStack) {
-            return !gasStack.isEmpty() && gasStack.getGas().getEngineEfficiency() > 0;
+            return !gasStack.isEmpty() && gasStack.getGasType().getEngineEfficiency() > 0;
         }
 
         @Override

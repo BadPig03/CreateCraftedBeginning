@@ -227,7 +227,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
                     availableFlow = gasInFlow;
                     continue;
                 }
-                if (GasStack.isSameGas(availableFlow, gasInFlow)) {
+                if (GasStack.isSameGasSameComponents(availableFlow, gasInFlow)) {
                     singleSource = null;
                     availableFlow = gasInFlow;
                     continue;

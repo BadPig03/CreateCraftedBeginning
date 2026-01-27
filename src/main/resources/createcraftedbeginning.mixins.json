@@ -1,18 +1,24 @@
 {
   "required": true,
-  "priority": 1120,
+  "priority": 1210,
   "package": "net.ty.createcraftedbeginning.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "accessor.AbstractPiglinAccessor",
+    "accessor.HoglinAccessor",
+    "accessor.HumanoidArmorLayerAtlasAccessor",
+    "accessor.ItemInHandRendererAccessor",
+    "accessor.MountedStorageManagerAccessor",
+    "accessor.ZombieAccessor",
+    "AbstractPiglinMixin",
 	"BuiltInRegistriesMixin",
-    "MountedStorageManagerMixin",
-    "MountedStorageManagerAccessor",
-	"TrainCargoManagerMixin",
-    "MechanicalPressBlockEntityMixin",
-    "SawBlockEntityMixin",
     "FillingBySpoutMixin",
+    "HoglinMixin",
+    "MechanicalPressBlockEntityMixin",
+    "MountedStorageManagerMixin",
     "PlayerMixin",
-    "HumanoidArmorLayerAtlasAccessor"
+    "SawBlockEntityMixin",
+    "TrainCargoManagerMixin"
   ],
   "minVersion": "0.8"
 }

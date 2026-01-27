@@ -62,8 +62,9 @@ public class AirtightArmorsEvents {
             return;
         }
 
-        AirtightArmorsUtils.refreshChestplateFlight(player);
-        if (!(player.getEyePosition().y > level.getMaxBuildHeight())) {
+        AirtightArmorsUtils.refreshChestplateModifiers(player);
+        AirtightArmorsUtils.refreshBootsModifiers(player);
+        if (CCBAdvancements.SKY_IS_NOT_THE_LIMIT.isAlreadyAwardedTo(player) || player.getEyePosition().y <= level.getMaxBuildHeight()) {
             return;
         }
 
@@ -83,7 +84,7 @@ public class AirtightArmorsEvents {
         if (!chestplate.is(CCBItems.AIRTIGHT_CHESTPLATE)) {
             return;
         }
-        if (!AirtightArmorsUtils.canInvalidateDamage(player, event.getAmount(), () -> true)) {
+        if (!AirtightArmorsUtils.canInvalidateDamage(player, event.getAmount(), () -> !player.level().isClientSide)) {
             return;
         }
 
@@ -140,7 +141,9 @@ public class AirtightArmorsEvents {
         if (!leggings.is(CCBItems.AIRTIGHT_LEGGINGS)) {
             return;
         }
-        if (!AirtightArmorsUtils.canInvalidateDamage(player, event.getAmount(), () -> player.level().getGameTime() % 10 == 0)) {
+
+        Level level = player.level();
+        if (!AirtightArmorsUtils.canInvalidateDamage(player, event.getAmount(), () -> !level.isClientSide && level.getGameTime() % 10 == 5)) {
             return;
         }
 
@@ -157,7 +160,7 @@ public class AirtightArmorsEvents {
         if (!boots.is(CCBItems.AIRTIGHT_BOOTS)) {
             return;
         }
-        if (!AirtightArmorsUtils.canInvalidateDamage(player, event.getAmount(), () -> true)) {
+        if (!AirtightArmorsUtils.canInvalidateDamage(player, event.getAmount(), () -> !player.level().isClientSide)) {
             return;
         }
 
@@ -179,7 +182,7 @@ public class AirtightArmorsEvents {
         if (!boots.is(CCBItems.AIRTIGHT_BOOTS)) {
             return;
         }
-        if (!AirtightArmorsUtils.canInvalidateDamage(player, event.getAmount(), () -> true)) {
+        if (!AirtightArmorsUtils.canInvalidateDamage(player, event.getAmount(), () -> !player.level().isClientSide)) {
             return;
         }
 
@@ -201,7 +204,9 @@ public class AirtightArmorsEvents {
         if (!boots.is(CCBItems.AIRTIGHT_BOOTS)) {
             return;
         }
-        if (!AirtightArmorsUtils.canInvalidateDamage(player, event.getAmount(), () -> player.level().getGameTime() % 10 == 0)) {
+
+        Level level = player.level();
+        if (!AirtightArmorsUtils.canInvalidateDamage(player, event.getAmount(), () -> !level.isClientSide && level.getGameTime() % 10 == 5)) {
             return;
         }
 

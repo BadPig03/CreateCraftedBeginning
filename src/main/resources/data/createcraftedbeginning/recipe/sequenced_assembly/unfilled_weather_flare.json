@@ -1,0 +1,62 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {
+    "tag": "c:plates/iron"
+  },
+  "loops": 1,
+  "results": [
+    {
+      "id": "createcraftedbeginning:unfilled_weather_flare"
+    }
+  ],
+  "sequence": [
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_weather_flare"
+        },
+        {
+          "item": "createcraftedbeginning:airtight_sheet"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_weather_flare"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_weather_flare"
+        },
+        {
+          "tag": "c:gunpowders"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_weather_flare"
+        }
+      ]
+    },
+    {
+      "type": "create:pressing",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_weather_flare"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_weather_flare"
+        }
+      ]
+    }
+  ],
+  "transitional_item": {
+    "id": "createcraftedbeginning:incomplete_weather_flare"
+  }
+}

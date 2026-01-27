@@ -1,0 +1,18 @@
+{
+  "type": "create:filling",
+  "ingredients": [
+    {
+      "item": "minecraft:amethyst_shard"
+    },
+    {
+      "type": "fluid_stack",
+      "amount": 375,
+      "fluid": "createcraftedbeginning:amethyst_suspension"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:small_amethyst_bud"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "item": "minecraft:bubble_coral"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 5,
+      "gas": "createcraftedbeginning:pressurized_energized_natural_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:bubble_coral_block"
+    }
+  ]
+}

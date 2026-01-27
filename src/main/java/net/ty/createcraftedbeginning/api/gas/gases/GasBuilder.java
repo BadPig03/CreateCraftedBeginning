@@ -19,15 +19,14 @@ public class GasBuilder {
 
     private final ResourceLocation texture;
     private int tint = 0xFFFFFF;
+    private float inflation;
     private float engineEfficiency;
     private float teslaEfficiency;
 
     @Nullable
-    private ResourceLocation pressurizedGas;
+    private ResourceLocation pressurizedGasType;
     @Nullable
-    private ResourceLocation depressurizedGas;
-    @Nullable
-    private ResourceLocation energizedGas;
+    private ResourceLocation energizedGasType;
     @Nullable
     private Supplier<FluidStack> outputFluidStackSupplier;
     @Nullable
@@ -58,19 +57,18 @@ public class GasBuilder {
         return this;
     }
 
-    public GasBuilder pressurizedGas(ResourceLocation pressurizedGas) {
-        this.pressurizedGas = pressurizedGas;
+    public GasBuilder pressurizedGas(ResourceLocation pressurizedGasType) {
+        this.pressurizedGasType = pressurizedGasType;
         return this;
     }
 
-    @SuppressWarnings("unused")
-    public GasBuilder depressurizedGas(ResourceLocation depressurizedGas) {
-        this.depressurizedGas = depressurizedGas;
+    public GasBuilder energizedGas(ResourceLocation energizedGasType) {
+        this.energizedGasType = energizedGasType;
         return this;
     }
 
-    public GasBuilder energizedGas(ResourceLocation energizedGas) {
-        this.energizedGas = energizedGas;
+    public GasBuilder inflation(float inflation) {
+        this.inflation = inflation;
         return this;
     }
 
@@ -106,19 +104,18 @@ public class GasBuilder {
         return tint;
     }
 
-    @Nullable
-    public ResourceLocation getPressurizedGas() {
-        return pressurizedGas;
+    public float getInflation() {
+        return inflation;
     }
 
     @Nullable
-    public ResourceLocation getDepressurizedGas() {
-        return depressurizedGas;
+    public ResourceLocation getPressurizedGasType() {
+        return pressurizedGasType;
     }
 
     @Nullable
-    public ResourceLocation getEnergizedGas() {
-        return energizedGas;
+    public ResourceLocation getEnergizedGasType() {
+        return energizedGasType;
     }
 
     @Nullable

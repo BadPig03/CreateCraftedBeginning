@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "item": "minecraft:brown_mushroom_block"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 25,
+      "gas": "createcraftedbeginning:pressurized_natural_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:mushroom_stem"
+    }
+  ]
+}

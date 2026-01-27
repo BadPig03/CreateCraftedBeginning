@@ -12,7 +12,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-@SuppressWarnings("unused")
 public class CCBEnergizationRecipes extends EnergizationRecipeGen {
     public CCBEnergizationRecipes(PackOutput output, CompletableFuture<Provider> registries) {
         super(output, registries, CreateCraftedBeginning.MOD_ID);
@@ -23,13 +22,13 @@ public class CCBEnergizationRecipes extends EnergizationRecipeGen {
         registriesFuture.thenAccept(registries -> {
             RegistryLookup<Gas> gasLookup = registries.lookupOrThrow(CCBRegistries.GAS_REGISTRY_KEY);
             gasLookup.listElements().forEach(holder -> {
-                Gas gas = holder.value();
-                if (gas.getEnergizedGas().isEmpty()) {
+                Gas gasType = holder.value();
+                if (gasType.getEnergizedGasType().isEmpty()) {
                     return;
                 }
 
                 String gasName = Objects.requireNonNull(holder.getKey()).location().getPath();
-                create(gasName, b -> b.require(holder.value(), 1).output(gas.getEnergizedGas(), 1));
+                create(gasName, b -> b.require(holder.value(), 1).output(gasType.getEnergizedGasType(), 1));
             });
         });
     }

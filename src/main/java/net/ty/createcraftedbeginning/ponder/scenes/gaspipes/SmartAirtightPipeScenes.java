@@ -51,7 +51,8 @@ public class SmartAirtightPipeScenes {
 
         Object smartObject = new Object();
 
-        ItemStack gasCanisterItem = new ItemStack(CCBItems.GAS_CANISTER.asItem());
+        ItemStack gasCanister = new ItemStack(CCBItems.GAS_CANISTER.asItem());
+        ItemStack gasFilter = new ItemStack(CCBItems.GAS_FILTER.asItem());
 
         float mediumSpeed = SpeedLevel.MEDIUM.getSpeedValue();
 
@@ -79,13 +80,19 @@ public class SmartAirtightPipeScenes {
         scene.overlay().showText(60).text("Smart Airtight Pipes can restrict gas types passing through").pointAt(Vec3.atCenterOf(smartPos)).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().showControls(filterVec, Pointing.DOWN, 67).rightClick().withItem(gasCanisterItem);
+        scene.overlay().showControls(filterVec, Pointing.DOWN, 37).rightClick().withItem(gasCanister);
 
         scene.idle(7);
-        scene.world().setFilterData(util.select().position(smartPos), SmartAirtightPipeBlockEntity.class, gasCanisterItem);
-        scene.overlay().showText(60).text("Right-click filter slots with Gas Canisters to mark or change filtered gases").pointAt(Vec3.atCenterOf(smartPos)).placeNearTarget().attachKeyFrame();
+        scene.world().setFilterData(util.select().position(smartPos), SmartAirtightPipeBlockEntity.class, gasCanister);
+        scene.overlay().showText(80).text("Right-click the filter slot with a Gas Canister or a Gas Filter to mark or change filtered gases").pointAt(Vec3.atCenterOf(smartPos)).placeNearTarget().attachKeyFrame();
 
-        scene.idle(80);
+        scene.idle(40);
+        scene.overlay().showControls(filterVec, Pointing.DOWN, 37).rightClick().withItem(gasFilter);
+
+        scene.idle(7);
+        scene.world().setFilterData(util.select().position(smartPos), SmartAirtightPipeBlockEntity.class, gasFilter);
+
+        scene.idle(73);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, smartObject, smartArea, 3);
 
         scene.idle(3);

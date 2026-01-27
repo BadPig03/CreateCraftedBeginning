@@ -29,7 +29,7 @@ public class AirtightCannonWindChargeItem extends Item {
     public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand usedHand) {
         ItemStack itemStack = player.getItemInHand(usedHand);
         if (!level.isClientSide) {
-            shoot(level, player, itemStack.isEnchanted());
+            shoot(level, player);
         }
 
         level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.WIND_CHARGE_THROW, SoundSource.NEUTRAL, 0.5f, 0.4f / (level.getRandom().nextFloat() * 0.4f + 0.8f));
@@ -40,13 +40,12 @@ public class AirtightCannonWindChargeItem extends Item {
         return InteractionResultHolder.sidedSuccess(itemStack, level.isClientSide);
     }
 
-    private void shoot(@NotNull Level level, @NotNull Player player, boolean enchanted) {
+    private void shoot(@NotNull Level level, @NotNull Player player) {
         Vec3 eyePos = player.getEyePosition();
         Vec3 lookVec = player.getLookAngle();
         Vec3 barrelPos = eyePos.add(lookVec.scale(0.75));
         Vec3 motion = lookVec.normalize().scale(2);
-        Gas pressurizedGas = gasSupplier.get().getPressurizedGas();
-        Holder<Gas> holder = enchanted ? pressurizedGas.getHolder() : gasSupplier.get().getHolder();
+        Holder<Gas> holder = gasSupplier.get().getHolder();
 
         AirtightCannonWindChargeProjectileEntity windCharge = new AirtightCannonWindChargeProjectileEntity(level, holder, motion);
         windCharge.setPos(barrelPos);

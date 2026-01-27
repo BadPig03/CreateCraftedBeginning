@@ -48,8 +48,8 @@ public final class SizedGasIngredient {
     }
 
     @Contract("_, _ -> new")
-    public static @NotNull SizedGasIngredient of(Gas gas, long amount) {
-        return new SizedGasIngredient(GasIngredient.of(gas), amount);
+    public static @NotNull SizedGasIngredient of(Gas gasType, long amount) {
+        return new SizedGasIngredient(GasIngredient.of(gasType), amount);
     }
 
     @Contract("_ -> new")

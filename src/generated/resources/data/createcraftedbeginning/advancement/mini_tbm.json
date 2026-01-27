@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:the_skies_are_clearing_up_now",
+  "parent": "createcraftedbeginning:hands_get_daze",
   "criteria": {
     "0": {
       "trigger": "createcraftedbeginning:mini_tbm_builtin"

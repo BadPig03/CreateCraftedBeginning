@@ -8,6 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.AABB;
@@ -19,8 +20,8 @@ import org.jetbrains.annotations.NotNull;
 public class AirtightReactorKettleBlockItem extends BlockItem {
     private static final int COLOR_RED = 0xFFFF5D6C;
 
-    public AirtightReactorKettleBlockItem(Block block, Properties properties) {
-        super(block, properties);
+    public AirtightReactorKettleBlockItem(Block block, @NotNull Properties properties) {
+        super(block, properties.rarity(Rarity.UNCOMMON));
     }
 
     @Override

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GGG",
+    "GIG",
+    "GGG"
+  ],
+  "key": {
+    "G": {
+      "tag": "c:nuggets/gold"
+    },
+    "I": {
+      "item": "createcraftedbeginning:ice_cream"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:golden_ice_cream"
+  }
+}

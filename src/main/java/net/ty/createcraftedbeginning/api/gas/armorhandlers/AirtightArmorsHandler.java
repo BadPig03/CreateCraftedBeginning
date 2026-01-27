@@ -15,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-@SuppressWarnings("unused")
 public interface AirtightArmorsHandler {
     SimpleRegistry<Gas, AirtightArmorsHandler> REGISTRY = SimpleRegistry.create();
 

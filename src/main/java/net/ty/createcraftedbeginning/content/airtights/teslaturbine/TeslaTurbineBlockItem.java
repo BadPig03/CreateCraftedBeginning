@@ -10,6 +10,7 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.AABB;
@@ -22,8 +23,8 @@ import org.jetbrains.annotations.NotNull;
 public class TeslaTurbineBlockItem extends BlockItem {
     private static final int COLOR_RED = 0xFFFF5D6C;
 
-    public TeslaTurbineBlockItem(Block block, Properties properties) {
-        super(block, properties);
+    public TeslaTurbineBlockItem(Block block, @NotNull Properties properties) {
+        super(block, properties.rarity(Rarity.UNCOMMON));
     }
 
     @Override

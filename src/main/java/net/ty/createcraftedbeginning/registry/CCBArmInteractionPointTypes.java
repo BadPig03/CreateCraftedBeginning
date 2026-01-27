@@ -13,17 +13,17 @@ import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")
 public class CCBArmInteractionPointTypes {
-    private static final DeferredRegister<ArmInteractionPointType> ARM_INTERACTION_POINT_TYPES = DeferredRegister.create(CreateBuiltInRegistries.ARM_INTERACTION_POINT_TYPE, CreateCraftedBeginning.MOD_ID);
+    private static final DeferredRegister<ArmInteractionPointType> TYPES = DeferredRegister.create(CreateBuiltInRegistries.ARM_INTERACTION_POINT_TYPE, CreateCraftedBeginning.MOD_ID);
 
     public static DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> BREEZE_COOLER = register("breeze_cooler", new BreezeCoolerType());
     public static DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> BREEZE_CHAMBER = register("breeze_chamber", new BreezeChamberType());
     public static DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> AIRTIGHT_REACTOR_KETTLE = register("airtight_reactor_kettle", new ReactorKettleType());
 
     private static <T extends ArmInteractionPointType> @NotNull DeferredHolder<ArmInteractionPointType, T> register(String key, T type) {
-        return ARM_INTERACTION_POINT_TYPES.register(key, () -> type);
+        return TYPES.register(key, () -> type);
     }
 
     public static void register(IEventBus modBus) {
-        ARM_INTERACTION_POINT_TYPES.register(modBus);
+        TYPES.register(modBus);
     }
 }

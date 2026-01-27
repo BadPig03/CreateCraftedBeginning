@@ -75,7 +75,7 @@
         {
           "type": "createcraftedbeginning:single",
           "amount": 125,
-          "gas": "createcraftedbeginning:pressurized_energized_ultrawarm_air"
+          "gas": "createcraftedbeginning:pressurized_energized_natural_air"
         }
       ],
       "results": [

@@ -1,0 +1,19 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "item": "minecraft:blaze_powder"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 25,
+      "gas": "createcraftedbeginning:pressurized_natural_air"
+    }
+  ],
+  "results": [
+    {
+      "count": 2,
+      "id": "minecraft:wind_charge"
+    }
+  ]
+}

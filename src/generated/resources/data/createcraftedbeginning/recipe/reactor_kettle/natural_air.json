@@ -1,0 +1,24 @@
+{
+  "type": "createcraftedbeginning:reactor_kettle",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:breeze_core"
+    },
+    {
+      "tag": "c:stones"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:breeze_core"
+    },
+    {
+      "chance": 0.25,
+      "id": "minecraft:gravel"
+    },
+    {
+      "amount": 10,
+      "id": "createcraftedbeginning:natural_air"
+    }
+  ]
+}

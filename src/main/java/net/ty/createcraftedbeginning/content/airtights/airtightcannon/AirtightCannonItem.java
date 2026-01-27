@@ -26,8 +26,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterClientUtils;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterSupplierUtils;
+import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerClients;
+import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.weatherflares.WeatherFlareSupplierUtils;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
@@ -55,13 +55,13 @@ public class AirtightCannonItem extends ProjectileWeaponItem implements CustomAr
             return InteractionResult.FAIL;
         }
 
-        return GasCanisterSupplierUtils.noUsableGasAvailable(player) ? InteractionResult.FAIL : use(context.getLevel(), player, context.getHand()).getResult();
+        return CanisterContainerSuppliers.isAnyContainerAvailable(player) ? use(context.getLevel(), player, context.getHand()).getResult() : InteractionResult.FAIL;
     }
 
     @Override
     public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
         ItemStack cannon = player.getItemInHand(hand);
-        if (GasCanisterSupplierUtils.noUsableGasAvailable(player)) {
+        if (!CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
             return InteractionResultHolder.fail(cannon);
         }
         if (ShootableGadgetItemMethods.shouldSwap(player, cannon, hand, stack -> stack.is(CCBItems.AIRTIGHT_CANNON))) {
@@ -83,17 +83,17 @@ public class AirtightCannonItem extends ProjectileWeaponItem implements CustomAr
 
     @Override
     public boolean isBarVisible(@NotNull ItemStack cannon) {
-        return GasCanisterClientUtils.isBarVisible();
+        return CanisterContainerClients.isBarVisible();
     }
 
     @Override
     public int getBarWidth(@NotNull ItemStack cannon) {
-        return GasCanisterClientUtils.getBarWidth();
+        return CanisterContainerClients.getBarWidth();
     }
 
     @Override
     public int getBarColor(@NotNull ItemStack cannon) {
-        return GasCanisterClientUtils.getBarColor();
+        return CanisterContainerClients.getBarColor();
     }
 
     @Override

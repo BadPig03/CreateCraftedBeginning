@@ -9,7 +9,7 @@ import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterQueryUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.IAssemblyRecipeWithGas;
 import net.ty.createcraftedbeginning.api.gas.gases.SizedGasIngredient;
@@ -17,6 +17,8 @@ import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipePara
 import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasSubCategory;
 import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasSubCategory.AssemblyInjecting;
 import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -80,11 +82,9 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
             return -1;
         }
 
-        if (GasCanisterQueryUtils.isCanisterInjectable(itemStack, gasStack)) {
+        if (GasCanisterUtils.isCanisterInjectable(itemStack, gasStack) && itemStack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents) {
             long maxCapacity = GasInjectionChamberBlockEntity.getMaxCapacity();
-            GasStack content = GasCanisterQueryUtils.getCanisterContent(itemStack);
-            long capacity = GasCanisterQueryUtils.getCanisterCapacity(itemStack, content.getGas());
-            return Math.min(maxCapacity, capacity - content.getAmount());
+            return Math.min(maxCapacity, canisterContents.getTankCapacity(0) - canisterContents.getGasInTank(0).getAmount());
         }
 
         SingleRecipeInput input = new SingleRecipeInput(itemStack);
@@ -120,7 +120,7 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
         if (level == null) {
             return true;
         }
-        if (GasCanisterQueryUtils.isCanisterInjectable(itemStack, gasStack)) {
+        if (GasCanisterUtils.isCanisterInjectable(itemStack, gasStack)) {
             return false;
         }
 

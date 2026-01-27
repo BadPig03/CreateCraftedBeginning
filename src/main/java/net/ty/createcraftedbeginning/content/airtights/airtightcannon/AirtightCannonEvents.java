@@ -35,8 +35,11 @@ public class AirtightCannonEvents {
             return;
         }
 
-        CCBAdvancements.WIND_CHARGER.awardTo(player);
-        if (!(entity instanceof Breeze)) {
+        if (!CCBAdvancements.WIND_CHARGER.isAlreadyAwardedTo(player)) {
+            CCBAdvancements.WIND_CHARGER.awardTo(player);
+        }
+
+        if (!(entity instanceof Breeze) || CCBAdvancements.WHO_IS_THE_BREEZE_NOW.isAlreadyAwardedTo(player)) {
             return;
         }
 

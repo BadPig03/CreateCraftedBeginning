@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 public class GasReactions {
     public static void handlePipeFlowCollision(Level level, BlockPos pos, @NotNull GasStack gas1, @NotNull GasStack gas2) {
         BlockHelper.destroyBlock(level, pos, 1);
-        Flow event = new Flow(level, pos, gas1.getGas(), gas2.getGas(), null);
+        Flow event = new Flow(level, pos, gas1.getGasType(), gas2.getGasType(), null);
         NeoForge.EVENT_BUS.post(event);
         if (event.getState() == null) {
             return;

@@ -29,13 +29,13 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterExecuteUtils;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterSupplierUtils;
+import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerClients;
+import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerConsumers;
+import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.windcharge.AirtightCannonWindChargeProjectileEntity;
-import net.ty.createcraftedbeginning.content.airtights.weatherflares.IWeatherFlare;
 import net.ty.createcraftedbeginning.content.airtights.weatherflares.WeatherFlareProjectileEntity;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -64,7 +64,11 @@ public final class AirtightCannonUtils {
     }
 
     public static float getChargedRatio(@NotNull ItemStack cannon, Player player, int timeCharged) {
-        return GasCanisterSupplierUtils.noUsableGasAvailable(player) || timeCharged < MIN_USE_TIME ? -1 : Mth.clamp((float) timeCharged / getEfficientUseTime(cannon), 0, 2);
+        if (!CanisterContainerSuppliers.isAnyContainerAvailable(player) || timeCharged < MIN_USE_TIME) {
+            return -1;
+        }
+
+        return Mth.clamp((float) timeCharged / getEfficientUseTime(cannon), 0, 2);
     }
 
     public static int getEfficientUseTime(ItemStack cannon) {
@@ -73,15 +77,27 @@ public final class AirtightCannonUtils {
     }
 
     public static int getEnchantmentMultiShotLevel(@NotNull ItemStack cannon) {
-        return cannon.is(CCBItems.AIRTIGHT_CANNON) ? cannon.getTagEnchantments().entrySet().stream().filter(entry -> entry.getKey().is(Enchantments.MULTISHOT)).findFirst().map(Entry::getValue).orElse(0) : 0;
+        if (!cannon.is(CCBItems.AIRTIGHT_CANNON)) {
+            return 0;
+        }
+
+        return cannon.getTagEnchantments().entrySet().stream().filter(entry -> entry.getKey().is(Enchantments.MULTISHOT)).findFirst().map(Entry::getValue).orElse(0);
     }
 
     public static int getEnchantmentPunchLevel(@NotNull ItemStack cannon) {
-        return cannon.is(CCBItems.AIRTIGHT_CANNON) ? cannon.getTagEnchantments().entrySet().stream().filter(entry -> entry.getKey().is(Enchantments.PUNCH)).findFirst().map(Entry::getValue).orElse(0) : 0;
+        if (!cannon.is(CCBItems.AIRTIGHT_CANNON)) {
+            return 0;
+        }
+
+        return cannon.getTagEnchantments().entrySet().stream().filter(entry -> entry.getKey().is(Enchantments.PUNCH)).findFirst().map(Entry::getValue).orElse(0);
     }
 
     public static int getEnchantmentQuickChargeLevel(@NotNull ItemStack cannon) {
-        return cannon.is(CCBItems.AIRTIGHT_CANNON) ? cannon.getTagEnchantments().entrySet().stream().filter(entry -> entry.getKey().is(Enchantments.QUICK_CHARGE)).findFirst().map(Entry::getValue).orElse(0) : 0;
+        if (!cannon.is(CCBItems.AIRTIGHT_CANNON)) {
+            return 0;
+        }
+
+        return cannon.getTagEnchantments().entrySet().stream().filter(entry -> entry.getKey().is(Enchantments.QUICK_CHARGE)).findFirst().map(Entry::getValue).orElse(0);
     }
 
     public static int getGasConsumption(ItemStack cannon, float chargedRatio) {
@@ -98,14 +114,14 @@ public final class AirtightCannonUtils {
             return;
         }
 
-        GasStack gasStack = GasCanisterSupplierUtils.getFirstNonEmptyGasContent(player);
-        if (gasStack.isEmpty()) {
+        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
+        if (gasContent.isEmpty()) {
             return;
         }
 
         tooltip.add(CommonComponents.EMPTY);
-        tooltip.add(CCBLang.gasName(gasStack).add(CCBLang.translate("gui.tooltips.gas_tools.content")).style(ChatFormatting.GRAY).component());
-        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasStack.getGas());
+        tooltip.add(CCBLang.gasName(gasContent).add(CCBLang.translate("gui.tooltips.gas_tools.content")).style(ChatFormatting.GRAY).component());
+        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasContent.getGasType());
         if (cannonHandler == null) {
             return;
         }
@@ -117,12 +133,13 @@ public final class AirtightCannonUtils {
     }
 
     public static void fireFlares(Level level, @NotNull Player player, ItemStack flareItemStack, float chargedRatio) {
-        if (GasCanisterSupplierUtils.noUsableGasAvailable(player) || !(flareItemStack.getItem() instanceof IWeatherFlare)) {
+        if (!CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
             return;
         }
 
-        GasStack gasStack = GasCanisterSupplierUtils.getFirstNonEmptyGasContent(player);
-        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasStack.getGas());
+        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
+        Gas gasType = gasContent.getGasType();
+        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasType);
         if (cannonHandler == null) {
             return;
         }
@@ -130,8 +147,8 @@ public final class AirtightCannonUtils {
         InteractionHand hand = player.getUsedItemHand();
         ItemStack cannon = player.getItemInHand(hand);
         int gasConsumption = Mth.ceil(getGasConsumption(cannon, chargedRatio) * cannonHandler.getGasConsumptionMultiplier());
-        if (!GasCanisterExecuteUtils.tryGasConsumption(player, gasStack.getGas(), gasConsumption)) {
-            GasCanisterExecuteUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", gasStack.getHoverName());
+        if (!CanisterContainerConsumers.interactContainer(player, gasType, gasConsumption, () -> !player.level().isClientSide)) {
+            CanisterContainerClients.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", gasContent.getHoverName());
             return;
         }
 
@@ -140,13 +157,12 @@ public final class AirtightCannonUtils {
         Vec3 barrelPos = eyePos.add(lookVec.scale(0.75));
         Vec3 motion = lookVec.normalize().scale(chargedRatio);
 
-        boolean isCreative = player.isCreative();
         WeatherFlareProjectileEntity flare = new WeatherFlareProjectileEntity(level, flareItemStack.getItem(), barrelPos.y);
         flare.setPos(barrelPos);
         flare.setOwner(player);
         flare.setDeltaMovement(motion);
         level.addFreshEntity(flare);
-        if (!isCreative) {
+        if (!player.isCreative()) {
             flareItemStack.shrink(1);
         }
         ShootableGadgetItemMethods.applyCooldown(player, cannon, hand, s -> s.getItem() instanceof AirtightCannonItem, getEfficientUseTime(cannon));
@@ -154,12 +170,13 @@ public final class AirtightCannonUtils {
     }
 
     public static void spawnWindCharges(Level level, @NotNull Player player, float chargedRatio) {
-        if (GasCanisterSupplierUtils.noUsableGasAvailable(player)) {
+        if (!CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
             return;
         }
 
-        GasStack gasStack = GasCanisterSupplierUtils.getFirstNonEmptyGasContent(player);
-        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasStack.getGas());
+        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
+        Gas gasType = gasContent.getGasType();
+        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasType);
         if (cannonHandler == null) {
             return;
         }
@@ -167,8 +184,8 @@ public final class AirtightCannonUtils {
         InteractionHand hand = player.getUsedItemHand();
         ItemStack cannon = player.getItemInHand(hand);
         int gasConsumption = Mth.ceil(getGasConsumption(cannon, chargedRatio) * cannonHandler.getGasConsumptionMultiplier());
-        if (!GasCanisterExecuteUtils.tryGasConsumption(player, gasStack.getGas(), gasConsumption)) {
-            GasCanisterExecuteUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", gasStack.getHoverName());
+        if (!CanisterContainerConsumers.interactContainer(player, gasType, gasConsumption, () -> !player.level().isClientSide)) {
+            CanisterContainerClients.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", gasContent.getHoverName());
             return;
         }
 
@@ -178,7 +195,7 @@ public final class AirtightCannonUtils {
         int punchLevel = getEnchantmentPunchLevel(cannon);
         int windChargesCount = multiShotLevel * 2 + 1;
         float sprayChange = 360.0f / windChargesCount;
-        Holder<Gas> gasHolder = gasStack.getGasHolder();
+        Holder<Gas> gasHolder = gasContent.getGasHolder();
         for (int i = 0; i < windChargesCount; i++) {
             Vec3 eyePos = player.getEyePosition();
             Vec3 lookVec = player.getLookAngle();

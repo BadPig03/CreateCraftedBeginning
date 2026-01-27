@@ -46,7 +46,7 @@ public class AirtightAssemblyDriverFlowMeter {
         long amount = resource.getAmount();
         if (action.execute()) {
             gatheredSupply += amount;
-            if (!gasType.is(resource.getGas())) {
+            if (!gasType.is(resource.getGasType())) {
                 setGasType(resource.copyWithAmount(1));
             }
         }
@@ -84,7 +84,7 @@ public class AirtightAssemblyDriverFlowMeter {
             setGasType(GasStack.EMPTY);
         }
         if (previousGasSupply != gasSupply) {
-            int newLevel = (int) (gasSupply * gasType.getGas().getEngineEfficiency() / SUPPLY_PER_LEVEL);
+            int newLevel = (int) (gasSupply * gasType.getGasType().getEngineEfficiency() / SUPPLY_PER_LEVEL);
             driverCore.getLevelCalculator().updateSupplyLevel(newLevel);
             previousGasSupply = gasSupply;
         }

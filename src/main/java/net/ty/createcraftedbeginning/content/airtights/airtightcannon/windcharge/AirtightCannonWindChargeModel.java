@@ -36,8 +36,8 @@ public class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWin
             return;
         }
 
-        Gas gas = windCharge.getGasHolder().value();
-        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gas);
+        Gas gasType = windCharge.getGasHolder().value();
+        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasType);
         if (cannonHandler == null) {
             return;
         }

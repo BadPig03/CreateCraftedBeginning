@@ -1,0 +1,10 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:golden_ice_cream"
+    }
+  ],
+  "processing_time": 11175,
+  "results": []
+}

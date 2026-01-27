@@ -8,6 +8,9 @@ public class CCBEquipments extends ConfigBase {
     public final ConfigGroup airtightCannon = group(0, "airtight_cannon", "Airtight Cannon");
     public final ConfigInt gasCostPerShot = i(50, 0, "gas_cost_per_shot", Comments.cannonGasCostPerShot);
 
+    public final ConfigGroup airtightExtendArm = group(0, "airtight_extend_arm", "Airtight Extend Arm");
+    public final ConfigInt armCostPerUse = i(5, 0, "gas_cost_per_use", Comments.armCostPerUse);
+
     public final ConfigGroup airtightHandheldDrill = group(0, "airtight_handheld_drill", "Airtight Handheld Drill");
     public final ConfigInt drillGasCostPerBlock = i(10, 0, "gas_cost_per_block", Comments.drillGasCostPerBlock);
     public final ConfigInt drillGasCostPerLiquidBlock = i(5, 0, "gas_cost_per_liquid_block", Comments.drillGasCostPerLiquidBlock);
@@ -31,6 +34,7 @@ public class CCBEquipments extends ConfigBase {
 
     private static class Comments {
         static String cannonGasCostPerShot = "The amount of gas consumed by the Airtight Cannon for each shot.";
+        static String armCostPerUse = "The amount of gas consumed by the Airtight Extend Arm for each use";
         static String drillGasCostPerBlock = "The amount of gas consumed by the Airtight Handheld Drill for each block mined.";
         static String drillGasCostPerLiquidBlock = "The amount of gas consumed by the Airtight Handheld Drill for each liquid block replaced.";
         static String drillGasCostPerEntityHit = "The amount of gas consumed by the Airtight Handheld Drill each time it attacks an entity.";

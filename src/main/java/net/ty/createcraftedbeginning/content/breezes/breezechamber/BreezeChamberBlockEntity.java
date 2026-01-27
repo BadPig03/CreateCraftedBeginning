@@ -32,13 +32,13 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasTank;
-import net.ty.createcraftedbeginning.api.gas.gases.SmartGasTankBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.GasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightassemblydriver.AirtightAssemblyDriverCore;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
@@ -101,27 +101,16 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.BREEZE_CHAMBER.get(), (be, context) -> be.isControllerActive() ? null : be.tankBehaviour.getCapability());
     }
 
-    @Override
-    public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
-        tankBehaviour = SmartGasTankBehaviour.single(this, CCBConfig.server().airtights.maxTankCapacity.get() * 500L).forbidInsertion().allowExtraction();
-        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.A_ROYAL_FEAST, CCBAdvancements.BAD_APPLE, CCBAdvancements.UNIVERSAL_ANTIDOTE);
-        behaviours.add(tankBehaviour);
-        behaviours.add(advancementBehaviour);
+    public static long getMaxCapacity() {
+        return CCBConfig.server().airtights.maxCanisterCapacity.get() * 500L;
     }
 
     @Override
-    public void lazyTick() {
-        super.lazyTick();
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
-        BlockState state = getBlockState();
-        if (!(state.getBlock() instanceof BreezeChamberBlock chamber) || chamber.canSurvive(state, level, getBlockPos())) {
-            return;
-        }
-
-        level.destroyBlock(worldPosition, true);
+    public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
+        tankBehaviour = SmartGasTankBehaviour.single(this, getMaxCapacity()).forbidInsertion().allowExtraction();
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.A_ROYAL_FEAST, CCBAdvancements.BAD_APPLE, CCBAdvancements.UNIVERSAL_ANTIDOTE);
+        behaviours.add(tankBehaviour);
+        behaviours.add(advancementBehaviour);
     }
 
     @Override
@@ -145,10 +134,19 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     @Override
-	public void invalidate() {
-		super.invalidate();
-		invalidateCapabilities();
-	}
+    public void lazyTick() {
+        super.lazyTick();
+        if (level == null || level.isClientSide) {
+            return;
+        }
+
+        BlockState state = getBlockState();
+        if (!(state.getBlock() instanceof BreezeChamberBlock chamber) || chamber.canSurvive(state, level, getBlockPos())) {
+            return;
+        }
+
+        level.destroyBlock(worldPosition, true);
+    }
 
     @Override
     protected void write(@NotNull CompoundTag compoundTag, Provider registries, boolean clientPacket) {
@@ -193,11 +191,17 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         super.read(compoundTag, registries, clientPacket);
     }
 
-    private @NotNull Gas getTankEnergizedGas() {
-        return getTankGas().getEnergizedGas();
+    @Override
+    public void invalidate() {
+        super.invalidate();
+        invalidateCapabilities();
     }
 
-    private @NotNull Gas getTankGas() {
+    private @NotNull Gas getTankEnergizedGasType() {
+        return getTankGasType().getEnergizedGasType();
+    }
+
+    private @NotNull Gas getTankGasType() {
         IChamberGasTank tank = getTank();
         if (tank == null) {
             return Gas.EMPTY_GAS_HOLDER.value();
@@ -208,7 +212,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             return Gas.EMPTY_GAS_HOLDER.value();
         }
 
-        return inventory.getGasStack().getGas();
+        return inventory.getGasStack().getGasType();
     }
 
     private @Nullable IChamberGasTank getTank() {
@@ -230,9 +234,9 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     private boolean isOutputMismatched() {
-        Gas tankGas = getTankGas();
-        Gas tankEnergizedGas = getTankEnergizedGas();
-        return !tankGas.isEmpty() && !tankEnergizedGas.isEmpty() && !tankBehaviour.getPrimaryHandler().isEmpty() && !tankBehaviour.getPrimaryHandler().getGasStack().is(tankEnergizedGas);
+        Gas tankGasType = getTankGasType();
+        Gas tankEnergizedGasType = getTankEnergizedGasType();
+        return !tankGasType.isEmpty() && !tankEnergizedGasType.isEmpty() && !tankBehaviour.getPrimaryHandler().isEmpty() && !tankBehaviour.getPrimaryHandler().getGasStack().is(tankEnergizedGasType);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -273,7 +277,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             return 0;
         }
 
-        int maxAmount = CCBConfig.server().gas.maxVortexingAmount.get();
+        int maxAmount = CCBConfig.server().airtights.maxEnergizationRate.get();
         float ratio = Mth.clamp((float) time / MAX_EFFECTIVE_THRESHOLD, 0, 1);
         return Mth.clamp((int) (maxAmount * ratio), 1, maxAmount);
     }
@@ -314,10 +318,10 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         CCBLang.translate("gui.goggles.breeze_chamber.current_state").style(ChatFormatting.GRAY).forGoggles(tooltip);
         CCBLang.translate(windLevel.getTranslatable()).style(windLevel.getChatFormatting()).forGoggles(tooltip, 1);
 
-        Gas tankGas = getTankGas();
+        Gas tankGasType = getTankGasType();
         boolean isBad = currentState.getWindLevel() == WindLevel.ILL;
         boolean isActive = isControllerActive();
-        boolean invalidGas = getTankEnergizedGas().isEmpty() && !tankGas.isEmpty() && !isActive;
+        boolean invalidGas = getTankEnergizedGasType().isEmpty() && !tankGasType.isEmpty() && !isActive;
         boolean outputFailed = (isOutputFull() || isOutputMismatched()) && !isActive;
         int time = getWindRemainingTime();
         if (currentState.getWindLevel() != WindLevel.CALM) {
@@ -365,7 +369,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             CCBLang.addToGoggles(tooltip, "gui.goggles.breeze_chamber.improper_food");
         }
         if (invalidGas) {
-            CCBLang.addToGoggles(tooltip, "gui.goggles.breeze_chamber.invalid_gas", Component.translatable(tankGas.getTranslationKey()));
+            CCBLang.addToGoggles(tooltip, "gui.goggles.breeze_chamber.invalid_gas", Component.translatable(tankGasType.getTranslationKey()));
         }
         if (outputFailed) {
             CCBLang.addToGoggles(tooltip, "gui.goggles.breeze_chamber.output_failed");
@@ -452,14 +456,14 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             return;
         }
 
-        Gas energizedGas = getTankEnergizedGas();
-        if (energizedGas.isEmpty() || isOutputMismatched()) {
+        Gas energizedGasType = getTankEnergizedGasType();
+        if (energizedGasType.isEmpty() || isOutputMismatched()) {
             return;
         }
 
         IGasHandler handler = tank.getCapability();
         GasStack drainedStack = handler.drain(Math.min(inventory.getGasAmount(), Math.min(maxAmount, tankBehaviour.getPrimaryHandler().getSpace())), GasAction.EXECUTE);
-        tankBehaviour.getInternalGasHandler().forceFill(new GasStack(energizedGas.getHolder(), drainedStack.getAmount()), GasAction.EXECUTE);
+        tankBehaviour.getInternalGasHandler().forceFill(new GasStack(energizedGasType.getHolder(), drainedStack.getAmount()), GasAction.EXECUTE);
     }
 
     public void loadFromItem(@NotNull ItemStack stack) {

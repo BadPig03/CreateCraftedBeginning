@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.api.gas.gases;
 
-@SuppressWarnings("unused")
 public interface IGasHandler {
     int getTanks();
 

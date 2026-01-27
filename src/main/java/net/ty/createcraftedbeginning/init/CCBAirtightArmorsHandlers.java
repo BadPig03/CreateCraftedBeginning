@@ -12,6 +12,7 @@ import net.ty.createcraftedbeginning.api.gas.armorhandlers.natural.EnergizedNatu
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.natural.NaturalAirArmorsHandler;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.natural.PressurizedEnergizedNaturalAirArmorsHandler;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.natural.PressurizedNaturalAirArmorsHandler;
+import net.ty.createcraftedbeginning.api.gas.armorhandlers.spore.SporeAirArmorsHandler;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.ultrawarm.EnergizedUltrawarmAirArmorsHandler;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.ultrawarm.PressurizedEnergizedUltrawarmAirArmorsHandler;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.ultrawarm.PressurizedUltrawarmAirArmorsHandler;
@@ -39,6 +40,7 @@ public class CCBAirtightArmorsHandlers {
         registry.register(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR.get(), new PressurizedEnergizedEtherealAirArmorsHandler());
 
         registry.register(CCBGases.MOIST_AIR.get(), new MoistAirArmorsHandler());
+        registry.register(CCBGases.SPORE_AIR.get(), new SporeAirArmorsHandler());
         registry.register(CCBGases.CREATIVE_AIR.get(), new CreativeAirArmorsHandler());
     }
 }

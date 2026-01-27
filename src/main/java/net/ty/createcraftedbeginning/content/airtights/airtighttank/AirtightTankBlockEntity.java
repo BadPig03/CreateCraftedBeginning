@@ -4,7 +4,6 @@ import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
-import com.simibubi.create.foundation.utility.CreateLang;
 import net.createmod.catnip.lang.LangBuilder;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.minecraft.ChatFormatting;
@@ -23,12 +22,12 @@ import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasConnectivityHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasTank;
-import net.ty.createcraftedbeginning.api.gas.gases.SmartGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.GasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.IGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.IGasTankMultiBlockEntityContainer.iGas;
+import net.ty.createcraftedbeginning.api.gas.gases.SmartGasTank;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightassemblydriver.AirtightAssemblyDriverCore;
 import net.ty.createcraftedbeginning.content.airtights.airtightassemblydriver.AirtightAssemblyDriverStructureManager;
@@ -86,7 +85,7 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements iGas, I
     }
 
     public static long getCapacityPerTank() {
-        return CCBConfig.server().airtights.maxTankCapacity.get() * 1000L;
+        return CCBConfig.server().airtights.maxCanisterCapacity.get() * 4000L;
     }
 
     @Override
@@ -538,6 +537,6 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements iGas, I
 
     @Override
     public MutableComponent format(int value) {
-        return CreateLang.text(value + " ").add(CreateLang.translate("schedule.condition.threshold.buckets")).component();
+        return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.buckets")).component();
     }
 }

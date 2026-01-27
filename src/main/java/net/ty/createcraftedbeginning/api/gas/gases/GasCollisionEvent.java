@@ -8,18 +8,18 @@ import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class GasCollisionEvent extends Event {
-    protected final Gas firstGas;
-    protected final Gas secondGas;
+    protected final Gas firstGasType;
+    protected final Gas secondGasType;
     private final Level level;
     private final BlockPos pos;
     @Nullable
     private BlockState state;
 
-    protected GasCollisionEvent(Level level, BlockPos pos, Gas firstGas, Gas secondGas, @Nullable BlockState state) {
+    protected GasCollisionEvent(Level level, BlockPos pos, Gas firstGasType, Gas secondGasType, @Nullable BlockState state) {
         this.level = level;
         this.pos = pos;
-        this.firstGas = firstGas;
-        this.secondGas = secondGas;
+        this.firstGasType = firstGasType;
+        this.secondGasType = secondGasType;
         this.state = state;
     }
 
@@ -41,16 +41,16 @@ public class GasCollisionEvent extends Event {
     }
 
     public static class Flow extends GasCollisionEvent {
-        public Flow(Level level, BlockPos pos, Gas firstGas, Gas secondGas, @Nullable BlockState defaultState) {
-            super(level, pos, firstGas, secondGas, defaultState);
+        public Flow(Level level, BlockPos pos, Gas firstGasType, Gas secondGasType, @Nullable BlockState defaultState) {
+            super(level, pos, firstGasType, secondGasType, defaultState);
         }
 
-        public Gas getFirstGas() {
-            return firstGas;
+        public Gas getFirstGasType() {
+            return firstGasType;
         }
 
-        public Gas getSecondGas() {
-            return secondGas;
+        public Gas getSecondGasType() {
+            return secondGasType;
         }
     }
 }

@@ -9,7 +9,6 @@ import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -36,15 +35,12 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterItem.GasCanisterBlockItem;
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.Optional;
 
 public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntity>, SimpleWaterloggedBlock, IWrenchable, SpecialBlockItemRequirement {
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
@@ -67,22 +63,16 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
             return;
         }
 
-        withBlockEntityDo(level, pos, be -> be.setContent(stack, level));
+        withBlockEntityDo(level, pos, be -> be.setCanisterContent(stack));
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public @NotNull ItemStack getCloneItemStack(@NotNull BlockState state, @NotNull HitResult target, @NotNull LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
-        if (!(asItem() instanceof GasCanisterBlockItem placeable)) {
+        if (!(asItem() instanceof GasCanisterBlockItem) || !(level.getBlockEntity(pos) instanceof GasCanisterBlockEntity canisterBlockEntity)) {
             return ItemStack.EMPTY;
         }
 
-        Optional<GasCanisterBlockEntity> canisterBlock = getBlockEntityOptional(level, pos);
-        DataComponentPatch components = canisterBlock.map(GasCanisterBlockEntity::getComponentPatch).orElse(DataComponentPatch.EMPTY);
-        GasStack gasStack = canisterBlock.map(GasCanisterBlockEntity::getContent).orElse(GasStack.EMPTY);
-        ItemStack stack = new ItemStack(placeable.getActualItem().builtInRegistryHolder(), 1, components);
-        stack.set(CCBDataComponents.CANISTER_CONTENT, gasStack);
-        return stack;
+        return canisterBlockEntity.getCanister().copy();
     }
 
     @Override
@@ -122,12 +112,7 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
             return lootDrops;
         }
 
-        DataComponentPatch components = canister.getComponentPatch().forget(c -> c.equals(CCBDataComponents.CANISTER_CONTENT));
-        return components.isEmpty() ? lootDrops : lootDrops.stream().peek(stack -> {
-            if (stack.getItem() instanceof GasCanisterItem) {
-                stack.applyComponents(components);
-            }
-        }).toList();
+        return List.of(canister.getCanister().copy());
     }
 
     @Override

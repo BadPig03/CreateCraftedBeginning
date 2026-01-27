@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.init;
 
 import com.simibubi.create.api.registry.SimpleRegistry;
+import net.ty.createcraftedbeginning.api.gas.drillhandlers.spore.SporeAirDrillHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.drillhandlers.AirtightHandheldDrillHandler;
 import net.ty.createcraftedbeginning.api.gas.drillhandlers.creative.CreativeDrillHandler;
@@ -39,6 +40,7 @@ public class CCBAirtightHandheldDrillHandlers {
         registry.register(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR.get(), new PressurizedEnergizedEtherealAirDrillHandler());
 
         registry.register(CCBGases.MOIST_AIR.get(), new MoistAirDrillHandler());
+        registry.register(CCBGases.SPORE_AIR.get(), new SporeAirDrillHandler());
         registry.register(CCBGases.CREATIVE_AIR.get(), new CreativeDrillHandler());
     }
 }

@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.content.airtights.weatherflares;
 
 import it.unimi.dsi.fastutil.doubles.DoubleDoubleImmutablePair;
 import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.syncher.SynchedEntityData.Builder;
@@ -32,9 +33,9 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 
 public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile implements ItemSupplier, IEntityWithComplexSpawn {
+    public static final double MIN_DELTA_MOVEMENT_LENGTH = 0.01;
     private static final float DEFAULT_SIZE = 0.25f;
     private static final float INERTIA = 0.95f;
-    private static final double MIN_DELTA_MOVEMENT_LENGTH = 0.01;
     private static final int DEFAULT_Y = 32;
     private static final int MAX_LIFE_TIME = 1800;
 
@@ -98,6 +99,7 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
         super.tick();
         Level level = level();
         if (level.isClientSide) {
+            level.addParticle(ParticleTypes.END_ROD, getX(), getY() + 0.15, getZ(), 0, 0, 0);
             return;
         }
 
@@ -202,14 +204,13 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
     }
 
     private void explode() {
-        Level level = level();
-        if (level.isClientSide || !(level instanceof ServerLevel serverLevel) || !(itemStack.getItem() instanceof IWeatherFlare flareItem)) {
+        if (!(level() instanceof ServerLevel serverLevel) || !(itemStack.getItem() instanceof IWeatherFlare flareItem)) {
             return;
         }
 
         Vec3 pos = position();
         serverLevel.explode(null, pos.x, pos.y, pos.z, 1, ExplosionInteraction.NONE);
-        flareItem.setWeather(serverLevel, Mth.clamp((getY() - startY) / DEFAULT_Y, MIN_DELTA_MOVEMENT_LENGTH, 16));
+        flareItem.setWeather(serverLevel, Mth.clamp((pos.y - startY) / DEFAULT_Y, MIN_DELTA_MOVEMENT_LENGTH, 16));
         grantAdvancements(serverLevel);
         discard();
     }
@@ -219,10 +220,10 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
             return;
         }
 
-        if ((serverLevel.isRaining() || serverLevel.isThundering()) && itemStack.is(CCBItems.SUNNY_FLARE)) {
+        if ((serverLevel.isRaining() || serverLevel.isThundering()) && itemStack.is(CCBItems.SUNNY_FLARE) && !CCBAdvancements.THE_SKIES_ARE_CLEARING_UP_NOW.isAlreadyAwardedTo(player)) {
             CCBAdvancements.THE_SKIES_ARE_CLEARING_UP_NOW.awardTo(player);
         }
-        if (!serverLevel.isThundering() && itemStack.is(CCBItems.THUNDERSTORM_FLARE)) {
+        if (!serverLevel.isThundering() && itemStack.is(CCBItems.THUNDERSTORM_FLARE) && !CCBAdvancements.I_AM_THE_STORM_THAT_IS_APPROACHING.isAlreadyAwardedTo(player)) {
             CCBAdvancements.I_AM_THE_STORM_THAT_IS_APPROACHING.awardTo(player);
         }
     }

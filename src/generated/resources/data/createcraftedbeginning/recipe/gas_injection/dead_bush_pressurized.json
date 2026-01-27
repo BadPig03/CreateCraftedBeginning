@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "item": "minecraft:short_grass"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 5,
+      "gas": "createcraftedbeginning:pressurized_energized_ultrawarm_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:dead_bush"
+    }
+  ]
+}

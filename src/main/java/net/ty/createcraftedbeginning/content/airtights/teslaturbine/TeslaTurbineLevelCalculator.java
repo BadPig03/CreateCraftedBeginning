@@ -52,7 +52,7 @@ public class TeslaTurbineLevelCalculator {
             return;
         }
 
-        typeLevel = (int) gasStack.getGas().getTeslaEfficiency();
+        typeLevel = (int) gasStack.getGasType().getTeslaEfficiency();
     }
 
     public Map<LevelKey, Integer> getLevels() {

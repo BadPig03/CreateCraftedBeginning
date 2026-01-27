@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "item": "minecraft:fire_coral_fan"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 100,
+      "gas": "createcraftedbeginning:energized_natural_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:fire_coral"
+    }
+  ]
+}

@@ -93,15 +93,15 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     }
 
     private static long getMaxCapacity() {
-        return CCBConfig.server().airtights.maxTankCapacity.get() * 500L;
+        return CCBConfig.server().airtights.maxCanisterCapacity.get() * 500L;
     }
 
     private static int getPressurizationRateMultiplier() {
         return CCBConfig.server().airtights.pressurizationRateMultiplier.get();
     }
 
-    private @NotNull Gas getPressurizedGas() {
-        return inputTankBehaviour.getPrimaryHandler().getGasStack().getGas().getPressurizedGas();
+    private @NotNull Gas getPressurizedGasType() {
+        return inputTankBehaviour.getPrimaryHandler().getGasStack().getGasType().getPressurizedGasType();
     }
 
     private boolean isInactive() {
@@ -109,7 +109,7 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     }
 
     private boolean isInputGasInvalid() {
-        return !inputTankBehaviour.getPrimaryHandler().isEmpty() && getPressurizedGas().isEmpty();
+        return !inputTankBehaviour.getPrimaryHandler().isEmpty() && getPressurizedGasType().isEmpty();
     }
 
     private boolean isInputNotEnough() {
@@ -127,13 +127,13 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     }
 
     private boolean isOutputMismatched() {
-        Gas pressurizedGas = getPressurizedGas();
-        if (pressurizedGas.isEmpty()) {
+        Gas pressurizedGasType = getPressurizedGasType();
+        if (pressurizedGasType.isEmpty()) {
             return false;
         }
 
         GasStack outputGas = outputTankBehaviour.getPrimaryHandler().getGasStack();
-        return !outputGas.isEmpty() && !outputGas.is(pressurizedGas);
+        return !outputGas.isEmpty() && !outputGas.is(pressurizedGasType);
     }
 
     private long getMaxAmount() {
@@ -151,8 +151,8 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
             return;
         }
 
-        Gas pressurizedGas = getPressurizedGas();
-        if (pressurizedGas.isEmpty()) {
+        Gas pressurizedGasType = getPressurizedGasType();
+        if (pressurizedGasType.isEmpty()) {
             return;
         }
         if (isOutputFull() || isOutputMismatched() || inputTankBehaviour.getPrimaryHandler().isEmpty()) {
@@ -165,7 +165,7 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         }
 
         long fillAmount = inputTankBehaviour.getInternalGasHandler().forceDrain(drainAmount, GasAction.EXECUTE).getAmount() / PRESSURIZATION_RATIO;
-        GasStack fillGasStack = new GasStack(pressurizedGas, fillAmount);
+        GasStack fillGasStack = new GasStack(pressurizedGasType, fillAmount);
         outputTankBehaviour.getInternalGasHandler().forceFill(fillGasStack, GasAction.EXECUTE);
     }
 

@@ -6,7 +6,7 @@
     },
     {
       "type": "createcraftedbeginning:single",
-      "amount": 250,
+      "amount": 500,
       "gas": "createcraftedbeginning:natural_air"
     }
   ],

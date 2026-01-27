@@ -8,7 +8,6 @@ import net.createmod.catnip.render.SuperRenderTypeBuffer;
 import net.createmod.ponder.foundation.PonderIndex;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -76,11 +75,8 @@ public class CCBClientEvents {
     }
 
     @SubscribeEvent
-    public static void addToItemTooltip(ItemTooltipEvent event) {
-        if (!AllConfigs.client().tooltips.get()) {
-            return;
-        }
-        if (event.getEntity() == null) {
+    public static void addToItemTooltip(@NotNull ItemTooltipEvent event) {
+        if (event.getEntity() == null || !AllConfigs.client().tooltips.get()) {
             return;
         }
 
@@ -92,11 +88,8 @@ public class CCBClientEvents {
         event.registerAbove(VanillaGuiLayers.HOTBAR, GasCanisterOverlay.RESOURCE, GasCanisterOverlay.INSTANCE);
     }
 
-    public static void onTick(boolean isPreEvent) {
-        if (Minecraft.getInstance().level == null || Minecraft.getInstance().player == null) {
-            return;
-        }
-        if (isPreEvent) {
+    private static void onTick(boolean isPreEvent) {
+        if (isPreEvent || Minecraft.getInstance().level == null || Minecraft.getInstance().player == null) {
             return;
         }
 
@@ -105,21 +98,16 @@ public class CCBClientEvents {
         AirtightChestplateFirstPersonRenderer.tick();
 
         CreateCraftedBeginningClient.AIRTIGHT_CANNON_RENDER_HANDLER.tick();
+        CreateCraftedBeginningClient.AIRTIGHT_EXTEND_ARM_RENDER_HANDLER.tick();
         CreateCraftedBeginningClient.AIRTIGHT_HAND_DRILL_RENDER_HANDLER.tick();
-        CreateCraftedBeginningClient.CINDER_INCINERATION_BLOWER_OUTLINER.tick();
 
         CCBOutliner.INSTANCE.tickOutlines();
     }
 
     private static void onRenderWorld(@NotNull PoseStack ms) {
-        Vec3 cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
-        float partialTicks = AnimationTickHolder.getPartialTicks();
-
         ms.pushPose();
         SuperRenderTypeBuffer buffer = DefaultSuperRenderTypeBuffer.getInstance();
-
-        CCBOutliner.INSTANCE.renderOutlines(ms, buffer, cameraPos, partialTicks);
-
+        CCBOutliner.INSTANCE.renderOutlines(ms, buffer, Minecraft.getInstance().gameRenderer.getMainCamera().getPosition(), AnimationTickHolder.getPartialTicks());
         buffer.draw();
         ms.popPose();
     }

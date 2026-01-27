@@ -40,6 +40,6 @@ public class SturdyCrateMountedStorage extends CrateMountedItemStorage {
 
     @Override
     public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-        return slot == 0 && stack.getItem().canFitInsideContainerItems() && (filterItem.isEmpty() || FilterItem.testDirect(filterItem, stack, false)) && (content.isEmpty() || ItemStack.isSameItemSameComponents(content, stack));
+        return slot == 0 && stack.canFitInsideContainerItems() && (filterItem.isEmpty() || FilterItem.testDirect(filterItem, stack, false)) && (content.isEmpty() || ItemStack.isSameItemSameComponents(content, stack));
     }
 }

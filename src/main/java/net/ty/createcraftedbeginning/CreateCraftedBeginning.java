@@ -24,13 +24,13 @@ import net.ty.createcraftedbeginning.advancement.CCBTriggers;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasBuilder;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackContentsDataManager;
 import net.ty.createcraftedbeginning.data.CCBDataGen;
 import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 import net.ty.createcraftedbeginning.data.CCBGases;
 import net.ty.createcraftedbeginning.data.CCBRegistrate;
 import net.ty.createcraftedbeginning.init.CCBAirtightArmorsHandlers;
 import net.ty.createcraftedbeginning.init.CCBAirtightCannonHandlers;
+import net.ty.createcraftedbeginning.init.CCBAirtightExtendArmHandlers;
 import net.ty.createcraftedbeginning.init.CCBAirtightHandheldDrillHandlers;
 import net.ty.createcraftedbeginning.init.CCBCoolantStrategyHandlers;
 import net.ty.createcraftedbeginning.init.CCBOpenPipeEffectHandlers;
@@ -49,6 +49,7 @@ import net.ty.createcraftedbeginning.registry.CCBFanProcessingTypes;
 import net.ty.createcraftedbeginning.registry.CCBFluids;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
+import net.ty.createcraftedbeginning.registry.CCBMobEffects;
 import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
 import net.ty.createcraftedbeginning.registry.CCBPackets;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
@@ -65,7 +66,6 @@ import org.slf4j.Logger;
 public class CreateCraftedBeginning {
     public static final String MOD_ID = "createcraftedbeginning";
     public static final Logger LOGGER = LogUtils.getLogger();
-    public static final GasCanisterPackContentsDataManager GAS_CANISTER_PACK_CONTENTS_DATA_MANAGER = new GasCanisterPackContentsDataManager();
 
     @SuppressWarnings("DataFlowIssue")
     private static final CCBRegistrate CCB_REGISTRATE = CCBRegistrate.create(MOD_ID).defaultCreativeTab((ResourceKey<CreativeModeTab>) null).setTooltipModifierFactory(item -> new Modifier(item, Palette.STANDARD_CREATE).andThen(TooltipModifier.mapNull(KineticStats.create(item))));
@@ -74,7 +74,6 @@ public class CreateCraftedBeginning {
         CCB_REGISTRATE.registerEventListeners(modEventBus);
 
         CCBSoundEvents.prepare();
-
         CCBArmInteractionPointTypes.register(modEventBus);
         CCBArmorMaterials.register(modEventBus);
         CCBBlockEntities.register();
@@ -86,13 +85,13 @@ public class CreateCraftedBeginning {
         CCBFanProcessingTypes.register(modEventBus);
         CCBFluids.register();
         CCBMenuTypes.register();
+        CCBMobEffects.register(modEventBus);
         CCBMountedStorage.register();
         CCBPackets.register();
         CCBPartialModels.register();
         CCBParticleTypes.register(modEventBus);
         CCBRecipeTypes.register(modEventBus);
         CCBTags.register();
-
         CCBConfig.register(modContainer);
 
         NeoForge.EVENT_BUS.register(this);
@@ -118,6 +117,7 @@ public class CreateCraftedBeginning {
         event.enqueueWork(() -> {
             CCBAirtightArmorsHandlers.register();
             CCBAirtightCannonHandlers.register();
+            CCBAirtightExtendArmHandlers.register();
             CCBAirtightHandheldDrillHandlers.register();
             CCBReactorKettleThermoregulators.register();
             CCBCoolantStrategyHandlers.register();

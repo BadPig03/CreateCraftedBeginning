@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "createcraftedbeginning:item/spore_wind_charge"
+  }
+}

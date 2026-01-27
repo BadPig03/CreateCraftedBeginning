@@ -43,8 +43,8 @@ public class AirtightCannonWindChargeProjectileEntityRenderer extends EntityRend
     @SuppressWarnings("DataFlowIssue")
     @Override
     public @NotNull ResourceLocation getTextureLocation(@NotNull AirtightCannonWindChargeProjectileEntity entity) {
-        Gas gas = entity.getGasHolder().value();
-        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gas);
+        Gas gasType = entity.getGasHolder().value();
+        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasType);
         return cannonHandler == null ? null : cannonHandler.getTextureLocation();
     }
 }

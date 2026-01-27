@@ -81,8 +81,8 @@ public class SmartAirtightPipeBlockEntity extends SmartBlockEntity {
         }
 
         @Override
-        public boolean canPullGasFrom(@NotNull GasStack gas, BlockState state, Direction direction) {
-            return (gas.isEmpty() || filter != null && filter.test(gas)) && super.canPullGasFrom(gas, state, direction);
+        public boolean canPullGasFrom(@NotNull GasStack gasStack, BlockState state, Direction direction) {
+            return (gasStack.isEmpty() || filter != null && filter.test(gasStack)) && super.canPullGasFrom(gasStack, state, direction);
         }
     }
 

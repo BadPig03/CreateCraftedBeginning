@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:unfilled_weather_flare"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 500,
+      "gas": "createcraftedbeginning:moist_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:rain_flare"
+    }
+  ]
+}

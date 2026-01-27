@@ -37,21 +37,19 @@ public class Gas {
     public static final StreamCodec<RegistryFriendlyByteBuf, Holder<Gas>> HOLDER_STREAM_CODEC = ByteBufCodecs.holderRegistry(CCBRegistries.GAS_REGISTRY_KEY);
     public static final StreamCodec<RegistryFriendlyByteBuf, Gas> GAS_STREAM_CODEC = ByteBufCodecs.registry(CCBRegistries.GAS_REGISTRY_KEY);
     public static final Holder<Gas> EMPTY_GAS_HOLDER = DeferredHolder.create(CCBGasRegistries.EMPTY_GAS_KEY);
-
     private static final String UNKNOWN_GAS = "gas." + CreateCraftedBeginning.MOD_ID + ".unknown";
 
     private final Reference<Gas> builtInRegistryHolder = CCBGasRegistries.GAS_REGISTRY.createIntrusiveHolder(this);
     private final ResourceLocation iconLocation;
     private final int tint;
+    private final float inflation;
     private final float engineEfficiency;
     private final float teslaEfficiency;
 
     @Nullable
-    private final ResourceLocation pressurizedGas;
+    private final ResourceLocation pressurizedGasType;
     @Nullable
-    private final ResourceLocation depressurizedGas;
-    @Nullable
-    private final ResourceLocation energizedGas;
+    private final ResourceLocation energizedGasType;
     private final ItemStack outputItemStack;
     private final FluidStack outputFluidStack;
     private final Set<TagKey<Gas>> tags;
@@ -61,9 +59,9 @@ public class Gas {
     public Gas(@NotNull GasBuilder builder) {
         iconLocation = builder.getTexture();
         tint = builder.getTint();
-        pressurizedGas = builder.getPressurizedGas();
-        depressurizedGas = builder.getDepressurizedGas();
-        energizedGas = builder.getEnergizedGas();
+        inflation = builder.getInflation();
+        pressurizedGasType = builder.getPressurizedGasType();
+        energizedGasType = builder.getEnergizedGasType();
         outputItemStack = builder.getOutputItemStack();
         outputFluidStack = builder.getOutputFluidStack();
         engineEfficiency = builder.getEngineEfficiency();
@@ -102,7 +100,7 @@ public class Gas {
         return Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(sprite);
     }
 
-    public static @NotNull Gas getGasByName(ResourceLocation location) {
+    public static @NotNull Gas getGasTypeByName(ResourceLocation location) {
         if (location == null) {
             return EMPTY_GAS_HOLDER.value();
         }
@@ -145,16 +143,16 @@ public class Gas {
         return tint;
     }
 
-    public @NotNull Gas getPressurizedGas() {
-        return Objects.requireNonNullElse(getGasByName(pressurizedGas), EMPTY_GAS_HOLDER.value());
+    public float getInflation() {
+        return inflation;
     }
 
-    public @NotNull Gas getDepressurizedGas() {
-        return Objects.requireNonNullElse(getGasByName(depressurizedGas), EMPTY_GAS_HOLDER.value());
+    public @NotNull Gas getPressurizedGasType() {
+        return Objects.requireNonNullElse(getGasTypeByName(pressurizedGasType), EMPTY_GAS_HOLDER.value());
     }
 
-    public @NotNull Gas getEnergizedGas() {
-        return Objects.requireNonNullElse(getGasByName(energizedGas), EMPTY_GAS_HOLDER.value());
+    public @NotNull Gas getEnergizedGasType() {
+        return Objects.requireNonNullElse(getGasTypeByName(energizedGasType), EMPTY_GAS_HOLDER.value());
     }
 
     public @NotNull ItemStack getOutputItemStack() {

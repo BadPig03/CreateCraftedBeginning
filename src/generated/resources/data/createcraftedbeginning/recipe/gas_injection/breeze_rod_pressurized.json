@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "tag": "c:rods/blaze"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 25,
+      "gas": "createcraftedbeginning:pressurized_natural_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:breeze_rod"
+    }
+  ]
+}

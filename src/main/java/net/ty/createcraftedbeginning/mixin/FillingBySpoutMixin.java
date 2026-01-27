@@ -25,24 +25,30 @@ import java.util.function.Predicate;
 @Mixin(FillingBySpout.class)
 public abstract class FillingBySpoutMixin {
     @Inject(method = "canItemBeFilled", at = @At("HEAD"), cancellable = true)
-    private static void canItemBeFilledWithGas(Level level, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
+    private static void ccb$canItemBeFilled(Level level, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
         SingleRecipeInput input = new SingleRecipeInput(stack);
         Optional<RecipeHolder<FillingWithGasRecipe>> recipeWithGas = SequencedAssemblyWithGasRecipe.getRecipe(level, input, CCBRecipeTypes.FILLING_WITH_GAS.getType(), FillingWithGasRecipe.class);
-        if (recipeWithGas.isPresent()) {
-            cir.setReturnValue(true);
+        if (recipeWithGas.isEmpty()) {
+            return;
         }
+
+        cir.setReturnValue(true);
     }
 
     @Inject(method = "getRequiredAmountForItem", at = @At("HEAD"), cancellable = true)
-    private static void getRequiredAmountForItemWithGas(Level level, ItemStack stack, FluidStack availableFluid, CallbackInfoReturnable<Integer> cir) {
+    private static void ccb$getRequiredAmountForItem(Level level, ItemStack stack, FluidStack availableFluid, CallbackInfoReturnable<Integer> cir) {
         SingleRecipeInput input = new SingleRecipeInput(stack);
         Optional<RecipeHolder<FillingWithGasRecipe>> recipeWithGas = SequencedAssemblyWithGasRecipe.getRecipe(level, input, CCBRecipeTypes.FILLING_WITH_GAS.getType(), FillingWithGasRecipe.class, matchItemAndFluidWithGas(level, availableFluid, input));
-        if (recipeWithGas.isPresent()) {
-            SizedFluidIngredient requiredFluid = recipeWithGas.get().value().getRequiredFluid();
-            if (requiredFluid.test(availableFluid)) {
-                cir.setReturnValue(requiredFluid.amount());
-            }
+        if (recipeWithGas.isEmpty()) {
+            return;
         }
+
+        SizedFluidIngredient requiredFluid = recipeWithGas.get().value().getRequiredFluid();
+        if (!requiredFluid.test(availableFluid)) {
+            return;
+        }
+
+        cir.setReturnValue(requiredFluid.amount());
     }
 
     @Contract(pure = true)
@@ -52,15 +58,17 @@ public abstract class FillingBySpoutMixin {
     }
 
     @Inject(method = "fillItem", at = @At("HEAD"), cancellable = true)
-    private static void fillItemWithGas(Level level, int requiredAmount, ItemStack stack, @NotNull FluidStack availableFluid, CallbackInfoReturnable<ItemStack> cir) {
+    private static void ccb$fillItem(Level level, int requiredAmount, ItemStack stack, @NotNull FluidStack availableFluid, CallbackInfoReturnable<ItemStack> cir) {
         SingleRecipeInput input = new SingleRecipeInput(stack);
         FluidStack toFill = availableFluid.copyWithAmount(requiredAmount);
         Optional<RecipeHolder<FillingWithGasRecipe>> recipeWithGas = SequencedAssemblyWithGasRecipe.getRecipe(level, input, CCBRecipeTypes.FILLING_WITH_GAS.getType(), FillingWithGasRecipe.class, matchItemAndFluidWithGas(level, availableFluid, input)).filter(fr -> fr.value().getRequiredFluid().test(toFill));
-        if (recipeWithGas.isPresent()) {
-            List<ItemStack> results = recipeWithGas.get().value().rollResults(level.random);
-            availableFluid.shrink(requiredAmount);
-            stack.shrink(1);
-            cir.setReturnValue(results.isEmpty() ? ItemStack.EMPTY : results.getFirst());
+        if (recipeWithGas.isEmpty()) {
+            return;
         }
+
+        List<ItemStack> results = recipeWithGas.get().value().rollResults(level.random);
+        availableFluid.shrink(requiredAmount);
+        stack.shrink(1);
+        cir.setReturnValue(results.isEmpty() ? ItemStack.EMPTY : results.getFirst());
     }
 }

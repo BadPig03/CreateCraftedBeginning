@@ -5,7 +5,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.ty.createcraftedbeginning.compat.jade.gas.GasConstants;
 import net.ty.createcraftedbeginning.compat.jade.gas.GasDataProvider;
-import net.ty.createcraftedbeginning.mixin.MountedStorageManagerAccessor;
+import net.ty.createcraftedbeginning.mixin.accessor.MountedStorageManagerAccessor;
 import org.jetbrains.annotations.NotNull;
 import snownee.jade.api.EntityAccessor;
 import snownee.jade.api.IComponentProvider;

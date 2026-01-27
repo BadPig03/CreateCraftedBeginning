@@ -88,13 +88,13 @@ public class GasPipeConnection {
         return pressure.getFirst();
     }
 
-    public void manageSource(Level world, BlockPos pos, BlockEntity blockEntity) {
-        if (source.isEmpty() && !determineSource(world, pos)) {
+    public void manageSource(Level level, BlockPos pos, BlockEntity blockEntity) {
+        if (source.isEmpty() && !determineSource(level, pos)) {
             return;
         }
 
         GasFlowSource flowSource = source.get();
-        flowSource.manageSource(world, blockEntity);
+        flowSource.manageSource(level, blockEntity);
     }
 
     public boolean determineSource(@NotNull Level level, @NotNull BlockPos pos) {
@@ -124,10 +124,10 @@ public class GasPipeConnection {
         return true;
     }
 
-    public boolean manageFlows(Level world, BlockPos pos, GasStack internalGas, Predicate<GasStack> extractionPredicate) {
+    public boolean manageFlows(Level level, BlockPos pos, GasStack internalGas, Predicate<GasStack> extractionPredicate) {
         Optional<GasNetwork> retainedNetwork = network;
         network = Optional.empty();
-        if (source.isEmpty() && !determineSource(world, pos)) {
+        if (source.isEmpty() && !determineSource(level, pos)) {
             return false;
         }
 
@@ -154,7 +154,7 @@ public class GasPipeConnection {
 
         AirFlow airFlow = flow.get();
         GasStack provided = airFlow.inbound ? flowSource.provideGas(extractionPredicate) : internalGas;
-        if (!hasPressure() || provided.isEmpty() || !GasStack.isSameGas(provided, airFlow.gas)) {
+        if (!hasPressure() || provided.isEmpty() || !GasStack.isSameGasSameComponents(provided, airFlow.gas)) {
             flow = Optional.empty();
             return true;
         }
@@ -162,20 +162,20 @@ public class GasPipeConnection {
         if (airFlow.inbound != comparePressure() < 0) {
             boolean inbound = !airFlow.inbound;
             if (inbound && !provided.isEmpty() || !inbound && !internalGas.isEmpty()) {
-                GasPropagator.resetAffectedNetworks(world, pos, side);
+                GasPropagator.resetAffectedNetworks(level, pos, side);
                 tryStartingNewFlow(inbound, inbound ? flowSource.provideGas(extractionPredicate) : internalGas);
                 return true;
             }
         }
 
-        flowSource.whileFlowPresent(world, airFlow.inbound);
+        flowSource.whileFlowPresent(level, airFlow.inbound);
         if (!flowSource.isEndpoint() || !airFlow.inbound) {
             return false;
         }
 
         network = retainedNetwork;
         if (network.isEmpty()) {
-            network = Optional.of(new GasNetwork(world, new BlockFace(pos, side), flowSource::provideHandler));
+            network = Optional.of(new GasNetwork(level, new BlockFace(pos, side), flowSource::provideHandler));
         }
         network.get().tick();
 
@@ -209,10 +209,9 @@ public class GasPipeConnection {
         determineSource(level, pos);
     }
 
-    public void write(@NotNull CompoundTag compoundTag, Provider registries, boolean clientPacket) {
+    public void write(@NotNull CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         CompoundTag connectionData = new CompoundTag();
         compoundTag.put(side.getName(), connectionData);
-
         if (hasPressure()) {
             ListTag pressureData = new ListTag();
             pressureData.add(FloatTag.valueOf(getInboundPressure()));
@@ -221,19 +220,19 @@ public class GasPipeConnection {
         }
 
         if (source.orElse(null) instanceof OpenEndedGasPipe) {
-            connectionData.put(COMPOUND_KEY_OPEN_END, ((OpenEndedGasPipe) source.get()).write(registries));
+            connectionData.put(COMPOUND_KEY_OPEN_END, ((OpenEndedGasPipe) source.get()).write(provider));
         }
 
         if (flow.isPresent()) {
             CompoundTag flowData = new CompoundTag();
             AirFlow airFlow = flow.get();
-            flowData.put(COMPOUND_KEY_GAS, airFlow.gas.saveOptional(registries));
+            flowData.put(COMPOUND_KEY_GAS, airFlow.gas.saveOptional(provider));
             flowData.putBoolean(COMPOUND_KEY_INBOUND, airFlow.inbound);
             connectionData.put(COMPOUND_KEY_AIR_FLOW, flowData);
         }
     }
 
-    public void read(@NotNull CompoundTag compoundTag, Provider registries, BlockPos blockEntityPos, boolean clientPacket) {
+    public void read(@NotNull CompoundTag compoundTag, Provider provider, BlockPos blockPos, boolean clientPacket) {
         CompoundTag connectionData = compoundTag.getCompound(side.getName());
 
         if (connectionData.contains(COMPOUND_KEY_PRESSURE)) {
@@ -246,13 +245,13 @@ public class GasPipeConnection {
 
         source = Optional.empty();
         if (connectionData.contains(COMPOUND_KEY_OPEN_END)) {
-            source = Optional.of(OpenEndedGasPipe.read(connectionData.getCompound(COMPOUND_KEY_OPEN_END), registries, blockEntityPos));
+            source = Optional.of(OpenEndedGasPipe.read(connectionData.getCompound(COMPOUND_KEY_OPEN_END), provider, blockPos));
         }
 
         if (connectionData.contains(COMPOUND_KEY_AIR_FLOW)) {
             CompoundTag flowData = connectionData.getCompound(COMPOUND_KEY_AIR_FLOW);
 
-            GasStack gas = GasStack.parseOptional(registries, flowData.getCompound(COMPOUND_KEY_GAS));
+            GasStack gas = GasStack.parseOptional(provider, flowData.getCompound(COMPOUND_KEY_GAS));
             boolean inbound = flowData.getBoolean(COMPOUND_KEY_INBOUND);
             if (flow.isEmpty()) {
                 flow = Optional.of(new AirFlow(inbound, gas));

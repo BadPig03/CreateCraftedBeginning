@@ -25,8 +25,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterClientUtils;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterSupplierUtils;
+import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerClients;
+import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,7 +40,7 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
 
     @Override
     public boolean onLeftClickEntity(@NotNull ItemStack drill, @NotNull Player player, @NotNull Entity entity) {
-        return !GasCanisterSupplierUtils.noUsableGasAvailable(player) || AirtightHandheldDrillUtils.isDrillAttackEnabled(drill);
+        return CanisterContainerSuppliers.isAnyContainerAvailable(player) || AirtightHandheldDrillUtils.isDrillAttackEnabled(drill);
     }
 
     @Override
@@ -107,17 +107,17 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
 
     @Override
     public boolean isBarVisible(@NotNull ItemStack drill) {
-        return GasCanisterClientUtils.isBarVisible();
+        return CanisterContainerClients.isBarVisible();
     }
 
     @Override
     public int getBarWidth(@NotNull ItemStack drill) {
-        return GasCanisterClientUtils.getBarWidth();
+        return CanisterContainerClients.getBarWidth();
     }
 
     @Override
     public int getBarColor(@NotNull ItemStack drill) {
-        return GasCanisterClientUtils.getBarColor();
+        return CanisterContainerClients.getBarColor();
     }
 
     @Override

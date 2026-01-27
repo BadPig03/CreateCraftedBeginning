@@ -10,7 +10,6 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueSettingsBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueSettingsBoard;
-import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup.Provider;
@@ -25,9 +24,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.Tags.Items;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterExecuteUtils;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterQueryUtils;
-import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterItem;
+import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerClients;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.IGasFilter;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,10 +34,11 @@ import java.util.function.Predicate;
 
 public class GasFilteringBehaviour extends BlockEntityBehaviour implements ValueSettingsBehaviour {
     public static final BehaviourType<GasFilteringBehaviour> TYPE = new BehaviourType<>();
+
     private static final String COMPOUND_KEY_FILTER = "Filter";
     private static final String COMPOUND_KEY_FILTERING = "Filtering";
 
-    private final Predicate<ItemStack> predicate = stack -> stack.getItem() instanceof GasCanisterItem;
+    private final Predicate<ItemStack> predicate = stack -> stack.getItem() instanceof IGasFilter;
     private final ValueBoxTransform slotPositioning;
 
     protected FilterItemStack filter;
@@ -59,19 +58,11 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
     }
 
     public boolean test(GasStack stack) {
-        return !isActive() || canGasPass(filter, stack);
+        return !isActive() || testFilter(filter, stack);
     }
 
-    private static boolean canGasPass(@NotNull FilterItemStack filterItem, GasStack stack) {
-        if (filterItem.isEmpty()) {
-            return true;
-        }
-        if (!(filterItem.item().getItem() instanceof GasCanisterItem)) {
-            return false;
-        }
-
-        GasStack filterGasStack = GasCanisterQueryUtils.getCanisterContent(filterItem.item());
-        return !filterGasStack.isEmpty() && GasStack.isSameGas(filterGasStack, stack);
+    private static boolean testFilter(@NotNull FilterItemStack filterItem, GasStack stack) {
+        return filterItem.isEmpty() || filterItem.item().getItem() instanceof IGasFilter gasFilter && gasFilter.test(filterItem.item(), stack);
     }
 
     @Override
@@ -174,7 +165,7 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
         }
 
         if (!setFilter(side, toApply)) {
-            GasCanisterExecuteUtils.displayCustomWarningHint(player, "gui.warnings.invalid_item", toApply.getHoverName());
+            CanisterContainerClients.displayCustomWarningHint(player, "gui.warnings.invalid_item", toApply.getHoverName());
             return;
         }
 
@@ -212,7 +203,7 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
     }
 
     public MutableComponent getTip() {
-        return CreateLang.translateDirect(filter.isEmpty() ? "logistics.filter.click_to_set" : "logistics.filter.click_to_replace");
+        return CCBLang.translateDirect(filter.isEmpty() ? "gui.filter.click_to_set" : "gui.filter.click_to_replace");
     }
 
     public float getRenderDistance() {

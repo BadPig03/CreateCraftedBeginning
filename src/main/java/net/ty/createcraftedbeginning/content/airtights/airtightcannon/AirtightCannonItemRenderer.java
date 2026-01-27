@@ -23,7 +23,7 @@ import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsE
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
 import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterSupplierUtils;
+import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.weatherflares.WeatherFlareSupplierUtils;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -54,16 +54,16 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
             return false;
         }
 
-        if (GasCanisterSupplierUtils.noUsableGasAvailable(player)) {
+        if (!CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
             return false;
         }
 
-        GasStack gasStack = GasCanisterSupplierUtils.getFirstNonEmptyGasContent(player);
-        if (gasStack.isEmpty()) {
+        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
+        if (gasContent.isEmpty()) {
             return false;
         }
 
-        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasStack.getGas());
+        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasContent.getGasType());
         if (cannonHandler == null) {
             return false;
         }

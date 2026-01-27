@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.airtights.airtighthanddrill;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
@@ -83,14 +82,13 @@ public class AirtightHandheldDrillRenderHandler {
             return;
         }
 
-        ItemInHandRenderer firstPersonRenderer = mc.getEntityRenderDispatcher().getItemInHandRenderer();
         PoseStack ms = event.getPoseStack();
         boolean rightHand = event.getHand() == InteractionHand.MAIN_HAND ^ player.getMainArm() == HumanoidArm.LEFT;
         float flip = rightHand ? 1 : -1;
 
         ms.pushPose();
         ms.translate(flip * 0.56f, -0.52f + event.getEquipProgress() * -0.6f, -0.72f);
-        firstPersonRenderer.renderItem(player, drill, rightHand ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND, !rightHand, ms, event.getMultiBufferSource(), event.getPackedLight());
+        mc.getEntityRenderDispatcher().getItemInHandRenderer().renderItem(player, drill, rightHand ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND, !rightHand, ms, event.getMultiBufferSource(), event.getPackedLight());
         ms.popPose();
 
         event.setCanceled(true);

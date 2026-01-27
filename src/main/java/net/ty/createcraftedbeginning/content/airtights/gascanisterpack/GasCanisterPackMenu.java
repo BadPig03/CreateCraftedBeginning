@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.content.airtights.gascanisterpack;
 
 import com.simibubi.create.foundation.gui.menu.MenuBase;
 import net.minecraft.client.HotbarManager;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -14,13 +15,14 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.cansiters.GasCanisterQueryUtils;
+import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
+import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackOverrides.GasCanisterPackType;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
+import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.UUID;
 
 public class GasCanisterPackMenu extends MenuBase<ItemStack> {
     public static final int I_SLOT_INDEX = SlotType.I.getIndex();
@@ -29,6 +31,8 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
     public static final int IV_SLOT_INDEX = SlotType.IV.getIndex();
     public static final int PLAYER_INVENTORY_SLOTS = Inventory.INVENTORY_SIZE;
 
+    private static final String COMPOUND_KEY_CANISTER = "Canister";
+    private static final int MAX_COUNT = 4;
     private static final int PLAYER_SLOT_X = 20;
     private static final int PLAYER_SLOT_Y = 166;
     private static final int SLOT_Y = 89;
@@ -54,11 +58,21 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
     }
 
     @Override
-    protected void initAndReadInventory(ItemStack pack) {
-        UUID uuid = GasCanisterPackUtils.getCanisterPackUUID(pack);
-        PackItemHandler handler = new PackItemHandler();
-        CreateCraftedBeginning.GAS_CANISTER_PACK_CONTENTS_DATA_MANAGER.getContents(uuid).fillItemStackHandler(handler);
-        packInventory = handler;
+    protected void initAndReadInventory(@NotNull ItemStack pack) {
+        if (!(pack.getCapability(GasHandler.ITEM) instanceof GasCanisterPackContainerContents packContents)) {
+            return;
+        }
+
+        packInventory = new PackItemHandler();
+        for (int i = 0; i < MAX_COUNT; i++) {
+            ItemStack canister = ItemStack.parseOptional(player.level().registryAccess(), packContents.getCompoundTag(i).getCompound(COMPOUND_KEY_CANISTER));
+            if (canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents) {
+                canisterContents.drain(0, canisterContents.getGasInTank(0), GasAction.EXECUTE);
+                canisterContents.setCapacity(0, GasCanisterContainerContents.getEnchantedCapacity(canister));
+                canisterContents.fill(0, packContents.getGasInTank(i), GasAction.EXECUTE);
+            }
+            packInventory.setStackInSlot(i, canister);
+        }
     }
 
     @Override
@@ -72,10 +86,26 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
 
     @Override
     protected void saveData(@NotNull ItemStack pack) {
+        if (!(pack.getCapability(GasHandler.ITEM) instanceof GasCanisterPackContainerContents packContents)) {
+            return;
+        }
+
+        for (int i = 0; i < MAX_COUNT; i++) {
+            ItemStack canister = packInventory.getStackInSlot(i);
+            if (canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents) {
+                packContents.setCapacity(i, canisterContents.getTankCapacity(0));
+                packContents.drain(i, packContents.getGasInTank(i), GasAction.EXECUTE);
+                packContents.fill(i, canisterContents.getGasInTank(0), GasAction.EXECUTE);
+            }
+            else {
+                packContents.drain(i, packContents.getGasInTank(i), GasAction.EXECUTE);
+                packContents.setCapacity(i, 0);
+            }
+            CompoundTag compoundTag = new CompoundTag();
+            compoundTag.put(COMPOUND_KEY_CANISTER, canister.saveOptional(player.level().registryAccess()));
+            packContents.setCompoundTag(i, compoundTag);
+        }
         pack.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, getPackType());
-        UUID uuid = GasCanisterPackUtils.getCanisterPackUUID(pack);
-        GasCanisterPackContents contents = GasCanisterPackContents.fromItemStackHandler(uuid, packInventory);
-        CreateCraftedBeginning.GAS_CANISTER_PACK_CONTENTS_DATA_MANAGER.addContents(uuid, contents);
     }
 
     @Override
@@ -110,23 +140,17 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
             slot.setChanged();
         }
 
-        if (!player.level().isClientSide) {
-            saveData(contentHolder);
-        }
+        saveData(contentHolder);
         return originalStack;
     }
 
     @Override
-    public void clicked(int slotId, int dragType, @NotNull ClickType clickTypeIn, @NotNull Player player) {
-        if (slotId == playerInventory.selected + PLAYER_INVENTORY_SLOTS - HotbarManager.NUM_HOTBAR_GROUPS && clickTypeIn != ClickType.THROW) {
+    public void clicked(int slotId, int dragType, @NotNull ClickType clickType, @NotNull Player player) {
+        if (slotId == playerInventory.selected + PLAYER_INVENTORY_SLOTS - HotbarManager.NUM_HOTBAR_GROUPS && clickType != ClickType.THROW) {
             return;
         }
 
-        super.clicked(slotId, dragType, clickTypeIn, player);
-        if (player.level().isClientSide) {
-            return;
-        }
-
+        super.clicked(slotId, dragType, clickType, player);
         saveData(contentHolder);
     }
 
@@ -138,10 +162,6 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
     @Override
     public void setItem(int slotId, int stateId, @NotNull ItemStack stack) {
         super.setItem(slotId, stateId, stack);
-        if (playerInventory.player.level().isClientSide) {
-            return;
-        }
-
         saveData(contentHolder);
     }
 
@@ -150,11 +170,21 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
         return slotIn.container == playerInventory;
     }
 
-    private int getPackType() {
-        boolean rightDown = GasCanisterQueryUtils.isValidCanister(packInventory.getStackInSlot(I_SLOT_INDEX));
-        boolean leftDown = GasCanisterQueryUtils.isValidCanister(packInventory.getStackInSlot(II_SLOT_INDEX));
-        boolean rightUp = GasCanisterQueryUtils.isValidCanister(packInventory.getStackInSlot(III_SLOT_INDEX));
-        boolean leftUp = GasCanisterQueryUtils.isValidCanister(packInventory.getStackInSlot(IV_SLOT_INDEX));
+    public void updateCanister(int slot, long amount) {
+        ItemStack canister = packInventory.getStackInSlot(slot);
+        if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
+            return;
+        }
+
+        canisterContents.drain(0, amount, GasAction.EXECUTE);
+        packInventory.setStackInSlot(slot, canister);
+    }
+
+    protected int getPackType() {
+        boolean rightDown = CanisterContainerSuppliers.isValidGasCanister(packInventory.getStackInSlot(I_SLOT_INDEX));
+        boolean leftDown = CanisterContainerSuppliers.isValidGasCanister(packInventory.getStackInSlot(II_SLOT_INDEX));
+        boolean rightUp = CanisterContainerSuppliers.isValidGasCanister(packInventory.getStackInSlot(III_SLOT_INDEX));
+        boolean leftUp = CanisterContainerSuppliers.isValidGasCanister(packInventory.getStackInSlot(IV_SLOT_INDEX));
         int flags = GasCanisterPackOverrides.calculateFlags(leftUp, rightUp, leftDown, rightDown);
         return GasCanisterPackType.getTypeFromFlags(flags).ordinal();
     }
@@ -175,7 +205,7 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
             return new SlotItemHandler(itemHandler, index, x, SLOT_Y) {
                 @Override
                 public boolean mayPlace(@NotNull ItemStack stack) {
-                    return GasCanisterQueryUtils.isValidCanister(stack);
+                    return stack.is(CCBItems.GAS_CANISTER);
                 }
 
                 @Override
@@ -190,9 +220,9 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
         }
     }
 
-    public static class PackItemHandler extends ItemStackHandler {
+    protected static class PackItemHandler extends ItemStackHandler {
         public PackItemHandler() {
-            super(4);
+            super(MAX_COUNT);
         }
 
         @Override

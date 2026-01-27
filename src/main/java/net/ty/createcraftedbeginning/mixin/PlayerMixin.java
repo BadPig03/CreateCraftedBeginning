@@ -11,13 +11,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Player.class)
 public abstract class PlayerMixin {
     @SuppressWarnings("DataFlowIssue")
-    @Inject(method = "getCurrentItemAttackStrengthDelay", cancellable = true, at = @At("RETURN"))
-    private void getCurrentItemAttackStrengthDelayWithFasterAttackSpeed(@NotNull CallbackInfoReturnable<Float> callback) {
+    @Inject(method = "getCurrentItemAttackStrengthDelay", at = @At("RETURN"), cancellable = true)
+    private void ccb$getCurrentItemAttackStrengthDelay(@NotNull CallbackInfoReturnable<Float> cir) {
         Player player = (Player) (Object) this;
         if (!player.getMainHandItem().is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
             return;
         }
 
-        callback.setReturnValue(0.0f);
+        cir.setReturnValue(0.0f);
     }
 }

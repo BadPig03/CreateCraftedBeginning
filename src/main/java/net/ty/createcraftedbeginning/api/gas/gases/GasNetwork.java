@@ -98,7 +98,7 @@ public class GasNetwork {
                 }
 
                 AirFlow flow = connection.flow.get();
-                if (!gas.isEmpty() && !GasStack.isSameGas(flow.gas, gas)) {
+                if (!gas.isEmpty() && !GasStack.isSameGasSameComponents(flow.gas, gas)) {
                     iterator.remove();
                     continue;
                 }
@@ -208,7 +208,7 @@ public class GasNetwork {
             GasStack transfer = GasStack.EMPTY;
             for (int i = 0; i < sourceCap.getTanks(); i++) {
                 GasStack contained = sourceCap.getGasInTank(i);
-                if (contained.isEmpty() || !GasStack.isSameGas(contained, gas)) {
+                if (contained.isEmpty() || !GasStack.isSameGasSameComponents(contained, gas)) {
                     continue;
                 }
                 GasStack toExtract = contained.copyWithAmount(flowSpeed);
@@ -218,7 +218,7 @@ public class GasNetwork {
 
             if (transfer.isEmpty()) {
                 GasStack genericExtract = sourceCap.drain(flowSpeed, action);
-                if (!genericExtract.isEmpty() && GasStack.isSameGas(genericExtract, gas)) {
+                if (!genericExtract.isEmpty() && GasStack.isSameGasSameComponents(genericExtract, gas)) {
                     transfer = genericExtract;
                 }
             }

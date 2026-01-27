@@ -19,6 +19,6 @@ public class MoistAirArmorsHandler implements AirtightArmorsHandler {
 
     @Override
     public float getMultiplierForBoostingElytra() {
-        return 1;
+        return 0.5f;
     }
 }

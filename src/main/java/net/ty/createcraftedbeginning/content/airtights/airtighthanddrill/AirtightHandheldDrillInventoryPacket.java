@@ -6,6 +6,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
+import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBPackets;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,10 +16,7 @@ public record AirtightHandheldDrillInventoryPacket(int optionFlags) implements S
     @Override
     public void handle(@NotNull ServerPlayer player) {
         ItemStack drill = player.getMainHandItem();
-        if (!(drill.getItem() instanceof AirtightHandheldDrillItem)) {
-            return;
-        }
-        if (!(player.containerMenu instanceof AirtightHandheldDrillMenu menu)) {
+        if (!drill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL) || !(player.containerMenu instanceof AirtightHandheldDrillMenu menu)) {
             return;
         }
 

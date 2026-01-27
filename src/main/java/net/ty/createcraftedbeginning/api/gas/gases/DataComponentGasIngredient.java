@@ -37,7 +37,7 @@ public class DataComponentGasIngredient extends GasIngredient {
 
     @Contract("_, _ -> new")
     public static @NotNull GasIngredient of(boolean strict, @NotNull GasStack stack) {
-        return of(strict, stack.getComponents(), stack.getGas());
+        return of(strict, stack.getComponents(), stack.getGasType());
     }
 
     @Contract("_, _, _, _ -> new")
