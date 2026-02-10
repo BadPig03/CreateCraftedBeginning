@@ -23,6 +23,8 @@ import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCa
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.windcharge.AirtightCannonWindChargeItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.AirtightExtendArmItem;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillItem;
+import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterItem;
+import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterItem.CreativeGasCanisterBlockItem;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterItem;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterItem.GasCanisterBlockItem;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackItem;
@@ -46,17 +48,23 @@ import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
 public class CCBItems {
     private static final CCBRegistrate CCB_REGISTRATE = CreateCraftedBeginning.registrate().setCreativeTab(CCBCreativeTabs.BASE_CREATIVE_TAB);
 
-    public static final ItemEntry<Item> POWDERED_AMETHYST = CCB_REGISTRATE.item("powdered_amethyst", Item::new).properties(p -> p.stacksTo(64)).tag(CCBItemTags.AMETHYST.tag).register();
-    public static final ItemEntry<Item> POWDERED_CRYING_OBSIDIAN = CCB_REGISTRATE.item("powdered_crying_obsidian", Item::new).properties(p -> p.stacksTo(64)).tag(CCBItemTags.CRYING_OBSIDIAN.tag).register();
-    public static final ItemEntry<Item> AMETHYST_CRYSTAL_SHEET = CCB_REGISTRATE.item("amethyst_crystal_sheet", Item::new).properties(p -> p.stacksTo(64)).tag(CCBItemTags.AMETHYST_CRYSTAL_PLATE.tag).register();
+    public static final ItemEntry<Item> POWDERED_AMETHYST = CCB_REGISTRATE.item("powdered_amethyst", Item::new).tag(CCBItemTags.AMETHYST.tag).register();
+    public static final ItemEntry<Item> POWDERED_CRYING_OBSIDIAN = CCB_REGISTRATE.item("powdered_crying_obsidian", Item::new).tag(CCBItemTags.CRYING_OBSIDIAN.tag).register();
     public static final ItemEntry<Item> CHORUS_FLOWER_POWDER = CCB_REGISTRATE.item("chorus_flower_powder", Item::new).tag(CCBItemTags.CHORUS_FLOWER.tag).register();
+    public static final ItemEntry<Item> AMETHYST_CRYSTAL_SHEET = CCB_REGISTRATE.item("amethyst_crystal_sheet", Item::new).tag(CCBItemTags.AMETHYST_CRYSTAL_PLATE.tag).register();
 
     public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_SHEET = CCB_REGISTRATE.item("incomplete_airtight_sheet", SequencedAssemblyItem::new).properties(Properties::fireResistant).register();
-    public static final ItemEntry<Item> AIRTIGHT_SHEET = CCB_REGISTRATE.item("airtight_sheet", Item::new).properties(p -> p.stacksTo(64).fireResistant()).register();
-    public static final ItemEntry<Item> CINDER_ALLOY = CCB_REGISTRATE.item("cinder_alloy", Item::new).properties(p -> p.stacksTo(64).fireResistant()).tag(CCBItemTags.CINDER_ALLOY.tag).register();
-    public static final ItemEntry<Item> END_ALLOY = CCB_REGISTRATE.item("end_alloy", Item::new).tag(CCBItemTags.END_ALLOY.tag).register();
+    public static final ItemEntry<Item> AIRTIGHT_SHEET = CCB_REGISTRATE.item("airtight_sheet", Item::new).properties(Properties::fireResistant).register();
+    public static final ItemEntry<Item> CINDER_ALLOY = CCB_REGISTRATE.item("cinder_alloy", Item::new).properties(Properties::fireResistant).tag(CCBItemTags.CINDER_ALLOY.tag).register();
+    public static final ItemEntry<Item> END_ALLOY = CCB_REGISTRATE.item("end_alloy", Item::new).properties(p -> p.rarity(Rarity.UNCOMMON)).tag(CCBItemTags.END_ALLOY.tag).register();
 
     public static final ItemEntry<GasFilterItem> GAS_FILTER = CCB_REGISTRATE.item("gas_filter", GasFilterItem::new).register();
+
+    public static final ItemEntry<GasCanisterBlockItem> GAS_CANISTER_PLACEABLE = CCB_REGISTRATE.item("gas_canister_placeable", p -> new GasCanisterBlockItem(CCBBlocks.GAS_CANISTER_BLOCK.get(), CCBItems.GAS_CANISTER::get, p)).model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/gas_canister"))).register();
+    public static final ItemEntry<GasCanisterItem> GAS_CANISTER = CCB_REGISTRATE.item("gas_canister", p -> new GasCanisterItem(p, GAS_CANISTER_PLACEABLE)).properties(p -> p.stacksTo(1).fireResistant()).register();
+
+    public static final ItemEntry<CreativeGasCanisterBlockItem> CREATIVE_GAS_CANISTER_PLACEABLE = CCB_REGISTRATE.item("creative_gas_canister_placeable", p -> new CreativeGasCanisterBlockItem(CCBBlocks.CREATIVE_GAS_CANISTER_BLOCK.get(), CCBItems.CREATIVE_GAS_CANISTER::get, p)).model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/creative_gas_canister"))).register();
+    public static final ItemEntry<CreativeGasCanisterItem> CREATIVE_GAS_CANISTER = CCB_REGISTRATE.item("creative_gas_canister", p -> new CreativeGasCanisterItem(p, CREATIVE_GAS_CANISTER_PLACEABLE)).properties(p -> p.stacksTo(1).fireResistant().rarity(Rarity.EPIC)).register();
 
     public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_GAS_CANISTER_PACK = CCB_REGISTRATE.item("incomplete_gas_canister_pack", SequencedAssemblyItem::new).properties(Properties::fireResistant).register();
     public static final ItemEntry<GasCanisterPackItem> GAS_CANISTER_PACK = CCB_REGISTRATE.item("gas_canister_pack", GasCanisterPackItem::new).properties(p -> p.stacksTo(1).fireResistant().rarity(Rarity.UNCOMMON)).onRegister(GasCanisterPackItem::registerModelOverrides).model(GasCanisterPackOverrides::addOverrideModels).register();
@@ -67,9 +75,6 @@ public class CCBItems {
 
     public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_TESLA_TURBINE_ROTOR = CCB_REGISTRATE.item("incomplete_tesla_turbine_rotor", SequencedAssemblyItem::new).properties(p -> p.rarity(Rarity.UNCOMMON).fireResistant()).register();
     public static final ItemEntry<Item> TESLA_TURBINE_ROTOR = CCB_REGISTRATE.item("tesla_turbine_rotor", Item::new).properties(p -> p.stacksTo(16).rarity(Rarity.UNCOMMON).fireResistant()).register();
-
-    public static final ItemEntry<GasCanisterBlockItem> GAS_CANISTER_PLACEABLE = CCB_REGISTRATE.item("gas_canister_placeable", p -> new GasCanisterBlockItem(CCBBlocks.GAS_CANISTER_BLOCK.get(), CCBItems.GAS_CANISTER::get, p)).model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/gas_canister"))).register();
-    public static final ItemEntry<GasCanisterItem> GAS_CANISTER = CCB_REGISTRATE.item("gas_canister", p -> new GasCanisterItem(p, GAS_CANISTER_PLACEABLE)).properties(p -> p.stacksTo(1).fireResistant()).register();
 
     public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_CANNON = CCB_REGISTRATE.item("incomplete_airtight_cannon", SequencedAssemblyItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).register();
     public static final ItemEntry<AirtightCannonItem> AIRTIGHT_CANNON = CCB_REGISTRATE.item("airtight_cannon", AirtightCannonItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).model(AssetLookup.itemModelWithPartials()).tag(Items.ENCHANTABLES).register();
@@ -115,6 +120,7 @@ public class CCBItems {
     public static final ItemEntry<AirtightCannonWindChargeItem> ETHEREAL_WIND_CHARGE = CCB_REGISTRATE.item("ethereal_wind_charge", p -> new AirtightCannonWindChargeItem(p, CCBGases.ETHEREAL_AIR)).register();
     public static final ItemEntry<AirtightCannonWindChargeItem> MOIST_WIND_CHARGE = CCB_REGISTRATE.item("moist_wind_charge", p -> new AirtightCannonWindChargeItem(p, CCBGases.MOIST_AIR)).register();
     public static final ItemEntry<AirtightCannonWindChargeItem> SPORE_WIND_CHARGE = CCB_REGISTRATE.item("spore_wind_charge", p -> new AirtightCannonWindChargeItem(p, CCBGases.SPORE_AIR)).register();
+    public static final ItemEntry<AirtightCannonWindChargeItem> SCULK_WIND_CHARGE = CCB_REGISTRATE.item("sculk_wind_charge", p -> new AirtightCannonWindChargeItem(p, CCBGases.SCULK_AIR)).register();
     public static final ItemEntry<AirtightCannonWindChargeItem> ENERGIZED_NATURAL_WIND_CHARGE = CCB_REGISTRATE.item("energized_natural_wind_charge", p -> new AirtightCannonWindChargeItem(p, CCBGases.ENERGIZED_NATURAL_AIR)).register();
     public static final ItemEntry<AirtightCannonWindChargeItem> ENERGIZED_ULTRAWARM_WIND_CHARGE = CCB_REGISTRATE.item("energized_ultrawarm_wind_charge", p -> new AirtightCannonWindChargeItem(p, CCBGases.ENERGIZED_ULTRAWARM_AIR)).register();
     public static final ItemEntry<AirtightCannonWindChargeItem> ENERGIZED_ETHEREAL_WIND_CHARGE = CCB_REGISTRATE.item("energized_ethereal_wind_charge", p -> new AirtightCannonWindChargeItem(p, CCBGases.ENERGIZED_ETHEREAL_AIR)).register();

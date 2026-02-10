@@ -14,11 +14,11 @@ public class SporeAirArmorsHandler implements AirtightArmorsHandler {
 
     @Override
     public float[] getConsumptionMultiplier() {
-        return new float[]{0.95f, 0.95f, 0.95f, 0.95f};
+        return new float[]{1, 1, 1, 1};
     }
 
     @Override
     public float getMultiplierForBoostingElytra() {
-        return 0.55f;
+        return 0.5f;
     }
 }

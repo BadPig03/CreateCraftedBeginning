@@ -19,7 +19,6 @@
     "createcraftedbeginning:airtight_reactor_kettle_structural_cog",
     "createcraftedbeginning:portable_gas_interface",
     "createcraftedbeginning:gas_injection_chamber",
-    "createcraftedbeginning:airtight_hatch",
-    "createcraftedbeginning:airtight_intake_port"
+    "createcraftedbeginning:airtight_hatch"
   ]
 }

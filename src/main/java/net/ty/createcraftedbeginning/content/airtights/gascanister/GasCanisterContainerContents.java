@@ -17,13 +17,13 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.List;
 
-public final class GasCanisterContainerContents implements IGasCanisterContainer {
+public class GasCanisterContainerContents implements IGasCanisterContainer {
     public static final List<GasStack> DEFAULT_CONTENT = List.of(GasStack.EMPTY);
     public static final List<Long> DEFAULT_CAPACITY = List.of(getDefaultCapacity());
-    private final ItemStack canister;
+    protected final ItemStack canister;
 
-    private GasStack gas;
-    private long capacity;
+    protected GasStack gas;
+    protected long capacity;
 
     public GasCanisterContainerContents(@NotNull ItemStack canister) {
         this.canister = canister;

@@ -17,7 +17,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
 import net.ty.createcraftedbeginning.compat.jade.gas.GasConstants;
 import net.ty.createcraftedbeginning.compat.jade.gas.GasDataProvider;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.ICreativeGasContainer;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock.WindLevel;
 import org.jetbrains.annotations.NotNull;
@@ -99,7 +99,8 @@ public enum GasTooltipProvider implements IServerDataProvider<BlockAccessor>, IC
             return;
         }
 
-        GasDataProvider.readData(data, gasHandlers, JadePlugin.GAS_BLOCK_TOOLTIP, be instanceof CreativeAirtightTankBlockEntity);
+        boolean creative = be instanceof ICreativeGasContainer creativeGasContainer && creativeGasContainer.isCreative(level, level.getBlockState(pos), pos);
+        GasDataProvider.readData(data, gasHandlers, JadePlugin.GAS_BLOCK_TOOLTIP, creative);
     }
 
     @Override

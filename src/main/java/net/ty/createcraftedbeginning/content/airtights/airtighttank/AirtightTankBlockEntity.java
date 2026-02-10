@@ -507,7 +507,7 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements iGas, I
         }
 
         IGasHandler gasHandler = controller.gasCapability;
-        return (int) gasHandler.getTankCapacity(0) / 1000;
+        return Math.clamp(gasHandler.getTankCapacity(0) / 1000, 0, Integer.MAX_VALUE);
     }
 
     @Override
@@ -532,7 +532,7 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements iGas, I
 
             amount += stack.getAmount();
         }
-        return (int) amount / 1000;
+        return Math.clamp(amount / 1000, 0, Integer.MAX_VALUE);
     }
 
     @Override

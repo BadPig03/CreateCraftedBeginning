@@ -9,10 +9,6 @@ import net.minecraft.world.level.LevelReader;
 import org.jetbrains.annotations.NotNull;
 
 public class CCBDamageSources {
-    public static @NotNull DamageSource cinderNozzleFire(Level level) {
-        return register(CCBDamageTypes.CINDER_FIRE, level);
-    }
-
     public static @NotNull DamageSource brimstoneFire(Level level) {
         return register(CCBDamageTypes.BRIMSTONE_FIRE, level);
     }

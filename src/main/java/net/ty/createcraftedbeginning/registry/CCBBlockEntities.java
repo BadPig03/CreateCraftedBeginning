@@ -24,6 +24,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTank
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentRenderer;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberRenderer;
@@ -42,13 +43,12 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamber
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerRenderer;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerVisual;
+import net.ty.createcraftedbeginning.content.cinder.cinderincinerationblower.CinderIncinerationBlowerBlockEntity;
+import net.ty.createcraftedbeginning.content.cinder.cinderincinerationblower.CinderIncinerationBlowerRenderer;
 import net.ty.createcraftedbeginning.content.crates.andesitecrate.AndesiteCrateBlockEntity;
 import net.ty.createcraftedbeginning.content.crates.brasscrate.BrassCrateBlockEntity;
 import net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateBlockEntity;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlockEntity;
-import net.ty.createcraftedbeginning.content.obsolete.airtightintakeport.AirtightIntakePortBlockEntity;
-import net.ty.createcraftedbeginning.content.obsolete.cinderincinerationblower.CinderIncinerationBlowerBlockEntity;
-import net.ty.createcraftedbeginning.content.obsolete.cinderincinerationblower.CinderIncinerationBlowerRenderer;
 import net.ty.createcraftedbeginning.content.obsolete.phohostressbearing.PhotoStressBearingBlockEntity;
 import net.ty.createcraftedbeginning.content.obsolete.phohostressbearing.PhotoStressBearingRenderer;
 import net.ty.createcraftedbeginning.content.obsolete.pneumaticengine.PneumaticEngineBlockEntity;
@@ -62,7 +62,6 @@ public class CCBBlockEntities {
     public static final BlockEntityEntry<AirtightEncasedPipeBlockEntity> AIRTIGHT_ENCASED_PIPE = CCB_REGISTRATE.blockEntity("airtight_encased_pipe", AirtightEncasedPipeBlockEntity::new).renderer(() -> AirtightEncasedPipeRenderer::new).validBlocks(CCBBlocks.AIRTIGHT_ENCASED_PIPE_BLOCK).register();
     public static final BlockEntityEntry<AirtightEngineBlockEntity> AIRTIGHT_ENGINE = CCB_REGISTRATE.blockEntity("airtight_engine", AirtightEngineBlockEntity::new).validBlocks(CCBBlocks.AIRTIGHT_ENGINE_BLOCK).renderer(() -> AirtightEngineRenderer::new).register();
     public static final BlockEntityEntry<AirtightHatchBlockEntity> AIRTIGHT_HATCH = CCB_REGISTRATE.blockEntity("airtight_hatch", AirtightHatchBlockEntity::new).validBlocks(CCBBlocks.AIRTIGHT_HATCH_BLOCK).register();
-    public static final BlockEntityEntry<AirtightIntakePortBlockEntity> AIRTIGHT_INTAKE_PORT = CCB_REGISTRATE.blockEntity("airtight_intake_port", AirtightIntakePortBlockEntity::new).validBlocks(CCBBlocks.AIRTIGHT_INTAKE_PORT_BLOCK).register();
     public static final BlockEntityEntry<AirtightPipeBlockEntity> AIRTIGHT_PIPE = CCB_REGISTRATE.blockEntity("airtight_pipe", AirtightPipeBlockEntity::new).validBlocks(CCBBlocks.AIRTIGHT_PIPE_BLOCK).register();
     public static final BlockEntityEntry<AirtightPumpBlockEntity> AIRTIGHT_PUMP = CCB_REGISTRATE.blockEntity("airtight_pump", AirtightPumpBlockEntity::new).visual(() -> SingleAxisRotatingVisual.ofZ(CCBPartialModels.AIRTIGHT_PUMP_COGS)).validBlocks(CCBBlocks.AIRTIGHT_PUMP_BLOCK).renderer(() -> AirtightPumpRenderer::new).register();
     public static final BlockEntityEntry<AirtightTankBlockEntity> AIRTIGHT_TANK = CCB_REGISTRATE.blockEntity("airtight_tank", AirtightTankBlockEntity::new).validBlocks(CCBBlocks.AIRTIGHT_TANK_BLOCK).register();
@@ -73,9 +72,9 @@ public class CCBBlockEntities {
     public static final BlockEntityEntry<BreezeCoolerBlockEntity> BREEZE_COOLER = CCB_REGISTRATE.blockEntity("breeze_cooler", BreezeCoolerBlockEntity::new).visual(() -> BreezeCoolerVisual::new, false).validBlocks(CCBBlocks.BREEZE_COOLER_BLOCK).renderer(() -> BreezeCoolerRenderer::new).register();
     public static final BlockEntityEntry<CardboardCrateBlockEntity> CARDBOARD_CRATE = CCB_REGISTRATE.blockEntity("cardboard_crate", CardboardCrateBlockEntity::new).validBlocks(CCBBlocks.CARDBOARD_CRATE_BLOCK).renderer(() -> SmartBlockEntityRenderer::new).register();
     public static final BlockEntityEntry<AirtightCheckValveBlockEntity> AIRTIGHT_CHECK_VALVE = CCB_REGISTRATE.blockEntity("airtight_check_valve", AirtightCheckValveBlockEntity::new).validBlocks(CCBBlocks.AIRTIGHT_CHECK_VALVE_BLOCK).register();
-    public static final BlockEntityEntry<CinderIncinerationBlowerBlockEntity> CINDER_NOZZLE = CCB_REGISTRATE.blockEntity("cinder_nozzle", CinderIncinerationBlowerBlockEntity::new).validBlocks(CCBBlocks.CINDER_INCINERATION_BLOWER_BLOCK).renderer(() -> CinderIncinerationBlowerRenderer::new).register();
     public static final BlockEntityEntry<CreativeAirtightTankBlockEntity> CREATIVE_AIRTIGHT_TANK = CCB_REGISTRATE.blockEntity("creative_airtight_tank", CreativeAirtightTankBlockEntity::new).validBlocks(CCBBlocks.CREATIVE_AIRTIGHT_TANK_BLOCK).register();
     public static final BlockEntityEntry<GasCanisterBlockEntity> GAS_CANISTER = CCB_REGISTRATE.blockEntity("gas_canister", GasCanisterBlockEntity::new).validBlocks(CCBBlocks.GAS_CANISTER_BLOCK).register();
+    public static final BlockEntityEntry<CreativeGasCanisterBlockEntity> CREATIVE_GAS_CANISTER = CCB_REGISTRATE.blockEntity("creative_gas_canister", CreativeGasCanisterBlockEntity::new).validBlocks(CCBBlocks.CREATIVE_GAS_CANISTER_BLOCK).register();
     public static final BlockEntityEntry<GasInjectionChamberBlockEntity> GAS_INJECTION_CHAMBER = CCB_REGISTRATE.blockEntity("gas_injection_chamber", GasInjectionChamberBlockEntity::new).validBlocks(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK).renderer(() -> GasInjectionChamberRenderer::new).register();
     public static final BlockEntityEntry<PhotoStressBearingBlockEntity> PHOTO_STRESS_BEARING = CCB_REGISTRATE.blockEntity("photo-stress_bearing", PhotoStressBearingBlockEntity::new).validBlocks(CCBBlocks.PHOTO_STRESS_BEARING_BLOCK).renderer(() -> PhotoStressBearingRenderer::new).register();
     public static final BlockEntityEntry<PneumaticEngineBlockEntity> PNEUMATIC_ENGINE = CCB_REGISTRATE.blockEntity("pneumatic_engine", PneumaticEngineBlockEntity::new).validBlocks(CCBBlocks.PNEUMATIC_ENGINE_BLOCK).renderer(() -> PneumaticEngineRenderer::new).register();
@@ -89,6 +88,7 @@ public class CCBBlockEntities {
     public static final BlockEntityEntry<AirtightReactorKettleStructuralBlockEntity> AIRTIGHT_REACTOR_KETTLE_STRUCTURAL = CCB_REGISTRATE.blockEntity("airtight_reactor_kettle_structural", AirtightReactorKettleStructuralBlockEntity::new).validBlocks(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK).renderer(() -> SmartBlockEntityRenderer::new).register();
     public static final BlockEntityEntry<AirtightReactorKettleStructuralCogBlockEntity> AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG = CCB_REGISTRATE.blockEntity("airtight_reactor_kettle_structural_cog", AirtightReactorKettleStructuralCogBlockEntity::new).validBlocks(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG_BLOCK).renderer(() -> AirtightReactorKettleStructuralCogRenderer::new).register();
 
+    public static final BlockEntityEntry<CinderIncinerationBlowerBlockEntity> CINDER_INCINERATION_BLOWER = CCB_REGISTRATE.blockEntity("cinder_incineration_blower", CinderIncinerationBlowerBlockEntity::new).validBlocks(CCBBlocks.CINDER_INCINERATION_BLOWER_BLOCK).renderer(() -> CinderIncinerationBlowerRenderer::new).register();
 
     public static void register() {
     }

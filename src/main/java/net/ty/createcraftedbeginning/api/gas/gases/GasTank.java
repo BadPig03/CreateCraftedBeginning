@@ -30,16 +30,16 @@ public class GasTank implements IGasHandler, IGasTank {
         return this;
     }
 
-    public void read(Provider lookupProvider, @NotNull CompoundTag compoundTag) {
+    public void read(Provider provider, @NotNull CompoundTag compoundTag) {
         if (!compoundTag.contains(COMPOUND_KEY_GAS)) {
             return;
         }
 
-        gas = GasStack.parseOptional(lookupProvider, compoundTag.getCompound(COMPOUND_KEY_GAS));
+        gas = GasStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_GAS));
     }
 
-    public CompoundTag write(Provider lookupProvider, @NotNull CompoundTag compoundTag) {
-        compoundTag.put(COMPOUND_KEY_GAS, gas.saveOptional(lookupProvider));
+    public CompoundTag write(Provider provider, @NotNull CompoundTag compoundTag) {
+        compoundTag.put(COMPOUND_KEY_GAS, gas.saveOptional(provider));
         return compoundTag;
     }
 

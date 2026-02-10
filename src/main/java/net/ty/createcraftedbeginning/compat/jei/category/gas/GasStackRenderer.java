@@ -141,7 +141,7 @@ public class GasStackRenderer implements IIngredientRenderer<GasStack> {
             return;
         }
 
-        int desiredHeight = Math.toIntExact(Math.round(height * (double) stack.getAmount() / capacityMb));
+        int desiredHeight = Math.clamp(Math.round(height * (double) stack.getAmount() / capacityMb), 0, Integer.MAX_VALUE);
         if (desiredHeight < MIN_GAS_HEIGHT) {
             desiredHeight = MIN_GAS_HEIGHT;
         }

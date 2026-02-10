@@ -19,10 +19,10 @@ import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBl
 import org.jetbrains.annotations.NotNull;
 
 public class BreezeCoolerScenes {
-    public static void feeding(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
-        scene.title("breeze_cooler_feeding", "Feeding Breeze Coolers");
+        scene.title("breeze_cooler", "Feeding Breeze Coolers");
         scene.configureBasePlate(0, 0, 7);
         scene.showBasePlate();
 

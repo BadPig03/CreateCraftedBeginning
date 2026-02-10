@@ -1,0 +1,16 @@
+{
+  "type": "create:item_application",
+  "ingredients": [
+    {
+      "tag": "createcraftedbeginning:end_casing_raw_materials"
+    },
+    {
+      "item": "createcraftedbeginning:end_alloy"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:end_casing"
+    }
+  ]
+}

@@ -1,11 +1,7 @@
-package net.ty.createcraftedbeginning.content.airtights.creativeairtighttank;
+package net.ty.createcraftedbeginning.api.gas.gases;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasTank;
-import net.ty.createcraftedbeginning.api.gas.gases.SmartGasTank;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;

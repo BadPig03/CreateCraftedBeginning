@@ -37,7 +37,7 @@ public enum SturdyCrateUnpackingHandler implements UnpackingHandler {
                 continue;
             }
 
-            if (!stack.getItem().canFitInsideContainerItems()) {
+            if (!stack.canFitInsideContainerItems()) {
                 return false;
             }
             if (filter != null && !filter.test(stack)) {

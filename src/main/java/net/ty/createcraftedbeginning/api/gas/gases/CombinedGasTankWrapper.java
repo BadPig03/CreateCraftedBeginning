@@ -91,7 +91,7 @@ public class CombinedGasTankWrapper implements IGasHandler {
     @Override
     public GasStack drain(@NotNull GasStack resource, GasAction action) {
         if (resource.isEmpty()) {
-            return resource;
+            return GasStack.EMPTY;
         }
 
         GasStack drained = GasStack.EMPTY;

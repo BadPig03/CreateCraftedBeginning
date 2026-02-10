@@ -15,10 +15,10 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 
 public class AirtightPumpScenes {
-    public static void transport(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
-        scene.title("airtight_pump_transport", "Transport gases using Airtight Pumps");
+        scene.title("airtight_pump", "Transport gases using Airtight Pumps");
         scene.configureBasePlate(0, 0, 7);
         scene.showBasePlate();
 

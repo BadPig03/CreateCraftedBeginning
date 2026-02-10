@@ -19,20 +19,21 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-public final class GasCanisterPackContainerContents implements IGasCanisterContainer {
+public class GasCanisterPackContainerContents implements IGasCanisterContainer {
     public static final int MAX_COUNT = 4;
 
-    private final ItemStack pack;
-
-    private final List<GasStack> gases;
-    private final List<Long> capacities;
-    private final List<CompoundTag> compoundTags;
+    protected final ItemStack pack;
+    protected final List<GasStack> gases;
+    protected final List<Long> capacities;
+    protected final List<CompoundTag> compoundTags;
+    protected final List<Boolean> creatives;
 
     public GasCanisterPackContainerContents(@NotNull ItemStack pack) {
         this.pack = pack;
         gases = new ArrayList<>(pack.getOrDefault(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, new ArrayList<>(List.of(GasStack.EMPTY, GasStack.EMPTY, GasStack.EMPTY, GasStack.EMPTY))));
         capacities = new ArrayList<>(pack.getOrDefault(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES, new ArrayList<>(List.of(0L, 0L, 0L, 0L))));
         compoundTags = new ArrayList<>(pack.getOrDefault(CCBDataComponents.CANISTER_PACK_CONTAINER_COMPOUNDS, new ArrayList<>(List.of(new CompoundTag(), new CompoundTag(), new CompoundTag(), new CompoundTag()))));
+        creatives = new ArrayList<>(pack.getOrDefault(CCBDataComponents.CANISTER_PACK_CONTAINER_CREATIVES, new ArrayList<>(List.of(false, false, false, false))));
     }
 
     private static boolean validateSlot(int tank) {
@@ -173,6 +174,7 @@ public final class GasCanisterPackContainerContents implements IGasCanisterConta
         saveContents();
         saveCapacities();
         saveCompounds();
+        saveCreatives();
     }
 
     @Override
@@ -219,6 +221,19 @@ public final class GasCanisterPackContainerContents implements IGasCanisterConta
         saveCompounds();
     }
 
+    public boolean getCreatives(int tank) {
+        return !validateSlot(tank) && creatives.get(tank);
+    }
+
+    public void setCreatives(int tank, boolean creative) {
+        if (validateSlot(tank)) {
+            return;
+        }
+
+        creatives.set(tank, creative);
+        saveCreatives();
+    }
+
     public void saveContents() {
         pack.set(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, gases);
     }
@@ -229,6 +244,10 @@ public final class GasCanisterPackContainerContents implements IGasCanisterConta
 
     public void saveCompounds() {
         pack.set(CCBDataComponents.CANISTER_PACK_CONTAINER_COMPOUNDS, compoundTags);
+    }
+
+    public void saveCreatives() {
+        pack.set(CCBDataComponents.CANISTER_PACK_CONTAINER_CREATIVES, creatives);
     }
 
     public @NotNull Pair<GasStack, Long> getFirstNonEmptyPair() {

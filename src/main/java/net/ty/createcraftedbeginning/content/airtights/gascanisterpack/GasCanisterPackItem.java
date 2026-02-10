@@ -90,13 +90,24 @@ public class GasCanisterPackItem extends Item implements MenuProvider {
             tooltip.add(CCBLang.translate("gui.tooltips.gas_canister_pack.number", slot + 1).style(ChatFormatting.GRAY).component());
             GasStack gasContent = packContents.getGasInTank(slot);
             long capacity = packContents.getTankCapacity(slot);
+            boolean creative = packContents.getCreatives(slot);
             if (gasContent.isEmpty()) {
-                tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.capacity").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
+                if (creative) {
+                    tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.capacity").add(CCBLang.translate("gui.goggles.gas_container.infinity").style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
+                }
+                else {
+                    tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.capacity").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
+                }
                 continue;
             }
 
             tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.content").add(CCBLang.gasName(gasContent).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
-            tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.capacity").add(CCBLang.number(gasContent.getAmount()).add(mb).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.DARK_GRAY))).style(ChatFormatting.GRAY).component());
+            if (creative) {
+                tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.capacity").add(CCBLang.translate("gui.goggles.gas_container.infinity").style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
+            }
+            else {
+                tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.capacity").add(CCBLang.number(gasContent.getAmount()).add(mb).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.DARK_GRAY))).style(ChatFormatting.GRAY).component());
+            }
         }
     }
 

@@ -23,10 +23,10 @@ import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.NotNull;
 
 public class EmptyBreezeCoolerScenes {
-    public static void using(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
-        scene.title("empty_breeze_cooler_using", "Using Empty Breeze Coolers");
+        scene.title("empty_breeze_cooler", "Using Empty Breeze Coolers");
         scene.configureBasePlate(0, 0, 7);
         scene.showBasePlate();
 

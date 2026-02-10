@@ -27,6 +27,7 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
 
     private static final CCBGUITextures BACKGROUND = CCBGUITextures.GAS_CANISTER_PACK;
     private static final CCBGUITextures CANISTER = CCBGUITextures.GAS_CANISTER_PACK_CANISTER;
+    private static final CCBGUITextures CREATIVE_CANISTER = CCBGUITextures.GAS_CANISTER_PACK_CREATIVE_CANISTER;
     private static final AllGuiTextures PLAYER_INVENTORY = AllGuiTextures.PLAYER_INVENTORY;
 
     public GasCanisterPackScreen(GasCanisterPackMenu container, Inventory inv, Component title) {
@@ -71,8 +72,8 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
     protected void renderBg(@NotNull GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         renderPlayerInventory(graphics, getLeftOfCentered(PLAYER_INVENTORY.getWidth()), topPos + BACKGROUND.getHeight() + 4);
         BACKGROUND.render(graphics, leftPos, topPos);
-        Component drillHoverName = pack.getHoverName();
-        graphics.drawString(font, drillHoverName, leftPos + (BACKGROUND.getWidth() - 8) / 2 - font.width(drillHoverName) / 2, topPos + 4, 0xFFFFFF, false);
+        Component packHoverName = pack.getHoverName();
+        graphics.drawString(font, packHoverName, leftPos + (BACKGROUND.getWidth() - 8) / 2 - font.width(packHoverName) / 2, topPos + 4, 0xFFFFFF, false);
         GuiGameElement.of(pack).scale(4).at(leftPos + BACKGROUND.getWidth() + 11, topPos + BACKGROUND.getHeight() - 48, -200).render(graphics);
     }
 
@@ -82,18 +83,38 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
     }
 
     private void drawGasCanisters(GuiGraphics graphics) {
+        int y = topPos + 27;
         PackItemHandler packInventory = menu.packInventory;
-        if (CanisterContainerSuppliers.isValidGasCanister(packInventory.getStackInSlot(GasCanisterPackMenu.I_SLOT_INDEX))) {
-            CANISTER.render(graphics, leftPos + 23, topPos + 27);
+        ItemStack firstSlot = packInventory.getStackInSlot(GasCanisterPackMenu.I_SLOT_INDEX);
+        if (CanisterContainerSuppliers.isValidGasCanister(firstSlot)) {
+            CANISTER.render(graphics, leftPos + 23, y);
         }
-        if (CanisterContainerSuppliers.isValidGasCanister(packInventory.getStackInSlot(GasCanisterPackMenu.II_SLOT_INDEX))) {
-            CANISTER.render(graphics, leftPos + 65, topPos + 27);
+        else if (CanisterContainerSuppliers.isValidCreativeGasCanister(firstSlot)) {
+            CREATIVE_CANISTER.render(graphics, leftPos + 23, y);
         }
-        if (CanisterContainerSuppliers.isValidGasCanister(packInventory.getStackInSlot(GasCanisterPackMenu.III_SLOT_INDEX))) {
-            CANISTER.render(graphics, leftPos + 107, topPos + 27);
+
+        ItemStack secondSlot = packInventory.getStackInSlot(GasCanisterPackMenu.II_SLOT_INDEX);
+        if (CanisterContainerSuppliers.isValidGasCanister(secondSlot)) {
+            CANISTER.render(graphics, leftPos + 65, y);
         }
-        if (CanisterContainerSuppliers.isValidGasCanister(packInventory.getStackInSlot(GasCanisterPackMenu.IV_SLOT_INDEX))) {
-            CANISTER.render(graphics, leftPos + 149, topPos + 27);
+        else if (CanisterContainerSuppliers.isValidCreativeGasCanister(secondSlot)) {
+            CREATIVE_CANISTER.render(graphics, leftPos + 65, y);
+        }
+
+        ItemStack thirdSlot = packInventory.getStackInSlot(GasCanisterPackMenu.III_SLOT_INDEX);
+        if (CanisterContainerSuppliers.isValidGasCanister(thirdSlot)) {
+            CANISTER.render(graphics, leftPos + 107, y);
+        }
+        else if (CanisterContainerSuppliers.isValidCreativeGasCanister(thirdSlot)) {
+            CREATIVE_CANISTER.render(graphics, leftPos + 107, y);
+        }
+
+        ItemStack fourthSlot = packInventory.getStackInSlot(GasCanisterPackMenu.IV_SLOT_INDEX);
+        if (CanisterContainerSuppliers.isValidGasCanister(fourthSlot)) {
+            CANISTER.render(graphics, leftPos + 149, y);
+        }
+        else if (CanisterContainerSuppliers.isValidCreativeGasCanister(fourthSlot)) {
+            CREATIVE_CANISTER.render(graphics, leftPos + 149, y);
         }
     }
 }

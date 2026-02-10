@@ -1,7 +1,19 @@
 {
   "variants": {
-    "": {
+    "facing=east": {
+      "model": "createcraftedbeginning:block/cinder_incineration_blower/block",
+      "y": 90
+    },
+    "facing=north": {
       "model": "createcraftedbeginning:block/cinder_incineration_blower/block"
+    },
+    "facing=south": {
+      "model": "createcraftedbeginning:block/cinder_incineration_blower/block",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "createcraftedbeginning:block/cinder_incineration_blower/block",
+      "y": 270
     }
   }
 }

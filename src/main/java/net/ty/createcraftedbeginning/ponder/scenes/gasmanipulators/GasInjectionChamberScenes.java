@@ -27,11 +27,11 @@ import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchambe
 import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity.PROCESSING_TIME;
 
 public class GasInjectionChamberScenes {
-    public static void gasInjection(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
         RandomSource random = RandomSource.create();
 
-        scene.title("gas_injection_chamber_gas_injection", "Injecting Gases with Gas Injection Chambers");
+        scene.title("gas_injection_chamber", "Injecting Gases with Gas Injection Chambers");
         scene.configureBasePlate(0, 0, 7);
         scene.showBasePlate();
 

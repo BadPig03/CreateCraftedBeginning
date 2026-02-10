@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import java.util.function.Consumer;
 
 @Mixin(BuiltInRegistries.class)
-public class BuiltInRegistriesMixin {
+public abstract class BuiltInRegistriesMixin {
     static {
         CCBBuiltInRegistries.init();
     }

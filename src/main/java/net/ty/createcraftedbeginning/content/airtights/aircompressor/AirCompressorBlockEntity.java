@@ -6,6 +6,7 @@ import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
 import com.simibubi.create.content.kinetics.base.IRotate.StressImpact;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
+import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import net.createmod.catnip.lang.Lang;
@@ -19,6 +20,7 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.ItemStack;
@@ -45,7 +47,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class AirCompressorBlockEntity extends KineticBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation {
+public class AirCompressorBlockEntity extends KineticBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, ThresholdSwitchObservable {
     private static final int SYNC_RATE = 4;
     private static final int LAZY_TICK_RATE = 5;
     private static final int PRESSURIZATION_RATIO = 10;
@@ -417,6 +419,32 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         CCBLang.translate("gui.goggles.stress_impact").style(ChatFormatting.GRAY).forGoggles(tooltip);
         CCBLang.number(calculateStressApplied() * Mth.abs(getTheoreticalSpeed())).translate("gui.goggles.unit.stress").style(ChatFormatting.AQUA).space().add(CCBLang.translate("gui.goggles.at_current_speed").style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
         return true;
+    }
+
+    @Override
+    public int getMaxValue() {
+        long maxValue = 0;
+        maxValue += inputTankBehaviour.getPrimaryHandler().getCapacity();
+        maxValue += outputTankBehaviour.getPrimaryHandler().getCapacity();
+        return Math.clamp(maxValue, 0, Integer.MAX_VALUE);
+    }
+
+    @Override
+    public int getMinValue() {
+        return 0;
+    }
+
+    @Override
+    public int getCurrentValue() {
+        long currentValue = 0;
+        currentValue += inputTankBehaviour.getPrimaryHandler().getGasAmount();
+        currentValue += outputTankBehaviour.getPrimaryHandler().getGasAmount();
+        return Math.clamp(currentValue, 0, Integer.MAX_VALUE);
+    }
+
+    @Override
+    public MutableComponent format(int value) {
+        return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.buckets")).component();
     }
 
     public enum CoolantEfficiency implements StringRepresentable {

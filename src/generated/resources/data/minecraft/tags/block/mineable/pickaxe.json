@@ -27,10 +27,12 @@
     "createcraftedbeginning:gas_injection_chamber",
     "createcraftedbeginning:airtight_hatch",
     "createcraftedbeginning:gas_canister",
+    "createcraftedbeginning:creative_gas_canister",
     "createcraftedbeginning:air_vent",
-    "createcraftedbeginning:airtight_intake_port",
     "createcraftedbeginning:cinder_alloy_block",
     "createcraftedbeginning:cinder_casing",
+    "createcraftedbeginning:end_alloy_block",
+    "createcraftedbeginning:end_casing",
     "createcraftedbeginning:cinder_incineration_blower",
     "createcraftedbeginning:photo-stress_bearing",
     "createcraftedbeginning:pneumatic_engine"

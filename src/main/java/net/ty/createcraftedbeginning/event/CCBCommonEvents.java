@@ -23,6 +23,8 @@ import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.Air
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterItem;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterItem;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackItem;
@@ -50,16 +52,17 @@ public class CCBCommonEvents {
     @SubscribeEvent
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         AirCompressorBlockEntity.registerCapabilities(event);
-        AirtightTankBlockEntity.registerCapabilities(event);
         AirtightHatchBlockEntity.registerCapabilities(event);
         AirtightReactorKettleBlockEntity.registerCapabilities(event);
         AirtightReactorKettleStructuralBlockEntity.registerCapabilities(event);
+        AirtightTankBlockEntity.registerCapabilities(event);
         AndesiteCrateBlockEntity.registerCapabilities(event);
         BrassCrateBlockEntity.registerCapabilities(event);
         BreezeChamberBlockEntity.registerCapabilities(event);
         BreezeCoolerBlockEntity.registerCapabilities(event);
         CardboardCrateBlockEntity.registerCapabilities(event);
         CreativeAirtightTankBlockEntity.registerCapabilities(event);
+        CreativeGasCanisterBlockEntity.registerCapabilities(event);
         GasCanisterBlockEntity.registerCapabilities(event);
         GasInjectionChamberBlockEntity.registerCapabilities(event);
         PortableGasInterfaceBlockEntity.registerCapabilities(event);
@@ -67,6 +70,7 @@ public class CCBCommonEvents {
         SturdyCrateBlockEntity.registerCapabilities(event);
         TeslaTurbineNozzleBlockEntity.registerCapabilities(event);
 
+        CreativeGasCanisterItem.registerCapabilities(event);
         GasCanisterItem.registerCapabilities(event);
         GasCanisterPackItem.registerCapabilities(event);
     }

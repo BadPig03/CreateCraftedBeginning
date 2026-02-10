@@ -10,9 +10,11 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.IAirtightComponent;
+import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock.CanisterType;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
 
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
@@ -34,7 +36,7 @@ public class AirtightHatchEvents {
             return;
         }
 
-        if (blockState.getValue(AirtightHatchBlock.OCCUPIED)) {
+        if (blockState.getValue(AirtightHatchBlock.CANISTER_TYPE) != CanisterType.EMPTY) {
             if (event.getUseItem() == TriState.DEFAULT) {
                 event.setUseItem(TriState.FALSE);
                 event.setUseBlock(TriState.TRUE);
@@ -65,7 +67,7 @@ public class AirtightHatchEvents {
             return;
         }
 
-        if (event.getItemStack().getItem() == CCBItems.GAS_CANISTER.get()) {
+        if (!(event.getItemStack().getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents)) {
             return;
         }
         if (event.getUseItem() != TriState.DEFAULT) {

@@ -13,12 +13,14 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.ty.createcraftedbeginning.api.gas.gases.CreativeSmartGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasConnectivityHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
@@ -35,7 +37,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.Objects;
 
-public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements iGas, IHaveGoggleInformation, IChamberGasTank, ThresholdSwitchObservable {
+public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements iGas, IHaveGoggleInformation, IChamberGasTank, ICreativeGasContainer, ThresholdSwitchObservable {
     private static final int MAX_LENGTH = 4;
     private static final int MAX_WIDTH = 3;
     private static final int SYNC_RATE = 4;
@@ -322,7 +324,7 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
     @Override
     public int getMaxValue() {
         CreativeAirtightTankBlockEntity controller = getControllerBE();
-        return controller == null ? 0 : (int) getCapacityPerTank() / 1000;
+        return controller == null ? 0 : Math.clamp(getCapacityPerTank() / 1000, 0, Integer.MAX_VALUE);
     }
 
     @Override
@@ -339,7 +341,7 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
 
         IGasHandler gasHandler = controller.gasCapability;
         GasStack gasStack = gasHandler.getGasInTank(0);
-        return gasStack.isEmpty() ? 0 : (int) getCapacityPerTank() / 1000;
+        return gasStack.isEmpty() ? 0 : Math.clamp(getCapacityPerTank() / 1000, 0, Integer.MAX_VALUE);
     }
 
     @Override
@@ -461,4 +463,8 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
         this.width = width;
     }
 
+    @Override
+    public boolean isCreative(Level level, BlockState blockState, BlockPos blockPos) {
+        return true;
+    }
 }

@@ -17,10 +17,10 @@ import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.Port
 import org.jetbrains.annotations.NotNull;
 
 public class PortableGasInterfaceScenes {
-    public static void transfer(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
-        scene.title("portable_gas_interface_transfer", "Gas Exchange on Contraptions");
+        scene.title("portable_gas_interface", "Gas Exchange on Contraptions");
         scene.configureBasePlate(0, 0, 7);
         scene.showBasePlate();
 

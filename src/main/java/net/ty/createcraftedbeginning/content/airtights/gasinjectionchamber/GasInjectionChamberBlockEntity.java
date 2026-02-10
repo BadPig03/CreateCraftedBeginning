@@ -6,6 +6,7 @@ import com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessingBehavio
 import com.simibubi.create.content.kinetics.belt.behaviour.TransportedItemStackHandlerBehaviour;
 import com.simibubi.create.content.kinetics.belt.behaviour.TransportedItemStackHandlerBehaviour.TransportedResult;
 import com.simibubi.create.content.kinetics.belt.transport.TransportedItemStack;
+import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.createmod.catnip.lang.LangBuilder;
@@ -16,6 +17,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -42,7 +44,7 @@ import java.util.List;
 import static com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessingBehaviour.ProcessingResult.HOLD;
 import static com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessingBehaviour.ProcessingResult.PASS;
 
-public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
+public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ThresholdSwitchObservable {
     public static final int PROCESSING_TIME = 60;
     public static final int NOZZLE_TIME = 15;
     public static final int NOZZLE_PART_TIME = 15;
@@ -244,5 +246,25 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     @Override
     protected AABB createRenderBoundingBox() {
         return super.createRenderBoundingBox().expandTowards(0, -2, 0);
+    }
+
+    @Override
+    public int getMaxValue() {
+        return Math.clamp(tankBehaviour.getPrimaryHandler().getCapacity() / 1000, 0, Integer.MAX_VALUE);
+    }
+
+    @Override
+    public int getMinValue() {
+        return 0;
+    }
+
+    @Override
+    public int getCurrentValue() {
+        return Math.clamp(tankBehaviour.getPrimaryHandler().getGasAmount() / 1000, 0, Integer.MAX_VALUE);
+    }
+
+    @Override
+    public MutableComponent format(int value) {
+        return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.buckets")).component();
     }
 }

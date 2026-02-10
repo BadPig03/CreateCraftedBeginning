@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class SmartGasTankBehaviour extends BlockEntityBehaviour {
     public static final BehaviourType<SmartGasTankBehaviour> TYPE = new BehaviourType<>();
     public static final BehaviourType<SmartGasTankBehaviour> INPUT = new BehaviourType<>("GasInput");
@@ -159,7 +159,6 @@ public class SmartGasTankBehaviour extends BlockEntityBehaviour {
     @Override
     public void tick() {
         super.tick();
-
         if (syncCooldown <= 0) {
             return;
         }
@@ -173,24 +172,24 @@ public class SmartGasTankBehaviour extends BlockEntityBehaviour {
     }
 
     @Override
-    public void read(CompoundTag compoundTag, Provider registries, boolean clientPacket) {
-        super.read(compoundTag, registries, clientPacket);
+    public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.read(compoundTag, provider, clientPacket);
         MutableInt index = new MutableInt(0);
         NBTHelper.iterateCompoundList(compoundTag.getList(getType().getName() + "Tanks", Tag.TAG_COMPOUND), c -> {
             if (index.intValue() >= tanks.length) {
                 return;
             }
 
-            tanks[index.intValue()].read(c, registries, clientPacket);
+            tanks[index.intValue()].read(c, provider, clientPacket);
             index.increment();
         });
     }
 
     @Override
-    public void write(CompoundTag compoundTag, Provider registries, boolean clientPacket) {
-        super.write(compoundTag, registries, clientPacket);
+    public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.write(compoundTag, provider, clientPacket);
         ListTag tanksNBT = new ListTag();
-        forEach(ts -> tanksNBT.add(ts.write(registries)));
+        forEach(ts -> tanksNBT.add(ts.write(provider)));
         compoundTag.put(getType().getName() + "Tanks", tanksNBT);
     }
 
@@ -233,7 +232,6 @@ public class SmartGasTankBehaviour extends BlockEntityBehaviour {
             return super.fill(resource, action);
         }
 
-        @SuppressWarnings("UnusedReturnValue")
         public GasStack forceDrain(GasStack resource, GasAction action) {
             return super.drain(resource, action);
         }

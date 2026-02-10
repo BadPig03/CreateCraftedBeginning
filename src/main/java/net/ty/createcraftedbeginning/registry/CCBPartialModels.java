@@ -16,7 +16,6 @@ public class CCBPartialModels {
 
     public static final PartialModel PNEUMATIC_ENGINE_COGS = block("pneumatic_engine/block_cogs");
     public static final PartialModel PHOTO_STRESS_BEARING_SHAFT = block("photo-stress_bearing/block_shaft");
-    public static final PartialModel CINDER_INCINERATION_BLOWER_SHAFT = block("cinder_incineration_blower/block_shaft");
 
     public static final PartialModel AIRTIGHT_PUMP_COGS = block("airtight_pump/block_cogs");
     public static final PartialModel AIRTIGHT_ENGINE_COGS = block("airtight_engine/block_cogs");
@@ -78,6 +77,8 @@ public class CCBPartialModels {
 
     public static final PartialModel AIR_VENT_CLOSED = block("air_vent/closed");
     public static final PartialModel AIR_VENT_OPENED = block("air_vent/opened");
+
+    public static final PartialModel CINDER_INCINERATION_BLOWER_SHAFT = block("cinder_incineration_blower/block_shaft");
 
     public static final PartialModel SHAFT_HALF_UP = block("shaft_half_up");
 

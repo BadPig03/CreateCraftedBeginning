@@ -16,7 +16,7 @@
       "item": "create:shaft"
     },
     "D": {
-      "tag": "c:nuggets/iron"
+      "item": "minecraft:iron_bars"
     }
   },
   "result": {

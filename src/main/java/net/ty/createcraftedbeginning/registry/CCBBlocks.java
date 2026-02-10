@@ -5,6 +5,7 @@ import com.simibubi.create.content.decoration.encasing.CasingBlock;
 import com.tterrag.registrate.util.entry.BlockEntry;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.ColorRGBA;
+import net.minecraft.world.item.Rarity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ColoredFallingBlock;
 import net.minecraft.world.level.block.SoundType;
@@ -26,6 +27,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.Air
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlock;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankBlock;
+import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterBlock;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterBlock;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlock;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceBlock;
@@ -39,12 +41,11 @@ import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaT
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.EmptyBreezeCoolerBlock;
+import net.ty.createcraftedbeginning.content.cinder.cinderincinerationblower.CinderIncinerationBlowerBlock;
 import net.ty.createcraftedbeginning.content.crates.andesitecrate.AndesiteCrateBlock;
 import net.ty.createcraftedbeginning.content.crates.brasscrate.BrassCrateBlock;
 import net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateBlock;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlock;
-import net.ty.createcraftedbeginning.content.obsolete.airtightintakeport.AirtightIntakePortBlock;
-import net.ty.createcraftedbeginning.content.obsolete.cinderincinerationblower.CinderIncinerationBlowerBlock;
 import net.ty.createcraftedbeginning.content.obsolete.phohostressbearing.PhotoStressBearingBlock;
 import net.ty.createcraftedbeginning.content.obsolete.pneumaticengine.PneumaticEngineBlock;
 import net.ty.createcraftedbeginning.data.CCBBuilderTransformer;
@@ -71,7 +72,7 @@ public class CCBBlocks {
     public static final BlockEntry<SturdyCrateBlock> STURDY_CRATE_BLOCK = CCB_REGISTRATE.block("sturdy_crate", SturdyCrateBlock::new).initialProperties(CCBSharedProperties::stone).transform(CCBBuilderTransformer.uncontainable_crate()).transform(pickaxeOnly()).properties(p -> p.mapColor(MapColor.TERRACOTTA_CYAN).sound(SoundType.NETHERITE_BLOCK)).transform(mountedItemStorage(CCBMountedStorage.STURDY_CRATE)).register();
     public static final BlockEntry<CardboardCrateBlock> CARDBOARD_CRATE_BLOCK = CCB_REGISTRATE.block("cardboard_crate", CardboardCrateBlock::new).initialProperties(CCBSharedProperties::cardboard).transform(CCBBuilderTransformer.crate("cardboard")).transform(axeOnly()).properties(p -> p.mapColor(MapColor.COLOR_BROWN).sound(SoundType.CHISELED_BOOKSHELF).ignitedByLava()).transform(mountedItemStorage(CCBMountedStorage.CARDBOARD_CRATE)).register();
 
-    public static final BlockEntry<ColoredFallingBlock> POWDERED_AMETHYST_BLOCK = CCB_REGISTRATE.block("powdered_amethyst_block", properties -> new ColoredFallingBlock(new ColorRGBA(0xFF8D6ACC), properties)).transform(minableWithShovel()).tag(BlockTags.CAMEL_SAND_STEP_SOUND_BLOCKS).transform(CCBBuilderTransformer.simple_block("powdered_amethyst_block")).properties(p -> p.mapColor(MapColor.COLOR_PURPLE).strength(0.5f).sound(SoundType.SAND)).register();
+    public static final BlockEntry<ColoredFallingBlock> POWDERED_AMETHYST_BLOCK = CCB_REGISTRATE.block("powdered_amethyst_block", properties -> new ColoredFallingBlock(new ColorRGBA(0xFF8D6ACC), properties)).transform(minableWithShovel()).tag(BlockTags.CAMEL_SAND_STEP_SOUND_BLOCKS).transform(CCBBuilderTransformer.simple_block("powdered_amethyst_block", p -> p)).properties(p -> p.mapColor(MapColor.COLOR_PURPLE).strength(0.5f).sound(SoundType.SAND)).register();
 
     public static final BlockEntry<Block> AIRTIGHT_SHEET_BLOCK = CCB_REGISTRATE.block("airtight_sheet_block", Block::new).transform(CCBBuilderTransformer.airtight_sheet_block()).transform(airtightPropertiesWithoutAirtightComponents()).register();
 
@@ -104,13 +105,18 @@ public class CCBBlocks {
     public static final BlockEntry<GasInjectionChamberBlock> GAS_INJECTION_CHAMBER_BLOCK = CCB_REGISTRATE.block("gas_injection_chamber", GasInjectionChamberBlock::new).transform(CCBBuilderTransformer.gas_injection_chamber()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<AirtightHatchBlock> AIRTIGHT_HATCH_BLOCK = CCB_REGISTRATE.block("airtight_hatch", AirtightHatchBlock::new).transform(CCBBuilderTransformer.airtight_hatch()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<GasCanisterBlock> GAS_CANISTER_BLOCK = CCB_REGISTRATE.block("gas_canister", GasCanisterBlock::new).transform(CCBBuilderTransformer.gas_canister()).transform(airtightPropertiesWithoutAirtightComponents()).register();
+    public static final BlockEntry<CreativeGasCanisterBlock> CREATIVE_GAS_CANISTER_BLOCK = CCB_REGISTRATE.block("creative_gas_canister", CreativeGasCanisterBlock::new).transform(CCBBuilderTransformer.creative_gas_canister()).transform(airtightPropertiesWithoutAirtightComponents()).register();
 
     public static final BlockEntry<AirVentBlock> AIR_VENT_BLOCK = CCB_REGISTRATE.block("air_vent", AirVentBlock::new).initialProperties(CCBSharedProperties::softMetal).transform(pickaxeOnly()).transform(CCBBuilderTransformer.air_vent()).register();
 
-    public static final BlockEntry<AirtightIntakePortBlock> AIRTIGHT_INTAKE_PORT_BLOCK = CCB_REGISTRATE.block("airtight_intake_port", AirtightIntakePortBlock::new).transform(CCBBuilderTransformer.airtight_intake_port()).transform(airtightPropertiesWithoutOcclusion()).register();
-    public static final BlockEntry<Block> CINDER_ALLOY_BLOCK = CCB_REGISTRATE.block("cinder_alloy_block", Block::new).initialProperties(CCBSharedProperties::softMetal).transform(pickaxeOnly()).transform(CCBBuilderTransformer.simple_block("cinder_alloy_block")).properties(p -> p.mapColor(MapColor.COLOR_BROWN)).register();
-    public static final BlockEntry<CasingBlock> CINDER_CASING_BLOCK = CCB_REGISTRATE.block("cinder_casing", CasingBlock::new).initialProperties(CCBSharedProperties::softMetal).transform(axeOrPickaxe()).transform(CCBBuilderTransformer.casing(() -> CCBSpriteShifts.CINDER_CASING)).properties(p -> p.mapColor(MapColor.COLOR_BROWN)).register();
+    public static final BlockEntry<Block> CINDER_ALLOY_BLOCK = CCB_REGISTRATE.block("cinder_alloy_block", Block::new).initialProperties(CCBSharedProperties::softMetal).transform(pickaxeOnly()).transform(CCBBuilderTransformer.simple_block("cinder_alloy_block", p -> p)).properties(p -> p.mapColor(MapColor.COLOR_BROWN)).register();
+    public static final BlockEntry<CasingBlock> CINDER_CASING_BLOCK = CCB_REGISTRATE.block("cinder_casing", CasingBlock::new).initialProperties(CCBSharedProperties::softMetal).transform(axeOrPickaxe()).transform(CCBBuilderTransformer.casing(() -> CCBSpriteShifts.CINDER_CASING, p -> p)).properties(p -> p.mapColor(MapColor.COLOR_BROWN)).register();
+
+    public static final BlockEntry<Block> END_ALLOY_BLOCK = CCB_REGISTRATE.block("end_alloy_block", Block::new).initialProperties(CCBSharedProperties::hardMetal).transform(pickaxeOnly()).transform(CCBBuilderTransformer.simple_block("end_alloy_block", p -> p.rarity(Rarity.UNCOMMON))).properties(p -> p.mapColor(MapColor.COLOR_GREEN)).register();
+    public static final BlockEntry<CasingBlock> END_CASING_BLOCK = CCB_REGISTRATE.block("end_casing", CasingBlock::new).initialProperties(CCBSharedProperties::hardMetal).transform(pickaxeOnly()).transform(CCBBuilderTransformer.casing(() -> CCBSpriteShifts.END_CASING, p -> p.rarity(Rarity.UNCOMMON))).properties(p -> p.mapColor(MapColor.COLOR_GREEN)).register();
+
     public static final BlockEntry<CinderIncinerationBlowerBlock> CINDER_INCINERATION_BLOWER_BLOCK = CCB_REGISTRATE.block("cinder_incineration_blower", CinderIncinerationBlowerBlock::new).initialProperties(CCBSharedProperties::softMetal).transform(CCBStress.setImpact(4.0f)).transform(pickaxeOnly()).transform(CCBBuilderTransformer.cinder_incineration_blower()).properties(p -> p.mapColor(MapColor.COLOR_YELLOW).noOcclusion()).register();
+
     public static final BlockEntry<PhotoStressBearingBlock> PHOTO_STRESS_BEARING_BLOCK = CCB_REGISTRATE.block("photo-stress_bearing", PhotoStressBearingBlock::new).initialProperties(CCBSharedProperties::stone).transform(CCBStress.setCapacity(8.0f)).transform(pickaxeOnly()).transform(CCBBuilderTransformer.photo_stress_bearing()).properties(p -> p.mapColor(MapColor.COLOR_PURPLE).noOcclusion()).register();
     public static final BlockEntry<PneumaticEngineBlock> PNEUMATIC_ENGINE_BLOCK = CCB_REGISTRATE.block("pneumatic_engine", PneumaticEngineBlock::new).initialProperties(CCBSharedProperties::copperMetal).transform(pickaxeOnly()).transform(CCBBuilderTransformer.pneumatic_engine()).transform(CCBStress.setCapacity(6.0f)).properties(p -> p.mapColor(MapColor.COLOR_ORANGE).noOcclusion()).register();
 

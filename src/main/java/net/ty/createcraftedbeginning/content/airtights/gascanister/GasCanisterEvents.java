@@ -16,6 +16,7 @@ import net.ty.createcraftedbeginning.api.gas.cansiters.IGasCanisterContainer;
 import net.ty.createcraftedbeginning.api.gas.cansiters.events.GasTypeChangedEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackContainerContents;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.NotNull;
@@ -46,6 +47,9 @@ public class GasCanisterEvents {
         int packType;
         if (container instanceof GasCanisterPackContainerContents packContents) {
             packType = packContents.getContainer().getOrDefault(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, 0);
+        }
+        else if (container instanceof CreativeGasCanisterContainerContents) {
+            packType = -2;
         }
         else {
             packType = -1;

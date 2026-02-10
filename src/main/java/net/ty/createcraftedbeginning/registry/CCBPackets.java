@@ -21,6 +21,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.Airtigh
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlayPacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackMenuSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreenPacket;
+import net.ty.createcraftedbeginning.content.cinder.cinderincinerationblower.CinderIncinerationBlowerOutlinePacket;
 
 import java.util.Arrays;
 import java.util.Locale;
@@ -38,6 +39,8 @@ public enum CCBPackets implements PacketTypeProvider {
     GAS_FILTER_SCREEN(GasFilterScreenPacket.class, GasFilterScreenPacket.STREAM_CODEC),
     GAS_AREA_OUTLINE(GasAreaOutlinePacket.class, GasAreaOutlinePacket.STREAM_CODEC),
     CANISTER_CONTAINER_CLIENT(CanisterContainerClientPacket.class, CanisterContainerClientPacket.STREAM_CODEC),
+
+    CINDER_INCINERATION_BLOWER_OUTLINE(CinderIncinerationBlowerOutlinePacket.class, CinderIncinerationBlowerOutlinePacket.STREAM_CODEC),
 
     MOUNTED_STORAGE_SYNC_WITH_GAS(MountedStorageSyncPacketWithGas.class, MountedStorageSyncPacketWithGas.STREAM_CODEC);
 

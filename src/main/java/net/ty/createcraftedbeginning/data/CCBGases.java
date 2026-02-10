@@ -3,12 +3,10 @@ package net.ty.createcraftedbeginning.data;
 import com.simibubi.create.AllItems;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.material.Fluids;
-import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.gases.GasBuilder;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gas.gases.GasBuilder;
 import net.ty.createcraftedbeginning.api.gas.gases.GasHolder;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBGasTags;
@@ -24,8 +22,10 @@ public class CCBGases {
     public static final GasHolder<Gas, Gas> NATURAL_AIR = GAS_REGISTER.register("natural_air", builder().tint(0xFFCBCFFA).pressurizedGas(CreateCraftedBeginning.asResource("pressurized_natural_air")).energizedGas(CreateCraftedBeginning.asResource("energized_natural_air")).inflation(1).engineEfficiency(1).teslaEfficiency(1).outputItemStack(() -> new ItemStack(Items.CLAY_BALL)).tag(CCBGasTags.NATURAL.tag));
     public static final GasHolder<Gas, Gas> ULTRAWARM_AIR = GAS_REGISTER.register("ultrawarm_air", builder().tint(0xFFF0D2B2).pressurizedGas(CreateCraftedBeginning.asResource("pressurized_ultrawarm_air")).energizedGas(CreateCraftedBeginning.asResource("energized_ultrawarm_air")).inflation(1).engineEfficiency(1.4f).teslaEfficiency(1.4f).outputItemStack(() -> new ItemStack(AllItems.CINDER_FLOUR.asItem())).tag(CCBGasTags.ULTRAWARM.tag));
     public static final GasHolder<Gas, Gas> ETHEREAL_AIR = GAS_REGISTER.register("ethereal_air", builder().tint(0xFFF4BAF5).pressurizedGas(CreateCraftedBeginning.asResource("pressurized_ethereal_air")).energizedGas(CreateCraftedBeginning.asResource("energized_ethereal_air")).inflation(1).engineEfficiency(2).teslaEfficiency(2).outputItemStack(() -> new ItemStack(CCBItems.CHORUS_FLOWER_POWDER.asItem())).tag(CCBGasTags.ETHEREAL.tag));
-    public static final GasHolder<Gas, Gas> MOIST_AIR = GAS_REGISTER.register("moist_air", builder().tint(0xFFBEDAED).inflation(1).engineEfficiency(1).teslaEfficiency(1).outputFluidStack(() -> new FluidStack(Fluids.WATER, 1)).tag(CCBGasTags.MOIST.tag));
-    public static final GasHolder<Gas, Gas> SPORE_AIR = GAS_REGISTER.register("spore_air", builder().tint(0XFFE8F5C4).inflation(1).engineEfficiency(1.8f).teslaEfficiency(1.8f).tag(CCBGasTags.SPORE.tag));
+
+    public static final GasHolder<Gas, Gas> MOIST_AIR = GAS_REGISTER.register("moist_air", builder().tint(0xFFBEDAED).inflation(1).engineEfficiency(0).teslaEfficiency(0).tag(CCBGasTags.MOIST.tag));
+    public static final GasHolder<Gas, Gas> SPORE_AIR = GAS_REGISTER.register("spore_air", builder().tint(0XFFE8F5C4).inflation(1).engineEfficiency(0).teslaEfficiency(0).tag(CCBGasTags.SPORE.tag));
+    public static final GasHolder<Gas, Gas> SCULK_AIR = GAS_REGISTER.register("sculk_air", builder().tint(0xFF111B21).inflation(1).engineEfficiency(0).teslaEfficiency(0).tag(CCBGasTags.SCULK.tag));
 
     public static final GasHolder<Gas, Gas> ENERGIZED_NATURAL_AIR = GAS_REGISTER.register("energized_natural_air", builder().inflation(1).tint(0xFFD2D5FB).pressurizedGas(CreateCraftedBeginning.asResource("pressurized_energized_natural_air")).engineEfficiency(0).teslaEfficiency(2).tag(CCBGasTags.NATURAL.tag).tag(CCBGasTags.ENERGIZED.tag));
     public static final GasHolder<Gas, Gas> ENERGIZED_ULTRAWARM_AIR = GAS_REGISTER.register("energized_ultrawarm_air", builder().inflation(1).tint(0xFFF2D8BC).pressurizedGas(CreateCraftedBeginning.asResource("pressurized_energized_ultrawarm_air")).engineEfficiency(0).teslaEfficiency(2.8f).tag(CCBGasTags.ULTRAWARM.tag).tag(CCBGasTags.ENERGIZED.tag));

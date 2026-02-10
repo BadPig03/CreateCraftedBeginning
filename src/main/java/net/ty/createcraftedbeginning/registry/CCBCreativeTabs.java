@@ -47,10 +47,10 @@ public class CCBCreativeTabs {
     private record RegistrateDisplayItemsGenerator(DeferredHolder<CreativeModeTab, CreativeModeTab> tabFilter) implements DisplayItemsGenerator {
         private static @NotNull Predicate<Item> makeExclusionPredicate() {
             Set<Item> exclusions = new ReferenceOpenHashSet<>();
-            List<ItemProviderEntry<?, ?>> itemsExclusions = List.of(CCBItems.INCOMPLETE_AIRTIGHT_SHEET, CCBItems.INCOMPLETE_GAS_CANISTER_PACK, CCBItems.INCOMPLETE_HEAVY_CORE, CCBItems.INCOMPLETE_TESLA_TURBINE_ROTOR, CCBItems.INCOMPLETE_BREEZE_CORE, CCBItems.INCOMPLETE_AIRTIGHT_CANNON, CCBItems.INCOMPLETE_AIRTIGHT_EXTEND_ARM, CCBItems.INCOMPLETE_AIRTIGHT_HANDHELD_DRILL, CCBItems.INCOMPLETE_AIRTIGHT_HELMET, CCBItems.INCOMPLETE_AIRTIGHT_CHESTPLATE, CCBItems.INCOMPLETE_AIRTIGHT_LEGGINGS, CCBItems.INCOMPLETE_AIRTIGHT_BOOTS, CCBItems.INCOMPLETE_WEATHER_FLARE, CCBItems.INCOMPLETE_ANCHOR_FLARE, CCBItems.GAS_CANISTER_PLACEABLE, CCBItems.NATURAL_WIND_CHARGE, CCBItems.ULTRAWARM_WIND_CHARGE, CCBItems.ETHEREAL_WIND_CHARGE, CCBItems.MOIST_WIND_CHARGE, CCBItems.SPORE_WIND_CHARGE, CCBItems.ENERGIZED_NATURAL_WIND_CHARGE, CCBItems.ENERGIZED_ULTRAWARM_WIND_CHARGE, CCBItems.ENERGIZED_ETHEREAL_WIND_CHARGE, CCBItems.GAS_VIRTUAL_ITEM);
+            List<ItemProviderEntry<?, ?>> itemsExclusions = List.of(CCBItems.INCOMPLETE_AIRTIGHT_SHEET, CCBItems.INCOMPLETE_GAS_CANISTER_PACK, CCBItems.INCOMPLETE_HEAVY_CORE, CCBItems.INCOMPLETE_TESLA_TURBINE_ROTOR, CCBItems.INCOMPLETE_BREEZE_CORE, CCBItems.INCOMPLETE_AIRTIGHT_CANNON, CCBItems.INCOMPLETE_AIRTIGHT_EXTEND_ARM, CCBItems.INCOMPLETE_AIRTIGHT_HANDHELD_DRILL, CCBItems.INCOMPLETE_AIRTIGHT_HELMET, CCBItems.INCOMPLETE_AIRTIGHT_CHESTPLATE, CCBItems.INCOMPLETE_AIRTIGHT_LEGGINGS, CCBItems.INCOMPLETE_AIRTIGHT_BOOTS, CCBItems.INCOMPLETE_WEATHER_FLARE, CCBItems.INCOMPLETE_ANCHOR_FLARE, CCBItems.GAS_CANISTER_PLACEABLE, CCBItems.CREATIVE_GAS_CANISTER_PLACEABLE, CCBItems.NATURAL_WIND_CHARGE, CCBItems.ULTRAWARM_WIND_CHARGE, CCBItems.ETHEREAL_WIND_CHARGE, CCBItems.MOIST_WIND_CHARGE, CCBItems.SPORE_WIND_CHARGE, CCBItems.SCULK_WIND_CHARGE, CCBItems.ENERGIZED_NATURAL_WIND_CHARGE, CCBItems.ENERGIZED_ULTRAWARM_WIND_CHARGE, CCBItems.ENERGIZED_ETHEREAL_WIND_CHARGE, CCBItems.GAS_VIRTUAL_ITEM);
             itemsExclusions.stream().map(ItemProviderEntry::asItem).forEach(exclusions::add);
 
-            List<ItemProviderEntry<?, ?>> blocksExclusions = List.of(CCBBlocks.AIRTIGHT_INTAKE_PORT_BLOCK, CCBBlocks.CINDER_ALLOY_BLOCK, CCBBlocks.CINDER_CASING_BLOCK, CCBBlocks.CINDER_INCINERATION_BLOWER_BLOCK, CCBBlocks.PHOTO_STRESS_BEARING_BLOCK, CCBBlocks.PNEUMATIC_ENGINE_BLOCK);
+            List<ItemProviderEntry<?, ?>> blocksExclusions = List.of(CCBBlocks.PHOTO_STRESS_BEARING_BLOCK, CCBBlocks.PNEUMATIC_ENGINE_BLOCK);
             blocksExclusions.stream().map(ItemProviderEntry::asItem).forEach(exclusions::add);
             return exclusions::contains;
         }
@@ -58,7 +58,7 @@ public class CCBCreativeTabs {
         private static @NotNull List<ItemOrdering> makeOrderings() {
             List<ItemOrdering> orderings = new ReferenceArrayList<>();
 
-            Map<ItemProviderEntry<?, ?>, ItemProviderEntry<?, ?>> simpleBeforeOrderings = Map.of(CCBItems.GAS_CANISTER, CCBItems.GAS_CANISTER_PACK);
+            Map<ItemProviderEntry<?, ?>, ItemProviderEntry<?, ?>> simpleBeforeOrderings = Map.of(CCBItems.GAS_CANISTER_PACK, CCBItems.GAS_CANISTER, CCBItems.GAS_CANISTER, CCBItems.CREATIVE_GAS_CANISTER);
             simpleBeforeOrderings.forEach((entry, otherEntry) -> orderings.add(ItemOrdering.order(entry.asItem(), otherEntry.asItem())));
             return orderings;
         }

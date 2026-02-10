@@ -18,7 +18,7 @@ public class CCBAirtights extends ConfigBase {
     public final ConfigInt fluidQuantityMultiplier = i(8, 1, 512, "fluid_quantity_multiplier", Comments.fluidQuantityMultiplier);
 
     public final ConfigGroup airtightHatch = group(0, "airtight_hatch", "Airtight Hatch");
-    public final ConfigInt maxTransferRate = i(250, 5, "max_transfer_rate", Comments.milliBuckets, Comments.maxTransferRate);
+    public final ConfigInt maxTransferRate = i(5, 1, "max_transfer_rate", Comments.milliBuckets, Comments.maxTransferRate);
 
     public final ConfigGroup airtightPump = group(0, "airtight_pump", "Airtight Pump");
     public final ConfigInt maxPumpRange = i(32, 1, "max_pump_range", Comments.blocks, Comments.maxPumpRange);

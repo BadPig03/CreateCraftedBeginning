@@ -19,10 +19,10 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamber
 import org.jetbrains.annotations.NotNull;
 
 public class BreezeChamberScenes {
-    public static void feeding(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
-        scene.title("breeze_chamber_feeding", "Feeding Breeze Chambers");
+        scene.title("breeze_chamber", "Feeding Breeze Chambers");
         scene.configureBasePlate(0, 0, 7);
         scene.showBasePlate();
 

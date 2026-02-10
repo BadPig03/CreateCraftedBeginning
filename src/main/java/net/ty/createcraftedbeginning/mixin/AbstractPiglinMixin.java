@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AbstractPiglin.class)
-public class AbstractPiglinMixin {
+public abstract class AbstractPiglinMixin {
     @SuppressWarnings("DataFlowIssue")
     @Inject(method = "isConverting", at = @At("RETURN"), cancellable = true)
     private void ccb$isConverting(CallbackInfoReturnable<Boolean> cir) {

@@ -12,6 +12,7 @@ import net.ty.createcraftedbeginning.api.gas.armhandlers.natural.EnergizedNatura
 import net.ty.createcraftedbeginning.api.gas.armhandlers.natural.NaturalAirArmHandler;
 import net.ty.createcraftedbeginning.api.gas.armhandlers.natural.PressurizedEnergizedNaturalAirArmHandler;
 import net.ty.createcraftedbeginning.api.gas.armhandlers.natural.PressurizedNaturalAirArmHandler;
+import net.ty.createcraftedbeginning.api.gas.armhandlers.sculk.SculkAirArmHandler;
 import net.ty.createcraftedbeginning.api.gas.armhandlers.spore.SporeAirArmHandler;
 import net.ty.createcraftedbeginning.api.gas.armhandlers.ultrawarm.EnergizedUltrawarmAirArmHandler;
 import net.ty.createcraftedbeginning.api.gas.armhandlers.ultrawarm.PressurizedEnergizedUltrawarmAirArmHandler;
@@ -40,6 +41,8 @@ public class CCBAirtightExtendArmHandlers {
 
         registry.register(CCBGases.MOIST_AIR.get(), new MoistAirArmHandler());
         registry.register(CCBGases.SPORE_AIR.get(), new SporeAirArmHandler());
+        registry.register(CCBGases.SCULK_AIR.get(), new SculkAirArmHandler());
+
         registry.register(CCBGases.CREATIVE_AIR.get(), new CreativeAirArmHandler());
     }
 }

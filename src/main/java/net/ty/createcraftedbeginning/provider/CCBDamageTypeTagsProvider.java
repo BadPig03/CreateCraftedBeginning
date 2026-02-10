@@ -26,6 +26,6 @@ public class CCBDamageTypeTagsProvider extends TagsProvider<DamageType> {
 
     @Override
     protected void addTags(@NotNull Provider provider) {
-        tag(DamageTypeTags.IS_FIRE).add(CCBDamageTypes.CINDER_FIRE).add(CCBDamageTypes.BRIMSTONE).add(CCBDamageTypes.BRIMSTONE_FIRE);
+        tag(DamageTypeTags.IS_FIRE).add(CCBDamageTypes.BRIMSTONE).add(CCBDamageTypes.BRIMSTONE_FIRE);
     }
 }

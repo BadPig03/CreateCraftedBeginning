@@ -8,6 +8,7 @@
       "tag": "c:netherracks"
     }
   ],
+  "processing_time": 200,
   "results": [
     {
       "id": "createcraftedbeginning:breeze_core"

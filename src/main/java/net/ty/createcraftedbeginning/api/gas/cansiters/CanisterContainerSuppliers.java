@@ -7,6 +7,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterItem;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterItem;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackContainerContents;
@@ -122,6 +123,28 @@ public final class CanisterContainerSuppliers {
      */
     public static boolean isValidGasCanister(@NotNull ItemStack itemStack) {
         return isValidCanisterContainer(itemStack) && (itemStack.is(CCBItems.GAS_CANISTER) || itemStack.getItem() instanceof GasCanisterItem);
+    }
+
+    /**
+     * Checks if an ItemStack represents a valid creative gas canister item.
+     * <p>
+     * This method determines if the ItemStack is both a valid gas canister container
+     * and specifically a creative gas canister item by checking if it matches the registered
+     * creative gas canister item or is an instance of {@link CreativeGasCanisterItem}.
+     * </p>
+     * <p>
+     * This is a specialized version of {@link #isValidGasCanister(ItemStack)} that specifically
+     * checks for creative variants of gas canisters, which typically have unlimited capacity
+     * or other creative-mode properties.
+     * </p>
+     *
+     * @param itemStack the ItemStack to check for creative gas canister validity (must not be null)
+     * @return true if the ItemStack is a valid creative gas canister item, false otherwise
+     * @see #isValidCanisterContainer(ItemStack)
+     * @see #isValidGasCanister(ItemStack)
+     */
+    public static boolean isValidCreativeGasCanister(@NotNull ItemStack itemStack) {
+        return isValidCanisterContainer(itemStack) && (itemStack.is(CCBItems.CREATIVE_GAS_CANISTER) || itemStack.getItem() instanceof CreativeGasCanisterItem);
     }
 
     /**

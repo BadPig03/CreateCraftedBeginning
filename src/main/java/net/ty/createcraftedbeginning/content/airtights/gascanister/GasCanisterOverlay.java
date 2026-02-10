@@ -12,6 +12,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.LayeredDraw.Layer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
@@ -30,6 +31,7 @@ public enum GasCanisterOverlay implements Layer {
     INSTANCE;
 
     private static final ItemStack CANISTER = new ItemStack(CCBItems.GAS_CANISTER.asItem());
+    private static final ItemStack CREATIVE_CANISTER = new ItemStack(CCBItems.CREATIVE_GAS_CANISTER.asItem());
     private static final ItemStack PACK = new ItemStack(CCBItems.GAS_CANISTER_PACK.asItem());
 
     public static final ResourceLocation RESOURCE = CreateCraftedBeginning.asResource("gas_canister_overlay");
@@ -68,6 +70,9 @@ public enum GasCanisterOverlay implements Layer {
         if (packType == -1) {
             GuiGameElement.of(CANISTER).at(xOffset, yOffset).render(guiGraphics);
         }
+        else if (packType == -2) {
+            GuiGameElement.of(CREATIVE_CANISTER).at(xOffset, yOffset).render(guiGraphics);
+        }
         else {
             ItemStack copied = PACK.copy();
             copied.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, packType);
@@ -80,10 +85,18 @@ public enum GasCanisterOverlay implements Layer {
         Font font = mc.font;
         guiGraphics.drawString(font, CCBLang.gasName(content).style(ChatFormatting.GOLD).component(), 17 + xOffset, yOffset + (content.isEmpty() ? font.lineHeight / 2 : 0), 0);
         if (capacity > 0) {
-            LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
-            float ratio = Mth.clamp(2.0f * amount / capacity, 0, 1);
-            guiGraphics.drawString(font, CCBLang.number(amount).add(mb).color(Color.mixColors(GasCanisterUtils.COLOR_RED, GasCanisterUtils.COLOR_WHITE, ratio)).add(CCBLang.text(" / ").style(ChatFormatting.WHITE)).add(CCBLang.number(capacity).add(mb).style(ChatFormatting.GRAY)).component(), 17 + xOffset, font.lineHeight + yOffset, 0);
+            MutableComponent text;
+            if (packType == -2) {
+                text = CCBLang.translateDirect("gui.goggles.gas_container.infinity").withStyle(ChatFormatting.GOLD);
+            }
+            else {
+                LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
+                text = CCBLang.number(amount).add(mb).color(Color.mixColors(GasCanisterUtils.COLOR_RED, GasCanisterUtils.COLOR_WHITE, Mth.clamp(2.0f * amount / capacity, 0, 1))).add(CCBLang.text(" / ").style(ChatFormatting.WHITE)).add(CCBLang.number(capacity).add(mb).style(ChatFormatting.GRAY)).component();
+            }
+            guiGraphics.drawString(font, text, 17 + xOffset, font.lineHeight + yOffset, 0);
         }
+
+
 
         poseStack.popPose();
     }

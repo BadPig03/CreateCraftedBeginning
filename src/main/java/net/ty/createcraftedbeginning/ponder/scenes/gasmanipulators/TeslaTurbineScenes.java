@@ -18,7 +18,7 @@ import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
 
 public class TeslaTurbineScenes {
-    public static void setting_up(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void settingUp(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("tesla_turbine_setting_up", "Setting Up Tesla Turbines");
@@ -165,7 +165,7 @@ public class TeslaTurbineScenes {
         scene.markAsFinished();
     }
 
-    public static void generating_rotational_force(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void generating(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("tesla_turbine_generating_rotational_force", "Generating Rotational Force via Tesla Turbines");

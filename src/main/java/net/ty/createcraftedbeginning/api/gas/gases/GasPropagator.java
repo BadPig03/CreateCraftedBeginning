@@ -186,7 +186,6 @@ public class GasPropagator {
         BlockPos connectedPos = pos.relative(side);
         BlockState connectedState = level.getBlockState(connectedPos);
         GasTransportBehaviour pipe = getPipe(level, connectedPos);
-
         if (pipe != null && pipe.canHaveFlowToward(connectedState, side.getOpposite())) {
             return false;
         }

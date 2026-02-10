@@ -8,6 +8,7 @@ import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 
 public class CCBSpriteShifts {
     public static final CTSpriteShiftEntry CINDER_CASING = omni("cinder_casing");
+    public static final CTSpriteShiftEntry END_CASING = omni("end_casing");
     public static final CTSpriteShiftEntry AIR_VENT = omni("air_vent/air_vent");
 
     public static final CTSpriteShiftEntry AIRTIGHT_TANK_TOP = rectangle("airtight_tank/top");

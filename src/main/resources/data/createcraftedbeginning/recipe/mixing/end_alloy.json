@@ -1,0 +1,23 @@
+{
+  "type": "create:mixing",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:chorus_flower_powder"
+    },
+    {
+      "tag": "c:plates/brass"
+    },
+    {
+      "tag": "c:plates/obsidian"
+    },
+    {
+      "tag": "c:ender_pearls"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:end_alloy",
+      "count": 2
+    }
+  ]
+}

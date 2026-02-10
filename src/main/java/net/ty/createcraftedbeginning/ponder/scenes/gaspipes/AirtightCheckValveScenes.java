@@ -19,10 +19,10 @@ import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.Airtig
 import org.jetbrains.annotations.NotNull;
 
 public class AirtightCheckValveScenes {
-    public static void transport(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
-        scene.title("airtight_check_valve_transport", "One-Way Transport with Airtight Check Valves");
+        scene.title("airtight_check_valve", "One-Way Transport with Airtight Check Valves");
         scene.configureBasePlate(0, 0, 7);
         scene.showBasePlate();
 

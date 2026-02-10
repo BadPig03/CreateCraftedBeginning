@@ -19,10 +19,10 @@ import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
 
 public class SmartAirtightPipeScenes {
-    public static void filter(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
-        scene.title("smart_airtight_pipe_filter", "Controlling Gas Flow with Smart Airtight Pipes");
+        scene.title("smart_airtight_pipe", "Controlling Gas Flow with Smart Airtight Pipes");
         scene.configureBasePlate(0, 0, 7);
         scene.showBasePlate();
 

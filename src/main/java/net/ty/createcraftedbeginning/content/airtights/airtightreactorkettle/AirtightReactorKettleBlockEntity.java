@@ -87,7 +87,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     private boolean contentsChanged;
     private boolean filterChanged;
     private boolean operating;
-    private DeferralBehaviour kettleChecker;
+    private DeferralBehaviour updateChecker;
     private IFluidHandler fluidCapability;
     private IGasHandler gasCapability;
     private int operatingTicks;
@@ -150,8 +150,8 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         behaviours.add(inputGasTank);
         behaviours.add(outputGasTank);
 
-        kettleChecker = new DeferralBehaviour(this, this::updateReactorKettle);
-        behaviours.add(kettleChecker);
+        updateChecker = new DeferralBehaviour(this, this::updateReactorKettle);
+        behaviours.add(updateChecker);
     }
 
     @Override
@@ -174,7 +174,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         }
 
         contentsChanged = false;
-        kettleChecker.scheduleUpdate();
+        updateChecker.scheduleUpdate();
     }
 
     @Override
@@ -254,7 +254,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     }
 
     public void scheduleUpdate() {
-        kettleChecker.scheduleUpdate();
+        updateChecker.scheduleUpdate();
     }
 
     public boolean isEmpty() {
@@ -401,7 +401,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
             operating = false;
             operatingTicks = 0;
             processingTicks = -1;
-            kettleChecker.scheduleUpdate();
+            updateChecker.scheduleUpdate();
             return;
         }
 
@@ -412,7 +412,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
             operating = false;
             operatingTicks = 0;
             processingTicks = -1;
-            kettleChecker.scheduleUpdate();
+            updateChecker.scheduleUpdate();
             return;
         }
 

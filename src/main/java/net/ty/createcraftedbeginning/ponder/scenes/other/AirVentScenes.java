@@ -20,10 +20,10 @@ import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.NotNull;
 
 public class AirVentScenes {
-    public static void placement(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
-        scene.title("air_vent_placement", "Placing Air Vents");
+        scene.title("air_vent", "Placing Air Vents");
         scene.configureBasePlate(0, 0, 7);
         scene.showBasePlate();
 

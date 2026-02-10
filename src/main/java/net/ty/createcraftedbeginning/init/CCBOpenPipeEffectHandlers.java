@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.init;
 import com.simibubi.create.api.registry.SimpleRegistry;
 import net.ty.createcraftedbeginning.api.gas.effecthandlers.ethereal.EnergizedEtherealAirEffectHandler;
 import net.ty.createcraftedbeginning.api.gas.effecthandlers.natural.EnergizedNaturalAirEffectHandler;
+import net.ty.createcraftedbeginning.api.gas.effecthandlers.sculk.SculkAirEffectHandler;
 import net.ty.createcraftedbeginning.api.gas.effecthandlers.ultrawarm.EnergizedUltrawarmAirEffectHandler;
 import net.ty.createcraftedbeginning.api.gas.effecthandlers.ethereal.EtherealAirEffectHandler;
 import net.ty.createcraftedbeginning.api.gas.effecthandlers.moist.MoistAirEffectHandler;
@@ -41,6 +42,8 @@ public class CCBOpenPipeEffectHandlers {
 
         registry.register(CCBGases.MOIST_AIR.get(), new MoistAirEffectHandler());
         registry.register(CCBGases.SPORE_AIR.get(), new SporeAirEffectHandler());
+        registry.register(CCBGases.SCULK_AIR.get(), new SculkAirEffectHandler());
+
         registry.register(CCBGases.CREATIVE_AIR.get(), new CreativeAirEffectHandler());
     }
 }

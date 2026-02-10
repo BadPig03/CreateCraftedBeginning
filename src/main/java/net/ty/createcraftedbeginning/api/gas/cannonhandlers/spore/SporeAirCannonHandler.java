@@ -12,7 +12,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.Item.TooltipContext;
@@ -50,15 +49,14 @@ public class SporeAirCannonHandler implements AirtightCannonHandler {
     }
 
     @Override
-    public void explode(Level level, @NotNull Vec3 pos, Entity source, float multiplier) {
+    public void explode(@NotNull Level level, @NotNull Vec3 pos, Entity source, float multiplier) {
         float radius = DEFAULT_RADIUS * multiplier;
-        DamageSource damageSource = CCBDamageTypes.source(DamageTypes.DROWN, level, source);
-        level.explode(source, damageSource, AirtightCannonUtils.createDamageCalculator(radius), pos.x(), pos.y(), pos.z(), radius, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
+        level.explode(source, CCBDamageTypes.source(DamageTypes.DROWN, level, source), AirtightCannonUtils.createDamageCalculator(radius), pos.x(), pos.y(), pos.z(), radius, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
     }
 
     @Override
     public ResourceLocation getTextureLocation() {
-        return CreateCraftedBeginning.asResource("textures/entity/projectiles/moist_wind_charge.png");
+        return CreateCraftedBeginning.asResource("textures/entity/projectiles/spore_wind_charge.png");
     }
 
     @Override
@@ -79,7 +77,7 @@ public class SporeAirCannonHandler implements AirtightCannonHandler {
 
     @Override
     public float getGasConsumptionMultiplier() {
-        return 0.95f;
+        return 1;
     }
 
     @Override

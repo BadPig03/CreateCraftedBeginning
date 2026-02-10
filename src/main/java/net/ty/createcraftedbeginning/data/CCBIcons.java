@@ -28,23 +28,24 @@ public class CCBIcons extends AllIcons {
     private final int iconX;
     private final int iconY;
 
-    public static final CCBIcons
-        I_NO_TRANSFER = newRow(),
-        I_INPUT_ONLY = next(),
-        I_OUTPUT_ONLY = next(),
-        I_STAY_HALF = next(),
-        I_EMPTY = next();
-
-    public static final CCBIcons
-        I_FILTER = newRow(),
-        I_FINISHED = next(),
-        I_OUTLINE = next(),
-        I_CONTAINER = next(),
-        I_DRILL_ATTACK = next(),
-        I_SILK_TOUCH_UPGRADE = next(),
-        I_MAGNET_UPGRADE = next(),
-        I_CONVERSION_UPGRADE = next(),
-        I_LIQUID_REPLACEMENT_UPGRADE = next();
+    public static final CCBIcons I_NO_TRANSFER = newRow();
+    public static final CCBIcons I_INPUT_ONLY = next();
+    public static final CCBIcons I_OUTPUT_ONLY = next();
+    public static final CCBIcons I_STAY_HALF = next();
+    public static final CCBIcons I_EMPTY = next();
+    public static final CCBIcons I_FILTER = newRow();
+    public static final CCBIcons I_FINISHED = next();
+    public static final CCBIcons I_OUTLINE = next();
+    public static final CCBIcons I_CONTAINER = next();
+    public static final CCBIcons I_DRILL_ATTACK = next();
+    public static final CCBIcons I_SILK_TOUCH_UPGRADE = next();
+    public static final CCBIcons I_MAGNET_UPGRADE = next();
+    public static final CCBIcons I_CONVERSION_UPGRADE = next();
+    public static final CCBIcons I_LIQUID_REPLACEMENT_UPGRADE = next();
+    public static final CCBIcons I_SMOKING = newRow();
+    public static final CCBIcons I_BLASTING = next();
+    public static final CCBIcons I_IGNITION = next();
+    public static final CCBIcons I_GRINDING = next();
 
     public CCBIcons(int x, int y) {
         super(x, y);

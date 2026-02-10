@@ -119,7 +119,7 @@ public class AirtightEngineScenes {
         scene.markAsFinished();
     }
 
-    public static void generatingRotationalForce(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void generating(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("airtight_engine_generating_rotational_force", "Generating Rotational Force via an Airtight Assembly Driver");

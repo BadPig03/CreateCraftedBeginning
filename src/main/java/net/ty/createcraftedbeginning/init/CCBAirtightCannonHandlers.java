@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.init;
 
 import com.simibubi.create.api.registry.SimpleRegistry;
+import net.ty.createcraftedbeginning.api.gas.cannonhandlers.sculk.SculkAirCannonHandler;
 import net.ty.createcraftedbeginning.api.gas.cannonhandlers.spore.SporeAirCannonHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.cannonhandlers.creative.CreativeAirCannonHandler;
@@ -41,6 +42,8 @@ public class CCBAirtightCannonHandlers {
 
         registry.register(CCBGases.MOIST_AIR.get(), new MoistAirCannonHandler());
         registry.register(CCBGases.SPORE_AIR.get(), new SporeAirCannonHandler());
+        registry.register(CCBGases.SCULK_AIR.get(), new SculkAirCannonHandler());
+
         registry.register(CCBGases.CREATIVE_AIR.get(), new CreativeAirCannonHandler());
     }
 }

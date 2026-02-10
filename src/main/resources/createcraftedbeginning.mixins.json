@@ -18,6 +18,7 @@
     "MountedStorageManagerMixin",
     "PlayerMixin",
     "SawBlockEntityMixin",
+    "ThresholdSwitchBlockEntityMixin",
     "TrainCargoManagerMixin"
   ],
   "minVersion": "0.8"

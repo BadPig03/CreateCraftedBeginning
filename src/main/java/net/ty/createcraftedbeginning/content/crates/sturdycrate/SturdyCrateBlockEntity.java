@@ -154,7 +154,7 @@ public class SturdyCrateBlockEntity extends CratesBlockEntity implements IHaveGo
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
             validateSlotIndex(slot);
-            return stack.getItem().canFitInsideContainerItems() && (filtering == null || filtering.getFilter().isEmpty() || FilterItem.testDirect(filtering.getFilter(), stack, false)) && (content.isEmpty() || ItemStack.isSameItemSameComponents(content, stack));
+            return stack.canFitInsideContainerItems() && (filtering == null || filtering.getFilter().isEmpty() || FilterItem.testDirect(filtering.getFilter(), stack, false)) && (content.isEmpty() || ItemStack.isSameItemSameComponents(content, stack));
         }
 
         @Override

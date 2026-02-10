@@ -13,16 +13,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock.CanisterType;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
 
 public class AirtightHatchScenes {
-    @SuppressWarnings("ConstantExpression")
-    public static void transfer(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
-        scene.title("airtight_hatch_transfer", "Gas Exchange via Airtight Hatches");
+        scene.title("airtight_hatch", "Gas Exchange via Airtight Hatches");
         scene.configureBasePlate(0, 0, 7);
         scene.showBasePlate();
 
@@ -63,11 +63,11 @@ public class AirtightHatchScenes {
         scene.overlay().showControls(hatchTopVec, Pointing.DOWN, 67).rightClick().withItem(gasCanisterItem);
 
         scene.idle(7);
-        scene.world().modifyBlock(hatchPos, s -> s.setValue(AirtightHatchBlock.OCCUPIED, true), false);
+        scene.world().modifyBlock(hatchPos, s -> s.setValue(AirtightHatchBlock.CANISTER_TYPE, CanisterType.NORMAL), false);
         scene.overlay().showText(60).text("Right-click with a Gas Canister to load it into the hatch").pointAt(Vec3.atCenterOf(hatchPos)).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().showScrollInput(hatchTopVec.add(new Vec3(0, 0, 1 / 6.0f)), Direction.UP, 60);
+        scene.overlay().showScrollInput(hatchTopVec.add(new Vec3(0, 0, 0.2)), Direction.UP, 60);
         scene.overlay().showText(60).text("Transfer modes are configurable").pointAt(hatchTopVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
@@ -93,7 +93,7 @@ public class AirtightHatchScenes {
         scene.overlay().showControls(hatchTopVec, Pointing.DOWN, 67).rightClick().withItem(wrenchItem);
 
         scene.idle(7);
-        scene.world().modifyBlock(hatchPos, s -> s.setValue(AirtightHatchBlock.OCCUPIED, false), false);
+        scene.world().modifyBlock(hatchPos, s -> s.setValue(AirtightHatchBlock.CANISTER_TYPE, CanisterType.EMPTY), false);
         scene.overlay().showText(60).text("Right-click with a Wrench to retrieve loaded canisters").pointAt(Vec3.atCenterOf(hatchPos)).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);

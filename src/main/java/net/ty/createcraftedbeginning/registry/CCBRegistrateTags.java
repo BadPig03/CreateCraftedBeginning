@@ -43,6 +43,7 @@ public class CCBRegistrateTags {
     private static void genItemTags(RegistrateTagsProvider<Item> provIn) {
         CCBTagsProvider<Item> provider = new CCBTagsProvider<>(provIn, Item::builtInRegistryHolder);
         provider.tag(CCBItemTags.CINDER_CASING_RAW_MATERIALS.tag).add(Blocks.STRIPPED_CRIMSON_STEM.asItem()).add(Blocks.STRIPPED_CRIMSON_HYPHAE.asItem()).add(Blocks.STRIPPED_WARPED_STEM.asItem()).add(Blocks.STRIPPED_WARPED_HYPHAE.asItem());
+        provider.tag(CCBItemTags.END_CASING_RAW_MATERIALS.tag).add(Blocks.CRYING_OBSIDIAN.asItem());
         provider.tag(Items.INGOTS).addTag(CCBItemTags.CINDER_ALLOY.tag);
         Arrays.stream(CCBItemTags.values()).filter(tag -> tag.alwaysDataGen).map(tag -> tag.tag).forEach(provider::getOrCreateRawBuilder);
     }

@@ -2,7 +2,9 @@ package net.ty.createcraftedbeginning.content.airtights.portablegasinterface;
 
 import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.content.contraptions.actors.psi.PortableStorageInterfaceBlockEntity;
+import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -12,12 +14,13 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
+import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.mixin.accessor.MountedStorageManagerAccessor;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlockEntity {
+public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlockEntity implements ThresholdSwitchObservable {
     protected IGasHandler capability;
 
     public PortableGasInterfaceBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -82,6 +85,26 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
 
     public int getTransferTimer() {
         return transferTimer;
+    }
+
+    @Override
+    public int getMaxValue() {
+        return Math.clamp(capability.getTankCapacity(0) / 1000, 0, Integer.MAX_VALUE);
+    }
+
+    @Override
+    public int getMinValue() {
+        return 0;
+    }
+
+    @Override
+    public int getCurrentValue() {
+        return Math.clamp(capability.getGasInTank(0).getAmount() / 1000, 0, Integer.MAX_VALUE);
+    }
+
+    @Override
+    public MutableComponent format(int value) {
+        return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.buckets")).component();
     }
 
     public class InterfaceGasHandler implements IGasHandler {

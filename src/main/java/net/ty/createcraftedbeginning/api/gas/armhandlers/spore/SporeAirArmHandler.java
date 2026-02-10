@@ -5,7 +5,7 @@ import net.ty.createcraftedbeginning.api.gas.armhandlers.AirtightExtendArmHandle
 public class SporeAirArmHandler implements AirtightExtendArmHandler {
     @Override
     public float getGasConsumptionMultiplier() {
-        return 0.95f;
+        return 1;
     }
 
     @Override

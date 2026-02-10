@@ -13,7 +13,6 @@ import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import org.jetbrains.annotations.NotNull;
 
 public class CCBDamageTypes {
-    public static final ResourceKey<DamageType> CINDER_FIRE = key("cinder_fire");
     public static final ResourceKey<DamageType> BRIMSTONE_FIRE = key("brimstone_fire");
     public static final ResourceKey<DamageType> BRIMSTONE = key("brimstone");
     public static final ResourceKey<DamageType> REACTOR_KETTLE_MIXER = key("reactor_kettle_mixer");
@@ -23,7 +22,6 @@ public class CCBDamageTypes {
     }
 
     public static void bootstrap(BootstrapContext<DamageType> ctx) {
-        new DamageTypeBuilder(CINDER_FIRE).effects(DamageEffects.BURNING).register(ctx);
         new DamageTypeBuilder(BRIMSTONE_FIRE).effects(DamageEffects.BURNING).register(ctx);
         new DamageTypeBuilder(BRIMSTONE).effects(DamageEffects.HURT).register(ctx);
         new DamageTypeBuilder(REACTOR_KETTLE_MIXER).register(ctx);

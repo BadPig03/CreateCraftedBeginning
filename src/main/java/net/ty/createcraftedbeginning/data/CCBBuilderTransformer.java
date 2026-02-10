@@ -30,7 +30,6 @@ import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.CopyComponentsFunction;
 import net.minecraft.world.level.storage.loot.functions.CopyComponentsFunction.Source;
 import net.minecraft.world.level.storage.loot.predicates.ExplosionCondition;
-import net.minecraft.world.level.storage.loot.predicates.LootItemCondition.Builder;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
@@ -67,8 +66,8 @@ import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBl
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerConductor;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerMovementBehaviour;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.EmptyBreezeCoolerBlock;
+import net.ty.createcraftedbeginning.content.cinder.cinderincinerationblower.CinderIncinerationBlowerBlock;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlockItem;
-import net.ty.createcraftedbeginning.content.obsolete.airtightintakeport.AirtightIntakePortBlock;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
@@ -149,18 +148,13 @@ public class CCBBuilderTransformer {
     }
 
     @Contract(pure = true)
-    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> cinder_incineration_blower() {
-        return b -> b.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().transform(customItemModel("cinder_incineration_blower", "item"));
+    public static <B extends CasingBlock> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> casing(Supplier<CTSpriteShiftEntry> ct, NonNullUnaryOperator<Properties> ip) {
+        return b -> b.blockstate((c, p) -> p.simpleBlock(c.get())).onRegister(connectedTextures(() -> new EncasedCTBehaviour(ct.get()))).onRegister(casingConnectivity((block, cc) -> cc.makeCasing(block, ct.get()))).tag(AllBlockTags.CASING.tag).item().properties(ip).tag(AllItemTags.CASING.tag).build();
     }
 
     @Contract(pure = true)
-    public static <B extends CasingBlock> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> casing(Supplier<CTSpriteShiftEntry> ct) {
-        return b -> b.blockstate((c, p) -> p.simpleBlock(c.get())).onRegister(connectedTextures(() -> new EncasedCTBehaviour(ct.get()))).onRegister(casingConnectivity((block, cc) -> cc.makeCasing(block, ct.get()))).tag(AllBlockTags.CASING.tag).item().tag(AllItemTags.CASING.tag).build();
-    }
-
-    @Contract(pure = true)
-    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> simple_block(String path) {
-        return b -> b.blockstate((c, p) -> p.simpleBlock(c.get(), p.models().cubeAll(c.getName(), p.modLoc("block/" + path)))).item().build();
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> simple_block(String path, NonNullUnaryOperator<Properties> ip) {
+        return b -> b.blockstate((c, p) -> p.simpleBlock(c.get(), p.models().cubeAll(c.getName(), p.modLoc("block/" + path)))).item().properties(ip).build();
     }
 
     @Contract(pure = true)
@@ -468,81 +462,66 @@ public class CCBBuilderTransformer {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> gas_canister() {
-        return b -> b.blockstate((c, p) -> {
-            ModelFile model = p.models().getExistingFile(p.modLoc("block/gas_canister"));
-            p.getVariantBuilder(c.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(model).build(), BlockStateProperties.WATERLOGGED);
-        }).loot((lt, block) -> {
-            LootTable.Builder builder = LootTable.lootTable();
-            Builder survivesExplosion = ExplosionCondition.survivesExplosion();
-            lt.add(block, builder.withPool(LootPool.lootPool().when(survivesExplosion).setRolls(ConstantValue.exactly(1)).add(LootItem.lootTableItem(CCBItems.GAS_CANISTER.get()).apply(CopyComponentsFunction.copyComponents(Source.BLOCK_ENTITY).include(CCBDataComponents.CANISTER_CONTAINER_CONTENTS).include(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES)))));
-        }).item().build();
+        return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(p.models().getExistingFile(p.modLoc("block/gas_canister"))).build(), BlockStateProperties.WATERLOGGED)).loot((lt, block) -> lt.add(block, LootTable.lootTable().withPool(LootPool.lootPool().when(ExplosionCondition.survivesExplosion()).setRolls(ConstantValue.exactly(1)).add(LootItem.lootTableItem(CCBItems.GAS_CANISTER.get()).apply(CopyComponentsFunction.copyComponents(Source.BLOCK_ENTITY).include(CCBDataComponents.CANISTER_CONTAINER_CONTENTS).include(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES)))))).item().build();
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> creative_gas_canister() {
+        return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(p.models().getExistingFile(p.modLoc("block/creative_gas_canister"))).build(), BlockStateProperties.WATERLOGGED)).loot((lt, block) -> lt.add(block, LootTable.lootTable().withPool(LootPool.lootPool().when(ExplosionCondition.survivesExplosion()).setRolls(ConstantValue.exactly(1)).add(LootItem.lootTableItem(CCBItems.GAS_CANISTER.get()).apply(CopyComponentsFunction.copyComponents(Source.BLOCK_ENTITY).include(CCBDataComponents.CANISTER_CONTAINER_CONTENTS).include(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES)))))).item().build();
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtight_hatch() {
-        return b -> b.blockstate((c, p) -> p.horizontalBlock(c.get(), s -> AssetLookup.partialBaseModel(c, p, s.getValue(AirtightHatchBlock.OCCUPIED) ? "occupied" : "empty"))).item().properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(bi -> bi.model(AssetLookup.customBlockItemModel("_", "block_empty"))).build();
-    }
-
-    @Contract(pure = true)
-    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtight_intake_port() {
-        return b -> b.blockstate((c, p) -> {
-            ModelFile model = p.models().getExistingFile(p.modLoc("block/airtight_intake_port/block"));
-            p.getVariantBuilder(c.getEntry()).forAllStatesExcept(state -> {
-                Direction facing = state.getValue(AirtightIntakePortBlock.FACING);
-                int rotationX = 0;
-                int rotationY = 0;
-                switch (facing) {
-                    case UP:
-                        rotationX = 270;
-                        break;
-                    case DOWN:
-                        rotationX = 90;
-                        break;
-                    case SOUTH:
-                        rotationY = 180;
-                        break;
-                    case WEST:
-                        rotationY = 270;
-                        break;
-                    case EAST:
-                        rotationY = 90;
-                        break;
-                    default:
-                        break;
-                }
-                return ConfiguredModel.builder().modelFile(model).rotationX(rotationX).rotationY(rotationY).build();
-            }, BlockStateProperties.WATERLOGGED);
-        }).item().properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(ib -> ib.model(AssetLookup::customItemModel)).build();
+        return b -> b.blockstate((c, p) -> p.horizontalBlock(c.get(), s -> AssetLookup.partialBaseModel(c, p, s.getValue(AirtightHatchBlock.CANISTER_TYPE).getSerializedName()))).item().properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(bi -> bi.model(AssetLookup.customBlockItemModel("_", "block_empty"))).build();
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> gas_injection_chamber() {
-        return b -> b.blockstate((c, p) -> {
-            ModelFile model = p.models().getExistingFile(p.modLoc("block/gas_injection_chamber/block"));
-            p.getVariantBuilder(c.getEntry()).forAllStatesExcept(state -> {
-                Direction facing = state.getValue(GasInjectionChamberBlock.FACING);
-                int rotationY = 0;
-                switch (facing) {
-                    case SOUTH:
-                        rotationY = 180;
-                        break;
-                    case WEST:
-                        rotationY = 270;
-                        break;
-                    case EAST:
-                        rotationY = 90;
-                        break;
-                    default:
-                        break;
-                }
-                return ConfiguredModel.builder().modelFile(model).rotationY(rotationY).build();
-            });
-        }).item(AssemblyOperatorBlockItem::new).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(ib -> ib.model(AssetLookup::customItemModel)).build();
+        return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.getEntry()).forAllStatesExcept(state -> {
+            Direction facing = state.getValue(GasInjectionChamberBlock.FACING);
+            int rotationY = 0;
+            switch (facing) {
+                case SOUTH:
+                    rotationY = 180;
+                    break;
+                case WEST:
+                    rotationY = 270;
+                    break;
+                case EAST:
+                    rotationY = 90;
+                    break;
+                default:
+                    break;
+            }
+            return ConfiguredModel.builder().modelFile(p.models().getExistingFile(p.modLoc("block/gas_injection_chamber/block"))).rotationY(rotationY).build();
+        })).item(AssemblyOperatorBlockItem::new).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(ib -> ib.model(AssetLookup::customItemModel)).build();
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtight_sheet_block() {
         return b -> b.blockstate((c, p) -> p.simpleBlock(c.get(), p.models().cubeAll(c.getName(), p.modLoc("block/airtight_sheet_block")))).item().properties(Properties::fireResistant).build();
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> cinder_incineration_blower() {
+        return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.getEntry()).forAllStatesExcept(state -> {
+            Direction facing = state.getValue(CinderIncinerationBlowerBlock.FACING);
+            int rotationY = 0;
+            switch (facing) {
+                case SOUTH:
+                    rotationY = 180;
+                    break;
+                case WEST:
+                    rotationY = 270;
+                    break;
+                case EAST:
+                    rotationY = 90;
+                    break;
+                default:
+                    break;
+            }
+            return ConfiguredModel.builder().modelFile(p.models().getExistingFile(p.modLoc("block/cinder_incineration_blower/block"))).rotationY(rotationY).build();
+        })).item().transform(ib -> ib.model(AssetLookup::customItemModel)).build();
     }
 
     @Contract(pure = true)

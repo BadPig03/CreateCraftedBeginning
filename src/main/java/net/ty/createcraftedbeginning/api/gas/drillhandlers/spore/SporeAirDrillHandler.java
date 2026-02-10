@@ -10,6 +10,6 @@ public class SporeAirDrillHandler implements AirtightHandheldDrillHandler {
 
     @Override
     public float getConsumptionMultiplier() {
-        return 0.95f;
+        return 1;
     }
 }

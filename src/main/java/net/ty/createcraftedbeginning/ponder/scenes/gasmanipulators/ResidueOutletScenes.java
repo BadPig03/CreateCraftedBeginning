@@ -24,10 +24,10 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamber
 import org.jetbrains.annotations.NotNull;
 
 public class ResidueOutletScenes {
-    public static void generatingResidue(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
-        scene.title("residue_outlet_expelling_residue", "Expelling Residue via Residue Outlets");
+        scene.title("residue_outlet", "Expelling Residue via Residue Outlets");
         scene.configureBasePlate(0, 0, 7);
         scene.scaleSceneView(0.9f);
         scene.showBasePlate();

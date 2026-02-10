@@ -114,7 +114,7 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
             maxValue += master.getGasCapability().getTankCapacity(i);
         }
 
-        return Math.toIntExact(maxValue);
+        return Math.clamp(maxValue, 0, Integer.MAX_VALUE);
     }
 
     @Override
@@ -140,7 +140,7 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
             currentValue += master.getGasCapability().getGasInTank(i).getAmount();
         }
 
-        return Math.toIntExact(currentValue);
+        return Math.clamp(currentValue, 0, Integer.MAX_VALUE);
     }
 
     @Override

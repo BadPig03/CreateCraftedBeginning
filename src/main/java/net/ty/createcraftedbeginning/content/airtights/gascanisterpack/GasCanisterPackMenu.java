@@ -21,7 +21,6 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackOverrides.GasCanisterPackType;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
-import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
 
 public class GasCanisterPackMenu extends MenuBase<ItemStack> {
@@ -104,6 +103,7 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
             CompoundTag compoundTag = new CompoundTag();
             compoundTag.put(COMPOUND_KEY_CANISTER, canister.saveOptional(player.level().registryAccess()));
             packContents.setCompoundTag(i, compoundTag);
+            packContents.setCreatives(i, CanisterContainerSuppliers.isValidCreativeGasCanister(canister));
         }
         pack.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, getPackType());
     }
@@ -181,10 +181,17 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
     }
 
     protected int getPackType() {
-        boolean rightDown = CanisterContainerSuppliers.isValidGasCanister(packInventory.getStackInSlot(I_SLOT_INDEX));
-        boolean leftDown = CanisterContainerSuppliers.isValidGasCanister(packInventory.getStackInSlot(II_SLOT_INDEX));
-        boolean rightUp = CanisterContainerSuppliers.isValidGasCanister(packInventory.getStackInSlot(III_SLOT_INDEX));
-        boolean leftUp = CanisterContainerSuppliers.isValidGasCanister(packInventory.getStackInSlot(IV_SLOT_INDEX));
+        ItemStack firstSlot = packInventory.getStackInSlot(I_SLOT_INDEX);
+        boolean rightDown = CanisterContainerSuppliers.isValidGasCanister(firstSlot) || CanisterContainerSuppliers.isValidCreativeGasCanister(firstSlot);
+
+        ItemStack secondSlot = packInventory.getStackInSlot(II_SLOT_INDEX);
+        boolean leftDown = CanisterContainerSuppliers.isValidGasCanister(secondSlot) || CanisterContainerSuppliers.isValidCreativeGasCanister(secondSlot);
+
+        ItemStack thirdSlot = packInventory.getStackInSlot(III_SLOT_INDEX);
+        boolean rightUp = CanisterContainerSuppliers.isValidGasCanister(thirdSlot) || CanisterContainerSuppliers.isValidCreativeGasCanister(thirdSlot);
+
+        ItemStack fourthSlot = packInventory.getStackInSlot(IV_SLOT_INDEX);
+        boolean leftUp = CanisterContainerSuppliers.isValidGasCanister(fourthSlot) || CanisterContainerSuppliers.isValidCreativeGasCanister(fourthSlot);
         int flags = GasCanisterPackOverrides.calculateFlags(leftUp, rightUp, leftDown, rightDown);
         return GasCanisterPackType.getTypeFromFlags(flags).ordinal();
     }
@@ -205,7 +212,7 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
             return new SlotItemHandler(itemHandler, index, x, SLOT_Y) {
                 @Override
                 public boolean mayPlace(@NotNull ItemStack stack) {
-                    return stack.is(CCBItems.GAS_CANISTER);
+                    return stack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents;
                 }
 
                 @Override

@@ -1,63 +1,93 @@
 {
   "variants": {
-    "facing=east,occupied=false,waterlogged=false": {
+    "canister_type=creative,facing=east,waterlogged=false": {
+      "model": "createcraftedbeginning:block/airtight_hatch/block_creative",
+      "y": 90
+    },
+    "canister_type=creative,facing=east,waterlogged=true": {
+      "model": "createcraftedbeginning:block/airtight_hatch/block_creative",
+      "y": 90
+    },
+    "canister_type=creative,facing=north,waterlogged=false": {
+      "model": "createcraftedbeginning:block/airtight_hatch/block_creative"
+    },
+    "canister_type=creative,facing=north,waterlogged=true": {
+      "model": "createcraftedbeginning:block/airtight_hatch/block_creative"
+    },
+    "canister_type=creative,facing=south,waterlogged=false": {
+      "model": "createcraftedbeginning:block/airtight_hatch/block_creative",
+      "y": 180
+    },
+    "canister_type=creative,facing=south,waterlogged=true": {
+      "model": "createcraftedbeginning:block/airtight_hatch/block_creative",
+      "y": 180
+    },
+    "canister_type=creative,facing=west,waterlogged=false": {
+      "model": "createcraftedbeginning:block/airtight_hatch/block_creative",
+      "y": 270
+    },
+    "canister_type=creative,facing=west,waterlogged=true": {
+      "model": "createcraftedbeginning:block/airtight_hatch/block_creative",
+      "y": 270
+    },
+    "canister_type=empty,facing=east,waterlogged=false": {
       "model": "createcraftedbeginning:block/airtight_hatch/block_empty",
       "y": 90
     },
-    "facing=east,occupied=false,waterlogged=true": {
+    "canister_type=empty,facing=east,waterlogged=true": {
       "model": "createcraftedbeginning:block/airtight_hatch/block_empty",
       "y": 90
     },
-    "facing=east,occupied=true,waterlogged=false": {
-      "model": "createcraftedbeginning:block/airtight_hatch/block_occupied",
-      "y": 90
-    },
-    "facing=east,occupied=true,waterlogged=true": {
-      "model": "createcraftedbeginning:block/airtight_hatch/block_occupied",
-      "y": 90
-    },
-    "facing=north,occupied=false,waterlogged=false": {
+    "canister_type=empty,facing=north,waterlogged=false": {
       "model": "createcraftedbeginning:block/airtight_hatch/block_empty"
     },
-    "facing=north,occupied=false,waterlogged=true": {
+    "canister_type=empty,facing=north,waterlogged=true": {
       "model": "createcraftedbeginning:block/airtight_hatch/block_empty"
     },
-    "facing=north,occupied=true,waterlogged=false": {
-      "model": "createcraftedbeginning:block/airtight_hatch/block_occupied"
-    },
-    "facing=north,occupied=true,waterlogged=true": {
-      "model": "createcraftedbeginning:block/airtight_hatch/block_occupied"
-    },
-    "facing=south,occupied=false,waterlogged=false": {
+    "canister_type=empty,facing=south,waterlogged=false": {
       "model": "createcraftedbeginning:block/airtight_hatch/block_empty",
       "y": 180
     },
-    "facing=south,occupied=false,waterlogged=true": {
+    "canister_type=empty,facing=south,waterlogged=true": {
       "model": "createcraftedbeginning:block/airtight_hatch/block_empty",
       "y": 180
     },
-    "facing=south,occupied=true,waterlogged=false": {
-      "model": "createcraftedbeginning:block/airtight_hatch/block_occupied",
-      "y": 180
-    },
-    "facing=south,occupied=true,waterlogged=true": {
-      "model": "createcraftedbeginning:block/airtight_hatch/block_occupied",
-      "y": 180
-    },
-    "facing=west,occupied=false,waterlogged=false": {
+    "canister_type=empty,facing=west,waterlogged=false": {
       "model": "createcraftedbeginning:block/airtight_hatch/block_empty",
       "y": 270
     },
-    "facing=west,occupied=false,waterlogged=true": {
+    "canister_type=empty,facing=west,waterlogged=true": {
       "model": "createcraftedbeginning:block/airtight_hatch/block_empty",
       "y": 270
     },
-    "facing=west,occupied=true,waterlogged=false": {
-      "model": "createcraftedbeginning:block/airtight_hatch/block_occupied",
+    "canister_type=normal,facing=east,waterlogged=false": {
+      "model": "createcraftedbeginning:block/airtight_hatch/block_normal",
+      "y": 90
+    },
+    "canister_type=normal,facing=east,waterlogged=true": {
+      "model": "createcraftedbeginning:block/airtight_hatch/block_normal",
+      "y": 90
+    },
+    "canister_type=normal,facing=north,waterlogged=false": {
+      "model": "createcraftedbeginning:block/airtight_hatch/block_normal"
+    },
+    "canister_type=normal,facing=north,waterlogged=true": {
+      "model": "createcraftedbeginning:block/airtight_hatch/block_normal"
+    },
+    "canister_type=normal,facing=south,waterlogged=false": {
+      "model": "createcraftedbeginning:block/airtight_hatch/block_normal",
+      "y": 180
+    },
+    "canister_type=normal,facing=south,waterlogged=true": {
+      "model": "createcraftedbeginning:block/airtight_hatch/block_normal",
+      "y": 180
+    },
+    "canister_type=normal,facing=west,waterlogged=false": {
+      "model": "createcraftedbeginning:block/airtight_hatch/block_normal",
       "y": 270
     },
-    "facing=west,occupied=true,waterlogged=true": {
-      "model": "createcraftedbeginning:block/airtight_hatch/block_occupied",
+    "canister_type=normal,facing=west,waterlogged=true": {
+      "model": "createcraftedbeginning:block/airtight_hatch/block_normal",
       "y": 270
     }
   }
