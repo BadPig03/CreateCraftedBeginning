@@ -1,4 +1,4 @@
-// 1.21.1	2026-01-29T19:05:18.2466871	Registrate Provider for createcraftedbeginning [Registries, Data Maps, Recipes, Advancements, Loot Tables, Tags (enchantments), Tags (blocks), Tags (items), Tags (fluids), Tags (entity_types), generic_server_provider, Blockstates, Item models, Lang (en_us/en_ud), generic_client_provider]
+// 1.21.1	2026-02-10T21:01:00.1933345	Registrate Provider for createcraftedbeginning [Registries, Data Maps, Recipes, Advancements, Loot Tables, Tags (enchantments), Tags (blocks), Tags (items), Tags (fluids), Tags (entity_types), generic_server_provider, Blockstates, Item models, Lang (en_us/en_ud), generic_client_provider]
 89cbcebfdf0a539cf4a9c69419bd236fa050d53a assets/createcraftedbeginning/blockstates/airtight_check_valve.json
 bc71e08b0f84e0be889efe5ca69ca91087763a01 assets/createcraftedbeginning/blockstates/airtight_encased_pipe.json
 cb5e887d5bfa4f2fa210775d0ff7bc61f5d2b2e6 assets/createcraftedbeginning/blockstates/airtight_engine.json
@@ -267,3 +267,4 @@ de74baae934a69d8554550678fea11e4ea2bb4d1 data/minecraft/tags/block/mineable/pick
 1bcd72f3e8b3c8a716c529c5ef6769855785e67f data/minecraft/tags/item/foot_armor.json
 765c67530dd3761f48184d51ae6d277b721af59b data/minecraft/tags/item/head_armor.json
 8cefd58b648600771503e7cfebea5f170d54c586 data/minecraft/tags/item/leg_armor.json
+eaf9e8cdb470ac22af808ed251138cdf3abbc68b data/minecraft/tags/item/piglin_loved.json

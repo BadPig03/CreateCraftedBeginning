@@ -6,10 +6,27 @@
   "loops": 1,
   "results": [
     {
+      "count": 2,
       "id": "createcraftedbeginning:airtight_sheet"
     }
   ],
   "sequence": [
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_airtight_sheet"
+        },
+        {
+          "tag": "c:plates/iron"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_airtight_sheet"
+        }
+      ]
+    },
     {
       "type": "create:deploying",
       "ingredients": [

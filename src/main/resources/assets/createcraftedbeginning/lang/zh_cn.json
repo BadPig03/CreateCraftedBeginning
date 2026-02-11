@@ -405,7 +405,7 @@
   "item.createcraftedbeginning.chorus_flower_powder": "紫颂花粉末",
   "item.createcraftedbeginning.cinder_alloy": "余烬合金",
   "item.createcraftedbeginning.creative_gas_canister": "创造气罐",
-  "item.createcraftedbeginning.creative_gas_canister.tooltip.summary": "可以随身携带的_无限_容量_气体容器_，可以为消耗气体的装备提供源源不断的气体。",
+  "item.createcraftedbeginning.creative_gas_canister.tooltip.summary": "可以随身携带的_无限_容量_气体容器_，可以为消耗气体的装备提供源源不断的气体。拿气罐_右键_该创造气罐即可改变内部气体种类。",
   "item.createcraftedbeginning.creative_gas_canister_placeable": "可放置的创造气罐",
   "item.createcraftedbeginning.creative_ice_cream": "创造冰淇淋",
   "item.createcraftedbeginning.end_alloy": "终末合金",

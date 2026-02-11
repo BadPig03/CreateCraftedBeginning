@@ -22,6 +22,10 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterContainerContents;
+import net.ty.createcraftedbeginning.data.CCBGases;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.data.CCBRegistrate;
 import org.jetbrains.annotations.ApiStatus.Internal;
@@ -102,14 +106,13 @@ public class CCBCreativeTabs {
         @Override
         public void accept(@NotNull ItemDisplayParameters parameters, @NotNull Output output) {
             Predicate<Item> exclusionPredicate = makeExclusionPredicate();
-            List<ItemOrdering> orderings = makeOrderings();
-            Function<Item, ItemStack> stackFunc = makeStackFunc();
-
             List<Item> items = new LinkedList<>(collectBlocks(exclusionPredicate));
             items.addAll(collectItems(exclusionPredicate));
-
-            applyOrderings(items, orderings);
-            outputAll(output, items, stackFunc);
+            applyOrderings(items, makeOrderings());
+            outputAll(output, items, makeStackFunc());
+            for (ItemStack stack : collectExtraItems()) {
+                output.accept(stack, TabVisibility.PARENT_AND_SEARCH_TABS);
+            }
         }
 
         private @NotNull List<Item> collectItems(Predicate<Item> exclusionPredicate) {
@@ -150,6 +153,18 @@ public class CCBCreativeTabs {
             }
             items = new ReferenceArrayList<>(new ReferenceLinkedOpenHashSet<>(items));
             return items;
+        }
+
+        private static @NotNull List<ItemStack> collectExtraItems() {
+            List<ItemStack> extraItems = new ReferenceArrayList<>();
+            CCBGases.GAS_REGISTER.getEntries().forEach(entry -> {
+                ItemStack canister = new ItemStack(CCBItems.CREATIVE_GAS_CANISTER.asItem());
+                if (canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents creativeCanisterContent) {
+                    creativeCanisterContent.setGasInTank(0, new GasStack(entry, creativeCanisterContent.getTankCapacity(0)));
+                }
+                extraItems.add(canister);
+            });
+            return extraItems;
         }
     }
 

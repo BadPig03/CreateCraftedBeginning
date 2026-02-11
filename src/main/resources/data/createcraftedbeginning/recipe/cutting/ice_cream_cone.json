@@ -2,7 +2,7 @@
   "type": "create:cutting",
   "ingredients": [
     {
-      "item": "c:foods/bread"
+      "tag": "c:foods/bread"
     }
   ],
   "processing_time": 200,
