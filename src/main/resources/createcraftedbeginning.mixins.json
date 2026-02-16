@@ -12,6 +12,7 @@
     "accessor.ZombieAccessor",
     "AbstractPiglinMixin",
 	"BuiltInRegistriesMixin",
+    "EntityMixin",
     "FillingBySpoutMixin",
     "HoglinMixin",
     "MechanicalPressBlockEntityMixin",

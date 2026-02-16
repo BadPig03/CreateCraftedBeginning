@@ -24,7 +24,7 @@ public class CCBAirtights extends ConfigBase {
     public final ConfigInt maxPumpRange = i(32, 1, "max_pump_range", Comments.blocks, Comments.maxPumpRange);
 
     public final ConfigGroup airtightEncasedPipe = group(0, "airtight_encased_pipe", "Airtight Encased Pipe");
-    public final ConfigBool canSealWithoutSheets = b(false, "can_seal_without_sheets", Comments.canSealWithoutSheets);
+    public final ConfigBool canSealWithoutSheets = b(true, "can_seal_without_sheets", Comments.canSealWithoutSheets);
 
     public final ConfigGroup gasCanister = group(0, "gas_canister", "Gas Canister");
     public final ConfigInt maxCanisterCapacity = i(20, 1, "max_canister_capacity", Comments.buckets, Comments.maxCanisterCapacity);

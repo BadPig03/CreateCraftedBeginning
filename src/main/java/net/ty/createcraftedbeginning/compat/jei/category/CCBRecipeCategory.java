@@ -69,13 +69,11 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
 
     public static IDrawable getRenderedSlot(float chance) {
         return chance == 1 ? BASIC_SLOT : CHANCE_SLOT;
-
     }
 
     public static ItemStack getResultItem(Recipe<?> recipe) {
         ClientLevel level = Minecraft.getInstance().level;
         return level == null ? ItemStack.EMPTY : recipe.getResultItem(level.registryAccess());
-
     }
 
     @Contract(value = "_ -> new", pure = true)

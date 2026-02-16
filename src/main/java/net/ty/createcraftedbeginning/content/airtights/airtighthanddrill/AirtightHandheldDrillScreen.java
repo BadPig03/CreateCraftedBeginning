@@ -135,11 +135,11 @@ public class AirtightHandheldDrillScreen extends AbstractSimiContainerScreen<Air
         setWindowOffset(-13, -4);
         super.init();
         clearWidgets();
-        initButtons();
         initMiningTemplate();
         initMiningSize();
         initMiningRelativePosition();
         initMiningDirection();
+        initButtons();
         updateStates();
     }
 
@@ -151,13 +151,13 @@ public class AirtightHandheldDrillScreen extends AbstractSimiContainerScreen<Air
         }
         super.containerTick();
         updateStates();
-        renderTooltips();
     }
 
     @Override
     protected void renderForeground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         super.renderForeground(guiGraphics, mouseX, mouseY, partialTicks);
         renderForeground(guiGraphics, mouseX, mouseY);
+        renderTooltips();
     }
 
     @Override
@@ -298,8 +298,7 @@ public class AirtightHandheldDrillScreen extends AbstractSimiContainerScreen<Air
             }
             menu.silkTouchEnabled = !menu.silkTouchEnabled;
         });
-        silkTouchIndicator = new Indicator(leftPos + 123, topPos + 72, CommonComponents.EMPTY);
-        addRenderableWidgets(silkTouchButton, silkTouchIndicator);
+        addRenderableWidget(silkTouchButton);
         buttonConfigs.put("silk_touch", new ScreenButtonConfig(silkTouchButton, SILK_TOUCH_UPGRADE_TITLE, SILK_TOUCH_UPGRADE_DESCRIPTION, () -> silkTouchButton.green, () -> !menu.silkTouchInstalled && silkTouchButton.active, AirtightHandheldDrillUtils.SILK_TOUCH_UPGRADE_ITEM));
 
         magnetButton = new IconButton(leftPos + 141, topPos + BACKGROUND.getHeight() - 60, CCBIcons.I_MAGNET_UPGRADE).withCallback(() -> {
@@ -312,7 +311,7 @@ public class AirtightHandheldDrillScreen extends AbstractSimiContainerScreen<Air
             menu.magnetEnabled = !menu.magnetEnabled;
         });
         magnetIndicator = new Indicator(leftPos + 141, topPos + 72, CommonComponents.EMPTY);
-        addRenderableWidgets(magnetButton, magnetIndicator);
+        addRenderableWidget(magnetButton);
         buttonConfigs.put("magnet", new ScreenButtonConfig(magnetButton, MAGNET_UPGRADE_TITLE, MAGNET_UPGRADE_DESCRIPTION, () -> magnetButton.green, () -> !menu.magnetInstalled && magnetButton.active, AirtightHandheldDrillUtils.MAGNET_UPGRADE_ITEM));
 
         conversionButton = new IconButton(leftPos + 159, topPos + BACKGROUND.getHeight() - 60, CCBIcons.I_CONVERSION_UPGRADE).withCallback(() -> {
@@ -324,8 +323,7 @@ public class AirtightHandheldDrillScreen extends AbstractSimiContainerScreen<Air
             }
             menu.conversionEnabled = !menu.conversionEnabled;
         });
-        conversionIndicator = new Indicator(leftPos + 159, topPos + 72, CommonComponents.EMPTY);
-        addRenderableWidgets(conversionButton, conversionIndicator);
+        addRenderableWidget(conversionButton);
         buttonConfigs.put("conversion", new ScreenButtonConfig(conversionButton, CONVERSION_UPGRADE_TITLE, CONVERSION_UPGRADE_DESCRIPTION, () -> conversionButton.green, () -> !menu.conversionInstalled && conversionButton.active, AirtightHandheldDrillUtils.CONVERSION_UPGRADE_ITEM));
 
         liquidReplacementButton = new IconButton(leftPos + 177, topPos + BACKGROUND.getHeight() - 60, CCBIcons.I_LIQUID_REPLACEMENT_UPGRADE).withCallback(() -> {
@@ -337,8 +335,7 @@ public class AirtightHandheldDrillScreen extends AbstractSimiContainerScreen<Air
             }
             menu.liquidReplacementEnabled = !menu.liquidReplacementEnabled;
         });
-        liquidReplacementIndicator = new Indicator(leftPos + 177, topPos + 72, CommonComponents.EMPTY);
-        addRenderableWidgets(liquidReplacementButton, liquidReplacementIndicator);
+        addRenderableWidget(liquidReplacementButton);
         buttonConfigs.put("liquid_replacement", new ScreenButtonConfig(liquidReplacementButton, LIQUID_REPLACEMENT_UPGRADE_TITLE, LIQUID_REPLACEMENT_UPGRADE_DESCRIPTION, () -> liquidReplacementButton.green, () -> !menu.liquidReplacementInstalled && liquidReplacementButton.active, AirtightHandheldDrillUtils.LIQUID_REPLACEMENT_UPGRADE_ITEM));
 
         IconButton confirmButton = new IconButton(leftPos +  BACKGROUND.getWidth() - 31, topPos + BACKGROUND.getHeight() - 24, AllIcons.I_CONFIRM).withCallback(() -> menu.player.closeContainer());
@@ -347,6 +344,18 @@ public class AirtightHandheldDrillScreen extends AbstractSimiContainerScreen<Air
         disableUpgradeButton = new IconButton(leftPos + 151, topPos + 35, CCBIcons.I_FINISHED).setActive(false);
         disableUpgradeButton.visible = false;
         addRenderableWidget(disableUpgradeButton);
+
+        silkTouchIndicator = new Indicator(leftPos + 123, topPos + 72, CommonComponents.EMPTY);
+        addRenderableWidget(silkTouchIndicator);
+
+        magnetIndicator = new Indicator(leftPos + 141, topPos + 72, CommonComponents.EMPTY);
+        addRenderableWidget(magnetIndicator);
+
+        conversionIndicator = new Indicator(leftPos + 159, topPos + 72, CommonComponents.EMPTY);
+        addRenderableWidget(conversionIndicator);
+
+        liquidReplacementIndicator = new Indicator(leftPos + 177, topPos + 72, CommonComponents.EMPTY);
+        addRenderableWidget(liquidReplacementIndicator);
     }
 
     private void renderTooltips() {

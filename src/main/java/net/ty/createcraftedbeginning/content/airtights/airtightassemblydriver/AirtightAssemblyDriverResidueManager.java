@@ -12,6 +12,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletInventory.InternalStackHandler;
+import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -188,7 +189,7 @@ public class AirtightAssemblyDriverResidueManager {
         }
 
         Gas gasType = flowMeter.getGasType().getGasType();
-        FluidStack outputFluidStack = gasType.getOutputFluidStack();
+        FluidStack outputFluidStack = ResidueGenerationRecipe.getRequiredFluid(level, gasType);
         boolean fluidSuccess;
         if (outputFluidStack.isEmpty()) {
             fluidSuccess = true;
@@ -199,7 +200,7 @@ public class AirtightAssemblyDriverResidueManager {
             fluidSuccess = filledAmount >= fillAmount;
         }
 
-        ItemStack outputItemStack = gasType.getOutputItemStack();
+        ItemStack outputItemStack = ResidueGenerationRecipe.getRequiredItem(level, gasType);
         boolean itemSuccess;
         if (outputItemStack.isEmpty()) {
             itemSuccess = true;

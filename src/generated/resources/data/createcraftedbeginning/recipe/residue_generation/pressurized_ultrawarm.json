@@ -1,0 +1,15 @@
+{
+  "type": "createcraftedbeginning:residue_generation",
+  "ingredients": [
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 1,
+      "gas": "createcraftedbeginning:pressurized_ultrawarm_air"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:clay_ball"
+    }
+  ]
+}

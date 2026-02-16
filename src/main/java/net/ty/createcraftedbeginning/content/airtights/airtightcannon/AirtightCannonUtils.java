@@ -15,6 +15,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item.TooltipContext;
@@ -57,10 +58,14 @@ public final class AirtightCannonUtils {
         return new SimpleExplosionDamageCalculator(true, false, Optional.of(knockbackMultiplier), BuiltInRegistries.BLOCK.getTag(BlockTags.BLOCKS_WIND_CHARGE_EXPLOSIONS).map(Function.identity()));
     }
 
-    public static @NotNull List<LivingEntity> getNearbyEntities(@NotNull Level level, @NotNull Vec3 pos, float radius) {
+    public static @NotNull List<LivingEntity> getNearbyEntities(@NotNull Level level, @NotNull Vec3 pos, float radius, Entity source) {
         float affectRadius = radius * 2;
         AABB aabb = new AABB(pos, pos).inflate(affectRadius, affectRadius, affectRadius);
-        return level.getEntitiesOfClass(LivingEntity.class, aabb);
+        List<LivingEntity> entities = level.getEntitiesOfClass(LivingEntity.class, aabb);
+        if (source instanceof AirtightCannonWindChargeProjectileEntity projectile && projectile.getOwner() instanceof Player player) {
+            entities.remove(player);
+        }
+        return entities;
     }
 
     public static float getChargedRatio(@NotNull ItemStack cannon, Player player, int timeCharged) {

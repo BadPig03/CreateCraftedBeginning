@@ -1,0 +1,24 @@
+{
+  "type": "createcraftedbeginning:reactor_kettle",
+  "ingredients": [
+    {
+      "tag": "c:cobblestones"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 250,
+      "gas": "createcraftedbeginning:moist_air"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 250,
+      "gas": "createcraftedbeginning:ultrawarm_air"
+    }
+  ],
+  "processing_time": 200,
+  "results": [
+    {
+      "id": "minecraft:obsidian"
+    }
+  ]
+}

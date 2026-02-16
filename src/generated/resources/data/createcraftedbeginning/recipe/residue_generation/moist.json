@@ -1,0 +1,16 @@
+{
+  "type": "createcraftedbeginning:residue_generation",
+  "ingredients": [
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 1,
+      "gas": "createcraftedbeginning:moist_air"
+    }
+  ],
+  "results": [
+    {
+      "amount": 1000,
+      "id": "minecraft:water"
+    }
+  ]
+}

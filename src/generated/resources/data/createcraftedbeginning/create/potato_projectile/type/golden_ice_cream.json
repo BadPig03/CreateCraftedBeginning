@@ -1,0 +1,12 @@
+{
+  "damage": 16,
+  "items": "createcraftedbeginning:golden_ice_cream",
+  "knockback": 0.25,
+  "reload_ticks": 20,
+  "render_mode": {
+    "type": "create:toward_motion",
+    "spin": 2.0,
+    "sprite_angle_offset": 140
+  },
+  "velocity_multiplier": 1.5
+}

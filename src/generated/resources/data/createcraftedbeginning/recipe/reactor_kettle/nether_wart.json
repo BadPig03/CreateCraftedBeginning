@@ -1,0 +1,23 @@
+{
+  "type": "createcraftedbeginning:reactor_kettle",
+  "ingredients": [
+    {
+      "tag": "c:seeds"
+    },
+    {
+      "item": "create:cinder_flour"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 500,
+      "gas": "createcraftedbeginning:ultrawarm_air"
+    }
+  ],
+  "processing_time": 100,
+  "results": [
+    {
+      "id": "minecraft:nether_wart"
+    }
+  ],
+  "temperature": "heated"
+}

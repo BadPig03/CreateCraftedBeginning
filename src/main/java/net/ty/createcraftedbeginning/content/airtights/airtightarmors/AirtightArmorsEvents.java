@@ -1,5 +1,8 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightarmors;
 
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageEffects;
 import net.minecraft.world.damagesource.DamageSource;
@@ -11,10 +14,15 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ProjectileDeflection;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult.Type;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ViewportEvent.RenderFog;
 import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
 import net.neoforged.neoforge.event.entity.living.LivingBreatheEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
@@ -22,8 +30,10 @@ import net.neoforged.neoforge.event.entity.living.MobEffectEvent.Applicable;
 import net.neoforged.neoforge.event.entity.living.MobEffectEvent.Applicable.Result;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickEmpty;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
+import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
+import net.ty.createcraftedbeginning.registry.CCBFluids;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
 
@@ -51,6 +61,38 @@ public class AirtightArmorsEvents {
         }
 
         event.setConsumeAirAmount(0);
+    }
+
+    @SubscribeEvent
+    @OnlyIn(Dist.CLIENT)
+    public static void onRenderFog(@NotNull RenderFog event) {
+        Camera camera = event.getCamera();
+        Level level = Minecraft.getInstance().level;
+        if (level == null) {
+            return;
+        }
+
+        BlockPos blockPos = camera.getBlockPosition();
+        FluidState fluidState = level.getFluidState(blockPos);
+        if (camera.getPosition().y >= blockPos.getY() + fluidState.getHeight(level, blockPos)) {
+            return;
+        }
+
+        FluidType fluidType = fluidState.getType().getFluidType();
+        Entity entity = camera.getEntity();
+        if (!(entity instanceof Player player) || player.isSpectator() || !player.getItemBySlot(EquipmentSlot.HEAD).is(CCBItems.AIRTIGHT_HELMET)) {
+            return;
+        }
+
+        if (fluidType == Fluids.WATER.getFluidType()) {
+            event.scaleFarPlaneDistance(6.25f);
+            event.setCanceled(true);
+        }
+        else if (fluidType == Fluids.LAVA.getFluidType() || fluidType == CCBFluids.BRIMSTONE.getType()) {
+            event.setNearPlaneDistance(-4);
+            event.setFarPlaneDistance(20);
+            event.setCanceled(true);
+        }
     }
 
     @SubscribeEvent

@@ -399,7 +399,7 @@ public final class AirtightHandheldDrillUtils {
         usedTool.mineBlock(level, state, pos, player);
         player.awardStat(Stats.ITEM_USED.get(usedTool.getItem()), -1);
         player.awardStat(Stats.BLOCK_MINED.get(block));
-        if (!CCBAdvancements.EVEN_IF_HARDER_THAN_OBSIDIAN.isAlreadyAwardedTo(player) || state.is(Blocks.REINFORCED_DEEPSLATE)) {
+        if (!CCBAdvancements.EVEN_IF_HARDER_THAN_OBSIDIAN.isAlreadyAwardedTo(player) && state.is(Blocks.REINFORCED_DEEPSLATE)) {
             CCBAdvancements.EVEN_IF_HARDER_THAN_OBSIDIAN.awardTo(player);
         }
 

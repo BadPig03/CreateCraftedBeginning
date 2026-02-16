@@ -18,7 +18,6 @@ import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.WaterAnimal;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -28,8 +27,8 @@ import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonUtils;
-import net.ty.createcraftedbeginning.registry.CCBDamageTypes;
 import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.registry.CCBDamageTypes;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
 import org.jetbrains.annotations.NotNull;
@@ -72,7 +71,7 @@ public class MoistAirCannonHandler implements AirtightCannonHandler {
         DamageSource damageSource = CCBDamageTypes.source(DamageTypes.DROWN, level, source);
         level.explode(source, damageSource, AirtightCannonUtils.createDamageCalculator(radius), pos.x(), pos.y(), pos.z(), radius, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
 
-        List<LivingEntity> entities = AirtightCannonUtils.getNearbyEntities(level, pos, radius);
+        List<LivingEntity> entities = AirtightCannonUtils.getNearbyEntities(level, pos, radius, source);
         if (entities.isEmpty()) {
             return;
         }

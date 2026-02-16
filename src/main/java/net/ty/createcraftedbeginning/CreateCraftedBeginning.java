@@ -114,6 +114,7 @@ public class CreateCraftedBeginning {
     }
 
     public static void init(@NotNull FMLCommonSetupEvent event) {
+        CCBFluids.registerFluidInteractions();
         event.enqueueWork(() -> {
             CCBAirtightArmorsHandlers.register();
             CCBAirtightCannonHandlers.register();

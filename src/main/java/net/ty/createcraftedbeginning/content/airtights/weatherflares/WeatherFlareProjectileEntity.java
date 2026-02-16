@@ -18,6 +18,7 @@ import net.minecraft.world.entity.projectile.AbstractHurtingProjectile;
 import net.minecraft.world.entity.projectile.ItemSupplier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.Level.ExplosionInteraction;
 import net.minecraft.world.phys.BlockHitResult;
@@ -223,7 +224,7 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
         if ((serverLevel.isRaining() || serverLevel.isThundering()) && itemStack.is(CCBItems.SUNNY_FLARE) && !CCBAdvancements.THE_SKIES_ARE_CLEARING_UP_NOW.isAlreadyAwardedTo(player)) {
             CCBAdvancements.THE_SKIES_ARE_CLEARING_UP_NOW.awardTo(player);
         }
-        if (!serverLevel.isThundering() && itemStack.is(CCBItems.THUNDERSTORM_FLARE) && !CCBAdvancements.I_AM_THE_STORM_THAT_IS_APPROACHING.isAlreadyAwardedTo(player)) {
+        if ((serverLevel.isThundering() && itemStack.is(CCBItems.ANCHOR_FLARE) || !serverLevel.getGameRules().getRule(GameRules.RULE_WEATHER_CYCLE).get() && itemStack.is(CCBItems.THUNDERSTORM_FLARE)) && !CCBAdvancements.I_AM_THE_STORM_THAT_IS_APPROACHING.isAlreadyAwardedTo(player)) {
             CCBAdvancements.I_AM_THE_STORM_THAT_IS_APPROACHING.awardTo(player);
         }
     }

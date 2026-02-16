@@ -36,7 +36,7 @@ import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.NotNull;
 
 public class ResidueOutletBlock extends HorizontalDirectionalBlock implements IBE<ResidueOutletBlockEntity>, IWrenchable, SimpleWaterloggedBlock {
-    private static final EnumProperty<AttachFace> FACE = BlockStateProperties.ATTACH_FACE;
+    public static final EnumProperty<AttachFace> FACE = BlockStateProperties.ATTACH_FACE;
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     public ResidueOutletBlock(Properties properties) {

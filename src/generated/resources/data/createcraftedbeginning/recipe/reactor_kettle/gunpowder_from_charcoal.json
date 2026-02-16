@@ -1,0 +1,18 @@
+{
+  "type": "createcraftedbeginning:reactor_kettle",
+  "ingredients": [
+    {
+      "item": "minecraft:charcoal"
+    },
+    {
+      "item": "minecraft:flint"
+    }
+  ],
+  "results": [
+    {
+      "count": 3,
+      "id": "minecraft:gunpowder"
+    }
+  ],
+  "temperature": "heated"
+}

@@ -1,0 +1,19 @@
+{
+  "type": "createcraftedbeginning:reactor_kettle",
+  "ingredients": [
+    {
+      "tag": "c:cobblestones"
+    },
+    {
+      "tag": "c:gems/quartz"
+    },
+    {
+      "tag": "c:nuggets/iron"
+    }
+  ],
+  "results": [
+    {
+      "id": "create:andesite_alloy"
+    }
+  ]
+}

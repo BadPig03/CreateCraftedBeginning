@@ -46,9 +46,8 @@ public class AirtightEngineRenderer extends KineticBlockEntityRenderer<AirtightE
         }
 
         float newPhase = Mth.lerp(0.1f, be.getPistonPhase() + Mth.abs(be.getSpeed()) * partialTicks * DELTA_TIME, be.getPreviousPhase());
-        float distance = -0.2f * Mth.sin(newPhase) - 0.2f;
         be.setPreviousPhase(newPhase);
-        pistonModel.translate(0, distance, 0).light(light).renderInto(ms, buffer.getBuffer(RenderType.solid()));
+        pistonModel.translate(0, -0.2f * Mth.sin(newPhase) - 0.2f, 0).light(light).renderInto(ms, buffer.getBuffer(RenderType.solid()));
         kineticRotationTransform(cogsModel, be, Axis.Y, getAngleForBe(be, pos, axis) * directionModifier, light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
     }
 

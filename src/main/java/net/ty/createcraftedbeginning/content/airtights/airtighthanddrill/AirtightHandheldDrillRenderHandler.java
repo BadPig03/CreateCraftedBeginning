@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 @OnlyIn(Dist.CLIENT)
 public class AirtightHandheldDrillRenderHandler {
-    private static final float MAX_ANIMATION = 1.0f;
+    private static final float MAX_ANIMATION = 1.5f;
     private static final float MIN_ANIMATION = 0.001f;
     private static final float ACCELERATION = (float) Math.pow(MAX_ANIMATION / MIN_ANIMATION, 0.1f);
     private static final float DECELERATION = 1 / ACCELERATION;

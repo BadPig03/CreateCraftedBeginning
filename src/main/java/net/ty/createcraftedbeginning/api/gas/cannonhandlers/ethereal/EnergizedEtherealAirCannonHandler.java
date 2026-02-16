@@ -54,7 +54,7 @@ public class EnergizedEtherealAirCannonHandler extends EtherealAirCannonHandler 
     @Override
     public void explode(@NotNull Level level, @NotNull Vec3 pos, Entity source, float multiplier) {
         super.explode(level, pos, source, multiplier);
-        List<LivingEntity> entities = AirtightCannonUtils.getNearbyEntities(level, pos, DEFAULT_RADIUS * multiplier);
+        List<LivingEntity> entities = AirtightCannonUtils.getNearbyEntities(level, pos, DEFAULT_RADIUS * multiplier, source);
         if (entities.isEmpty()) {
             return;
         }

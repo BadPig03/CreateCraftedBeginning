@@ -22,6 +22,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasPipeConnection;
 import net.ty.createcraftedbeginning.api.gas.gases.GasPropagator;
 import net.ty.createcraftedbeginning.api.gas.gases.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.IGasExtractor;
 import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -36,7 +37,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-public class AirtightPumpBlockEntity extends KineticBlockEntity {
+public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasExtractor {
     private static final int LAZY_TICK_RATE = 10;
 
     private final Couple<MutableBoolean> sidesToUpdate;
@@ -339,6 +340,11 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity {
                 pipeBehaviour.addPressure(pipeSide, inbound, pressure / parallelBranches);
             }
         }
+    }
+
+    @Override
+    public boolean canExtract(Level level, BlockState blockState, BlockPos blockPos, Direction direction) {
+        return isSpeedRequirementFulfilled();
     }
 
     private class GasPumpTransportBehaviour extends GasTransportBehaviour {

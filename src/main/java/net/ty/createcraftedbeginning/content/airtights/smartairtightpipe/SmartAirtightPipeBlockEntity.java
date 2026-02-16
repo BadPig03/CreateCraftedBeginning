@@ -13,6 +13,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -24,12 +25,13 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.IDirectionalPipe;
 import net.ty.createcraftedbeginning.api.gas.gases.IDirectionalPipe.DirectionalFacing;
+import net.ty.createcraftedbeginning.api.gas.gases.IGasExtractor;
 import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class SmartAirtightPipeBlockEntity extends SmartBlockEntity {
+public class SmartAirtightPipeBlockEntity extends SmartBlockEntity implements IGasExtractor {
     private GasFilteringBehaviour filter;
 
     public SmartAirtightPipeBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -50,6 +52,11 @@ public class SmartAirtightPipeBlockEntity extends SmartBlockEntity {
         }
 
         GasPropagator.propagateChangedPipe(level, worldPosition, getBlockState());
+    }
+
+    @Override
+    public boolean canExtract(Level level, BlockState blockState, BlockPos blockPos, Direction direction) {
+        return true;
     }
 
     public class SmartPipeTransportBehaviour extends GasTransportBehaviour {

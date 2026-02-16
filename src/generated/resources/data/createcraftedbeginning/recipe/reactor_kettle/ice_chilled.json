@@ -1,0 +1,16 @@
+{
+  "type": "createcraftedbeginning:reactor_kettle",
+  "ingredients": [
+    {
+      "type": "neoforge:tag",
+      "amount": 1000,
+      "tag": "c:water"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:ice"
+    }
+  ],
+  "temperature": "chilled"
+}

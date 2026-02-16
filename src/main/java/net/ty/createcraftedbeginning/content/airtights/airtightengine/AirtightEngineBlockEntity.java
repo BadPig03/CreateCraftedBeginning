@@ -72,7 +72,7 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
 
         if (level.isClientSide) {
             pistonPhase += Mth.abs(getSpeed()) * DELTA_TIME;
-            if (pistonPhase > 2 * Math.PI) {
+            if (pistonPhase > Mth.TWO_PI) {
                 pistonPhase -= Mth.TWO_PI;
             }
             return;

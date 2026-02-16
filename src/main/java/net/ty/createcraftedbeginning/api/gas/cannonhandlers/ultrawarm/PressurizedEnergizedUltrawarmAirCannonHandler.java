@@ -2,14 +2,12 @@ package net.ty.createcraftedbeginning.api.gas.cannonhandlers.ultrawarm;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderLookup.RegistryLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -41,7 +39,7 @@ public class PressurizedEnergizedUltrawarmAirCannonHandler extends EnergizedUltr
     public void explode(@NotNull Level level, @NotNull Vec3 pos, Entity source, float multiplier) {
         super.explode(level, pos, source, multiplier);
 
-        List<LivingEntity> entities = AirtightCannonUtils.getNearbyEntities(level, pos, DEFAULT_RADIUS * multiplier);
+        List<LivingEntity> entities = AirtightCannonUtils.getNearbyEntities(level, pos, DEFAULT_RADIUS * multiplier, source);
         if (entities.isEmpty()) {
             return;
         }

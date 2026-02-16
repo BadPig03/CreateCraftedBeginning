@@ -2,8 +2,6 @@ package net.ty.createcraftedbeginning.api.gas.gases;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.fluids.FluidStack;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Supplier;
 
 public class GasBuilder {
     private static final ResourceLocation TEXTURE = CreateCraftedBeginning.asResource("gas/icon");
@@ -27,10 +24,6 @@ public class GasBuilder {
     private ResourceLocation pressurizedGasType;
     @Nullable
     private ResourceLocation energizedGasType;
-    @Nullable
-    private Supplier<FluidStack> outputFluidStackSupplier;
-    @Nullable
-    private Supplier<ItemStack> outputItemStackSupplier;
     @Nullable
     private Set<TagKey<Gas>> tags;
 
@@ -82,16 +75,6 @@ public class GasBuilder {
         return this;
     }
 
-    public GasBuilder outputItemStack(Supplier<ItemStack> outputItemStackSupplier) {
-        this.outputItemStackSupplier = outputItemStackSupplier;
-        return this;
-    }
-
-    public GasBuilder outputFluidStack(Supplier<FluidStack> outputFluidStackSupplier) {
-        this.outputFluidStackSupplier = outputFluidStackSupplier;
-        return this;
-    }
-
     public GasBuilder tag(TagKey<Gas> tag) {
         if (tags == null) {
             tags = new HashSet<>();
@@ -116,16 +99,6 @@ public class GasBuilder {
     @Nullable
     public ResourceLocation getEnergizedGasType() {
         return energizedGasType;
-    }
-
-    @Nullable
-    public FluidStack getOutputFluidStack() {
-        return outputFluidStackSupplier != null ? outputFluidStackSupplier.get() : null;
-    }
-
-    @Nullable
-    public ItemStack getOutputItemStack() {
-        return outputItemStackSupplier != null ? outputItemStackSupplier.get() : null;
     }
 
     public float getEngineEfficiency() {

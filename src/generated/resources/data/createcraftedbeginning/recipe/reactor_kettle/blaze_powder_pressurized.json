@@ -1,0 +1,20 @@
+{
+  "type": "createcraftedbeginning:reactor_kettle",
+  "ingredients": [
+    {
+      "tag": "c:gunpowders"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 25,
+      "gas": "createcraftedbeginning:pressurized_ultrawarm_air"
+    }
+  ],
+  "processing_time": 100,
+  "results": [
+    {
+      "id": "minecraft:blaze_powder"
+    }
+  ],
+  "temperature": "superheated"
+}

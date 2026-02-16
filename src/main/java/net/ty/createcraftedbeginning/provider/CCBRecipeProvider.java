@@ -14,6 +14,7 @@ import net.ty.createcraftedbeginning.data.CCBChillingRecipes;
 import net.ty.createcraftedbeginning.data.CCBGasInjectionRecipes;
 import net.ty.createcraftedbeginning.data.CCBPressurizationRecipes;
 import net.ty.createcraftedbeginning.data.CCBReactorKettleRecipes;
+import net.ty.createcraftedbeginning.data.CCBResidueGenerationRecipes;
 import net.ty.createcraftedbeginning.data.CCBWindChargingRecipes;
 import org.jetbrains.annotations.NotNull;
 
@@ -51,6 +52,7 @@ public class CCBRecipeProvider extends RecipeProvider {
         GENERATORS_WITH_GAS.add(new CCBEnergizationRecipes(output, registries));
         GENERATORS_WITH_GAS.add(new CCBGasInjectionRecipes(output, registries));
         GENERATORS_WITH_GAS.add(new CCBReactorKettleRecipes(output, registries));
+        GENERATORS_WITH_GAS.add(new CCBResidueGenerationRecipes(output, registries));
 
         generator.addProvider(true, new DataProvider() {
             @Override

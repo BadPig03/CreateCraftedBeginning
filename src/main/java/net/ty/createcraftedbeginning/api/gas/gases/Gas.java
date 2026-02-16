@@ -17,8 +17,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.inventory.InventoryMenu;
-import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.data.CCBGasRegistries;
@@ -50,8 +48,6 @@ public class Gas {
     private final ResourceLocation pressurizedGasType;
     @Nullable
     private final ResourceLocation energizedGasType;
-    private final ItemStack outputItemStack;
-    private final FluidStack outputFluidStack;
     private final Set<TagKey<Gas>> tags;
     @Nullable
     private String translationKey;
@@ -62,8 +58,6 @@ public class Gas {
         inflation = builder.getInflation();
         pressurizedGasType = builder.getPressurizedGasType();
         energizedGasType = builder.getEnergizedGasType();
-        outputItemStack = builder.getOutputItemStack();
-        outputFluidStack = builder.getOutputFluidStack();
         engineEfficiency = builder.getEngineEfficiency();
         teslaEfficiency = builder.getTeslaEfficiency();
         tags = builder.getTags() != null ? Set.copyOf(builder.getTags()) : Collections.emptySet();
@@ -153,14 +147,6 @@ public class Gas {
 
     public @NotNull Gas getEnergizedGasType() {
         return Objects.requireNonNullElse(getGasTypeByName(energizedGasType), EMPTY_GAS_HOLDER.value());
-    }
-
-    public @NotNull ItemStack getOutputItemStack() {
-        return Objects.requireNonNullElse(outputItemStack, ItemStack.EMPTY);
-    }
-
-    public @NotNull FluidStack getOutputFluidStack() {
-        return Objects.requireNonNullElse(outputFluidStack, FluidStack.EMPTY);
     }
 
     public float getEngineEfficiency() {

@@ -158,6 +158,7 @@ public class AirtightCannonItem extends ProjectileWeaponItem implements CustomAr
     }
 
     @Override
+    @SuppressWarnings({"deprecation", "RedundantSuppression"})
     public @NotNull Predicate<ItemStack> getAllSupportedProjectiles() {
         return ItemStack::isEmpty;
     }
