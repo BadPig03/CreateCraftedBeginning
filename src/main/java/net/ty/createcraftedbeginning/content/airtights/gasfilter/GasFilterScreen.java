@@ -21,7 +21,9 @@ import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> {
     private static final CCBGUITextures BACKGROUND = CCBGUITextures.GAS_FILTER;
@@ -31,6 +33,8 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
     private static final Component BLACKLIST_DESCRIPTION = CCBLang.translateDirect("gui.gas_filter.blacklist.description");
     private static final Component WHITELIST_TITLE = CCBLang.translateDirect("gui.gas_filter.whitelist");
     private static final Component WHITELIST_DESCRIPTION = CCBLang.translateDirect("gui.gas_filter.whitelist.description");
+    private static final Component OPTION_ENABLED = CCBLang.translateDirect("gui.airtight_handheld_drill.option_enabled");
+    private static final Component OPTION_DISABLED = CCBLang.translateDirect("gui.airtight_handheld_drill.option_disabled");
 
     private final ItemStack filter;
     private IconButton whitelistButton;
@@ -58,7 +62,12 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
         }
         super.containerTick();
         updateStates();
-        renderTooltips();
+    }
+
+    @Override
+    protected void renderForeground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        super.renderForeground(guiGraphics, mouseX, mouseY, partialTicks);
+        renderTooltips(guiGraphics, mouseX, mouseY);
     }
 
     @Override
@@ -101,24 +110,28 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
         whitelistButton.green = !menu.blacklist;
     }
 
-    private void renderTooltips() {
+    private void renderTooltips(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         boolean hasShiftDown = hasShiftDown();
-        if (blacklistButton.isHoveredOrFocused()) {
-            blacklistButton.setToolTip(BLACKLIST_TITLE);
-            List<Component> blacklistButtonToolTip = blacklistButton.getToolTip();
-            blacklistButtonToolTip.add(CCBLang.translateDirect("gui.hold_for_description", CCBLang.translateDirect("gui.key.shift").withStyle(hasShiftDown ? ChatFormatting.WHITE : ChatFormatting.GRAY)).withStyle(ChatFormatting.DARK_GRAY));
+        if (blacklistButton.isHovered()) {
+            List<Component> tooltips = new ArrayList<>(List.of(BLACKLIST_TITLE));
+            boolean isEnabled = blacklistButton.green;
+            tooltips.add((isEnabled ? OPTION_ENABLED : OPTION_DISABLED).plainCopy().withStyle(isEnabled ? ChatFormatting.DARK_GREEN : ChatFormatting.RED));
+            tooltips.add(CCBLang.translateDirect("gui.hold_for_description", CCBLang.translateDirect("gui.key.shift").withStyle(hasShiftDown ? ChatFormatting.WHITE : ChatFormatting.GRAY)).withStyle(ChatFormatting.DARK_GRAY));
             if (hasShiftDown) {
-                blacklistButtonToolTip.addAll(TooltipHelper.cutTextComponent(BLACKLIST_DESCRIPTION, Palette.ALL_GRAY));
+                tooltips.addAll(TooltipHelper.cutTextComponent(BLACKLIST_DESCRIPTION, Palette.ALL_GRAY));
             }
+            guiGraphics.renderTooltip(font, tooltips, Optional.empty(), mouseX, mouseY);
         }
 
-        if (whitelistButton.isHoveredOrFocused()) {
-            whitelistButton.setToolTip(WHITELIST_TITLE);
-            List<Component> whitelistButtonToolTip = whitelistButton.getToolTip();
-            whitelistButtonToolTip.add(CCBLang.translateDirect("gui.hold_for_description", CCBLang.translateDirect("gui.key.shift").withStyle(hasShiftDown ? ChatFormatting.WHITE : ChatFormatting.GRAY)).withStyle(ChatFormatting.DARK_GRAY));
+        if (whitelistButton.isHovered()) {
+            List<Component> tooltips = new ArrayList<>(List.of(WHITELIST_TITLE));
+            boolean isEnabled = whitelistButton.green;
+            tooltips.add((isEnabled ? OPTION_ENABLED : OPTION_DISABLED).plainCopy().withStyle(isEnabled ? ChatFormatting.DARK_GREEN : ChatFormatting.RED));
+            tooltips.add(CCBLang.translateDirect("gui.hold_for_description", CCBLang.translateDirect("gui.key.shift").withStyle(hasShiftDown ? ChatFormatting.WHITE : ChatFormatting.GRAY)).withStyle(ChatFormatting.DARK_GRAY));
             if (hasShiftDown) {
-                whitelistButtonToolTip.addAll(TooltipHelper.cutTextComponent(WHITELIST_DESCRIPTION, Palette.ALL_GRAY));
+                tooltips.addAll(TooltipHelper.cutTextComponent(WHITELIST_DESCRIPTION, Palette.ALL_GRAY));
             }
+            guiGraphics.renderTooltip(font, tooltips, Optional.empty(), mouseX, mouseY);
         }
     }
 }

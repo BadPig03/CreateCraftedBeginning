@@ -64,6 +64,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     private static final String COMPOUND_KEY_OPERATING = "Operating";
     private static final String COMPOUND_KEY_OPERATING_TICKS = "OperatingTicks";
     private static final String COMPOUND_KEY_PROCESSING_TICKS = "ProcessingTicks";
+    private static final String COMPOUND_KEY_OPEN_STATE = "OpenState";
 
     private static final int PROCESSING_STARTED = 20;
     private static final int OPERATING_FINISHED = 40;
@@ -97,6 +98,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     private SmartFluidTankBehaviour outputFluidTank;
     private SmartGasTankBehaviour inputGasTank;
     private SmartGasTankBehaviour outputGasTank;
+    private boolean windowsOpenState = true;
 
     public AirtightReactorKettleBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -188,6 +190,11 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         }
 
         core.lazyTick();
+        if (level.getGameTime() % 20 != 10) {
+            return;
+        }
+
+        updateChecker.scheduleUpdate();
     }
 
     @Override
@@ -199,6 +206,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         compoundTag.putInt(COMPOUND_KEY_OPERATING_TICKS, operatingTicks);
         compoundTag.putInt(COMPOUND_KEY_PROCESSING_TICKS, processingTicks);
         compoundTag.putBoolean(COMPOUND_KEY_OPERATING, operating);
+        compoundTag.putBoolean(COMPOUND_KEY_OPEN_STATE, windowsOpenState);
     }
 
     @Override
@@ -221,6 +229,9 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         }
         if (compoundTag.contains(COMPOUND_KEY_OPERATING)) {
             operating = compoundTag.getBoolean(COMPOUND_KEY_OPERATING);
+        }
+        if (compoundTag.contains(COMPOUND_KEY_OPEN_STATE)) {
+            windowsOpenState = compoundTag.getBoolean(COMPOUND_KEY_OPEN_STATE);
         }
     }
 
@@ -259,6 +270,10 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
 
     public boolean isEmpty() {
         return inputInventory.isEmpty() && outputInventory.isEmpty() && inputFluidTank.isEmpty() && outputFluidTank.isEmpty() && inputGasTank.isEmpty() && outputGasTank.isEmpty();
+    }
+
+    public boolean getWindowsOpenState() {
+        return windowsOpenState;
     }
 
     public void notifyContentsChanged() {
@@ -334,7 +349,12 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     }
 
     public boolean shouldKeepWindowsOpen() {
-        return inputGasTank.isEmpty() && outputGasTank.isEmpty();
+        boolean empty = inputGasTank.isEmpty() && outputGasTank.isEmpty();
+        if (currentRecipe == null) {
+            return empty;
+        }
+
+        return empty && currentRecipe.getGasIngredients().isEmpty() && currentRecipe.getGasResults().isEmpty();
     }
 
     public float getMixerOffset(float partialTicks) {
@@ -405,6 +425,10 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
             return;
         }
 
+        if (level != null && !level.isClientSide) {
+            windowsOpenState = shouldKeepWindowsOpen();
+        }
+
         updateRotationSpeed(operating && operatingTicks <= PROCESSING_STARTED);
         updateWindowDistance();
         float absSpeed = level instanceof PonderLevel ? SpeedLevel.FAST.getSpeedValue() : Mth.abs(core.getStructureManager().getSpeed());
@@ -445,11 +469,13 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     }
 
     private void updateWindowDistance() {
-        double distance = 0;
-        if (shouldKeepWindowsOpen()) {
-            distance = 0.5;
+        if (windowsOpenState) {
+            windowDistance.chase(0.5, 0.2, Chaser.EXP);
         }
-        windowDistance.chase(distance, 0.25, Chaser.EXP);
+        else {
+            windowDistance.chase(0, 0.3, Chaser.EXP);
+        }
+
         windowDistance.tickChaser();
     }
 
@@ -468,6 +494,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
 
         List<ReactorKettleRecipe> recipes = AirtightReactorKettleUtils.getMatchingRecipes(this, core);
         if (recipes.isEmpty()) {
+            currentRecipe = null;
             return true;
         }
 
@@ -487,7 +514,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     }
 
     private void startProcessing() {
-        if (level == null || level.isClientSide && !isVirtual()) {
+        if (level == null) {
             return;
         }
 
@@ -521,7 +548,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     }
 
     private void applyRecipe() {
-        if (currentRecipe == null || !ReactorKettleRecipe.apply(this, currentRecipe)) {
+        if (level == null || level.isClientSide && !isVirtual() || currentRecipe == null || !ReactorKettleRecipe.apply(this, currentRecipe)) {
             return;
         }
 
@@ -541,7 +568,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
             return;
         }
 
-        float pitch = Mth.clamp(absSpeed / 256.0f + 0.45f, 0.85f, 1.0f);
+        float pitch = Mth.clamp(absSpeed / 256 + 0.45f, 0.85f, 1);
         SoundScapes.play(AmbienceGroup.KINETIC, worldPosition, pitch);
         if (absSpeed <= 64 && AnimationTickHolder.getTicks() % 2 == 0 || operatingTicks != PROCESSING_STARTED) {
             return;

@@ -66,7 +66,6 @@ import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBl
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerConductor;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerMovementBehaviour;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.EmptyBreezeCoolerBlock;
-import net.ty.createcraftedbeginning.content.cinder.cinderincinerationblower.CinderIncinerationBlowerBlock;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlockItem;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -159,7 +158,7 @@ public class CCBBuilderTransformer {
 
     @Contract(pure = true)
     public static <B extends AirVentBlock> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> air_vent() {
-        return b -> b.blockstate((c, p) -> p.simpleBlock(c.getEntry(), p.models().getExistingFile(p.modLoc("block/air_vent/block")))).onRegister(connectedTextures(AirVentCTBehaviour::new)).properties(p -> p.mapColor(MapColor.DEEPSLATE).sound(SoundType.NETHERITE_BLOCK).requiresCorrectToolForDrops().dynamicShape()).item().build();
+        return b -> b.initialProperties(CCBSharedProperties::softMetal).blockstate((c, p) -> p.simpleBlock(c.getEntry(), p.models().getExistingFile(p.modLoc("block/air_vent/block")))).onRegister(connectedTextures(AirVentCTBehaviour::new)).properties(p -> p.mapColor(MapColor.DEEPSLATE).sound(SoundType.NETHERITE_BLOCK).requiresCorrectToolForDrops().dynamicShape()).item().build();
     }
 
     @Contract(pure = true)
@@ -447,7 +446,7 @@ public class CCBBuilderTransformer {
                 case Z -> rotationX = 90;
             }
             return ConfiguredModel.builder().modelFile(model).rotationX(rotationX).rotationY(rotationY).build();
-        })).properties(BlockBehaviour.Properties::noOcclusion);
+        })).properties(BlockBehaviour.Properties::noOcclusion).lang("Tesla Turbine");
     }
 
     @Contract(pure = true)
@@ -503,25 +502,13 @@ public class CCBBuilderTransformer {
     }
 
     @Contract(pure = true)
-    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> cinder_incineration_blower() {
-        return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.getEntry()).forAllStatesExcept(state -> {
-            Direction facing = state.getValue(CinderIncinerationBlowerBlock.FACING);
-            int rotationY = 0;
-            switch (facing) {
-                case SOUTH:
-                    rotationY = 180;
-                    break;
-                case WEST:
-                    rotationY = 270;
-                    break;
-                case EAST:
-                    rotationY = 90;
-                    break;
-                default:
-                    break;
-            }
-            return ConfiguredModel.builder().modelFile(p.models().getExistingFile(p.modLoc("block/cinder_incineration_blower/block"))).rotationY(rotationY).build();
-        })).item().transform(ib -> ib.model(AssetLookup::customItemModel)).build();
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> end_incineration_blower() {
+        return b -> b.initialProperties(CCBSharedProperties::obsidian).blockstate((c, p) -> p.getVariantBuilder(c.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(p.models().getExistingFile(p.modLoc("block/end_incineration_blower/block"))).build())).item().properties(p -> p.rarity(Rarity.UNCOMMON)).transform(ib -> ib.model(AssetLookup::customItemModel)).build().properties(p -> p.mapColor(MapColor.COLOR_GREEN).noOcclusion());
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> end_incineration_blower_structural() {
+        return b -> b.initialProperties(CCBSharedProperties::obsidian).blockstate((c, p) -> p.getVariantBuilder(c.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(p.models().getExistingFile(p.modLoc("block/end_incineration_blower/structural"))).build())).lang("End Incineration Blower").properties(p -> p.mapColor(MapColor.COLOR_GREEN).noOcclusion());
     }
 
     @Contract(pure = true)

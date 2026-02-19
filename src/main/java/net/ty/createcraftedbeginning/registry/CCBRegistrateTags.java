@@ -10,7 +10,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.Fluid;
-import net.neoforged.neoforge.common.Tags.Items;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.compat.Mods;
 import net.ty.createcraftedbeginning.data.CCBRegistrate;
@@ -45,7 +44,6 @@ public class CCBRegistrateTags {
         CCBTagsProvider<Item> provider = new CCBTagsProvider<>(provIn, Item::builtInRegistryHolder);
         provider.tag(CCBItemTags.CINDER_CASING_RAW_MATERIALS.tag).add(Blocks.STRIPPED_CRIMSON_STEM.asItem()).add(Blocks.STRIPPED_CRIMSON_HYPHAE.asItem()).add(Blocks.STRIPPED_WARPED_STEM.asItem()).add(Blocks.STRIPPED_WARPED_HYPHAE.asItem());
         provider.tag(CCBItemTags.END_CASING_RAW_MATERIALS.tag).add(Blocks.CRYING_OBSIDIAN.asItem());
-        provider.tag(Items.INGOTS).addTag(CCBItemTags.CINDER_ALLOY.tag);
         provider.tag(ItemTags.PIGLIN_LOVED).add(CCBItems.GOLDEN_ICE_CREAM.get());
         Arrays.stream(CCBItemTags.values()).filter(tag -> tag.alwaysDataGen).map(tag -> tag.tag).forEach(provider::getOrCreateRawBuilder);
     }

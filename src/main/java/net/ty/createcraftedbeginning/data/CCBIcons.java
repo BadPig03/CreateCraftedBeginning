@@ -45,7 +45,6 @@ public class CCBIcons extends AllIcons {
     public static final CCBIcons I_SMOKING = newRow();
     public static final CCBIcons I_BLASTING = next();
     public static final CCBIcons I_IGNITION = next();
-    public static final CCBIcons I_GRINDING = next();
 
     public CCBIcons(int x, int y) {
         super(x, y);

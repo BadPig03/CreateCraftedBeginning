@@ -169,7 +169,11 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
     @Override
     protected @NotNull ItemInteractionResult useItemOn(@NotNull ItemStack stack, @NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull InteractionHand hand, @NotNull BlockHitResult hitResult) {
         IPlacementHelper placementHelper = PlacementHelpers.get(PLACEMENT_HELPER_ID);
-        return placementHelper.matchesItem(stack) ? placementHelper.getOffset(player, level, state, pos, hitResult).placeInWorld(level, (BlockItem) stack.getItem(), player, hand, hitResult) : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        if (placementHelper.matchesItem(stack)) {
+            return placementHelper.getOffset(player, level, state, pos, hitResult).placeInWorld(level, (BlockItem) stack.getItem(), player, hand, hitResult);
+        }
+
+        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
     }
 
     @Override
@@ -387,7 +391,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         @Contract(pure = true)
         @Override
         public @NotNull Predicate<BlockState> getStatePredicate() {
-            return s -> s.getBlock() instanceof TeslaTurbineStructuralBlock;
+            return CCBBlocks.TESLA_TURBINE_STRUCTURAL_BLOCK::has;
         }
 
         @Override
@@ -395,14 +399,11 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
             BlockPos masterPos = getMaster(pos, state);
             Axis axis = state.getValue(BlockStateProperties.AXIS);
             Set<BlockPos> worldOffsets = getWorldOffsets(axis);
-
             BlockPos bestPos = null;
             double minDistance = Double.MAX_VALUE;
             Vec3 hitPos = ray.getLocation();
-
             for (BlockPos offset : worldOffsets) {
                 BlockPos candidate = masterPos.offset(offset);
-
                 if (!level.getBlockState(candidate).canBeReplaced()) {
                     continue;
                 }
@@ -413,7 +414,6 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
                     bestPos = candidate;
                 }
             }
-
             if (bestPos == null) {
                 return PlacementOffset.fail();
             }
@@ -424,8 +424,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
             }
 
             boolean clockwise = TeslaTurbineNozzleBlock.isClockwise(level, facing.getOpposite(), bestPos);
-            BlockState nozzleState = CCBBlocks.TESLA_TURBINE_NOZZLE_BLOCK.get().defaultBlockState().setValue(TeslaTurbineNozzleBlock.FACING, facing).setValue(TeslaTurbineNozzleBlock.CLOCKWISE, clockwise);
-            return PlacementOffset.success(bestPos, s -> nozzleState);
+            return PlacementOffset.success(bestPos, s -> CCBBlocks.TESLA_TURBINE_NOZZLE_BLOCK.get().defaultBlockState().setValue(TeslaTurbineNozzleBlock.FACING, facing).setValue(TeslaTurbineNozzleBlock.CLOCKWISE, clockwise));
         }
     }
 }

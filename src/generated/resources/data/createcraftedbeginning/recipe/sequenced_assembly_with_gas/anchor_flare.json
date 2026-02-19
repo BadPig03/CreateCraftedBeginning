@@ -16,6 +16,22 @@
   ],
   "sequence": [
     {
+      "type": "createcraftedbeginning:deploying_with_gas",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_anchor_flare"
+        },
+        {
+          "item": "minecraft:gunpowder"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_anchor_flare"
+        }
+      ]
+    },
+    {
       "type": "createcraftedbeginning:gas_injection",
       "ingredients": [
         {

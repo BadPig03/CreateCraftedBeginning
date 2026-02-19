@@ -25,7 +25,7 @@ public class ResidueGenerationRecipe extends StandardProcessingWithGasRecipe<Sin
         List<RecipeHolder<ResidueGenerationRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.RESIDUE_GENERATION.getType());
         for (RecipeHolder<ResidueGenerationRecipe> holder : recipes) {
             ResidueGenerationRecipe recipe = holder.value();
-            if (recipe.getFluidResults().isEmpty() || !recipe.getIngredientsGas().test(new GasStack(gasType, FluidType.BUCKET_VOLUME))) {
+            if (recipe.getFluidResults().isEmpty() || !recipe.getIngredientsGas().test(gasType)) {
                 continue;
             }
 
@@ -38,7 +38,7 @@ public class ResidueGenerationRecipe extends StandardProcessingWithGasRecipe<Sin
         List<RecipeHolder<ResidueGenerationRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.RESIDUE_GENERATION.getType());
         for (RecipeHolder<ResidueGenerationRecipe> holder : recipes) {
             ResidueGenerationRecipe recipe = holder.value();
-            if (recipe.isIngredientEmpty() || !recipe.getIngredientsGas().test(new GasStack(gasType, FluidType.BUCKET_VOLUME))) {
+            if (!recipe.getFluidResults().isEmpty() || !recipe.getIngredientsGas().test(new GasStack(gasType, FluidType.BUCKET_VOLUME))) {
                 continue;
             }
 

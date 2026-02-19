@@ -39,7 +39,7 @@ public class InactiveCoolerState extends BaseCoolerState {
             return InteractionResult.FAIL;
         }
 
-        CoolingData data = CoolingRecipe.getResultingCoolingTime(level, stack, null);
+        CoolingData data = CoolingRecipe.getCoolingTime(level, stack, null);
         int time = data.time();
         if (time <= 0) {
             return InteractionResult.FAIL;

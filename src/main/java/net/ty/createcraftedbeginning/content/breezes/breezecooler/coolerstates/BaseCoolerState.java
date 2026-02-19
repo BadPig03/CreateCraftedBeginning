@@ -117,7 +117,7 @@ public abstract class BaseCoolerState {
                 return;
             }
 
-            CoolingData data = CoolingRecipe.getResultingCoolingTime(level, null, fluidStack);
+            CoolingData data = CoolingRecipe.getCoolingTime(level, null, fluidStack);
             int time = data.time();
             int amount = data.amount();
             if (time == 0 || amount == 0) {

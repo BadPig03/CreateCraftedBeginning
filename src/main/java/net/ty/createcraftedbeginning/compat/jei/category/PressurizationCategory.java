@@ -53,7 +53,7 @@ public class PressurizationCategory extends CCBRecipeCategory<PressurizationReci
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, @NotNull PressurizationRecipe recipe, @NotNull IFocusGroup focuses) {
-        addGasInputSlot(builder, recipe.getIngredientsGas());
-        addGasOutputSlot(builder, recipe.getResultingGas());
+        addGasInputSlot(builder, recipe.getGasIngredient());
+        addGasOutputSlot(builder, recipe.getGasResult());
     }
 }

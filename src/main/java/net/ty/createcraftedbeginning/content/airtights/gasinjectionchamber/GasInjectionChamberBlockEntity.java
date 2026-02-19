@@ -147,7 +147,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             return PASS;
         }
 
-        return GasInjectionRecipe.getRequiredGasAmountForItem(level, transported.stack, tankGas) == -1 ? PASS : HOLD;
+        return GasInjectionRecipe.getRequiredGasAmount(level, transported.stack, tankGas) == -1 ? PASS : HOLD;
     }
 
     private @NotNull GasStack getGasInTank() {
@@ -172,7 +172,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             return PASS;
         }
 
-        long requiredAmount = GasInjectionRecipe.getRequiredGasAmountForItem(level, transported.stack, tankGas);
+        long requiredAmount = GasInjectionRecipe.getRequiredGasAmount(level, transported.stack, tankGas);
         if (requiredAmount == -1) {
             return PASS;
         }

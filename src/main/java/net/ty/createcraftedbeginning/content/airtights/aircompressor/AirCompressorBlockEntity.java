@@ -29,6 +29,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.ty.createcraftedbeginning.api.gas.coolantstrategy.CoolantStrategyHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
@@ -39,6 +40,7 @@ import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatsta
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatstates.MeltdownOverheatState;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatstates.OverheatManager;
 import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -103,7 +105,11 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     }
 
     private @NotNull Gas getPressurizedGasType() {
-        return inputTankBehaviour.getPrimaryHandler().getGasStack().getGasType().getPressurizedGasType();
+        if (level == null) {
+            return Gas.EMPTY_GAS_HOLDER.value();
+        }
+
+        return PressurizationRecipe.getResultGasType(level, inputTankBehaviour.getPrimaryHandler().getGasStack().getGasType());
     }
 
     private boolean isInactive() {
@@ -169,6 +175,16 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         long fillAmount = inputTankBehaviour.getInternalGasHandler().forceDrain(drainAmount, GasAction.EXECUTE).getAmount() / PRESSURIZATION_RATIO;
         GasStack fillGasStack = new GasStack(pressurizedGasType, fillAmount);
         outputTankBehaviour.getInternalGasHandler().forceFill(fillGasStack, GasAction.EXECUTE);
+    }
+
+    public void updateCoolant(BlockPos coolantPos) {
+        if (level == null) {
+            return;
+        }
+
+        CoolantStrategyHandler coolantStrategy = CoolantStrategyHandler.REGISTRY.get(level.getBlockState(coolantPos).getBlock());
+        CoolantEfficiency efficiency = coolantStrategy == null ? CoolantEfficiency.NONE : coolantStrategy.getCoolantEfficiency(level, coolantPos, level.getBlockState(coolantPos));
+        setCoolantEfficiency(efficiency);
     }
 
     public CoolantEfficiency getCoolantEfficiency() {

@@ -7,11 +7,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.ty.createcraftedbeginning.ponder.scenes.breezes.BreezeChamberScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.breezes.BreezeCoolerScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.breezes.EmptyBreezeCoolerScenes;
-import net.ty.createcraftedbeginning.ponder.scenes.cinder.CinderIncinerationBlowerScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.crates.AndesiteCrateScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.crates.BrassCrateScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.crates.CardboardCrateScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.crates.SturdyCrateScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.end.EndIncinerationBlowerScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gascontainers.AirtightTankScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gascontainers.CreativeAirtightTankScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.AirCompressorScenes;
@@ -62,6 +62,6 @@ public class CCBPonderScenes {
 
         entryHelper.forComponents(CCBBlocks.AIR_VENT_BLOCK).addStoryBoard("air_vent_story_board", AirVentScenes::scene);
 
-        entryHelper.forComponents(CCBBlocks.CINDER_INCINERATION_BLOWER_BLOCK).addStoryBoard("cinder_incineration_blower_story_board", CinderIncinerationBlowerScenes::scene, AllCreatePonderTags.KINETIC_APPLIANCES);
+        entryHelper.forComponents(CCBBlocks.END_INCINERATION_BLOWER_BLOCK).addStoryBoard("end_incineration_blower_story_board", EndIncinerationBlowerScenes::scene, AllCreatePonderTags.KINETIC_APPLIANCES);
     }
 }

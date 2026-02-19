@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "AIA",
+    "IMI",
+    "ASA"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:ingots/end_alloy"
+    },
+    "I": {
+      "tag": "c:plates/iron"
+    },
+    "M": {
+      "item": "minecraft:magma_block"
+    },
+    "S": {
+      "item": "create:mechanical_bearing"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:end_incineration_blower"
+  }
+}

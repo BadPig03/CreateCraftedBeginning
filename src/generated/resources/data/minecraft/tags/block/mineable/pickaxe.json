@@ -29,11 +29,10 @@
     "createcraftedbeginning:gas_canister",
     "createcraftedbeginning:creative_gas_canister",
     "createcraftedbeginning:air_vent",
-    "createcraftedbeginning:cinder_alloy_block",
-    "createcraftedbeginning:cinder_casing",
     "createcraftedbeginning:end_alloy_block",
     "createcraftedbeginning:end_casing",
-    "createcraftedbeginning:cinder_incineration_blower",
+    "createcraftedbeginning:end_incineration_blower",
+    "createcraftedbeginning:end_incineration_blower_structural",
     "createcraftedbeginning:photo-stress_bearing",
     "createcraftedbeginning:pneumatic_engine"
   ]

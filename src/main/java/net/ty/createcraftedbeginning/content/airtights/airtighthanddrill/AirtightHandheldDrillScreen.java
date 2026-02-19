@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 
@@ -157,7 +158,6 @@ public class AirtightHandheldDrillScreen extends AbstractSimiContainerScreen<Air
     protected void renderForeground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         super.renderForeground(guiGraphics, mouseX, mouseY, partialTicks);
         renderForeground(guiGraphics, mouseX, mouseY);
-        renderTooltips();
     }
 
     @Override
@@ -358,35 +358,6 @@ public class AirtightHandheldDrillScreen extends AbstractSimiContainerScreen<Air
         addRenderableWidget(liquidReplacementIndicator);
     }
 
-    private void renderTooltips() {
-        for (ScreenButtonConfig buttonConfig : buttonConfigs.values()) {
-            IconButton button = buttonConfig.getIconButton();
-            button.setToolTip(buttonConfig.getTitle());
-
-            List<Component> tooltips = button.getToolTip();
-            Item upgradeItem = buttonConfig.getUpgradeItem();
-            if (!button.active && upgradeItem != null) {
-                tooltips.add(UPGRADE_NOT_INSTALLED.plainCopy().append(upgradeItem.getDescription()).withStyle(ChatFormatting.RED));
-            }
-
-            if (buttonConfig.canBeInstalled()) {
-                tooltips.add(UPGRADE_CAN_BE_INSTALLED.plainCopy().withStyle(ChatFormatting.GOLD));
-            }
-            else if (button.active) {
-                boolean isEnabled = buttonConfig.isEnabled();
-                tooltips.add((isEnabled ? OPTION_ENABLED : OPTION_DISABLED).plainCopy().withStyle(isEnabled ? ChatFormatting.DARK_GREEN : ChatFormatting.RED));
-            }
-
-            boolean hasShiftDown = hasShiftDown();
-            tooltips.add(CCBLang.translateDirect("gui.hold_for_description", CCBLang.translateDirect("gui.key.shift").withStyle(hasShiftDown ? ChatFormatting.WHITE : ChatFormatting.GRAY)).withStyle(ChatFormatting.DARK_GRAY));
-            if (!hasShiftDown || !button.isHoveredOrFocused()) {
-                continue;
-            }
-
-            tooltips.addAll(TooltipHelper.cutTextComponent(buttonConfig.getDescription(), Palette.ALL_GRAY));
-        }
-    }
-
     private void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (AirtightHandheldDrillUtils.isMouseOverSlot(mouseX, mouseY, leftPos + 16, topPos + 25)) {
             guiGraphics.renderTooltip(font, TEMPLATE_TITLE, mouseX, mouseY);
@@ -399,6 +370,33 @@ public class AirtightHandheldDrillScreen extends AbstractSimiContainerScreen<Air
         }
         if (AirtightHandheldDrillUtils.isMouseOverSlot(mouseX, mouseY, leftPos + 16, topPos + 85)) {
             guiGraphics.renderTooltip(font, DIRECTION_TITLE, mouseX, mouseY);
+        }
+        for (ScreenButtonConfig buttonConfig : buttonConfigs.values()) {
+            IconButton button = buttonConfig.getIconButton();
+            if (!button.isHovered()) {
+                continue;
+            }
+
+            List<Component> tooltips = new ArrayList<>(List.of(buttonConfig.getTitle()));
+            Item upgradeItem = buttonConfig.getUpgradeItem();
+            if (!button.isActive() && upgradeItem != null) {
+                tooltips.add(UPGRADE_NOT_INSTALLED.plainCopy().append(upgradeItem.getDescription()).withStyle(ChatFormatting.RED));
+            }
+
+            if (buttonConfig.canBeInstalled()) {
+                tooltips.add(UPGRADE_CAN_BE_INSTALLED.plainCopy().withStyle(ChatFormatting.GOLD));
+            }
+            else if (button.isActive()) {
+                boolean isEnabled = buttonConfig.isEnabled();
+                tooltips.add((isEnabled ? OPTION_ENABLED : OPTION_DISABLED).plainCopy().withStyle(isEnabled ? ChatFormatting.DARK_GREEN : ChatFormatting.RED));
+            }
+
+            boolean hasShiftDown = hasShiftDown();
+            tooltips.add(CCBLang.translateDirect("gui.hold_for_description", CCBLang.translateDirect("gui.key.shift").withStyle(hasShiftDown ? ChatFormatting.WHITE : ChatFormatting.GRAY)).withStyle(ChatFormatting.DARK_GRAY));
+            if (hasShiftDown) {
+                tooltips.addAll(TooltipHelper.cutTextComponent(buttonConfig.getDescription(), Palette.ALL_GRAY));
+            }
+            guiGraphics.renderTooltip(font, tooltips, Optional.empty(), mouseX, mouseY);
         }
         if (hoveredSlot == null || hoveredSlot.hasItem() || hoveredSlot.getMaxStackSize() != 1) {
             return;
@@ -420,20 +418,20 @@ public class AirtightHandheldDrillScreen extends AbstractSimiContainerScreen<Air
         outlineButton.green = !menu.outlineDisabled;
 
         ItemStack upgrade = menu.drillInventory.getStackInSlot(AirtightHandheldDrillMenu.UPGRADE_SLOT_INDEX);
-        silkTouchButton.green = menu.silkTouchEnabled && menu.silkTouchInstalled;
         silkTouchButton.active = menu.silkTouchInstalled || upgrade.is(AirtightHandheldDrillUtils.SILK_TOUCH_UPGRADE_ITEM);
+        silkTouchButton.green = menu.silkTouchEnabled && menu.silkTouchInstalled;
         silkTouchIndicator.state = menu.silkTouchInstalled ? menu.silkTouchEnabled ? State.GREEN : State.RED : silkTouchButton.active ? State.YELLOW : State.OFF;
 
-        magnetButton.green = menu.magnetEnabled && menu.magnetInstalled;
         magnetButton.active = menu.magnetInstalled || upgrade.is(AirtightHandheldDrillUtils.MAGNET_UPGRADE_ITEM);
+        magnetButton.green = menu.magnetEnabled && menu.magnetInstalled;
         magnetIndicator.state = menu.magnetInstalled ? menu.magnetEnabled ? State.GREEN : State.RED : magnetButton.active ? State.YELLOW : State.OFF;
 
-        conversionButton.green = menu.conversionEnabled && menu.conversionInstalled;
         conversionButton.active = menu.conversionInstalled || upgrade.is(AirtightHandheldDrillUtils.CONVERSION_UPGRADE_ITEM);
+        conversionButton.green = menu.conversionEnabled && menu.conversionInstalled;
         conversionIndicator.state = menu.conversionInstalled ? menu.conversionEnabled ? State.GREEN : State.RED : conversionButton.active ? State.YELLOW : State.OFF;
 
-        liquidReplacementButton.green = menu.liquidReplacementEnabled && menu.liquidReplacementInstalled;
         liquidReplacementButton.active = menu.liquidReplacementInstalled || upgrade.is(AirtightHandheldDrillUtils.LIQUID_REPLACEMENT_UPGRADE_ITEM);
+        liquidReplacementButton.green = menu.liquidReplacementEnabled && menu.liquidReplacementInstalled;
         liquidReplacementIndicator.state = menu.liquidReplacementInstalled ? menu.liquidReplacementEnabled ? State.GREEN : State.RED : liquidReplacementButton.active ? State.YELLOW : State.OFF;
         if (menu.silkTouchInstalled && menu.magnetInstalled && menu.conversionInstalled && menu.liquidReplacementInstalled && !disableUpgradeButton.visible) {
             disableUpgradeButton.visible = true;
@@ -449,7 +447,7 @@ public class AirtightHandheldDrillScreen extends AbstractSimiContainerScreen<Air
         }
     }
 
-    private class ScreenButtonConfig {
+    private static class ScreenButtonConfig {
         private final IconButton iconButton;
         private final Component title;
         private final Component description;

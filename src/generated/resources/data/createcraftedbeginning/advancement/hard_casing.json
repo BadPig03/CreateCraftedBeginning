@@ -1,0 +1,35 @@
+{
+  "parent": "createcraftedbeginning:soft_alloy",
+  "criteria": {
+    "0": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:end_casing"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.hard_casing.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:end_casing"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.hard_casing"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

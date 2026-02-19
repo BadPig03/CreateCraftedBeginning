@@ -57,7 +57,7 @@ public class IllChamberState extends BaseChamberState {
         }
 
         CCBAdvancementBehaviour advancementBehaviour = chamber.getAdvancementBehaviour();
-        WindChargingData data = WindChargingRecipe.getResultingWindChargingTime(level, stack);
+        WindChargingData data = WindChargingRecipe.getWindChargingTime(level, stack);
         boolean isMilky = data.isMilky();
         if (isMilky) {
             if (!simulate) {

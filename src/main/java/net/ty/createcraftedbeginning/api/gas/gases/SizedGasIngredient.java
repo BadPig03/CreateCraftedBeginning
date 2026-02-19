@@ -74,6 +74,10 @@ public final class SizedGasIngredient {
         return ingredient.test(stack) && stack.getAmount() >= amount;
     }
 
+    public boolean test(Gas gasType) {
+        return ingredient.test(new GasStack(gasType, amount));
+    }
+
     public GasStack[] getGases() {
         if (cachedStacks == null) {
             cachedStacks = Stream.of(ingredient.getStacks()).map(s -> s.copyWithAmount(amount)).toArray(GasStack[]::new);

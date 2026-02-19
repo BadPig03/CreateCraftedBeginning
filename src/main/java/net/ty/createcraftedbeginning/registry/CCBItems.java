@@ -55,7 +55,6 @@ public class CCBItems {
 
     public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_SHEET = CCB_REGISTRATE.item("incomplete_airtight_sheet", SequencedAssemblyItem::new).properties(Properties::fireResistant).register();
     public static final ItemEntry<Item> AIRTIGHT_SHEET = CCB_REGISTRATE.item("airtight_sheet", Item::new).properties(Properties::fireResistant).register();
-    public static final ItemEntry<Item> CINDER_ALLOY = CCB_REGISTRATE.item("cinder_alloy", Item::new).properties(Properties::fireResistant).tag(CCBItemTags.CINDER_ALLOY.tag).register();
     public static final ItemEntry<Item> END_ALLOY = CCB_REGISTRATE.item("end_alloy", Item::new).properties(p -> p.rarity(Rarity.UNCOMMON)).tag(CCBItemTags.END_ALLOY.tag).register();
 
     public static final ItemEntry<GasFilterItem> GAS_FILTER = CCB_REGISTRATE.item("gas_filter", GasFilterItem::new).register();

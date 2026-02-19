@@ -40,8 +40,8 @@ public class EnergizationCategory extends CCBRecipeCategory<EnergizationRecipe> 
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, @NotNull EnergizationRecipe recipe, @NotNull IFocusGroup focuses) {
-        addGasInputSlot(builder, recipe.getIngredientsGas());
-        addGasOutputSlot(builder, recipe.getResultingGas());
+        addGasInputSlot(builder, recipe.getGasIngredient());
+        addGasOutputSlot(builder, recipe.getGasResult());
     }
 
     private static void addGasInputSlot(@NotNull IRecipeLayoutBuilder builder, @NotNull SizedGasIngredient gasIngredient) {

@@ -18,8 +18,8 @@ public class ConversionRecipe extends StandardProcessingRecipe<RecipeWrapper> {
     }
 
     public static @NotNull RecipeHolder<ConversionRecipe> create(ItemStack from, ItemStack to, String name) {
-        ResourceLocation recipeId = CreateCraftedBeginning.asResource("conversion_" + name);
-        return new RecipeHolder<>(recipeId, new Builder<>(ConversionRecipe::new, recipeId).withItemIngredients(Ingredient.of(from)).withSingleItemOutput(to).build());
+        ResourceLocation recipe = CreateCraftedBeginning.asResource("conversion_" + name);
+        return new RecipeHolder<>(recipe, new Builder<>(ConversionRecipe::new, recipe).withItemIngredients(Ingredient.of(from)).withSingleItemOutput(to).build());
     }
 
     @Override

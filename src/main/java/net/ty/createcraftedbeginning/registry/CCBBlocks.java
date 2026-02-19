@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.registry;
 
 import com.simibubi.create.api.stress.BlockStressValues;
-import com.simibubi.create.content.decoration.encasing.CasingBlock;
 import com.tterrag.registrate.util.entry.BlockEntry;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.ColorRGBA;
@@ -41,11 +40,13 @@ import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaT
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.EmptyBreezeCoolerBlock;
-import net.ty.createcraftedbeginning.content.cinder.cinderincinerationblower.CinderIncinerationBlowerBlock;
 import net.ty.createcraftedbeginning.content.crates.andesitecrate.AndesiteCrateBlock;
 import net.ty.createcraftedbeginning.content.crates.brasscrate.BrassCrateBlock;
 import net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateBlock;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlock;
+import net.ty.createcraftedbeginning.content.end.endcasing.EndCasingBlock;
+import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerBlock;
+import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerStructuralBlock;
 import net.ty.createcraftedbeginning.content.obsolete.phohostressbearing.PhotoStressBearingBlock;
 import net.ty.createcraftedbeginning.content.obsolete.pneumaticengine.PneumaticEngineBlock;
 import net.ty.createcraftedbeginning.data.CCBBuilderTransformer;
@@ -89,13 +90,13 @@ public class CCBBlocks {
     public static final BlockEntry<BreezeCoolerBlock> BREEZE_COOLER_BLOCK = CCB_REGISTRATE.block("breeze_cooler", BreezeCoolerBlock::new).transform(CCBBuilderTransformer.breeze_cooler()).transform(breezes()).register();
     public static final BlockEntry<BreezeChamberBlock> BREEZE_CHAMBER_BLOCK = CCB_REGISTRATE.block("breeze_chamber", BreezeChamberBlock::new).transform(CCBBuilderTransformer.breeze_chamber()).transform(airtightPropertiesWithoutOcclusion()).register();
 
-    public static final BlockEntry<AirtightEngineBlock> AIRTIGHT_ENGINE_BLOCK = CCB_REGISTRATE.block("airtight_engine", AirtightEngineBlock::new).transform(CCBBuilderTransformer.airtight_engine()).transform(CCBStress.setCapacity(1024.0f)).onRegister(BlockStressValues.setGeneratorSpeed(64, true)).transform(airtightPropertiesWithoutOcclusion()).register();
+    public static final BlockEntry<AirtightEngineBlock> AIRTIGHT_ENGINE_BLOCK = CCB_REGISTRATE.block("airtight_engine", AirtightEngineBlock::new).transform(CCBBuilderTransformer.airtight_engine()).transform(CCBStress.setCapacity(1024)).onRegister(BlockStressValues.setGeneratorSpeed(64, true)).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<ResidueOutletBlock> RESIDUE_OUTLET_BLOCK = CCB_REGISTRATE.block("residue_outlet", ResidueOutletBlock::new).transform(CCBBuilderTransformer.residue_outlet()).transform(airtightPropertiesWithoutOcclusion()).register();
 
-    public static final BlockEntry<AirCompressorBlock> AIR_COMPRESSOR_BLOCK = CCB_REGISTRATE.block("air_compressor", AirCompressorBlock::new).transform(CCBBuilderTransformer.air_compressor()).transform(CCBStress.setImpact(16.0f)).transform(airtightPropertiesWithoutOcclusion()).register();
-    public static final BlockEntry<TeslaTurbineBlock> TESLA_TURBINE_BLOCK = CCB_REGISTRATE.block("tesla_turbine", TeslaTurbineBlock::new).clientExtension(() -> TeslaTurbineRenderProperties::new).transform(CCBBuilderTransformer.tesla_turbine()).transform(CCBStress.setCapacity(4096.0f)).onRegister(BlockStressValues.setGeneratorSpeed(256, true)).transform(airtightPropertiesWithoutOcclusion()).register();
+    public static final BlockEntry<AirCompressorBlock> AIR_COMPRESSOR_BLOCK = CCB_REGISTRATE.block("air_compressor", AirCompressorBlock::new).transform(CCBBuilderTransformer.air_compressor()).transform(CCBStress.setImpact(16)).transform(airtightPropertiesWithoutOcclusion()).register();
+    public static final BlockEntry<TeslaTurbineBlock> TESLA_TURBINE_BLOCK = CCB_REGISTRATE.block("tesla_turbine", TeslaTurbineBlock::new).clientExtension(() -> TeslaTurbineRenderProperties::new).transform(CCBBuilderTransformer.tesla_turbine()).transform(CCBStress.setCapacity(4096)).onRegister(BlockStressValues.setGeneratorSpeed(256, true)).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<TeslaTurbineNozzleBlock> TESLA_TURBINE_NOZZLE_BLOCK = CCB_REGISTRATE.block("tesla_turbine_nozzle", TeslaTurbineNozzleBlock::new).transform(CCBBuilderTransformer.tesla_turbine_nozzle()).transform(airtightPropertiesWithoutOcclusion()).register();
-    public static final BlockEntry<TeslaTurbineStructuralBlock> TESLA_TURBINE_STRUCTURAL_BLOCK = CCB_REGISTRATE.block("tesla_turbine_structural", TeslaTurbineStructuralBlock::new).clientExtension(() -> TeslaTurbineStructuralRenderProperties::new).transform(CCBBuilderTransformer.tesla_turbine_structural()).lang("Tesla Turbine").transform(airtightStructural()).register();
+    public static final BlockEntry<TeslaTurbineStructuralBlock> TESLA_TURBINE_STRUCTURAL_BLOCK = CCB_REGISTRATE.block("tesla_turbine_structural", TeslaTurbineStructuralBlock::new).clientExtension(() -> TeslaTurbineStructuralRenderProperties::new).transform(CCBBuilderTransformer.tesla_turbine_structural()).transform(airtightStructural()).register();
 
     public static final BlockEntry<AirtightReactorKettleBlock> AIRTIGHT_REACTOR_KETTLE_BLOCK = CCB_REGISTRATE.block("airtight_reactor_kettle", AirtightReactorKettleBlock::new).clientExtension(() -> AirtightReactorKettleRenderProperties::new).transform(CCBBuilderTransformer.airtight_reactor_kettle()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<AirtightReactorKettleStructuralBlock> AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK = CCB_REGISTRATE.block("airtight_reactor_kettle_structural", AirtightReactorKettleStructuralBlock::new).clientExtension(() -> AirtightReactorKettleStructuralRenderProperties::new).transform(CCBBuilderTransformer.airtight_reactor_kettle_structural()).lang("Airtight Reactor Kettle").transform(airtightStructural()).register();
@@ -107,18 +108,15 @@ public class CCBBlocks {
     public static final BlockEntry<GasCanisterBlock> GAS_CANISTER_BLOCK = CCB_REGISTRATE.block("gas_canister", GasCanisterBlock::new).transform(CCBBuilderTransformer.gas_canister()).transform(airtightPropertiesWithoutAirtightComponents()).register();
     public static final BlockEntry<CreativeGasCanisterBlock> CREATIVE_GAS_CANISTER_BLOCK = CCB_REGISTRATE.block("creative_gas_canister", CreativeGasCanisterBlock::new).transform(CCBBuilderTransformer.creative_gas_canister()).transform(airtightPropertiesWithoutAirtightComponents()).register();
 
-    public static final BlockEntry<AirVentBlock> AIR_VENT_BLOCK = CCB_REGISTRATE.block("air_vent", AirVentBlock::new).initialProperties(CCBSharedProperties::softMetal).transform(pickaxeOnly()).transform(CCBBuilderTransformer.air_vent()).register();
+    public static final BlockEntry<AirVentBlock> AIR_VENT_BLOCK = CCB_REGISTRATE.block("air_vent", AirVentBlock::new).transform(pickaxeOnly()).transform(CCBBuilderTransformer.air_vent()).register();
 
-    public static final BlockEntry<Block> CINDER_ALLOY_BLOCK = CCB_REGISTRATE.block("cinder_alloy_block", Block::new).initialProperties(CCBSharedProperties::softMetal).transform(pickaxeOnly()).transform(CCBBuilderTransformer.simple_block("cinder_alloy_block", p -> p)).properties(p -> p.mapColor(MapColor.COLOR_BROWN)).register();
-    public static final BlockEntry<CasingBlock> CINDER_CASING_BLOCK = CCB_REGISTRATE.block("cinder_casing", CasingBlock::new).initialProperties(CCBSharedProperties::softMetal).transform(axeOrPickaxe()).transform(CCBBuilderTransformer.casing(() -> CCBSpriteShifts.CINDER_CASING, p -> p)).properties(p -> p.mapColor(MapColor.COLOR_BROWN)).register();
+    public static final BlockEntry<Block> END_ALLOY_BLOCK = CCB_REGISTRATE.block("end_alloy_block", Block::new).initialProperties(CCBSharedProperties::obsidian).transform(pickaxeOnly()).transform(CCBBuilderTransformer.simple_block("end_alloy_block", p -> p.rarity(Rarity.UNCOMMON))).properties(p -> p.mapColor(MapColor.COLOR_GREEN)).register();
+    public static final BlockEntry<EndCasingBlock> END_CASING_BLOCK = CCB_REGISTRATE.block("end_casing", EndCasingBlock::new).initialProperties(CCBSharedProperties::obsidian).transform(pickaxeOnly()).transform(CCBBuilderTransformer.casing(() -> CCBSpriteShifts.END_CASING, p -> p.rarity(Rarity.UNCOMMON))).properties(p -> p.mapColor(MapColor.COLOR_GREEN)).register();
+    public static final BlockEntry<EndIncinerationBlowerBlock> END_INCINERATION_BLOWER_BLOCK = CCB_REGISTRATE.block("end_incineration_blower", EndIncinerationBlowerBlock::new).transform(pickaxeOnly()).transform(CCBStress.setImpact(4)).transform(CCBBuilderTransformer.end_incineration_blower()).register();
+    public static final BlockEntry<EndIncinerationBlowerStructuralBlock> END_INCINERATION_BLOWER_STRUCTURAL_BLOCK = CCB_REGISTRATE.block("end_incineration_blower_structural", EndIncinerationBlowerStructuralBlock::new).transform(pickaxeOnly()).transform(CCBStress.setImpact(0)).transform(CCBBuilderTransformer.end_incineration_blower_structural()).register();
 
-    public static final BlockEntry<Block> END_ALLOY_BLOCK = CCB_REGISTRATE.block("end_alloy_block", Block::new).initialProperties(CCBSharedProperties::hardMetal).transform(pickaxeOnly()).transform(CCBBuilderTransformer.simple_block("end_alloy_block", p -> p.rarity(Rarity.UNCOMMON))).properties(p -> p.mapColor(MapColor.COLOR_GREEN)).register();
-    public static final BlockEntry<CasingBlock> END_CASING_BLOCK = CCB_REGISTRATE.block("end_casing", CasingBlock::new).initialProperties(CCBSharedProperties::hardMetal).transform(pickaxeOnly()).transform(CCBBuilderTransformer.casing(() -> CCBSpriteShifts.END_CASING, p -> p.rarity(Rarity.UNCOMMON))).properties(p -> p.mapColor(MapColor.COLOR_GREEN)).register();
-
-    public static final BlockEntry<CinderIncinerationBlowerBlock> CINDER_INCINERATION_BLOWER_BLOCK = CCB_REGISTRATE.block("cinder_incineration_blower", CinderIncinerationBlowerBlock::new).initialProperties(CCBSharedProperties::softMetal).transform(CCBStress.setImpact(4.0f)).transform(pickaxeOnly()).transform(CCBBuilderTransformer.cinder_incineration_blower()).properties(p -> p.mapColor(MapColor.COLOR_YELLOW).noOcclusion()).register();
-
-    public static final BlockEntry<PhotoStressBearingBlock> PHOTO_STRESS_BEARING_BLOCK = CCB_REGISTRATE.block("photo-stress_bearing", PhotoStressBearingBlock::new).initialProperties(CCBSharedProperties::stone).transform(CCBStress.setCapacity(8.0f)).transform(pickaxeOnly()).transform(CCBBuilderTransformer.photo_stress_bearing()).properties(p -> p.mapColor(MapColor.COLOR_PURPLE).noOcclusion()).register();
-    public static final BlockEntry<PneumaticEngineBlock> PNEUMATIC_ENGINE_BLOCK = CCB_REGISTRATE.block("pneumatic_engine", PneumaticEngineBlock::new).initialProperties(CCBSharedProperties::copperMetal).transform(pickaxeOnly()).transform(CCBBuilderTransformer.pneumatic_engine()).transform(CCBStress.setCapacity(6.0f)).properties(p -> p.mapColor(MapColor.COLOR_ORANGE).noOcclusion()).register();
+    public static final BlockEntry<PhotoStressBearingBlock> PHOTO_STRESS_BEARING_BLOCK = CCB_REGISTRATE.block("photo-stress_bearing", PhotoStressBearingBlock::new).initialProperties(CCBSharedProperties::stone).transform(CCBStress.setCapacity(8)).transform(pickaxeOnly()).transform(CCBBuilderTransformer.photo_stress_bearing()).properties(p -> p.mapColor(MapColor.COLOR_PURPLE).noOcclusion()).register();
+    public static final BlockEntry<PneumaticEngineBlock> PNEUMATIC_ENGINE_BLOCK = CCB_REGISTRATE.block("pneumatic_engine", PneumaticEngineBlock::new).initialProperties(CCBSharedProperties::copperMetal).transform(pickaxeOnly()).transform(CCBBuilderTransformer.pneumatic_engine()).transform(CCBStress.setCapacity(6)).properties(p -> p.mapColor(MapColor.COLOR_ORANGE).noOcclusion()).register();
 
     public static void register() {
     }

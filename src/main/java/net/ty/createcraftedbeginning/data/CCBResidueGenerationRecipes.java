@@ -18,7 +18,7 @@ public class CCBResidueGenerationRecipes extends ResidueGenerationGen {
     GeneratedRecipe PRESSURIZED_NATURAL = create("pressurized_natural", b -> b.require(CCBGases.PRESSURIZED_NATURAL_AIR.get(), 1).output(Items.CLAY_BALL));
 
     GeneratedRecipe ULTRAWARM = create("ultrawarm", b -> b.require(CCBGases.ULTRAWARM_AIR.get(), 1).output(AllItems.CINDER_FLOUR));
-    GeneratedRecipe PRESSURIZED_ULTRAWARM = create("pressurized_ultrawarm", b -> b.require(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get(), 1).output(Items.CLAY_BALL));
+    GeneratedRecipe PRESSURIZED_ULTRAWARM = create("pressurized_ultrawarm", b -> b.require(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get(), 1).output(AllItems.CINDER_FLOUR));
 
     GeneratedRecipe ETHEREAL = create("ethereal", b -> b.require(CCBGases.ETHEREAL_AIR.get(), 1).output(CCBItems.CHORUS_FLOWER_POWDER));
     GeneratedRecipe PRESSURIZED_ETHEREAL = create("pressurized_ethereal", b -> b.require(CCBGases.PRESSURIZED_ETHEREAL_AIR.get(), 1).output(CCBItems.CHORUS_FLOWER_POWDER));

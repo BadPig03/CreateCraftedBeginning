@@ -1,5 +1,6 @@
 {
   "type": "create:mixing",
+  "heat_requirement": "superheated",
   "ingredients": [
     {
       "item": "createcraftedbeginning:chorus_flower_powder"

@@ -27,7 +27,7 @@ public class CCBPonderTags {
         PonderTagRegistrationHelper<RegistryEntry<?, ?>> entryHelper = helper.withKeyFunction(RegistryEntry::getId);
         entryHelper.addToTag(AllCreatePonderTags.CREATIVE).add(CCBBlocks.CREATIVE_AIRTIGHT_TANK_BLOCK);
         entryHelper.addToTag(AllCreatePonderTags.KINETIC_SOURCES).add(CCBBlocks.AIRTIGHT_ENGINE_BLOCK).add(CCBBlocks.TESLA_TURBINE_BLOCK);
-        entryHelper.addToTag(AllCreatePonderTags.KINETIC_APPLIANCES).add(CCBBlocks.AIR_COMPRESSOR_BLOCK).add(CCBBlocks.CINDER_INCINERATION_BLOWER_BLOCK);
+        entryHelper.addToTag(AllCreatePonderTags.KINETIC_APPLIANCES).add(CCBBlocks.AIR_COMPRESSOR_BLOCK).add(CCBBlocks.END_INCINERATION_BLOWER_BLOCK);
 
         entryHelper.addToTag(CRATES_TAG_ID).add(CCBBlocks.ANDESITE_CRATE_BLOCK).add(CCBBlocks.BRASS_CRATE_BLOCK).add(CCBBlocks.STURDY_CRATE_BLOCK).add(CCBBlocks.CARDBOARD_CRATE_BLOCK);
         entryHelper.addToTag(GAS_PIPES_TAG_ID).add(CCBBlocks.AIRTIGHT_PIPE_BLOCK).add(CCBBlocks.AIRTIGHT_ENCASED_PIPE_BLOCK).add(CCBBlocks.AIRTIGHT_CHECK_VALVE_BLOCK).add(CCBBlocks.SMART_AIRTIGHT_PIPE_BLOCK).add(CCBBlocks.AIRTIGHT_PUMP_BLOCK);

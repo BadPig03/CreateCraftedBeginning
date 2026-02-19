@@ -27,7 +27,6 @@ import static net.ty.createcraftedbeginning.advancement.CCBAdvancement.TaskType.
 @SuppressWarnings("unused")
 public class CCBAdvancements implements DataProvider {
     public static final List<CCBAdvancement> ENTRIES = new ArrayList<>();
-    public static final CCBAdvancement START = null;
     public static final CCBAdvancement ROOT = create("root", b -> b.icon(CCBBlocks.BREEZE_COOLER_BLOCK).title("Welcome to Create: Crafted Beginning").description("A brand new experience").awardedForFree().special(HIDDEN_TASK));
 
     public static final CCBAdvancement ITEM_TANK = create("item_tank", b -> b.icon(CCBBlocks.ANDESITE_CRATE_BLOCK).title("Item Tank").description("Obtain an Andesite Crate").whenIconCollected().after(ROOT));
@@ -52,6 +51,10 @@ public class CCBAdvancements implements DataProvider {
     public static final CCBAdvancement RISING_FORCE = create("rising_force", b -> b.icon(CCBBlocks.AIRTIGHT_ENGINE_BLOCK).title("Rising Force").description("Use an Airtight Engine to generate torque").after(INDUSTRIAL_AUTOCLAVE));
     public static final CCBAdvancement DEBRIS_CRAFTING = create("debris_crafting", b -> b.icon(CCBItems.TESLA_TURBINE_ROTOR).title("Debris Crafting").description("Assemble a Tesla Turbine Rotor").whenIconCollected().after(RISING_FORCE));
     public static final CCBAdvancement ENGINEERING_PRODIGY = create("engineering_prodigy", b -> b.icon(CCBBlocks.TESLA_TURBINE_BLOCK).title("Engineering Prodigy").description("Obtain a Tesla Turbine").whenIconCollected().after(DEBRIS_CRAFTING));
+
+    public static final CCBAdvancement SOFT_ALLOY = create("soft_alloy", b -> b.icon(CCBItems.END_ALLOY).title("Soft Alloy").description("Obtain an End Alloy").whenIconCollected().after(ROOT));
+    public static final CCBAdvancement HARD_CASING = create("hard_casing", b -> b.icon(CCBBlocks.END_CASING_BLOCK).title("Hard Casing").description("Obtain an End Casing").whenIconCollected().after(SOFT_ALLOY));
+    public static final CCBAdvancement HOT_HOT_HOT = create("hot_hot_hot", b -> b.icon(CCBBlocks.END_INCINERATION_BLOWER_BLOCK).title("Hot Hot Hot").description("Ignite a mob using the End Incineration Blower").after(HARD_CASING));
 
     public static final CCBAdvancement LIVING_FREEZER = create("living_freezer", b -> b.icon(CCBBlocks.BREEZE_COOLER_BLOCK).title("Living Freezer").description("Obtain a Breeze Cooler").whenIconCollected().after(PLYWOOD));
     public static final CCBAdvancement FROZEN_NECTAR = create("frozen_nectar", b -> b.icon(CCBItems.ICE_CREAM).title("Frozen Nectar").description("Feed an Ice Cream to the Breeze Cooler").after(LIVING_FREEZER));
@@ -82,8 +85,6 @@ public class CCBAdvancements implements DataProvider {
     public static final CCBAdvancement I_AM_THE_STORM_THAT_IS_APPROACHING = create("i_am_the_storm_that_is_approaching", b -> b.icon(CCBItems.THUNDERSTORM_FLARE).title("I Am the Storm That Is Approaching").description("Use an Airtight Cannon and Weather Flares to create an endless thunderstorm\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(EVEN_IF_HARDER_THAN_OBSIDIAN));
     public static final CCBAdvancement THREE_WAY_HANDSHAKE = create("three_way_handshake", b -> b.icon(CCBItems.AIRTIGHT_EXTEND_ARM).title("Three-way Handshake").description("Hold two Airtight Extend Arms at the same time\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(I_AM_THE_STORM_THAT_IS_APPROACHING));
     public static final CCBAdvancement SKY_IS_NOT_THE_LIMIT = create("sky_is_not_the_limit", b -> b.icon(CCBItems.AIRTIGHT_CHESTPLATE).title("Sky Is Not the Limit").description("Fly to the world build height limit while wearing an Airtight Chestplate\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(THREE_WAY_HANDSHAKE));
-
-    public static final CCBAdvancement END = null;
 
     private final PackOutput output;
     private final CompletableFuture<Provider> registries;

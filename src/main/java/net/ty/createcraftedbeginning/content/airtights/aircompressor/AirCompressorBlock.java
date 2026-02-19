@@ -69,12 +69,6 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
         return state.getValue(HORIZONTAL_FACING).getClockWise();
     }
 
-    private static void updateCoolant(@NotNull Level level, BlockPos coolantPos, @NotNull AirCompressorBlockEntity compressor) {
-        CoolantStrategyHandler coolantStrategy = CoolantStrategyHandler.REGISTRY.get(level.getBlockState(coolantPos).getBlock());
-        CoolantEfficiency efficiency = coolantStrategy == null ? CoolantEfficiency.NONE : coolantStrategy.getCoolantEfficiency(level, coolantPos, level.getBlockState(coolantPos));
-        compressor.setCoolantEfficiency(efficiency);
-    }
-
     private static @NotNull BlockState getStateForBasicPlacement(@NotNull BlockPlaceContext context, BlockState state) {
         Direction horizontalDirection = context.getHorizontalDirection().getOpposite();
         if (context.getPlayer() != null && context.getPlayer().isShiftKeyDown()) {
@@ -145,16 +139,6 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
     }
 
     @Override
-    public void onPlace(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState oldState, boolean isMoving) {
-        super.onPlace(state, level, pos, oldState, isMoving);
-        if (!(level.getBlockEntity(pos) instanceof AirCompressorBlockEntity compressor)) {
-            return;
-        }
-
-        updateCoolant(level, pos, compressor);
-    }
-
-    @Override
     public boolean hasShaftTowards(LevelReader world, BlockPos pos, BlockState state, Direction face) {
         return face == Direction.UP;
     }
@@ -179,6 +163,7 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
         }
 
         compressor.loadFromItem(stack);
+        compressor.updateCoolant(pos.below());
     }
 
     @Override
@@ -219,14 +204,11 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
 
     @Override
     public void neighborChanged(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Block otherBlock, @NotNull BlockPos neighborPos, boolean isMoving) {
-        if (!pos.below().equals(neighborPos)) {
-            return;
-        }
-        if (!(level.getBlockEntity(pos) instanceof AirCompressorBlockEntity compressor)) {
+        if (!pos.below().equals(neighborPos) || !(level.getBlockEntity(pos) instanceof AirCompressorBlockEntity compressor)) {
             return;
         }
 
-        updateCoolant(level, neighborPos, compressor);
+        compressor.updateCoolant(neighborPos);
     }
 
     @Override
@@ -262,7 +244,7 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
             return;
         }
 
-        updateCoolant(level, pos.below(), compressor);
+        compressor.updateCoolant(pos.below());
         if (random.nextFloat() < RANDOM_TICK_POSSIBILITY) {
             return;
         }
@@ -282,7 +264,7 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
                 level.setBlockAndUpdate(coolantPos, newState);
             }
         }
-        updateCoolant(level, coolantPos, compressor);
+        compressor.updateCoolant(coolantPos);
     }
 
     @Override

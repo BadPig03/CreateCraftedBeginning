@@ -18,30 +18,21 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
         super(CCBRecipeTypes.WIND_CHARGING, params);
     }
 
-    public static @NotNull WindChargingData getResultingWindChargingTime(@NotNull Level level, ItemStack itemStack) {
+    public static @NotNull WindChargingData getWindChargingTime(@NotNull Level level, ItemStack itemStack) {
         List<RecipeHolder<WindChargingRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.WIND_CHARGING.getType());
         for (RecipeHolder<WindChargingRecipe> holder : recipes) {
             WindChargingRecipe recipe = holder.value();
-            ItemStack currentItemStack = getItemIngredient(recipe).getItems()[0];
-            if (currentItemStack.getItem() != itemStack.getItem()) {
+            if (!recipe.getIngredient().test(itemStack)) {
                 continue;
             }
 
-            return processWindChargingRecipe(recipe);
+            return new WindChargingData(recipe.processingDuration, 1, recipe.isBadFood(), recipe.isMilkyItem());
         }
 
         return new WindChargingData(0, 0, false, false);
     }
 
-    private static Ingredient getItemIngredient(@NotNull WindChargingRecipe recipe) {
-        return recipe.getIngredientsItem();
-    }
-
-    private static @NotNull WindChargingData processWindChargingRecipe(@NotNull WindChargingRecipe recipe) {
-        return new WindChargingData(recipe.processingDuration, recipe.getRequiredAmount(), recipe.isBadFood(), recipe.isMilkyItem());
-    }
-
-    public Ingredient getIngredientsItem() {
+    public Ingredient getIngredient() {
         return ingredients.getFirst();
     }
 
@@ -53,20 +44,12 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
         return processingDuration == 0;
     }
 
-    public int getResultTime() {
-        return processingDuration;
-    }
-
-    public int getRequiredAmount() {
-        return 1;
-    }
-
     public boolean isCreativeIceCream() {
-        return getIngredientsItem().getItems()[0].getItem() instanceof CreativeIceCreamItem;
+        return getIngredient().getItems()[0].getItem() instanceof CreativeIceCreamItem;
     }
 
     @Override
-    public boolean matches(@NotNull SingleRecipeInput inv, @NotNull Level worldIn) {
+    public boolean matches(@NotNull SingleRecipeInput input, @NotNull Level level) {
         return true;
     }
 

@@ -43,12 +43,14 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamber
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerRenderer;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerVisual;
-import net.ty.createcraftedbeginning.content.cinder.cinderincinerationblower.CinderIncinerationBlowerBlockEntity;
-import net.ty.createcraftedbeginning.content.cinder.cinderincinerationblower.CinderIncinerationBlowerRenderer;
 import net.ty.createcraftedbeginning.content.crates.andesitecrate.AndesiteCrateBlockEntity;
 import net.ty.createcraftedbeginning.content.crates.brasscrate.BrassCrateBlockEntity;
 import net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateBlockEntity;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlockEntity;
+import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerBlockEntity;
+import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerRenderer;
+import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerStructuralBlockEntity;
+import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerStructuralRenderer;
 import net.ty.createcraftedbeginning.content.obsolete.phohostressbearing.PhotoStressBearingBlockEntity;
 import net.ty.createcraftedbeginning.content.obsolete.phohostressbearing.PhotoStressBearingRenderer;
 import net.ty.createcraftedbeginning.content.obsolete.pneumaticengine.PneumaticEngineBlockEntity;
@@ -88,7 +90,8 @@ public class CCBBlockEntities {
     public static final BlockEntityEntry<AirtightReactorKettleStructuralBlockEntity> AIRTIGHT_REACTOR_KETTLE_STRUCTURAL = CCB_REGISTRATE.blockEntity("airtight_reactor_kettle_structural", AirtightReactorKettleStructuralBlockEntity::new).validBlocks(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK).renderer(() -> SmartBlockEntityRenderer::new).register();
     public static final BlockEntityEntry<AirtightReactorKettleStructuralCogBlockEntity> AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG = CCB_REGISTRATE.blockEntity("airtight_reactor_kettle_structural_cog", AirtightReactorKettleStructuralCogBlockEntity::new).validBlocks(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG_BLOCK).renderer(() -> AirtightReactorKettleStructuralCogRenderer::new).register();
 
-    public static final BlockEntityEntry<CinderIncinerationBlowerBlockEntity> CINDER_INCINERATION_BLOWER = CCB_REGISTRATE.blockEntity("cinder_incineration_blower", CinderIncinerationBlowerBlockEntity::new).validBlocks(CCBBlocks.CINDER_INCINERATION_BLOWER_BLOCK).renderer(() -> CinderIncinerationBlowerRenderer::new).register();
+    public static final BlockEntityEntry<EndIncinerationBlowerBlockEntity> END_INCINERATION_BLOWER = CCB_REGISTRATE.blockEntity("end_incineration_blower", EndIncinerationBlowerBlockEntity::new).validBlocks(CCBBlocks.END_INCINERATION_BLOWER_BLOCK).renderer(() -> EndIncinerationBlowerRenderer::new).register();
+    public static final BlockEntityEntry<EndIncinerationBlowerStructuralBlockEntity> END_INCINERATION_BLOWER_STRUCTURAL = CCB_REGISTRATE.blockEntity("end_incineration_blower_structural", EndIncinerationBlowerStructuralBlockEntity::new).validBlocks(CCBBlocks.END_INCINERATION_BLOWER_STRUCTURAL_BLOCK).renderer(() -> EndIncinerationBlowerStructuralRenderer::new).register();
 
     public static void register() {
     }

@@ -150,7 +150,7 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
         AirtightReactorKettleStructuralPosition structuralPosition = blockState.getValue(STRUCTURAL_POSITION);
         VoxelShape shape = AirtightReactorKettleVoxelShapes.getShape(structuralPosition);
         BlockPos masterPos = AirtightReactorKettleUtils.getMaster(blockPos, blockState);
-        if (!(level.getBlockEntity(masterPos) instanceof AirtightReactorKettleBlockEntity masterBlockEntity) || masterBlockEntity.shouldKeepWindowsOpen()) {
+        if (!(level.getBlockEntity(masterPos) instanceof AirtightReactorKettleBlockEntity masterBlockEntity) || masterBlockEntity.getWindowsOpenState()) {
             return shape;
         }
         if (!structuralPosition.isWindow(0)) {

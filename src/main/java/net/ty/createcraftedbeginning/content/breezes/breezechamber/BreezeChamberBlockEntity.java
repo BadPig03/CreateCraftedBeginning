@@ -50,6 +50,7 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates.IllChamberState;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates.InactiveChamberState;
 import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.recipe.EnergizationRecipe;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
@@ -198,7 +199,11 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     private @NotNull Gas getTankEnergizedGasType() {
-        return getTankGasType().getEnergizedGasType();
+        if (level == null) {
+            return Gas.EMPTY_GAS_HOLDER.value();
+        }
+
+        return EnergizationRecipe.getResultGasType(level, getTankGasType());
     }
 
     private @NotNull Gas getTankGasType() {

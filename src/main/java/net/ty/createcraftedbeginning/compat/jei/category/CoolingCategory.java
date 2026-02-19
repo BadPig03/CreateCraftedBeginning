@@ -38,25 +38,25 @@ public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
             return;
         }
 
-        if (!recipe.isIngredientsFluid() && recipe.isCreativeIceCream()) {
+        if (!recipe.isFluidIngredients() && recipe.isCreativeIceCream()) {
             MutableComponent text = Component.translatable("jade.gas.infinity_mark");
             graphics.drawString(font, text, getBackground().getWidth() / 2 - font.width(text) / 2 - 12, 22, COLOR, false);
             cooler.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
             return;
         }
 
-        MutableComponent time = CCBLang.secondsWithGameTicks(recipe.getResultTime(), 20).component();
+        MutableComponent time = CCBLang.secondsWithGameTicks(recipe.getProcessingDuration(), 20).component();
         graphics.drawString(font, time, getBackground().getWidth() / 2 - font.width(time) / 2 - 12, 22, COLOR, false);
         cooler.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
     }
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, @NotNull CoolingRecipe recipe, @NotNull IFocusGroup focuses) {
-        if (recipe.isIngredientsFluid()) {
-            addFluidInputSlot(builder, recipe.getIngredientsFluid());
+        if (recipe.isFluidIngredients()) {
+            addFluidInputSlot(builder, recipe.getFluidIngredient());
         }
         else {
-            addItemInputSlot(builder, recipe.getIngredientsItem());
+            addItemInputSlot(builder, recipe.getIngredient());
         }
     }
 

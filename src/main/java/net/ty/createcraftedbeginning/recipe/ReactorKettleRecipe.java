@@ -272,6 +272,6 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
 
     @Override
     public boolean matches(@NotNull RecipeInput input, @NotNull Level level) {
-        return false;
+        return true;
     }
 }

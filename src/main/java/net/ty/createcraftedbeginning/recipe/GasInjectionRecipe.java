@@ -45,7 +45,7 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
         SingleRecipeInput input = new SingleRecipeInput(itemStack);
         Optional<RecipeHolder<GasInjectionRecipe>> assemblyRecipe = SequencedAssemblyWithGasRecipe.getRecipe(level, input, CCBRecipeTypes.GAS_INJECTION.getType(), GasInjectionRecipe.class, matchItemAndGas(level, gasStack, input));
         if (assemblyRecipe.isPresent()) {
-            SizedGasIngredient requiredGas = assemblyRecipe.get().value().getRequiredGas();
+            SizedGasIngredient requiredGas = assemblyRecipe.get().value().getGasIngredient();
             GasStack requiredGasStack = requiredGas.getFirstGas();
             if (GasStack.isSameGasSameComponents(requiredGasStack, gasStack)) {
                 List<ItemStack> results = assemblyRecipe.get().value().rollResults(level.random);
@@ -56,11 +56,11 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
         List<RecipeHolder<GasInjectionRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.GAS_INJECTION.getType());
         for (RecipeHolder<GasInjectionRecipe> holder : recipes) {
             GasInjectionRecipe recipe = holder.value();
-            if (!recipe.getIngredientsItem().test(itemStack)) {
+            if (!recipe.getIngredient().test(itemStack)) {
                 continue;
             }
 
-            SizedGasIngredient gasIngredient = recipe.getIngredientsGas();
+            SizedGasIngredient gasIngredient = recipe.getGasIngredient();
             GasStack ingredientGasStack = gasIngredient.getFirstGas();
             if (!GasStack.isSameGasSameComponents(ingredientGasStack, gasStack)) {
                 continue;
@@ -72,12 +72,7 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
         return ItemStack.EMPTY;
     }
 
-    @Contract(pure = true)
-    private static @NotNull Predicate<RecipeHolder<GasInjectionRecipe>> matchItemAndGas(Level level, GasStack gasStack, SingleRecipeInput input) {
-        return r -> r.value().matches(input, level) && GasStack.isSameGasSameComponents(r.value().getRequiredGas().getFirstGas(), gasStack);
-    }
-
-    public static long getRequiredGasAmountForItem(Level level, ItemStack itemStack, GasStack gasStack) {
+    public static long getRequiredGasAmount(Level level, ItemStack itemStack, GasStack gasStack) {
         if (level == null) {
             return -1;
         }
@@ -90,7 +85,7 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
         SingleRecipeInput input = new SingleRecipeInput(itemStack);
         Optional<RecipeHolder<GasInjectionRecipe>> assemblyRecipe = SequencedAssemblyWithGasRecipe.getRecipe(level, input, CCBRecipeTypes.GAS_INJECTION.getType(), GasInjectionRecipe.class, matchItemAndGas(level, gasStack, input));
         if (assemblyRecipe.isPresent()) {
-            SizedGasIngredient requiredGas = assemblyRecipe.get().value().getRequiredGas();
+            SizedGasIngredient requiredGas = assemblyRecipe.get().value().getGasIngredient();
             GasStack requiredGasStack = requiredGas.getFirstGas();
             if (GasStack.isSameGasSameComponents(requiredGasStack, gasStack)) {
                 return requiredGas.amount();
@@ -100,11 +95,11 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
         List<RecipeHolder<GasInjectionRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.GAS_INJECTION.getType());
         for (RecipeHolder<GasInjectionRecipe> holder : recipes) {
             GasInjectionRecipe recipe = holder.value();
-            if (!recipe.getIngredientsItem().test(itemStack)) {
+            if (!recipe.getIngredient().test(itemStack)) {
                 continue;
             }
 
-            SizedGasIngredient gasIngredient = recipe.getIngredientsGas();
+            SizedGasIngredient gasIngredient = recipe.getGasIngredient();
             GasStack ingredientGasStack = gasIngredient.getFirstGas();
             if (!GasStack.isSameGasSameComponents(ingredientGasStack, gasStack)) {
                 continue;
@@ -133,7 +128,7 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
         List<RecipeHolder<GasInjectionRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.GAS_INJECTION.getType());
         for (RecipeHolder<GasInjectionRecipe> holder : recipes) {
             GasInjectionRecipe recipe = holder.value();
-            Ingredient ingredient = recipe.getIngredientsItem();
+            Ingredient ingredient = recipe.getIngredient();
             if (ingredient.test(itemStack)) {
                 return false;
             }
@@ -142,25 +137,26 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
         return true;
     }
 
-    @Override
-    public boolean matches(@NotNull SingleRecipeInput inv, @NotNull Level level) {
-        return ingredients.getFirst().test(inv.getItem(0));
+    @Contract(pure = true)
+    private static @NotNull Predicate<RecipeHolder<GasInjectionRecipe>> matchItemAndGas(Level level, GasStack gasStack, SingleRecipeInput input) {
+        return r -> r.value().matches(input, level) && GasStack.isSameGasSameComponents(r.value().getGasIngredient().getFirstGas(), gasStack);
     }
 
-    public SizedGasIngredient getRequiredGas() {
+    @Override
+    public boolean matches(@NotNull SingleRecipeInput input, @NotNull Level level) {
+        return ingredients.getFirst().test(input.getItem(0));
+    }
+
+    public SizedGasIngredient getGasIngredient() {
         if (gasIngredients.isEmpty()) {
-            throw new IllegalStateException("Filling Recipe has no gas ingredient!");
+            throw new IllegalStateException("Gas Injection Recipe has no gas ingredient!");
         }
 
         return gasIngredients.getFirst();
     }
 
-    public Ingredient getIngredientsItem() {
+    public Ingredient getIngredient() {
         return ingredients.getFirst();
-    }
-
-    public SizedGasIngredient getIngredientsGas() {
-        return gasIngredients.getFirst();
     }
 
     @Override
@@ -195,7 +191,7 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
 
     @Override
     public void addAssemblyGasIngredients(@NotNull List<SizedGasIngredient> list) {
-        list.add(getRequiredGas());
+        list.add(getGasIngredient());
     }
 
     @Override

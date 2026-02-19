@@ -73,7 +73,7 @@ public class GaleChamberState extends BaseChamberState {
             return InteractionResult.FAIL;
         }
 
-        WindChargingData data = WindChargingRecipe.getResultingWindChargingTime(level, stack);
+        WindChargingData data = WindChargingRecipe.getWindChargingTime(level, stack);
         boolean isMilky = data.isMilky();
         if (isMilky) {
             return InteractionResult.PASS;

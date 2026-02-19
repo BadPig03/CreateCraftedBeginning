@@ -21,10 +21,6 @@ public class GasBuilder {
     private float teslaEfficiency;
 
     @Nullable
-    private ResourceLocation pressurizedGasType;
-    @Nullable
-    private ResourceLocation energizedGasType;
-    @Nullable
     private Set<TagKey<Gas>> tags;
 
     protected GasBuilder(ResourceLocation texture) {
@@ -47,16 +43,6 @@ public class GasBuilder {
 
     public GasBuilder tint(int tint) {
         this.tint = tint;
-        return this;
-    }
-
-    public GasBuilder pressurizedGas(ResourceLocation pressurizedGasType) {
-        this.pressurizedGasType = pressurizedGasType;
-        return this;
-    }
-
-    public GasBuilder energizedGas(ResourceLocation energizedGasType) {
-        this.energizedGasType = energizedGasType;
         return this;
     }
 
@@ -89,16 +75,6 @@ public class GasBuilder {
 
     public float getInflation() {
         return inflation;
-    }
-
-    @Nullable
-    public ResourceLocation getPressurizedGasType() {
-        return pressurizedGasType;
-    }
-
-    @Nullable
-    public ResourceLocation getEnergizedGasType() {
-        return energizedGasType;
     }
 
     public float getEngineEfficiency() {

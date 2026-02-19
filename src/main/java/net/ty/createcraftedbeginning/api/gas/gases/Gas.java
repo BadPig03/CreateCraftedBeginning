@@ -25,7 +25,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -44,10 +43,6 @@ public class Gas {
     private final float engineEfficiency;
     private final float teslaEfficiency;
 
-    @Nullable
-    private final ResourceLocation pressurizedGasType;
-    @Nullable
-    private final ResourceLocation energizedGasType;
     private final Set<TagKey<Gas>> tags;
     @Nullable
     private String translationKey;
@@ -56,8 +51,6 @@ public class Gas {
         iconLocation = builder.getTexture();
         tint = builder.getTint();
         inflation = builder.getInflation();
-        pressurizedGasType = builder.getPressurizedGasType();
-        energizedGasType = builder.getEnergizedGasType();
         engineEfficiency = builder.getEngineEfficiency();
         teslaEfficiency = builder.getTeslaEfficiency();
         tags = builder.getTags() != null ? Set.copyOf(builder.getTags()) : Collections.emptySet();
@@ -139,14 +132,6 @@ public class Gas {
 
     public float getInflation() {
         return inflation;
-    }
-
-    public @NotNull Gas getPressurizedGasType() {
-        return Objects.requireNonNullElse(getGasTypeByName(pressurizedGasType), EMPTY_GAS_HOLDER.value());
-    }
-
-    public @NotNull Gas getEnergizedGasType() {
-        return Objects.requireNonNullElse(getGasTypeByName(energizedGasType), EMPTY_GAS_HOLDER.value());
     }
 
     public float getEngineEfficiency() {

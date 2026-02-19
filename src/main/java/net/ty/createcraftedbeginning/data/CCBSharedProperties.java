@@ -20,6 +20,10 @@ public class CCBSharedProperties {
         return Blocks.IRON_BLOCK;
     }
 
+    public static Block obsidian() {
+        return Blocks.OBSIDIAN;
+    }
+
     public static Block airtightMetal() {
         return Blocks.HEAVY_CORE;
     }

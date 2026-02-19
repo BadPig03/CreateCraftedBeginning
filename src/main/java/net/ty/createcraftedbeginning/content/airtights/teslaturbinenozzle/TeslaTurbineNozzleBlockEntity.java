@@ -26,11 +26,11 @@ import java.util.Set;
 
 public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
     private final Direction lastDirection;
-    private TeslaTurbineBlockEntity source;
+    private TeslaTurbineBlockEntity turbine;
 
     public TeslaTurbineNozzleBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
-        source = null;
+        turbine = null;
         lastDirection = state.getValue(TeslaTurbineNozzleBlock.FACING);
     }
 
@@ -56,14 +56,14 @@ public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements I
             return null;
         }
 
-        if (source == null || source.isRemoved()) {
-            source = getTurbine();
-            if (source == null) {
+        if (turbine == null || turbine.isRemoved()) {
+            turbine = getTurbine();
+            if (turbine == null) {
                 return null;
             }
         }
 
-        return source.getCore().createGasHandler(getBlockState().getValue(TeslaTurbineNozzleBlock.CLOCKWISE));
+        return turbine.getCore().createGasHandler(getBlockState().getValue(TeslaTurbineNozzleBlock.CLOCKWISE));
     }
 
     private @Nullable TeslaTurbineBlockEntity getTurbine() {
@@ -118,10 +118,10 @@ public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements I
             return;
         }
 
-        if (source == null || source.isRemoved()) {
-            source = getTurbine();
+        if (turbine == null || turbine.isRemoved()) {
+            turbine = getTurbine();
         }
-        if (source != null && lastDirection == getBlockState().getValue(TeslaTurbineNozzleBlock.FACING)) {
+        if (turbine != null && lastDirection == getBlockState().getValue(TeslaTurbineNozzleBlock.FACING)) {
             return;
         }
 

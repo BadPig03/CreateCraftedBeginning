@@ -191,7 +191,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         }
 
         FluidStack fluidStack = tankBehaviour.getPrimaryHandler().getFluid();
-        CoolingData data = CoolingRecipe.getResultingCoolingTime(level, null, fluidStack);
+        CoolingData data = CoolingRecipe.getCoolingTime(level, null, fluidStack);
         return data.time() == 0 || data.amount() == 0;
     }
 
