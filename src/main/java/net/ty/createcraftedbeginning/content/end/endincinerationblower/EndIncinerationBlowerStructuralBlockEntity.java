@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.content.end.endincinerationblower;
 
-import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.INamedIconOptions;
 import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.ScrollOptionBehaviour;
@@ -8,17 +7,15 @@ import net.createmod.catnip.lang.Lang;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalStructuralBlockEntity;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class EndIncinerationBlowerStructuralBlockEntity extends KineticBlockEntity {
+public class EndIncinerationBlowerStructuralBlockEntity extends EndMechanicalStructuralBlockEntity<EndIncinerationBlowerBlockEntity> {
     private ScrollOptionBehaviour<BlowerWorkingMode> blowerWorkingMode;
-    private EndIncinerationBlowerBlockEntity blower;
 
     public EndIncinerationBlowerStructuralBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
@@ -29,31 +26,6 @@ public class EndIncinerationBlowerStructuralBlockEntity extends KineticBlockEnti
         super.addBehaviours(behaviours);
         blowerWorkingMode = new ScrollOptionBehaviour<>(BlowerWorkingMode.class, CCBLang.translateDirect("gui.end_incineration_blower.working_mode"), this, new EndIncinerationBlowerValueBox());
         behaviours.add(blowerWorkingMode);
-    }
-
-    @Override
-    public void tick() {
-        super.tick();
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
-        if (blower == null || blower.isRemoved()) {
-            blower = getBlower();
-        }
-        if (blower != null) {
-            return;
-        }
-
-        level.setBlockAndUpdate(worldPosition, CCBBlocks.END_CASING_BLOCK.get().defaultBlockState());
-    }
-
-    private @Nullable EndIncinerationBlowerBlockEntity getBlower() {
-        if (level == null || !(level.getBlockEntity(worldPosition.above()) instanceof EndIncinerationBlowerBlockEntity be)) {
-            return null;
-        }
-
-        return be;
     }
 
     public ScrollOptionBehaviour<BlowerWorkingMode> getBlowerWorkingMode() {

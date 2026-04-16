@@ -201,12 +201,12 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     }
 
     public void loadFromItem(@NotNull ItemStack stack) {
-        String stateName = stack.getOrDefault(CCBDataComponents.AIR_COMPRESSOR_OVERHEAT_STATE, OverheatManager.NORMAL.getSerializedName());
+        String stateName = stack.getOrDefault(CCBDataComponents.COMPRESSOR_OVERHEAT_STATE, OverheatManager.NORMAL.getSerializedName());
         setOverheatState(OverheatManager.getStateByName(stateName));
     }
 
     public void saveToItem(@NotNull ItemStack stack) {
-        stack.set(CCBDataComponents.AIR_COMPRESSOR_OVERHEAT_STATE, overheatState.getSerializedName());
+        stack.set(CCBDataComponents.COMPRESSOR_OVERHEAT_STATE, overheatState.getSerializedName());
     }
 
     public int getAnalogOutputSignal() {

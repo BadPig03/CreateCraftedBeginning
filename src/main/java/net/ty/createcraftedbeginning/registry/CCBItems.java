@@ -15,10 +15,10 @@ import net.neoforged.neoforge.common.Tags.Items;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsTrimsModelGenerator;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightBootsItem;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightChestplateItem;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightHelmetItem;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightLeggingsItem;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.AirtightBootsItem;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateItem;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.AirtightHelmetItem;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.AirtightLeggingsItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.windcharge.AirtightCannonWindChargeItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.AirtightExtendArmItem;
@@ -48,14 +48,22 @@ import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
 public class CCBItems {
     private static final CCBRegistrate CCB_REGISTRATE = CreateCraftedBeginning.registrate().setCreativeTab(CCBCreativeTabs.BASE_CREATIVE_TAB);
 
-    public static final ItemEntry<Item> POWDERED_AMETHYST = CCB_REGISTRATE.item("powdered_amethyst", Item::new).tag(CCBItemTags.AMETHYST.tag).register();
-    public static final ItemEntry<Item> POWDERED_CRYING_OBSIDIAN = CCB_REGISTRATE.item("powdered_crying_obsidian", Item::new).tag(CCBItemTags.CRYING_OBSIDIAN.tag).register();
-    public static final ItemEntry<Item> CHORUS_FLOWER_POWDER = CCB_REGISTRATE.item("chorus_flower_powder", Item::new).tag(CCBItemTags.CHORUS_FLOWER.tag).register();
-    public static final ItemEntry<Item> AMETHYST_CRYSTAL_SHEET = CCB_REGISTRATE.item("amethyst_crystal_sheet", Item::new).tag(CCBItemTags.AMETHYST_CRYSTAL_PLATE.tag).register();
+    public static final ItemEntry<Item> POWDERED_AMETHYST = CCB_REGISTRATE.item("powdered_amethyst", Item::new).tag(CCBItemTags.DUSTS.tag).tag(CCBItemTags.DUSTS_AMETHYST.tag).register();
+    public static final ItemEntry<Item> AMETHYST_CRYSTAL_SHEET = CCB_REGISTRATE.item("amethyst_crystal_sheet", Item::new).tag(CCBItemTags.PLATES_AMETHYST_CRYSTAL.tag).register();
+
+    public static final ItemEntry<Item> OBSIDIAN_CHUNK = CCB_REGISTRATE.item("obsidian_chunk", Item::new).register();
+    public static final ItemEntry<Item> OBSIDIAN_BRICK = CCB_REGISTRATE.item("obsidian_brick", Item::new).tag(CCBItemTags.BRICKS.tag).tag(CCBItemTags.BRICKS_OBSIDIAN.tag).register();
+    public static final ItemEntry<Item> CRYING_OBSIDIAN_CHUNK = CCB_REGISTRATE.item("crying_obsidian_chunk", Item::new).register();
+
+    public static final ItemEntry<Item> POWDERED_CRYING_OBSIDIAN = CCB_REGISTRATE.item("powdered_crying_obsidian", Item::new).tag(CCBItemTags.DUSTS.tag).tag(CCBItemTags.DUSTS_CRYING_OBSIDIAN.tag).register();
+    public static final ItemEntry<Item> CRYING_OBSIDIAN_BRICK = CCB_REGISTRATE.item("crying_obsidian_brick", Item::new).tag(CCBItemTags.BRICKS.tag).tag(CCBItemTags.BRICKS_CRYING_OBSIDIAN.tag).register();
 
     public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_SHEET = CCB_REGISTRATE.item("incomplete_airtight_sheet", SequencedAssemblyItem::new).properties(Properties::fireResistant).register();
     public static final ItemEntry<Item> AIRTIGHT_SHEET = CCB_REGISTRATE.item("airtight_sheet", Item::new).properties(Properties::fireResistant).register();
-    public static final ItemEntry<Item> END_ALLOY = CCB_REGISTRATE.item("end_alloy", Item::new).properties(p -> p.rarity(Rarity.UNCOMMON)).tag(CCBItemTags.END_ALLOY.tag).register();
+    public static final ItemEntry<Item> END_ALLOY = CCB_REGISTRATE.item("end_alloy", Item::new).properties(p -> p.rarity(Rarity.UNCOMMON)).tag(CCBItemTags.INGOTS_END_ALLOY.tag).register();
+    public static final ItemEntry<Item> END_ALLOY_SHEET = CCB_REGISTRATE.item("end_alloy_sheet", Item::new).properties(p -> p.rarity(Rarity.UNCOMMON)).tag(CCBItemTags.PLATES_END_ALLOY.tag).register();
+
+    public static final ItemEntry<Item> CHORUS_FLOWER_POWDER = CCB_REGISTRATE.item("chorus_flower_powder", Item::new).tag(CCBItemTags.DUSTS.tag).tag(CCBItemTags.DUSTS_CHORUS_FLOWER.tag).register();
 
     public static final ItemEntry<GasFilterItem> GAS_FILTER = CCB_REGISTRATE.item("gas_filter", GasFilterItem::new).register();
 

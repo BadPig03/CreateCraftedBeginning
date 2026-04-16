@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.registry;
 
+import com.simibubi.create.AllCreativeModeTabs;
 import com.tterrag.registrate.util.entry.ItemProviderEntry;
 import com.tterrag.registrate.util.entry.RegistryEntry;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
@@ -13,7 +14,6 @@ import net.minecraft.world.item.CreativeModeTab.DisplayItemsGenerator;
 import net.minecraft.world.item.CreativeModeTab.ItemDisplayParameters;
 import net.minecraft.world.item.CreativeModeTab.Output;
 import net.minecraft.world.item.CreativeModeTab.TabVisibility;
-import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -41,14 +41,17 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class CCBCreativeTabs {
-    private static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CreateCraftedBeginning.MOD_ID);
+    private static final DeferredRegister<CreativeModeTab> REGISTER = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CreateCraftedBeginning.MOD_ID);
+
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> BASE_CREATIVE_TAB = REGISTER.register("base", () -> CreativeModeTab.builder().title(CCBLang.translateDirect("item_groups.base_creative_tab")).withTabsBefore(AllCreativeModeTabs.BASE_CREATIVE_TAB.getKey()).icon(CCBBlocks.BREEZE_COOLER_BLOCK::asStack).displayItems(new RegistrateDisplayItemsGenerator(true, CCBCreativeTabs.BASE_CREATIVE_TAB)).build());
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> DECORATION_CREATIVE_TAB = REGISTER.register("decoration", () -> CreativeModeTab.builder().title(CCBLang.translateDirect("item_groups.decoration_creative_tab")).withTabsBefore(AllCreativeModeTabs.PALETTES_CREATIVE_TAB.getKey()).icon(CCBBlocks.OBSIDIAN_BRICKS::asStack).displayItems(new RegistrateDisplayItemsGenerator(false, CCBCreativeTabs.DECORATION_CREATIVE_TAB)).build());
 
     @Internal
     public static void register(IEventBus eventBus) {
-        TABS.register(eventBus);
+        REGISTER.register(eventBus);
     }
 
-    private record RegistrateDisplayItemsGenerator(DeferredHolder<CreativeModeTab, CreativeModeTab> tabFilter) implements DisplayItemsGenerator {
+    private record RegistrateDisplayItemsGenerator(boolean addExtraItems, DeferredHolder<CreativeModeTab, CreativeModeTab> tabFilter) implements DisplayItemsGenerator {
         private static @NotNull Predicate<Item> makeExclusionPredicate() {
             Set<Item> exclusions = new ReferenceOpenHashSet<>();
             List<ItemProviderEntry<?, ?>> itemsExclusions = List.of(CCBItems.INCOMPLETE_AIRTIGHT_SHEET, CCBItems.INCOMPLETE_GAS_CANISTER_PACK, CCBItems.INCOMPLETE_HEAVY_CORE, CCBItems.INCOMPLETE_TESLA_TURBINE_ROTOR, CCBItems.INCOMPLETE_BREEZE_CORE, CCBItems.INCOMPLETE_AIRTIGHT_CANNON, CCBItems.INCOMPLETE_AIRTIGHT_EXTEND_ARM, CCBItems.INCOMPLETE_AIRTIGHT_HANDHELD_DRILL, CCBItems.INCOMPLETE_AIRTIGHT_HELMET, CCBItems.INCOMPLETE_AIRTIGHT_CHESTPLATE, CCBItems.INCOMPLETE_AIRTIGHT_LEGGINGS, CCBItems.INCOMPLETE_AIRTIGHT_BOOTS, CCBItems.INCOMPLETE_WEATHER_FLARE, CCBItems.INCOMPLETE_ANCHOR_FLARE, CCBItems.GAS_CANISTER_PLACEABLE, CCBItems.CREATIVE_GAS_CANISTER_PLACEABLE, CCBItems.NATURAL_WIND_CHARGE, CCBItems.ULTRAWARM_WIND_CHARGE, CCBItems.ETHEREAL_WIND_CHARGE, CCBItems.MOIST_WIND_CHARGE, CCBItems.SPORE_WIND_CHARGE, CCBItems.SCULK_WIND_CHARGE, CCBItems.ENERGIZED_NATURAL_WIND_CHARGE, CCBItems.ENERGIZED_ULTRAWARM_WIND_CHARGE, CCBItems.ENERGIZED_ETHEREAL_WIND_CHARGE, CCBItems.GAS_VIRTUAL_ITEM);
@@ -110,6 +113,10 @@ public class CCBCreativeTabs {
             items.addAll(collectItems(exclusionPredicate));
             applyOrderings(items, makeOrderings());
             outputAll(output, items, makeStackFunc());
+            if (!addExtraItems) {
+                return;
+            }
+
             for (ItemStack stack : collectExtraItems()) {
                 output.accept(stack, TabVisibility.PARENT_AND_SEARCH_TABS);
             }
@@ -174,6 +181,4 @@ public class CCBCreativeTabs {
             return new ItemOrdering(item, anchor);
         }
     }
-
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> BASE_CREATIVE_TAB = TABS.register("base", () -> CreativeModeTab.builder().title(CCBLang.translateDirect("item_groups.creative_tab")).withTabsBefore(CreativeModeTabs.SPAWN_EGGS).icon(CCBBlocks.BREEZE_COOLER_BLOCK::asStack).displayItems(new RegistrateDisplayItemsGenerator(CCBCreativeTabs.BASE_CREATIVE_TAB)).build());
 }

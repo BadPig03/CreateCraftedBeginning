@@ -24,6 +24,13 @@ import net.ty.createcraftedbeginning.advancement.CCBTriggers;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasBuilder;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.upgrades.AirtightBootsUpgradeRegistry;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.AirtightChestplateUpgradeRegistry;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.upgrades.AirtightHelmetUpgradeRegistry;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.AirtightLeggingsUpgradeRegistry;
+import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.AirtightHandheldDrillUpgradeRegistry;
+import net.ty.createcraftedbeginning.content.end.endcasing.EndCasingBlock;
+import net.ty.createcraftedbeginning.content.end.endsculksilencer.GlobalEndSculkSilencerManager;
 import net.ty.createcraftedbeginning.data.CCBDataGen;
 import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 import net.ty.createcraftedbeginning.data.CCBGases;
@@ -66,6 +73,7 @@ import org.slf4j.Logger;
 public class CreateCraftedBeginning {
     public static final String MOD_ID = "createcraftedbeginning";
     public static final Logger LOGGER = LogUtils.getLogger();
+    public static final GlobalEndSculkSilencerManager GLOBAL_END_SCULK_SILENCER_MANAGER = new GlobalEndSculkSilencerManager();
 
     @SuppressWarnings("DataFlowIssue")
     private static final CCBRegistrate CCB_REGISTRATE = CCBRegistrate.create(MOD_ID).defaultCreativeTab((ResourceKey<CreativeModeTab>) null).setTooltipModifierFactory(item -> new Modifier(item, Palette.STANDARD_CREATE).andThen(TooltipModifier.mapNull(KineticStats.create(item))));
@@ -115,6 +123,12 @@ public class CreateCraftedBeginning {
 
     public static void init(@NotNull FMLCommonSetupEvent event) {
         CCBFluids.registerFluidInteractions();
+        EndCasingBlock.registerPlacementHelpers();
+        AirtightHelmetUpgradeRegistry.registerUpgrades();
+        AirtightChestplateUpgradeRegistry.registerUpgrades();
+        AirtightLeggingsUpgradeRegistry.registerUpgrades();
+        AirtightBootsUpgradeRegistry.registerUpgrades();
+        AirtightHandheldDrillUpgradeRegistry.registerUpgrades();
         event.enqueueWork(() -> {
             CCBAirtightArmorsHandlers.register();
             CCBAirtightCannonHandlers.register();

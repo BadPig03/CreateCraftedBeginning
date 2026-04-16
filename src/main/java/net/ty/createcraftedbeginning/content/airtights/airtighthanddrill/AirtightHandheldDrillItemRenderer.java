@@ -43,12 +43,12 @@ public class AirtightHandheldDrillItemRenderer extends CustomRenderedItemModelRe
             return;
         }
 
-        BakedModel drillFrontModel = CCBPartialModels.AIRTIGHT_HANDHELD_DRILL_FRONT.get();
+        BakedModel drillFront = CCBPartialModels.AIRTIGHT_HANDHELD_DRILL_FRONT.get();
         float angle = rotationAngles.getOrDefault(drill, 0.0f);
         if (player.getMainHandItem() != drill && player.getOffhandItem() != drill) {
             ms.pushPose();
             ms.mulPose(Axis.ZP.rotationDegrees(angle));
-            renderer.render(drillFrontModel, light);
+            renderer.render(drillFront, light);
             ms.popPose();
             return;
         }
@@ -59,7 +59,7 @@ public class AirtightHandheldDrillItemRenderer extends CustomRenderedItemModelRe
 
         ms.pushPose();
         ms.mulPose(Axis.ZP.rotationDegrees(angle));
-        renderer.render(drillFrontModel, light);
+        renderer.render(drillFront, light);
         ms.popPose();
     }
 }

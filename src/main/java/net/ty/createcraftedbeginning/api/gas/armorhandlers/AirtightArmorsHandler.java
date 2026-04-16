@@ -5,7 +5,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -29,10 +28,6 @@ public interface AirtightArmorsHandler {
     }
 
     default void appendHelmetHoverText(ItemStack helmet, TooltipContext context, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
-        if (canCureEffect(new MobEffectInstance(MobEffects.GLOWING))) {
-            tooltip.add(CCBLang.translate("gui.tooltips.airtight_armors.natural_effect").style(ChatFormatting.DARK_GREEN).component());
-        }
-
         float consumptionMultiplier = getConsumptionMultiplier()[0];
         MutableComponent advancedConsumptionMultiplier = flag.isAdvanced() ? CCBLang.text(" [x" + getRenderStr(consumptionMultiplier) + ']').component() : Component.empty();
         tooltip.add(CCBLang.translate("gui.tooltips.gas_tools.gas_consumption", getRenderStr(consumptionMultiplier * 100)).add(advancedConsumptionMultiplier.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());

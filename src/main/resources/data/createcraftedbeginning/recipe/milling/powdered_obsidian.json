@@ -1,0 +1,14 @@
+{
+  "type": "create:milling",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:obsidian_chunk"
+    }
+  ],
+  "processing_time": 250,
+  "results": [
+    {
+      "id": "create:powdered_obsidian"
+    }
+  ]
+}

@@ -195,7 +195,7 @@ public final class AirtightExtendArmUtils {
             return false;
         }
 
-        int gasConsumption = Mth.ceil(CCBConfig.server().equipments.armCostPerUse.get() * armHandler.getGasConsumptionMultiplier());
+        int gasConsumption = Mth.ceil(CCBConfig.server().equipments.gasCostPerUse.get() * armHandler.getGasConsumptionMultiplier());
         Level level = player.level();
         return CanisterContainerConsumers.interactContainer(player, gasType, gasConsumption, () -> !level.isClientSide);
     }

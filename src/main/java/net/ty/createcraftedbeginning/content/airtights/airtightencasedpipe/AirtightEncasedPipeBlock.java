@@ -47,6 +47,7 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
 
     public AirtightEncasedPipeBlock(Properties properties) {
         super(PIPE_APOTHEM, properties);
+        registerDefaultState(defaultBlockState().setValue(NORTH, false).setValue(EAST, false).setValue(SOUTH, false).setValue(WEST, false).setValue(WEST, false).setValue(UP, false).setValue(DOWN, false));
     }
 
     public static boolean isOpenAt(@NotNull BlockState state, Direction direction) {

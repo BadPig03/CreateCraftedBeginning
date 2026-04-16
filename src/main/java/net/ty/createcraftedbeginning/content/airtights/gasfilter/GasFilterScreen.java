@@ -33,8 +33,8 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
     private static final Component BLACKLIST_DESCRIPTION = CCBLang.translateDirect("gui.gas_filter.blacklist.description");
     private static final Component WHITELIST_TITLE = CCBLang.translateDirect("gui.gas_filter.whitelist");
     private static final Component WHITELIST_DESCRIPTION = CCBLang.translateDirect("gui.gas_filter.whitelist.description");
-    private static final Component OPTION_ENABLED = CCBLang.translateDirect("gui.airtight_handheld_drill.option_enabled");
-    private static final Component OPTION_DISABLED = CCBLang.translateDirect("gui.airtight_handheld_drill.option_disabled");
+    private static final Component OPTION_ENABLED = CCBLang.translateDirect("gui.option_enabled");
+    private static final Component OPTION_DISABLED = CCBLang.translateDirect("gui.option_disabled");
 
     private final ItemStack filter;
     private IconButton whitelistButton;
@@ -92,17 +92,18 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
             menu.blacklist = true;
             CatnipServices.NETWORK.sendToServer(new GasFilterScreenPacket(true));
         });
+        addRenderableWidget(blacklistButton);
         whitelistButton = new IconButton(leftPos + 36, topPos + 75, AllIcons.I_WHITELIST).withCallback(() -> {
             menu.blacklist = false;
             CatnipServices.NETWORK.sendToServer(new GasFilterScreenPacket(false));
         });
-        addRenderableWidgets(blacklistButton, whitelistButton);
+        addRenderableWidget(whitelistButton);
 
         IconButton resetButton = new IconButton(leftPos + BACKGROUND.getWidth() - 62, topPos + BACKGROUND.getHeight() - 29, AllIcons.I_TRASH).withCallback(() -> {
 			menu.clearContents();
 			menu.sendClearPacket();
 		});
-        addRenderableWidgets(resetButton);
+        addRenderableWidget(resetButton);
     }
 
     private void updateStates() {

@@ -5,23 +5,30 @@ import com.simibubi.create.foundation.item.ItemHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Unit;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
+import net.neoforged.neoforge.event.level.LevelEvent.Load;
+import net.neoforged.neoforge.event.level.LevelEvent.Unload;
+import net.neoforged.neoforge.event.tick.LevelTickEvent.Post;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.recipes.DeployerApplicationWithGasRecipe;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillMenu;
-import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillMenu.DrillItemHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.templates.AirtightHandheldDrillMiningTemplates;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu.InventoryHandler;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterItem;
@@ -76,6 +83,46 @@ public class CCBCommonEvents {
     }
 
     @SubscribeEvent
+    public static void onPostTick(@NotNull Post event) {
+        Level level = event.getLevel();
+        if (level.isClientSide) {
+            return;
+        }
+
+        CreateCraftedBeginning.GLOBAL_END_SCULK_SILENCER_MANAGER.tick(level);
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLoggedIn(@NotNull PlayerLoggedInEvent event) {
+        Player player = event.getEntity();
+        if (player.level().isClientSide || !(player instanceof ServerPlayer serverPlayer)) {
+            return;
+        }
+
+        CreateCraftedBeginning.GLOBAL_END_SCULK_SILENCER_MANAGER.sendToClients(serverPlayer);
+    }
+
+    @SubscribeEvent
+    public static void onLoad(@NotNull Load event) {
+        LevelAccessor level = event.getLevel();
+        if (level.isClientSide()) {
+            return;
+        }
+
+        CreateCraftedBeginning.GLOBAL_END_SCULK_SILENCER_MANAGER.clear();
+    }
+
+    @SubscribeEvent
+    public static void onUnload(@NotNull Unload event) {
+        LevelAccessor level = event.getLevel();
+        if (level.isClientSide()) {
+            return;
+        }
+
+        CreateCraftedBeginning.GLOBAL_END_SCULK_SILENCER_MANAGER.clear();
+    }
+
+    @SubscribeEvent
     public static void onDeployerRecipeSearch(@NotNull DeployerRecipeSearchEvent event) {
         Level level = event.getBlockEntity().getLevel();
         if (level == null) {
@@ -88,13 +135,12 @@ public class CCBCommonEvents {
     @SubscribeEvent
     public static void onModifyDefaultComponents(@NotNull ModifyDefaultComponentsEvent event) {
         event.modify(CCBItems.AIRTIGHT_HANDHELD_DRILL, builder -> {
-            builder.set(CCBDataComponents.DRILL_OPTION_FLAGS, AirtightHandheldDrillMenu.getDefaultFlags());
+            builder.set(CCBDataComponents.AIRTIGHT_UPGRADABLE_INVENTORY, ItemHelper.containerContentsFromHandler(new InventoryHandler(AirtightHandheldDrillMenu.MAX_SLOTS)));
             builder.set(CCBDataComponents.DRILL_MINING_TEMPLATE, AirtightHandheldDrillMiningTemplates.CUBOID);
             builder.set(CCBDataComponents.DRILL_MINING_SIZE, new BlockPos(1, 1, 1));
             builder.set(CCBDataComponents.DRILL_MINING_DIRECTION, Direction.NORTH);
             builder.set(CCBDataComponents.DRILL_MINING_RELATIVE_POSITION, new BlockPos(0, 0, 0));
-            builder.set(CCBDataComponents.DRILL_INVENTORY, ItemHelper.containerContentsFromHandler(new DrillItemHandler()));
-        });
+            });
         event.modify(CCBItems.GAS_CANISTER, builder -> {
             builder.set(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, List.of(GasStack.EMPTY));
             builder.set(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES, List.of(0L));

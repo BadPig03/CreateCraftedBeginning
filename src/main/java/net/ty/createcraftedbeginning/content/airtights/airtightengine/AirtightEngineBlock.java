@@ -74,16 +74,11 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
     }
 
     @Override
-    public InteractionResult onWrenched(BlockState state, @NotNull UseOnContext context) {
+    public InteractionResult onWrenched(@NotNull BlockState state, @NotNull UseOnContext context) {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
-        if (!(level.getBlockEntity(pos) instanceof AirtightEngineBlockEntity engine)) {
-            return InteractionResult.FAIL;
-        }
-
-        boolean isClockwise = state.getValue(CLOCKWISE);
-        level.setBlockAndUpdate(pos, state.setValue(CLOCKWISE, !isClockwise));
-        engine.updateGeneratedRotation();
+        level.setBlockAndUpdate(pos, state.setValue(CLOCKWISE, !state.getValue(CLOCKWISE)));
+        withBlockEntityDo(level, pos, AirtightEngineBlockEntity::updateRotation);
         IWrenchable.playRotateSound(level, pos);
         return InteractionResult.SUCCESS;
     }
@@ -111,11 +106,11 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
 
     @Override
     public BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
-        BlockState state;
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
         Direction direction = context.getClickedFace();
         Direction horizontalDirection = context.getHorizontalDirection();
+        BlockState state;
         if (direction == Direction.UP) {
             state = defaultBlockState().setValue(FACE, AttachFace.FLOOR).setValue(FACING, horizontalDirection).setValue(AXIS, Axis.Y);
         }
@@ -129,9 +124,9 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
     }
 
     @Override
-    public @NotNull BlockState updateShape(@NotNull BlockState state, @NotNull Direction direction, @NotNull BlockState neighbourState, @NotNull LevelAccessor world, @NotNull BlockPos pos, @NotNull BlockPos neighbourPos) {
+    public @NotNull BlockState updateShape(@NotNull BlockState state, @NotNull Direction direction, @NotNull BlockState neighbourState, @NotNull LevelAccessor level, @NotNull BlockPos pos, @NotNull BlockPos neighbourPos) {
         if (state.getValue(WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
+            level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
         return state;
     }
@@ -208,4 +203,9 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
     public boolean isLargeCog() {
         return true;
     }
+
+    @Override
+    public boolean isSmallCog() {
+		return false;
+	}
 }

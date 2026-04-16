@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "tag": "createcraftedbeginning:crying_obsidian_bricks"
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:crying_obsidian_bricks_v"
+  }
+}

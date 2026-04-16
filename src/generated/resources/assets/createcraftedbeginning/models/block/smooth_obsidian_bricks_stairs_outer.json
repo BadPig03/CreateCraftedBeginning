@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "bottom": "createcraftedbeginning:block/obsidians/smooth_obsidian_bricks",
+    "side": "createcraftedbeginning:block/obsidians/smooth_obsidian_bricks",
+    "top": "createcraftedbeginning:block/obsidians/smooth_obsidian_bricks"
+  }
+}

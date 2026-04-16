@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/wall_inventory",
+  "textures": {
+    "wall": "createcraftedbeginning:block/obsidians/smooth_crying_obsidian_bricks"
+  }
+}

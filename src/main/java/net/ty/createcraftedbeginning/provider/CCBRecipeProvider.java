@@ -9,6 +9,7 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeGen;
 import net.ty.createcraftedbeginning.data.CCBCoolingRecipes;
+import net.ty.createcraftedbeginning.data.CCBDissipationRecipes;
 import net.ty.createcraftedbeginning.data.CCBEnergizationRecipes;
 import net.ty.createcraftedbeginning.data.CCBChillingRecipes;
 import net.ty.createcraftedbeginning.data.CCBGasInjectionRecipes;
@@ -50,6 +51,7 @@ public class CCBRecipeProvider extends RecipeProvider {
     public static void registerAllProcessingWithGas(@NotNull DataGenerator generator, PackOutput output, CompletableFuture<Provider> registries) {
         GENERATORS_WITH_GAS.add(new CCBPressurizationRecipes(output, registries));
         GENERATORS_WITH_GAS.add(new CCBEnergizationRecipes(output, registries));
+        GENERATORS_WITH_GAS.add(new CCBDissipationRecipes(output, registries));
         GENERATORS_WITH_GAS.add(new CCBGasInjectionRecipes(output, registries));
         GENERATORS_WITH_GAS.add(new CCBReactorKettleRecipes(output, registries));
         GENERATORS_WITH_GAS.add(new CCBResidueGenerationRecipes(output, registries));

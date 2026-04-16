@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "cookingtime": 200,
+  "experience": 0.1,
+  "ingredient": {
+    "item": "createcraftedbeginning:crying_obsidian_bricks"
+  },
+  "result": {
+    "id": "createcraftedbeginning:smooth_crying_obsidian_bricks"
+  }
+}

@@ -28,8 +28,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
@@ -50,6 +48,7 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates.IllChamberState;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates.InactiveChamberState;
 import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.recipe.DissipationRecipe;
 import net.ty.createcraftedbeginning.recipe.EnergizationRecipe;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -127,7 +126,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         }
 
         spawnParticles(getWindLevelFromBlock());
-        if (!shouldTickAnimation()) {
+        if (!VisualizationManager.supportsVisualization(level)) {
             return;
         }
 
@@ -166,7 +165,6 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             ChargerType stateType = ChargerType.values()[compoundTag.getInt(COMPOUND_KEY_STATE_TYPE)];
             CompoundTag stateData = compoundTag.getCompound(COMPOUND_KEY_STATE_DATA);
             boolean isCreative = stateData.contains(COMPOUND_KEY_IS_CREATIVE) && stateData.getBoolean(COMPOUND_KEY_IS_CREATIVE);
-
             BaseChamberState newState;
             if (isCreative) {
                 newState = new CreativeChamberState(stateType);
@@ -198,120 +196,6 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         invalidateCapabilities();
     }
 
-    private @NotNull Gas getTankEnergizedGasType() {
-        if (level == null) {
-            return Gas.EMPTY_GAS_HOLDER.value();
-        }
-
-        return EnergizationRecipe.getResultGasType(level, getTankGasType());
-    }
-
-    private @NotNull Gas getTankGasType() {
-        IChamberGasTank tank = getTank();
-        if (tank == null) {
-            return Gas.EMPTY_GAS_HOLDER.value();
-        }
-
-        GasTank inventory = tank.getTankInventory();
-        if (inventory.isEmpty()) {
-            return Gas.EMPTY_GAS_HOLDER.value();
-        }
-
-        return inventory.getGasStack().getGasType();
-    }
-
-    private @Nullable IChamberGasTank getTank() {
-        if (level == null) {
-            return null;
-        }
-
-        IChamberGasTank tank = source.get();
-        if (tank == null || tank.isRemoved()) {
-            source = new WeakReference<>(null);
-            tank = level.getBlockEntity(worldPosition.below()) instanceof IChamberGasTank tankBe ? tankBe : null;
-            source = new WeakReference<>(tank);
-        }
-        return tank == null ? null : tank.getControllerBE();
-    }
-
-    private boolean isOutputFull() {
-        return tankBehaviour.getPrimaryHandler().getSpace() == 0;
-    }
-
-    private boolean isOutputMismatched() {
-        Gas tankGasType = getTankGasType();
-        Gas tankEnergizedGasType = getTankEnergizedGasType();
-        return !tankGasType.isEmpty() && !tankEnergizedGasType.isEmpty() && !tankBehaviour.getPrimaryHandler().isEmpty() && !tankBehaviour.getPrimaryHandler().getGasStack().is(tankEnergizedGasType);
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    private boolean shouldTickAnimation() {
-        return !VisualizationManager.supportsVisualization(level);
-    }
-
-    private float getTarget() {
-        float target = 0;
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player != null && !player.isInvisible()) {
-            double x;
-            double z;
-            if (isVirtual()) {
-                x = -4;
-                z = -10;
-            }
-            else {
-                x = player.getX();
-                z = player.getZ();
-            }
-            double dx = x - (getBlockPos().getX() + 0.5);
-            double dz = z - (getBlockPos().getZ() + 0.5);
-            target = AngleHelper.deg(-Mth.atan2(dz, dx)) - 90;
-        }
-        target = headAngle.getValue() + AngleHelper.getShortestAngleDiff(headAngle.getValue(), target);
-        return target;
-    }
-
-    private int getEnergizationAmount() {
-        int time = getWindRemainingTime();
-        if (time <= 0) {
-            return 0;
-        }
-
-        IChamberGasTank tank = getTank();
-        if (tank == null || isControllerActive()) {
-            return 0;
-        }
-
-        int maxAmount = CCBConfig.server().airtights.maxEnergizationRate.get();
-        float ratio = Mth.clamp((float) time / MAX_EFFECTIVE_THRESHOLD, 0, 1);
-        return Mth.clamp((int) (maxAmount * ratio), 1, maxAmount);
-    }
-
-    private void spawnParticles(WindLevel windLevel) {
-        if (level == null) {
-            return;
-        }
-
-        RandomSource random = level.getRandom();
-        int possibility = windLevel == WindLevel.ILL ? 4 : 2;
-        if (random.nextInt(possibility) != 0) {
-            return;
-        }
-
-        Vec3 center = VecHelper.getCenterOf(worldPosition);
-        Vec3 added = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125f).multiply(1, 0, 1));
-        if (random.nextInt(possibility * 2) == 0) {
-            level.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), added.x, added.y, added.z, 0, 0, 0);
-        }
-        double yMotion = random.nextDouble() * 0.0125f;
-        Vec3 galeAdded = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25f, 1).normalize().scale(0.5 + random.nextDouble() * 0.125f)).add(0, 0.5, 0);
-        if (!windLevel.isAtLeast(WindLevel.GALE)) {
-            return;
-        }
-
-        level.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), galeAdded.x, galeAdded.y, galeAdded.z, 0, yMotion, 0);
-    }
-
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         if (level == null) {
@@ -324,12 +208,11 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         CCBLang.translate(windLevel.getTranslatable()).style(windLevel.getChatFormatting()).forGoggles(tooltip, 1);
 
         Gas tankGasType = getTankGasType();
-        boolean isBad = currentState.getWindLevel() == WindLevel.ILL;
         boolean isActive = isControllerActive();
-        boolean invalidGas = getTankEnergizedGasType().isEmpty() && !tankGasType.isEmpty() && !isActive;
-        boolean outputFailed = (isOutputFull() || isOutputMismatched()) && !isActive;
+        boolean isInputInvalid = isInputInvalid();
+        boolean isOutputFailed = (isOutputFull() || isOutputMismatched()) && !isActive;
         int time = getWindRemainingTime();
-        if (currentState.getWindLevel() != WindLevel.CALM) {
+        if (windLevel != WindLevel.CALM) {
             CCBLang.translate("gui.goggles.breeze_chamber.remaining_time").style(ChatFormatting.GRAY).forGoggles(tooltip);
             ChatFormatting timeColor = time > 0 ? ChatFormatting.GREEN : ChatFormatting.RED;
             if (isCreative()) {
@@ -338,14 +221,9 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             else {
                 CCBLang.seconds(time, level.tickRateManager().tickrate()).style(timeColor).forGoggles(tooltip, 1);
             }
-
             if (isActive) {
                 CCBLang.translate("gui.goggles.breeze_chamber.energization_level").style(ChatFormatting.GRAY).forGoggles(tooltip);
                 CCBLang.translate("gui.goggles.breeze_chamber.current_level", CCBLang.number(getWindRemainingLevel())).style(ChatFormatting.BLUE).forGoggles(tooltip, 1);
-            }
-            else {
-                CCBLang.translate("gui.goggles.breeze_chamber.energization_rate").style(ChatFormatting.GRAY).forGoggles(tooltip);
-                CCBLang.translate("gui.goggles.breeze_chamber.milli_buckets_per_second", CCBLang.number(getEnergizationAmount() * 20)).style(ChatFormatting.BLUE).forGoggles(tooltip, 1);
             }
         }
 
@@ -366,17 +244,14 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             }
         }
 
-        if (isBad || invalidGas || outputFailed) {
+        if (isInputInvalid || isOutputFailed) {
             tooltip.add(CommonComponents.EMPTY);
             CCBLang.translate("gui.goggles.warning").style(ChatFormatting.GOLD).forGoggles(tooltip);
         }
-        if (isBad) {
-            CCBLang.addToGoggles(tooltip, "gui.goggles.breeze_chamber.improper_food");
-        }
-        if (invalidGas) {
+        if (isInputInvalid) {
             CCBLang.addToGoggles(tooltip, "gui.goggles.breeze_chamber.invalid_gas", Component.translatable(tankGasType.getTranslationKey()));
         }
-        if (outputFailed) {
+        if (isOutputFailed) {
             CCBLang.addToGoggles(tooltip, "gui.goggles.breeze_chamber.output_failed");
         }
         return true;
@@ -455,7 +330,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             return;
         }
 
-        int maxAmount = getEnergizationAmount();
+        int maxAmount = getProcessingAmount();
         GasTank inventory = tank.getTankInventory();
         if (inventory.isEmpty() || isOutputFull()) {
             return;
@@ -469,6 +344,32 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         IGasHandler handler = tank.getCapability();
         GasStack drainedStack = handler.drain(Math.min(inventory.getGasAmount(), Math.min(maxAmount, tankBehaviour.getPrimaryHandler().getSpace())), GasAction.EXECUTE);
         tankBehaviour.getInternalGasHandler().forceFill(new GasStack(energizedGasType.getHolder(), drainedStack.getAmount()), GasAction.EXECUTE);
+    }
+
+    public void doDissipation() {
+        if (level == null) {
+            return;
+        }
+
+        IChamberGasTank tank = getTank();
+        if (tank == null) {
+            return;
+        }
+
+        int maxAmount = getProcessingAmount();
+        GasTank inventory = tank.getTankInventory();
+        if (inventory.isEmpty() || isOutputFull()) {
+            return;
+        }
+
+        Gas dissipatedGasType = getTankDissipatedGasType();
+        if (dissipatedGasType.isEmpty() || isOutputMismatched()) {
+            return;
+        }
+
+        IGasHandler handler = tank.getCapability();
+        GasStack drainedStack = handler.drain(Math.min(inventory.getGasAmount(), Math.min(maxAmount, tankBehaviour.getPrimaryHandler().getSpace())), GasAction.EXECUTE);
+        tankBehaviour.getInternalGasHandler().forceFill(new GasStack(dissipatedGasType.getHolder(), drainedStack.getAmount()), GasAction.EXECUTE);
     }
 
     public void loadFromItem(@NotNull ItemStack stack) {
@@ -508,7 +409,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             return;
         }
 
-        level.setBlockAndUpdate(worldPosition, getBlockState().setValue(WIND_LEVEL, currentState.getWindLevel()));
+        level.setBlockAndUpdate(worldPosition, getBlockState().setValue(WIND_LEVEL, getWindLevel()));
         notifyUpdate();
     }
 
@@ -550,7 +451,6 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         spawnParticleBurst(true);
     }
 
-    @OnlyIn(Dist.CLIENT)
     public void tickAnimation() {
         boolean active = isControllerActive();
         if (active) {
@@ -575,6 +475,155 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
 
     public WindLevel getWindLevelFromBlock() {
         return BreezeChamberBlock.getWindLevelOf(getBlockState());
+    }
+
+    private @NotNull Gas getTankEnergizedGasType() {
+        if (level == null) {
+            return Gas.EMPTY_GAS_HOLDER.value();
+        }
+
+        return EnergizationRecipe.getResultGasType(level, getTankGasType());
+    }
+
+    private @NotNull Gas getTankDissipatedGasType() {
+        if (level == null) {
+            return Gas.EMPTY_GAS_HOLDER.value();
+        }
+
+        return DissipationRecipe.getResultGasType(level, getTankGasType());
+    }
+
+    private @NotNull Gas getTankGasType() {
+        IChamberGasTank tank = getTank();
+        if (tank == null) {
+            return Gas.EMPTY_GAS_HOLDER.value();
+        }
+
+        GasTank inventory = tank.getTankInventory();
+        if (inventory.isEmpty()) {
+            return Gas.EMPTY_GAS_HOLDER.value();
+        }
+
+        return inventory.getGasStack().getGasType();
+    }
+
+    private @Nullable IChamberGasTank getTank() {
+        if (level == null) {
+            return null;
+        }
+
+        IChamberGasTank tank = source.get();
+        if (tank == null || tank.isRemoved()) {
+            source = new WeakReference<>(null);
+            tank = level.getBlockEntity(worldPosition.below()) instanceof IChamberGasTank tankBe ? tankBe : null;
+            source = new WeakReference<>(tank);
+        }
+        return tank == null ? null : tank.getControllerBE();
+    }
+
+    private boolean isOutputFull() {
+        return tankBehaviour.getPrimaryHandler().getSpace() == 0;
+    }
+
+    private boolean isOutputMismatched() {
+        if (getTankGasType().isEmpty()) {
+            return false;
+        }
+
+        WindLevel windLevel = getWindLevel();
+        if (windLevel == WindLevel.GALE) {
+            Gas energizedGasType = getTankEnergizedGasType();
+            return !energizedGasType.isEmpty() && !tankBehaviour.getPrimaryHandler().isEmpty() && !tankBehaviour.getPrimaryHandler().getGasStack().is(energizedGasType);
+        }
+        else if (windLevel == WindLevel.ILL) {
+            Gas dissipatedGasType = getTankDissipatedGasType();
+            return !dissipatedGasType.isEmpty() && !tankBehaviour.getPrimaryHandler().isEmpty() && !tankBehaviour.getPrimaryHandler().getGasStack().is(dissipatedGasType);
+        }
+        return false;
+    }
+
+    private boolean isInputInvalid() {
+        if (getTankGasType().isEmpty()) {
+            return false;
+        }
+
+        Gas energizedGasType = getTankEnergizedGasType();
+        Gas dissipatedGasType = getTankDissipatedGasType();
+        if (energizedGasType.isEmpty() && dissipatedGasType.isEmpty()) {
+            return true;
+        }
+
+        WindLevel windLevel = getWindLevel();
+        if (windLevel == WindLevel.GALE) {
+            return energizedGasType.isEmpty();
+        }
+        else if (windLevel == WindLevel.ILL) {
+            return dissipatedGasType.isEmpty();
+        }
+        return false;
+    }
+
+    private float getTarget() {
+        float target = 0;
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player != null && !player.isInvisible()) {
+            double x;
+            double z;
+            if (isVirtual()) {
+                x = -4;
+                z = -10;
+            }
+            else {
+                x = player.getX();
+                z = player.getZ();
+            }
+            double dx = x - (getBlockPos().getX() + 0.5);
+            double dz = z - (getBlockPos().getZ() + 0.5);
+            target = AngleHelper.deg(-Mth.atan2(dz, dx)) - 90;
+        }
+        target = headAngle.getValue() + AngleHelper.getShortestAngleDiff(headAngle.getValue(), target);
+        return target;
+    }
+
+    private int getProcessingAmount() {
+        int time = getWindRemainingTime();
+        if (time == 0) {
+            return 0;
+        }
+
+        IChamberGasTank tank = getTank();
+        if (tank == null || isControllerActive()) {
+            return 0;
+        }
+
+        int maxAmount = CCBConfig.server().airtights.maxProcessingRate.get();
+        float ratio = Mth.clamp((float) Mth.abs(time) / MAX_EFFECTIVE_THRESHOLD, 0, 1);
+        return Mth.clamp((int) (maxAmount * ratio), 1, maxAmount);
+    }
+
+    private void spawnParticles(WindLevel windLevel) {
+        if (level == null) {
+            return;
+        }
+
+        RandomSource random = level.getRandom();
+        int possibility = windLevel == WindLevel.ILL ? 4 : 2;
+        if (random.nextInt(possibility) != 0) {
+            return;
+        }
+
+        Vec3 center = VecHelper.getCenterOf(worldPosition);
+        Vec3 added = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125f).multiply(1, 0, 1));
+        if (random.nextInt(possibility * 2) == 0) {
+            level.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), added.x, added.y, added.z, 0, 0, 0);
+        }
+        double yMotion = random.nextDouble() * 0.0125f;
+        Vec3 galeAdded = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25f, 1).normalize().scale(0.5 + random.nextDouble() * 0.125f)).add(0, 0.5, 0);
+        if (!windLevel.isAtLeast(WindLevel.GALE)) {
+            return;
+        }
+
+        level.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), galeAdded.x, galeAdded.y, galeAdded.z, 0, yMotion, 0);
     }
 
     public enum ChargerType {

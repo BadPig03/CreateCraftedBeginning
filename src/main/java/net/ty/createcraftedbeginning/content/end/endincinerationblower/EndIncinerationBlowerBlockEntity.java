@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.content.end.endincinerationblower;
 
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
-import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.belt.behaviour.TransportedItemStackHandlerBehaviour;
 import com.simibubi.create.content.kinetics.belt.behaviour.TransportedItemStackHandlerBehaviour.TransportedResult;
 import com.simibubi.create.content.kinetics.fan.processing.AllFanProcessingTypes;
@@ -25,19 +24,18 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
-public class EndIncinerationBlowerBlockEntity extends KineticBlockEntity {
+public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<EndIncinerationBlowerStructuralBlockEntity> {
     private static final String COMPOUND_KEY_SHOW_OUTLINE = "ShowOutline";
     private static final String COMPOUND_KEY_OWNER = "Owner";
 
-    private EndIncinerationBlowerStructuralBlockEntity structural;
     private EndIncinerationBlowerFakePlayer player;
     private UUID owner;
     private boolean showOutline;
@@ -131,14 +129,9 @@ public class EndIncinerationBlowerBlockEntity extends KineticBlockEntity {
     @Override
     public void tick() {
         super.tick();
-        if (level == null) {
-            return;
-        }
-
         displayOutline();
         spawnParticles();
         applyPrimaryEffect();
-        verifyStructural();
     }
 
     @Override
@@ -163,6 +156,7 @@ public class EndIncinerationBlowerBlockEntity extends KineticBlockEntity {
         }
     }
 
+    @Override
     public void updateStructural() {
         if (level == null || level.isClientSide) {
             return;
@@ -197,35 +191,12 @@ public class EndIncinerationBlowerBlockEntity extends KineticBlockEntity {
         player = null;
     }
 
-    private @Nullable EndIncinerationBlowerStructuralBlockEntity getStructural() {
-        if (level == null || !(level.getBlockEntity(worldPosition.below()) instanceof EndIncinerationBlowerStructuralBlockEntity be)) {
-            return null;
-        }
-
-        return be;
-    }
-
     private void displayOutline() {
         if (!(level instanceof ServerLevel serverLevel) || !showOutline) {
             return;
         }
 
         CatnipServices.NETWORK.sendToClientsAround(serverLevel, worldPosition, 64, new EndIncinerationBlowerOutlinePacket(worldPosition, getSpeed()));
-    }
-
-    private void verifyStructural() {
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
-        if (structural == null || structural.isRemoved()) {
-            structural = getStructural();
-        }
-        if (structural != null) {
-            return;
-        }
-
-        level.destroyBlock(worldPosition, true);
     }
 
     private void spawnParticles() {
@@ -255,7 +226,6 @@ public class EndIncinerationBlowerBlockEntity extends KineticBlockEntity {
             return;
         }
 
-        EndIncinerationBlowerStructuralBlockEntity structural = getStructural();
         if (structural == null) {
             return;
         }

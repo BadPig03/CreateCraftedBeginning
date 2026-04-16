@@ -179,7 +179,7 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
 
     @Override
     public void appendHoverText(@NotNull ItemStack compressor, @NotNull TooltipContext context, @NotNull List<Component> tooltips, @NotNull TooltipFlag flag) {
-        String stateName = compressor.getOrDefault(CCBDataComponents.AIR_COMPRESSOR_OVERHEAT_STATE, OverheatManager.NORMAL.getSerializedName());
+        String stateName = compressor.getOrDefault(CCBDataComponents.COMPRESSOR_OVERHEAT_STATE, OverheatManager.NORMAL.getSerializedName());
         IOverheatState overheatState = OverheatManager.getStateByName(stateName);
         tooltips.add(CCBLang.translate("gui.tooltips.air_compressor.overheat_state").style(ChatFormatting.GRAY).add(CCBLang.translate(overheatState.getTranslationKey()).style(overheatState.getDisplayColor())).component());
     }

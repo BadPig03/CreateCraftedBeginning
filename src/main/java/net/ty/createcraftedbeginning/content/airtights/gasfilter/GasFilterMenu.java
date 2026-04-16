@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu {
+    private static final int PLAYER_INVENTORY_SLOTS = Inventory.INVENTORY_SIZE;
+
     protected ItemStackHandler filterInventory;
     protected boolean blacklist;
 
@@ -91,8 +93,8 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
 
     @Override
     public @NotNull ItemStack quickMoveStack(@NotNull Player player, int index) {
-        if (index >= 36) {
-            filterInventory.extractItem(index - 36, 1, false);
+        if (index >= PLAYER_INVENTORY_SLOTS) {
+            filterInventory.extractItem(index - PLAYER_INVENTORY_SLOTS, 1, false);
             getSlot(index).setChanged();
             return ItemStack.EMPTY;
         }
@@ -108,7 +110,7 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
 
     @Override
     public void clicked(int slotId, int dragType, @NotNull ClickType clickType, @NotNull Player player) {
-        if (slotId < 36) {
+        if (slotId < PLAYER_INVENTORY_SLOTS) {
             super.clicked(slotId, dragType, clickType, player);
             return;
         }
@@ -122,7 +124,7 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
 
         ItemStack carried = getCarried();
         if (carried.isEmpty()) {
-            filterInventory.setStackInSlot(slotId - 36, ItemStack.EMPTY);
+            filterInventory.setStackInSlot(slotId - PLAYER_INVENTORY_SLOTS, ItemStack.EMPTY);
             getSlot(slotId).setChanged();
             return;
         }
@@ -145,12 +147,20 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
         return slotIn.container == playerInventory;
     }
 
-    protected boolean isInSlot(int index) {
-        return index >= 27 && index - 27 == playerInventory.selected;
-    }
+    public void insertDirectly(@NotNull List<ItemStack> items) {
+        int slotIndex = 0;
+        int slots = filterInventory.getSlots();
+        for (ItemStack virtual : items) {
+            while (slotIndex < slots && !filterInventory.getStackInSlot(slotIndex).isEmpty()) {
+                slotIndex++;
+            }
+            if (slotIndex >= slots) {
+                break;
+            }
 
-    protected boolean mayPlace(ItemStack stack) {
-        return CanisterContainerSuppliers.isValidCanisterContainer(stack);
+            filterInventory.insertItem(slotIndex, virtual, false);
+            getSlot(slotIndex + PLAYER_INVENTORY_SLOTS).setChanged();
+        }
     }
 
     protected void tryToInsert(@NotNull ItemStack stack) {
@@ -182,18 +192,14 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
             return;
         }
 
-        int slotIndex = 0;
-        int slots = filterInventory.getSlots();
-        for (ItemStack virtual : toInsert) {
-            while (slotIndex < slots && !filterInventory.getStackInSlot(slotIndex).isEmpty()) {
-                slotIndex++;
-            }
-            if (slotIndex >= slots) {
-                break;
-            }
+        insertDirectly(toInsert);
+    }
 
-            filterInventory.insertItem(slotIndex, virtual, false);
-            getSlot(slotIndex + 36).setChanged();
-        }
+    protected boolean isInSlot(int index) {
+        return index >= 27 && index - 27 == playerInventory.selected;
+    }
+
+    protected boolean mayPlace(ItemStack stack) {
+        return CanisterContainerSuppliers.isValidCanisterContainer(stack);
     }
 }

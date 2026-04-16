@@ -28,7 +28,7 @@ public class CCBReactorKettleRecipes extends ReactorKettleRecipeGen {
     GeneratedRecipe GUNPOWDER_FROM_COAL = create("gunpowder_from_coal", b -> b.require(Items.COAL).require(Items.FLINT).temperatureCondition(TemperatureCondition.HEATED).duration(0).output(Items.GUNPOWDER, 2));
     GeneratedRecipe GUNPOWDER_FROM_CHARCOAL = create("gunpowder_from_charcoal", b -> b.require(Items.CHARCOAL).require(Items.FLINT).temperatureCondition(TemperatureCondition.HEATED).duration(0).output(Items.GUNPOWDER, 3));
     GeneratedRecipe ICE_CHILLED = create("ice_chilled", b -> b.require(Fluids.WATER, 1000).temperatureCondition(TemperatureCondition.CHILLED).duration(0).output(Blocks.ICE));
-    GeneratedRecipe ICE_SUPERCHILLED = create("ice_superchilled", b -> b.require(Fluids.WATER, 1000).temperatureCondition(TemperatureCondition.SUPERCHILLED).duration(0).output(Blocks.ICE));
+    GeneratedRecipe ICE_SUPERCHILLED = create("ice_superchilled", b -> b.require(Fluids.WATER, 1000).temperatureCondition(TemperatureCondition.SUPERCHILLED).duration(0).output(0.75f, Blocks.PACKED_ICE).output(0.25f, Blocks.BLUE_ICE));
 
     GeneratedRecipe NATURAL_AIR = create("natural_air", b -> b.require(CCBItems.BREEZE_CORE).require(Tags.Items.STONES).duration(200).output(CCBGases.NATURAL_AIR.get(), 10).output(CCBItems.BREEZE_CORE).output(0.25f, Items.GRAVEL));
     GeneratedRecipe ULTRAWARM_AIR = create("ultrawarm_air", b -> b.require(CCBItems.BREEZE_CORE).require(Tags.Items.NETHERRACKS).duration(200).output(CCBGases.ULTRAWARM_AIR.get(), 10).output(CCBItems.BREEZE_CORE).output(0.25f, Items.GRAVEL).temperatureCondition(TemperatureCondition.SUPERHEATED));

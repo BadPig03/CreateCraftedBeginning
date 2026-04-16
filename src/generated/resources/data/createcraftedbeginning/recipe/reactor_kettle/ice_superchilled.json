@@ -9,7 +9,12 @@
   ],
   "results": [
     {
-      "id": "minecraft:ice"
+      "chance": 0.75,
+      "id": "minecraft:packed_ice"
+    },
+    {
+      "chance": 0.25,
+      "id": "minecraft:blue_ice"
     }
   ],
   "temperature": "superchilled"

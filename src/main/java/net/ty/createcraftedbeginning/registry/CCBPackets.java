@@ -13,34 +13,42 @@ import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerClientPa
 import net.ty.createcraftedbeginning.api.gas.gases.GasAreaOutlinePacket;
 import net.ty.createcraftedbeginning.api.gas.gases.MountedStorageSyncPacketWithGas;
 import net.ty.createcraftedbeginning.compat.jei.airtights.AirtightHandheldDrillGhostItemSubmitPacket;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightBoostElytraPacket;
+import net.ty.createcraftedbeginning.compat.jei.airtights.GasFilterGhostItemSubmitPacket;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateElytraBoostPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillAnimationPacket;
-import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillInventoryPacket;
-import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillScreenPacket;
+import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillParametersPacket;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlayPacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackMenuSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreenPacket;
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerOutlinePacket;
+import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerUpdatePacket;
 
 import java.util.Arrays;
 import java.util.Locale;
 
 public enum CCBPackets implements PacketTypeProvider {
     AIRTIGHT_CANNON(AirtightCannonPacket.class, AirtightCannonPacket.STREAM_CODEC),
+
+    AIRTIGHT_HANDHELD_DRILL_PARAMETERS(AirtightHandheldDrillParametersPacket.class, AirtightHandheldDrillParametersPacket.STREAM_CODEC),
     AIRTIGHT_HANDHELD_DRILL_ANIMATION(AirtightHandheldDrillAnimationPacket.class, AirtightHandheldDrillAnimationPacket.STREAM_CODEC),
-    AIRTIGHT_HANDHELD_DRILL_SCREEN(AirtightHandheldDrillScreenPacket.class, AirtightHandheldDrillScreenPacket.STREAM_CODEC),
-    AIRTIGHT_HANDHELD_DRILL_INVENTORY(AirtightHandheldDrillInventoryPacket.class, AirtightHandheldDrillInventoryPacket.STREAM_CODEC),
     AIRTIGHT_HANDHELD_DRILL_GHOST_ITEM_SUBMIT(AirtightHandheldDrillGhostItemSubmitPacket.class, AirtightHandheldDrillGhostItemSubmitPacket.STREAM_CODEC),
-    AIRTIGHT_BOOST_ELYTRA(AirtightBoostElytraPacket.class, AirtightBoostElytraPacket.STREAM_CODEC),
+
+    AIRTIGHT_BOOST_ELYTRA(AirtightChestplateElytraBoostPacket.class, AirtightChestplateElytraBoostPacket.STREAM_CODEC),
+
+    AIRTIGHT_UPGRADE(AirtightUpgradePacket.class, AirtightUpgradePacket.STREAM_CODEC),
+
+    GAS_FILTER_SCREEN(GasFilterScreenPacket.class, GasFilterScreenPacket.STREAM_CODEC),
+    GAS_FILTER_GHOST_ITEM_SUBMIT(GasFilterGhostItemSubmitPacket.class, GasFilterGhostItemSubmitPacket.STREAM_CODEC),
 
     GAS_CANISTER_OVERLAY(GasCanisterOverlayPacket.class, GasCanisterOverlayPacket.STREAM_CODEC),
     GAS_CANISTER_PACK_MENU_SYNC(GasCanisterPackMenuSyncPacket.class, GasCanisterPackMenuSyncPacket.STREAM_CODEC),
-    GAS_FILTER_SCREEN(GasFilterScreenPacket.class, GasFilterScreenPacket.STREAM_CODEC),
     GAS_AREA_OUTLINE(GasAreaOutlinePacket.class, GasAreaOutlinePacket.STREAM_CODEC),
     CANISTER_CONTAINER_CLIENT(CanisterContainerClientPacket.class, CanisterContainerClientPacket.STREAM_CODEC),
 
     END_INCINERATION_BLOWER_OUTLINE(EndIncinerationBlowerOutlinePacket.class, EndIncinerationBlowerOutlinePacket.STREAM_CODEC),
+    END_SCULK_SILENCER_UPDATE(EndSculkSilencerUpdatePacket.class, EndSculkSilencerUpdatePacket.STREAM_CODEC),
 
     MOUNTED_STORAGE_SYNC_WITH_GAS(MountedStorageSyncPacketWithGas.class, MountedStorageSyncPacketWithGas.STREAM_CODEC);
 

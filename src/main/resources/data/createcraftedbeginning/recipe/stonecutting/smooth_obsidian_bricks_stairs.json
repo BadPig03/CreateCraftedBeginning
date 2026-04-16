@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "tag": "createcraftedbeginning:obsidian_bricks"
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:smooth_obsidian_bricks_stairs"
+  }
+}

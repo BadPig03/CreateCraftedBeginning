@@ -28,6 +28,7 @@ import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasRec
 import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
 import net.ty.createcraftedbeginning.recipe.ConversionRecipe;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
+import net.ty.createcraftedbeginning.recipe.DissipationRecipe;
 import net.ty.createcraftedbeginning.recipe.EnergizationRecipe;
 import net.ty.createcraftedbeginning.recipe.ChillingRecipe;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
@@ -49,6 +50,7 @@ public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
     PRESSURIZATION(PressurizationRecipe::new),
     WIND_CHARGING(WindChargingRecipe::new),
     ENERGIZATION(EnergizationRecipe::new),
+    DISSIPATION(DissipationRecipe::new),
     REACTOR_KETTLE(ReactorKettleRecipe::new),
     RESIDUE_GENERATION(ResidueGenerationRecipe::new),
 

@@ -26,7 +26,7 @@ import java.util.function.Supplier;
 public class GasNetwork {
     private static final int CYCLES_PER_TICK = 16;
     private static final int PAUSE_INTERVAL = 2;
-    private static final int TWO_SECONDS_IN_TICKS = 40;
+    private static final int TICK_RATE = 40;
 
     private final Level level;
     private final BlockFace start;
@@ -175,7 +175,7 @@ public class GasNetwork {
             return;
         }
         for (Pair<BlockFace, GasFlowSource> pair : targets) {
-            if (level.getGameTime() % TWO_SECONDS_IN_TICKS != 0) {
+            if (level.getGameTime() % TICK_RATE != 0) {
                 continue;
             }
 

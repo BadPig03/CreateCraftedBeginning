@@ -5,17 +5,19 @@
 	"texture_size": [32, 32],
 	"textures": {
 		"0": "createcraftedbeginning:block/end_incineration_blower/blower",
-		"particle": "createcraftedbeginning:block/end_casing"
+		"particle": "createcraftedbeginning:block/end_incineration_blower/particle"
 	},
 	"elements": [
 		{
 			"from": [0, 1, 0],
 			"to": [16, 16, 16],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
 			"faces": {
 				"north": {"uv": [8.00001, 7.99999, 16, 15.5], "texture": "#0"},
 				"east": {"uv": [8.00001, 7.99999, 16, 15.5], "texture": "#0"},
 				"south": {"uv": [8.00001, 7.99999, 16, 15.5], "texture": "#0"},
 				"west": {"uv": [8.00001, 7.99999, 16, 15.5], "texture": "#0"},
+				"up": {"uv": [0, 0, 8, 8], "texture": "#0"},
 				"down": {"uv": [0, 7.99999, 8, 16], "texture": "#0"}
 			}
 		},

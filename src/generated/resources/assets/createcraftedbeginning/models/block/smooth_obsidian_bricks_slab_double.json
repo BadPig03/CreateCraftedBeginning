@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "createcraftedbeginning:block/obsidians/smooth_obsidian_bricks",
+    "side": "createcraftedbeginning:block/obsidians/smooth_obsidian_bricks_slab"
+  }
+}

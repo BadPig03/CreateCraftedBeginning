@@ -15,7 +15,6 @@ import java.util.function.BiFunction;
 public class CCBShapes {
     public static final VoxelShaper AIRTIGHT_ENGINE = shape(0, 0, 0, 16, 2, 16).add(2, 2, 2, 14, 6, 14).add(0, 6, 0, 16, 10, 16).add(2, 10, 2, 14, 14, 14).forDirectional(Direction.UP);
     public static final VoxelShaper AIRTIGHT_HATCH = shape(2, 2, 0, 14, 14, 1).add(3, 0, 0, 13, 16, 10).forHorizontal(Direction.SOUTH);
-    public static final VoxelShaper AIRTIGHT_INTAKE_PORT = shape(0, 0, 0, 16, 11, 16).forDirectional(Direction.UP);
     public static final VoxelShaper AIRTIGHT_PIPE = shape(4, 0, 4, 12, 16, 12).forAxis();
     public static final VoxelShaper AIRTIGHT_PUMP = shape(2, 0, 2, 14, 16, 14).forDirectional(Direction.UP);
     public static final VoxelShaper CHECK_VALVE = shape(4, 0, 4, 12, 3, 12).add(3, 3, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).forAxis();
@@ -36,7 +35,8 @@ public class CCBShapes {
     public static final VoxelShape ENCASED_PIPE_SHAPE = shape(0, 0, 0, 16, 16, 16).build();
     public static final VoxelShape GAS_CANISTER_SHAPE = shape(4, 0, 4, 12, 12, 12).add(6, 12, 6, 10, 13, 10).build();
     public static final VoxelShape GAS_INJECTION_CHAMBER_SHAPE = shape(1, 1, 1, 15, 15, 15).add(2, 15, 2, 14, 16, 14).build();
-
+    public static final VoxelShape END_SCULK_SILENCER_SHAPE = shape(0, 0, 0, 16, 8, 16).add(1, 8, 1, 15, 15, 15).build();
+    public static final VoxelShape END_SCULK_SILENCER_COLLISION_SHAPE = shape(0, 0, 0, 16, 8, 16).build();
     public static final VoxelShape AIRTIGHT_REACTOR_KETTLE_TOP_CENTER = shape(0, 2, 0, 16, 16, 16).build();
     public static final VoxelShape AIRTIGHT_REACTOR_KETTLE_BOTTOM_CENTER = shape(0, 0, 0, 16, 2, 16).build();
 

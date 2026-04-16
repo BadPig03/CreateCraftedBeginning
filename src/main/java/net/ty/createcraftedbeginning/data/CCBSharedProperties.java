@@ -24,6 +24,10 @@ public class CCBSharedProperties {
         return Blocks.OBSIDIAN;
     }
 
+    public static Block cryingObsidian() {
+        return Blocks.CRYING_OBSIDIAN;
+    }
+
     public static Block airtightMetal() {
         return Blocks.HEAVY_CORE;
     }

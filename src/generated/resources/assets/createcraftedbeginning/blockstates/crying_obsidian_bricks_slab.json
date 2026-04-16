@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "createcraftedbeginning:block/crying_obsidian_bricks_slab"
+    },
+    "type=double": {
+      "model": "createcraftedbeginning:block/crying_obsidian_bricks_slab_double"
+    },
+    "type=top": {
+      "model": "createcraftedbeginning:block/crying_obsidian_bricks_slab_top"
+    }
+  }
+}

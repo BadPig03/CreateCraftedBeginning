@@ -28,7 +28,6 @@ public abstract class BaseTemplate {
         return 1;
     }
 
-    @SuppressWarnings("unused")
     public int getMaxValue(int index) {
         return 8;
     }

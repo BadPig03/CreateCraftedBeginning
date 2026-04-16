@@ -1,9 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighthanddrill;
 
-import com.simibubi.create.AllItems;
 import com.simibubi.create.content.logistics.filter.FilterItem;
 import com.simibubi.create.content.logistics.filter.FilterItemStack;
-import com.simibubi.create.foundation.item.ItemHelper;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.ChatFormatting;
@@ -11,9 +9,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.component.DataComponentMap;
-import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
@@ -62,8 +57,15 @@ import net.ty.createcraftedbeginning.api.gas.drillhandlers.AirtightHandheldDrill
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillMenu.DrillItemHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.templates.AirtightHandheldDrillMiningTemplates;
+import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.ExperienceConversionUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.HandheldDrillAttackModeButton;
+import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.HandheldDrillContainerProtectionButton;
+import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.HandheldDrillFilterButton;
+import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.LiquidReplacementUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.MagnetUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.SilkTouchUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBDamageTypes;
@@ -76,33 +78,15 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class AirtightHandheldDrillUtils {
-    public static final Item SILK_TOUCH_UPGRADE_ITEM = AllItems.PRECISION_MECHANISM.asItem();
-    public static final Item MAGNET_UPGRADE_ITEM = AllItems.BRASS_HAND.asItem();
-    public static final Item CONVERSION_UPGRADE_ITEM = Items.ECHO_SHARD.asItem();
-    public static final Item LIQUID_REPLACEMENT_UPGRADE_ITEM = Items.SPONGE.asItem();
-
-    private static final int SLOT_LENGTH = 18;
-
     private AirtightHandheldDrillUtils() {
     }
 
     public static @NotNull Direction getMiningDirection(@NotNull ItemStack drill) {
         return drill.getOrDefault(CCBDataComponents.DRILL_MINING_DIRECTION, Direction.NORTH);
-    }
-
-    public static @NotNull DrillItemHandler getInventoryHandler(@NotNull ItemStack drill) {
-        DrillItemHandler handler = new DrillItemHandler();
-        if (!drill.has(CCBDataComponents.DRILL_INVENTORY)) {
-            return handler;
-        }
-
-        ItemHelper.fillItemStackHandler(Objects.requireNonNull(drill.get(CCBDataComponents.DRILL_INVENTORY)), handler);
-        return handler;
     }
 
     public static @NotNull Set<BlockPos> getInstantDestructionPos(@NotNull Level level, @NotNull Set<BlockPos> totalPos) {
@@ -130,61 +114,24 @@ public final class AirtightHandheldDrillUtils {
     }
 
     public static boolean canPassContainerTest(ItemStack drill, BlockPos pos, @NotNull Level level) {
-        return !isContainerDisabled(drill) && level.getCapability(ItemHandler.BLOCK, pos, null) != null;
+        return HandheldDrillContainerProtectionButton.INSTANCE.isEnabled(drill) && level.getCapability(ItemHandler.BLOCK, pos, null) != null;
     }
 
     public static boolean canPassFilterTest(ItemStack drill, ItemStack testItemStack, Level level) {
-        if (isFilterDisabled(drill)) {
+        if (!HandheldDrillFilterButton.INSTANCE.isEnabled(drill)) {
             return false;
         }
 
-        ItemStack filterStack = getInventoryHandler(drill).getStackInSlot(AirtightHandheldDrillMenu.FILTER_SLOT_INDEX);
+        ItemStack filterStack = AirtightUpgradableMenu.getInventoryHandler(drill, 2).getStackInSlot(AirtightHandheldDrillMenu.FILTER_SLOT_INDEX);
         return !filterStack.isEmpty() && FilterItemStack.of(filterStack).test(level, testItemStack);
     }
 
     public static boolean canPassLiquidTest(ItemStack drill, BlockState state) {
-        return isLiquidReplacementEnabled(drill) && state.getBlock() instanceof LiquidBlock;
-
+        return LiquidReplacementUpgrade.INSTANCE.isEnabled(drill) && state.getBlock() instanceof LiquidBlock;
     }
 
-    public static boolean isContainerDisabled(@NotNull ItemStack drill) {
-        return (drill.getOrDefault(CCBDataComponents.DRILL_OPTION_FLAGS, 0) & AirtightHandheldDrillMenu.CONTAINER_DISABLED_FLAG) != 0;
-    }
-
-    public static boolean isConversionEnabled(@NotNull ItemStack drill) {
-        return (drill.getOrDefault(CCBDataComponents.DRILL_OPTION_FLAGS, 0) & AirtightHandheldDrillMenu.CONVERSION_ENABLED_FLAG) != 0;
-    }
-
-    public static boolean isDrillAttackEnabled(@NotNull ItemStack drill) {
-        return (drill.getOrDefault(CCBDataComponents.DRILL_OPTION_FLAGS, 0) & AirtightHandheldDrillMenu.DRILL_ATTACK_DISABLED_FLAG) == 0;
-    }
-
-    public static boolean isFilterDisabled(@NotNull ItemStack drill) {
-        return (drill.getOrDefault(CCBDataComponents.DRILL_OPTION_FLAGS, 0) & AirtightHandheldDrillMenu.FILTER_DISABLED_FLAG) != 0;
-    }
-
-    public static boolean isInstantBreakable(BlockPos basePos, @NotNull Level level) {
-        return level.getBlockState(basePos).getDestroySpeed(level, basePos) == 0;
-    }
-
-    public static boolean isLiquidReplacementEnabled(@NotNull ItemStack drill) {
-        return (drill.getOrDefault(CCBDataComponents.DRILL_OPTION_FLAGS, 0) & AirtightHandheldDrillMenu.LIQUID_REPLACEMENT_ENABLED_FLAG) != 0;
-    }
-
-    public static boolean isMagnetEnabled(@NotNull ItemStack drill) {
-        return (drill.getOrDefault(CCBDataComponents.DRILL_OPTION_FLAGS, 0) & AirtightHandheldDrillMenu.MAGNET_ENABLED_FLAG) != 0;
-    }
-
-    public static boolean isMouseOverSlot(int mouseX, int mouseY, int x, int y) {
-        return mouseX >= x && mouseY >= y && mouseX < x + SLOT_LENGTH && mouseY < y + SLOT_LENGTH;
-    }
-
-    public static boolean isOutlineEnabled(@NotNull ItemStack drill) {
-        return (drill.getOrDefault(CCBDataComponents.DRILL_OPTION_FLAGS, 0) & AirtightHandheldDrillMenu.OUTLINE_DISABLED_FLAG) == 0;
-    }
-
-    public static boolean isSilkTouchEnabled(@NotNull ItemStack drill) {
-        return (drill.getOrDefault(CCBDataComponents.DRILL_OPTION_FLAGS, 0) & AirtightHandheldDrillMenu.SILK_TOUCH_ENABLED_FLAG) != 0;
+    public static boolean isRelativePositionValid(@NotNull AirtightHandheldDrillMiningTemplates template, int[] size, Direction dir, int[] relPos) {
+        return template.getTemplate().getOffset(size, dir, relPos).contains(BlockPos.ZERO);
     }
 
     public static boolean isValidFilter(@NotNull ItemStack stack) {
@@ -192,32 +139,14 @@ public final class AirtightHandheldDrillUtils {
         return item instanceof FilterItem || item instanceof BlockItem;
     }
 
+    public static boolean isInstantBreakable(BlockPos basePos, @NotNull Level level) {
+        return level.getBlockState(basePos).getDestroySpeed(level, basePos) == 0;
+    }
+
     public static boolean isValidMiningTarget(ItemStack drill, BlockPos basePos, @NotNull Level level) {
         BlockState state = level.getBlockState(basePos);
         Block block = state.getBlock();
         return !(state.getDestroySpeed(level, basePos) < 0) && !canPassLiquidTest(drill, state) && !canPassContainerTest(drill, basePos, level) && !canPassFilterTest(drill, new ItemStack(block.asItem()), level);
-    }
-
-    public static boolean shouldCauseBlockBreakReset(@NotNull ItemStack oldStack, @NotNull ItemStack newStack) {
-        if (!newStack.is(oldStack.getItem())) {
-            return true;
-        }
-
-        if (!newStack.isDamageableItem() || !oldStack.isDamageableItem()) {
-            return !ItemStack.isSameItemSameComponents(newStack, oldStack);
-        }
-
-        DataComponentMap newComponents = newStack.getComponents();
-        DataComponentMap oldComponents = oldStack.getComponents();
-        if (newComponents.isEmpty() || oldComponents.isEmpty()) {
-            return !(newComponents.isEmpty() && oldComponents.isEmpty());
-        }
-
-        Set<DataComponentType<?>> newKeys = new HashSet<>(newComponents.keySet());
-        Set<DataComponentType<?>> oldKeys = new HashSet<>(oldComponents.keySet());
-        newKeys.remove(DataComponents.DAMAGE);
-        oldKeys.remove(DataComponents.DAMAGE);
-        return !newKeys.equals(oldKeys) || !newKeys.stream().allMatch(key -> Objects.equals(newComponents.get(key), oldComponents.get(key)));
     }
 
     public static float calculateGasConsumptionForBlock(@NotNull Level level, BlockPos pos, boolean silkTouch, boolean magnet, boolean conversion, boolean liquidReplacement) {
@@ -228,7 +157,7 @@ public final class AirtightHandheldDrillUtils {
         }
 
         float gasConsumption = 0;
-        int liquidBaseGasConsumption = CCBConfig.server().equipments.drillGasCostPerLiquidBlock.get();
+        int liquidBaseGasConsumption = CCBConfig.server().equipments.gasCostPerLiquidBlock.get();
         if (block instanceof LiquidBlock) {
             if (liquidReplacement) {
                 gasConsumption += liquidBaseGasConsumption;
@@ -239,19 +168,19 @@ public final class AirtightHandheldDrillUtils {
         if (liquidReplacement && !state.getFluidState().is(Fluids.EMPTY)) {
             gasConsumption += liquidBaseGasConsumption;
         }
-        int blockBaseGasConsumption = CCBConfig.server().equipments.drillGasCostPerBlock.get();
+        int blockBaseGasConsumption = CCBConfig.server().equipments.gasCostPerBlock.get();
         gasConsumption += blockBaseGasConsumption;
 
         if (silkTouch) {
-            float silkTouchMultiplier = CCBConfig.server().equipments.drillGasMultiplierForSilkTouch.getF();
+            float silkTouchMultiplier = CCBConfig.server().equipments.silkTouchGasCostMultiplier.getF();
             gasConsumption *= silkTouchMultiplier;
         }
         if (magnet) {
-            float magnetMultiplier = CCBConfig.server().equipments.drillGasMultiplierForMagnet.getF();
+            float magnetMultiplier = CCBConfig.server().equipments.magnetGasCostMultiplier.getF();
             gasConsumption *= magnetMultiplier;
         }
         if (conversion) {
-            float conversionMultiplier = CCBConfig.server().equipments.drillGasMultiplierForConversion.getF();
+            float conversionMultiplier = CCBConfig.server().equipments.experienceConversionGasCostMultiplier.getF();
             gasConsumption *= conversionMultiplier;
         }
 
@@ -311,11 +240,11 @@ public final class AirtightHandheldDrillUtils {
             return -1;
         }
 
-        boolean isSilkTouchEnabled = isSilkTouchEnabled(drill);
-        boolean isMagnetEnabled = isMagnetEnabled(drill);
-        boolean isConversionEnabled = isConversionEnabled(drill);
-        boolean isLiquidReplacementEnabled = isLiquidReplacementEnabled(drill);
-        double totalConsumption = destructionPos.stream().mapToDouble(pos -> calculateGasConsumptionForBlock(level, pos, isSilkTouchEnabled, isMagnetEnabled, isConversionEnabled, isLiquidReplacementEnabled)).sum();
+        boolean silkTouch = SilkTouchUpgrade.INSTANCE.isEnabled(drill);
+        boolean magnet = MagnetUpgrade.INSTANCE.isEnabled(drill);
+        boolean experienceConversion = ExperienceConversionUpgrade.INSTANCE.isEnabled(drill);
+        boolean liquidReplacement = LiquidReplacementUpgrade.INSTANCE.isEnabled(drill);
+        double totalConsumption = destructionPos.stream().mapToDouble(pos -> calculateGasConsumptionForBlock(level, pos, silkTouch, magnet, experienceConversion, liquidReplacement)).sum();
         return Mth.ceil(1.5 * drillHandler.getConsumptionMultiplier() * Math.pow(totalConsumption, Math.log(2.25)));
     }
 
@@ -365,14 +294,6 @@ public final class AirtightHandheldDrillUtils {
         }
 
         drillHandler.appendHoverText(drill, context, tooltip, tooltipFlag);
-    }
-
-    public static void configureDrill(@NotNull ItemStack drill, int optionFlags, AirtightHandheldDrillMiningTemplates template, BlockPos sizeParams, Direction direction, BlockPos relativeParams) {
-        drill.set(CCBDataComponents.DRILL_OPTION_FLAGS, optionFlags);
-        drill.set(CCBDataComponents.DRILL_MINING_TEMPLATE, template);
-        drill.set(CCBDataComponents.DRILL_MINING_SIZE, sizeParams);
-        drill.set(CCBDataComponents.DRILL_MINING_DIRECTION, direction);
-        drill.set(CCBDataComponents.DRILL_MINING_RELATIVE_POSITION, relativeParams);
     }
 
     public static void destroyBlockAs(@NotNull ServerLevel level, BlockPos basePos, BlockPos pos, @NotNull Player player, ItemStack usedTool, boolean magnet, boolean conversion, boolean liquidReplacement) {
@@ -477,7 +398,7 @@ public final class AirtightHandheldDrillUtils {
             return;
         }
 
-        int entityHitGasConsumption = CCBConfig.server().equipments.drillGasCostPerEntityHit.get();
+        int entityHitGasConsumption = CCBConfig.server().equipments.gasCostPerEntityHit.get();
         DamageSource damageSource = CCBDamageTypes.source(DamageTypes.THORNS, level, player);
         List<LivingEntity> vulnerableEntities = new ArrayList<>();
         for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(range, range, range))) {
@@ -535,11 +456,11 @@ public final class AirtightHandheldDrillUtils {
 
     public static void mineAreaBlocks(ItemStack drill, @NotNull ServerLevel level, @NotNull BlockPos basePos, @NotNull Player player) {
         GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
-        Gas gasType = gasContent.getGasType();
         if (gasContent.isEmpty()) {
             return;
         }
 
+        Gas gasType = gasContent.getGasType();
         int gasConsumption = calculateGasConsumption(drill, level, basePos, gasType);
         if (gasConsumption < 0) {
             return;
@@ -551,7 +472,7 @@ public final class AirtightHandheldDrillUtils {
         }
 
         ItemStack tool = new ItemStack(Items.NETHERITE_PICKAXE);
-        if (isSilkTouchEnabled(drill)) {
+        if (SilkTouchUpgrade.INSTANCE.isEnabled(drill)) {
             tool.enchant(level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.SILK_TOUCH), 1);
         }
         if (!CanisterContainerConsumers.interactContainer(player, gasType, gasConsumption, () -> !player.level().isClientSide)) {
@@ -562,11 +483,11 @@ public final class AirtightHandheldDrillUtils {
         if (!CCBAdvancements.MINI_TBM.isAlreadyAwardedTo(player) && destructionPos.size() >= 64) {
             CCBAdvancements.MINI_TBM.awardTo(player);
         }
-        boolean magnet = isMagnetEnabled(drill);
-        boolean conversion = isConversionEnabled(drill);
-        boolean liquidReplacement = isLiquidReplacementEnabled(drill);
+        boolean magnet = MagnetUpgrade.INSTANCE.isEnabled(drill);
+        boolean experienceConversion = ExperienceConversionUpgrade.INSTANCE.isEnabled(drill);
+        boolean liquidReplacement = LiquidReplacementUpgrade.INSTANCE.isEnabled(drill);
         for (BlockPos targetPos : destructionPos) {
-            destroyBlockAs(level, basePos, targetPos, player, tool, magnet, conversion, liquidReplacement);
+            destroyBlockAs(level, basePos, targetPos, player, tool, magnet, experienceConversion, liquidReplacement);
         }
     }
 
@@ -617,7 +538,7 @@ public final class AirtightHandheldDrillUtils {
         }
 
         float animation = player.getPersistentData().getFloat(AirtightHandheldDrillAnimationPacket.COMPOUND_KEY_ANIMATION);
-        if (!CanisterContainerSuppliers.isAnyContainerAvailable(player) || !isDrillAttackEnabled(drill) || animation < 0.5f) {
+        if (!CanisterContainerSuppliers.isAnyContainerAvailable(player) || !HandheldDrillAttackModeButton.INSTANCE.isEnabled(drill) || animation < 0.5f) {
             return;
         }
 

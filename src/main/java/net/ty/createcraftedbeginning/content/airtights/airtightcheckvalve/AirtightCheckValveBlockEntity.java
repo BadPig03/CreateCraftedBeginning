@@ -47,8 +47,8 @@ public class AirtightCheckValveBlockEntity extends SmartBlockEntity implements I
             }
 
             BlockPos otherPos = worldPosition.relative(direction);
-            BlockState otherState = getWorld().getBlockState(otherPos);
-            return isValidAirtightComponents(otherPos, otherState, direction);
+            Level level = getWorld();
+            return isValidAirtightComponents(level, otherPos, level.getBlockState(otherPos), direction);
         }
 
         @Override

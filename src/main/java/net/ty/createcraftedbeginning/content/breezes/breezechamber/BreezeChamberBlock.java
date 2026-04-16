@@ -247,7 +247,7 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
 
     @Override
     public @NotNull BlockState playerWillDestroy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, @NotNull Player player) {
-        if (!level.isClientSide && player.isCreative() && level.getBlockEntity(pos) instanceof BreezeChamberBlockEntity chamber && chamber.getWindRemainingTime() != 0) {
+        if (!level.isClientSide && player.isCreative() && player.isShiftKeyDown() && level.getBlockEntity(pos) instanceof BreezeChamberBlockEntity chamber && chamber.getWindRemainingTime() != 0) {
             ItemStack chamberItemEntity = new ItemStack(this);
             chamber.saveToItem(chamberItemEntity);
             Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, chamberItemEntity);

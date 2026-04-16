@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "cookingtime": 200,
+  "experience": 0.1,
+  "ingredient": {
+    "tag": "c:obsidians/normal"
+  },
+  "result": {
+    "id": "createcraftedbeginning:smooth_obsidian_bricks"
+  }
+}

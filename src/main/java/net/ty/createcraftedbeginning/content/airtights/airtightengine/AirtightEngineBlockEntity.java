@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.content.airtights.airtightengine;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.api.stress.BlockStressValues;
+import com.simibubi.create.content.kinetics.RotationPropagator;
 import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
 import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.IRotate.StressImpact;
@@ -9,7 +10,7 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Direction.Axis;
+import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -137,7 +138,7 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
 
     @Override
     public float getGeneratedSpeed() {
-        return BASE_ROTATION_SPEED * getSpeedModifier() * (getBlockState().getValue(AirtightEngineBlock.CLOCKWISE) ? 1 : -1);
+        return BASE_ROTATION_SPEED * getSpeedModifier() * (getRotationDirection() ? 1 : -1);
     }
 
     @Override
@@ -148,18 +149,26 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
     }
 
     @Override
-    public List<BlockPos> addPropagationLocations(@NotNull IRotate block, BlockState state, List<BlockPos> neighbours) {
-        Axis axis = block.getRotationAxis(state);
+    public List<BlockPos> addPropagationLocations(IRotate block, BlockState state, List<BlockPos> neighbours) {
         BlockPos.betweenClosedStream(new BlockPos(-1, -1, -1), new BlockPos(1, 1, 1)).forEach(offset -> {
-            if (axis.choose(offset.getX(), offset.getY(), offset.getZ()) != 0) {
-                return;
+            if (offset.distSqr(BlockPos.ZERO) == 2) {
+                neighbours.add(worldPosition.offset(offset));
             }
-            if (offset.distSqr(BlockPos.ZERO) != 2) {
-                return;
-            }
-            neighbours.add(worldPosition.offset(offset));
         });
         return neighbours;
+    }
+
+    public void updateRotation() {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+
+        if (hasNetwork()) {
+            getOrCreateNetwork().remove(this);
+        }
+        RotationPropagator.handleRemoved(level, worldPosition, this);
+        removeSource();
+        attachKinetics();
     }
 
     private @Nullable AirtightTankBlockEntity getTank() {
@@ -201,6 +210,11 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
 
         int engines = driverCore.getStructureManager().getAttachedEngines();
         return engines == 0 ? 0 : (float) driverCore.getLevelCalculator().getCurrentLevel() / engines;
+    }
+
+    private boolean getRotationDirection() {
+        BlockState blockState = getBlockState();
+        return (AirtightEngineBlock.getFacing(blockState).getAxisDirection() == AxisDirection.POSITIVE) == blockState.getValue(AirtightEngineBlock.CLOCKWISE);
     }
 
     public float getPistonPhase() {

@@ -19,7 +19,9 @@ import org.jetbrains.annotations.NotNull;
 public class WindChargingCategory extends CCBRecipeCategory<WindChargingRecipe> {
     private static final int COLOR_NORMAL = 0x888888;
     private static final int COLOR_BAD = 0xAB2222;
-    private final AnimatedBreezeChamber chamber = new AnimatedBreezeChamber();
+    private final AnimatedBreezeChamber galeChamber = new AnimatedBreezeChamber(false);
+    private final AnimatedBreezeChamber illChamber = new AnimatedBreezeChamber(true);
+    private final AnimatedBreezeChamber calmChamber = new AnimatedBreezeChamber(null);
 
     public WindChargingCategory(Info<WindChargingRecipe> info) {
         super(info);
@@ -42,21 +44,26 @@ public class WindChargingCategory extends CCBRecipeCategory<WindChargingRecipe> 
         if (recipe.isCreativeIceCream()) {
             MutableComponent text = Component.translatable("jade.gas.infinity_mark");
             graphics.drawString(font, text, getBackground().getWidth() / 2 - font.width(text) / 2 - 12, 22, COLOR_NORMAL, false);
-            chamber.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
+            galeChamber.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
             return;
         }
 
         if (recipe.isMilkyItem()) {
-            MutableComponent text = CCBLang.translateDirect("gui.clear_negative_effects");
+            MutableComponent text = CCBLang.translateDirect("gui.clear_ill_state");
             graphics.drawString(font, text, getBackground().getWidth() / 2 - font.width(text) / 2 - 15, 22, COLOR_NORMAL, false);
-            chamber.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
+            calmChamber.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
             return;
         }
 
         boolean isBadFood = recipe.isBadFood();
         MutableComponent realTime = (isBadFood ? CCBLang.text("-").component() : Component.empty()).append(CCBLang.secondsWithGameTicks(Math.abs(recipe.getProcessingDuration()), 20).component());
         graphics.drawString(font, realTime, getBackground().getWidth() / 2 - font.width(realTime) / 2 - 12, 22, isBadFood ? COLOR_BAD : COLOR_NORMAL, false);
-        chamber.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
+        if (isBadFood) {
+            illChamber.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
+        }
+        else {
+            galeChamber.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
+        }
     }
 
     @Override

@@ -182,7 +182,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
     }
 
     @Override
-    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter worldIn, @NotNull BlockPos pos, @NotNull CollisionContext context) {
+    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos, @NotNull CollisionContext context) {
         return CCBShapes.TESLA_TURBINE.get(state.getValue(BlockStateProperties.AXIS));
     }
 
@@ -195,6 +195,11 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         level.destroyBlock(pos, false);
     }
 
+    @Override
+    public BlockPos getInformationSource(Level level, BlockPos pos, BlockState state) {
+        return stillValid(level, pos, state, false) ? getMaster(pos, state) : pos;
+    }
+
     public boolean stillValid(BlockGetter level, BlockPos pos, @NotNull BlockState state, boolean ignored) {
         if (!state.is(this)) {
             return false;
@@ -202,11 +207,6 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
 
         BlockState targetedState = level.getBlockState(getMaster(pos, state));
         return targetedState.getBlock() instanceof TeslaTurbineBlock && targetedState.getValue(TeslaTurbineBlock.AXIS) == state.getValue(AXIS);
-    }
-
-    @Override
-    public BlockPos getInformationSource(Level level, BlockPos pos, BlockState state) {
-        return stillValid(level, pos, state, false) ? getMaster(pos, state) : pos;
     }
 
     public enum TeslaTurbineStructuralPosition implements StringRepresentable {

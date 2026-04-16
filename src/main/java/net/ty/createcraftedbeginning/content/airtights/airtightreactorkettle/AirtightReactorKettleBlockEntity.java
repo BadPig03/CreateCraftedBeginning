@@ -190,7 +190,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         }
 
         core.lazyTick();
-        if (level.getGameTime() % 20 != 10) {
+        if (level.getGameTime() % 20 != 0) {
             return;
         }
 

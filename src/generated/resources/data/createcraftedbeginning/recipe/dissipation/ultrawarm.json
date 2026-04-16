@@ -1,0 +1,16 @@
+{
+  "type": "createcraftedbeginning:dissipation",
+  "ingredients": [
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 1,
+      "gas": "createcraftedbeginning:energized_ultrawarm_air"
+    }
+  ],
+  "results": [
+    {
+      "amount": 1,
+      "id": "createcraftedbeginning:ultrawarm_air"
+    }
+  ]
+}

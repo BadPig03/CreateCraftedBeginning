@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ACA",
+    "UHU",
+    "ASA"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:plates/end_alloy"
+    },
+    "U": {
+      "item": "minecraft:sculk"
+    },
+    "C": {
+      "item": "minecraft:sculk_catalyst"
+    },
+    "H": {
+      "item": "minecraft:sculk_shrieker"
+    },
+    "S": {
+      "item": "create:mechanical_bearing"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:end_sculk_silencer"
+  }
+}

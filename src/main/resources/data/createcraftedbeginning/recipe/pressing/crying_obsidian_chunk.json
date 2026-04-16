@@ -1,0 +1,13 @@
+{
+  "type": "create:pressing",
+  "ingredients": [
+    {
+      "tag": "c:obsidians/crying"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:crying_obsidian_chunk"
+    }
+  ]
+}

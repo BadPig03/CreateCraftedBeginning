@@ -27,6 +27,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerClients;
 import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.HandheldDrillAttackModeButton;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,22 +41,12 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
 
     @Override
     public boolean onLeftClickEntity(@NotNull ItemStack drill, @NotNull Player player, @NotNull Entity entity) {
-        return CanisterContainerSuppliers.isAnyContainerAvailable(player) || AirtightHandheldDrillUtils.isDrillAttackEnabled(drill);
+        return CanisterContainerSuppliers.isAnyContainerAvailable(player) || HandheldDrillAttackModeButton.INSTANCE.isEnabled(drill);
     }
 
     @Override
     public boolean supportsEnchantment(@NotNull ItemStack drill, @NotNull Holder<Enchantment> enchantment) {
         return enchantment.is(Enchantments.EFFICIENCY);
-    }
-
-    @Override
-    public boolean shouldCauseReequipAnimation(@NotNull ItemStack oldStack, @NotNull ItemStack newStack, boolean slotChanged) {
-        return oldStack.getItem() != newStack.getItem();
-    }
-
-    @Override
-    public boolean shouldCauseBlockBreakReset(@NotNull ItemStack oldStack, @NotNull ItemStack newStack) {
-        return AirtightHandheldDrillUtils.shouldCauseBlockBreakReset(oldStack, newStack);
     }
 
     @Override

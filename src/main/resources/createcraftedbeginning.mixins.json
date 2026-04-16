@@ -10,17 +10,22 @@
     "accessor.ItemInHandRendererAccessor",
     "accessor.MountedStorageManagerAccessor",
     "accessor.ZombieAccessor",
+    "create.FillingBySpoutMixin",
+    "create.MechanicalPressBlockEntityMixin",
+    "create.MountedStorageManagerMixin",
+    "create.SawBlockEntityMixin",
+    "create.ThresholdSwitchBlockEntityMixin",
+    "create.TrainCargoManagerMixin",
     "AbstractPiglinMixin",
+    "AllayMixin",
 	"BuiltInRegistriesMixin",
+    "CalibratedSculkSensorBlockEntityMixin",
     "EntityMixin",
-    "FillingBySpoutMixin",
     "HoglinMixin",
-    "MechanicalPressBlockEntityMixin",
-    "MountedStorageManagerMixin",
     "PlayerMixin",
-    "SawBlockEntityMixin",
-    "ThresholdSwitchBlockEntityMixin",
-    "TrainCargoManagerMixin"
+    "SculkSensorBlockEntityMixin",
+    "SculkShriekerBlockEntityMixin",
+    "WardenMixin"
   ],
   "minVersion": "0.8"
 }

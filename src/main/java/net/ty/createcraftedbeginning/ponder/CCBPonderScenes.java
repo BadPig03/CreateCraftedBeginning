@@ -12,6 +12,7 @@ import net.ty.createcraftedbeginning.ponder.scenes.crates.BrassCrateScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.crates.CardboardCrateScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.crates.SturdyCrateScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.end.EndIncinerationBlowerScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.end.EndSculkSilencerScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gascontainers.AirtightTankScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gascontainers.CreativeAirtightTankScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.AirCompressorScenes;
@@ -63,5 +64,6 @@ public class CCBPonderScenes {
         entryHelper.forComponents(CCBBlocks.AIR_VENT_BLOCK).addStoryBoard("air_vent_story_board", AirVentScenes::scene);
 
         entryHelper.forComponents(CCBBlocks.END_INCINERATION_BLOWER_BLOCK).addStoryBoard("end_incineration_blower_story_board", EndIncinerationBlowerScenes::scene, AllCreatePonderTags.KINETIC_APPLIANCES);
+        entryHelper.forComponents(CCBBlocks.END_SCULK_SILENCER_BLOCK).addStoryBoard("end_sculk_silencer_story_board", EndSculkSilencerScenes::scene, AllCreatePonderTags.KINETIC_APPLIANCES);
     }
 }

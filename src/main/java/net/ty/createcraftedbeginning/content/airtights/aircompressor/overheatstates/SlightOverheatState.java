@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class SlightOverheatState implements IOverheatState {
     private static final String NAME = "slight";
+    private static final int TICK_RATE = 8;
 
     @Override
     public IOverheatState getNextState() {
@@ -24,7 +25,7 @@ public class SlightOverheatState implements IOverheatState {
     public void tick(@NotNull AirCompressorBlockEntity blockEntity) {
         Level level = blockEntity.getLevel();
         BlockPos pos = blockEntity.getBlockPos();
-        if (level == null || !level.isClientSide || level.getGameTime() % 8 != 0) {
+        if (level == null || !level.isClientSide || level.getGameTime() % TICK_RATE != 0) {
             return;
         }
 

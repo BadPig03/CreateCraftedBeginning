@@ -1,0 +1,13 @@
+{
+  "type": "create:pressing",
+  "ingredients": [
+    {
+      "tag": "c:obsidians/normal"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:obsidian_chunk"
+    }
+  ]
+}

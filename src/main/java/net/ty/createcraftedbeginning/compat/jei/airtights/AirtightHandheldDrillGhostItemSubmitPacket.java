@@ -4,12 +4,15 @@ import net.createmod.catnip.net.base.ServerboundPacketPayload;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillMenu;
 import net.ty.createcraftedbeginning.registry.CCBPackets;
 import org.jetbrains.annotations.NotNull;
 
 public record AirtightHandheldDrillGhostItemSubmitPacket(ItemStack item) implements ServerboundPacketPayload {
+    private static final int PLAYER_INVENTORY_SLOTS = Inventory.INVENTORY_SIZE;
+
     public static final StreamCodec<RegistryFriendlyByteBuf, AirtightHandheldDrillGhostItemSubmitPacket> STREAM_CODEC = StreamCodec.composite(ItemStack.OPTIONAL_STREAM_CODEC, AirtightHandheldDrillGhostItemSubmitPacket::item, AirtightHandheldDrillGhostItemSubmitPacket::new);
 
     @Override
@@ -18,8 +21,8 @@ public record AirtightHandheldDrillGhostItemSubmitPacket(ItemStack item) impleme
             return;
         }
 
-        menu.getDrillInventory().setStackInSlot(AirtightHandheldDrillMenu.FILTER_SLOT_INDEX, item);
-        menu.getSlot(AirtightHandheldDrillMenu.PLAYER_INVENTORY_SLOTS + AirtightHandheldDrillMenu.FILTER_SLOT_INDEX).setChanged();
+        menu.getMenuInventory().setStackInSlot(AirtightHandheldDrillMenu.FILTER_SLOT_INDEX, item);
+        menu.getSlot(PLAYER_INVENTORY_SLOTS + AirtightHandheldDrillMenu.FILTER_SLOT_INDEX).setChanged();
     }
 
     @Override

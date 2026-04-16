@@ -173,7 +173,7 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
     }
 
     @Override
-    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter worldIn, @NotNull BlockPos pos, @NotNull CollisionContext context) {
+    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos, @NotNull CollisionContext context) {
         return CCBShapes.TESLA_TURBINE.get(state.getValue(BlockStateProperties.AXIS));
     }
 

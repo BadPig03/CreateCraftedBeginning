@@ -15,10 +15,14 @@ import com.tterrag.registrate.util.nullness.NonNullUnaryOperator;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Item.Properties;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.AttachFace;
@@ -502,13 +506,53 @@ public class CCBBuilderTransformer {
     }
 
     @Contract(pure = true)
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> obsidian_alike_blocks(String name) {
+        return b -> b.initialProperties(CCBSharedProperties::obsidian).blockstate((c, p) -> p.simpleBlock(c.get(), p.models().cubeAll(c.getName(), p.modLoc("block/obsidians/" + name)))).transform(pickaxeOnly()).item().tag(CCBItemTags.OBSIDIAN_BRICKS.tag).build();
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> crying_obsidian_alike_blocks(String name) {
+        return b -> b.initialProperties(CCBSharedProperties::cryingObsidian).blockstate((c, p) -> p.simpleBlock(c.get(), p.models().cubeAll(c.getName(), p.modLoc("block/obsidians/" + name)))).transform(pickaxeOnly()).item().tag(CCBItemTags.CRYING_OBSIDIAN_BRICKS.tag).build();
+    }
+
+    @Contract(pure = true)
+    public static <B extends SlabBlock> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> obsidian_alike_slabs(String name) {
+        return obsidian_alike_slabs(name, name);
+    }
+
+    @Contract(pure = true)
+    public static <B extends SlabBlock> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> obsidian_alike_slabs(String sideName, String topName) {
+        return b -> b.initialProperties(CCBSharedProperties::obsidian).blockstate((c, p) -> p.slabBlock(c.get(), p.models().slab(c.getName(), p.modLoc("block/obsidians/" + sideName), p.modLoc("block/obsidians/" + topName), p.modLoc("block/obsidians/" + topName)), p.models().slabTop(c.getName() + "_top", p.modLoc("block/obsidians/" + sideName), p.modLoc("block/obsidians/" + topName), p.modLoc("block/obsidians/" + topName)), p.models().cubeColumn(c.getName() + "_double", p.modLoc("block/obsidians/" + sideName), p.modLoc("block/obsidians/" + topName)))).transform(pickaxeOnly()).tag(BlockTags.SLABS).item().tag(ItemTags.SLABS).build();
+    }
+
+    @Contract(pure = true)
+    public static <B extends StairBlock> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> obsidian_alike_stairs(String name) {
+        return b -> b.initialProperties(CCBSharedProperties::obsidian).blockstate((c, p) -> p.stairsBlock(c.get(), p.modLoc("block/obsidians/" + name))).tag(BlockTags.STAIRS).item().tag(ItemTags.STAIRS).build();
+    }
+
+    @Contract(pure = true)
+    public static <B extends WallBlock> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> obsidian_alike_wall(String name) {
+        return b -> b.initialProperties(CCBSharedProperties::obsidian).blockstate((c, p) -> p.wallBlock(c.get(), name + "_wall", p.modLoc("block/obsidians/" + name))).tag(BlockTags.WALLS).item().transform(builder -> builder.model((c, p) -> p.wallInventory(c.getName(), p.modLoc("block/obsidians/" + name)))).tag(ItemTags.WALLS).build();
+    }
+
+    @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> end_incineration_blower() {
-        return b -> b.initialProperties(CCBSharedProperties::obsidian).blockstate((c, p) -> p.getVariantBuilder(c.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(p.models().getExistingFile(p.modLoc("block/end_incineration_blower/block"))).build())).item().properties(p -> p.rarity(Rarity.UNCOMMON)).transform(ib -> ib.model(AssetLookup::customItemModel)).build().properties(p -> p.mapColor(MapColor.COLOR_GREEN).noOcclusion());
+        return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(p.models().getExistingFile(p.modLoc("block/end_incineration_blower/block"))).build())).item().properties(p -> p.rarity(Rarity.UNCOMMON)).transform(ib -> ib.model(AssetLookup::customItemModel)).build();
     }
 
     @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> end_incineration_blower_structural() {
-        return b -> b.initialProperties(CCBSharedProperties::obsidian).blockstate((c, p) -> p.getVariantBuilder(c.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(p.models().getExistingFile(p.modLoc("block/end_incineration_blower/structural"))).build())).lang("End Incineration Blower").properties(p -> p.mapColor(MapColor.COLOR_GREEN).noOcclusion());
+        return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(p.models().getExistingFile(p.modLoc("block/end_incineration_blower/structural"))).build())).lang("End Incineration Blower");
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> end_sculk_silencer() {
+        return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(p.models().getExistingFile(p.modLoc("block/end_sculk_silencer/block"))).build())).item().properties(p -> p.rarity(Rarity.UNCOMMON)).transform(ib -> ib.model(AssetLookup::customItemModel)).build();
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> end_sculk_silencer_structural() {
+        return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(p.models().getExistingFile(p.modLoc("block/end_sculk_silencer/structural"))).build())).lang("End Sculk Silencer");
     }
 
     @Contract(pure = true)
@@ -527,13 +571,13 @@ public class CCBBuilderTransformer {
     }
 
     @Contract(pure = true)
-    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> breezes() {
-        return b -> b.initialProperties(CCBSharedProperties::hardMetal).transform(pickaxeOnly()).properties(p -> p.mapColor(MapColor.COLOR_BLUE).noOcclusion());
+    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> pickaxeOnly() {
+        return b -> b.tag(BlockTags.MINEABLE_WITH_PICKAXE);
     }
 
     @Contract(pure = true)
-    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> pickaxeOnly() {
-        return b -> b.tag(BlockTags.MINEABLE_WITH_PICKAXE);
+    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> breezes() {
+        return b -> b.initialProperties(CCBSharedProperties::hardMetal).transform(pickaxeOnly()).properties(p -> p.mapColor(MapColor.COLOR_BLUE).noOcclusion());
     }
 
     @Contract(pure = true)
@@ -549,5 +593,10 @@ public class CCBBuilderTransformer {
     @Contract(pure = true)
     public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> airtightStructural() {
         return b -> b.initialProperties(CCBSharedProperties::airtightMetal).transform(pickaxeOnly()).properties(p -> p.mapColor(MapColor.METAL).sound(SoundType.EMPTY).requiresCorrectToolForDrops().noOcclusion()).tag(CCBBlockTags.AIRTIGHT_COMPONENTS.tag);
+    }
+
+    @Contract(pure = true)
+    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> endProperties() {
+        return b -> b.initialProperties(CCBSharedProperties::obsidian).transform(pickaxeOnly()).properties(p -> p.mapColor(MapColor.COLOR_GREEN).noOcclusion()).tag(CCBBlockTags.END_COMPONENTS.tag);
     }
 }

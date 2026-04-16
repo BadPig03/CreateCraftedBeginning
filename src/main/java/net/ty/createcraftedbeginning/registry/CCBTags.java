@@ -79,7 +79,8 @@ public class CCBTags {
 
     public enum CCBBlockTags {
         CRATES,
-        AIRTIGHT_COMPONENTS;
+        AIRTIGHT_COMPONENTS,
+        END_COMPONENTS;
 
         public final TagKey<Block> tag;
         public final boolean alwaysDataGen;
@@ -113,17 +114,25 @@ public class CCBTags {
     public enum CCBItemTags {
         AIRTIGHT_COMPONENTS,
         AIRTIGHT_ARMOR,
-        AMETHYST(COMMON, "dusts/amethyst"),
-        AMETHYST_CRYSTAL_PLATE(COMMON, "plates/amethyst_crystal"),
-        CHORUS_FLOWER(COMMON, "dusts/chorus_flower"),
-        END_ALLOY(COMMON, "ingots/end_alloy"),
         CINDER_CASING_RAW_MATERIALS,
         END_CASING_RAW_MATERIALS,
         CRATES,
-        CRYING_OBSIDIAN(COMMON, "dusts/crying_obsidian"),
         WEATHER_FLARE,
         ICE_CREAMS,
-        ICE_CREAM_WITH_FLAVOR;
+        ICE_CREAM_WITH_FLAVOR,
+        OBSIDIAN_BRICKS,
+        CRYING_OBSIDIAN_BRICKS,
+        DUSTS(COMMON, "dusts"),
+        BRICKS(COMMON, "bricks"),
+
+        DUSTS_AMETHYST(COMMON, "dusts/amethyst"),
+        DUSTS_CHORUS_FLOWER(COMMON, "dusts/chorus_flower"),
+        DUSTS_CRYING_OBSIDIAN(COMMON, "dusts/crying_obsidian"),
+        INGOTS_END_ALLOY(COMMON, "ingots/end_alloy"),
+        PLATES_END_ALLOY(COMMON, "plates/end_alloy"),
+        PLATES_AMETHYST_CRYSTAL(COMMON, "plates/amethyst_crystal"),
+        BRICKS_OBSIDIAN(COMMON, "bricks/obsidian"),
+        BRICKS_CRYING_OBSIDIAN(COMMON, "bricks/crying_obsidian");
 
         public final TagKey<Item> tag;
         public final boolean alwaysDataGen;

@@ -56,6 +56,10 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         newPipe.interfaces = interfaceTransfer.get(world).remove(pos);
     }
 
+    public static boolean isValidAirtightComponents(Level level, BlockPos pos, @NotNull BlockState state, Direction direction) {
+        return state.isAir() || state.canBeReplaced() && state.getDestroySpeed(level, pos) != -1 || state.hasProperty(BlockStateProperties.WATERLOGGED) || GasPropagator.hasGasCapability(level, pos, direction) || state.getBlock() instanceof IAirtightComponent airtightComponent && airtightComponent.isAirtight(pos, state, direction);
+    }
+
     public GasStack getProvidedOutwardGas(Direction side) {
         createConnectionData();
         if (!interfaces.containsKey(side)) {
@@ -137,19 +141,6 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
 
     public boolean isIncorrectAxis(@NotNull BlockState state, @NotNull Direction direction) {
         return state.getValue(BlockStateProperties.AXIS) != direction.getAxis();
-    }
-
-    @SuppressWarnings("SimplifiableIfStatement")
-    protected boolean isValidAirtightComponents(BlockPos pos, @NotNull BlockState state, Direction direction) {
-        Level level = getWorld();
-        if (state.isAir() || state.canBeReplaced() && state.getDestroySpeed(level, pos) != -1 || state.hasProperty(BlockStateProperties.WATERLOGGED)) {
-            return true;
-        }
-        if (GasPropagator.hasGasCapability(level, pos, direction)) {
-            return true;
-        }
-
-        return state.getBlock() instanceof IAirtightComponent airtightComponent && airtightComponent.isAirtight(pos, state, direction);
     }
 
     public AttachmentTypes getRenderedRimAttachment(BlockAndTintGetter world, BlockPos pos, BlockState state, Direction direction) {

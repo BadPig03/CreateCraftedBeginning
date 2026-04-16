@@ -25,11 +25,11 @@ import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasFilteringRenderer;
 import net.ty.createcraftedbeginning.api.outliner.CCBOutliner;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightChestplateFirstPersonRenderer;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightChestplateLayer;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightLeggingsLayer;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateFirstPersonRenderer;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateLayer;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.AirtightLeggingsLayer;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonItemRenderer;
-import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillBlockRender;
+import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillOutlineRenderer;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlay;
 import net.ty.createcraftedbeginning.ponder.CCBPonderPlugin;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
@@ -94,7 +94,7 @@ public class CCBClientEvents {
         }
 
         GasFilteringRenderer.tick();
-        AirtightHandheldDrillBlockRender.tick();
+        AirtightHandheldDrillOutlineRenderer.tick();
         AirtightChestplateFirstPersonRenderer.tick();
 
         CreateCraftedBeginningClient.AIRTIGHT_CANNON_RENDER_HANDLER.tick();

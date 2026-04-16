@@ -28,5 +28,4 @@ public class HollowCuboidTemplate extends BaseTemplate {
         }
         return hollowCuboid;
     }
-
 }

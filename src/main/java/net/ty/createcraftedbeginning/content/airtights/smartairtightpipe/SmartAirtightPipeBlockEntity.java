@@ -71,8 +71,8 @@ public class SmartAirtightPipeBlockEntity extends SmartBlockEntity implements IG
             }
 
             BlockPos otherPos = worldPosition.relative(direction);
-            BlockState otherState = getWorld().getBlockState(otherPos);
-            return isValidAirtightComponents(otherPos, otherState, direction);
+            Level level = getWorld();
+            return isValidAirtightComponents(level, otherPos, level.getBlockState(otherPos), direction);
         }
 
         @Override

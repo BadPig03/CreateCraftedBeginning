@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class EnergizationCategory extends CCBRecipeCategory<EnergizationRecipe> {
-    private final AnimatedBreezeChamberWithTank chamber = new AnimatedBreezeChamberWithTank();
+    private final AnimatedBreezeChamberWithTank chamber = new AnimatedBreezeChamberWithTank(false);
 
     public EnergizationCategory(Info<EnergizationRecipe> info) {
         super(info);

@@ -23,11 +23,23 @@ public enum CCBGUITextures implements ScreenElement, TextureSheetSegment {
     JEI_HEAT_BAR("jei/widgets", 0, 201, 169, 19),
 	JEI_NO_HEAT_BAR("jei/widgets", 0, 221, 169, 19),
 
+    ARMORS("armors", 0, 0, 190, 138),
     HANDHELD_DRILL("handheld_drill", 0, 0, 215, 138),
     GAS_CANISTER_PACK("gas_canister_pack", 0, 0, 196, 144),
     GAS_CANISTER_PACK_CANISTER("gas_canister_pack", 0, 144, 16, 38),
     GAS_CANISTER_PACK_CREATIVE_CANISTER("gas_canister_pack", 16, 144, 16, 38),
-    GAS_FILTER("gas_filter", 0, 0, 214, 104);
+    GAS_FILTER("gas_filter", 0, 0, 214, 104),
+
+    INDICATOR_RIGHT("widgets", 0, 0, 6, 18),
+    INDICATOR_WHITE_RIGHT("widgets", 6, 0, 6, 18),
+    INDICATOR_GREEN_RIGHT("widgets", 12, 0, 6, 18),
+    INDICATOR_YELLOW_RIGHT("widgets", 18, 0, 6, 18),
+    INDICATOR_RED_RIGHT("widgets", 24, 0, 6, 18),
+    INDICATOR_LEFT("widgets", 0, 18, 6, 18),
+    INDICATOR_WHITE_LEFT("widgets", 6, 18, 6, 18),
+    INDICATOR_GREEN_LEFT("widgets", 12, 18, 6, 18),
+    INDICATOR_YELLOW_LEFT("widgets", 18, 18, 6, 18),
+    INDICATOR_RED_LEFT("widgets", 24, 18, 6, 18);
 
     public final ResourceLocation location;
     private final int width;

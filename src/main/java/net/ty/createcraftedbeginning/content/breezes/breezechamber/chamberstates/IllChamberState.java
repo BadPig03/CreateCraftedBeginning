@@ -15,6 +15,8 @@ import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import org.jetbrains.annotations.NotNull;
 
 public class IllChamberState extends BaseChamberState {
+    private int dissipationTimer;
+
     public IllChamberState(int remainingTime, boolean isCreative) {
         super(remainingTime, isCreative);
     }
@@ -36,7 +38,22 @@ public class IllChamberState extends BaseChamberState {
             return;
         }
 
+        dissipationTick(chamber);
         chamber.notifyUpdate();
+    }
+
+    public void dissipationTick(@NotNull BreezeChamberBlockEntity chamber) {
+        if (chamber.isControllerActive()) {
+            return;
+        }
+
+        dissipationTimer++;
+        if (dissipationTimer < NOTIFY_INTERVAL) {
+            return;
+        }
+
+        chamber.doDissipation();
+        dissipationTimer = 0;
     }
 
     @Override
