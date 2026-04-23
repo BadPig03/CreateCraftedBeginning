@@ -67,8 +67,7 @@ public abstract class GasFlowSource {
     }
 
     public static class GasHandler extends GasFlowSource {
-        @Nullable
-        ICapabilityProvider<IGasHandler> gasHandlerCache;
+        @Nullable ICapabilityProvider<IGasHandler> gasHandlerCache;
 
         public GasHandler(BlockFace location) {
             super(location);
@@ -98,7 +97,10 @@ public abstract class GasFlowSource {
             }
 
             if (level instanceof ServerLevel serverLevel) {
-                gasHandlerCache = ICapabilityProvider.of(BlockCapabilityCache.create(GasCapabilities.GasHandler.BLOCK, serverLevel, blockEntity.getBlockPos(), location.getOppositeFace(), () -> !networkBE.isRemoved(), () -> gasHandlerCache = EMPTY));
+                gasHandlerCache = ICapabilityProvider.of(invalidate -> BlockCapabilityCache.create(GasCapabilities.GasHandler.BLOCK, serverLevel, blockEntity.getBlockPos(), location.getOppositeFace(), () -> !networkBE.isRemoved(), () -> {
+                    gasHandlerCache = EMPTY;
+                    invalidate.run();
+                }));
             }
             else if (level instanceof PonderLevel) {
                 gasHandlerCache = ICapabilityProvider.of(() -> level.getCapability(GasCapabilities.GasHandler.BLOCK, blockEntity.getBlockPos(), location.getOppositeFace()));

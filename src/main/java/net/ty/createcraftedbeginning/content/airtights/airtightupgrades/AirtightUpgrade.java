@@ -77,13 +77,13 @@ public interface AirtightUpgrade {
         return false;
     }
 
-    default boolean isEnabled(@NotNull ItemStack armor) {
-        List<AirtightUpgradeStatus> upgradeStatusList = armor.getOrDefault(CCBDataComponents.AIRTIGHT_UPGRADE_STATUS, AirtightArmorsUtils.getDefaultUpgradeList(armor));
+    default boolean isEnabled(@NotNull ItemStack item) {
+        List<AirtightUpgradeStatus> upgradeStatusList = item.getOrDefault(CCBDataComponents.AIRTIGHT_UPGRADE_STATUS, AirtightArmorsUtils.getDefaultUpgradeList(item));
         return upgradeStatusList.get(getIndex()).isEnabled();
     }
 
-    default boolean isInstalled(@NotNull ItemStack armor) {
-        List<AirtightUpgradeStatus> upgradeStatusList = armor.getOrDefault(CCBDataComponents.AIRTIGHT_UPGRADE_STATUS, AirtightArmorsUtils.getDefaultUpgradeList(armor));
+    default boolean isInstalled(@NotNull ItemStack item) {
+        List<AirtightUpgradeStatus> upgradeStatusList = item.getOrDefault(CCBDataComponents.AIRTIGHT_UPGRADE_STATUS, AirtightArmorsUtils.getDefaultUpgradeList(item));
         return upgradeStatusList.get(getIndex()).isInstalled();
     }
 }

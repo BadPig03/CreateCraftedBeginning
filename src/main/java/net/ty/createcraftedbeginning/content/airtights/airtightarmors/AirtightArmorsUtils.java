@@ -20,6 +20,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthe
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.upgrades.HelmetResistanceUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.AirtightLeggingsUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.LeggingsResistanceUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.AirtightHandheldDrillUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.NotNull;
@@ -34,15 +35,17 @@ public final class AirtightArmorsUtils {
 
     private static final int DURATION_THRESHOLD = 30;
 
-    public static List<AirtightUpgradeStatus> getDefaultUpgradeList(@NotNull ItemStack armor) {
-        if (armor.is(CCBItems.AIRTIGHT_HELMET)) {
+    public static List<AirtightUpgradeStatus> getDefaultUpgradeList(@NotNull ItemStack item) {
+        if (item.is(CCBItems.AIRTIGHT_HELMET)) {
             return AirtightHelmetUpgradeRegistry.getDefaultUpgradeList();
-        } else if (armor.is(CCBItems.AIRTIGHT_CHESTPLATE)) {
+        } else if (item.is(CCBItems.AIRTIGHT_CHESTPLATE)) {
             return AirtightChestplateUpgradeRegistry.getDefaultUpgradeList();
-        } else if (armor.is(CCBItems.AIRTIGHT_LEGGINGS)) {
+        } else if (item.is(CCBItems.AIRTIGHT_LEGGINGS)) {
             return AirtightLeggingsUpgradeRegistry.getDefaultUpgradeList();
-        } else if (armor.is(CCBItems.AIRTIGHT_BOOTS)) {
+        } else if (item.is(CCBItems.AIRTIGHT_BOOTS)) {
             return AirtightBootsUpgradeRegistry.getDefaultUpgradeList();
+        } else if (item.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
+            return AirtightHandheldDrillUpgradeRegistry.getDefaultUpgradeList();
         }
         return Collections.emptyList();
     }
