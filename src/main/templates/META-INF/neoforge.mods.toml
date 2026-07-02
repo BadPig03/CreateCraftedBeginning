@@ -32,3 +32,10 @@ config="${mod_id}.mixins.json"
     versionRange="[6.0.10,6.1.0)"
     ordering="NONE"
     direction="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="kubejs"
+    type="optional"
+    versionRange="[2101.7.2-build.368,)"
+    ordering="NONE"
+    side="BOTH"
