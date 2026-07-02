@@ -1,43 +1,40 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades;
 
 import net.createmod.catnip.data.Couple;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import net.ty.createcraftedbeginning.registry.CCBItems;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.List;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public enum HandheldDrillFilterButton implements AirtightUpgrade {
     INSTANCE;
 
     @Override
-    public int getIndex() {
-        return 4;
+    public List<Component> getComponents(Player player, ItemStack item) {
+        return List.of();
     }
 
     @Override
-    public @NotNull ResourceLocation getID() {
-        return CreateCraftedBeginning.asResource("handheld_drill_filter");
+    public boolean canApply(Player player) {
+        return false;
     }
 
     @Override
-    public @Nullable Item getUpgradeItem() {
-        return null;
-    }
-
-    @Override
-    public @NotNull Couple<Integer> getOffset() {
-        return Couple.create(40, 114);
-    }
-
-    @Override
-    public CCBIcons getIcon() {
-        return CCBIcons.I_FILTER;
+    public boolean meetsConditions(Player player, ItemStack item) {
+        return true;
     }
 
     @Override
@@ -46,28 +43,43 @@ public enum HandheldDrillFilterButton implements AirtightUpgrade {
     }
 
     @Override
-    public @NotNull Component getTitle() {
-        return CCBLang.translateDirect("gui.airtight_handheld_drill.filter");
+    public CCBIcons getIcon() {
+        return CCBIcons.I_FILTER;
     }
 
     @Override
-    public @NotNull Component getDescription() {
+    public Component getDescription() {
         return CCBLang.translateDirect("gui.airtight_handheld_drill.filter.description");
     }
 
     @Override
-    public @Nullable Component getGasCostComponent(Player player) {
-        return null;
+    public Component getTitle() {
+        return CCBLang.translateDirect("gui.airtight_handheld_drill.filter");
     }
 
     @Override
-    public int getGasCost(Player player) {
-        return 0;
+    public Couple<Integer> getOffset() {
+        return Couple.create(40, 114);
     }
 
     @Override
-    public boolean canApply(Player player) {
-        return false;
+    public int getGasConsumptionPerSecond(Player player, ItemStack item) {
+        return -1;
+    }
+
+    @Override
+    public int getIndex() {
+        return 4;
+    }
+
+    @Override
+    public Item getUpgradeItem() {
+        return Items.BARRIER;
+    }
+
+    @Override
+    public ResourceLocation getID() {
+        return CreateCraftedBeginning.asResource("handheld_drill_filter");
     }
 
     @Override
@@ -82,5 +94,14 @@ public enum HandheldDrillFilterButton implements AirtightUpgrade {
     @Override
     public boolean startsInstalled() {
         return true;
+    }
+
+    @Override
+    public boolean isActive(Player player, ItemStack item) {
+        return item.is(CCBItems.AIRTIGHT_HANDHELD_DRILL) && AirtightUpgrade.super.isActive(player, item);
+    }
+
+    public boolean canApply(ItemStack item) {
+        return item.is(CCBItems.AIRTIGHT_HANDHELD_DRILL) && isEnabled(item);
     }
 }

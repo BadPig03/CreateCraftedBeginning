@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.registry;
 
 import net.createmod.catnip.lang.Lang;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.SimpleParticleType;
@@ -10,15 +11,17 @@ import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.content.particles.AirtightJetpackParticle;
+import net.ty.createcraftedbeginning.content.particles.AirtightJetpackParticle.Provider;
 import net.ty.createcraftedbeginning.content.particles.BreezeCloudParticle;
 import net.ty.createcraftedbeginning.content.particles.BubbleWithoutWaterParticle;
 import net.ty.createcraftedbeginning.content.particles.EndIncinerationParticle;
 import org.jetbrains.annotations.ApiStatus.Internal;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Supplier;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public enum CCBParticleTypes {
     AIRTIGHT_JETPACK(() -> new SimpleParticleType(false)),
@@ -37,19 +40,18 @@ public enum CCBParticleTypes {
         ParticleEntry.REGISTER.register(modEventBus);
     }
 
-    @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
-    public static void registerFactories(@NotNull RegisterParticleProvidersEvent event) {
-        event.registerSpriteSet((SimpleParticleType) AIRTIGHT_JETPACK.get(), AirtightJetpackParticle.Provider::new);
+    public static void registerFactories(RegisterParticleProvidersEvent event) {
+        event.registerSpriteSet((SimpleParticleType) AIRTIGHT_JETPACK.get(), Provider::new);
         event.registerSpriteSet((SimpleParticleType) BREEZE_CLOUD.get(), BreezeCloudParticle.Provider::new);
         event.registerSpriteSet((SimpleParticleType) BUBBLE_WITHOUT_WATER.get(), BubbleWithoutWaterParticle.Provider::new);
         event.registerSpriteSet((SimpleParticleType) END_INCINERATION.get(), EndIncinerationParticle.Provider::new);
     }
 
-    public @NotNull ParticleType<?> get() {
+    public ParticleType<?> get() {
         return entry.object.get();
     }
 
-    public @NotNull ParticleOptions getParticleOptions() {
+    public ParticleOptions getParticleOptions() {
         return (ParticleOptions) entry.object.get();
     }
 

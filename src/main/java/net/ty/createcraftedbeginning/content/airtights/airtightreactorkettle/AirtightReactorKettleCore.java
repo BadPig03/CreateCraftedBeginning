@@ -1,9 +1,13 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightReactorKettleCore {
     private static final String COMPOUND_KEY_STRUCTURE_MANAGER = "StructureManager";
 
@@ -32,7 +36,7 @@ public class AirtightReactorKettleCore {
         return compoundTag;
     }
 
-    public void read(@NotNull CompoundTag compoundTag) {
+    public void read(CompoundTag compoundTag) {
         structureManager.read(compoundTag.getCompound(COMPOUND_KEY_STRUCTURE_MANAGER));
     }
 

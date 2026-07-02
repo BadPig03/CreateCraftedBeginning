@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.crates;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.Containers;
@@ -7,15 +8,17 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateContents;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public final class CrateContainersUtils {
     private CrateContainersUtils() {
     }
 
-    public static void dropContents(Level level, Vec3 pos, @NotNull SturdyCrateContents contents) {
+    public static void dropContents(Level level, Vec3 pos, SturdyCrateContents contents) {
         ItemStack content = contents.content();
         int count = contents.count();
         if (content.isEmpty() || count <= 0) {
@@ -30,7 +33,7 @@ public final class CrateContainersUtils {
         }
     }
 
-    public static void dropContents(Level level, double x, double y, double z, @NotNull CrateItemStackHandler handler) {
+    public static void dropContents(Level level, double x, double y, double z, CrateItemStackHandler handler) {
         ItemStack content = handler.getStackInSlot(0);
         int count = handler.getCountInSlot(0);
         if (content.isEmpty() || count <= 0) {
@@ -45,7 +48,7 @@ public final class CrateContainersUtils {
         }
     }
 
-    public static int calculateRedstoneSignal(@NotNull CrateItemStackHandler handler) {
+    public static int calculateRedstoneSignal(CrateItemStackHandler handler) {
         ItemStack content = handler.getStackInSlot(0);
         int count = handler.getCountInSlot(0);
         if (content.isEmpty() || count <= 0) {
@@ -56,7 +59,7 @@ public final class CrateContainersUtils {
         return Mth.floor((float) count / limit * 14) + 1;
     }
 
-    public static boolean defaultUnpack(@NotNull Level level, BlockPos pos, List<ItemStack> items, boolean simulate) {
+    public static boolean defaultUnpack(Level level, BlockPos pos, List<ItemStack> items, boolean simulate) {
         if (!(level.getBlockEntity(pos) instanceof CratesBlockEntity crateBlockEntity)) {
             return false;
         }

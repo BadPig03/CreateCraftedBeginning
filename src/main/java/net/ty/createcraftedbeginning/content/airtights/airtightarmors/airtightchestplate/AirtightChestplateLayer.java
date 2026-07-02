@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.foundation.mixin.accessor.EntityRenderDispatcherAccessor;
 import net.createmod.catnip.render.CachedBuffers;
 import net.createmod.catnip.render.SuperByteBuffer;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -25,8 +26,11 @@ import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightch
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightChestplateLayer<T extends LivingEntity, M extends EntityModel<T>> extends RenderLayer<T, M> {
     public AirtightChestplateLayer(RenderLayerParent<T, M> renderer) {
         super(renderer);
@@ -41,7 +45,7 @@ public class AirtightChestplateLayer<T extends LivingEntity, M extends EntityMod
         livingRenderer.addLayer((AirtightChestplateLayer) new AirtightChestplateLayer<>(livingRenderer));
     }
 
-    public static void registerOnAll(@NotNull EntityRenderDispatcher renderManager) {
+    public static void registerOnAll(EntityRenderDispatcher renderManager) {
         for (EntityRenderer<? extends Player> renderer : renderManager.getSkinMap().values()) {
             registerOn(renderer);
         }
@@ -51,7 +55,7 @@ public class AirtightChestplateLayer<T extends LivingEntity, M extends EntityMod
     }
 
     @Override
-    public void render(@NotNull PoseStack poseStack, @NotNull MultiBufferSource bufferSource, int light, @NotNull LivingEntity entity, float yaw, float pitch, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
+    public void render(PoseStack poseStack, MultiBufferSource bufferSource, int light, LivingEntity entity, float yaw, float pitch, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
         if (!(getParentModel() instanceof HumanoidModel<?> model) || !(entity instanceof Player player) || player.getPose() == Pose.SLEEPING) {
             return;
         }

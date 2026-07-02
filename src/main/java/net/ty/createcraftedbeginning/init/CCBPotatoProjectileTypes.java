@@ -4,14 +4,18 @@ import com.simibubi.create.api.equipment.potatoCannon.PotatoCannonProjectileType
 import com.simibubi.create.api.equipment.potatoCannon.PotatoCannonProjectileType.Builder;
 import com.simibubi.create.api.registry.CreateRegistries;
 import com.simibubi.create.content.equipment.potatoCannon.AllPotatoProjectileEntityHitActions.PotionEffect;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffects;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBPotatoProjectileTypes {
     public static void bootstrap(BootstrapContext<PotatoCannonProjectileType> context) {
         register(context, "amethyst_ice_cream", new Builder().damage(6).addItems(CCBItems.AMETHYST_ICE_CREAM.asItem()).knockback(0.25f).reloadTicks(20).renderTowardMotion(140, 2).velocity(1.5f).soundPitch(1.0f).onEntityHit(new PotionEffect(MobEffects.MOVEMENT_SLOWDOWN, 1, 300, false)).build());
@@ -25,7 +29,7 @@ public class CCBPotatoProjectileTypes {
         register(context, "milk_ice_cream", new Builder().damage(5).addItems(CCBItems.MILK_ICE_CREAM.asItem()).knockback(0.25f).reloadTicks(20).renderTowardMotion(140, 2).velocity(1.5f).soundPitch(1.0f).onEntityHit(new PotionEffect(MobEffects.MOVEMENT_SLOWDOWN, 1, 300, false)).build());
     }
 
-    private static void register(@NotNull BootstrapContext<PotatoCannonProjectileType> context, String name, PotatoCannonProjectileType type) {
+    private static void register(BootstrapContext<PotatoCannonProjectileType> context, String name, PotatoCannonProjectileType type) {
         context.register(ResourceKey.create(CreateRegistries.POTATO_PROJECTILE_TYPE, ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, name)), type);
     }
 }

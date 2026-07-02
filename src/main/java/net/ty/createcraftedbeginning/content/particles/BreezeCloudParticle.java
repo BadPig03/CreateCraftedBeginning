@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.particles;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleProvider;
@@ -10,8 +11,11 @@ import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.util.Mth;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class BreezeCloudParticle extends TextureSheetParticle {
     private final SpriteSet sprites;
@@ -53,7 +57,7 @@ public class BreezeCloudParticle extends TextureSheetParticle {
     }
 
     @Override
-    public @NotNull ParticleRenderType getRenderType() {
+    public ParticleRenderType getRenderType() {
         return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
     }
 
@@ -66,7 +70,7 @@ public class BreezeCloudParticle extends TextureSheetParticle {
         }
 
         @Override
-        public Particle createParticle(@NotNull SimpleParticleType type, @NotNull ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+        public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
             return new BreezeCloudParticle(level, x, y, z, xSpeed, ySpeed, zSpeed, sprites);
         }
     }

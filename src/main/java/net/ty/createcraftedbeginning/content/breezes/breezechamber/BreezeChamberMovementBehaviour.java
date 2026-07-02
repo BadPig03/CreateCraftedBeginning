@@ -12,6 +12,7 @@ import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.math.VecHelper;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.Direction;
@@ -25,12 +26,16 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class BreezeChamberMovementBehaviour implements MovementBehaviour {
     private static final String COMPOUND_KEY_CONDUCTOR = "Conductor";
 
-    private static LerpedFloat getHeadAngle(@NotNull MovementContext context) {
+    private static LerpedFloat getHeadAngle(MovementContext context) {
         if (!(context.temporaryData instanceof LerpedFloat)) {
             context.temporaryData = LerpedFloat.angular().startWithValue(getTargetAngle(context));
         }
@@ -53,7 +58,7 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
         return AngleHelper.deg(-Mth.atan2(applyRotation.z, applyRotation.x)) - 90;
     }
 
-    private static boolean shouldRenderHat(@NotNull MovementContext context) {
+    private static boolean shouldRenderHat(MovementContext context) {
         CompoundTag compoundTag = context.data;
         if (!compoundTag.contains(COMPOUND_KEY_CONDUCTOR)) {
             compoundTag.putBoolean(COMPOUND_KEY_CONDUCTOR, determineIfConducting(context));
@@ -61,7 +66,7 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
         return compoundTag.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity cce && cce.hasSchedule();
     }
 
-    private static boolean determineIfConducting(@NotNull MovementContext context) {
+    private static boolean determineIfConducting(MovementContext context) {
         Contraption contraption = context.contraption;
         if (!(contraption instanceof CarriageContraption carriageContraption)) {
             return false;
@@ -79,7 +84,7 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
     }
 
     @Override
-    public void tick(@NotNull MovementContext context) {
+    public void tick(MovementContext context) {
         if (!context.world.isClientSide()) {
             return;
         }
@@ -97,7 +102,7 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
     }
 
     @Override
-    public ItemStack canBeDisabledVia(MovementContext context) {
+    public @Nullable ItemStack canBeDisabledVia(MovementContext context) {
         return null;
     }
 
@@ -109,6 +114,6 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
     @Override
     @OnlyIn(Dist.CLIENT)
     public void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource buffer) {
-        BreezeChamberRenderer.renderInContraption(context, matrices, buffer, getHeadAngle(context), shouldRenderHat(context));
+        BreezeChamberRenderer.renderInContraption(context, matrices, buffer, getHeadAngle(context), shouldRenderHat(context), renderWorld);
     }
 }

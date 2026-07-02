@@ -3,12 +3,16 @@ package net.ty.createcraftedbeginning.api.gas.recipes;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Function;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class ItemApplicationWithGasRecipeParams extends ProcessingWithGasRecipeParams {
     public static MapCodec<ItemApplicationWithGasRecipeParams> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(codec(ItemApplicationWithGasRecipeParams::new).forGetter(Function.identity()), Codec.BOOL.optionalFieldOf("keep_held_item", false).forGetter(ItemApplicationWithGasRecipeParams::keepHeldItem)).apply(instance, (params, keepHeldItem) -> {
         params.keepHeldItem = keepHeldItem;

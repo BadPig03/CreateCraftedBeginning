@@ -1,0 +1,35 @@
+{
+  "parent": "createcraftedbeginning:emerging_power",
+  "criteria": {
+    "0": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:tesla_turbine_rotor"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.debris_craft.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:tesla_turbine_rotor"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.debris_craft"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

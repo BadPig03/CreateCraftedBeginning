@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.data;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.DefaultedRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
@@ -7,17 +8,21 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.RegistryBuilder;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.gases.CompoundGasIngredient;
-import net.ty.createcraftedbeginning.api.gas.gases.DataComponentGasIngredient;
-import net.ty.createcraftedbeginning.api.gas.gases.DifferenceGasIngredient;
-import net.ty.createcraftedbeginning.api.gas.gases.EmptyGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.CompoundGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.DataComponentGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.DifferenceGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.EmptyGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasIngredientType;
-import net.ty.createcraftedbeginning.api.gas.gases.IntersectionGasIngredient;
-import net.ty.createcraftedbeginning.api.gas.gases.SingleGasIngredient;
-import net.ty.createcraftedbeginning.api.gas.gases.TagGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.GasIngredientType;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.IntersectionGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SingleGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.TagGasIngredient;
 import net.ty.createcraftedbeginning.registry.CCBRegistries;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBGasRegistries {
     public static final ResourceKey<Gas> EMPTY_GAS_KEY = ResourceKey.create(CCBRegistries.GAS_REGISTRY_KEY, CreateCraftedBeginning.asResource("empty"));
 

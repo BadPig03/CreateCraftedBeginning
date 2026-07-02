@@ -5,6 +5,7 @@ import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.content.kinetics.base.KineticBlock;
 import com.simibubi.create.content.kinetics.simpleRelays.ICogWheel;
 import com.simibubi.create.foundation.block.IBE;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -32,8 +33,11 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implements IBE<AirtightReactorKettleStructuralCogBlockEntity>, IWrenchable, IProxyHoveringInformation, ICogWheel, IAirtightReactorKettleStructural {
     public static final EnumProperty<AirtightReactorKettleStructuralPosition> STRUCTURAL_POSITION = EnumProperty.create("structural_position", AirtightReactorKettleStructuralPosition.class);
 
@@ -48,7 +52,7 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
     }
 
     @Override
-    public InteractionResult onSneakWrenched(BlockState state, @NotNull UseOnContext context) {
+    public InteractionResult onSneakWrenched(BlockState state, UseOnContext context) {
         BlockPos clickedPos = context.getClickedPos();
         Level level = context.getLevel();
         if (!stillValid(level, clickedPos, state)) {
@@ -62,22 +66,22 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
     }
 
     @Override
-    public @NotNull ItemStack getCloneItemStack(@NotNull BlockState state, @NotNull HitResult target, @NotNull LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
-        return CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK.asStack();
+    public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
+        return new ItemStack(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK);
     }
 
     @Override
-    public boolean addLandingEffects(@NotNull BlockState blockState1, @NotNull ServerLevel level, @NotNull BlockPos pos, @NotNull BlockState blockState2, @NotNull LivingEntity entity, int numberOfParticles) {
+    public boolean addLandingEffects(BlockState blockState1, ServerLevel level, BlockPos pos, BlockState blockState2, LivingEntity entity, int numberOfParticles) {
         return true;
     }
 
     @Override
-    public PushReaction getPistonPushReaction(@NotNull BlockState state) {
+    public PushReaction getPistonPushReaction(BlockState state) {
         return PushReaction.BLOCK;
     }
 
     @Override
-    public @NotNull BlockState playerWillDestroy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, @NotNull Player player) {
+    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         if (!stillValid(level, pos, state)) {
             return super.playerWillDestroy(level, pos, state, player);
         }
@@ -91,13 +95,13 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
     }
 
     @Override
-    protected void createBlockStateDefinition(@NotNull Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
         builder.add(STRUCTURAL_POSITION);
         super.createBlockStateDefinition(builder);
     }
 
     @Override
-    public @NotNull BlockState updateShape(@NotNull BlockState state, @NotNull Direction direction, @NotNull BlockState neighborState, @NotNull LevelAccessor accessor, @NotNull BlockPos pos, @NotNull BlockPos neighborPos) {
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor accessor, BlockPos pos, BlockPos neighborPos) {
         if (stillValid(accessor, pos, state)) {
             BlockPos masterPos = AirtightReactorKettleUtils.getMaster(pos, state);
             if (!accessor.getBlockTicks().hasScheduledTick(masterPos, CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK.get())) {
@@ -116,7 +120,7 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
     }
 
     @Override
-    protected @NotNull VoxelShape getShape(@NotNull BlockState blockState, @NotNull BlockGetter level, @NotNull BlockPos blockPos, @NotNull CollisionContext context) {
+    protected VoxelShape getShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
         AirtightReactorKettleStructuralPosition structuralPosition = blockState.getValue(STRUCTURAL_POSITION);
         VoxelShape shape = AirtightReactorKettleVoxelShapes.getShape(structuralPosition);
         BlockPos masterPos = AirtightReactorKettleUtils.getMaster(blockPos, blockState);
@@ -131,7 +135,7 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
     }
 
     @Override
-    public void tick(@NotNull BlockState state, @NotNull ServerLevel level, @NotNull BlockPos pos, @NotNull RandomSource random) {
+    public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         if (stillValid(level, pos, state)) {
             return;
         }
@@ -140,9 +144,9 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
     }
 
     @Override
-    public void onRemove(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState newState, boolean moving) {
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moving) {
         super.onRemove(state, level, pos, newState, moving);
-        if (!stillValid(level, pos, state)) {
+        if (state.is(newState.getBlock()) || !stillValid(level, pos, state)) {
             return;
         }
 
@@ -150,7 +154,7 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
     }
 
     @Override
-    public boolean stillValid(BlockGetter level, BlockPos pos, @NotNull BlockState state) {
+    public boolean stillValid(BlockGetter level, BlockPos pos, BlockState state) {
         return state.is(this) && level.getBlockState(AirtightReactorKettleUtils.getMaster(pos, state)).is(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK);
     }
 

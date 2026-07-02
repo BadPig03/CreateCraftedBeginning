@@ -1,5 +1,11 @@
 package net.ty.createcraftedbeginning.api.gas.drillhandlers.ultrawarm;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EnergizedUltrawarmAirDrillHandler extends UltrawarmAirDrillHandler {
     @Override
     public int getDamageAddition() {

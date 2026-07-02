@@ -6,7 +6,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.gameevent.GameEvent.Context;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.content.end.endsculksilencer.GlobalEndSculkSilencerManager;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,7 +24,7 @@ public abstract class SculkShriekerBlockEntityMixin {
         }
 
         BlockPos sourcePos = sourceEntity.blockPosition();
-        if (!CreateCraftedBeginning.GLOBAL_END_SCULK_SILENCER_MANAGER.checkWithinRange(sourcePos, level.dimension().location().toString())) {
+        if (!GlobalEndSculkSilencerManager.checkWithinRange(sourcePos, level.dimension().location().toString())) {
             return;
         }
 

@@ -4,6 +4,7 @@ import com.simibubi.create.AllDataComponents;
 import com.simibubi.create.foundation.gui.menu.IClearableMenu;
 import com.simibubi.create.foundation.gui.menu.MenuBase;
 import com.simibubi.create.foundation.item.ItemHelper;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -13,20 +14,22 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
-import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerSuppliers;
-import net.ty.createcraftedbeginning.api.gas.cansiters.IGasCanisterContainer;
+import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.api.gas.canisters.IGasCanisterContainer;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu {
     private static final int PLAYER_INVENTORY_SLOTS = Inventory.INVENTORY_SIZE;
 
@@ -42,7 +45,7 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
     }
 
     @Contract("_, _, _ -> new")
-    public static @NotNull GasFilterMenu create(int id, Inventory inv, ItemStack filter) {
+    public static GasFilterMenu create(int id, Inventory inv, ItemStack filter) {
         return new GasFilterMenu(CCBMenuTypes.GAS_FILTER_MENU.get(), id, inv, filter);
     }
 
@@ -68,7 +71,7 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
     }
 
     @Override
-    protected void saveData(@NotNull ItemStack filter) {
+    protected void saveData(ItemStack filter) {
         filter.set(AllDataComponents.FILTER_ITEMS_BLACKLIST, blacklist);
         for (int i = 0; i < filterInventory.getSlots(); i++) {
             if (!filterInventory.getStackInSlot(i).isEmpty()) {
@@ -92,7 +95,7 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
     }
 
     @Override
-    public @NotNull ItemStack quickMoveStack(@NotNull Player player, int index) {
+    public ItemStack quickMoveStack(Player player, int index) {
         if (index >= PLAYER_INVENTORY_SLOTS) {
             filterInventory.extractItem(index - PLAYER_INVENTORY_SLOTS, 1, false);
             getSlot(index).setChanged();
@@ -109,7 +112,7 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
     }
 
     @Override
-    public void clicked(int slotId, int dragType, @NotNull ClickType clickType, @NotNull Player player) {
+    public void clicked(int slotId, int dragType, ClickType clickType, Player player) {
         if (slotId < PLAYER_INVENTORY_SLOTS) {
             super.clicked(slotId, dragType, clickType, player);
             return;
@@ -133,21 +136,21 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
     }
 
     @Override
-    public boolean canTakeItemForPickAll(@NotNull ItemStack stack, @NotNull Slot slot) {
+    public boolean canTakeItemForPickAll(ItemStack stack, Slot slot) {
         return super.canTakeItemForPickAll(stack, slot) && !isInSlot(slot.index);
     }
 
     @Override
-    protected boolean moveItemStackTo(@NotNull ItemStack stack, int startIndex, int endIndex, boolean reverseDirection) {
+    protected boolean moveItemStackTo(ItemStack stack, int startIndex, int endIndex, boolean reverseDirection) {
         return false;
     }
 
     @Override
-    public boolean canDragTo(@NotNull Slot slotIn) {
+    public boolean canDragTo(Slot slotIn) {
         return slotIn.container == playerInventory;
     }
 
-    public void insertDirectly(@NotNull List<ItemStack> items) {
+    public void insertDirectly(List<ItemStack> items) {
         int slotIndex = 0;
         int slots = filterInventory.getSlots();
         for (ItemStack virtual : items) {
@@ -163,7 +166,7 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
         }
     }
 
-    protected void tryToInsert(@NotNull ItemStack stack) {
+    protected void tryToInsert(ItemStack stack) {
         if (!CanisterContainerSuppliers.isValidCanisterContainer(stack)) {
             return;
         }

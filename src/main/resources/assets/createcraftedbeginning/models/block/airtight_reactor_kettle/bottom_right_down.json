@@ -6,7 +6,7 @@
 	"textures": {
 		"1": "createcraftedbeginning:block/airtight_reactor_kettle/side",
 		"2": "createcraftedbeginning:block/airtight_reactor_kettle/top_outer_trim",
-		"3": "createcraftedbeginning:block/airtight_reactor_kettle/bottem_side",
+		"3": "createcraftedbeginning:block/airtight_reactor_kettle/bottom_side",
 		"4": "createcraftedbeginning:block/airtight_reactor_kettle/bottom_inner",
 		"5": "createcraftedbeginning:block/airtight_reactor_kettle/bottom_outer",
 		"6": "createcraftedbeginning:block/airtight_reactor_kettle/top_inner_trim",
@@ -51,7 +51,7 @@
 				"east": {"uv": [0, 8, 4, 12], "texture": "#1"},
 				"south": {"uv": [8, 8, 12, 12], "texture": "#1"},
 				"up": {"uv": [0, 0, 4, 4], "rotation": 180, "texture": "#2"},
-				"down": {"uv": [0, 8, 4, 12], "rotation": 180, "texture": "#5"}
+				"down": {"uv": [8, 0, 12, 4], "texture": "#5"}
 			}
 		},
 		{

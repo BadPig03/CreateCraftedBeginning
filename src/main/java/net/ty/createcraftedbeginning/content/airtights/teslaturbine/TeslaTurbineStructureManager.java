@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.teslaturbine;
 
 import net.createmod.catnip.data.Pair;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -10,12 +11,14 @@ import net.minecraft.world.level.Level.ExplosionInteraction;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlock;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Set;
 
 import static net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlock.calculateStructurePos;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TeslaTurbineStructureManager {
     private static final String COMPOUND_KEY_CLOCKWISE_NOZZLES = "ClockwiseNozzles";
     private static final String COMPOUND_KEY_COUNTER_CLOCKWISE_NOZZLES = "CounterClockwiseNozzles";
@@ -30,12 +33,12 @@ public class TeslaTurbineStructureManager {
     private int previousClockwiseNozzle = -1;
     private int previousCounterClockwiseNozzle = -1;
 
-    public TeslaTurbineStructureManager(@NotNull TeslaTurbineCore core, TeslaTurbineBlockEntity turbine) {
+    public TeslaTurbineStructureManager(TeslaTurbineCore core, TeslaTurbineBlockEntity turbine) {
         this.core = core;
         this.turbine = turbine;
     }
 
-    private static int findNozzle(@NotNull Set<Pair<Integer, Integer>> offsets, BlockPos pos, Axis axis, Level level) {
+    private static int findNozzle(Set<Pair<Integer, Integer>> offsets, BlockPos pos, Axis axis, Level level) {
         int nozzles = 0;
         for (Pair<Integer, Integer> offset : offsets) {
             BlockPos nozzlePos = calculateStructurePos(pos, axis, offset.getFirst(), offset.getSecond());
@@ -97,24 +100,23 @@ public class TeslaTurbineStructureManager {
         }
 
         BlockPos pos = turbine.getBlockPos();
-        BlockState newState = oldState.setValue(TeslaTurbineBlock.ROTOR, 0);
         Axis axis = oldState.getValue(TeslaTurbineBlock.AXIS);
         double centerX = pos.getX() + 0.5;
         double centerY = pos.getY() + 0.5;
         double centerZ = pos.getZ() + 0.5;
         if (axis == Axis.X) {
-            level.explode(null, centerX + 0.5, centerY, centerZ, rotorCount, false, ExplosionInteraction.NONE);
-            level.explode(null, centerX - 0.5, centerY, centerZ, rotorCount, false, ExplosionInteraction.NONE);
+            level.explode(null, centerX + 0.5, centerY, centerZ, rotorCount, true, ExplosionInteraction.NONE);
+            level.explode(null, centerX - 0.5, centerY, centerZ, rotorCount, true, ExplosionInteraction.NONE);
         }
         else if (axis == Axis.Z) {
-            level.explode(null, centerX, centerY, centerZ + 0.5, rotorCount, false, ExplosionInteraction.NONE);
-            level.explode(null, centerX, centerY, centerZ - 0.5, rotorCount, false, ExplosionInteraction.NONE);
+            level.explode(null, centerX, centerY, centerZ + 0.5, rotorCount, true, ExplosionInteraction.NONE);
+            level.explode(null, centerX, centerY, centerZ - 0.5, rotorCount, true, ExplosionInteraction.NONE);
         }
         else {
-            level.explode(null, centerX, centerY + 0.5, centerZ, rotorCount, false, ExplosionInteraction.NONE);
-            level.explode(null, centerX, centerY - 0.5, centerZ, rotorCount, false, ExplosionInteraction.NONE);
+            level.explode(null, centerX, centerY + 0.5, centerZ, rotorCount, true, ExplosionInteraction.NONE);
+            level.explode(null, centerX, centerY - 0.5, centerZ, rotorCount, true, ExplosionInteraction.NONE);
         }
-        level.setBlockAndUpdate(pos, newState);
+        level.setBlockAndUpdate(pos, oldState.setValue(TeslaTurbineBlock.ROTOR, 0));
         turbine.getAdvancementBehaviour().awardPlayer(CCBAdvancements.TESLA_TURBINE_EASY_AS_PIE);
     }
 
@@ -142,7 +144,7 @@ public class TeslaTurbineStructureManager {
         return compoundTag;
     }
 
-    public void read(@NotNull CompoundTag compoundTag) {
+    public void read(CompoundTag compoundTag) {
         if (compoundTag.contains(COMPOUND_KEY_CLOCKWISE_NOZZLES)) {
             attachedClockwiseNozzle = compoundTag.getInt(COMPOUND_KEY_CLOCKWISE_NOZZLES);
         }

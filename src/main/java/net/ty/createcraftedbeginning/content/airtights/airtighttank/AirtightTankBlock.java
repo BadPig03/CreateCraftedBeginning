@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.content.airtights.airtighttank;
 
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.LivingEntity;
@@ -17,10 +18,14 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.GasConnectivityHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.IAirtightComponent;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEntity>, IWrenchable, IAirtightComponent {
     public static final BooleanProperty TOP = BooleanProperty.create("top");
     public static final BooleanProperty BOTTOM = BooleanProperty.create("bottom");
@@ -30,7 +35,7 @@ public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEnt
         registerDefaultState(defaultBlockState().setValue(TOP, true).setValue(BOTTOM, true));
     }
 
-    public static void updateTankState(@NotNull Level level, BlockPos tankPos) {
+    public static void updateTankState(Level level, BlockPos tankPos) {
         BlockState tankState = level.getBlockState(tankPos);
         if (!(tankState.getBlock() instanceof AirtightTankBlock tank)) {
             return;
@@ -50,28 +55,34 @@ public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEnt
     }
 
     @Override
-    protected void createBlockStateDefinition(@NotNull Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
         builder.add(TOP, BOTTOM);
         super.createBlockStateDefinition(builder);
     }
 
     @Override
-    public void onPlace(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState oldState, boolean moved) {
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean moved) {
         if (oldState.getBlock() == state.getBlock() || moved) {
             return;
         }
 
         withBlockEntityDo(level, pos, AirtightTankBlockEntity::updateConnectivity);
+        BlockState newState = level.getBlockState(pos);
+        if (state == newState || newState.getBlock() != this) {
+            return;
+        }
+
+        level.markAndNotifyBlock(pos, level.getChunkAt(pos), oldState, newState, UPDATE_ALL_IMMEDIATE, 512);
     }
 
     @Override
-    public void setPlacedBy(@NotNull Level level, @NotNull BlockPos blockPos, @NotNull BlockState blockState, LivingEntity placer, @NotNull ItemStack itemStack) {
+    public void setPlacedBy(Level level, BlockPos blockPos, BlockState blockState, @Nullable LivingEntity placer, ItemStack itemStack) {
         super.setPlacedBy(level, blockPos, blockState, placer, itemStack);
         CCBAdvancementBehaviour.setPlacedBy(level, blockPos, placer);
     }
 
     @Override
-    public void onRemove(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState newState, boolean isMoving) {
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.hasBlockEntity() || state.is(newState.getBlock())) {
             return;
         }
@@ -84,7 +95,7 @@ public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEnt
     }
 
     @Override
-    public @NotNull VoxelShape getBlockSupportShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos) {
+    public VoxelShape getBlockSupportShape(BlockState state, BlockGetter level, BlockPos pos) {
         return Shapes.block();
     }
 

@@ -1,16 +1,19 @@
 package net.ty.createcraftedbeginning.api.gas.gases;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class GasBuilder {
     private static final ResourceLocation TEXTURE = CreateCraftedBeginning.asResource("gas/icon");
 
@@ -28,12 +31,12 @@ public class GasBuilder {
     }
 
     @Contract(" -> new")
-    public static @NotNull GasBuilder builder() {
+    public static GasBuilder builder() {
         return builder(TEXTURE);
     }
 
     @Contract("_ -> new")
-    public static @NotNull GasBuilder builder(ResourceLocation texture) {
+    public static GasBuilder builder(ResourceLocation texture) {
         return new GasBuilder(Objects.requireNonNull(texture));
     }
 

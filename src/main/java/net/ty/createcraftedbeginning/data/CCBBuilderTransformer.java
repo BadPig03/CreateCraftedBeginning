@@ -12,6 +12,7 @@ import com.tterrag.registrate.providers.DataGenContext;
 import com.tterrag.registrate.providers.RegistrateBlockstateProvider;
 import com.tterrag.registrate.util.nullness.NonNullFunction;
 import com.tterrag.registrate.util.nullness.NonNullUnaryOperator;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.tags.BlockTags;
@@ -37,10 +38,13 @@ import net.minecraft.world.level.storage.loot.predicates.ExplosionCondition;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
-import net.ty.createcraftedbeginning.api.gas.gases.IDirectionalPipe;
-import net.ty.createcraftedbeginning.api.gas.gases.IDirectionalPipe.DirectionalFacing;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe.DirectionalFacing;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockItem;
+import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralShaftBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentModel;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
@@ -79,6 +83,7 @@ import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -87,8 +92,10 @@ import static com.simibubi.create.api.behaviour.movement.MovementBehaviour.movem
 import static com.simibubi.create.foundation.data.CreateRegistrate.casingConnectivity;
 import static com.simibubi.create.foundation.data.CreateRegistrate.connectedTextures;
 import static com.simibubi.create.foundation.data.ModelGen.customItemModel;
-import static net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorageType.mountedGasStorage;
+import static net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageType.mountedGasStorage;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBBuilderTransformer {
     @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> uncontainable_crate() {
@@ -434,6 +441,11 @@ public class CCBBuilderTransformer {
     }
 
     @Contract(pure = true)
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtight_forging_press() {
+        return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(state -> ConfiguredModel.builder().modelFile(p.models().getExistingFile(p.modLoc("block/airtight_forging_press/block"))).build())).item(AirtightForgingPressBlockItem::new).transform(ib -> ib.model(AssetLookup::customItemModel)).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+    }
+
+    @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> tesla_turbine_structural() {
         return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(state -> {
             Axis axis = state.getValue(TeslaTurbineStructuralBlock.AXIS);
@@ -461,6 +473,16 @@ public class CCBBuilderTransformer {
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtight_reactor_kettle_structural_cog() {
         return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(state -> ConfiguredModel.builder().modelFile(p.models().getExistingFile(p.modLoc(String.format("block/airtight_reactor_kettle/%s", state.getValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION).getSerializedName())))).build())).properties(BlockBehaviour.Properties::noOcclusion);
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtight_forging_press_structural() {
+        return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(state -> ConfiguredModel.builder().modelFile(p.models().getExistingFile(p.modLoc(String.format("block/airtight_forging_press/%s", state.getValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION).getSerializedName())))).build())).properties(BlockBehaviour.Properties::noOcclusion);
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtight_forging_press_structural_shaft() {
+        return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(state -> ConfiguredModel.builder().modelFile(p.models().getExistingFile(p.modLoc(String.format("block/airtight_forging_press/%s", state.getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION).getSerializedName())))).build())).properties(BlockBehaviour.Properties::noOcclusion);
     }
 
     @Contract(pure = true)

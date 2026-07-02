@@ -10,6 +10,7 @@ import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.material.Fluids;
@@ -21,10 +22,13 @@ import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutl
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock.WindLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class ResidueOutletScenes {
-    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("residue_outlet", "Expelling Residue via Residue Outlets");
@@ -61,9 +65,16 @@ public class ResidueOutletScenes {
         Selection secondPipeSelection = util.select().fromTo(leftOutletPos, leftPipePos);
         Selection funnelSelection = util.select().position(funnelPos);
 
-        AABB tankArea = new AABB(util.vector().centerOf(rightTankPos), util.vector().centerOf(rightTankPos));
-        AABB pipeArea = new AABB(util.vector().centerOf(middlePipePos), util.vector().centerOf(middlePipePos));
-        AABB funnelArea = new AABB(util.vector().centerOf(funnelPos), util.vector().centerOf(funnelPos));
+        Vec3 rightOutletVec = util.vector().centerOf(rightOutletPos);
+        Vec3 leftOutletVec = util.vector().centerOf(leftOutletPos);
+        Vec3 engineVec = util.vector().centerOf(enginePos);
+        Vec3 rightTankVec = util.vector().centerOf(rightTankPos);
+        Vec3 middlePipeVec = util.vector().centerOf(middlePipePos);
+        Vec3 funnelVec = util.vector().centerOf(funnelPos);
+
+        AABB tankArea = new AABB(rightTankVec, rightTankVec);
+        AABB pipeArea = new AABB(middlePipeVec, middlePipeVec);
+        AABB funnelArea = new AABB(funnelVec, funnelVec);
 
         Object tankObject = new Object();
         Object pipeObject = new Object();
@@ -87,7 +98,7 @@ public class ResidueOutletScenes {
         scene.idle(3);
         tankArea = tankArea.expandTowards(1, 2, 1);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, tankObject, tankArea, 60);
-        scene.overlay().showText(60).text("Residue Outlets must be placed on Airtight Tanks").pointAt(Vec3.atCenterOf(rightOutletPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Residue Outlets must be placed on Airtight Tanks").pointAt(rightOutletVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().showSection(engineSelection, Direction.EAST);
@@ -96,17 +107,20 @@ public class ResidueOutletScenes {
         scene.world().showSection(chamberSelection, Direction.DOWN);
 
         scene.idle(3);
-        scene.world().showSection(airtightPipeSelection, Direction.SOUTH);
         scene.world().setBlock(airtightMotorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.NORTH), false);
+        scene.world().showSection(airtightPipeSelection, Direction.SOUTH);
         scene.world().showSection(airtightSourceSelection, Direction.WEST);
         scene.world().modifyBlockEntity(chamberPos, BreezeChamberBlockEntity.class, BreezeChamberBlockEntity::SwitchToGaleState);
         scene.world().modifyBlock(chamberPos, s -> s.setValue(BreezeChamberBlock.WIND_LEVEL, WindLevel.GALE), false);
+
+        scene.idle(15);
         scene.world().setKineticSpeed(airtightSourceSelection, mediumSpeed);
         scene.world().setKineticSpeed(airtightPipeSelection, -mediumSpeed);
         scene.world().setKineticSpeed(engineSelection, 8);
         scene.effects().rotationSpeedIndicator(airtightPumpPos);
         scene.effects().rotationSpeedIndicator(enginePos);
-        scene.overlay().showText(60).text("Airtight Assembly Driver gradually generate residue while producing Stress").pointAt(Vec3.atCenterOf(enginePos)).placeNearTarget().attachKeyFrame();
+        scene.effects().rotationSpeedIndicator(airtightMotorPos);
+        scene.overlay().showText(60).text("Airtight Assembly Driver gradually generate residue while producing Stress").colored(PonderPalette.RED).pointAt(engineVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().modifyBlock(middlePipePos, s -> s.setValue(FluidPipeBlock.EAST, false), false);
@@ -116,9 +130,12 @@ public class ResidueOutletScenes {
         scene.world().setBlock(motorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.EAST), false);
         scene.world().showSection(cogSelection, Direction.EAST);
         scene.world().showSection(funnelSelection, Direction.EAST);
+
+        scene.idle(15);
         scene.world().setKineticSpeed(firstPipeSelection, mediumSpeed);
         scene.world().setKineticSpeed(cogSelection, -mediumSpeed);
         scene.effects().rotationSpeedIndicator(pumpPos);
+        scene.effects().rotationSpeedIndicator(motorPos);
         scene.world().modifyBlockEntity(rightOutletPos, ResidueOutletBlockEntity.class, be -> {
             InternalFluidHandler handler = (InternalFluidHandler) be.getFluidTankBehaviour().getCapability();
             handler.forceFill(new FluidStack(Fluids.WATER, 4000), FluidAction.EXECUTE);
@@ -138,7 +155,7 @@ public class ResidueOutletScenes {
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, pipeObject, pipeArea, 60);
         funnelArea = funnelArea.inflate(0.5, 0.5, 0.5);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, funnelObject, funnelArea, 60);
-        scene.overlay().showText(60).text("Untreated residue accumulation will degrade the Residue Level of the Airtight Assembly Driver").colored(PonderPalette.RED).pointAt(Vec3.atCenterOf(rightOutletPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Untreated residue accumulation will degrade the Residue Level of the Airtight Assembly Driver").colored(PonderPalette.RED).colored(PonderPalette.RED).pointAt(rightOutletVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().showSection(secondPipeSelection, Direction.WEST);
@@ -152,7 +169,7 @@ public class ResidueOutletScenes {
         scene.world().propagatePipeChange(pumpPos);
 
         scene.idle(10);
-        scene.overlay().showText(60).text("Additional Residue Outlets can be placed as needed").pointAt(Vec3.atCenterOf(leftOutletPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Additional Residue Outlets can be placed as needed").colored(PonderPalette.GREEN).pointAt(leftOutletVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();

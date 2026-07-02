@@ -5,6 +5,7 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.content.processing.recipe.ProcessingOutput;
 import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -19,16 +20,17 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.SizedGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.reactorkettle.TemperatureCondition;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
-@SuppressWarnings("unused")
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends ProcessingWithGasRecipeParams> implements Recipe<I> {
     private final RecipeType<?> type;
     private final RecipeSerializer<?> serializer;
@@ -44,7 +46,7 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
     protected TemperatureCondition temperatureCondition;
     private Supplier<ItemStack> forcedResult;
 
-    public ProcessingWithGasRecipe(@NotNull IRecipeTypeInfo typeInfo, @NotNull P params) {
+    public ProcessingWithGasRecipe(IRecipeTypeInfo typeInfo, P params) {
         this.params = params;
         this.typeInfo = typeInfo;
         ingredients = params.ingredients;
@@ -60,7 +62,7 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
         forcedResult = null;
     }
 
-    public static <P extends ProcessingWithGasRecipeParams, R extends ProcessingWithGasRecipe<?, P>> MapCodec<R> codec(@NotNull Factory<P, R> factory, @NotNull MapCodec<P> paramsCodec) {
+    public static <P extends ProcessingWithGasRecipeParams, R extends ProcessingWithGasRecipe<?, P>> MapCodec<R> codec(Factory<P, R> factory, MapCodec<P> paramsCodec) {
         return paramsCodec.xmap(factory::create, recipe -> recipe.getParams()).validate(recipe -> {
             List<String> errors = recipe.validate();
             if (errors.isEmpty()) {
@@ -71,7 +73,7 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
         });
     }
 
-    public static <P extends ProcessingWithGasRecipeParams, R extends ProcessingWithGasRecipe<?, P>> @NotNull StreamCodec<RegistryFriendlyByteBuf, R> streamCodec(@NotNull Factory<P, R> factory, @NotNull StreamCodec<RegistryFriendlyByteBuf, P> streamCodec) {
+    public static <P extends ProcessingWithGasRecipeParams, R extends ProcessingWithGasRecipe<?, P>> @NotNull StreamCodec<RegistryFriendlyByteBuf, R> streamCodec(Factory<P, R> factory, StreamCodec<RegistryFriendlyByteBuf, P> streamCodec) {
         return streamCodec.map(factory::create, ProcessingWithGasRecipe::getParams);
     }
 
@@ -104,10 +106,12 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
             errors.add("Recipe has more gas outputs (" + outputCount + ") than supported (" + getMaxGasOutputCount() + ").");
         }
 
+        if (specialValidateCondition()) {
+            errors.add("Recipe failed to pass the special validate condition.");
+        }
         if (processingDuration > 0 && !canSpecifyDuration()) {
             errors.add("Recipe specified a duration. Durations have no impact on this type of recipe.");
         }
-
         if (temperatureCondition != TemperatureCondition.NONE && !requireTemperatureCondition()) {
             errors.add("Recipe specified a temperature condition. Temperature conditions have no impact on this type of recipe.");
         }
@@ -142,6 +146,10 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
         return 0;
     }
 
+    protected boolean specialValidateCondition() {
+        return false;
+    }
+
     public P getParams() {
         return params;
     }
@@ -162,10 +170,6 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
         return gasResults;
     }
 
-    public List<ItemStack> getRollableResultsAsItemStacks() {
-        return getRollableResults().stream().map(ProcessingOutput::getStack).collect(Collectors.toList());
-    }
-
     public List<ProcessingOutput> getRollableResults() {
         return results;
     }
@@ -178,7 +182,7 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
         return rollResults(getRollableResults(), randomSource);
     }
 
-    public List<ItemStack> rollResults(@NotNull List<ProcessingOutput> rollableResults, RandomSource randomSource) {
+    public List<ItemStack> rollResults(List<ProcessingOutput> rollableResults, RandomSource randomSource) {
         List<ItemStack> results = new ArrayList<>();
         for (int i = 0; i < rollableResults.size(); i++) {
             ProcessingOutput output = rollableResults.get(i);
@@ -199,7 +203,7 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
     }
 
     @Override
-    public @NotNull ItemStack assemble(@NotNull I t, @NotNull Provider provider) {
+    public ItemStack assemble(I t, Provider provider) {
         return getResultItem(provider);
     }
 
@@ -209,7 +213,7 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
     }
 
     @Override
-    public @NotNull ItemStack getResultItem(@NotNull Provider provider) {
+    public ItemStack getResultItem(Provider provider) {
         if (forcedResult != null) {
             return forcedResult.get();
         }
@@ -217,7 +221,7 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
     }
 
     @Override
-    public @NotNull NonNullList<Ingredient> getIngredients() {
+    public NonNullList<Ingredient> getIngredients() {
         return ingredients;
     }
 
@@ -227,17 +231,17 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
     }
 
     @Override
-    public @NotNull String getGroup() {
+    public String getGroup() {
         return "processing";
     }
 
     @Override
-    public @NotNull RecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getSerializer() {
         return serializer;
     }
 
     @Override
-    public @NotNull RecipeType<?> getType() {
+    public RecipeType<?> getType() {
         return type;
     }
 

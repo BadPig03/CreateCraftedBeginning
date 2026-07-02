@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import net.createmod.catnip.render.CachedBuffers;
 import net.createmod.catnip.render.SuperByteBuffer;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
@@ -11,15 +12,18 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EndSculkSilencerRenderer extends KineticBlockEntityRenderer<EndSculkSilencerBlockEntity> {
     public EndSculkSilencerRenderer(Context context) {
         super(context);
     }
 
     @Override
-    protected void renderSafe(@NotNull EndSculkSilencerBlockEntity be, float partialTicks, @NotNull PoseStack ms, @NotNull MultiBufferSource buffer, int light, int overlay) {
+    protected void renderSafe(EndSculkSilencerBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         SuperByteBuffer core = getRotatedModel(be, be.getBlockState());
         float angle = be.getAnimation().getValue(partialTicks) * Mth.DEG_TO_RAD;
 

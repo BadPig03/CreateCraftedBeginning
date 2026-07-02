@@ -2,18 +2,21 @@ package net.ty.createcraftedbeginning.advancement;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.advancements.critereon.ContextAwarePredicate;
 import net.minecraft.advancements.critereon.EntityPredicate;
 import net.minecraft.server.level.ServerPlayer;
 import net.ty.createcraftedbeginning.advancement.SimpleCCBTrigger.Instance;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class SimpleCCBTrigger extends CriterionTriggerBase<Instance> {
     public SimpleCCBTrigger(String id) {
         super(id);
@@ -24,12 +27,12 @@ public class SimpleCCBTrigger extends CriterionTriggerBase<Instance> {
     }
 
     @Contract(" -> new")
-    public static @NotNull Instance instance() {
+    public static Instance instance() {
         return new Instance();
     }
 
     @Override
-    public @NotNull Codec<Instance> codec() {
+    public Codec<Instance> codec() {
         return Instance.CODEC;
     }
 
@@ -52,7 +55,7 @@ public class SimpleCCBTrigger extends CriterionTriggerBase<Instance> {
         }
 
         @Override
-        public @NotNull Optional<ContextAwarePredicate> player() {
+        public Optional<ContextAwarePredicate> player() {
             return player;
         }
     }

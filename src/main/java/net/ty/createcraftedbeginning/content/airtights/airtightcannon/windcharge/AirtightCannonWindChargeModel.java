@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightcannon.windcharge;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.RenderType;
@@ -8,8 +9,11 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWindCharge> {
     private static final String NAME_BONE = "bone";
@@ -22,7 +26,7 @@ public class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWin
     private final ModelPart windOuter;
     private final ModelPart windInner;
 
-    public AirtightCannonWindChargeModel(@NotNull ModelPart root) {
+    public AirtightCannonWindChargeModel(ModelPart root) {
         super(RenderType::entityTranslucent);
         bone = root.getChild(NAME_BONE);
         windOuter = bone.getChild(NAME_WIND_OUTER);
@@ -31,7 +35,7 @@ public class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWin
     }
 
     @Override
-    public void setupAnim(@NotNull AbstractWindCharge entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+    public void setupAnim(AbstractWindCharge entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         if (!(entity instanceof AirtightCannonWindChargeProjectileEntity windCharge)) {
             return;
         }
@@ -59,7 +63,7 @@ public class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWin
     }
 
     @Override
-    public @NotNull ModelPart root() {
+    public ModelPart root() {
         return bone;
     }
 }

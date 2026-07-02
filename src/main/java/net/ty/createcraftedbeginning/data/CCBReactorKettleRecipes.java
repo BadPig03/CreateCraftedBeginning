@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.data;
 
 import com.simibubi.create.AllItems;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
@@ -16,8 +17,11 @@ import net.ty.createcraftedbeginning.api.gas.reactorkettle.TemperatureCondition;
 import net.ty.createcraftedbeginning.recipe.generators.ReactorKettleRecipeGen;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.concurrent.CompletableFuture;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBReactorKettleRecipes extends ReactorKettleRecipeGen {
     private static final TagKey<Item> ZINC_NUGGETS = ItemTags.create(ResourceLocation.fromNamespaceAndPath("c", "nuggets/zinc"));
@@ -31,8 +35,8 @@ public class CCBReactorKettleRecipes extends ReactorKettleRecipeGen {
     GeneratedRecipe ICE_SUPERCHILLED = create("ice_superchilled", b -> b.require(Fluids.WATER, 1000).temperatureCondition(TemperatureCondition.SUPERCHILLED).duration(0).output(0.75f, Blocks.PACKED_ICE).output(0.25f, Blocks.BLUE_ICE));
 
     GeneratedRecipe NATURAL_AIR = create("natural_air", b -> b.require(CCBItems.BREEZE_CORE).require(Tags.Items.STONES).duration(200).output(CCBGases.NATURAL_AIR.get(), 10).output(CCBItems.BREEZE_CORE).output(0.25f, Items.GRAVEL));
-    GeneratedRecipe ULTRAWARM_AIR = create("ultrawarm_air", b -> b.require(CCBItems.BREEZE_CORE).require(Tags.Items.NETHERRACKS).duration(200).output(CCBGases.ULTRAWARM_AIR.get(), 10).output(CCBItems.BREEZE_CORE).output(0.25f, Items.GRAVEL).temperatureCondition(TemperatureCondition.SUPERHEATED));
-    GeneratedRecipe ETHEREAL_AIR = create("ethereal_air", b -> b.require(CCBItems.BREEZE_CORE).require(Tags.Items.END_STONES).duration(200).output(CCBGases.ETHEREAL_AIR.get(), 10).output(CCBItems.BREEZE_CORE).output(0.25f, Items.GRAVEL).temperatureCondition(TemperatureCondition.SUPERCHILLED));
+    GeneratedRecipe ULTRAWARM_AIR = create("ultrawarm_air", b -> b.require(CCBItems.BREEZE_CORE).require(Tags.Items.NETHERRACKS).duration(200).temperatureCondition(TemperatureCondition.SUPERHEATED).output(CCBGases.ULTRAWARM_AIR.get(), 10).output(CCBItems.BREEZE_CORE).output(0.25f, Items.GRAVEL));
+    GeneratedRecipe ETHEREAL_AIR = create("ethereal_air", b -> b.require(CCBItems.BREEZE_CORE).require(Tags.Items.END_STONES).duration(200).temperatureCondition(TemperatureCondition.SUPERCHILLED).output(CCBGases.ETHEREAL_AIR.get(), 10).output(CCBItems.BREEZE_CORE).output(0.25f, Items.GRAVEL));
 
     GeneratedRecipe NETHER_WART = create("nether_wart", b -> b.require(Tags.Items.SEEDS).require(AllItems.CINDER_FLOUR).require(CCBGases.ULTRAWARM_AIR.get(), 500).temperatureCondition(TemperatureCondition.HEATED).averageProcessingDuration().output(Items.NETHER_WART));
     GeneratedRecipe NETHER_WART_PRESSURIZED = create("nether_wart_pressurized", b -> b.require(Tags.Items.SEEDS).require(AllItems.CINDER_FLOUR).require(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get(), 25).temperatureCondition(TemperatureCondition.HEATED).averageProcessingDuration().output(Items.NETHER_WART));

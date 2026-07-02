@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
@@ -12,8 +13,11 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamber
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingData;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class IllChamberState extends BaseChamberState {
     private int dissipationTimer;
 
@@ -42,7 +46,7 @@ public class IllChamberState extends BaseChamberState {
         chamber.notifyUpdate();
     }
 
-    public void dissipationTick(@NotNull BreezeChamberBlockEntity chamber) {
+    public void dissipationTick(BreezeChamberBlockEntity chamber) {
         if (chamber.isControllerActive()) {
             return;
         }
@@ -67,7 +71,7 @@ public class IllChamberState extends BaseChamberState {
     }
 
     @Override
-    public InteractionResult onItemInsert(@NotNull BreezeChamberBlockEntity chamber, ItemStack stack, boolean forceOverflow, boolean simulate) {
+    public InteractionResult onItemInsert(BreezeChamberBlockEntity chamber, ItemStack stack, boolean forceOverflow, boolean simulate) {
         Level level = chamber.getLevel();
         if (level == null) {
             return InteractionResult.FAIL;
@@ -94,7 +98,7 @@ public class IllChamberState extends BaseChamberState {
         }
 
         if (stack.is(Items.ENCHANTED_GOLDEN_APPLE)) {
-            advancementBehaviour.awardPlayer(CCBAdvancements.A_ROYAL_FEAST);
+            advancementBehaviour.awardPlayer(CCBAdvancements.LUXURY_TREAT);
         }
         if (time < 0) {
             advancementBehaviour.awardPlayer(CCBAdvancements.BAD_APPLE);

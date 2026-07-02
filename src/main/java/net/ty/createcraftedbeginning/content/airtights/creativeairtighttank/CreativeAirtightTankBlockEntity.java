@@ -6,6 +6,7 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.HolderLookup.Provider;
@@ -20,23 +21,26 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.api.gas.gases.CreativeSmartGasTank;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.CreativeSmartGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasConnectivityHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.GasTank;
-import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.IGasTank;
-import net.ty.createcraftedbeginning.api.gas.gases.IGasTankMultiBlockEntityContainer.iGas;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTank;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTankMultiBlockEntityContainer.iGas;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.IChamberGasTank;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Objects;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements iGas, IHaveGoggleInformation, IChamberGasTank, ICreativeGasContainer, ThresholdSwitchObservable {
     private static final int MAX_LENGTH = 4;
     private static final int MAX_WIDTH = 3;
@@ -70,7 +74,7 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
         refreshCapability();
     }
 
-    public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.CREATIVE_AIRTIGHT_TANK.get(), (be, context) -> {
             if (be.gasCapability == null) {
                 be.refreshCapability();
@@ -144,7 +148,7 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
     }
 
     @Override
-    public void write(@NotNull CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+    public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
         if (isController()) {
             compoundTag.put(COMPOUND_KEY_TANK_CONTENT, tankInventory.write(provider, new CompoundTag()));
@@ -234,7 +238,7 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
             return;
         }
 
-        GasConnectivityHandler.formMulti(this);
+        GasConnectivityHandler.formMulti(this, level);
     }
 
     private void onPositionChanged() {
@@ -356,7 +360,7 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
 
     @SuppressWarnings("unchecked")
     @Override
-    public CreativeAirtightTankBlockEntity getControllerBE() {
+    public @Nullable CreativeAirtightTankBlockEntity getControllerBE() {
         if (isController() || level == null) {
             return this;
         }

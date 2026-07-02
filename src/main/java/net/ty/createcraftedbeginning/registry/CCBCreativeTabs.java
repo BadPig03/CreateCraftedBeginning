@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
@@ -30,8 +31,8 @@ import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.data.CCBRegistrate;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,11 +41,13 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBCreativeTabs {
     private static final DeferredRegister<CreativeModeTab> REGISTER = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CreateCraftedBeginning.MOD_ID);
 
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> BASE_CREATIVE_TAB = REGISTER.register("base", () -> CreativeModeTab.builder().title(CCBLang.translateDirect("item_groups.base_creative_tab")).withTabsBefore(AllCreativeModeTabs.BASE_CREATIVE_TAB.getKey()).icon(CCBBlocks.BREEZE_COOLER_BLOCK::asStack).displayItems(new RegistrateDisplayItemsGenerator(true, CCBCreativeTabs.BASE_CREATIVE_TAB)).build());
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> DECORATION_CREATIVE_TAB = REGISTER.register("decoration", () -> CreativeModeTab.builder().title(CCBLang.translateDirect("item_groups.decoration_creative_tab")).withTabsBefore(AllCreativeModeTabs.PALETTES_CREATIVE_TAB.getKey()).icon(CCBBlocks.OBSIDIAN_BRICKS::asStack).displayItems(new RegistrateDisplayItemsGenerator(false, CCBCreativeTabs.DECORATION_CREATIVE_TAB)).build());
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> BASE_CREATIVE_TAB = REGISTER.register("base", () -> CreativeModeTab.builder().title(CCBLang.translateDirect("item_groups.base_creative_tab")).withTabsBefore(AllCreativeModeTabs.BASE_CREATIVE_TAB.getKey()).icon(() -> new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK)).displayItems(new RegistrateDisplayItemsGenerator(true, CCBCreativeTabs.BASE_CREATIVE_TAB)).build());
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> DECORATION_CREATIVE_TAB = REGISTER.register("decoration", () -> CreativeModeTab.builder().title(CCBLang.translateDirect("item_groups.decoration_creative_tab")).withTabsBefore(AllCreativeModeTabs.PALETTES_CREATIVE_TAB.getKey()).icon(() -> new ItemStack(CCBBlocks.OBSIDIAN_BRICKS)).displayItems(new RegistrateDisplayItemsGenerator(false, CCBCreativeTabs.DECORATION_CREATIVE_TAB)).build());
 
     @Internal
     public static void register(IEventBus eventBus) {
@@ -52,7 +55,7 @@ public class CCBCreativeTabs {
     }
 
     private record RegistrateDisplayItemsGenerator(boolean addExtraItems, DeferredHolder<CreativeModeTab, CreativeModeTab> tabFilter) implements DisplayItemsGenerator {
-        private static @NotNull Predicate<Item> makeExclusionPredicate() {
+        private static Predicate<Item> makeExclusionPredicate() {
             Set<Item> exclusions = new ReferenceOpenHashSet<>();
             List<ItemProviderEntry<?, ?>> itemsExclusions = List.of(CCBItems.INCOMPLETE_AIRTIGHT_SHEET, CCBItems.INCOMPLETE_GAS_CANISTER_PACK, CCBItems.INCOMPLETE_HEAVY_CORE, CCBItems.INCOMPLETE_TESLA_TURBINE_ROTOR, CCBItems.INCOMPLETE_BREEZE_CORE, CCBItems.INCOMPLETE_AIRTIGHT_CANNON, CCBItems.INCOMPLETE_AIRTIGHT_EXTEND_ARM, CCBItems.INCOMPLETE_AIRTIGHT_HANDHELD_DRILL, CCBItems.INCOMPLETE_AIRTIGHT_HELMET, CCBItems.INCOMPLETE_AIRTIGHT_CHESTPLATE, CCBItems.INCOMPLETE_AIRTIGHT_LEGGINGS, CCBItems.INCOMPLETE_AIRTIGHT_BOOTS, CCBItems.INCOMPLETE_WEATHER_FLARE, CCBItems.INCOMPLETE_ANCHOR_FLARE, CCBItems.GAS_CANISTER_PLACEABLE, CCBItems.CREATIVE_GAS_CANISTER_PLACEABLE, CCBItems.NATURAL_WIND_CHARGE, CCBItems.ULTRAWARM_WIND_CHARGE, CCBItems.ETHEREAL_WIND_CHARGE, CCBItems.MOIST_WIND_CHARGE, CCBItems.SPORE_WIND_CHARGE, CCBItems.SCULK_WIND_CHARGE, CCBItems.ENERGIZED_NATURAL_WIND_CHARGE, CCBItems.ENERGIZED_ULTRAWARM_WIND_CHARGE, CCBItems.ENERGIZED_ETHEREAL_WIND_CHARGE, CCBItems.GAS_VIRTUAL_ITEM);
             itemsExclusions.stream().map(ItemProviderEntry::asItem).forEach(exclusions::add);
@@ -62,7 +65,7 @@ public class CCBCreativeTabs {
             return exclusions::contains;
         }
 
-        private static @NotNull List<ItemOrdering> makeOrderings() {
+        private static List<ItemOrdering> makeOrderings() {
             List<ItemOrdering> orderings = new ReferenceArrayList<>();
 
             Map<ItemProviderEntry<?, ?>, ItemProviderEntry<?, ?>> simpleBeforeOrderings = Map.of(CCBItems.GAS_CANISTER_PACK, CCBItems.GAS_CANISTER, CCBItems.GAS_CANISTER, CCBItems.CREATIVE_GAS_CANISTER);
@@ -71,7 +74,7 @@ public class CCBCreativeTabs {
         }
 
         @SuppressWarnings("RedundantOperationOnEmptyContainer")
-        private static @NotNull Function<Item, ItemStack> makeStackFunc() {
+        private static Function<Item, ItemStack> makeStackFunc() {
             Map<Item, Function<Item, ItemStack>> factories = new Reference2ReferenceOpenHashMap<>();
             Map<ItemProviderEntry<?, ?>, Function<Item, ItemStack>> simpleFactories = Map.of();
             simpleFactories.forEach((entry, factory) -> factories.put(entry.asItem(), factory));
@@ -82,7 +85,7 @@ public class CCBCreativeTabs {
             };
         }
 
-        private static void applyOrderings(List<Item> items, @NotNull List<ItemOrdering> orderings) {
+        private static void applyOrderings(List<Item> items, List<ItemOrdering> orderings) {
             for (ItemOrdering ordering : orderings) {
                 int anchorIndex = items.indexOf(ordering.anchor());
                 if (anchorIndex == -1) {
@@ -102,12 +105,12 @@ public class CCBCreativeTabs {
             }
         }
 
-        private static void outputAll(Output output, @NotNull List<Item> items, Function<Item, ItemStack> stackFunc) {
+        private static void outputAll(Output output, List<Item> items, Function<Item, ItemStack> stackFunc) {
             items.forEach(item -> output.accept(stackFunc.apply(item), TabVisibility.PARENT_AND_SEARCH_TABS));
         }
 
         @Override
-        public void accept(@NotNull ItemDisplayParameters parameters, @NotNull Output output) {
+        public void accept(ItemDisplayParameters parameters, Output output) {
             Predicate<Item> exclusionPredicate = makeExclusionPredicate();
             List<Item> items = new LinkedList<>(collectBlocks(exclusionPredicate));
             items.addAll(collectItems(exclusionPredicate));
@@ -122,7 +125,7 @@ public class CCBCreativeTabs {
             }
         }
 
-        private @NotNull List<Item> collectItems(Predicate<Item> exclusionPredicate) {
+        private List<Item> collectItems(Predicate<Item> exclusionPredicate) {
             List<Item> items = new ReferenceArrayList<>();
             for (RegistryEntry<Item, Item> entry : CreateCraftedBeginning.registrate().getAll(Registries.ITEM)) {
                 if (CCBRegistrate.isOutOfCreativeTab(entry, tabFilter)) {
@@ -141,7 +144,7 @@ public class CCBCreativeTabs {
             return items;
         }
 
-        private @NotNull List<Item> collectBlocks(Predicate<Item> exclusionPredicate) {
+        private List<Item> collectBlocks(Predicate<Item> exclusionPredicate) {
             List<Item> items = new ReferenceArrayList<>();
             Collection<RegistryEntry<Block, Block>> registryEntries = CreateCraftedBeginning.registrate().getAll(Registries.BLOCK);
             for (RegistryEntry<Block, Block> entry : registryEntries) {
@@ -162,7 +165,7 @@ public class CCBCreativeTabs {
             return items;
         }
 
-        private static @NotNull List<ItemStack> collectExtraItems() {
+        private static List<ItemStack> collectExtraItems() {
             List<ItemStack> extraItems = new ReferenceArrayList<>();
             CCBGases.GAS_REGISTER.getEntries().forEach(entry -> {
                 ItemStack canister = new ItemStack(CCBItems.CREATIVE_GAS_CANISTER.asItem());
@@ -177,7 +180,7 @@ public class CCBCreativeTabs {
 
     private record ItemOrdering(Item item, Item anchor) {
         @Contract("_, _ -> new")
-        public static @NotNull ItemOrdering order(Item item, Item anchor) {
+        public static ItemOrdering order(Item item, Item anchor) {
             return new ItemOrdering(item, anchor);
         }
     }

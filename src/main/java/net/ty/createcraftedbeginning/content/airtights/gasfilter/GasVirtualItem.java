@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.gasfilter;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
@@ -11,14 +12,17 @@ import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class GasVirtualItem extends Item {
     public GasVirtualItem(Properties properties) {
         super(properties);
     }
 
-    public static @NotNull ItemStack getVirtualItem(@NotNull GasStack gasContent) {
+    public static ItemStack getVirtualItem(GasStack gasContent) {
         if (gasContent.isEmpty()) {
             return ItemStack.EMPTY;
         }
@@ -32,7 +36,7 @@ public class GasVirtualItem extends Item {
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, @NotNull Level level, @NotNull Entity entity, int slotId, boolean isSelected) {
+    public void inventoryTick(ItemStack stack, Level level, Entity entity, int slotId, boolean isSelected) {
         if (entity instanceof Player player && player.containerMenu instanceof GasFilterMenu) {
             return;
         }

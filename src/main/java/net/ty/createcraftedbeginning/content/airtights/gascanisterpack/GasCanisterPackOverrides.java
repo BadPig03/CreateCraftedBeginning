@@ -6,6 +6,7 @@ import com.tterrag.registrate.providers.RegistrateItemModelProvider;
 import io.netty.buffer.ByteBuf;
 import net.createmod.catnip.codecs.stream.CatnipStreamCodecBuilders;
 import net.createmod.catnip.lang.Lang;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
@@ -17,8 +18,11 @@ import net.neoforged.neoforge.client.model.generators.ItemModelBuilder;
 import net.neoforged.neoforge.client.model.generators.ModelFile.UncheckedModelFile;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class GasCanisterPackOverrides {
     private static final int LEFT_UP = 1;
@@ -53,7 +57,7 @@ public class GasCanisterPackOverrides {
         }
 
         @Override
-        public @NotNull String getSerializedName() {
+        public String getSerializedName() {
             return Lang.asId(name());
         }
 
@@ -83,7 +87,7 @@ public class GasCanisterPackOverrides {
         ItemProperties.register(item, GasCanisterPackType.TYPE, (stack, level, entity, seed) -> GasCanisterPackType.getTypeFromFlags(stack.getOrDefault(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, 0)).ordinal());
     }
 
-    public static void addOverrideModels(@NotNull DataGenContext<Item, GasCanisterPackItem> context, @NotNull RegistrateItemModelProvider provider) {
+    public static void addOverrideModels(DataGenContext<Item, GasCanisterPackItem> context, RegistrateItemModelProvider provider) {
         ItemModelBuilder builder = provider.generated(context::get);
         for (GasCanisterPackType type : GasCanisterPackType.values()) {
             int i = type.ordinal();

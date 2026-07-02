@@ -1,8 +1,12 @@
 package net.ty.createcraftedbeginning.api.gas.gases;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 
-@SuppressWarnings("unused")
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public enum GasAction {
     EXECUTE(FluidAction.EXECUTE),
     SIMULATE(FluidAction.SIMULATE);

@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.templates;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
@@ -7,9 +8,12 @@ import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.Airtigh
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class BaseTemplate {
     public abstract Set<BlockPos> getBaseArea(int[] params);
 
@@ -41,7 +45,7 @@ public abstract class BaseTemplate {
     }
 
     @Contract("_, _ -> new")
-    protected @NotNull BlockPos rotate(@NotNull BlockPos pos, @NotNull Direction direction) {
+    protected BlockPos rotate(BlockPos pos, Direction direction) {
         int x = pos.getX();
         int y = pos.getY();
         int z = pos.getZ();
@@ -77,7 +81,7 @@ public abstract class BaseTemplate {
     }
 
     @Contract("_, _, _ -> new")
-    protected @NotNull BlockPos offset(@NotNull BlockPos pos, Direction direction, int @NotNull [] relativeParams) {
+    protected BlockPos offset(BlockPos pos, Direction direction, int @NotNull [] relativeParams) {
         int x = pos.getX();
         int y = pos.getY();
         int z = pos.getZ();

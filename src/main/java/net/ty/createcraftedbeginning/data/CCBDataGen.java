@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.data;
 
 import com.tterrag.registrate.providers.ProviderType;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
@@ -15,15 +16,17 @@ import net.ty.createcraftedbeginning.provider.CCBRecipeProvider;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBRegistrateTags;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBDataGen {
     private static final CCBRegistrate CCB_REGISTRATE = CreateCraftedBeginning.registrate();
 
-    public static void gatherDataHighPriority(@NotNull GatherDataEvent event) {
+    public static void gatherDataHighPriority(GatherDataEvent event) {
         if (!event.getMods().contains(CreateCraftedBeginning.MOD_ID)) {
             return;
         }
@@ -41,7 +44,7 @@ public class CCBDataGen {
         });
     }
 
-    public static void gatherData(@NotNull GatherDataEvent event) {
+    public static void gatherData(GatherDataEvent event) {
         if (!event.getMods().contains(CreateCraftedBeginning.MOD_ID)) {
             return;
         }

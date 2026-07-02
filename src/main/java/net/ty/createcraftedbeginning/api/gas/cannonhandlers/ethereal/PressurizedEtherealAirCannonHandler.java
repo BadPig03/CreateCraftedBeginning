@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.api.gas.cannonhandlers.ethereal;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.core.HolderLookup.RegistryLookup;
 import net.minecraft.core.registries.Registries;
@@ -19,13 +20,15 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonUtils;
 import net.ty.createcraftedbeginning.data.CCBLang;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PressurizedEtherealAirCannonHandler extends EtherealAirCannonHandler {
     @Override
-    public ItemStack getRenderIcon(@NotNull Level level) {
+    public ItemStack getRenderIcon(Level level) {
         ItemStack icon = super.getRenderIcon(level);
         RegistryLookup<Enchantment> enchantmentRegistryLookup = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
         icon.enchant(enchantmentRegistryLookup.getOrThrow(Enchantments.MENDING), 1);
@@ -33,12 +36,12 @@ public class PressurizedEtherealAirCannonHandler extends EtherealAirCannonHandle
     }
 
     @Override
-    public void renderTrailParticles(@NotNull Level level, @NotNull Vec3 pos) {
+    public void renderTrailParticles(Level level, Vec3 pos) {
         super.renderTrailParticles(level, pos);
     }
 
     @Override
-    public void explode(@NotNull Level level, @NotNull Vec3 pos, Entity source, float multiplier) {
+    public void explode(Level level, Vec3 pos, Entity source, float multiplier) {
         super.explode(level, pos, source, multiplier);
 
         List<LivingEntity> entities = AirtightCannonUtils.getNearbyEntities(level, pos, DEFAULT_RADIUS * multiplier, source);
@@ -73,7 +76,7 @@ public class PressurizedEtherealAirCannonHandler extends EtherealAirCannonHandle
     }
 
     @Override
-    public void appendHoverText(@NotNull ItemStack cannon, @NotNull TooltipContext context, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
+    public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(CCBLang.translate("gui.tooltips.airtight_cannon.pressurized_ethereal_air").style(ChatFormatting.DARK_GREEN).component());
     }
 }

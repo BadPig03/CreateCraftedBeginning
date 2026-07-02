@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.api.gas.effecthandlers.natural;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -9,21 +10,23 @@ import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasOpenPipeEffectHandler;
+import net.ty.createcraftedbeginning.api.gas.effecthandlers.AirtightPipeEffectHandler;
 import net.ty.createcraftedbeginning.mixin.accessor.AbstractPiglinAccessor;
 import net.ty.createcraftedbeginning.mixin.accessor.HoglinAccessor;
 import net.ty.createcraftedbeginning.registry.CCBMobEffects;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
-public class NaturalAirEffectHandler implements GasOpenPipeEffectHandler {
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public class NaturalAirEffectHandler implements AirtightPipeEffectHandler {
     @Override
-    public void apply(Level level, BlockPos pos, Direction direction, @NotNull Gas gasType) {
+    public void apply(Level level, BlockPos pos, Direction direction, Gas gasType) {
         applyEffects(level, pos, direction, gasType.getInflation(), gasType.getTint(), 1);
     }
 
-    protected void applyEffects(@NotNull Level level, BlockPos pos, Direction direction, float inflation, int color, int scale) {
+    protected void applyEffects(Level level, BlockPos pos, Direction direction, float inflation, int color, int scale) {
         showOutline(level, pos, direction, inflation, color);
         AABB area = new AABB(pos.relative(direction)).inflate(inflation);
         List<LivingEntity> entities = level.getEntitiesOfClass(LivingEntity.class, area);

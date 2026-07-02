@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.fluids;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -7,8 +8,11 @@ import net.minecraft.world.level.material.FluidState;
 import net.neoforged.neoforge.fluids.FluidStack;
 import org.joml.Vector3f;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Supplier;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class SolidRenderedPlaceableFluidType extends TintedFluidType {
     protected Vector3f fogColor;
     protected Supplier<Float> fogDistance;

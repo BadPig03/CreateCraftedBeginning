@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.gascanisterpack;
 import net.createmod.catnip.lang.LangBuilder;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
@@ -26,17 +27,19 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class GasCanisterPackItem extends Item implements MenuProvider {
     public GasCanisterPackItem(Properties properties) {
         super(properties);
     }
 
-    public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerItem(GasHandler.ITEM, (itemStack, context) -> new GasCanisterPackContainerContents(itemStack), CCBItems.GAS_CANISTER_PACK);
     }
 
@@ -45,24 +48,23 @@ public class GasCanisterPackItem extends Item implements MenuProvider {
     }
 
     @Override
-    public boolean shouldCauseReequipAnimation(@NotNull ItemStack oldStack, @NotNull ItemStack newStack, boolean slotChanged) {
+    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
         return oldStack.getItem() != newStack.getItem();
     }
 
     @Override
-    public boolean shouldCauseBlockBreakReset(@NotNull ItemStack oldStack, @NotNull ItemStack newStack) {
+    public boolean shouldCauseBlockBreakReset(ItemStack oldStack, ItemStack newStack) {
         return GasCanisterPackUtils.shouldCauseBlockBreakReset(oldStack, newStack);
     }
 
-    @NotNull
     @Override
-    public InteractionResult useOn(@NotNull UseOnContext context) {
+    public InteractionResult useOn(UseOnContext context) {
         Player player = context.getPlayer();
         return player == null ? InteractionResult.FAIL : use(context.getLevel(), player, context.getHand()).getResult();
     }
 
     @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack drill = player.getItemInHand(hand);
         if (hand == InteractionHand.OFF_HAND) {
             return InteractionResultHolder.fail(drill);
@@ -79,7 +81,7 @@ public class GasCanisterPackItem extends Item implements MenuProvider {
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(@NotNull ItemStack pack, @NotNull TooltipContext context, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
+    public void appendHoverText(ItemStack pack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null || !(pack.getCapability(GasHandler.ITEM) instanceof GasCanisterPackContainerContents packContents)) {
             return;
@@ -112,12 +114,12 @@ public class GasCanisterPackItem extends Item implements MenuProvider {
     }
 
     @Override
-    public @NotNull Component getDisplayName() {
+    public Component getDisplayName() {
         return getDescription();
     }
 
     @Override
-    public @Nullable AbstractContainerMenu createMenu(int containerId, @NotNull Inventory playerInventory, @NotNull Player player) {
+    public @Nullable AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
         return new GasCanisterPackMenu(CCBMenuTypes.GAS_CANISTER_PACK_MENU.get(), containerId, playerInventory, player.getMainHandItem());
     }
 }

@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.registry;
 
 import net.createmod.catnip.lang.Lang;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -20,13 +21,18 @@ import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasTags;
 import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import static net.ty.createcraftedbeginning.registry.CCBTags.NameSpace.COMMON;
 import static net.ty.createcraftedbeginning.registry.CCBTags.NameSpace.MOD;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBTags {
-    public static @NotNull TagKey<Block> commonBlockTag(String path) {
+    public static TagKey<Block> commonBlockTag(String path) {
         return commonTag(BuiltInRegistries.BLOCK, path);
     }
 
@@ -34,19 +40,19 @@ public class CCBTags {
         return optionalTag(registry, ResourceLocation.fromNamespaceAndPath("c", path));
     }
 
-    public static <T> @NotNull TagKey<T> optionalTag(@NotNull Registry<T> registry, ResourceLocation id) {
+    public static <T> @NotNull TagKey<T> optionalTag(Registry<T> registry, ResourceLocation id) {
         return TagKey.create(registry.key(), id);
     }
 
-    public static @NotNull TagKey<Item> commonItemTag(String path) {
+    public static TagKey<Item> commonItemTag(String path) {
         return commonTag(BuiltInRegistries.ITEM, path);
     }
 
-    public static @NotNull TagKey<Fluid> commonFluidTag(String path) {
+    public static TagKey<Fluid> commonFluidTag(String path) {
         return commonTag(BuiltInRegistries.FLUID, path);
     }
 
-    public static @NotNull TagKey<Gas> commonGasTag(String path) {
+    public static TagKey<Gas> commonGasTag(String path) {
         return commonTag(CCBGasRegistries.GAS_REGISTRY, path);
     }
 
@@ -97,7 +103,7 @@ public class CCBTags {
             this(namespace, null, optional, alwaysDataGen);
         }
 
-        CCBBlockTags(@NotNull NameSpace namespace, String path, boolean optional, boolean always) {
+        CCBBlockTags(NameSpace namespace, @Nullable String path, boolean optional, boolean always) {
             ResourceLocation id = ResourceLocation.fromNamespaceAndPath(namespace.id, path == null ? Lang.asId(name()) : path);
             tag = optional ? optionalTag(BuiltInRegistries.BLOCK, id) : BlockTags.create(id);
             alwaysDataGen = always;
@@ -122,6 +128,9 @@ public class CCBTags {
         ICE_CREAM_WITH_FLAVOR,
         OBSIDIAN_BRICKS,
         CRYING_OBSIDIAN_BRICKS,
+        PRESS_HEAD_TOOLS,
+        CHUNKS,
+        GAS_CANISTER_ENCHANTABLE,
         DUSTS(COMMON, "dusts"),
         BRICKS(COMMON, "bricks"),
 
@@ -149,7 +158,7 @@ public class CCBTags {
             this(namespace, null, optional, alwaysDataGen);
         }
 
-        CCBItemTags(@NotNull NameSpace namespace, String path, boolean optional, boolean always) {
+        CCBItemTags(NameSpace namespace, @Nullable String path, boolean optional, boolean always) {
             ResourceLocation id = ResourceLocation.fromNamespaceAndPath(namespace.id, path == null ? Lang.asId(name()) : path);
             tag = optional ? optionalTag(BuiltInRegistries.ITEM, id) : ItemTags.create(id);
             alwaysDataGen = always;
@@ -162,7 +171,7 @@ public class CCBTags {
         private static void init() {
         }
 
-        public boolean matches(@NotNull ItemStack stack) {
+        public boolean matches(ItemStack stack) {
             return stack.is(tag);
         }
     }
@@ -185,7 +194,7 @@ public class CCBTags {
             this(namespace, null, optional, alwaysDataGen);
         }
 
-        CCBFluidTags(@NotNull NameSpace namespace, String path, boolean optional, boolean always) {
+        CCBFluidTags(NameSpace namespace, @Nullable String path, boolean optional, boolean always) {
             ResourceLocation id = ResourceLocation.fromNamespaceAndPath(namespace.id, path == null ? Lang.asId(name()) : path);
             tag = optional ? optionalTag(BuiltInRegistries.FLUID, id) : FluidTags.create(id);
             alwaysDataGen = always;
@@ -217,7 +226,7 @@ public class CCBTags {
             this(namespace, null, optional, alwaysDataGen);
         }
 
-        CCBEntityFlags(@NotNull NameSpace namespace, String path, boolean optional, boolean always) {
+        CCBEntityFlags(NameSpace namespace, @Nullable String path, boolean optional, boolean always) {
             ResourceLocation id = ResourceLocation.fromNamespaceAndPath(namespace.id, path == null ? Lang.asId(name()) : path);
             tag = optional ? optionalTag(BuiltInRegistries.ENTITY_TYPE, id) : TagKey.create(Registries.ENTITY_TYPE, id);
             alwaysDataGen = always;
@@ -230,11 +239,11 @@ public class CCBTags {
         private static void init() {
         }
 
-        public boolean matches(@NotNull Entity entity) {
+        public boolean matches(Entity entity) {
             return matches(entity.getType());
         }
 
-        public boolean matches(@NotNull EntityType<?> type) {
+        public boolean matches(EntityType<?> type) {
             return type.is(tag);
         }
     }
@@ -266,7 +275,7 @@ public class CCBTags {
             this(namespace, null, optional, alwaysDataGen);
         }
 
-        CCBGasTags(@NotNull NameSpace namespace, String path, boolean optional, boolean always) {
+        CCBGasTags(NameSpace namespace, @Nullable String path, boolean optional, boolean always) {
             ResourceLocation id = ResourceLocation.fromNamespaceAndPath(namespace.id, path == null ? Lang.asId(name()) : path);
             tag = optional ? optionalTag(CCBGasRegistries.GAS_REGISTRY, id) : GasTags.create(id);
             alwaysDataGen = always;

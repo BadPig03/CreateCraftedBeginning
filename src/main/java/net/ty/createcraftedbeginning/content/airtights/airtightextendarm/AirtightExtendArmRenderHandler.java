@@ -6,6 +6,7 @@ import dev.engine_room.flywheel.lib.model.baked.PartialModel;
 import dev.engine_room.flywheel.lib.transform.PoseTransformStack;
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.createmod.catnip.animation.AnimationTickHolder;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
@@ -28,8 +29,11 @@ import net.neoforged.neoforge.client.event.RenderHandEvent;
 import net.ty.createcraftedbeginning.mixin.accessor.ItemInHandRendererAccessor;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class AirtightExtendArmRenderHandler {
     protected float handAnimation;
@@ -46,7 +50,7 @@ public class AirtightExtendArmRenderHandler {
         return Mth.lerp(partialTicks, lastHandAnimation, handAnimation);
     }
 
-    public void registerListeners(@NotNull IEventBus bus) {
+    public void registerListeners(IEventBus bus) {
         bus.addListener(this::onRenderPlayerHand);
     }
 
@@ -70,7 +74,7 @@ public class AirtightExtendArmRenderHandler {
         pose = CCBPartialModels.AIRTIGHT_EXTEND_ARM_HOLDING;
     }
 
-    protected void onRenderPlayerHand(@NotNull RenderHandEvent event) {
+    protected void onRenderPlayerHand(RenderHandEvent event) {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
         if (player == null || !(mc.getEntityRenderDispatcher().getItemInHandRenderer() instanceof ItemInHandRendererAccessor accessor)) {

@@ -1,5 +1,11 @@
 package net.ty.createcraftedbeginning.api.gas.drillhandlers.natural;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PressurizedEnergizedNaturalAirDrillHandler extends NaturalAirDrillHandler {
     @Override
     public int getDamageAddition() {

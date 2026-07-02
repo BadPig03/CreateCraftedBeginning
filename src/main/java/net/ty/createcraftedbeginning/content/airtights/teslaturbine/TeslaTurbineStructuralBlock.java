@@ -7,6 +7,7 @@ import net.createmod.catnip.lang.Lang;
 import net.createmod.catnip.placement.IPlacementHelper;
 import net.createmod.catnip.placement.PlacementHelpers;
 import net.createmod.catnip.placement.PlacementOffset;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.BlockPos;
@@ -48,15 +49,17 @@ import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaT
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
 
 import static net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlock.calculateStructurePos;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements IWrenchable, SimpleWaterloggedBlock, IProxyHoveringInformation {
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
     private static final int PLACEMENT_HELPER_ID = PlacementHelpers.register(new NozzlePlacementHelper());
@@ -68,7 +71,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(STRUCTURAL_POSITION, TeslaTurbineStructuralPosition.TOP_MID));
     }
 
-    public static @NotNull BlockPos getMaster(@NotNull BlockPos pos, @NotNull BlockState state) {
+    public static BlockPos getMaster(BlockPos pos, BlockState state) {
         TeslaTurbineStructuralPosition position = state.getValue(STRUCTURAL_POSITION);
         int u = position.u;
         int v = position.v;
@@ -87,7 +90,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
     }
 
     @Override
-    public InteractionResult onSneakWrenched(BlockState state, @NotNull UseOnContext context) {
+    public InteractionResult onSneakWrenched(BlockState state, UseOnContext context) {
         BlockPos clickedPos = context.getClickedPos();
         Level level = context.getLevel();
         if (!stillValid(level, clickedPos, state, false)) {
@@ -101,22 +104,22 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
     }
 
     @Override
-    public @NotNull ItemStack getCloneItemStack(@NotNull BlockState state, @NotNull HitResult target, @NotNull LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
-        return CCBBlocks.TESLA_TURBINE_BLOCK.asStack();
+    public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
+        return new ItemStack(CCBBlocks.TESLA_TURBINE_BLOCK);
     }
 
     @Override
-    public boolean addLandingEffects(@NotNull BlockState blockState1, @NotNull ServerLevel level, @NotNull BlockPos pos, @NotNull BlockState blockState2, @NotNull LivingEntity entity, int numberOfParticles) {
+    public boolean addLandingEffects(BlockState blockState1, ServerLevel level, BlockPos pos, BlockState blockState2, LivingEntity entity, int numberOfParticles) {
         return true;
     }
 
     @Override
-    public PushReaction getPistonPushReaction(@NotNull BlockState state) {
+    public PushReaction getPistonPushReaction(BlockState state) {
         return PushReaction.BLOCK;
     }
 
     @Override
-    public @NotNull BlockState playerWillDestroy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, @NotNull Player player) {
+    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         if (!stillValid(level, pos, state, false)) {
             return super.playerWillDestroy(level, pos, state, player);
         }
@@ -130,13 +133,13 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
     }
 
     @Override
-    protected void createBlockStateDefinition(@NotNull Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
         builder.add(WATERLOGGED).add(STRUCTURAL_POSITION);
         super.createBlockStateDefinition(builder);
     }
 
     @Override
-    public @NotNull BlockState updateShape(@NotNull BlockState state, @NotNull Direction direction, @NotNull BlockState neighborState, @NotNull LevelAccessor accessor, @NotNull BlockPos pos, @NotNull BlockPos neighborPos) {
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor accessor, BlockPos pos, BlockPos neighborPos) {
         if (stillValid(accessor, pos, state, false)) {
             BlockPos masterPos = getMaster(pos, state);
             if (!accessor.getBlockTicks().hasScheduledTick(masterPos, CCBBlocks.TESLA_TURBINE_BLOCK.get())) {
@@ -158,8 +161,8 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
     }
 
     @Override
-    public void onRemove(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState newState, boolean moving) {
-        if (!stillValid(level, pos, state, false)) {
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moving) {
+        if (state.is(newState.getBlock()) || !stillValid(level, pos, state, false)) {
             return;
         }
 
@@ -167,7 +170,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
     }
 
     @Override
-    protected @NotNull ItemInteractionResult useItemOn(@NotNull ItemStack stack, @NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull InteractionHand hand, @NotNull BlockHitResult hitResult) {
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
         IPlacementHelper placementHelper = PlacementHelpers.get(PLACEMENT_HELPER_ID);
         if (placementHelper.matchesItem(stack)) {
             return placementHelper.getOffset(player, level, state, pos, hitResult).placeInWorld(level, (BlockItem) stack.getItem(), player, hand, hitResult);
@@ -177,17 +180,17 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
     }
 
     @Override
-    public @NotNull FluidState getFluidState(@NotNull BlockState state) {
+    public FluidState getFluidState(BlockState state) {
         return state.getValue(WATERLOGGED) ? Fluids.WATER.defaultFluidState() : super.getFluidState(state);
     }
 
     @Override
-    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos, @NotNull CollisionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return CCBShapes.TESLA_TURBINE.get(state.getValue(BlockStateProperties.AXIS));
     }
 
     @Override
-    public void tick(@NotNull BlockState state, @NotNull ServerLevel level, @NotNull BlockPos pos, @NotNull RandomSource random) {
+    public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         if (stillValid(level, pos, state, false)) {
             return;
         }
@@ -200,7 +203,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         return stillValid(level, pos, state, false) ? getMaster(pos, state) : pos;
     }
 
-    public boolean stillValid(BlockGetter level, BlockPos pos, @NotNull BlockState state, boolean ignored) {
+    public boolean stillValid(BlockGetter level, BlockPos pos, BlockState state, boolean ignored) {
         if (!state.is(this)) {
             return false;
         }
@@ -228,7 +231,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         }
 
         @Contract(pure = true)
-        public static boolean isMid(@NotNull TeslaTurbineStructuralPosition pos) {
+        public static boolean isMid(TeslaTurbineStructuralPosition pos) {
             return pos.u == 0 || pos.v == 0;
         }
 
@@ -262,7 +265,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
             }
         }
 
-        public static @NotNull Set<Direction> getPossiblePosition(@NotNull TeslaTurbineStructuralPosition pos, Axis axis) {
+        public static Set<Direction> getPossiblePosition(TeslaTurbineStructuralPosition pos, Axis axis) {
             Set<Direction> directionSet = new HashSet<>();
             int u = pos.u;
             int v = pos.v;
@@ -282,14 +285,14 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         }
 
         @Override
-        public @NotNull String getSerializedName() {
+        public String getSerializedName() {
             return Lang.asId(name());
         }
     }
 
     public static class TeslaTurbineStructuralRenderProperties implements IClientBlockExtensions, MultiPosDestructionHandler {
         @Override
-        public boolean addHitEffects(@NotNull BlockState state, @NotNull Level level, @NotNull HitResult target, @NotNull ParticleEngine manager) {
+        public boolean addHitEffects(BlockState state, Level level, HitResult target, ParticleEngine manager) {
             if (!(target instanceof BlockHitResult result)) {
                 return IClientBlockExtensions.super.addHitEffects(state, level, target, manager);
             }
@@ -332,7 +335,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
     private static class NozzlePlacementHelper implements IPlacementHelper {
         private static final Set<BlockPos> ALLOWED_OFFSETS = Set.of(new BlockPos(2, 1, 0), new BlockPos(2, -1, 0), new BlockPos(-2, 1, 0), new BlockPos(-2, -1, 0), new BlockPos(1, 2, 0), new BlockPos(1, -2, 0), new BlockPos(-1, 2, 0), new BlockPos(-1, -2, 0));
 
-        private static @NotNull Set<BlockPos> getWorldOffsets(Axis axis) {
+        private static Set<BlockPos> getWorldOffsets(Axis axis) {
             Set<BlockPos> worldOffsets = new HashSet<>();
             for (BlockPos offset : ALLOWED_OFFSETS) {
                 BlockPos transformedOffset;
@@ -350,7 +353,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
             return worldOffsets;
         }
 
-        private static Direction calculateFacingDirection(BlockPos nozzlePos, @NotNull BlockPos masterPos, Axis axis) {
+        private static Direction calculateFacingDirection(BlockPos nozzlePos, BlockPos masterPos, Axis axis) {
             BlockPos diff = masterPos.subtract(nozzlePos);
             int x = diff.getX();
             int y = diff.getY();
@@ -384,18 +387,18 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
 
         @Contract(pure = true)
         @Override
-        public @NotNull Predicate<ItemStack> getItemPredicate() {
+        public Predicate<ItemStack> getItemPredicate() {
             return CCBBlocks.TESLA_TURBINE_NOZZLE_BLOCK::isIn;
         }
 
         @Contract(pure = true)
         @Override
-        public @NotNull Predicate<BlockState> getStatePredicate() {
+        public Predicate<BlockState> getStatePredicate() {
             return CCBBlocks.TESLA_TURBINE_STRUCTURAL_BLOCK::has;
         }
 
         @Override
-        public @NotNull PlacementOffset getOffset(@NotNull Player player, @NotNull Level level, @NotNull BlockState state, @NotNull BlockPos pos, @NotNull BlockHitResult ray) {
+        public PlacementOffset getOffset(Player player, Level level, BlockState state, BlockPos pos, BlockHitResult ray) {
             BlockPos masterPos = getMaster(pos, state);
             Axis axis = state.getValue(BlockStateProperties.AXIS);
             Set<BlockPos> worldOffsets = getWorldOffsets(axis);

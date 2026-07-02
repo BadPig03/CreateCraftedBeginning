@@ -8,12 +8,15 @@ import com.simibubi.create.foundation.gui.AllGuiTextures;
 import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
+import mezz.jei.api.gui.ingredient.IRecipeSlotDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
+import net.createmod.catnip.config.ConfigBase.ConfigBool;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -25,22 +28,26 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.level.ItemLike;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.compat.jei.JEIPlugin;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEI;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static mezz.jei.api.recipe.RecipeType.createRecipeHolderType;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeCategory<RecipeHolder<T>> {
-    private static final IDrawable BASIC_SLOT = asDrawable(AllGuiTextures.JEI_SLOT);
-    private static final IDrawable CHANCE_SLOT = asDrawable(AllGuiTextures.JEI_CHANCE_SLOT);
+    protected static final IDrawable BASIC_SLOT = asDrawable(AllGuiTextures.JEI_SLOT);
+    protected static final IDrawable CHANCE_SLOT = asDrawable(AllGuiTextures.JEI_CHANCE_SLOT);
 
     protected final RecipeType<RecipeHolder<T>> type;
     protected final Component title;
@@ -50,7 +57,7 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
     private final Supplier<List<RecipeHolder<T>>> recipes;
     private final List<Supplier<? extends ItemStack>> catalysts;
 
-    public CCBRecipeCategory(@NotNull Info<T> info) {
+    public CCBRecipeCategory(Info<T> info) {
         type = info.recipeType();
         title = info.title();
         background = info.background();
@@ -63,7 +70,7 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
         return BASIC_SLOT;
     }
 
-    public static IDrawable getRenderedSlot(@NotNull ProcessingOutput output) {
+    public static IDrawable getRenderedSlot(ProcessingOutput output) {
         return getRenderedSlot(output.getChance());
     }
 
@@ -73,11 +80,15 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
 
     public static ItemStack getResultItem(Recipe<?> recipe) {
         ClientLevel level = Minecraft.getInstance().level;
-        return level == null ? ItemStack.EMPTY : recipe.getResultItem(level.registryAccess());
+        if (level == null) {
+            return ItemStack.EMPTY;
+        }
+
+        return recipe.getResultItem(level.registryAccess());
     }
 
     @Contract(value = "_ -> new", pure = true)
-    protected static @NotNull IDrawable asDrawable(AllGuiTextures texture) {
+    protected static IDrawable asDrawable(AllGuiTextures texture) {
         return new IDrawable() {
             @Override
             public int getWidth() {
@@ -90,20 +101,19 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
             }
 
             @Override
-            public void draw(@NotNull GuiGraphics graphics, int xOffset, int yOffset) {
+            public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
                 texture.render(graphics, xOffset, yOffset);
             }
         };
     }
 
-    @NotNull
     @Override
     public RecipeType<RecipeHolder<T>> getRecipeType() {
         return type;
     }
 
     @Override
-    public @NotNull Component getTitle() {
+    public Component getTitle() {
         return title;
     }
 
@@ -119,19 +129,27 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
     }
 
     @Override
-    public void setRecipe(@NotNull IRecipeLayoutBuilder builder, @NotNull RecipeHolder<T> holder, @NotNull IFocusGroup focuses) {
+    public void setRecipe(IRecipeLayoutBuilder builder, RecipeHolder<T> holder, IFocusGroup focuses) {
         setRecipe(builder, holder.value(), focuses);
     }
 
     @Override
-    public void draw(@NotNull RecipeHolder<T> holder, @NotNull IRecipeSlotsView recipeSlotsView, @NotNull GuiGraphics gui, double mouseX, double mouseY) {
+    public void draw(RecipeHolder<T> holder, IRecipeSlotsView recipeSlotsView, GuiGraphics gui, double mouseX, double mouseY) {
         draw(holder.value(), recipeSlotsView, gui, mouseX, mouseY);
+    }
+
+    @Override
+    public void onDisplayedIngredientsUpdate(RecipeHolder<T> holder, List<IRecipeSlotDrawable> recipeSlots, IFocusGroup focuses) {
+        onDisplayedIngredientsUpdate(holder.value(), recipeSlots, focuses);
     }
 
     @SuppressWarnings("removal")
     @Override
-    public @NotNull List<Component> getTooltipStrings(@NotNull RecipeHolder<T> holder, @NotNull IRecipeSlotsView recipeSlotsView, double mouseX, double mouseY) {
+    public List<Component> getTooltipStrings(RecipeHolder<T> holder, IRecipeSlotsView recipeSlotsView, double mouseX, double mouseY) {
         return getTooltipStrings(holder.value(), recipeSlotsView, mouseX, mouseY);
+    }
+
+    protected void onDisplayedIngredientsUpdate(T recipe, List<IRecipeSlotDrawable> recipeSlots, IFocusGroup focuses) {
     }
 
     protected List<Component> getTooltipStrings(T recipe, IRecipeSlotsView recipeSlotsView, double mouseX, double mouseY) {
@@ -142,7 +160,7 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
 
     protected abstract void setRecipe(IRecipeLayoutBuilder builder, T recipe, IFocusGroup focuses);
 
-    public void registerRecipes(@NotNull IRecipeRegistration registration) {
+    public void registerRecipes(IRecipeRegistration registration) {
         registration.addRecipes(type, recipes.get());
     }
 
@@ -161,7 +179,7 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
         private final Class<? extends T> recipeClass;
         private final List<Consumer<List<RecipeHolder<T>>>> recipeListConsumers = new ArrayList<>();
         private final List<Supplier<? extends ItemStack>> catalysts = new ArrayList<>();
-        private final Supplier<Boolean> config = () -> true;
+        private Supplier<Boolean> config = () -> true;
         private IDrawable background;
         private IDrawable icon;
 
@@ -169,8 +187,14 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
             this.recipeClass = recipeClass;
         }
 
-        public Builder<T> addRecipes(Supplier<Collection<? extends RecipeHolder<T>>> collection) {
-            return addRecipeListConsumer(recipes -> recipes.addAll(collection.get()));
+        public Builder<T> enableWhen(Supplier<Boolean> predicate) {
+            config = predicate;
+            return this;
+        }
+
+        public Builder<T> enableWhen(ConfigBool configValue) {
+            config = configValue::get;
+            return this;
         }
 
         public Builder<T> addRecipeListConsumer(Consumer<List<RecipeHolder<T>>> consumer) {
@@ -178,13 +202,25 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
             return this;
         }
 
-        public Builder<T> addTypedRecipes(@NotNull IRecipeTypeInfo recipeTypeEntry) {
+        public Builder<T> addRecipes(Supplier<Collection<? extends RecipeHolder<T>>> collection) {
+            return addRecipeListConsumer(recipes -> recipes.addAll(collection.get()));
+        }
+
+        public Builder<T> addAllRecipesIf(Predicate<RecipeHolder<?>> pred, Function<RecipeHolder<?>, RecipeHolder<T>> converter) {
+            return addRecipeListConsumer(recipes -> CCBJEI.consumeAllRecipes(recipe -> {
+                if (pred.test(recipe)) {
+                    recipes.add(converter.apply(recipe));
+                }
+            }));
+        }
+
+        public Builder<T> addTypedRecipes(IRecipeTypeInfo recipeTypeEntry) {
             return addTypedRecipes(recipeTypeEntry::getType);
         }
 
         @SuppressWarnings("unchecked")
         public <I extends RecipeInput, R extends Recipe<I>> Builder<T> addTypedRecipes(Supplier<net.minecraft.world.item.crafting.RecipeType<R>> recipeType) {
-            return addRecipeListConsumer(recipes -> JEIPlugin.consumeTypedRecipes(recipe -> {
+            return addRecipeListConsumer(recipes -> CCBJEI.consumeTypedRecipes(recipe -> {
                 if (!recipeClass.isInstance(recipe.value())) {
                     return;
                 }
@@ -226,7 +262,7 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
             return build(CreateCraftedBeginning.asResource(name), factory);
         }
 
-        public CCBRecipeCategory<T> build(ResourceLocation id, @NotNull Factory<T> factory) {
+        public CCBRecipeCategory<T> build(ResourceLocation id, Factory<T> factory) {
             Supplier<List<RecipeHolder<T>>> recipesSupplier = config.get() ? () -> {
                 List<RecipeHolder<T>> recipes = new ArrayList<>();
                 for (Consumer<List<RecipeHolder<T>>> consumer : recipeListConsumers) {

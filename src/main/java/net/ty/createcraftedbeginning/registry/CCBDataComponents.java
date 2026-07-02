@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.registry;
 
 import com.mojang.serialization.Codec;
 import net.createmod.catnip.codecs.stream.CatnipStreamCodecBuilders;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponentType;
@@ -20,9 +21,12 @@ import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateConte
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe.SequencedAssemblyWithGas;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBDataComponents {
     public static final DeferredRegister<DataComponentType<?>> COMPONENTS = DeferredRegister.create(BuiltInRegistries.DATA_COMPONENT_TYPE, CreateCraftedBeginning.MOD_ID);
 
@@ -43,7 +47,6 @@ public class CCBDataComponents {
     public static final DataComponentType<BlockPos> DRILL_MINING_RELATIVE_POSITION = register("drill_mining_relative_position", builder -> builder.persistent(BlockPos.CODEC).networkSynchronized(BlockPos.STREAM_CODEC));
 
     public static final DataComponentType<ItemContainerContents> AIRTIGHT_UPGRADABLE_INVENTORY = register("airtight_upgradable_inventory", builder -> builder.persistent(ItemContainerContents.CODEC).networkSynchronized(ItemContainerContents.STREAM_CODEC));
-    public static final DataComponentType<Integer> AIRTIGHT_UPGRADABLE_OPTION_FLAGS = register("airtight_upgradable_option_flags", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
     public static final DataComponentType<List<AirtightUpgradeStatus>> AIRTIGHT_UPGRADE_STATUS = register("airtight_upgrade_status", builder -> builder.persistent(AirtightUpgradeStatus.CODEC.listOf()).networkSynchronized(CatnipStreamCodecBuilders.list(AirtightUpgradeStatus.STREAM_CODEC)));
 
     public static final DataComponentType<Integer> GAS_CANISTER_PACK_FLAGS = register("gas_canister_pack_flags", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
@@ -53,7 +56,7 @@ public class CCBDataComponents {
 
     public static final DataComponentType<SequencedAssemblyWithGas> SEQUENCED_ASSEMBLY_WITH_GAS = register("sequenced_assembly_with_gas", builder -> builder.persistent(SequencedAssemblyWithGas.CODEC).networkSynchronized(SequencedAssemblyWithGas.STREAM_CODEC));
 
-    private static <T> @NotNull DataComponentType<T> register(String name, @NotNull UnaryOperator<Builder<T>> builder) {
+    private static <T> @NotNull DataComponentType<T> register(String name, UnaryOperator<Builder<T>> builder) {
         DataComponentType<T> type = builder.apply(DataComponentType.builder()).build();
         COMPONENTS.register(name, () -> type);
         return type;

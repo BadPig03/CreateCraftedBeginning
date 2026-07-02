@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.mobeffects;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -12,8 +13,11 @@ import net.neoforged.neoforge.event.entity.living.MobEffectEvent.Expired;
 import net.neoforged.neoforge.event.entity.living.MobEffectEvent.Remove;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.registry.CCBMobEffects;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
 public class ZombificationImmunityEffect extends MobEffect {
     public ZombificationImmunityEffect(MobEffectCategory category, int color) {
@@ -21,7 +25,7 @@ public class ZombificationImmunityEffect extends MobEffect {
     }
 
     @Override
-    public void onEffectStarted(@NotNull LivingEntity livingEntity, int amplifier) {
+    public void onEffectStarted(LivingEntity livingEntity, int amplifier) {
         if (livingEntity instanceof AbstractPiglin piglin) {
             piglin.setImmuneToZombification(true);
         }
@@ -31,7 +35,7 @@ public class ZombificationImmunityEffect extends MobEffect {
     }
 
     @SubscribeEvent
-    public static void onEffectExpired(@NotNull Expired event) {
+    public static void onEffectExpired(Expired event) {
         MobEffectInstance effectInstance = event.getEffectInstance();
         if (effectInstance == null || !effectInstance.is(CCBMobEffects.ZOMBIFICATION_IMMUNITY)) {
             return;
@@ -47,7 +51,7 @@ public class ZombificationImmunityEffect extends MobEffect {
     }
 
     @SubscribeEvent
-    public static void onEffectRemove(@NotNull Remove event) {
+    public static void onEffectRemove(Remove event) {
         MobEffectInstance effectInstance = event.getEffectInstance();
         if (effectInstance == null || !effectInstance.is(CCBMobEffects.ZOMBIFICATION_IMMUNITY)) {
             return;

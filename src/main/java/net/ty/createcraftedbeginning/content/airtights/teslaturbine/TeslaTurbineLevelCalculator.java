@@ -1,15 +1,18 @@
 package net.ty.createcraftedbeginning.content.airtights.teslaturbine;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.EnumMap;
 import java.util.Map;
 
 import static net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineCore.MAX_LEVEL;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TeslaTurbineLevelCalculator {
     private static final String COMPOUND_KEY_CURRENT_LEVEL = "CurrentLevel";
     private static final String COMPOUND_KEY_MAX_LEVEL_FOR_SUPPLY = "MaxLevelForSupply";
@@ -34,9 +37,8 @@ public class TeslaTurbineLevelCalculator {
     private int supplyLevel;
     private int rotorLevel;
     private int typeLevel;
-    private float speed;
 
-    public TeslaTurbineLevelCalculator(@NotNull TeslaTurbineCore core, TeslaTurbineBlockEntity turbine) {
+    public TeslaTurbineLevelCalculator(TeslaTurbineCore core, TeslaTurbineBlockEntity turbine) {
         this.core = core;
         this.turbine = turbine;
     }
@@ -66,7 +68,7 @@ public class TeslaTurbineLevelCalculator {
     }
 
     public float getSpeed() {
-        return speed;
+        return turbine.getGeneratedSpeed();
     }
 
     public int getCurrentLevel() {
@@ -96,11 +98,10 @@ public class TeslaTurbineLevelCalculator {
         compoundTag.putInt(COMPOUND_KEY_TYPE_LEVEL, typeLevel);
         compoundTag.putInt(COMPOUND_KEY_MAX_VALUE, maxValue);
         compoundTag.putInt(COMPOUND_KEY_MIN_VALUE, minValue);
-        compoundTag.putFloat(COMPOUND_KEY_SPEED, speed);
         return compoundTag;
     }
 
-    public void read(@NotNull CompoundTag compoundTag) {
+    public void read(CompoundTag compoundTag) {
         if (compoundTag.contains(COMPOUND_KEY_CURRENT_LEVEL)) {
             currentLevel = compoundTag.getInt(COMPOUND_KEY_CURRENT_LEVEL);
         }
@@ -128,14 +129,11 @@ public class TeslaTurbineLevelCalculator {
         if (compoundTag.contains(COMPOUND_KEY_MIN_VALUE)) {
             minValue = compoundTag.getInt(COMPOUND_KEY_MIN_VALUE);
         }
-        if (compoundTag.contains(COMPOUND_KEY_SPEED)) {
-            speed = compoundTag.getFloat(COMPOUND_KEY_SPEED);
-        }
         update();
     }
 
     public void update() {
-        updateRotorLevel();
+        rotorLevel = turbine.getBlockState().getValue(TeslaTurbineBlock.ROTOR) * 2;
         maxLevelForSupply = Math.min(MAX_LEVEL, supplyLevel);
         maxLevelForRotor = Math.min(MAX_LEVEL, rotorLevel);
         maxLevelForType = Math.min(MAX_LEVEL, typeLevel);
@@ -147,11 +145,6 @@ public class TeslaTurbineLevelCalculator {
         }
 
         turbine.getAdvancementBehaviour().awardPlayer(CCBAdvancements.MIRACLE_OF_ENGINEERING);
-    }
-
-    public void updateRotorLevel() {
-        rotorLevel = turbine.getBlockState().getValue(TeslaTurbineBlock.ROTOR) * 2;
-        speed = turbine.getGeneratedSpeed();
     }
 
     public enum LevelKey {

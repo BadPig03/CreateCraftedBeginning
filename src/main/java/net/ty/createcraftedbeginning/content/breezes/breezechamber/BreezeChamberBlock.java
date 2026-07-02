@@ -8,6 +8,7 @@ import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import net.createmod.catnip.lang.Lang;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -54,7 +55,8 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.IAirtightComponent;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
+import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.IChamberGasTank;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.data.CCBShapes;
@@ -62,10 +64,14 @@ import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collections;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IBE<BreezeChamberBlockEntity>, SimpleWaterloggedBlock, IWrenchable, IAirtightComponent {
     public static final EnumProperty<WindLevel> WIND_LEVEL = EnumProperty.create("wind_level", WindLevel.class);
 
@@ -76,11 +82,11 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(WIND_LEVEL, WindLevel.CALM));
     }
 
-    public static @NotNull WindLevel getWindLevelOf(@NotNull BlockState blockState) {
+    public static WindLevel getWindLevelOf(BlockState blockState) {
         return blockState.getValue(WIND_LEVEL);
     }
 
-    public static InteractionResultHolder<ItemStack> tryInsert(@NotNull Level level, BlockPos pos, ItemStack stack, boolean doNotConsume, boolean forceOverflow, boolean simulate) {
+    public static InteractionResultHolder<ItemStack> tryInsert(Level level, BlockPos pos, ItemStack stack, boolean doNotConsume, boolean forceOverflow, boolean simulate) {
         if (!(level.getBlockEntity(pos) instanceof BreezeChamberBlockEntity bcbe) || !bcbe.tryUpdateChargerByItem(stack, forceOverflow, simulate)) {
             return InteractionResultHolder.fail(ItemStack.EMPTY);
         }
@@ -104,17 +110,20 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     }
 
     @Override
-    protected boolean isPathfindable(@NotNull BlockState state, @NotNull PathComputationType pathComputationType) {
+    protected boolean isPathfindable(BlockState state, PathComputationType pathComputationType) {
         return false;
     }
 
     @Override
-    public boolean canSurvive(@NotNull BlockState state, @NotNull LevelReader level, @NotNull BlockPos pos) {
-        return level.getBlockEntity(pos.below()) instanceof IChamberGasTank;
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor world, BlockPos pos, BlockPos neighbourPos) {
+        if (state.getValue(WATERLOGGED)) {
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
+        }
+        return state;
     }
 
     @Override
-    public void neighborChanged(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Block otherBlock, @NotNull BlockPos neighborPos, boolean isMoving) {
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block otherBlock, BlockPos neighborPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, otherBlock, neighborPos, isMoving);
         if (canSurvive(state, level, pos)) {
             return;
@@ -124,15 +133,27 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     }
 
     @Override
-    public @NotNull BlockState updateShape(@NotNull BlockState state, @NotNull Direction direction, @NotNull BlockState neighbourState, @NotNull LevelAccessor world, @NotNull BlockPos pos, @NotNull BlockPos neighbourPos) {
-        if (state.getValue(WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean isMoving) {
+        super.onPlace(state, level, pos, oldState, isMoving);
+        if (oldState.is(state.getBlock()) || isMoving) {
+            return;
         }
-        return state;
+
+        AirtightTankBlock.updateTankState(level, pos.below());
     }
 
     @Override
-    protected @NotNull ItemInteractionResult useItemOn(@NotNull ItemStack stack, @NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull InteractionHand hand, @NotNull BlockHitResult hitResult) {
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        super.onRemove(state, level, pos, newState, isMoving);
+        if (state.is(newState.getBlock()) || isMoving) {
+            return;
+        }
+
+        AirtightTankBlock.updateTankState(level, pos.below());
+    }
+
+    @Override
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
         if (AllItems.GOGGLES.isIn(stack)) {
             return onBlockEntityUseItemOn(level, pos, bcbe -> {
                 if (bcbe.hasGoggles()) {
@@ -173,17 +194,17 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     }
 
     @Override
-    public @NotNull FluidState getFluidState(@NotNull BlockState state) {
+    public FluidState getFluidState(BlockState state) {
         return state.getValue(WATERLOGGED) ? Fluids.WATER.defaultFluidState() : super.getFluidState(state);
     }
 
     @Override
-    public boolean hasAnalogOutputSignal(@NotNull BlockState blockState) {
+    public boolean hasAnalogOutputSignal(BlockState blockState) {
         return true;
     }
 
     @Override
-    public @NotNull List<ItemStack> getDrops(@NotNull BlockState state, LootParams.@NotNull Builder params) {
+    public List<ItemStack> getDrops(BlockState state, LootParams.@NotNull Builder params) {
         if (!(params.getParameter(LootContextParams.BLOCK_ENTITY) instanceof BreezeChamberBlockEntity chamber) || chamber.getWindRemainingTime() == 0) {
             return super.getDrops(state, params);
         }
@@ -194,28 +215,33 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     }
 
     @Override
-    public int getAnalogOutputSignal(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos blockPos) {
+    public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
+        return level.getBlockEntity(pos.below()) instanceof IChamberGasTank;
+    }
+
+    @Override
+    public int getAnalogOutputSignal(BlockState state, Level level, BlockPos blockPos) {
         return Math.max(0, state.getValue(WIND_LEVEL).ordinal() - 1);
     }
 
     @Override
-    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter reader, @NotNull BlockPos pos, @NotNull CollisionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter reader, BlockPos pos, CollisionContext context) {
         return CCBShapes.CHAMBER_BLOCK_SHAPE;
     }
 
     @Override
-    public @NotNull VoxelShape getCollisionShape(@NotNull BlockState blockState, @NotNull BlockGetter level, @NotNull BlockPos blockPos, @NotNull CollisionContext context) {
+    public VoxelShape getCollisionShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
         return context == CollisionContext.empty() ? CCBShapes.CHAMBER_BLOCK_SPECIAL_COLLISION_SHAPE : getShape(blockState, level, blockPos, context);
     }
 
     @Override
-    protected @NotNull MapCodec<? extends HorizontalDirectionalBlock> codec() {
+    protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
         return simpleCodec(BreezeChamberBlock::new);
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void animateTick(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull RandomSource random) {
+    public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
         if (random.nextInt(10) != 0) {
             return;
         }
@@ -224,7 +250,7 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     }
 
     @Override
-    public BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
+    public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState state = super.getStateForPlacement(context);
         if (state == null) {
             return null;
@@ -235,7 +261,7 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     }
 
     @Override
-    public void setPlacedBy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, LivingEntity entity, @NotNull ItemStack stack) {
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
         super.setPlacedBy(level, pos, state, entity, stack);
         CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
         if (!(level.getBlockEntity(pos) instanceof BreezeChamberBlockEntity chamber)) {
@@ -246,7 +272,7 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     }
 
     @Override
-    public @NotNull BlockState playerWillDestroy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, @NotNull Player player) {
+    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         if (!level.isClientSide && player.isCreative() && player.isShiftKeyDown() && level.getBlockEntity(pos) instanceof BreezeChamberBlockEntity chamber && chamber.getWindRemainingTime() != 0) {
             ItemStack chamberItemEntity = new ItemStack(this);
             chamber.saveToItem(chamberItemEntity);
@@ -257,13 +283,13 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     }
 
     @Override
-    protected void createBlockStateDefinition(@NotNull Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
         builder.add(FACING, WATERLOGGED, WIND_LEVEL);
         super.createBlockStateDefinition(builder);
     }
 
     @Override
-    public void appendHoverText(@NotNull ItemStack chamber, @NotNull TooltipContext context, @NotNull List<Component> tooltips, @NotNull TooltipFlag flag) {
+    public void appendHoverText(ItemStack chamber, TooltipContext context, List<Component> tooltips, TooltipFlag flag) {
         int time = chamber.getOrDefault(CCBDataComponents.BREEZE_TIME, 0);
         WindLevel windLevel = WindLevel.CALM;
         if (time > 0) {
@@ -281,7 +307,7 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     }
 
     @Override
-    public @NotNull ItemStack getCloneItemStack(@NotNull BlockState state, @NotNull HitResult target, @NotNull LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
+    public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
         ItemStack chamberItemEntity = new ItemStack(this);
         if (!(level.getBlockEntity(pos) instanceof BreezeChamberBlockEntity chamber) || chamber.getWindRemainingTime() == 0 || !player.isShiftKeyDown()) {
             return chamberItemEntity;
@@ -313,17 +339,17 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
 
         public static final Codec<WindLevel> CODEC = StringRepresentable.fromEnum(WindLevel::values);
 
-        public boolean isAtLeast(@NotNull WindLevel windLevel) {
+        public boolean isAtLeast(WindLevel windLevel) {
             return ordinal() >= windLevel.ordinal();
         }
 
         @Override
-        public @NotNull String getSerializedName() {
+        public String getSerializedName() {
             return Lang.asId(name());
         }
 
         @Contract(pure = true)
-        public @NotNull String getTranslatable() {
+        public String getTranslatable() {
             return switch (this) {
                 case ILL -> "gui.goggles.breeze_chamber.ill";
                 case CALM -> "gui.goggles.breeze_chamber.calm";

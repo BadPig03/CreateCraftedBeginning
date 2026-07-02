@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.init;
 
 import com.simibubi.create.api.registry.SimpleRegistry;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.api.gas.armhandlers.AirtightExtendArmHandler;
 import net.ty.createcraftedbeginning.api.gas.armhandlers.creative.CreativeAirArmHandler;
 import net.ty.createcraftedbeginning.api.gas.armhandlers.ethereal.EnergizedEtherealAirArmHandler;
@@ -20,6 +21,10 @@ import net.ty.createcraftedbeginning.api.gas.armhandlers.ultrawarm.PressurizedUl
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.data.CCBGases;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBAirtightExtendArmHandlers {
     public static void register() {
         SimpleRegistry<Gas, AirtightExtendArmHandler> registry = AirtightExtendArmHandler.REGISTRY;

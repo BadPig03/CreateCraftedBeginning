@@ -1,20 +1,22 @@
 package net.ty.createcraftedbeginning.content.airtights.creativegascanister;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
-@SuppressWarnings("unused")
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CreativeGasCanisterContainerContents extends GasCanisterContainerContents {
     public static final List<GasStack> DEFAULT_CONTENT = List.of(GasStack.EMPTY);
 
-    public CreativeGasCanisterContainerContents(@NotNull ItemStack canister) {
+    public CreativeGasCanisterContainerContents(ItemStack canister) {
         super(canister);
         gas = canister.getOrDefault(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, DEFAULT_CONTENT).getFirst();
         capacity = getDefaultCapacity();
@@ -22,6 +24,15 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
 
     public static long getDefaultCapacity() {
         return CCBConfig.server().airtights.maxCanisterCapacity.get() * 1000L;
+    }
+
+    @Override
+    public GasStack getGasInTank(int tank) {
+        if (tank != 0) {
+            return GasStack.EMPTY;
+        }
+
+        return gas.copyWithAmount(capacity);
     }
 
     @Override
@@ -34,17 +45,7 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
     }
 
     @Override
-    public GasStack getGasInTank(int tank) {
-        return gas.copyWithAmount(capacity);
-    }
-
-    public void setGasInTank(int tank, @NotNull GasStack resource) {
-        gas = resource.copyWithAmount(capacity);
-        save();
-    }
-
-    @Override
-    public long fill(int tank, @NotNull GasStack resource, GasAction action) {
+    public long fill(int tank, GasStack resource, GasAction action) {
         if (resource.isEmpty()) {
             return 0;
         }
@@ -53,7 +54,7 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
     }
 
     @Override
-    public GasStack drain(int tank, long maxDrain, @NotNull GasAction action) {
+    public GasStack drain(int tank, long maxDrain, GasAction action) {
         GasStack gas = getGasInTank(0);
         long drained = Math.min(maxDrain, gas.getAmount());
         return gas.copyWithAmount(drained);
@@ -62,5 +63,14 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
     @Override
     public boolean isFull() {
         return !getGasInTank(0).isEmpty();
+    }
+
+    public void setGasInTank(int tank, GasStack resource) {
+        if (tank != 0) {
+            return;
+        }
+
+        gas = resource.copyWithAmount(capacity);
+        save();
     }
 }

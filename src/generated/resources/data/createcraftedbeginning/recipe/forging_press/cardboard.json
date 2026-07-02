@@ -1,0 +1,13 @@
+{
+  "type": "createcraftedbeginning:forging_press",
+  "ingredients": [
+    {
+      "item": "create:pulp"
+    }
+  ],
+  "results": [
+    {
+      "id": "create:cardboard"
+    }
+  ]
+}

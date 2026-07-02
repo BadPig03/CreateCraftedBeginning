@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:i_am_the_storm_that_is_approaching",
+  "parent": "createcraftedbeginning:all_hands_acquired",
   "criteria": {
     "0": {
       "trigger": "createcraftedbeginning:three_way_handshake_builtin"

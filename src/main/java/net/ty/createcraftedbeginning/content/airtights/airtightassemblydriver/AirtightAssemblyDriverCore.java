@@ -1,18 +1,21 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightassemblydriver;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightAssemblyDriverCore {
     public static final int MAX_LEVEL = 8;
 
@@ -27,12 +30,14 @@ public class AirtightAssemblyDriverCore {
     private final AirtightAssemblyDriverStructureManager structureManager;
     private final AirtightAssemblyDriverTooltipBuilder tooltipBuilder;
 
+    private boolean dirty;
+
     public AirtightAssemblyDriverCore() {
         flowMeter = new AirtightAssemblyDriverFlowMeter(this);
         residueManager = new AirtightAssemblyDriverResidueManager(this);
         structureManager = new AirtightAssemblyDriverStructureManager(this);
         tooltipBuilder = new AirtightAssemblyDriverTooltipBuilder(this);
-        levelCalculator = new AirtightAssemblyDriverLevelCalculator();
+        levelCalculator = new AirtightAssemblyDriverLevelCalculator(this);
     }
 
     public boolean addToGoggleTooltip(List<Component> tooltip) {
@@ -44,20 +49,23 @@ public class AirtightAssemblyDriverCore {
         return true;
     }
 
-    public void tick(@NotNull AirtightTankBlockEntity controller) {
-        if (!structureManager.isActive()) {
-            return;
-        }
-
+    public void tick(AirtightTankBlockEntity controller) {
         Level level = controller.getLevel();
         if (level == null || level.isClientSide) {
             return;
         }
 
-        flowMeter.tick(level);
-        residueManager.tick(level);
-        levelCalculator.update();
+        if (structureManager.isActive()) {
+            flowMeter.tick(level);
+            residueManager.tick(level);
+            levelCalculator.update(true);
+        }
+        if (!dirty) {
+            return;
+        }
+
         controller.notifyUpdate();
+        dirty = false;
     }
 
     public AirtightAssemblyDriverFlowMeter getFlowMeter() {
@@ -80,6 +88,10 @@ public class AirtightAssemblyDriverCore {
         return new AirtightEngineGasHandler();
     }
 
+    public void markDirty() {
+        dirty = true;
+    }
+
     public void reset() {
         flowMeter.reset(true);
         structureManager.reset();
@@ -98,7 +110,7 @@ public class AirtightAssemblyDriverCore {
         return compoundTag;
     }
 
-    public void read(@NotNull CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+    public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         if (compoundTag.contains(COMPOUND_KEY_FLOW_METER)) {
             flowMeter.read(compoundTag.getCompound(COMPOUND_KEY_FLOW_METER), provider);
         }
@@ -111,7 +123,7 @@ public class AirtightAssemblyDriverCore {
         if (compoundTag.contains(COMPOUND_KEY_RESIDUE_MANAGER) && !clientPacket) {
             residueManager.read(compoundTag.getCompound(COMPOUND_KEY_RESIDUE_MANAGER));
         }
-        levelCalculator.update();
+        levelCalculator.update(false);
     }
 
     public class AirtightEngineGasHandler implements IGasHandler {
@@ -121,7 +133,7 @@ public class AirtightAssemblyDriverCore {
         }
 
         @Override
-        public @NotNull GasStack getGasInTank(int tank) {
+        public GasStack getGasInTank(int tank) {
             return GasStack.EMPTY;
         }
 
@@ -131,22 +143,22 @@ public class AirtightAssemblyDriverCore {
         }
 
         @Override
-        public boolean isGasValid(int tank, @NotNull GasStack gasStack) {
+        public boolean isGasValid(int tank, GasStack gasStack) {
             return !gasStack.isEmpty() && gasStack.getGasType().getEngineEfficiency() > 0;
         }
 
         @Override
-        public long fill(@NotNull GasStack resource, @NotNull GasAction action) {
+        public long fill(GasStack resource, GasAction action) {
             return isGasValid(0, resource) ? flowMeter.fill(resource, action) : 0;
         }
 
         @Override
-        public @NotNull GasStack drain(@NotNull GasStack resource, @NotNull GasAction action) {
+        public GasStack drain(GasStack resource, GasAction action) {
             return GasStack.EMPTY;
         }
 
         @Override
-        public @NotNull GasStack drain(long maxDrain, @NotNull GasAction action) {
+        public GasStack drain(long maxDrain, GasAction action) {
             return GasStack.EMPTY;
         }
     }

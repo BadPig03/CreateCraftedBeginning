@@ -2,8 +2,9 @@ package net.ty.createcraftedbeginning.registry;
 
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorageType;
 import com.tterrag.registrate.util.entry.RegistryEntry;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorageType;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageType;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankMountedStorageType;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankMountedStorageType;
 import net.ty.createcraftedbeginning.content.crates.andesitecrate.AndesiteCrateMountedStorageType;
@@ -13,8 +14,11 @@ import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateMount
 import net.ty.createcraftedbeginning.data.CCBRegistrate;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Supplier;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBMountedStorage {
     private static final CCBRegistrate CCB_REGISTRATE = CreateCraftedBeginning.registrate();
 

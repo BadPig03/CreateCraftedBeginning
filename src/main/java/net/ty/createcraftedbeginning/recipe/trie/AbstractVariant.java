@@ -1,16 +1,21 @@
 package net.ty.createcraftedbeginning.recipe.trie;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.material.Fluid;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public sealed interface AbstractVariant {
     final class AbstractItem implements AbstractVariant {
         private final @NotNull Item item;
         private final int hashCode;
 
-        public AbstractItem(@NotNull Item item) {
+        public AbstractItem(Item item) {
             this.item = item;
             hashCode = item.hashCode();
         }
@@ -30,7 +35,7 @@ public sealed interface AbstractVariant {
         private final @NotNull Fluid fluid;
         private final int hashCode;
 
-        public AbstractFluid(@NotNull Fluid fluid) {
+        public AbstractFluid(Fluid fluid) {
             this.fluid = fluid;
             hashCode = fluid.hashCode();
         }
@@ -50,7 +55,7 @@ public sealed interface AbstractVariant {
         private final @NotNull Gas gasType;
         private final int hashCode;
 
-        public AbstractGas(@NotNull Gas gasType) {
+        public AbstractGas(Gas gasType) {
             this.gasType = gasType;
             hashCode = gasType.hashCode();
         }

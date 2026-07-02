@@ -1,17 +1,21 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightassemblydriver;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.FloatTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightAssemblyDriverFlowMeter {
     private static final int SAMPLE_RATE = 5;
     private static final int SAMPLES_COUNT = 10;
@@ -38,22 +42,27 @@ public class AirtightAssemblyDriverFlowMeter {
         this.driverCore = driverCore;
     }
 
-    public long fill(@NotNull GasStack resource, @NotNull GasAction action) {
+    public long fill(GasStack resource, GasAction action) {
         if (resource.isEmpty()) {
             return 0;
         }
 
-        long amount = resource.getAmount();
+        long remainingInput = getRemainingInput(resource);
+        long acceptedAmount = Math.min(resource.getAmount(), remainingInput);
+        if (acceptedAmount <= 0) {
+            return 0;
+        }
+
         if (action.execute()) {
-            gatheredSupply += amount;
             if (!gasType.is(resource.getGasType())) {
                 setGasType(resource.copyWithAmount(1));
             }
+            gatheredSupply += acceptedAmount;
         }
-        return amount;
+        return acceptedAmount;
     }
 
-    public void tick(@NotNull Level level) {
+    public void tick(Level level) {
         if (level.isClientSide) {
             return;
         }
@@ -71,23 +80,25 @@ public class AirtightAssemblyDriverFlowMeter {
     }
 
     private void updateGasSupply() {
-        float maxSupply = 0;
+        float totalSupply = 0;
         for (float sample : supplyOverTime) {
-            if (sample > maxSupply) {
-                maxSupply = sample;
-            }
+            totalSupply += sample;
         }
-        gasSupply = maxSupply;
 
+        gasSupply = totalSupply / SAMPLES_COUNT;
         if (gasSupply < MIN_GAS_SUPPLY_THRESHOLD && !gasType.isEmpty()) {
             gasSupply = 0;
             setGasType(GasStack.EMPTY);
         }
-        if (previousGasSupply != gasSupply) {
-            int newLevel = (int) (gasSupply * gasType.getGasType().getEngineEfficiency() / SUPPLY_PER_LEVEL);
-            driverCore.getLevelCalculator().updateSupplyLevel(newLevel);
-            previousGasSupply = gasSupply;
+
+        if (Float.compare(previousGasSupply, gasSupply) == 0) {
+            return;
         }
+
+        int newLevel = gasType.isEmpty() ? 0 : (int) (gasSupply * gasType.getGasType().getEngineEfficiency() / SUPPLY_PER_LEVEL);
+        driverCore.getLevelCalculator().updateSupplyLevel(newLevel);
+        previousGasSupply = gasSupply;
+        driverCore.markDirty();
     }
 
     public CompoundTag write(Provider provider) {
@@ -105,7 +116,7 @@ public class AirtightAssemblyDriverFlowMeter {
         return compoundTag;
     }
 
-    public void read(@NotNull CompoundTag compoundTag, Provider provider) {
+    public void read(CompoundTag compoundTag, Provider provider) {
         gatheredSupply = 0;
         if (compoundTag.contains(COMPOUND_KEY_CURRENT_INDEX)) {
             currentIndex = compoundTag.getInt(COMPOUND_KEY_CURRENT_INDEX);
@@ -139,11 +150,18 @@ public class AirtightAssemblyDriverFlowMeter {
     }
 
     private void setGasType(GasStack gasStack) {
+        boolean changed = !GasStack.isSameGas(gasType, gasStack);
         gasType = gasStack;
         reset(false);
+        if (!changed) {
+            return;
+        }
+
+        driverCore.markDirty();
     }
 
     public void reset(boolean resetGasType) {
+        boolean changed = gasSupply != 0 || gatheredSupply != 0 || currentIndex != 0 || ticksUntilNextSample != SAMPLE_RATE || resetGasType && !gasType.isEmpty();
         gasSupply = 0;
         gatheredSupply = 0;
         ticksUntilNextSample = SAMPLE_RATE;
@@ -154,5 +172,20 @@ public class AirtightAssemblyDriverFlowMeter {
         }
         driverCore.getLevelCalculator().updateSupplyLevel(0);
         driverCore.getResidueManager().applyRemovalPenalty(true);
+        if (!changed) {
+            return;
+        }
+
+        driverCore.markDirty();
+    }
+
+    private long getRemainingInput(GasStack resource) {
+        long maxInput = 0;
+        double efficiency = resource.getGasType().getEngineEfficiency();
+        if (efficiency > 0) {
+            maxInput = Mth.ceil(AirtightAssemblyDriverCore.MAX_LEVEL * SUPPLY_PER_LEVEL * SAMPLE_RATE / efficiency);
+        }
+        long accepted = gasType.is(resource.getGasType()) ? gatheredSupply : 0;
+        return Math.max(0, maxInput - accepted);
     }
 }

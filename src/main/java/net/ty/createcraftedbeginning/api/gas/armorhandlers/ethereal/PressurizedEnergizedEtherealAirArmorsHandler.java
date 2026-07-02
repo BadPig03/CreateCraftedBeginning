@@ -1,5 +1,11 @@
 package net.ty.createcraftedbeginning.api.gas.armorhandlers.ethereal;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PressurizedEnergizedEtherealAirArmorsHandler extends EtherealAirArmorsHandler {
     @Override
     public float[] getConsumptionMultiplier() {

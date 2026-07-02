@@ -7,6 +7,7 @@ import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
@@ -16,10 +17,13 @@ import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock.WindLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class BreezeChamberScenes {
-    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("breeze_chamber", "Feeding Breeze Chambers");
@@ -40,22 +44,27 @@ public class BreezeChamberScenes {
         Selection breadSelection = util.select().position(breadDepotPos);
         Selection pufferFishSelection = util.select().position(pufferFishDepotPos);
 
-        AABB chamberArea = new AABB(util.vector().centerOf(chamberPos), util.vector().centerOf(chamberPos));
+        Vec3 tankVec = util.vector().centerOf(tankPos);
+        Vec3 chamberVec = util.vector().centerOf(chamberPos);
+        Vec3 depotVec = util.vector().centerOf(breadDepotPos);
+        Vec3 chamberInteractionVec = util.vector().blockSurface(chamberPos, Direction.UP).subtract(0, 0.125, 0);
+
+        AABB chamberArea = new AABB(chamberVec, chamberVec);
 
         Object chamberObject = new Object();
 
-        ItemStack bread = new ItemStack(Items.BREAD);
-        ItemStack pufferFish = new ItemStack(Items.PUFFERFISH);
-        ItemStack beetrootSoup = new ItemStack(Items.BEETROOT_SOUP);
+        ItemStack breadItem = new ItemStack(Items.BREAD);
+        ItemStack pufferFishItem = new ItemStack(Items.PUFFERFISH);
+        ItemStack beetrootSoupItem = new ItemStack(Items.BEETROOT_SOUP);
 
         scene.idle(20);
         scene.world().showSection(tankSelection, Direction.DOWN);
 
-        scene.idle(10);
+        scene.idle(5);
         scene.world().showSection(chamberSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Breeze Chambers must be placed atop Airtight Tanks").pointAt(Vec3.atCenterOf(tankPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Breeze Chambers must be placed atop Airtight Tanks").pointAt(tankVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, chamberObject, chamberArea, 3);
@@ -67,26 +76,26 @@ public class BreezeChamberScenes {
         scene.idle(3);
         chamberArea = chamberArea.expandTowards(0, -1, 0);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, chamberObject, chamberArea, 60);
-        scene.overlay().showText(60).text("The Breeze Chamber energizes gases in Airtight Tanks below it").pointAt(Vec3.atCenterOf(chamberPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("The Breeze Chamber energizes gases in Airtight Tanks below it").colored(PonderPalette.GREEN).pointAt(chamberVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().showControls(util.vector().blockSurface(chamberPos, Direction.UP).subtract(0, 0.125f, 0), Pointing.DOWN, 67).rightClick().withItem(bread);
+        scene.overlay().showControls(chamberInteractionVec, Pointing.DOWN, 67).rightClick().withItem(breadItem.copy());
         
         scene.idle(7);
         scene.world().modifyBlockEntity(chamberPos, BreezeChamberBlockEntity.class, BreezeChamberBlockEntity::SwitchToGaleState);
         scene.world().modifyBlock(chamberPos, s -> s.setValue(BreezeChamberBlock.WIND_LEVEL, WindLevel.GALE), false);
-        scene.overlay().showText(60).text("Requires feeding food to the Breeze Chamber").pointAt(Vec3.atCenterOf(chamberPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Requires feeding food to the Breeze Chamber").colored(PonderPalette.INPUT).pointAt(chamberVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().showControls(util.vector().blockSurface(chamberPos, Direction.UP).subtract(0, 0.125f, 0), Pointing.DOWN, 67).rightClick().withItem(pufferFish);
+        scene.overlay().showControls(chamberInteractionVec, Pointing.DOWN, 67).rightClick().withItem(pufferFishItem.copy());
 
         scene.idle(7);
         scene.world().modifyBlockEntity(chamberPos, BreezeChamberBlockEntity.class, BreezeChamberBlockEntity::SwitchToIllState);
         scene.world().modifyBlock(chamberPos, s -> s.setValue(BreezeChamberBlock.WIND_LEVEL, WindLevel.ILL), false);
-		scene.overlay().showText(60).text("Improper foods reduce duration and may cause the Breeze ill").colored(PonderPalette.RED).pointAt(Vec3.atCenterOf(chamberPos)).placeNearTarget().attachKeyFrame();
+		scene.overlay().showText(60).text("Improper foods reduce duration and may cause the Breeze ill").colored(PonderPalette.RED).pointAt(chamberVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> compoundTag.put("HeldItem", beetrootSoup.saveOptional(scene.world().getHolderLookupProvider())));
+        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> compoundTag.put("HeldItem", beetrootSoupItem.copy().saveOptional(scene.world().getHolderLookupProvider())));
         scene.world().showSection(deployerSelection, Direction.WEST);
 
         scene.idle(3);
@@ -97,7 +106,7 @@ public class BreezeChamberScenes {
         scene.world().showSection(pufferFishSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Can be automated with Mechanical Arms or Deployers").pointAt(Vec3.atCenterOf(breadDepotPos)).attachKeyFrame();
+        scene.overlay().showText(60).text("Can be automated with Mechanical Arms or Deployers").colored(PonderPalette.GREEN).pointAt(depotVec).attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();

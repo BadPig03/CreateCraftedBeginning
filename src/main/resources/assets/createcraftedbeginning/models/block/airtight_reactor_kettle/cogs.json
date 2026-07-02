@@ -4,7 +4,7 @@
 	"render_type": "minecraft:cutout_mipped",
 	"texture_size": [32, 32],
 	"textures": {
-		"3": "createcraftedbeginning:block/airtight_reactor_kettle/bottem_side"
+		"3": "createcraftedbeginning:block/airtight_reactor_kettle/bottom_side"
 	},
 	"elements": [
 		{

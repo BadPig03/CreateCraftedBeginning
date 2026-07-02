@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.data;
 
 import com.simibubi.create.AllItems;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.item.Items;
@@ -10,8 +11,11 @@ import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.recipe.generators.ResidueGenerationGen;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.concurrent.CompletableFuture;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBResidueGenerationRecipes extends ResidueGenerationGen {
     GeneratedRecipe NATURAL = create("natural", b -> b.require(CCBGases.NATURAL_AIR.get(), 1).output(Items.CLAY_BALL));
@@ -24,6 +28,8 @@ public class CCBResidueGenerationRecipes extends ResidueGenerationGen {
     GeneratedRecipe PRESSURIZED_ETHEREAL = create("pressurized_ethereal", b -> b.require(CCBGases.PRESSURIZED_ETHEREAL_AIR.get(), 1).output(CCBItems.CHORUS_FLOWER_POWDER));
 
     GeneratedRecipe MOIST = create("moist", b -> b.require(CCBGases.MOIST_AIR.get(), 1).output(new FluidStack(Fluids.WATER, 1000)));
+    GeneratedRecipe SPORE = create("spore", b -> b.require(CCBGases.SPORE_AIR.get(), 1).output(Items.MUSHROOM_STEM));
+    GeneratedRecipe SCULK = create("sculk", b -> b.require(CCBGases.SCULK_AIR.get(), 1).output(Items.SCULK_VEIN));
 
     public CCBResidueGenerationRecipes(PackOutput output, CompletableFuture<Provider> registries) {
         super(output, registries, CreateCraftedBeginning.MOD_ID);

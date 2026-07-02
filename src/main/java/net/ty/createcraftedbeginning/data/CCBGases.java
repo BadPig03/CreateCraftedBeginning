@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.data;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
@@ -7,10 +8,12 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasBuilder;
 import net.ty.createcraftedbeginning.api.gas.gases.GasHolder;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBGasTags;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.BiConsumer;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBGases {
     public static final CCBGasDeferredRegister GAS_REGISTER = new CCBGasDeferredRegister(CreateCraftedBeginning.MOD_ID);
@@ -20,8 +23,8 @@ public class CCBGases {
     public static final GasHolder<Gas, Gas> ETHEREAL_AIR = GAS_REGISTER.register("ethereal_air", builder().tint(0xFFF4BAF5).inflation(1).engineEfficiency(2).teslaEfficiency(2).tag(CCBGasTags.ETHEREAL.tag));
 
     public static final GasHolder<Gas, Gas> MOIST_AIR = GAS_REGISTER.register("moist_air", builder().tint(0xFFBEDAED).inflation(1).engineEfficiency(1).teslaEfficiency(1).tag(CCBGasTags.MOIST.tag));
-    public static final GasHolder<Gas, Gas> SPORE_AIR = GAS_REGISTER.register("spore_air", builder().tint(0XFFE8F5C4).inflation(1).engineEfficiency(0).teslaEfficiency(0).tag(CCBGasTags.SPORE.tag));
-    public static final GasHolder<Gas, Gas> SCULK_AIR = GAS_REGISTER.register("sculk_air", builder().tint(0xFF111B21).inflation(1).engineEfficiency(0).teslaEfficiency(0).tag(CCBGasTags.SCULK.tag));
+    public static final GasHolder<Gas, Gas> SPORE_AIR = GAS_REGISTER.register("spore_air", builder().tint(0XFFE8F5C4).inflation(1).engineEfficiency(1).teslaEfficiency(1).tag(CCBGasTags.SPORE.tag));
+    public static final GasHolder<Gas, Gas> SCULK_AIR = GAS_REGISTER.register("sculk_air", builder().tint(0xFF111B21).inflation(1).engineEfficiency(1).teslaEfficiency(1).tag(CCBGasTags.SCULK.tag));
 
     public static final GasHolder<Gas, Gas> ENERGIZED_NATURAL_AIR = GAS_REGISTER.register("energized_natural_air", builder().inflation(1).tint(0xFFD2D5FB).engineEfficiency(0).teslaEfficiency(2).tag(CCBGasTags.NATURAL.tag).tag(CCBGasTags.ENERGIZED.tag));
     public static final GasHolder<Gas, Gas> ENERGIZED_ULTRAWARM_AIR = GAS_REGISTER.register("energized_ultrawarm_air", builder().inflation(1).tint(0xFFF2D8BC).engineEfficiency(0).teslaEfficiency(3).tag(CCBGasTags.ULTRAWARM.tag).tag(CCBGasTags.ENERGIZED.tag));
@@ -38,7 +41,7 @@ public class CCBGases {
     public static final GasHolder<Gas, Gas> CREATIVE_AIR = GAS_REGISTER.register("creative_air", builder().inflation(2).tint(0xFF000000).inflation(2).engineEfficiency(16).teslaEfficiency(16).tag(CCBGasTags.CREATIVE.tag));
 
     @Contract(" -> new")
-    private static @NotNull GasBuilder builder() {
+    private static GasBuilder builder() {
         return GasBuilder.builder();
     }
 
@@ -46,7 +49,7 @@ public class CCBGases {
         GAS_REGISTER.getEntries().stream().map(DeferredHolder::getId).forEach(id -> consumer.accept("gas." + id.getNamespace() + '.' + id.getPath(), formatGasName(id.getPath())));
     }
 
-    private static @NotNull String formatGasName(@NotNull String registryName) {
+    private static String formatGasName(String registryName) {
         String[] words = registryName.replace('_', ' ').split("\\s+");
         StringBuilder builder = new StringBuilder();
         for (String word : words) {

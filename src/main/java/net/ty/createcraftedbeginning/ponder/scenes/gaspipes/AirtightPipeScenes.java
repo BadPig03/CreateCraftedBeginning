@@ -10,6 +10,7 @@ import net.createmod.ponder.api.element.WorldSectionElement;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -18,11 +19,13 @@ import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightPipeScenes {
-    @SuppressWarnings("ConstantExpression")
-    public static void moving(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void moving(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("airtight_pipe_moving", "Moving Gases using Airtight Pipes");
@@ -47,9 +50,12 @@ public class AirtightPipeScenes {
         Selection cogSelection = util.select().fromTo(cogPos, motorPos);
         Selection pumpSelection = util.select().position(middlePipePos);
 
-        AABB pipeArea = new AABB(util.vector().centerOf(leftPipePos), util.vector().centerOf(rightPipePos));
-        AABB pumpArea = new AABB(util.vector().centerOf(leftPipePos), util.vector().centerOf(leftPipePos));
-        AABB connectionArea = new AABB(util.vector().centerOf(middlePipePos), util.vector().centerOf(middlePipePos)).inflate(1 / 6.0f);
+        Vec3 middlePipeVec = util.vector().centerOf(middlePipePos);
+        Vec3 leftPipeVec = util.vector().centerOf(leftPipePos);
+
+        AABB pipeArea = new AABB(leftPipeVec, util.vector().centerOf(rightPipePos));
+        AABB pumpArea = new AABB(leftPipeVec, leftPipeVec);
+        AABB connectionArea = new AABB(util.vector().centerOf(middlePipePos), util.vector().centerOf(middlePipePos)).inflate(0.16666667f);
 
         Object pipeObject = new Object();
         Object upConnectionObject = new Object();
@@ -75,7 +81,7 @@ public class AirtightPipeScenes {
         scene.idle(3);
         pipeArea = pipeArea.inflate(0.5, 0.3125, 0.3125);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, pipeObject, pipeArea, 60);
-        scene.overlay().showText(60).text("Airtight Pipes can connect two or more gas sources and targets").pointAt(Vec3.atCenterOf(middlePipePos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Airtight Pipes can connect two or more gas sources and targets").pointAt(middlePipeVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().showSection(upPipeSelection, Direction.DOWN);
@@ -113,13 +119,13 @@ public class AirtightPipeScenes {
         scene.idle(3);
         pumpArea = pumpArea.expandTowards(-2, 0, 0);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, pumpObject, pumpArea, 60);
-        scene.overlay().showText(60).text("Powered by Airtight Pumps, the Pipes can moving Gases").colored(PonderPalette.INPUT).pointAt(Vec3.atCenterOf(middlePipePos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Powered by Airtight Pumps, the Pipes can moving Gases").colored(PonderPalette.INPUT).pointAt(middlePipeVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();
     }
 
-    public static void interaction(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void interaction(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("airtight_pipe_interaction", "Draining and Filling Gas Containers");
@@ -140,8 +146,11 @@ public class AirtightPipeScenes {
         Selection tankSelection = util.select().fromTo(tankBottomPos, tankTopPos);
         Selection cogSelection = util.select().fromTo(cogPos, motorPos);
 
-        AABB tankArea = new AABB(util.vector().centerOf(airPos), util.vector().centerOf(airPos));
-        AABB airArea = new AABB(util.vector().centerOf(airPos), util.vector().centerOf(airPos));
+        Vec3 rightPipeVec = util.vector().centerOf(rightPipePos);
+        Vec3 airVec = util.vector().centerOf(airPos);
+
+        AABB tankArea = new AABB(airVec, airVec);
+        AABB airArea = new AABB(airVec, airVec);
 
         Object tankObject = new Object();
         Object airObject = new Object();
@@ -157,7 +166,7 @@ public class AirtightPipeScenes {
         scene.world().moveSection(tankSection, util.vector().of(-4, 0, 0), 0);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Endpoints of an Airtight Pipe network can interact with a variety of gas containers").pointAt(Vec3.atCenterOf(rightPipePos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Endpoints of an Airtight Pipe network can interact with a variety of gas containers").pointAt(rightPipeVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, tankObject, tankArea, 3);
@@ -169,24 +178,29 @@ public class AirtightPipeScenes {
         scene.idle(3);
         tankArea = tankArea.expandTowards(0, 1, 0);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, tankObject, tankArea, 60);
-        scene.overlay().showText(60).text("Any block with gas storage capabilities can be filled or drained").pointAt(Vec3.atCenterOf(airPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Any block with gas storage capabilities can be filled or drained").colored(PonderPalette.GREEN).pointAt(airVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().setBlock(motorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.WEST), false);
         scene.world().hideIndependentSection(tankSection, Direction.UP);
         scene.world().showSection(cogSelection, Direction.NORTH);
+
+        scene.idle(15);
         scene.world().setKineticSpeed(cogSelection, mediumSpeed);
         scene.world().setKineticSpeed(pumpSelection, -mediumSpeed);
         scene.effects().rotationSpeedIndicator(pumpPos);
 
         scene.idle(20);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, airObject, airArea, 3);
+
+        scene.idle(3);
         airArea = airArea.inflate(0.5, 0.375, 0.375);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, airObject, airArea, 3);
 
         scene.idle(3);
         airArea = airArea.expandTowards(3, 0, 0);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, airObject, airArea, 60);
-        scene.overlay().showText(60).text("Powered by Airtight Pumps, the Pipes can extract gases from the air").colored(PonderPalette.INPUT).pointAt(Vec3.atCenterOf(airPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Powered by Airtight Pumps, the Pipes can extract gases from the air").colored(PonderPalette.INPUT).pointAt(airVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();

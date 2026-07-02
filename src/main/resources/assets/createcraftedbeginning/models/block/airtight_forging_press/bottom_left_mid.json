@@ -1,0 +1,32 @@
+{
+	"format_version": "1.21.6",
+	"credit": "Made with Blockbench",
+	"render_type": "minecraft:cutout_mipped",
+	"texture_size": [32, 32],
+	"textures": {
+		"1": "createcraftedbeginning:block/airtight_forging_press/side",
+		"2": "createcraftedbeginning:block/airtight_forging_press/top_inner",
+		"3": "createcraftedbeginning:block/airtight_forging_press/bottom_outer",
+		"4": "createcraftedbeginning:block/airtight_forging_press/base",
+		"particle": "createcraftedbeginning:block/airtight_tank/top"
+	},
+	"elements": [
+		{
+			"from": [0, 0, 0],
+			"to": [16, 11, 16],
+			"faces": {
+				"west": {"uv": [4, 9.25, 8, 12], "texture": "#1"},
+				"up": {"uv": [0, 4, 4, 8], "texture": "#2"},
+				"down": {"uv": [0, 4, 4, 8], "texture": "#3"}
+			}
+		},
+		{
+			"from": [12, 11, 0],
+			"to": [16, 13, 16],
+			"faces": {
+				"west": {"uv": [11, 0, 15, 0.5], "texture": "#4"},
+				"up": {"uv": [0, 1, 1, 5], "texture": "#4"}
+			}
+		}
+	]
+}

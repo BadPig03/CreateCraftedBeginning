@@ -1,12 +1,16 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle;
 
 import net.createmod.catnip.lang.Lang;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.util.StringRepresentable;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public enum AirtightReactorKettleStructuralPosition implements StringRepresentable {
     TOP_LEFT_UP(1, -1, 1, false, Direction.UP),
     TOP_MID_UP(0, -1, 1, true, Direction.NORTH),
@@ -151,13 +155,13 @@ public enum AirtightReactorKettleStructuralPosition implements StringRepresentab
     }
 
     @Contract(value = " -> new", pure = true)
-    public @NotNull Vec3i getPosition() {
+    public Vec3i getPosition() {
         return new Vec3i(x, y, z);
     }
 
     @Contract(pure = true)
     @Override
-    public @NotNull String getSerializedName() {
+    public String getSerializedName() {
         return Lang.asId(name());
     }
 }

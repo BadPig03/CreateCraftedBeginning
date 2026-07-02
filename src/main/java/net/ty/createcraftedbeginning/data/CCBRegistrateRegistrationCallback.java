@@ -1,10 +1,15 @@
 package net.ty.createcraftedbeginning.data;
 
 import com.tterrag.registrate.util.nullness.NonNullConsumer;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBRegistrateRegistrationCallback {
     private CCBRegistrateRegistrationCallback() {
     }

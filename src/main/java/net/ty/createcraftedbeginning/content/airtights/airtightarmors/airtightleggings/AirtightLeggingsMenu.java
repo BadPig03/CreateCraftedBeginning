@@ -1,6 +1,8 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
@@ -8,10 +10,12 @@ import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightle
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightLeggingsMenu extends AirtightUpgradableMenu {
     public AirtightLeggingsMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
         super(type, id, inv, extraData);
@@ -22,13 +26,18 @@ public class AirtightLeggingsMenu extends AirtightUpgradableMenu {
     }
 
     @Override
-    protected boolean isValidUpgrade(@NotNull ItemStack stack) {
+    protected @Nullable AirtightUpgrade getUpgradeById(ResourceLocation id) {
+        return AirtightLeggingsUpgradeRegistry.getByID(id);
+    }
+
+    @Override
+    protected boolean isValidUpgrade(ItemStack stack) {
         AirtightUpgrade upgrade = AirtightLeggingsUpgradeRegistry.getByItem(stack.getItem());
         return upgrade != null && !currentStatusList.get(upgrade.getIndex()).isInstalled();
     }
 
     @Override
-    public void updateStatus(@NotNull ItemStack stack) {
-        currentStatusList = new ArrayList<>(stack.getOrDefault(CCBDataComponents.AIRTIGHT_UPGRADE_STATUS, AirtightLeggingsUpgradeRegistry.getDefaultUpgradeList()));
+    public void updateStatus(ItemStack stack) {
+        currentStatusList = normalizeStatusList(stack.getOrDefault(CCBDataComponents.AIRTIGHT_UPGRADE_STATUS, AirtightLeggingsUpgradeRegistry.getDefaultUpgradeList()), AirtightLeggingsUpgradeRegistry.getAll());
     }
 }

@@ -1,5 +1,11 @@
 package net.ty.createcraftedbeginning.api.gas.armhandlers.ethereal;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EnergizedEtherealAirArmHandler extends EtherealAirArmHandler {
     @Override
     public float getGasConsumptionMultiplier() {

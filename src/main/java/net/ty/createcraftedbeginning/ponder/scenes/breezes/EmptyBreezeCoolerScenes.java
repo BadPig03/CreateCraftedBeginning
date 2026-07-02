@@ -3,11 +3,13 @@ package net.ty.createcraftedbeginning.ponder.scenes.breezes;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.api.ParticleEmitter;
+import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.element.ElementLink;
 import net.createmod.ponder.api.element.EntityElement;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
@@ -20,10 +22,13 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.TrialSpawnerBlockEntity;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EmptyBreezeCoolerScenes {
-    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("empty_breeze_cooler", "Using Empty Breeze Coolers");
@@ -36,7 +41,10 @@ public class EmptyBreezeCoolerScenes {
 
         Selection spawnerSelection = util.select().position(spawnerPos);
 
-        ItemStack emptyChamber = new ItemStack(CCBBlocks.EMPTY_BREEZE_COOLER_BLOCK);
+        Vec3 spawnerVec = util.vector().centerOf(spawnerPos);
+        Vec3 aboveTwoVec = util.vector().centerOf(aboveTwoPos);
+
+        ItemStack emptyChamberItem = new ItemStack(CCBBlocks.EMPTY_BREEZE_COOLER_BLOCK.asItem());
 
         ParticleEmitter gust = scene.effects().simpleParticleEmitter(ParticleTypes.GUST, Vec3.ZERO);
 
@@ -54,26 +62,26 @@ public class EmptyBreezeCoolerScenes {
         });
 
         scene.idle(20);
-		scene.overlay().showText(60).text("Right-click a Breeze with an Empty Breeze Cooler to capture it").pointAt(util.vector().blockSurface(aboveTwoPos, Direction.WEST)).placeNearTarget().attachKeyFrame();
+		scene.overlay().showText(60).text("Right-click a Breeze with an Empty Breeze Cooler to capture it").colored(PonderPalette.BLUE).pointAt(util.vector().blockSurface(aboveTwoPos, Direction.WEST)).placeNearTarget().attachKeyFrame();
 
 		scene.idle(20);
-        scene.overlay().showControls(util.vector().centerOf(aboveTwoPos), Pointing.DOWN, 40).rightClick().withItem(emptyChamber);
+        scene.overlay().showControls(aboveTwoVec, Pointing.DOWN, 40).rightClick().withItem(emptyChamberItem.copy());
 
         scene.idle(7);
 		scene.world().modifyEntity(breeze, Entity::discard);
-        scene.effects().emitParticles(util.vector().centerOf(spawnerPos), gust, 1, 1);
+        scene.effects().emitParticles(spawnerVec, gust, 1, 1);
 
         scene.idle(53);
         scene.world().restoreBlocks(spawnerSelection);
-        scene.world().modifyBlockEntity(spawnerPos, TrialSpawnerBlockEntity.class, spawner -> spawner.setEntityId(EntityType.BREEZE, RandomSource.create()));
+        scene.world().modifyBlockEntity(spawnerPos, TrialSpawnerBlockEntity.class, s -> s.setEntityId(EntityType.BREEZE, RandomSource.create()));
         scene.world().showSection(spawnerSelection, Direction.DOWN);
 
         scene.idle(20);
-		scene.overlay().showControls(util.vector().topOf(spawnerPos), Pointing.DOWN, 67).rightClick().withItem(emptyChamber);
+		scene.overlay().showControls(spawnerVec, Pointing.DOWN, 67).rightClick().withItem(emptyChamberItem.copy());
 
         scene.idle(7);
-        scene.effects().emitParticles(util.vector().centerOf(spawnerPos), gust, 1, 1);
-		scene.overlay().showText(60).text("Breezes can also be collected from Spawners and Trial Spawners directly").pointAt(util.vector().blockSurface(spawnerPos, Direction.WEST)).placeNearTarget().attachKeyFrame();
+        scene.effects().emitParticles(spawnerVec, gust, 1, 1);
+		scene.overlay().showText(60).text("Breezes can also be collected from Spawners and Trial Spawners directly").colored(PonderPalette.BLUE).pointAt(util.vector().blockSurface(spawnerPos, Direction.WEST)).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();

@@ -1,0 +1,22 @@
+{
+  "type": "createcraftedbeginning:forging_press",
+  "ingredients": [
+    {
+      "item": "minecraft:charcoal"
+    },
+    {
+      "item": "minecraft:heavy_core"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 250,
+      "gas": "createcraftedbeginning:pressurized_energized_ultrawarm_air"
+    }
+  ],
+  "results": [
+    {
+      "chance": 0.2,
+      "id": "minecraft:diamond"
+    }
+  ]
+}

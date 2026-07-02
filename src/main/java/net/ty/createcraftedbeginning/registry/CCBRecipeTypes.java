@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
 import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
 import net.createmod.catnip.lang.Lang;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -26,11 +27,11 @@ import net.ty.createcraftedbeginning.api.gas.recipes.PressingWithGasRecipe;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipe.Factory;
 import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasRecipeSerializer;
 import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
-import net.ty.createcraftedbeginning.recipe.ConversionRecipe;
+import net.ty.createcraftedbeginning.recipe.ChillingRecipe;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 import net.ty.createcraftedbeginning.recipe.DissipationRecipe;
 import net.ty.createcraftedbeginning.recipe.EnergizationRecipe;
-import net.ty.createcraftedbeginning.recipe.ChillingRecipe;
+import net.ty.createcraftedbeginning.recipe.ForgingPressRecipe;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
@@ -38,26 +39,28 @@ import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Supplier;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
-    CONVERSION(ConversionRecipe::new),
     CHILLING(ChillingRecipe::new),
     COOLING(CoolingRecipe::new),
+    DISSIPATION(DissipationRecipe::new),
+    ENERGIZATION(EnergizationRecipe::new),
+    FORGING_PRESS(ForgingPressRecipe::new),
     GAS_INJECTION(GasInjectionRecipe::new),
     PRESSURIZATION(PressurizationRecipe::new),
-    WIND_CHARGING(WindChargingRecipe::new),
-    ENERGIZATION(EnergizationRecipe::new),
-    DISSIPATION(DissipationRecipe::new),
     REACTOR_KETTLE(ReactorKettleRecipe::new),
     RESIDUE_GENERATION(ResidueGenerationRecipe::new),
+    WIND_CHARGING(WindChargingRecipe::new),
 
     CUTTING_WITH_GAS(CuttingWithGasRecipe::new),
+    DEPLOYING_WITH_GAS(DeployerApplicationWithGasRecipe::new),
     FILLING_WITH_GAS(FillingWithGasRecipe::new),
     PRESSING_WITH_GAS(PressingWithGasRecipe::new),
-    DEPLOYING_WITH_GAS(DeployerApplicationWithGasRecipe::new),
     SEQUENCED_ASSEMBLY_WITH_GAS(SequencedAssemblyWithGasRecipeSerializer::new);
 
     public static final Codec<CCBRecipeTypes> CODEC = StringRepresentable.fromEnum(CCBRecipeTypes::values);
@@ -75,8 +78,7 @@ public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
         id = CreateCraftedBeginning.asResource(name);
         this.serializerSupplier = serializerSupplier;
         serializerObject = Registers.SERIALIZER_REGISTER.register(name, serializerSupplier);
-        @Nullable DeferredHolder<RecipeType<?>, RecipeType<?>> typeObject = Registers.TYPE_REGISTER.register(name, () -> RecipeType.simple(id));
-        type = typeObject;
+        type = Registers.TYPE_REGISTER.register(name, () -> RecipeType.simple(id));
     }
 
     CCBRecipeTypes(StandardProcessingWithGasRecipe.Factory<?> processingFactory) {
@@ -111,7 +113,7 @@ public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
     }
 
     @Override
-    public @NotNull String getSerializedName() {
+    public String getSerializedName() {
         return id.toString();
     }
 

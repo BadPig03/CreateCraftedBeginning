@@ -4,6 +4,8 @@ import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
+import net.createmod.catnip.data.TriState;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -14,20 +16,23 @@ import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedBree
 import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class WindChargingCategory extends CCBRecipeCategory<WindChargingRecipe> {
     private static final int COLOR_NORMAL = 0x888888;
     private static final int COLOR_BAD = 0xAB2222;
-    private final AnimatedBreezeChamber galeChamber = new AnimatedBreezeChamber(false);
-    private final AnimatedBreezeChamber illChamber = new AnimatedBreezeChamber(true);
-    private final AnimatedBreezeChamber calmChamber = new AnimatedBreezeChamber(null);
+    private final AnimatedBreezeChamber galeChamber = new AnimatedBreezeChamber(TriState.FALSE);
+    private final AnimatedBreezeChamber illChamber = new AnimatedBreezeChamber(TriState.TRUE);
+    private final AnimatedBreezeChamber calmChamber = new AnimatedBreezeChamber(TriState.DEFAULT);
 
     public WindChargingCategory(Info<WindChargingRecipe> info) {
         super(info);
     }
 
-    private static void addItemInputSlot(@NotNull IRecipeLayoutBuilder builder, Ingredient ingredient) {
+    private static void addItemInputSlot(IRecipeLayoutBuilder builder, Ingredient ingredient) {
         builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setBackground(getRenderedSlot(), -1, -1).addIngredients(ingredient);
     }
 
@@ -37,10 +42,6 @@ public class WindChargingCategory extends CCBRecipeCategory<WindChargingRecipe> 
         CCBGUITextures.JEI_SHADOW.render(graphics, 122, 37);
         CCBGUITextures.JEI_LONG_ARROW.render(graphics, 42, 30);
         CCBGUITextures.JEI_WIND_CHARGING_BACKGROUND.render(graphics, 16, 8);
-        if (getBackground() == null) {
-            return;
-        }
-
         if (recipe.isCreativeIceCream()) {
             MutableComponent text = Component.translatable("jade.gas.infinity_mark");
             graphics.drawString(font, text, getBackground().getWidth() / 2 - font.width(text) / 2 - 12, 22, COLOR_NORMAL, false);
@@ -67,7 +68,7 @@ public class WindChargingCategory extends CCBRecipeCategory<WindChargingRecipe> 
     }
 
     @Override
-    public void setRecipe(IRecipeLayoutBuilder builder, @NotNull WindChargingRecipe recipe, @NotNull IFocusGroup focuses) {
+    public void setRecipe(IRecipeLayoutBuilder builder, WindChargingRecipe recipe, IFocusGroup focuses) {
         addItemInputSlot(builder, recipe.getIngredient());
     }
 }

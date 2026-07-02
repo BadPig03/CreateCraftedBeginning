@@ -14,6 +14,7 @@ import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
@@ -52,13 +53,15 @@ import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
 import static net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.COOLER;
 import static net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.FROST_LEVEL;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
     public static final int MAX_COOLANT_CAPACITY = 72000;
 
@@ -91,14 +94,14 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         lastCoolerState = false;
     }
 
-    public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.BREEZE_COOLER.get(), (be, context) -> be.tankBehaviour.getCapability());
     }
 
     @Override
-    public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         tankBehaviour = SmartFluidTankBehaviour.single(this, AllConfigs.server().fluids.fluidTankCapacity.get() * 500);
-        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.A_MURDER, CCBAdvancements.FROZEN_NECTAR);
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.A_MURDER, CCBAdvancements.FROZEN_AMBROSIA);
         behaviours.add(tankBehaviour);
         behaviours.add(advancementBehaviour);
     }
@@ -138,7 +141,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     @Override
-    protected void write(@NotNull CompoundTag compoundTag, Provider registries, boolean clientPacket) {
+    protected void write(CompoundTag compoundTag, Provider registries, boolean clientPacket) {
         CompoundTag stateTag = new CompoundTag();
         currentState.save(stateTag);
         compoundTag.put(COMPOUND_KEY_STATE_DATA, stateTag);
@@ -151,7 +154,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     @Override
-    protected void read(@NotNull CompoundTag compoundTag, Provider registries, boolean clientPacket) {
+    protected void read(CompoundTag compoundTag, Provider registries, boolean clientPacket) {
         if (compoundTag.contains(COMPOUND_KEY_STATE_TYPE) && compoundTag.contains(COMPOUND_KEY_STATE_DATA)) {
             CoolantType stateType = CoolantType.values()[compoundTag.getInt(COMPOUND_KEY_STATE_TYPE)];
             CompoundTag stateData = compoundTag.getCompound(COMPOUND_KEY_STATE_DATA);
@@ -306,7 +309,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         return level != null && level.getBlockEntity(worldPosition.above()) instanceof AirCompressorBlockEntity;
     }
 
-    public boolean tryUpdateCoolantByItem(@NotNull ItemStack itemStack, boolean forceOverflow, boolean simulate) {
+    public boolean tryUpdateCoolantByItem(ItemStack itemStack, boolean forceOverflow, boolean simulate) {
         if (itemStack.is(CCBItems.CREATIVE_ICE_CREAM)) {
             if (!simulate) {
                 CoolantType coolantType = CreativeCoolerState.getNextCoolantType(currentState.getCoolantType());
@@ -323,7 +326,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         }
 
         if (itemStack.is(CCBItemTags.ICE_CREAMS.tag)) {
-            advancementBehaviour.awardPlayer(CCBAdvancements.FROZEN_NECTAR);
+            advancementBehaviour.awardPlayer(CCBAdvancements.FROZEN_AMBROSIA);
         }
         notifyUpdate();
         return true;

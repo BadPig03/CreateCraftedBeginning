@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.api.gas.cannonhandlers.ethereal;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
@@ -30,10 +31,12 @@ import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCa
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBDamageTypes;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EtherealAirCannonHandler implements AirtightCannonHandler {
     protected static final float DEFAULT_RADIUS = 1.0f;
     protected static final int DEFAULT_DAMAGE = 6;
@@ -50,7 +53,7 @@ public class EtherealAirCannonHandler implements AirtightCannonHandler {
     }
 
     @Override
-    public void renderTrailParticles(@NotNull Level level, @NotNull Vec3 pos) {
+    public void renderTrailParticles(Level level, Vec3 pos) {
         level.addParticle(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 0, 0, 0);
 
         RandomSource random = level.getRandom();
@@ -70,7 +73,7 @@ public class EtherealAirCannonHandler implements AirtightCannonHandler {
     }
 
     @Override
-    public void explode(@NotNull Level level, @NotNull Vec3 pos, Entity source, float multiplier) {
+    public void explode(Level level, Vec3 pos, Entity source, float multiplier) {
         float radius = DEFAULT_RADIUS * multiplier;
         level.explode(source, CCBDamageTypes.source(DamageTypes.MAGIC, level, source), AirtightCannonUtils.createDamageCalculator(radius), pos.x(), pos.y(), pos.z(), radius, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
 
@@ -113,7 +116,7 @@ public class EtherealAirCannonHandler implements AirtightCannonHandler {
     }
 
     @Override
-    public void appendHoverText(@NotNull ItemStack cannon, @NotNull TooltipContext context, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
+    public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(CCBLang.translate("gui.tooltips.airtight_cannon.ethereal_air").style(ChatFormatting.DARK_GREEN).component());
     }
 }

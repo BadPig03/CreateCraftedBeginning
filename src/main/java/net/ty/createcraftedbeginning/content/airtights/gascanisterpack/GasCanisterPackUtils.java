@@ -1,21 +1,24 @@
 package net.ty.createcraftedbeginning.content.airtights.gascanisterpack;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public final class GasCanisterPackUtils {
     private GasCanisterPackUtils() {
     }
 
-    public static boolean shouldCauseBlockBreakReset(@NotNull ItemStack oldStack, @NotNull ItemStack newStack) {
+    public static boolean shouldCauseBlockBreakReset(ItemStack oldStack, ItemStack newStack) {
         if (!newStack.is(oldStack.getItem())) {
             return true;
         }
@@ -41,7 +44,7 @@ public final class GasCanisterPackUtils {
         return !newKeys.equals(oldKeys) || !newKeys.stream().allMatch(key -> Objects.equals(newComponents.get(key), oldComponents.get(key)));
     }
 
-    public static boolean isCanisterPackMenuOpened(@NotNull Player player, ItemStack pack) {
+    public static boolean isCanisterPackMenuOpened(Player player, ItemStack pack) {
         return player.containerMenu instanceof GasCanisterPackMenu menu && ItemStack.matches(menu.contentHolder, pack);
     }
 }

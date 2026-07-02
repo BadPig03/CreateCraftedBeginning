@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.api.gas.recipes;
 
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.foundation.utility.CreateLang;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
@@ -11,23 +12,25 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
-import net.ty.createcraftedbeginning.api.gas.gases.IAssemblyRecipeWithGas;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAssemblyRecipeWithGas;
 import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasSubCategory.AssemblySpouting;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class FillingWithGasRecipe extends StandardProcessingWithGasRecipe<SingleRecipeInput> implements IAssemblyRecipeWithGas {
     public FillingWithGasRecipe(ProcessingWithGasRecipeParams params) {
         super(CCBRecipeTypes.FILLING_WITH_GAS, params);
     }
 
     @Override
-    public boolean matches(@NotNull SingleRecipeInput inv, @NotNull Level level) {
+    public boolean matches(SingleRecipeInput inv, Level level) {
         return ingredients.getFirst().test(inv.getItem(0));
     }
 
@@ -54,7 +57,7 @@ public class FillingWithGasRecipe extends StandardProcessingWithGasRecipe<Single
     }
 
     @Override
-    public void addRequiredMachines(@NotNull Set<ItemLike> list) {
+    public void addRequiredMachines(Set<ItemLike> list) {
         list.add(AllBlocks.SPOUT.get());
     }
 
@@ -63,7 +66,7 @@ public class FillingWithGasRecipe extends StandardProcessingWithGasRecipe<Single
     }
 
     @Override
-    public void addAssemblyFluidIngredients(@NotNull List<SizedFluidIngredient> list) {
+    public void addAssemblyFluidIngredients(List<SizedFluidIngredient> list) {
         list.add(getRequiredFluid());
     }
 

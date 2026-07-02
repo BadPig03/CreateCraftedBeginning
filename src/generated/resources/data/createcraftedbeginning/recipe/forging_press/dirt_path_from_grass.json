@@ -1,0 +1,13 @@
+{
+  "type": "createcraftedbeginning:forging_press",
+  "ingredients": [
+    {
+      "item": "minecraft:grass_block"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:dirt_path"
+    }
+  ]
+}

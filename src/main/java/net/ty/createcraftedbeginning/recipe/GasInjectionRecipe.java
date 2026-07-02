@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.recipe;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -11,8 +12,8 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.IAssemblyRecipeWithGas;
-import net.ty.createcraftedbeginning.api.gas.gases.SizedGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAssemblyRecipeWithGas;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
 import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasSubCategory;
 import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasSubCategory.AssemblyInjecting;
@@ -24,24 +25,23 @@ import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRecipeInput> implements IAssemblyRecipeWithGas {
     public GasInjectionRecipe(ProcessingWithGasRecipeParams params) {
         super(CCBRecipeTypes.GAS_INJECTION, params);
     }
 
     public static ItemStack getResultItem(Level level, ItemStack itemStack, GasStack gasStack) {
-        if (level == null) {
-            return ItemStack.EMPTY;
-        }
-
         SingleRecipeInput input = new SingleRecipeInput(itemStack);
         Optional<RecipeHolder<GasInjectionRecipe>> assemblyRecipe = SequencedAssemblyWithGasRecipe.getRecipe(level, input, CCBRecipeTypes.GAS_INJECTION.getType(), GasInjectionRecipe.class, matchItemAndGas(level, gasStack, input));
         if (assemblyRecipe.isPresent()) {
@@ -73,10 +73,6 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
     }
 
     public static long getRequiredGasAmount(Level level, ItemStack itemStack, GasStack gasStack) {
-        if (level == null) {
-            return -1;
-        }
-
         if (GasCanisterUtils.isCanisterInjectable(itemStack, gasStack) && itemStack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents) {
             long maxCapacity = GasInjectionChamberBlockEntity.getMaxCapacity();
             return Math.min(maxCapacity, canisterContents.getTankCapacity(0) - canisterContents.getGasInTank(0).getAmount());
@@ -111,11 +107,8 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
         return -1;
     }
 
-    public static boolean isItemInvalidForInjection(Level level, ItemStack itemStack, GasStack gasStack) {
-        if (level == null) {
-            return true;
-        }
-        if (GasCanisterUtils.isCanisterInjectable(itemStack, gasStack)) {
+    public static boolean isItemInvalidForInjection(@Nullable Level level, ItemStack itemStack, GasStack gasStack) {
+        if (level == null || GasCanisterUtils.isCanisterInjectable(itemStack, gasStack)) {
             return false;
         }
 
@@ -138,12 +131,12 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
     }
 
     @Contract(pure = true)
-    private static @NotNull Predicate<RecipeHolder<GasInjectionRecipe>> matchItemAndGas(Level level, GasStack gasStack, SingleRecipeInput input) {
+    private static Predicate<RecipeHolder<GasInjectionRecipe>> matchItemAndGas(Level level, GasStack gasStack, SingleRecipeInput input) {
         return r -> r.value().matches(input, level) && GasStack.isSameGasSameComponents(r.value().getGasIngredient().getFirstGas(), gasStack);
     }
 
     @Override
-    public boolean matches(@NotNull SingleRecipeInput input, @NotNull Level level) {
+    public boolean matches(SingleRecipeInput input, Level level) {
         return ingredients.getFirst().test(input.getItem(0));
     }
 
@@ -181,7 +174,7 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
     }
 
     @Override
-    public void addRequiredMachines(@NotNull Set<ItemLike> list) {
+    public void addRequiredMachines(Set<ItemLike> list) {
         list.add(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK.get());
     }
 
@@ -190,7 +183,7 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
     }
 
     @Override
-    public void addAssemblyGasIngredients(@NotNull List<SizedGasIngredient> list) {
+    public void addAssemblyGasIngredients(List<SizedGasIngredient> list) {
         list.add(getGasIngredient());
     }
 

@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.gasfilter;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -9,17 +10,20 @@ import net.neoforged.neoforge.event.ItemStackedOnOtherEvent;
 import net.neoforged.neoforge.event.entity.item.ItemTossEvent;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @EventBusSubscriber(Dist.CLIENT)
 public class GasVirtualItemEvents {
     @SubscribeEvent
-    public static void registerColors(@NotNull Item event) {
+    public static void registerColors(Item event) {
         event.register((stack, color) -> stack.getOrDefault(CCBDataComponents.GAS_VIRTUAL_ITEM_COLOR, 0xFFFFFFFF), CCBItems.GAS_VIRTUAL_ITEM.get());
     }
 
     @SubscribeEvent
-    public static void onDropGasVirtualItems(@NotNull ItemTossEvent event) {
+    public static void onDropGasVirtualItems(ItemTossEvent event) {
         ItemStack stack = event.getEntity().getItem();
         if (!stack.is(CCBItems.GAS_VIRTUAL_ITEM)) {
             return;
@@ -29,7 +33,7 @@ public class GasVirtualItemEvents {
     }
 
     @SubscribeEvent
-    public static void onClickOnGasVirtualItems(@NotNull ItemStackedOnOtherEvent event) {
+    public static void onClickOnGasVirtualItems(ItemStackedOnOtherEvent event) {
         ItemStack carried = event.getCarriedItem();
         ItemStack stackOn = event.getStackedOnItem();
         boolean cancel = false;

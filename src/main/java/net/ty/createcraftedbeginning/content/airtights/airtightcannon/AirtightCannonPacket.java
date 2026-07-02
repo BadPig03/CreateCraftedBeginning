@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.airtightcannon;
 import com.simibubi.create.content.equipment.zapper.ShootGadgetPacket;
 import com.simibubi.create.content.equipment.zapper.ShootableGadgetRenderHandler;
 import net.createmod.catnip.codecs.stream.CatnipStreamCodecs;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -14,6 +15,10 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
 import net.ty.createcraftedbeginning.registry.CCBPackets;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightCannonPacket extends ShootGadgetPacket {
     public static final StreamCodec<RegistryFriendlyByteBuf, AirtightCannonPacket> STREAM_CODEC = StreamCodec.composite(CatnipStreamCodecs.VEC3, packet -> packet.location, CatnipStreamCodecs.VEC3, packet -> packet.motion, ItemStack.OPTIONAL_STREAM_CODEC, packet -> packet.item, CatnipStreamCodecs.HAND, packet -> packet.hand, ByteBufCodecs.FLOAT, packet -> packet.pitch, ByteBufCodecs.BOOL, packet -> packet.self, AirtightCannonPacket::new);
 

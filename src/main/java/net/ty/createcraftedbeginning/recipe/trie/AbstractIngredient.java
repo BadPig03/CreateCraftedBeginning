@@ -1,9 +1,13 @@
 package net.ty.createcraftedbeginning.recipe.trie;
 
 import com.google.common.collect.ImmutableSet;
+import net.minecraft.MethodsReturnNonnullByDefault;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Set;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AbstractIngredient {
     final Set<AbstractVariant> variants;
     final int hashCode;

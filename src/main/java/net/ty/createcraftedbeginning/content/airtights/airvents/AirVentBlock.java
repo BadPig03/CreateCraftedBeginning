@@ -9,6 +9,7 @@ import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.lang.Lang;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -44,11 +45,14 @@ import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
 import java.util.Map;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, SimpleWaterloggedBlock, IWrenchable {
     public static final EnumProperty<VentState> NORTH = EnumProperty.create("north", VentState.class);
     public static final EnumProperty<VentState> EAST = EnumProperty.create("east", VentState.class);
@@ -82,7 +86,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
     }
 
     @Override
-    public InteractionResult onWrenched(BlockState state, @NotNull UseOnContext context) {
+    public InteractionResult onWrenched(BlockState state, UseOnContext context) {
         Player player = context.getPlayer();
         if (player != null && player.getInBlockState().is(CCBBlocks.AIR_VENT_BLOCK)) {
             return InteractionResult.FAIL;
@@ -92,7 +96,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
     }
 
     @Override
-    public InteractionResult onSneakWrenched(BlockState state, @NotNull UseOnContext context) {
+    public InteractionResult onSneakWrenched(BlockState state, UseOnContext context) {
         Player player = context.getPlayer();
         if (player != null && player.getInBlockState().is(CCBBlocks.AIR_VENT_BLOCK)) {
             return InteractionResult.FAIL;
@@ -102,7 +106,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
     }
 
     @Override
-    public boolean isLadder(@NotNull BlockState state, @NotNull LevelReader level, @NotNull BlockPos pos, @NotNull LivingEntity entity) {
+    public boolean isLadder(BlockState state, LevelReader level, BlockPos pos, LivingEntity entity) {
         if (!(entity instanceof Player player)) {
             return false;
         }
@@ -112,7 +116,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
     }
 
     @Override
-    public @NotNull BlockState updateShape(@NotNull BlockState state, @NotNull Direction direction, @NotNull BlockState neighbourState, @NotNull LevelAccessor level, @NotNull BlockPos pos, @NotNull BlockPos neighbourPos) {
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos) {
         if (state.getValue(WATERLOGGED)) {
             level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
@@ -130,12 +134,12 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
     }
 
     @Override
-    protected boolean skipRendering(@NotNull BlockState blockState, @NotNull BlockState adjacentState, @NotNull Direction direction) {
+    protected boolean skipRendering(BlockState blockState, BlockState adjacentState, Direction direction) {
         return adjacentState.is(CCBBlocks.AIR_VENT_BLOCK);
     }
 
     @Override
-    protected @NotNull ItemInteractionResult useItemOn(@NotNull ItemStack stack, @NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull InteractionHand hand, @NotNull BlockHitResult hitResult) {
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
         if (player.getInBlockState().is(CCBBlocks.AIR_VENT_BLOCK)) {
             return ItemInteractionResult.FAIL;
         }
@@ -181,48 +185,48 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
     }
 
     @Override
-    public @NotNull FluidState getFluidState(@NotNull BlockState state) {
+    public FluidState getFluidState(BlockState state) {
         return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : Fluids.EMPTY.defaultFluidState();
     }
 
     @Override
-    protected @NotNull VoxelShape getOcclusionShape(@NotNull BlockState blockState, @NotNull BlockGetter level, @NotNull BlockPos blockPos) {
+    protected VoxelShape getOcclusionShape(BlockState blockState, BlockGetter level, BlockPos blockPos) {
         return Shapes.empty();
     }
 
     @Override
-    protected @NotNull VoxelShape getBlockSupportShape(@NotNull BlockState blockState, @NotNull BlockGetter level, @NotNull BlockPos blockPos) {
+    protected VoxelShape getBlockSupportShape(BlockState blockState, BlockGetter level, BlockPos blockPos) {
         return Shapes.block();
     }
 
     @Override
-    protected @NotNull VoxelShape getShape(@NotNull BlockState blockState, @NotNull BlockGetter level, @NotNull BlockPos blockPos, @NotNull CollisionContext context) {
+    protected VoxelShape getShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
         return getShape(blockState);
     }
 
     @Override
-    protected @NotNull VoxelShape getCollisionShape(@NotNull BlockState blockState, @NotNull BlockGetter level, @NotNull BlockPos blockPos, @NotNull CollisionContext context) {
+    protected VoxelShape getCollisionShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
         return getCollisionShape(blockState);
     }
 
     @Override
-    protected @NotNull VoxelShape getVisualShape(@NotNull BlockState blockState, @NotNull BlockGetter level, @NotNull BlockPos blockPos, @NotNull CollisionContext context) {
+    protected VoxelShape getVisualShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
         return Shapes.block();
     }
 
     @Override
-    public BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
         return ProperWaterloggedBlock.withWater(context.getLevel(), defaultBlockState(), context.getClickedPos());
     }
 
     @Override
-    public void setPlacedBy(@NotNull Level level, @NotNull BlockPos blockPos, @NotNull BlockState blockState, LivingEntity entity, @NotNull ItemStack itemStack) {
+    public void setPlacedBy(Level level, BlockPos blockPos, BlockState blockState, @Nullable LivingEntity entity, ItemStack itemStack) {
         super.setPlacedBy(level, blockPos, blockState, entity, itemStack);
         CCBAdvancementBehaviour.setPlacedBy(level, blockPos, entity);
     }
 
     @Override
-    protected void createBlockStateDefinition(@NotNull Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
         builder.add(WATERLOGGED, NORTH, EAST, SOUTH, WEST, UP, DOWN);
         super.createBlockStateDefinition(builder);
     }
@@ -246,7 +250,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
         public static final Codec<VentState> CODEC = StringRepresentable.fromEnum(VentState::values);
 
         @Contract(pure = true)
-        public static VentState getHandInteractedState(@NotNull VentState oldState) {
+        public static VentState getHandInteractedState(VentState oldState) {
             return switch (oldState) {
                 case CLOSED -> OPENED;
                 case OPENED -> CLOSED;
@@ -256,7 +260,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
         }
 
         @Contract(pure = true)
-        public static VentState getWrenchInteractedState(@NotNull VentState oldState) {
+        public static VentState getWrenchInteractedState(VentState oldState) {
             return switch (oldState) {
                 case CLOSED, OPENED -> EMPTY;
                 case EMPTY -> CLOSED;
@@ -265,7 +269,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
         }
 
         @Override
-        public @NotNull String getSerializedName() {
+        public String getSerializedName() {
             return Lang.asId(name());
         }
 

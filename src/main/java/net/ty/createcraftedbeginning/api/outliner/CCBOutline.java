@@ -8,12 +8,12 @@ import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.render.BindableTexture;
 import net.createmod.catnip.render.SuperRenderTypeBuffer;
 import net.createmod.catnip.theme.Color;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -21,7 +21,10 @@ import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-@SuppressWarnings("unused")
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class CCBOutline {
     protected final CCBOutlineParams params;
     protected final Vector4f colorTemp = new Vector4f();
@@ -44,7 +47,7 @@ public abstract class CCBOutline {
     public void tick() {
     }
 
-    public void bufferCuboidLine(@NotNull PoseStack poseStack, VertexConsumer consumer, @NotNull Vec3 camera, @NotNull Vector3d start, @NotNull Vector3d end, float width, Vector4f color, int lightmap, boolean disableNormals) {
+    public void bufferCuboidLine(PoseStack poseStack, VertexConsumer consumer, Vec3 camera, Vector3d start, Vector3d end, float width, Vector4f color, int lightmap, boolean disableNormals) {
         Vector3f diff = diffPosTemp;
         diff.set((float) (end.x - start.x), (float) (end.y - start.y), (float) (end.z - start.z));
         float length = Mth.sqrt(diff.x() * diff.x() + diff.y() * diff.y() + diff.z() * diff.z());
@@ -60,7 +63,7 @@ public abstract class CCBOutline {
         poseStack.popPose();
     }
 
-    public void bufferCuboidLine(Pose pose, VertexConsumer consumer, @NotNull Vector3f origin, @NotNull Direction direction, float length, float width, Vector4f color, int lightmap, boolean disableNormals) {
+    public void bufferCuboidLine(Pose pose, VertexConsumer consumer, Vector3f origin, Direction direction, float length, float width, Vector4f color, int lightmap, boolean disableNormals) {
         Vector3f minPos = minPosTemp;
         Vector3f maxPos = maxPosTemp;
 
@@ -79,7 +82,7 @@ public abstract class CCBOutline {
         bufferCuboid(pose, consumer, minPos, maxPos, color, lightmap, disableNormals);
     }
 
-    public void bufferCuboid(@NotNull Pose pose, @NotNull VertexConsumer consumer, @NotNull Vector3f minPos, @NotNull Vector3f maxPos, @NotNull Vector4f color, int lightmap, boolean disableNormals) {
+    public void bufferCuboid(Pose pose, VertexConsumer consumer, Vector3f minPos, Vector3f maxPos, Vector4f color, int lightmap, boolean disableNormals) {
         Vector4f posTemp = posTransformTemp;
         Vector3f normalTemp = normalTransformTemp;
         float minX = minPos.x();
@@ -235,7 +238,7 @@ public abstract class CCBOutline {
         bufferQuad(pose, consumer, pos0, pos1, pos2, pos3, color, 0, 0, 1, 1, lightmap, normal);
     }
 
-    public void bufferQuad(@NotNull Pose pose, @NotNull VertexConsumer consumer, @NotNull Vector3f pos0, @NotNull Vector3f pos1, @NotNull Vector3f pos2, @NotNull Vector3f pos3, @NotNull Vector4f color, float minU, float minV, float maxU, float maxV, int lightmap, Vector3f normal) {
+    public void bufferQuad(Pose pose, VertexConsumer consumer, Vector3f pos0, Vector3f pos1, Vector3f pos2, Vector3f pos3, Vector4f color, float minU, float minV, float maxU, float maxV, int lightmap, Vector3f normal) {
         Vector4f posTransformTemp = this.posTransformTemp;
         Vector3f normalTransformTemp = this.normalTransformTemp;
         Matrix4f posMatrix = pose.pose();
@@ -308,7 +311,7 @@ public abstract class CCBOutline {
             return this;
         }
 
-        public CCBOutlineParams colored(@NotNull Color c) {
+        public CCBOutlineParams colored(Color c) {
             rgb = c.copy();
             return this;
         }
@@ -323,7 +326,6 @@ public abstract class CCBOutline {
             return this;
         }
 
-        @SuppressWarnings("UnusedReturnValue")
         public CCBOutlineParams withFaceTexture(@Nullable BindableTexture texture) {
             faceTexture = texture;
             return this;
@@ -363,7 +365,7 @@ public abstract class CCBOutline {
             return highlightedFace;
         }
 
-        public void loadColor(@NotNull Vector4f vec) {
+        public void loadColor(Vector4f vec) {
             vec.set(rgb.getRedAsFloat(), rgb.getGreenAsFloat(), rgb.getBlueAsFloat(), rgb.getAlphaAsFloat() * alpha);
         }
     }

@@ -8,14 +8,18 @@ import com.tterrag.registrate.util.nullness.NonNullSupplier;
 import dev.engine_room.flywheel.lib.visualization.SimpleBlockEntityVisualizer;
 import dev.engine_room.flywheel.lib.visualization.SimpleBlockEntityVisualizer.Factory;
 import net.createmod.catnip.platform.CatnipServices;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Predicate;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBBlockEntityBuilder<T extends BlockEntity, P> extends BlockEntityBuilder<T, P> {
     @Nullable
     private NonNullSupplier<Factory<T>> visualFactory;
@@ -26,7 +30,7 @@ public class CCBBlockEntityBuilder<T extends BlockEntity, P> extends BlockEntity
     }
 
     @Contract("_, _, _, _, _ -> new")
-    public static <T extends BlockEntity, P> @NotNull BlockEntityBuilder<T, P> create(@NotNull AbstractRegistrate<?> owner, @NotNull P parent, @NotNull String name, @NotNull BuilderCallback callback, @NotNull BlockEntityFactory<T> factory) {
+    public static <T extends BlockEntity, P> @NotNull BlockEntityBuilder<T, P> create(AbstractRegistrate<?> owner, P parent, String name, BuilderCallback callback, BlockEntityFactory<T> factory) {
         return new CCBBlockEntityBuilder<>(owner, parent, name, callback, factory);
     }
 

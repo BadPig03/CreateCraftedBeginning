@@ -120,6 +120,31 @@
     ],
     "subtitle": "createcraftedbeginning.subtitle.deny"
   },
+  "forging_press_pressed": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:block.anvil.land"
+      }
+    ],
+    "subtitle": "createcraftedbeginning.subtitle.forging_press_pressed"
+  },
+  "forging_press_pressed_compounded_1": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:entity.item.break"
+      }
+    ]
+  },
+  "forging_press_pressed_compounded_2": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:block.netherite_block.hit"
+      }
+    ]
+  },
   "injecting": {
     "sounds": [
       {

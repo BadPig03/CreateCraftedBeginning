@@ -6,6 +6,7 @@ import com.simibubi.create.foundation.item.render.CustomRenderedItemModelRendere
 import com.simibubi.create.foundation.item.render.PartialItemModelRenderer;
 import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
 import net.createmod.catnip.animation.AnimationTickHolder;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -23,17 +24,20 @@ import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsE
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
 import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
-import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.weatherflares.WeatherFlareSupplierUtils;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @EventBusSubscriber(value = Dist.CLIENT, modid = CreateCraftedBeginning.MOD_ID)
 public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer {
     @SubscribeEvent
-    public static void register(@NotNull RegisterClientExtensionsEvent event) {
+    public static void register(RegisterClientExtensionsEvent event) {
         event.registerItem(SimpleCustomRenderer.create(CCBItems.AIRTIGHT_CANNON.asItem(), new AirtightCannonItemRenderer()), CCBItems.AIRTIGHT_CANNON.asItem());
     }
 
@@ -72,7 +76,7 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
         return false;
     };
 
-    private static void renderItem(@NotNull GuiGraphics guiGraphics, int xOffset, int yOffset, ItemStack icon) {
+    private static void renderItem(GuiGraphics guiGraphics, int xOffset, int yOffset, ItemStack icon) {
         PoseStack poseStack = guiGraphics.pose();
         poseStack.pushPose();
         poseStack.translate(xOffset, yOffset + 8, 100);
@@ -82,7 +86,7 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
     }
 
     @Override
-    protected void render(ItemStack cannon, @NotNull CustomRenderedItemModel model, @NotNull PartialItemModelRenderer renderer, ItemDisplayContext transformType, @NotNull PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
+    protected void render(ItemStack cannon, CustomRenderedItemModel model, PartialItemModelRenderer renderer, ItemDisplayContext transformType, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         renderer.render(model.getOriginalModel(), light);
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) {

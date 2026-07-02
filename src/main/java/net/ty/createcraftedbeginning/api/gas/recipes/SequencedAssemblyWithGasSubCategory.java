@@ -12,23 +12,26 @@ import mezz.jei.api.gui.builder.IRecipeSlotBuilder;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.SizedGasIngredient;
-import net.ty.createcraftedbeginning.compat.jei.JEIPlugin;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEI;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedGasInjectionChamber;
 import net.ty.createcraftedbeginning.recipe.SequencedWithGasRecipe;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import static net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory.getRenderedSlot;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class SequencedAssemblyWithGasSubCategory {
     private final int width;
 
@@ -54,7 +57,7 @@ public abstract class SequencedAssemblyWithGasSubCategory {
         }
 
         @Override
-        public void draw(SequencedWithGasRecipe<?> recipe, @NotNull GuiGraphics graphics, double mouseX, double mouseY, int index) {
+        public void draw(SequencedWithGasRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int index) {
             PoseStack ms = graphics.pose();
             press.offset = index;
             ms.pushPose();
@@ -74,13 +77,13 @@ public abstract class SequencedAssemblyWithGasSubCategory {
         }
 
         @Override
-        public void setRecipe(IRecipeLayoutBuilder builder, @NotNull SequencedWithGasRecipe<?> recipe, IFocusGroup focuses, int x) {
+        public void setRecipe(IRecipeLayoutBuilder builder, SequencedWithGasRecipe<?> recipe, IFocusGroup focuses, int x) {
             SizedFluidIngredient fluidIngredient = recipe.getRecipe().getFluidIngredients().getFirst();
             CreateRecipeCategory.addFluidSlot(builder, x + 4, 15, fluidIngredient);
         }
 
         @Override
-        public void draw(@NotNull SequencedWithGasRecipe<?> recipe, @NotNull GuiGraphics graphics, double mouseX, double mouseY, int index) {
+        public void draw(SequencedWithGasRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int index) {
             PoseStack ms = graphics.pose();
             spout.offset = index;
             ms.pushPose();
@@ -100,7 +103,7 @@ public abstract class SequencedAssemblyWithGasSubCategory {
         }
 
         @Override
-        public void setRecipe(@NotNull IRecipeLayoutBuilder builder, @NotNull SequencedWithGasRecipe<?> recipe, IFocusGroup focuses, int x) {
+        public void setRecipe(IRecipeLayoutBuilder builder, SequencedWithGasRecipe<?> recipe, IFocusGroup focuses, int x) {
             IRecipeSlotBuilder slot = builder.addSlot(RecipeIngredientRole.INPUT, x + 4, 15).setBackground(CreateRecipeCategory.getRenderedSlot(), -1, -1).addIngredients(recipe.getRecipe().getIngredients().get(1));
             if (!(recipe.getAsAssemblyRecipe() instanceof DeployerApplicationWithGasRecipe deployerRecipe) || !deployerRecipe.shouldKeepHeldItem()) {
                 return;
@@ -110,7 +113,7 @@ public abstract class SequencedAssemblyWithGasSubCategory {
         }
 
         @Override
-        public void draw(SequencedWithGasRecipe<?> recipe, @NotNull GuiGraphics graphics, double mouseX, double mouseY, int index) {
+        public void draw(SequencedWithGasRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int index) {
             PoseStack ms = graphics.pose();
             deployer.offset = index;
             ms.pushPose();
@@ -130,18 +133,18 @@ public abstract class SequencedAssemblyWithGasSubCategory {
         }
 
         @Override
-        public void setRecipe(@NotNull IRecipeLayoutBuilder builder, @NotNull SequencedWithGasRecipe<?> recipe, IFocusGroup focuses, int x) {
+        public void setRecipe(IRecipeLayoutBuilder builder, SequencedWithGasRecipe<?> recipe, IFocusGroup focuses, int x) {
             SizedGasIngredient gasIngredient = recipe.getRecipe().getGasIngredients().getFirst();
             List<GasStack> gasStackList = Arrays.asList(gasIngredient.getGases());
             List<GasStack> fullStacks = new ArrayList<>();
             for (GasStack stack : gasStackList) {
                 fullStacks.add(stack.copyWithAmount(FluidType.BUCKET_VOLUME));
             }
-            builder.addSlot(RecipeIngredientRole.OUTPUT, x + 4, 15).setBackground(getRenderedSlot(), -1, -1).addIngredients(JEIPlugin.GAS_STACK, fullStacks).setFluidRenderer(FluidType.BUCKET_VOLUME, false, 16, 16).addRichTooltipCallback((recipeSlotView, tooltip) -> gasStackList.stream().map(stack -> Component.translatable("jei.tooltip.gas.amount", stack.getAmount()).withStyle(ChatFormatting.GRAY)).forEach(tooltip::add));
+            builder.addSlot(RecipeIngredientRole.INPUT, x + 4, 15).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEI.GAS_STACK, fullStacks).setFluidRenderer(FluidType.BUCKET_VOLUME, false, 16, 16).addRichTooltipCallback((recipeSlotView, tooltip) -> gasStackList.stream().map(stack -> Component.translatable("jei.tooltip.gas.amount", stack.getAmount()).withStyle(ChatFormatting.GRAY)).forEach(tooltip::add));
         }
 
         @Override
-        public void draw(SequencedWithGasRecipe<?> recipe, @NotNull GuiGraphics graphics, double mouseX, double mouseY, int index) {
+        public void draw(SequencedWithGasRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int index) {
             PoseStack ms = graphics.pose();
             chamber.offset = index;
             ms.pushPose();
@@ -161,7 +164,7 @@ public abstract class SequencedAssemblyWithGasSubCategory {
         }
 
         @Override
-        public void draw(SequencedWithGasRecipe<?> recipe, @NotNull GuiGraphics graphics, double mouseX, double mouseY, int index) {
+        public void draw(SequencedWithGasRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int index) {
             PoseStack ms = graphics.pose();
             ms.pushPose();
             ms.translate(0, 51.5f, 0);

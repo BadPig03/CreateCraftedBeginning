@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.fluids;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -8,8 +9,11 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.neoforged.neoforge.fluids.BaseFlowingFluid;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class SlushVirtualFluid extends BaseFlowingFluid {
     private final boolean source;
 
@@ -19,42 +23,42 @@ public class SlushVirtualFluid extends BaseFlowingFluid {
     }
 
     @Contract("_ -> new")
-    public static @NotNull SlushVirtualFluid createSource(Properties properties) {
+    public static SlushVirtualFluid createSource(Properties properties) {
         return new SlushVirtualFluid(properties, true);
     }
 
     @Contract("_ -> new")
-    public static @NotNull SlushVirtualFluid createFlowing(Properties properties) {
+    public static SlushVirtualFluid createFlowing(Properties properties) {
         return new SlushVirtualFluid(properties, false);
     }
 
     @Override
-    public @NotNull Fluid getFlowing() {
+    public Fluid getFlowing() {
         return source ? super.getFlowing() : this;
     }
 
     @Override
-    public @NotNull Fluid getSource() {
+    public Fluid getSource() {
         return source ? this : super.getSource();
     }
 
     @Override
-    public @NotNull Item getBucket() {
+    public Item getBucket() {
         return Items.POWDER_SNOW_BUCKET;
     }
 
     @Override
-    protected @NotNull BlockState createLegacyBlock(@NotNull FluidState state) {
+    protected BlockState createLegacyBlock(FluidState state) {
         return Blocks.POWDER_SNOW.defaultBlockState();
     }
 
     @Override
-    public boolean isSource(@NotNull FluidState fluidState) {
+    public boolean isSource(FluidState fluidState) {
         return source;
     }
 
     @Override
-    public int getAmount(@NotNull FluidState fluidState) {
+    public int getAmount(FluidState fluidState) {
         return 0;
     }
 

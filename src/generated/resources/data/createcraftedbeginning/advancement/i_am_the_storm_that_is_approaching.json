@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:even_if_harder_than_obsidian",
+  "parent": "createcraftedbeginning:looks_like_the_weathers_clearing_up",
   "criteria": {
     "0": {
       "trigger": "createcraftedbeginning:i_am_the_storm_that_is_approaching_builtin"

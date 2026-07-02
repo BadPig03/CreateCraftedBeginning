@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.end.endcasing;
 
 import com.simibubi.create.content.kinetics.base.KineticBlock;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -14,26 +15,30 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class EndMechanicalBlock extends KineticBlock {
     public EndMechanicalBlock(Properties properties) {
         super(properties);
     }
 
     @Override
-    public int getLightEmission(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos) {
+    public int getLightEmission(BlockState state, BlockGetter level, BlockPos pos) {
         return 15;
     }
 
     @Override
-    public void setPlacedBy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState blockState, LivingEntity placer, @NotNull ItemStack stack) {
+    public void setPlacedBy(Level level, BlockPos pos, BlockState blockState, @Nullable LivingEntity placer, ItemStack stack) {
         super.setPlacedBy(level, pos, blockState, placer, stack);
         CCBAdvancementBehaviour.setPlacedBy(level, pos, placer);
     }
 
     @Override
-    public BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
+    public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState state = super.getStateForPlacement(context);
         if (state == null) {
             return null;

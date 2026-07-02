@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.teslaturbine;
 import net.createmod.catnip.data.Pair;
 import net.createmod.catnip.outliner.Outliner;
 import net.createmod.catnip.platform.CatnipServices;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -18,22 +19,22 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.data.CCBLang;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TeslaTurbineBlockItem extends BlockItem {
     private static final int COLOR_RED = 0xFFFF5D6C;
 
-    public TeslaTurbineBlockItem(Block block, @NotNull Properties properties) {
+    public TeslaTurbineBlockItem(Block block, Properties properties) {
         super(block, properties.rarity(Rarity.UNCOMMON));
     }
 
     @Override
-    public @NotNull InteractionResult place(@NotNull BlockPlaceContext context) {
+    public InteractionResult place(BlockPlaceContext context) {
         InteractionResult result = super.place(context);
-        if (result != InteractionResult.FAIL) {
-            return result;
-        }
-        if (!(getBlock() instanceof TeslaTurbineBlock turbine)) {
+        if (result != InteractionResult.FAIL || !(getBlock() instanceof TeslaTurbineBlock turbine)) {
             return result;
         }
 
@@ -49,7 +50,7 @@ public class TeslaTurbineBlockItem extends BlockItem {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public void showBounds(@NotNull BlockPlaceContext context) {
+    public void showBounds(BlockPlaceContext context) {
         if (!(getBlock() instanceof TeslaTurbineBlock turbine)) {
             return;
         }

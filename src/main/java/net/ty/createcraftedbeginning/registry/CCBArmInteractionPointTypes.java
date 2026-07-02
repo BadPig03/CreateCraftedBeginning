@@ -2,15 +2,21 @@ package net.ty.createcraftedbeginning.registry;
 
 import com.simibubi.create.api.registry.CreateBuiltInRegistries;
 import com.simibubi.create.content.kinetics.mechanicalArm.ArmInteractionPointType;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressInteractionPoint.ForgingPressType;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleInteractionPoint.ReactorKettleType;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberInteractionPoint.BreezeChamberType;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerInteractionPoint.BreezeCoolerType;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBArmInteractionPointTypes {
     private static final DeferredRegister<ArmInteractionPointType> TYPES = DeferredRegister.create(CreateBuiltInRegistries.ARM_INTERACTION_POINT_TYPE, CreateCraftedBeginning.MOD_ID);
@@ -18,6 +24,7 @@ public class CCBArmInteractionPointTypes {
     public static DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> BREEZE_COOLER = register("breeze_cooler", new BreezeCoolerType());
     public static DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> BREEZE_CHAMBER = register("breeze_chamber", new BreezeChamberType());
     public static DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> AIRTIGHT_REACTOR_KETTLE = register("airtight_reactor_kettle", new ReactorKettleType());
+    public static DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> AIRTIGHT_FORGING_PRESS = register("airtight_forging_press", new ForgingPressType());
 
     private static <T extends ArmInteractionPointType> @NotNull DeferredHolder<ArmInteractionPointType, T> register(String key, T type) {
         return TYPES.register(key, () -> type);

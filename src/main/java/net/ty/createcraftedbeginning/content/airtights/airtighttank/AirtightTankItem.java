@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighttank;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
@@ -16,20 +17,26 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.gas.gases.GasConnectivityHandler;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightTankItem extends BlockItem {
+    private static final String COMPOUND_KEY_CORE = "Core";
     private static final String COMPOUND_KEY_WIDTH = "Width";
     private static final String COMPOUND_KEY_HEIGHT = "Height";
     private static final String COMPOUND_KEY_LAST_KNOWN_POS = "LastKnownPos";
-    private static final String COMPOUND_KEY_CONTROLLER_POS = "ControllerPos";
+    private static final String COMPOUND_KEY_CONTROLLER_POS = "Controller";
+    private static final String COMPOUND_KEY_TANK_CONTENT = "TankContent";
 
     public AirtightTankItem(Block block, Properties properties) {
         super(block, properties);
     }
 
     @Override
-    public @NotNull InteractionResult place(@NotNull BlockPlaceContext context) {
+    public InteractionResult place(BlockPlaceContext context) {
         InteractionResult initialResult = super.place(context);
         if (!initialResult.consumesAction()) {
             return initialResult;
@@ -40,7 +47,7 @@ public class AirtightTankItem extends BlockItem {
     }
 
     @Override
-    protected boolean updateCustomBlockEntityTag(@NotNull BlockPos blockPos, @NotNull Level level, Player player, @NotNull ItemStack itemStack, @NotNull BlockState blockState) {
+    protected boolean updateCustomBlockEntityTag(BlockPos blockPos, Level level, @Nullable Player player, ItemStack itemStack, BlockState blockState) {
         MinecraftServer server = level.getServer();
         if (server == null) {
             return false;
@@ -53,12 +60,14 @@ public class AirtightTankItem extends BlockItem {
             compoundTag.remove(COMPOUND_KEY_HEIGHT);
             compoundTag.remove(COMPOUND_KEY_CONTROLLER_POS);
             compoundTag.remove(COMPOUND_KEY_LAST_KNOWN_POS);
+            compoundTag.remove(COMPOUND_KEY_CORE);
+            compoundTag.remove(COMPOUND_KEY_TANK_CONTENT);
             itemStack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(compoundTag));
         }
         return super.updateCustomBlockEntityTag(blockPos, level, player, itemStack, blockState);
     }
 
-    private void tryMultiPlace(@NotNull BlockPlaceContext context) {
+    private void tryMultiPlace(BlockPlaceContext context) {
         Player player = context.getPlayer();
         if (player == null || player.isShiftKeyDown()) {
             return;

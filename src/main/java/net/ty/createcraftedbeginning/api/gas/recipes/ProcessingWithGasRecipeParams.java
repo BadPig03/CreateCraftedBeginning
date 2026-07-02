@@ -7,6 +7,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.content.processing.recipe.ProcessingOutput;
 import com.simibubi.create.foundation.codec.CreateCodecs;
 import net.createmod.catnip.codecs.stream.CatnipStreamCodecBuilders;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -15,16 +16,18 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.SizedGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.reactorkettle.TemperatureCondition;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-@SuppressWarnings("unused")
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class ProcessingWithGasRecipeParams {
     public static MapCodec<ProcessingWithGasRecipeParams> CODEC = codec(ProcessingWithGasRecipeParams::new);
     public static StreamCodec<RegistryFriendlyByteBuf, ProcessingWithGasRecipeParams> STREAM_CODEC = streamCodec(ProcessingWithGasRecipeParams::new);
@@ -71,7 +74,7 @@ public class ProcessingWithGasRecipeParams {
         });
     }
 
-    protected final @NotNull List<Either<Either<SizedFluidIngredient, SizedGasIngredient>, Ingredient>> ingredients() {
+    protected final List<Either<Either<SizedFluidIngredient, SizedGasIngredient>, Ingredient>> ingredients() {
         List<Either<Either<SizedFluidIngredient, SizedGasIngredient>, Ingredient>> ingredients = new ArrayList<>(this.ingredients.size() + gasIngredients.size() + fluidIngredients.size());
         this.ingredients.forEach(ingredient -> ingredients.add(Either.right(ingredient)));
         fluidIngredients.forEach(ingredient -> ingredients.add(Either.left(Either.left(ingredient))));
@@ -79,7 +82,7 @@ public class ProcessingWithGasRecipeParams {
         return ingredients;
     }
 
-    protected final @NotNull List<Either<Either<FluidStack, GasStack>, ProcessingOutput>> results() {
+    protected final List<Either<Either<FluidStack, GasStack>, ProcessingOutput>> results() {
         List<Either<Either<FluidStack, GasStack>, ProcessingOutput>> results = new ArrayList<>(this.results.size() + gasResults.size() + fluidResults.size());
         this.results.forEach(result -> results.add(Either.right(result)));
         fluidResults.forEach(result -> results.add(Either.left(Either.left(result))));

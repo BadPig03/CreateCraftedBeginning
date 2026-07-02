@@ -16,6 +16,7 @@ import com.tterrag.registrate.util.nullness.NonNullFunction;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
 import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
@@ -34,7 +35,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.fluids.BaseFlowingFluid.Flowing;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorageType;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageType;
 import net.ty.createcraftedbeginning.content.fluids.AmethystSuspensionVirtualFluid;
 import net.ty.createcraftedbeginning.content.fluids.SlushVirtualFluid;
 import net.ty.createcraftedbeginning.registry.CCBRegistries;
@@ -42,12 +43,15 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
     private static final Map<RegistryEntry<?, ?>, DeferredHolder<CreativeModeTab, CreativeModeTab>> TAB_LOOKUP = Collections.synchronizedMap(new IdentityHashMap<>());
     private static final ResourceLocation SLUSH = CreateCraftedBeginning.asResource("fluid/slush");
@@ -62,7 +66,7 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
     }
 
     @Contract("_ -> new")
-    public static @NotNull CCBRegistrate create(String modId) {
+    public static CCBRegistrate create(String modId) {
         CCBRegistrate registrate = new CCBRegistrate(modId);
         CCBRegistrateRegistrationCallback.provideRegistrate(registrate);
         return registrate;
@@ -78,7 +82,7 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
     }
 
     @OnlyIn(Dist.CLIENT)
-    private static void registerBlockModel(Block entry, @NotNull Supplier<NonNullFunction<BakedModel, ? extends BakedModel>> func) {
+    private static void registerBlockModel(Block entry, Supplier<NonNullFunction<BakedModel, ? extends BakedModel>> func) {
         CreateClient.MODEL_SWAPPER.getCustomBlockModels().register(RegisteredObjectsHelper.getKeyOrThrow(entry), func.get());
     }
 
@@ -93,13 +97,13 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
     }
 
     @Override
-    public @NotNull CCBRegistrate registerEventListeners(@NotNull IEventBus bus) {
+    public CCBRegistrate registerEventListeners(IEventBus bus) {
         return super.registerEventListeners(bus);
     }
 
     @SuppressWarnings("ObjectEqualsCanBeEquality")
     @Override
-    protected <R, T extends R> @NotNull RegistryEntry<R, T> accept(@NotNull String name, @NotNull ResourceKey<? extends Registry<R>> type, @NotNull Builder<R, T, ?, ?> builder, @NotNull NonNullSupplier<? extends T> creator, @NotNull NonNullFunction<DeferredHolder<R, T>, ? extends RegistryEntry<R, T>> entryFactory) {
+    protected <R, T extends R> @NotNull RegistryEntry<R, T> accept(String name, ResourceKey<? extends Registry<R>> type, Builder<R, T, ?, ?> builder, NonNullSupplier<? extends T> creator, NonNullFunction<DeferredHolder<R, T>, ? extends RegistryEntry<R, T>> entryFactory) {
         RegistryEntry<R, T> entry = super.accept(name, type, builder, creator, entryFactory);
         if (type.equals(Registries.ITEM) && currentTooltipModifierFactory != null) {
             Function<Item, TooltipModifier> factory = currentTooltipModifierFactory;
@@ -116,22 +120,22 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
     }
 
     @Override
-    public <T extends Entity> @NotNull CCBEntityBuilder<T, CCBRegistrate> entity(@NotNull String name, @NotNull EntityFactory<T> factory, @NotNull MobCategory classification) {
+    public <T extends Entity> @NotNull CCBEntityBuilder<T, CCBRegistrate> entity(String name, EntityFactory<T> factory, MobCategory classification) {
         return entity(self(), name, factory, classification);
     }
 
     @Override
-    public <T extends Entity, P> @NotNull CCBEntityBuilder<T, P> entity(@NotNull P parent, @NotNull String name, @NotNull EntityFactory<T> factory, @NotNull MobCategory classification) {
+    public <T extends Entity, P> @NotNull CCBEntityBuilder<T, P> entity(P parent, String name, EntityFactory<T> factory, MobCategory classification) {
         return (CCBEntityBuilder<T, P>) entry(name, callback -> CCBEntityBuilder.create(this, parent, name, callback, factory, classification));
     }
 
     @Override
-    public <T extends BlockEntity> @NotNull CCBBlockEntityBuilder<T, CCBRegistrate> blockEntity(@NotNull String name, @NotNull BlockEntityFactory<T> factory) {
+    public <T extends BlockEntity> @NotNull CCBBlockEntityBuilder<T, CCBRegistrate> blockEntity(String name, BlockEntityFactory<T> factory) {
         return blockEntity(self(), name, factory);
     }
 
     @Override
-    public <T extends BlockEntity, P> @NotNull CCBBlockEntityBuilder<T, P> blockEntity(@NotNull P parent, @NotNull String name, @NotNull BlockEntityFactory<T> factory) {
+    public <T extends BlockEntity, P> @NotNull CCBBlockEntityBuilder<T, P> blockEntity(P parent, String name, BlockEntityFactory<T> factory) {
         return (CCBBlockEntityBuilder<T, P>) entry(name, callback -> CCBBlockEntityBuilder.create(this, parent, name, callback, factory));
     }
 

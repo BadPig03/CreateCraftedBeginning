@@ -1,75 +1,84 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades;
 
 import net.createmod.catnip.data.Couple;
+import net.createmod.catnip.platform.CatnipServices;
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.AirtightArmorsHandler;
-import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerConsumers;
-import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateElytraBoostPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
+import org.jetbrains.annotations.Unmodifiable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.List;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public enum ElytraUpgrade implements AirtightUpgrade {
     INSTANCE;
 
-    public static boolean canApply(@NotNull Player player, int flightTicks) {
+    public static float getBoostMultiplier(Player player) {
+        if (!player.isFallFlying()) {
+            return 0;
+        }
+
         ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
-        if (!chestplate.is(CCBItems.AIRTIGHT_CHESTPLATE) || !INSTANCE.isEnabled(chestplate) || !CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
-            return false;
+        if (!INSTANCE.canApply(player) || player.getCooldowns().isOnCooldown(chestplate.getItem())) {
+            return 0;
         }
 
-        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
-        if (gasContent.isEmpty()) {
-            return false;
+        Gas gasType = CanisterContainerSuppliers.getFirstAvailableGasContent(player).getGasType();
+        AirtightArmorsHandler armorsHandler = AirtightArmorsHandler.REGISTRY.get(gasType);
+        if (armorsHandler == null) {
+            return 0;
         }
 
-        int gasCost = INSTANCE.getGasCost(player);
-        if (gasCost < 0) {
-            return false;
+        return armorsHandler.getMultiplierForBoostingElytra();
+    }
+
+    public static void speedBoost(Player player, float multiplier) {
+        Vec3 pos = player.position();
+        Vec3 lookAngle = player.getLookAngle().scale(0.85f * multiplier);
+        Vec3 movement = player.getDeltaMovement().scale(0.75f * multiplier);
+        player.setDeltaMovement(movement.add(lookAngle));
+        player.level().addParticle(ParticleTypes.GUST_EMITTER_SMALL, pos.x, pos.y, pos.z, 0, 0, 0);
+        player.playSound(CCBSoundEvents.AIRTIGHT_JETPACK_LAUNCH.getMainEvent(), 1, 0.8f);
+        CatnipServices.NETWORK.sendToServer(new AirtightChestplateElytraBoostPacket(multiplier));
+    }
+
+    @Override
+    public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
+        int gasCost = getGasConsumptionPerSecond(player, item);
+        if (gasCost == 0) {
+            return List.of(CCBLang.translateDirect("gui.gas_consumption.supply_require_only"));
         }
-
-        Level level = player.level();
-        return CanisterContainerConsumers.interactContainer(player, gasContent.getGasType(), gasCost, () -> !level.isClientSide && flightTicks % 20 == 0);
+        return List.of(CCBLang.translateDirect("gui.gas_consumption_per_second", gasCost));
     }
 
     @Override
-    public int getIndex() {
-        return 0;
+    public boolean canApply(Player player) {
+        return isActive(player, player.getItemBySlot(EquipmentSlot.CHEST));
     }
 
     @Override
-    public @NotNull ResourceLocation getID() {
-        return CreateCraftedBeginning.asResource("elytra");
-    }
-
-    @Override
-    public Item getUpgradeItem() {
-        return Items.ELYTRA;
-    }
-
-    @Override
-    public @NotNull Couple<Integer> getOffset() {
-        return Couple.create(36, 31);
-    }
-
-    @Override
-    public CCBIcons getIcon() {
-        return CCBIcons.I_ELYTRA;
+    public boolean meetsConditions(Player player, ItemStack item) {
+        return true;
     }
 
     @Override
@@ -78,47 +87,51 @@ public enum ElytraUpgrade implements AirtightUpgrade {
     }
 
     @Override
-    public @NotNull Component getTitle() {
-        return CCBLang.translateDirect("gui.airtight_chestplate.elytra_upgrade");
+    public CCBIcons getIcon() {
+        return CCBIcons.I_ELYTRA;
     }
 
     @Override
-    public @NotNull Component getDescription() {
+    public Component getDescription() {
         return CCBLang.translateDirect("gui.airtight_chestplate.elytra_upgrade.description");
     }
 
     @Override
-    public @Nullable Component getGasCostComponent(Player player) {
-        int gasCost = getGasCost(player);
-        if (gasCost < 0) {
-            return null;
-        }
-
-        return CCBLang.translateDirect("gui.gas_cost_per_second", gasCost);
+    public Component getTitle() {
+        return CCBLang.translateDirect("gui.airtight_chestplate.elytra_upgrade");
     }
 
     @Override
-    public int getGasCost(Player player) {
-        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
-        if (gasContent.isEmpty()) {
-            return -1;
-        }
-
-        Gas gasType = gasContent.getGasType();
-        AirtightArmorsHandler armorsHandler = AirtightArmorsHandler.REGISTRY.get(gasType);
-        if (armorsHandler == null) {
-            return -1;
-        }
-
-        return Mth.ceil(CCBConfig.server().equipments.elytraGasCost.get() * armorsHandler.getConsumptionMultiplier()[1]);
+    public Couple<Integer> getOffset() {
+        return Couple.create(36, 31);
     }
 
     @Override
-    public boolean canApply(@NotNull Player player) {
-        return false;
+    public int getGasConsumptionPerSecond(Player player, ItemStack item) {
+        return CCBConfig.server().equipments.elytraConsumption.get();
+    }
+
+    @Override
+    public int getIndex() {
+        return 0;
+    }
+
+    @Override
+    public Item getUpgradeItem() {
+        return Items.ELYTRA;
+    }
+
+    @Override
+    public ResourceLocation getID() {
+        return CreateCraftedBeginning.asResource("elytra");
     }
 
     @Override
     public void applyEffect(Player player) {
+    }
+
+    @Override
+    public boolean isActive(Player player, ItemStack item) {
+        return item.is(CCBItems.AIRTIGHT_CHESTPLATE) && AirtightUpgrade.super.isActive(player, item);
     }
 }

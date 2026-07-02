@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.api.gas.recipes;
 
 import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
@@ -9,11 +10,13 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
-@SuppressWarnings("unused")
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class ProcessingWithGasRecipeGen<P extends ProcessingWithGasRecipeParams, R extends ProcessingWithGasRecipe<?, P>, B extends ProcessingWithGasRecipeBuilder<P, R, B>> extends BaseRecipeProviderWithGas {
     public ProcessingWithGasRecipeGen(PackOutput output, CompletableFuture<Provider> registries, String defaultNamespace) {
         super(output, registries, defaultNamespace);

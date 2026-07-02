@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.recipe;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
@@ -8,20 +9,22 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.SizedGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
 import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class ResidueGenerationRecipe extends StandardProcessingWithGasRecipe<SingleRecipeInput> {
     public ResidueGenerationRecipe(ProcessingWithGasRecipeParams params) {
         super(CCBRecipeTypes.RESIDUE_GENERATION, params);
     }
 
-    public static FluidStack getRequiredFluid(@NotNull Level level, Gas gasType) {
+    public static FluidStack getRequiredFluid(Level level, Gas gasType) {
         List<RecipeHolder<ResidueGenerationRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.RESIDUE_GENERATION.getType());
         for (RecipeHolder<ResidueGenerationRecipe> holder : recipes) {
             ResidueGenerationRecipe recipe = holder.value();
@@ -34,7 +37,7 @@ public class ResidueGenerationRecipe extends StandardProcessingWithGasRecipe<Sin
         return FluidStack.EMPTY;
     }
 
-    public static ItemStack getRequiredItem(@NotNull Level level, Gas gasType) {
+    public static ItemStack getRequiredItem(Level level, Gas gasType) {
         List<RecipeHolder<ResidueGenerationRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.RESIDUE_GENERATION.getType());
         for (RecipeHolder<ResidueGenerationRecipe> holder : recipes) {
             ResidueGenerationRecipe recipe = holder.value();
@@ -68,7 +71,7 @@ public class ResidueGenerationRecipe extends StandardProcessingWithGasRecipe<Sin
     }
 
     @Override
-    public boolean matches(@NotNull SingleRecipeInput input, @NotNull Level level) {
+    public boolean matches(SingleRecipeInput input, Level level) {
         return true;
     }
 

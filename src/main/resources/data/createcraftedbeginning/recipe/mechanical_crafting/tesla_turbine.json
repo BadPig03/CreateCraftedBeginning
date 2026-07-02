@@ -12,14 +12,14 @@
     "C": {
       "item": "minecraft:iron_bars"
     },
-    "S": {
+    "D": {
       "item": "create:shaft"
     }
   },
   "pattern": [
     "BAAAB",
     "ABCBA",
-    "ACSCA",
+    "ACDCA",
     "ABCBA",
     "BAAAB"
   ],

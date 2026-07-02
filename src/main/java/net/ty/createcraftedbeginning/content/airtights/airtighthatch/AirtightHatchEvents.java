@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighthatch;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
@@ -11,16 +12,19 @@ import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.IAirtightComponent;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock.CanisterType;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
 public class AirtightHatchEvents {
     @SubscribeEvent(priority = EventPriority.HIGH)
-    public static void useOnItemHatchIgnoresSneak(@NotNull RightClickBlock event) {
+    public static void useOnItemHatchIgnoresSneak(RightClickBlock event) {
         if (event.getEntity().isShiftKeyDown()) {
             return;
         }

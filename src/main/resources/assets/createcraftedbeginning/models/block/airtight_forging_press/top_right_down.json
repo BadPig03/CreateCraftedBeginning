@@ -1,0 +1,46 @@
+{
+	"format_version": "1.21.6",
+	"credit": "Made with Blockbench",
+	"render_type": "minecraft:cutout_mipped",
+	"texture_size": [32, 32],
+	"textures": {
+		"1": "createcraftedbeginning:block/airtight_forging_press/side",
+		"2": "createcraftedbeginning:block/airtight_forging_press/top_inner",
+		"3": "createcraftedbeginning:block/airtight_forging_press/top_outer",
+		"particle": "createcraftedbeginning:block/airtight_tank/top"
+	},
+	"elements": [
+		{
+			"from": [0, 2, 0],
+			"to": [16, 16, 16],
+			"faces": {
+				"east": {"uv": [0, 0, 4, 3.5], "texture": "#1"},
+				"south": {"uv": [8, 0, 12, 3.5], "texture": "#1"},
+				"up": {"uv": [8, 8, 12, 12], "texture": "#3"},
+				"down": {"uv": [8, 0, 12, 4], "texture": "#2"}
+			}
+		},
+		{
+			"from": [5, 0, 5],
+			"to": [15, 1, 15],
+			"faces": {
+				"north": {"uv": [13.5, 2.75, 16, 3], "texture": "#1"},
+				"east": {"uv": [13.5, 2.75, 16, 3], "texture": "#1"},
+				"south": {"uv": [13.5, 2.75, 16, 3], "texture": "#1"},
+				"west": {"uv": [13.5, 2.75, 16, 3], "texture": "#1"},
+				"up": {"uv": [13.5, 0, 16, 2.5], "texture": "#1"},
+				"down": {"uv": [13.5, 0, 16, 2.5], "texture": "#1"}
+			}
+		},
+		{
+			"from": [6, 0, 6],
+			"to": [14, 2, 14],
+			"faces": {
+				"north": {"uv": [13.75, 2.5, 15.75, 3], "texture": "#1"},
+				"east": {"uv": [13.75, 2.5, 15.75, 3], "texture": "#1"},
+				"south": {"uv": [13.75, 2.5, 15.75, 3], "texture": "#1"},
+				"west": {"uv": [13.75, 2.5, 15.75, 3], "texture": "#1"}
+			}
+		}
+	]
+}

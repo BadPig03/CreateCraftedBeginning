@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.api.gas.gases;
 
 import com.mojang.serialization.Codec;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -21,13 +22,15 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 import net.ty.createcraftedbeginning.registry.CCBRegistries;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class Gas {
     public static final Codec<Holder<Gas>> HOLDER_CODEC = CCBGasRegistries.GAS_REGISTRY.holderByNameCodec();
@@ -47,7 +50,7 @@ public class Gas {
     @Nullable
     private String translationKey;
 
-    public Gas(@NotNull GasBuilder builder) {
+    public Gas(GasBuilder builder) {
         iconLocation = builder.getTexture();
         tint = builder.getTint();
         inflation = builder.getInflation();
@@ -56,11 +59,11 @@ public class Gas {
         tags = builder.getTags() != null ? Set.copyOf(builder.getTags()) : Collections.emptySet();
     }
 
-    public static Optional<Holder<Gas>> parseHolder(@NotNull Provider lookupProvider, Tag tag) {
+    public static Optional<Holder<Gas>> parseHolder(Provider lookupProvider, Tag tag) {
         return HOLDER_CODEC.parse(lookupProvider.createSerializationContext(NbtOps.INSTANCE), tag).resultOrPartial(error -> CreateCraftedBeginning.LOGGER.error("Tried to load invalid gas: '{}'", error));
     }
 
-    public static Holder<Gas> parseOptionalHolder(Provider lookupProvider, @NotNull String tag) {
+    public static Holder<Gas> parseOptionalHolder(Provider lookupProvider, String tag) {
         if (tag.isEmpty()) {
             return EMPTY_GAS_HOLDER;
         }
@@ -79,7 +82,7 @@ public class Gas {
         return reference.isPresent() ? reference.get() : EMPTY_GAS_HOLDER;
     }
 
-    public static TextureAtlasSprite getGasTexture(@NotNull Holder<Gas> holder) {
+    public static TextureAtlasSprite getGasTexture(Holder<Gas> holder) {
         ResourceLocation sprite = holder.value().iconLocation;
         if (sprite == null) {
             sprite = MissingTextureAtlasSprite.getLocation();
@@ -87,11 +90,7 @@ public class Gas {
         return Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(sprite);
     }
 
-    public static @NotNull Gas getGasTypeByName(ResourceLocation location) {
-        if (location == null) {
-            return EMPTY_GAS_HOLDER.value();
-        }
-
+    public static Gas getGasTypeByName(ResourceLocation location) {
         return CCBGasRegistries.GAS_REGISTRY.get(location);
     }
 

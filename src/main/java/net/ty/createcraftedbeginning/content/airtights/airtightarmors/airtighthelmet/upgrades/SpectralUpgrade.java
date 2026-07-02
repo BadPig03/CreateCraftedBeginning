@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.upgrades;
 
 import net.createmod.catnip.data.Couple;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -12,76 +13,40 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerSuppliers;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public enum SpectralUpgrade implements AirtightUpgrade {
     INSTANCE;
 
     private static final int RADIUS = 24;
-    private static final int DURATION_LIMIT = 230;
-    private static final int DURATION_THRESHOLD = 10;
+    private static final int DURATION_THRESHOLD = 30;
 
-    private static @NotNull @Unmodifiable List<LivingEntity> getNearbyEntities(@NotNull Player player) {
+    @Override
+    public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
+        return List.of(CCBLang.translateDirect("gui.gas_consumption.supply_require_only"));
+    }
+
+    @Override
+    public boolean canApply(Player player) {
+        return isActive(player, player.getItemBySlot(EquipmentSlot.HEAD));
+    }
+
+    @Override
+    public boolean meetsConditions(Player player, ItemStack item) {
         BlockPos pos = player.getOnPos();
-        return player.level().getEntitiesOfClass(LivingEntity.class, new AABB(pos).inflate(RADIUS)).stream().filter(entity -> !(entity instanceof Player) && entity.isAlive() && !entity.isRemoved() && pos.closerToCenterThan(entity.position(), RADIUS)).toList();
-    }
-
-    private static boolean canApply(@NotNull Player player, @NotNull LivingEntity entity) {
-        MobEffectInstance existingEffect = entity.getEffect(MobEffects.GLOWING);
-        if (existingEffect != null && (existingEffect.getAmplifier() != 0 || !existingEffect.endsWithin(DURATION_THRESHOLD))) {
-            return false;
-        }
-
-        ItemStack helmet = player.getItemBySlot(EquipmentSlot.HEAD);
-        if (!helmet.is(CCBItems.AIRTIGHT_HELMET) || !INSTANCE.isEnabled(helmet) || !CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
-            return false;
-        }
-
-        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
-        if (gasContent.isEmpty() || getNearbyEntities(player).isEmpty()) {
-            return false;
-        }
-
-        int gasCost = INSTANCE.getGasCost(player);
-        return gasCost >= 0;
-    }
-
-    @Override
-    public int getIndex() {
-        return 4;
-    }
-
-    @Override
-    public @NotNull ResourceLocation getID() {
-        return CreateCraftedBeginning.asResource("spectral");
-    }
-
-    @Override
-    public Item getUpgradeItem() {
-        return Items.SPECTRAL_ARROW;
-    }
-
-    @Override
-    public @NotNull Couple<Integer> getOffset() {
-        return Couple.create(132, 55);
-    }
-
-    @Override
-    public CCBIcons getIcon() {
-        return CCBIcons.I_SPECTRAL;
+        List<LivingEntity> nearbyEntities = player.level().getEntitiesOfClass(LivingEntity.class, new AABB(pos).inflate(RADIUS)).stream().filter(e -> !(e instanceof Player) && e.isAlive() && !e.isRemoved() && pos.closerToCenterThan(e.position(), RADIUS)).toList();
+        return !nearbyEntities.isEmpty();
     }
 
     @Override
@@ -90,63 +55,65 @@ public enum SpectralUpgrade implements AirtightUpgrade {
     }
 
     @Override
-    public @NotNull Component getTitle() {
-        return CCBLang.translateDirect("gui.airtight_helmet.spectral_upgrade");
+    public CCBIcons getIcon() {
+        return CCBIcons.I_SPECTRAL;
     }
 
     @Override
-    public @NotNull Component getDescription() {
+    public Component getDescription() {
         return CCBLang.translateDirect("gui.airtight_helmet.spectral_upgrade.description", RADIUS);
     }
 
     @Override
-    public @Nullable Component getGasCostComponent(Player player) {
-        int gasCost = getGasCost(player);
-        if (gasCost < 0) {
-            return null;
-        }
-
-        return CCBLang.translateDirect("gui.gas_cost_per_second", gasCost);
+    public Component getTitle() {
+        return CCBLang.translateDirect("gui.airtight_helmet.spectral_upgrade");
     }
 
     @Override
-    public int getGasCost(Player player) {
-        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
-        if (gasContent.isEmpty()) {
-            return -1;
-        }
+    public Couple<Integer> getOffset() {
+        return Couple.create(132, 55);
+    }
 
+    @Override
+    public int getGasConsumptionPerSecond(Player player, ItemStack item) {
         return 0;
     }
 
     @Override
-    public boolean canApply(@NotNull Player player) {
-        Level level = player.level();
-        if (level.getGameTime() % 10 != 0) {
-            return false;
-        }
-
-        ItemStack helmet = player.getItemBySlot(EquipmentSlot.HEAD);
-        if (!helmet.is(CCBItems.AIRTIGHT_HELMET) || !isEnabled(helmet) || !CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
-            return false;
-        }
-
-        List<LivingEntity> nearbyEntities = getNearbyEntities(player);
-        if (nearbyEntities.isEmpty()) {
-            return false;
-        }
-
-        nearbyEntities.forEach(entity -> {
-            if (!canApply(player, entity)) {
-                return;
-            }
-
-            entity.addEffect(new MobEffectInstance(MobEffects.GLOWING, DURATION_LIMIT, 0));
-        });
-        return false;
+    public int getIndex() {
+        return 4;
     }
 
     @Override
-    public void applyEffect(@NotNull Player player) {
+    public Item getUpgradeItem() {
+        return Items.SPECTRAL_ARROW;
+    }
+
+    @Override
+    public ResourceLocation getID() {
+        return CreateCraftedBeginning.asResource("spectral");
+    }
+
+    @Override
+    public void applyEffect(Player player) {
+        BlockPos pos = player.getOnPos();
+        List<LivingEntity> nearbyEntities = player.level().getEntitiesOfClass(LivingEntity.class, new AABB(pos).inflate(RADIUS)).stream().filter(e -> !(e instanceof Player) && e.isAlive() && !e.isRemoved() && pos.closerToCenterThan(e.position(), RADIUS)).toList();
+        if (nearbyEntities.isEmpty()) {
+            return;
+        }
+
+        nearbyEntities.forEach(entity -> {
+            MobEffectInstance existingEffect = entity.getEffect(MobEffects.GLOWING);
+            if (existingEffect != null && (existingEffect.getAmplifier() != 0 || !existingEffect.endsWithin(DURATION_THRESHOLD))) {
+                return;
+            }
+
+            entity.addEffect(new MobEffectInstance(MobEffects.GLOWING, DURATION_THRESHOLD, 0));
+        });
+    }
+
+    @Override
+    public boolean isActive(Player player, ItemStack item) {
+        return item.is(CCBItems.AIRTIGHT_HELMET) && AirtightUpgrade.super.isActive(player, item);
     }
 }

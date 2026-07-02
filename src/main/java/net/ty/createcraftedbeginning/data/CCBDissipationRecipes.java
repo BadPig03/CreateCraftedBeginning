@@ -1,12 +1,16 @@
 package net.ty.createcraftedbeginning.data;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.PackOutput;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.recipe.DissipationRecipeGen;
+import net.ty.createcraftedbeginning.recipe.generators.DissipationRecipeGen;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.concurrent.CompletableFuture;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBDissipationRecipes extends DissipationRecipeGen {
     GeneratedRecipe NATURAL = create("natural", b -> b.require(CCBGases.ENERGIZED_NATURAL_AIR.get(), 1).output(CCBGases.NATURAL_AIR.get(), 1));

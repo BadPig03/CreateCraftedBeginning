@@ -2,15 +2,13 @@ package net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighth
 
 import com.simibubi.create.content.equipment.goggles.GogglesItem;
 import com.simibubi.create.foundation.item.TooltipHelper;
-import net.createmod.catnip.lang.FontHelper;
+import net.createmod.catnip.lang.FontHelper.Palette;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.Holder;
-import net.minecraft.core.HolderLookup.RegistryLookup;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.MenuProvider;
@@ -20,76 +18,47 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.minecraft.world.item.enchantment.ItemEnchantments.Mutable;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.AirtightArmorsHandler;
-import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerClients;
-import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerClients;
+import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsUtils;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightBaseArmorItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.upgrades.GogglesUpgrade;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.upgrades.WaterBreathingUpgrade;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightHelmetItem extends AirtightBaseArmorItem implements MenuProvider {
     static {
         GogglesItem.addIsWearingPredicate(GogglesUpgrade.INSTANCE::canApply);
     }
 
-    public AirtightHelmetItem(@NotNull Properties properties) {
+    public AirtightHelmetItem(Properties properties) {
         super(Type.HELMET, properties);
     }
 
     @Override
-    public boolean supportsEnchantment(@NotNull ItemStack helmet, @NotNull Holder<Enchantment> enchantment) {
-        return enchantment.is(EnchantmentTags.ARMOR_EXCLUSIVE) || enchantment.is(EnchantmentTags.CURSE);
-    }
-
-    @Override
-    public int getEnchantmentLevel(@NotNull ItemStack helmet, @NotNull Holder<Enchantment> enchantment) {
-        if (!enchantment.is(Enchantments.AQUA_AFFINITY) || !WaterBreathingUpgrade.INSTANCE.isEnabled(helmet)) {
-            return super.getEnchantmentLevel(helmet, enchantment);
-        }
-
-        return 1;
-    }
-
-    @Override
-    public @NotNull ItemEnchantments getAllEnchantments(@NotNull ItemStack helmet, @NotNull RegistryLookup<Enchantment> lookup) {
-        ItemEnchantments enchantments = super.getAllEnchantments(helmet, lookup);
-        if (!WaterBreathingUpgrade.INSTANCE.isEnabled(helmet)) {
-            return enchantments;
-        }
-
-        Mutable enchants = new Mutable(enchantments);
-        enchants.set(lookup.getOrThrow(Enchantments.AQUA_AFFINITY), 1);
-        return enchants.toImmutable();
-    }
-
-    @Override
-    public boolean isEnderMask(@NotNull ItemStack helmet, @NotNull Player player, @NotNull EnderMan endermanEntity) {
+    public boolean isEnderMask(ItemStack helmet, Player player, EnderMan endermanEntity) {
         return helmet.is(CCBItems.AIRTIGHT_HELMET);
     }
 
     @Override
-    public boolean isDamageable(@NotNull ItemStack helmet) {
+    public boolean isDamageable(ItemStack helmet) {
         return false;
     }
 
     @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         if (!player.isShiftKeyDown()) {
             return super.use(level, player, hand);
         }
@@ -105,23 +74,23 @@ public class AirtightHelmetItem extends AirtightBaseArmorItem implements MenuPro
     }
 
     @Override
-    public boolean isBarVisible(@NotNull ItemStack helmet) {
+    public boolean isBarVisible(ItemStack helmet) {
         return CanisterContainerClients.isBarVisible();
     }
 
     @Override
-    public int getBarWidth(@NotNull ItemStack helmet) {
+    public int getBarWidth(ItemStack helmet) {
         return CanisterContainerClients.getBarWidth();
     }
 
     @Override
-    public int getBarColor(@NotNull ItemStack helmet) {
+    public int getBarColor(ItemStack helmet) {
         return CanisterContainerClients.getBarColor();
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(@NotNull ItemStack helmet, @NotNull TooltipContext context, @NotNull List<Component> tooltip, @NotNull TooltipFlag tooltipFlag) {
+    public void appendHoverText(ItemStack helmet, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null || !CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
             return;
@@ -129,7 +98,7 @@ public class AirtightHelmetItem extends AirtightBaseArmorItem implements MenuPro
 
         if (AirtightArmorsUtils.isEntireArmoredUp(player) && tooltipFlag.hasShiftDown()) {
             tooltip.add(CCBLang.translate("gui.tooltips.airtight_armors.fire_immune_condition").style(ChatFormatting.GRAY).component());
-            tooltip.addAll(TooltipHelper.cutTextComponent(CCBLang.translateDirect("gui.tooltips.airtight_armors.fire_immune_behaviour"), FontHelper.Palette.STANDARD_CREATE));
+            tooltip.addAll(TooltipHelper.cutTextComponent(CCBLang.translateDirect("gui.tooltips.airtight_armors.fire_immune_behaviour"), Palette.STANDARD_CREATE));
         }
         GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
         if (gasContent.isEmpty()) {
@@ -147,12 +116,17 @@ public class AirtightHelmetItem extends AirtightBaseArmorItem implements MenuPro
     }
 
     @Override
-    public @NotNull Component getDisplayName() {
+    public boolean isEnchantable(ItemStack helmet) {
+        return true;
+    }
+
+    @Override
+    public Component getDisplayName() {
         return getDescription();
     }
 
     @Override
-    public @Nullable AbstractContainerMenu createMenu(int containerId, @NotNull Inventory playerInventory, @NotNull Player player) {
+    public @Nullable AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
         return new AirtightHelmetMenu(CCBMenuTypes.AIRTIGHT_HELMET_MENU.get(), containerId, playerInventory, player.getMainHandItem());
     }
 }

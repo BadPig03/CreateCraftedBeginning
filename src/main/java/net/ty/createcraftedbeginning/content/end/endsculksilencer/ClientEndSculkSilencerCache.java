@@ -1,12 +1,16 @@
 package net.ty.createcraftedbeginning.content.end.endsculksilencer;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public enum ClientEndSculkSilencerCache {
     INSTANCE;
 

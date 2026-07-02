@@ -2,18 +2,21 @@ package net.ty.createcraftedbeginning.api.outliner;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.createmod.catnip.render.SuperRenderTypeBuffer;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.api.outliner.CCBOutline.CCBOutlineParams;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 
-@SuppressWarnings("unused")
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public enum CCBOutliner {
     INSTANCE;
 
@@ -76,9 +79,9 @@ public enum CCBOutliner {
                 float currentAlpha = 1 + entry.ticksTillRemoval / fadeTicks;
                 float alpha = Mth.lerp(pt, lastAlpha, currentAlpha);
                 params.alpha = (float) Math.pow(alpha, 3);
-				if (params.alpha < 0.125f) {
-					return;
-				}
+                if (params.alpha < 0.125f) {
+                    return;
+                }
             }
             outline.render(ms, buffer, camera, pt);
         });

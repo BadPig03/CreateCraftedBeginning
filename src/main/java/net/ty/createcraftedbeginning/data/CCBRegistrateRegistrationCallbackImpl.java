@@ -2,21 +2,24 @@ package net.ty.createcraftedbeginning.data;
 
 import com.mojang.datafixers.util.Either;
 import com.tterrag.registrate.util.nullness.NonNullConsumer;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBRegistrateRegistrationCallbackImpl {
     private static final Map<String, Either<List<CallbackImpl<?, ?>>, CCBRegistrate>> CALLBACKS = new HashMap<>();
 
-    public static void provideRegistrate(@NotNull CCBRegistrate registrate) {
+    public static void provideRegistrate(CCBRegistrate registrate) {
         synchronized (CALLBACKS) {
             String modId = registrate.getModid();
             Either<List<CallbackImpl<?, ?>>, CCBRegistrate> either = CALLBACKS.remove(modId);
@@ -43,7 +46,7 @@ public class CCBRegistrateRegistrationCallbackImpl {
     }
 
     private record CallbackImpl<R, T extends R>(ResourceKey<? extends Registry<R>> registry, ResourceLocation id, NonNullConsumer<? super T> callback) {
-        public void addToRegistrate(@NotNull CCBRegistrate registrate) {
+        public void addToRegistrate(CCBRegistrate registrate) {
             registrate.<R, T>addRegisterCallback(id.getPath(), registry, callback);
         }
     }

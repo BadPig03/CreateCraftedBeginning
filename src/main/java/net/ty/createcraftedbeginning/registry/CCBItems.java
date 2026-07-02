@@ -1,8 +1,10 @@
 package net.ty.createcraftedbeginning.registry;
 
+import com.simibubi.create.AllTags.AllItemTags;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyItem;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.tterrag.registrate.util.entry.ItemEntry;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -44,6 +46,10 @@ import net.ty.createcraftedbeginning.data.CCBGases;
 import net.ty.createcraftedbeginning.data.CCBRegistrate;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBItems {
     private static final CCBRegistrate CCB_REGISTRATE = CreateCraftedBeginning.registrate().setCreativeTab(CCBCreativeTabs.BASE_CREATIVE_TAB);
@@ -51,12 +57,11 @@ public class CCBItems {
     public static final ItemEntry<Item> POWDERED_AMETHYST = CCB_REGISTRATE.item("powdered_amethyst", Item::new).tag(CCBItemTags.DUSTS.tag).tag(CCBItemTags.DUSTS_AMETHYST.tag).register();
     public static final ItemEntry<Item> AMETHYST_CRYSTAL_SHEET = CCB_REGISTRATE.item("amethyst_crystal_sheet", Item::new).tag(CCBItemTags.PLATES_AMETHYST_CRYSTAL.tag).register();
 
-    public static final ItemEntry<Item> OBSIDIAN_CHUNK = CCB_REGISTRATE.item("obsidian_chunk", Item::new).register();
+    public static final ItemEntry<Item> OBSIDIAN_CHUNK = CCB_REGISTRATE.item("obsidian_chunk", Item::new).tag(CCBItemTags.CHUNKS.tag).register();
     public static final ItemEntry<Item> OBSIDIAN_BRICK = CCB_REGISTRATE.item("obsidian_brick", Item::new).tag(CCBItemTags.BRICKS.tag).tag(CCBItemTags.BRICKS_OBSIDIAN.tag).register();
-    public static final ItemEntry<Item> CRYING_OBSIDIAN_CHUNK = CCB_REGISTRATE.item("crying_obsidian_chunk", Item::new).register();
-
-    public static final ItemEntry<Item> POWDERED_CRYING_OBSIDIAN = CCB_REGISTRATE.item("powdered_crying_obsidian", Item::new).tag(CCBItemTags.DUSTS.tag).tag(CCBItemTags.DUSTS_CRYING_OBSIDIAN.tag).register();
+    public static final ItemEntry<Item> CRYING_OBSIDIAN_CHUNK = CCB_REGISTRATE.item("crying_obsidian_chunk", Item::new).tag(CCBItemTags.CHUNKS.tag).register();
     public static final ItemEntry<Item> CRYING_OBSIDIAN_BRICK = CCB_REGISTRATE.item("crying_obsidian_brick", Item::new).tag(CCBItemTags.BRICKS.tag).tag(CCBItemTags.BRICKS_CRYING_OBSIDIAN.tag).register();
+    public static final ItemEntry<Item> POWDERED_CRYING_OBSIDIAN = CCB_REGISTRATE.item("powdered_crying_obsidian", Item::new).tag(CCBItemTags.DUSTS.tag).tag(CCBItemTags.DUSTS_CRYING_OBSIDIAN.tag).register();
 
     public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_SHEET = CCB_REGISTRATE.item("incomplete_airtight_sheet", SequencedAssemblyItem::new).properties(Properties::fireResistant).register();
     public static final ItemEntry<Item> AIRTIGHT_SHEET = CCB_REGISTRATE.item("airtight_sheet", Item::new).properties(Properties::fireResistant).register();
@@ -68,7 +73,7 @@ public class CCBItems {
     public static final ItemEntry<GasFilterItem> GAS_FILTER = CCB_REGISTRATE.item("gas_filter", GasFilterItem::new).register();
 
     public static final ItemEntry<GasCanisterBlockItem> GAS_CANISTER_PLACEABLE = CCB_REGISTRATE.item("gas_canister_placeable", p -> new GasCanisterBlockItem(CCBBlocks.GAS_CANISTER_BLOCK.get(), CCBItems.GAS_CANISTER::get, p)).model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/gas_canister"))).register();
-    public static final ItemEntry<GasCanisterItem> GAS_CANISTER = CCB_REGISTRATE.item("gas_canister", p -> new GasCanisterItem(p, GAS_CANISTER_PLACEABLE)).properties(p -> p.stacksTo(1).fireResistant()).register();
+    public static final ItemEntry<GasCanisterItem> GAS_CANISTER = CCB_REGISTRATE.item("gas_canister", p -> new GasCanisterItem(p, GAS_CANISTER_PLACEABLE)).properties(p -> p.stacksTo(1).fireResistant()).tag(Items.ENCHANTABLES, CCBItemTags.GAS_CANISTER_ENCHANTABLE.tag, AllItemTags.PRESSURIZED_AIR_SOURCES.tag, ItemTags.VANISHING_ENCHANTABLE).register();
 
     public static final ItemEntry<CreativeGasCanisterBlockItem> CREATIVE_GAS_CANISTER_PLACEABLE = CCB_REGISTRATE.item("creative_gas_canister_placeable", p -> new CreativeGasCanisterBlockItem(CCBBlocks.CREATIVE_GAS_CANISTER_BLOCK.get(), CCBItems.CREATIVE_GAS_CANISTER::get, p)).model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/creative_gas_canister"))).register();
     public static final ItemEntry<CreativeGasCanisterItem> CREATIVE_GAS_CANISTER = CCB_REGISTRATE.item("creative_gas_canister", p -> new CreativeGasCanisterItem(p, CREATIVE_GAS_CANISTER_PLACEABLE)).properties(p -> p.stacksTo(1).fireResistant().rarity(Rarity.EPIC)).register();
@@ -84,25 +89,25 @@ public class CCBItems {
     public static final ItemEntry<Item> TESLA_TURBINE_ROTOR = CCB_REGISTRATE.item("tesla_turbine_rotor", Item::new).properties(p -> p.stacksTo(16).rarity(Rarity.UNCOMMON).fireResistant()).register();
 
     public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_CANNON = CCB_REGISTRATE.item("incomplete_airtight_cannon", SequencedAssemblyItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).register();
-    public static final ItemEntry<AirtightCannonItem> AIRTIGHT_CANNON = CCB_REGISTRATE.item("airtight_cannon", AirtightCannonItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).model(AssetLookup.itemModelWithPartials()).tag(Items.ENCHANTABLES).register();
+    public static final ItemEntry<AirtightCannonItem> AIRTIGHT_CANNON = CCB_REGISTRATE.item("airtight_cannon", AirtightCannonItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).model(AssetLookup.itemModelWithPartials()).tag(Items.ENCHANTABLES, ItemTags.BOW_ENCHANTABLE, ItemTags.CROSSBOW_ENCHANTABLE, ItemTags.VANISHING_ENCHANTABLE).register();
 
     public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_EXTEND_ARM = CCB_REGISTRATE.item("incomplete_airtight_extend_arm", SequencedAssemblyItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).register();
     public static final ItemEntry<AirtightExtendArmItem> AIRTIGHT_EXTEND_ARM = CCB_REGISTRATE.item("airtight_extend_arm", AirtightExtendArmItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).model(AssetLookup.itemModelWithPartials()).register();
 
     public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_HANDHELD_DRILL = CCB_REGISTRATE.item("incomplete_airtight_handheld_drill", SequencedAssemblyItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).register();
-    public static final ItemEntry<AirtightHandheldDrillItem> AIRTIGHT_HANDHELD_DRILL = CCB_REGISTRATE.item("airtight_handheld_drill", p -> new AirtightHandheldDrillItem(Tiers.NETHERITE, p)).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).model(AssetLookup.itemModelWithPartials()).tag(Items.ENCHANTABLES).register();
+    public static final ItemEntry<AirtightHandheldDrillItem> AIRTIGHT_HANDHELD_DRILL = CCB_REGISTRATE.item("airtight_handheld_drill", p -> new AirtightHandheldDrillItem(Tiers.NETHERITE, p)).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).model(AssetLookup.itemModelWithPartials()).tag(Items.ENCHANTABLES, ItemTags.MINING_ENCHANTABLE, ItemTags.VANISHING_ENCHANTABLE).register();
 
     public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_HELMET = CCB_REGISTRATE.item("incomplete_airtight_helmet", SequencedAssemblyItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).register();
-    public static final ItemEntry<AirtightHelmetItem> AIRTIGHT_HELMET = CCB_REGISTRATE.item("airtight_helmet", AirtightHelmetItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).tag(ItemTags.HEAD_ARMOR).tag(CCBItemTags.AIRTIGHT_ARMOR.tag).model(AirtightArmorsTrimsModelGenerator::generate).register();
+    public static final ItemEntry<AirtightHelmetItem> AIRTIGHT_HELMET = CCB_REGISTRATE.item("airtight_helmet", AirtightHelmetItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).tag(CCBItemTags.AIRTIGHT_ARMOR.tag, Items.ENCHANTABLES, ItemTags.HEAD_ARMOR_ENCHANTABLE, ItemTags.VANISHING_ENCHANTABLE, ItemTags.EQUIPPABLE_ENCHANTABLE).model(AirtightArmorsTrimsModelGenerator::generate).register();
 
     public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_CHESTPLATE = CCB_REGISTRATE.item("incomplete_airtight_chestplate", SequencedAssemblyItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).register();
-    public static final ItemEntry<AirtightChestplateItem> AIRTIGHT_CHESTPLATE = CCB_REGISTRATE.item("airtight_chestplate", AirtightChestplateItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).tag(ItemTags.CHEST_ARMOR).tag(CCBItemTags.AIRTIGHT_ARMOR.tag).model(AirtightArmorsTrimsModelGenerator::generate).register();
+    public static final ItemEntry<AirtightChestplateItem> AIRTIGHT_CHESTPLATE = CCB_REGISTRATE.item("airtight_chestplate", AirtightChestplateItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).tag(CCBItemTags.AIRTIGHT_ARMOR.tag, Items.ENCHANTABLES, ItemTags.CHEST_ARMOR_ENCHANTABLE, ItemTags.VANISHING_ENCHANTABLE, ItemTags.EQUIPPABLE_ENCHANTABLE).model(AirtightArmorsTrimsModelGenerator::generate).register();
 
     public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_LEGGINGS = CCB_REGISTRATE.item("incomplete_airtight_leggings", SequencedAssemblyItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).register();
-    public static final ItemEntry<AirtightLeggingsItem> AIRTIGHT_LEGGINGS = CCB_REGISTRATE.item("airtight_leggings", AirtightLeggingsItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).tag(ItemTags.LEG_ARMOR).tag(CCBItemTags.AIRTIGHT_ARMOR.tag).model(AirtightArmorsTrimsModelGenerator::generate).register();
+    public static final ItemEntry<AirtightLeggingsItem> AIRTIGHT_LEGGINGS = CCB_REGISTRATE.item("airtight_leggings", AirtightLeggingsItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).tag(CCBItemTags.AIRTIGHT_ARMOR.tag, Items.ENCHANTABLES, ItemTags.LEG_ARMOR_ENCHANTABLE, ItemTags.VANISHING_ENCHANTABLE, ItemTags.EQUIPPABLE_ENCHANTABLE).model(AirtightArmorsTrimsModelGenerator::generate).register();
 
     public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_BOOTS = CCB_REGISTRATE.item("incomplete_airtight_boots", SequencedAssemblyItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).register();
-    public static final ItemEntry<AirtightBootsItem> AIRTIGHT_BOOTS = CCB_REGISTRATE.item("airtight_boots", AirtightBootsItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).tag(ItemTags.FOOT_ARMOR).tag(CCBItemTags.AIRTIGHT_ARMOR.tag).model(AirtightArmorsTrimsModelGenerator::generate).register();
+    public static final ItemEntry<AirtightBootsItem> AIRTIGHT_BOOTS = CCB_REGISTRATE.item("airtight_boots", AirtightBootsItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).tag(CCBItemTags.AIRTIGHT_ARMOR.tag, Items.ENCHANTABLES, ItemTags.FOOT_ARMOR_ENCHANTABLE, ItemTags.VANISHING_ENCHANTABLE, ItemTags.EQUIPPABLE_ENCHANTABLE).model(AirtightArmorsTrimsModelGenerator::generate).register();
 
     public static final ItemEntry<SequencedAssemblyWithGasItem> INCOMPLETE_WEATHER_FLARE = CCB_REGISTRATE.item("incomplete_weather_flare", SequencedAssemblyWithGasItem::new).register();
     public static final ItemEntry<Item> UNFILLED_WEATHER_FLARE = CCB_REGISTRATE.item("unfilled_weather_flare", Item::new).properties(p -> p.stacksTo(16)).register();

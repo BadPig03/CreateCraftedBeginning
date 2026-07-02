@@ -5,6 +5,7 @@ import com.simibubi.create.AllKeys;
 import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.foundation.recipe.ItemCopyingRecipe.SupportsItemCopying;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -29,27 +30,29 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class GasFilterItem extends Item implements MenuProvider, SupportsItemCopying, IGasFilter {
     public GasFilterItem(Properties properties) {
         super(properties);
     }
 
-    public static boolean isBlacklist(@NotNull ItemStack filter) {
+    public static boolean isBlacklist(ItemStack filter) {
         return filter.getOrDefault(AllDataComponents.FILTER_ITEMS_BLACKLIST, false);
     }
 
-    public static @NotNull ItemStackHandler getGasFilterItemHandler(@NotNull ItemStack filter) {
+    public static ItemStackHandler getGasFilterItemHandler(ItemStack filter) {
         ItemStackHandler inv = new ItemStackHandler(18);
         ItemHelper.fillItemStackHandler(filter.getOrDefault(AllDataComponents.FILTER_ITEMS, ItemContainerContents.EMPTY), inv);
         return inv;
     }
 
-    public static @NotNull List<Gas> getExistingGasTypes(@NotNull ItemStackHandler filterInventory) {
+    public static List<Gas> getExistingGasTypes(ItemStackHandler filterInventory) {
         List<Gas> existingGasTypes = new ArrayList<>();
         for (int i = 0; i < filterInventory.getSlots(); i++) {
             ItemStack stack = filterInventory.getStackInSlot(i);
@@ -68,7 +71,7 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
     }
 
     @Override
-    public @NotNull InteractionResult useOn(@NotNull UseOnContext context) {
+    public InteractionResult useOn(UseOnContext context) {
         Player player = context.getPlayer();
         if (player == null) {
             return InteractionResult.PASS;
@@ -78,7 +81,7 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
     }
 
     @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack filter = player.getItemInHand(hand);
         if (player.isShiftKeyDown() || hand != InteractionHand.MAIN_HAND) {
             return InteractionResultHolder.pass(filter);
@@ -92,7 +95,7 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(@NotNull ItemStack filter, @NotNull TooltipContext context, @NotNull List<Component> tooltips, @NotNull TooltipFlag flag) {
+    public void appendHoverText(ItemStack filter, TooltipContext context, List<Component> tooltips, TooltipFlag flag) {
         if (AllKeys.shiftDown()) {
             return;
         }
@@ -123,7 +126,7 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
     }
 
     @Override
-    public AbstractContainerMenu createMenu(int id, @NotNull Inventory inv, @NotNull Player player) {
+    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
         return GasFilterMenu.create(id, inv, player.getMainHandItem());
     }
 
@@ -133,12 +136,12 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
     }
 
     @Override
-    public @NotNull Component getDisplayName() {
+    public Component getDisplayName() {
         return getDescription();
     }
 
     @Override
-    public boolean test(@NotNull ItemStack filterItem, GasStack filterGasStack) {
+    public boolean test(ItemStack filterItem, GasStack filterGasStack) {
         if (!filterItem.is(CCBItems.GAS_FILTER)) {
             return false;
         }

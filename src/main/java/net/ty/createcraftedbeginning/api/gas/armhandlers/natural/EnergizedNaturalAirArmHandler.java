@@ -1,5 +1,11 @@
 package net.ty.createcraftedbeginning.api.gas.armhandlers.natural;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EnergizedNaturalAirArmHandler extends NaturalAirArmHandler {
     @Override
     public float getGasConsumptionMultiplier() {

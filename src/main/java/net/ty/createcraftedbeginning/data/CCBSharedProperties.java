@@ -1,8 +1,13 @@
 package net.ty.createcraftedbeginning.data;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBSharedProperties {
     public static Block stone() {
         return Blocks.ANDESITE;

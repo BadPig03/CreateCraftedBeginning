@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.registry;
 import com.simibubi.create.AllFluids;
 import com.simibubi.create.content.decoration.palettes.AllPaletteStoneTypes;
 import com.tterrag.registrate.util.entry.FluidEntry;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.MapColor;
@@ -13,6 +14,7 @@ import net.neoforged.neoforge.fluids.BaseFlowingFluid.Flowing;
 import net.neoforged.neoforge.fluids.BaseFlowingFluid.Source;
 import net.neoforged.neoforge.fluids.FluidInteractionRegistry;
 import net.neoforged.neoforge.fluids.FluidInteractionRegistry.InteractionInformation;
+import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.content.amethystcrystals.AmethystSuspensionBucketItem;
 import net.ty.createcraftedbeginning.content.brimstone.BrimstoneFluidBlock;
@@ -21,6 +23,10 @@ import net.ty.createcraftedbeginning.content.fluids.AmethystSuspensionVirtualFlu
 import net.ty.createcraftedbeginning.content.fluids.SlushVirtualFluid;
 import net.ty.createcraftedbeginning.data.CCBRegistrate;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBFluids {
     private static final CCBRegistrate CCB_REGISTRATE = CreateCraftedBeginning.registrate().setCreativeTab(CCBCreativeTabs.BASE_CREATIVE_TAB);
@@ -32,10 +38,11 @@ public class CCBFluids {
     public static final FluidEntry<SlushVirtualFluid> SLUSH = CCB_REGISTRATE.slush_fluid("slush").lang("Slush").tag(CCBTags.commonFluidTag("snow")).register();
 
     public static void registerFluidInteractions() {
-        FluidInteractionRegistry.addInteraction(NeoForgeMod.WATER_TYPE.value(), new InteractionInformation(BRIMSTONE.get().getFluidType(), fluidState -> Blocks.NETHERRACK.defaultBlockState()));
-        FluidInteractionRegistry.addInteraction(NeoForgeMod.LAVA_TYPE.value(), new InteractionInformation(BRIMSTONE.get().getFluidType(), fluidState -> Blocks.MAGMA_BLOCK.defaultBlockState()));
-        FluidInteractionRegistry.addInteraction(AllFluids.HONEY.getType(), new InteractionInformation(BRIMSTONE.get().getFluidType(), fluidState -> AllPaletteStoneTypes.OCHRUM.getBaseBlock().get().defaultBlockState()));
-        FluidInteractionRegistry.addInteraction(AllFluids.CHOCOLATE.getType(), new InteractionInformation(BRIMSTONE.get().getFluidType(), fluidState -> AllPaletteStoneTypes.CRIMSITE.getBaseBlock().get().defaultBlockState()));
+        FluidType brimstone = BRIMSTONE.get().getFluidType();
+        FluidInteractionRegistry.addInteraction(NeoForgeMod.WATER_TYPE.value(), new InteractionInformation(brimstone, fluidState -> Blocks.NETHERRACK.defaultBlockState()));
+        FluidInteractionRegistry.addInteraction(NeoForgeMod.LAVA_TYPE.value(), new InteractionInformation(brimstone, fluidState -> Blocks.MAGMA_BLOCK.defaultBlockState()));
+        FluidInteractionRegistry.addInteraction(AllFluids.HONEY.getType(), new InteractionInformation(brimstone, fluidState -> AllPaletteStoneTypes.OCHRUM.getBaseBlock().get().defaultBlockState()));
+        FluidInteractionRegistry.addInteraction(AllFluids.CHOCOLATE.getType(), new InteractionInformation(brimstone, fluidState -> AllPaletteStoneTypes.CRIMSITE.getBaseBlock().get().defaultBlockState()));
     }
 
     public static void register() {

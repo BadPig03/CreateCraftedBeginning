@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.breezes.breezecooler;
 
 import net.createmod.catnip.math.VecHelper;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
@@ -23,30 +24,34 @@ import net.minecraft.world.level.block.entity.trialspawner.TrialSpawner;
 import net.minecraft.world.level.block.entity.trialspawner.TrialSpawnerData;
 import net.minecraft.world.level.block.entity.trialspawner.TrialSpawnerState;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBEntityFlags;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class BreezeCoolerBlockItem extends BlockItem {
     public BreezeCoolerBlockItem(Block block, Properties properties) {
         super(block, properties);
     }
 
-    private static void giveChamberItemTo(@NotNull Player player, ItemStack heldItem, InteractionHand hand) {
-        ItemStack filled = CCBBlocks.BREEZE_COOLER_BLOCK.asStack();
+    private static void giveChamberItemTo(Player player, ItemStack heldItem, InteractionHand hand) {
+        ItemStack cooler = new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK);
         if (!player.isCreative()) {
             heldItem.shrink(1);
         }
         if (heldItem.isEmpty()) {
-            player.setItemInHand(hand, filled);
+            player.setItemInHand(hand, cooler);
             return;
         }
 
-        player.getInventory().placeItemBackInInventory(filled);
+        ItemHandlerHelper.giveItemToPlayer(player, cooler);
     }
 
-    private static void spawnCaptureEffects(@NotNull Level level, Vec3 vec) {
+    private static void spawnCaptureEffects(Level level, Vec3 vec) {
         if (level.isClientSide) {
             for (int i = 0; i < 40; i++) {
                 Vec3 motion = VecHelper.offsetRandomly(Vec3.ZERO, level.random, 0.125f);
@@ -60,7 +65,7 @@ public class BreezeCoolerBlockItem extends BlockItem {
         level.playSound(null, soundPos, SoundEvents.BREEZE_LAND, SoundSource.HOSTILE, 0.5f, 0.75f);
     }
 
-    private static InteractionResult getResultFromTrialSpawner(TrialSpawnerBlockEntity spawnerBlockEntity, @NotNull UseOnContext context) {
+    private static InteractionResult getResultFromTrialSpawner(TrialSpawnerBlockEntity spawnerBlockEntity, UseOnContext context) {
         Level level = context.getLevel();
         Player player = context.getPlayer();
         if (player == null) {
@@ -83,7 +88,7 @@ public class BreezeCoolerBlockItem extends BlockItem {
         return InteractionResult.FAIL;
     }
 
-    private static InteractionResult getResultFromSpawner(SpawnerBlockEntity spawnerBlockEntity, @NotNull UseOnContext context) {
+    private static InteractionResult getResultFromSpawner(SpawnerBlockEntity spawnerBlockEntity, UseOnContext context) {
         Level level = context.getLevel();
         Player player = context.getPlayer();
         if (player == null) {
@@ -101,7 +106,7 @@ public class BreezeCoolerBlockItem extends BlockItem {
     }
 
     @Override
-    public @NotNull InteractionResult interactLivingEntity(@NotNull ItemStack heldItem, @NotNull Player player, @NotNull LivingEntity entity, @NotNull InteractionHand hand) {
+    public InteractionResult interactLivingEntity(ItemStack heldItem, Player player, LivingEntity entity, InteractionHand hand) {
         if (!CCBEntityFlags.BREEZE_CHAMBER_CAPTURABLE.matches(entity)) {
             return InteractionResult.PASS;
         }
@@ -118,7 +123,7 @@ public class BreezeCoolerBlockItem extends BlockItem {
     }
 
     @Override
-    public @NotNull InteractionResult useOn(@NotNull UseOnContext context) {
+    public InteractionResult useOn(UseOnContext context) {
         Level level = context.getLevel();
         BlockEntity be = level.getBlockEntity(context.getClickedPos());
         if (!CCBConfig.server().airtights.canCoolerGetFromSpawners.get()) {

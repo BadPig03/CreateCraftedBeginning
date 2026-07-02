@@ -1,11 +1,16 @@
 package net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatstates;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.world.item.ItemStack;
+import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
 import java.util.Map;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public final class OverheatManager {
     private static final Map<String, IOverheatState> STATES = new HashMap<>();
 
@@ -16,13 +21,17 @@ public final class OverheatManager {
     public static final IOverheatState MELTDOWN = register(new MeltdownOverheatState());
 
     @Contract("_ -> param1")
-    private static @NotNull IOverheatState register(IOverheatState state) {
+    private static IOverheatState register(IOverheatState state) {
         STATES.put(state.getSerializedName(), state);
         return state;
     }
 
     public static IOverheatState getStateByName(String name) {
         return STATES.getOrDefault(name, NORMAL);
+    }
+
+    public static IOverheatState getStateByItem(ItemStack item) {
+        return getStateByName(item.getOrDefault(CCBDataComponents.COMPRESSOR_OVERHEAT_STATE, NORMAL.getSerializedName()));
     }
 
     public static int getCount() {

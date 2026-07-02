@@ -1,0 +1,42 @@
+{
+  "type": "create:mechanical_crafting",
+  "accept_mirrored": true,
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "createcraftedbeginning:airtight_tank"
+    },
+    "B": {
+      "item": "createcraftedbeginning:airtight_sheet_block"
+    },
+    "C": {
+      "item": "create:shaft"
+    },
+    "D": {
+      "item": "create:depot"
+    },
+    "E": {
+      "item": "create:gearbox"
+    },
+    "F": {
+      "item": "minecraft:iron_block"
+    },
+    "G": {
+      "item": "createcraftedbeginning:airtight_sheet"
+    },
+    "H": {
+      "item": "create:chute"
+    }
+  },
+  "pattern": [
+    "BAHAB",
+    "CCECC",
+    "BGFGB",
+    "BGFGB",
+    "BDDDB"
+  ],
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:airtight_forging_press"
+  }
+}

@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightc
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.foundation.item.CustomRenderedArmorItem;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -27,31 +28,33 @@ import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.mixin.accessor.HumanoidArmorLayerAtlasAccessor;
 import net.ty.createcraftedbeginning.registry.CCBArmorMaterials;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Locale;
 import java.util.Map;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightChestplateArmorItem extends ArmorItem implements CustomRenderedArmorItem {
     protected final ResourceLocation textureLoc = CreateCraftedBeginning.asResource("airtight");
 
-    public AirtightChestplateArmorItem(Type type, @NotNull Properties properties) {
+    public AirtightChestplateArmorItem(Type type, Properties properties) {
         super(CCBArmorMaterials.AIRTIGHT, type, properties.stacksTo(1));
     }
 
-    private static void renderModel(PoseStack poseStack, @NotNull MultiBufferSource bufferSource, int light, @NotNull Model model, ResourceLocation armorResource) {
+    private static void renderModel(PoseStack poseStack, MultiBufferSource bufferSource, int light, Model model, ResourceLocation armorResource) {
         VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.armorCutoutNoCull(armorResource));
         model.renderToBuffer(poseStack, vertexConsumer, light, OverlayTexture.NO_OVERLAY, -1);
     }
 
-    private static void renderTrim(@NotNull TextureAtlas armorTrimAtlas, PoseStack poseStack, @NotNull MultiBufferSource bufferSource, int light, @NotNull ArmorTrim trim, @NotNull Model model, boolean inner) {
+    private static void renderTrim(TextureAtlas armorTrimAtlas, PoseStack poseStack, MultiBufferSource bufferSource, int light, ArmorTrim trim, Model model, boolean inner) {
         Holder<ArmorMaterial> materialHolder = CCBArmorMaterials.AIRTIGHT;
         TextureAtlasSprite sprite = armorTrimAtlas.getSprite(inner ? trim.innerTexture(materialHolder) : trim.outerTexture(materialHolder));
         VertexConsumer vertexConsumer = sprite.wrap(bufferSource.getBuffer(Sheets.armorTrimsSheet(trim.pattern().value().decal())));
         model.renderToBuffer(poseStack, vertexConsumer, light, OverlayTexture.NO_OVERLAY);
     }
 
-    private static void renderGlint(PoseStack poseStack, @NotNull MultiBufferSource bufferSource, int light, @NotNull Model model) {
+    private static void renderGlint(PoseStack poseStack, MultiBufferSource bufferSource, int light, Model model) {
         VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.armorEntityGlint());
         model.renderToBuffer(poseStack, vertexConsumer, light, OverlayTexture.NO_OVERLAY);
     }
@@ -63,7 +66,7 @@ public class AirtightChestplateArmorItem extends ArmorItem implements CustomRend
     @OnlyIn(Dist.CLIENT)
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
-    public void renderArmorPiece(HumanoidArmorLayer<?, ?, ?> layer, PoseStack poseStack, MultiBufferSource bufferSource, LivingEntity entity, EquipmentSlot slot, int light, HumanoidModel<?> originalModel, @NotNull ItemStack stack) {
+    public void renderArmorPiece(HumanoidArmorLayer<?, ?, ?> layer, PoseStack poseStack, MultiBufferSource bufferSource, LivingEntity entity, EquipmentSlot slot, int light, HumanoidModel<?> originalModel, ItemStack stack) {
         if (!stack.is(CCBItems.AIRTIGHT_CHESTPLATE)) {
             return;
         }

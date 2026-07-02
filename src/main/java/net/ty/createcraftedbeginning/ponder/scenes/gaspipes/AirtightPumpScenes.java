@@ -8,14 +8,18 @@ import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightPumpScenes {
-    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("airtight_pump", "Transport gases using Airtight Pumps");
@@ -43,13 +47,17 @@ public class AirtightPumpScenes {
         Selection cogSelection = util.select().fromTo(cogPos, motorPos);
         Selection pumpSelection = util.select().position(pumpPos);
 
+        Vec3 pumpVec = util.vector().centerOf(pumpPos);
+        Vec3 pipeFirstVec = util.vector().centerOf(pipeFirstPos);
+        Vec3 encasedVec = util.vector().centerOf(encasedPos);
+
         float slowSpeed = SpeedLevel.SLOW.getSpeedValue();
         float mediumSpeed = SpeedLevel.MEDIUM.getSpeedValue();
         float fastSpeed = SpeedLevel.FAST.getSpeedValue();
 
-        AABB backArea = new AABB(util.vector().centerOf(pipeFirstPos), util.vector().centerOf(pipeFirstPos));
-        AABB frontArea = new AABB(util.vector().centerOf(encasedPos), util.vector().centerOf(encasedPos));
-        AABB pumpArea = new AABB(util.vector().centerOf(pumpPos), util.vector().centerOf(pumpPos));
+        AABB backArea = new AABB(pipeFirstVec, pipeFirstVec);
+        AABB frontArea = new AABB(encasedVec, encasedVec);
+        AABB pumpArea = new AABB(pumpVec, pumpVec);
 
         Object backObject = new Object();
         Object frontObject = new Object();
@@ -73,6 +81,8 @@ public class AirtightPumpScenes {
         scene.idle(3);
         scene.world().setBlock(motorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.WEST), false);
         scene.world().showSection(cogSelection, Direction.NORTH);
+
+        scene.idle(15);
         scene.world().setKineticSpeed(cogSelection, mediumSpeed);
         scene.world().setKineticSpeed(pumpSelection, -mediumSpeed);
         scene.effects().rotationSpeedIndicator(pumpPos);
@@ -90,7 +100,7 @@ public class AirtightPumpScenes {
         frontArea = frontArea.expandTowards(-3, 0, 0);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, backObject, backArea, 60);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, frontObject, frontArea, 60);
-        scene.overlay().showText(60).text("Airtight Pumps works similar to Mechanical Pumps").colored(PonderPalette.INPUT).pointAt(Vec3.atCenterOf(pumpPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Airtight Pumps works similar to Mechanical Pumps").pointAt(pumpVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, pumpObject, pumpArea, 3);
@@ -105,13 +115,13 @@ public class AirtightPumpScenes {
         scene.world().setKineticSpeed(cogSelection, slowSpeed);
         scene.world().setKineticSpeed(pumpSelection, -slowSpeed);
         scene.effects().rotationSpeedIndicator(pumpPos);
-        scene.overlay().showText(60).text("But Airtight Pumps must be rotating with at least medium rotational speed").colored(PonderPalette.RED).pointAt(Vec3.atCenterOf(pumpPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("But Airtight Pumps must be rotating with at least medium rotational speed").colored(PonderPalette.MEDIUM).pointAt(pumpVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().setKineticSpeed(cogSelection, fastSpeed);
         scene.world().setKineticSpeed(pumpSelection, -fastSpeed);
         scene.effects().rotationSpeedIndicator(pumpPos);
-        scene.overlay().showText(60).text("And the Pumps affect pipes connected up to 32 blocks away").pointAt(Vec3.atCenterOf(pumpPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("And the Pumps affect pipes connected up to 32 blocks away").colored(PonderPalette.RED).pointAt(pumpVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();

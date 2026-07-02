@@ -1,9 +1,13 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle;
 
 import com.simibubi.create.foundation.item.SmartInventory;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightReactorKettleInventory extends SmartInventory {
     private final AirtightReactorKettleBlockEntity blockEntity;
 
@@ -13,7 +17,7 @@ public class AirtightReactorKettleInventory extends SmartInventory {
     }
 
     @Override
-    public @NotNull ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+    public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
         int firstFreeSlot = -1;
         for (int i = 0; i < getSlots(); i++) {
             if (i != slot && ItemStack.isSameItemSameComponents(stack, inv.getStackInSlot(i))) {
@@ -33,7 +37,7 @@ public class AirtightReactorKettleInventory extends SmartInventory {
     }
 
     @Override
-    public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
+    public ItemStack extractItem(int slot, int amount, boolean simulate) {
         ItemStack extractItem = super.extractItem(slot, amount, simulate);
         if (!simulate && !extractItem.isEmpty()) {
             blockEntity.notifyContentsChanged();

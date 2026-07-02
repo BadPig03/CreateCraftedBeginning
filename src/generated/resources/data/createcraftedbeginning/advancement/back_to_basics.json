@@ -1,0 +1,29 @@
+{
+  "parent": "createcraftedbeginning:who_is_the_breeze_now",
+  "criteria": {
+    "0": {
+      "trigger": "createcraftedbeginning:back_to_basics_builtin"
+    }
+  },
+  "display": {
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.back_to_basics.desc"
+    },
+    "frame": "goal",
+    "hidden": true,
+    "icon": {
+      "count": 1,
+      "id": "create:andesite_alloy"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.back_to_basics"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

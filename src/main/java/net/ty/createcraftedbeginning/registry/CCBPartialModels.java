@@ -3,14 +3,18 @@ package net.ty.createcraftedbeginning.registry;
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.lang.Lang;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.gases.GasTransportBehaviour.AttachmentTypes.ComponentPartials;
+import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour.AttachmentTypes.ComponentPartials;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBPartialModels {
     public static final PartialModel BREEZE_TRAIN_HAT = entity("train_hat");
 
@@ -74,6 +78,8 @@ public class CCBPartialModels {
     public static final PartialModel AIRTIGHT_REACTOR_KETTLE_RIGHT_WINDOW = block("airtight_reactor_kettle/right_window");
     public static final PartialModel AIRTIGHT_REACTOR_KETTLE_WINDOW_OPENED = block("airtight_reactor_kettle/windows_opened");
     public static final PartialModel AIRTIGHT_REACTOR_KETTLE_WINDOW_CLOSED = block("airtight_reactor_kettle/windows_closed");
+
+    public static final PartialModel AIRTIGHT_FORGING_PRESS_PRESS_HEAD = block("airtight_forging_press/press_head");
 
     public static final PartialModel AIR_VENT_CLOSED = block("air_vent/closed");
     public static final PartialModel AIR_VENT_OPENED = block("air_vent/opened");

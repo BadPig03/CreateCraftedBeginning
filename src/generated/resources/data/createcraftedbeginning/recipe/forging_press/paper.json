@@ -1,0 +1,13 @@
+{
+  "type": "createcraftedbeginning:forging_press",
+  "ingredients": [
+    {
+      "tag": "c:crops/sugar_cane"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:paper"
+    }
+  ]
+}

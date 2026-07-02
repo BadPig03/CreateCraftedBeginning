@@ -5,6 +5,7 @@ import com.simibubi.create.AllPartialModels;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import net.createmod.catnip.render.CachedBuffers;
 import net.createmod.catnip.render.SuperByteBuffer;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
@@ -12,8 +13,11 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TeslaTurbineRenderer extends KineticBlockEntityRenderer<TeslaTurbineBlockEntity> {
     public TeslaTurbineRenderer(Context context) {
         super(context);
@@ -48,7 +52,7 @@ public class TeslaTurbineRenderer extends KineticBlockEntityRenderer<TeslaTurbin
     }
 
     @Override
-    protected SuperByteBuffer getRotatedModel(TeslaTurbineBlockEntity be, @NotNull BlockState blockState) {
+    protected SuperByteBuffer getRotatedModel(TeslaTurbineBlockEntity be, BlockState blockState) {
         return CachedBuffers.partial(AllPartialModels.SHAFT, blockState);
     }
 

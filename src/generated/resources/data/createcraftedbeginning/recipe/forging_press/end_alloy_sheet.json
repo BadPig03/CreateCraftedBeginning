@@ -1,0 +1,13 @@
+{
+  "type": "createcraftedbeginning:forging_press",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:end_alloy"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:end_alloy_sheet"
+    }
+  ]
+}

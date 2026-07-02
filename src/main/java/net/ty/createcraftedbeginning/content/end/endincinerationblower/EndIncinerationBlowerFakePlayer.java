@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.end.endincinerationblower;
 
 import com.mojang.authlib.GameProfile;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -15,12 +16,14 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.common.UsernameCache;
 import net.neoforged.neoforge.common.util.FakePlayer;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.OptionalInt;
 import java.util.UUID;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EndIncinerationBlowerFakePlayer extends FakePlayer {
     public static final UUID FALLBACK_UUID = UUID.fromString("053c6a34-9ba9-49fb-bb2d-88edcd146dde");
 
@@ -32,18 +35,18 @@ public class EndIncinerationBlowerFakePlayer extends FakePlayer {
     }
 
     @Override
-	public @NotNull OptionalInt openMenu(MenuProvider menuProvider) {
+	public OptionalInt openMenu(@Nullable MenuProvider menuProvider) {
 		return OptionalInt.empty();
 	}
 
     @Override
 	@OnlyIn(Dist.CLIENT)
-	public @NotNull EntityDimensions getDefaultDimensions(@NotNull Pose pose) {
+	public EntityDimensions getDefaultDimensions(Pose pose) {
 		return super.getDefaultDimensions(pose).withEyeHeight(0);
 	}
 
     @Override
-	public @NotNull Vec3 position() {
+	public Vec3 position() {
 		return new Vec3(getX(), getY(), getZ());
 	}
 
@@ -58,24 +61,24 @@ public class EndIncinerationBlowerFakePlayer extends FakePlayer {
 	}
 
     @Override
-	public @NotNull ItemStack eat(@NotNull Level level, @NotNull ItemStack food, @NotNull FoodProperties foodProperties) {
+	public ItemStack eat(Level level, ItemStack food, FoodProperties foodProperties) {
 		food.shrink(1);
 		return food;
 	}
 
     @SuppressWarnings("deprecation")
     @Override
-	public boolean canBeAffected(@NotNull MobEffectInstance effectInstance) {
+	public boolean canBeAffected(MobEffectInstance effectInstance) {
 		return false;
 	}
 
     @Override
-	public @NotNull UUID getUUID() {
+	public UUID getUUID() {
 		return owner == null ? super.getUUID() : owner;
 	}
 
     @Override
-	protected boolean doesEmitEquipEvent(@NotNull EquipmentSlot slot) {
+	protected boolean doesEmitEquipEvent(EquipmentSlot slot) {
 		return false;
 	}
 
@@ -104,15 +107,12 @@ public class EndIncinerationBlowerFakePlayer extends FakePlayer {
 
         @Override
         public boolean equals(Object other) {
-            return this == other || other instanceof GameProfile otherProfile && Objects.equals(getId(), otherProfile.getId()) && Objects.equals(getName(), otherProfile.getName());
+            return this == other || other instanceof GameProfile otherProfile && getId().equals(otherProfile.getId()) && getName().equals(otherProfile.getName());
         }
 
         @Override
 		public int hashCode() {
-			UUID id = getId();
-			String name = getName();
-			int result = id == null ? 0 : id.hashCode();
-            return 31 * result + (name == null ? 0 : name.hashCode());
+            return 31 * getId().hashCode() + getName().hashCode();
 		}
     }
 }

@@ -13,7 +13,7 @@ import dev.engine_room.flywheel.lib.visual.SimpleDynamicVisual;
 import dev.engine_room.flywheel.lib.visual.SimpleTickableVisual;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.createmod.catnip.math.AngleHelper;
-import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.FrostLevel;
@@ -21,8 +21,11 @@ import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Consumer;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBlockEntity> implements SimpleDynamicVisual, SimpleTickableVisual {
     private final TransformedInstance head;
     private final boolean isRiming;
@@ -42,7 +45,6 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
         validBlockAbove = blockEntity.isValidBlockAbove();
         isRiming = !blockEntity.getFrostLevel().isAtLeast(FrostLevel.CHILLED);
         head = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(BreezeCoolerRenderer.getBreezeModel(frostLevel, validBlockAbove))).createInstance();
-        head.light(LightTexture.FULL_BRIGHT);
         animate(partialTick);
     }
 
@@ -59,7 +61,6 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
         boolean hasGoggles = blockEntity.hasGoggles();
         if (hasGoggles && goggles == null) {
             goggles = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(isRiming ? CCBPartialModels.BREEZE_COOLER_GOGGLES_SMALL : CCBPartialModels.BREEZE_COOLER_GOGGLES)).createInstance();
-            goggles.light(LightTexture.FULL_BRIGHT);
         }
         else if (!hasGoggles && goggles != null) {
             goggles.delete();
@@ -69,7 +70,6 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
         boolean hatPresent = blockEntity.hasTrainHat();
         if (hatPresent && hat == null) {
             hat = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.BREEZE_TRAIN_HAT)).createInstance();
-            hat.light(LightTexture.FULL_BRIGHT);
         }
         else if (!hatPresent && hat != null) {
             hat.delete();
@@ -79,7 +79,6 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
         boolean hasWind = blockEntity.getFrostLevel().isAtLeast(FrostLevel.CHILLED);
         if (hasWind && wind == null) {
             wind = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.BREEZE_COOLER_WIND)).createInstance();
-            wind.light(LightTexture.FULL_BRIGHT);
         }
         else if (!hasWind && wind != null) {
             wind.delete();
@@ -95,12 +94,11 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
         }
         if (hat != null) {
             hat.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translateY(0.75f);
-            hat.rotateCentered(horizontalAngle + Mth.PI, Direction.UP).translate(0.5f, 0, 0.5f).light(LightTexture.FULL_BRIGHT);
+            hat.rotateCentered(horizontalAngle + Mth.PI, Direction.UP).translate(0.5f, 0, 0.5f);
             hat.setChanged();
         }
         if (wind != null) {
-            float totalRotation = horizontalAngle + AngleHelper.rad(renderTime * (hasWind ? 24.0f : 0) % 360);
-            wind.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(totalRotation).translateBack(Translate.CENTER).setChanged();
+            wind.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle + AngleHelper.rad(renderTime * (hasWind ? 24.0f : 0) % 360)).translateBack(Translate.CENTER).setChanged();
         }
     }
 
@@ -120,6 +118,7 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
 
     @Override
     public void updateLight(float partialTick) {
+        relight(head, goggles, hat, wind);
     }
 
     @Override

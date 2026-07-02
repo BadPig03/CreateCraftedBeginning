@@ -2,14 +2,18 @@ package net.ty.createcraftedbeginning.content.crates;
 
 import com.simibubi.create.content.logistics.filter.FilterItem;
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INBTSerializable<CompoundTag> {
     private static final String COMPOUND_KEY_CONTENT = "Content";
     private static final String COMPOUND_KEY_COUNT = "Count";
@@ -26,7 +30,7 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
     }
 
     @Override
-    public CompoundTag serializeNBT(@NotNull Provider provider) {
+    public CompoundTag serializeNBT(Provider provider) {
         CompoundTag compoundTag = new CompoundTag();
         compoundTag.put(COMPOUND_KEY_CONTENT, content.saveOptional(provider));
         compoundTag.putInt(COMPOUND_KEY_COUNT, count);
@@ -34,7 +38,7 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
     }
 
     @Override
-    public void deserializeNBT(@NotNull Provider provider, @NotNull CompoundTag compoundTag) {
+    public void deserializeNBT(Provider provider, CompoundTag compoundTag) {
         if (compoundTag.contains(COMPOUND_KEY_CONTENT)) {
             content = ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_CONTENT));
         }
@@ -55,13 +59,13 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
     }
 
     @Override
-    public @NotNull ItemStack getStackInSlot(int slot) {
+    public ItemStack getStackInSlot(int slot) {
         validateSlotIndex(slot);
         return content.isEmpty() || count == 0 ? ItemStack.EMPTY : content.copyWithCount(count);
     }
 
     @Override
-    public void setStackInSlot(int slot, @NotNull ItemStack stack) {
+    public void setStackInSlot(int slot, ItemStack stack) {
         validateSlotIndex(slot);
 
         content = stack;
@@ -84,7 +88,7 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
     }
 
     @Override
-    public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
+    public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
         if (stack.isEmpty()) {
             return ItemStack.EMPTY;
         }
@@ -125,7 +129,7 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
     }
 
     @Override
-    public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
+    public ItemStack extractItem(int slot, int amount, boolean simulate) {
         if (amount <= 0) {
             return ItemStack.EMPTY;
         }
@@ -157,7 +161,7 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
     }
 
     @Override
-    public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+    public boolean isItemValid(int slot, ItemStack stack) {
         validateSlotIndex(slot);
         return (filtering == null || filtering.getFilter().isEmpty() || FilterItem.testDirect(filtering.getFilter(), stack, false)) && (content.isEmpty() || ItemStack.isSameItemSameComponents(content, stack));
     }

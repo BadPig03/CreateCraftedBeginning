@@ -1,5 +1,11 @@
 package net.ty.createcraftedbeginning.api.gas.armhandlers.ultrawarm;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PressurizedEnergizedUltrawarmAirArmHandler extends UltrawarmAirArmHandler {
     @Override
     public float getGasConsumptionMultiplier() {

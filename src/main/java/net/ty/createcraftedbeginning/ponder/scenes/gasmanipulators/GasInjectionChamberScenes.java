@@ -10,6 +10,7 @@ import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
@@ -19,15 +20,13 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity;
-import org.jetbrains.annotations.NotNull;
 
-import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity.NOZZLE_IDLE_TIME;
-import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity.NOZZLE_PART_TIME;
-import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity.NOZZLE_TIME;
-import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity.PROCESSING_TIME;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class GasInjectionChamberScenes {
-    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
         RandomSource random = RandomSource.create();
 
@@ -48,11 +47,17 @@ public class GasInjectionChamberScenes {
         Selection sourceSelection = util.select().fromTo(cogPos, motorPos);
         Selection depotSelection = util.select().position(chamberTargetPos);
 
+        Vec3 chamberVec = util.vector().centerOf(chamberPos);
+        Vec3 lowerPipeVec = util.vector().centerOf(lowerPipePos);
+        Vec3 chamberTargetVec = util.vector().centerOf(chamberTargetPos);
+        Vec3 upperPipeVec = util.vector().centerOf(upperPipePos);
+        Vec3 subtractedVec = chamberVec.subtract(0, 1.6875f, 0);
+
+        AABB pipeArea = new AABB(upperPipeVec, upperPipeVec);
+
         float mediumSpeed = SpeedLevel.MEDIUM.getSpeedValue();
 
         Object pipeObject = new Object();
-
-        AABB pipeArea = new AABB(util.vector().centerOf(upperPipePos), util.vector().centerOf(upperPipePos));
 
         ItemStack blazePowderItem = new ItemStack(Items.BLAZE_POWDER);
         ItemStack windChargeItem = new ItemStack(Items.WIND_CHARGE);
@@ -64,49 +69,51 @@ public class GasInjectionChamberScenes {
         scene.world().showSection(chamberSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("").pointAt(Vec3.atCenterOf(chamberPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Gas Injection Chambers inject gases into items on Depots or Belts below them").colored(PonderPalette.GREEN).pointAt(chamberVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.world().showSection(pipeSelection, Direction.DOWN);
         scene.world().setBlock(motorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.DOWN), false);
+        scene.world().showSection(pipeSelection, Direction.DOWN);
         scene.world().showSection(sourceSelection, Direction.DOWN);
+
+        scene.idle(15);
         scene.world().setKineticSpeed(pipeSelection, mediumSpeed);
         scene.world().setKineticSpeed(sourceSelection, -mediumSpeed);
         scene.effects().rotationSpeedIndicator(pumpPos);
+        scene.effects().rotationSpeedIndicator(motorPos);
 
         scene.idle(20);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, pipeObject, pipeArea, 3);
 
         scene.idle(3);
-        pipeArea = pipeArea.inflate(0.5, 0.5, 0.5);
+        pipeArea = pipeArea.inflate(0.375, 0.5, 0.375);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, pipeObject, pipeArea, 3);
 
         scene.idle(3);
         pipeArea = pipeArea.expandTowards(0, -2, 0);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, pipeObject, pipeArea, 60);
-        scene.overlay().showText(60).text("").colored(PonderPalette.INPUT).pointAt(Vec3.atCenterOf(lowerPipePos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Gas must be supplied to the Gas Injection Chamber from above").colored(PonderPalette.INPUT).pointAt(lowerPipeVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().showText(60).text("").pointAt(Vec3.atCenterOf(chamberPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Processing automatically initiates when items accept the gas").colored(PonderPalette.GREEN).pointAt(chamberVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(10);
-        scene.world().createItemOnBeltLike(chamberTargetPos, Direction.NORTH, blazePowderItem);
-        scene.overlay().showControls(util.vector().centerOf(chamberTargetPos), Pointing.UP, 30).withItem(blazePowderItem);
+        scene.world().createItemOnBeltLike(chamberTargetPos, Direction.NORTH, blazePowderItem.copy());
+        scene.overlay().showControls(chamberTargetVec, Pointing.UP, 30).withItem(blazePowderItem.copy());
 
         scene.idle(30);
-		scene.world().modifyBlockEntityNBT(chamberSelection, GasInjectionChamberBlockEntity.class, compoundTag -> compoundTag.putInt("ProcessingTicks", PROCESSING_TIME));
+		scene.world().modifyBlockEntityNBT(chamberSelection, GasInjectionChamberBlockEntity.class, compoundTag -> compoundTag.putInt("ProcessingTicks", 60));
 
-        scene.idle(PROCESSING_TIME - NOZZLE_TIME - NOZZLE_PART_TIME - NOZZLE_IDLE_TIME);
+        scene.idle(25);
         scene.world().removeItemsFromBelt(chamberTargetPos);
-        scene.world().createItemOnBeltLike(chamberTargetPos, Direction.UP, windChargeItem);
-        Vec3 vec = VecHelper.getCenterOf(chamberPos).subtract(0, 1.6875f, 0);
+        scene.world().createItemOnBeltLike(chamberTargetPos, Direction.UP, windChargeItem.copy());
         for (int i = 0; i < random.nextInt(3, 6); i++) {
             Vec3 offset = VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125f);
-            scene.effects().emitParticles(vec, scene.effects().simpleParticleEmitter(ParticleTypes.CLOUD, new Vec3(offset.x, Math.abs(offset.y), offset.z)), 1, 1);
+            scene.effects().emitParticles(subtractedVec, scene.effects().simpleParticleEmitter(ParticleTypes.CLOUD, new Vec3(offset.x, Math.abs(offset.y), offset.z)), 1, 1);
         }
 
         scene.idle(10);
-        scene.overlay().showControls(util.vector().centerOf(chamberTargetPos), Pointing.UP, 30).withItem(windChargeItem);
+        scene.overlay().showControls(chamberTargetVec, Pointing.UP, 30).withItem(windChargeItem.copy());
 
         scene.idle(30);
         scene.markAsFinished();

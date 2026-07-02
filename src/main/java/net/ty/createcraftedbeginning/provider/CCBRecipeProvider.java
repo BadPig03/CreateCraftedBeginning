@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.provider;
 
 import com.simibubi.create.api.data.recipe.ProcessingRecipeGen;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataGenerator;
@@ -12,17 +13,20 @@ import net.ty.createcraftedbeginning.data.CCBCoolingRecipes;
 import net.ty.createcraftedbeginning.data.CCBDissipationRecipes;
 import net.ty.createcraftedbeginning.data.CCBEnergizationRecipes;
 import net.ty.createcraftedbeginning.data.CCBChillingRecipes;
+import net.ty.createcraftedbeginning.data.CCBForgingPressRecipes;
 import net.ty.createcraftedbeginning.data.CCBGasInjectionRecipes;
 import net.ty.createcraftedbeginning.data.CCBPressurizationRecipes;
 import net.ty.createcraftedbeginning.data.CCBReactorKettleRecipes;
 import net.ty.createcraftedbeginning.data.CCBResidueGenerationRecipes;
 import net.ty.createcraftedbeginning.data.CCBWindChargingRecipes;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBRecipeProvider extends RecipeProvider {
     private static final List<ProcessingRecipeGen<?, ?, ?>> GENERATORS = new ArrayList<>();
     private static final List<ProcessingWithGasRecipeGen<?, ?, ?>> GENERATORS_WITH_GAS = new ArrayList<>();
@@ -31,39 +35,40 @@ public class CCBRecipeProvider extends RecipeProvider {
         super(output, registries);
     }
 
-    public static void registerAllProcessing(@NotNull DataGenerator generator, PackOutput output, CompletableFuture<Provider> registries) {
-        GENERATORS.add(new CCBCoolingRecipes(output, registries));
+    public static void registerAllProcessing(DataGenerator generator, PackOutput output, CompletableFuture<Provider> registries) {
         GENERATORS.add(new CCBChillingRecipes(output, registries));
+        GENERATORS.add(new CCBCoolingRecipes(output, registries));
         GENERATORS.add(new CCBWindChargingRecipes(output, registries));
         generator.addProvider(true, new DataProvider() {
             @Override
-            public @NotNull CompletableFuture<?> run(@NotNull CachedOutput cachedOutput) {
+            public CompletableFuture<?> run(CachedOutput cachedOutput) {
                 return CompletableFuture.allOf(GENERATORS.stream().map(gen -> gen.run(cachedOutput)).toArray(CompletableFuture[]::new));
             }
 
             @Override
-            public @NotNull String getName() {
+            public String getName() {
                 return "Create Crafted Beginning's Processing Recipes";
             }
         });
     }
 
-    public static void registerAllProcessingWithGas(@NotNull DataGenerator generator, PackOutput output, CompletableFuture<Provider> registries) {
-        GENERATORS_WITH_GAS.add(new CCBPressurizationRecipes(output, registries));
-        GENERATORS_WITH_GAS.add(new CCBEnergizationRecipes(output, registries));
+    public static void registerAllProcessingWithGas(DataGenerator generator, PackOutput output, CompletableFuture<Provider> registries) {
         GENERATORS_WITH_GAS.add(new CCBDissipationRecipes(output, registries));
+        GENERATORS_WITH_GAS.add(new CCBEnergizationRecipes(output, registries));
+        GENERATORS_WITH_GAS.add(new CCBForgingPressRecipes(output, registries));
         GENERATORS_WITH_GAS.add(new CCBGasInjectionRecipes(output, registries));
+        GENERATORS_WITH_GAS.add(new CCBPressurizationRecipes(output, registries));
         GENERATORS_WITH_GAS.add(new CCBReactorKettleRecipes(output, registries));
         GENERATORS_WITH_GAS.add(new CCBResidueGenerationRecipes(output, registries));
 
         generator.addProvider(true, new DataProvider() {
             @Override
-            public @NotNull CompletableFuture<?> run(@NotNull CachedOutput cachedOutput) {
+            public CompletableFuture<?> run(CachedOutput cachedOutput) {
                 return CompletableFuture.allOf(GENERATORS_WITH_GAS.stream().map(gen -> gen.run(cachedOutput)).toArray(CompletableFuture[]::new));
             }
 
             @Override
-            public @NotNull String getName() {
+            public String getName() {
                 return "Create Crafted Beginning's Processing Recipes With Gas";
             }
         });

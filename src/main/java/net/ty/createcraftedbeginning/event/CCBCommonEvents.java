@@ -1,27 +1,30 @@
 package net.ty.createcraftedbeginning.event;
 
+import com.simibubi.create.compat.jei.ConversionRecipe;
+import com.simibubi.create.compat.jei.category.MysteriousItemConversionCategory;
 import com.simibubi.create.content.kinetics.deployer.DeployerRecipeSearchEvent;
 import com.simibubi.create.foundation.item.ItemHelper;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.util.Unit;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
-import net.neoforged.neoforge.event.level.LevelEvent.Load;
-import net.neoforged.neoforge.event.level.LevelEvent.Unload;
-import net.neoforged.neoforge.event.tick.LevelTickEvent.Post;
+import net.neoforged.neoforge.registries.RegisterEvent;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.recipes.DeployerApplicationWithGasRecipe;
+import net.ty.createcraftedbeginning.compat.CCBCompatMods;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralShaftBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillMenu;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.templates.AirtightHandheldDrillMiningTemplates;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlockEntity;
@@ -47,18 +50,24 @@ import net.ty.createcraftedbeginning.content.crates.brasscrate.BrassCrateBlockEn
 import net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateBlockEntity;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlockEntity;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
+import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
 public class CCBCommonEvents {
     @SubscribeEvent
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         AirCompressorBlockEntity.registerCapabilities(event);
+        AirtightForgingPressBlockEntity.registerCapabilities(event);
+        AirtightForgingPressStructuralBlockEntity.registerCapabilities(event);
+        AirtightForgingPressStructuralShaftBlockEntity.registerCapabilities(event);
         AirtightHatchBlockEntity.registerCapabilities(event);
         AirtightReactorKettleBlockEntity.registerCapabilities(event);
         AirtightReactorKettleStructuralBlockEntity.registerCapabilities(event);
@@ -83,47 +92,7 @@ public class CCBCommonEvents {
     }
 
     @SubscribeEvent
-    public static void onPostTick(@NotNull Post event) {
-        Level level = event.getLevel();
-        if (level.isClientSide) {
-            return;
-        }
-
-        CreateCraftedBeginning.GLOBAL_END_SCULK_SILENCER_MANAGER.tick(level);
-    }
-
-    @SubscribeEvent
-    public static void onPlayerLoggedIn(@NotNull PlayerLoggedInEvent event) {
-        Player player = event.getEntity();
-        if (player.level().isClientSide || !(player instanceof ServerPlayer serverPlayer)) {
-            return;
-        }
-
-        CreateCraftedBeginning.GLOBAL_END_SCULK_SILENCER_MANAGER.sendToClients(serverPlayer);
-    }
-
-    @SubscribeEvent
-    public static void onLoad(@NotNull Load event) {
-        LevelAccessor level = event.getLevel();
-        if (level.isClientSide()) {
-            return;
-        }
-
-        CreateCraftedBeginning.GLOBAL_END_SCULK_SILENCER_MANAGER.clear();
-    }
-
-    @SubscribeEvent
-    public static void onUnload(@NotNull Unload event) {
-        LevelAccessor level = event.getLevel();
-        if (level.isClientSide()) {
-            return;
-        }
-
-        CreateCraftedBeginning.GLOBAL_END_SCULK_SILENCER_MANAGER.clear();
-    }
-
-    @SubscribeEvent
-    public static void onDeployerRecipeSearch(@NotNull DeployerRecipeSearchEvent event) {
+    public static void onDeployerRecipeSearch(DeployerRecipeSearchEvent event) {
         Level level = event.getBlockEntity().getLevel();
         if (level == null) {
             return;
@@ -133,7 +102,7 @@ public class CCBCommonEvents {
     }
 
     @SubscribeEvent
-    public static void onModifyDefaultComponents(@NotNull ModifyDefaultComponentsEvent event) {
+    public static void onModifyDefaultComponents(ModifyDefaultComponentsEvent event) {
         event.modify(CCBItems.AIRTIGHT_HANDHELD_DRILL, builder -> {
             builder.set(CCBDataComponents.AIRTIGHT_UPGRADABLE_INVENTORY, ItemHelper.containerContentsFromHandler(new InventoryHandler(AirtightHandheldDrillMenu.MAX_SLOTS)));
             builder.set(CCBDataComponents.DRILL_MINING_TEMPLATE, AirtightHandheldDrillMiningTemplates.CUBOID);
@@ -147,5 +116,14 @@ public class CCBCommonEvents {
         });
         event.modify(CCBItems.GAS_CANISTER_PACK, builder -> builder.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, GasCanisterPackType._0000.getFlags()));
         event.modify(CCBItems.GAS_VIRTUAL_ITEM, builder -> builder.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE));
+    }
+
+    @SubscribeEvent
+    public static void onRegisterEvent(RegisterEvent event) {
+        if (event.getRegistry() != BuiltInRegistries.TRIGGER_TYPES || !CCBCompatMods.JEI.isLoaded()) {
+            return;
+        }
+
+        MysteriousItemConversionCategory.RECIPES.add(ConversionRecipe.create(new ItemStack(CCBBlocks.EMPTY_BREEZE_COOLER_BLOCK), new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK)));
     }
 }

@@ -7,6 +7,7 @@ import com.simibubi.create.foundation.item.render.CustomRenderedItemModelRendere
 import com.simibubi.create.foundation.item.render.PartialItemModelRenderer;
 import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
 import net.createmod.catnip.animation.AnimationTickHolder;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -21,22 +22,24 @@ import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID, value = Dist.CLIENT)
 public class AirtightHandheldDrillItemRenderer extends CustomRenderedItemModelRenderer {
     private final Map<ItemStack, Float> rotationAngles = new WeakHashMap<>();
 
     @SubscribeEvent
-    public static void register(@NotNull RegisterClientExtensionsEvent event) {
+    public static void register(RegisterClientExtensionsEvent event) {
         event.registerItem(SimpleCustomRenderer.create(CCBItems.AIRTIGHT_HANDHELD_DRILL.asItem(), new AirtightHandheldDrillItemRenderer()), CCBItems.AIRTIGHT_HANDHELD_DRILL.asItem());
     }
 
     @Override
-    protected void render(ItemStack drill, @NotNull CustomRenderedItemModel model, @NotNull PartialItemModelRenderer renderer, ItemDisplayContext transformType, @NotNull PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
+    protected void render(ItemStack drill, CustomRenderedItemModel model, PartialItemModelRenderer renderer, ItemDisplayContext transformType, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         renderer.render(model.getOriginalModel(), light);
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) {

@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionResult;
@@ -11,8 +12,11 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamber
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity.ChargerType;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class BaseChamberState {
     protected static final String COMPOUND_KEY_REMAINING_TIME = "RemainingTime";
     protected static final String COMPOUND_KEY_IS_CREATIVE = "isCreative";
@@ -35,7 +39,7 @@ public abstract class BaseChamberState {
         return isCreative;
     }
 
-    public void read(@NotNull CompoundTag compoundTag) {
+    public void read(CompoundTag compoundTag) {
         if (compoundTag.contains(COMPOUND_KEY_REMAINING_TIME)) {
             remainingTime = compoundTag.getInt(COMPOUND_KEY_REMAINING_TIME);
         }
@@ -44,7 +48,7 @@ public abstract class BaseChamberState {
         }
     }
 
-    public void save(@NotNull CompoundTag compoundTag) {
+    public void save(CompoundTag compoundTag) {
         compoundTag.putInt(COMPOUND_KEY_REMAINING_TIME, remainingTime);
         compoundTag.putBoolean(COMPOUND_KEY_IS_CREATIVE, isCreative);
     }
@@ -53,7 +57,7 @@ public abstract class BaseChamberState {
         validateStates(chamber);
     }
 
-    public void validateStates(@NotNull BreezeChamberBlockEntity chamber) {
+    public void validateStates(BreezeChamberBlockEntity chamber) {
         Level level = chamber.getLevel();
         if (level == null || level.isClientSide) {
             return;

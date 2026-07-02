@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle;
 
 import net.createmod.catnip.data.Iterate;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -8,8 +9,11 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.gas.reactorkettle.ReactorKettleThermoregulator;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightReactorKettleStructureManager {
     private static final String COMPOUND_KEY_TEMPERATURE = "Temperature";
     private static final String COMPOUND_KEY_PREVIOUS_TEMPERATURE = "PreviousTemperature";
@@ -51,7 +55,7 @@ public class AirtightReactorKettleStructureManager {
         return addedTemperature;
     }
 
-    private static float getSpeed(@NotNull BlockPos corePos, @NotNull Level level) {
+    private static float getSpeed(BlockPos corePos, Level level) {
         if (!(level.getBlockEntity(corePos.above()) instanceof AirtightReactorKettleStructuralCogBlockEntity cogBlockEntity)) {
             return 0;
         }
@@ -59,7 +63,7 @@ public class AirtightReactorKettleStructureManager {
         return cogBlockEntity.getSpeed();
     }
 
-    private static float getTheoreticalSpeed(@NotNull BlockPos corePos, @NotNull Level level) {
+    private static float getTheoreticalSpeed(BlockPos corePos, Level level) {
         float speed = 0;
         for (Direction direction : Iterate.horizontalDirections) {
             if (!(level.getBlockEntity(corePos.above().relative(direction)) instanceof AirtightReactorKettleStructuralCogBlockEntity cogBlockEntity)) {
@@ -77,7 +81,7 @@ public class AirtightReactorKettleStructureManager {
         return speed;
     }
 
-    private static boolean isOverstressed(@NotNull BlockPos corePos, @NotNull Level level) {
+    private static boolean isOverstressed(BlockPos corePos, Level level) {
         return level.getBlockEntity(corePos.above()) instanceof AirtightReactorKettleStructuralCogBlockEntity cogBlockEntity && cogBlockEntity.getOverstressed();
     }
 
@@ -121,7 +125,7 @@ public class AirtightReactorKettleStructureManager {
         return compoundTag;
     }
 
-    public void read(@NotNull CompoundTag compoundTag) {
+    public void read(CompoundTag compoundTag) {
         if (compoundTag.contains(COMPOUND_KEY_TEMPERATURE)) {
             temperature = compoundTag.getFloat(COMPOUND_KEY_TEMPERATURE);
         }

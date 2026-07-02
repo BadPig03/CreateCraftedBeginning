@@ -2,14 +2,18 @@ package net.ty.createcraftedbeginning.content.crates;
 
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorage;
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorageType;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CrateMountedItemStorage extends MountedItemStorage {
     protected ItemStack content;
     protected int count;
@@ -32,7 +36,7 @@ public class CrateMountedItemStorage extends MountedItemStorage {
     }
 
     @Override
-    public void setStackInSlot(int slot, @NotNull ItemStack stack) {
+    public void setStackInSlot(int slot, ItemStack stack) {
         if (slot != 0) {
             return;
         }
@@ -42,12 +46,12 @@ public class CrateMountedItemStorage extends MountedItemStorage {
     }
 
     @Override
-    public @NotNull ItemStack getStackInSlot(int slot) {
+    public ItemStack getStackInSlot(int slot) {
         return slot != 0 || content.isEmpty() || count == 0 ? ItemStack.EMPTY : content.copyWithCount(count);
     }
 
     @Override
-    public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
+    public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
         if (stack.isEmpty()) {
             return ItemStack.EMPTY;
         }
@@ -85,7 +89,7 @@ public class CrateMountedItemStorage extends MountedItemStorage {
     }
 
     @Override
-    public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
+    public ItemStack extractItem(int slot, int amount, boolean simulate) {
         if (slot != 0 || amount <= 0 || content.isEmpty() || count == 0) {
             return ItemStack.EMPTY;
         }
@@ -110,7 +114,7 @@ public class CrateMountedItemStorage extends MountedItemStorage {
     }
 
     @Override
-    public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+    public boolean isItemValid(int slot, ItemStack stack) {
         return slot == 0 && (content.isEmpty() || ItemStack.isSameItemSameComponents(content, stack));
     }
 }

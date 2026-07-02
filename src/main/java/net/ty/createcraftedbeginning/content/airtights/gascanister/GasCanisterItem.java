@@ -1,11 +1,10 @@
 package net.ty.createcraftedbeginning.content.airtights.gascanister;
 
-import com.simibubi.create.AllEnchantments;
 import net.createmod.catnip.lang.LangBuilder;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
@@ -14,23 +13,23 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
-import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerClients;
+import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerClients;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.IGasFilter;
 import net.ty.createcraftedbeginning.data.CCBLang;
-import net.ty.createcraftedbeginning.registry.CCBEnchantments;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.function.Supplier;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class GasCanisterItem extends Item implements IGasFilter {
     private final Supplier<GasCanisterBlockItem> blockItem;
 
@@ -39,53 +38,48 @@ public class GasCanisterItem extends Item implements IGasFilter {
         blockItem = placeable;
     }
 
-    public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerItem(GasHandler.ITEM, (itemStack, context) -> new GasCanisterContainerContents(itemStack), CCBItems.GAS_CANISTER);
     }
 
     @Override
-    public boolean supportsEnchantment(@NotNull ItemStack canister, @NotNull Holder<Enchantment> enchantment) {
-        return enchantment.is(AllEnchantments.CAPACITY) || enchantment.is(CCBEnchantments.ECONOMIZE);
-    }
-
-    @Override
-    public boolean shouldCauseReequipAnimation(@NotNull ItemStack oldStack, @NotNull ItemStack newStack, boolean slotChanged) {
+    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
         return oldStack.getItem() != newStack.getItem();
     }
 
     @Override
-    public boolean shouldCauseBlockBreakReset(@NotNull ItemStack oldStack, @NotNull ItemStack newStack) {
+    public boolean shouldCauseBlockBreakReset(ItemStack oldStack, ItemStack newStack) {
         return GasCanisterUtils.shouldCauseBlockBreakReset(oldStack, newStack);
     }
 
     @Override
-    public @NotNull InteractionResult useOn(@NotNull UseOnContext ctx) {
+    public InteractionResult useOn(UseOnContext ctx) {
         return blockItem.get().useOn(ctx);
     }
 
     @Override
-    public boolean isBarVisible(@NotNull ItemStack canister) {
+    public boolean isBarVisible(ItemStack canister) {
         return true;
     }
 
     @Override
-    public int getBarWidth(@NotNull ItemStack canister) {
+    public int getBarWidth(ItemStack canister) {
         return CanisterContainerClients.getBarWidth(canister);
     }
 
     @Override
-    public int getBarColor(@NotNull ItemStack canister) {
+    public int getBarColor(ItemStack canister) {
         return CanisterContainerClients.getBarColor(canister);
     }
 
     @Override
-    public @NotNull String getDescriptionId() {
+    public String getDescriptionId() {
         return getOrCreateDescriptionId();
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(@NotNull ItemStack canister, @NotNull TooltipContext context, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
+    public void appendHoverText(ItemStack canister, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null || !(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
             return;
@@ -104,7 +98,7 @@ public class GasCanisterItem extends Item implements IGasFilter {
     }
 
     @Override
-    public boolean isEnchantable(@NotNull ItemStack canister) {
+    public boolean isEnchantable(ItemStack canister) {
         return true;
     }
 
@@ -113,7 +107,7 @@ public class GasCanisterItem extends Item implements IGasFilter {
     }
 
     @Override
-    public boolean test(@NotNull ItemStack filterItem, GasStack filterGasStack) {
+    public boolean test(ItemStack filterItem, GasStack filterGasStack) {
         if (!(filterItem.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
             return false;
         }
@@ -125,13 +119,13 @@ public class GasCanisterItem extends Item implements IGasFilter {
     public static class GasCanisterBlockItem extends BlockItem {
         private final Supplier<Item> actualItem;
 
-        public GasCanisterBlockItem(Block block, @NotNull Supplier<Item> actualItem, @NotNull Properties properties) {
+        public GasCanisterBlockItem(Block block, Supplier<Item> actualItem, Properties properties) {
             super(block, properties.fireResistant());
             this.actualItem = actualItem;
         }
 
         @Override
-        public @NotNull String getDescriptionId() {
+        public String getDescriptionId() {
             return getOrCreateDescriptionId();
         }
 

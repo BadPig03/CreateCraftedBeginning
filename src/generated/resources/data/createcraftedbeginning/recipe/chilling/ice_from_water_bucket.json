@@ -8,6 +8,9 @@
   "results": [
     {
       "id": "minecraft:ice"
+    },
+    {
+      "id": "minecraft:bucket"
     }
   ]
 }

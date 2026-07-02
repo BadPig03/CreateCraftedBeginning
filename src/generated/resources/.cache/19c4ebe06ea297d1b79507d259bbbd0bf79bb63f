@@ -1,8 +1,8 @@
-// 1.21.1	2026-01-25T12:32:16.9327303	Create Crafted Beginning's Processing Recipes
+// 1.21.1	2026-06-28T10:56:31.8094253	Create Crafted Beginning's Processing Recipes
 a625fc0cc13d34b551ddb1270ec34d6eebd7ebdb data/createcraftedbeginning/recipe/chilling/blue_ice.json
 8574d97987e6fefbb3b587141351d2cbec16b065 data/createcraftedbeginning/recipe/chilling/ice_from_snow_block.json
-81a1628bb98af74e4b77cec5419e9da9944c04af data/createcraftedbeginning/recipe/chilling/ice_from_water_bucket.json
-05506486601b3c4a26d24a0f82d9d0f336a60a7f data/createcraftedbeginning/recipe/chilling/obsidian_from_lava_bucket.json
+48a812774d28b7c62f39ff9e5e795cfb19269eee data/createcraftedbeginning/recipe/chilling/ice_from_water_bucket.json
+99f7f1abdd5e2d4f8bc725cfc03a2a546f809533 data/createcraftedbeginning/recipe/chilling/obsidian_from_lava_bucket.json
 9e8cc44d62179eed8af8223dc7fd576cb8abb393 data/createcraftedbeginning/recipe/chilling/obsidian_from_magma_block.json
 60fee841d1b046f66ead20e6df19482a95e201e9 data/createcraftedbeginning/recipe/chilling/packed_ice.json
 81064381e5e99c2d293e85ff7c466a950a3a702d data/createcraftedbeginning/recipe/cooling/blue_ice.json

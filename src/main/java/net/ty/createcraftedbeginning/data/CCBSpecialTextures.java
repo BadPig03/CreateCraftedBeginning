@@ -1,10 +1,14 @@
 package net.ty.createcraftedbeginning.data;
 
 import net.createmod.catnip.render.BindableTexture;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public enum CCBSpecialTextures implements BindableTexture {
     LOW_TRANSLUCENT("low_translucent.png"),
     LOW_TRANSLUCENT_HIGHLIGHTED("low_translucent_highlighted.png");
@@ -16,7 +20,7 @@ public enum CCBSpecialTextures implements BindableTexture {
     }
 
     @Override
-    public @NotNull ResourceLocation getLocation() {
+    public ResourceLocation getLocation() {
         return location;
     }
 }

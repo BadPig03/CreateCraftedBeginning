@@ -6,6 +6,7 @@ import net.createmod.catnip.animation.AnimationTickHolder;
 import net.createmod.catnip.render.DefaultSuperRenderTypeBuffer;
 import net.createmod.catnip.render.SuperRenderTypeBuffer;
 import net.createmod.ponder.foundation.PonderIndex;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.neoforged.api.distmarker.Dist;
@@ -34,12 +35,15 @@ import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOv
 import net.ty.createcraftedbeginning.ponder.CCBPonderPlugin;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID, value = Dist.CLIENT)
 public class CCBClientEvents {
     @SubscribeEvent
-    public static void onClientSetup(@NotNull FMLClientSetupEvent event) {
+    public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> PonderIndex.addPlugin(new CCBPonderPlugin()));
     }
 
@@ -54,7 +58,7 @@ public class CCBClientEvents {
     }
 
     @SubscribeEvent
-    public static void onRenderWorld(@NotNull RenderLevelStageEvent event) {
+    public static void onRenderWorld(RenderLevelStageEvent event) {
         if (event.getStage() != Stage.AFTER_PARTICLES) {
             return;
         }
@@ -63,7 +67,7 @@ public class CCBClientEvents {
     }
 
     @SubscribeEvent
-    public static void registerItemDecorations(@NotNull RegisterItemDecorationsEvent event) {
+    public static void registerItemDecorations(RegisterItemDecorationsEvent event) {
         event.register(CCBItems.AIRTIGHT_CANNON, AirtightCannonItemRenderer.DECORATOR);
     }
 
@@ -75,7 +79,7 @@ public class CCBClientEvents {
     }
 
     @SubscribeEvent
-    public static void addToItemTooltip(@NotNull ItemTooltipEvent event) {
+    public static void addToItemTooltip(ItemTooltipEvent event) {
         if (event.getEntity() == null || !AllConfigs.client().tooltips.get()) {
             return;
         }
@@ -84,7 +88,7 @@ public class CCBClientEvents {
     }
 
     @SubscribeEvent
-    public static void registerGuiOverlays(@NotNull RegisterGuiLayersEvent event) {
+    public static void registerGuiOverlays(RegisterGuiLayersEvent event) {
         event.registerAbove(VanillaGuiLayers.HOTBAR, GasCanisterOverlay.RESOURCE, GasCanisterOverlay.INSTANCE);
     }
 
@@ -104,7 +108,7 @@ public class CCBClientEvents {
         CCBOutliner.INSTANCE.tickOutlines();
     }
 
-    private static void onRenderWorld(@NotNull PoseStack ms) {
+    private static void onRenderWorld(PoseStack ms) {
         ms.pushPose();
         SuperRenderTypeBuffer buffer = DefaultSuperRenderTypeBuffer.getInstance();
         CCBOutliner.INSTANCE.renderOutlines(ms, buffer, Minecraft.getInstance().gameRenderer.getMainCamera().getPosition(), AnimationTickHolder.getPartialTicks());

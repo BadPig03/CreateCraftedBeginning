@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.api.gas.cannonhandlers.natural;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -21,10 +22,12 @@ import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCa
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBDamageTypes;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EnergizedNaturalAirCannonHandler extends NaturalAirCannonHandler {
     @Override
     public ItemStack getRenderIcon(Level level) {
@@ -32,7 +35,7 @@ public class EnergizedNaturalAirCannonHandler extends NaturalAirCannonHandler {
     }
 
     @Override
-    public void renderTrailParticles(@NotNull Level level, @NotNull Vec3 pos) {
+    public void renderTrailParticles(Level level, Vec3 pos) {
         super.renderTrailParticles(level, pos);
 
         RandomSource random = level.getRandom();
@@ -45,7 +48,7 @@ public class EnergizedNaturalAirCannonHandler extends NaturalAirCannonHandler {
     }
 
     @Override
-    public void explode(@NotNull Level level, @NotNull Vec3 pos, Entity source, float multiplier) {
+    public void explode(Level level, Vec3 pos, Entity source, float multiplier) {
         super.explode(level, pos, source, multiplier);
 
         List<LivingEntity> entities = AirtightCannonUtils.getNearbyEntities(level, pos, DEFAULT_RADIUS * multiplier, source);
@@ -85,7 +88,7 @@ public class EnergizedNaturalAirCannonHandler extends NaturalAirCannonHandler {
     }
 
     @Override
-    public void appendHoverText(@NotNull ItemStack cannon, @NotNull TooltipContext context, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
+    public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(CCBLang.translate("gui.tooltips.airtight_cannon.energized_natural_air").style(ChatFormatting.DARK_GREEN).component());
     }
 }

@@ -10,14 +10,18 @@ import net.createmod.ponder.api.element.WorldSectionElement;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceBlockEntity;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PortableGasInterfaceScenes {
-    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("portable_gas_interface", "Gas Exchange on Contraptions");
@@ -49,6 +53,10 @@ public class PortableGasInterfaceScenes {
         Selection sourceSelection = util.select().fromTo(cogPos, motorPos);
         Selection redstoneSelection = util.select().fromTo(leverPos, redstoneBasePos);
 
+        Vec3 contraptionTopVec = util.vector().centerOf(contraptionTopPos);
+        Vec3 contraptionInterfaceVec = util.vector().topOf(contraptionInterfacePos);
+        Vec3 interfaceVec = util.vector().topOf(interfacePos);
+
         float mediumSpeed = SpeedLevel.MEDIUM.getSpeedValue();
 
         scene.idle(20);
@@ -59,31 +67,31 @@ public class PortableGasInterfaceScenes {
         scene.idle(20);
         scene.world().rotateBearing(bearingPos, 360, 60);
 		scene.world().rotateSection(contraption, 0, 360, 0, 60);
-        scene.overlay().showText(60).text("Airtight Pipes cannot directly interact with Airtight Tanks on contraptions").colored(PonderPalette.RED).pointAt(Vec3.atCenterOf(contraptionTopPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Airtight Pipes cannot directly interact with Airtight Tanks on contraptions").colored(PonderPalette.RED).pointAt(contraptionTopVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().showSectionAndMerge(contraptionInterfaceSelection, Direction.SOUTH, contraption);
 
         scene.idle(13);
 		scene.effects().superGlue(contraptionInterfacePos, Direction.SOUTH, true);
-        scene.overlay().showText(60).text("Similarly to Portable Fluid Interfaces, Portable Gas Interfaces enable direct gas exchange with contraptions").pointAt(util.vector().topOf(contraptionInterfacePos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Similarly to Portable Fluid Interfaces, Portable Gas Interfaces enable direct gas exchange with contraptions").colored(PonderPalette.GREEN).pointAt(contraptionInterfaceVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().rotateBearing(bearingPos, 360, 60);
 		scene.world().rotateSection(contraption, 0, 360, 0, 60);
 
         scene.idle(10);
+        scene.world().setBlock(motorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.EAST), false);
         scene.world().showSection(pipeSelection, Direction.DOWN);
-        scene.world().setBlock(motorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.WEST), false);
         scene.world().showSection(sourceSelection, Direction.SOUTH);
 
-        scene.idle(10);
+        scene.idle(15);
         scene.world().setKineticSpeed(sourceSelection, mediumSpeed);
         scene.world().setKineticSpeed(pipeSelection, -mediumSpeed);
         scene.effects().rotationSpeedIndicator(pumpPos);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Their behavior mirrors Portable Fluid Interfaces exactly").pointAt(util.vector().topOf(interfacePos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Their behavior mirrors Portable Fluid Interfaces exactly").colored(PonderPalette.GREEN).pointAt(interfaceVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(30);
         scene.world().modifyBlockEntityNBT(bothInterfaceSelection, PortableGasInterfaceBlockEntity.class, compoundTag -> {
@@ -102,7 +110,7 @@ public class PortableGasInterfaceScenes {
         scene.idle(20);
         scene.world().toggleRedstonePower(redstoneSelection);
         scene.effects().indicateRedstone(leverPos);
-        scene.overlay().showText(60).text("Redstone power will prevent the interface from engaging").colored(PonderPalette.RED).pointAt(util.vector().topOf(interfacePos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Redstone power will prevent the interface from engaging").colored(PonderPalette.RED).pointAt(interfaceVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(20);
         scene.world().rotateBearing(bearingPos, 360, 60);

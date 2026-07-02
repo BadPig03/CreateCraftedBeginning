@@ -1,14 +1,18 @@
 package net.ty.createcraftedbeginning.api.gas.effecthandlers.ultrawarm;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PressurizedUltrawarmAirEffectHandler extends UltrawarmAirEffectHandler {
     @Override
-    public void apply(@NotNull Level level, @NotNull BlockPos pos, Direction direction, @NotNull Gas gasType) {
+    public void apply(Level level, BlockPos pos, Direction direction, Gas gasType) {
         applyEffects(level, pos, direction, gasType.getInflation(), gasType.getTint(), 10);
     }
 }

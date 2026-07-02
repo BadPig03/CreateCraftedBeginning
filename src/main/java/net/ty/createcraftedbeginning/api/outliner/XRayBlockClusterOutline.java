@@ -7,22 +7,24 @@ import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.render.BindableTexture;
 import net.createmod.catnip.render.PonderRenderTypes;
 import net.createmod.catnip.render.SuperRenderTypeBuffer;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-@SuppressWarnings("unused")
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class XRayBlockClusterOutline extends CCBOutline {
     protected final Vector3f pos0Temp = new Vector3f();
     protected final Vector3f pos1Temp = new Vector3f();
@@ -32,12 +34,12 @@ public class XRayBlockClusterOutline extends CCBOutline {
     protected final Vector3f originTemp = new Vector3f();
     private final Cluster cluster;
 
-    public XRayBlockClusterOutline(@NotNull Iterable<BlockPos> positions) {
+    public XRayBlockClusterOutline(Iterable<BlockPos> positions) {
         cluster = new Cluster();
         positions.forEach(cluster::include);
     }
 
-    public static void loadFaceData(@NotNull Direction face, Vector3f pos0, Vector3f pos1, Vector3f pos2, Vector3f pos3, Vector3f normal) {
+    public static void loadFaceData(Direction face, Vector3f pos0, Vector3f pos1, Vector3f pos2, Vector3f pos3, Vector3f normal) {
         switch (face) {
             case DOWN -> {
                 pos0.set(0, 0, 1);
@@ -84,7 +86,7 @@ public class XRayBlockClusterOutline extends CCBOutline {
         }
     }
 
-    public static void addPos(float x, float y, float z, @NotNull Vector3f pos0, @NotNull Vector3f pos1, @NotNull Vector3f pos2, @NotNull Vector3f pos3) {
+    public static void addPos(float x, float y, float z, Vector3f pos0, Vector3f pos1, Vector3f pos2, Vector3f pos3) {
         pos0.add(x, y, z);
         pos1.add(x, y, z);
         pos2.add(x, y, z);
@@ -146,7 +148,7 @@ public class XRayBlockClusterOutline extends CCBOutline {
         ms.popPose();
     }
 
-    protected void bufferBlockFace(Pose pose, VertexConsumer consumer, @NotNull BlockPos pos, Direction face, Vector4f color, int lightmap) {
+    protected void bufferBlockFace(Pose pose, VertexConsumer consumer, BlockPos pos, Direction face, Vector4f color, int lightmap) {
         Vector3f pos0 = pos0Temp;
         Vector3f pos1 = pos1Temp;
         Vector3f pos2 = pos2Temp;

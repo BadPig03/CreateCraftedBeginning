@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.data;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.item.Items;
@@ -15,8 +16,11 @@ import net.ty.createcraftedbeginning.registry.CCBFluids;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBTags;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.concurrent.CompletableFuture;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBSequencedAssemblyWithGasRecipes extends SequencedAssemblyWithGasRecipeGen {
     GeneratedRecipe HEAVY_CORE = create("heavy_core", b -> b.require(CCBTags.commonItemTag("obsidians/crying")).transitionTo(CCBItems.INCOMPLETE_HEAVY_CORE).addOutput(Items.HEAVY_CORE, 75).addOutput(Items.NETHERITE_INGOT, 4, 25).loops(4).addStep(DeployerApplicationWithGasRecipe::new, rb -> rb.require(Items.NETHERITE_INGOT)).addStep(FillingWithGasRecipe::new, rb -> rb.require(Fluids.LAVA, 500)).addStep(DeployerApplicationWithGasRecipe::new, rb -> rb.require(CCBItems.AIRTIGHT_SHEET)).addStep(GasInjectionRecipe::new, rb -> rb.require(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get(), 125)).addStep(PressingWithGasRecipe::new, rb -> rb));

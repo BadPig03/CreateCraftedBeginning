@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.data;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -10,10 +11,12 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasHolder;
 import net.ty.createcraftedbeginning.registry.CCBRegistries;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-@SuppressWarnings("unchecked")
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBGasDeferredRegister extends DeferredRegister<Gas> {
     private final Function<ResourceKey<Gas>, GasHolder<Gas, Gas>> holderCreator = GasHolder::new;
 
@@ -25,18 +28,21 @@ public class CCBGasDeferredRegister extends DeferredRegister<Gas> {
         return register(name, () -> new Gas(builder));
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public <I extends Gas> @NotNull GasHolder<Gas, I> register(@NotNull String name, @NotNull Supplier<? extends I> supplier) {
+    public <I extends Gas> @NotNull GasHolder<Gas, I> register(String name, Supplier<? extends I> supplier) {
         return (GasHolder<Gas, I>) super.register(name, supplier);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public <I extends Gas> @NotNull GasHolder<Gas, I> register(@NotNull String name, @NotNull Function<ResourceLocation, ? extends I> func) {
+    public <I extends Gas> @NotNull GasHolder<Gas, I> register(String name, Function<ResourceLocation, ? extends I> func) {
         return (GasHolder<Gas, I>) super.register(name, func);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected <I extends Gas> @NotNull GasHolder<Gas, I> createHolder(@NotNull ResourceKey<? extends Registry<Gas>> registryKey, @NotNull ResourceLocation key) {
+    protected <I extends Gas> @NotNull GasHolder<Gas, I> createHolder(ResourceKey<? extends Registry<Gas>> registryKey, ResourceLocation key) {
         return (GasHolder<Gas, I>) holderCreator.apply(ResourceKey.create(registryKey, key));
     }
 }

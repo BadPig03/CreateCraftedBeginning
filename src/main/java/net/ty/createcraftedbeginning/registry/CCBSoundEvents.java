@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.registry;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Vec3i;
 import net.minecraft.core.registries.Registries;
@@ -22,8 +23,9 @@ import net.neoforged.neoforge.registries.RegisterEvent;
 import net.neoforged.neoforge.registries.RegisterEvent.RegisterHelper;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,6 +36,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBSoundEvents {
     public static final Map<ResourceLocation, SoundEntry> ALL = new HashMap<>();
@@ -54,18 +58,19 @@ public class CCBSoundEvents {
     public static final SoundEntry AIR_VENT_OUTLET_PLACED = create("air_vent_outlet_placed").playExisting(SoundEvents.NETHERITE_BLOCK_PLACE, 0.75f, 1.0f).subtitle("Air Vent Outlet placed").category(SoundSource.BLOCKS).build();
     public static final SoundEntry AIR_VENT_OUTLET_REMOVED = create("air_vent_outlet_removed").playExisting(SoundEvents.NETHERITE_BLOCK_BREAK, 0.75f, 1.0f).subtitle("Air Vent Outlet removed").category(SoundSource.BLOCKS).build();
     public static final SoundEntry REACTOR_KETTLE_MIXING = create("reactor_kettle_mixing").subtitle("Reactor Kettle Mixing noises").playExisting(SoundEvents.GILDED_BLACKSTONE_BREAK, 0.125f, 0.5f).playExisting(SoundEvents.NETHERRACK_BREAK, 0.125f, 0.5f).playExisting(SoundEvents.NETHERITE_BLOCK_HIT, 0.125f, 0.5f).category(SoundSource.BLOCKS).build();
+    public static final SoundEntry FORGING_PRESS_PRESSED = create("forging_press_pressed").subtitle("Forging Press clangs").playExisting(SoundEvents.ANVIL_LAND, 0.1f, 1.0f).playExisting(SoundEvents.ITEM_BREAK, 0.4f, 1.0f).playExisting(SoundEvents.NETHERITE_BLOCK_HIT, 0.35f, 1.0f).category(SoundSource.BLOCKS).build();
 
     @Contract("_ -> new")
-    private static @NotNull SoundEntryBuilder create(String name) {
+    private static SoundEntryBuilder create(String name) {
         return create(CreateCraftedBeginning.asResource(name));
     }
 
     @Contract("_ -> new")
-    public static @NotNull SoundEntryBuilder create(ResourceLocation id) {
+    public static SoundEntryBuilder create(ResourceLocation id) {
         return new SoundEntryBuilder(id);
     }
 
-    public static void register(@NotNull RegisterEvent event) {
+    public static void register(RegisterEvent event) {
         event.register(Registries.SOUND_EVENT, helper -> ALL.values().forEach(entry -> entry.register(helper)));
     }
 
@@ -74,11 +79,11 @@ public class CCBSoundEvents {
     }
 
     @Contract("_ -> new")
-    public static @NotNull SoundEntryProvider provider(DataGenerator generator) {
+    public static SoundEntryProvider provider(DataGenerator generator) {
         return new SoundEntryProvider(generator);
     }
 
-    public static void playItemPickup(@NotNull Player player) {
+    public static void playItemPickup(Player player) {
         player.level().playSound(null, player.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1.0f + player.level().random.nextFloat());
     }
 
@@ -133,11 +138,11 @@ public class CCBSoundEvents {
             play(world, null, pos, volume, pitch);
         }
 
-        public void play(Level world, Player entity, @NotNull Vec3i pos, float volume, float pitch) {
+        public void play(Level world, @Nullable Player entity, Vec3i pos, float volume, float pitch) {
             play(world, entity, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, volume, pitch);
         }
 
-        public abstract void play(Level world, Player entity, double x, double y, double z, float volume, float pitch);
+        public abstract void play(Level world, @Nullable Player entity, double x, double y, double z, float volume, float pitch);
 
         public void play(Level world, Player entity, Vec3i pos) {
             play(world, entity, pos, 1, 1);
@@ -147,7 +152,7 @@ public class CCBSoundEvents {
             playFrom(entity, 1, 1);
         }
 
-        public void playFrom(@NotNull Entity entity, float volume, float pitch) {
+        public void playFrom(Entity entity, float volume, float pitch) {
             if (entity.isSilent()) {
                 return;
             }
@@ -155,17 +160,17 @@ public class CCBSoundEvents {
             play(entity.level(), null, entity.blockPosition(), volume, pitch);
         }
 
-        public void play(Level world, Player entity, @NotNull Vec3 pos, float volume, float pitch) {
+        public void play(Level world, Player entity, Vec3 pos, float volume, float pitch) {
             play(world, entity, pos.x(), pos.y(), pos.z(), volume, pitch);
         }
 
-        public void playAt(Level world, @NotNull Vec3i pos, float volume, float pitch, boolean fade) {
+        public void playAt(Level world, Vec3i pos, float volume, float pitch, boolean fade) {
             playAt(world, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, volume, pitch, fade);
         }
 
         public abstract void playAt(Level world, double x, double y, double z, float volume, float pitch, boolean fade);
 
-        public void playAt(Level world, @NotNull Vec3 pos, float volume, float pitch, boolean fade) {
+        public void playAt(Level world, Vec3 pos, float volume, float pitch, boolean fade) {
             playAt(world, pos.x(), pos.y(), pos.z(), volume, pitch, fade);
         }
     }
@@ -174,17 +179,17 @@ public class CCBSoundEvents {
 
         private final PackOutput output;
 
-        public SoundEntryProvider(@NotNull DataGenerator generator) {
+        public SoundEntryProvider(DataGenerator generator) {
             output = generator.getPackOutput();
         }
 
         @Override
-        public @NotNull CompletableFuture<?> run(@NotNull CachedOutput cache) {
+        public CompletableFuture<?> run(CachedOutput cache) {
             return generate(output.getOutputFolder(), cache);
         }
 
         @Override
-        public @NotNull String getName() {
+        public String getName() {
             return "Create Crafted Beginning's Custom Sounds";
         }
 
@@ -255,7 +260,7 @@ public class CCBSoundEvents {
             return this;
         }
 
-        public SoundEntryBuilder playExisting(@NotNull Holder<SoundEvent> event) {
+        public SoundEntryBuilder playExisting(Holder<SoundEvent> event) {
             return playExisting(event::value, 1, 1);
         }
 
@@ -318,12 +323,12 @@ public class CCBSoundEvents {
         }
 
         @Override
-        public @NotNull SoundEvent getMainEvent() {
+        public SoundEvent getMainEvent() {
             return compiledEvents.getFirst().event().get();
         }
 
         @Override
-        public void play(Level world, Player entity, double x, double y, double z, float volume, float pitch) {
+        public void play(Level world, @Nullable Player entity, double x, double y, double z, float volume, float pitch) {
             compiledEvents.forEach(event -> world.playSound(entity, x, y, z, event.event().get(), category, event.volume() * volume, event.pitch() * pitch));
         }
 
@@ -333,7 +338,7 @@ public class CCBSoundEvents {
         }
 
         @Contract("_ -> new")
-        protected @NotNull ResourceLocation getIdOf(int i) {
+        protected ResourceLocation getIdOf(int i) {
             return ResourceLocation.fromNamespaceAndPath(id.getNamespace(), i == 0 ? id.getPath() : id.getPath() + "_compounded_" + i);
         }
 
@@ -355,7 +360,7 @@ public class CCBSoundEvents {
         }
 
         @Override
-        public void register(@NotNull RegisterHelper<SoundEvent> helper) {
+        public void register(RegisterHelper<SoundEvent> helper) {
             ResourceLocation location = event.getId();
             helper.register(location, SoundEvent.createVariableRangeEvent(location));
         }
@@ -395,17 +400,17 @@ public class CCBSoundEvents {
         }
 
         @Override
-        public @NotNull SoundEvent getMainEvent() {
+        public SoundEvent getMainEvent() {
             return event.get();
         }
 
         @Override
-        public void play(@NotNull Level world, Player entity, double x, double y, double z, float volume, float pitch) {
+        public void play(Level world, @Nullable Player entity, double x, double y, double z, float volume, float pitch) {
             world.playSound(entity, x, y, z, event.get(), category, volume, pitch);
         }
 
         @Override
-        public void playAt(@NotNull Level world, double x, double y, double z, float volume, float pitch, boolean fade) {
+        public void playAt(Level world, double x, double y, double z, float volume, float pitch, boolean fade) {
             world.playLocalSound(x, y, z, event.get(), category, volume, pitch, fade);
         }
     }

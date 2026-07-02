@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:so_close",
+  "parent": "createcraftedbeginning:debris_craft",
   "criteria": {
     "0": {
       "trigger": "createcraftedbeginning:tesla_turbine_easy_as_pie_builtin"

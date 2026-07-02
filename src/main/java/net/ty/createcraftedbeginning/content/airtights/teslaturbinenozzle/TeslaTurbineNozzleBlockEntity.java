@@ -4,6 +4,7 @@ import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -12,18 +13,20 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.TeslaTurbineStructuralPosition;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Set;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
     private final Direction lastDirection;
     private TeslaTurbineBlockEntity turbine;
@@ -34,7 +37,8 @@ public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements I
         lastDirection = state.getValue(TeslaTurbineNozzleBlock.FACING);
     }
 
-    public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
+    @SuppressWarnings("DataFlowIssue")
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.TESLA_TURBINE_NOZZLE.get(), TeslaTurbineNozzleBlockEntity::getGasCapability);
     }
 
@@ -63,7 +67,8 @@ public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements I
             }
         }
 
-        return turbine.getCore().createGasHandler(getBlockState().getValue(TeslaTurbineNozzleBlock.CLOCKWISE));
+        boolean clockwise = getBlockState().getValue(TeslaTurbineNozzleBlock.CLOCKWISE);
+        return turbine.getCore().createGasHandler(clockwise);
     }
 
     private @Nullable TeslaTurbineBlockEntity getTurbine() {

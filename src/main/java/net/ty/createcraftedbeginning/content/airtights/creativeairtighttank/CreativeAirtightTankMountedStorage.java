@@ -1,20 +1,24 @@
 package net.ty.createcraftedbeginning.content.airtights.creativeairtighttank;
 
 import com.mojang.serialization.MapCodec;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.gas.gases.CreativeSmartGasTank;
-import net.ty.createcraftedbeginning.api.gas.gases.GasTank;
-import net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorageType;
-import net.ty.createcraftedbeginning.api.gas.gases.WrapperMountedGasStorage;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.CreativeSmartGasTank;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageType;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.WrapperMountedGasStorage;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CreativeAirtightTankMountedStorage extends WrapperMountedGasStorage<CreativeSmartGasTank> {
     public static final MapCodec<CreativeAirtightTankMountedStorage> CODEC = CreativeSmartGasTank.CODEC.xmap(CreativeAirtightTankMountedStorage::new, storage -> storage.wrapped).fieldOf("value");
 
@@ -27,7 +31,7 @@ public class CreativeAirtightTankMountedStorage extends WrapperMountedGasStorage
 	}
 
     @Contract("_ -> new")
-    public static @NotNull CreativeAirtightTankMountedStorage fromTank(@NotNull CreativeAirtightTankBlockEntity tank) {
+    public static CreativeAirtightTankMountedStorage fromTank(CreativeAirtightTankBlockEntity tank) {
         GasTank inventory = tank.getTankInventory();
         CreativeSmartGasTank copy = new CreativeSmartGasTank(inventory.getCapacity(), $ -> {});
         copy.setContainedGas(inventory.getGasStack());

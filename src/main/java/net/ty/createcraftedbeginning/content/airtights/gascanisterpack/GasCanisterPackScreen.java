@@ -6,6 +6,7 @@ import com.simibubi.create.foundation.gui.AllIcons;
 import com.simibubi.create.foundation.gui.menu.AbstractSimiContainerScreen;
 import com.simibubi.create.foundation.gui.widget.IconButton;
 import net.createmod.catnip.gui.element.GuiGameElement;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
@@ -14,13 +15,15 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackMenu.PackItemHandler;
 import net.ty.createcraftedbeginning.data.CCBGUITextures;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanisterPackMenu> {
     private ItemStack pack;
@@ -63,13 +66,13 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
     }
 
     @Override
-	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         super.render(graphics, mouseX, mouseY, partialTicks);
         drawGasCanisters(graphics);
     }
 
     @Override
-    protected void renderBg(@NotNull GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+    protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         renderPlayerInventory(graphics, getLeftOfCentered(PLAYER_INVENTORY.getWidth()), topPos + BACKGROUND.getHeight() + 4);
         BACKGROUND.render(graphics, leftPos, topPos);
         Component packHoverName = pack.getHoverName();

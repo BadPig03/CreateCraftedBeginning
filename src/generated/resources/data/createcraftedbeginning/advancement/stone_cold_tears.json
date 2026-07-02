@@ -1,0 +1,35 @@
+{
+  "parent": "createcraftedbeginning:pre_crushing",
+  "criteria": {
+    "0": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:powdered_crying_obsidian"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.stone_cold_tears.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:powdered_crying_obsidian"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.stone_cold_tears"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -3,14 +3,19 @@ package net.ty.createcraftedbeginning.recipe;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import io.netty.handler.codec.DecoderException;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.neoforged.neoforge.common.crafting.CompoundIngredient;
-import net.ty.createcraftedbeginning.api.gas.gases.IAssemblyRecipeWithGas;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAssemblyRecipeWithGas;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipe;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class SequencedWithGasRecipe<T extends ProcessingWithGasRecipe<?, ?>> {
     public static final Codec<SequencedWithGasRecipe<?>> CODEC = Recipe.CODEC.comapFlatMap(recipe -> recipe instanceof ProcessingWithGasRecipe<?, ?> processing && recipe instanceof IAssemblyRecipeWithGas ? DataResult.success(new SequencedWithGasRecipe<>(processing)) : DataResult.error(() -> recipe.getClass().getSimpleName() + " is not supported in Sequenced Assembly with Gas"), SequencedWithGasRecipe::getRecipe);
 

@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.crates.brasscrate;
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -20,15 +21,19 @@ import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.crates.CrateContainersUtils;
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class BrassCrateBlock extends HorizontalDirectionalBlock implements IBE<BrassCrateBlockEntity>, IWrenchable {
     public BrassCrateBlock(Properties properties) {
         super(properties);
     }
 
     @Override
-    protected @NotNull MapCodec<? extends HorizontalDirectionalBlock> codec() {
+    protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
         return simpleCodec(BrassCrateBlock::new);
     }
 
@@ -43,25 +48,28 @@ public class BrassCrateBlock extends HorizontalDirectionalBlock implements IBE<B
     }
 
     @Override
-    protected void createBlockStateDefinition(@NotNull Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
         builder.add(FACING);
         super.createBlockStateDefinition(builder);
     }
 
     @Override
-    public BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
+    public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState state = super.getStateForPlacement(context);
-        return state == null ? null : state.setValue(FACING, context.getHorizontalDirection().getOpposite());
+        if (state == null) {
+            return null;
+        }
+        return state.setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
 
     @Override
-    public void setPlacedBy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, LivingEntity entity, @NotNull ItemStack stack) {
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity entity, ItemStack stack) {
         super.setPlacedBy(level, pos, state, entity, stack);
         CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
     }
 
     @Override
-    public void onRemove(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState newState, boolean isMoving) {
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (state.is(newState.getBlock())) {
             return;
         }
@@ -73,17 +81,17 @@ public class BrassCrateBlock extends HorizontalDirectionalBlock implements IBE<B
     }
 
     @Override
-    public boolean hasAnalogOutputSignal(@NotNull BlockState state) {
+    public boolean hasAnalogOutputSignal(BlockState state) {
         return true;
     }
 
     @Override
-    public int getAnalogOutputSignal(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos) {
+    public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
         return level.getBlockEntity(pos) instanceof BrassCrateBlockEntity crate ? CrateContainersUtils.calculateRedstoneSignal(crate.getHandler()) : 0;
     }
 
     @Override
-    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos, @NotNull CollisionContext context) {
-        return CCBShapes.CRATE;
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return CCBShapes.CRATE_SHAPE;
     }
 }

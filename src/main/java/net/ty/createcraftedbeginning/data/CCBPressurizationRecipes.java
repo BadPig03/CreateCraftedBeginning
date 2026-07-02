@@ -1,12 +1,16 @@
 package net.ty.createcraftedbeginning.data;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.PackOutput;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.recipe.generators.PressurizationRecipeGen;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.concurrent.CompletableFuture;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBPressurizationRecipes extends PressurizationRecipeGen {
     GeneratedRecipe PRESSURIZED_NATURAL = create("pressurized_natural", b -> b.require(CCBGases.NATURAL_AIR.get(), 10).output(CCBGases.PRESSURIZED_NATURAL_AIR.get(), 1));

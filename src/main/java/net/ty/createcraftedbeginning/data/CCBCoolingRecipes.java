@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.data;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.item.Items;
@@ -10,8 +11,11 @@ import net.ty.createcraftedbeginning.registry.CCBFluids;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.concurrent.CompletableFuture;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBCoolingRecipes extends CoolingRecipeGen {
     GeneratedRecipe ICE_CREAMS = create("ice_creams", b -> b.require(CCBItemTags.ICE_CREAMS.tag).duration(450));

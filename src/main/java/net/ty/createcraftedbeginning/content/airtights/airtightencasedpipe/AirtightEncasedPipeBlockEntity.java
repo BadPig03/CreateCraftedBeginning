@@ -5,21 +5,28 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.gas.gases.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.IGasExtractor;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasExtractor;
 import net.ty.createcraftedbeginning.data.CCBLang;
-import org.jetbrains.annotations.NotNull;
+import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightEncasedPipeBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IGasExtractor {
+    private CCBAdvancementBehaviour advancementBehaviour;
+
     public AirtightEncasedPipeBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
@@ -58,14 +65,22 @@ public class AirtightEncasedPipeBlockEntity extends SmartBlockEntity implements 
     }
 
     @Override
-    public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.GASEOUS_VARIATIONS, CCBAdvancements.MINTY_FRESH);
+        behaviours.add(advancementBehaviour);
+
         AirtightEncasedPipeTransportBehaviour transportBehaviour = new AirtightEncasedPipeTransportBehaviour(this);
         behaviours.add(transportBehaviour);
     }
 
     @Override
-    public boolean canExtract(Level level, @NotNull BlockState blockState, BlockPos blockPos, Direction direction) {
+    public boolean canExtract(Level level, BlockState blockState, BlockPos blockPos, Direction direction) {
         return blockState.getValue(AirtightEncasedPipeBlock.PROPERTY_BY_DIRECTION.get(direction));
+    }
+
+    @Override
+    public CCBAdvancementBehaviour getAdvancementBehaviour() {
+        return advancementBehaviour;
     }
 
     public class AirtightEncasedPipeTransportBehaviour extends GasTransportBehaviour {

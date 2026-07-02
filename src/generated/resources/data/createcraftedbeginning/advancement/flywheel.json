@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:phantom_divers",
+  "parent": "createcraftedbeginning:sky_is_not_the_limit",
   "criteria": {
     "0": {
       "trigger": "createcraftedbeginning:flywheel_builtin"

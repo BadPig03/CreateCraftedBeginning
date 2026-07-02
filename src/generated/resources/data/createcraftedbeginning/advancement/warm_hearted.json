@@ -1,0 +1,29 @@
+{
+  "parent": "createcraftedbeginning:hot_hot_hot",
+  "criteria": {
+    "0": {
+      "trigger": "createcraftedbeginning:warm_hearted_builtin"
+    }
+  },
+  "display": {
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.warm_hearted.desc"
+    },
+    "frame": "goal",
+    "hidden": true,
+    "icon": {
+      "count": 1,
+      "id": "minecraft:snow_block"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.warm_hearted"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

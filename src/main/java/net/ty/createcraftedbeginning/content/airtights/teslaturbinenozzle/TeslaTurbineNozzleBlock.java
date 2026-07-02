@@ -5,6 +5,7 @@ import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import net.createmod.catnip.data.Pair;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -34,12 +35,15 @@ import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbine
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.data.CCBShapes;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Set;
 
 import static net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlock.calculateStructurePos;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<TeslaTurbineNozzleBlockEntity>, SimpleWaterloggedBlock, IWrenchable {
     public static final BooleanProperty CLOCKWISE = BooleanProperty.create("clockwise");
 
@@ -51,7 +55,7 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(CLOCKWISE, false));
     }
 
-    public static boolean isClockwise(@NotNull Level level, Direction facing, @NotNull BlockPos nozzlePos) {
+    public static boolean isClockwise(Level level, Direction facing, BlockPos nozzlePos) {
         BlockPos structurePos = nozzlePos.relative(facing);
         BlockState structuralState = level.getBlockState(structurePos);
         Axis structuralAxis = structuralState.getValue(TeslaTurbineStructuralBlock.AXIS);
@@ -68,7 +72,7 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
         return true;
     }
 
-    public static boolean isInvalidPlacement(@NotNull Level level, Direction facing, @NotNull BlockPos nozzlePos) {
+    public static boolean isInvalidPlacement(Level level, Direction facing, BlockPos nozzlePos) {
         BlockPos structurePos = nozzlePos.relative(facing);
         BlockState structuralState = level.getBlockState(structurePos);
         if (!(structuralState.getBlock() instanceof TeslaTurbineStructuralBlock)) {
@@ -102,7 +106,7 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
     }
 
     @Override
-    protected @NotNull MapCodec<? extends DirectionalBlock> codec() {
+    protected MapCodec<? extends DirectionalBlock> codec() {
         return simpleCodec(TeslaTurbineNozzleBlock::new);
     }
 
@@ -112,7 +116,7 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
     }
 
     @Override
-    public BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
+    public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState state = super.getStateForPlacement(context);
         if (state == null) {
             return null;
@@ -134,24 +138,24 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
     }
 
     @Override
-    protected void createBlockStateDefinition(@NotNull Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
         builder.add(FACING, WATERLOGGED, CLOCKWISE);
         super.createBlockStateDefinition(builder);
     }
 
     @Override
-    public void setPlacedBy(@NotNull Level level, @NotNull BlockPos blockPos, @NotNull BlockState blockState, LivingEntity placer, @NotNull ItemStack itemStack) {
+    public void setPlacedBy(Level level, BlockPos blockPos, BlockState blockState, @Nullable LivingEntity placer, ItemStack itemStack) {
         super.setPlacedBy(level, blockPos, blockState, placer, itemStack);
         CCBAdvancementBehaviour.setPlacedBy(level, blockPos, placer);
     }
 
     @Override
-    public @NotNull FluidState getFluidState(@NotNull BlockState state) {
+    public FluidState getFluidState(BlockState state) {
         return state.getValue(WATERLOGGED) ? Fluids.WATER.defaultFluidState() : super.getFluidState(state);
     }
 
     @Override
-    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter worldIn, @NotNull BlockPos pos, @NotNull CollisionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
         Direction facing = state.getValue(FACING);
         return facing.getAxis() == Axis.Y ? CCBShapes.TESLA_TURBINE_NOZZLE_VERTICAL.get(facing) : CCBShapes.TESLA_TURBINE_NOZZLE.get(facing);
     }

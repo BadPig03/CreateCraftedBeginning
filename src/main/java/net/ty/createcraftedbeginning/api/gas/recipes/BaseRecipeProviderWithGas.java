@@ -1,16 +1,19 @@
 package net.ty.createcraftedbeginning.api.gas.recipes;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class BaseRecipeProviderWithGas extends RecipeProvider {
     protected final String modId;
     protected final List<GeneratedRecipe> all = new ArrayList<>();
@@ -30,7 +33,7 @@ public abstract class BaseRecipeProviderWithGas extends RecipeProvider {
     }
 
     @Override
-    protected void buildRecipes(@NotNull RecipeOutput recipeOutput) {
+    protected void buildRecipes(RecipeOutput recipeOutput) {
         all.forEach(c -> c.register(recipeOutput));
     }
 

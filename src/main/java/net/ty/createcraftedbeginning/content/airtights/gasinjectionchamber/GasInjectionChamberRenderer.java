@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.foundation.blockEntity.renderer.SmartBlockEntityRenderer;
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
 import net.createmod.catnip.render.CachedBuffers;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
@@ -11,11 +12,15 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity.NOZZLE_IDLE_TIME;
 import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity.NOZZLE_PART_TIME;
 import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity.NOZZLE_TIME;
 import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity.PROCESSING_TIME;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class GasInjectionChamberRenderer extends SmartBlockEntityRenderer<GasInjectionChamberBlockEntity> {
     public GasInjectionChamberRenderer(Context context) {
         super(context);
@@ -66,12 +71,11 @@ public class GasInjectionChamberRenderer extends SmartBlockEntityRenderer<GasInj
         PartialModel nozzleTop = CCBPartialModels.NOZZLE_TOP;
         PartialModel nozzleBottom = CCBPartialModels.NOZZLE_BOTTOM;
         BlockState state = be.getBlockState();
-        int processingTicks = be.processingTicks;
-        float pt = processingTicks - partialTicks;
+        float ticks = be.getProcessingTicks() - partialTicks;
 
-        ms.translate(0, getNozzleSqueeze(pt), 0);
+        ms.translate(0, getNozzleSqueeze(ticks), 0);
         CachedBuffers.partial(nozzle, state).light(light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
-        ms.translate(0, getNozzleSqueezePart(pt), 0);
+        ms.translate(0, getNozzleSqueezePart(ticks), 0);
         CachedBuffers.partial(nozzleTop, state).light(light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
         CachedBuffers.partial(nozzleBottom, state).light(light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
 

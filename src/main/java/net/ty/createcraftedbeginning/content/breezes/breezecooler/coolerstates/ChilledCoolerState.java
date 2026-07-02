@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
@@ -9,8 +10,11 @@ import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBl
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity.CoolantType;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe.CoolingData;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class ChilledCoolerState extends BaseCoolerState {
     public ChilledCoolerState(int remainingTime, boolean isCreative) {
         super(remainingTime, isCreative);
@@ -47,7 +51,7 @@ public class ChilledCoolerState extends BaseCoolerState {
     }
 
     @Override
-    public InteractionResult onItemInsert(@NotNull BreezeCoolerBlockEntity cooler, ItemStack stack, boolean forceOverflow, boolean simulate) {
+    public InteractionResult onItemInsert(BreezeCoolerBlockEntity cooler, ItemStack stack, boolean forceOverflow, boolean simulate) {
         Level level = cooler.getLevel();
         if (level == null) {
             return InteractionResult.FAIL;
@@ -79,7 +83,7 @@ public class ChilledCoolerState extends BaseCoolerState {
     }
 
     @Override
-    public boolean onSnowballImpact(@NotNull BreezeCoolerBlockEntity cooler) {
+    public boolean onSnowballImpact(BreezeCoolerBlockEntity cooler) {
         Level level = cooler.getLevel();
         if (level == null || level.isClientSide) {
             return false;

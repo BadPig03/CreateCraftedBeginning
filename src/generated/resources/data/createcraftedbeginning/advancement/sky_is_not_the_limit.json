@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:three_way_handshake",
+  "parent": "createcraftedbeginning:minty_fresh",
   "criteria": {
     "0": {
       "trigger": "createcraftedbeginning:sky_is_not_the_limit_builtin"
@@ -11,7 +11,6 @@
       "translate": "advancement.createcraftedbeginning.sky_is_not_the_limit.desc"
     },
     "frame": "goal",
-    "hidden": true,
     "icon": {
       "count": 1,
       "id": "createcraftedbeginning:airtight_chestplate"

@@ -6,7 +6,7 @@ import net.minecraft.core.WritableRegistry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.neoforged.neoforge.registries.RegistryBuilder;
-import net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorageType;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageType;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 

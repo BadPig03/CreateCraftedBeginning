@@ -5,6 +5,7 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.core.HolderSet;
@@ -25,9 +26,9 @@ import net.neoforged.neoforge.common.util.DataComponentUtil;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -37,6 +38,8 @@ import java.util.stream.Stream;
  * Represents a stack of gas with amount and data components, similar to ItemStack but for gases.
  * Provides functionality for gas storage, manipulation, serialization, and comparison.
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public final class GasStack implements MutableDataComponentHolder {
     public static final GasStack EMPTY = new GasStack(null);
@@ -45,7 +48,7 @@ public final class GasStack implements MutableDataComponentHolder {
     public static final Codec<Holder<Gas>> GAS_NON_EMPTY_CODEC = CCBGasRegistries.GAS_REGISTRY.holderByNameCodec().validate(holder -> holder.value().isEmpty() ? DataResult.error(() -> "Gas must not be minecraft:empty") : DataResult.success(holder));
     public static final StreamCodec<RegistryFriendlyByteBuf, GasStack> OPTIONAL_STREAM_CODEC = new StreamCodec<>() {
         @Override
-        public @NotNull GasStack decode(@NotNull RegistryFriendlyByteBuf buffer) {
+        public GasStack decode(RegistryFriendlyByteBuf buffer) {
             long amount = buffer.readVarLong();
             if (amount <= 0) {
                 return EMPTY;
@@ -57,7 +60,7 @@ public final class GasStack implements MutableDataComponentHolder {
         }
 
         @Override
-        public void encode(@NotNull RegistryFriendlyByteBuf buffer, @NotNull GasStack stack) {
+        public void encode(RegistryFriendlyByteBuf buffer, GasStack stack) {
             if (stack.isEmpty()) {
                 buffer.writeVarLong(0);
             }
@@ -70,7 +73,7 @@ public final class GasStack implements MutableDataComponentHolder {
     };
     public static final StreamCodec<RegistryFriendlyByteBuf, GasStack> STREAM_CODEC = new StreamCodec<>() {
         @Override
-        public @NotNull GasStack decode(@NotNull RegistryFriendlyByteBuf buffer) {
+        public GasStack decode(RegistryFriendlyByteBuf buffer) {
             GasStack stack = OPTIONAL_STREAM_CODEC.decode(buffer);
             if (stack.isEmpty()) {
                 throw new DecoderException("Empty GasStack not allowed");
@@ -80,7 +83,7 @@ public final class GasStack implements MutableDataComponentHolder {
         }
 
         @Override
-        public void encode(@NotNull RegistryFriendlyByteBuf buffer, @NotNull GasStack stack) {
+        public void encode(RegistryFriendlyByteBuf buffer, GasStack stack) {
             if (stack.isEmpty()) {
                 throw new EncoderException("Empty GasStack not allowed");
             }
@@ -94,7 +97,7 @@ public final class GasStack implements MutableDataComponentHolder {
     private final PatchedDataComponentMap components;
     private long amount;
 
-    public GasStack(@NotNull Holder<Gas> gasHolder, long amount, DataComponentPatch patch) {
+    public GasStack(Holder<Gas> gasHolder, long amount, DataComponentPatch patch) {
         this(gasHolder.value(), amount, PatchedDataComponentMap.fromPatch(DataComponentMap.EMPTY, patch));
     }
 
@@ -102,7 +105,7 @@ public final class GasStack implements MutableDataComponentHolder {
         this(gasType, amount, PatchedDataComponentMap.fromPatch(DataComponentMap.EMPTY, patch));
     }
 
-    public GasStack(@NotNull Holder<Gas> gasHolder, long amount) {
+    public GasStack(Holder<Gas> gasHolder, long amount) {
         this(gasHolder.value(), amount, new PatchedDataComponentMap(DataComponentMap.EMPTY));
     }
 
@@ -110,13 +113,27 @@ public final class GasStack implements MutableDataComponentHolder {
         this(gasType, amount, new PatchedDataComponentMap(DataComponentMap.EMPTY));
     }
 
-    private GasStack(@NotNull Gas gasType, long amount, PatchedDataComponentMap components) {
+    private GasStack(Gas gasType, long amount, PatchedDataComponentMap components) {
+        if (gasType.isEmpty() || amount <= 0) {
+            gasHolder = null;
+            this.amount = 0;
+            this.components = new PatchedDataComponentMap(DataComponentMap.EMPTY);
+            return;
+        }
+
         gasHolder = gasType.getHolder();
         this.amount = amount;
         this.components = components;
     }
 
-    private GasStack(@NotNull Holder<Gas> gasHolder, long amount, PatchedDataComponentMap components) {
+    private GasStack(Holder<Gas> gasHolder, long amount, PatchedDataComponentMap components) {
+        if (gasHolder.value().isEmpty() || amount <= 0) {
+            this.gasHolder = null;
+            this.amount = 0;
+            this.components = new PatchedDataComponentMap(DataComponentMap.EMPTY);
+            return;
+        }
+
         this.gasHolder = gasHolder;
         this.amount = amount;
         this.components = components;
@@ -134,7 +151,7 @@ public final class GasStack implements MutableDataComponentHolder {
      * @param compoundTag    the compound tag to parse from
      * @return the parsed GasStack, or {@link #EMPTY} if parsing fails or tag is empty
      */
-    public static GasStack parseOptional(Provider lookupProvider, @NotNull CompoundTag compoundTag) {
+    public static GasStack parseOptional(Provider lookupProvider, CompoundTag compoundTag) {
         return compoundTag.isEmpty() ? EMPTY : parse(lookupProvider, compoundTag).orElse(EMPTY);
     }
 
@@ -145,7 +162,7 @@ public final class GasStack implements MutableDataComponentHolder {
      * @param tag            the tag to parse from
      * @return an Optional containing the parsed GasStack, or empty if parsing fails
      */
-    public static Optional<GasStack> parse(@NotNull Provider lookupProvider, Tag tag) {
+    public static Optional<GasStack> parse(Provider lookupProvider, Tag tag) {
         return CODEC.parse(lookupProvider.createSerializationContext(NbtOps.INSTANCE), tag).resultOrPartial(error -> CreateCraftedBeginning.LOGGER.error("Tried to parse invalid gas holder: '{}'", error));
     }
 
@@ -156,7 +173,7 @@ public final class GasStack implements MutableDataComponentHolder {
      * @param second the second GasStack to compare (cannot be null)
      * @return true if both stacks have same amount, gas type, and components
      */
-    public static boolean matches(@NotNull GasStack first, @NotNull GasStack second) {
+    public static boolean matches(GasStack first, GasStack second) {
         return first == second || first.getAmount() == second.getAmount() && isSameGasSameComponents(first, second);
     }
 
@@ -167,7 +184,7 @@ public final class GasStack implements MutableDataComponentHolder {
      * @param second the second GasStack to compare (cannot be null)
      * @return true if both stacks have same gas type and components
      */
-    public static boolean isSameGasSameComponents(@NotNull GasStack first, @NotNull GasStack second) {
+    public static boolean isSameGasSameComponents(GasStack first, GasStack second) {
         return first.is(second.getGasType()) && (first.isEmpty() && second.isEmpty() || Objects.equals(first.components, second.components));
     }
 
@@ -178,7 +195,7 @@ public final class GasStack implements MutableDataComponentHolder {
      * @param second the second GasStack to compare
      * @return true if both stacks contain the same gas type
      */
-    public static boolean isSameGas(@NotNull GasStack first, @NotNull GasStack second) {
+    public static boolean isSameGas(GasStack first, GasStack second) {
         return first.is(second.getGasHolder());
     }
 
@@ -189,16 +206,20 @@ public final class GasStack implements MutableDataComponentHolder {
      * @return a hash code combining gas type and components, or 0 if stack is null
      */
     public static int hashGasAndComponents(@Nullable GasStack stack) {
-        if (stack == null) {
+        if (stack == null || stack.isEmpty()) {
             return 0;
         }
 
-        int i = 31 + stack.getGasType().hashCode();
-        return 31 * i + stack.components.hashCode();
+        int result = stack.getGasHolder().hashCode();
+        result = 31 * result + stack.components.hashCode();
+        return result;
     }
 
     public Holder<Gas> getGasHolder() {
-        return isEmpty() ? Gas.EMPTY_GAS_HOLDER : gasHolder;
+        if (isEmpty() || gasHolder == null) {
+            return Gas.EMPTY_GAS_HOLDER;
+        }
+        return gasHolder;
     }
 
     public boolean isEmpty() {
@@ -209,15 +230,15 @@ public final class GasStack implements MutableDataComponentHolder {
         return getGasHolder().is(tag);
     }
 
-    public boolean is(@NotNull Predicate<Holder<Gas>> predicate) {
+    public boolean is(Predicate<Holder<Gas>> predicate) {
         return predicate.test(getGasHolder());
     }
 
-    public boolean is(@NotNull HolderSet<Gas> holderSet) {
+    public boolean is(HolderSet<Gas> holderSet) {
         return holderSet.contains(getGasHolder());
     }
 
-    public boolean is(@NotNull Holder<Gas> holder) {
+    public boolean is(Holder<Gas> holder) {
         return is(holder.value());
     }
 
@@ -225,13 +246,13 @@ public final class GasStack implements MutableDataComponentHolder {
         return getGasType() == gasType;
     }
 
-    public @NotNull Gas getGasType() {
+    public Gas getGasType() {
         return isEmpty() ? Gas.EMPTY_GAS_HOLDER.value() : getGasHolder().value();
     }
 
     @Override
-    public @NotNull PatchedDataComponentMap getComponents() {
-        return components;
+    public PatchedDataComponentMap getComponents() {
+        return isEmpty() ? new PatchedDataComponentMap(DataComponentMap.EMPTY) : components;
     }
 
     public DataComponentPatch getComponentsPatch() {
@@ -243,7 +264,7 @@ public final class GasStack implements MutableDataComponentHolder {
     }
 
     public GasStack copyWithAmount(long amount) {
-        if (isEmpty()) {
+        if (isEmpty() || amount <= 0) {
             return EMPTY;
         }
 
@@ -261,22 +282,34 @@ public final class GasStack implements MutableDataComponentHolder {
     }
 
     public void setAmount(long amount) {
-        this.amount = amount;
+        if (this == EMPTY || gasHolder == null || gasHolder.value().isEmpty()) {
+            return;
+        }
+
+        this.amount = Math.max(0, amount);
     }
 
     public void shrink(long amount) {
+        if (isEmpty()) {
+            return;
+        }
+
         grow(-amount);
     }
 
     public void grow(long amount) {
-        this.amount = this.amount + amount;
+        if (isEmpty()) {
+            return;
+        }
+
+        setAmount(this.amount + amount);
     }
 
-    public @NotNull Stream<TagKey<Gas>> getTags() {
+    public Stream<TagKey<Gas>> getTags() {
         return getGasHolder().tags();
     }
 
-    public @NotNull Tag save(Provider provider) {
+    public Tag save(Provider provider) {
         if (isEmpty()) {
             throw new IllegalStateException("Cannot encode empty GasStack");
         }
@@ -284,11 +317,11 @@ public final class GasStack implements MutableDataComponentHolder {
         return DataComponentUtil.wrapEncodingExceptions(this, CODEC, provider);
     }
 
-    public @NotNull Tag saveOptional(Provider provider) {
+    public Tag saveOptional(Provider provider) {
         return isEmpty() ? new CompoundTag() : save(provider, new CompoundTag());
     }
 
-    public @NotNull Tag save(Provider provider, Tag tag) {
+    public Tag save(Provider provider, Tag tag) {
         if (isEmpty()) {
             throw new IllegalStateException("Cannot encode empty GasStack");
         }
@@ -298,28 +331,44 @@ public final class GasStack implements MutableDataComponentHolder {
 
     @Nullable
     @Override
-    public <T> T set(@NotNull DataComponentType<? super T> type, @Nullable T component) {
+    public <T> T set(DataComponentType<? super T> type, @Nullable T component) {
+        if (isEmpty()) {
+            return null;
+        }
+
         return components.set(type, component);
     }
 
     @Nullable
     @Override
-    public <T> T remove(@NotNull DataComponentType<? extends T> type) {
+    public <T> T remove(DataComponentType<? extends T> type) {
+        if (isEmpty()) {
+            return null;
+        }
+
         return components.remove(type);
     }
 
     @Override
-    public void applyComponents(@NotNull DataComponentPatch patch) {
+    public void applyComponents(DataComponentPatch patch) {
+        if (isEmpty()) {
+            return;
+        }
+
         components.applyPatch(patch);
     }
 
     @Override
-    public void applyComponents(@NotNull DataComponentMap componentMap) {
+    public void applyComponents(DataComponentMap componentMap) {
+        if (isEmpty()) {
+            return;
+        }
+
         components.setAll(componentMap);
     }
 
     @Contract(" -> new")
-    public @NotNull Component getHoverName() {
+    public Component getHoverName() {
         return Component.translatable(getGasType().getTranslationKey());
     }
 
@@ -333,12 +382,19 @@ public final class GasStack implements MutableDataComponentHolder {
 
     @Override
     public int hashCode() {
-        return isEmpty() || gasHolder == null ? 0 : 31 * gasHolder.hashCode() + Long.hashCode(amount);
+        if (isEmpty()) {
+            return 0;
+        }
+
+        int result = getGasHolder().hashCode();
+        result = 31 * result + Long.hashCode(getAmount());
+        result = 31 * result + components.hashCode();
+        return result;
     }
 
     @Override
     public boolean equals(Object obj) {
-        return obj == this || obj instanceof GasStack other && getAmount() == other.getAmount() && is(other.getGasHolder());
+        return obj == this || obj instanceof GasStack other && (isEmpty() && other.isEmpty() || !isEmpty() && !other.isEmpty() && getAmount() == other.getAmount() && is(other.getGasHolder()) && Objects.equals(components, other.components));
     }
 
     @Override

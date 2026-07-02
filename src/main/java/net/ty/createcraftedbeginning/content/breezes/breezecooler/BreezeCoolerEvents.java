@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.breezes.breezecooler;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -13,12 +14,15 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
 public class BreezeCoolerEvents {
     @SubscribeEvent
-    public static void onSnowballImpact(@NotNull ProjectileImpactEvent event) {
+    public static void onSnowballImpact(ProjectileImpactEvent event) {
         Projectile projectile = event.getProjectile();
         if (!(projectile instanceof Snowball) || event.getRayTraceResult().getType() != Type.BLOCK) {
             return;

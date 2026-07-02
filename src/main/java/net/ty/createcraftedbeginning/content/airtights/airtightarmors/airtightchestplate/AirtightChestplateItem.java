@@ -3,76 +3,79 @@ package net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightc
 import com.simibubi.create.foundation.item.TooltipHelper;
 import net.createmod.catnip.lang.FontHelper.Palette;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.Holder;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.AirtightArmorsHandler;
-import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerClients;
-import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerClients;
+import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsUtils;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.ElytraUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.HasteUpgrade;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightChestplateItem extends AirtightChestplateArmorItem implements MenuProvider {
-    public static final ResourceLocation CREATIVE_FLIGHT_ID = CreateCraftedBeginning.asResource("creative_flight");
-    public static final AttributeModifier CREATIVE_FLIGHT_MODIFIER = new AttributeModifier(CREATIVE_FLIGHT_ID, 1, Operation.ADD_VALUE);
-    public static final ResourceLocation ATTACK_SPEED_ID = CreateCraftedBeginning.asResource("attack_speed");
-    public static final AttributeModifier ATTACK_SPEED_MODIFIER = new AttributeModifier(ATTACK_SPEED_ID, 0.5, Operation.ADD_MULTIPLIED_TOTAL);
-    public static final ResourceLocation BLOCK_BREAK_SPEED_ID = CreateCraftedBeginning.asResource("block_break_speed");
-    public static final AttributeModifier BLOCK_BREAK_SPEED_MODIFIER = new AttributeModifier(BLOCK_BREAK_SPEED_ID, 1, Operation.ADD_MULTIPLIED_TOTAL);
+    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("airtight_chestplate");
 
     public AirtightChestplateItem(Properties properties) {
         super(Type.CHESTPLATE, properties);
     }
 
     @Override
-    public boolean supportsEnchantment(@NotNull ItemStack chestplate, @NotNull Holder<Enchantment> enchantment) {
-        return enchantment.is(EnchantmentTags.ARMOR_EXCLUSIVE) || enchantment.is(EnchantmentTags.CURSE);
+    public ItemAttributeModifiers getDefaultAttributeModifiers(ItemStack chestplate) {
+        ItemAttributeModifiers modifiers = super.getDefaultAttributeModifiers(chestplate);
+        if (HasteUpgrade.INSTANCE.canApply(chestplate)) {
+            modifiers = modifiers.withModifierAdded(Attributes.ATTACK_SPEED, new AttributeModifier(ID, 0.2, Operation.ADD_MULTIPLIED_TOTAL), EquipmentSlotGroup.CHEST).withModifierAdded(Attributes.BLOCK_BREAK_SPEED, new AttributeModifier(ID, 0.4, Operation.ADD_MULTIPLIED_TOTAL), EquipmentSlotGroup.CHEST).withModifierAdded(Attributes.SUBMERGED_MINING_SPEED, new AttributeModifier(ID, 4, Operation.ADD_MULTIPLIED_TOTAL), EquipmentSlotGroup.CHEST);
+        }
+        return modifiers;
     }
 
     @Override
-    public boolean canElytraFly(@NotNull ItemStack chestplate, @NotNull LivingEntity entity) {
-        return entity instanceof Player player && ElytraUpgrade.canApply(player, 10);
+    public boolean canElytraFly(ItemStack chestplate, LivingEntity entity) {
+        return entity instanceof Player player && ElytraUpgrade.INSTANCE.canApply(player);
     }
 
     @Override
-    public boolean elytraFlightTick(@NotNull ItemStack chestplate, @NotNull LivingEntity entity, int flightTicks) {
-        return entity instanceof Player player && ElytraUpgrade.canApply(player, flightTicks);
+    public boolean elytraFlightTick(ItemStack chestplate, LivingEntity entity, int flightTicks) {
+        return entity instanceof Player player && ElytraUpgrade.INSTANCE.canApply(player);
     }
 
     @Override
-    public boolean isDamageable(@NotNull ItemStack chestplate) {
+    public boolean isDamageable(ItemStack chestplate) {
         return false;
     }
 
     @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         if (!player.isShiftKeyDown()) {
             return super.use(level, player, hand);
         }
@@ -88,23 +91,23 @@ public class AirtightChestplateItem extends AirtightChestplateArmorItem implemen
     }
 
     @Override
-    public boolean isBarVisible(@NotNull ItemStack chestplate) {
+    public boolean isBarVisible(ItemStack chestplate) {
         return CanisterContainerClients.isBarVisible();
     }
 
     @Override
-    public int getBarWidth(@NotNull ItemStack chestplate) {
+    public int getBarWidth(ItemStack chestplate) {
         return CanisterContainerClients.getBarWidth();
     }
 
     @Override
-    public int getBarColor(@NotNull ItemStack chestplate) {
+    public int getBarColor(ItemStack chestplate) {
         return CanisterContainerClients.getBarColor();
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(@NotNull ItemStack chestplate, @NotNull TooltipContext context, @NotNull List<Component> tooltip, @NotNull TooltipFlag tooltipFlag) {
+    public void appendHoverText(ItemStack chestplate, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null || !CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
             return;
@@ -131,12 +134,17 @@ public class AirtightChestplateItem extends AirtightChestplateArmorItem implemen
     }
 
     @Override
-    public @NotNull Component getDisplayName() {
+    public boolean isEnchantable(ItemStack chestplate) {
+        return true;
+    }
+
+    @Override
+    public Component getDisplayName() {
         return getDescription();
     }
 
     @Override
-    public @Nullable AbstractContainerMenu createMenu(int containerId, @NotNull Inventory playerInventory, @NotNull Player player) {
+    public @Nullable AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
         return new AirtightChestplateMenu(CCBMenuTypes.AIRTIGHT_CHESTPLATE_MENU.get(), containerId, playerInventory, player.getMainHandItem());
     }
 }

@@ -9,6 +9,7 @@ import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import mezz.jei.api.gui.builder.ITooltipBuilder;
 import mezz.jei.api.ingredients.IIngredientRenderer;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
@@ -24,14 +25,15 @@ import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.data.CCBLang;
-import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@SuppressWarnings("unused")
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class GasStackRenderer implements IIngredientRenderer<GasStack> {
     private static final int TEXTURE_SIZE = 16;
     private static final int MIN_GAS_HEIGHT = 1;
@@ -60,43 +62,39 @@ public class GasStackRenderer implements IIngredientRenderer<GasStack> {
         this(capacityMb, TooltipMode.SHOW_AMOUNT, width, height);
     }
 
-    @SuppressWarnings("SameParameterValue")
-    private static void drawTiledSprite(GuiGraphics guiGraphics, int xPosition, int yPosition, int yOffset, int desiredWidth, int desiredHeight, TextureAtlasSprite sprite, int textureWidth, int textureHeight, int zLevel, TilingDirection tilingDirection, boolean blend) {
-        if (desiredWidth == 0 || desiredHeight == 0 || textureWidth == 0 || textureHeight == 0) {
+    private static void drawTiledSprite(GuiGraphics guiGraphics, int yOffset, int desiredWidth, int desiredHeight, TextureAtlasSprite sprite) {
+        if (desiredWidth == 0 || desiredHeight == 0 || TEXTURE_SIZE == 0) {
             return;
         }
 
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, sprite.atlasLocation());
-        int xTileCount = desiredWidth / textureWidth;
-        int xRemainder = desiredWidth - xTileCount * textureWidth;
-        int yTileCount = desiredHeight / textureHeight;
-        int yRemainder = desiredHeight - yTileCount * textureHeight;
-        int yStart = yPosition + yOffset;
+        int xTileCount = desiredWidth / TEXTURE_SIZE;
+        int xRemainder = desiredWidth - xTileCount * TEXTURE_SIZE;
+        int yTileCount = desiredHeight / TEXTURE_SIZE;
+        int yRemainder = desiredHeight - yTileCount * TEXTURE_SIZE;
         float uMin = sprite.getU0();
         float uMax = sprite.getU1();
         float vMin = sprite.getV0();
         float vMax = sprite.getV1();
         float uDif = uMax - uMin;
         float vDif = vMax - vMin;
-        if (blend) {
-            RenderSystem.enableBlend();
-        }
+        RenderSystem.enableBlend();
         BufferBuilder vertexBuffer = Tesselator.getInstance().begin(Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         Matrix4f matrix4f = guiGraphics.pose().last().pose();
         for (int xTile = 0; xTile <= xTileCount; xTile++) {
-            int width = xTile == xTileCount ? xRemainder : textureWidth;
+            int width = xTile == xTileCount ? xRemainder : TEXTURE_SIZE;
             if (width == 0) {
                 break;
             }
 
-            int x = xPosition + xTile * textureWidth;
-            int maskRight = textureWidth - width;
-            int shiftedX = x + textureWidth - maskRight;
-            float uLocalDif = uDif * maskRight / textureWidth;
+            int x = xTile * TEXTURE_SIZE;
+            int maskRight = TEXTURE_SIZE - width;
+            int shiftedX = x + TEXTURE_SIZE - maskRight;
+            float uLocalDif = uDif * maskRight / TEXTURE_SIZE;
             float uLocalMin;
             float uLocalMax;
-            if (tilingDirection.right) {
+            if (TilingDirection.UP_RIGHT.right) {
                 uLocalMin = uMin;
                 uLocalMax = uMax - uLocalDif;
             }
@@ -105,17 +103,17 @@ public class GasStackRenderer implements IIngredientRenderer<GasStack> {
                 uLocalMax = uMax;
             }
             for (int yTile = 0; yTile <= yTileCount; yTile++) {
-                int height = yTile == yTileCount ? yRemainder : textureHeight;
+                int height = yTile == yTileCount ? yRemainder : TEXTURE_SIZE;
                 if (height == 0) {
                     break;
                 }
 
-                int y = yStart - (yTile + 1) * textureHeight;
-                int maskTop = textureHeight - height;
-                float vLocalDif = vDif * maskTop / textureHeight;
+                int y = yOffset - (yTile + 1) * TEXTURE_SIZE;
+                int maskTop = TEXTURE_SIZE - height;
+                float vLocalDif = vDif * maskTop / TEXTURE_SIZE;
                 float vLocalMin;
                 float vLocalMax;
-                if (tilingDirection.down) {
+                if (TilingDirection.UP_RIGHT.down) {
                     vLocalMin = vMin;
                     vLocalMax = vMax - vLocalDif;
                 }
@@ -123,20 +121,18 @@ public class GasStackRenderer implements IIngredientRenderer<GasStack> {
                     vLocalMin = vMin + vLocalDif;
                     vLocalMax = vMax;
                 }
-                vertexBuffer.addVertex(matrix4f, x, y + textureHeight, zLevel).setUv(uLocalMin, vLocalMax);
-                vertexBuffer.addVertex(matrix4f, shiftedX, y + textureHeight, zLevel).setUv(uLocalMax, vLocalMax);
-                vertexBuffer.addVertex(matrix4f, shiftedX, y + maskTop, zLevel).setUv(uLocalMax, vLocalMin);
-                vertexBuffer.addVertex(matrix4f, x, y + maskTop, zLevel).setUv(uLocalMin, vLocalMin);
+                vertexBuffer.addVertex(matrix4f, x, y + TEXTURE_SIZE, 100).setUv(uLocalMin, vLocalMax);
+                vertexBuffer.addVertex(matrix4f, shiftedX, y + TEXTURE_SIZE, 100).setUv(uLocalMax, vLocalMax);
+                vertexBuffer.addVertex(matrix4f, shiftedX, y + maskTop, 100).setUv(uLocalMax, vLocalMin);
+                vertexBuffer.addVertex(matrix4f, x, y + maskTop, 100).setUv(uLocalMin, vLocalMin);
             }
         }
         BufferUploader.drawWithShader(vertexBuffer.buildOrThrow());
-        if (blend) {
-            RenderSystem.disableBlend();
-        }
+        RenderSystem.disableBlend();
     }
 
     @Override
-    public void render(@NotNull GuiGraphics guiGraphics, @NotNull GasStack stack) {
+    public void render(GuiGraphics guiGraphics, GasStack stack) {
         if (stack.isEmpty()) {
             return;
         }
@@ -150,13 +146,13 @@ public class GasStackRenderer implements IIngredientRenderer<GasStack> {
         }
         int color = stack.getHint();
         guiGraphics.setColor(ARGB32.red(color) / 255.0f, ARGB32.green(color) / 255.0f, ARGB32.blue(color) / 255.0f, ARGB32.alpha(color) / 255.0f);
-        drawTiledSprite(guiGraphics, 0, 0, height, width, desiredHeight, Gas.getGasTexture(stack.getGasHolder()), TEXTURE_SIZE, TEXTURE_SIZE, 100, TilingDirection.UP_RIGHT, true);
+        drawTiledSprite(guiGraphics, height, width, desiredHeight, Gas.getGasTexture(stack.getGasHolder()));
         guiGraphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
     @Override
     @SuppressWarnings("removal")
-    public @NotNull List<Component> getTooltip(@NotNull GasStack stack, @NotNull TooltipFlag tooltipFlag) {
+    public List<Component> getTooltip(GasStack stack, TooltipFlag tooltipFlag) {
         Holder<Gas> gasHolder = stack.getGasHolder();
         if (gasHolder.value().isEmpty()) {
             return Collections.emptyList();
@@ -168,7 +164,7 @@ public class GasStackRenderer implements IIngredientRenderer<GasStack> {
     }
 
     @Override
-    public void getTooltip(@NotNull ITooltipBuilder builder, @NotNull GasStack stack, @NotNull TooltipFlag tooltipFlag) {
+    public void getTooltip(ITooltipBuilder builder, GasStack stack, TooltipFlag tooltipFlag) {
         List<Component> tooltips = new ArrayList<>();
         collectTooltips(stack, tooltips, tooltipFlag);
         builder.addAll(tooltips);
@@ -184,7 +180,7 @@ public class GasStackRenderer implements IIngredientRenderer<GasStack> {
         return height;
     }
 
-    private void collectTooltips(@NotNull GasStack stack, List<Component> tooltips, TooltipFlag tooltipFlag) {
+    private void collectTooltips(GasStack stack, List<Component> tooltips, TooltipFlag tooltipFlag) {
         Holder<Gas> gasHolder = stack.getGasHolder();
         if (gasHolder.value().isEmpty()) {
             return;

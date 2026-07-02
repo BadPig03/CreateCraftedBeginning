@@ -8,6 +8,7 @@ import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
@@ -15,10 +16,13 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlock;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TeslaTurbineScenes {
-    public static void settingUp(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void settingUp(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("tesla_turbine_setting_up", "Setting Up Tesla Turbines");
@@ -47,6 +51,27 @@ public class TeslaTurbineScenes {
         Selection rightSelection = util.select().fromTo(rightLU, rightRD);
         Selection rightNozzlesSelection = util.select().fromTo(rightLeftNozzle, rightRightNozzle);
 
+        Vec3 rightCenterVec = util.vector().centerOf(rightCenter);
+        Vec3 leftRDVec = util.vector().centerOf(leftRD);
+        Vec3 leftVec = util.vector().centerOf(leftCenter);
+        Vec3 leftRDNozzleVec = util.vector().centerOf(leftRDNozzle);
+        Vec3 leftVirtualNozzleVec = util.vector().centerOf(leftVirtualNozzle);
+        Vec3 rightNozzleVec = util.vector().centerOf(rightRightNozzle);
+        Vec3 leftLDNozzleVec = util.vector().centerOf(leftLDNozzle);
+        Vec3 leftLUNozzleVec = util.vector().centerOf(leftLUNozzle);
+        Vec3 leftRUNozzleVec = util.vector().centerOf(leftRUNozzle);
+        Vec3 rightLeftNozzleVec = util.vector().centerOf(rightLeftNozzle);
+
+        AABB leftArea = new AABB(leftVec, leftVec);
+        AABB rightArea = new AABB(rightCenterVec, rightCenterVec);
+        AABB leftLDNozzleArea = new AABB(leftLDNozzleVec, leftLDNozzleVec);
+        AABB leftLUNozzleArea = new AABB(leftLUNozzleVec, leftLUNozzleVec);
+        AABB leftRUNozzleArea = new AABB(leftRUNozzleVec, leftRUNozzleVec);
+        AABB leftRDNozzleArea = new AABB(leftRDNozzleVec, leftRDNozzleVec);
+        AABB leftVirtualNozzleArea = new AABB(leftVirtualNozzleVec, leftVirtualNozzleVec);
+        AABB rightLeftNozzleArea = new AABB(rightLeftNozzleVec, rightLeftNozzleVec);
+        AABB rightRightNozzleArea = new AABB(rightNozzleVec, rightNozzleVec);
+
         Object leftObject = new Object();
         Object rightObject = new Object();
         Object leftLDNozzleObject = new Object();
@@ -56,16 +81,6 @@ public class TeslaTurbineScenes {
         Object leftVirualObject = new Object();
         Object rightLeftNozzleObject = new Object();
         Object rightRightNozzleObject = new Object();
-
-        AABB leftArea = new AABB(util.vector().centerOf(leftCenter), util.vector().centerOf(leftCenter));
-        AABB rightArea = new AABB(util.vector().centerOf(rightCenter), util.vector().centerOf(rightCenter));
-        AABB leftLDNozzleArea = new AABB(util.vector().centerOf(leftLDNozzle), util.vector().centerOf(leftLDNozzle));
-        AABB leftLUNozzleArea = new AABB(util.vector().centerOf(leftLUNozzle), util.vector().centerOf(leftLUNozzle));
-        AABB leftRUNozzleArea = new AABB(util.vector().centerOf(leftRUNozzle), util.vector().centerOf(leftRUNozzle));
-        AABB leftRDNozzleArea = new AABB(util.vector().centerOf(leftRDNozzle), util.vector().centerOf(leftRDNozzle));
-        AABB leftVirtualNozzleArea = new AABB(util.vector().centerOf(leftVirtualNozzle), util.vector().centerOf(leftVirtualNozzle));
-        AABB rightLeftNozzleArea = new AABB(util.vector().centerOf(rightLeftNozzle), util.vector().centerOf(rightLeftNozzle));
-        AABB rightRightNozzleArea = new AABB(util.vector().centerOf(rightRightNozzle), util.vector().centerOf(rightRightNozzle));
 
         ItemStack rotorItem = new ItemStack(CCBItems.TESLA_TURBINE_ROTOR.asItem());
 
@@ -82,13 +97,13 @@ public class TeslaTurbineScenes {
         scene.idle(3);
         rightArea = rightArea.inflate(1, 1, 0);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, rightObject, rightArea, 60);
-        scene.overlay().showText(60).text("Tesla Turbines require a 3x3 space for placement").pointAt(Vec3.atCenterOf(rightCenter)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Tesla Turbines require a 3x3 space for placement").pointAt(rightCenterVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().showSection(leftSelection, Direction.DOWN);
 
         scene.idle(20);
-        rightArea = new AABB(util.vector().centerOf(rightCenter), util.vector().centerOf(rightCenter));
+        rightArea = new AABB(rightCenterVec, rightCenterVec);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, rightObject, rightArea, 3);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, leftObject, leftArea, 3);
 
@@ -103,14 +118,14 @@ public class TeslaTurbineScenes {
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, leftObject, leftArea, 60);
         rightArea = rightArea.inflate(1, 1, 0);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, rightObject, rightArea, 60);
-        scene.overlay().showText(60).text("And can be oriented horizontally or vertically").pointAt(Vec3.atCenterOf(leftRD)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("And can be oriented horizontally or vertically").pointAt(leftRDVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().showControls(util.vector().blockSurface(leftCenter, Direction.UP), Pointing.DOWN, 67).rightClick().withItem(rotorItem);
+        scene.overlay().showControls(util.vector().blockSurface(leftCenter, Direction.UP), Pointing.DOWN, 67).rightClick().withItem(rotorItem.copy());
 
         scene.idle(7);
         scene.world().modifyBlock(leftCenter, s -> s.setValue(TeslaTurbineBlock.ROTOR, 1), false);
-        scene.overlay().showText(60).text("Requires at least one Tesla Turbine Rotor to function...").pointAt(Vec3.atCenterOf(leftCenter)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Requires at least one Tesla Turbine Rotor to function...").colored(PonderPalette.RED).pointAt(leftVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().showSection(leftLDNozzleSelection, Direction.WEST);
@@ -133,10 +148,10 @@ public class TeslaTurbineScenes {
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, leftRUNozzleObject, leftRUNozzleArea, 60);
         leftRDNozzleArea = leftRDNozzleArea.inflate(0.5, 0.5, 0.5);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, leftRDNozzleObject, leftRDNozzleArea, 60);
-        scene.overlay().showText(60).text("...with up to 4 Tesla Turbine Nozzles attached laterally").pointAt(Vec3.atCenterOf(leftRDNozzle)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("...with up to 4 Tesla Turbine Nozzles attached laterally").colored(PonderPalette.GREEN).pointAt(leftRDNozzleVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        leftRDNozzleArea = new AABB(util.vector().centerOf(leftRDNozzle), util.vector().centerOf(leftRDNozzle));
+        leftRDNozzleArea = new AABB(leftRDNozzleVec, leftRDNozzleVec);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, leftRDNozzleObject, leftRDNozzleArea, 3);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, leftVirualObject, leftVirtualNozzleArea, 3);
 
@@ -145,7 +160,7 @@ public class TeslaTurbineScenes {
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, leftRDNozzleObject, leftRDNozzleArea, 60);
         leftVirtualNozzleArea = leftVirtualNozzleArea.inflate(0.5, 0.5, 0.5);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, leftVirualObject, leftVirtualNozzleArea, 60);
-        scene.overlay().showText(60).text("Adjacent nozzles cannot occupy the same corner position").colored(PonderPalette.RED).pointAt(Vec3.atCenterOf(leftVirtualNozzle)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Adjacent nozzles cannot occupy the same corner position").colored(PonderPalette.RED).pointAt(leftVirtualNozzleVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().showSection(rightNozzlesSelection, Direction.DOWN);
@@ -159,13 +174,13 @@ public class TeslaTurbineScenes {
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, rightLeftNozzleObject, rightLeftNozzleArea, 60);
         rightRightNozzleArea = rightRightNozzleArea.inflate(0.5, 0.5, 0.5);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, rightRightNozzleObject, rightRightNozzleArea, 60);
-        scene.overlay().showText(60).text("Nozzle placement determines the direction and capacity of Stress generated").pointAt(Vec3.atCenterOf(rightRightNozzle)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Nozzle placement determines the direction and capacity of Stress generated").colored(PonderPalette.MEDIUM).pointAt(rightNozzleVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();
     }
 
-    public static void generating(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void generating(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("tesla_turbine_generating_rotational_force", "Generating Rotational Force via Tesla Turbines");
@@ -205,13 +220,20 @@ public class TeslaTurbineScenes {
         Selection rightDownSourceSelection = util.select().fromTo(rightDownCogPos, rightDownMotorPos);
         Selection shaftSelection = util.select().fromTo(speedometerPos, centerPos);
 
+        Vec3 centerVec = util.vector().centerOf(centerPos);
+        Vec3 rightDownNozzleVec = util.vector().centerOf(rightDownNozzlePos);
+        Vec3 rightDownPipeVec = util.vector().centerOf(rightDownPipePos);
+        Vec3 rightUpPipeVec = util.vector().centerOf(rightUpPipePos);
+        Vec3 leftUpPipeVec = util.vector().centerOf(leftUpPipePos);
+        Vec3 rotorControlVec = util.vector().blockSurface(centerPos, Direction.EAST);
+
+        AABB rightDownArea = new AABB(rightDownPipeVec, rightDownPipeVec);
+        AABB rightUpArea = new AABB(rightUpPipeVec, rightUpPipeVec);
+        AABB leftUpArea = new AABB(leftUpPipeVec, leftUpPipeVec);
+
         Object rightDownObject = new Object();
         Object rightUpObject = new Object();
         Object leftUpObject = new Object();
-
-        AABB rightDownArea = new AABB(util.vector().centerOf(rightDownPipePos), util.vector().centerOf(rightDownPipePos));
-        AABB rightUpArea = new AABB(util.vector().centerOf(rightUpPipePos), util.vector().centerOf(rightUpPipePos));
-        AABB leftUpArea = new AABB(util.vector().centerOf(leftUpPipePos), util.vector().centerOf(leftUpPipePos));
 
         ItemStack rotorItem = new ItemStack(CCBItems.TESLA_TURBINE_ROTOR.asItem());
 
@@ -227,15 +249,18 @@ public class TeslaTurbineScenes {
         scene.world().showSection(leftUpPumpSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Generating Stress requires fulfilling multiple conditions...").pointAt(Vec3.atCenterOf(centerPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Generating Stress requires fulfilling multiple conditions...").colored(PonderPalette.RED).pointAt(centerVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().setBlock(rightDownMotorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.EAST), false);
         scene.world().showSection(rightDownSourceSelection, Direction.EAST);
+
+        scene.idle(15);
         scene.world().setKineticSpeed(rightDownPumpSelection, 64);
         scene.world().setKineticSpeed(rightDownSourceSelection, -64);
-        scene.effects().rotationSpeedIndicator(rightDownPumpPos);
         scene.world().setKineticSpeed(shaftSelection, 16);
+        scene.effects().rotationSpeedIndicator(rightDownPumpPos);
+        scene.effects().rotationSpeedIndicator(rightDownMotorPos);
         scene.effects().rotationSpeedIndicator(speedometerPos);
         scene.effects().indicateSuccess(speedometerPos);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, rightDownObject, rightDownArea, 3);
@@ -247,19 +272,22 @@ public class TeslaTurbineScenes {
         scene.idle(3);
         rightDownArea = rightDownArea.expandTowards(2, 0, 0);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, rightDownObject, rightDownArea, 60);
-        scene.overlay().showText(60).text("1. Continuous high-volume gas input to the Nozzles").colored(PonderPalette.INPUT).pointAt(Vec3.atCenterOf(rightDownNozzlePos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("1. Continuous high-volume gas input to the Nozzles").colored(PonderPalette.INPUT).pointAt(rightDownNozzleVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().setBlock(rightUpMotorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.DOWN), false);
         scene.world().showSection(rightUpSourceSelection, Direction.DOWN);
+
+        scene.idle(15);
         scene.world().setKineticSpeed(rightUpPumpSelection, 64);
         scene.world().setKineticSpeed(rightUpSourceSelection, -64);
-        scene.effects().rotationSpeedIndicator(rightUpPumpPos);
         scene.world().setKineticSpeed(shaftSelection, 32);
+        scene.effects().rotationSpeedIndicator(rightUpPumpPos);
+        scene.effects().rotationSpeedIndicator(rightUpMotorPos);
         scene.effects().rotationSpeedIndicator(speedometerPos);
         scene.effects().indicateSuccess(speedometerPos);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, rightUpObject, rightUpArea, 3);
-        rightDownArea = new AABB(util.vector().centerOf(rightDownPipePos), util.vector().centerOf(rightDownPipePos));
+        rightDownArea = new AABB(rightDownPipeVec, rightDownPipeVec);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, rightDownObject, rightDownArea, 3);
 
         scene.idle(3);
@@ -278,16 +306,19 @@ public class TeslaTurbineScenes {
         scene.idle(80);
         scene.world().setBlock(leftUpMotorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.DOWN), false);
         scene.world().showSection(leftUpSourceSelection, Direction.DOWN);
+
+        scene.idle(15);
         scene.world().setKineticSpeed(leftUpPumpSelection, 64);
         scene.world().setKineticSpeed(leftUpSourceSelection, -64);
-        scene.effects().rotationSpeedIndicator(leftUpPumpPos);
         scene.world().setKineticSpeed(shaftSelection, 16);
+        scene.effects().rotationSpeedIndicator(leftUpPumpPos);
+        scene.effects().rotationSpeedIndicator(leftUpMotorPos);
         scene.effects().rotationSpeedIndicator(speedometerPos);
         scene.effects().indicateSuccess(speedometerPos);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, leftUpObject, leftUpArea, 3);
-        rightUpArea = new AABB(util.vector().centerOf(rightUpPipePos), util.vector().centerOf(rightUpPipePos));
+        rightUpArea = new AABB(rightUpPipeVec, rightUpPipeVec);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, rightUpObject, rightUpArea, 3);
-        rightDownArea = new AABB(util.vector().centerOf(rightDownPipePos), util.vector().centerOf(rightDownPipePos));
+        rightDownArea = new AABB(rightDownPipeVec, rightDownPipeVec);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, rightDownObject, rightDownArea, 3);
 
         scene.idle(3);
@@ -316,14 +347,16 @@ public class TeslaTurbineScenes {
         scene.idle(20);
         scene.world().setKineticSpeed(rightUpPumpSelection, 256);
         scene.world().setKineticSpeed(rightUpSourceSelection, -256);
-        scene.effects().rotationSpeedIndicator(rightUpPumpPos);
         scene.world().setKineticSpeed(rightDownPumpSelection, 256);
         scene.world().setKineticSpeed(rightDownSourceSelection, -256);
+        scene.effects().rotationSpeedIndicator(rightUpPumpPos);
         scene.effects().rotationSpeedIndicator(rightDownPumpPos);
-        scene.overlay().showText(60).text("2. Sufficient Tesla Turbine Rotors installed").pointAt(Vec3.atCenterOf(centerPos)).placeNearTarget().attachKeyFrame();
+        scene.effects().rotationSpeedIndicator(rightUpMotorPos);
+        scene.effects().rotationSpeedIndicator(rightDownMotorPos);
+        scene.overlay().showText(60).text("2. Sufficient Tesla Turbine Rotors installed").colored(PonderPalette.GREEN).pointAt(centerVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().showControls(util.vector().blockSurface(centerPos, Direction.EAST), Pointing.RIGHT, 37).rightClick().withItem(rotorItem);
+        scene.overlay().showControls(rotorControlVec, Pointing.RIGHT, 37).rightClick().withItem(rotorItem.copy());
 
         scene.idle(7);
         scene.world().modifyBlock(centerPos, s -> s.setValue(TeslaTurbineBlock.ROTOR, 2), false);
@@ -331,7 +364,7 @@ public class TeslaTurbineScenes {
         scene.effects().rotationSpeedIndicator(speedometerPos);
 
         scene.idle(50);
-        scene.overlay().showControls(util.vector().blockSurface(centerPos, Direction.EAST), Pointing.RIGHT, 37).rightClick().withItem(rotorItem);
+        scene.overlay().showControls(rotorControlVec, Pointing.RIGHT, 37).rightClick().withItem(rotorItem.copy());
 
         scene.idle(7);
         scene.world().modifyBlock(centerPos, s -> s.setValue(TeslaTurbineBlock.ROTOR, 3), false);
@@ -339,16 +372,16 @@ public class TeslaTurbineScenes {
         scene.effects().rotationSpeedIndicator(speedometerPos);
 
         scene.idle(50);
-        scene.overlay().showControls(util.vector().blockSurface(centerPos, Direction.EAST), Pointing.RIGHT, 37).rightClick().withItem(rotorItem);
+        scene.overlay().showControls(rotorControlVec, Pointing.RIGHT, 37).rightClick().withItem(rotorItem.copy());
 
         scene.idle(7);
         scene.world().modifyBlock(centerPos, s -> s.setValue(TeslaTurbineBlock.ROTOR, 4), false);
         scene.world().setKineticSpeed(shaftSelection, 128);
         scene.effects().rotationSpeedIndicator(speedometerPos);
-        scene.overlay().showText(60).text("...to increase Stress production capacity").colored(PonderPalette.OUTPUT).pointAt(Vec3.atCenterOf(centerPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("...to increase Stress production capacity").colored(PonderPalette.GREEN).pointAt(centerVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().showText(60).text("Additionally, input gas type influences performance").pointAt(Vec3.atCenterOf(rightDownNozzlePos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Additionally, input gas type influences performance").colored(PonderPalette.MEDIUM).pointAt(rightDownNozzleVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();

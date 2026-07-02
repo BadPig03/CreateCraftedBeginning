@@ -1,0 +1,35 @@
+{
+  "parent": "createcraftedbeginning:big_pressure_cooker",
+  "criteria": {
+    "0": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:airtight_forging_press"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.press_it_all.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:airtight_forging_press"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.press_it_all"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

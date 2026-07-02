@@ -2,14 +2,17 @@ package net.ty.createcraftedbeginning.api.gas.recipes;
 
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeSerializer;
-import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("unused")
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class StandardProcessingWithGasRecipe<T extends RecipeInput> extends ProcessingWithGasRecipe<T, ProcessingWithGasRecipeParams> {
     public StandardProcessingWithGasRecipe(IRecipeTypeInfo typeInfo, ProcessingWithGasRecipeParams params) {
         super(typeInfo, params);
@@ -18,7 +21,7 @@ public abstract class StandardProcessingWithGasRecipe<T extends RecipeInput> ext
     @FunctionalInterface
     public interface Factory<R extends StandardProcessingWithGasRecipe<?>> extends ProcessingWithGasRecipe.Factory<ProcessingWithGasRecipeParams, R> {
         @Override
-        @NotNull R create(@NotNull ProcessingWithGasRecipeParams params);
+        R create(ProcessingWithGasRecipeParams params);
     }
 
     public static class Builder<R extends StandardProcessingWithGasRecipe<?>> extends ProcessingWithGasRecipeBuilder<ProcessingWithGasRecipeParams, R, Builder<R>> {
@@ -49,12 +52,12 @@ public abstract class StandardProcessingWithGasRecipe<T extends RecipeInput> ext
         }
 
         @Override
-        public @NotNull MapCodec<R> codec() {
+        public MapCodec<R> codec() {
             return codec;
         }
 
         @Override
-        public @NotNull StreamCodec<RegistryFriendlyByteBuf, R> streamCodec() {
+        public StreamCodec<RegistryFriendlyByteBuf, R> streamCodec() {
             return streamCodec;
         }
 

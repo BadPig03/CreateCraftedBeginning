@@ -4,9 +4,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.gameevent.GameEvent.Context;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.content.end.endsculksilencer.GlobalEndSculkSilencerManager;
+import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,10 +26,13 @@ public abstract class WardenMixin {
         }
 
         BlockPos sourcePos = sourceEntity.blockPosition();
-        if (!CreateCraftedBeginning.GLOBAL_END_SCULK_SILENCER_MANAGER.checkWithinRange(sourcePos, level.dimension().location().toString())) {
+        if (!GlobalEndSculkSilencerManager.checkWithinRange(sourcePos, level.dimension().location().toString())) {
             return;
         }
 
+        if (sourceEntity instanceof Player player) {
+            CCBAdvancements.STEVES_REDEMPTION.awardTo(player);
+        }
         cir.setReturnValue(false);
     }
 }

@@ -1,0 +1,35 @@
+{
+  "parent": "createcraftedbeginning:feeling_the_pressure",
+  "criteria": {
+    "0": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:airtight_reactor_kettle"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.big_pressure_cooker.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:airtight_reactor_kettle"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.big_pressure_cooker"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -5,14 +5,18 @@ import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform.Si
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.math.VecHelper;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EndIncinerationBlowerValueBox extends Sided {
     @Override
     protected Vec3 getSouthLocation() {
@@ -20,13 +24,13 @@ public class EndIncinerationBlowerValueBox extends Sided {
     }
 
     @Override
-    public void rotate(LevelAccessor level, BlockPos pos, @NotNull BlockState state, PoseStack ms) {
+    public void rotate(LevelAccessor level, BlockPos pos, BlockState state, PoseStack ms) {
         super.rotate(level, pos, state, ms);
         TransformStack.of(ms).rotateZDegrees(-AngleHelper.horizontalAngle(Direction.UP));
     }
 
     @Override
-    protected boolean isSideActive(BlockState state, @NotNull Direction direction) {
+    protected boolean isSideActive(BlockState state, Direction direction) {
         return direction.getAxis() != Axis.Y;
     }
 }

@@ -10,6 +10,7 @@ import net.createmod.catnip.gui.element.GuiGameElement;
 import net.createmod.catnip.lang.FontHelper.Palette;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
@@ -19,12 +20,14 @@ import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> {
     private static final CCBGUITextures BACKGROUND = CCBGUITextures.GAS_FILTER;
     private static final AllGuiTextures PLAYER_INVENTORY = AllGuiTextures.PLAYER_INVENTORY;
@@ -65,7 +68,7 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
     }
 
     @Override
-    protected void renderForeground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+    protected void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         super.renderForeground(guiGraphics, mouseX, mouseY, partialTicks);
         renderTooltips(guiGraphics, mouseX, mouseY);
     }
@@ -76,7 +79,7 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
     }
 
     @Override
-    protected void renderBg(@NotNull GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+    protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         renderPlayerInventory(graphics, getLeftOfCentered(PLAYER_INVENTORY.getWidth()), topPos + BACKGROUND.getHeight() - 1);
         BACKGROUND.render(graphics, leftPos, topPos - 5);
         Component filterHoverName = filter.getHoverName();

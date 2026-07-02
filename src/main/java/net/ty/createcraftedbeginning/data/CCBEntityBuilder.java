@@ -8,16 +8,19 @@ import com.tterrag.registrate.util.nullness.NonNullSupplier;
 import dev.engine_room.flywheel.lib.visualization.SimpleEntityVisualizer;
 import dev.engine_room.flywheel.lib.visualization.SimpleEntityVisualizer.Factory;
 import net.createmod.catnip.platform.CatnipServices;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityType.EntityFactory;
 import net.minecraft.world.entity.MobCategory;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Predicate;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBEntityBuilder<T extends Entity, P> extends EntityBuilder<T, P> {
     @Nullable
@@ -28,7 +31,7 @@ public class CCBEntityBuilder<T extends Entity, P> extends EntityBuilder<T, P> {
         super(owner, parent, name, callback, factory, classification);
     }
 
-    public static <T extends Entity, P> @NotNull EntityBuilder<T, P> create(@NotNull AbstractRegistrate<?> owner, @NotNull P parent, @NotNull String name, @NotNull BuilderCallback callback, @NotNull EntityFactory<T> factory, @NotNull MobCategory classification) {
+    public static <T extends Entity, P> @NotNull EntityBuilder<T, P> create(AbstractRegistrate<?> owner, P parent, String name, BuilderCallback callback, EntityFactory<T> factory, MobCategory classification) {
         return new CCBEntityBuilder<>(owner, parent, name, callback, factory, classification).defaultLang();
     }
 

@@ -6,11 +6,12 @@
     }
   },
   "display": {
-    "announce_to_chat": false,
     "description": {
       "color": "#DBA213",
       "translate": "advancement.createcraftedbeginning.universal_antidote.desc"
     },
+    "frame": "goal",
+    "hidden": true,
     "icon": {
       "count": 1,
       "id": "minecraft:milk_bucket"

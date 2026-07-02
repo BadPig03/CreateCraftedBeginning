@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:give_it_another_crush",
+  "parent": "createcraftedbeginning:shiny_dust",
   "criteria": {
     "0": {
       "conditions": {

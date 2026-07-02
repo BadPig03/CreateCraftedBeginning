@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightcannon;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -15,12 +16,15 @@ import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.windcharge.AirtightCannonWindChargeProjectileEntity;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
 public class AirtightCannonEvents {
     @SubscribeEvent
-    public static void onAirtightCannonKillEntity(@NotNull LivingDeathEvent event) {
+    public static void onAirtightCannonKillEntity(LivingDeathEvent event) {
         LivingEntity entity = event.getEntity();
         if (entity.level().isClientSide) {
             return;
@@ -38,11 +42,8 @@ public class AirtightCannonEvents {
             return;
         }
 
-        if (!CCBAdvancements.WIND_CHARGER.isAlreadyAwardedTo(player)) {
-            CCBAdvancements.WIND_CHARGER.awardTo(player);
-        }
-
-        if (!(entity instanceof Breeze) || CCBAdvancements.WHO_IS_THE_BREEZE_NOW.isAlreadyAwardedTo(player)) {
+        CCBAdvancements.WIND_CHARGED.awardTo(player);
+        if (!(entity instanceof Breeze)) {
             return;
         }
 
@@ -50,7 +51,7 @@ public class AirtightCannonEvents {
     }
 
     @SubscribeEvent
-    public static void onComputeFovModifier(@NotNull ComputeFovModifierEvent event) {
+    public static void onComputeFovModifier(ComputeFovModifierEvent event) {
         Player player = event.getPlayer();
         ItemStack usingItem = player.getUseItem();
         if (!usingItem.is(CCBItems.AIRTIGHT_CANNON) || !player.isUsingItem()) {

@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.foundation.gui.AllIcons;
 import net.createmod.catnip.theme.Color;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -15,9 +16,12 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBIcons extends AllIcons {
     public static final ResourceLocation CCB_ICON_ATLAS = CreateCraftedBeginning.asResource("textures/gui/icons.png");
@@ -25,9 +29,6 @@ public class CCBIcons extends AllIcons {
 
     private static int ccbX;
     private static int ccbY = -1;
-    private final int iconX;
-    private final int iconY;
-
     public static final CCBIcons I_NO_TRANSFER = newRow();
     public static final CCBIcons I_INPUT_ONLY = next();
     public static final CCBIcons I_OUTPUT_ONLY = next();
@@ -69,6 +70,8 @@ public class CCBIcons extends AllIcons {
     public static final CCBIcons I_STEP_HEIGHT = next();
     public static final CCBIcons I_ENVIRONMENTAL_DAMAGE_PROTECTION = next();
     public static final CCBIcons I_FALL_PROTECTION = next();
+    private final int iconX;
+    private final int iconY;
 
     public CCBIcons(int x, int y) {
         super(x, y);
@@ -77,13 +80,18 @@ public class CCBIcons extends AllIcons {
     }
 
     @Contract(" -> new")
-    private static @NotNull CCBIcons newRow() {
+    private static CCBIcons newRow() {
         return new CCBIcons(ccbX = 0, ++ccbY);
     }
 
     @Contract(" -> new")
-    private static @NotNull CCBIcons next() {
+    private static CCBIcons next() {
         return new CCBIcons(++ccbX, ccbY);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    private static void vertex(VertexConsumer builder, Matrix4f matrix, Vec3 vec, Color rgb, float u, float v, int light) {
+        builder.addVertex(matrix, (float) vec.x, (float) vec.y, (float) vec.z).setColor(rgb.getRed(), rgb.getGreen(), rgb.getBlue(), 255).setUv(u, v).setLight(light);
     }
 
     @Override
@@ -94,13 +102,13 @@ public class CCBIcons extends AllIcons {
 
     @OnlyIn(Dist.CLIENT)
     @Override
-    public void render(@NotNull GuiGraphics graphics, int x, int y) {
+    public void render(GuiGraphics graphics, int x, int y) {
         graphics.blit(CCB_ICON_ATLAS, x, y, 0, iconX, iconY, 16, 16, 256, 256);
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void render(@NotNull PoseStack ms, @NotNull MultiBufferSource buffer, int color) {
+    public void render(PoseStack ms, MultiBufferSource buffer, int color) {
         VertexConsumer builder = buffer.getBuffer(RenderType.text(CCB_ICON_ATLAS));
         Matrix4f matrix = ms.last().pose();
         Color rgb = new Color(color);
@@ -120,10 +128,5 @@ public class CCBIcons extends AllIcons {
         vertex(builder, matrix, vec2, rgb, u1, v2, light);
         vertex(builder, matrix, vec3, rgb, u2, v2, light);
         vertex(builder, matrix, vec4, rgb, u2, v1, light);
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    private void vertex(@NotNull VertexConsumer builder, Matrix4f matrix, @NotNull Vec3 vec, @NotNull Color rgb, float u, float v, int light) {
-        builder.addVertex(matrix, (float) vec.x, (float) vec.y, (float) vec.z).setColor(rgb.getRed(), rgb.getGreen(), rgb.getBlue(), 255).setUv(u, v).setLight(light);
     }
 }

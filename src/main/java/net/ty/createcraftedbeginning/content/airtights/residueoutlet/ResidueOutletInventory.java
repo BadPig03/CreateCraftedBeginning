@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.residueoutlet;
 
 import com.simibubi.create.foundation.blockEntity.ItemHandlerContainer;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
@@ -8,30 +9,38 @@ import net.neoforged.neoforge.common.util.INBTSerializable;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.neoforged.neoforge.items.ItemStackHandler;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class ResidueOutletInventory extends ItemHandlerContainer implements IItemHandlerModifiable, INBTSerializable<CompoundTag> {
-	private static final int MAX_SIZE = 1;
-	private static final String COMPOUND_KEY_PARTIAL_ITEM_COUNT = "PartialItemCount";
+    private static final int MAX_SIZE = 1;
+    private static final String COMPOUND_KEY_PARTIAL_ITEM_COUNT = "PartialItemCount";
 
-	private float partialItemCount;
+    private float partialItemCount;
 
     public ResidueOutletInventory(ResidueOutletBlockEntity outlet) {
         super(new InternalStackHandler(outlet));
     }
 
     @Override
-	public int getSlots() {
-		return MAX_SIZE;
-	}
+    public int getSlots() {
+        return MAX_SIZE;
+    }
 
     @Override
-	public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
+    public ItemStack getStackInSlot(int slot) {
+        return inv.getStackInSlot(slot);
+    }
+
+    @Override
+    public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
         return stack;
-	}
+    }
 
     @Override
-    public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
+    public ItemStack extractItem(int slot, int amount, boolean simulate) {
         return inv.extractItem(slot, amount, simulate);
     }
 
@@ -41,30 +50,25 @@ public class ResidueOutletInventory extends ItemHandlerContainer implements IIte
     }
 
     @Override
-	public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-		return inv.isItemValid(slot, stack);
-	}
+    public boolean isItemValid(int slot, ItemStack stack) {
+        return inv.isItemValid(slot, stack);
+    }
 
     @Override
-	public @NotNull ItemStack getStackInSlot(int slot) {
-		return inv.getStackInSlot(slot);
-	}
+    public void setStackInSlot(int slot, ItemStack stack) {
+        inv.setStackInSlot(slot, stack);
+    }
 
     @Override
-	public void setStackInSlot(int slot, @NotNull ItemStack stack) {
-		inv.setStackInSlot(slot, stack);
-	}
+    public CompoundTag serializeNBT(Provider provider) {
+        CompoundTag compoundTag = ((InternalStackHandler) inv).serializeNBT(provider);
+        compoundTag.putFloat(COMPOUND_KEY_PARTIAL_ITEM_COUNT, partialItemCount);
+        return compoundTag;
+    }
 
     @Override
-	public CompoundTag serializeNBT(@NotNull Provider provider) {
-		CompoundTag compoundTag = ((InternalStackHandler) inv).serializeNBT(provider);
-		compoundTag.putFloat(COMPOUND_KEY_PARTIAL_ITEM_COUNT, partialItemCount);
-		return compoundTag;
-	}
-
-    @Override
-	public void deserializeNBT(@NotNull Provider provider, @NotNull CompoundTag compoundTag) {
-		((InternalStackHandler) inv).deserializeNBT(provider, compoundTag);
+    public void deserializeNBT(Provider provider, CompoundTag compoundTag) {
+        ((InternalStackHandler) inv).deserializeNBT(provider, compoundTag);
         if (!compoundTag.contains(COMPOUND_KEY_PARTIAL_ITEM_COUNT)) {
             return;
         }
@@ -73,22 +77,44 @@ public class ResidueOutletInventory extends ItemHandlerContainer implements IIte
     }
 
     public IItemHandler getCapability() {
-		return inv;
-	}
+        return inv;
+    }
 
-	public boolean addPartialItemCount(float count, ItemStack itemStack) {
-		partialItemCount += count;
-		int intPart = (int) partialItemCount;
-		if (intPart > 0) {
-			ItemStack inserted = inv.insertItem(0, itemStack.copyWithCount(intPart), false);
-			if (inserted.isEmpty()) {
-				partialItemCount -= intPart;
-				return true;
-			}
-			else {
-				return false;
-			}
+    public boolean canAcceptItem(ItemStack itemStack) {
+        return itemStack.isEmpty() || inv.insertItem(0, itemStack.copyWithCount(1), true).isEmpty();
+    }
+
+    public boolean canAddPartialItemCount(float count, ItemStack itemStack) {
+        if (count <= 0 || itemStack.isEmpty()) {
+            return true;
         }
+
+        float newPartialItemCount = partialItemCount + count;
+        int intPart = (int) newPartialItemCount;
+        return intPart <= 0 || inv.insertItem(0, itemStack.copyWithCount(intPart), true).isEmpty();
+    }
+
+    public boolean addPartialItemCount(float count, ItemStack itemStack) {
+        if (count <= 0 || itemStack.isEmpty()) {
+            return true;
+        }
+
+        float newPartialItemCount = partialItemCount + count;
+        int intPart = (int) newPartialItemCount;
+        if (intPart > 0) {
+            if (!canAddPartialItemCount(count, itemStack)) {
+                return false;
+            }
+
+            ItemStack leftover = inv.insertItem(0, itemStack.copyWithCount(intPart), false);
+            if (!leftover.isEmpty()) {
+                return false;
+            }
+
+            newPartialItemCount -= intPart;
+        }
+
+        partialItemCount = newPartialItemCount;
         return true;
     }
 
@@ -96,14 +122,14 @@ public class ResidueOutletInventory extends ItemHandlerContainer implements IIte
         private final ResidueOutletBlockEntity outlet;
 
         public InternalStackHandler(ResidueOutletBlockEntity outlet) {
-			super(MAX_SIZE);
-			this.outlet = outlet;
-		}
+            super(MAX_SIZE);
+            this.outlet = outlet;
+        }
 
         @Override
-		protected void onContentsChanged(int slot) {
-			super.onContentsChanged(slot);
-			outlet.notifyUpdate();
-		}
+        protected void onContentsChanged(int slot) {
+            super.onContentsChanged(slot);
+            outlet.notifyUpdate();
+        }
     }
 }

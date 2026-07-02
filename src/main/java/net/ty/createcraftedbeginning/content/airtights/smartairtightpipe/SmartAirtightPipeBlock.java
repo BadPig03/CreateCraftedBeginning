@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.smartairtightpipe;
 
 import com.simibubi.create.foundation.block.IBE;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -12,13 +13,16 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.ty.createcraftedbeginning.api.gas.gases.IAirtightComponent;
-import net.ty.createcraftedbeginning.api.gas.gases.IDirectionalPipe;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AxisGasPipeBlock;
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class SmartAirtightPipeBlock extends AxisGasPipeBlock implements IBE<SmartAirtightPipeBlockEntity>, IDirectionalPipe, IAirtightComponent {
     public SmartAirtightPipeBlock(Properties properties) {
         super(properties);
@@ -26,20 +30,20 @@ public class SmartAirtightPipeBlock extends AxisGasPipeBlock implements IBE<Smar
     }
 
     @Override
-    protected void createBlockStateDefinition(@NotNull Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
         builder.add(DIRECTIONAL_FACING);
         super.createBlockStateDefinition(builder);
     }
 
     @Override
-    public @NotNull BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState state = super.getStateForPlacement(context);
         Direction horizontalFacing = context.getHorizontalDirection();
         return state.setValue(DIRECTIONAL_FACING, DirectionalFacing.getFacingDirection(horizontalFacing));
     }
 
     @Override
-    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos blockPos, @NotNull CollisionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos blockPos, CollisionContext context) {
         Axis axis = state.getValue(AXIS);
         if (axis == Axis.Y) {
             DirectionalFacing facing = state.getValue(DIRECTIONAL_FACING);
@@ -60,7 +64,7 @@ public class SmartAirtightPipeBlock extends AxisGasPipeBlock implements IBE<Smar
     }
 
     @Override
-    public boolean isAirtight(BlockPos currentPos, @NotNull BlockState currentState, @NotNull Direction oppositeDirection) {
+    public boolean isAirtight(BlockPos currentPos, BlockState currentState, Direction oppositeDirection) {
         return currentState.getValue(AXIS) == oppositeDirection.getAxis();
     }
 }

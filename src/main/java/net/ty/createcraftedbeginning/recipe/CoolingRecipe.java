@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.recipe;
 
 import com.simibubi.create.content.processing.recipe.ProcessingRecipeParams;
 import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -11,17 +12,19 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.content.icecreams.CreativeIceCreamItem;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CoolingRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
     public CoolingRecipe(ProcessingRecipeParams params) {
         super(CCBRecipeTypes.COOLING, params);
     }
 
-    public static @NotNull CoolingData getCoolingTime(@NotNull Level level, @Nullable ItemStack itemStack, @Nullable FluidStack fluidStack) {
+    public static CoolingData getCoolingTime(Level level, @Nullable ItemStack itemStack, @Nullable FluidStack fluidStack) {
         List<RecipeHolder<CoolingRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.COOLING.getType());
         for (RecipeHolder<CoolingRecipe> holder : recipes) {
             CoolingRecipe recipe = holder.value();
@@ -65,7 +68,7 @@ public class CoolingRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
     }
 
     @Override
-    public boolean matches(@NotNull SingleRecipeInput inv, @NotNull Level level) {
+    public boolean matches(SingleRecipeInput inv, Level level) {
         return true;
     }
 

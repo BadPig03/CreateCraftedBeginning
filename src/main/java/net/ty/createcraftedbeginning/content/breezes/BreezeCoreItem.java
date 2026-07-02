@@ -1,23 +1,27 @@
 package net.ty.createcraftedbeginning.content.breezes;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class BreezeCoreItem extends Item {
     public BreezeCoreItem(Properties properties) {
         super(properties);
     }
 
     @Override
-    public boolean isFoil(@NotNull ItemStack stack) {
+    public boolean isFoil(ItemStack stack) {
         return true;
     }
 
     @Override
-	public boolean onEntityItemUpdate(@NotNull ItemStack stack, @NotNull ItemEntity entity) {
+	public boolean onEntityItemUpdate(ItemStack stack, ItemEntity entity) {
 		Level level = entity.level();
         if (level.isClientSide || entity.isNoGravity()) {
 			return false;

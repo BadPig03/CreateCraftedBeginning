@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.portablegasinterface;
 import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.content.contraptions.actors.psi.PortableStorageInterfaceBlockEntity;
 import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.Entity;
@@ -11,15 +12,18 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasTank;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.mixin.accessor.MountedStorageManagerAccessor;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlockEntity implements ThresholdSwitchObservable {
     protected IGasHandler capability;
 
@@ -28,7 +32,7 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
         capability = createEmptyHandler();
     }
 
-    public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.PORTABLE_GAS_INTERFACE.get(), (be, context) -> be.capability);
     }
 
@@ -39,12 +43,12 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
 	}
 
     @Contract(" -> new")
-    private @NotNull IGasHandler createEmptyHandler() {
+    private IGasHandler createEmptyHandler() {
         return new InterfaceGasHandler(new GasTank(0));
     }
 
     @Override
-    public void startTransferringTo(@NotNull Contraption contraption, float distance) {
+    public void startTransferringTo(Contraption contraption, float distance) {
         if (!(contraption.getStorage() instanceof MountedStorageManagerAccessor accessor)) {
             return;
         }

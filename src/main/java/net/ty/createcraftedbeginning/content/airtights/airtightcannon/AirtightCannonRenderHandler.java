@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.content.equipment.zapper.ShootableGadgetRenderHandler;
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.createmod.catnip.math.VecHelper;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.particles.ItemParticleOption;
@@ -13,8 +14,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.windcharge.AirtightCannonWindChargeProjectileEntity;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightCannonRenderHandler extends ShootableGadgetRenderHandler {
     private float nextPitch;
 
@@ -24,24 +28,24 @@ public class AirtightCannonRenderHandler extends ShootableGadgetRenderHandler {
     }
 
     @Override
-    protected boolean appliesTo(@NotNull ItemStack stack) {
+    protected boolean appliesTo(ItemStack stack) {
         return stack.is(CCBItems.AIRTIGHT_CANNON);
     }
 
     @Override
-    protected void transformTool(@NotNull PoseStack ms, float flip, float equipProgress, float recoil, float pt) {
+    protected void transformTool(PoseStack ms, float flip, float equipProgress, float recoil, float pt) {
         ms.translate(flip * -0.1f, 0, 0.14f);
         ms.scale(0.75f, 0.75f, 0.75f);
         TransformStack.of(ms).rotateXDegrees(recoil * 80);
     }
 
     @Override
-    protected void transformHand(@NotNull PoseStack ms, float flip, float equipProgress, float recoil, float pt) {
+    protected void transformHand(PoseStack ms, float flip, float equipProgress, float recoil, float pt) {
         ms.translate(flip * -0.09, -0.275, -0.25);
         TransformStack.of(ms).rotateZDegrees(flip * -10);
     }
 
-    public void beforeShoot(float pitch, Vec3 location, Vec3 motion, @NotNull ItemStack stack) {
+    public void beforeShoot(float pitch, Vec3 location, Vec3 motion, ItemStack stack) {
         nextPitch = pitch;
         ClientLevel clientLevel = Minecraft.getInstance().level;
         if (stack.isEmpty() || clientLevel == null) {

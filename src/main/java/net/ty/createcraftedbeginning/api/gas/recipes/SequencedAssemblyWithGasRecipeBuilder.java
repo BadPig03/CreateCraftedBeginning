@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.api.gas.recipes;
 
 import com.simibubi.create.content.processing.recipe.ProcessingOutput;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
@@ -15,14 +16,15 @@ import net.ty.createcraftedbeginning.api.gas.recipes.ItemApplicationWithGasRecip
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
 import net.ty.createcraftedbeginning.recipe.SequencedWithGasRecipe;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
-@SuppressWarnings("unused")
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class SequencedAssemblyWithGasRecipeBuilder {
     private final ResourceLocation id;
     private final SequencedAssemblyWithGasRecipe recipe;
@@ -38,7 +40,7 @@ public class SequencedAssemblyWithGasRecipeBuilder {
         return addStep((Function<ResourceLocation, StandardProcessingWithGasRecipe.Builder<R>>) id -> new StandardProcessingWithGasRecipe.Builder<>(factory, id), builder);
     }
 
-    public <B extends ProcessingWithGasRecipeBuilder<?, ?, B>> SequencedAssemblyWithGasRecipeBuilder addStep(@NotNull Function<ResourceLocation, B> factory, @NotNull UnaryOperator<B> builder) {
+    public <B extends ProcessingWithGasRecipeBuilder<?, ?, B>> SequencedAssemblyWithGasRecipeBuilder addStep(Function<ResourceLocation, B> factory, UnaryOperator<B> builder) {
         B recipeBuilder = factory.apply(ResourceLocation.withDefaultNamespace("dummy"));
         Item placeHolder = recipe.getTransitionalItem().getItem();
         recipe.getSequence().add(new SequencedWithGasRecipe<>(builder.apply(recipeBuilder.require(placeHolder).output(placeHolder)).build()));
@@ -62,7 +64,7 @@ public class SequencedAssemblyWithGasRecipeBuilder {
         return require(Ingredient.of(tag));
     }
 
-    public SequencedAssemblyWithGasRecipeBuilder transitionTo(@NotNull ItemLike item) {
+    public SequencedAssemblyWithGasRecipeBuilder transitionTo(ItemLike item) {
         recipe.transitionalItem = new ProcessingOutput(item.asItem(), 1, 1);
         return this;
     }
@@ -80,17 +82,17 @@ public class SequencedAssemblyWithGasRecipeBuilder {
         return addOutput(new ItemStack(item), count, weight);
     }
 
-    public SequencedAssemblyWithGasRecipeBuilder addOutput(@NotNull ItemStack item, float weight) {
+    public SequencedAssemblyWithGasRecipeBuilder addOutput(ItemStack item, float weight) {
         recipe.resultPool.add(new ProcessingOutput(item.getItem(), item.getCount(), item.getComponentsPatch(), weight));
         return this;
     }
 
-    public SequencedAssemblyWithGasRecipeBuilder addOutput(@NotNull ItemStack item, int count, float weight) {
+    public SequencedAssemblyWithGasRecipeBuilder addOutput(ItemStack item, int count, float weight) {
         recipe.resultPool.add(new ProcessingOutput(item.getItem(), count, item.getComponentsPatch(), weight));
         return this;
     }
 
-    public void build(@NotNull RecipeOutput consumer) {
+    public void build(RecipeOutput consumer) {
         RecipeHolder<SequencedAssemblyWithGasRecipe> holder = build();
         ResourceLocation id = ResourceLocation.fromNamespaceAndPath(holder.id().getNamespace(), CCBRecipeTypes.SEQUENCED_ASSEMBLY_WITH_GAS.getId().getPath() + '/' + holder.id().getPath());
         consumer.accept(id, holder.value(), null, recipeConditions.toArray(new ICondition[0]));

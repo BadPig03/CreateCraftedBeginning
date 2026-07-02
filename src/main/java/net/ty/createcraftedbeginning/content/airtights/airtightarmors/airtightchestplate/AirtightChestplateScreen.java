@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightc
 
 import com.simibubi.create.foundation.gui.widget.IconButton;
 import net.createmod.catnip.data.Couple;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
@@ -15,6 +16,10 @@ import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.Airtight
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
 import net.ty.createcraftedbeginning.data.CCBGUITextures;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class AirtightChestplateScreen extends AirtightUpgradableScreen<AirtightChestplateMenu> {
     public AirtightChestplateScreen(AirtightChestplateMenu menu, Inventory inv, Component title) {
@@ -40,7 +45,7 @@ public class AirtightChestplateScreen extends AirtightUpgradableScreen<AirtightC
             VerticalIndicator indicator = new VerticalIndicator(leftPos + (isRight ? offset.getFirst() + 18 : offset.getFirst() - 6), topPos + offset.getSecond(), isRight);
             upgradeIndicators.put(upgrade, indicator);
 
-            buttonConfigsMap.put(upgrade, new ScreenButtonConfig(button, upgrade.getTitle(), upgrade.getDescription(), () -> button.green, () -> !menu.getStatus(upgrade).isInstalled() && button.active, () -> upgrade.getGasCostComponent(menu.player), upgrade.getUpgradeItem()));
+            buttonConfigsMap.put(upgrade, new ScreenButtonConfig(button, upgrade.getTitle(), upgrade.getDescription(), () -> button.green, () -> !menu.getStatus(upgrade).isInstalled() && button.active, () -> upgrade.getComponents(menu.player, menu.contentHolder.copy()), upgrade.getUpgradeItem()));
             addRenderableWidgets(button, indicator);
         });
     }

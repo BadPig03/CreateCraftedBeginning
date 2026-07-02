@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
@@ -9,15 +10,18 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamber
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity.ChargerType;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CreativeChamberState extends BaseChamberState {
     private static final String COMPOUND_KEY_CREATIVE_TYPE = "CreativeType";
 
     private ChargerType creativeType;
     private int energizationTimer;
 
-    public CreativeChamberState(@NotNull ChargerType type) {
+    public CreativeChamberState(ChargerType type) {
         super(switch (type) {
             case BAD -> -BreezeChamberBlockEntity.MAX_WIND_CAPACITY;
             case NONE -> 0;
@@ -27,7 +31,7 @@ public class CreativeChamberState extends BaseChamberState {
     }
 
     @Contract(pure = true)
-    public static ChargerType getNextChargeType(@NotNull ChargerType chargerType) {
+    public static ChargerType getNextChargeType(ChargerType chargerType) {
         return switch (chargerType) {
             case NORMAL -> ChargerType.BAD;
             case BAD -> ChargerType.NONE;
@@ -36,7 +40,7 @@ public class CreativeChamberState extends BaseChamberState {
     }
 
     @Override
-    public void read(@NotNull CompoundTag compoundTag) {
+    public void read(CompoundTag compoundTag) {
         if (compoundTag.contains(COMPOUND_KEY_CREATIVE_TYPE)) {
             creativeType = ChargerType.values()[compoundTag.getInt(COMPOUND_KEY_CREATIVE_TYPE)];
         }
@@ -44,13 +48,13 @@ public class CreativeChamberState extends BaseChamberState {
     }
 
     @Override
-    public void save(@NotNull CompoundTag compoundTag) {
+    public void save(CompoundTag compoundTag) {
         compoundTag.putInt(COMPOUND_KEY_CREATIVE_TYPE, creativeType.ordinal());
         super.save(compoundTag);
     }
 
     @Override
-    public void tick(@NotNull BreezeChamberBlockEntity chamber) {
+    public void tick(BreezeChamberBlockEntity chamber) {
         super.tick(chamber);
         Level level = chamber.getLevel();
         if (level == null || level.getGameTime() % 5 != 0) {
@@ -61,7 +65,7 @@ public class CreativeChamberState extends BaseChamberState {
         chamber.notifyUpdate();
     }
 
-    public void energizationTick(@NotNull BreezeChamberBlockEntity chamber) {
+    public void energizationTick(BreezeChamberBlockEntity chamber) {
         if (chamber.isControllerActive()) {
             return;
         }
@@ -90,7 +94,7 @@ public class CreativeChamberState extends BaseChamberState {
     }
 
     @Override
-    public InteractionResult onItemInsert(BreezeChamberBlockEntity chamber, @NotNull ItemStack stack, boolean forceOverflow, boolean simulate) {
+    public InteractionResult onItemInsert(BreezeChamberBlockEntity chamber, ItemStack stack, boolean forceOverflow, boolean simulate) {
         if (stack.getItem() != CCBItems.CREATIVE_ICE_CREAM.asItem()) {
             return InteractionResult.PASS;
         }

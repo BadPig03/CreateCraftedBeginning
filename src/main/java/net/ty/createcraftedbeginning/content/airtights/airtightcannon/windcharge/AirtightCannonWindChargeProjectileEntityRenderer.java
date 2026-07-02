@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.content.airtights.airtightcannon.windcharg
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -12,8 +13,11 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class AirtightCannonWindChargeProjectileEntityRenderer extends EntityRenderer<AirtightCannonWindChargeProjectileEntity> {
     private static final double MIN_CAMERA_DISTANCE_SQUARED = 16.0d;
@@ -23,7 +27,7 @@ public class AirtightCannonWindChargeProjectileEntityRenderer extends EntityRend
     }
 
     @Override
-    public void render(@NotNull AirtightCannonWindChargeProjectileEntity windCharge, float entityYaw, float partialTick, @NotNull PoseStack poseStack, @NotNull MultiBufferSource bufferSource, int light) {
+    public void render(AirtightCannonWindChargeProjectileEntity windCharge, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int light) {
         if (windCharge.tickCount < 4 && entityRenderDispatcher.camera.getEntity().distanceToSqr(windCharge) < MIN_CAMERA_DISTANCE_SQUARED) {
             return;
         }
@@ -42,7 +46,7 @@ public class AirtightCannonWindChargeProjectileEntityRenderer extends EntityRend
 
     @SuppressWarnings("DataFlowIssue")
     @Override
-    public @NotNull ResourceLocation getTextureLocation(@NotNull AirtightCannonWindChargeProjectileEntity entity) {
+    public ResourceLocation getTextureLocation(AirtightCannonWindChargeProjectileEntity entity) {
         Gas gasType = entity.getGasHolder().value();
         AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasType);
         return cannonHandler == null ? null : cannonHandler.getTextureLocation();

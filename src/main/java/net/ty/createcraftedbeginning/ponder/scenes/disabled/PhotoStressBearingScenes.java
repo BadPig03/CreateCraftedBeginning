@@ -10,6 +10,7 @@ import net.createmod.ponder.api.element.WorldSectionElement;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -20,10 +21,13 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.obsolete.phohostressbearing.PhotoStressBearingBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PhotoStressBearingScenes {
-    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("photo-stress_bearing", "Generates Rotational Force using Photo-Stress Bearings");
@@ -110,7 +114,7 @@ public class PhotoStressBearingScenes {
         scene.world().modifyEntity(lightningBolt, Entity::discard);
 
         scene.idle(60);
-        Vec3 surface = util.vector().blockSurface(bearingPos, Direction.WEST).subtract(0, 1 / 8.0f, 0);
+        Vec3 surface = util.vector().blockSurface(bearingPos, Direction.WEST).subtract(0, 0.125, 0);
         scene.overlay().showControls(surface, Pointing.DOWN, 60).rightClick();
         scene.overlay().showFilterSlotInput(surface, Direction.WEST, 50);
         scene.world().setKineticSpeed(allSelection, 16);

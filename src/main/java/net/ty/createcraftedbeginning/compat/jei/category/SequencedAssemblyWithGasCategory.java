@@ -11,6 +11,7 @@ import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -20,18 +21,20 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasSubCategory;
-import net.ty.createcraftedbeginning.compat.jei.JEIPlugin;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEI;
+import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
 import net.ty.createcraftedbeginning.recipe.SequencedWithGasRecipe;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@SuppressWarnings("unused")
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<SequencedAssemblyWithGasRecipe> {
     public static final String[] ROMANS = {"I", "II", "III", "IV", "V", "VI", "-"};
     public Map<ResourceLocation, SequencedAssemblyWithGasSubCategory> subCategories = new HashMap<>();
@@ -41,13 +44,8 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
     }
 
     @Override
-    @NotNull
-    public List<Component> getTooltipStrings(@NotNull SequencedAssemblyWithGasRecipe recipe, @NotNull IRecipeSlotsView iRecipeSlotsView, double mouseX, double mouseY) {
+    public List<Component> getTooltipStrings(SequencedAssemblyWithGasRecipe recipe, IRecipeSlotsView iRecipeSlotsView, double mouseX, double mouseY) {
         List<Component> tooltip = new ArrayList<>();
-        if (getBackground() == null) {
-            return tooltip;
-        }
-
         boolean singleOutput = recipe.getOutputChance() == 1;
         boolean willRepeat = recipe.getLoops() > 1;
         int xOffset = -7;
@@ -97,11 +95,7 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
     }
 
     @Override
-    public void draw(@NotNull SequencedAssemblyWithGasRecipe recipe, @NotNull IRecipeSlotsView iRecipeSlotsView, @NotNull GuiGraphics graphics, double mouseX, double mouseY) {
-        if (getBackground() == null) {
-            return;
-        }
-
+    public void draw(SequencedAssemblyWithGasRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         Font font = Minecraft.getInstance().font;
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
@@ -109,7 +103,7 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
         poseStack.translate(0, 15, 0);
         boolean singleOutput = recipe.getOutputChance() == 1;
         int xOffset = singleOutput ? 0 : -7;
-        AllGuiTextures.JEI_LONG_ARROW.render(graphics, 52 + xOffset, 79);
+        CCBGUITextures.JEI_LONG_ARROW.render(graphics, 52 + xOffset, 79);
         if (!singleOutput) {
             AllGuiTextures.JEI_CHANCE_SLOT.render(graphics, 150 + xOffset, 75);
             Component component = Component.literal("?").withStyle(ChatFormatting.BOLD);
@@ -146,11 +140,7 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
     }
 
     @Override
-    public void setRecipe(@NotNull IRecipeLayoutBuilder builder, @NotNull SequencedAssemblyWithGasRecipe recipe, @NotNull IFocusGroup focuses) {
-        if (getBackground() == null) {
-            return;
-        }
-
+    public void setRecipe(IRecipeLayoutBuilder builder, SequencedAssemblyWithGasRecipe recipe, IFocusGroup focuses) {
         boolean noRandomOutput = recipe.getOutputChance() == 1;
         int xOffset = noRandomOutput ? 0 : -7;
         builder.addSlot(RecipeIngredientRole.INPUT, 27 + xOffset, 91).setBackground(getRenderedSlot(), -1, -1).addItemStacks(List.of(recipe.getIngredient().getItems()));
@@ -179,12 +169,12 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
                 NonNullList<Ingredient> sequencedIngredients = sequencedRecipe.getRecipe().getIngredients();
                 sequencedIngredients.subList(1, sequencedIngredients.size()).forEach(ingredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(ingredient));
                 sequencedRecipe.getRecipe().getFluidIngredients().forEach(fluidIngredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(NeoForgeTypes.FLUID_STACK, Arrays.asList(fluidIngredient.getFluids())));
-                sequencedRecipe.getRecipe().getGasIngredients().forEach(gasIngredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(JEIPlugin.GAS_STACK, Arrays.asList(gasIngredient.getGases())));
+                sequencedRecipe.getRecipe().getGasIngredients().forEach(gasIngredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(CCBJEI.GAS_STACK, Arrays.asList(gasIngredient.getGases())));
             });
         }
     }
 
-    private SequencedAssemblyWithGasSubCategory getSubCategory(@NotNull SequencedWithGasRecipe<?> sequencedRecipe) {
+    private SequencedAssemblyWithGasSubCategory getSubCategory(SequencedWithGasRecipe<?> sequencedRecipe) {
         return subCategories.computeIfAbsent(RegisteredObjectsHelper.getKeyOrThrow(sequencedRecipe.getRecipe().getSerializer()), rl -> sequencedRecipe.getAsAssemblyRecipe().getJEISubCategory().get().get());
     }
 

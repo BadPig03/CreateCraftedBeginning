@@ -1,8 +1,12 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighthanddrill;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.HitResult.Type;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent.BreakSpeed;
@@ -10,20 +14,47 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickB
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock.Action;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Pre;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerClients;
-import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
+import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
 public class AirtightHandheldDrillEvents {
     @SubscribeEvent
-    public static void onPlayerPreTick(@NotNull Pre event) {
-        AirtightHandheldDrillUtils.tryUpdateAnimation(event.getEntity());
+    public static void onPlayerPreTick(Pre event) {
+        Player player = event.getEntity();
+        Level level = player.level();
+        if (!level.isClientSide) {
+            return;
+        }
+
+        AirtightHandheldDrillRenderHandler renderHandler = CreateCraftedBeginningClient.AIRTIGHT_HAND_DRILL_RENDER_HANDLER;
+        ItemStack drill = player.getMainHandItem();
+        if (!drill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
+            if (renderHandler.hasHandAnimation(0)) {
+                renderHandler.stop();
+            }
+            return;
+        }
+
+        Minecraft minecraft = Minecraft.getInstance();
+        boolean hasAnimation = renderHandler.hasHandAnimation(0);
+        boolean shouldRotate = player.isUsingItem() && player.getUseItem().is(CCBItems.AIRTIGHT_HANDHELD_DRILL) || minecraft.options.keyAttack.isDown() && minecraft.hitResult != null && minecraft.hitResult.getType() == Type.BLOCK;
+        if (shouldRotate && !hasAnimation) {
+            renderHandler.start();
+        }
+        else if (!shouldRotate && hasAnimation) {
+            renderHandler.stop();
+        }
     }
 
     @SubscribeEvent
-    public static void onLeftClickBlock(@NotNull LeftClickBlock event) {
+    public static void onLeftClickBlock(LeftClickBlock event) {
         Player player = event.getEntity();
         ItemStack drill = player.getMainHandItem();
         if (!drill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
@@ -46,15 +77,15 @@ public class AirtightHandheldDrillEvents {
         }
 
         if (newSpeed == -1) {
-            CanisterContainerClients.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", CanisterContainerSuppliers.getFirstAvailableGasContent(player).getHoverName());
+            GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", CanisterContainerSuppliers.getFirstAvailableGasContent(player).getHoverName());
         }
         else if (newSpeed == -2) {
-            CanisterContainerClients.displayCustomWarningHint(player, "gui.warnings.invalid_mining_target");
+            GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_mining_target");
         }
     }
 
     @SubscribeEvent
-    public static void onBreakSpeed(@NotNull BreakSpeed event) {
+    public static void onBreakSpeed(BreakSpeed event) {
         Player player = event.getEntity();
         ItemStack drill = player.getMainHandItem();
         if (!drill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {

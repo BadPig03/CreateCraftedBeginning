@@ -1,0 +1,35 @@
+{
+  "parent": "createcraftedbeginning:ultimate_storage_strategy",
+  "criteria": {
+    "0": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:cardboard_crate"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.bottomless_pit.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:cardboard_crate"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.bottomless_pit"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

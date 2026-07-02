@@ -6,13 +6,16 @@ import dev.engine_room.flywheel.lib.instance.InstanceTypes;
 import dev.engine_room.flywheel.lib.instance.TransformedInstance;
 import dev.engine_room.flywheel.lib.model.Models;
 import net.createmod.catnip.math.AngleHelper;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Consumer;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PortableGasInterfaceInstance {
     private final InstancerProvider instancerProvider;
     private final BlockPos instancePos;
@@ -24,7 +27,7 @@ public class PortableGasInterfaceInstance {
 
     private boolean lit;
 
-    public PortableGasInterfaceInstance(@NotNull InstancerProvider instancerProvider, @NotNull BlockState blockState, BlockPos instancePos, boolean lit) {
+    public PortableGasInterfaceInstance(InstancerProvider instancerProvider, BlockState blockState, BlockPos instancePos, boolean lit) {
         this.instancerProvider = instancerProvider;
         this.instancePos = instancePos;
         this.lit = lit;
@@ -58,7 +61,7 @@ public class PortableGasInterfaceInstance {
         top.delete();
     }
 
-    public void collectCrumblingInstances(@NotNull Consumer<Instance> consumer) {
+    public void collectCrumblingInstances(Consumer<Instance> consumer) {
         consumer.accept(middle);
         consumer.accept(top);
     }

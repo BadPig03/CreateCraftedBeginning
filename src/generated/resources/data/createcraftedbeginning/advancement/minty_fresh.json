@@ -1,0 +1,36 @@
+{
+  "parent": "createcraftedbeginning:luxury_treat",
+  "criteria": {
+    "0": {
+      "trigger": "createcraftedbeginning:minty_fresh_builtin"
+    }
+  },
+  "display": {
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.minty_fresh.desc"
+    },
+    "frame": "goal",
+    "icon": {
+      "components": {
+        "createcraftedbeginning:gas_virtual_item_color": -4680775,
+        "createcraftedbeginning:gas_virtual_item_type": {
+          "amount": 1,
+          "id": "createcraftedbeginning:pressurized_energized_ethereal_air"
+        },
+        "minecraft:item_name": "{\"translate\":\"gas.createcraftedbeginning.pressurized_energized_ethereal_air\"}"
+      },
+      "count": 1,
+      "id": "createcraftedbeginning:gas_virtual_item"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.minty_fresh"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

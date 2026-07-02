@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.api.gas.cannonhandlers.natural;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
@@ -14,7 +15,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -24,14 +24,16 @@ import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonUtils;
-import net.ty.createcraftedbeginning.registry.CCBDamageTypes;
 import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.registry.CCBDamageTypes;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class NaturalAirCannonHandler implements AirtightCannonHandler {
     protected static final float DEFAULT_RADIUS = 1.2f;
     protected static final int DEFAULT_DAMAGE = 4;
@@ -48,12 +50,12 @@ public class NaturalAirCannonHandler implements AirtightCannonHandler {
     }
 
     @Override
-    public void renderTrailParticles(@NotNull Level level, @NotNull Vec3 pos) {
+    public void renderTrailParticles(Level level, Vec3 pos) {
         level.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), pos.x, pos.y, pos.z, 0, 0, 0);
     }
 
     @Override
-    public void explode(@NotNull Level level, @NotNull Vec3 pos, Entity source, float multiplier) {
+    public void explode(Level level, Vec3 pos, Entity source, float multiplier) {
         float radius = DEFAULT_RADIUS * multiplier;
         level.explode(source, CCBDamageTypes.source(DamageTypes.WIND_CHARGE, level, source), AirtightCannonUtils.createDamageCalculator(radius), pos.x(), pos.y(), pos.z(), radius, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
     }
@@ -86,7 +88,7 @@ public class NaturalAirCannonHandler implements AirtightCannonHandler {
     }
 
     @Override
-    public void appendHoverText(@NotNull ItemStack cannon, @NotNull TooltipContext context, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
+    public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(CCBLang.translate("gui.tooltips.airtight_cannon.natural_air").style(ChatFormatting.DARK_GREEN).component());
     }
 }

@@ -1,0 +1,28 @@
+{
+  "parent": "createcraftedbeginning:wind_charged",
+  "criteria": {
+    "0": {
+      "trigger": "createcraftedbeginning:looks_like_the_weathers_clearing_up_builtin"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.looks_like_the_weathers_clearing_up.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:sunny_flare"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.looks_like_the_weathers_clearing_up"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

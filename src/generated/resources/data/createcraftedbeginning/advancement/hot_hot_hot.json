@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:hard_casing",
+  "parent": "createcraftedbeginning:the_integrated_industry_age",
   "criteria": {
     "0": {
       "trigger": "createcraftedbeginning:hot_hot_hot_builtin"

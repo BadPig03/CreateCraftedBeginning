@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.crates.brasscrate;
 import com.simibubi.create.api.packager.unpacking.UnpackingHandler;
 import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
@@ -10,17 +11,19 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.content.crates.CrateContainersUtils;
 import net.ty.createcraftedbeginning.content.crates.CrateItemStackHandler;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("UnstableApiUsage")
 public enum BrassCrateUnpackingHandler implements UnpackingHandler {
     INSTANCE;
 
     @Override
-    public boolean unpack(@NotNull Level level, BlockPos pos, BlockState state, Direction side, List<ItemStack> items, @Nullable PackageOrderWithCrafts orderContext, boolean simulate) {
+    public boolean unpack(Level level, BlockPos pos, BlockState state, Direction side, List<ItemStack> items, @Nullable PackageOrderWithCrafts orderContext, boolean simulate) {
         if (!(level.getBlockEntity(pos) instanceof BrassCrateBlockEntity crate)) {
             return false;
         }
@@ -37,13 +40,11 @@ public enum BrassCrateUnpackingHandler implements UnpackingHandler {
                 continue;
             }
 
-            if (filter != null && !filter.test(stack)) {
-                return false;
+            if (filter.test(stack) && ItemStack.isSameItemSameComponents(stack, content)) {
+                continue;
             }
 
-            if (!ItemStack.isSameItemSameComponents(stack, content)) {
-                return false;
-            }
+            return false;
         }
         return CrateContainersUtils.defaultUnpack(level, pos, items, simulate);
     }

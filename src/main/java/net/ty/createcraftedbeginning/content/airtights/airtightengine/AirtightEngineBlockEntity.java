@@ -8,6 +8,7 @@ import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.IRotate.StressImpact;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.AxisDirection;
@@ -25,12 +26,14 @@ import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTank
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity implements IHaveGoggleInformation {
     public static final int BASE_ROTATION_SPEED = 8;
     public static final float DELTA_TIME = 0.01f;
@@ -116,10 +119,7 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
     @Override
     public void onSpeedChanged(float previousSpeed) {
         super.onSpeedChanged(previousSpeed);
-        if (level == null || level.isClientSide) {
-            return;
-        }
-        if (getSpeed() == 0) {
+        if (level == null || level.isClientSide || getSpeed() == 0) {
             return;
         }
 
@@ -128,7 +128,7 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
             return;
         }
 
-        advancementBehaviour.awardPlayer(CCBAdvancements.RISING_FORCE);
+        advancementBehaviour.awardPlayer(CCBAdvancements.EMERGING_POWER);
         if (driverCore.getLevelCalculator().getCurrentLevel() != AirtightAssemblyDriverCore.MAX_LEVEL) {
             return;
         }
@@ -142,10 +142,11 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
     }
 
     @Override
-    public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
-        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.RISING_FORCE, CCBAdvancements.FLYWHEEL);
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+		super.addBehaviours(behaviours);
+		
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.EMERGING_POWER, CCBAdvancements.FLYWHEEL);
         behaviours.add(advancementBehaviour);
-        super.addBehaviours(behaviours);
     }
 
     @Override
@@ -185,7 +186,7 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
         return tank == null ? null : tank.getControllerBE();
     }
 
-    private @Nullable AirtightTankBlockEntity findController(@NotNull Level level) {
+    private @Nullable AirtightTankBlockEntity findController(Level level) {
         Direction facing = AirtightEngineBlock.getFacing(getBlockState());
         BlockEntity be = level.getBlockEntity(worldPosition.relative(facing));
         return be instanceof AirtightTankBlockEntity tank ? tank : null;

@@ -4,6 +4,7 @@ import com.tterrag.registrate.builders.MenuBuilder.ForgeMenuFactory;
 import com.tterrag.registrate.builders.MenuBuilder.ScreenFactory;
 import com.tterrag.registrate.util.entry.MenuEntry;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -24,6 +25,11 @@ import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterMenu;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreen;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+@SuppressWarnings("DataFlowIssue")
 public class CCBMenuTypes {
     public static final MenuEntry<AirtightHelmetMenu> AIRTIGHT_HELMET_MENU = register("airtight_helmet", AirtightHelmetMenu::new, () -> AirtightHelmetScreen::new);
     public static final MenuEntry<AirtightChestplateMenu> AIRTIGHT_CHESTPLATE_MENU = register("airtight_chestplate", AirtightChestplateMenu::new, () -> AirtightChestplateScreen::new);

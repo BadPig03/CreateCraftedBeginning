@@ -7,10 +7,14 @@ import dev.engine_room.flywheel.api.visualization.VisualizationContext;
 import dev.engine_room.flywheel.lib.visual.AbstractBlockEntityVisual;
 import dev.engine_room.flywheel.lib.visual.SimpleDynamicVisual;
 import dev.engine_room.flywheel.lib.visual.SimpleTickableVisual;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Consumer;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PortableGasInterfaceVisual extends AbstractBlockEntityVisual<PortableGasInterfaceBlockEntity> implements SimpleDynamicVisual, SimpleTickableVisual {
     private final PortableGasInterfaceInstance instance;
 

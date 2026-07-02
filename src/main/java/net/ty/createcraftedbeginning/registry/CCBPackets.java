@@ -4,19 +4,19 @@ import net.createmod.catnip.net.base.BasePacketPayload;
 import net.createmod.catnip.net.base.BasePacketPayload.PacketTypeProvider;
 import net.createmod.catnip.net.base.CatnipPacketRegistry;
 import net.createmod.catnip.net.base.CatnipPacketRegistry.PacketType;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerClientPacket;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAreaOutlinePacket;
-import net.ty.createcraftedbeginning.api.gas.gases.MountedStorageSyncPacketWithGas;
-import net.ty.createcraftedbeginning.compat.jei.airtights.AirtightHandheldDrillGhostItemSubmitPacket;
-import net.ty.createcraftedbeginning.compat.jei.airtights.GasFilterGhostItemSubmitPacket;
+import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerClientPacket;
+import net.ty.createcraftedbeginning.api.gas.gases.packets.GasAreaOutlinePacket;
+import net.ty.createcraftedbeginning.api.gas.gases.packets.MountedStorageSyncWithGasPacket;
+import net.ty.createcraftedbeginning.compat.jei.utils.AirtightHandheldDrillGhostItemSubmitPacket;
+import net.ty.createcraftedbeginning.compat.jei.utils.GasFilterGhostItemSubmitPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateElytraBoostPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonPacket;
-import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillAnimationPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillParametersPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlayPacket;
@@ -25,14 +25,16 @@ import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreen
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerOutlinePacket;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerUpdatePacket;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
 import java.util.Locale;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public enum CCBPackets implements PacketTypeProvider {
     AIRTIGHT_CANNON(AirtightCannonPacket.class, AirtightCannonPacket.STREAM_CODEC),
 
     AIRTIGHT_HANDHELD_DRILL_PARAMETERS(AirtightHandheldDrillParametersPacket.class, AirtightHandheldDrillParametersPacket.STREAM_CODEC),
-    AIRTIGHT_HANDHELD_DRILL_ANIMATION(AirtightHandheldDrillAnimationPacket.class, AirtightHandheldDrillAnimationPacket.STREAM_CODEC),
     AIRTIGHT_HANDHELD_DRILL_GHOST_ITEM_SUBMIT(AirtightHandheldDrillGhostItemSubmitPacket.class, AirtightHandheldDrillGhostItemSubmitPacket.STREAM_CODEC),
 
     AIRTIGHT_BOOST_ELYTRA(AirtightChestplateElytraBoostPacket.class, AirtightChestplateElytraBoostPacket.STREAM_CODEC),
@@ -50,7 +52,7 @@ public enum CCBPackets implements PacketTypeProvider {
     END_INCINERATION_BLOWER_OUTLINE(EndIncinerationBlowerOutlinePacket.class, EndIncinerationBlowerOutlinePacket.STREAM_CODEC),
     END_SCULK_SILENCER_UPDATE(EndSculkSilencerUpdatePacket.class, EndSculkSilencerUpdatePacket.STREAM_CODEC),
 
-    MOUNTED_STORAGE_SYNC_WITH_GAS(MountedStorageSyncPacketWithGas.class, MountedStorageSyncPacketWithGas.STREAM_CODEC);
+    MOUNTED_STORAGE_SYNC_WITH_GAS(MountedStorageSyncWithGasPacket.class, MountedStorageSyncWithGasPacket.STREAM_CODEC);
 
     private final PacketType<?> type;
 

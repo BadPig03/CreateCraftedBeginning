@@ -4,6 +4,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorageType;
 import com.simibubi.create.content.logistics.filter.FilterItem;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.item.ItemStack;
@@ -12,9 +13,12 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.content.crates.CrateMountedItemStorage;
 import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class BrassCrateMountedStorage extends CrateMountedItemStorage {
     public static final MapCodec<BrassCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(ItemStack.CODEC.fieldOf("content").forGetter(storage -> storage.content), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("count").forGetter(storage -> storage.count), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("maxCount").forGetter(storage -> storage.maxCount), ItemStack.CODEC.fieldOf("filterItem").forGetter(storage -> storage.filterItem)).apply(instance, BrassCrateMountedStorage::new));
 
@@ -24,7 +28,7 @@ public class BrassCrateMountedStorage extends CrateMountedItemStorage {
         this(CCBMountedStorage.BRASS_CRATE.get(), content, count, maxCount, filterItem);
     }
 
-    protected BrassCrateMountedStorage(MountedItemStorageType<?> type, @NotNull ItemStack content, int count, int maxCount, @NotNull ItemStack filterItem) {
+    protected BrassCrateMountedStorage(MountedItemStorageType<?> type, ItemStack content, int count, int maxCount, ItemStack filterItem) {
         super(type, content, count, maxCount);
         this.filterItem = filterItem.copy();
     }
@@ -39,7 +43,7 @@ public class BrassCrateMountedStorage extends CrateMountedItemStorage {
     }
 
     @Override
-    public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+    public boolean isItemValid(int slot, ItemStack stack) {
         return slot == 0 && (filterItem.isEmpty() || FilterItem.testDirect(filterItem, stack, false)) && (content.isEmpty() || ItemStack.isSameItemSameComponents(content, stack));
     }
 }

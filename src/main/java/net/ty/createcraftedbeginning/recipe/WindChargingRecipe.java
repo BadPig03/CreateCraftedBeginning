@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.recipe;
 
 import com.simibubi.create.content.processing.recipe.ProcessingRecipeParams;
 import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -9,16 +10,18 @@ import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.content.icecreams.CreativeIceCreamItem;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
     public WindChargingRecipe(ProcessingRecipeParams params) {
         super(CCBRecipeTypes.WIND_CHARGING, params);
     }
 
-    public static @NotNull WindChargingData getWindChargingTime(@NotNull Level level, ItemStack itemStack) {
+    public static WindChargingData getWindChargingTime(Level level, ItemStack itemStack) {
         List<RecipeHolder<WindChargingRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.WIND_CHARGING.getType());
         for (RecipeHolder<WindChargingRecipe> holder : recipes) {
             WindChargingRecipe recipe = holder.value();
@@ -49,7 +52,7 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
     }
 
     @Override
-    public boolean matches(@NotNull SingleRecipeInput input, @NotNull Level level) {
+    public boolean matches(SingleRecipeInput input, Level level) {
         return true;
     }
 

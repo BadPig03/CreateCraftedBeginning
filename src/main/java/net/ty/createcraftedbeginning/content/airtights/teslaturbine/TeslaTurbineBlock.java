@@ -9,6 +9,7 @@ import com.simibubi.create.content.schematics.requirement.ItemRequirement.StackR
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import com.simibubi.create.foundation.block.render.MultiPosDestructionHandler;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -43,6 +44,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.TeslaTurbineStructuralPosition;
 import net.ty.createcraftedbeginning.data.CCBShapes;
@@ -51,14 +53,16 @@ import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<TeslaTurbineBlockEntity>, SimpleWaterloggedBlock, SpecialBlockItemRequirement {
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
     private static final int ROTOR_MAX_COUNT = 8;
@@ -71,7 +75,7 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
     }
 
     @Contract("_, _, _, _ -> new")
-    public static @NotNull BlockPos calculateStructurePos(BlockPos pos, @NotNull Axis axis, int u, int v) {
+    public static BlockPos calculateStructurePos(BlockPos pos, Axis axis, int u, int v) {
         switch (axis) {
             case X -> {
                 return new BlockPos(pos.getX(), pos.getY() + v, pos.getZ() + u);
@@ -85,9 +89,12 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
         }
     }
 
-    public Axis getAxisForPlacement(BlockPlaceContext context) {
+    public @Nullable Axis getAxisForPlacement(BlockPlaceContext context) {
         BlockState state = super.getStateForPlacement(context);
-        return state == null ? null : state.getValue(AXIS);
+        if (state == null) {
+            return null;
+        }
+        return state.getValue(AXIS);
     }
 
     @Override
@@ -106,7 +113,7 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
     }
 
     @Override
-    public void onRemove(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState newState, boolean isMoving) {
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (state.is(newState.getBlock())) {
             return;
         }
@@ -121,12 +128,12 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
     }
 
     @Override
-    public boolean hasShaftTowards(LevelReader world, BlockPos pos, BlockState state, @NotNull Direction face) {
+    public boolean hasShaftTowards(LevelReader world, BlockPos pos, BlockState state, Direction face) {
         return face.getAxis() == getRotationAxis(state);
     }
 
     @Override
-    public Axis getRotationAxis(@NotNull BlockState state) {
+    public Axis getRotationAxis(BlockState state) {
         return state.getValue(AXIS);
     }
 
@@ -141,11 +148,11 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
     }
 
     @Override
-    protected @NotNull ItemInteractionResult useItemOn(@NotNull ItemStack stack, @NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull InteractionHand hand, @NotNull BlockHitResult hitResult) {
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
         ItemStack itemStack = player.getItemInHand(hand);
         int rotorCount = state.getValue(ROTOR);
         if (itemStack.is(CCBItems.TESLA_TURBINE_ROTOR)) {
-            if (rotorCount == ROTOR_MAX_COUNT) {
+            if (rotorCount >= ROTOR_MAX_COUNT) {
                 return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
             }
 
@@ -164,7 +171,7 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
             level.setBlockAndUpdate(pos, state.setValue(ROTOR, rotorCount - 1));
             CCBSoundEvents.ROTOR_REMOVED.playOnServer(level, pos, 1.0f, 1.0f);
             if (!player.isCreative()) {
-                player.getInventory().placeItemBackInInventory(new ItemStack(CCBItems.TESLA_TURBINE_ROTOR.asItem()));
+                ItemHandlerHelper.giveItemToPlayer(player, new ItemStack(CCBItems.TESLA_TURBINE_ROTOR.asItem()));
             }
             return ItemInteractionResult.SUCCESS;
         }
@@ -173,12 +180,12 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
     }
 
     @Override
-    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos, @NotNull CollisionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return CCBShapes.TESLA_TURBINE.get(state.getValue(BlockStateProperties.AXIS));
     }
 
     @Override
-    public void tick(@NotNull BlockState state, @NotNull ServerLevel level, @NotNull BlockPos pos, @NotNull RandomSource random) {
+    public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         Axis axis = state.getValue(AXIS);
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
@@ -204,18 +211,18 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
     }
 
     @Override
-    public void setPlacedBy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, LivingEntity entity, @NotNull ItemStack stack) {
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity entity, ItemStack stack) {
         super.setPlacedBy(level, pos, state, entity, stack);
         CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
     }
 
     @Override
-    public @NotNull FluidState getFluidState(@NotNull BlockState state) {
+    public FluidState getFluidState(BlockState state) {
         return state.getValue(WATERLOGGED) ? Fluids.WATER.defaultFluidState() : super.getFluidState(state);
     }
 
     @Override
-    public @NotNull BlockState updateShape(@NotNull BlockState state, @NotNull Direction direction, @NotNull BlockState neighbourState, @NotNull LevelAccessor level, @NotNull BlockPos pos, @NotNull BlockPos neighbourPos) {
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos) {
         if (state.getValue(WATERLOGGED)) {
             level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
@@ -223,13 +230,13 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
     }
 
     @Override
-    protected void createBlockStateDefinition(@NotNull Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
         builder.add(WATERLOGGED).add(ROTOR);
         super.createBlockStateDefinition(builder);
     }
 
     @Override
-    public ItemRequirement getRequiredItems(@NotNull BlockState state, BlockEntity blockEntity) {
+    public ItemRequirement getRequiredItems(BlockState state, @Nullable BlockEntity blockEntity) {
         List<StackRequirement> requirements = new ArrayList<>();
         requirements.add(new StackRequirement(new ItemStack(asItem()), ItemUseType.CONSUME));
         int rotorCount = state.getValue(ROTOR);
@@ -240,7 +247,7 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
     }
 
     @Override
-    public BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
+    public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState state = super.getStateForPlacement(context);
         if (state == null) {
             return null;
@@ -267,7 +274,7 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
     public static class TeslaTurbineRenderProperties implements IClientBlockExtensions, MultiPosDestructionHandler {
         @Override
         @Nullable
-        public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, @NotNull BlockState blockState, int progress) {
+        public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
             Axis axis = blockState.getValue(AXIS);
             HashSet<BlockPos> positions = new HashSet<>();
             for (int i = -1; i <= 1; i++) {

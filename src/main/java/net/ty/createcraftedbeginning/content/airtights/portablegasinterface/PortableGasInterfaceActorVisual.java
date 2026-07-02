@@ -6,7 +6,12 @@ import com.simibubi.create.foundation.virtualWorld.VirtualRenderWorld;
 import dev.engine_room.flywheel.api.visualization.VisualizationContext;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.createmod.catnip.animation.LerpedFloat;
+import net.minecraft.MethodsReturnNonnullByDefault;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PortableGasInterfaceActorVisual extends ActorVisual {
     private final PortableGasInterfaceInstance instance;
 

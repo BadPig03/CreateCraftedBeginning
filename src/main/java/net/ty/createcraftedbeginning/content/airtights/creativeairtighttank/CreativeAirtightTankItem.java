@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.creativeairtighttank;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
@@ -16,8 +17,12 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.gas.gases.GasConnectivityHandler;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CreativeAirtightTankItem extends BlockItem {
     private static final String COMPOUND_KEY_WIDTH = "Width";
     private static final String COMPOUND_KEY_HEIGHT = "Height";
@@ -29,7 +34,7 @@ public class CreativeAirtightTankItem extends BlockItem {
     }
 
     @Override
-    public @NotNull InteractionResult place(@NotNull BlockPlaceContext context) {
+    public InteractionResult place(BlockPlaceContext context) {
         InteractionResult initialResult = super.place(context);
         if (!initialResult.consumesAction()) {
             return initialResult;
@@ -40,7 +45,7 @@ public class CreativeAirtightTankItem extends BlockItem {
     }
 
     @Override
-    protected boolean updateCustomBlockEntityTag(@NotNull BlockPos blockPos, @NotNull Level level, Player player, @NotNull ItemStack itemStack, @NotNull BlockState blockState) {
+    protected boolean updateCustomBlockEntityTag(BlockPos blockPos, Level level, @Nullable Player player, ItemStack itemStack, BlockState blockState) {
         MinecraftServer server = level.getServer();
         if (server == null) {
             return false;
@@ -58,7 +63,7 @@ public class CreativeAirtightTankItem extends BlockItem {
         return super.updateCustomBlockEntityTag(blockPos, level, player, itemStack, blockState);
     }
 
-    private void tryMultiPlace(@NotNull BlockPlaceContext context) {
+    private void tryMultiPlace(BlockPlaceContext context) {
         Player player = context.getPlayer();
         if (player == null || player.isShiftKeyDown()) {
             return;

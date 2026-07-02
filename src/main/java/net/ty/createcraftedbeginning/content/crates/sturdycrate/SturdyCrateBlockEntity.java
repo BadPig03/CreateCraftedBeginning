@@ -8,6 +8,7 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform;
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
 import dev.engine_room.flywheel.lib.transform.TransformStack;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup.Provider;
@@ -30,10 +31,12 @@ import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class SturdyCrateBlockEntity extends CratesBlockEntity implements IHaveGoggleInformation, ThresholdSwitchObservable {
     private static final String COMPOUND_KEY_INVENTORY = "Inventory";
 
@@ -46,12 +49,14 @@ public class SturdyCrateBlockEntity extends CratesBlockEntity implements IHaveGo
         handler = new SturdyItemHandler(this);
     }
 
-    public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.STURDY_CRATE.get(), (be, context) -> be.handler);
     }
 
     @Override
-    public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+        super.addBehaviours(behaviours);
+
         filteringBehaviour = new FilteringBehaviour(this, new SturdySmartFilterSlot());
         advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.PORTABLE_LAVA_SEA);
         behaviours.add(filteringBehaviour);
@@ -84,11 +89,11 @@ public class SturdyCrateBlockEntity extends CratesBlockEntity implements IHaveGo
         return handler.getStackInSlot(0).isEmpty() || handler.getCountInSlot(0) == 0;
     }
 
-    public void saveToItem(@NotNull ItemStack crate) {
+    public void saveToItem(ItemStack crate) {
         crate.set(CCBDataComponents.STURDY_CRATE_CONTENTS, new SturdyCrateContents(handler.getStackInSlot(0).copyWithCount(1), handler.getCountInSlot(0), filteringBehaviour.getFilter().copyWithCount(1)));
     }
 
-    public void loadFromItem(@NotNull ItemStack crate) {
+    public void loadFromItem(ItemStack crate) {
         SturdyCrateContents contents = crate.getOrDefault(CCBDataComponents.STURDY_CRATE_CONTENTS, SturdyCrateContents.empty());
         handler.setStackInSlot(0, contents.content().copyWithCount(1));
         handler.setCountInSlot(0, contents.count());
@@ -135,24 +140,24 @@ public class SturdyCrateBlockEntity extends CratesBlockEntity implements IHaveGo
     private class SturdySmartFilterSlot extends ValueBoxTransform {
         @Contract(value = "_, _, _ -> new", pure = true)
         @Override
-        public @NotNull Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, BlockState state) {
+        public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, BlockState state) {
             return new Vec3(0.5, 0.84375, 0.5);
         }
 
         @Override
-        public void rotate(LevelAccessor level, BlockPos pos, @NotNull BlockState state, PoseStack ms) {
+        public void rotate(LevelAccessor level, BlockPos pos, BlockState state, PoseStack ms) {
             Direction facing = state.getValue(SturdyCrateBlock.FACING);
             TransformStack.of(ms).rotateXDegrees(90).rotateZDegrees(facing.getOpposite().toYRot());
         }
     }
 
     private class SturdyItemHandler extends CrateItemStackHandler {
-        SturdyItemHandler(@NotNull SturdyCrateBlockEntity be) {
+        SturdyItemHandler(SturdyCrateBlockEntity be) {
             super(CCBConfig.server().crates.maxSturdyCapacity.get(), be.filteringBehaviour);
         }
 
         @Override
-        public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+        public boolean isItemValid(int slot, ItemStack stack) {
             validateSlotIndex(slot);
             return stack.canFitInsideContainerItems() && (filtering == null || filtering.getFilter().isEmpty() || FilterItem.testDirect(filtering.getFilter(), stack, false)) && (content.isEmpty() || ItemStack.isSameItemSameComponents(content, stack));
         }

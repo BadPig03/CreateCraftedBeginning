@@ -4,16 +4,19 @@ import com.mojang.serialization.Codec;
 import io.netty.buffer.ByteBuf;
 import net.createmod.catnip.codecs.stream.CatnipStreamCodecBuilders;
 import net.createmod.catnip.lang.Lang;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
 import net.ty.createcraftedbeginning.data.CCBLang;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public enum AirtightHandheldDrillMiningTemplates implements StringRepresentable {
     CUBOID(new CuboidTemplate()),
     HOLLOW_CUBOID(new HollowCuboidTemplate()),
@@ -29,7 +32,7 @@ public enum AirtightHandheldDrillMiningTemplates implements StringRepresentable 
         this.template = template;
     }
 
-    private static @NotNull List<Component> generateOptions() {
+    private static List<Component> generateOptions() {
         String prefix = "gui.airtight_handheld_drill.template";
         String[] keys = Arrays.stream(values()).map(AirtightHandheldDrillMiningTemplates::getSerializedName).toArray(String[]::new);
         return CCBLang.translatedOptions(prefix, keys);
@@ -39,7 +42,7 @@ public enum AirtightHandheldDrillMiningTemplates implements StringRepresentable 
         return template;
     }
 
-    public @NotNull Component getSizeLabel(int index, @NotNull Direction direction) {
+    public Component getSizeLabel(int index, Direction direction) {
         return switch (direction) {
             case UP, DOWN -> switch (index) {
                 case 0 -> CCBLang.translateDirect("gui.airtight_handheld_drill.size.width");
@@ -54,7 +57,7 @@ public enum AirtightHandheldDrillMiningTemplates implements StringRepresentable 
         };
     }
 
-    public @NotNull Component getRelativeLabel(int index, @NotNull Direction direction) {
+    public Component getRelativeLabel(int index, Direction direction) {
         return switch (direction) {
             case UP, DOWN -> switch (index) {
                 case 0 -> CCBLang.translateDirect("gui.airtight_handheld_drill.relative_position.width");
@@ -70,7 +73,7 @@ public enum AirtightHandheldDrillMiningTemplates implements StringRepresentable 
     }
 
     @Override
-    public @NotNull String getSerializedName() {
+    public String getSerializedName() {
         return Lang.asId(name());
     }
 }

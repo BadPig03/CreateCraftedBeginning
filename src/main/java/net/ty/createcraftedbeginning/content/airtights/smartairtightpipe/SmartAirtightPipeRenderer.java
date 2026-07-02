@@ -3,10 +3,15 @@ package net.ty.createcraftedbeginning.content.airtights.smartairtightpipe;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.renderer.SafeBlockEntityRenderer;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
 import net.ty.createcraftedbeginning.api.gas.gases.GasFilteringRenderer;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class SmartAirtightPipeRenderer<T extends SmartBlockEntity> extends SafeBlockEntityRenderer<T> {
     public SmartAirtightPipeRenderer(Context ignored) {
     }

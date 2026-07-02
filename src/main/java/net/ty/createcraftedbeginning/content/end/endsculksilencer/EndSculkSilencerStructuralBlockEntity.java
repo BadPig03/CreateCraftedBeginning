@@ -5,6 +5,7 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.INamedIconOptions;
 import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.ScrollOptionBehaviour;
 import net.createmod.catnip.lang.Lang;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -13,10 +14,12 @@ import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalStructur
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerValueBox;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EndSculkSilencerStructuralBlockEntity extends EndMechanicalStructuralBlockEntity<EndSculkSilencerBlockEntity> {
     private ScrollOptionBehaviour<SilencerWorkingRange> silencerWorkingRange;
 
@@ -31,7 +34,7 @@ public class EndSculkSilencerStructuralBlockEntity extends EndMechanicalStructur
     }
 
     @Override
-    public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         super.addBehaviours(behaviours);
         silencerWorkingRange = new ScrollOptionBehaviour<>(SilencerWorkingRange.class, CCBLang.translateDirect("gui.end_sculk_silencer.working_range"), this, new EndIncinerationBlowerValueBox());
         behaviours.add(silencerWorkingRange);

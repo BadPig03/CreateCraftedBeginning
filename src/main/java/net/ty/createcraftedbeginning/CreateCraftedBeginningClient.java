@@ -4,6 +4,7 @@ import com.simibubi.create.compat.Mods;
 import com.simibubi.create.compat.ftb.FTBIntegration;
 import com.simibubi.create.compat.pojav.PojavChecker;
 import com.simibubi.create.compat.sodium.SodiumCompat;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -12,15 +13,18 @@ import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCa
 import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.AirtightExtendArmRenderHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillRenderHandler;
 import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @Mod(value = CreateCraftedBeginning.MOD_ID, dist = Dist.CLIENT)
 public class CreateCraftedBeginningClient {
     public static final AirtightCannonRenderHandler AIRTIGHT_CANNON_RENDER_HANDLER = new AirtightCannonRenderHandler();
     public static final AirtightExtendArmRenderHandler AIRTIGHT_EXTEND_ARM_RENDER_HANDLER = new AirtightExtendArmRenderHandler();
     public static final AirtightHandheldDrillRenderHandler AIRTIGHT_HAND_DRILL_RENDER_HANDLER = new AirtightHandheldDrillRenderHandler();
 
-    public CreateCraftedBeginningClient(@NotNull IEventBus modEventBus) {
+    public CreateCraftedBeginningClient(IEventBus modEventBus) {
         IEventBus eventBus = NeoForge.EVENT_BUS;
         modEventBus.addListener(CCBParticleTypes::registerFactories);
 

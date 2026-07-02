@@ -4,6 +4,7 @@ import com.simibubi.create.content.equipment.armor.TrimmableArmorModelGenerator;
 import com.simibubi.create.foundation.mixin.accessor.ItemModelGeneratorsAccessor;
 import com.tterrag.registrate.providers.DataGenContext;
 import com.tterrag.registrate.providers.RegistrateItemModelProvider;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.data.models.ItemModelGenerators;
 import net.minecraft.data.models.ItemModelGenerators.TrimModelData;
 import net.minecraft.data.models.model.ModelLocationUtils;
@@ -13,13 +14,15 @@ import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.client.model.generators.ItemModelBuilder;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Map;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightArmorsTrimsModelGenerator extends TrimmableArmorModelGenerator {
     @SuppressWarnings("unchecked")
-    public static <T extends ArmorItem> void generate(@NotNull DataGenContext<Item, T> c, @NotNull RegistrateItemModelProvider p) {
+    public static <T extends ArmorItem> void generate(DataGenContext<Item, T> c, RegistrateItemModelProvider p) {
         T item = c.get();
         ItemModelBuilder builder = p.generated(c);
         for (TrimModelData data : ItemModelGeneratorsAccessor.create$getGENERATED_TRIM_MODELS()) {

@@ -5,6 +5,7 @@ import com.simibubi.create.foundation.item.ItemDescription.Modifier;
 import com.simibubi.create.foundation.item.KineticStats;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import net.createmod.catnip.lang.FontHelper.Palette;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -30,7 +31,6 @@ import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthe
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.AirtightLeggingsUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.AirtightHandheldDrillUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndCasingBlock;
-import net.ty.createcraftedbeginning.content.end.endsculksilencer.GlobalEndSculkSilencerManager;
 import net.ty.createcraftedbeginning.data.CCBDataGen;
 import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 import net.ty.createcraftedbeginning.data.CCBGases;
@@ -39,9 +39,9 @@ import net.ty.createcraftedbeginning.init.CCBAirtightArmorsHandlers;
 import net.ty.createcraftedbeginning.init.CCBAirtightCannonHandlers;
 import net.ty.createcraftedbeginning.init.CCBAirtightExtendArmHandlers;
 import net.ty.createcraftedbeginning.init.CCBAirtightHandheldDrillHandlers;
+import net.ty.createcraftedbeginning.init.CCBAirtightPipeEffectHandlers;
+import net.ty.createcraftedbeginning.init.CCBAirtightPipeExtractHandlers;
 import net.ty.createcraftedbeginning.init.CCBCoolantStrategyHandlers;
-import net.ty.createcraftedbeginning.init.CCBOpenPipeEffectHandlers;
-import net.ty.createcraftedbeginning.init.CCBOpenPipeExtractHandlers;
 import net.ty.createcraftedbeginning.init.CCBReactorKettleThermoregulators;
 import net.ty.createcraftedbeginning.init.CCBUnpackingHandlers;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
@@ -66,14 +66,16 @@ import net.ty.createcraftedbeginning.registry.CCBRegistries;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 import net.ty.createcraftedbeginning.registry.CCBTags;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @Mod(CreateCraftedBeginning.MOD_ID)
 public class CreateCraftedBeginning {
     public static final String MOD_ID = "createcraftedbeginning";
     public static final Logger LOGGER = LogUtils.getLogger();
-    public static final GlobalEndSculkSilencerManager GLOBAL_END_SCULK_SILENCER_MANAGER = new GlobalEndSculkSilencerManager();
 
     @SuppressWarnings("DataFlowIssue")
     private static final CCBRegistrate CCB_REGISTRATE = CCBRegistrate.create(MOD_ID).defaultCreativeTab((ResourceKey<CreativeModeTab>) null).setTooltipModifierFactory(item -> new Modifier(item, Palette.STANDARD_CREATE).andThen(TooltipModifier.mapNull(KineticStats.create(item))));
@@ -112,7 +114,7 @@ public class CreateCraftedBeginning {
         modEventBus.addListener(CCBSoundEvents::register);
     }
 
-    public static void onRegister(@NotNull RegisterEvent event) {
+    public static void onRegister(RegisterEvent event) {
         if (event.getRegistry() != BuiltInRegistries.TRIGGER_TYPES) {
             return;
         }
@@ -121,7 +123,7 @@ public class CreateCraftedBeginning {
         CCBTriggers.register();
     }
 
-    public static void init(@NotNull FMLCommonSetupEvent event) {
+    public static void init(FMLCommonSetupEvent event) {
         CCBFluids.registerFluidInteractions();
         EndCasingBlock.registerPlacementHelpers();
         AirtightHelmetUpgradeRegistry.registerUpgrades();
@@ -136,14 +138,14 @@ public class CreateCraftedBeginning {
             CCBAirtightHandheldDrillHandlers.register();
             CCBReactorKettleThermoregulators.register();
             CCBCoolantStrategyHandlers.register();
-            CCBOpenPipeEffectHandlers.register();
-            CCBOpenPipeExtractHandlers.register();
+            CCBAirtightPipeEffectHandlers.register();
+            CCBAirtightPipeExtractHandlers.register();
             CCBUnpackingHandlers.register();
         });
     }
 
     @Contract("_ -> new")
-    public static @NotNull ResourceLocation asResource(String path) {
+    public static ResourceLocation asResource(String path) {
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
     }
 
@@ -151,7 +153,7 @@ public class CreateCraftedBeginning {
         return CCB_REGISTRATE;
     }
 
-    private static void addRegistrationListeners(@NotNull IEventBus modEventBus) {
+    private static void addRegistrationListeners(IEventBus modEventBus) {
         modEventBus.addListener(CreateCraftedBeginning::registerEventListener);
         modEventBus.addListener(CreateCraftedBeginning::registerRegistries);
 
@@ -159,11 +161,11 @@ public class CreateCraftedBeginning {
         CCBGasRegistries.GAS_INGREDIENT_TYPES.register(modEventBus);
     }
 
-    private static void registerEventListener(@NotNull RegisterEvent event) {
+    private static void registerEventListener(RegisterEvent event) {
         event.register(CCBRegistries.GAS_REGISTRY_KEY, CCBGasRegistries.EMPTY_GAS_KEY.location(), () -> new Gas(GasBuilder.builder()));
     }
 
-    private static void registerRegistries(@NotNull NewRegistryEvent event) {
+    private static void registerRegistries(NewRegistryEvent event) {
         event.register(CCBGasRegistries.GAS_REGISTRY);
         event.register(CCBGasRegistries.GAS_INGREDIENT_TYPES_REGISTRY);
     }

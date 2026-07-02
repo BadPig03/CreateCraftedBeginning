@@ -10,16 +10,20 @@ import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightCheckValveScenes {
-    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("airtight_check_valve", "One-Way Transport with Airtight Check Valves");
@@ -45,7 +49,10 @@ public class AirtightCheckValveScenes {
         Selection encasedSelection = util.select().position(encasedPipePos);
         Selection motorSelection = util.select().fromTo(motorPos, cogPos);
 
-        AABB valveReverseArea = new AABB(util.vector().centerOf(fourthPipePos), util.vector().centerOf(fourthPipePos));
+        Vec3 valveVec = util.vector().centerOf(valvePos);
+        Vec3 fourthPipeVec = util.vector().centerOf(fourthPipePos);
+
+        AABB valveReverseArea = new AABB(fourthPipeVec, fourthPipeVec);
 
         Object valveReverseObject = new Object();
 
@@ -71,10 +78,12 @@ public class AirtightCheckValveScenes {
         scene.idle(3);
         scene.world().setBlock(motorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.NORTH), false);
         scene.world().showSection(motorSelection, Direction.WEST);
+
+        scene.idle(15);
         scene.world().setKineticSpeed(motorSelection, mediumSpeed);
         scene.world().setKineticSpeed(pumpPipeSelection, -mediumSpeed);
         scene.effects().rotationSpeedIndicator(pumpPos);
-        scene.overlay().showText(60).text("Airtight Check Valves allow gas flowing in a single direction only").pointAt(Vec3.atCenterOf(valvePos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Airtight Check Valves allow gas flowing in a single direction only").colored(PonderPalette.GREEN).pointAt(valveVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, valveReverseObject, valveReverseArea, 3);
@@ -86,14 +95,14 @@ public class AirtightCheckValveScenes {
         scene.idle(3);
         valveReverseArea = valveReverseArea.expandTowards(2, 0, 0);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, valveReverseObject, valveReverseArea, 60);
-        scene.overlay().showText(60).text("Gas attempting to flow from the opposite direction is blocked").colored(PonderPalette.RED).pointAt(Vec3.atCenterOf(valvePos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Gas attempting to flow from the opposite direction is blocked").colored(PonderPalette.RED).pointAt(valveVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-		scene.overlay().showControls(util.vector().blockSurface(valvePos, Direction.UP).subtract(0, 0.125f, 0), Pointing.DOWN, 67).rightClick().withItem(wrenchItem);
+		scene.overlay().showControls(util.vector().blockSurface(valvePos, Direction.UP).subtract(0, 0.125f, 0), Pointing.DOWN, 67).rightClick().withItem(wrenchItem.copy());
         
 		scene.idle(7);
 		scene.world().modifyBlock(valvePos, s -> s.setValue(AirtightCheckValveBlock.INVERTED, true), false);
-        scene.overlay().showText(60).text("A Wrench can be used to reverse the direction").pointAt(Vec3.atCenterOf(valvePos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("A Wrench can be used to reverse the direction").colored(PonderPalette.GREEN).pointAt(valveVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();

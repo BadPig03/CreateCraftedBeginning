@@ -3,11 +3,14 @@ package net.ty.createcraftedbeginning.data;
 import com.simibubi.create.foundation.block.connected.AllCTTypes;
 import com.simibubi.create.foundation.block.connected.CTSpriteShiftEntry;
 import com.simibubi.create.foundation.block.connected.CTSpriteShifter;
-import com.simibubi.create.foundation.block.connected.CTType;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBSpriteShifts {
-    public static final CTSpriteShiftEntry CINDER_CASING = omni("cinder_casing");
     public static final CTSpriteShiftEntry END_CASING = omni("end_casing");
     public static final CTSpriteShiftEntry AIR_VENT = omni("air_vent/air_vent");
 
@@ -17,16 +20,15 @@ public class CCBSpriteShifts {
     public static final CTSpriteShiftEntry CREATIVE_AIRTIGHT_TANK = rectangle("airtight_tank/creative_vertical");
 
     private static CTSpriteShiftEntry omni(String name) {
-        return getCT(AllCTTypes.OMNIDIRECTIONAL, name);
+        return getCT(name);
     }
 
-    @SuppressWarnings("SameParameterValue")
-    private static CTSpriteShiftEntry getCT(CTType type, String blockTextureName) {
-        return getCT(type, blockTextureName, blockTextureName);
+    private static CTSpriteShiftEntry getCT(String blockTextureName) {
+        return getCT(blockTextureName, blockTextureName);
     }
 
-    private static CTSpriteShiftEntry getCT(CTType type, String blockTextureName, String connectedTextureName) {
-        return CTSpriteShifter.getCT(type, CreateCraftedBeginning.asResource("block/" + blockTextureName), CreateCraftedBeginning.asResource("block/" + connectedTextureName + "_connected"));
+    private static CTSpriteShiftEntry getCT(String blockTextureName, String connectedTextureName) {
+        return CTSpriteShifter.getCT(AllCTTypes.OMNIDIRECTIONAL, CreateCraftedBeginning.asResource("block/" + blockTextureName), CreateCraftedBeginning.asResource("block/" + connectedTextureName + "_connected"));
     }
 
     private static CTSpriteShiftEntry rectangle(String blockTextureName) {

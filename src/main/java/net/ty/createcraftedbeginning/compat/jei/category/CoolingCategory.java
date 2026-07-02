@@ -5,6 +5,7 @@ import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.neoforge.NeoForgeTypes;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -16,10 +17,12 @@ import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedBree
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 import net.ty.createcraftedbeginning.data.CCBGUITextures;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
     private static final int COLOR = 0x888888;
     private final AnimatedBreezeCooler cooler = new AnimatedBreezeCooler();
@@ -34,10 +37,6 @@ public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
         CCBGUITextures.JEI_SHADOW.render(graphics, 122, 37);
         CCBGUITextures.JEI_LONG_ARROW.render(graphics, 42, 30);
         CCBGUITextures.JEI_COOLING_BACKGROUND.render(graphics, 16, 8);
-        if (getBackground() == null) {
-            return;
-        }
-
         if (!recipe.isFluidIngredients() && recipe.isCreativeIceCream()) {
             MutableComponent text = Component.translatable("jade.gas.infinity_mark");
             graphics.drawString(font, text, getBackground().getWidth() / 2 - font.width(text) / 2 - 12, 22, COLOR, false);
@@ -51,20 +50,14 @@ public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
     }
 
     @Override
-    public void setRecipe(IRecipeLayoutBuilder builder, @NotNull CoolingRecipe recipe, @NotNull IFocusGroup focuses) {
+    public void setRecipe(IRecipeLayoutBuilder builder, CoolingRecipe recipe, IFocusGroup focuses) {
         if (recipe.isFluidIngredients()) {
-            addFluidInputSlot(builder, recipe.getFluidIngredient());
+            SizedFluidIngredient fluidIngredient = recipe.getFluidIngredient();
+            builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setFluidRenderer(1000, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredients(NeoForgeTypes.FLUID_STACK, Arrays.asList(fluidIngredient.getFluids()));
         }
         else {
-            addItemInputSlot(builder, recipe.getIngredient());
+            Ingredient ingredient = recipe.getIngredient();
+            builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setBackground(getRenderedSlot(), -1, -1).addIngredients(ingredient);
         }
-    }
-
-    private static void addItemInputSlot(@NotNull IRecipeLayoutBuilder builder, Ingredient ingredient) {
-        builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setBackground(getRenderedSlot(), -1, -1).addIngredients(ingredient);
-    }
-
-    private static void addFluidInputSlot(@NotNull IRecipeLayoutBuilder builder, @NotNull SizedFluidIngredient fluidIngredient) {
-        builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setFluidRenderer(1000, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredients(NeoForgeTypes.FLUID_STACK, Arrays.asList(fluidIngredient.getFluids()));
     }
 }

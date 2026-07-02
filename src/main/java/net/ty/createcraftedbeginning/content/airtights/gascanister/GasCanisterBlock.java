@@ -7,6 +7,7 @@ import com.simibubi.create.content.schematics.requirement.ItemRequirement;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement.ItemUseType;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.LivingEntity;
@@ -39,9 +40,13 @@ import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterIt
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntity>, SimpleWaterloggedBlock, IWrenchable, SpecialBlockItemRequirement {
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
@@ -51,12 +56,12 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
     }
 
     @Override
-    public @NotNull MapCodec<GasCanisterBlock> codec() {
+    public MapCodec<GasCanisterBlock> codec() {
         return simpleCodec(GasCanisterBlock::new);
     }
 
     @Override
-    public void setPlacedBy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, LivingEntity entity, @NotNull ItemStack stack) {
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
         super.setPlacedBy(level, pos, state, entity, stack);
         CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
         if (level.isClientSide) {
@@ -67,7 +72,7 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
     }
 
     @Override
-    public @NotNull ItemStack getCloneItemStack(@NotNull BlockState state, @NotNull HitResult target, @NotNull LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
+    public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
         if (!(asItem() instanceof GasCanisterBlockItem) || !(level.getBlockEntity(pos) instanceof GasCanisterBlockEntity canisterBlockEntity)) {
             return ItemStack.EMPTY;
         }
@@ -76,7 +81,7 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
     }
 
     @Override
-    public BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState state = super.getStateForPlacement(context);
         return state == null ? null : ProperWaterloggedBlock.withWater(context.getLevel(), state, context.getClickedPos());
     }
@@ -87,12 +92,12 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
     }
 
     @Override
-    protected boolean isPathfindable(@NotNull BlockState state, @NotNull PathComputationType pathComputationType) {
+    protected boolean isPathfindable(BlockState state, PathComputationType pathComputationType) {
         return false;
     }
 
     @Override
-    public @NotNull BlockState updateShape(@NotNull BlockState state, @NotNull Direction direction, @NotNull BlockState neighbourState, @NotNull LevelAccessor world, @NotNull BlockPos pos, @NotNull BlockPos neighbourPos) {
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor world, BlockPos pos, BlockPos neighbourPos) {
         if (state.getValue(WATERLOGGED)) {
             world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
         }
@@ -100,12 +105,12 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
     }
 
     @Override
-    public @NotNull FluidState getFluidState(@NotNull BlockState state) {
+    public FluidState getFluidState(BlockState state) {
         return state.getValue(WATERLOGGED) ? Fluids.WATER.defaultFluidState() : super.getFluidState(state);
     }
 
     @Override
-    public @NotNull List<ItemStack> getDrops(@NotNull BlockState state, @NotNull Builder builder) {
+    public List<ItemStack> getDrops(BlockState state, Builder builder) {
         List<ItemStack> lootDrops = super.getDrops(state, builder);
         BlockEntity blockEntity = builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
         if (!(blockEntity instanceof GasCanisterBlockEntity canister)) {
@@ -116,7 +121,7 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
     }
 
     @Override
-    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos blockPos, @NotNull CollisionContext collisionContext) {
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos blockPos, CollisionContext collisionContext) {
         return CCBShapes.GAS_CANISTER_SHAPE;
     }
 

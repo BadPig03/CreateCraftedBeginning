@@ -11,6 +11,7 @@ import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.render.CachedBuffers;
 import net.createmod.catnip.render.SuperByteBuffer;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -18,20 +19,23 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Con
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Consumer;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PortableGasInterfaceRenderer extends SafeBlockEntityRenderer<PortableGasInterfaceBlockEntity> {
     public PortableGasInterfaceRenderer(Context ignored) {
     }
 
-    public static void renderInContraption(@NotNull MovementContext context, VirtualRenderWorld renderWorld, @NotNull ContraptionMatrices matrices, @NotNull MultiBufferSource bufferSource) {
+    public static void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource bufferSource) {
         LerpedFloat animation = PortableGasInterfaceMovement.getAnimation(context);
         render(context.state, animation.settled(), animation.getValue(AnimationTickHolder.getPartialTicks()), matrices.getModel(), byteBuffer -> byteBuffer.light(LevelRenderer.getLightColor(renderWorld, context.localPos)).useLevelLight(context.world, matrices.getWorld()).renderInto(matrices.getViewProjection(), bufferSource.getBuffer(RenderType.solid())));
     }
 
-    private static void render(BlockState blockState, boolean lit, float progress, PoseStack local, Consumer<SuperByteBuffer> drawCallback) {
+    private static void render(BlockState blockState, boolean lit, float progress, @Nullable PoseStack local, Consumer<SuperByteBuffer> drawCallback) {
         SuperByteBuffer middle = CachedBuffers.partial(getMiddleForState(lit), blockState);
         SuperByteBuffer top = CachedBuffers.partial(getTopForState(), blockState);
         if (local != null) {
@@ -48,7 +52,7 @@ public class PortableGasInterfaceRenderer extends SafeBlockEntityRenderer<Portab
         drawCallback.accept(top);
     }
 
-    private static void rotateToFacing(@NotNull SuperByteBuffer buffer, Direction facing) {
+    private static void rotateToFacing(SuperByteBuffer buffer, Direction facing) {
         buffer.center().rotateYDegrees(AngleHelper.horizontalAngle(facing)).rotateXDegrees(facing == Direction.UP ? 0 : facing == Direction.DOWN ? 180 : 90).uncenter();
     }
 
@@ -61,7 +65,7 @@ public class PortableGasInterfaceRenderer extends SafeBlockEntityRenderer<Portab
     }
 
     @Override
-    protected void renderSafe(@NotNull PortableGasInterfaceBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource bufferSource, int light, int overlay) {
+    protected void renderSafe(PortableGasInterfaceBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource bufferSource, int light, int overlay) {
         render(be.getBlockState(), be.isConnected(), be.getExtensionDistance(partialTicks), null, byteBuffer -> byteBuffer.light(light).renderInto(ms, bufferSource.getBuffer(RenderType.solid())));
     }
 }

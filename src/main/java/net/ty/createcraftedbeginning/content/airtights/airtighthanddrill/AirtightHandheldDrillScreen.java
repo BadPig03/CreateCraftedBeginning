@@ -10,6 +10,7 @@ import com.simibubi.create.foundation.gui.widget.SelectionScrollInput;
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -28,10 +29,13 @@ import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<AirtightHandheldDrillMenu> {
     private static final Component TEMPLATE_TITLE = CCBLang.translateDirect("gui.airtight_handheld_drill.template");
@@ -125,12 +129,12 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
             upgradeButtons.put(upgrade, button);
 
             if (upgrade.isRightIndicator()) {
-                buttonConfigsMap.put(upgrade, new ScreenButtonConfig(button, upgrade.getTitle(), upgrade.getDescription(), () -> button.green, () -> false, () -> null, null));
+                buttonConfigsMap.put(upgrade, new ScreenButtonConfig(button, upgrade.getTitle(), upgrade.getDescription(), () -> button.green, () -> false, List::of, null));
             }
             else {
                 Indicator indicator = new Indicator(leftPos + offset.getFirst(), topPos + offset.getSecond() - 6, CommonComponents.EMPTY);
                 upgradeIndicators.put(upgrade, indicator);
-                buttonConfigsMap.put(upgrade, new ScreenButtonConfig(button, upgrade.getTitle(), upgrade.getDescription(), () -> button.green, () -> !menu.getStatus(upgrade).isInstalled() && button.active, () -> upgrade.getGasCostComponent(menu.player), upgrade.getUpgradeItem()));
+                buttonConfigsMap.put(upgrade, new ScreenButtonConfig(button, upgrade.getTitle(), upgrade.getDescription(), () -> button.green, () -> !menu.getStatus(upgrade).isInstalled() && button.active, () -> upgrade.getComponents(menu.player, menu.contentHolder.copy()), upgrade.getUpgradeItem()));
                 addRenderableWidget(indicator);
             }
             addRenderableWidgets(button);
@@ -244,6 +248,7 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
         miningDirectionScrollInput = new SelectionScrollInput(leftPos + 40, topPos + 85, 58, 18).forOptions(CCBLang.translatedOptions("gui.airtight_handheld_drill.direction", Arrays.stream(Direction.values()).map(Direction::getSerializedName).toArray(String[]::new))).withShiftStep(1).titled(DIRECTION_TITLE.plainCopy()).writingTo(miningDirectionLabel).calling(index -> {
             currentDirection = Direction.values()[index];
             initMiningRelativePosition();
+            initMiningSize();
         });
         miningDirectionScrollInput.setState(currentDirection.ordinal());
         addRenderableWidget(miningDirectionScrollInput);

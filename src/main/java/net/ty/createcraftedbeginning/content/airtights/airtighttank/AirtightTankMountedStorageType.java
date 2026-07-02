@@ -1,12 +1,17 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighttank;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorageType;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageType;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightTankMountedStorageType extends MountedGasStorageType<AirtightTankMountedStorage> {
     public AirtightTankMountedStorageType() {
         super(AirtightTankMountedStorage.CODEC);

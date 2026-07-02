@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.api.gas.recipes;
 
 import com.mojang.serialization.MapCodec;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
@@ -9,9 +10,11 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
-import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("unused")
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class ItemApplicationWithGasRecipe extends ProcessingWithGasRecipe<RecipeWrapper, ItemApplicationWithGasRecipeParams> {
     private final boolean keepHeldItem;
 
@@ -21,7 +24,7 @@ public class ItemApplicationWithGasRecipe extends ProcessingWithGasRecipe<Recipe
     }
 
     @Override
-    public boolean matches(@NotNull RecipeWrapper inv, @NotNull Level level) {
+    public boolean matches(RecipeWrapper inv, Level level) {
         return getProcessedItem().test(inv.getItem(0)) && getRequiredHeldItem().test(inv.getItem(1));
     }
 
@@ -92,12 +95,12 @@ public class ItemApplicationWithGasRecipe extends ProcessingWithGasRecipe<Recipe
         }
 
         @Override
-        public @NotNull MapCodec<R> codec() {
+        public MapCodec<R> codec() {
             return codec;
         }
 
         @Override
-        public @NotNull StreamCodec<RegistryFriendlyByteBuf, R> streamCodec() {
+        public StreamCodec<RegistryFriendlyByteBuf, R> streamCodec() {
             return streamCodec;
         }
     }

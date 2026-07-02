@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.api.gas.recipes;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.content.processing.recipe.ProcessingOutput;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -11,10 +12,12 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
 import net.ty.createcraftedbeginning.recipe.SequencedWithGasRecipe;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Optional;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class SequencedAssemblyWithGasRecipeSerializer implements RecipeSerializer<SequencedAssemblyWithGasRecipe> {
     public final StreamCodec<RegistryFriendlyByteBuf, SequencedAssemblyWithGasRecipe> STREAM_CODEC = StreamCodec.of(this::toNetwork, this::fromNetwork);
     @SuppressWarnings({"UnstableApiUsage", "removal"})
@@ -31,7 +34,7 @@ public class SequencedAssemblyWithGasRecipeSerializer implements RecipeSerialize
         return recipe;
     }));
 
-    protected void toNetwork(RegistryFriendlyByteBuf buffer, @NotNull SequencedAssemblyWithGasRecipe recipe) {
+    protected void toNetwork(RegistryFriendlyByteBuf buffer, SequencedAssemblyWithGasRecipe recipe) {
         Ingredient.CONTENTS_STREAM_CODEC.encode(buffer, recipe.getIngredient());
         SequencedWithGasRecipe.STREAM_CODEC.apply(ByteBufCodecs.list()).encode(buffer, recipe.getSequence());
         ProcessingOutput.STREAM_CODEC.apply(ByteBufCodecs.list()).encode(buffer, recipe.resultPool);
@@ -50,12 +53,12 @@ public class SequencedAssemblyWithGasRecipeSerializer implements RecipeSerialize
     }
 
     @Override
-    public @NotNull MapCodec<SequencedAssemblyWithGasRecipe> codec() {
+    public MapCodec<SequencedAssemblyWithGasRecipe> codec() {
         return CODEC;
     }
 
     @Override
-    public @NotNull StreamCodec<RegistryFriendlyByteBuf, SequencedAssemblyWithGasRecipe> streamCodec() {
+    public StreamCodec<RegistryFriendlyByteBuf, SequencedAssemblyWithGasRecipe> streamCodec() {
         return STREAM_CODEC;
     }
 }

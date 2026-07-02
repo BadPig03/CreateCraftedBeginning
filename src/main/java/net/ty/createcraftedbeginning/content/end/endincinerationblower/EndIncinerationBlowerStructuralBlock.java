@@ -1,10 +1,15 @@
 package net.ty.createcraftedbeginning.content.end.endincinerationblower;
 
 import com.simibubi.create.foundation.block.IBE;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalStructuralBlock;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EndIncinerationBlowerStructuralBlock extends EndMechanicalStructuralBlock implements IBE<EndIncinerationBlowerStructuralBlockEntity> {
     public EndIncinerationBlowerStructuralBlock(Properties properties) {
         super(properties);

@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates;
 
 import com.simibubi.create.foundation.fluid.SmartFluidTank;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundEvents;
@@ -21,10 +22,13 @@ import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe.CoolingData;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import static net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity.MAX_COOLANT_CAPACITY;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class BaseCoolerState {
     protected static final String COMPOUND_KEY_REMAINING_TIME = "RemainingTime";
     protected static final String COMPOUND_KEY_IS_CREATIVE = "isCreative";
@@ -48,7 +52,7 @@ public abstract class BaseCoolerState {
         return isCreative;
     }
 
-    public void read(@NotNull CompoundTag compoundTag) {
+    public void read(CompoundTag compoundTag) {
         if (compoundTag.contains(COMPOUND_KEY_REMAINING_TIME)) {
             remainingTime = compoundTag.getInt(COMPOUND_KEY_REMAINING_TIME);
         }
@@ -57,7 +61,7 @@ public abstract class BaseCoolerState {
         }
     }
 
-    public void save(@NotNull CompoundTag compoundTag) {
+    public void save(CompoundTag compoundTag) {
         compoundTag.putInt(COMPOUND_KEY_REMAINING_TIME, remainingTime);
         compoundTag.putBoolean(COMPOUND_KEY_IS_CREATIVE, isCreative);
     }
@@ -67,7 +71,7 @@ public abstract class BaseCoolerState {
         validateStates(cooler);
     }
 
-    public void validateStates(@NotNull BreezeCoolerBlockEntity cooler) {
+    public void validateStates(BreezeCoolerBlockEntity cooler) {
         Level level = cooler.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -87,7 +91,7 @@ public abstract class BaseCoolerState {
         cooler.setCoolerState(new InactiveCoolerState());
     }
 
-    protected void tickFluid(@NotNull BreezeCoolerBlockEntity cooler) {
+    protected void tickFluid(BreezeCoolerBlockEntity cooler) {
         Level level = cooler.getLevel();
         if (level == null || level.isClientSide) {
             return;

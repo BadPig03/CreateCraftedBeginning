@@ -9,6 +9,7 @@ import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
@@ -17,13 +18,16 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlockEntity;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightReactorKettleScenes {
-    public static void placement(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void placement(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
-        scene.title("airtight_reactor_kettle_placement", "Placing Airtight Reactor Kettles");
+        scene.title("airtight_reactor_kettle_placement", "Placing an Airtight Reactor Kettle");
         scene.configureBasePlate(0, 0, 7);
         scene.showBasePlate();
 
@@ -58,15 +62,22 @@ public class AirtightReactorKettleScenes {
         Selection funnelSelection = util.select().position(funnelPos);
         Selection hatchSelection = util.select().position(hatchPos);
 
+        Vec3 realCenterVec = util.vector().centerOf(realCenterPos);
+        Vec3 westCogVec = util.vector().centerOf(westCogPos);
+        Vec3 rightDownVec = util.vector().centerOf(rightDownPos);
+        Vec3 funnelVec = util.vector().centerOf(funnelPos);
+        Vec3 fluidPumpVec = util.vector().centerOf(fluidPumpPos);
+        Vec3 airtightPumpVec = util.vector().centerOf(airtightPumpPos);
+
+        AABB kettleArea = new AABB(realCenterVec, realCenterVec);
+        AABB cogArea = new AABB(westCogVec, westCogVec);
+        AABB fluidPipeArea = new AABB(fluidPumpVec, fluidPumpVec);
+        AABB airtightPipeArea = new AABB(airtightPumpVec, airtightPumpVec);
+
         Object kettleObject = new Object();
         Object cogObject = new Object();
         Object fluidPipeObject = new Object();
         Object airtightPipeObject = new Object();
-
-        AABB kettleArea = new AABB(util.vector().centerOf(realCenterPos), util.vector().centerOf(realCenterPos));
-        AABB cogArea = new AABB(util.vector().centerOf(westCogPos), util.vector().centerOf(westCogPos));
-        AABB fluidPipeArea = new AABB(util.vector().centerOf(fluidPumpPos), util.vector().centerOf(fluidPumpPos));
-        AABB airtightPipeArea = new AABB(util.vector().centerOf(airtightPumpPos), util.vector().centerOf(airtightPumpPos));
 
         float fastSpeed = SpeedLevel.FAST.getSpeedValue();
 
@@ -83,7 +94,7 @@ public class AirtightReactorKettleScenes {
 
         scene.idle(3);
         kettleArea = kettleArea.inflate(1);
-        scene.overlay().showText(60).text("The Airtight Reactor Kettle occupies a 3x3x3 area...").colored(PonderPalette.RED).pointAt(Vec3.atCenterOf(realCenterPos)).placeNearTarget();
+        scene.overlay().showText(60).text("The Airtight Reactor Kettle occupies a 3x3x3 area...").pointAt(realCenterVec).placeNearTarget();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, kettleObject, kettleArea, 60);
 
         scene.idle(80);
@@ -93,7 +104,7 @@ public class AirtightReactorKettleScenes {
         scene.world().showSection(kettleSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("...with different sections serving distinct purposes").pointAt(Vec3.atCenterOf(realCenterPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("...with different sections serving distinct purposes").pointAt(realCenterVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().showSection(northCogSelection, Direction.SOUTH);
@@ -108,20 +119,22 @@ public class AirtightReactorKettleScenes {
         scene.world().setBlock(motorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.DOWN), false);
         scene.world().showSection(motorSelection, Direction.EAST);
         scene.world().showSection(westCogSelection, Direction.EAST);
+
+        scene.idle(15);
         scene.world().setKineticSpeed(motorSelection, fastSpeed);
         scene.world().setKineticSpeed(westCogSelection, fastSpeed);
         scene.world().setKineticSpeed(eastCogSelection, fastSpeed);
         scene.world().setKineticSpeed(northCogSelection, fastSpeed);
         scene.world().setKineticSpeed(southCogSelection, fastSpeed);
         scene.world().setKineticSpeed(kettleCogsSelection, -fastSpeed);
-        scene.effects().rotationSpeedIndicator(westCogPos);
+        scene.effects().rotationSpeedIndicator(motorPos);
 
         scene.idle(20);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, cogObject, cogArea, 3);
 
         scene.idle(3);
         cogArea = cogArea.inflate(0.5);
-        scene.overlay().showText(60).text("Stress must be supplied from the top").colored(PonderPalette.INPUT).pointAt(Vec3.atCenterOf(westCogPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Stress must be supplied from the top").colored(PonderPalette.INPUT).pointAt(westCogVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, cogObject, cogArea, 60);
 
         scene.idle(80);
@@ -133,15 +146,15 @@ public class AirtightReactorKettleScenes {
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, airtightPipeObject, airtightPipeArea, 3);
 
         scene.idle(3);
-        fluidPipeArea = fluidPipeArea.inflate(0.375, 0.5, 0.5);
-        airtightPipeArea = airtightPipeArea.inflate(0.375, 0.5, 0.5);
+        fluidPipeArea = fluidPipeArea.inflate(0.375, 0.375, 0.5);
+        airtightPipeArea = airtightPipeArea.inflate(0.375, 0.375, 0.5);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, fluidPipeObject, fluidPipeArea, 3);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, airtightPipeObject, airtightPipeArea, 3);
 
         scene.idle(3);
         fluidPipeArea = fluidPipeArea.expandTowards(0, 0, 1);
         airtightPipeArea = airtightPipeArea.expandTowards(0, 0, 1);
-        scene.overlay().showText(60).text("while Items, Fluids, and Gases are input from below").colored(PonderPalette.INPUT).pointAt(Vec3.atCenterOf(rightDownPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("while Items, Fluids, and Gases are input from below").colored(PonderPalette.INPUT).pointAt(rightDownVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, fluidPipeObject, fluidPipeArea, 60);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, airtightPipeObject, airtightPipeArea, 60);
 
@@ -150,13 +163,13 @@ public class AirtightReactorKettleScenes {
         scene.world().showSection(hatchSelection, Direction.EAST);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Items, in particular, can be fed via Funnels or dropped in directly").colored(PonderPalette.INPUT).pointAt(Vec3.atCenterOf(funnelPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Items, in particular, can be fed via Funnels or dropped in directly").colored(PonderPalette.INPUT).pointAt(funnelVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();
     }
 
-    public static void processing(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void processing(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("airtight_reactor_kettle_processing", "Processing Items with the Airtight Reactor Kettle");
@@ -197,11 +210,16 @@ public class AirtightReactorKettleScenes {
         float fastSpeed = SpeedLevel.FAST.getSpeedValue();
         float mediumSpeed = SpeedLevel.MEDIUM.getSpeedValue();
 
+        Vec3 filterVec = util.vector().blockSurface(filterPos, Direction.NORTH).add(0, 0, -0.0625);
+        Vec3 rightDownVec = util.vector().centerOf(rightDownPos);
+        Vec3 blazeVec = util.vector().centerOf(blazePos);
+        Vec3 breezeVec = util.vector().centerOf(breezePos);
+
+        AABB blazeArea = new AABB(blazeVec, blazeVec);
+        AABB breezeArea = new AABB(breezeVec, breezeVec);
+
         Object blazeObject = new Object();
         Object breezeObject = new Object();
-
-        AABB blazeArea = new AABB(util.vector().centerOf(blazePos), util.vector().centerOf(blazePos));
-        AABB breezeArea = new AABB(util.vector().centerOf(breezePos), util.vector().centerOf(breezePos));
 
         scene.idle(20);
         scene.world().showSection(kettleSelection, Direction.DOWN);
@@ -209,46 +227,50 @@ public class AirtightReactorKettleScenes {
         scene.idle(3);
         scene.world().setBlock(motorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.DOWN), false);
         scene.world().showSection(sourceSelection, Direction.EAST);
+
+        scene.idle(15);
         scene.world().setKineticSpeed(sourceSelection, fastSpeed);
         scene.world().setKineticSpeed(kettleCogsSelection, -fastSpeed);
-        scene.effects().rotationSpeedIndicator(cogPos);
+        scene.effects().rotationSpeedIndicator(motorPos);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("The Reactor Kettle can automate certain crafting recipes").colored(PonderPalette.INPUT).pointAt(Vec3.atCenterOf(rightDownPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Airtight Reactor Kettle can automate certain crafting recipes").colored(PonderPalette.GREEN).pointAt(rightDownVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().setBlock(andesiteMotorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.SOUTH), false);
         scene.world().showSection(andesiteFunnelSelection, Direction.EAST);
+
+        scene.idle(15);
         scene.world().setKineticSpeed(andesiteFunnelSelection, -mediumSpeed);
 
         scene.idle(20);
-        scene.world().createItemOnBeltLike(andesiteBeltRightPos, Direction.UP, cobblestoneItem.copyWithCount(8));
+        scene.world().createItemOnBeltLike(andesiteBeltRightPos, Direction.UP, cobblestoneItem.copyWithCount(32));
 
         scene.idle(13);
         scene.world().removeItemsFromBelt(andesiteBeltLeftPos);
         scene.world().flapFunnel(andesiteFunnelPos, false);
-        scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, be -> be.getItemCapability().insertItem(0, cobblestoneItem.copyWithCount(8), false));
+        scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, be -> be.getItemCapability().insertItem(0, cobblestoneItem.copyWithCount(32), false));
 
         scene.idle(10);
-        scene.world().createItemOnBeltLike(andesiteBeltRightPos, Direction.UP, quartzItem.copyWithCount(8));
+        scene.world().createItemOnBeltLike(andesiteBeltRightPos, Direction.UP, quartzItem.copyWithCount(32));
 
         scene.idle(13);
         scene.world().removeItemsFromBelt(andesiteBeltLeftPos);
         scene.world().flapFunnel(andesiteFunnelPos, false);
-        scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, be -> be.getItemCapability().insertItem(1, quartzItem.copyWithCount(8), false));
+        scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, be -> be.getItemCapability().insertItem(1, quartzItem.copyWithCount(32), false));
 
         scene.idle(10);
-        scene.world().createItemOnBeltLike(andesiteBeltRightPos, Direction.UP, ironNuggetItem.copyWithCount(8));
+        scene.world().createItemOnBeltLike(andesiteBeltRightPos, Direction.UP, ironNuggetItem.copyWithCount(32));
 
         scene.idle(13);
         scene.world().removeItemsFromBelt(andesiteBeltLeftPos);
         scene.world().flapFunnel(andesiteFunnelPos, false);
-        scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, be -> be.getItemCapability().insertItem(2, ironNuggetItem.copyWithCount(8), false));
+        scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, be -> be.getItemCapability().insertItem(2, ironNuggetItem.copyWithCount(32), false));
         scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, AirtightReactorKettleBlockEntity::startProcessInPonderLevel);
 
         scene.idle(20);
-        scene.overlay().showFilterSlotInput(util.vector().blockSurface(filterPos, Direction.NORTH), Direction.NORTH, 60);
-        scene.overlay().showText(60).text("The filter slot can be used in case two or more recipes are conflicting").pointAt(Vec3.atCenterOf(filterPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showFilterSlotInput(filterVec, Direction.NORTH, 60);
+        scene.overlay().showText(60).text("The filter slot can be used in case two or more recipes are conflicting").colored(PonderPalette.GREEN).pointAt(filterVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().showSection(brassFunnelSelection, Direction.SOUTH);
@@ -256,11 +278,13 @@ public class AirtightReactorKettleScenes {
         scene.idle(20);
         scene.world().setBlock(brassMotorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.NORTH), false);
         scene.world().showSection(brassMotorSelection, Direction.NORTH);
+
+        scene.idle(15);
         scene.world().setKineticSpeed(brassFunnelSelection, -mediumSpeed);
         scene.world().setKineticSpeed(brassMotorSelection, -mediumSpeed);
         scene.world().flapFunnel(brassFunnelPos, true);
-        scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, be -> be.getItemCapability().setStackInSlot(4, ItemStack.EMPTY));
-        scene.world().createItemOnBeltLike(brassFunnelPos.below(), Direction.UP, andesiteAlloyItem.copyWithCount(8));
+        scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, be -> be.getItemCapability().setStackInSlot(27, ItemStack.EMPTY));
+        scene.world().createItemOnBeltLike(brassFunnelPos.below(), Direction.UP, andesiteAlloyItem.copyWithCount(32));
 
         scene.idle(60);
         scene.rotateCameraY(180);
@@ -274,7 +298,7 @@ public class AirtightReactorKettleScenes {
         breezeArea = breezeArea.inflate(0.5);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, blazeObject, blazeArea, 60);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.BLUE, breezeObject, breezeArea, 60);
-        scene.overlay().showText(60).text("Some recipes may require a Blaze Burner or Breeze Cooler to adjust temperature conditions").attachKeyFrame();
+        scene.overlay().showText(60).text("Some recipes may require a Blaze Burner or Breeze Cooler to adjust temperature conditions").colored(PonderPalette.MEDIUM).attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();

@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightcannon.windcharge;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Holder;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -12,12 +13,15 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Supplier;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightCannonWindChargeItem extends Item {
     private static final int COOLDOWN = 10;
+
     private final Supplier<Gas> gasSupplier;
 
     public AirtightCannonWindChargeItem(Properties properties, Supplier<Gas> gasSupplier) {
@@ -26,7 +30,7 @@ public class AirtightCannonWindChargeItem extends Item {
     }
 
     @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand usedHand) {
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand usedHand) {
         ItemStack itemStack = player.getItemInHand(usedHand);
         if (!level.isClientSide) {
             shoot(level, player);
@@ -40,7 +44,7 @@ public class AirtightCannonWindChargeItem extends Item {
         return InteractionResultHolder.sidedSuccess(itemStack, level.isClientSide);
     }
 
-    private void shoot(@NotNull Level level, @NotNull Player player) {
+    private void shoot(Level level, Player player) {
         Vec3 eyePos = player.getEyePosition();
         Vec3 lookVec = player.getLookAngle();
         Vec3 barrelPos = eyePos.add(lookVec.scale(0.75));
@@ -53,6 +57,7 @@ public class AirtightCannonWindChargeItem extends Item {
         windCharge.setDeltaMovement(motion);
         windCharge.setMultiplier(1);
         windCharge.setKnockback(0.1f);
+
         level.addFreshEntity(windCharge);
     }
 }

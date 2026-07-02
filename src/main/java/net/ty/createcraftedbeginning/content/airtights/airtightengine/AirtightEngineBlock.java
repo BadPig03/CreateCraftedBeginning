@@ -7,6 +7,7 @@ import com.simibubi.create.content.kinetics.simpleRelays.CogWheelBlock;
 import com.simibubi.create.content.kinetics.simpleRelays.ICogWheel;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -38,8 +39,11 @@ import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlock;
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEngineBlockEntity>, IWrenchable, SimpleWaterloggedBlock, ICogWheel {
     public static final EnumProperty<AttachFace> FACE = BlockStateProperties.ATTACH_FACE;
     public static final Property<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
@@ -53,7 +57,7 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(FACE, AttachFace.FLOOR).setValue(FACING, Direction.NORTH).setValue(AXIS, Axis.Y).setValue(CLOCKWISE, true));
     }
 
-    public static @NotNull Direction getFacing(@NotNull BlockState state) {
+    public static Direction getFacing(BlockState state) {
         return switch (state.getValue(FACE)) {
             case CEILING -> Direction.UP;
             case FLOOR -> Direction.DOWN;
@@ -61,7 +65,7 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
         };
     }
 
-    public static boolean isStateValid(@NotNull BlockState state) {
+    public static boolean isStateValid(BlockState state) {
         AttachFace face = state.getValue(FACE);
         Axis axis = state.getValue(AXIS);
         if (face == AttachFace.WALL) {
@@ -74,7 +78,7 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
     }
 
     @Override
-    public InteractionResult onWrenched(@NotNull BlockState state, @NotNull UseOnContext context) {
+    public InteractionResult onWrenched(BlockState state, UseOnContext context) {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
         level.setBlockAndUpdate(pos, state.setValue(CLOCKWISE, !state.getValue(CLOCKWISE)));
@@ -84,7 +88,7 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
     }
 
     @Override
-    protected void createBlockStateDefinition(@NotNull Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
         builder.add(FACE, FACING, AXIS, CLOCKWISE, WATERLOGGED);
         super.createBlockStateDefinition(builder);
     }
@@ -100,12 +104,12 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
     }
 
     @Override
-    protected @NotNull MapCodec<? extends KineticBlock> codec() {
+    protected MapCodec<? extends KineticBlock> codec() {
         return simpleCodec(AirtightEngineBlock::new);
     }
 
     @Override
-    public BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
         Direction direction = context.getClickedFace();
@@ -124,7 +128,7 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
     }
 
     @Override
-    public @NotNull BlockState updateShape(@NotNull BlockState state, @NotNull Direction direction, @NotNull BlockState neighbourState, @NotNull LevelAccessor level, @NotNull BlockPos pos, @NotNull BlockPos neighbourPos) {
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos) {
         if (state.getValue(WATERLOGGED)) {
             level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
@@ -132,24 +136,24 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
     }
 
     @Override
-    public boolean canSurvive(@NotNull BlockState state, @NotNull LevelReader level, @NotNull BlockPos pos) {
+    public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
         Direction facing = getFacing(state);
         return level.getBlockState(pos.relative(facing)).getBlock() instanceof AirtightTankBlock && CogWheelBlock.isValidCogwheelPosition(true, level, pos, facing.getAxis()) && isStateValid(state);
     }
 
     @Override
-	public void setPlacedBy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, LivingEntity entity, @NotNull ItemStack stack) {
+	public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity entity, ItemStack stack) {
         super.setPlacedBy(level, pos, state, entity, stack);
         CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
     }
 
     @Override
-    protected boolean isPathfindable(@NotNull BlockState state, @NotNull PathComputationType pathComputationType) {
+    protected boolean isPathfindable(BlockState state, PathComputationType pathComputationType) {
         return false;
     }
 
     @Override
-    public void neighborChanged(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Block otherBlock, @NotNull BlockPos neighborPos, boolean isMoving) {
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block otherBlock, BlockPos neighborPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, otherBlock, neighborPos, isMoving);
         if (canSurvive(state, level, pos)) {
             return;
@@ -159,22 +163,22 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
     }
 
     @Override
-    public @NotNull FluidState getFluidState(@NotNull BlockState state) {
+    public FluidState getFluidState(BlockState state) {
         return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : Fluids.EMPTY.defaultFluidState();
     }
 
     @Override
-    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos blockPos, @NotNull CollisionContext collisionContext) {
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos blockPos, CollisionContext collisionContext) {
         return CCBShapes.AIRTIGHT_ENGINE.get(getFacing(state).getOpposite());
     }
 
     @Override
-    public void onPlace(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState oldState, boolean isMoving) {
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean isMoving) {
         AirtightTankBlock.updateTankState(level, pos.relative(getFacing(state)));
     }
 
     @Override
-    public void onRemove(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState newState, boolean isMoving) {
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         super.onRemove(state, level, pos, newState, isMoving);
         AirtightTankBlock.updateTankState(level, pos.relative(getFacing(state)));
     }

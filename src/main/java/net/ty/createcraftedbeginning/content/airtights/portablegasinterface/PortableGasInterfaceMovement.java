@@ -12,6 +12,7 @@ import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.nbt.NBTHelper;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -21,16 +22,18 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Optional;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PortableGasInterfaceMovement extends PortableStorageInterfaceMovement {
     private static final String COMPOUND_KEY_WORKING_POSITION = "WorkingPosition";
     private static final String COMPOUND_KEY_CLIENT_PREVIOUS_POSITION = "ClientPreviousPosition";
 
-    public static LerpedFloat getAnimation(@NotNull MovementContext context) {
+    public static LerpedFloat getAnimation(MovementContext context) {
         if (context.temporaryData instanceof LerpedFloat animation) {
             return animation;
         }
@@ -52,7 +55,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
         return null;
     }
 
-    private static @Nullable PortableGasInterfaceBlockEntity getStationaryInterfaceAt(@NotNull Level level, BlockPos pos, BlockState state, Direction facing) {
+    private static @Nullable PortableGasInterfaceBlockEntity getStationaryInterfaceAt(Level level, BlockPos pos, BlockState state, Direction facing) {
         if (!(level.getBlockEntity(pos) instanceof PortableGasInterfaceBlockEntity psi)) {
             return null;
         }
@@ -65,7 +68,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
         return psi.isPowered() ? null : psi;
     }
 
-    private static Optional<Direction> getCurrentFacingIfValid(@NotNull MovementContext context) {
+    private static Optional<Direction> getCurrentFacingIfValid(MovementContext context) {
         Vec3 directionVec = Vec3.atLowerCornerOf(context.state.getValue(PortableGasInterfaceBlock.FACING).getNormal());
         directionVec = context.rotation.apply(directionVec);
         Direction facingFromVector = Direction.getNearest(directionVec.x, directionVec.y, directionVec.z);
@@ -73,7 +76,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
     }
 
     @Override
-    public Vec3 getActiveAreaOffset(@NotNull MovementContext context) {
+    public Vec3 getActiveAreaOffset(MovementContext context) {
         return Vec3.atLowerCornerOf(context.state.getValue(PortableGasInterfaceBlock.FACING).getNormal()).scale(1.85f);
     }
 
@@ -85,7 +88,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void renderInContraption(@NotNull MovementContext context, VirtualRenderWorld virtualLevel, ContraptionMatrices matrices, MultiBufferSource buffer) {
+    public void renderInContraption(MovementContext context, VirtualRenderWorld virtualLevel, ContraptionMatrices matrices, MultiBufferSource buffer) {
         if (VisualizationManager.supportsVisualization(context.world)) {
             return;
         }
@@ -94,7 +97,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
     }
 
     @Override
-    public void visitNewPosition(@NotNull MovementContext context, BlockPos pos) {
+    public void visitNewPosition(MovementContext context, BlockPos pos) {
         if (context.contraption instanceof CarriageContraption && context.motion.length() > 0.25f) {
             return;
         }
@@ -106,7 +109,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
     }
 
     @Override
-    public void tick(@NotNull MovementContext context) {
+    public void tick(MovementContext context) {
         if (context.world.isClientSide) {
             getAnimation(context).tickChaser();
         }
@@ -160,7 +163,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
     }
 
     @Override
-    protected boolean findInterface(@NotNull MovementContext context, BlockPos pos) {
+    protected boolean findInterface(MovementContext context, BlockPos pos) {
         if (context.contraption instanceof CarriageContraption contraption && !contraption.notInPortal()) {
             return false;
         }
@@ -192,7 +195,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
     }
 
     @Override
-    public void reset(@NotNull MovementContext context) {
+    public void reset(MovementContext context) {
         context.data.remove(COMPOUND_KEY_CLIENT_PREVIOUS_POSITION);
         context.data.remove(COMPOUND_KEY_WORKING_POSITION);
         context.stall = false;

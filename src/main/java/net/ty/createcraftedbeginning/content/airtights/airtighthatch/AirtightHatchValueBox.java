@@ -5,14 +5,18 @@ import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform.Si
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.math.VecHelper;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightHatchValueBox extends Sided {
     private static final int COLOR = 0x191C26;
 
@@ -22,7 +26,7 @@ public class AirtightHatchValueBox extends Sided {
     }
 
     @Override
-    public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, @NotNull BlockState state) {
+    public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, BlockState state) {
         Vec3 location = getSouthLocation();
         Direction facing = state.getValue(AirtightHatchBlock.FACING);
         location = VecHelper.rotateCentered(location, -90, Axis.X);
@@ -31,7 +35,7 @@ public class AirtightHatchValueBox extends Sided {
     }
 
     @Override
-    public void rotate(LevelAccessor level, BlockPos pos, @NotNull BlockState state, PoseStack ms) {
+    public void rotate(LevelAccessor level, BlockPos pos, BlockState state, PoseStack ms) {
         super.rotate(level, pos, state, ms);
         TransformStack.of(ms).rotateZDegrees(180 - AngleHelper.horizontalAngle(state.getValue(AirtightHatchBlock.FACING)));
     }

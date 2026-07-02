@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.content.crates.andesitecrate;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
@@ -16,8 +17,11 @@ import net.ty.createcraftedbeginning.content.crates.CrateItemStackHandler;
 import net.ty.createcraftedbeginning.content.crates.CratesBlockEntity;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AndesiteCrateBlockEntity extends CratesBlockEntity implements IHaveGoggleInformation, ThresholdSwitchObservable {
     private static final String COMPOUND_KEY_INVENTORY = "Inventory";
 
@@ -28,7 +32,7 @@ public class AndesiteCrateBlockEntity extends CratesBlockEntity implements IHave
         handler = new AndesiteItemHandler();
     }
 
-    public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.ANDESITE_CRATE.get(), (be, context) -> be.handler);
     }
 

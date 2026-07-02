@@ -1,0 +1,361 @@
+{
+  "parent": "createcraftedbeginning:stone_cold_tears",
+  "criteria": {
+    "0": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_a"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "1": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_b"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "10": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_k"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "11": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_l"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "12": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_m"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "13": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_n"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "14": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_o"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "15": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_p"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "16": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_q"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "17": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_r"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "18": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_s"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "19": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_t"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "2": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_c"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "20": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_u"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "21": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_v"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "22": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_w"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "23": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_x"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "24": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_y"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "25": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_z"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "3": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_d"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "4": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_e"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "5": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_f"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "6": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_g"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "7": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_h"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "8": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_i"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "9": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:crying_obsidian_bricks_j"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.rock_solid_wisdom.desc"
+    },
+    "frame": "goal",
+    "hidden": true,
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:crying_obsidian_bricks_m"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.rock_solid_wisdom"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ],
+    [
+      "1"
+    ],
+    [
+      "2"
+    ],
+    [
+      "3"
+    ],
+    [
+      "4"
+    ],
+    [
+      "5"
+    ],
+    [
+      "6"
+    ],
+    [
+      "7"
+    ],
+    [
+      "8"
+    ],
+    [
+      "9"
+    ],
+    [
+      "10"
+    ],
+    [
+      "11"
+    ],
+    [
+      "12"
+    ],
+    [
+      "13"
+    ],
+    [
+      "14"
+    ],
+    [
+      "15"
+    ],
+    [
+      "16"
+    ],
+    [
+      "17"
+    ],
+    [
+      "18"
+    ],
+    [
+      "19"
+    ],
+    [
+      "20"
+    ],
+    [
+      "21"
+    ],
+    [
+      "22"
+    ],
+    [
+      "23"
+    ],
+    [
+      "24"
+    ],
+    [
+      "25"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

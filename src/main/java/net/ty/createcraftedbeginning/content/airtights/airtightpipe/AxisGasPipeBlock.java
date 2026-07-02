@@ -5,6 +5,7 @@ import com.simibubi.create.content.fluids.pipes.IAxisPipe;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.createmod.catnip.data.Iterate;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -38,14 +39,17 @@ import net.minecraft.world.ticks.TickPriority;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasPropagator;
-import net.ty.createcraftedbeginning.api.gas.gases.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.data.CCBShapes;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashSet;
 import java.util.Set;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterloggedBlock, IWrenchable, IAxisPipe {
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
@@ -54,7 +58,7 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false));
     }
 
-    public static boolean isOpenAt(@NotNull BlockState state, @NotNull Direction direction) {
+    public static boolean isOpenAt(BlockState state, Direction direction) {
         return direction.getAxis() == state.getValue(AXIS);
     }
 
@@ -64,24 +68,24 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
     }
 
     @Override
-    public void setPlacedBy(@NotNull Level level, @NotNull BlockPos blockPos, @NotNull BlockState state, LivingEntity entity, @NotNull ItemStack itemStack) {
+    public void setPlacedBy(Level level, BlockPos blockPos, BlockState state, @Nullable LivingEntity entity, ItemStack itemStack) {
         super.setPlacedBy(level, blockPos, state, entity, itemStack);
         CCBAdvancementBehaviour.setPlacedBy(level, blockPos, entity);
     }
 
     @Override
-    public Axis getAxis(@NotNull BlockState state) {
+    public Axis getAxis(BlockState state) {
         return state.getValue(AXIS);
     }
 
     @Override
-    protected void createBlockStateDefinition(@NotNull Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
         builder.add(WATERLOGGED);
         super.createBlockStateDefinition(builder);
     }
 
     @Override
-    public @NotNull BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
         BlockState state = super.getStateForPlacement(context);
@@ -135,7 +139,7 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
     }
 
     @Override
-    public @NotNull BlockState updateShape(@NotNull BlockState state, @NotNull Direction direction, @NotNull BlockState neighbourState, @NotNull LevelAccessor world, @NotNull BlockPos pos, @NotNull BlockPos neighbourPos) {
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor world, BlockPos pos, BlockPos neighbourPos) {
         if (state.getValue(WATERLOGGED)) {
             world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
         }
@@ -143,7 +147,7 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
     }
 
     @Override
-    public void neighborChanged(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Block otherBlock, @NotNull BlockPos neighborPos, boolean isMoving) {
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block otherBlock, BlockPos neighborPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, otherBlock, neighborPos, isMoving);
         Direction direction = GasPropagator.validateNeighbourChange(state, level, pos, neighborPos, isMoving);
         if (direction == null || !isOpenAt(state, direction)) {
@@ -154,7 +158,7 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
     }
 
     @Override
-    public void onPlace(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState oldState, boolean isMoving) {
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean isMoving) {
         if (level.isClientSide || state == oldState) {
             return;
         }
@@ -163,7 +167,7 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
     }
 
     @Override
-    public void onRemove(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState newState, boolean isMoving) {
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         boolean changed = !state.is(newState.getBlock());
         if (changed && !level.isClientSide) {
             GasPropagator.propagateChangedPipe(level, pos, state);
@@ -172,22 +176,22 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
     }
 
     @Override
-    protected @NotNull ItemInteractionResult useItemOn(@NotNull ItemStack stack, @NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull InteractionHand hand, @NotNull BlockHitResult hitResult) {
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
         return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
     }
 
     @Override
-    public @NotNull FluidState getFluidState(@NotNull BlockState state) {
+    public FluidState getFluidState(BlockState state) {
         return state.getValue(WATERLOGGED) ? Fluids.WATER.defaultFluidState() : super.getFluidState(state);
     }
 
     @Override
-    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos blockPos, @NotNull CollisionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos blockPos, CollisionContext context) {
         return CCBShapes.AIRTIGHT_PIPE.get(state.getValue(AXIS));
     }
 
     @Override
-    public void tick(@NotNull BlockState state, @NotNull ServerLevel serverLevel, @NotNull BlockPos pos, @NotNull RandomSource random) {
+    public void tick(BlockState state, ServerLevel serverLevel, BlockPos pos, RandomSource random) {
         GasPropagator.propagateChangedPipe(serverLevel, pos, state);
     }
 }

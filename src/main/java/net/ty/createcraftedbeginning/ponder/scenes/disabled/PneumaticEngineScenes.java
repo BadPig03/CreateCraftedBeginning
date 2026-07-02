@@ -10,6 +10,7 @@ import net.createmod.ponder.api.element.WorldSectionElement;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
@@ -18,10 +19,13 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PneumaticEngineScenes {
-    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("pneumatic_engine", "Generates Rotational Force using Pneumatic Engines");
@@ -31,7 +35,7 @@ public class PneumaticEngineScenes {
         BlockPos tankPos = util.grid().at(2, 1, 2);
         BlockPos enginePos = util.grid().at(2, 2, 2);
 
-        ItemStack wrench = AllItems.WRENCH.asStack();
+        ItemStack wrench = new ItemStack(AllItems.WRENCH.asItem());
 
         scene.world().setBlock(tankPos, AllBlocks.COPPER_BACKTANK.getDefaultState(), false);
         scene.world().setBlock(enginePos, CCBBlocks.PNEUMATIC_ENGINE_BLOCK.getDefaultState(), false);
@@ -60,7 +64,7 @@ public class PneumaticEngineScenes {
         scene.markAsFinished();
     }
 
-    public static void limitation(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void limitation(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("pneumatic_engine_limitation", "Limitations of Pneumatic Engines");

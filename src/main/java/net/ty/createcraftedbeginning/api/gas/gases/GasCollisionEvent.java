@@ -1,12 +1,16 @@
 package net.ty.createcraftedbeginning.api.gas.gases;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.Event;
 import org.jetbrains.annotations.Nullable;
 
-@SuppressWarnings("unused")
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class GasCollisionEvent extends Event {
     protected final Gas firstGasType;
     protected final Gas secondGasType;

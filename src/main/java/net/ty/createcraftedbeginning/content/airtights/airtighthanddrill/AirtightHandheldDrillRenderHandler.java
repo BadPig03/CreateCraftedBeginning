@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighthanddrill;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.Mth;
@@ -13,8 +14,11 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.event.RenderHandEvent;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class AirtightHandheldDrillRenderHandler {
     private static final float MAX_ANIMATION = 1.2f;
@@ -66,11 +70,11 @@ public class AirtightHandheldDrillRenderHandler {
         return handAnimation > threshold;
     }
 
-    public void registerListeners(@NotNull IEventBus bus) {
+    public void registerListeners(IEventBus bus) {
         bus.addListener(this::onRenderPlayerHand);
     }
 
-    protected void onRenderPlayerHand(@NotNull RenderHandEvent event) {
+    protected void onRenderPlayerHand(RenderHandEvent event) {
         ItemStack drill = event.getItemStack();
         if (!drill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
             return;

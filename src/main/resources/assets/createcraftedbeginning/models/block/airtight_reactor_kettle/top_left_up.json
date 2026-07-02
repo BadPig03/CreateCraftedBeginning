@@ -7,8 +7,8 @@
 		"1": "createcraftedbeginning:block/airtight_reactor_kettle/top_outer",
 		"2": "createcraftedbeginning:block/airtight_reactor_kettle/top_inner",
 		"3": "createcraftedbeginning:block/airtight_reactor_kettle/side",
-		"5": "createcraftedbeginning:block/airtight_reactor_kettle/top_outer_trim",
-		"7": "createcraftedbeginning:block/airtight_reactor_kettle/windows",
+		"4": "createcraftedbeginning:block/airtight_reactor_kettle/top_outer_trim",
+		"5": "createcraftedbeginning:block/airtight_reactor_kettle/windows",
 		"particle": "createcraftedbeginning:block/airtight_tank/top"
 	},
 	"elements": [
@@ -19,7 +19,7 @@
 				"north": {"uv": [8, 0, 12, 4], "texture": "#3"},
 				"west": {"uv": [0, 0, 4, 4], "texture": "#3"},
 				"up": {"uv": [0, 0, 4, 4], "texture": "#1"},
-				"down": {"uv": [0, 8, 4, 12], "texture": "#5"}
+				"down": {"uv": [0, 8, 4, 12], "texture": "#4"}
 			}
 		},
 		{
@@ -73,8 +73,8 @@
 			"to": [4, 2, 13],
 			"rotation": {"angle": 0, "axis": "y", "origin": [9, 8, 8]},
 			"faces": {
-				"east": {"uv": [8.5, 0, 10.75, 0.5], "texture": "#7"},
-				"south": {"uv": [10.5, 10.5, 11, 11], "texture": "#7"}
+				"east": {"uv": [8.5, 0, 10.75, 0.5], "texture": "#5"},
+				"south": {"uv": [10.5, 10.5, 11, 11], "texture": "#5"}
 			}
 		},
 		{
@@ -82,8 +82,8 @@
 			"to": [13, 2, 4],
 			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
 			"faces": {
-				"east": {"uv": [10.5, 10.5, 11.25, 11], "texture": "#7"},
-				"south": {"uv": [0.75, 0, 3, 0.5], "texture": "#7"}
+				"east": {"uv": [10.5, 10.5, 11.25, 11], "texture": "#5"},
+				"south": {"uv": [0.75, 0, 3, 0.5], "texture": "#5"}
 			}
 		},
 		{
@@ -91,7 +91,7 @@
 			"to": [2, 2, 16],
 			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
 			"faces": {
-				"east": {"uv": [3.75, 0, 4.5, 0.5], "texture": "#5"}
+				"east": {"uv": [3.75, 0, 4.5, 0.5], "texture": "#4"}
 			}
 		},
 		{
@@ -99,7 +99,7 @@
 			"to": [16, 2, 2],
 			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
 			"faces": {
-				"south": {"uv": [7, 0, 7.75, 0.5], "texture": "#5"}
+				"south": {"uv": [7, 0, 7.75, 0.5], "texture": "#4"}
 			}
 		}
 	]

@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.init;
 
 import com.simibubi.create.api.registry.SimpleRegistry;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.AirtightArmorsHandler;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.creative.CreativeAirArmorsHandler;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.ethereal.EnergizedEtherealAirArmorsHandler;
@@ -21,6 +22,10 @@ import net.ty.createcraftedbeginning.api.gas.armorhandlers.ultrawarm.UltrawarmAi
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.data.CCBGases;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBAirtightArmorsHandlers {
     public static void register() {
         SimpleRegistry<Gas, AirtightArmorsHandler> registry = AirtightArmorsHandler.REGISTRY;

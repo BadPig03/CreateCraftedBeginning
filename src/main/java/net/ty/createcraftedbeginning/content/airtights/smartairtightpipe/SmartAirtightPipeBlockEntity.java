@@ -8,6 +8,7 @@ import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform;
 import dev.engine_room.flywheel.lib.transform.PoseTransformStack;
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.createmod.catnip.math.VecHelper;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -19,30 +20,39 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.api.gas.gases.GasFilteringBehaviour;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasFilteringBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.GasPropagator;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.IDirectionalPipe;
-import net.ty.createcraftedbeginning.api.gas.gases.IDirectionalPipe.DirectionalFacing;
-import net.ty.createcraftedbeginning.api.gas.gases.IGasExtractor;
+import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe.DirectionalFacing;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasExtractor;
 import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
-import org.jetbrains.annotations.NotNull;
+import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class SmartAirtightPipeBlockEntity extends SmartBlockEntity implements IGasExtractor {
     private GasFilteringBehaviour filter;
+    private CCBAdvancementBehaviour advancementBehaviour;
 
     public SmartAirtightPipeBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
 
     @Override
-    public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         filter = new GasFilteringBehaviour(this, new SmartPipeFilterSlot()).withCallback(this::onFilterChanged);
-        SmartPipeTransportBehaviour transportBehaviour = new SmartPipeTransportBehaviour(this);
         behaviours.add(filter);
+
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.GASEOUS_VARIATIONS, CCBAdvancements.MINTY_FRESH);
+        behaviours.add(advancementBehaviour);
+
+        SmartPipeTransportBehaviour transportBehaviour = new SmartPipeTransportBehaviour(this);
         behaviours.add(transportBehaviour);
     }
 
@@ -59,13 +69,18 @@ public class SmartAirtightPipeBlockEntity extends SmartBlockEntity implements IG
         return true;
     }
 
+    @Override
+    public CCBAdvancementBehaviour getAdvancementBehaviour() {
+        return advancementBehaviour;
+    }
+
     public class SmartPipeTransportBehaviour extends GasTransportBehaviour {
         public SmartPipeTransportBehaviour(SmartBlockEntity be) {
             super(be);
         }
 
         @Override
-        public boolean canHaveFlowToward(@NotNull BlockState state, @NotNull Direction direction) {
+        public boolean canHaveFlowToward(BlockState state, Direction direction) {
             if (state.getValue(SmartAirtightPipeBlock.AXIS) != direction.getAxis()) {
                 return false;
             }
@@ -88,14 +103,14 @@ public class SmartAirtightPipeBlockEntity extends SmartBlockEntity implements IG
         }
 
         @Override
-        public boolean canPullGasFrom(@NotNull GasStack gasStack, BlockState state, Direction direction) {
+        public boolean canPullGasFrom(GasStack gasStack, BlockState state, Direction direction) {
             return (gasStack.isEmpty() || filter != null && filter.test(gasStack)) && super.canPullGasFrom(gasStack, state, direction);
         }
     }
 
     class SmartPipeFilterSlot extends ValueBoxTransform {
         @Override
-        public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, @NotNull BlockState state) {
+        public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, BlockState state) {
             Axis axis = state.getValue(SmartAirtightPipeBlock.AXIS);
             if (axis == Axis.Y) {
                 DirectionalFacing facing = state.getValue(IDirectionalPipe.DIRECTIONAL_FACING);
@@ -110,7 +125,7 @@ public class SmartAirtightPipeBlockEntity extends SmartBlockEntity implements IG
         }
 
         @Override
-        public void rotate(LevelAccessor level, BlockPos pos, @NotNull BlockState state, PoseStack ms) {
+        public void rotate(LevelAccessor level, BlockPos pos, BlockState state, PoseStack ms) {
             Axis axis = state.getValue(SmartAirtightPipeBlock.AXIS);
             DirectionalFacing facing = state.getValue(IDirectionalPipe.DIRECTIONAL_FACING);
             TransformStack<PoseTransformStack> transformStack = TransformStack.of(ms);

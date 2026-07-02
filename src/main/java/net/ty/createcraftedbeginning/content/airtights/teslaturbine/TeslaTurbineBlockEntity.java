@@ -5,6 +5,7 @@ import com.simibubi.create.api.stress.BlockStressValues;
 import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.infrastructure.config.AllConfigs;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.HolderLookup.Provider;
@@ -16,13 +17,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implements IHaveGoggleInformation {
     private static final String COMPOUND_KEY_CORE = "Core";
-
     private static final int BASE_ROTATION_SPEED = 16;
     private static final int LAZY_TICK_RATE = 4;
 
@@ -68,13 +70,16 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
     @Override
     public void onSpeedChanged(float previousSpeed) {
         super.onSpeedChanged(previousSpeed);
-        if (level == null || level.isClientSide) {
+        if (level == null || level.isClientSide || getSpeed() == 0) {
             return;
         }
-        if (getSpeed() == 0) {
+
+        if (core == null || !core.getStructureManager().isActive()) {
             return;
         }
-        if (core == null || !core.getStructureManager().isActive() || core.getLevelCalculator().getCurrentLevel() != TeslaTurbineCore.MAX_LEVEL) {
+
+        advancementBehaviour.awardPlayer(CCBAdvancements.GENIUS_ENGINEER);
+        if (core.getLevelCalculator().getCurrentLevel() != TeslaTurbineCore.MAX_LEVEL) {
             return;
         }
 
@@ -89,7 +94,7 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
     }
 
     @Override
-    public void write(@NotNull CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+    public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
         compoundTag.put(COMPOUND_KEY_CORE, core.write(provider));
     }
@@ -105,10 +110,11 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
     }
 
     @Override
-    public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
-        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.MIRACLE_OF_ENGINEERING, CCBAdvancements.TESLA_TURBINE_EASY_AS_PIE);
-        behaviours.add(advancementBehaviour);
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         super.addBehaviours(behaviours);
+		
+		advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.MIRACLE_OF_ENGINEERING, CCBAdvancements.GENIUS_ENGINEER, CCBAdvancements.TESLA_TURBINE_EASY_AS_PIE);
+        behaviours.add(advancementBehaviour);
     }
 
     @Override

@@ -2,10 +2,14 @@ package net.ty.createcraftedbeginning.api;
 
 import com.google.common.collect.ImmutableList;
 import net.createmod.catnip.gui.widget.AbstractSimiWidget;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.ty.createcraftedbeginning.data.CCBGUITextures;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class VerticalIndicator extends AbstractSimiWidget {
     public State state;
     public boolean right;
@@ -18,7 +22,7 @@ public class VerticalIndicator extends AbstractSimiWidget {
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         if (!visible) {
             return;
         }

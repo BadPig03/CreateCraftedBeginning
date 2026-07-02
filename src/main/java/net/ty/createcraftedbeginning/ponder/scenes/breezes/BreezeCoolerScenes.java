@@ -7,6 +7,7 @@ import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
@@ -16,10 +17,13 @@ import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.FrostLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class BreezeCoolerScenes {
-    public static void scene(SceneBuilder builder, @NotNull SceneBuildingUtil util) {
+    public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("breeze_cooler", "Feeding Breeze Coolers");
@@ -41,11 +45,14 @@ public class BreezeCoolerScenes {
         Selection pipeSelection = util.select().fromTo(pipePos, pumpPos);
         Selection tankSelection = util.select().fromTo(tankPos, tankPos.above());
 
-        AABB coolerArea = new AABB(util.vector().centerOf(coolerPos), util.vector().centerOf(coolerPos));
+        Vec3 coolerVec = util.vector().centerOf(coolerPos);
+        Vec3 depotVec = util.vector().centerOf(depotPos);
+
+        AABB coolerArea = new AABB(coolerVec, coolerVec);
 
         Object coolerObject = new Object();
 
-        ItemStack iceBlock = new ItemStack(Blocks.ICE);
+        ItemStack iceBlockItem = new ItemStack(Blocks.ICE);
 
         scene.idle(20);
         scene.world().showSection(coolerSelection, Direction.DOWN);
@@ -60,18 +67,18 @@ public class BreezeCoolerScenes {
         scene.idle(3);
         coolerArea = coolerArea.expandTowards(0, 1, 0);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, coolerObject, coolerArea, 60);
-        scene.overlay().showText(60).text("The Breeze Cooler acts as a coolant source for blocks above it").pointAt(Vec3.atCenterOf(coolerPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("The Breeze Cooler acts as a coolant source for blocks above it").colored(PonderPalette.GREEN).pointAt(coolerVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().showControls(util.vector().blockSurface(coolerPos, Direction.UP).subtract(0, 0.125f, 0), Pointing.DOWN, 67).rightClick().withItem(iceBlock);
+        scene.overlay().showControls(util.vector().blockSurface(coolerPos, Direction.UP).subtract(0, 0.125, 0), Pointing.DOWN, 67).rightClick().withItem(iceBlockItem.copy());
         
         scene.idle(7);
         scene.world().modifyBlockEntity(coolerPos, BreezeCoolerBlockEntity.class, BreezeCoolerBlockEntity::SwitchToChilledState);
         scene.world().modifyBlock(coolerPos, s -> s.setValue(BreezeCoolerBlock.FROST_LEVEL, FrostLevel.CHILLED), false);
-		scene.overlay().showText(60).text("Requires feeding low-temperature items to the Breeze Cooler").pointAt(Vec3.atCenterOf(coolerPos)).placeNearTarget().attachKeyFrame();
+		scene.overlay().showText(60).text("Requires feeding low-temperature items to the Breeze Cooler").colored(PonderPalette.INPUT).pointAt(coolerVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> compoundTag.put("HeldItem", iceBlock.saveOptional(scene.world().getHolderLookupProvider())));
+        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> compoundTag.put("HeldItem", iceBlockItem.copy().saveOptional(scene.world().getHolderLookupProvider())));
         scene.world().showSection(deployerSelection, Direction.WEST);
 
         scene.idle(3);
@@ -83,7 +90,7 @@ public class BreezeCoolerScenes {
         scene.world().showSection(tankSelection, Direction.NORTH);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Can be automated with Mechanical Arms, Deployers, or Mechanical Pumps").pointAt(Vec3.atCenterOf(depotPos)).attachKeyFrame();
+        scene.overlay().showText(60).text("Can be automated with Mechanical Arms, Deployers, or Mechanical Pumps").colored(PonderPalette.GREEN).pointAt(depotVec).attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();

@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
@@ -20,8 +21,11 @@ import net.neoforged.neoforge.client.event.RenderArmEvent;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @EventBusSubscriber(Dist.CLIENT)
 public class AirtightChestplateFirstPersonRenderer {
     private static final ResourceLocation CHESTPLATE_ARM_LOCATION = CreateCraftedBeginning.asResource("textures/models/armor/airtight_chestplate_arm.png");
@@ -33,8 +37,8 @@ public class AirtightChestplateFirstPersonRenderer {
         rendererActive = mc.player != null && mc.player.getItemBySlot(EquipmentSlot.CHEST).is(CCBItems.AIRTIGHT_CHESTPLATE);
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void onChestplateFirstPersonRender(@NotNull RenderArmEvent event) {
+    @SubscribeEvent(priority = EventPriority.LOW)
+    public static void onChestplateFirstPersonRender(RenderArmEvent event) {
         if (!CCBConfig.client().enableChestplateFirstPersonArm.get() || !rendererActive) {
             return;
         }
@@ -46,12 +50,11 @@ public class AirtightChestplateFirstPersonRenderer {
         }
 
         PlayerModel<AbstractClientPlayer> model = renderer.getModel();
+        ModelPart armPart = event.getArm() == HumanoidArm.LEFT ? model.leftSleeve : model.rightSleeve;
         model.attackTime = 0;
         model.crouching = false;
         model.swimAmount = 0;
         model.setupAnim(player, 0, 0, 0, 0, 0);
-
-        ModelPart armPart = event.getArm() == HumanoidArm.LEFT ? model.leftSleeve : model.rightSleeve;
         armPart.xRot = 0;
         armPart.render(event.getPoseStack(), event.getMultiBufferSource().getBuffer(RenderType.entitySolid(CHESTPLATE_ARM_LOCATION)), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
         event.setCanceled(true);

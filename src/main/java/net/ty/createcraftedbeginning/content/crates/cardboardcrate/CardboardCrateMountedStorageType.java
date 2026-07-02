@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.crates.cardboardcrate;
 
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorageType;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -8,6 +9,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.content.crates.CrateItemStackHandler;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CardboardCrateMountedStorageType extends MountedItemStorageType<CardboardCrateMountedStorage> {
     public CardboardCrateMountedStorageType() {
         super(CardboardCrateMountedStorage.CODEC);

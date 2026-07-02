@@ -5,6 +5,7 @@ import com.simibubi.create.foundation.blockEntity.renderer.SmartBlockEntityRende
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.render.CachedBuffers;
 import net.createmod.catnip.render.SuperByteBuffer;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
@@ -12,17 +13,19 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock.VentState;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirVentRenderer extends SmartBlockEntityRenderer<AirVentBlockEntity> {
     public AirVentRenderer(Context context) {
         super(context);
     }
 
     @Override
-    protected void renderSafe(@NotNull AirVentBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
+    protected void renderSafe(AirVentBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         BlockState state = be.getBlockState();
-
         for (Direction direction : Iterate.directions) {
             VentState ventState = state.getValue(AirVentBlock.PROPERTY_BY_DIRECTION.get(direction));
             if (!ventState.canHandInteract()) {

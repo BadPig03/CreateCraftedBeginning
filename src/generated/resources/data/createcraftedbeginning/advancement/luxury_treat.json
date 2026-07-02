@@ -1,0 +1,28 @@
+{
+  "parent": "createcraftedbeginning:glaciologist",
+  "criteria": {
+    "0": {
+      "trigger": "createcraftedbeginning:luxury_treat_builtin"
+    }
+  },
+  "display": {
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.luxury_treat.desc"
+    },
+    "frame": "goal",
+    "icon": {
+      "count": 1,
+      "id": "minecraft:enchanted_golden_apple"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.luxury_treat"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

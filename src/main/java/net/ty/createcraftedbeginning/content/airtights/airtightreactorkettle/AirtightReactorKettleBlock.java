@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.render.MultiPosDestructionHandler;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -19,30 +20,32 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashSet;
 import java.util.Set;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightReactorKettleBlock extends Block implements IBE<AirtightReactorKettleBlockEntity>, IWrenchable {
     public AirtightReactorKettleBlock(Properties properties) {
         super(properties);
     }
 
     @Override
-    protected boolean skipRendering(@NotNull BlockState state, @NotNull BlockState adjacentState, @NotNull Direction direction) {
+    protected boolean skipRendering(BlockState state, BlockState adjacentState, Direction direction) {
         return true;
     }
 
     @Override
-    public void onPlace(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState oldState, boolean isMoving) {
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean isMoving) {
         super.onPlace(state, level, pos, oldState, isMoving);
         if (level.getBlockTicks().hasScheduledTick(pos, this)) {
             return;
@@ -52,17 +55,17 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
     }
 
     @Override
-    public void onRemove(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState newState, boolean isMoving) {
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         IBE.onRemove(state, level, pos, newState);
     }
 
     @Override
-    protected @NotNull VoxelShape getShape(@NotNull BlockState blockState, @NotNull BlockGetter level, @NotNull BlockPos blockPos, @NotNull CollisionContext context) {
-        return Shapes.empty();
+    protected VoxelShape getShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
+        return CCBShapes.AIRTIGHT_REACTOR_KETTLE_CENTER_SHAPE;
     }
 
     @Override
-    public void tick(@NotNull BlockState state, @NotNull ServerLevel level, @NotNull BlockPos pos, @NotNull RandomSource random) {
+    public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
                 for (int k = -1; k <= 1; k++) {
@@ -100,7 +103,7 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
     }
 
     @Override
-    public BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
+    public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState state = super.getStateForPlacement(context);
         if (state == null) {
             return null;
@@ -126,7 +129,7 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
     }
 
     @Override
-    public void setPlacedBy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, LivingEntity entity, @NotNull ItemStack stack) {
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
         super.setPlacedBy(level, pos, state, entity, stack);
         CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
     }
@@ -144,7 +147,7 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
     public static class AirtightReactorKettleRenderProperties implements IClientBlockExtensions, MultiPosDestructionHandler {
         @Override
         @Nullable
-        public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, @NotNull BlockState blockState, int progress) {
+        public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
             HashSet<BlockPos> positions = new HashSet<>();
             for (int i = -1; i <= 1; i++) {
                 for (int j = -1; j <= 1; j++) {

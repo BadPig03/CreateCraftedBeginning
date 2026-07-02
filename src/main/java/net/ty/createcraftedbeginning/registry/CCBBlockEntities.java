@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.registry;
 import com.simibubi.create.content.kinetics.base.SingleAxisRotatingVisual;
 import com.simibubi.create.foundation.blockEntity.renderer.SmartBlockEntityRenderer;
 import com.tterrag.registrate.util.entry.BlockEntityEntry;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorRenderer;
@@ -11,6 +12,11 @@ import net.ty.createcraftedbeginning.content.airtights.airtightencasedpipe.Airti
 import net.ty.createcraftedbeginning.content.airtights.airtightencasedpipe.AirtightEncasedPipeRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineRenderer;
+import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressRenderer;
+import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralShaftBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralShaftRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlockEntity;
@@ -60,6 +66,10 @@ import net.ty.createcraftedbeginning.content.obsolete.pneumaticengine.PneumaticE
 import net.ty.createcraftedbeginning.content.obsolete.pneumaticengine.PneumaticEngineRenderer;
 import net.ty.createcraftedbeginning.data.CCBRegistrate;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBBlockEntities {
     private static final CCBRegistrate CCB_REGISTRATE = CreateCraftedBeginning.registrate();
 
@@ -89,9 +99,14 @@ public class CCBBlockEntities {
     public static final BlockEntityEntry<SturdyCrateBlockEntity> STURDY_CRATE = CCB_REGISTRATE.blockEntity("sturdy_crate", SturdyCrateBlockEntity::new).validBlock(CCBBlocks.STURDY_CRATE_BLOCK).renderer(() -> SmartBlockEntityRenderer::new).register();
     public static final BlockEntityEntry<TeslaTurbineBlockEntity> TESLA_TURBINE = CCB_REGISTRATE.blockEntity("tesla_turbine", TeslaTurbineBlockEntity::new).validBlock(CCBBlocks.TESLA_TURBINE_BLOCK).renderer(() -> TeslaTurbineRenderer::new).register();
     public static final BlockEntityEntry<TeslaTurbineNozzleBlockEntity> TESLA_TURBINE_NOZZLE = CCB_REGISTRATE.blockEntity("tesla_turbine_nozzle", TeslaTurbineNozzleBlockEntity::new).validBlock(CCBBlocks.TESLA_TURBINE_NOZZLE_BLOCK).register();
+
     public static final BlockEntityEntry<AirtightReactorKettleBlockEntity> AIRTIGHT_REACTOR_KETTLE = CCB_REGISTRATE.blockEntity("airtight_reactor_kettle", AirtightReactorKettleBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK).renderer(() -> AirtightReactorKettleRenderer::new).register();
     public static final BlockEntityEntry<AirtightReactorKettleStructuralBlockEntity> AIRTIGHT_REACTOR_KETTLE_STRUCTURAL = CCB_REGISTRATE.blockEntity("airtight_reactor_kettle_structural", AirtightReactorKettleStructuralBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK).renderer(() -> SmartBlockEntityRenderer::new).register();
     public static final BlockEntityEntry<AirtightReactorKettleStructuralCogBlockEntity> AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG = CCB_REGISTRATE.blockEntity("airtight_reactor_kettle_structural_cog", AirtightReactorKettleStructuralCogBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG_BLOCK).renderer(() -> AirtightReactorKettleStructuralCogRenderer::new).register();
+
+    public static final BlockEntityEntry<AirtightForgingPressBlockEntity> AIRTIGHT_FORGING_PRESS = CCB_REGISTRATE.blockEntity("airtight_forging_press", AirtightForgingPressBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK).renderer(() -> AirtightForgingPressRenderer::new).register();
+    public static final BlockEntityEntry<AirtightForgingPressStructuralBlockEntity> AIRTIGHT_FORGING_PRESS_STRUCTURAL = CCB_REGISTRATE.blockEntity("airtight_forging_press_structural", AirtightForgingPressStructuralBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_BLOCK).renderer(() -> SmartBlockEntityRenderer::new).register();
+    public static final BlockEntityEntry<AirtightForgingPressStructuralShaftBlockEntity> AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT = CCB_REGISTRATE.blockEntity("airtight_forging_press_structural_shaft", AirtightForgingPressStructuralShaftBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT_BLOCK).renderer(() -> AirtightForgingPressStructuralShaftRenderer::new).register();
 
     public static final BlockEntityEntry<EndIncinerationBlowerBlockEntity> END_INCINERATION_BLOWER = CCB_REGISTRATE.blockEntity("end_incineration_blower", EndIncinerationBlowerBlockEntity::new).validBlock(CCBBlocks.END_INCINERATION_BLOWER_BLOCK).renderer(() -> EndIncinerationBlowerRenderer::new).register();
     public static final BlockEntityEntry<EndIncinerationBlowerStructuralBlockEntity> END_INCINERATION_BLOWER_STRUCTURAL = CCB_REGISTRATE.blockEntity("end_incineration_blower_structural", EndIncinerationBlowerStructuralBlockEntity::new).validBlock(CCBBlocks.END_INCINERATION_BLOWER_STRUCTURAL_BLOCK).renderer(() -> EndIncinerationBlowerStructuralRenderer::new).register();

@@ -1,14 +1,18 @@
 package net.ty.createcraftedbeginning.api.gas.armorhandlers.natural;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.neoforged.neoforge.common.EffectCures;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.AirtightArmorsHandler;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class NaturalAirArmorsHandler implements AirtightArmorsHandler {
     @Override
-    public boolean canCureEffect(@NotNull MobEffectInstance effectInstance) {
+    public boolean canCureEffect(MobEffectInstance effectInstance) {
         return effectInstance.getEffect().value().getCategory() == MobEffectCategory.HARMFUL && effectInstance.getCures().contains(EffectCures.MILK);
     }
 

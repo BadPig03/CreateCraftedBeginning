@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.end.endcasing;
 
 import com.simibubi.create.content.kinetics.base.KineticBlock;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -13,22 +14,24 @@ import net.minecraft.world.level.storage.loot.LootParams.Builder;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.HitResult;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class EndMechanicalStructuralBlock extends KineticBlock {
     public EndMechanicalStructuralBlock(Properties properties) {
         super(properties);
     }
 
     @Override
-    public int getLightEmission(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos) {
+    public int getLightEmission(BlockState state, BlockGetter level, BlockPos pos) {
         return 15;
     }
 
     @Override
-    public @NotNull ItemStack getCloneItemStack(@NotNull BlockState state, @NotNull HitResult target, @NotNull LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
+    public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
         if (!(level.getBlockState(pos).getBlock() instanceof EndMechanicalStructuralBlock)) {
             return ItemStack.EMPTY;
         }
@@ -37,7 +40,7 @@ public abstract class EndMechanicalStructuralBlock extends KineticBlock {
     }
 
     @Override
-    public @NotNull List<ItemStack> getDrops(@NotNull BlockState state, @NotNull Builder builder) {
+    public List<ItemStack> getDrops(BlockState state, Builder builder) {
         List<ItemStack> lootDrops = super.getDrops(state, builder);
         BlockState blockState = builder.getOptionalParameter(LootContextParams.BLOCK_STATE);
         if (blockState == null || !(blockState.getBlock() instanceof EndMechanicalStructuralBlock)) {
@@ -53,7 +56,7 @@ public abstract class EndMechanicalStructuralBlock extends KineticBlock {
     }
 
     @Override
-    public boolean hasShaftTowards(LevelReader level, BlockPos pos, BlockState state, @NotNull Direction direction) {
+    public boolean hasShaftTowards(LevelReader level, BlockPos pos, BlockState state, Direction direction) {
         return direction.getAxis() == Axis.Y;
     }
 

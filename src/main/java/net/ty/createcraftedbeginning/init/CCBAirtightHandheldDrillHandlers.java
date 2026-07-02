@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.init;
 
 import com.simibubi.create.api.registry.SimpleRegistry;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.api.gas.drillhandlers.sculk.SculkAirDrillHandler;
 import net.ty.createcraftedbeginning.api.gas.drillhandlers.spore.SporeAirDrillHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
@@ -21,6 +22,10 @@ import net.ty.createcraftedbeginning.api.gas.drillhandlers.ultrawarm.Pressurized
 import net.ty.createcraftedbeginning.api.gas.drillhandlers.ultrawarm.UltrawarmAirDrillHandler;
 import net.ty.createcraftedbeginning.data.CCBGases;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBAirtightHandheldDrillHandlers {
     public static void register() {
         SimpleRegistry<Gas, AirtightHandheldDrillHandler> registry = AirtightHandheldDrillHandler.REGISTRY;

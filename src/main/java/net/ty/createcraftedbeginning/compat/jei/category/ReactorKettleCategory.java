@@ -10,8 +10,10 @@ import mezz.jei.api.recipe.RecipeIngredientRole;
 import net.createmod.catnip.data.Pair;
 import net.createmod.catnip.theme.Color;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -19,22 +21,24 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.SizedGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.reactorkettle.TemperatureCondition;
-import net.ty.createcraftedbeginning.compat.jei.JEIPlugin;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEI;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightReactorKettle;
 import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.simibubi.create.compat.jei.category.CreateRecipeCategory.addFluidSlot;
 import static com.simibubi.create.compat.jei.category.CreateRecipeCategory.addStochasticTooltip;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe> {
     private final AnimatedAirtightReactorKettle reactorKettleOpened = new AnimatedAirtightReactorKettle(false);
     private final AnimatedAirtightReactorKettle reactorKettleClosed = new AnimatedAirtightReactorKettle(true);
@@ -60,11 +64,7 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
     }
 
     @Override
-    protected void draw(@NotNull ReactorKettleRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
-        if (getBackground() == null) {
-            return;
-        }
-
+    protected void draw(ReactorKettleRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         int size = recipe.getFluidResults().size() + recipe.getGasResults().size() + recipe.getRollableResults().size();
         if (size <= 3) {
             CCBGUITextures.JEI_DOWN_ARROW.render(graphics, 136, -19 * ((1 + size) / 2 - 1) + 32);
@@ -85,9 +85,14 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
     }
 
     @Override
-    protected void setRecipe(IRecipeLayoutBuilder builder, @NotNull ReactorKettleRecipe recipe, IFocusGroup focuses) {
+    protected void setRecipe(IRecipeLayoutBuilder builder, ReactorKettleRecipe recipe, IFocusGroup focuses) {
         List<Pair<Ingredient, Integer>> condensedIngredients = ReactorKettleRecipe.getCondensedIngredients(recipe.getIngredients());
-        int size = condensedIngredients.size() + recipe.getFluidIngredients().size() + recipe.getGasIngredients().size();
+        NonNullList<SizedFluidIngredient> fluidIngredients = recipe.getFluidIngredients();
+        NonNullList<SizedGasIngredient> gasIngredients = recipe.getGasIngredients();
+        List<ProcessingOutput> results = recipe.getRollableResults();
+        NonNullList<FluidStack> fluidResults = recipe.getFluidResults();
+        NonNullList<GasStack> gasResults = recipe.getGasResults();
+        int size = condensedIngredients.size() + fluidIngredients.size() + gasIngredients.size();
         int xOffset = size < 3 ? (3 - size) * 19 / 2 : 0;
         int i = 0;
         for (Pair<Ingredient, Integer> pair : condensedIngredients) {
@@ -100,38 +105,38 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
             builder.addSlot(RecipeIngredientRole.INPUT, x, y).setBackground(getRenderedSlot(), -1, -1).addItemStacks(stacks);
             i++;
         }
-        for (SizedFluidIngredient fluidIngredient : recipe.getFluidIngredients()) {
+        for (SizedFluidIngredient fluidIngredient : fluidIngredients) {
             int x = getInputX(i, xOffset);
             int y = getInputY(i);
             addFluidSlot(builder, x, y, fluidIngredient);
             i++;
         }
-        for (SizedGasIngredient gasIngredient : recipe.getGasIngredients()) {
+        for (SizedGasIngredient gasIngredient : gasIngredients) {
             int x = getInputX(i, xOffset);
             int y = getInputY(i);
             GasStack gasStack = gasIngredient.getFirstGas();
-            builder.addSlot(RecipeIngredientRole.INPUT, x, y).setFluidRenderer(FluidType.BUCKET_VOLUME, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredient(JEIPlugin.GAS_STACK, gasStack.copyWithAmount(FluidType.BUCKET_VOLUME)).addRichTooltipCallback((recipeSlotView, tooltip) -> tooltip.add(Component.translatable("jei.tooltip.gas.amount", gasStack.getAmount()).withStyle(ChatFormatting.GRAY)));
+            builder.addSlot(RecipeIngredientRole.INPUT, x, y).setFluidRenderer(FluidType.BUCKET_VOLUME, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEI.GAS_STACK, gasStack.copyWithAmount(FluidType.BUCKET_VOLUME)).addRichTooltipCallback((recipeSlotView, tooltip) -> tooltip.add(Component.translatable("jei.tooltip.gas.amount", gasStack.getAmount()).withStyle(ChatFormatting.GRAY)));
             i++;
         }
 
-        size = recipe.getRollableResults().size() + recipe.getFluidResults().size() + recipe.getGasResults().size();
+        size = results.size() + fluidResults.size() + gasResults.size();
         i = 0;
-        for (ProcessingOutput result : recipe.getRollableResults()) {
+        for (ProcessingOutput result : results) {
             int x = getOutputX(i, size);
             int y = getOutputY(i);
             builder.addSlot(RecipeIngredientRole.OUTPUT, x, y).setBackground(getRenderedSlot(result), -1, -1).addItemStack(result.getStack()).addRichTooltipCallback(addStochasticTooltip(result));
             i++;
         }
-        for (FluidStack fluidResult : recipe.getFluidResults()) {
+        for (FluidStack fluidResult : fluidResults) {
             int x = getOutputX(i, size);
             int y = getOutputY(i);
             addFluidSlot(builder, x, y, fluidResult);
             i++;
         }
-        for (GasStack gasResult : recipe.getGasResults()) {
+        for (GasStack gasResult : gasResults) {
             int x = getOutputX(i, size);
             int y = getOutputY(i);
-            builder.addSlot(RecipeIngredientRole.OUTPUT, x, y).setFluidRenderer(FluidType.BUCKET_VOLUME, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredient(JEIPlugin.GAS_STACK, gasResult.copyWithAmount(FluidType.BUCKET_VOLUME)).addRichTooltipCallback((recipeSlotView, tooltip) -> tooltip.add(Component.translatable("jei.tooltip.gas.amount", gasResult.getAmount()).withStyle(ChatFormatting.GRAY)));
+            builder.addSlot(RecipeIngredientRole.OUTPUT, x, y).setFluidRenderer(FluidType.BUCKET_VOLUME, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEI.GAS_STACK, gasResult.copyWithAmount(FluidType.BUCKET_VOLUME)).addRichTooltipCallback((recipeSlotView, tooltip) -> tooltip.add(Component.translatable("jei.tooltip.gas.amount", gasResult.getAmount()).withStyle(ChatFormatting.GRAY)));
             i++;
         }
 
@@ -141,12 +146,12 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
         }
 
         switch (condition) {
-            case CHILLED -> builder.addSlot(RecipeIngredientRole.RENDER_ONLY, 134, 81).addItemStack(CCBBlocks.BREEZE_COOLER_BLOCK.asStack());
-            case SUPERCHILLED -> builder.addSlot(RecipeIngredientRole.RENDER_ONLY, 134, 81).addItemStack(new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK.asItem(), 3));
-            case HEATED -> builder.addSlot(RecipeIngredientRole.RENDER_ONLY, 134, 81).addItemStack(AllBlocks.BLAZE_BURNER.asStack());
+            case CHILLED -> builder.addSlot(RecipeIngredientRole.RENDER_ONLY, 134, 81).addItemStack(new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK));
+            case SUPERCHILLED -> builder.addSlot(RecipeIngredientRole.RENDER_ONLY, 134, 81).addItemStack(new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK, 3));
+            case HEATED -> builder.addSlot(RecipeIngredientRole.RENDER_ONLY, 134, 81).addItemStack(new ItemStack(AllBlocks.BLAZE_BURNER));
             case SUPERHEATED -> {
-                builder.addSlot(RecipeIngredientRole.RENDER_ONLY, 134, 81).addItemStack(AllBlocks.BLAZE_BURNER.asStack());
-                builder.addSlot(RecipeIngredientRole.CATALYST, 153, 81).addItemStack(AllItems.BLAZE_CAKE.asStack());
+                builder.addSlot(RecipeIngredientRole.RENDER_ONLY, 134, 81).addItemStack(new ItemStack(AllBlocks.BLAZE_BURNER));
+                builder.addSlot(RecipeIngredientRole.CATALYST, 153, 81).addItemStack(new ItemStack(AllItems.BLAZE_CAKE.asItem()));
             }
         }
     }

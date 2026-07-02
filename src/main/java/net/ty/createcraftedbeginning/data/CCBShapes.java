@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.data;
 
 import net.createmod.catnip.math.VoxelShaper;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.block.Block;
@@ -8,10 +9,12 @@ import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.BiFunction;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBShapes {
     public static final VoxelShaper AIRTIGHT_ENGINE = shape(0, 0, 0, 16, 2, 16).add(2, 2, 2, 14, 6, 14).add(0, 6, 0, 16, 10, 16).add(2, 10, 2, 14, 14, 14).forDirectional(Direction.UP);
     public static final VoxelShaper AIRTIGHT_HATCH = shape(2, 2, 0, 14, 14, 1).add(3, 0, 0, 13, 16, 10).forHorizontal(Direction.SOUTH);
@@ -31,14 +34,18 @@ public class CCBShapes {
     public static final VoxelShape COOLER_BLOCK_COOLER_SHAPE = shape(1, 0, 1, 15, 12, 15).add(0, 12, 0, 16, 16, 16).build();
     public static final VoxelShape COOLER_BLOCK_SHAPE = shape(1, 0, 1, 15, 14, 15).build();
     public static final VoxelShape COOLER_BLOCK_SPECIAL_COLLISION_SHAPE = shape(0, 0, 0, 16, 4, 16).build();
-    public static final VoxelShape CRATE = shape(1, 0, 1, 15, 14, 15).build();
+    public static final VoxelShape CRATE_SHAPE = shape(1, 0, 1, 15, 14, 15).build();
     public static final VoxelShape ENCASED_PIPE_SHAPE = shape(0, 0, 0, 16, 16, 16).build();
     public static final VoxelShape GAS_CANISTER_SHAPE = shape(4, 0, 4, 12, 12, 12).add(6, 12, 6, 10, 13, 10).build();
     public static final VoxelShape GAS_INJECTION_CHAMBER_SHAPE = shape(1, 1, 1, 15, 15, 15).add(2, 15, 2, 14, 16, 14).build();
     public static final VoxelShape END_SCULK_SILENCER_SHAPE = shape(0, 0, 0, 16, 8, 16).add(1, 8, 1, 15, 15, 15).build();
     public static final VoxelShape END_SCULK_SILENCER_COLLISION_SHAPE = shape(0, 0, 0, 16, 8, 16).build();
-    public static final VoxelShape AIRTIGHT_REACTOR_KETTLE_TOP_CENTER = shape(0, 2, 0, 16, 16, 16).build();
-    public static final VoxelShape AIRTIGHT_REACTOR_KETTLE_BOTTOM_CENTER = shape(0, 0, 0, 16, 2, 16).build();
+    public static final VoxelShape AIRTIGHT_REACTOR_KETTLE_TOP_CENTER_SHAPE = shape(0, 2, 0, 16, 16, 16).build();
+    public static final VoxelShape AIRTIGHT_REACTOR_KETTLE_BOTTOM_CENTER_SHAPE = shape(0, 0, 0, 16, 2, 16).build();
+    public static final VoxelShape AIRTIGHT_REACTOR_KETTLE_CENTER_SHAPE = shape(6.5, -0.5, 6.5, 9.5, 18, 9.5).build();
+    public static final VoxelShape AIRTIGHT_FORGING_PRESS_TOP_CENTER_SHAPE = shape(0, 0, 0, 16, 16, 16).build();
+    public static final VoxelShape AIRTIGHT_FORGING_PRESS_BOTTOM_CENTER_SHAPE = shape(0, 0, 0, 16, 13, 16).build();
+    public static final VoxelShape AIRTIGHT_FORGING_PRESS_CENTER_SHAPE = shape(-2, 10, -2, 18, 16, 18).build();
 
     public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_TOP_CORNER = shape(0, 0, 0, 16, 16, 16).remove(2, 0, 2, 16, 2, 16).add(4, 0, 4, 8, 2, 8).add(2, 0, 4, 4, 2, 13).add(4, 0, 2, 13, 2, 4).add(2, 0, 13, 3, 2, 16).add(13, 0, 2, 16, 2, 3).forHorizontal(Direction.NORTH);
     public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_TOP_MID = shape(0, 0, 0, 16, 16, 16).remove(0, 0, 2, 16, 2, 16).forHorizontal(Direction.NORTH);
@@ -49,17 +56,23 @@ public class CCBShapes {
     public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_BOTTOM_MID = shape(0, 0, 0, 16, 16, 16).remove(0, 2, 2, 16, 16, 16).add(0, 15, 2, 16, 16, 4).forHorizontal(Direction.NORTH);
     public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_BOTTOM_CORNER = shape(0, 0, 0, 16, 16, 16).remove(2, 2, 2, 16, 16, 16).add(2, 2, 2, 3, 15, 14).add(3, 2, 2, 4, 15, 13).add(4, 2, 2, 5, 15, 12).add(5, 2, 2, 6, 15, 11).add(6, 2, 2, 7, 15, 10).add(7, 2, 2, 8, 15, 9).add(8, 2, 2, 9, 15, 8).add(9, 2, 2, 10, 15, 7).add(10, 2, 2, 11, 15, 6).add(11, 2, 2, 12, 15, 5).add(12, 2, 2, 13, 15, 4).add(13, 2, 2, 14, 15, 3).add(4, 15, 4, 8, 16, 8).add(2, 15, 4, 4, 16, 16).add(4, 15, 2, 16, 16, 4).forHorizontal(Direction.NORTH);
 
+    public static final VoxelShaper AIRTIGHT_FORGING_PRESS_TOP_MID = shape(0, 2, 0, 16, 16, 16).remove(4, 4, 0, 12, 12, 1).forHorizontal(Direction.NORTH);
+    public static final VoxelShaper AIRTIGHT_FORGING_PRESS_BOTTOM_MID = shape(0, 0, 0, 16, 11, 16).add(0, 11, 12, 16, 13, 16).forHorizontal(Direction.NORTH);
+    public static final VoxelShaper AIRTIGHT_FORGING_PRESS_TOP_CORNER = shape(0, 2, 0, 16, 16, 16).add(1, 0, 1, 11, 1, 11).add(2, 1, 2, 10, 2, 10).forHorizontal(Direction.NORTH);
+    public static final VoxelShaper AIRTIGHT_FORGING_PRESS_MID_CORNER = shape(3, 0, 3, 9, 7, 9).add(2, 7, 2, 10, 16, 10).add(1, 10, 1, 11, 11, 11).add(1, 12, 1, 11, 13, 11).add(1, 14, 1, 11, 15, 11).forHorizontal(Direction.NORTH);
+    public static final VoxelShaper AIRTIGHT_FORGING_PRESS_BOTTOM_CORNER = shape(0, 0, 0, 16, 11, 16).add(2, 11, 2, 10, 13, 10).add(3, 13, 3, 9, 16, 9).add(12, 11, 12, 16, 13, 16).forHorizontal(Direction.NORTH);
+
     @Contract("_, _, _, _, _, _ -> new")
-    private static @NotNull Builder shape(double x1, double y1, double z1, double x2, double y2, double z2) {
+    private static Builder shape(double x1, double y1, double z1, double x2, double y2, double z2) {
         return shape(cuboid(x1, y1, z1, x2, y2, z2));
     }
 
     @Contract(value = "_ -> new", pure = true)
-    private static @NotNull Builder shape(VoxelShape shape) {
+    private static Builder shape(VoxelShape shape) {
         return new Builder(shape);
     }
 
-    private static @NotNull VoxelShape cuboid(double x1, double y1, double z1, double x2, double y2, double z2) {
+    private static VoxelShape cuboid(double x1, double y1, double z1, double x2, double y2, double z2) {
         return Block.box(x1, y1, z1, x2, y2, z2);
     }
 
@@ -96,7 +109,7 @@ public class CCBShapes {
             return build(VoxelShaper::forAxis, Axis.Y);
         }
 
-        public VoxelShaper build(@NotNull BiFunction<VoxelShape, Axis, VoxelShaper> factory, Axis axis) {
+        public VoxelShaper build(BiFunction<VoxelShape, Axis, VoxelShaper> factory, Axis axis) {
             return factory.apply(shape, axis);
         }
 
@@ -104,7 +117,7 @@ public class CCBShapes {
             return build(VoxelShaper::forDirectional, direction);
         }
 
-        public VoxelShaper build(@NotNull BiFunction<VoxelShape, Direction, VoxelShaper> factory, Direction direction) {
+        public VoxelShaper build(BiFunction<VoxelShape, Direction, VoxelShaper> factory, Direction direction) {
             return factory.apply(shape, direction);
         }
 

@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airvents;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Pose;
@@ -11,12 +12,15 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
 public class AirVentEvents {
     @SubscribeEvent
-    public static void onPlayerTick(@NotNull Post event) {
+    public static void onPlayerTick(Post event) {
         Player player = event.getEntity();
         if (player.isSpectator() || !player.isShiftKeyDown()) {
             return;

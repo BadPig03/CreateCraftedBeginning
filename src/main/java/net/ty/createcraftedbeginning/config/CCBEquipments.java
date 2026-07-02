@@ -6,32 +6,39 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings("unused")
 public class CCBEquipments extends ConfigBase {
     public final ConfigGroup airtightCannon = group(0, "airtight_cannon", "Airtight Cannon");
-    public final ConfigInt gasCostPerShot = i(50, 0, "gas_cost_per_shot", Comments.gasCostPerShot);
+    public final ConfigInt perShotConsumption = i(50, 0, "per_shot_cost", Comments.perShotConsumption);
 
     public final ConfigGroup airtightExtendArm = group(0, "airtight_extend_arm", "Airtight Extend Arm");
-    public final ConfigInt gasCostPerUse = i(4, 0, "gas_cost_per_use", Comments.gasCostPerUse);
+    public final ConfigInt perUseConsumption = i(5, 0, "per_use_consumption", Comments.perUseConsumption);
 
     public final ConfigGroup airtightHandheldDrill = group(0, "airtight_handheld_drill", "Airtight Handheld Drill");
-    public final ConfigInt gasCostPerBlock = i(10, 0, "gas_cost_per_block", Comments.gasCostPerBlock);
-    public final ConfigInt gasCostPerLiquidBlock = i(5, 0, "gas_cost_per_liquid_block", Comments.gasCostPerLiquidBlock);
-    public final ConfigInt gasCostPerEntityHit = i(5, 0, "gas_cost_per_entity_hit", Comments.gasCostPerEntityHit);
-    public final ConfigFloat silkTouchGasCostMultiplier = f(2, 1, "silk_touch_gas_cost_multiplier", Comments.silkTouchGasCostMultiplier);
-    public final ConfigFloat magnetGasCostMultiplier = f(1.5f, 1, "magnet_gas_cost_multiplier", Comments.magnetGasCostMultiplier);
-    public final ConfigFloat experienceConversionGasCostMultiplier = f(3, 1, "experience_conversion_gas_cost_multiplier", Comments.experienceConversionGasCostMultiplier);
+    public final ConfigInt perBlockConsumption = i(5, 0, "per_block_consumption", Comments.perBlockConsumption);
+    public final ConfigInt perEntityHitConsumption = i(3, 0, "per_entity_hit_consumption", Comments.perEntityHitConsumption);
+    public final ConfigFloat silkTouchMultiplier = f(2, 1, "silk_touch_multiplier", Comments.silkTouchMultiplier);
+    public final ConfigFloat liquidReplacementMultiplier = f(1, 1, "liquid_replacement_multiplier", Comments.liquidReplacementMultiplier);
+    public final ConfigFloat magnetMultiplier = f(1.5f, 1, "magnet_multiplier", Comments.magnetMultiplier);
+    public final ConfigFloat experienceConversionMultiplier = f(3, 1, "experience_conversion_multiplier", Comments.experienceConversionMultiplier);
 
     public final ConfigGroup airtightHelmet = group(0, "airtight_helmet", "Airtight Helmet");
-    public final ConfigFloat effectsProtectionGasCostMultiplier = f(0.5f, 0, "effects_protection_gas_cost_multiplier", Comments.effectsProtectionGasCostMultiplier);
-    public final ConfigInt waterBreathingGasCost = i(5, 0, "water_breathing_gas_cost", Comments.waterBreathingGasCost);
+    public final ConfigFloat effectsProtectionMultiplier = f(0.5f, 0, "effects_protection_multiplier", Comments.effectsProtectionMultiplier);
+    public final ConfigInt waterBreathingConsumption = i(10, 0, "water_breathing_consumption", Comments.waterBreathingConsumption);
+    public final ConfigInt visionConsumption = i(5, 0, "vision_consumption", Comments.visionConsumption);
+    public final ConfigFloat helmetResistanceMultiplier = f(5, 0, "helmet_resistance_multiplier", Comments.helmetResistanceMultiplier);
 
     public final ConfigGroup airtightChestplate = group(0, "airtight_chestplate", "Airtight Chestplate");
-    public final ConfigInt elytraGasCost = i(5, 0, "elytra_gas_cost", Comments.elytraGasCost);
-    public final ConfigInt creativeFlightGasCost = i(20, 0, "creative_flight_gas_cost", Comments.creativeFlightGasCost);
-    public final ConfigInt regenerationGasCost = i(10, 0, "regeneration_gas_cost", Comments.regenerationGasCost);
+    public final ConfigInt elytraConsumption = i(5, 0, "elytra_consumption", Comments.elytraConsumption);
+    public final ConfigInt creativeFlightConsumption = i(20, 0, "creative_flight_flying_consumption", Comments.creativeFlightConsumption);
+    public final ConfigInt regenerationConsumption = i(10, 0, "regeneration_consumption", Comments.regenerationConsumption);
+    public final ConfigInt invisibilityConsumption = i(5, 0, "invisibility_consumption", Comments.invisibilityConsumption);
+    public final ConfigFloat chestplateResistanceMultiplier = f(5, 0, "chestplate_resistance_multiplier", Comments.chestplateResistanceMultiplier);
 
     public final ConfigGroup airtightLeggings = group(0, "airtight_leggings", "Airtight Leggings");
-    public final ConfigInt projectileDeflectionGasCost = i(10, 0, "projectile_deflection_gas_cost", Comments.projectileDeflectionGasCost);
+    public final ConfigFloat projectileDeflectionMultiplier = f(25, 0, "projectile_deflection_multiplier", Comments.projectileDeflectionMultiplier);
+    public final ConfigInt quickSwimmingConsumption = i(5, 0, "quick_swimming_consumption", Comments.quickSwimmingConsumption);
+    public final ConfigFloat leggingsResistanceMultiplier = f(5, 0, "leggings_resistance_multiplier", Comments.leggingsResistanceMultiplier);
 
-    public final ConfigInt armorsInvalidateDamage = i(20, 0, "armors_invalidate_damage_gas_cost", Comments.armorsInvalidateDamage);
+    public final ConfigGroup airtightBoots = group(0, "airtight_boots", "Airtight Boots");
+    public final ConfigFloat bootsResistanceMultiplier = f(5, 0, "boots_resistance_multiplier", Comments.bootsResistanceMultiplier);
 
     @Override
     public @NotNull String getName() {
@@ -39,26 +46,32 @@ public class CCBEquipments extends ConfigBase {
     }
 
     private static class Comments {
-        static String gasCostPerShot = "The amount of gas consumed by the Airtight Cannon for each shot.";
+        static String perShotConsumption = "The amount of gas consumed by the Airtight Cannon per shot.";
 
-        static String gasCostPerUse = "The amount of gas consumed by the Airtight Extend Arm for each use";
+        static String perUseConsumption = "The amount of gas consumed by the Airtight Extend Arm per use";
 
-        static String gasCostPerBlock = "The amount of gas consumed by the Airtight Handheld Drill for each block mined.";
-        static String gasCostPerLiquidBlock = "The amount of gas consumed by the Airtight Handheld Drill for each liquid block replaced.";
-        static String gasCostPerEntityHit = "The amount of gas consumed by the Airtight Handheld Drill each time it attacks an entity.";
-        static String silkTouchGasCostMultiplier = "The gas consumption multiplier of the Airtight Handheld Drill with the Silk Touch Upgrade enabled.";
-        static String magnetGasCostMultiplier = "The gas consumption multiplier of the Airtight Handheld Drill with the Magnet Upgrade enabled.";
-        static String experienceConversionGasCostMultiplier = "The gas consumption multiplier of the Airtight Handheld Drill with the Experience Conversion Upgrade enabled.";
+        static String perBlockConsumption = "The amount of gas consumed by the Airtight Handheld Drill per block mined.";
+        static String perEntityHitConsumption = "The amount of gas consumed by the Airtight Handheld Drill each time it hits an entity.";
+        static String silkTouchMultiplier = "The gas consumption multiplier of the Airtight Handheld Drill while the Silk Touch Upgrade is active.";
+        static String liquidReplacementMultiplier = "The gas consumption multiplier of the Airtight Handheld Drill while the Liquid Replacement Upgrade is active.";
+        static String magnetMultiplier = "The gas consumption multiplier of the Airtight Handheld Drill while the Magnet Upgrade is active.";
+        static String experienceConversionMultiplier = "The gas consumption multiplier of the Airtight Handheld Drill while the Experience Conversion Upgrade is active.";
 
-        static String armorsInvalidateDamage = "The amount of gas consumed by Airtight Armors to invalidate each point of damage.";
+        static String effectsProtectionMultiplier = "The gas consumption multiplier of the Airtight Helmet while the Effects Protection Upgrade is active.";
+        static String waterBreathingConsumption = "The amount of gas consumed per second by the Airtight Helmet while the Water Breathing Upgrade is active and the wearer is underwater.";
+        static String visionConsumption = "The amount of gas consumed per second by the Airtight Helmet while the Vision Upgrade is active.";
+        static String helmetResistanceMultiplier = "The gas consumption multiplier of the Airtight Helmet while the Resistance Upgrade is active and the wearer takes damage that does not bypass the Resistance effect.";
 
-        static String effectsProtectionGasCostMultiplier = "The gas consumption multiplier of the Airtight Helmet with the Effects Protection Upgrade enabled.";
-        static String waterBreathingGasCost = "The amount of gas consumed per second by the Airtight Helmet when breathing underwater.";
+        static String elytraConsumption = "The amount of gas consumed per second by the Airtight Chestplate while the Elytra Upgrade is active and the wearer is gliding.";
+        static String creativeFlightConsumption = "The amount of gas consumed per second by the Airtight Chestplate while the Creative Flight Upgrade is active and the wearer is flying.";
+        static String regenerationConsumption = "The amount of gas consumed per second by the Airtight Chestplate while the Regeneration Upgrade is active and the wearer is regenerating health.";
+        static String invisibilityConsumption = "The amount of gas consumed per second by the Airtight Chestplate while the Invisibility Upgrade is active.";
+        static String chestplateResistanceMultiplier = "The gas consumption multiplier of the Airtight Chestplate while the Resistance Upgrade is active and the wearer takes damage that does not bypass the Resistance effect.";
 
-        static String elytraGasCost = "The amount of gas consumed per second by the Airtight Chestplate when gliding midair.";
-        static String creativeFlightGasCost = "The amount of gas consumed per second by the Airtight Chestplate when activating creative flight.";
-        static String regenerationGasCost = "The amount of gas consumed per second by the Airtight Chestplate when restoring the health.";
+        static String projectileDeflectionMultiplier = "The gas consumption multiplier of the Airtight Leggings while the Projectile Deflection Upgrade is active and the wearer deflects a projectile.";
+        static String quickSwimmingConsumption = "The amount of gas consumed per second by the Airtight Leggings while the Quick Swimming Upgrade is active and the wearer is underwater.";
+        static String leggingsResistanceMultiplier = "The gas consumption multiplier of the Airtight Leggings while the Resistance Upgrade is active and the wearer takes damage that does not bypass the Resistance effect.";
 
-        static String projectileDeflectionGasCost = "The amount of gas consumed by the Airtight Leggings when deflecting a projectile.";
+        static String bootsResistanceMultiplier = "The gas consumption multiplier of the Airtight Boots while the Resistance Upgrade is active and the wearer takes damage that does not bypass the Resistance effect.";
     }
 }

@@ -4,7 +4,7 @@ import com.simibubi.create.content.contraptions.MountedStorageManager;
 import com.simibubi.create.content.contraptions.minecart.TrainCargoManager;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorageWrapper;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageWrapper;
 import net.ty.createcraftedbeginning.mixin.accessor.MountedStorageManagerAccessor;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;

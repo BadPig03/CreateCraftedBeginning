@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.airtightpipe;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.model.BakedModelWrapperWithData;
 import net.createmod.catnip.data.Iterate;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
@@ -16,17 +17,19 @@ import net.neoforged.neoforge.client.model.data.ModelData;
 import net.neoforged.neoforge.client.model.data.ModelData.Builder;
 import net.neoforged.neoforge.client.model.data.ModelProperty;
 import net.neoforged.neoforge.common.util.TriState;
-import net.ty.createcraftedbeginning.api.gas.gases.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.GasTransportBehaviour.AttachmentTypes;
-import net.ty.createcraftedbeginning.api.gas.gases.GasTransportBehaviour.AttachmentTypes.ComponentPartials;
+import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour.AttachmentTypes;
+import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour.AttachmentTypes.ComponentPartials;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
     private static final ModelProperty<PipeModelData> PIPE_PROPERTY = new ModelProperty<>();
     private final boolean ambientOcclusion;
@@ -37,16 +40,13 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
     }
 
     @Contract("_ -> new")
-    public static @NotNull AirtightPipeAttachmentModel withAO(BakedModel template) {
+    public static AirtightPipeAttachmentModel withAO(BakedModel template) {
         return new AirtightPipeAttachmentModel(template, true);
     }
 
     private static void addQuads(List<BakedQuad> quads, BlockState state, Direction side, RandomSource rand, ModelData data, PipeModelData pipeData, RenderType renderType) {
         for (Direction direction : Iterate.directions) {
             AttachmentTypes type = pipeData.getAttachment(direction);
-            if (type == null) {
-                continue;
-            }
 
             for (ComponentPartials partial : type.partials) {
                 quads.addAll(CCBPartialModels.AIRTIGHT_PIPE_ATTACHMENTS.get(partial).get(direction).get().getQuads(state, side, rand, data, renderType));
@@ -73,12 +73,12 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
     }
 
     @Override
-    public @NotNull TriState useAmbientOcclusion(@NotNull BlockState state, @NotNull ModelData data, @NotNull RenderType renderType) {
+    public TriState useAmbientOcclusion(BlockState state, ModelData data, RenderType renderType) {
         return ambientOcclusion ? TriState.TRUE : TriState.FALSE;
     }
 
     @Override
-    public @NotNull List<BakedQuad> getQuads(BlockState state, Direction side, @NotNull RandomSource rand, @NotNull ModelData data, RenderType renderType) {
+    public List<BakedQuad> getQuads(BlockState state, Direction side, RandomSource rand, ModelData data, RenderType renderType) {
         List<BakedQuad> quads = super.getQuads(state, side, rand, data, renderType);
         if (data.has(PIPE_PROPERTY)) {
             PipeModelData pipeData = data.get(PIPE_PROPERTY);
@@ -91,7 +91,7 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
     }
 
     @Override
-    public @NotNull ChunkRenderTypeSet getRenderTypes(@NotNull BlockState state, @NotNull RandomSource rand, @NotNull ModelData data) {
+    public ChunkRenderTypeSet getRenderTypes(BlockState state, RandomSource rand, ModelData data) {
         List<ChunkRenderTypeSet> set = new ArrayList<>();
         set.add(super.getRenderTypes(state, rand, data));
 
@@ -122,12 +122,12 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
             Arrays.fill(attachments, AttachmentTypes.NONE);
         }
 
-        public void putAttachment(@NotNull Direction face, AttachmentTypes rim) {
+        public void putAttachment(Direction face, AttachmentTypes rim) {
             attachments[face.get3DDataValue()] = rim;
         }
 
         @Contract(pure = true)
-        public AttachmentTypes getAttachment(@NotNull Direction face) {
+        public AttachmentTypes getAttachment(Direction face) {
             return attachments[face.get3DDataValue()];
         }
     }

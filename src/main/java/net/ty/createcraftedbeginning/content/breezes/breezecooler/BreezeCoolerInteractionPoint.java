@@ -4,21 +4,25 @@ import com.simibubi.create.content.kinetics.mechanicalArm.AllArmInteractionPoint
 import com.simibubi.create.content.kinetics.mechanicalArm.ArmBlockEntity;
 import com.simibubi.create.content.kinetics.mechanicalArm.ArmInteractionPoint;
 import com.simibubi.create.content.kinetics.mechanicalArm.ArmInteractionPointType;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class BreezeCoolerInteractionPoint extends DepositOnlyArmInteractionPoint {
     public BreezeCoolerInteractionPoint(ArmInteractionPointType type, Level level, BlockPos pos, BlockState state) {
         super(type, level, pos, state);
     }
 
     @Override
-    public ItemStack insert(ArmBlockEntity armBlockEntity, @NotNull ItemStack stack, boolean simulate) {
+    public ItemStack insert(ArmBlockEntity armBlockEntity, ItemStack stack, boolean simulate) {
         ItemStack input = stack.copy();
         ItemStack remainder = BreezeCoolerBlock.tryInsert(cachedState, level, pos, input, false, false, simulate).getObject();
         if (input.isEmpty()) {

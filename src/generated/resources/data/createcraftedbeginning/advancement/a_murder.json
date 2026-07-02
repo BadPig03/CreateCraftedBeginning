@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:hermetic_seal_600",
+  "parent": "createcraftedbeginning:gaseous_variations",
   "criteria": {
     "0": {
       "trigger": "createcraftedbeginning:a_murder_builtin"

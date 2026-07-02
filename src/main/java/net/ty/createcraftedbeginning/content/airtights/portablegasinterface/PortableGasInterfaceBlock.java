@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.content.airtights.portablegasinterface;
 
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.WrenchableDirectionalBlock;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.LivingEntity;
@@ -17,41 +18,44 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.data.CCBShapes;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PortableGasInterfaceBlock extends WrenchableDirectionalBlock implements IBE<PortableGasInterfaceBlockEntity> {
     public PortableGasInterfaceBlock(Properties properties) {
         super(properties);
     }
 
     @Override
-    public void neighborChanged(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Block neighborBlock, @NotNull BlockPos neighborPos, boolean moving) {
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block neighborBlock, BlockPos neighborPos, boolean moving) {
         withBlockEntityDo(level, pos, PortableGasInterfaceBlockEntity::neighbourChanged);
     }
 
     @Override
-    public boolean hasAnalogOutputSignal(@NotNull BlockState state) {
+    public boolean hasAnalogOutputSignal(BlockState state) {
         return true;
     }
 
     @Override
-    public int getAnalogOutputSignal(@NotNull BlockState blockState, @NotNull Level level, @NotNull BlockPos pos) {
+    public int getAnalogOutputSignal(BlockState blockState, Level level, BlockPos pos) {
         return getBlockEntityOptional(level, pos).map(be -> be.isConnected() ? 15 : 0).orElse(0);
     }
 
     @Override
-    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos, @NotNull CollisionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return CCBShapes.PORTABLE_GAS_INTERFACE.get(state.getValue(FACING));
     }
 
     @Override
-    public void setPlacedBy(@NotNull Level level, @NotNull BlockPos blockPos, @NotNull BlockState state, LivingEntity entity, @NotNull ItemStack itemStack) {
+    public void setPlacedBy(Level level, BlockPos blockPos, BlockState state, LivingEntity entity, ItemStack itemStack) {
         super.setPlacedBy(level, blockPos, state, entity, itemStack);
         CCBAdvancementBehaviour.setPlacedBy(level, blockPos, entity);
     }
 
     @Override
-    public BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState state = super.getStateForPlacement(context);
         if (state == null) {
             return null;

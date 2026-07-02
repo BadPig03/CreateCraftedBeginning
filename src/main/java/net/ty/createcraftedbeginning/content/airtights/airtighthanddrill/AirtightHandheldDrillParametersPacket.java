@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.content.airtights.airtighthanddrill;
 
 import io.netty.buffer.ByteBuf;
 import net.createmod.catnip.net.base.ServerboundPacketPayload;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.codec.StreamCodec;
@@ -11,13 +12,17 @@ import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.templat
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBPackets;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public record AirtightHandheldDrillParametersPacket(AirtightHandheldDrillMiningTemplates template, BlockPos sizeParams, Direction direction, BlockPos relativeParams) implements ServerboundPacketPayload {
+
     public static final StreamCodec<ByteBuf, AirtightHandheldDrillParametersPacket> STREAM_CODEC = StreamCodec.composite(AirtightHandheldDrillMiningTemplates.STREAM_CODEC, AirtightHandheldDrillParametersPacket::template, BlockPos.STREAM_CODEC, AirtightHandheldDrillParametersPacket::sizeParams, Direction.STREAM_CODEC, AirtightHandheldDrillParametersPacket::direction, BlockPos.STREAM_CODEC, AirtightHandheldDrillParametersPacket::relativeParams, AirtightHandheldDrillParametersPacket::new);
 
     @Override
-    public void handle(@NotNull ServerPlayer player) {
+    public void handle(ServerPlayer player) {
         ItemStack drill = player.getMainHandItem();
         if (!drill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
             return;

@@ -1,17 +1,11 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightarmors;
 
-import net.minecraft.util.Mth;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.api.gas.armorhandlers.AirtightArmorsHandler;
-import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerConsumers;
-import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerSuppliers;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.upgrades.AirtightBootsUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.upgrades.BootsResistanceUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.AirtightChestplateUpgradeRegistry;
@@ -21,56 +15,60 @@ import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthe
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.AirtightLeggingsUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.LeggingsResistanceUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.AirtightHandheldDrillUpgradeRegistry;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
-import java.util.function.Supplier;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public final class AirtightArmorsUtils {
+    private static final int DURATION_THRESHOLD = 30;
+
     private AirtightArmorsUtils() {
     }
 
-    private static final int DURATION_THRESHOLD = 30;
-
-    public static List<AirtightUpgradeStatus> getDefaultUpgradeList(@NotNull ItemStack item) {
+    public static List<AirtightUpgradeStatus> getDefaultUpgradeList(ItemStack item) {
         if (item.is(CCBItems.AIRTIGHT_HELMET)) {
             return AirtightHelmetUpgradeRegistry.getDefaultUpgradeList();
-        } else if (item.is(CCBItems.AIRTIGHT_CHESTPLATE)) {
+        }
+        else if (item.is(CCBItems.AIRTIGHT_CHESTPLATE)) {
             return AirtightChestplateUpgradeRegistry.getDefaultUpgradeList();
-        } else if (item.is(CCBItems.AIRTIGHT_LEGGINGS)) {
+        }
+        else if (item.is(CCBItems.AIRTIGHT_LEGGINGS)) {
             return AirtightLeggingsUpgradeRegistry.getDefaultUpgradeList();
-        } else if (item.is(CCBItems.AIRTIGHT_BOOTS)) {
+        }
+        else if (item.is(CCBItems.AIRTIGHT_BOOTS)) {
             return AirtightBootsUpgradeRegistry.getDefaultUpgradeList();
-        } else if (item.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
+        }
+        else if (item.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
             return AirtightHandheldDrillUpgradeRegistry.getDefaultUpgradeList();
         }
-        return Collections.emptyList();
+        return List.of();
     }
 
-    public static boolean canInvalidateDamage(@NotNull Player player, float amount, Supplier<Boolean> supplier) {
-        if (!CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
-            return false;
+    public static List<AirtightUpgrade> getAllUpgrades(ItemStack item) {
+        if (item.is(CCBItems.AIRTIGHT_HELMET)) {
+            return AirtightHelmetUpgradeRegistry.getAll();
         }
-
-        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
-        if (gasContent.isEmpty()) {
-            return false;
+        else if (item.is(CCBItems.AIRTIGHT_CHESTPLATE)) {
+            return AirtightChestplateUpgradeRegistry.getAll();
         }
-
-        Gas gasType = gasContent.getGasType();
-        AirtightArmorsHandler armorsHandler = AirtightArmorsHandler.REGISTRY.get(gasType);
-        if (armorsHandler == null) {
-            return false;
+        else if (item.is(CCBItems.AIRTIGHT_LEGGINGS)) {
+            return AirtightLeggingsUpgradeRegistry.getAll();
         }
-
-        int gasConsumption = Mth.ceil(CCBConfig.server().equipments.armorsInvalidateDamage.get() * amount * armorsHandler.getConsumptionMultiplier()[3]);
-        return CanisterContainerConsumers.interactContainer(player, gasType, gasConsumption, supplier);
+        else if (item.is(CCBItems.AIRTIGHT_BOOTS)) {
+            return AirtightBootsUpgradeRegistry.getAll();
+        }
+        else if (item.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
+            return AirtightHandheldDrillUpgradeRegistry.getAll();
+        }
+        return List.of();
     }
 
-    public static boolean isEntireArmoredUp(@NotNull Player player) {
+    public static boolean isEntireArmoredUp(Player player) {
         ItemStack helmet = player.getItemBySlot(EquipmentSlot.HEAD);
         if (!helmet.is(CCBItems.AIRTIGHT_HELMET)) {
             return false;
@@ -90,12 +88,7 @@ public final class AirtightArmorsUtils {
         return boots.is(CCBItems.AIRTIGHT_BOOTS);
     }
 
-    public static void applyResistance(@NotNull Player player) {
-        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
-        if (gasContent.isEmpty()) {
-            return;
-        }
-
+    public static void applyResistance(Player player) {
         int resistanceLevel = getResistanceLevel(player);
         if (resistanceLevel < 0) {
             return;
@@ -109,29 +102,20 @@ public final class AirtightArmorsUtils {
         player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, DURATION_THRESHOLD, resistanceLevel, true, false));
     }
 
-    public static int getResistanceLevel(@NotNull Player player) {
+    private static int getResistanceLevel(Player player) {
         int level = -1;
-        ItemStack helmet = player.getItemBySlot(EquipmentSlot.HEAD);
-        if (helmet.is(CCBItems.AIRTIGHT_HELMET) && HelmetResistanceUpgrade.INSTANCE.isEnabled(helmet)) {
+        if (HelmetResistanceUpgrade.INSTANCE.canApply(player)) {
             level++;
         }
-
-        ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
-        if (chestplate.is(CCBItems.AIRTIGHT_CHESTPLATE) && ChestplateResistanceUpgrade.INSTANCE.isEnabled(chestplate)) {
+        if (ChestplateResistanceUpgrade.INSTANCE.canApply(player)) {
             level++;
         }
-
-        ItemStack leggings = player.getItemBySlot(EquipmentSlot.LEGS);
-        if (leggings.is(CCBItems.AIRTIGHT_LEGGINGS) && LeggingsResistanceUpgrade.INSTANCE.isEnabled(leggings)) {
+        if (LeggingsResistanceUpgrade.INSTANCE.canApply(player)) {
             level++;
         }
-
-        ItemStack boots = player.getItemBySlot(EquipmentSlot.FEET);
-        if (boots.is(CCBItems.AIRTIGHT_BOOTS) && BootsResistanceUpgrade.INSTANCE.isEnabled(boots)) {
+        if (BootsResistanceUpgrade.INSTANCE.canApply(player)) {
             level++;
         }
-
         return level;
     }
-
 }

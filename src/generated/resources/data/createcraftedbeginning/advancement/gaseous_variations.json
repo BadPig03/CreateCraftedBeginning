@@ -1,0 +1,37 @@
+{
+  "parent": "createcraftedbeginning:plywood",
+  "criteria": {
+    "0": {
+      "trigger": "createcraftedbeginning:gaseous_variations_builtin"
+    }
+  },
+  "display": {
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.gaseous_variations.desc"
+    },
+    "frame": "goal",
+    "hidden": true,
+    "icon": {
+      "components": {
+        "createcraftedbeginning:gas_virtual_item_color": -1509948,
+        "createcraftedbeginning:gas_virtual_item_type": {
+          "amount": 1,
+          "id": "createcraftedbeginning:spore_air"
+        },
+        "minecraft:item_name": "{\"translate\":\"gas.createcraftedbeginning.spore_air\"}"
+      },
+      "count": 1,
+      "id": "createcraftedbeginning:gas_virtual_item"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.gaseous_variations"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

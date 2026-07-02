@@ -8,6 +8,9 @@
   "results": [
     {
       "id": "minecraft:obsidian"
+    },
+    {
+      "id": "minecraft:bucket"
     }
   ]
 }

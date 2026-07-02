@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:plywood",
+  "parent": "createcraftedbeginning:gas_filtration",
   "criteria": {
     "0": {
       "conditions": {

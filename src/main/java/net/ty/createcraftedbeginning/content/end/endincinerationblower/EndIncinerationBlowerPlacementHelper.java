@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.content.end.endincinerationblower;
 
 import net.createmod.catnip.placement.IPlacementHelper;
 import net.createmod.catnip.placement.PlacementOffset;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -10,26 +11,28 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Predicate;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EndIncinerationBlowerPlacementHelper implements IPlacementHelper {
     @Contract(pure = true)
     @Override
-    public @NotNull Predicate<ItemStack> getItemPredicate() {
+    public Predicate<ItemStack> getItemPredicate() {
         return CCBBlocks.END_INCINERATION_BLOWER_BLOCK::isIn;
     }
 
     @Contract(pure = true)
     @Override
-    public @NotNull Predicate<BlockState> getStatePredicate() {
+    public Predicate<BlockState> getStatePredicate() {
         return CCBBlocks.END_CASING_BLOCK::has;
     }
 
     @Contract(pure = true)
     @Override
-    public @NotNull PlacementOffset getOffset(@NotNull Player player, @NotNull Level level, @NotNull BlockState state, @NotNull BlockPos pos, @NotNull BlockHitResult ray) {
+    public PlacementOffset getOffset(Player player, Level level, BlockState state, BlockPos pos, BlockHitResult ray) {
         BlockPos newPos = pos.above();
         if (!level.getBlockState(newPos).canBeReplaced()) {
             return PlacementOffset.fail();

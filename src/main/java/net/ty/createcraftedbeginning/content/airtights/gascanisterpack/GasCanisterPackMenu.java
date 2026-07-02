@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.gascanisterpack;
 
 import com.simibubi.create.foundation.gui.menu.MenuBase;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.HotbarManager;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -15,14 +16,17 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
-import net.ty.createcraftedbeginning.api.gas.cansiters.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackOverrides.GasCanisterPackType;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class GasCanisterPackMenu extends MenuBase<ItemStack> {
     public static final int I_SLOT_INDEX = SlotType.I.getIndex();
     public static final int II_SLOT_INDEX = SlotType.II.getIndex();
@@ -57,7 +61,7 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
     }
 
     @Override
-    protected void initAndReadInventory(@NotNull ItemStack pack) {
+    protected void initAndReadInventory(ItemStack pack) {
         if (!(pack.getCapability(GasHandler.ITEM) instanceof GasCanisterPackContainerContents packContents)) {
             return;
         }
@@ -84,7 +88,7 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
     }
 
     @Override
-    protected void saveData(@NotNull ItemStack pack) {
+    protected void saveData(ItemStack pack) {
         if (!(pack.getCapability(GasHandler.ITEM) instanceof GasCanisterPackContainerContents packContents)) {
             return;
         }
@@ -114,7 +118,7 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
     }
 
     @Override
-    public @NotNull ItemStack quickMoveStack(@NotNull Player player, int slotIndex) {
+    public ItemStack quickMoveStack(Player player, int slotIndex) {
         Slot slot = slots.get(slotIndex);
         if (!slot.hasItem()) {
             return ItemStack.EMPTY;
@@ -145,7 +149,7 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
     }
 
     @Override
-    public void clicked(int slotId, int dragType, @NotNull ClickType clickType, @NotNull Player player) {
+    public void clicked(int slotId, int dragType, ClickType clickType, Player player) {
         if (slotId == playerInventory.selected + PLAYER_INVENTORY_SLOTS - HotbarManager.NUM_HOTBAR_GROUPS && clickType != ClickType.THROW) {
             return;
         }
@@ -155,18 +159,18 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
     }
 
     @Override
-    public boolean canTakeItemForPickAll(@NotNull ItemStack stack, @NotNull Slot slotIn) {
+    public boolean canTakeItemForPickAll(ItemStack stack, Slot slotIn) {
         return slotIn.container == playerInventory;
     }
 
     @Override
-    public void setItem(int slotId, int stateId, @NotNull ItemStack stack) {
+    public void setItem(int slotId, int stateId, ItemStack stack) {
         super.setItem(slotId, stateId, stack);
         saveData(contentHolder);
     }
 
     @Override
-    public boolean canDragTo(@NotNull Slot slotIn) {
+    public boolean canDragTo(Slot slotIn) {
         return slotIn.container == playerInventory;
     }
 
@@ -208,15 +212,15 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
             this.index = index;
         }
 
-        private static @NotNull SlotItemHandler getSlot(IItemHandler itemHandler, int index, int x) {
+        private static SlotItemHandler getSlot(IItemHandler itemHandler, int index, int x) {
             return new SlotItemHandler(itemHandler, index, x, SLOT_Y) {
                 @Override
-                public boolean mayPlace(@NotNull ItemStack stack) {
+                public boolean mayPlace(ItemStack stack) {
                     return stack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents;
                 }
 
                 @Override
-                public int getMaxStackSize(@NotNull ItemStack stack) {
+                public int getMaxStackSize(ItemStack stack) {
                     return 1;
                 }
             };

@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.api.gas.gases;
 
 import net.createmod.catnip.data.Iterate;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -9,12 +10,15 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.ty.createcraftedbeginning.api.gas.gases.IGasTankMultiBlockEntityContainer.iGas;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTank;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTankMultiBlockEntityContainer;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTankMultiBlockEntityContainer.iGas;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,15 +28,17 @@ import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class GasConnectivityHandler {
-    public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> void formMulti(T be) {
+    public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> void formMulti(T be, Level level) {
         SearchCache<T> cache = new SearchCache<>();
         List<T> frontier = new ArrayList<>();
         frontier.add(be);
-        formMulti(be.getType(), be.getLevel(), cache, frontier);
+        formMulti(be.getType(), level, cache, frontier);
     }
 
-    private static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> void formMulti(BlockEntityType<?> type, BlockGetter level, SearchCache<T> cache, @NotNull List<T> frontier) {
+    private static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> void formMulti(BlockEntityType<?> type, BlockGetter level, SearchCache<T> cache, List<T> frontier) {
         PriorityQueue<Pair<Integer, T>> creationQueue = makeCreationQueue();
         Set<BlockPos> visited = new HashSet<>();
         Axis mainAxis = frontier.getFirst().getMainConnectionAxis();
@@ -104,7 +110,7 @@ public class GasConnectivityHandler {
         }
     }
 
-    public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> boolean isConnected(@NotNull BlockGetter level, BlockPos pos, BlockPos other) {
+    public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> boolean isConnected(BlockGetter level, BlockPos pos, BlockPos other) {
         T one = checked(level.getBlockEntity(pos));
         T two = checked(level.getBlockEntity(other));
         return one != null && two != null && one.getController().equals(two.getController());
@@ -112,11 +118,11 @@ public class GasConnectivityHandler {
 
     @Nullable
     @SuppressWarnings("unchecked")
-    private static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> T checked(BlockEntity be) {
+    private static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> T checked(@Nullable BlockEntity be) {
         return be instanceof IGasTankMultiBlockEntityContainer ? (T) be : null;
     }
 
-    private static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> int tryToFormNewMulti(@NotNull T be, SearchCache<T> cache, boolean simulate) {
+    private static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> int tryToFormNewMulti(T be, SearchCache<T> cache, boolean simulate) {
         int bestWidth = 1;
         int bestAmount = -1;
         if (!be.isController()) {
@@ -154,7 +160,7 @@ public class GasConnectivityHandler {
         return bestAmount;
     }
 
-    private static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> int tryToFormNewMultiOfWidth(@NotNull T be, int width, SearchCache<T> cache, boolean simulate) {
+    private static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> int tryToFormNewMultiOfWidth(T be, int width, SearchCache<T> cache, boolean simulate) {
         int amount = 0;
         int height = 0;
         BlockEntityType<?> type = be.getType();
@@ -181,7 +187,7 @@ public class GasConnectivityHandler {
                         case Y -> origin.offset(xOffset, yOffset, zOffset);
                         case Z -> origin.offset(xOffset, zOffset, yOffset);
                     };
-                    Optional<T> part = cache.getOrCache(type, level, pos);
+                    Optional<@NotNull T> part = cache.getOrCache(type, level, pos);
                     if (part.isEmpty()) {
                         break Search;
                     }
@@ -308,7 +314,7 @@ public class GasConnectivityHandler {
         splitMultiAndInvalidate(be, null);
     }
 
-    private static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> void splitMultiAndInvalidate(@NotNull T be, @Nullable SearchCache<T> cache) {
+    private static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> void splitMultiAndInvalidate(T be, @Nullable SearchCache<T> cache) {
         Level level = be.getLevel();
         if (level == null) {
             return;
@@ -386,20 +392,19 @@ public class GasConnectivityHandler {
         }
     }
 
-    @Nullable
-    public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> T partAt(BlockEntityType<?> type, @NotNull BlockGetter level, BlockPos pos) {
+    public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> @Nullable T partAt(BlockEntityType<?> type, BlockGetter level, BlockPos pos) {
         BlockEntity be = level.getBlockEntity(pos);
         return be != null && be.getType() == type && !be.isRemoved() ? checked(be) : null;
     }
 
     private static class SearchCache<T extends BlockEntity & IGasTankMultiBlockEntityContainer> {
-        Map<BlockPos, Optional<T>> controllerMap;
+        Map<BlockPos, Optional<@NotNull T>> controllerMap;
 
         public SearchCache() {
             controllerMap = new HashMap<>();
         }
 
-        Optional<T> getOrCache(BlockEntityType<?> type, BlockGetter level, BlockPos pos) {
+        Optional<@NotNull T> getOrCache(BlockEntityType<?> type, BlockGetter level, BlockPos pos) {
             if (hasVisited(pos)) {
                 return controllerMap.get(pos);
             }

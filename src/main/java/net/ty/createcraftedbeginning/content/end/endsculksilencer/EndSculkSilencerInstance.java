@@ -1,13 +1,16 @@
 package net.ty.createcraftedbeginning.content.end.endsculksilencer;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EndSculkSilencerInstance {
     public BlockPos blockPos;
     public String dimension;
@@ -21,7 +24,7 @@ public class EndSculkSilencerInstance {
         uuid = calculateUUID(blockPos, dimension);
     }
 
-    public static @NotNull UUID calculateUUID(@NotNull BlockPos blockPos, @NotNull String dimension) {
+    public static UUID calculateUUID(BlockPos blockPos, String dimension) {
         byte[] nameBytes = dimension.getBytes(StandardCharsets.UTF_8);
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES + nameBytes.length);
         buffer.putLong(BlockPos.asLong(blockPos.getX(), blockPos.getY(), blockPos.getZ()));
@@ -29,7 +32,7 @@ public class EndSculkSilencerInstance {
         return UUID.nameUUIDFromBytes(buffer.array());
     }
 
-    public static boolean isWithinChunkRange(@NotNull BlockPos soundPos, @NotNull BlockPos silencerPos, short range) {
+    public static boolean isWithinChunkRange(BlockPos soundPos, BlockPos silencerPos, short range) {
         return Mth.abs((soundPos.getX() >> 4) - (silencerPos.getX() >> 4)) < range && Mth.abs((soundPos.getZ() >> 4) - (silencerPos.getZ() >> 4)) < range;
     }
 }

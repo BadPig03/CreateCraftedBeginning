@@ -1,13 +1,13 @@
 package net.ty.createcraftedbeginning.advancement;
 
 import com.tterrag.registrate.util.entry.ItemProviderEntry;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementType;
 import net.minecraft.advancements.Criterion;
 import net.minecraft.advancements.critereon.InventoryChangeTrigger.TriggerInstance;
 import net.minecraft.advancements.critereon.ItemPredicate;
-import net.minecraft.advancements.critereon.ItemUsedOnLocationTrigger;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -17,18 +17,20 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
-import net.minecraft.world.level.block.Block;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
-@SuppressWarnings("unused")
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBAdvancement {
     private static final ResourceLocation BACKGROUND = CreateCraftedBeginning.asResource("textures/gui/advancements.png");
     private final Advancement.Builder advancementBuilder = Advancement.Builder.advancement();
@@ -41,7 +43,7 @@ public class CCBAdvancement {
     private String title;
     private String description;
 
-    public CCBAdvancement(String id, @NotNull UnaryOperator<Builder> operator) {
+    public CCBAdvancement(String id, UnaryOperator<Builder> operator) {
         this.id = id;
         operator.apply(builder);
         if (!builder.externalTrigger) {
@@ -61,11 +63,10 @@ public class CCBAdvancement {
 
         AdvancementHolder advancement = serverPlayer.getServer().getAdvancements().get(CreateCraftedBeginning.asResource(id));
         return advancement == null || serverPlayer.getAdvancements().getOrStartProgress(advancement).isDone();
-
     }
 
-    public void awardTo(Player player) {
-        if (!(player instanceof ServerPlayer serverPlayer) || builtinTrigger == null) {
+    public void awardTo(@Nullable Player player) {
+        if (!(player instanceof ServerPlayer serverPlayer) || builtinTrigger == null || isAlreadyAwardedTo(player)) {
             return;
         }
 
@@ -85,16 +86,16 @@ public class CCBAdvancement {
     }
 
     @Contract(pure = true)
-    private @NotNull String titleKey() {
+    private String titleKey() {
         return "advancement." + CreateCraftedBeginning.MOD_ID + '.' + id;
     }
 
     @Contract(pure = true)
-    private @NotNull String descriptionKey() {
+    private String descriptionKey() {
         return titleKey() + ".desc";
     }
 
-    public void provideLang(@NotNull BiConsumer<String, String> consumer) {
+    public void provideLang(BiConsumer<String, String> consumer) {
         consumer.accept(titleKey(), title);
         consumer.accept(descriptionKey(), description);
     }
@@ -138,8 +139,8 @@ public class CCBAdvancement {
             return this;
         }
 
-        public Builder icon(@NotNull ItemProviderEntry<?, ?> item) {
-            return icon(item.asStack());
+        public Builder icon(ItemProviderEntry<?, ?> item) {
+            return icon(new ItemStack(item));
         }
 
         public Builder icon(ItemStack item) {
@@ -166,10 +167,6 @@ public class CCBAdvancement {
             return this;
         }
 
-        public Builder whenBlockPlaced(Block block) {
-            return externalTrigger(ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(block));
-        }
-
         public Builder externalTrigger(Criterion<?> trigger) {
             advancementBuilder.addCriterion(String.valueOf(keyIndex), trigger);
             externalTrigger = true;
@@ -178,11 +175,11 @@ public class CCBAdvancement {
         }
 
         public Builder whenIconCollected() {
-            return externalTrigger(TriggerInstance.hasItems(icon.getItem()));
+            return whenItemCollected(icon.getItem());
         }
 
-        public Builder whenItemCollected(@NotNull ItemProviderEntry<?, ?> item) {
-            return whenItemCollected(item.asStack().getItem());
+        public Builder whenItemCollected(ItemProviderEntry<?, ?> item) {
+            return whenItemCollected(item.asItem());
         }
 
         public Builder whenItemCollected(ItemLike itemProvider) {
@@ -191,6 +188,13 @@ public class CCBAdvancement {
 
         public Builder whenItemCollected(TagKey<Item> tag) {
             return externalTrigger(TriggerInstance.hasItems(ItemPredicate.Builder.item().of(tag).build()));
+        }
+
+        public Builder whenItemsCollected(List<ItemProviderEntry<?, ?>> items) {
+            for (var item: items) {
+                whenItemCollected(item);
+            }
+            return this;
         }
 
         public Builder awardedForFree() {

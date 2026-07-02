@@ -6,6 +6,7 @@ import com.simibubi.create.foundation.data.SimpleDatagenIngredient;
 import com.simibubi.create.foundation.data.recipe.Mods;
 import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.NonNullList;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.resources.ResourceLocation;
@@ -26,17 +27,18 @@ import net.neoforged.neoforge.fluids.crafting.FluidIngredient;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.GasIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.SizedGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.reactorkettle.TemperatureCondition;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipe.Factory;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("unused")
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class ProcessingWithGasRecipeBuilder<P extends ProcessingWithGasRecipeParams, R extends ProcessingWithGasRecipe<?, P>, S extends ProcessingWithGasRecipeBuilder<P, R, S>> {
     protected ResourceLocation recipeId;
     protected Factory<P, R> factory;
@@ -155,7 +157,7 @@ public abstract class ProcessingWithGasRecipeBuilder<P extends ProcessingWithGas
         return require(Ingredient.of(item));
     }
 
-    public S require(@NotNull ICustomIngredient ingredient) {
+    public S require(ICustomIngredient ingredient) {
         params.ingredients.add(ingredient.toVanilla());
         return self();
     }
@@ -165,7 +167,7 @@ public abstract class ProcessingWithGasRecipeBuilder<P extends ProcessingWithGas
         return self();
     }
 
-    public S require(@NotNull FlowingFluid fluid, int amount) {
+    public S require(FlowingFluid fluid, int amount) {
 		return require(SizedFluidIngredient.of(fluid.getSource(), amount));
 	}
 
@@ -220,7 +222,7 @@ public abstract class ProcessingWithGasRecipeBuilder<P extends ProcessingWithGas
         return output(1, output);
     }
 
-    public S output(float chance, @NotNull Mods mod, String id, int amount) {
+    public S output(float chance, Mods mod, String id, int amount) {
         return output(new ProcessingOutput(mod.asResource(id), amount, chance));
     }
 
@@ -232,7 +234,7 @@ public abstract class ProcessingWithGasRecipeBuilder<P extends ProcessingWithGas
         return output(new ProcessingOutput(registryName, amount, chance));
     }
 
-    public S output(@NotNull Mods mod, String id) {
+    public S output(Mods mod, String id) {
         return output(1, mod.asResource(id), 1);
     }
 

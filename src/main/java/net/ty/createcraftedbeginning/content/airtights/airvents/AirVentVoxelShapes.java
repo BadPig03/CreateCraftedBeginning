@@ -1,13 +1,17 @@
 package net.ty.createcraftedbeginning.content.airtights.airvents;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
 import java.util.Map;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public final class AirVentVoxelShapes {
     private static final VoxelShape NORTH_FACE = Shapes.box(0, 0, 0, 1, 1, 0.000125);
     private static final VoxelShape SOUTH_FACE = Shapes.box(0, 0, 0.999875, 1, 1, 1);

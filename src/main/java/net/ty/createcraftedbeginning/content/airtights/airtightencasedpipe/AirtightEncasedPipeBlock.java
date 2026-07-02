@@ -4,7 +4,7 @@ import com.mojang.serialization.MapCodec;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
-import net.createmod.catnip.data.Iterate;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -31,17 +31,15 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.TickPriority;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.GasPropagator;
-import net.ty.createcraftedbeginning.api.gas.gases.IAirtightComponent;
-import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
 import net.ty.createcraftedbeginning.data.CCBShapes;
-import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightEncasedPipeBlockEntity>, IWrenchable, IAirtightComponent {
     private static final float PIPE_APOTHEM = 0.5f;
 
@@ -50,24 +48,24 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
         registerDefaultState(defaultBlockState().setValue(NORTH, false).setValue(EAST, false).setValue(SOUTH, false).setValue(WEST, false).setValue(WEST, false).setValue(UP, false).setValue(DOWN, false));
     }
 
-    public static boolean isOpenAt(@NotNull BlockState state, Direction direction) {
+    public static boolean isOpenAt(BlockState state, Direction direction) {
         return state.getValue(PROPERTY_BY_DIRECTION.get(direction));
     }
 
     @Override
-    public void setPlacedBy(@NotNull Level level, @NotNull BlockPos blockPos, @NotNull BlockState blockState, LivingEntity placer, @NotNull ItemStack itemStack) {
+    public void setPlacedBy(Level level, BlockPos blockPos, BlockState blockState, LivingEntity placer, ItemStack itemStack) {
         super.setPlacedBy(level, blockPos, blockState, placer, itemStack);
         CCBAdvancementBehaviour.setPlacedBy(level, blockPos, placer);
     }
 
     @Override
-    protected void createBlockStateDefinition(@NotNull Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
         builder.add(NORTH, EAST, SOUTH, WEST, UP, DOWN);
         super.createBlockStateDefinition(builder);
     }
 
     @Override
-    public @NotNull BlockState updateShape(@NotNull BlockState state, @NotNull Direction direction, @NotNull BlockState neighbourState, @NotNull LevelAccessor world, @NotNull BlockPos pos, @NotNull BlockPos neighbourPos) {
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor world, BlockPos pos, BlockPos neighbourPos) {
         if (isOpenAt(state, direction) && neighbourState.hasProperty(BlockStateProperties.WATERLOGGED)) {
             world.scheduleTick(pos, this, 1, TickPriority.HIGH);
         }
@@ -75,7 +73,7 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
     }
 
     @Override
-    public void neighborChanged(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Block otherBlock, @NotNull BlockPos neighborPos, boolean isMoving) {
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block otherBlock, BlockPos neighborPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, otherBlock, neighborPos, isMoving);
         Direction direction = GasPropagator.validateNeighbourChange(state, level, pos, neighborPos, isMoving);
         if (direction == null) {
@@ -86,7 +84,7 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
     }
 
     @Override
-    public void onPlace(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos blockPos, @NotNull BlockState oldState, boolean isMoving) {
+    public void onPlace(BlockState state, Level level, BlockPos blockPos, BlockState oldState, boolean isMoving) {
         if (level.isClientSide || state == oldState) {
             return;
         }
@@ -95,7 +93,7 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
     }
 
     @Override
-    public void onRemove(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState newState, boolean isMoving) {
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         boolean changed = !state.is(newState.getBlock());
         if (changed && !level.isClientSide) {
             GasPropagator.propagateChangedPipe(level, pos, state);
@@ -104,11 +102,11 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
     }
 
     @Override
-    protected @NotNull ItemInteractionResult useItemOn(@NotNull ItemStack stack, @NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull InteractionHand hand, @NotNull BlockHitResult hitResult) {
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
         Property<Boolean> property = PROPERTY_BY_DIRECTION.get(hitResult.getDirection());
         boolean opened = state.getValue(property);
         ItemStack held = player.getItemInHand(hand);
-        boolean adding = opened && (CCBConfig.server().airtights.canSealWithoutSheets.get() && held.is(AllItems.WRENCH.asItem()) || held.is(CCBItems.AIRTIGHT_SHEET.asItem()));
+        boolean adding = opened && held.is(AllItems.WRENCH.asItem());
         boolean removing = !opened && held.is(AllItems.WRENCH.asItem());
         if (!adding && !removing) {
             return ItemInteractionResult.FAIL;
@@ -127,21 +125,16 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
         else {
             CCBSoundEvents.SHEET_REMOVED.playOnServer(level, pos, 1.0f, 1.0f);
         }
-        if (CCBAdvancements.HERMETIC_SEAL_600.isAlreadyAwardedTo(player) || Arrays.stream(Iterate.directions).anyMatch(dir -> newState.getValue(PROPERTY_BY_DIRECTION.get(dir)))) {
-            return ItemInteractionResult.sidedSuccess(false);
-        }
-
-        CCBAdvancements.HERMETIC_SEAL_600.awardTo(player);
         return ItemInteractionResult.sidedSuccess(false);
     }
 
     @Override
-    public @NotNull VoxelShape getOcclusionShape(@NotNull BlockState blockState, @NotNull BlockGetter level, @NotNull BlockPos blockPos) {
+    public VoxelShape getOcclusionShape(BlockState blockState, BlockGetter level, BlockPos blockPos) {
         return CCBShapes.ENCASED_PIPE_SHAPE;
     }
 
     @Override
-    public void tick(@NotNull BlockState blockState, @NotNull ServerLevel serverLevel, @NotNull BlockPos blockPos, @NotNull RandomSource random) {
+    public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, RandomSource random) {
         GasPropagator.propagateChangedPipe(serverLevel, blockPos, blockState);
     }
 
@@ -161,12 +154,12 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
     }
 
     @Override
-    protected @NotNull MapCodec<? extends PipeBlock> codec() {
+    protected MapCodec<? extends PipeBlock> codec() {
         return simpleCodec(AirtightEncasedPipeBlock::new);
     }
 
     @Override
-    public boolean isAirtight(BlockPos currentPos, @NotNull BlockState currentState, @NotNull Direction oppositeDirection) {
+    public boolean isAirtight(BlockPos currentPos, BlockState currentState, Direction oppositeDirection) {
         return currentState.getValue(PROPERTY_BY_DIRECTION.get(oppositeDirection.getOpposite()));
     }
 }

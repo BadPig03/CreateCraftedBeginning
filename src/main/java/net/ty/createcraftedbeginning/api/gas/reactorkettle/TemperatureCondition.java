@@ -4,13 +4,16 @@ import com.mojang.serialization.Codec;
 import io.netty.buffer.ByteBuf;
 import net.createmod.catnip.codecs.stream.CatnipStreamCodecBuilders;
 import net.createmod.catnip.lang.Lang;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
 import java.util.function.Function;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public enum TemperatureCondition implements StringRepresentable {
     SUPERCHILLED(0xFF1E90FF, t -> t <= ReactorKettleThermoregulator.SUPERCHILLED),
     CHILLED(0xFF87CEEB, t -> t > ReactorKettleThermoregulator.SUPERCHILLED && t <= ReactorKettleThermoregulator.CHILLED),
@@ -33,11 +36,11 @@ public enum TemperatureCondition implements StringRepresentable {
     }
 
     @Override
-    public @NotNull String getSerializedName() {
+    public String getSerializedName() {
         return Lang.asId(name());
     }
 
-    public @NotNull String getTranslationKey() {
+    public String getTranslationKey() {
         return "recipe.temperature_condition." + getSerializedName();
     }
 

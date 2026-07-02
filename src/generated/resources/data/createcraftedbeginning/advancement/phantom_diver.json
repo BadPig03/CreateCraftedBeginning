@@ -1,0 +1,29 @@
+{
+  "parent": "createcraftedbeginning:sealed_to_perfection",
+  "criteria": {
+    "0": {
+      "trigger": "createcraftedbeginning:phantom_diver_builtin"
+    }
+  },
+  "display": {
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.phantom_diver.desc"
+    },
+    "frame": "goal",
+    "hidden": true,
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:airtight_boots"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.phantom_diver"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

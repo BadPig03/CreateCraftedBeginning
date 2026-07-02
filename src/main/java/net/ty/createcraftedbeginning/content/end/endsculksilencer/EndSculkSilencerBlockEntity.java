@@ -1,17 +1,25 @@
 package net.ty.createcraftedbeginning.content.end.endsculksilencer;
 
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
+import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.platform.CatnipServices;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalBlockEntity;
+import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.List;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndSculkSilencerStructuralBlockEntity> {
     public static final int LAZY_TICK_RATE = 5;
 
@@ -25,6 +33,12 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
         setLazyTickRate(LAZY_TICK_RATE);
         animationSpeed = LerpedFloat.linear().startWithValue(0);
         animation = LerpedFloat.angular().startWithValue(0);
+    }
+
+    @Override
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.STEVES_REDEMPTION);
+        behaviours.add(advancementBehaviour);
     }
 
     @Override
@@ -51,7 +65,7 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
         }
 
         String dimension = level.dimension().location().toString();
-        CreateCraftedBeginning.GLOBAL_END_SCULK_SILENCER_MANAGER.remove(worldPosition, dimension);
+        GlobalEndSculkSilencerManager.remove(worldPosition, dimension);
         CatnipServices.NETWORK.sendToAllClients(new EndSculkSilencerUpdatePacket(worldPosition, dimension, (short) 0, false));
     }
 
@@ -110,11 +124,11 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
 
         String dimension = level.dimension().location().toString();
         short range = getWorkingRange();
-        if (!CreateCraftedBeginning.GLOBAL_END_SCULK_SILENCER_MANAGER.canUpdate(worldPosition, dimension, range)) {
+        if (!GlobalEndSculkSilencerManager.canUpdate(worldPosition, dimension, range)) {
             return;
         }
 
-        CreateCraftedBeginning.GLOBAL_END_SCULK_SILENCER_MANAGER.add(worldPosition, dimension, range);
+        GlobalEndSculkSilencerManager.add(worldPosition, dimension, range);
         CatnipServices.NETWORK.sendToAllClients(new EndSculkSilencerUpdatePacket(worldPosition, dimension, range, true));
     }
 

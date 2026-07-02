@@ -5,20 +5,24 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.api.contraption.storage.SyncedMountedStorage;
 import com.simibubi.create.content.contraptions.Contraption;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.gas.gases.GasTank;
-import net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorageType;
-import net.ty.createcraftedbeginning.api.gas.gases.WrapperMountedGasStorage;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageType;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.WrapperMountedGasStorage;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankMountedStorage.Handler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightTankMountedStorage extends WrapperMountedGasStorage<Handler> implements SyncedMountedStorage {
     public static final MapCodec<AirtightTankMountedStorage> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(Codec.LONG.fieldOf("capacity").forGetter(AirtightTankMountedStorage::getCapacity), GasStack.OPTIONAL_CODEC.fieldOf("gas").forGetter(AirtightTankMountedStorage::getGasStack)).apply(i, AirtightTankMountedStorage::new));
 
@@ -34,7 +38,7 @@ public class AirtightTankMountedStorage extends WrapperMountedGasStorage<Handler
     }
 
     @Contract("_ -> new")
-    public static @NotNull AirtightTankMountedStorage fromTank(@NotNull AirtightTankBlockEntity tank) {
+    public static AirtightTankMountedStorage fromTank(AirtightTankBlockEntity tank) {
         GasTank inventory = tank.getTankInventory();
         return new AirtightTankMountedStorage(inventory.getCapacity(), inventory.getGasStack().copy());
     }
@@ -64,7 +68,7 @@ public class AirtightTankMountedStorage extends WrapperMountedGasStorage<Handler
     }
 
     @Override
-    public void afterSync(@NotNull Contraption contraption, BlockPos localPos) {
+    public void afterSync(Contraption contraption, BlockPos localPos) {
         if (!(contraption.getBlockEntityClientSide(localPos) instanceof AirtightTankBlockEntity tank)) {
             return;
         }

@@ -12,6 +12,7 @@ import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform;
 import net.createmod.catnip.data.Pair;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.outliner.Outliner;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -28,10 +29,14 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasFilteringBehaviour;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class GasFilteringRenderer {
     public static void tick() {
         Minecraft mc = Minecraft.getInstance();
@@ -84,7 +89,7 @@ public class GasFilteringRenderer {
     }
 
     public static void renderOnBlockEntity(SmartBlockEntity be, float ignored, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        if (be == null || be.isRemoved()) {
+        if (be.isRemoved()) {
             return;
         }
 

@@ -10,6 +10,7 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.ponder.api.level.PonderLevel;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
@@ -18,20 +19,24 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.SnowGolem;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<EndIncinerationBlowerStructuralBlockEntity> {
     private static final String COMPOUND_KEY_SHOW_OUTLINE = "ShowOutline";
     private static final String COMPOUND_KEY_OWNER = "Owner";
@@ -46,6 +51,12 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         showOutline = true;
     }
 
+    @Override
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.HOT_HOT_HOT, CCBAdvancements.WARM_HEARTED);
+        behaviours.add(advancementBehaviour);
+    }
+
     public static float calculateRange(float speed) {
         float absSpeed = Mth.abs(speed);
         if (absSpeed < SpeedLevel.MEDIUM.getSpeedValue()) {
@@ -55,13 +66,14 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         return absSpeed / SpeedLevel.MEDIUM.getSpeedValue() - 0.5f;
     }
 
-    public static @NotNull AABB calculateArea(BlockPos pos, float speed) {
+    public static AABB calculateArea(BlockPos pos, float speed) {
         Vec3 center = Vec3.atCenterOf(pos);
         double range = calculateRange(speed);
         return new AABB(center.x - range, center.y - range, center.z - range, center.x + range, center.y + range, center.z + range);
     }
 
-    private static void applyFanProcessing(@NotNull Level level, FanProcessingType processingType, AABB area) {
+    private static boolean applyFanProcessing(Level level, FanProcessingType processingType, AABB area) {
+        AtomicBoolean applied = new AtomicBoolean(false);
         for (ItemEntity itemEntity : level.getEntitiesOfClass(ItemEntity.class, area)) {
             if (level.isClientSide) {
                 processingType.spawnProcessingParticles(level, itemEntity.position());
@@ -72,7 +84,8 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
                 continue;
             }
 
-            FanProcessing.applyProcessing(itemEntity, processingType);
+            boolean result = FanProcessing.applyProcessing(itemEntity, processingType);
+            applied.set(result);
         }
 
         BlockPos.betweenClosedStream(area.deflate(0.5)).forEach(blockPos -> {
@@ -87,12 +100,17 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
                     return TransportedResult.doNothing();
                 }
 
-                return FanProcessing.applyProcessing(transported, level, processingType);
+                TransportedResult result = FanProcessing.applyProcessing(transported, level, processingType);
+                applied.set(!result.doesNothing());
+                return result;
             });
         });
+
+        return applied.get();
     }
 
-    private static void applyIgnition(@NotNull Level level, AABB area, EndIncinerationBlowerFakePlayer fakePlayer, UUID playerUUID) {
+    private static boolean applyIgnition(Level level, AABB area, EndIncinerationBlowerFakePlayer fakePlayer, EndIncinerationBlowerBlockEntity be) {
+        boolean applied = false;
         for (LivingEntity livingEntity : level.getEntitiesOfClass(LivingEntity.class, area)) {
             if (!livingEntity.isAlive() || livingEntity.fireImmune()) {
                 continue;
@@ -101,17 +119,16 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
             if (livingEntity.hurt(livingEntity.damageSources().onFire(), 2)) {
                 livingEntity.igniteForSeconds(2);
                 livingEntity.setLastHurtByPlayer(fakePlayer);
-                Player player = level.getPlayerByUUID(playerUUID);
-                if (player != null && !CCBAdvancements.HOT_HOT_HOT.isAlreadyAwardedTo(player)) {
-                    CCBAdvancements.HOT_HOT_HOT.awardTo(player);
-                }
+                applied = true;
             }
             if (!(livingEntity instanceof SnowGolem golem)) {
                 continue;
             }
 
             golem.die(golem.damageSources().onFire());
+            be.advancementBehaviour.awardPlayer(CCBAdvancements.WARM_HEARTED);
         }
+        return applied;
     }
 
     @Override
@@ -129,6 +146,10 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
     @Override
     public void tick() {
         super.tick();
+        if (level == null) {
+            return;
+        }
+
         displayOutline();
         spawnParticles();
         applyPrimaryEffect();
@@ -151,9 +172,11 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         if (compoundTag.contains(COMPOUND_KEY_SHOW_OUTLINE)) {
             showOutline = compoundTag.getBoolean(COMPOUND_KEY_SHOW_OUTLINE);
         }
-        if (compoundTag.contains(COMPOUND_KEY_OWNER)) {
-            owner = compoundTag.getUUID(COMPOUND_KEY_OWNER);
+        if (!compoundTag.contains(COMPOUND_KEY_OWNER)) {
+            return;
         }
+
+        owner = compoundTag.getUUID(COMPOUND_KEY_OWNER);
     }
 
     @Override
@@ -222,19 +245,20 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
 
     private void applyPrimaryEffect() {
         float absSpeed = Mth.abs(getSpeed());
-        if (absSpeed < SpeedLevel.MEDIUM.getSpeedValue() || level == null || level instanceof PonderLevel) {
-            return;
-        }
-
-        if (structural == null) {
+        if (absSpeed < SpeedLevel.MEDIUM.getSpeedValue() || level == null || level instanceof PonderLevel || structural == null) {
             return;
         }
 
         AABB area = calculateArea(worldPosition, absSpeed);
-        switch (structural.getBlowerWorkingMode().get()) {
+        boolean result = switch (structural.getBlowerWorkingMode().get()) {
             case SMOKING -> applyFanProcessing(level, AllFanProcessingTypes.SMOKING, area);
             case BLASTING -> applyFanProcessing(level, AllFanProcessingTypes.BLASTING, area);
-            case IGNITION -> applyIgnition(level, area, player, owner);
+            case IGNITION -> applyIgnition(level, area, player, this);
+        };
+        if (!result) {
+            return;
         }
+
+        advancementBehaviour.awardPlayer(CCBAdvancements.HOT_HOT_HOT);
     }
 }

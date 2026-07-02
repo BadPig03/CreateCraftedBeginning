@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle;
 
+import com.simibubi.create.AllItems;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
@@ -19,6 +20,7 @@ import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.ponder.api.level.PonderLevel;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
@@ -27,6 +29,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -42,112 +46,113 @@ import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
-import net.ty.createcraftedbeginning.api.gas.gases.CombinedGasTankWrapper;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.CombinedGasTankWrapper;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
+import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
+import java.util.Optional;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation {
     public static final int MAX_FLUID_CAPACITY = 9000;
-    private static final String COMPOUND_KEY_INPUT_ITEMS = "InputItems";
-    private static final String COMPOUND_KEY_OUTPUT_ITEMS = "OutputItems";
+
+    private static final int LAZY_TICK_RATE = 4;
+    private static final int MAX_ITEM_SLOT = 27;
+    private static final int OPERATING_FINISHED = 40;
+    private static final int PROCESSING_STARTED = 20;
+
     private static final String COMPOUND_KEY_CORE = "Core";
+    private static final String COMPOUND_KEY_INPUT_ITEMS = "InputItems";
+    private static final String COMPOUND_KEY_OPEN_STATE = "OpenState";
     private static final String COMPOUND_KEY_OPERATING = "Operating";
     private static final String COMPOUND_KEY_OPERATING_TICKS = "OperatingTicks";
+    private static final String COMPOUND_KEY_OUTPUT_ITEMS = "OutputItems";
     private static final String COMPOUND_KEY_PROCESSING_TICKS = "ProcessingTicks";
-    private static final String COMPOUND_KEY_OPEN_STATE = "OpenState";
 
-    private static final int PROCESSING_STARTED = 20;
-    private static final int OPERATING_FINISHED = 40;
-    private static final int MAX_ITEM_SLOT = 27;
-    private static final int MAX_GAS_CAPACITY = 90000;
-    private static final int LAZY_TICK_RATE = 4;
-
+    private final AirtightReactorKettleCore core;
     private final AirtightReactorKettleInventory inputInventory;
-    private final SmartInventory outputInventory;
-    private final LerpedFloat ingredientRotationSpeed;
-    private final LerpedFloat ingredientRotation;
-    private final LerpedFloat mixerRotationSpeed;
-    private final LerpedFloat mixerRotation;
-    private final LerpedFloat windowDistance;
-    private final Couple<SmartInventory> inventories;
     private final Couple<SmartFluidTankBehaviour> fluidTanks;
     private final Couple<SmartGasTankBehaviour> gasTanks;
+    private final Couple<SmartInventory> inventories;
     private final IItemHandlerModifiable itemCapability;
-    private final AirtightReactorKettleCore core;
+    private final LerpedFloat ingredientRotation;
+    private final LerpedFloat ingredientRotationSpeed;
+    private final LerpedFloat mixerRotation;
+    private final LerpedFloat mixerRotationSpeed;
+    private final LerpedFloat windowDistance;
+    private final SmartInventory outputInventory;
 
     private boolean contentsChanged;
     private boolean filterChanged;
     private boolean operating;
+    private boolean windowsOpenState = true;
     private DeferralBehaviour updateChecker;
     private IFluidHandler fluidCapability;
     private IGasHandler gasCapability;
     private int operatingTicks;
-    private int processingTicks;
+    private int processingTicks = -1;
+    private CraftingRecipe currentCraftingRecipe;
     private ReactorKettleRecipe currentRecipe;
     private SmartFluidTankBehaviour inputFluidTank;
     private SmartFluidTankBehaviour outputFluidTank;
     private SmartGasTankBehaviour inputGasTank;
     private SmartGasTankBehaviour outputGasTank;
-    private boolean windowsOpenState = true;
+    private CCBAdvancementBehaviour advancementBehaviour;
 
     public AirtightReactorKettleBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
         setLazyTickRate(LAZY_TICK_RATE);
         core = new AirtightReactorKettleCore(this);
+
         inputInventory = new AirtightReactorKettleInventory(MAX_ITEM_SLOT, this);
         inputInventory.whenContentsChanged($ -> contentsChanged = true);
-        outputInventory = new AirtightReactorKettleInventory(MAX_ITEM_SLOT, this).forbidInsertion().withMaxStackSize(64);
+        outputInventory = new AirtightReactorKettleInventory(MAX_ITEM_SLOT, this).forbidInsertion();
         outputInventory.whenContentsChanged($ -> contentsChanged = true);
         itemCapability = new CombinedInvWrapper(inputInventory, outputInventory);
+        inventories = Couple.create(inputInventory, outputInventory);
+
+        fluidTanks = Couple.create(inputFluidTank, outputFluidTank);
+        gasTanks = Couple.create(inputGasTank, outputGasTank);
+
         ingredientRotation = LerpedFloat.angular().startWithValue(0);
         ingredientRotationSpeed = LerpedFloat.linear().startWithValue(0);
         mixerRotation = LerpedFloat.angular().startWithValue(0);
         mixerRotationSpeed = LerpedFloat.linear().startWithValue(0);
         windowDistance = LerpedFloat.linear().startWithValue(0.5);
-        inventories = Couple.create(inputInventory, outputInventory);
-        fluidTanks = Couple.create(inputFluidTank, outputFluidTank);
-        gasTanks = Couple.create(inputGasTank, outputGasTank);
         contentsChanged = true;
     }
 
-    public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (be, context) -> be.itemCapability);
-        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (be, context) -> be.fluidCapability);
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (be, context) -> be.gasCapability);
-    }
-
-    private static boolean acceptItemOutputsIntoKettle(@NotNull List<ItemStack> outputItems, boolean simulate, IItemHandler targetInv) {
-        return outputItems.stream().allMatch(itemStack -> ItemHandlerHelper.insertItemStacked(targetInv, itemStack.copy(), simulate).isEmpty());
-    }
-
-    private static boolean acceptFluidOutputsIntoKettle(@NotNull List<FluidStack> outputFluids, boolean simulate, IFluidHandler targetTank) {
-        return outputFluids.stream().noneMatch(fluidStack -> targetTank.fill(fluidStack.copy(), simulate ? FluidAction.SIMULATE : FluidAction.EXECUTE) != fluidStack.getAmount());
-    }
-
-    private static boolean acceptGasOutputsIntoKettle(@NotNull List<GasStack> outputGases, boolean simulate, IGasHandler targetTank) {
-        return outputGases.stream().noneMatch(gasStack -> targetTank.fill(gasStack.copy(), simulate ? GasAction.SIMULATE : GasAction.EXECUTE) != gasStack.getAmount());
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (be, direction) -> be.itemCapability);
+        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (be, direction) -> be.fluidCapability);
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (be, direction) -> be.gasCapability);
     }
 
     @Override
-    public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.BACK_TO_BASICS);
+        behaviours.add(advancementBehaviour);
+
         inputFluidTank = new SmartFluidTankBehaviour(SmartFluidTankBehaviour.INPUT, this, 3, MAX_FLUID_CAPACITY, true).whenFluidUpdates(() -> contentsChanged = true);
         outputFluidTank = new SmartFluidTankBehaviour(SmartFluidTankBehaviour.OUTPUT, this, 2, MAX_FLUID_CAPACITY, true).forbidInsertion().whenFluidUpdates(() -> contentsChanged = true);
         fluidCapability = new CombinedTankWrapper(inputFluidTank.getCapability(), outputFluidTank.getCapability());
         behaviours.add(inputFluidTank);
         behaviours.add(outputFluidTank);
 
-        inputGasTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.INPUT, this, 3, MAX_GAS_CAPACITY, true).whenGasUpdates(() -> contentsChanged = true);
-        outputGasTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.OUTPUT, this, 2, MAX_GAS_CAPACITY, true).forbidInsertion().whenGasUpdates(() -> contentsChanged = true);
+        inputGasTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.INPUT, this, 3, MAX_FLUID_CAPACITY * 10L, true).whenGasUpdates(() -> contentsChanged = true);
+        outputGasTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.OUTPUT, this, 2, MAX_FLUID_CAPACITY * 10L, true).forbidInsertion().whenGasUpdates(() -> contentsChanged = true);
         gasCapability = new CombinedGasTankWrapper(inputGasTank.getCapability(), outputGasTank.getCapability());
         behaviours.add(inputGasTank);
         behaviours.add(outputGasTank);
@@ -182,18 +187,11 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     @Override
     public void lazyTick() {
         super.lazyTick();
-        if (filterChanged) {
-            filterChanged = false;
-        }
         if (level == null || level.isClientSide) {
             return;
         }
 
         core.lazyTick();
-        if (level.getGameTime() % 20 != 0) {
-            return;
-        }
-
         updateChecker.scheduleUpdate();
     }
 
@@ -233,6 +231,15 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         if (compoundTag.contains(COMPOUND_KEY_OPEN_STATE)) {
             windowsOpenState = compoundTag.getBoolean(COMPOUND_KEY_OPEN_STATE);
         }
+        if (clientPacket) {
+            return;
+        }
+
+        operating = false;
+        operatingTicks = 0;
+        processingTicks = -1;
+        currentRecipe = null;
+        currentCraftingRecipe = null;
     }
 
     @Override
@@ -255,7 +262,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     }
 
     @Override
-    public boolean addToTooltip(@NotNull List<Component> tooltip, boolean isPlayerSneaking) {
+    public boolean addToTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         return core.getTooltipBuilder().addToTooltip(tooltip);
     }
 
@@ -264,44 +271,156 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         return super.createRenderBoundingBox().inflate(1, 1, 1);
     }
 
-    public void scheduleUpdate() {
-        updateChecker.scheduleUpdate();
+    public AirtightReactorKettleCore getCore() {
+        return core;
     }
 
-    public boolean isEmpty() {
-        return inputInventory.isEmpty() && outputInventory.isEmpty() && inputFluidTank.isEmpty() && outputFluidTank.isEmpty() && inputGasTank.isEmpty() && outputGasTank.isEmpty();
+    public boolean acceptOutputs(List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases, boolean simulate) {
+        IItemHandler targetInventory = outputInventory;
+        IFluidHandler targetFluidTank = outputFluidTank.getCapability();
+        IGasHandler targetGasTank = outputGasTank.getCapability();
+        boolean hasItemOutputs = outputItems.stream().anyMatch(stack -> !stack.isEmpty());
+        boolean hasFluidOutputs = outputFluids.stream().anyMatch(stack -> !stack.isEmpty());
+        boolean hasGasOutputs = outputGases.stream().anyMatch(stack -> !stack.isEmpty());
+        if (hasItemOutputs) {
+            if (targetInventory == null) {
+                return false;
+            }
+
+            SmartInventory simulatedOutput = new SmartInventory(outputInventory.getSlots(), this);
+            for (int slot = 0; slot < outputInventory.getSlots(); slot++) {
+                simulatedOutput.setStackInSlot(slot, outputInventory.getStackInSlot(slot).copy());
+            }
+
+            for (ItemStack stack : outputItems) {
+                if (stack.isEmpty()) {
+                    continue;
+                }
+
+                ItemStack remainder = ItemHandlerHelper.insertItemStacked(simulatedOutput, stack.copy(), false);
+                if (remainder.isEmpty()) {
+                    continue;
+                }
+
+                return false;
+            }
+        }
+
+        if (hasFluidOutputs) {
+            if (targetFluidTank == null) {
+                return false;
+            }
+
+            SmartFluidTankBehaviour simulatedOutputFluidTank = new SmartFluidTankBehaviour(SmartFluidTankBehaviour.OUTPUT, this, targetFluidTank.getTanks(), MAX_FLUID_CAPACITY, true);
+            IFluidHandler simulatedFluidTank = simulatedOutputFluidTank.getCapability();
+            for (int tank = 0; tank < targetFluidTank.getTanks(); tank++) {
+                FluidStack existing = targetFluidTank.getFluidInTank(tank).copy();
+                if (existing.isEmpty() || simulatedFluidTank.fill(existing.copy(), FluidAction.EXECUTE) == existing.getAmount()) {
+                    continue;
+                }
+
+                return false;
+            }
+
+            for (FluidStack stack : outputFluids) {
+                if (stack.isEmpty() || simulatedFluidTank.fill(stack.copy(), FluidAction.EXECUTE) == stack.getAmount()) {
+                    continue;
+                }
+
+                return false;
+            }
+        }
+
+        if (hasGasOutputs) {
+            if (targetGasTank == null) {
+                return false;
+            }
+
+            SmartGasTankBehaviour simulatedOutputGasTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.OUTPUT, this, targetGasTank.getTanks(), MAX_FLUID_CAPACITY * 10L, true);
+            IGasHandler simulatedGasTank = simulatedOutputGasTank.getCapability();
+            for (int tank = 0; tank < targetGasTank.getTanks(); tank++) {
+                GasStack existing = targetGasTank.getGasInTank(tank).copy();
+                if (existing.isEmpty() || simulatedGasTank.fill(existing.copy(), GasAction.EXECUTE) == existing.getAmount()) {
+                    continue;
+                }
+
+                return false;
+            }
+
+            for (GasStack stack : outputGases) {
+                if (stack.isEmpty() || simulatedGasTank.fill(stack.copy(), GasAction.EXECUTE) == stack.getAmount()) {
+                    continue;
+                }
+
+                return false;
+            }
+        }
+
+        if (simulate) {
+            return true;
+        }
+
+        outputInventory.allowInsertion();
+        outputFluidTank.allowInsertion();
+        outputGasTank.allowInsertion();
+        try {
+            if (hasItemOutputs) {
+                for (ItemStack stack : outputItems) {
+                    if (stack.isEmpty()) {
+                        continue;
+                    }
+
+                    if (stack.is(AllItems.ANDESITE_ALLOY)) {
+                        advancementBehaviour.awardPlayer(CCBAdvancements.BACK_TO_BASICS);
+                    }
+                    ItemStack remainder = ItemHandlerHelper.insertItemStacked(targetInventory, stack.copy(), false);
+                    if (remainder.isEmpty()) {
+                        continue;
+                    }
+
+                    return false;
+                }
+            }
+
+            if (hasFluidOutputs) {
+                for (FluidStack stack : outputFluids) {
+                    if (stack.isEmpty() || targetFluidTank.fill(stack.copy(), FluidAction.EXECUTE) == stack.getAmount()) {
+                        continue;
+                    }
+
+                    return false;
+                }
+            }
+
+            if (hasGasOutputs) {
+                for (GasStack stack : outputGases) {
+                    if (stack.isEmpty() || targetGasTank.fill(stack.copy(), GasAction.EXECUTE) == stack.getAmount()) {
+                        continue;
+                    }
+
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        finally {
+            outputInventory.forbidInsertion();
+            outputFluidTank.forbidInsertion();
+            outputGasTank.forbidInsertion();
+        }
     }
 
     public boolean getWindowsOpenState() {
         return windowsOpenState;
     }
 
-    public void notifyContentsChanged() {
-        contentsChanged = true;
-    }
-
-    public void notifyFiltersChanged() {
-        filterChanged = true;
+    public boolean isEmpty() {
+        return inputInventory.isEmpty() && outputInventory.isEmpty() && inputFluidTank.isEmpty() && outputFluidTank.isEmpty() && inputGasTank.isEmpty() && outputGasTank.isEmpty();
     }
 
     public boolean isFilterChanged() {
         return filterChanged;
-    }
-
-    public IItemHandlerModifiable getItemCapability() {
-        return itemCapability;
-    }
-
-    public IFluidHandler getFluidCapability() {
-        return fluidCapability;
-    }
-
-    public IGasHandler getGasCapability() {
-        return gasCapability;
-    }
-
-    public Couple<SmartInventory> getInventories() {
-        return inventories;
     }
 
     public Couple<SmartFluidTankBehaviour> getFluidTanks() {
@@ -312,20 +431,8 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         return gasTanks;
     }
 
-    public LerpedFloat getIngredientRotation() {
-        return ingredientRotation;
-    }
-
-    public LerpedFloat getMixerRotation() {
-        return mixerRotation;
-    }
-
-    public LerpedFloat getWindowDistance() {
-        return windowDistance;
-    }
-
-    public AirtightReactorKettleCore getCore() {
-        return core;
+    public Couple<SmartInventory> getInventories() {
+        return inventories;
     }
 
     @Nullable
@@ -337,24 +444,17 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         return structural.getFilteringBehaviour();
     }
 
-    public boolean acceptOutputs(List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases, boolean simulate) {
-        outputInventory.allowInsertion();
-        outputFluidTank.allowInsertion();
-        outputGasTank.allowInsertion();
-        boolean acceptOutputsInner = acceptOutputsInner(outputItems, outputFluids, outputGases, simulate);
-        outputInventory.forbidInsertion();
-        outputFluidTank.forbidInsertion();
-        outputGasTank.forbidInsertion();
-        return acceptOutputsInner;
-    }
-
-    public boolean shouldKeepWindowsOpen() {
-        boolean empty = inputGasTank.isEmpty() && outputGasTank.isEmpty();
-        if (currentRecipe == null) {
-            return empty;
+    public float getDamage() {
+        if (!operating) {
+            return 0;
         }
 
-        return empty && currentRecipe.getGasIngredients().isEmpty() && currentRecipe.getGasResults().isEmpty();
+        float absSpeed = Mth.abs(core.getStructureManager().getSpeed());
+        if (absSpeed == 0) {
+            return 0;
+        }
+
+        return absSpeed / 32;
     }
 
     public float getMixerOffset(float partialTicks) {
@@ -380,103 +480,54 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         return offset * 0.72f;
     }
 
-    public float getDamage() {
-        if (!operating) {
-            return 0;
-        }
+    public IFluidHandler getFluidCapability() {
+        return fluidCapability;
+    }
 
-        float absSpeed = Mth.abs(core.getStructureManager().getSpeed());
-        if (absSpeed == 0) {
-            return 0;
-        }
+    public IGasHandler getGasCapability() {
+        return gasCapability;
+    }
 
-        return absSpeed / 32;
+    public IItemHandlerModifiable getItemCapability() {
+        return itemCapability;
+    }
+
+    public LerpedFloat getIngredientRotation() {
+        return ingredientRotation;
+    }
+
+    public LerpedFloat getMixerRotation() {
+        return mixerRotation;
+    }
+
+    public LerpedFloat getWindowDistance() {
+        return windowDistance;
+    }
+
+    public void notifyContentsChanged() {
+        contentsChanged = true;
+    }
+
+    public void notifyFiltersChanged() {
+        filterChanged = true;
+    }
+
+    public void scheduleUpdate() {
+        updateChecker.scheduleUpdate();
     }
 
     public void startProcessInPonderLevel() {
-        operating = true;
-        operatingTicks = 0;
+        update(false);
         updateReactorKettle();
     }
 
-    private boolean acceptOutputsInner(List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases, boolean simulate) {
-        IItemHandler targetInventory = outputInventory;
-        IFluidHandler targetFluidTank = outputFluidTank.getCapability();
-        IGasHandler targetGasTank = outputGasTank.getCapability();
-        if (targetInventory == null && !outputItems.isEmpty() || !acceptItemOutputsIntoKettle(outputItems, simulate, targetInventory)) {
-            return false;
-        }
-        if (!outputFluids.isEmpty() && targetFluidTank == null || !acceptFluidOutputsIntoKettle(outputFluids, simulate, targetFluidTank)) {
-            return false;
-        }
-        if (!outputGases.isEmpty() && targetGasTank == null || !acceptGasOutputsIntoKettle(outputGases, simulate, targetGasTank)) {
-            return false;
+    private boolean shouldKeepWindowsOpen() {
+        boolean empty = inputGasTank.isEmpty() && outputGasTank.isEmpty();
+        if (currentRecipe == null) {
+            return empty;
         }
 
-        return true;
-    }
-
-    private void tickOperation() {
-        if (filterChanged) {
-            operating = false;
-            operatingTicks = 0;
-            processingTicks = -1;
-            updateChecker.scheduleUpdate();
-            return;
-        }
-
-        if (level != null && !level.isClientSide) {
-            windowsOpenState = shouldKeepWindowsOpen();
-        }
-
-        updateRotationSpeed(operating && operatingTicks <= PROCESSING_STARTED);
-        updateWindowDistance();
-        float absSpeed = level instanceof PonderLevel ? SpeedLevel.FAST.getSpeedValue() : Mth.abs(core.getStructureManager().getSpeed());
-        if (operatingTicks >= OPERATING_FINISHED || absSpeed < AirtightReactorKettleUtils.getMinSpeedRequired()) {
-            operating = false;
-            operatingTicks = 0;
-            processingTicks = -1;
-            updateChecker.scheduleUpdate();
-            return;
-        }
-
-        if (!operating || level == null) {
-            return;
-        }
-
-        if (operatingTicks != PROCESSING_STARTED) {
-            operatingTicks++;
-            return;
-        }
-
-        startProcessing();
-    }
-
-    private boolean isProcessing() {
-        return operatingTicks > 15 && operatingTicks <= PROCESSING_STARTED;
-    }
-
-    private void updateRotationSpeed(boolean moving) {
-        float speed = Mth.clamp(core.getStructureManager().getSpeed() * 0.5f, -64, 64);
-        if (level instanceof PonderLevel) {
-            speed = SpeedLevel.FAST.getSpeedValue() * 0.5f;
-        }
-        boolean processing = isProcessing();
-        double ingredientSpeed = processing ? speed * 0.5 : 0;
-        ingredientRotationSpeed.chase(moving ? ingredientSpeed : 0, 0.15, Chaser.EXP);
-        double mixSpeed = processing ? speed * 2 : speed / 2;
-        mixerRotationSpeed.chase(moving ? mixSpeed : 0, 0.1, Chaser.EXP);
-    }
-
-    private void updateWindowDistance() {
-        if (windowsOpenState) {
-            windowDistance.chase(0.5, 0.2, Chaser.EXP);
-        }
-        else {
-            windowDistance.chase(0, 0.3, Chaser.EXP);
-        }
-
-        windowDistance.tickChaser();
+        return empty && currentRecipe.getGasIngredients().isEmpty() && currentRecipe.getGasResults().isEmpty();
     }
 
     private boolean updateReactorKettle() {
@@ -488,33 +539,83 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         if (level instanceof PonderLevel) {
             speed = SpeedLevel.FAST.getSpeedValue();
         }
-        if (level.isClientSide && !isVirtual() || operating || speed < AirtightReactorKettleUtils.getMinSpeedRequired()) {
+        if (level.isClientSide && !isVirtual() || operating || speed < SpeedLevel.FAST.getSpeedValue()) {
             return true;
         }
 
         List<ReactorKettleRecipe> recipes = AirtightReactorKettleUtils.getMatchingRecipes(this, core);
-        if (recipes.isEmpty()) {
-            currentRecipe = null;
+        if (!recipes.isEmpty()) {
+            currentRecipe = recipes.getFirst();
+            currentCraftingRecipe = null;
+            operating = true;
+            operatingTicks = 0;
+            sendData();
             return true;
         }
 
-        currentRecipe = recipes.getFirst();
-        startProcessingKettle();
+        Optional<RecipeHolder<CraftingRecipe>> craftingRecipe = AirtightReactorKettleUtils.getMatchingCraftingRecipe(this);
+        if (craftingRecipe.isEmpty()) {
+            currentRecipe = null;
+            currentCraftingRecipe = null;
+            return true;
+        }
+
+        currentRecipe = null;
+        currentCraftingRecipe = craftingRecipe.get().value();
+        operating = true;
+        operatingTicks = 0;
         sendData();
         return true;
     }
 
-    private void startProcessingKettle() {
-        if (operating && operatingTicks <= PROCESSING_STARTED) {
+    @OnlyIn(Dist.CLIENT)
+    private void tickAudio() {
+        float absSpeed = Mth.abs(core.getStructureManager().getSpeed());
+        if (absSpeed == 0) {
             return;
         }
 
-        operating = true;
-        operatingTicks = 0;
+        float pitch = Mth.clamp(absSpeed / 256 + 0.45f, 0.85f, 1);
+        SoundScapes.play(AmbienceGroup.KINETIC, worldPosition, pitch);
+        if (absSpeed <= 64 && AnimationTickHolder.getTicks() % 2 == 0 || operatingTicks != PROCESSING_STARTED) {
+            return;
+        }
+
+        CCBSoundEvents.REACTOR_KETTLE_MIXING.playAt(level, worldPosition, 0.75f, 1, true);
     }
 
-    private void startProcessing() {
+    private void tickOperation() {
+        if (filterChanged) {
+            filterChanged = false;
+            update(true);
+            return;
+        }
+
         if (level == null) {
+            return;
+        }
+
+        if (!level.isClientSide) {
+            windowsOpenState = shouldKeepWindowsOpen();
+        }
+        updateRotationSpeed(operating && operatingTicks <= PROCESSING_STARTED);
+        updateWindowDistance();
+        if (!operating) {
+            return;
+        }
+
+        if (operatingTicks >= OPERATING_FINISHED) {
+            update(true);
+            return;
+        }
+
+        if ((level instanceof PonderLevel ? SpeedLevel.FAST.getSpeedValue() : Mth.abs(core.getStructureManager().getSpeed())) < SpeedLevel.FAST.getSpeedValue()) {
+            update(false);
+            return;
+        }
+
+        if (operatingTicks != PROCESSING_STARTED) {
+            operatingTicks++;
             return;
         }
 
@@ -543,37 +644,75 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
 
         operatingTicks++;
         processingTicks = -1;
-        applyRecipe();
-        sendData();
-    }
+        if (level.isClientSide && !isVirtual()) {
+            return;
+        }
 
-    private void applyRecipe() {
-        if (level == null || level.isClientSide && !isVirtual() || currentRecipe == null || !ReactorKettleRecipe.apply(this, currentRecipe)) {
+        boolean success;
+        if (currentRecipe != null) {
+            success = ReactorKettleRecipe.apply(this, currentRecipe);
+        }
+        else if (currentCraftingRecipe != null) {
+            success = AirtightReactorKettleUtils.applyCraftingRecipe(this, currentCraftingRecipe);
+        }
+        else {
+            success = false;
+        }
+        if (!success) {
+            update(false);
             return;
         }
 
         inputFluidTank.sendDataImmediately();
         inputGasTank.sendDataImmediately();
-        if (ReactorKettleRecipe.match(this, currentRecipe)) {
-            operatingTicks = PROCESSING_STARTED;
-            sendData();
-        }
+        sendData();
         contentsChanged = true;
+
+        boolean canContinue;
+        if (currentRecipe != null) {
+            canContinue = ReactorKettleRecipe.match(this, currentRecipe);
+        }
+        else {
+            canContinue = currentCraftingRecipe != null && AirtightReactorKettleUtils.matchCraftingRecipe(this, currentCraftingRecipe);
+        }
+        if (!canContinue) {
+            return;
+        }
+
+        operatingTicks = PROCESSING_STARTED;
     }
 
-    @OnlyIn(Dist.CLIENT)
-    private void tickAudio() {
-        float absSpeed = Mth.abs(core.getStructureManager().getSpeed());
-        if (absSpeed == 0) {
+    private void update(boolean schedule) {
+        operating = false;
+        operatingTicks = 0;
+        processingTicks = -1;
+        currentRecipe = null;
+        currentCraftingRecipe = null;
+        sendData();
+        if (!schedule || level == null || level.isClientSide && !isVirtual()) {
             return;
         }
 
-        float pitch = Mth.clamp(absSpeed / 256 + 0.45f, 0.85f, 1);
-        SoundScapes.play(AmbienceGroup.KINETIC, worldPosition, pitch);
-        if (absSpeed <= 64 && AnimationTickHolder.getTicks() % 2 == 0 || operatingTicks != PROCESSING_STARTED) {
-            return;
-        }
+        updateChecker.scheduleUpdate();
+    }
 
-        CCBSoundEvents.REACTOR_KETTLE_MIXING.playAt(level, worldPosition, 0.75f, 1, true);
+    private void updateRotationSpeed(boolean moving) {
+        float speed = Mth.clamp(core.getStructureManager().getSpeed() * 0.5f, -64, 64);
+        if (level instanceof PonderLevel) {
+            speed = SpeedLevel.FAST.getSpeedValue() * 0.5f;
+        }
+        boolean processing = operatingTicks > 15 && operatingTicks <= PROCESSING_STARTED;
+        ingredientRotationSpeed.chase(moving ? processing ? speed * 0.5 : 0 : 0, 0.15, Chaser.EXP);
+        mixerRotationSpeed.chase(moving ? processing ? speed * 2 : speed / 2 : 0, 0.1, Chaser.EXP);
+    }
+
+    private void updateWindowDistance() {
+        if (windowsOpenState) {
+            windowDistance.chase(0.5, 0.2, Chaser.EXP);
+        }
+        else {
+            windowDistance.chase(0, 0.3, Chaser.EXP);
+        }
+        windowDistance.tickChaser();
     }
 }

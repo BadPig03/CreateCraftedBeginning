@@ -9,6 +9,7 @@ import dev.engine_room.flywheel.lib.model.baked.PartialModel;
 import dev.engine_room.flywheel.lib.transform.PoseTransformStack;
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.createmod.catnip.animation.AnimationTickHolder;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -20,8 +21,11 @@ import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @EventBusSubscriber(value = Dist.CLIENT, modid = CreateCraftedBeginning.MOD_ID)
 public class AirtightExtendArmItemRenderer extends CustomRenderedItemModelRenderer {
     private static final PartialModel COGS = CCBPartialModels.AIRTIGHT_EXTEND_ARM_COGS;
@@ -30,12 +34,12 @@ public class AirtightExtendArmItemRenderer extends CustomRenderedItemModelRender
     private static final PartialModel POINTING = CCBPartialModels.AIRTIGHT_EXTEND_ARM_POINTING;
 
     @SubscribeEvent
-    public static void register(@NotNull RegisterClientExtensionsEvent event) {
+    public static void register(RegisterClientExtensionsEvent event) {
         event.registerItem(SimpleCustomRenderer.create(CCBItems.AIRTIGHT_EXTEND_ARM.asItem(), new AirtightExtendArmItemRenderer()), CCBItems.AIRTIGHT_EXTEND_ARM.asItem());
     }
 
     @Override
-    protected void render(ItemStack arm, CustomRenderedItemModel model, PartialItemModelRenderer renderer, ItemDisplayContext transformType, @NotNull PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
+    protected void render(ItemStack arm, CustomRenderedItemModel model, PartialItemModelRenderer renderer, ItemDisplayContext transformType, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         PoseTransformStack transformStack = TransformStack.of(ms);
         AirtightExtendArmRenderHandler renderHandler = CreateCraftedBeginningClient.AIRTIGHT_EXTEND_ARM_RENDER_HANDLER;
         float animation;

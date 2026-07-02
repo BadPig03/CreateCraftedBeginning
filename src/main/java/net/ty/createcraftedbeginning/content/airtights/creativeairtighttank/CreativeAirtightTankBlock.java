@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.content.airtights.creativeairtighttank;
 
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
@@ -20,16 +21,20 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.CreativeSmartGasTank;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.CreativeSmartGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasConnectivityHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.IAirtightComponent;
-import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirtightTankBlockEntity>, IWrenchable, IAirtightComponent {
     public static final BooleanProperty TOP = BooleanProperty.create("top");
     public static final BooleanProperty BOTTOM = BooleanProperty.create("bottom");
@@ -40,13 +45,13 @@ public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirt
     }
 
     @Override
-    protected void createBlockStateDefinition(@NotNull Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
         builder.add(TOP, BOTTOM);
         super.createBlockStateDefinition(builder);
     }
 
     @Override
-    public void onPlace(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState oldState, boolean moved) {
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean moved) {
         if (oldState.getBlock() == state.getBlock() || moved) {
             return;
         }
@@ -55,13 +60,13 @@ public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirt
     }
 
     @Override
-    public void setPlacedBy(@NotNull Level level, @NotNull BlockPos blockPos, @NotNull BlockState blockState, LivingEntity placer, @NotNull ItemStack itemStack) {
+    public void setPlacedBy(Level level, BlockPos blockPos, BlockState blockState, @Nullable LivingEntity placer, ItemStack itemStack) {
         super.setPlacedBy(level, blockPos, blockState, placer, itemStack);
         CCBAdvancementBehaviour.setPlacedBy(level, blockPos, placer);
     }
 
     @Override
-    public void onRemove(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState newState, boolean isMoving) {
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.hasBlockEntity() || state.is(newState.getBlock())) {
             return;
         }
@@ -74,7 +79,7 @@ public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirt
     }
 
     @Override
-    protected @NotNull ItemInteractionResult useItemOn(@NotNull ItemStack stack, @NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull InteractionHand hand, @NotNull BlockHitResult hitResult) {
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
         if (player.isShiftKeyDown() || !(stack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
@@ -112,7 +117,7 @@ public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirt
     }
 
     @Override
-    public @NotNull VoxelShape getBlockSupportShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos) {
+    public VoxelShape getBlockSupportShape(BlockState state, BlockGetter level, BlockPos pos) {
         return Shapes.block();
     }
 

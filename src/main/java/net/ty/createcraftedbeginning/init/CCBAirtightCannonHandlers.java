@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.init;
 
 import com.simibubi.create.api.registry.SimpleRegistry;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.api.gas.cannonhandlers.sculk.SculkAirCannonHandler;
 import net.ty.createcraftedbeginning.api.gas.cannonhandlers.spore.SporeAirCannonHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
@@ -21,6 +22,10 @@ import net.ty.createcraftedbeginning.api.gas.cannonhandlers.ultrawarm.UltrawarmA
 import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
 import net.ty.createcraftedbeginning.data.CCBGases;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBAirtightCannonHandlers {
     public static void register() {
         SimpleRegistry<Gas, AirtightCannonHandler> registry = AirtightCannonHandler.REGISTRY;

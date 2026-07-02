@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.ponder;
 import com.simibubi.create.infrastructure.ponder.AllCreatePonderTags;
 import com.tterrag.registrate.util.entry.RegistryEntry;
 import net.createmod.ponder.api.registration.PonderSceneRegistrationHelper;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.ty.createcraftedbeginning.ponder.scenes.breezes.BreezeChamberScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.breezes.BreezeCoolerScenes;
@@ -17,6 +18,7 @@ import net.ty.createcraftedbeginning.ponder.scenes.gascontainers.AirtightTankSce
 import net.ty.createcraftedbeginning.ponder.scenes.gascontainers.CreativeAirtightTankScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.AirCompressorScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.AirtightEngineScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.AirtightForgingPressScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.AirtightHatchScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.AirtightReactorKettleScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.GasInjectionChamberScenes;
@@ -29,10 +31,13 @@ import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AirtightPumpScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.SmartAirtightPipeScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.other.AirVentScenes;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBPonderScenes {
-    public static void register(@NotNull PonderSceneRegistrationHelper<ResourceLocation> helper) {
+    public static void register(PonderSceneRegistrationHelper<ResourceLocation> helper) {
         PonderSceneRegistrationHelper<RegistryEntry<?, ?>> entryHelper = helper.withKeyFunction(RegistryEntry::getId);
         entryHelper.forComponents(CCBBlocks.ANDESITE_CRATE_BLOCK).addStoryBoard("crates_story_board", AndesiteCrateScenes::scene, CCBPonderTags.CRATES_TAG_ID);
         entryHelper.forComponents(CCBBlocks.BRASS_CRATE_BLOCK).addStoryBoard("crates_story_board", BrassCrateScenes::scene, CCBPonderTags.CRATES_TAG_ID);
@@ -57,6 +62,7 @@ public class CCBPonderScenes {
         entryHelper.forComponents(CCBBlocks.TESLA_TURBINE_BLOCK).addStoryBoard("tesla_turbine_setting_up_story_board", TeslaTurbineScenes::settingUp, CCBPonderTags.GAS_MANIPULATORS_TAG_ID, AllCreatePonderTags.KINETIC_SOURCES).addStoryBoard("tesla_turbine_generating_story_board", TeslaTurbineScenes::generating, CCBPonderTags.GAS_MANIPULATORS_TAG_ID, AllCreatePonderTags.KINETIC_SOURCES);
         entryHelper.forComponents(CCBBlocks.TESLA_TURBINE_NOZZLE_BLOCK).addStoryBoard("tesla_turbine_setting_up_story_board", TeslaTurbineScenes::settingUp, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK).addStoryBoard("airtight_reactor_kettle_placement_story_board", AirtightReactorKettleScenes::placement, CCBPonderTags.GAS_MANIPULATORS_TAG_ID).addStoryBoard("airtight_reactor_kettle_processing_story_board", AirtightReactorKettleScenes::processing, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
+        entryHelper.forComponents(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK).addStoryBoard("airtight_forging_press_placement_story_board", AirtightForgingPressScenes::placement, CCBPonderTags.GAS_MANIPULATORS_TAG_ID).addStoryBoard("airtight_forging_press_processing_story_board", AirtightForgingPressScenes::processing, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
         entryHelper.forComponents(CCBBlocks.PORTABLE_GAS_INTERFACE_BLOCK).addStoryBoard("portable_gas_interface_story_board", PortableGasInterfaceScenes::scene, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
         entryHelper.forComponents(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK).addStoryBoard("gas_injection_chamber_story_board", GasInjectionChamberScenes::scene, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_HATCH_BLOCK).addStoryBoard("airtight_hatch_story_board", AirtightHatchScenes::scene, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);

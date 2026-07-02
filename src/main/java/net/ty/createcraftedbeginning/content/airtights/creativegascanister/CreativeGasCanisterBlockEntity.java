@@ -4,6 +4,7 @@ import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
@@ -16,15 +17,17 @@ import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.SmartGasTank;
-import net.ty.createcraftedbeginning.api.gas.gases.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.SmartGasTank;
+import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.ICreativeGasContainer;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CreativeGasCanisterBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ICreativeGasContainer {
     private static final String COMPOUND_KEY_CANISTER = "Canister";
 
@@ -35,12 +38,12 @@ public class CreativeGasCanisterBlockEntity extends SmartBlockEntity implements 
         super(type, pos, state);
     }
 
-    public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.CREATIVE_GAS_CANISTER.get(), (be, context) -> be.tankBehaviour.getCapability());
     }
 
     @Override
-    public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         tankBehaviour = SmartGasTankBehaviour.single(this, CreativeGasCanisterContainerContents.getDefaultCapacity()).forbidInsertion().forbidExtraction();
         behaviours.add(tankBehaviour);
     }
@@ -68,7 +71,7 @@ public class CreativeGasCanisterBlockEntity extends SmartBlockEntity implements 
         updateCapacity();
     }
 
-    public void setCanisterContent(@NotNull ItemStack itemStack) {
+    public void setCanisterContent(ItemStack itemStack) {
         canister = itemStack.copy();
         if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents canisterContents)) {
             return;

@@ -1,17 +1,21 @@
 package net.ty.createcraftedbeginning.content.airtights.weatherflares;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class ThunderstormFlareItem extends Item implements IWeatherFlare {
     public ThunderstormFlareItem(Properties properties) {
         super(properties);
     }
 
     @Override
-    public void setWeather(@NotNull ServerLevel serverLevel, double ratio) {
+    public void setWeather(ServerLevel serverLevel, double ratio) {
         serverLevel.setWeatherParameters(0, Mth.ceil(DEFAULT_DURATION * ratio), true, true);
     }
 }

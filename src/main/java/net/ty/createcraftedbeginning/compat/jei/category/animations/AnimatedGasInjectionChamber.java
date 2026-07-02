@@ -5,12 +5,16 @@ import com.mojang.math.Axis;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.compat.jei.category.animations.AnimatedKinetics;
 import net.createmod.catnip.animation.AnimationTickHolder;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AnimatedGasInjectionChamber extends AnimatedKinetics {
     private static final int SCALE = 20;
 
@@ -42,7 +46,7 @@ public class AnimatedGasInjectionChamber extends AnimatedKinetics {
     }
 
     @Override
-    public void draw(@NotNull GuiGraphics graphics, int xOffset, int yOffset) {
+    public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
         PoseStack matrixStack = graphics.pose();
         matrixStack.pushPose();
 

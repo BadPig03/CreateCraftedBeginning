@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.end.endincinerationblower;
 
 import com.simibubi.create.foundation.block.IBE;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -15,15 +16,19 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.neoforged.neoforge.common.Tags.Items;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalBlock;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EndIncinerationBlowerBlock extends EndMechanicalBlock implements IBE<EndIncinerationBlowerBlockEntity> {
     public EndIncinerationBlowerBlock(Properties properties) {
         super(properties);
     }
 
     @Override
-    protected @NotNull ItemInteractionResult useItemOn(@NotNull ItemStack stack, @NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull InteractionHand hand, @NotNull BlockHitResult hitResult) {
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
         if (!stack.is(Items.TOOLS_WRENCH)) {
             return ItemInteractionResult.FAIL;
         }
@@ -37,7 +42,7 @@ public class EndIncinerationBlowerBlock extends EndMechanicalBlock implements IB
     }
 
     @Override
-    public void setPlacedBy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState blockState, LivingEntity placer, @NotNull ItemStack stack) {
+    public void setPlacedBy(Level level, BlockPos pos, BlockState blockState, @Nullable LivingEntity placer, ItemStack stack) {
         super.setPlacedBy(level, pos, blockState, placer, stack);
         withBlockEntityDo(level, pos, EndIncinerationBlowerBlockEntity::updateStructural);
         if (!(placer instanceof ServerPlayer player)) {

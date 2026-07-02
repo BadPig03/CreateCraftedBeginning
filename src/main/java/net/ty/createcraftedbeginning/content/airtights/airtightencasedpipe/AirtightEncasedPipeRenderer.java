@@ -5,18 +5,21 @@ import com.simibubi.create.foundation.blockEntity.renderer.SafeBlockEntityRender
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.render.CachedBuffers;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightEncasedPipeRenderer extends SafeBlockEntityRenderer<AirtightEncasedPipeBlockEntity> {
     private static final Map<Direction, PartialModel> MODEL_CACHE = Arrays.stream(Direction.values()).collect(Collectors.toMap(dir -> dir, dir -> switch (dir) {
         case DOWN -> CCBPartialModels.ENCASED_DOWN;
@@ -31,7 +34,7 @@ public class AirtightEncasedPipeRenderer extends SafeBlockEntityRenderer<Airtigh
     }
 
     @Override
-    protected void renderSafe(@NotNull AirtightEncasedPipeBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource bufferSource, int light, int overlay) {
+    protected void renderSafe(AirtightEncasedPipeBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource bufferSource, int light, int overlay) {
         BlockState state = be.getBlockState();
         for (Direction direction : Iterate.directions) {
             if (AirtightEncasedPipeBlock.isOpenAt(state, direction)) {

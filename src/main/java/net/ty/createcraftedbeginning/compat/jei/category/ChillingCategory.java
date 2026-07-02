@@ -12,6 +12,7 @@ import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
@@ -19,28 +20,29 @@ import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.ChillingRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.function.Supplier;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class ChillingCategory extends CCBRecipeCategory<ChillingRecipe> {
     private static final int SCALE = 24;
 
-    public ChillingCategory(@NotNull Info<ChillingRecipe> info) {
+    public ChillingCategory(Info<ChillingRecipe> info) {
         super(info);
     }
 
-    public static @NotNull Supplier<ItemStack> getCatalystStack() {
-        ItemStack stack = AllBlocks.ENCASED_FAN.asStack();
+    public static Supplier<ItemStack> getCatalystStack() {
+        ItemStack stack = new ItemStack(AllBlocks.ENCASED_FAN);
         stack.set(DataComponents.CUSTOM_NAME, CCBLang.translateDirect("recipe.fan_chilling.fan").withStyle(style -> style.withItalic(false)));
         return () -> stack;
     }
 
     @Override
-    protected void draw(@NotNull ChillingRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
-        int size = recipe.getRollableResultsAsItemStacks().size();
-        int xOffsetAmount = 1 - Math.min(3, size);
+    protected void draw(ChillingRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
+        int xOffsetAmount = 1 - Math.min(3, recipe.getRollableResultsAsItemStacks().size());
         AllGuiTextures.JEI_SHADOW.render(graphics, 46, 29);
         AllGuiTextures.JEI_SHADOW.render(graphics, 65, 39);
         AllGuiTextures.JEI_LONG_ARROW.render(graphics, 7 * xOffsetAmount + 54, 51);
@@ -60,7 +62,7 @@ public class ChillingCategory extends CCBRecipeCategory<ChillingRecipe> {
     }
 
     @Override
-    protected void setRecipe(@NotNull IRecipeLayoutBuilder builder, @NotNull ChillingRecipe recipe, IFocusGroup focuses) {
+    protected void setRecipe(IRecipeLayoutBuilder builder, ChillingRecipe recipe, IFocusGroup focuses) {
         List<ProcessingOutput> results = recipe.getRollableResults();
         int xOffsetAmount = 1 - Math.min(3, results.size());
         builder.addSlot(RecipeIngredientRole.INPUT, 5 * xOffsetAmount + 21, 48).setBackground(getRenderedSlot(), -1, -1).addIngredients(recipe.getIngredients().getFirst());

@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.icecreams;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -11,20 +12,23 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AmethystIceCreamItem extends Item {
     public AmethystIceCreamItem(Properties properties) {
         super(properties);
     }
 
     @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         return ItemUtils.startUsingInstantly(level, player, hand);
     }
 
     @Override
-    public @NotNull ItemStack finishUsingItem(@NotNull ItemStack stack, @NotNull Level level, @NotNull LivingEntity entityLiving) {
+    public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entityLiving) {
         ItemStack result = super.finishUsingItem(stack, level, entityLiving);
         if (!level.isClientSide) {
             entityLiving.addEffect(new MobEffectInstance(MobEffects.GLOWING, 1200, 0));
@@ -33,12 +37,12 @@ public class AmethystIceCreamItem extends Item {
     }
 
     @Override
-    public @NotNull UseAnim getUseAnimation(@NotNull ItemStack stack) {
+    public UseAnim getUseAnimation(ItemStack stack) {
         return UseAnim.EAT;
     }
 
     @Override
-    public int getUseDuration(@NotNull ItemStack stack, @NotNull LivingEntity entity) {
+    public int getUseDuration(ItemStack stack, LivingEntity entity) {
         return 32;
     }
 }

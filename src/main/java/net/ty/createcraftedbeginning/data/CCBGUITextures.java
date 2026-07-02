@@ -4,24 +4,29 @@ import net.createmod.catnip.gui.TextureSheetSegment;
 import net.createmod.catnip.gui.UIRenderHelper;
 import net.createmod.catnip.gui.element.ScreenElement;
 import net.createmod.catnip.theme.Color;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public enum CCBGUITextures implements ScreenElement, TextureSheetSegment {
-    JEI_SHADOW("jei/widgets", 0, 56, 52, 11),
-    JEI_DOWN_ARROW("jei/widgets", 0, 21, 18, 14),
-    JEI_LONG_ARROW("jei/widgets", 19, 0, 71, 10),
-    JEI_QUESTION_MARK("jei/widgets", 0, 178, 12, 16),
     JEI_COOLING("jei/widgets", 12, 178, 16, 16),
     JEI_COOLING_BACKGROUND("jei/widgets", 28, 178, 16, 16),
+    JEI_DOWN_ARROW("jei/widgets", 0, 21, 18, 14),
+    JEI_HEAT_BAR("jei/widgets", 0, 201, 169, 19),
+    JEI_LONG_ARROW("jei/widgets", 19, 0, 71, 10),
+	JEI_NO_HEAT_BAR("jei/widgets", 0, 221, 169, 19),
+    JEI_PRESS_HEAD_TOOL("jei/widgets", 0, 72, 19, 19),
+    JEI_QUESTION_MARK("jei/widgets", 0, 178, 12, 16),
+    JEI_SHADOW("jei/widgets", 0, 56, 52, 11),
     JEI_WIND_CHARGING("jei/widgets", 44, 178, 16, 16),
     JEI_WIND_CHARGING_BACKGROUND("jei/widgets", 60, 178, 16, 16),
-    JEI_HEAT_BAR("jei/widgets", 0, 201, 169, 19),
-	JEI_NO_HEAT_BAR("jei/widgets", 0, 221, 169, 19),
 
     ARMORS("armors", 0, 0, 190, 138),
     HANDHELD_DRILL("handheld_drill", 0, 0, 215, 138),
@@ -60,13 +65,13 @@ public enum CCBGUITextures implements ScreenElement, TextureSheetSegment {
     }
 
     @Override
-    public @NotNull ResourceLocation getLocation() {
+    public ResourceLocation getLocation() {
         return location;
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void render(@NotNull GuiGraphics graphics, int x, int y) {
+    public void render(GuiGraphics graphics, int x, int y) {
         graphics.blit(location, x, y, startX, startY, width, height);
     }
 

@@ -1,16 +1,17 @@
 {
-  "parent": "createcraftedbeginning:retrofit",
+  "parent": "createcraftedbeginning:retrofitted",
   "criteria": {
     "0": {
       "trigger": "createcraftedbeginning:bad_apple_builtin"
     }
   },
   "display": {
-    "announce_to_chat": false,
     "description": {
       "color": "#DBA213",
       "translate": "advancement.createcraftedbeginning.bad_apple.desc"
     },
+    "frame": "goal",
+    "hidden": true,
     "icon": {
       "count": 1,
       "id": "minecraft:pufferfish"

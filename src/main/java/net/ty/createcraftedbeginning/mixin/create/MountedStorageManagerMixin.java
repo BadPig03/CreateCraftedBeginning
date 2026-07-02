@@ -10,6 +10,7 @@ import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.content.contraptions.MountedStorageManager;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.createmod.catnip.platform.CatnipServices;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
@@ -22,11 +23,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorage;
-import net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorageType;
-import net.ty.createcraftedbeginning.api.gas.gases.MountedGasStorageWrapper;
-import net.ty.createcraftedbeginning.api.gas.gases.MountedStorageSyncPacketWithGas;
-import net.ty.createcraftedbeginning.api.gas.gases.IMountedStorageManagerWithGas;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorage;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageType;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageWrapper;
+import net.ty.createcraftedbeginning.api.gas.gases.packets.MountedStorageSyncWithGasPacket;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IMountedStorageManagerWithGas;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -36,12 +37,15 @@ import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("LoggingSimilarMessage")
 @Mixin(MountedStorageManager.class)
 public abstract class MountedStorageManagerMixin implements IMountedStorageManagerWithGas {
@@ -57,7 +61,7 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
     private int syncCooldown;
 
     @Unique
-    private static <K, V> @NotNull ImmutableMap<K, V> subMap(@NotNull Map<K, V> map, Predicate<V> predicate) {
+    private static <K, V> @NotNull ImmutableMap<K, V> subMap(Map<K, V> map, Predicate<V> predicate) {
         Builder<K, V> builder = ImmutableMap.builder();
         map.forEach((key, value) -> {
             if (predicate.test(value)) {
@@ -91,7 +95,7 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
     }
 
     @Inject(method = "addBlock", at = @At("TAIL"))
-    private void ccb$addBlock(Level level, @NotNull BlockState state, BlockPos globalPos, BlockPos localPos, BlockEntity be, CallbackInfo ci) {
+    private void ccb$addBlock(Level level, BlockState state, BlockPos globalPos, BlockPos localPos, BlockEntity be, CallbackInfo ci) {
         MountedGasStorageType<?> gasType = MountedGasStorageType.REGISTRY.get(state.getBlock());
         if (gasType == null) {
             return;
@@ -116,7 +120,7 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
     }
 
     @Inject(method = "unmount", at = @At("TAIL"))
-    private void ccb$unmount(Level level, @NotNull StructureBlockInfo info, BlockPos globalPos, BlockEntity be, CallbackInfo ci) {
+    private void ccb$unmount(Level level, StructureBlockInfo info, BlockPos globalPos, BlockEntity be, CallbackInfo ci) {
         BlockPos localPos = info.pos();
         BlockState state = info.state();
         MountedGasStorage gasStorage = getGases().storages.get(localPos);
@@ -164,14 +168,14 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
             return;
         }
 
-        MountedStorageSyncPacketWithGas packet = new MountedStorageSyncPacketWithGas(entity.getId(), new HashMap<>(), new HashMap<>(), gases);
+        MountedStorageSyncWithGasPacket packet = new MountedStorageSyncWithGasPacket(entity.getId(), new HashMap<>(), new HashMap<>(), gases);
         CatnipServices.NETWORK.sendToClientsTrackingEntity(entity, packet);
         syncCooldown = 8;
     }
 
     @Override
     @Unique
-    public void handleSyncWithGas(MountedStorageSyncPacketWithGas packet, AbstractContraptionEntity entity) {
+    public void handleSyncWithGas(MountedStorageSyncWithGasPacket packet, AbstractContraptionEntity entity) {
         MountedGasStorageWrapper gases = getGases();
         Map<SyncedMountedStorage, BlockPos> syncedStorages = new IdentityHashMap<>();
         try {
@@ -243,7 +247,7 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
 
     @Inject(method = "read", at = @At("RETURN"))
     private void ccb$readAtReturn(CompoundTag nbt, Provider registries, boolean clientPacket, Contraption contraption, CallbackInfo ci) {
-        if (!clientPacket || contraption == null) {
+        if (!clientPacket) {
             return;
         }
 

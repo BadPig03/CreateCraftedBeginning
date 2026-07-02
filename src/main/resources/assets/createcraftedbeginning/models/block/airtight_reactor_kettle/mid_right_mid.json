@@ -4,7 +4,7 @@
 	"render_type": "minecraft:cutout_mipped",
 	"texture_size": [32, 32],
 	"textures": {
-		"1": "createcraftedbeginning:block/airtight_reactor_kettle/windows",
+		"5": "createcraftedbeginning:block/airtight_reactor_kettle/windows",
 		"particle": "createcraftedbeginning:block/airtight_tank/top"
 	},
 	"elements": [
@@ -13,9 +13,9 @@
 			"to": [15, 1, 16],
 			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
 			"faces": {
-				"east": {"uv": [10.5, 10.5, 14.5, 10.75], "texture": "#1"},
-				"west": {"uv": [10.5, 10.5, 14.5, 10.75], "texture": "#1"},
-				"up": {"uv": [15.25, 10.5, 16, 11.25], "texture": "#1"}
+				"east": {"uv": [10.5, 10.5, 14.5, 10.75], "texture": "#5"},
+				"west": {"uv": [10.5, 10.5, 14.5, 10.75], "texture": "#5"},
+				"up": {"uv": [15.25, 10.5, 16, 11.25], "texture": "#5"}
 			}
 		}
 	]

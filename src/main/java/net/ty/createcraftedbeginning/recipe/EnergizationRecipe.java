@@ -1,24 +1,27 @@
 package net.ty.createcraftedbeginning.recipe;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.SizedGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
 import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EnergizationRecipe extends StandardProcessingWithGasRecipe<SingleRecipeInput> {
     public EnergizationRecipe(ProcessingWithGasRecipeParams params) {
         super(CCBRecipeTypes.ENERGIZATION, params);
     }
 
-    public static @NotNull Gas getResultGasType(@NotNull Level level, Gas gasType) {
+    public static Gas getResultGasType(Level level, Gas gasType) {
         List<RecipeHolder<EnergizationRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.ENERGIZATION.getType());
         for (RecipeHolder<EnergizationRecipe> holder : recipes) {
             EnergizationRecipe recipe = holder.value();
@@ -33,7 +36,7 @@ public class EnergizationRecipe extends StandardProcessingWithGasRecipe<SingleRe
     }
 
     @Override
-    public boolean matches(@NotNull SingleRecipeInput input, @NotNull Level level) {
+    public boolean matches(SingleRecipeInput input, Level level) {
         return true;
     }
 

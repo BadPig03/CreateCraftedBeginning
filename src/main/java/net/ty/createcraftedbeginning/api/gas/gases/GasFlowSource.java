@@ -4,19 +4,23 @@ import com.simibubi.create.foundation.ICapabilityProvider;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.createmod.catnip.math.BlockFace;
 import net.createmod.ponder.api.level.PonderLevel;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
+import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.ref.WeakReference;
 import java.util.function.Predicate;
 
-@SuppressWarnings("unused")
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class GasFlowSource {
-    private static final ICapabilityProvider<IGasHandler> EMPTY = null;
-
     protected BlockFace location;
 
     public GasFlowSource(BlockFace location) {
@@ -24,38 +28,35 @@ public abstract class GasFlowSource {
     }
 
     public GasStack provideGas(Predicate<GasStack> extractionPredicate) {
-        ICapabilityProvider<IGasHandler> tankCache = provideHandler();
-        if (tankCache == null) {
+        ICapabilityProvider<IGasHandler> provider = getGasHandlerProvider();
+        if (provider == null) {
             return GasStack.EMPTY;
         }
 
-        IGasHandler tank = tankCache.getCapability();
-        if (tank == null) {
+        IGasHandler handler = provider.getCapability();
+        if (handler == null) {
             return GasStack.EMPTY;
         }
 
-        GasStack immediateFluid = tank.drain(1, GasAction.SIMULATE);
-        if (extractionPredicate.test(immediateFluid)) {
-            return immediateFluid;
+        GasStack immediate = handler.drain(1, GasAction.SIMULATE);
+        if (extractionPredicate.test(immediate)) {
+            return immediate;
         }
 
-        for (int i = 0; i < tank.getTanks(); i++) {
-            GasStack contained = tank.getGasInTank(i);
+        for (int i = 0; i < handler.getTanks(); i++) {
+            GasStack contained = handler.getGasInTank(i);
             if (contained.isEmpty() || !extractionPredicate.test(contained)) {
                 continue;
             }
 
-            return tank.drain(contained.copyWithAmount(1), GasAction.SIMULATE);
+            return handler.drain(contained.copyWithAmount(1), GasAction.SIMULATE);
         }
 
         return GasStack.EMPTY;
     }
 
-    public @Nullable ICapabilityProvider<IGasHandler> provideHandler() {
-        return EMPTY;
-    }
-
-    public void keepAlive() {
+    public @Nullable ICapabilityProvider<IGasHandler> getGasHandlerProvider() {
+        return null;
     }
 
     public abstract boolean isEndpoint();
@@ -63,20 +64,17 @@ public abstract class GasFlowSource {
     public void manageSource(Level level, BlockEntity networkBE) {
     }
 
-    public void whileFlowPresent(Level level, boolean pulling) {
-    }
-
-    public static class GasHandler extends GasFlowSource {
+    public static class ExternalHandlerSource extends GasFlowSource {
         @Nullable ICapabilityProvider<IGasHandler> gasHandlerCache;
 
-        public GasHandler(BlockFace location) {
+        public ExternalHandlerSource(BlockFace location) {
             super(location);
-            gasHandlerCache = EMPTY;
+            gasHandlerCache = null;
         }
 
         @Override
         @Nullable
-        public ICapabilityProvider<IGasHandler> provideHandler() {
+        public ICapabilityProvider<IGasHandler> getGasHandlerProvider() {
             return gasHandlerCache;
         }
 
@@ -97,21 +95,21 @@ public abstract class GasFlowSource {
             }
 
             if (level instanceof ServerLevel serverLevel) {
-                gasHandlerCache = ICapabilityProvider.of(invalidate -> BlockCapabilityCache.create(GasCapabilities.GasHandler.BLOCK, serverLevel, blockEntity.getBlockPos(), location.getOppositeFace(), () -> !networkBE.isRemoved(), () -> {
-                    gasHandlerCache = EMPTY;
+                gasHandlerCache = ICapabilityProvider.of(invalidate -> BlockCapabilityCache.create(GasHandler.BLOCK, serverLevel, blockEntity.getBlockPos(), location.getOppositeFace(), () -> !networkBE.isRemoved(), () -> {
+                    gasHandlerCache = null;
                     invalidate.run();
                 }));
             }
             else if (level instanceof PonderLevel) {
-                gasHandlerCache = ICapabilityProvider.of(() -> level.getCapability(GasCapabilities.GasHandler.BLOCK, blockEntity.getBlockPos(), location.getOppositeFace()));
+                gasHandlerCache = ICapabilityProvider.of(() -> level.getCapability(GasHandler.BLOCK, blockEntity.getBlockPos(), location.getOppositeFace()));
             }
         }
     }
 
-    public static class OtherPipe extends GasFlowSource {
+    public static class AdjacentPipeSource extends GasFlowSource {
         WeakReference<GasTransportBehaviour> cached;
 
-        public OtherPipe(BlockFace location) {
+        public AdjacentPipeSource(BlockFace location) {
             super(location);
         }
 
@@ -126,8 +124,8 @@ public abstract class GasFlowSource {
                 return GasStack.EMPTY;
             }
 
-            GasStack providedOutwardFluid = behaviour.getProvidedOutwardGas(location.getOppositeFace());
-            return extractionPredicate.test(providedOutwardFluid) ? providedOutwardFluid : GasStack.EMPTY;
+            GasStack providedOutward = behaviour.getProvidedOutwardGas(location.getOppositeFace());
+            return extractionPredicate.test(providedOutward) ? providedOutward : GasStack.EMPTY;
         }
 
         @Override

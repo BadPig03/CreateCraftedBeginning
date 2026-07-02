@@ -8,6 +8,7 @@ import com.simibubi.create.foundation.fluid.SmartFluidTank;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import net.createmod.catnip.lang.LangBuilder;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
@@ -24,10 +25,12 @@ import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlock;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
     private static final int LAZY_TICK_RATE = 20;
     private static final String COMPOUND_KEY_INVENTORY = "Inventory";
@@ -44,7 +47,7 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
         setLazyTickRate(LAZY_TICK_RATE);
     }
 
-    public static void registerCapabilities(@NotNull RegisterCapabilitiesEvent event) {
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.RESIDUE_OUTLET.get(), (be, context) -> be.fluidTankBehaviour.getCapability());
         event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.RESIDUE_OUTLET.get(), (be, context) -> be.itemCapability);
     }
@@ -78,7 +81,7 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     @Override
-    public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         fluidTankBehaviour = SmartFluidTankBehaviour.single(this, getMaxCapacity()).forbidInsertion();
         behaviours.add(fluidTankBehaviour);
     }

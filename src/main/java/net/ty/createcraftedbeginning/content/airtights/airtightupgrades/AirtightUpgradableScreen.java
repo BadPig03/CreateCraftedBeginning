@@ -11,6 +11,7 @@ import net.createmod.catnip.gui.widget.AbstractSimiWidget;
 import net.createmod.catnip.lang.FontHelper.Palette;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.CommonComponents;
@@ -24,9 +25,9 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,11 +35,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu> extends AbstractSimiContainerScreen<T> {
     protected static final AllGuiTextures PLAYER_INVENTORY = AllGuiTextures.PLAYER_INVENTORY;
 
-    protected static final int PLAYER_INVENTORY_SLOTS = Inventory.INVENTORY_SIZE;
     protected static final Component UPGRADE_SLOT_TITLE = CCBLang.translateDirect("gui.upgrade_slot");
     protected static final Component OPTION_ENABLED = CCBLang.translateDirect("gui.option_enabled");
     protected static final Component OPTION_DISABLED = CCBLang.translateDirect("gui.option_disabled");
@@ -82,7 +84,7 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
     }
 
     @Override
-    protected void renderForeground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+    protected void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         super.renderForeground(guiGraphics, mouseX, mouseY, partialTicks);
         for (ScreenButtonConfig buttonConfig : buttonConfigsMap.values()) {
             IconButton button = buttonConfig.getIconButton();
@@ -108,12 +110,13 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
             tooltips.add(CCBLang.translateDirect("gui.hold_for_description", CCBLang.translateDirect("gui.key.shift").withStyle(hasShiftDown ? ChatFormatting.WHITE : ChatFormatting.GRAY)).withStyle(ChatFormatting.DARK_GRAY));
             if (hasShiftDown) {
                 tooltips.addAll(TooltipHelper.cutTextComponent(buttonConfig.getDescription(), Palette.ALL_GRAY));
-
-                Component gasCost = buttonConfig.getGasCostComponent();
-                if (gasCost != null) {
+                List<Component> components = buttonConfig.getComponents();
+                if (!components.isEmpty()) {
                     tooltips.add(CommonComponents.EMPTY);
-                    tooltips.add(CCBLang.translateDirect("gui.gas_cost").withStyle(ChatFormatting.GRAY));
-                    tooltips.add(gasCost.plainCopy().withStyle(ChatFormatting.GRAY));
+                    tooltips.add(CCBLang.translateDirect("gui.gas_consumption").withStyle(ChatFormatting.GRAY));
+                    for (Component component: components) {
+                        tooltips.add(component.plainCopy().withStyle(ChatFormatting.GRAY));
+                    }
                 }
             }
             guiGraphics.renderTooltip(font, tooltips, Optional.empty(), mouseX, mouseY);
@@ -122,17 +125,17 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
     }
 
     @Override
-    protected void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+    public List<Rect2i> getExtraAreas() {
+        return ImmutableList.of(new Rect2i(leftPos + 2 + background.getWidth(), topPos + background.getHeight() - 48, 48, 48));
+    }
+
+    @Override
+    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
         renderPlayerInventory(guiGraphics, getLeftOfCentered(PLAYER_INVENTORY.getWidth()) + 1, topPos + background.getHeight() + 4);
         background.render(guiGraphics, leftPos + 2, topPos);
         Component hoverName = menu.contentHolder.getHoverName();
         guiGraphics.drawString(font, hoverName, leftPos + (background.getWidth() - 8) / 2 - font.width(hoverName) / 2 + 2, topPos + 4, 0xFFFFFF, false);
         GuiGameElement.of(menu.contentHolder).scale(4).at(leftPos + background.getWidth() + 2, topPos + background.getHeight() - 48, -200).render(guiGraphics);
-    }
-
-    @Override
-    public List<Rect2i> getExtraAreas() {
-        return ImmutableList.of(new Rect2i(leftPos + 2 + background.getWidth(), topPos + background.getHeight() - 48, 48, 48));
     }
 
     protected void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY) {
@@ -168,11 +171,11 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
         AirtightUpgradeStatus upgradeStatus = menu.getStatus(upgrade);
         if (upgradeStatus.isInstalled()) {
             menu.toggleUpgrade(upgrade);
-            CatnipServices.NETWORK.sendToServer(new AirtightUpgradePacket(upgrade.getID(), false, ItemStack.EMPTY));
-        } else if (menu.getMenuInventory().getStackInSlot(AirtightUpgradableMenu.UPGRADE_SLOT_INDEX).is(upgrade.getUpgradeItem())) {
+            CatnipServices.NETWORK.sendToServer(new AirtightUpgradePacket(upgrade.getID(), false));
+        }
+        else if (menu.getMenuInventory().getStackInSlot(AirtightUpgradableMenu.UPGRADE_SLOT_INDEX).is(upgrade.getUpgradeItem())) {
             menu.installUpgrade(upgrade);
-            ItemStack upgradeItemInSlot = menu.getMenuInventory().getStackInSlot(AirtightUpgradableMenu.UPGRADE_SLOT_INDEX).copy();
-            CatnipServices.NETWORK.sendToServer(new AirtightUpgradePacket(upgrade.getID(), true, upgradeItemInSlot));
+            CatnipServices.NETWORK.sendToServer(new AirtightUpgradePacket(upgrade.getID(), true));
         }
     }
 
@@ -184,17 +187,17 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
         private final Component description;
         private final Supplier<Boolean> isEnabled;
         private final Supplier<Boolean> canBeInstalled;
-        private final Supplier<Component> gasCostComponent;
+        private final Supplier<List<Component>> components;
         @Nullable
         private final Item upgradeItem;
 
-        public ScreenButtonConfig(IconButton iconButton, Component title, Component description, Supplier<Boolean> isEnabled, Supplier<Boolean> canBeInstalled, Supplier<Component> gasCostComponent, @Nullable Item upgradeItem) {
+        public ScreenButtonConfig(IconButton iconButton, Component title, Component description, Supplier<Boolean> isEnabled, Supplier<Boolean> canBeInstalled, Supplier<List<Component>> components, @Nullable Item upgradeItem) {
             this.iconButton = iconButton;
             this.title = title;
             this.description = description;
             this.isEnabled = isEnabled;
             this.canBeInstalled = canBeInstalled;
-            this.gasCostComponent = gasCostComponent;
+            this.components = components;
             this.upgradeItem = upgradeItem;
         }
 
@@ -218,9 +221,8 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
             return canBeInstalled.get();
         }
 
-        @Nullable
-        public Component getGasCostComponent() {
-            return gasCostComponent.get();
+        public List<Component> getComponents() {
+            return components.get();
         }
 
         @Nullable

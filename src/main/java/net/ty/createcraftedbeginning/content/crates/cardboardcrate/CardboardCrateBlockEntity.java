@@ -74,7 +74,9 @@ public class CardboardCrateBlockEntity extends CratesBlockEntity implements IHav
 
     @Override
     public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
-        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.BORN_FROM_THE_SAME_ROOT);
+        super.addBehaviours(behaviours);
+
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.CUT_FROM_THE_SAME_CARDBOARD);
         behaviours.add(advancementBehaviour);
     }
 
@@ -179,7 +181,7 @@ public class CardboardCrateBlockEntity extends CratesBlockEntity implements IHav
 
             if (!simulate) {
                 if (awardAdvancement(content)) {
-                    advancementBehaviour.awardPlayer(CCBAdvancements.BORN_FROM_THE_SAME_ROOT);
+                    advancementBehaviour.awardPlayer(CCBAdvancements.CUT_FROM_THE_SAME_CARDBOARD);
                 }
                 content = stack.copyWithCount(1);
                 count = Math.min(stack.getCount(), maxCount);

@@ -6,6 +6,7 @@ import com.simibubi.create.content.kinetics.base.IRotate.StressImpact;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import net.createmod.catnip.lang.LangBuilder;
 import net.minecraft.ChatFormatting;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -15,15 +16,17 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.reactorkettle.TemperatureCondition;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AirtightReactorKettleTooltipBuilder {
     private final AirtightReactorKettleCore core;
     private final AirtightReactorKettleBlockEntity kettle;
@@ -33,11 +36,7 @@ public class AirtightReactorKettleTooltipBuilder {
         this.kettle = kettle;
     }
 
-    private static int getMaxItemDisplayCount() {
-        return CCBConfig.client().maxItemStackDisplay.get();
-    }
-
-    public void addToGoggleTooltip(@NotNull List<Component> tooltip) {
+    public void addToGoggleTooltip(List<Component> tooltip) {
         if (addStoredInfo(tooltip)) {
             tooltip.add(CommonComponents.EMPTY);
         }
@@ -46,7 +45,7 @@ public class AirtightReactorKettleTooltipBuilder {
         addKineticInfo(tooltip);
     }
 
-    public boolean addToTooltip(@NotNull List<Component> tooltip) {
+    public boolean addToTooltip(List<Component> tooltip) {
         AirtightReactorKettleStructureManager structureManager = core.getStructureManager();
         if (structureManager.getOverstressed() && AllConfigs.client().enableOverstressedTooltip.get()) {
             CCBLang.translate("gui.goggles.overstressed").style(ChatFormatting.GOLD).forGoggles(tooltip);
@@ -84,7 +83,7 @@ public class AirtightReactorKettleTooltipBuilder {
     private boolean addStoredInfo(List<Component> tooltip) {
         CCBLang.translate("gui.goggles.airtight_reactor_kettle").forGoggles(tooltip);
         CCBLang.translate("gui.goggles.airtight_reactor_kettle.contents").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        int maxDisplay = getMaxItemDisplayCount();
+        int maxDisplay = CCBConfig.client().maxItemStackDisplay.get();
         int listCount = 0;
         IItemHandlerModifiable itemCapability = kettle.getItemCapability();
         for (int i = 0; i < itemCapability.getSlots(); i++) {

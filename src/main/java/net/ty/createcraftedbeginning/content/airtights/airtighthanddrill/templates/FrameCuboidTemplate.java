@@ -1,17 +1,16 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.templates;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashSet;
 import java.util.Set;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class FrameCuboidTemplate extends BaseTemplate {
-    @Override
-    public int[] getDefaultRelativePosition() {
-        return new int[]{1, 1, 1};
-    }
-
     @Override
     public Set<BlockPos> getBaseArea(int @NotNull [] params) {
         int sizeX = params[0];
@@ -34,6 +33,11 @@ public class FrameCuboidTemplate extends BaseTemplate {
             frameCuboid.add(new BlockPos(x, y, z));
         }
         return frameCuboid;
+    }
+
+    @Override
+    public int[] getDefaultRelativePosition() {
+        return new int[]{1, 1, 1};
     }
 
     @Override

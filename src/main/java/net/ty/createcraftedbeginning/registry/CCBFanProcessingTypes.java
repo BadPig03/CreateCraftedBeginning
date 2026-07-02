@@ -2,12 +2,17 @@ package net.ty.createcraftedbeginning.registry;
 
 import com.simibubi.create.api.registry.CreateRegistries;
 import com.simibubi.create.content.kinetics.fan.processing.FanProcessingType;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.content.fanprocessing.ChillingFanProcessingType;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBFanProcessingTypes {
     private static final DeferredRegister<FanProcessingType> TYPES = DeferredRegister.create(CreateRegistries.FAN_PROCESSING_TYPE, CreateCraftedBeginning.MOD_ID);

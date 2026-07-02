@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.data;
 
 import com.simibubi.create.content.equipment.BuildersTeaItem;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.core.registries.Registries;
@@ -17,11 +18,13 @@ import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.content.icecreams.MilkIceCreamItem;
 import net.ty.createcraftedbeginning.recipe.generators.WindChargingRecipeGen;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBWindChargingRecipes extends WindChargingRecipeGen {
     GeneratedRecipe CAKE = create("cake", b -> b.require(Items.CAKE).duration(3068));
@@ -37,7 +40,7 @@ public class CCBWindChargingRecipes extends WindChargingRecipeGen {
         return item instanceof OminousBottleItem || item instanceof MilkIceCreamItem || item instanceof BuildersTeaItem;
     }
 
-    private void addFoodRecipes(@NotNull CompletableFuture<Provider> registriesFuture) {
+    private void addFoodRecipes(CompletableFuture<Provider> registriesFuture) {
         registriesFuture.thenAccept(registries -> {
             HolderLookup<Item> items = registries.lookupOrThrow(Registries.ITEM);
             items.listElements().forEach(holder -> {

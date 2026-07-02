@@ -1,11 +1,15 @@
 package net.ty.createcraftedbeginning.advancement;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.LinkedList;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBTriggers {
     private static final List<CriterionTriggerBase<?>> triggers = new LinkedList<>();
 

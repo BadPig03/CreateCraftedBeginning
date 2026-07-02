@@ -1,11 +1,12 @@
 package net.ty.createcraftedbeginning.content.end.endsculksilencer;
 
 import net.createmod.catnip.platform.CatnipServices;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,41 +14,22 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-public class GlobalEndSculkSilencerManager {
-    private static final float TICK_RATE = EndSculkSilencerBlockEntity.LAZY_TICK_RATE * 2;
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public final class GlobalEndSculkSilencerManager {
+    private static final float TICK_RATE = 10;
+    private static final Map<UUID, EndSculkSilencerInstance> SILENCERS = new HashMap<>();
 
-    private final Map<UUID, EndSculkSilencerInstance> silencers = new HashMap<>();
-
-    public boolean checkWithinRange(BlockPos soundPos, String dimension) {
-        return silencers.values().stream().anyMatch(instance -> Objects.equals(instance.dimension, dimension) && EndSculkSilencerInstance.isWithinChunkRange(soundPos, instance.blockPos, instance.range));
+    private GlobalEndSculkSilencerManager() {
     }
 
-    public boolean canUpdate(@NotNull BlockPos blockPos, String dimension, short range) {
-        UUID uuid = EndSculkSilencerInstance.calculateUUID(blockPos, dimension);
-        return !silencers.containsKey(uuid) || silencers.get(uuid).range != range;
-    }
-
-    public void add(BlockPos blockPos, String dimension, short range) {
-        UUID uuid = EndSculkSilencerInstance.calculateUUID(blockPos, dimension);
-        silencers.put(uuid, new EndSculkSilencerInstance(blockPos, dimension, range));
-    }
-
-    public void remove(BlockPos blockPos, String dimension) {
-        UUID uuid = EndSculkSilencerInstance.calculateUUID(blockPos, dimension);
-        if (!silencers.containsKey(uuid)) {
-            return;
-        }
-
-        silencers.remove(uuid);
-    }
-
-    public void tick(@NotNull Level level) {
+    public static void tick(Level level) {
         if (level.getGameTime() % TICK_RATE != 0) {
             return;
         }
 
         List<UUID> toRemove = new ArrayList<>();
-        silencers.values().forEach(instance -> {
+        SILENCERS.values().forEach(instance -> {
             String dimension = instance.dimension;
             if (!Objects.equals(dimension, level.dimension().location().toString())) {
                 return;
@@ -64,14 +46,37 @@ public class GlobalEndSculkSilencerManager {
             return;
         }
 
-        toRemove.forEach(silencers::remove);
+        toRemove.forEach(SILENCERS::remove);
     }
 
-    public void clear() {
-        silencers.clear();
+    public static boolean checkWithinRange(BlockPos soundPos, String dimension) {
+        return SILENCERS.values().stream().anyMatch(instance -> Objects.equals(instance.dimension, dimension) && EndSculkSilencerInstance.isWithinChunkRange(soundPos, instance.blockPos, instance.range));
     }
 
-    public void sendToClients(ServerPlayer serverPlayer) {
-        silencers.values().forEach(instance -> CatnipServices.NETWORK.sendToClient(serverPlayer, new EndSculkSilencerUpdatePacket(instance.blockPos, instance.dimension, instance.range, true)));
+    public static boolean canUpdate(BlockPos blockPos, String dimension, short range) {
+        UUID uuid = EndSculkSilencerInstance.calculateUUID(blockPos, dimension);
+        return !SILENCERS.containsKey(uuid) || SILENCERS.get(uuid).range != range;
+    }
+
+    public static void add(BlockPos blockPos, String dimension, short range) {
+        UUID uuid = EndSculkSilencerInstance.calculateUUID(blockPos, dimension);
+        SILENCERS.put(uuid, new EndSculkSilencerInstance(blockPos, dimension, range));
+    }
+
+    public static void remove(BlockPos blockPos, String dimension) {
+        UUID uuid = EndSculkSilencerInstance.calculateUUID(blockPos, dimension);
+        if (!SILENCERS.containsKey(uuid)) {
+            return;
+        }
+
+        SILENCERS.remove(uuid);
+    }
+
+    public static void clear() {
+        SILENCERS.clear();
+    }
+
+    public static void sendToClients(ServerPlayer serverPlayer) {
+        SILENCERS.values().forEach(instance -> CatnipServices.NETWORK.sendToClient(serverPlayer, new EndSculkSilencerUpdatePacket(instance.blockPos, instance.dimension, instance.range, true)));
     }
 }

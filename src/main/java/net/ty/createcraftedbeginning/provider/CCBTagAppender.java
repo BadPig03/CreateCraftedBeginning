@@ -1,12 +1,16 @@
 package net.ty.createcraftedbeginning.provider;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.data.tags.TagsProvider.TagAppender;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagBuilder;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBTagAppender<T> extends TagAppender<T> {
     private final Function<T, ResourceKey<T>> keyExtractor;
 
