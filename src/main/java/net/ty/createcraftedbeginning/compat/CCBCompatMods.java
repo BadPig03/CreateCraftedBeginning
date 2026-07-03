@@ -14,7 +14,8 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public enum CCBCompatMods {
-    JEI("jei");
+    JEI("jei"),
+    KUBEJS("kubeJS");
 
     private final String id;
 

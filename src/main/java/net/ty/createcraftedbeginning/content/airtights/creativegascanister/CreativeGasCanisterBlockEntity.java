@@ -89,10 +89,6 @@ public class CreativeGasCanisterBlockEntity extends SmartBlockEntity implements 
         }
 
         SmartGasTank gasTank = tankBehaviour.getPrimaryHandler();
-        if (gasTank == null) {
-            return false;
-        }
-
         CCBLang.translate("gui.goggles.gas_container").forGoggles(tooltip);
         GasStack stack = gasTank.getGasStack();
         if (stack.isEmpty()) {

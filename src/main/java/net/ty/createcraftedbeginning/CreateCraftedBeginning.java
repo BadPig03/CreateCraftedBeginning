@@ -24,6 +24,7 @@ import net.neoforged.neoforge.registries.RegisterEvent;
 import net.ty.createcraftedbeginning.advancement.CCBTriggers;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasBuilder;
+import net.ty.createcraftedbeginning.api.turbinehandlers.CCBAirtightTurbineHandlers;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.upgrades.AirtightBootsUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.AirtightChestplateUpgradeRegistry;
@@ -37,10 +38,11 @@ import net.ty.createcraftedbeginning.data.CCBGases;
 import net.ty.createcraftedbeginning.data.CCBRegistrate;
 import net.ty.createcraftedbeginning.init.CCBAirtightArmorsHandlers;
 import net.ty.createcraftedbeginning.init.CCBAirtightCannonHandlers;
+import net.ty.createcraftedbeginning.api.enginehandlers.CCBAirtightEngineHandlers;
 import net.ty.createcraftedbeginning.init.CCBAirtightExtendArmHandlers;
 import net.ty.createcraftedbeginning.init.CCBAirtightHandheldDrillHandlers;
-import net.ty.createcraftedbeginning.init.CCBAirtightPipeEffectHandlers;
-import net.ty.createcraftedbeginning.init.CCBAirtightPipeExtractHandlers;
+import net.ty.createcraftedbeginning.api.drainagehandlers.CCBAirtightDrainageHandlers;
+import net.ty.createcraftedbeginning.api.fillhandlers.CCBAirtightFillHandlers;
 import net.ty.createcraftedbeginning.init.CCBCoolantStrategyHandlers;
 import net.ty.createcraftedbeginning.init.CCBReactorKettleThermoregulators;
 import net.ty.createcraftedbeginning.init.CCBUnpackingHandlers;
@@ -134,12 +136,14 @@ public class CreateCraftedBeginning {
         event.enqueueWork(() -> {
             CCBAirtightArmorsHandlers.register();
             CCBAirtightCannonHandlers.register();
+            CCBAirtightEngineHandlers.register();
+            CCBAirtightTurbineHandlers.register();
             CCBAirtightExtendArmHandlers.register();
             CCBAirtightHandheldDrillHandlers.register();
             CCBReactorKettleThermoregulators.register();
             CCBCoolantStrategyHandlers.register();
-            CCBAirtightPipeEffectHandlers.register();
-            CCBAirtightPipeExtractHandlers.register();
+            CCBAirtightDrainageHandlers.register();
+            CCBAirtightFillHandlers.register();
             CCBUnpackingHandlers.register();
         });
     }

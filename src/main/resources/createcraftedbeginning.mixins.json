@@ -13,6 +13,8 @@
     "accessor.SmithingTrimRecipeAccessor",
     "accessor.ZombieAccessor",
     "create.BeltMovementHandlerMixin",
+    "create.ChainConveyorRendererMixin",
+    "create.ChainConveyorVisualMixin",
     "create.FillingBySpoutMixin",
     "create.ManualApplicationRecipeMixin",
     "create.MechanicalPressBlockEntityMixin",

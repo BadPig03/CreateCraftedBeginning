@@ -141,7 +141,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     @Override
-    protected void write(CompoundTag compoundTag, Provider registries, boolean clientPacket) {
+    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         CompoundTag stateTag = new CompoundTag();
         currentState.save(stateTag);
         compoundTag.put(COMPOUND_KEY_STATE_DATA, stateTag);
@@ -150,11 +150,11 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         compoundTag.putBoolean(COMPOUND_KEY_TRAIN_HAT, trainHat);
         compoundTag.putBoolean(COMPOUND_KEY_LAST_COOLER_STATE, lastCoolerState);
 
-        super.write(compoundTag, registries, clientPacket);
+        super.write(compoundTag, provider, clientPacket);
     }
 
     @Override
-    protected void read(CompoundTag compoundTag, Provider registries, boolean clientPacket) {
+    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         if (compoundTag.contains(COMPOUND_KEY_STATE_TYPE) && compoundTag.contains(COMPOUND_KEY_STATE_DATA)) {
             CoolantType stateType = CoolantType.values()[compoundTag.getInt(COMPOUND_KEY_STATE_TYPE)];
             CompoundTag stateData = compoundTag.getCompound(COMPOUND_KEY_STATE_DATA);
@@ -185,7 +185,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
             lastCoolerState = compoundTag.getBoolean(COMPOUND_KEY_LAST_COOLER_STATE);
         }
 
-        super.read(compoundTag, registries, clientPacket);
+        super.read(compoundTag, provider, clientPacket);
     }
 
     private boolean isLiquidInvalid() {

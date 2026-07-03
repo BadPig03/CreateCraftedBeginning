@@ -19,7 +19,7 @@ import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
-import net.ty.createcraftedbeginning.compat.jei.CCBJEI;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedGasInjectionChamber;
 import net.ty.createcraftedbeginning.recipe.SequencedWithGasRecipe;
 
@@ -140,7 +140,7 @@ public abstract class SequencedAssemblyWithGasSubCategory {
             for (GasStack stack : gasStackList) {
                 fullStacks.add(stack.copyWithAmount(FluidType.BUCKET_VOLUME));
             }
-            builder.addSlot(RecipeIngredientRole.INPUT, x + 4, 15).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEI.GAS_STACK, fullStacks).setFluidRenderer(FluidType.BUCKET_VOLUME, false, 16, 16).addRichTooltipCallback((recipeSlotView, tooltip) -> gasStackList.stream().map(stack -> Component.translatable("jei.tooltip.gas.amount", stack.getAmount()).withStyle(ChatFormatting.GRAY)).forEach(tooltip::add));
+            builder.addSlot(RecipeIngredientRole.INPUT, x + 4, 15).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, fullStacks).setFluidRenderer(FluidType.BUCKET_VOLUME, false, 16, 16).addRichTooltipCallback((recipeSlotView, tooltip) -> gasStackList.stream().map(stack -> Component.translatable("jei.tooltip.gas.amount", stack.getAmount()).withStyle(ChatFormatting.GRAY)).forEach(tooltip::add));
         }
 
         @Override

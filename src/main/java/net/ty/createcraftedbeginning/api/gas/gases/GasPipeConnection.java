@@ -15,10 +15,12 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
-import net.ty.createcraftedbeginning.api.gas.gases.GasFlowSource.Blocked;
-import net.ty.createcraftedbeginning.api.gas.gases.GasFlowSource.ExternalHandlerSource;
-import net.ty.createcraftedbeginning.api.gas.gases.GasFlowSource.AdjacentPipeSource;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.flowsources.AdjacentPipeSource;
+import net.ty.createcraftedbeginning.api.gas.gases.flowsources.BlockedSource;
+import net.ty.createcraftedbeginning.api.gas.gases.flowsources.ExternalHandlerSource;
+import net.ty.createcraftedbeginning.api.gas.gases.flowsources.GasFlowSource;
+import net.ty.createcraftedbeginning.api.gas.gases.flowsources.OpenEndedSource;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Optional;
@@ -26,7 +28,8 @@ import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class GasPipeConnection {
+@SuppressWarnings("unused")
+public final class GasPipeConnection {
     private static final String COMPOUND_KEY_PRESSURE = "Pressure";
     private static final String COMPOUND_KEY_OPEN_END = "OpenEnd";
     private static final String COMPOUND_KEY_AIR_FLOW = "AirFlow";
@@ -51,14 +54,13 @@ public class GasPipeConnection {
     }
 
     public GasStack getProvidedGas() {
-        GasStack empty = GasStack.EMPTY;
-        if (flow.isEmpty()) {
-            return empty;
+        if (!hasPressure() || flow.isEmpty()) {
+            return GasStack.EMPTY;
         }
 
         AirFlow airFlow = flow.get();
         if (!airFlow.inbound) {
-            return empty;
+            return GasStack.EMPTY;
         }
 
         return airFlow.gas;
@@ -101,29 +103,34 @@ public class GasPipeConnection {
     }
 
     public boolean determineSource(Level level, BlockPos pos) {
-        BlockPos relative = pos.relative(side);
-        if (level.getChunk(relative.getX() >> 4, relative.getZ() >> 4, ChunkStatus.FULL, false) == null) {
+        BlockPos relativePos = pos.relative(side);
+        if (level.getChunk(relativePos.getX() >> 4, relativePos.getZ() >> 4, ChunkStatus.FULL, false) == null) {
             return false;
         }
 
         BlockFace location = new BlockFace(pos, side);
-        if (GasPropagator.isOpenEnd(level, pos, side)) {
-            if (previousSource.orElse(null) instanceof OpenEndedAirtightPipe) {
+        if (GasPropagator.isOpenEnded(level, pos, side)) {
+            if (previousSource.orElse(null) instanceof OpenEndedSource) {
                 source = previousSource;
             }
             else {
-                source = Optional.of(new OpenEndedAirtightPipe(location));
+                source = Optional.of(new OpenEndedSource(location));
             }
             return true;
         }
 
-        if (GasPropagator.hasGasCapability(level, location.getConnectedPos(), side.getOpposite())) {
+        if (GasCapabilities.hasGasCapability(level, location.getConnectedPos(), side.getOpposite())) {
             source = Optional.of(new ExternalHandlerSource(location));
             return true;
         }
 
-        GasTransportBehaviour behaviour = BlockEntityBehaviour.get(level, relative, GasTransportBehaviour.TYPE);
-        source = Optional.of(behaviour == null ? new Blocked(location) : new AdjacentPipeSource(location));
+        GasTransportBehaviour behaviour = BlockEntityBehaviour.get(level, relativePos, GasTransportBehaviour.TYPE);
+        if (behaviour == null) {
+            source = Optional.of(new BlockedSource(location));
+        }
+        else {
+            source = Optional.of(new AdjacentPipeSource(location));
+        }
         return true;
     }
 
@@ -221,8 +228,8 @@ public class GasPipeConnection {
             connectionData.put(COMPOUND_KEY_PRESSURE, pressureData);
         }
 
-        if (source.orElse(null) instanceof OpenEndedAirtightPipe) {
-            connectionData.put(COMPOUND_KEY_OPEN_END, ((OpenEndedAirtightPipe) source.get()).write(provider));
+        if (source.orElse(null) instanceof OpenEndedSource) {
+            connectionData.put(COMPOUND_KEY_OPEN_END, ((OpenEndedSource) source.get()).write(provider));
         }
 
         if (flow.isPresent()) {
@@ -236,7 +243,6 @@ public class GasPipeConnection {
 
     public void read(CompoundTag compoundTag, Provider provider, BlockPos blockPos, boolean clientPacket) {
         CompoundTag connectionData = compoundTag.getCompound(side.getName());
-
         if (connectionData.contains(COMPOUND_KEY_PRESSURE)) {
             ListTag pressureData = connectionData.getList(COMPOUND_KEY_PRESSURE, Tag.TAG_FLOAT);
             pressure = Couple.create(pressureData.getFloat(0), pressureData.getFloat(1));
@@ -247,7 +253,7 @@ public class GasPipeConnection {
 
         source = Optional.empty();
         if (connectionData.contains(COMPOUND_KEY_OPEN_END)) {
-            source = Optional.of(OpenEndedAirtightPipe.read(connectionData.getCompound(COMPOUND_KEY_OPEN_END), provider, blockPos));
+            source = Optional.of(OpenEndedSource.read(connectionData.getCompound(COMPOUND_KEY_OPEN_END), provider, blockPos));
         }
 
         if (connectionData.contains(COMPOUND_KEY_AIR_FLOW)) {
@@ -283,7 +289,7 @@ public class GasPipeConnection {
     }
 
     public GasStack provideOutboundFlow() {
-        if (flow.isEmpty()) {
+        if (!hasPressure() || flow.isEmpty()) {
             return GasStack.EMPTY;
         }
 

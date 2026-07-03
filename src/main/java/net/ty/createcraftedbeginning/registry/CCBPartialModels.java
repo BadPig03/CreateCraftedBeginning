@@ -1,12 +1,15 @@
 package net.ty.createcraftedbeginning.registry;
 
+import com.simibubi.create.AllPartialModels;
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.lang.Lang;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour.AttachmentTypes.ComponentPartials;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes.ComponentPartials;
+import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonStyles;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.EnumMap;
@@ -15,6 +18,7 @@ import java.util.Map;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
+@SuppressWarnings("unused")
 public class CCBPartialModels {
     public static final PartialModel BREEZE_TRAIN_HAT = entity("train_hat");
 
@@ -85,11 +89,19 @@ public class CCBPartialModels {
     public static final PartialModel AIR_VENT_OPENED = block("air_vent/opened");
 
     public static final PartialModel END_INCINERATION_BLOWER_CORE = block("end_incineration_blower/core");
-    public static final PartialModel END_SCULK_SILENCER_CORE =  block("end_sculk_silencer/core");
+    public static final PartialModel END_SCULK_SILENCER_CORE = block("end_sculk_silencer/core");
 
     public static final PartialModel SHAFT_HALF_UP = block("shaft_half_up");
     public static final PartialModel SHAFT_HALF_DOWN = block("shaft_half_down");
 
+    public static final PartialModel BALLOON_10X8 = balloon("balloon_10x8");
+    public static final PartialModel BALLOON_10X12 = balloon("balloon_10x12");
+    public static final PartialModel BALLOON_12X10 = balloon("balloon_12x10");
+    public static final PartialModel BALLOON_12X12 = balloon("balloon_12x12");
+    public static final PartialModel BALLOON_RIGGING_10X8 = balloonRigging("balloon_rigging_10x8");
+    public static final PartialModel BALLOON_RIGGING_10X12 = balloonRigging("balloon_rigging_10x12");
+    public static final PartialModel BALLOON_RIGGING_12X10 = balloonRigging("balloon_rigging_12x10");
+    public static final PartialModel BALLOON_RIGGING_12X12 = balloonRigging("balloon_rigging_12x12");
 
     public static final Map<ComponentPartials, Map<Direction, PartialModel>> AIRTIGHT_PIPE_ATTACHMENTS = new EnumMap<>(ComponentPartials.class);
 
@@ -107,6 +119,20 @@ public class CCBPartialModels {
         return PartialModel.of(CreateCraftedBeginning.asResource("item/" + path));
     }
 
+    private static PartialModel balloon(String path) {
+        PartialModel model = PartialModel.of(CreateCraftedBeginning.asResource("item/balloon/" + path));
+        ResourceLocation location = CreateCraftedBeginning.asResource(path);
+        BalloonStyles.addPackage(location, model);
+        return model;
+    }
+
+    private static PartialModel balloonRigging(String path) {
+        PartialModel model = PartialModel.of(CreateCraftedBeginning.asResource("item/balloon/" + path));
+        ResourceLocation location = CreateCraftedBeginning.asResource(path);
+        BalloonStyles.addPackage(location, model);
+        return model;
+    }
+
     private static PartialModel block(String path) {
         return PartialModel.of(CreateCraftedBeginning.asResource("block/" + path));
     }
@@ -117,5 +143,17 @@ public class CCBPartialModels {
     }
 
     public static void register() {
+    }
+
+    public static void registerBalloons() {
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_10X8.getId(), BALLOON_10X8);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_10X12.getId(), BALLOON_10X12);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_12X10.getId(), BALLOON_12X10);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_12X12.getId(), BALLOON_12X12);
+
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_10X8.getId(), BALLOON_RIGGING_10X8);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_10X12.getId(), BALLOON_RIGGING_10X12);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_12X10.getId(), BALLOON_RIGGING_12X10);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_12X12.getId(), BALLOON_RIGGING_12X12);
     }
 }

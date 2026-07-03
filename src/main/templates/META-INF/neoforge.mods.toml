@@ -3,32 +3,39 @@ loaderVersion="${loader_version_range}"
 license="${mod_license}"
 
 [[mods]]
-modId="${mod_id}"
+modId="createcraftedbeginning"
 version="${mod_version}"
 displayName="${mod_name}"
 authors="${mod_authors}"
 description='''${mod_description}'''
 
 [[mixins]]
-config="${mod_id}.mixins.json"
+config="createcraftedbeginning.mixins.json"
 
-[[dependencies.${mod_id}]]
+[[dependencies.createcraftedbeginning]]
     modId="neoforge"
     type="required"
     versionRange="${neo_version_range}"
     ordering="NONE"
     direction="BOTH"
 
-[[dependencies.${mod_id}]]
+[[dependencies.createcraftedbeginning]]
     modId="minecraft"
     type="required"
     versionRange="${minecraft_version_range}"
     ordering="NONE"
     direction="BOTH"
 
-[[dependencies.${mod_id}]]
+[[dependencies.createcraftedbeginning]]
     modId="create"
     type="required"
     versionRange="[6.0.10,6.1.0)"
     ordering="NONE"
     direction="BOTH"
+
+[[dependencies.kubejs_create]]
+    modId = "kubejs"
+    type="optional"
+    versionRange = "[${kubejs_version},)"
+    ordering = "AFTER"
+    side = "BOTH"

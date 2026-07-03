@@ -24,7 +24,7 @@ import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsE
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
 import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
-import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.weatherflares.WeatherFlareSupplierUtils;
 import net.ty.createcraftedbeginning.registry.CCBItems;

@@ -16,6 +16,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
+@SuppressWarnings("unused")
 public interface AirtightExtendArmHandler {
     SimpleRegistry<Gas, AirtightExtendArmHandler> REGISTRY = SimpleRegistry.create();
 

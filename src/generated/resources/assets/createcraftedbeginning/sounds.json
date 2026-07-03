@@ -145,6 +145,15 @@
       }
     ]
   },
+  "gas_drainage": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "minecraft:entity.breeze.whirl"
+      }
+    ],
+    "subtitle": "createcraftedbeginning.subtitle.gas_drainage"
+  },
   "injecting": {
     "sounds": [
       {

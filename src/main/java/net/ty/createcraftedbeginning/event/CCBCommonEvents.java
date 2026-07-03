@@ -3,7 +3,9 @@ package net.ty.createcraftedbeginning.event;
 import com.simibubi.create.compat.jei.ConversionRecipe;
 import com.simibubi.create.compat.jei.category.MysteriousItemConversionCategory;
 import com.simibubi.create.content.kinetics.deployer.DeployerRecipeSearchEvent;
+import com.simibubi.create.content.trains.schedule.Schedule;
 import com.simibubi.create.foundation.item.ItemHelper;
+import net.createmod.catnip.data.Pair;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -19,6 +21,7 @@ import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasThresholdCondition;
 import net.ty.createcraftedbeginning.api.gas.recipes.DeployerApplicationWithGasRecipe;
 import net.ty.createcraftedbeginning.compat.CCBCompatMods;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlockEntity;
@@ -120,10 +123,13 @@ public class CCBCommonEvents {
 
     @SubscribeEvent
     public static void onRegisterEvent(RegisterEvent event) {
-        if (event.getRegistry() != BuiltInRegistries.TRIGGER_TYPES || !CCBCompatMods.JEI.isLoaded()) {
+        if (event.getRegistry() != BuiltInRegistries.TRIGGER_TYPES) {
             return;
         }
 
-        MysteriousItemConversionCategory.RECIPES.add(ConversionRecipe.create(new ItemStack(CCBBlocks.EMPTY_BREEZE_COOLER_BLOCK), new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK)));
+        if (CCBCompatMods.JEI.isLoaded()) {
+            MysteriousItemConversionCategory.RECIPES.add(ConversionRecipe.create(new ItemStack(CCBBlocks.EMPTY_BREEZE_COOLER_BLOCK), new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK)));
+        }
+        Schedule.CONDITION_TYPES.add(3, Pair.of(CreateCraftedBeginning.asResource("gas_threshold"), GasThresholdCondition::new));
     }
 }

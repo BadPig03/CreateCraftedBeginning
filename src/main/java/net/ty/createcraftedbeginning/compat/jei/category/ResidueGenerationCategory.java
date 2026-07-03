@@ -10,7 +10,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
-import net.ty.createcraftedbeginning.compat.jei.CCBJEI;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightEngine;
 import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe;
@@ -47,7 +47,7 @@ public class ResidueGenerationCategory extends CCBRecipeCategory<ResidueGenerati
         for (GasStack stack : gasStackList) {
             fullStacks.add(stack.copyWithAmount(FluidType.BUCKET_VOLUME));
         }
-        builder.addSlot(RecipeIngredientRole.INPUT, 27, 74).setFluidRenderer(FluidType.BUCKET_VOLUME, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEI.GAS_STACK, fullStacks);
+        builder.addSlot(RecipeIngredientRole.INPUT, 27, 74).setFluidRenderer(FluidType.BUCKET_VOLUME, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, fullStacks);
     }
 
     private static void addOutputSlot(IRecipeLayoutBuilder builder, ResidueGenerationRecipe recipe) {

@@ -17,6 +17,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.FastColor.ARGB32;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
@@ -37,25 +38,20 @@ public class Gas {
     public static final StreamCodec<RegistryFriendlyByteBuf, Holder<Gas>> HOLDER_STREAM_CODEC = ByteBufCodecs.holderRegistry(CCBRegistries.GAS_REGISTRY_KEY);
     public static final StreamCodec<RegistryFriendlyByteBuf, Gas> GAS_STREAM_CODEC = ByteBufCodecs.registry(CCBRegistries.GAS_REGISTRY_KEY);
     public static final Holder<Gas> EMPTY_GAS_HOLDER = DeferredHolder.create(CCBGasRegistries.EMPTY_GAS_KEY);
-    private static final String UNKNOWN_GAS = "gas." + CreateCraftedBeginning.MOD_ID + ".unknown";
 
     private final Reference<Gas> builtInRegistryHolder = CCBGasRegistries.GAS_REGISTRY.createIntrusiveHolder(this);
-    private final ResourceLocation iconLocation;
+    private final ResourceLocation texture;
     private final int tint;
-    private final float inflation;
-    private final float engineEfficiency;
-    private final float teslaEfficiency;
-
+    private final int alpha;
     private final Set<TagKey<Gas>> tags;
+
     @Nullable
     private String translationKey;
 
     public Gas(GasBuilder builder) {
-        iconLocation = builder.getTexture();
+        texture = builder.getTexture();
         tint = builder.getTint();
-        inflation = builder.getInflation();
-        engineEfficiency = builder.getEngineEfficiency();
-        teslaEfficiency = builder.getTeslaEfficiency();
+        alpha = builder.getAlpha();
         tags = builder.getTags() != null ? Set.copyOf(builder.getTags()) : Collections.emptySet();
     }
 
@@ -83,7 +79,7 @@ public class Gas {
     }
 
     public static TextureAtlasSprite getGasTexture(Holder<Gas> holder) {
-        ResourceLocation sprite = holder.value().iconLocation;
+        ResourceLocation sprite = holder.value().texture;
         if (sprite == null) {
             sprite = MissingTextureAtlasSprite.getLocation();
         }
@@ -91,7 +87,7 @@ public class Gas {
     }
 
     public static Gas getGasTypeByName(ResourceLocation location) {
-        return CCBGasRegistries.GAS_REGISTRY.get(location);
+        return CCBGasRegistries.GAS_REGISTRY.getOptional(location).orElse(EMPTY_GAS_HOLDER.value());
     }
 
     public boolean is(TagKey<Gas> tag) {
@@ -106,8 +102,8 @@ public class Gas {
         return builtInRegistryHolder;
     }
 
-    public ResourceLocation getIcon() {
-        return iconLocation;
+    public ResourceLocation getTexture() {
+        return texture;
     }
 
     public String getTranslationKey() {
@@ -117,7 +113,7 @@ public class Gas {
 
         ResourceLocation id = CCBGasRegistries.GAS_REGISTRY.getKeyOrNull(this);
         if (id == null) {
-            translationKey = UNKNOWN_GAS;
+            translationKey = "gas." + CreateCraftedBeginning.MOD_ID + ".unknown";
         }
         else {
             translationKey = "gas." + id.getNamespace() + '.' + id.getPath();
@@ -126,19 +122,7 @@ public class Gas {
     }
 
     public int getTint() {
-        return tint;
-    }
-
-    public float getInflation() {
-        return inflation;
-    }
-
-    public float getEngineEfficiency() {
-        return engineEfficiency;
-    }
-
-    public float getTeslaEfficiency() {
-        return teslaEfficiency;
+        return ARGB32.color(alpha, tint);
     }
 
     public Set<TagKey<Gas>> getTags() {

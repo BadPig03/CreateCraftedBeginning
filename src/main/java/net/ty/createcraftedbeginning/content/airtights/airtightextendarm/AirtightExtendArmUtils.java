@@ -10,8 +10,9 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.armhandlers.AirtightExtendArmHandler;
-import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerConsumers;
-import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.api.gas.armhandlers.ArmHandlerUtils;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerConsumers;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
@@ -46,12 +47,7 @@ public final class AirtightExtendArmUtils {
         }
 
         Gas gasType = gasContent.getGasType();
-        AirtightExtendArmHandler armHandler = AirtightExtendArmHandler.REGISTRY.get(gasType);
-        if (armHandler == null) {
-            removeArmModifiers(player);
-            return;
-        }
-
+        AirtightExtendArmHandler armHandler = ArmHandlerUtils.of(gasType);
         long gasConsumption = getGasConsumption(armHandler);
         if (!CanisterContainerConsumers.interactContainer(player, gasType, gasConsumption, () -> true, true)) {
             removeArmModifiers(player);
@@ -93,8 +89,8 @@ public final class AirtightExtendArmUtils {
         }
 
         Gas gasType = gasContent.getGasType();
-        AirtightExtendArmHandler armHandler = AirtightExtendArmHandler.REGISTRY.get(gasType);
-        return armHandler != null && CanisterContainerConsumers.interactContainer(player, gasType, getGasConsumption(armHandler), () -> true, false);
+        AirtightExtendArmHandler armHandler = ArmHandlerUtils.of(gasType);
+        return CanisterContainerConsumers.interactContainer(player, gasType, getGasConsumption(armHandler), () -> true, false);
     }
 
     private static long getGasConsumption(AirtightExtendArmHandler armHandler) {

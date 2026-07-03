@@ -15,7 +15,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -34,6 +33,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.TickPriority;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities;
 import net.ty.createcraftedbeginning.api.gas.gases.GasPropagator;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
@@ -53,12 +53,12 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false));
     }
 
-    public static boolean canConnectTo(BlockAndTintGetter world, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
-        if (GasPropagator.hasGasCapability(world, neighbourPos, direction.getOpposite())) {
+    public static boolean canConnectTo(Level level, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
+        if (GasCapabilities.hasGasCapability(level, neighbourPos, direction.getOpposite())) {
             return true;
         }
 
-        GasTransportBehaviour transport = BlockEntityBehaviour.get(world, neighbourPos, GasTransportBehaviour.TYPE);
+        GasTransportBehaviour transport = BlockEntityBehaviour.get(level, neighbourPos, GasTransportBehaviour.TYPE);
         return transport != null && transport.canHaveFlowToward(neighbour, direction.getOpposite());
     }
 
@@ -150,7 +150,7 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         boolean changed = !state.is(newState.getBlock());
         if (changed && !level.isClientSide) {
-            GasPropagator.propagateChangedPipe(level, pos, state);
+            GasPropagator.propagatePipe(level, pos, state);
         }
         super.onRemove(state, level, pos, newState, isMoving);
     }
@@ -171,7 +171,7 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block otherBlock, BlockPos neighborPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, otherBlock, neighborPos, isMoving);
-        Direction direction = GasPropagator.validateNeighbourChange(state, level, pos, neighborPos, isMoving);
+        Direction direction = GasPropagator.getChangedNeighbourSide(level, pos, neighborPos);
         if (direction == null || !isOpenAt(state, direction)) {
             return;
         }
@@ -196,8 +196,8 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
     }
 
     @Override
-    public void tick(BlockState state, ServerLevel world, BlockPos pos, RandomSource random) {
-        GasPropagator.propagateChangedPipe(world, pos, state);
+    public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        GasPropagator.propagatePipe(level, pos, state);
     }
 
     @Override

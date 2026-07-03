@@ -111,7 +111,7 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
         IItemHandler availableItems = kettle.getItemCapability();
         IFluidHandler availableFluids = kettle.getFluidCapability();
         IGasHandler availableGases = kettle.getGasCapability();
-        if (availableItems == null || availableFluids == null || availableGases == null || !recipe.temperatureCondition.test(kettle.getCore().getStructureManager().getTemperature())) {
+        if (!recipe.temperatureCondition.test(kettle.getCore().getStructureManager().getTemperature())) {
             return false;
         }
 

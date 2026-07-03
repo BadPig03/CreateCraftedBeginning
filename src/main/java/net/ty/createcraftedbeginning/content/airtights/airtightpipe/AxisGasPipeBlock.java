@@ -149,7 +149,7 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block otherBlock, BlockPos neighborPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, otherBlock, neighborPos, isMoving);
-        Direction direction = GasPropagator.validateNeighbourChange(state, level, pos, neighborPos, isMoving);
+        Direction direction = GasPropagator.getChangedNeighbourSide(level, pos, neighborPos);
         if (direction == null || !isOpenAt(state, direction)) {
             return;
         }
@@ -170,7 +170,7 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         boolean changed = !state.is(newState.getBlock());
         if (changed && !level.isClientSide) {
-            GasPropagator.propagateChangedPipe(level, pos, state);
+            GasPropagator.propagatePipe(level, pos, state);
         }
         super.onRemove(state, level, pos, newState, isMoving);
     }
@@ -191,7 +191,7 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
     }
 
     @Override
-    public void tick(BlockState state, ServerLevel serverLevel, BlockPos pos, RandomSource random) {
-        GasPropagator.propagateChangedPipe(serverLevel, pos, state);
+    public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        GasPropagator.propagatePipe(level, pos, state);
     }
 }

@@ -1,11 +1,12 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades;
 
 import net.createmod.catnip.data.Couple;
-import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -14,10 +15,9 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.AirtightArmorsHandler;
-import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateElytraBoostPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
@@ -33,7 +33,16 @@ import java.util.List;
 public enum ElytraUpgrade implements AirtightUpgrade {
     INSTANCE;
 
-    public static float getBoostMultiplier(Player player) {
+    public static boolean canRequestBoost(Player player) {
+        if (!player.isFallFlying()) {
+            return false;
+        }
+
+        ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
+        return chestplate.is(CCBItems.AIRTIGHT_CHESTPLATE) && INSTANCE.isEnabled(chestplate) && !player.getCooldowns().isOnCooldown(chestplate.getItem());
+    }
+
+    public static float calculateBoostMultiplier(Player player) {
         if (!player.isFallFlying()) {
             return 0;
         }
@@ -52,14 +61,23 @@ public enum ElytraUpgrade implements AirtightUpgrade {
         return armorsHandler.getMultiplierForBoostingElytra();
     }
 
-    public static void speedBoost(Player player, float multiplier) {
+    public static void applySpeedBoost(Player player) {
+        float multiplier = calculateBoostMultiplier(player);
+        if (multiplier <= 0) {
+            return;
+        }
+
         Vec3 pos = player.position();
         Vec3 lookAngle = player.getLookAngle().scale(0.85f * multiplier);
         Vec3 movement = player.getDeltaMovement().scale(0.75f * multiplier);
         player.setDeltaMovement(movement.add(lookAngle));
-        player.level().addParticle(ParticleTypes.GUST_EMITTER_SMALL, pos.x, pos.y, pos.z, 0, 0, 0);
-        player.playSound(CCBSoundEvents.AIRTIGHT_JETPACK_LAUNCH.getMainEvent(), 1, 0.8f);
-        CatnipServices.NETWORK.sendToServer(new AirtightChestplateElytraBoostPacket(multiplier));
+        player.hasImpulse = true;
+        if (!(player.level() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        serverLevel.sendParticles(ParticleTypes.GUST_EMITTER_SMALL, pos.x, pos.y, pos.z, 1, 0, 0, 0, 0);
+        CCBSoundEvents.AIRTIGHT_JETPACK_LAUNCH.playOnServer(serverLevel, BlockPos.containing(pos));
     }
 
     @Override

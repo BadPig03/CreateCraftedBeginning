@@ -1,34 +1,30 @@
 package net.ty.createcraftedbeginning.api.gas.gases;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.AllSpecialTextures;
 import com.simibubi.create.CreateClient;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBox;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBox.ItemValueBox;
-import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxRenderer;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform;
 import net.createmod.catnip.data.Pair;
-import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.outliner.Outliner;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasFilteringBehaviour;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -37,7 +33,8 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class GasFilteringRenderer {
+@OnlyIn(Dist.CLIENT)
+public final class GasFilteringRenderer {
     public static void tick() {
         Minecraft mc = Minecraft.getInstance();
         HitResult target = mc.hitResult;
@@ -85,45 +82,6 @@ public class GasFilteringRenderer {
             tip.add(label.copy());
             tip.add(behaviour.getTip());
             CreateClient.VALUE_SETTINGS_HANDLER.showHoverTip(tip);
-        }
-    }
-
-    public static void renderOnBlockEntity(SmartBlockEntity be, float ignored, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        if (be.isRemoved()) {
-            return;
-        }
-
-        Level level = be.getLevel();
-        BlockPos blockPos = be.getBlockPos();
-        for (BlockEntityBehaviour behaviour : be.getAllBehaviours()) {
-            if (!(behaviour instanceof GasFilteringBehaviour filteringBehaviour)) {
-                continue;
-            }
-
-            if (!be.isVirtual()) {
-                Entity cameraEntity = Minecraft.getInstance().cameraEntity;
-                if (cameraEntity != null && level == cameraEntity.level()) {
-                    float max = filteringBehaviour.getRenderDistance();
-                    if (cameraEntity.position().distanceToSqr(VecHelper.getCenterOf(blockPos)) > max * max) {
-                        continue;
-                    }
-                }
-            }
-
-            if (!filteringBehaviour.isActive() || filteringBehaviour.getFilter().isEmpty()) {
-                continue;
-            }
-
-            ValueBoxTransform slotPositioning = filteringBehaviour.getSlotPositioning();
-            BlockState blockState = be.getBlockState();
-            if (!slotPositioning.shouldRender(level, blockPos, blockState)) {
-                continue;
-            }
-
-            ms.pushPose();
-            slotPositioning.transform(level, blockPos, blockState, ms);
-            ValueBoxRenderer.renderItemIntoValueBox(filteringBehaviour.getFilter(), ms, buffer, light, overlay);
-            ms.popPose();
         }
     }
 }

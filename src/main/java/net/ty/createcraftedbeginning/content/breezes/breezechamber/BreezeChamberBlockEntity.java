@@ -156,18 +156,19 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     @Override
-    protected void write(CompoundTag compoundTag, Provider registries, boolean clientPacket) {
+    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         CompoundTag stateTag = new CompoundTag();
         currentState.save(stateTag);
         compoundTag.put(COMPOUND_KEY_STATE_DATA, stateTag);
         compoundTag.putInt(COMPOUND_KEY_STATE_TYPE, currentState.getChargerType().ordinal());
         compoundTag.putBoolean(COMPOUND_KEY_GOGGLES, goggles);
         compoundTag.putBoolean(COMPOUND_KEY_TRAIN_HAT, trainHat);
-        super.write(compoundTag, registries, clientPacket);
+
+        super.write(compoundTag, provider, clientPacket);
     }
 
     @Override
-    protected void read(CompoundTag compoundTag, Provider registries, boolean clientPacket) {
+    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         if (compoundTag.contains(COMPOUND_KEY_STATE_TYPE) && compoundTag.contains(COMPOUND_KEY_STATE_DATA)) {
             ChargerType stateType = ChargerType.values()[compoundTag.getInt(COMPOUND_KEY_STATE_TYPE)];
             CompoundTag stateData = compoundTag.getCompound(COMPOUND_KEY_STATE_DATA);
@@ -194,7 +195,8 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         if (compoundTag.contains(COMPOUND_KEY_TRAIN_HAT)) {
             trainHat = compoundTag.getBoolean(COMPOUND_KEY_TRAIN_HAT);
         }
-        super.read(compoundTag, registries, clientPacket);
+
+        super.read(compoundTag, provider, clientPacket);
     }
 
     @Override

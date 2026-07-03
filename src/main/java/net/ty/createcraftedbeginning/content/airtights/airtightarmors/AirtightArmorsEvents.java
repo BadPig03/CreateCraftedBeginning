@@ -10,6 +10,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
@@ -67,6 +68,16 @@ public class AirtightArmorsEvents {
     }
 
     @SubscribeEvent
+    public static void onPlayerLoggedIn(PlayerLoggedInEvent event) {
+        Player player = event.getEntity();
+        if (player.level().isClientSide) {
+            return;
+        }
+
+        GlobalAirtightUpgradesConsumptionManager.syncToClient(player);
+    }
+
+    @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerLoggedOutEvent event) {
         Player player = event.getEntity();
         if (player.level().isClientSide) {
@@ -83,5 +94,6 @@ public class AirtightArmorsEvents {
         }
 
         GlobalAirtightUpgradesConsumptionManager.clear(player);
+        GlobalAirtightUpgradesConsumptionManager.syncToClient(player);
     }
 }

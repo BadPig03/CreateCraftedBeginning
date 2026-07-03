@@ -5,6 +5,7 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.api.enginehandlers.AirtightEngineHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
@@ -29,6 +30,7 @@ public class AirtightAssemblyDriverCore {
     private final AirtightAssemblyDriverResidueManager residueManager;
     private final AirtightAssemblyDriverStructureManager structureManager;
     private final AirtightAssemblyDriverTooltipBuilder tooltipBuilder;
+    private final AirtightEngineGasHandler gasHandler;
 
     private boolean dirty;
 
@@ -38,6 +40,7 @@ public class AirtightAssemblyDriverCore {
         structureManager = new AirtightAssemblyDriverStructureManager(this);
         tooltipBuilder = new AirtightAssemblyDriverTooltipBuilder(this);
         levelCalculator = new AirtightAssemblyDriverLevelCalculator(this);
+        gasHandler = new AirtightEngineGasHandler();
     }
 
     public boolean addToGoggleTooltip(List<Component> tooltip) {
@@ -85,7 +88,7 @@ public class AirtightAssemblyDriverCore {
     }
 
     public IGasHandler createGasHandler() {
-        return new AirtightEngineGasHandler();
+        return gasHandler;
     }
 
     public void markDirty() {
@@ -144,7 +147,7 @@ public class AirtightAssemblyDriverCore {
 
         @Override
         public boolean isGasValid(int tank, GasStack gasStack) {
-            return !gasStack.isEmpty() && gasStack.getGasType().getEngineEfficiency() > 0;
+            return !gasStack.isEmpty() && AirtightEngineHandlerUtils.of(gasStack).getEfficiency() > 0;
         }
 
         @Override

@@ -12,10 +12,10 @@ import net.minecraft.world.item.TooltipFlag;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.gas.armhandlers.AirtightExtendArmHandler;
-import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerClients;
-import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.api.gas.armhandlers.ArmHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.data.CCBLang;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -56,20 +56,14 @@ public class AirtightExtendArmItem extends Item {
             return;
         }
 
-        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
-        Gas gasType = gasContent.getGasType();
-        if (gasContent.isEmpty()) {
+        Gas gasType = CanisterContainerSuppliers.getFirstAvailableGasContent(player).getGasType();
+        if (gasType.isEmpty()) {
             return;
         }
 
         tooltip.add(CommonComponents.EMPTY);
-        tooltip.add(CCBLang.gasName(gasContent).add(CCBLang.translate("gui.tooltips.gas_tools.content")).style(ChatFormatting.GRAY).component());
-
-        AirtightExtendArmHandler armHandler = AirtightExtendArmHandler.REGISTRY.get(gasType);
-        if (armHandler == null) {
-            return;
-        }
-
+        tooltip.add(CCBLang.gasName(gasType).add(CCBLang.translate("gui.tooltips.gas_tools.content")).style(ChatFormatting.GRAY).component());
+        AirtightExtendArmHandler armHandler = ArmHandlerUtils.of(gasType);
         armHandler.appendHoverText(arm, context, tooltip, tooltipFlag);
     }
 

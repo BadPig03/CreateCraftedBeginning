@@ -60,7 +60,7 @@ public class BreezeChamberVisual extends AbstractBlockEntityVisual<BreezeChamber
 
         boolean hasGoggles = blockEntity.hasGoggles();
         if (hasGoggles && goggles == null) {
-            goggles = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(isCalm ? CCBPartialModels.BREEZE_COOLER_GOGGLES_SMALL : CCBPartialModels.BREEZE_COOLER_GOGGLES)).createInstance();
+            goggles = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(isCalm ? CCBPartialModels.BREEZE_CHAMBER_GOGGLES_SMALL : CCBPartialModels.BREEZE_CHAMBER_GOGGLES)).createInstance();
         }
         else if (!hasGoggles && goggles != null) {
             goggles.delete();
@@ -78,7 +78,7 @@ public class BreezeChamberVisual extends AbstractBlockEntityVisual<BreezeChamber
 
         boolean hasWind = blockEntity.getWindLevel().isAtLeast(WindLevel.GALE);
         if (hasWind && wind == null) {
-            wind = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.BREEZE_COOLER_WIND)).createInstance();
+            wind = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.BREEZE_CHAMBER_WIND)).createInstance();
         }
         else if (!hasWind && wind != null) {
             wind.delete();
@@ -93,13 +93,10 @@ public class BreezeChamberVisual extends AbstractBlockEntityVisual<BreezeChamber
             goggles.setIdentityTransform().translate(getVisualPosition()).translateY(headY + 0.5f).translate(Translate.CENTER).rotateY(horizontalAngle).translateBack(Translate.CENTER).setChanged();
         }
         if (hat != null) {
-            hat.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translateY(0.75f);
-            hat.rotateCentered(horizontalAngle + Mth.PI, Direction.UP).translate(0.5f, 0, 0.5f);
-            hat.setChanged();
+            hat.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translateY(0.75f).rotateCentered(horizontalAngle + Mth.PI, Direction.UP).translate(0.5f, 0, 0.5f).setChanged();
         }
         if (wind != null) {
-            float totalRotation = horizontalAngle + AngleHelper.rad(renderTime * (hasWind ? 24.0f : 0) % 360);
-            wind.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(totalRotation).translateBack(Translate.CENTER).setChanged();
+            wind.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle + AngleHelper.rad(renderTime * (hasWind ? 24.0f : 0) % 360)).translateBack(Translate.CENTER).setChanged();
         }
     }
 

@@ -21,7 +21,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasSubCategory;
-import net.ty.createcraftedbeginning.compat.jei.CCBJEI;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
 import net.ty.createcraftedbeginning.recipe.SequencedWithGasRecipe;
@@ -169,7 +169,7 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
                 NonNullList<Ingredient> sequencedIngredients = sequencedRecipe.getRecipe().getIngredients();
                 sequencedIngredients.subList(1, sequencedIngredients.size()).forEach(ingredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(ingredient));
                 sequencedRecipe.getRecipe().getFluidIngredients().forEach(fluidIngredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(NeoForgeTypes.FLUID_STACK, Arrays.asList(fluidIngredient.getFluids())));
-                sequencedRecipe.getRecipe().getGasIngredients().forEach(gasIngredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(CCBJEI.GAS_STACK, Arrays.asList(gasIngredient.getGases())));
+                sequencedRecipe.getRecipe().getGasIngredients().forEach(gasIngredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(CCBJEIPlugin.GAS_STACK, Arrays.asList(gasIngredient.getGases())));
             });
         }
     }

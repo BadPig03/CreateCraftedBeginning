@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.mixin;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.entity.monster.hoglin.Hoglin;
 import net.ty.createcraftedbeginning.registry.CCBMobEffects;
 import org.spongepowered.asm.mixin.Mixin;
@@ -7,6 +8,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @Mixin(Hoglin.class)
 public abstract class HoglinMixin {
     @SuppressWarnings("DataFlowIssue")

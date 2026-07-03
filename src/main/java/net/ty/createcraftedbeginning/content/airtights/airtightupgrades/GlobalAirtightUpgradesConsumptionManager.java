@@ -1,16 +1,18 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightupgrades;
 
+import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.armorhandlers.AirtightArmorsHandler;
-import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerConsumers;
-import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerConsumers;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -24,6 +26,7 @@ import java.util.UUID;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GlobalAirtightUpgradesConsumptionManager {
+    private static final Map<UUID, Map<ResourceLocation, Long>> CLIENT_POWERED_UPGRADES = new HashMap<>();
     private static final Map<UUID, Map<ResourceLocation, Long>> POWERED_UPGRADES = new HashMap<>();
     private static final Map<Integer, EquipmentSlot> ARMOR_SLOTS = Map.of(0, EquipmentSlot.HEAD, 1, EquipmentSlot.CHEST, 2, EquipmentSlot.LEGS, 3, EquipmentSlot.FEET);
 
@@ -83,8 +86,74 @@ public final class GlobalAirtightUpgradesConsumptionManager {
     }
 
     public static boolean isPowered(Player player, AirtightUpgrade upgrade) {
-        Map<ResourceLocation, Long> playerState = POWERED_UPGRADES.get(player.getUUID());
-        return playerState != null && playerState.getOrDefault(upgrade.getID(), 0L) >= player.level().getGameTime();
+        Map<UUID, Map<ResourceLocation, Long>> source;
+        if (player.level().isClientSide) {
+            source = CLIENT_POWERED_UPGRADES;
+        }
+        else {
+            source = POWERED_UPGRADES;
+        }
+
+        Map<ResourceLocation, Long> playerState = source.get(player.getUUID());
+        if (playerState == null) {
+            return false;
+        }
+
+        long expiresAt = playerState.getOrDefault(upgrade.getID(), 0L);
+        if (expiresAt >= player.level().getGameTime()) {
+            return true;
+        }
+
+        if (!player.level().isClientSide) {
+            return false;
+        }
+
+        playerState.remove(upgrade.getID());
+        if (!playerState.isEmpty()) {
+            return false;
+        }
+
+        CLIENT_POWERED_UPGRADES.remove(player.getUUID());
+        return false;
+    }
+
+    public static void syncToClient(Player player) {
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            return;
+        }
+
+        Map<ResourceLocation, Long> playerState = POWERED_UPGRADES.get(serverPlayer.getUUID());
+        if (playerState == null || playerState.isEmpty()) {
+            CatnipServices.NETWORK.sendToClient(serverPlayer, new AirtightUpgradeSyncPacket(List.of()));
+            return;
+        }
+
+        List<ResourceLocation> poweredIds = new ArrayList<>();
+        long now = serverPlayer.level().getGameTime();
+        playerState.forEach((id, expiresAt) -> {
+            if (expiresAt < now) {
+                return;
+            }
+
+            poweredIds.add(id);
+        });
+        CatnipServices.NETWORK.sendToClient(serverPlayer, new AirtightUpgradeSyncPacket(poweredIds));
+    }
+
+    public static void acceptClientSync(Player player, List<ResourceLocation> poweredIds) {
+        if (!player.level().isClientSide) {
+            return;
+        }
+
+        if (poweredIds.isEmpty()) {
+            CLIENT_POWERED_UPGRADES.remove(player.getUUID());
+            return;
+        }
+
+        Map<ResourceLocation, Long> playerState = CLIENT_POWERED_UPGRADES.computeIfAbsent(player.getUUID(), uuid -> new HashMap<>());
+        long expiresAt = player.level().getGameTime() + 25L;
+        playerState.clear();
+        poweredIds.forEach(id -> playerState.put(id, expiresAt));
     }
 
     public static boolean tryConsumeGas(Player player, AirtightUpgrade upgrade, EquipmentSlot slot, float consumption) {
@@ -142,17 +211,20 @@ public final class GlobalAirtightUpgradesConsumptionManager {
 
         if (requestedUpgrades.isEmpty()) {
             clearExpired(player);
+            syncToClient(player);
             return;
         }
 
         if (totalCost > 0 && !tryConsumeGasDirectly(player, totalCost)) {
             clear(player);
+            syncToClient(player);
             return;
         }
 
         Map<ResourceLocation, Long> playerState = POWERED_UPGRADES.computeIfAbsent(player.getUUID(), uuid -> new HashMap<>());
-        long time = level.getGameTime() + 20L;
-        requestedUpgrades.forEach(upgrade -> playerState.put(upgrade.getID(), time));
+        long expiresAt = level.getGameTime() + 20L;
+        requestedUpgrades.forEach(upgrade -> playerState.put(upgrade.getID(), expiresAt));
         clearExpired(player);
+        syncToClient(player);
     }
 }

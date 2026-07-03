@@ -18,8 +18,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @EventBusSubscriber(Dist.CLIENT)
 public class GasVirtualItemEvents {
     @SubscribeEvent
-    public static void registerColors(Item event) {
-        event.register((stack, color) -> stack.getOrDefault(CCBDataComponents.GAS_VIRTUAL_ITEM_COLOR, 0xFFFFFFFF), CCBItems.GAS_VIRTUAL_ITEM.get());
+    public static void onRegisterItemColors(Item event) {
+        event.register((stack, i) -> stack.getOrDefault(CCBDataComponents.GAS_VIRTUAL_ITEM_COLOR, 0xFFFFFF), CCBItems.GAS_VIRTUAL_ITEM.get());
     }
 
     @SubscribeEvent

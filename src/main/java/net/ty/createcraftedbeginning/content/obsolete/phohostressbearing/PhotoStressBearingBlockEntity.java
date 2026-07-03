@@ -8,7 +8,6 @@ import com.simibubi.create.foundation.utility.CreateLang;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.core.particles.DustColorTransitionOptions;
 import net.minecraft.nbt.CompoundTag;
@@ -40,25 +39,25 @@ public class PhotoStressBearingBlockEntity extends GeneratingKineticBlockEntity 
     }
 
     @Override
-    protected void write(CompoundTag compound, Provider registries, boolean clientPacket) {
-        super.write(compound, registries, clientPacket);
+    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.write(compoundTag, provider, clientPacket);
         if (!clientPacket) {
-            compound.putInt("SkyLight", skyLight);
-            compound.putBoolean("Clockwise", isClockwise);
+            compoundTag.putInt("SkyLight", skyLight);
+            compoundTag.putBoolean("Clockwise", isClockwise);
         }
     }
 
     @Override
-    protected void read(CompoundTag compound, Provider registries, boolean clientPacket) {
-        super.read(compound, registries, clientPacket);
+    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.read(compoundTag, provider, clientPacket);
         if (clientPacket) {
             return;
         }
-        if (compound.contains("SkyLight")) {
-            skyLight = compound.getInt("SkyLight");
+        if (compoundTag.contains("SkyLight")) {
+            skyLight = compoundTag.getInt("SkyLight");
         }
-        if (compound.contains("Clockwise")) {
-            isClockwise = compound.getBoolean("Clockwise");
+        if (compoundTag.contains("Clockwise")) {
+            isClockwise = compoundTag.getBoolean("Clockwise");
         }
     }
 

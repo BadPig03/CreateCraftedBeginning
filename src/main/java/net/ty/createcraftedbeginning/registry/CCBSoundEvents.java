@@ -59,6 +59,7 @@ public class CCBSoundEvents {
     public static final SoundEntry AIR_VENT_OUTLET_REMOVED = create("air_vent_outlet_removed").playExisting(SoundEvents.NETHERITE_BLOCK_BREAK, 0.75f, 1.0f).subtitle("Air Vent Outlet removed").category(SoundSource.BLOCKS).build();
     public static final SoundEntry REACTOR_KETTLE_MIXING = create("reactor_kettle_mixing").subtitle("Reactor Kettle Mixing noises").playExisting(SoundEvents.GILDED_BLACKSTONE_BREAK, 0.125f, 0.5f).playExisting(SoundEvents.NETHERRACK_BREAK, 0.125f, 0.5f).playExisting(SoundEvents.NETHERITE_BLOCK_HIT, 0.125f, 0.5f).category(SoundSource.BLOCKS).build();
     public static final SoundEntry FORGING_PRESS_PRESSED = create("forging_press_pressed").subtitle("Forging Press clangs").playExisting(SoundEvents.ANVIL_LAND, 0.1f, 1.0f).playExisting(SoundEvents.ITEM_BREAK, 0.4f, 1.0f).playExisting(SoundEvents.NETHERITE_BLOCK_HIT, 0.35f, 1.0f).category(SoundSource.BLOCKS).build();
+    public static final SoundEntry GAS_DRAINAGE = create("gas_drainage").subtitle("Gas Drainage").playExisting(SoundEvents.BREEZE_WHIRL, 0.45f, 1.0f).category(SoundSource.BLOCKS).build();
 
     @Contract("_ -> new")
     private static SoundEntryBuilder create(String name) {

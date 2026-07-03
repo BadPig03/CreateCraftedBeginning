@@ -10,7 +10,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.canisters.CanisterContainerClientPacket;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClientPacket;
 import net.ty.createcraftedbeginning.api.gas.gases.packets.GasAreaOutlinePacket;
 import net.ty.createcraftedbeginning.api.gas.gases.packets.MountedStorageSyncWithGasPacket;
 import net.ty.createcraftedbeginning.compat.jei.utils.AirtightHandheldDrillGhostItemSubmitPacket;
@@ -19,6 +19,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightch
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillParametersPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePacket;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlayPacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackMenuSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreenPacket;
@@ -40,6 +41,7 @@ public enum CCBPackets implements PacketTypeProvider {
     AIRTIGHT_BOOST_ELYTRA(AirtightChestplateElytraBoostPacket.class, AirtightChestplateElytraBoostPacket.STREAM_CODEC),
 
     AIRTIGHT_UPGRADE(AirtightUpgradePacket.class, AirtightUpgradePacket.STREAM_CODEC),
+    AIRTIGHT_UPGRADE_SYNC(AirtightUpgradeSyncPacket.class, AirtightUpgradeSyncPacket.STREAM_CODEC),
 
     GAS_FILTER_SCREEN(GasFilterScreenPacket.class, GasFilterScreenPacket.STREAM_CODEC),
     GAS_FILTER_GHOST_ITEM_SUBMIT(GasFilterGhostItemSubmitPacket.class, GasFilterGhostItemSubmitPacket.STREAM_CODEC),

@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.mixin.create;
 
 import com.simibubi.create.content.kinetics.deployer.ManualApplicationRecipe;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
@@ -10,6 +11,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @Mixin(ManualApplicationRecipe.class)
 public abstract class ManualApplicationRecipeMixin {
     @Inject(method = "awardAdvancements", at = @At("HEAD"))

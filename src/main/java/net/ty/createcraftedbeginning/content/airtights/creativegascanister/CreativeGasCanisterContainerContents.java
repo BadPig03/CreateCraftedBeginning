@@ -4,7 +4,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 
@@ -23,7 +22,7 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
     }
 
     public static long getDefaultCapacity() {
-        return CCBConfig.server().airtights.maxCanisterCapacity.get() * 1000L;
+        return Integer.MAX_VALUE * 1000L;
     }
 
     @Override
@@ -56,8 +55,11 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
     @Override
     public GasStack drain(int tank, long maxDrain, GasAction action) {
         GasStack gas = getGasInTank(0);
-        long drained = Math.min(maxDrain, gas.getAmount());
-        return gas.copyWithAmount(drained);
+        if (gas.isEmpty()) {
+            return GasStack.EMPTY;
+        }
+
+        return gas.copyWithAmount(maxDrain);
     }
 
     @Override

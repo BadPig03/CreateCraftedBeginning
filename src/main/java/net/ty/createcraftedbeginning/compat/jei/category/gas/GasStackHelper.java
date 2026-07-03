@@ -15,7 +15,7 @@ import net.minecraft.tags.TagKey;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.compat.jei.CCBJEI;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,7 +37,7 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
 
     @Override
     public IIngredientType<GasStack> getIngredientType() {
-        return CCBJEI.GAS_STACK;
+        return CCBJEIPlugin.GAS_STACK;
     }
 
     @Override

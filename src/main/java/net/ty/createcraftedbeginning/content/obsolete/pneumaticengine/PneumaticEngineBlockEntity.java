@@ -6,7 +6,6 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -40,19 +39,23 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
     }
 
     @Override
-    protected void write(CompoundTag compound, Provider registries, boolean clientPacket) {
-        super.write(compound, registries, clientPacket);
-        if (!clientPacket) {
-            compound.putBoolean("Clockwise", isClockwise);
+    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.write(compoundTag, provider, clientPacket);
+        if (clientPacket) {
+            return;
         }
+
+        compoundTag.putBoolean("Clockwise", isClockwise);
     }
 
     @Override
-    protected void read(CompoundTag compound, Provider registries, boolean clientPacket) {
-        super.read(compound, registries, clientPacket);
-        if (!clientPacket && compound.contains("Clockwise")) {
-            isClockwise = compound.getBoolean("Clockwise");
+    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.read(compoundTag, provider, clientPacket);
+        if (clientPacket || !compoundTag.contains("Clockwise")) {
+            return;
         }
+
+        isClockwise = compoundTag.getBoolean("Clockwise");
     }
 
     @Override

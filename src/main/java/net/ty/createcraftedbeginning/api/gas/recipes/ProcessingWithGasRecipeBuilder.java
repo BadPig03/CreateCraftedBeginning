@@ -39,6 +39,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
+@SuppressWarnings("unused")
 public abstract class ProcessingWithGasRecipeBuilder<P extends ProcessingWithGasRecipeParams, R extends ProcessingWithGasRecipe<?, P>, S extends ProcessingWithGasRecipeBuilder<P, R, S>> {
     protected ResourceLocation recipeId;
     protected Factory<P, R> factory;

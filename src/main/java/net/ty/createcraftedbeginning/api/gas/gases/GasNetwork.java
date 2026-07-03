@@ -11,6 +11,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.gases.GasPipeConnection.AirFlow;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.flowsources.GasFlowSource;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,7 +31,7 @@ import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class GasNetwork {
+public final class GasNetwork {
     private static final int CYCLES_PER_TICK = 16;
     private static final int PAUSE_INTERVAL = 2;
 

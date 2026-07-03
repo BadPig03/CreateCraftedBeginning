@@ -28,7 +28,7 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.level.ItemLike;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.compat.jei.CCBJEI;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -207,7 +207,7 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
         }
 
         public Builder<T> addAllRecipesIf(Predicate<RecipeHolder<?>> pred, Function<RecipeHolder<?>, RecipeHolder<T>> converter) {
-            return addRecipeListConsumer(recipes -> CCBJEI.consumeAllRecipes(recipe -> {
+            return addRecipeListConsumer(recipes -> CCBJEIPlugin.consumeAllRecipes(recipe -> {
                 if (pred.test(recipe)) {
                     recipes.add(converter.apply(recipe));
                 }
@@ -220,7 +220,7 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
 
         @SuppressWarnings("unchecked")
         public <I extends RecipeInput, R extends Recipe<I>> Builder<T> addTypedRecipes(Supplier<net.minecraft.world.item.crafting.RecipeType<R>> recipeType) {
-            return addRecipeListConsumer(recipes -> CCBJEI.consumeTypedRecipes(recipe -> {
+            return addRecipeListConsumer(recipes -> CCBJEIPlugin.consumeTypedRecipes(recipe -> {
                 if (!recipeClass.isInstance(recipe.value())) {
                     return;
                 }

@@ -8,6 +8,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.api.enginehandlers.AirtightEngineHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 
@@ -95,7 +96,7 @@ public class AirtightAssemblyDriverFlowMeter {
             return;
         }
 
-        int newLevel = gasType.isEmpty() ? 0 : (int) (gasSupply * gasType.getGasType().getEngineEfficiency() / SUPPLY_PER_LEVEL);
+        int newLevel = gasType.isEmpty() ? 0 : (int) (gasSupply * AirtightEngineHandlerUtils.of(gasType).getEfficiency() / SUPPLY_PER_LEVEL);
         driverCore.getLevelCalculator().updateSupplyLevel(newLevel);
         previousGasSupply = gasSupply;
         driverCore.markDirty();
@@ -179,13 +180,14 @@ public class AirtightAssemblyDriverFlowMeter {
         driverCore.markDirty();
     }
 
-    private long getRemainingInput(GasStack resource) {
-        long maxInput = 0;
-        double efficiency = resource.getGasType().getEngineEfficiency();
-        if (efficiency > 0) {
-            maxInput = Mth.ceil(AirtightAssemblyDriverCore.MAX_LEVEL * SUPPLY_PER_LEVEL * SAMPLE_RATE / efficiency);
+    private long getRemainingInput(GasStack gasStack) {
+        int efficiency = AirtightEngineHandlerUtils.of(gasStack).getEfficiency();
+        if (efficiency == 0) {
+            return 0;
         }
-        long accepted = gasType.is(resource.getGasType()) ? gatheredSupply : 0;
+
+        long maxInput = Mth.ceil((float) AirtightAssemblyDriverCore.MAX_LEVEL * SUPPLY_PER_LEVEL * SAMPLE_RATE / efficiency);
+        long accepted = gasType.is(gasStack.getGasType()) ? gatheredSupply : 0;
         return Math.max(0, maxInput - accepted);
     }
 }

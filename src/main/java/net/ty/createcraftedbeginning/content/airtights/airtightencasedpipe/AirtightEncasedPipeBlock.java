@@ -75,7 +75,7 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block otherBlock, BlockPos neighborPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, otherBlock, neighborPos, isMoving);
-        Direction direction = GasPropagator.validateNeighbourChange(state, level, pos, neighborPos, isMoving);
+        Direction direction = GasPropagator.getChangedNeighbourSide(level, pos, neighborPos);
         if (direction == null) {
             return;
         }
@@ -96,7 +96,7 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         boolean changed = !state.is(newState.getBlock());
         if (changed && !level.isClientSide) {
-            GasPropagator.propagateChangedPipe(level, pos, state);
+            GasPropagator.propagatePipe(level, pos, state);
         }
         super.onRemove(state, level, pos, newState, isMoving);
     }
@@ -134,8 +134,8 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
     }
 
     @Override
-    public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, RandomSource random) {
-        GasPropagator.propagateChangedPipe(serverLevel, blockPos, blockState);
+    public void tick(BlockState blockState, ServerLevel level, BlockPos blockPos, RandomSource random) {
+        GasPropagator.propagatePipe(level, blockPos, blockState);
     }
 
     @Override

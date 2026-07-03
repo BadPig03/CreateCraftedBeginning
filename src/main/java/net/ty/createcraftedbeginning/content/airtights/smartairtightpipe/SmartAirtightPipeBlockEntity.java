@@ -21,14 +21,16 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasFilteringBehaviour;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes;
 import net.ty.createcraftedbeginning.api.gas.gases.GasPropagator;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasFilteringBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe.DirectionalFacing;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasExtractor;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTransporter;
 import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.IAirtightPipeDrain;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -36,7 +38,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class SmartAirtightPipeBlockEntity extends SmartBlockEntity implements IGasExtractor {
+public class SmartAirtightPipeBlockEntity extends SmartBlockEntity implements IGasTransporter {
     private GasFilteringBehaviour filter;
     private CCBAdvancementBehaviour advancementBehaviour;
 
@@ -56,22 +58,26 @@ public class SmartAirtightPipeBlockEntity extends SmartBlockEntity implements IG
         behaviours.add(transportBehaviour);
     }
 
-    private void onFilterChanged(ItemStack newFilter) {
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
-        GasPropagator.propagateChangedPipe(level, worldPosition, getBlockState());
-    }
-
     @Override
-    public boolean canExtract(Level level, BlockState blockState, BlockPos blockPos, Direction direction) {
+    public boolean canTransport(Level level, BlockState blockState, BlockPos blockPos, Direction direction) {
         return true;
     }
 
     @Override
     public CCBAdvancementBehaviour getAdvancementBehaviour() {
         return advancementBehaviour;
+    }
+
+    public GasFilteringBehaviour getFilter() {
+        return filter;
+    }
+
+    private void onFilterChanged(ItemStack newFilter) {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+
+        GasPropagator.propagatePipe(level, worldPosition, getBlockState());
     }
 
     public class SmartPipeTransportBehaviour extends GasTransportBehaviour {
@@ -99,7 +105,13 @@ public class SmartAirtightPipeBlockEntity extends SmartBlockEntity implements IG
             BlockState otherState = level.getBlockState(pos.relative(direction));
             Block otherBlock = otherState.getBlock();
             Axis axis = state.getValue(AirtightCheckValveBlock.AXIS);
-            return otherBlock instanceof IAxisPipe axisPipe && axisPipe.getAxis(otherState) == axis ? AttachmentTypes.NONE : AttachmentTypes.RIM.withoutConnector();
+            if (otherBlock instanceof IAxisPipe axisPipe && axisPipe.getAxis(otherState) == axis) {
+                return AttachmentTypes.NONE;
+            }
+            else if (otherBlock instanceof IAirtightPipeDrain) {
+                return AttachmentTypes.DRAIN;
+            }
+            return AttachmentTypes.RIM;
         }
 
         @Override

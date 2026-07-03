@@ -13,19 +13,42 @@ version = mod_version
 group = mod_group_id
 
 repositories {
-    maven { url = "https://maven.createmod.net" } // Create, Ponder, Flywheel
+    maven {
+        url = "https://maven.createmod.net"
+    } // Create, Ponder, Flywheel
 
-    maven { url = "https://maven.ithundxr.dev/snapshots" } // Registrate
-    maven { url = "https://api.modrinth.com/maven" }
+    maven {
+        url = "https://maven.ithundxr.dev/snapshots"
+    } // Registrate
+
+    maven {
+        url = "https://api.modrinth.com/maven"
+    }
 
     maven {
         name = "Jared's maven"
         url = "https://maven.blamejared.com/"
     } // location of the maven that hosts JEI files since January 2023
+
     maven {
         name = "ModMaven"
         url = "https://modmaven.dev"
     } // location of a maven mirror for JEI files, as a fallback
+
+    maven {
+        url "https://maven.latvian.dev/releases"
+        content {
+            includeGroup "dev.latvian.mods"
+            includeGroup "dev.latvian.apps"
+        }
+    }
+
+    maven {
+        url 'https://jitpack.io'
+        content {
+            includeGroup "com.github.rtyley"
+        }
+    }
 
     flatDir {
         dirs 'libs'
@@ -68,7 +91,7 @@ neoForge {
         data {
             data()
 
-            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath(), '--existing-mod', 'kubejs'
         }
 
         configureEach {
@@ -92,30 +115,39 @@ configurations {
 }
 
 dependencies {
-    implementation("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") { transitive = false }
-    implementation("net.createmod.ponder:ponder-neoforge:${ponder_version}+mc${minecraft_version}")
-    compileOnly("dev.engine-room.flywheel:flywheel-neoforge-api-${minecraft_version}:${flywheel_version}")
-    runtimeOnly("dev.engine-room.flywheel:flywheel-neoforge-${minecraft_version}:${flywheel_version}")
     implementation("com.tterrag.registrate:Registrate:${registrate_version}")
 
+    api("dev.latvian.mods:kubejs-neoforge:$kubejs_version")
+    interfaceInjectionData("dev.latvian.mods:kubejs-neoforge:$kubejs_version")
+    localRuntime("dev.latvian.mods:kubejs-neoforge:$kubejs_version")
+
+    compileOnly("dev.engine-room.flywheel:flywheel-neoforge-api-${minecraft_version}:${flywheel_version}")
+
+    implementation("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") { transitive = false }
+    implementation("net.createmod.ponder:ponder-neoforge:${ponder_version}+mc${minecraft_version}")
+    runtimeOnly("dev.engine-room.flywheel:flywheel-neoforge-${minecraft_version}:${flywheel_version}")
+
     implementation "maven.modrinth:jade:${jade_version}"
-    compileOnly("mezz.jei:jei-1.21.1-neoforge-api:19.21.0.247")
-    runtimeOnly("mezz.jei:jei-1.21.1-neoforge:19.21.0.247")
+
+    compileOnly("mezz.jei:jei-1.21.1-neoforge-api:${jei_version}")
+    runtimeOnly("mezz.jei:jei-1.21.1-neoforge:${jei_version}")
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
     var replaceProperties = [
-            minecraft_version      : minecraft_version,
-            minecraft_version_range: minecraft_version_range,
-            neo_version            : neo_version,
-            neo_version_range      : neo_version_range,
-            loader_version_range   : loader_version_range,
-            mod_id                 : mod_id,
-            mod_name               : mod_name,
-            mod_license            : mod_license,
-            mod_version            : mod_version,
-            mod_authors            : mod_authors,
-            mod_description        : mod_description
+        minecraft_version      : minecraft_version,
+        minecraft_version_range: minecraft_version_range,
+        neo_version            : neo_version,
+        neo_version_range      : neo_version_range,
+        loader_version_range   : loader_version_range,
+        mod_id                 : mod_id,
+        mod_name               : mod_name,
+        mod_license            : mod_license,
+        mod_version            : mod_version,
+        mod_authors            : mod_authors,
+        mod_description        : mod_description,
+        jei_version            : jei_version,
+        kubejs_version         : kubejs_version
     ]
     inputs.properties replaceProperties
     expand replaceProperties

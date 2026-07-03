@@ -11,7 +11,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -21,8 +20,10 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasPipeConnection;
 import net.ty.createcraftedbeginning.api.gas.gases.GasPropagator;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasExtractor;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTransporter;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.IAirtightPipeDrain;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.jetbrains.annotations.Nullable;
@@ -41,7 +42,7 @@ import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasExtractor {
+public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasTransporter {
     private static final int LAZY_TICK_RATE = 10;
 
     private final Couple<MutableBoolean> sidesToUpdate;
@@ -60,7 +61,7 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasE
         setLazyTickRate(LAZY_TICK_RATE);
     }
 
-    private static boolean hasReachedValidEndpoint(LevelAccessor level, BlockFace blockFace, boolean pull) {
+    private static boolean hasReachedValidEndpoint(Level level, BlockFace blockFace, boolean pull) {
         BlockPos connectedPos = blockFace.getConnectedPos();
         BlockState connectedState = level.getBlockState(connectedPos);
         BlockEntity blockEntity = level.getBlockEntity(connectedPos);
@@ -69,7 +70,7 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasE
             return pumpBE.canPump() && isPullingOnSide(pumpBE.isFront(blockFace.getOppositeFace())) != pull;
         }
 
-        GasTransportBehaviour pipe = GasPropagator.getPipe(level, connectedPos);
+        GasTransportBehaviour pipe = GasPropagator.getBehaviour(level, connectedPos);
         if (pipe != null && pipe.canHaveFlowToward(connectedState, blockFace.getOppositeFace())) {
             return false;
         }
@@ -81,7 +82,7 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasE
             }
         }
 
-        return GasPropagator.isOpenEnd(level, blockFace.getPos(), face);
+        return GasPropagator.isOpenEnded(level, blockFace.getPos(), face);
     }
 
     private static boolean isPullingOnSide(boolean front) {
@@ -170,8 +171,8 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasE
         Direction front = getFront();
         BlockPos frontPos = worldPosition.relative(front);
         BlockPos backPos = worldPosition.relative(front.getOpposite());
-        GasPropagator.propagateChangedPipe(level, frontPos, level.getBlockState(frontPos));
-        GasPropagator.propagateChangedPipe(level, backPos, level.getBlockState(backPos));
+        GasPropagator.propagatePipe(level, frontPos, level.getBlockState(frontPos));
+        GasPropagator.propagatePipe(level, backPos, level.getBlockState(backPos));
         if (transportBehaviour != null) {
             transportBehaviour.wipePressure();
         }
@@ -214,8 +215,8 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasE
             return;
         }
 
-        GasTransportBehaviour frontPipe = GasPropagator.getPipe(level, worldPosition.relative(front));
-        GasTransportBehaviour backPipe = GasPropagator.getPipe(level, worldPosition.relative(front.getOpposite()));
+        GasTransportBehaviour frontPipe = GasPropagator.getBehaviour(level, worldPosition.relative(front));
+        GasTransportBehaviour backPipe = GasPropagator.getBehaviour(level, worldPosition.relative(front.getOpposite()));
         boolean pressureMissing = frontPipe != null && !frontPipe.hasAnyPressure() || backPipe != null && !backPipe.hasAnyPressure();
         if (!stateChanged && (!foundGas || !pressureMissing)) {
             return;
@@ -287,12 +288,12 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasE
             return graph;
         }
 
-        GasTransportBehaviour startPipe = GasPropagator.getPipe(level, startState.pos);
+        GasTransportBehaviour startPipe = GasPropagator.getBehaviour(level, startState.pos);
         if (startPipe == null || startPipe instanceof GasPumpTransportBehaviour) {
             return graph;
         }
 
-        int maxDistance = GasPropagator.getAirtightPumpRange();
+        int maxDistance = GasPropagator.getAirtightPumpMaxRange();
         Deque<SearchEntry> frontier = new ArrayDeque<>();
         Set<TraversalState> visited = new HashSet<>();
         frontier.add(new SearchEntry(startState, 1));
@@ -305,7 +306,7 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasE
             }
 
             BlockState currentState = level.getBlockState(current.pos);
-            GasTransportBehaviour currentPipe = GasPropagator.getPipe(level, current.pos);
+            GasTransportBehaviour currentPipe = GasPropagator.getBehaviour(level, current.pos);
             if (currentPipe == null || currentPipe instanceof GasPumpTransportBehaviour) {
                 continue;
             }
@@ -326,7 +327,7 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasE
                     continue;
                 }
 
-                GasTransportBehaviour connectedPipe = GasPropagator.getPipe(level, connectedPos);
+                GasTransportBehaviour connectedPipe = GasPropagator.getBehaviour(level, connectedPos);
                 if (connectedPipe == null || connectedPipe instanceof GasPumpTransportBehaviour) {
                     continue;
                 }
@@ -395,7 +396,7 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasE
             return;
         }
 
-        GasTransportBehaviour pipeBehaviour = GasPropagator.getPipe(level, pipePos);
+        GasTransportBehaviour pipeBehaviour = GasPropagator.getBehaviour(level, pipePos);
         if (pipeBehaviour == null) {
             return;
         }
@@ -404,7 +405,7 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasE
     }
 
     @Override
-    public boolean canExtract(Level level, BlockState blockState, BlockPos blockPos, Direction direction) {
+    public boolean canTransport(Level level, BlockState blockState, BlockPos blockPos, Direction direction) {
         return isSpeedRequirementFulfilled() && isSideAccessible(blockState, direction) && isPullingOnSide(isFront(blockState, direction));
     }
 
@@ -454,7 +455,10 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasE
 
         @Override
         public AttachmentTypes getRenderedRimAttachment(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction direction) {
-            return AttachmentTypes.NONE;
+            if (!(level.getBlockState(pos.relative(direction)).getBlock() instanceof IAirtightPipeDrain)) {
+                return AttachmentTypes.NONE;
+            }
+            return AttachmentTypes.DRAIN;
         }
 
         @Override

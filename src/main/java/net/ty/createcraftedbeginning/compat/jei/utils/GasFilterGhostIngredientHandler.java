@@ -9,7 +9,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.compat.jei.CCBJEI;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreen;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualItem;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +26,7 @@ public class GasFilterGhostIngredientHandler implements IGhostIngredientHandler<
     @Override
     public <I> @NotNull List<Target<I>> getTargetsTyped(GasFilterScreen gui, ITypedIngredient<I> ingredient, boolean doStart) {
         List<Target<I>> targets = new LinkedList<>();
-        if (ingredient.getType() != CCBJEI.GAS_STACK) {
+        if (ingredient.getType() != CCBJEIPlugin.GAS_STACK) {
             return targets;
         }
 

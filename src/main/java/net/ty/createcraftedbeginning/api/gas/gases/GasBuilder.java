@@ -4,44 +4,37 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasBuilder {
-    private static final ResourceLocation TEXTURE = CreateCraftedBeginning.asResource("gas/icon");
+    private static final ResourceLocation DEFAULT_TEXTURE = CreateCraftedBeginning.asResource("gas/icon");
 
-    private final ResourceLocation texture;
+    private ResourceLocation texture;
     private int tint = 0xFFFFFF;
-    private float inflation;
-    private float engineEfficiency;
-    private float teslaEfficiency;
-
+    private int alpha = 0xFF;
     @Nullable
     private Set<TagKey<Gas>> tags;
 
-    protected GasBuilder(ResourceLocation texture) {
-        this.texture = texture;
+    private GasBuilder() {
     }
 
-    @Contract(" -> new")
     public static GasBuilder builder() {
-        return builder(TEXTURE);
+        return new GasBuilder().texture(null);
     }
 
-    @Contract("_ -> new")
     public static GasBuilder builder(ResourceLocation texture) {
-        return new GasBuilder(Objects.requireNonNull(texture));
+        return new GasBuilder().texture(texture);
     }
 
-    public ResourceLocation getTexture() {
-        return texture;
+    public GasBuilder texture(@Nullable ResourceLocation texture) {
+        this.texture = texture == null ? DEFAULT_TEXTURE : texture;
+        return this;
     }
 
     public GasBuilder tint(int tint) {
@@ -49,18 +42,8 @@ public class GasBuilder {
         return this;
     }
 
-    public GasBuilder inflation(float inflation) {
-        this.inflation = inflation;
-        return this;
-    }
-
-    public GasBuilder engineEfficiency(float engineEfficiency) {
-        this.engineEfficiency = engineEfficiency;
-        return this;
-    }
-
-    public GasBuilder teslaEfficiency(float teslaEfficiency) {
-        this.teslaEfficiency = teslaEfficiency;
+    public GasBuilder alpha(int alpha) {
+        this.alpha = alpha;
         return this;
     }
 
@@ -72,20 +55,16 @@ public class GasBuilder {
         return this;
     }
 
+    public ResourceLocation getTexture() {
+        return texture;
+    }
+
     public int getTint() {
         return tint;
     }
 
-    public float getInflation() {
-        return inflation;
-    }
-
-    public float getEngineEfficiency() {
-        return engineEfficiency;
-    }
-
-    public float getTeslaEfficiency() {
-        return teslaEfficiency;
+    public int getAlpha() {
+        return alpha;
     }
 
     @Nullable

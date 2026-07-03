@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate;
 
+import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.InteractionHand;
@@ -34,21 +35,12 @@ public class AirtightChestplateEvents {
     @SubscribeEvent
     public static void onRightClickEmpty(RightClickEmpty event) {
         Player player = event.getEntity();
-        if (!player.getMainHandItem().isEmpty()) {
+        if (!player.level().isClientSide || event.getHand() != InteractionHand.MAIN_HAND || !player.getMainHandItem().isEmpty() || !ElytraUpgrade.canRequestBoost(player)) {
             return;
         }
 
-        InteractionHand hand = event.getHand();
-        if (hand != InteractionHand.MAIN_HAND) {
-            return;
-        }
-
-        float multiplier = ElytraUpgrade.getBoostMultiplier(player);
-        if (multiplier == 0) {
-            return;
-        }
-
-        ElytraUpgrade.speedBoost(player, multiplier);
+        ElytraUpgrade.applySpeedBoost(player);
+        CatnipServices.NETWORK.sendToServer(AirtightChestplateElytraBoostPacket.INSTANCE);
     }
 
     @SubscribeEvent

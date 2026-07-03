@@ -14,7 +14,8 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasExtractor;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTransporter;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -22,7 +23,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightPipeBlockEntity extends SmartBlockEntity implements IGasExtractor {
+public class AirtightPipeBlockEntity extends SmartBlockEntity implements IGasTransporter {
     private CCBAdvancementBehaviour advancementBehaviour;
 
     public AirtightPipeBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -39,7 +40,7 @@ public class AirtightPipeBlockEntity extends SmartBlockEntity implements IGasExt
     }
 
     @Override
-    public boolean canExtract(Level level, BlockState blockState, BlockPos blockPos, Direction direction) {
+    public boolean canTransport(Level level, BlockState blockState, BlockPos blockPos, Direction direction) {
         return true;
     }
 
@@ -73,7 +74,13 @@ public class AirtightPipeBlockEntity extends SmartBlockEntity implements IGasExt
             BlockState otherState = level.getBlockState(pos.relative(direction));
             Block otherBlock = otherState.getBlock();
             Axis axis = state.getValue(AirtightPipeBlock.AXIS);
-            return otherBlock instanceof IAxisPipe axisPipe && axisPipe.getAxis(otherState) == axis ? AttachmentTypes.NONE : AttachmentTypes.RIM.withoutConnector();
+            if (otherBlock instanceof IAxisPipe axisPipe && axisPipe.getAxis(otherState) == axis) {
+                return AttachmentTypes.NONE;
+            }
+            else if (otherBlock instanceof IAirtightPipeDrain) {
+                return AttachmentTypes.DRAIN;
+            }
+            return AttachmentTypes.RIM;
         }
     }
 }

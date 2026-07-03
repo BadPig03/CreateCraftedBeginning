@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.teslaturbine;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.turbinehandlers.AirtightTurbineHandlerUtils;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -54,7 +55,7 @@ public class TeslaTurbineLevelCalculator {
             return;
         }
 
-        typeLevel = (int) gasStack.getGasType().getTeslaEfficiency();
+        typeLevel = AirtightTurbineHandlerUtils.of(gasStack).getEfficiency();
     }
 
     public Map<LevelKey, Integer> getLevels() {

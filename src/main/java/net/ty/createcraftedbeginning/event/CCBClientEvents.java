@@ -16,6 +16,7 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent.Post;
 import net.neoforged.neoforge.client.event.ClientTickEvent.Pre;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent.AddLayers;
+import net.neoforged.neoforge.client.event.ModelEvent.RegisterAdditional;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RegisterItemDecorationsEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
@@ -35,6 +36,7 @@ import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOv
 import net.ty.createcraftedbeginning.ponder.CCBPonderPlugin;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
 import net.ty.createcraftedbeginning.registry.CCBItems;
+import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -85,6 +87,11 @@ public class CCBClientEvents {
         }
 
         SequencedAssemblyWithGasRecipe.addToTooltip(event);
+    }
+
+    @SubscribeEvent
+    static void onRegisterAdditionalModels(RegisterAdditional event) {
+        CCBPartialModels.registerBalloons();
     }
 
     @SubscribeEvent

@@ -49,7 +49,7 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
         BlockState newState = state.setValue(INVERTED, !state.getValue(INVERTED));
         level.setBlockAndUpdate(pos, newState);
         level.scheduleTick(pos, this, 1, TickPriority.HIGH);
-        GasPropagator.propagateChangedPipe(level, pos, newState);
+        GasPropagator.propagatePipe(level, pos, newState);
         IWrenchable.playRotateSound(level, pos);
         return InteractionResult.SUCCESS;
     }

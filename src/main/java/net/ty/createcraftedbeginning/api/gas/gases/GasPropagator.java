@@ -10,15 +10,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasPipeConnection.AirFlow;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlockEntity;
@@ -28,7 +23,6 @@ import org.jetbrains.annotations.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
@@ -36,63 +30,59 @@ import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class GasPropagator {
-    public static void propagateChangedPipe(LevelAccessor level, BlockPos pipePos, BlockState pipeState) {
+public final class GasPropagator {
+    private GasPropagator() {
+    }
+
+    public static void propagatePipe(Level level, BlockPos pipePos, BlockState pipeState) {
         Deque<Pair<Integer, BlockPos>> frontier = new ArrayDeque<>();
         Set<BlockPos> visited = new HashSet<>();
         Set<Pair<AirtightPumpBlockEntity, Direction>> discoveredPumps = new HashSet<>();
 
         frontier.add(Pair.of(0, pipePos));
         visited.add(pipePos);
-        int pumpRange = getAirtightPumpRange();
+        int pumpRange = getAirtightPumpMaxRange();
         while (!frontier.isEmpty()) {
             Pair<Integer, BlockPos> pair = frontier.poll();
-            int currentDistance = pair.getFirst();
+            int distance = pair.getFirst();
             BlockPos currentPos = pair.getSecond();
-            BlockState currentState = currentPos.equals(pipePos) ? pipeState : level.getBlockState(currentPos);
-            GasTransportBehaviour pipe = getPipe(level, currentPos);
-            if (pipe == null) {
+            GasTransportBehaviour behaviour = getBehaviour(level, currentPos);
+            if (behaviour == null) {
                 continue;
             }
 
-            pipe.wipePressure();
-
-            for (Direction direction : getPipeConnections(currentState, pipe)) {
-                BlockPos target = currentPos.relative(direction);
-                if (level instanceof Level l && !l.isLoaded(target)) {
-                    continue;
-                }
-                if (visited.contains(target)) {
+            behaviour.wipePressure();
+            BlockState currentState = currentPos.equals(pipePos) ? pipeState : level.getBlockState(currentPos);
+            for (Direction direction : getPipeConnections(currentState, behaviour)) {
+                BlockPos targetPos = currentPos.relative(direction);
+                if (!level.isLoaded(targetPos) || visited.contains(targetPos)) {
                     continue;
                 }
 
-                visited.add(target);
-                BlockState targetState = level.getBlockState(target);
-
-                if (CCBBlocks.AIRTIGHT_PUMP_BLOCK.has(targetState)) {
-                    Direction pumpFacing = targetState.getValue(AirtightPumpBlock.FACING);
-                    if (pumpFacing.getAxis() == direction.getAxis()) {
-                        BlockEntity be = level.getBlockEntity(target);
-                        if (be instanceof AirtightPumpBlockEntity pump) {
-                            discoveredPumps.add(Pair.of(pump, direction.getOpposite()));
-                        }
+                visited.add(targetPos);
+                BlockState targetState = level.getBlockState(targetPos);
+                if (targetState.is(CCBBlocks.AIRTIGHT_PUMP_BLOCK)) {
+                    Direction facing = targetState.getValue(AirtightPumpBlock.FACING);
+                    if (facing.getAxis() == direction.getAxis() && level.getBlockEntity(targetPos) instanceof AirtightPumpBlockEntity pump) {
+                        discoveredPumps.add(Pair.of(pump, direction.getOpposite()));
                     }
                     continue;
                 }
 
-                GasTransportBehaviour targetPipe = getPipe(level, target);
-                if (targetPipe == null) {
+                GasTransportBehaviour targetBehaviour = getBehaviour(level, targetPos);
+                if (targetBehaviour == null) {
                     continue;
                 }
 
-                int newDistance = currentDistance + 1;
-                if (newDistance > pumpRange && !targetPipe.hasAnyPressure()) {
+                int newDistance = distance + 1;
+                if (newDistance > pumpRange && !targetBehaviour.hasAnyPressure()) {
+                    continue;
+                }
+                if (!targetBehaviour.canHaveFlowToward(targetState, direction.getOpposite())) {
                     continue;
                 }
 
-                if (targetPipe.canHaveFlowToward(targetState, direction.getOpposite())) {
-                    frontier.add(Pair.of(newDistance, target));
-                }
+                frontier.add(Pair.of(newDistance, targetPos));
             }
         }
 
@@ -100,74 +90,50 @@ public class GasPropagator {
     }
 
     @Nullable
-    public static GasTransportBehaviour getPipe(BlockGetter level, BlockPos pos) {
+    public static GasTransportBehaviour getBehaviour(BlockGetter level, BlockPos pos) {
         return BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
     }
 
-    public static List<Direction> getPipeConnections(BlockState state, GasTransportBehaviour pipe) {
+    public static List<Direction> getPipeConnections(BlockState state, GasTransportBehaviour behaviour) {
         List<Direction> list = new ArrayList<>();
         for (Direction direction : Iterate.directions) {
-            if (pipe.canHaveFlowToward(state, direction)) {
-                list.add(direction);
+            if (!behaviour.canHaveFlowToward(state, direction)) {
+                continue;
             }
+
+            list.add(direction);
         }
         return list;
     }
 
-    public static int getAirtightPumpRange() {
+    public static int getAirtightPumpMaxRange() {
         return CCBConfig.server().airtights.maxPumpRange.get();
     }
 
     public static void resetAffectedNetworks(Level level, BlockPos start, Direction side) {
         Deque<BlockPos> frontier = new ArrayDeque<>();
         Set<BlockPos> visited = new HashSet<>();
-
         frontier.add(start);
         visited.add(start);
-
         while (!frontier.isEmpty()) {
             BlockPos pos = frontier.poll();
-            GasTransportBehaviour pipe = getPipe(level, pos);
-            if (pipe == null) {
+            GasTransportBehaviour behaviour = getBehaviour(level, pos);
+            if (behaviour == null) {
                 continue;
             }
 
-            List<Direction> directionsToCheck = new ArrayList<>();
             if (pos.equals(start)) {
-                directionsToCheck.add(side);
+                resetNetworkInDirection(level, pos, behaviour, side, frontier, visited);
             }
             else {
-                Collections.addAll(directionsToCheck, Iterate.directions);
-            }
-
-            for (Direction d : directionsToCheck) {
-                BlockPos target = pos.relative(d);
-                if (!level.isLoaded(target) || visited.contains(target)) {
-                    continue;
+                for (Direction direction : Iterate.directions) {
+                    resetNetworkInDirection(level, pos, behaviour, direction, frontier, visited);
                 }
-
-                GasPipeConnection connection = pipe.getConnection(d);
-                if (connection == null) {
-                    continue;
-                }
-                if (connection.flow.isEmpty()) {
-                    continue;
-                }
-
-                AirFlow flow = connection.flow.get();
-                if (!flow.inbound) {
-                    continue;
-                }
-
-                connection.resetNetwork();
-
-                frontier.add(target);
-                visited.add(target);
             }
         }
     }
 
-    public static @Nullable Direction validateNeighbourChange(BlockState state, Level level, BlockPos pos, BlockPos neighborPos, boolean isMoving) {
+    public static @Nullable Direction getChangedNeighbourSide(Level level, BlockPos pos, BlockPos neighborPos) {
         if (level.isClientSide) {
             return null;
         }
@@ -181,37 +147,52 @@ public class GasPropagator {
             if (!pos.relative(direction).equals(neighborPos)) {
                 continue;
             }
+
             return direction;
         }
         return null;
     }
 
-    public static boolean isOpenEnd(BlockGetter level, BlockPos pos, Direction side) {
-        BlockPos connectedPos = pos.relative(side);
-        BlockState connectedState = level.getBlockState(connectedPos);
-        GasTransportBehaviour pipe = getPipe(level, connectedPos);
-        if (pipe != null && pipe.canHaveFlowToward(connectedState, side.getOpposite())) {
+    public static boolean isOpenEnded(Level level, BlockPos pos, Direction side) {
+        BlockPos targetPos = pos.relative(side);
+        BlockState targetState = level.getBlockState(targetPos);
+        GasTransportBehaviour behaviour = getBehaviour(level, targetPos);
+        if (behaviour != null && behaviour.canHaveFlowToward(targetState, side.getOpposite())) {
             return false;
         }
-        if (AirtightPumpBlock.isPump(connectedState) && connectedState.getValue(AirtightPumpBlock.FACING).getAxis() == side.getAxis()) {
+
+        if (AirtightPumpBlock.isPump(targetState) && targetState.getValue(AirtightPumpBlock.FACING).getAxis() == side.getAxis()) {
             return false;
         }
-        if (BlockHelper.hasBlockSolidSide(connectedState, level, connectedPos, side.getOpposite()) && !AllBlockTags.FAN_TRANSPARENT.matches(connectedState)) {
+
+        if (BlockHelper.hasBlockSolidSide(targetState, level, targetPos, side.getOpposite()) && !AllBlockTags.FAN_TRANSPARENT.matches(targetState)) {
             return false;
         }
-        if (hasGasCapability(level, connectedPos, side.getOpposite())) {
+
+        if (GasCapabilities.hasGasCapability(level, targetPos, side.getOpposite())) {
             return false;
         }
-        return connectedState.canBeReplaced() && connectedState.getDestroySpeed(level, connectedPos) != -1 || connectedState.hasProperty(BlockStateProperties.WATERLOGGED);
+        return targetState.canBeReplaced() && targetState.getDestroySpeed(level, targetPos) != -1;
     }
 
-    public static boolean hasGasCapability(BlockGetter level, BlockPos pos, Direction side) {
-        BlockEntity blockEntity = level.getBlockEntity(pos);
-        if (blockEntity == null || blockEntity.getLevel() == null) {
-            return false;
+    private static void resetNetworkInDirection(Level level, BlockPos pos, GasTransportBehaviour behaviour, Direction direction, Deque<BlockPos> frontier, Set<BlockPos> visited) {
+        BlockPos targetPos = pos.relative(direction);
+        if (!level.isLoaded(targetPos) || visited.contains(targetPos)) {
+            return;
         }
 
-        IGasHandler capability = blockEntity.getLevel().getCapability(GasHandler.BLOCK, blockEntity.getBlockPos(), side);
-        return capability != null;
+        GasPipeConnection connection = behaviour.getConnection(direction);
+        if (connection == null || connection.flow.isEmpty()) {
+            return;
+        }
+
+        AirFlow flow = connection.flow.get();
+        if (!flow.inbound) {
+            return;
+        }
+
+        connection.resetNetwork();
+        frontier.add(targetPos);
+        visited.add(targetPos);
     }
 }

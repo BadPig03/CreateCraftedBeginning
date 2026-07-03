@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.api.gas.gases.behaviours;
 
-import com.simibubi.create.AllBlocks;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BehaviourType;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
@@ -16,11 +15,12 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes;
+import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities;
 import net.ty.createcraftedbeginning.api.gas.gases.GasPipeConnection;
 import net.ty.createcraftedbeginning.api.gas.gases.GasPipeConnection.AirFlow;
-import net.ty.createcraftedbeginning.api.gas.gases.GasPropagator;
-import net.ty.createcraftedbeginning.api.gas.gases.GasReactions;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.collisions.GasCollisionEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
 import org.jetbrains.annotations.Nullable;
@@ -34,9 +34,11 @@ import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
+@SuppressWarnings("unused")
 public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     public static final BehaviourType<GasTransportBehaviour> TYPE = new BehaviourType<>();
     public static final WorldAttached<Map<BlockPos, Map<Direction, GasPipeConnection>>> interfaceTransfer = new WorldAttached<>($ -> new HashMap<>());
+
     public Map<Direction, GasPipeConnection> interfaces;
     public UpdatePhase phase;
 
@@ -64,8 +66,10 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     }
 
     public static boolean isValidAirtightComponents(Level level, BlockPos pos, BlockState state, Direction direction) {
-        return state.isAir() || state.canBeReplaced() && state.getDestroySpeed(level, pos) != -1 || state.hasProperty(BlockStateProperties.WATERLOGGED) || GasPropagator.hasGasCapability(level, pos, direction) || state.getBlock() instanceof IAirtightComponent airtightComponent && airtightComponent.isAirtight(pos, state, direction);
+        return state.canBeReplaced() && state.getDestroySpeed(level, pos) != -1 || GasCapabilities.hasGasCapability(level, pos, direction) || state.getBlock() instanceof IAirtightComponent airtightComponent && airtightComponent.isAirtight(pos, state, direction);
     }
+
+    public abstract boolean canHaveFlowToward(BlockState state, Direction direction);
 
     public GasStack getProvidedOutwardGas(Direction side) {
         createConnectionData();
@@ -90,8 +94,6 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
             interfaces.put(direction, new GasPipeConnection(direction));
         }
     }
-
-    public abstract boolean canHaveFlowToward(BlockState state, Direction direction);
 
     @Nullable
     public GasPipeConnection getConnection(Direction side) {
@@ -161,7 +163,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
             return AttachmentTypes.NONE;
         }
 
-        if (GasPropagator.hasGasCapability(level, offsetPos, direction.getOpposite()) && !AllBlocks.HOSE_PULLEY.has(facingState)) {
+        if (GasCapabilities.hasGasCapability(level, offsetPos, direction.getOpposite())) {
             return AttachmentTypes.DRAIN;
         }
 
@@ -236,7 +238,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
             }
 
             if (!collidingFlow.isEmpty()) {
-                GasReactions.handlePipeFlowCollision(level, pos, availableFlow, collidingFlow);
+                GasCollisionEvent.handleCollision(level, pos, availableFlow, collidingFlow);
                 return;
             }
 
@@ -297,38 +299,5 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         WAIT_FOR_PUMPS,
         FLIP_FLOWS,
         IDLE
-    }
-
-    public enum AttachmentTypes {
-        NONE,
-        CONNECTION(ComponentPartials.CONNECTION),
-        DETAILED_CONNECTION(ComponentPartials.RIM_CONNECTOR),
-        RIM(ComponentPartials.RIM_CONNECTOR, ComponentPartials.RIM),
-        PARTIAL_RIM(ComponentPartials.RIM),
-        DRAIN(ComponentPartials.RIM_CONNECTOR, ComponentPartials.DRAIN),
-        PARTIAL_DRAIN(ComponentPartials.DRAIN);
-
-        public final ComponentPartials[] partials;
-
-        AttachmentTypes(ComponentPartials... partials) {
-            this.partials = partials;
-        }
-
-        public AttachmentTypes withoutConnector() {
-            if (this == RIM) {
-                return PARTIAL_RIM;
-            }
-            if (this == DRAIN) {
-                return PARTIAL_DRAIN;
-            }
-            return this;
-        }
-
-        public enum ComponentPartials {
-            CONNECTION,
-            RIM_CONNECTOR,
-            RIM,
-            DRAIN
-        }
     }
 }

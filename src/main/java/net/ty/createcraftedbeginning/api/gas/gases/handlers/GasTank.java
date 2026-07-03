@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
+@SuppressWarnings("unused")
 public class GasTank implements IGasHandler, IGasTank {
     private static final String COMPOUND_KEY_GAS = "Gas";
 

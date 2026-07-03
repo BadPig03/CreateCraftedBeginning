@@ -27,8 +27,8 @@ import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock.CanisterType;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.ICreativeGasContainer;
@@ -81,7 +81,7 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
             return;
         }
 
-        GasStack drained = hatchGasContent.isEmpty() ? targetHandler.drain(maxTransferRate, GasAction.EXECUTE) : targetHandler.drain(hatchGasContent.copyWithAmount(maxTransferRate), GasAction.EXECUTE);
+        GasStack drained = targetHandler.drain(maxTransferRate, GasAction.EXECUTE);
         if (creative) {
             return;
         }
@@ -95,7 +95,8 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
             return;
         }
 
-        long filled = targetHandler.fill(hatchHandler.drain(maxTransferRate, GasAction.SIMULATE), GasAction.SIMULATE);
+        GasStack toFill = hatchHandler.drain(maxTransferRate, GasAction.SIMULATE);
+        long filled = targetHandler.fill(toFill, GasAction.SIMULATE);
         if (filled == 0) {
             return;
         }
@@ -138,6 +139,7 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
             }
             return;
         }
+
         if (isEmpty()) {
             return;
         }
@@ -193,12 +195,23 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         GasStack hatchGasContent = getHatchGasContent();
         long capacity = getHatchCapacity();
         LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
-        if (hatchGasContent.isEmpty()) {
-            CCBLang.translate("gui.goggles.gas_container.capacity").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+        if (isCreative()) {
+            if (hatchGasContent.isEmpty()) {
+                CCBLang.translate("gui.tooltips.creative_gas_canister.empty").style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+            }
+            else {
+                CCBLang.gasName(hatchGasContent).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+                CCBLang.translate("gui.goggles.gas_container.infinity").style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
+            }
         }
         else {
-            CCBLang.gasName(hatchGasContent).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-            CCBLang.number(hatchGasContent.getAmount()).add(mb).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+            if (hatchGasContent.isEmpty()) {
+                CCBLang.translate("gui.goggles.gas_container.capacity").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+            }
+            else {
+                CCBLang.gasName(hatchGasContent).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+                CCBLang.number(hatchGasContent.getAmount()).add(mb).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+            }
         }
         return true;
     }
@@ -221,7 +234,7 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
             return 0;
         }
 
-        return Math.clamp(getHatchGasContent().getAmount() / 1000, 0, Integer.MAX_VALUE);
+        return Math.clamp(getHatchCapacity() / 1000, 0, Integer.MAX_VALUE);
     }
 
     @Override

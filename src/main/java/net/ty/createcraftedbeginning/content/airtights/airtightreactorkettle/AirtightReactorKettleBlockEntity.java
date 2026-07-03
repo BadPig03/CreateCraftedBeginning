@@ -47,12 +47,12 @@ import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.CombinedGasTankWrapper;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.CombinedGasTankWrapper;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -332,10 +332,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         }
 
         if (hasGasOutputs) {
-            if (targetGasTank == null) {
-                return false;
-            }
-
             SmartGasTankBehaviour simulatedOutputGasTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.OUTPUT, this, targetGasTank.getTanks(), MAX_FLUID_CAPACITY * 10L, true);
             IGasHandler simulatedGasTank = simulatedOutputGasTank.getCapability();
             for (int tank = 0; tank < targetGasTank.getTanks(); tank++) {
@@ -570,6 +566,10 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
 
     @OnlyIn(Dist.CLIENT)
     private void tickAudio() {
+        if (level == null || !level.isClientSide) {
+            return;
+        }
+
         float absSpeed = Mth.abs(core.getStructureManager().getSpeed());
         if (absSpeed == 0) {
             return;
@@ -620,9 +620,9 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         }
 
         if (processingTicks < 0) {
-            float recipeSpeed = 1;
-            if (currentRecipe instanceof ReactorKettleRecipe kettleRecipe) {
-                recipeSpeed = kettleRecipe.getProcessingDuration() / 100.0f;
+            float recipeSpeed = 0;
+            if (currentRecipe != null) {
+                recipeSpeed = currentRecipe.getProcessingDuration() / 100.0f;
             }
             float absSpeed = Mth.abs(core.getStructureManager().getSpeed());
             if (level instanceof PonderLevel) {

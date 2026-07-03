@@ -5,6 +5,7 @@ import com.simibubi.create.content.kinetics.press.MechanicalPressBlockEntity;
 import com.simibubi.create.content.kinetics.press.PressingBehaviour;
 import com.simibubi.create.foundation.recipe.RecipeApplier;
 import net.createmod.catnip.math.VecHelper;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -13,7 +14,6 @@ import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.api.gas.recipes.PressingWithGasRecipe;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
-import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -22,9 +22,12 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Optional;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @Mixin(MechanicalPressBlockEntity.class)
 public abstract class MechanicalPressBlockEntityMixin {
     @Shadow
@@ -32,7 +35,7 @@ public abstract class MechanicalPressBlockEntityMixin {
 
     @SuppressWarnings("DataFlowIssue")
     @Inject(method = "tryProcessInWorld", at = @At("HEAD"), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
-    private void ccb$tryProcessInWorld(@NotNull ItemEntity itemEntity, boolean simulate, CallbackInfoReturnable<Boolean> cir) {
+    private void ccb$tryProcessInWorld(ItemEntity itemEntity, boolean simulate, CallbackInfoReturnable<Boolean> cir) {
         MechanicalPressBlockEntity self = (MechanicalPressBlockEntity) (Object) this;
         ItemStack item = itemEntity.getItem();
         Level level = self.getLevel();
@@ -54,7 +57,7 @@ public abstract class MechanicalPressBlockEntityMixin {
     }
 
     @Unique
-    private void processRecipeInWorld(Level level, @NotNull ItemEntity itemEntity, @NotNull RecipeHolder<PressingWithGasRecipe> recipe) {
+    private void processRecipeInWorld(Level level, ItemEntity itemEntity, RecipeHolder<PressingWithGasRecipe> recipe) {
         ItemStack item = itemEntity.getItem();
         ItemStack itemCreated = ItemStack.EMPTY;
         pressingBehaviour.particleItems.add(item);
@@ -89,7 +92,7 @@ public abstract class MechanicalPressBlockEntityMixin {
 
     @SuppressWarnings("DataFlowIssue")
     @Inject(method = "tryProcessOnBelt", at = @At("HEAD"), cancellable = true)
-    private void ccb$tryProcessOnBelt(@NotNull TransportedItemStack input, List<ItemStack> outputList, boolean simulate, CallbackInfoReturnable<Boolean> cir) {
+    private void ccb$tryProcessOnBelt(TransportedItemStack input, List<ItemStack> outputList, boolean simulate, CallbackInfoReturnable<Boolean> cir) {
         MechanicalPressBlockEntity self = (MechanicalPressBlockEntity) (Object) this;
         Level level = self.getLevel();
 
@@ -106,7 +109,7 @@ public abstract class MechanicalPressBlockEntityMixin {
     }
 
     @Unique
-    private void processRecipeOnBelt(Level level, @NotNull TransportedItemStack input, List<ItemStack> outputList, @NotNull RecipeHolder<PressingWithGasRecipe> recipe) {
+    private void processRecipeOnBelt(Level level, TransportedItemStack input, List<ItemStack> outputList, RecipeHolder<PressingWithGasRecipe> recipe) {
         pressingBehaviour.particleItems.add(input.stack);
         List<ItemStack> outputs = RecipeApplier.applyRecipeOn(level, canProcessInBulk() ? input.stack : input.stack.copyWithCount(1), recipe.value(), true);
 

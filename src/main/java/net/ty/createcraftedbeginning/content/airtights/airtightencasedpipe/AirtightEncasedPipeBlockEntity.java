@@ -14,7 +14,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasExtractor;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTransporter;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
@@ -24,7 +24,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightEncasedPipeBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IGasExtractor {
+public class AirtightEncasedPipeBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IGasTransporter {
     private CCBAdvancementBehaviour advancementBehaviour;
 
     public AirtightEncasedPipeBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -74,7 +74,7 @@ public class AirtightEncasedPipeBlockEntity extends SmartBlockEntity implements 
     }
 
     @Override
-    public boolean canExtract(Level level, BlockState blockState, BlockPos blockPos, Direction direction) {
+    public boolean canTransport(Level level, BlockState blockState, BlockPos blockPos, Direction direction) {
         return blockState.getValue(AirtightEncasedPipeBlock.PROPERTY_BY_DIRECTION.get(direction));
     }
 

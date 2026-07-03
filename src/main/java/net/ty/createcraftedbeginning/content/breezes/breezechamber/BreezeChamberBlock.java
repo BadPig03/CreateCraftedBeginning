@@ -56,6 +56,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.IAirtightPipeDrain;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.IChamberGasTank;
 import net.ty.createcraftedbeginning.data.CCBLang;
@@ -72,7 +73,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IBE<BreezeChamberBlockEntity>, SimpleWaterloggedBlock, IWrenchable, IAirtightComponent {
+public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IBE<BreezeChamberBlockEntity>, SimpleWaterloggedBlock, IWrenchable, IAirtightComponent, IAirtightPipeDrain {
     public static final EnumProperty<WindLevel> WIND_LEVEL = EnumProperty.create("wind_level", WindLevel.class);
 
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
