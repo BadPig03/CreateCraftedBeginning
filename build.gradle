@@ -27,6 +27,21 @@ repositories {
         url = "https://modmaven.dev"
     } // location of a maven mirror for JEI files, as a fallback
 
+    maven {
+        url "https://maven.latvian.dev/releases"
+        content {
+            includeGroup "dev.latvian.mods"
+            includeGroup "dev.latvian.apps"
+        }
+    }
+
+    maven {
+        url 'https://jitpack.io'
+        content {
+            includeGroup "com.github.rtyley"
+        }
+    }
+
     flatDir {
         dirs 'libs'
     }
@@ -99,8 +114,11 @@ dependencies {
     implementation("com.tterrag.registrate:Registrate:${registrate_version}")
 
     implementation "maven.modrinth:jade:${jade_version}"
-    compileOnly("mezz.jei:jei-1.21.1-neoforge-api:19.21.0.247")
-    runtimeOnly("mezz.jei:jei-1.21.1-neoforge:19.21.0.247")
+    compileOnly("mezz.jei:jei-1.21.1-neoforge-api:$jei_version")
+    runtimeOnly("mezz.jei:jei-1.21.1-neoforge:$jei_version")
+
+    compileOnly("dev.latvian.mods:kubejs-neoforge:$kubejs_version")
+    localRuntime("dev.latvian.mods:kubejs-neoforge:$kubejs_version")
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
