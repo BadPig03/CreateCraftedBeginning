@@ -68,9 +68,9 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
     }
 
     @Override
-    public void setPlacedBy(Level level, BlockPos blockPos, BlockState state, @Nullable LivingEntity entity, ItemStack itemStack) {
-        super.setPlacedBy(level, blockPos, state, entity, itemStack);
-        CCBAdvancementBehaviour.setPlacedBy(level, blockPos, entity);
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, entity, stack);
+        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
     }
 
     @Override

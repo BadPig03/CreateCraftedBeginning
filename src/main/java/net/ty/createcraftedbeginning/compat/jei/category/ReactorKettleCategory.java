@@ -22,7 +22,7 @@ import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
-import net.ty.createcraftedbeginning.api.gas.reactorkettle.TemperatureCondition;
+import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.TemperatureCondition;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightReactorKettle;
 import net.ty.createcraftedbeginning.data.CCBGUITextures;

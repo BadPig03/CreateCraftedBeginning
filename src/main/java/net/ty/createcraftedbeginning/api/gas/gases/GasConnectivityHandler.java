@@ -12,7 +12,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTankMultiBlockEntityContainer;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTankMultiBlockEntityContainer.iGas;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -147,8 +146,8 @@ public class GasConnectivityHandler {
             }
 
             splitMultiAndInvalidate(be, cache);
-            if (be instanceof iGas iGasBE && iGasBE.hasTank()) {
-                iGasBE.setTankSize(0, bestAmount);
+            if (be.hasTank()) {
+                be.setTankSize(0, bestAmount);
             }
 
             tryToFormNewMultiOfWidth(be, bestWidth, cache, false);
@@ -172,8 +171,8 @@ public class GasConnectivityHandler {
         BlockPos origin = be.getBlockPos();
         IGasTank beTank = null;
         GasStack gas = GasStack.EMPTY;
-        if (be instanceof iGas iGas && iGas.hasTank()) {
-            beTank = iGas.getTank(0);
+        if (be.hasTank()) {
+            beTank = be.getTank(0);
             gas = beTank.getGasStack();
         }
         Axis axis = be.getMainConnectionAxis();
@@ -243,8 +242,8 @@ public class GasConnectivityHandler {
                             }
                         }
                     }
-                    if (controller instanceof iGas iGasContainer && iGasContainer.hasTank()) {
-                        GasStack otherGas = iGasContainer.getGas(0);
+                    if (controller.hasTank()) {
+                        GasStack otherGas = controller.getGas(0);
                         if (!gas.isEmpty() && !otherGas.isEmpty() && !GasStack.isSameGasSameComponents(gas, otherGas)) {
                             break Search;
                         }
@@ -278,11 +277,11 @@ public class GasConnectivityHandler {
                     }
 
                     extraData = be.modifyExtraData(extraData);
-                    if (part instanceof iGas iGasPart && iGasPart.hasTank()) {
-                        IGasTank tankAt = iGasPart.getTank(0);
+                    if (part.hasTank()) {
+                        IGasTank tankAt = part.getTank(0);
                         GasStack gasAt = tankAt.getGasStack();
                         if (!gasAt.isEmpty()) {
-                            if (be instanceof iGas iGasBE && iGasBE.hasTank() && beTank != null) {
+                            if (be.hasTank() && beTank != null) {
                                 beTank.fill(gasAt, GasAction.EXECUTE);
                             }
                         }
@@ -335,13 +334,13 @@ public class GasConnectivityHandler {
         Axis axis = be.getMainConnectionAxis();
         GasStack toDistribute = GasStack.EMPTY;
         long maxCapacity = 0;
-        if (be instanceof iGas iGasBE && iGasBE.hasTank()) {
-            toDistribute = iGasBE.getGas(0);
-            maxCapacity = iGasBE.getTankSize(0);
+        if (be.hasTank()) {
+            toDistribute = be.getGas(0);
+            maxCapacity = be.getTankSize(0);
             if (!toDistribute.isEmpty() && !be.isRemoved()) {
                 toDistribute.shrink(maxCapacity);
             }
-            iGasBE.setTankSize(0, 1);
+            be.setTankSize(0, 1);
         }
 
         for (int yOffset = 0; yOffset < height; yOffset++) {
@@ -366,13 +365,11 @@ public class GasConnectivityHandler {
                     partAt.removeController(true);
                     if (!toDistribute.isEmpty() && partAt != be) {
                         GasStack copy = toDistribute.copy();
-                        IGasTank tank = partAt instanceof iGas iGasPart ? iGasPart.getTank(0) : null;
+                        IGasTank tank = partAt.getTank(0);
                         long split = Math.min(maxCapacity, toDistribute.getAmount());
                         copy.setAmount(split);
                         toDistribute.shrink(split);
-                        if (tank != null) {
-                            tank.fill(copy, GasAction.EXECUTE);
-                        }
+                        tank.fill(copy, GasAction.EXECUTE);
                     }
 
                     if (cache == null) {
@@ -387,7 +384,7 @@ public class GasConnectivityHandler {
         if (be instanceof IGasTankMultiBlockEntityContainer.Inventory inv && inv.hasInventory() && be.getLevel() != null) {
             be.getLevel().invalidateCapabilities(be.getBlockPos());
         }
-        if (be instanceof iGas iGas && iGas.hasTank() && be.getLevel() != null) {
+        if (be.hasTank() && be.getLevel() != null) {
             be.getLevel().invalidateCapabilities(be.getBlockPos());
         }
     }

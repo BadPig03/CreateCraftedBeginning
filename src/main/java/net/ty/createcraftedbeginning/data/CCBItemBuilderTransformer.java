@@ -8,7 +8,6 @@ import com.tterrag.registrate.util.nullness.NonNullBiConsumer;
 import com.tterrag.registrate.util.nullness.NonNullFunction;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.Item;
-import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonStyles;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,6 +31,11 @@ public final class CCBItemBuilderTransformer {
 
     @Contract(pure = true)
     public static <T extends Item, P> @NotNull NonNullFunction<ItemBuilder<T, P>, ItemBuilder<T, P>> balloon(PackageStyle style) {
-        return b -> b.properties(p -> p.stacksTo(1)).tag(AllItemTags.PACKAGES.tag).model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("item/balloon/balloon_" + BalloonStyles.getPath(style)))).lang("Balloon").setData(ProviderType.LANG, NonNullBiConsumer.noop());
+        return b -> b.properties(p -> p.stacksTo(1)).tag(AllItemTags.PACKAGES.tag).model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("item/balloon/balloon_" + style.width() + 'x' + style.height()))).lang("Balloon").setData(ProviderType.LANG, NonNullBiConsumer.noop());
+    }
+
+    @Contract(pure = true)
+    public static <T extends Item, P> @NotNull NonNullFunction<ItemBuilder<T, P>, ItemBuilder<T, P>> balloonRare(PackageStyle style) {
+        return b -> b.properties(p -> p.stacksTo(1)).tag(AllItemTags.PACKAGES.tag).model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("item/balloon/balloon_rare_reverted")).texture("0", p.modLoc("item/balloon/" + style.type()))).lang("Rare Balloon").setData(ProviderType.LANG, NonNullBiConsumer.noop());
     }
 }

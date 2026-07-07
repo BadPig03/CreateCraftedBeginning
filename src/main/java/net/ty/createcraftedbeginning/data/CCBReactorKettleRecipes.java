@@ -13,7 +13,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.Tags.Fluids;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.reactorkettle.TemperatureCondition;
+import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.TemperatureCondition;
 import net.ty.createcraftedbeginning.recipe.generators.ReactorKettleRecipeGen;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 

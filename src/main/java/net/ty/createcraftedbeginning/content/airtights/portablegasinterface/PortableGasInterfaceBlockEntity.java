@@ -12,11 +12,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IMountedStorageManagerWithGas;
 import net.ty.createcraftedbeginning.data.CCBLang;
-import net.ty.createcraftedbeginning.mixin.accessor.MountedStorageManagerAccessor;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Contract;
 
@@ -49,11 +49,11 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
 
     @Override
     public void startTransferringTo(Contraption contraption, float distance) {
-        if (!(contraption.getStorage() instanceof MountedStorageManagerAccessor accessor)) {
+        if (!(contraption.getStorage() instanceof IMountedStorageManagerWithGas withGas)) {
             return;
         }
 
-        capability = new InterfaceGasHandler(accessor.getGases());
+        capability = new InterfaceGasHandler(withGas.ccb$getGases());
         invalidateCapability();
         super.startTransferringTo(contraption, distance);
     }

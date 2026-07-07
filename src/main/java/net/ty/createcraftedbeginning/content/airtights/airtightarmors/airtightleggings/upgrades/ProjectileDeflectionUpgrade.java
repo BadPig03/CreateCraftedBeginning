@@ -11,9 +11,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.armorhandlers.AirtightArmorsHandler;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.GlobalAirtightUpgradesConsumptionManager;
@@ -109,12 +106,6 @@ public enum ProjectileDeflectionUpgrade implements AirtightUpgrade {
 
     public boolean canApply(Player player, Vec3 movement) {
         if (!isActive(player, player.getItemBySlot(EquipmentSlot.LEGS))) {
-            return false;
-        }
-
-        Gas gasType = CanisterContainerSuppliers.getFirstAvailableGasContent(player).getGasType();
-        AirtightArmorsHandler armorsHandler = AirtightArmorsHandler.REGISTRY.get(gasType);
-        if (armorsHandler == null) {
             return false;
         }
 

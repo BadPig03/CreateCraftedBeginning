@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "BCB",
+    "DBD"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:dyes/red"
+    },
+    "B": {
+      "item": "createcraftedbeginning:airtight_sheet"
+    },
+    "C": {
+      "tag": "c:leathers"
+    },
+    "D": {
+      "tag": "c:dusts/redstone"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:gas_packager"
+  }
+}

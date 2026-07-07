@@ -122,6 +122,7 @@ public class BreezeCoolerRenderer extends SmartBlockEntityRenderer<BreezeCoolerB
             return;
         }
 
-        renderShared(ms, null, bufferSource, level, be.getBlockState(), be.getFrostLevelForRender(), be.getHeadAnimation().getValue(partialTicks) * 0.175f, AngleHelper.rad(be.headAngle.getValue(partialTicks)), be.hasGoggles(), be.hasTrainHat() ? CCBPartialModels.BREEZE_TRAIN_HAT : null, be.getFrostLevel().isAtLeast(FrostLevel.CHILLED), be.getFrostLevel().isAtLeast(FrostLevel.CHILLED) ? 24 : 0, be.hashCode(), light, null);
+        boolean isChilled = be.getFrostLevel().isAtLeast(FrostLevel.CHILLED);
+        renderShared(ms, null, bufferSource, level, be.getBlockState(), be.getFrostLevelForRender(), be.getHeadAnimation().getValue(partialTicks) * 0.175f, AngleHelper.rad(be.headAngle.getValue(partialTicks)), be.hasGoggles(), be.hasTrainHat() ? CCBPartialModels.BREEZE_TRAIN_HAT : be.isStockKeeper() ? CCBPartialModels.BREEZE_LOGISTICS_HAT : null, isChilled, isChilled ? 24 : 0, be.hashCode(), light, null);
     }
 }

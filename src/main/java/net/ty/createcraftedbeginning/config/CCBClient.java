@@ -12,6 +12,10 @@ public class CCBClient extends ConfigBase {
     public final ConfigInt gasInfoXOffset = i(0, "gas_info_x_offset", Comments.gasInfoXOffset);
     public final ConfigInt gasInfoYOffset = i(0, "gas_info_y_offset", Comments.gasInfoYOffset);
     public final ConfigInt maxItemStackDisplay = i(4, 1, 27, "max_item_stack_display", Comments.maxItemStackDisplay);
+    public final ConfigInt gasRequestScrollStep = i(1000, 1, "gas_request_scroll_step", Comments.gasRequestScrollStep);
+    public final ConfigInt gasRequestAltScrollStep = i(10, 1, "gas_request_alt_scroll_step", Comments.gasRequestScrollStepAlt);
+    public final ConfigInt gasRequestCtrlScrollStep = i(1, 1, "gas_request_ctrl_scroll_step", Comments.gasRequestScrollStepCtrl);
+    public final ConfigInt gasRequestShiftScrollStep = i(100, 1, "gas_request_shift_scroll_step", Comments.gasRequestScrollStepShift);
 
     @Override
     public @NotNull String getName() {
@@ -27,5 +31,9 @@ public class CCBClient extends ConfigBase {
         static String gasInfoXOffset = "X offset of the display showing the gas information currently used by the player.";
         static String gasInfoYOffset = "Y offset of the display showing the gas information currently used by the player.";
         static String maxItemStackDisplay = "The maximum number of item stacks displayed for the Airtight Reactor Kettle with Engineers' Goggles.";
+        static String gasRequestScrollStep = "The amount of gas adjusted per scroll step in the Redstone Requester screen.";
+        static String gasRequestScrollStepAlt = "The amount of gas adjusted per scroll step while holding Alt in the Redstone Requester screen.";
+        static String gasRequestScrollStepCtrl = "The amount of gas adjusted per scroll step while holding Ctrl in the Redstone Requester screen.";
+        static String gasRequestScrollStepShift = "The amount of gas adjusted per scroll step while holding Shift in the Redstone Requester screen.";
     }
 }

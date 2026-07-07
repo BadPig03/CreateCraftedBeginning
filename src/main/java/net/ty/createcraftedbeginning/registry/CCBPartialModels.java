@@ -6,10 +6,8 @@ import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.lang.Lang;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes.ComponentPartials;
-import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonStyles;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.EnumMap;
@@ -21,6 +19,7 @@ import java.util.Map;
 @SuppressWarnings("unused")
 public class CCBPartialModels {
     public static final PartialModel BREEZE_TRAIN_HAT = entity("train_hat");
+    public static final PartialModel BREEZE_LOGISTICS_HAT = entity("logistics_hat");
 
     public static final PartialModel PNEUMATIC_ENGINE_COGS = block("pneumatic_engine/block_cogs");
     public static final PartialModel PHOTO_STRESS_BEARING_SHAFT = block("photo-stress_bearing/block_shaft");
@@ -37,6 +36,7 @@ public class CCBPartialModels {
     public static final PartialModel BREEZE_CHAMBER_GOGGLES = block("breeze_chamber/breeze/goggles");
     public static final PartialModel BREEZE_CHAMBER_GOGGLES_SMALL = block("breeze_chamber/breeze/goggles_small");
 
+    public static final PartialModel BREEZE_COOLER_BLOCK = block("breeze_cooler/block");
     public static final PartialModel BREEZE_RIMING = block("breeze_cooler/breeze/riming");
     public static final PartialModel BREEZE_CHILLED = block("breeze_cooler/breeze/chilled");
     public static final PartialModel BREEZE_CHILLED_ACTIVE = block("breeze_cooler/breeze/chilled_active");
@@ -98,10 +98,28 @@ public class CCBPartialModels {
     public static final PartialModel BALLOON_10X12 = balloon("balloon_10x12");
     public static final PartialModel BALLOON_12X10 = balloon("balloon_12x10");
     public static final PartialModel BALLOON_12X12 = balloon("balloon_12x12");
+    public static final PartialModel BALLOON_RARE_REVERTED = balloon("balloon_rare_reverted");
+    public static final PartialModel BALLOON_RARE_SMILE = balloon("balloon_rare_smile");
+    public static final PartialModel BALLOON_RARE_CRY = balloon("balloon_rare_cry");
+    public static final PartialModel BALLOON_RARE_EYE = balloon("balloon_rare_eye");
+    public static final PartialModel BALLOON_RARE_ISAAC = balloon("balloon_rare_isaac");
+    public static final PartialModel BALLOON_RARE_GHAST = balloon("balloon_rare_ghast");
+    public static final PartialModel BALLOON_RARE_TROLLFACE = balloon("balloon_rare_trollface");
+    public static final PartialModel BALLOON_RARE_TENNA = balloon("balloon_rare_tenna");
+    public static final PartialModel BALLOON_RARE_PVZ = balloon("balloon_rare_pvz");
+    public static final PartialModel BALLOON_RARE_QUESTION_MARKS = balloon("balloon_rare_question_marks");
+    public static final PartialModel BALLOON_RARE_POWERFUL = balloon("balloon_rare_powerful");
+    public static final PartialModel BALLOON_RARE_CHEESE = balloon("balloon_rare_cheese");
     public static final PartialModel BALLOON_RIGGING_10X8 = balloonRigging("balloon_rigging_10x8");
     public static final PartialModel BALLOON_RIGGING_10X12 = balloonRigging("balloon_rigging_10x12");
     public static final PartialModel BALLOON_RIGGING_12X10 = balloonRigging("balloon_rigging_12x10");
     public static final PartialModel BALLOON_RIGGING_12X12 = balloonRigging("balloon_rigging_12x12");
+    public static final PartialModel BALLOON_RIGGING_RARE = balloonRigging("balloon_rigging_rare");
+
+    public static final PartialModel GAS_PACKAGER_TRAY_REGULAR = block("gas_packager/tray");
+    public static final PartialModel GAS_PACKAGER_TRAY_DEFRAG = block("gas_repackager/tray");
+    public static final PartialModel GAS_PACKAGER_HATCH_OPEN = block("gas_packager/hatch_open");
+    public static final PartialModel GAS_PACKAGER_HATCH_CLOSED = block("gas_packager/hatch_closed");
 
     public static final Map<ComponentPartials, Map<Direction, PartialModel>> AIRTIGHT_PIPE_ATTACHMENTS = new EnumMap<>(ComponentPartials.class);
 
@@ -120,17 +138,11 @@ public class CCBPartialModels {
     }
 
     private static PartialModel balloon(String path) {
-        PartialModel model = PartialModel.of(CreateCraftedBeginning.asResource("item/balloon/" + path));
-        ResourceLocation location = CreateCraftedBeginning.asResource(path);
-        BalloonStyles.addPackage(location, model);
-        return model;
+        return PartialModel.of(CreateCraftedBeginning.asResource("item/balloon/" + path));
     }
 
     private static PartialModel balloonRigging(String path) {
-        PartialModel model = PartialModel.of(CreateCraftedBeginning.asResource("item/balloon/" + path));
-        ResourceLocation location = CreateCraftedBeginning.asResource(path);
-        BalloonStyles.addPackage(location, model);
-        return model;
+        return PartialModel.of(CreateCraftedBeginning.asResource("item/balloon/" + path));
     }
 
     private static PartialModel block(String path) {
@@ -150,10 +162,34 @@ public class CCBPartialModels {
         AllPartialModels.PACKAGES.put(CCBItems.BALLOON_10X12.getId(), BALLOON_10X12);
         AllPartialModels.PACKAGES.put(CCBItems.BALLOON_12X10.getId(), BALLOON_12X10);
         AllPartialModels.PACKAGES.put(CCBItems.BALLOON_12X12.getId(), BALLOON_12X12);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_REVERTED.getId(), BALLOON_RARE_REVERTED);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_SMILE.getId(), BALLOON_RARE_SMILE);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_CRY.getId(), BALLOON_RARE_CRY);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_EYE.getId(), BALLOON_RARE_EYE);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_ISAAC.getId(), BALLOON_RARE_ISAAC);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_GHAST.getId(), BALLOON_RARE_GHAST);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_TROLLFACE.getId(), BALLOON_RARE_TROLLFACE);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_TENNA.getId(), BALLOON_RARE_TENNA);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_PVZ.getId(), BALLOON_RARE_PVZ);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_QUESTION_MARKS.getId(), BALLOON_RARE_QUESTION_MARKS);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_POWERFUL.getId(), BALLOON_RARE_POWERFUL);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_CHEESE.getId(), BALLOON_RARE_CHEESE);
 
         AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_10X8.getId(), BALLOON_RIGGING_10X8);
         AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_10X12.getId(), BALLOON_RIGGING_10X12);
         AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_12X10.getId(), BALLOON_RIGGING_12X10);
         AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_12X12.getId(), BALLOON_RIGGING_12X12);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_REVERTED.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_SMILE.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_CRY.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_EYE.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_ISAAC.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_GHAST.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_TROLLFACE.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_TENNA.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_PVZ.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_QUESTION_MARKS.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_POWERFUL.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_CHEESE.getId(), BALLOON_RIGGING_RARE);
     }
 }

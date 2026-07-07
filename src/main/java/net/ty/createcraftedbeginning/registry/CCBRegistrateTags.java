@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.registry;
 import com.tterrag.registrate.providers.ProviderType;
 import com.tterrag.registrate.providers.RegistrateTagsProvider;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
@@ -36,12 +37,12 @@ public class CCBRegistrateTags {
 
     private static void genBlockTags(RegistrateTagsProvider<Block> provIn) {
         CCBTagsProvider<Block> provider = new CCBTagsProvider<>(provIn, Block::builtInRegistryHolder);
+        provider.tag(CCBBlockTags.GAS_SOURCES.tag).addTag(BlockTags.LEAVES);
         Arrays.stream(CCBBlockTags.values()).filter(tag -> tag.alwaysDataGen).map(tag -> tag.tag).forEach(provider::getOrCreateRawBuilder);
     }
 
     private static void genItemTags(RegistrateTagsProvider<Item> provIn) {
         CCBTagsProvider<Item> provider = new CCBTagsProvider<>(provIn, Item::builtInRegistryHolder);
-        provider.tag(CCBItemTags.CINDER_CASING_RAW_MATERIALS.tag).add(Blocks.STRIPPED_CRIMSON_STEM.asItem()).add(Blocks.STRIPPED_CRIMSON_HYPHAE.asItem()).add(Blocks.STRIPPED_WARPED_STEM.asItem()).add(Blocks.STRIPPED_WARPED_HYPHAE.asItem());
         provider.tag(CCBItemTags.END_CASING_RAW_MATERIALS.tag).add(Blocks.CRYING_OBSIDIAN.asItem());
         provider.tag(CCBItemTags.PRESS_HEAD_TOOLS.tag).add(Items.HEAVY_CORE).add(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE);
         provider.tag(ItemTags.PIGLIN_LOVED).add(CCBItems.GOLDEN_ICE_CREAM.get());

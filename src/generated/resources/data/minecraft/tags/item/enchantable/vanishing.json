@@ -1,11 +1,11 @@
 {
   "values": [
-    "createcraftedbeginning:gas_canister",
     "createcraftedbeginning:airtight_cannon",
     "createcraftedbeginning:airtight_handheld_drill",
     "createcraftedbeginning:airtight_helmet",
     "createcraftedbeginning:airtight_chestplate",
     "createcraftedbeginning:airtight_leggings",
-    "createcraftedbeginning:airtight_boots"
+    "createcraftedbeginning:airtight_boots",
+    "createcraftedbeginning:gas_canister"
   ]
 }

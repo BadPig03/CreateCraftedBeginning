@@ -15,6 +15,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
@@ -86,6 +87,7 @@ public class CCBTags {
     public enum CCBBlockTags {
         CRATES,
         AIRTIGHT_COMPONENTS,
+        GAS_SOURCES,
         END_COMPONENTS;
 
         public final TagKey<Block> tag;
@@ -115,12 +117,15 @@ public class CCBTags {
 
         private static void init() {
         }
+
+        public boolean matches(BlockState state) {
+            return state.is(tag);
+        }
     }
 
     public enum CCBItemTags {
         AIRTIGHT_COMPONENTS,
         AIRTIGHT_ARMOR,
-        CINDER_CASING_RAW_MATERIALS,
         END_CASING_RAW_MATERIALS,
         CRATES,
         WEATHER_FLARE,

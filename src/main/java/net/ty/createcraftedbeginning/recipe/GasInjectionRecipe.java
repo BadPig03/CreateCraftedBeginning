@@ -73,7 +73,7 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
     }
 
     public static long getRequiredGasAmount(Level level, ItemStack itemStack, GasStack gasStack) {
-        if (GasCanisterUtils.isCanisterInjectable(itemStack, gasStack) && itemStack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents) {
+        if (GasCanisterUtils.canInjectCanister(itemStack, gasStack) && itemStack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents) {
             long maxCapacity = GasInjectionChamberBlockEntity.getMaxCapacity();
             return Math.min(maxCapacity, canisterContents.getTankCapacity(0) - canisterContents.getGasInTank(0).getAmount());
         }
@@ -108,7 +108,7 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
     }
 
     public static boolean isItemInvalidForInjection(@Nullable Level level, ItemStack itemStack, GasStack gasStack) {
-        if (level == null || GasCanisterUtils.isCanisterInjectable(itemStack, gasStack)) {
+        if (level == null || GasCanisterUtils.canInjectCanister(itemStack, gasStack)) {
             return false;
         }
 

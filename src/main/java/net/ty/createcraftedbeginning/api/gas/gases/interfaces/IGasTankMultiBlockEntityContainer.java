@@ -9,21 +9,19 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public interface IGasTankMultiBlockEntityContainer extends IMultiBlockEntityContainer {
-    interface iGas extends IGasTankMultiBlockEntityContainer {
-        IGasTank getTank(int tank);
+    IGasTank getTank(int tank);
 
-        void setTankSize(int tank, int blocks);
+    void setTankSize(int tank, int blocks);
 
-        default boolean hasTank() {
-            return false;
-        }
+    default boolean hasTank() {
+        return false;
+    }
 
-        default GasStack getGas(int tank) {
-            return GasStack.EMPTY;
-        }
+    default GasStack getGas(int tank) {
+        return GasStack.EMPTY;
+    }
 
-        default long getTankSize(int tank) {
+    default long getTankSize(int tank) {
             return 0;
         }
-    }
 }

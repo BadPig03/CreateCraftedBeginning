@@ -30,7 +30,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.GasIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
-import net.ty.createcraftedbeginning.api.gas.reactorkettle.TemperatureCondition;
+import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.TemperatureCondition;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipe.Factory;
 
 import javax.annotation.ParametersAreNonnullByDefault;

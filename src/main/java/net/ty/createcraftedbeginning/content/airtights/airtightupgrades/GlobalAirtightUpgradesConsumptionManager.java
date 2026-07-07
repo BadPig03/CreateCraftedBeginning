@@ -9,7 +9,8 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.api.gas.armorhandlers.AirtightArmorsHandler;
+import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandler;
+import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerConsumers;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
@@ -39,11 +40,7 @@ public final class GlobalAirtightUpgradesConsumptionManager {
             return -1;
         }
 
-        AirtightArmorsHandler armorsHandler = AirtightArmorsHandler.REGISTRY.get(gasType);
-        if (armorsHandler == null) {
-            return -1;
-        }
-
+        AirtightArmorsHandler armorsHandler = AirtightArmorsHandlerUtils.of(gasType);
         float[] multipliers = armorsHandler.getConsumptionMultiplier();
         if (index < 0 || index >= multipliers.length) {
             return -1;
@@ -78,11 +75,6 @@ public final class GlobalAirtightUpgradesConsumptionManager {
 
         Gas gasType = CanisterContainerSuppliers.getFirstAvailableGasContent(player).getGasType();
         return !gasType.isEmpty() && CanisterContainerConsumers.interactContainer(player, gasType, amount, () -> true, false);
-    }
-
-    public static boolean hasValidGas(Player player) {
-        Gas gasType = CanisterContainerSuppliers.getFirstAvailableGasContent(player).getGasType();
-        return !gasType.isEmpty() && AirtightArmorsHandler.REGISTRY.get(gasType) != null;
     }
 
     public static boolean isPowered(Player player, AirtightUpgrade upgrade) {

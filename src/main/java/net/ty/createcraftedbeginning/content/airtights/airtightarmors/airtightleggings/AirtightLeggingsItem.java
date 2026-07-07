@@ -10,6 +10,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup.RegistryLookup;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -32,7 +33,8 @@ import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.armorhandlers.AirtightArmorsHandler;
+import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandler;
+import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlerUtils;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
@@ -137,14 +139,12 @@ public class AirtightLeggingsItem extends AirtightBaseArmorItem implements MenuP
             return;
         }
 
-        AirtightArmorsHandler armorsHandler = AirtightArmorsHandler.REGISTRY.get(gasContent.getGasType());
-        if (armorsHandler == null) {
-            return;
-        }
-
+        AirtightArmorsHandler armorsHandler = AirtightArmorsHandlerUtils.of(gasContent.getGasType());
         tooltip.add(CommonComponents.EMPTY);
         tooltip.add(CCBLang.gasName(gasContent).add(CCBLang.translate("gui.tooltips.gas_tools.content")).style(ChatFormatting.GRAY).component());
-        armorsHandler.appendLeggingsHoverText(leggings, context, tooltip, tooltipFlag);
+        float consumptionMultiplier = armorsHandler.getConsumptionMultiplier()[2];
+        MutableComponent advancedConsumptionMultiplier = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + armorsHandler.getRenderStr(consumptionMultiplier) + ']').component() : Component.empty();
+        tooltip.add(CCBLang.translate("gui.tooltips.gas_tools.gas_consumption", armorsHandler.getRenderStr(consumptionMultiplier * 100)).add(advancedConsumptionMultiplier.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
     }
 
     @Override

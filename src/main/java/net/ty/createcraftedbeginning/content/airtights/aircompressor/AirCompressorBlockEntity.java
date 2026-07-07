@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.content.airtights.aircompressor;
 
-import com.mojang.serialization.Codec;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
@@ -9,7 +8,6 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.infrastructure.config.AllConfigs;
-import net.createmod.catnip.lang.Lang;
 import net.createmod.catnip.lang.LangBuilder;
 import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.ChatFormatting;
@@ -23,14 +21,13 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
-import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.coolantstrategy.CoolantStrategyHandler;
+import net.ty.createcraftedbeginning.api.coolantshandlers.AirtightCoolantHandler;
+import net.ty.createcraftedbeginning.api.coolantshandlers.AirtightCoolantHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
@@ -487,9 +484,8 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
             return;
         }
 
-        CoolantStrategyHandler coolantStrategy = CoolantStrategyHandler.REGISTRY.get(level.getBlockState(coolantPos).getBlock());
-        CoolantEfficiency efficiency = coolantStrategy == null ? CoolantEfficiency.NONE : coolantStrategy.getCoolantEfficiency(level, coolantPos, level.getBlockState(coolantPos));
-        setCoolantEfficiency(efficiency);
+        AirtightCoolantHandler coolantHandler = AirtightCoolantHandlerUtils.of(level.getBlockState(coolantPos).getBlock());
+        setCoolantEfficiency(coolantHandler.getCoolantEfficiency(level, coolantPos, level.getBlockState(coolantPos)));
     }
 
     @Override
@@ -516,24 +512,5 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     @Override
     public MutableComponent format(int value) {
         return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.buckets")).component();
-    }
-
-    public enum CoolantEfficiency implements StringRepresentable {
-        NONE,
-        BASIC,
-        ADVANCED,
-        EXTREME;
-
-        public static final Codec<CoolantEfficiency> CODEC = StringRepresentable.fromEnum(CoolantEfficiency::values);
-
-        public int getHeatReduced(Level level) {
-            int passive = level.dimensionType().ultraWarm() ? 0 : 1;
-            return Math.max(passive, ordinal() * 2);
-        }
-
-        @Override
-        public String getSerializedName() {
-            return Lang.asId(name());
-        }
     }
 }

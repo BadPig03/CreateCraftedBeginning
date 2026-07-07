@@ -7,7 +7,8 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.entity.projectile.windcharge.AbstractWindCharge;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
+import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandler;
+import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -41,11 +42,7 @@ public class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWin
         }
 
         Gas gasType = windCharge.getGasHolder().value();
-        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasType);
-        if (cannonHandler == null) {
-            return;
-        }
-
+        AirtightCannonHandler cannonHandler = AirtightCannonHandlerUtils.of(gasType);
         float[] anim = cannonHandler.getSetupAnim(ageInTicks);
         if (anim.length != 9) {
             return;

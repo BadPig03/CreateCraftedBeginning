@@ -4,6 +4,9 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
+import com.simibubi.create.content.logistics.stockTicker.StockTickerBlockEntity;
+import com.simibubi.create.content.logistics.stockTicker.StockTickerInteractionHandler;
+import com.simibubi.create.content.processing.burner.BlazeBurnerBlockEntity;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import net.createmod.catnip.lang.Lang;
@@ -126,6 +129,15 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
                 bcbe.notifyUpdate();
                 return ItemInteractionResult.SUCCESS;
             });
+        }
+
+        BreezeCoolerBlockEntity be = getBlockEntity(level, pos);
+        if (be != null && be.isStockKeeper()) {
+            StockTickerBlockEntity stockTicker = BlazeBurnerBlockEntity.getStockTicker(level, pos);
+            if (stockTicker != null) {
+                StockTickerInteractionHandler.interactWithLogisticsManagerAt(player, level, stockTicker.getBlockPos());
+            }
+            return ItemInteractionResult.SUCCESS;
         }
 
         if (stack.isEmpty()) {

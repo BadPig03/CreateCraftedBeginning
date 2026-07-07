@@ -7,6 +7,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsUtils;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.upgrades.AirtightBootsUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.AirtightChestplateUpgradeRegistry;
@@ -100,7 +101,7 @@ public interface AirtightUpgrade {
             return true;
         }
         else if (consumption == 0) {
-            return GlobalAirtightUpgradesConsumptionManager.hasValidGas(player);
+            return !CanisterContainerSuppliers.getFirstAvailableGasContent(player).getGasType().isEmpty();
         }
         return GlobalAirtightUpgradesConsumptionManager.isPowered(player, this);
     }

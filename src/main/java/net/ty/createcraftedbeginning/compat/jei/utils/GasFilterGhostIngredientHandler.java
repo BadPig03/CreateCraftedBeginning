@@ -11,7 +11,7 @@ import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreen;
-import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualItem;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -61,7 +61,7 @@ public class GasFilterGhostIngredientHandler implements IGhostIngredientHandler<
                 return;
             }
 
-            ItemStack virtualItem = GasVirtualItem.getVirtualItem(gasStack);
+            ItemStack virtualItem = GasVirtualUtils.createVirtualItem(gasStack);
             gui.getMenu().insertDirectly(List.of(virtualItem));
             CatnipServices.NETWORK.sendToServer(new GasFilterGhostItemSubmitPacket(virtualItem));
         }

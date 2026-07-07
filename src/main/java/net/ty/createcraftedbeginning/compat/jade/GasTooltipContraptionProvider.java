@@ -3,9 +3,9 @@ package net.ty.createcraftedbeginning.compat.jade;
 import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IMountedStorageManagerWithGas;
 import net.ty.createcraftedbeginning.compat.jade.gas.GasConstants;
 import net.ty.createcraftedbeginning.compat.jade.gas.GasDataProvider;
-import net.ty.createcraftedbeginning.mixin.accessor.MountedStorageManagerAccessor;
 import org.jetbrains.annotations.NotNull;
 import snownee.jade.api.EntityAccessor;
 import snownee.jade.api.IComponentProvider;
@@ -29,11 +29,11 @@ public enum GasTooltipContraptionProvider implements IServerDataProvider<EntityA
         if (!(entityAccessor.getEntity() instanceof AbstractContraptionEntity entity)) {
             return;
         }
-        if (!(entity.getContraption().getStorage() instanceof MountedStorageManagerAccessor accessor)) {
+        if (!(entity.getContraption().getStorage() instanceof IMountedStorageManagerWithGas withGas)) {
             return;
         }
 
-        GasDataProvider.readData(data, new HashSet<>(List.of(accessor.getGases())), JadePlugin.GAS_CONTRAPTION_TOOLTIP, false);
+        GasDataProvider.readData(data, new HashSet<>(List.of(withGas.ccb$getGases())), JadePlugin.GAS_CONTRAPTION_TOOLTIP, false);
     }
 
     @Override

@@ -54,11 +54,10 @@ public class CCBDataGen {
         CompletableFuture<Provider> lookupProvider = event.getLookupProvider();
         ExistingFileHelper existingFileHelper = event.getExistingFileHelper();
 
-        generator.addProvider(event.includeClient(), CCBSoundEvents.provider(generator));
-
         CCBDatapackBuiltinEntriesProvider generatedEntriesProvider = new CCBDatapackBuiltinEntriesProvider(output, lookupProvider);
         lookupProvider = generatedEntriesProvider.getRegistryProvider();
 
+        generator.addProvider(event.includeClient(), CCBSoundEvents.provider(generator));
         generator.addProvider(event.includeServer(), generatedEntriesProvider);
         generator.addProvider(event.includeServer(), new CCBAdvancements(output, lookupProvider));
         generator.addProvider(event.includeServer(), new CCBDamageTypeTagsProvider(output, lookupProvider, existingFileHelper));

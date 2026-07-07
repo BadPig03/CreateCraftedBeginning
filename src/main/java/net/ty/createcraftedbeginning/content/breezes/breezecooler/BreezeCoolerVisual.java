@@ -67,9 +67,9 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
             goggles = null;
         }
 
-        boolean hatPresent = blockEntity.hasTrainHat();
+        boolean hatPresent = blockEntity.hasTrainHat() || blockEntity.isStockKeeper();
         if (hatPresent && hat == null) {
-            hat = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.BREEZE_TRAIN_HAT)).createInstance();
+            hat = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(blockEntity.isStockKeeper() ? CCBPartialModels.BREEZE_LOGISTICS_HAT : CCBPartialModels.BREEZE_TRAIN_HAT)).createInstance();
         }
         else if (!hatPresent && hat != null) {
             hat.delete();

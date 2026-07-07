@@ -19,8 +19,8 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageWrapper;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IMountedStorageManagerWithGas;
 import net.ty.createcraftedbeginning.data.CCBLang;
-import net.ty.createcraftedbeginning.mixin.accessor.MountedStorageManagerAccessor;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -39,11 +39,11 @@ public class GasThresholdCondition extends CargoThresholdCondition {
         int target = getThreshold();
         long foundGas = 0;
         for (Carriage carriage : train.carriages) {
-            if (!(carriage.storage instanceof MountedStorageManagerAccessor accessor)) {
+            if (!(carriage.storage instanceof IMountedStorageManagerWithGas withGas)) {
                 continue;
             }
 
-            MountedGasStorageWrapper gases = accessor.getGases();
+            MountedGasStorageWrapper gases = withGas.ccb$getGases();
             for (int i = 0; i < gases.getTanks(); i++) {
                 GasStack gasInTank = gases.getGasInTank(i);
                 if (!filterItem.isEmpty() && (!(filterItem.getItem() instanceof IGasFilter filter) || !filter.test(filterItem, gasInTank))) {

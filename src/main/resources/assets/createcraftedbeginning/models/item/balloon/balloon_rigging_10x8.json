@@ -1,0 +1,123 @@
+{
+	"format_version": "1.21.11",
+	"credit": "Made with Blockbench",
+	"parent": "create:item/package_transforms",
+	"render_type": "minecraft:cutout",
+	"textures": {
+		"0": "createcraftedbeginning:item/balloon/balloon",
+		"particle": "createcraftedbeginning:item/balloon/ballon_particle"
+	},
+	"elements": [
+		{
+			"name": "rope_1",
+			"from": [7.76188, 5.22096, 1.8],
+			"to": [7.76188, 12.22096, 14.2],
+			"rotation": {"angle": 45, "axis": "z", "origin": [7.96188, 5.12096, 8]},
+			"faces": {
+				"east": {"uv": [12.5, 2, 15.5, 4], "texture": "#0"},
+				"west": {"uv": [12.5, 1.5, 15.5, 3.25], "texture": "#0"}
+			}
+		},
+		{
+			"name": "rope_2",
+			"from": [1.8, 5.08025, 8.17883],
+			"to": [14.2, 12.08025, 8.17883],
+			"rotation": {"angle": 45, "axis": "x", "origin": [8, 4.98025, 8.17883]},
+			"faces": {
+				"north": {"uv": [12.5, 2, 15.5, 4], "texture": "#0"},
+				"south": {"uv": [12.5, 1.5, 15.5, 3.25], "texture": "#0"}
+			}
+		},
+		{
+			"name": "rope_3",
+			"from": [8.95665, 4.75807, 1.8],
+			"to": [8.95665, 11.75807, 14.2],
+			"rotation": {"angle": -45, "axis": "z", "origin": [8.95665, 5.75807, 8]},
+			"faces": {
+				"east": {"uv": [12.5, 1.5, 15.5, 3.25], "texture": "#0"},
+				"west": {"uv": [12.5, 2, 15.5, 4], "texture": "#0"}
+			}
+		},
+		{
+			"name": "rope_4",
+			"from": [1.8, 5.05025, 7.74975],
+			"to": [14.2, 12.05025, 7.74975],
+			"rotation": {"angle": -45, "axis": "x", "origin": [8, 5.05025, 7.74975]},
+			"faces": {
+				"north": {"uv": [12.5, 1.5, 15.5, 3.25], "texture": "#0"},
+				"south": {"uv": [12.5, 2, 15.5, 4], "texture": "#0"}
+			}
+		},
+		{
+			"name": "knot",
+			"from": [6.5, 3, 6.5],
+			"to": [9.5, 6, 9.5],
+			"rotation": {"angle": 0, "axis": "x", "origin": [8, 4.5, 8]},
+			"faces": {
+				"north": {"uv": [13.5, 8, 14.25, 8.75], "texture": "#0"},
+				"east": {"uv": [13.5, 8, 14.25, 8.75], "texture": "#0"},
+				"south": {"uv": [13.5, 8, 14.25, 8.75], "texture": "#0"},
+				"west": {"uv": [13.5, 8, 14.25, 8.75], "texture": "#0"},
+				"up": {"uv": [13.5, 9.5, 14.25, 10.25], "texture": "#0"},
+				"down": {"uv": [13.5, 8.75, 14.25, 9.5], "texture": "#0"}
+			}
+		},
+		{
+			"name": "hook",
+			"from": [8, -15, 6],
+			"to": [8, -8, 10],
+			"rotation": {"angle": 0, "axis": "x", "origin": [8, -11.5, 8]},
+			"faces": {
+				"east": {"uv": [14.5, 11, 13.5, 12.75], "rotation": 180, "texture": "#0"},
+				"west": {"uv": [13.5, 11, 14.5, 12.75], "rotation": 180, "texture": "#0"}
+			}
+		},
+		{
+			"name": "tape",
+			"from": [8, -8, 7],
+			"to": [8, 3, 9],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, -2.5, 8]},
+			"faces": {
+				"east": {"uv": [14.25, 12.75, 13.75, 15.5], "rotation": 180, "texture": "#0"},
+				"west": {"uv": [13.75, 12.75, 14.25, 15.5], "rotation": 180, "texture": "#0"}
+			}
+		},
+		{
+			"name": "box_section",
+			"from": [2.8, 10, 2.8],
+			"to": [13.2, 18.2, 13.2],
+			"rotation": {"angle": 0, "axis": "x", "origin": [8, 14.1, 8]},
+			"faces": {
+				"north": {"uv": [12.75, 2.25, 15.25, 4.25], "texture": "#0"},
+				"east": {"uv": [12.75, 2.25, 15.25, 4.25], "texture": "#0"},
+				"south": {"uv": [12.75, 2.25, 15.25, 4.25], "texture": "#0"},
+				"west": {"uv": [12.75, 2.25, 15.25, 4.25], "texture": "#0"},
+				"up": {"uv": [12.75, 4.75, 15.25, 7.25], "rotation": 90, "texture": "#0"}
+			}
+		},
+		{
+			"name": "box_section_interior",
+			"from": [2.8, 18.2, 2.8],
+			"to": [13.2, 10, 13.2],
+			"rotation": {"angle": 0, "axis": "x", "origin": [8, 14.1, 8]},
+			"faces": {
+				"north": {"uv": [12.75, 2.25, 15.25, 4.25], "texture": "#0"},
+				"east": {"uv": [12.75, 2.25, 15.25, 4.25], "texture": "#0"},
+				"south": {"uv": [12.75, 2.25, 15.25, 4.25], "texture": "#0"},
+				"west": {"uv": [12.75, 2.25, 15.25, 4.25], "texture": "#0"},
+				"down": {"uv": [12.75, 4.75, 15.25, 7.25], "rotation": 270, "texture": "#0"}
+			}
+		}
+	],
+	"groups": [
+		{
+			"name": "top_section",
+			"origin": [2, 0, 2],
+			"scope": 0,
+			"color": 0,
+			"children": [0, 1, 2, 3, 4, 5, 6]
+		},
+		7,
+		8
+	]
+}

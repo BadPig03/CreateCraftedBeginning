@@ -4,6 +4,7 @@ import com.simibubi.create.AllTags.AllBlockTags;
 import com.simibubi.create.AllTags.AllItemTags;
 import com.simibubi.create.content.decoration.encasing.CasingBlock;
 import com.simibubi.create.content.decoration.encasing.EncasedCTBehaviour;
+import com.simibubi.create.content.logistics.packager.PackagerBlock;
 import com.simibubi.create.content.processing.AssemblyOperatorBlockItem;
 import com.simibubi.create.foundation.block.connected.CTSpriteShiftEntry;
 import com.simibubi.create.foundation.data.AssetLookup;
@@ -284,6 +285,18 @@ public final class CCBBlockBuilderTransformer {
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> creativeAirtightTank() {
         return b -> b.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.standardModel(c, p))).transform(mountedGasStorage(CCBMountedStorage.CREATIVE_AIRTIGHT_TANK)).onRegister(connectedTextures(CreativeAirtightTankCTBehavior::new)).onRegister(movementBehaviour(new CreativeAirtightTankMovementBehavior())).item(CreativeAirtightTankItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> gasPackager() {
+        return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.getEntry()).forAllStates(state -> {
+            String suffix = state.getValue(PackagerBlock.LINKED) ? "linked" : state.getValue(PackagerBlock.POWERED) ? "powered" : "";
+            Direction facing = state.getValue(PackagerBlock.FACING);
+            boolean isVertical = facing.getAxis() == Axis.Y;
+            ModelFile model = isVertical ? AssetLookup.partialBaseModel(c, p, "vertical", suffix) : AssetLookup.partialBaseModel(c, p, suffix);
+            int rotationY = isVertical ? 0 : (int) facing.toYRot();
+            return ConfiguredModel.builder().modelFile(model).rotationY(rotationY).build();
+        })).properties(p -> p.isRedstoneConductor((state, level, pos) -> false)).item().model(AssetLookup::customItemModel).build();
     }
 
     @Contract(pure = true)

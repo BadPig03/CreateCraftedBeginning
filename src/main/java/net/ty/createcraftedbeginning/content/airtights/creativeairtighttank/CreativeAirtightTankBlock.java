@@ -60,9 +60,9 @@ public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirt
     }
 
     @Override
-    public void setPlacedBy(Level level, BlockPos blockPos, BlockState blockState, @Nullable LivingEntity placer, ItemStack itemStack) {
-        super.setPlacedBy(level, blockPos, blockState, placer, itemStack);
-        CCBAdvancementBehaviour.setPlacedBy(level, blockPos, placer);
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, entity, stack);
+        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
     }
 
     @Override

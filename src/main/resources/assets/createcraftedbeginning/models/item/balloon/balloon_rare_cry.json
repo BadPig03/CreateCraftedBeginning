@@ -1,0 +1,24 @@
+{
+	"format_version": "1.21.11",
+	"credit": "Made with Blockbench",
+	"parent": "create:item/package_transforms",
+	"textures": {
+		"0": "createcraftedbeginning:item/balloon/rare_cry",
+		"particle": "createcraftedbeginning:item/balloon/rare_cry"
+	},
+	"elements": [
+		{
+			"from": [2, 0, 2],
+			"to": [14, 10, 14],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 5, 8]},
+			"faces": {
+				"north": {"uv": [1, 5.5, 7, 10.5], "texture": "#0"},
+				"east": {"uv": [1, 0.5, 7, 5.5], "texture": "#0"},
+				"south": {"uv": [7, 5.5, 1, 10.5], "texture": "#0"},
+				"west": {"uv": [1, 10.5, 7, 15.5], "texture": "#0"},
+				"up": {"uv": [9, 2, 15, 8], "rotation": 180, "texture": "#0"},
+				"down": {"uv": [9, 8, 15, 14], "texture": "#0"}
+			}
+		}
+	]
+}

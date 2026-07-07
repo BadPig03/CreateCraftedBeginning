@@ -22,9 +22,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.SimpleExplosionDamageCalculator;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlerUtils;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerConsumers;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
-import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
+import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
@@ -94,13 +95,9 @@ public final class AirtightCannonUtils {
 
         GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
         Gas gasType = gasContent.getGasType();
-        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasType);
-        if (cannonHandler == null) {
-            return;
-        }
-
         InteractionHand hand = player.getUsedItemHand();
         ItemStack cannon = player.getItemInHand(hand);
+        AirtightCannonHandler cannonHandler = AirtightCannonHandlerUtils.of(gasType);
         int gasConsumption = Mth.ceil(getGasConsumption(cannon, chargedRatio) * cannonHandler.getGasConsumptionMultiplier());
         if (!CanisterContainerConsumers.interactContainer(player, gasType, gasConsumption, () -> true, false)) {
             GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", gasContent.getHoverName());
@@ -133,13 +130,9 @@ public final class AirtightCannonUtils {
 
         GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
         Gas gasType = gasContent.getGasType();
-        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasType);
-        if (cannonHandler == null) {
-            return;
-        }
-
         InteractionHand hand = player.getUsedItemHand();
         ItemStack cannon = player.getItemInHand(hand);
+        AirtightCannonHandler cannonHandler = AirtightCannonHandlerUtils.of(gasType);
         int gasConsumption = Mth.ceil(getGasConsumption(cannon, chargedRatio) * cannonHandler.getGasConsumptionMultiplier());
         if (!CanisterContainerConsumers.interactContainer(player, gasType, gasConsumption, () -> true, false)) {
             GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", gasContent.getHoverName());

@@ -9,8 +9,8 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.armhandlers.AirtightExtendArmHandler;
-import net.ty.createcraftedbeginning.api.gas.armhandlers.ArmHandlerUtils;
+import net.ty.createcraftedbeginning.api.armhandlers.AirtightArmHandler;
+import net.ty.createcraftedbeginning.api.armhandlers.AirtightArmHandlerUtils;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerConsumers;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
@@ -47,7 +47,7 @@ public final class AirtightExtendArmUtils {
         }
 
         Gas gasType = gasContent.getGasType();
-        AirtightExtendArmHandler armHandler = ArmHandlerUtils.of(gasType);
+        AirtightArmHandler armHandler = AirtightArmHandlerUtils.of(gasType);
         long gasConsumption = getGasConsumption(armHandler);
         if (!CanisterContainerConsumers.interactContainer(player, gasType, gasConsumption, () -> true, true)) {
             removeArmModifiers(player);
@@ -89,15 +89,15 @@ public final class AirtightExtendArmUtils {
         }
 
         Gas gasType = gasContent.getGasType();
-        AirtightExtendArmHandler armHandler = ArmHandlerUtils.of(gasType);
+        AirtightArmHandler armHandler = AirtightArmHandlerUtils.of(gasType);
         return CanisterContainerConsumers.interactContainer(player, gasType, getGasConsumption(armHandler), () -> true, false);
     }
 
-    private static long getGasConsumption(AirtightExtendArmHandler armHandler) {
+    private static long getGasConsumption(AirtightArmHandler armHandler) {
         return Math.max(0, Mth.ceil(CCBConfig.server().equipments.perUseConsumption.get() * armHandler.getGasConsumptionMultiplier()));
     }
 
-    private static void applyArmModifiers(Player player, AirtightExtendArmHandler armHandler) {
+    private static void applyArmModifiers(Player player, AirtightArmHandler armHandler) {
         AttributeInstance blockInstance = player.getAttributes().getInstance(Attributes.BLOCK_INTERACTION_RANGE);
         AttributeInstance entityInstance = player.getAttributes().getInstance(Attributes.ENTITY_INTERACTION_RANGE);
         AttributeInstance knockbackInstance = player.getAttributes().getInstance(Attributes.ATTACK_KNOCKBACK);

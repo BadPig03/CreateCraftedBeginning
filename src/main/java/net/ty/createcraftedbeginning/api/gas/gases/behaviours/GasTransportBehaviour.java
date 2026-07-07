@@ -15,14 +15,15 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities;
 import net.ty.createcraftedbeginning.api.gas.gases.GasPipeConnection;
 import net.ty.createcraftedbeginning.api.gas.gases.GasPipeConnection.AirFlow;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.collisions.GasCollisionEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
+import net.ty.createcraftedbeginning.registry.CCBTags.CCBBlockTags;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -66,7 +67,8 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     }
 
     public static boolean isValidAirtightComponents(Level level, BlockPos pos, BlockState state, Direction direction) {
-        return state.canBeReplaced() && state.getDestroySpeed(level, pos) != -1 || GasCapabilities.hasGasCapability(level, pos, direction) || state.getBlock() instanceof IAirtightComponent airtightComponent && airtightComponent.isAirtight(pos, state, direction);
+        boolean openEnded = state.getDestroySpeed(level, pos) != -1 && (state.canBeReplaced() || CCBBlockTags.GAS_SOURCES.matches(state));
+        return openEnded || GasCapabilities.hasGasCapability(level, pos, direction) || state.getBlock() instanceof IAirtightComponent airtightComponent && airtightComponent.isAirtight(pos, state, direction);
     }
 
     public abstract boolean canHaveFlowToward(BlockState state, Direction direction);

@@ -11,8 +11,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.drainagehandlers.AirtightDrainageHandler;
-import net.ty.createcraftedbeginning.mixin.accessor.AbstractPiglinAccessor;
-import net.ty.createcraftedbeginning.mixin.accessor.HoglinAccessor;
+import net.ty.createcraftedbeginning.mixin.server.accessor.AbstractPiglinAccessor;
+import net.ty.createcraftedbeginning.mixin.server.accessor.HoglinAccessor;
 import net.ty.createcraftedbeginning.registry.CCBMobEffects;
 
 import javax.annotation.ParametersAreNonnullByDefault;

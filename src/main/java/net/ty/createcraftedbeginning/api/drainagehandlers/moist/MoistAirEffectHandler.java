@@ -11,7 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.drainagehandlers.AirtightDrainageHandler;
-import net.ty.createcraftedbeginning.mixin.accessor.ZombieAccessor;
+import net.ty.createcraftedbeginning.mixin.server.accessor.ZombieAccessor;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;

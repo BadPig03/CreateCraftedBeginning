@@ -28,10 +28,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.ty.createcraftedbeginning.api.drillhandlers.AirtightDrillHandler;
+import net.ty.createcraftedbeginning.api.drillhandlers.AirtightDrillHandlerUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
-import net.ty.createcraftedbeginning.api.gas.drillhandlers.AirtightHandheldDrillHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.HandheldDrillAttackModeButton;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
@@ -84,12 +85,6 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
 
         GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
         if (gasContent.isEmpty()) {
-            player.stopUsingItem();
-            return;
-        }
-
-        AirtightHandheldDrillHandler drillHandler = AirtightHandheldDrillHandler.REGISTRY.get(gasContent.getGasType());
-        if (drillHandler == null) {
             player.stopUsingItem();
             return;
         }
@@ -201,11 +196,7 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
 
         tooltip.add(CommonComponents.EMPTY);
         tooltip.add(CCBLang.gasName(gasContent).add(CCBLang.translate("gui.tooltips.gas_tools.content")).style(ChatFormatting.GRAY).component());
-        AirtightHandheldDrillHandler drillHandler = AirtightHandheldDrillHandler.REGISTRY.get(gasContent.getGasType());
-        if (drillHandler == null) {
-            return;
-        }
-
+        AirtightDrillHandler drillHandler = AirtightDrillHandlerUtils.of(gasContent.getGasType());
         drillHandler.appendHoverText(drill, context, tooltip, tooltipFlag);
     }
 

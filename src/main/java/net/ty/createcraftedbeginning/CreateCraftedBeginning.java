@@ -22,6 +22,9 @@ import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.registries.NewRegistryEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import net.ty.createcraftedbeginning.advancement.CCBTriggers;
+import net.ty.createcraftedbeginning.api.drainagehandlers.CCBAirtightDrainageHandlers;
+import net.ty.createcraftedbeginning.api.enginehandlers.CCBAirtightEngineHandlers;
+import net.ty.createcraftedbeginning.api.fillhandlers.CCBAirtightFillHandlers;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasBuilder;
 import net.ty.createcraftedbeginning.api.turbinehandlers.CCBAirtightTurbineHandlers;
@@ -36,16 +39,13 @@ import net.ty.createcraftedbeginning.data.CCBDataGen;
 import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 import net.ty.createcraftedbeginning.data.CCBGases;
 import net.ty.createcraftedbeginning.data.CCBRegistrate;
-import net.ty.createcraftedbeginning.init.CCBAirtightArmorsHandlers;
-import net.ty.createcraftedbeginning.init.CCBAirtightCannonHandlers;
-import net.ty.createcraftedbeginning.api.enginehandlers.CCBAirtightEngineHandlers;
-import net.ty.createcraftedbeginning.init.CCBAirtightExtendArmHandlers;
-import net.ty.createcraftedbeginning.init.CCBAirtightHandheldDrillHandlers;
-import net.ty.createcraftedbeginning.api.drainagehandlers.CCBAirtightDrainageHandlers;
-import net.ty.createcraftedbeginning.api.fillhandlers.CCBAirtightFillHandlers;
-import net.ty.createcraftedbeginning.init.CCBCoolantStrategyHandlers;
-import net.ty.createcraftedbeginning.init.CCBReactorKettleThermoregulators;
-import net.ty.createcraftedbeginning.init.CCBUnpackingHandlers;
+import net.ty.createcraftedbeginning.api.armorhandlers.CCBAirtightArmorsHandlers;
+import net.ty.createcraftedbeginning.api.cannonhandlers.CCBAirtightCannonHandlers;
+import net.ty.createcraftedbeginning.api.armhandlers.CCBAirtightArmHandlers;
+import net.ty.createcraftedbeginning.api.drillhandlers.CCBAirtightDrillHandlers;
+import net.ty.createcraftedbeginning.api.coolantshandlers.CCBAirtightCoolantHandlers;
+import net.ty.createcraftedbeginning.api.thermoregulatorhandlers.CCBAirtightThermoregulatorHandlers;
+import net.ty.createcraftedbeginning.registry.CCBUnpackingHandlers;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBArmInteractionPointTypes;
 import net.ty.createcraftedbeginning.registry.CCBArmorMaterials;
@@ -77,6 +77,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mod(CreateCraftedBeginning.MOD_ID)
 public class CreateCraftedBeginning {
     public static final String MOD_ID = "createcraftedbeginning";
+    public static final String NAME = "Create Crafted Beginning";
     public static final Logger LOGGER = LogUtils.getLogger();
 
     @SuppressWarnings("DataFlowIssue")
@@ -128,6 +129,7 @@ public class CreateCraftedBeginning {
     public static void init(FMLCommonSetupEvent event) {
         CCBFluids.registerFluidInteractions();
         EndCasingBlock.registerPlacementHelpers();
+
         AirtightHelmetUpgradeRegistry.registerUpgrades();
         AirtightChestplateUpgradeRegistry.registerUpgrades();
         AirtightLeggingsUpgradeRegistry.registerUpgrades();
@@ -138,10 +140,10 @@ public class CreateCraftedBeginning {
             CCBAirtightCannonHandlers.register();
             CCBAirtightEngineHandlers.register();
             CCBAirtightTurbineHandlers.register();
-            CCBAirtightExtendArmHandlers.register();
-            CCBAirtightHandheldDrillHandlers.register();
-            CCBReactorKettleThermoregulators.register();
-            CCBCoolantStrategyHandlers.register();
+            CCBAirtightArmHandlers.register();
+            CCBAirtightDrillHandlers.register();
+            CCBAirtightThermoregulatorHandlers.register();
+            CCBAirtightCoolantHandlers.register();
             CCBAirtightDrainageHandlers.register();
             CCBAirtightFillHandlers.register();
             CCBUnpackingHandlers.register();

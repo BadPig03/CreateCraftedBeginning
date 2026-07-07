@@ -37,10 +37,7 @@ public record MountedStorageSyncWithGasPacket(int contraptionId, Map<BlockPos, M
     @OnlyIn(Dist.CLIENT)
     public void handle(LocalPlayer player) {
         Level level = Minecraft.getInstance().level;
-        if (level == null) {
-            return;
-        }
-        if (!(level.getEntity(contraptionId) instanceof AbstractContraptionEntity contraption)) {
+        if (level == null || !(level.getEntity(contraptionId) instanceof AbstractContraptionEntity contraption)) {
             return;
         }
 
@@ -49,6 +46,6 @@ public record MountedStorageSyncWithGasPacket(int contraptionId, Map<BlockPos, M
             return;
         }
 
-        withGas.handleSyncWithGas(this, contraption);
+        withGas.ccb$handleSyncWithGas(this, contraption);
     }
 }

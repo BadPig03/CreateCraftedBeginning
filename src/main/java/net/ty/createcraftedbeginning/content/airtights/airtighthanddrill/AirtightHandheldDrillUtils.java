@@ -38,9 +38,10 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.level.BlockDropsEvent;
 import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
+import net.ty.createcraftedbeginning.api.drillhandlers.AirtightDrillHandlerUtils;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerConsumers;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
-import net.ty.createcraftedbeginning.api.gas.drillhandlers.AirtightHandheldDrillHandler;
+import net.ty.createcraftedbeginning.api.drillhandlers.AirtightDrillHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
@@ -226,11 +227,7 @@ public final class AirtightHandheldDrillUtils {
             return -1;
         }
 
-        AirtightHandheldDrillHandler drillHandler = AirtightHandheldDrillHandler.REGISTRY.get(gasType);
-        if (drillHandler == null) {
-            return -1;
-        }
-
+        AirtightDrillHandler drillHandler = AirtightDrillHandlerUtils.of(gasType);
         boolean silkTouch = SilkTouchUpgrade.INSTANCE.canApply(drill);
         boolean magnet = MagnetUpgrade.INSTANCE.canApply(drill);
         boolean experienceConversion = ExperienceConversionUpgrade.INSTANCE.canApply(drill);
@@ -349,11 +346,7 @@ public final class AirtightHandheldDrillUtils {
             return;
         }
 
-        AirtightHandheldDrillHandler drillHandler = AirtightHandheldDrillHandler.REGISTRY.get(gasType);
-        if (drillHandler == null) {
-            return;
-        }
-
+        AirtightDrillHandler drillHandler = AirtightDrillHandlerUtils.of(gasType);
         int perEntityHit = CCBConfig.server().equipments.perEntityHitConsumption.get();
         DamageSource damageSource = CCBDamageTypes.source(DamageTypes.THORNS, level, player);
         List<LivingEntity> vulnerableEntities = new ArrayList<>();
@@ -397,7 +390,7 @@ public final class AirtightHandheldDrillUtils {
 
         int damagedCount = 0;
         for (LivingEntity entity : vulnerableEntities) {
-            int damageAmount = AirtightHandheldDrillHandler.BASE_DAMAGE_AMOUNT + drillHandler.getDamageAddition();
+            int damageAmount = AirtightDrillHandler.BASE_DAMAGE_AMOUNT + drillHandler.getDamageAddition();
             if (!entity.hurt(damageSource, damageAmount)) {
                 continue;
             }

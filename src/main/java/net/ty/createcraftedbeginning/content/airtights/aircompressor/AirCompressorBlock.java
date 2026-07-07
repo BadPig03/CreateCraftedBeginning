@@ -26,7 +26,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -39,9 +38,9 @@ import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.HitResult;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.coolantstrategy.CoolantStrategyHandler;
+import net.ty.createcraftedbeginning.api.coolantshandlers.AirtightCoolantHandler;
+import net.ty.createcraftedbeginning.api.coolantshandlers.AirtightCoolantHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
-import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlockEntity.CoolantEfficiency;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatstates.IOverheatState;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatstates.NormalOverheatState;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatstates.OverheatManager;
@@ -229,17 +228,13 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
         BlockPos coolantPos = pos.below();
         compressor.updateCoolant(coolantPos);
         CoolantEfficiency efficiency = compressor.getCoolantEfficiency();
-        if (efficiency == CoolantEfficiency.NONE || !compressor.shouldConsumeCoolant()) {
-            return;
-        }
-
-        if (random.nextFloat() >= COOLANT_CONSUME_CHANCE) {
+        if (efficiency == CoolantEfficiency.NONE || !compressor.shouldConsumeCoolant() || random.nextFloat() >= COOLANT_CONSUME_CHANCE) {
             return;
         }
 
         BlockState coolantState = level.getBlockState(coolantPos);
-        CoolantStrategyHandler coolantStrategy = CoolantStrategyHandler.REGISTRY.get(coolantState.getBlock());
-        BlockState newState = coolantStrategy == null ? Blocks.AIR.defaultBlockState() : coolantStrategy.getMeltBlockState(level, coolantPos, coolantState);
+        AirtightCoolantHandler coolantStrategy = AirtightCoolantHandlerUtils.of(coolantState.getBlock());
+        BlockState newState = coolantStrategy.getMeltBlockState(level, coolantPos, coolantState);
         if (newState != null) {
             level.destroyBlock(coolantPos, false);
             if (!newState.isAir()) {
@@ -255,7 +250,7 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
     }
 
     @Override
-    public boolean hasShaftTowards(LevelReader world, BlockPos pos, BlockState state, Direction face) {
+    public boolean hasShaftTowards(LevelReader level, BlockPos pos, BlockState state, Direction face) {
         return face == Direction.UP;
     }
 

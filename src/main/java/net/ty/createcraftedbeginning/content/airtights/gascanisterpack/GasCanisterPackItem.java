@@ -24,6 +24,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.IGasFilter;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
@@ -34,7 +35,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class GasCanisterPackItem extends Item implements MenuProvider {
+public class GasCanisterPackItem extends Item implements MenuProvider, IGasFilter {
     public GasCanisterPackItem(Properties properties) {
         super(properties);
     }
@@ -121,5 +122,23 @@ public class GasCanisterPackItem extends Item implements MenuProvider {
     @Override
     public @Nullable AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
         return new GasCanisterPackMenu(CCBMenuTypes.GAS_CANISTER_PACK_MENU.get(), containerId, playerInventory, player.getMainHandItem());
+    }
+
+    @Override
+    public boolean test(ItemStack filterItem, GasStack filterGasStack) {
+        if (!(filterItem.getCapability(GasHandler.ITEM) instanceof GasCanisterPackContainerContents packContents)) {
+            return false;
+        }
+
+        for (int i = 0; i < packContents.getTanks(); i++) {
+            GasStack gasContent = packContents.getGasInTank(i);
+            if (gasContent.isEmpty() || !GasStack.isSameGasSameComponents(gasContent, filterGasStack)) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 }

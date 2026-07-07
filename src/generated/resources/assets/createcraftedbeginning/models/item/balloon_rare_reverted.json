@@ -1,0 +1,6 @@
+{
+  "parent": "createcraftedbeginning:item/balloon/balloon_rare_reverted",
+  "textures": {
+    "0": "createcraftedbeginning:item/balloon/rare_reverted"
+  }
+}

@@ -23,7 +23,8 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
+import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandler;
+import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.registry.CCBEntityTypes;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
@@ -179,11 +180,7 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
             return;
         }
 
-        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasHolder.value());
-        if (cannonHandler == null) {
-            return;
-        }
-
+        AirtightCannonHandler cannonHandler = AirtightCannonHandlerUtils.of(gasHolder.value());
         cannonHandler.renderTrailParticles(level, pos);
     }
 
@@ -220,19 +217,13 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
     }
 
     private void explodeDirectly(Vec3 pos) {
-        Gas gasType = gasHolder.value();
-        Level level = level();
-        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasType);
-        if (cannonHandler == null) {
-            return;
-        }
-
-        cannonHandler.explode(level, pos, this, multiplier);
+        AirtightCannonHandler cannonHandler = AirtightCannonHandlerUtils.of(gasHolder.value());
+        cannonHandler.explode(level(), pos, this, multiplier);
     }
 
     @OnlyIn(Dist.CLIENT)
     private void setModelFromGas(Gas gasType) {
-        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasType);
-        windChargeModel = cannonHandler != null ? new AirtightCannonWindChargeModel(cannonHandler.getLayerDefinition().bakeRoot()) : null;
+        AirtightCannonHandler cannonHandler = AirtightCannonHandlerUtils.of(gasType);
+        windChargeModel = new AirtightCannonWindChargeModel(cannonHandler.getLayerDefinition().bakeRoot());
     }
 }

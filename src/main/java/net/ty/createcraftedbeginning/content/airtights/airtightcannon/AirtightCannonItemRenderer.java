@@ -23,10 +23,11 @@ import net.neoforged.neoforge.client.IItemDecorator;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
-import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
+import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandler;
+import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlerUtils;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.weatherflares.WeatherFlareSupplierUtils;
+import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlareSupplierUtils;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 
@@ -67,11 +68,7 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
             return false;
         }
 
-        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasContent.getGasType());
-        if (cannonHandler == null) {
-            return false;
-        }
-
+        AirtightCannonHandler cannonHandler = AirtightCannonHandlerUtils.of(gasContent.getGasType());
         renderItem(guiGraphics, xOffset, yOffset, cannonHandler.getRenderIcon(level));
         return false;
     };

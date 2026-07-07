@@ -24,8 +24,8 @@ import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehavi
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
 import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity;
-import net.ty.createcraftedbeginning.mixin.accessor.SmithingTransformRecipeAccessor;
-import net.ty.createcraftedbeginning.mixin.accessor.SmithingTrimRecipeAccessor;
+import net.ty.createcraftedbeginning.mixin.server.accessor.SmithingTransformRecipeAccessor;
+import net.ty.createcraftedbeginning.mixin.server.accessor.SmithingTrimRecipeAccessor;
 import net.ty.createcraftedbeginning.recipe.trie.IAirtightWithGasRecipe;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 import org.jetbrains.annotations.NotNull;

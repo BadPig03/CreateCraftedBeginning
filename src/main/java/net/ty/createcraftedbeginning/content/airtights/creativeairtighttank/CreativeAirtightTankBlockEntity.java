@@ -21,15 +21,14 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.CreativeSmartGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasConnectivityHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.CreativeSmartGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTank;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTankMultiBlockEntityContainer.iGas;
-import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTankMultiBlockEntityContainer;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.IChamberGasTank;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -41,7 +40,7 @@ import java.util.Objects;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements iGas, IHaveGoggleInformation, IChamberGasTank, ICreativeGasContainer, ThresholdSwitchObservable {
+public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements IGasTankMultiBlockEntityContainer, IHaveGoggleInformation, IChamberGasTank, ICreativeGasContainer, ThresholdSwitchObservable {
     private static final int MAX_LENGTH = 4;
     private static final int MAX_WIDTH = 3;
     private static final int SYNC_RATE = 4;
@@ -84,7 +83,7 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
     }
 
     public static long getCapacityPerTank() {
-        return CCBConfig.server().airtights.maxCanisterCapacity.get() * 4000L;
+        return Integer.MAX_VALUE * 1000L;
     }
 
     @Override

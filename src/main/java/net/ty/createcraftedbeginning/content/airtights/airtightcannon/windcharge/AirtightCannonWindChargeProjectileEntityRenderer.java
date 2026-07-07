@@ -11,8 +11,8 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
+import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandler;
+import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlerUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -44,11 +44,9 @@ public class AirtightCannonWindChargeProjectileEntityRenderer extends EntityRend
         super.render(windCharge, entityYaw, partialTick, poseStack, bufferSource, light);
     }
 
-    @SuppressWarnings("DataFlowIssue")
     @Override
     public ResourceLocation getTextureLocation(AirtightCannonWindChargeProjectileEntity entity) {
-        Gas gasType = entity.getGasHolder().value();
-        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasType);
-        return cannonHandler == null ? null : cannonHandler.getTextureLocation();
+        AirtightCannonHandler cannonHandler = AirtightCannonHandlerUtils.of(entity.getGasHolder().value());
+        return cannonHandler.getTextureLocation();
     }
 }

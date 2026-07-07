@@ -32,9 +32,9 @@ public abstract class EndMechanicalBlock extends KineticBlock {
     }
 
     @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState blockState, @Nullable LivingEntity placer, ItemStack stack) {
-        super.setPlacedBy(level, pos, blockState, placer, stack);
-        CCBAdvancementBehaviour.setPlacedBy(level, pos, placer);
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, entity, stack);
+        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
     }
 
     @Override

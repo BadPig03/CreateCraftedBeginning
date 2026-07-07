@@ -1,0 +1,23 @@
+{
+	"format_version": "1.21.11",
+	"credit": "Made with Blockbench",
+	"render_type": "cutout",
+	"textures": {
+		"1": "createcraftedbeginning:block/gas_packager/packager_details"
+	},
+	"elements": [
+		{
+			"from": [2.1, 2, 2.1],
+			"to": [13.9, 4, 13.9],
+			"rotation": {"angle": 0, "axis": "y", "origin": [2, 2, 2]},
+			"faces": {
+				"north": {"uv": [1, 6.5, 7, 7.5], "texture": "#1"},
+				"east": {"uv": [1, 6.5, 7, 7.5], "texture": "#1"},
+				"south": {"uv": [1, 6.5, 7, 7.5], "texture": "#1"},
+				"west": {"uv": [1, 6.5, 7, 7.5], "texture": "#1"},
+				"up": {"uv": [1, 1, 7, 7], "texture": "#1"},
+				"down": {"uv": [1, 1, 7, 7], "texture": "#1"}
+			}
+		}
+	]
+}

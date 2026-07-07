@@ -25,10 +25,10 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasConnectivityHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.SmartGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTank;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTankMultiBlockEntityContainer.iGas;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.SmartGasTank;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTankMultiBlockEntityContainer;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightassemblydriver.AirtightAssemblyDriverCore;
 import net.ty.createcraftedbeginning.content.airtights.airtightassemblydriver.AirtightAssemblyDriverStructureManager;
@@ -42,7 +42,7 @@ import java.util.Objects;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightTankBlockEntity extends SmartBlockEntity implements iGas, IHaveGoggleInformation, IChamberGasTank, ThresholdSwitchObservable {
+public class AirtightTankBlockEntity extends SmartBlockEntity implements IGasTankMultiBlockEntityContainer, IHaveGoggleInformation, IChamberGasTank, ThresholdSwitchObservable {
     private static final int MAX_LENGTH = 4;
     private static final int MAX_WIDTH = 3;
     private static final int SYNC_RATE = 4;

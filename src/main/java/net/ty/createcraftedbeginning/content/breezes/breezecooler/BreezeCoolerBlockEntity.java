@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.breezes.breezecooler;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
+import com.simibubi.create.content.processing.burner.BlazeBurnerBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
@@ -77,6 +78,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
 
     protected LerpedFloat headAngle;
 
+    private boolean stockKeeper;
     private boolean goggles;
     private boolean trainHat;
     private CCBAdvancementBehaviour advancementBehaviour;
@@ -92,6 +94,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         headAngle.startWithValue((AngleHelper.horizontalAngle(state.getOptionalValue(BreezeCoolerBlock.FACING).orElse(Direction.NORTH)) + 180) % 360);
         headAnimation = LerpedFloat.linear();
         lastCoolerState = false;
+        stockKeeper = false;
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
@@ -138,6 +141,12 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         level.setBlockAndUpdate(worldPosition, getBlockState().setValue(COOLER, active));
         lastCoolerState = active;
         notifyUpdate();
+    }
+
+    @Override
+    public void lazyTick() {
+        super.lazyTick();
+        stockKeeper = BlazeBurnerBlockEntity.getStockTicker(level, worldPosition) != null;
     }
 
     @Override
@@ -251,7 +260,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
 
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        if (level == null) {
+        if (level == null || stockKeeper) {
             return false;
         }
 
@@ -301,6 +310,10 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         return trainHat;
     }
 
+    public boolean isStockKeeper() {
+        return stockKeeper;
+    }
+
     public boolean isCreative() {
         return currentState.isCreative();
     }
@@ -337,6 +350,9 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     public FrostLevel getFrostLevelForRender() {
+        if (stockKeeper) {
+            return FrostLevel.CHILLED;
+        }
         return getFrostLevelFromBlock();
     }
 

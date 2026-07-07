@@ -18,6 +18,7 @@ import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import net.ty.createcraftedbeginning.registry.CCBTags.CCBBlockTags;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -153,11 +154,13 @@ public final class GasPropagator {
         return null;
     }
 
+    @SuppressWarnings("SimplifiableIfStatement")
     public static boolean isOpenEnded(Level level, BlockPos pos, Direction side) {
         BlockPos targetPos = pos.relative(side);
         BlockState targetState = level.getBlockState(targetPos);
+        Direction oppositeDir = side.getOpposite();
         GasTransportBehaviour behaviour = getBehaviour(level, targetPos);
-        if (behaviour != null && behaviour.canHaveFlowToward(targetState, side.getOpposite())) {
+        if (behaviour != null && behaviour.canHaveFlowToward(targetState, oppositeDir)) {
             return false;
         }
 
@@ -165,11 +168,15 @@ public final class GasPropagator {
             return false;
         }
 
-        if (BlockHelper.hasBlockSolidSide(targetState, level, targetPos, side.getOpposite()) && !AllBlockTags.FAN_TRANSPARENT.matches(targetState)) {
+        if (GasCapabilities.hasGasCapability(level, targetPos, oppositeDir)) {
             return false;
         }
 
-        if (GasCapabilities.hasGasCapability(level, targetPos, side.getOpposite())) {
+        if (CCBBlockTags.GAS_SOURCES.matches(targetState)) {
+            return true;
+        }
+
+        if (BlockHelper.hasBlockSolidSide(targetState, level, targetPos, oppositeDir) && !AllBlockTags.FAN_TRANSPARENT.matches(targetState)) {
             return false;
         }
         return targetState.canBeReplaced() && targetState.getDestroySpeed(level, targetPos) != -1;

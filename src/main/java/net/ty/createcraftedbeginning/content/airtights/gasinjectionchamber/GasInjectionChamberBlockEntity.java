@@ -189,11 +189,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         }
 
         GasStack tankGas = getGasInTank();
-        if (tankGas.isEmpty()) {
-            return HOLD;
-        }
-
-        if (GasInjectionRecipe.isItemInvalidForInjection(level, transported.stack, tankGas)) {
+        if (tankGas.isEmpty() || GasInjectionRecipe.isItemInvalidForInjection(level, transported.stack, tankGas)) {
             return PASS;
         }
 

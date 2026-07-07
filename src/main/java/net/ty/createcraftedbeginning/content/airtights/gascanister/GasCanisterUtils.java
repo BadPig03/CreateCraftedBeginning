@@ -7,14 +7,20 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterContainerContents;
+import net.ty.createcraftedbeginning.data.CCBGases;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
+import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -52,7 +58,7 @@ public final class GasCanisterUtils {
         return !newKeys.equals(oldKeys) || !newKeys.stream().allMatch(key -> Objects.equals(newComponents.get(key), oldComponents.get(key)));
     }
 
-    public static boolean isCanisterInjectable(ItemStack itemStack, GasStack resource) {
+    public static boolean canInjectCanister(ItemStack itemStack, GasStack resource) {
         if (!(itemStack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
             return false;
         }
@@ -61,24 +67,6 @@ public final class GasCanisterUtils {
         return gasContent.isEmpty() || GasStack.isSameGasSameComponents(gasContent, resource) && !canisterContents.isFull();
     }
 
-    /**
-     * Displays a custom warning hint to the player with visual and audio feedback (server-side only).
-     * <p>
-     * This method shows a client-side warning message to the player in red text format
-     * and plays a denial sound effect, but only executes on the server side. The message
-     * is displayed as an action bar message (above the hotbar) for prominent visibility.
-     * </p>
-     * <p>
-     * The method includes a client-side check to ensure it only runs on the server,
-     * preventing duplicate execution when called from client-side code.
-     * </p>
-     *
-     * @param player the player to display the warning to (must not be null)
-     * @param key    the translation key for the warning message (must not be null)
-     * @param args   optional arguments for the translation key
-     * @see CCBLang#translateDirect(String, Object...)
-     * @see CCBSoundEvents#DENY
-     */
     public static void displayCustomWarningHint(Player player, String key, Object... args) {
         Level level = player.level();
         if (level.isClientSide) {
@@ -87,5 +75,25 @@ public final class GasCanisterUtils {
 
         player.displayClientMessage(CCBLang.translateDirect(key, args).withStyle(ChatFormatting.RED), true);
         CCBSoundEvents.DENY.playOnServer(level, player.blockPosition(), 1, 1);
+    }
+
+    public static List<ItemStack> getAllCanisters() {
+        List<ItemStack> items = new ArrayList<>(List.of(new ItemStack(CCBItems.GAS_CANISTER.asItem())));
+        CCBGases.GAS_REGISTER.getEntries().forEach(entry -> {
+            ItemStack canister = new ItemStack(CCBItems.GAS_CANISTER.asItem());
+            if (canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents containerContents) {
+                containerContents.fill(0, new GasStack(entry, containerContents.getTankCapacity(0)), GasAction.EXECUTE);
+            }
+            items.add(canister);
+        });
+        items.add(new ItemStack(CCBItems.CREATIVE_GAS_CANISTER.asItem()));
+        CCBGases.GAS_REGISTER.getEntries().forEach(entry -> {
+            ItemStack canister = new ItemStack(CCBItems.CREATIVE_GAS_CANISTER.asItem());
+            if (canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents creativeGasCanisterContainerContents) {
+                creativeGasCanisterContainerContents.setGasInTank(0, new GasStack(entry, creativeGasCanisterContainerContents.getTankCapacity(0)));
+            }
+            items.add(canister);
+        });
+        return items;
     }
 }

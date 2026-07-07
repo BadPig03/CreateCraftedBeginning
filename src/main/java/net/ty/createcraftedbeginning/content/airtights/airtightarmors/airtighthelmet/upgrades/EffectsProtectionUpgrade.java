@@ -11,7 +11,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.armorhandlers.AirtightArmorsHandler;
+import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandler;
+import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlerUtils;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.config.CCBConfig;
@@ -113,8 +114,8 @@ public enum EffectsProtectionUpgrade implements AirtightUpgrade {
         }
 
         Gas gasType = CanisterContainerSuppliers.getFirstAvailableGasContent(player).getGasType();
-        AirtightArmorsHandler armorsHandler = AirtightArmorsHandler.REGISTRY.get(gasType);
-        if (armorsHandler == null || !armorsHandler.canCureEffect(effectInstance)) {
+        AirtightArmorsHandler armorsHandler = AirtightArmorsHandlerUtils.of(gasType);
+        if (!armorsHandler.canCureEffect(effectInstance)) {
             return false;
         }
 

@@ -43,6 +43,7 @@ import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterIt
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackItem;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackOverrides.GasCanisterPackType;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlockEntity;
@@ -84,6 +85,7 @@ public class CCBCommonEvents {
         CreativeGasCanisterBlockEntity.registerCapabilities(event);
         GasCanisterBlockEntity.registerCapabilities(event);
         GasInjectionChamberBlockEntity.registerCapabilities(event);
+        GasPackagerBlockEntity.registerCapabilities(event);
         PortableGasInterfaceBlockEntity.registerCapabilities(event);
         ResidueOutletBlockEntity.registerCapabilities(event);
         SturdyCrateBlockEntity.registerCapabilities(event);
@@ -118,7 +120,7 @@ public class CCBCommonEvents {
             builder.set(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES, List.of(0L));
         });
         event.modify(CCBItems.GAS_CANISTER_PACK, builder -> builder.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, GasCanisterPackType._0000.getFlags()));
-        event.modify(CCBItems.GAS_VIRTUAL_ITEM, builder -> builder.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE));
+        event.modify(CCBItems.GAS_VIRTUAL_ITEM, builder -> builder.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE).set(DataComponents.HIDE_TOOLTIP, Unit.INSTANCE));
     }
 
     @SubscribeEvent

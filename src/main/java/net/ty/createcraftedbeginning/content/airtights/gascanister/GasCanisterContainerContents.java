@@ -11,7 +11,7 @@ import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualItem;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBEnchantments;
 import org.jetbrains.annotations.Unmodifiable;
@@ -146,7 +146,7 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
             return List.of(ItemStack.EMPTY);
         }
 
-        return List.of(GasVirtualItem.getVirtualItem(gasContent));
+        return List.of(GasVirtualUtils.createVirtualItem(gasContent));
     }
 
     @Override

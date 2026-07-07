@@ -8,7 +8,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.gas.reactorkettle.ReactorKettleThermoregulator;
+import net.ty.createcraftedbeginning.api.thermoregulatorhandlers.AirtightThermoregulatorHandler;
+import net.ty.createcraftedbeginning.api.thermoregulatorhandlers.AirtightThermoregulatorHandlerUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -44,11 +45,7 @@ public class AirtightReactorKettleStructureManager {
             for (int j = -1; j <= 1; j++) {
                 BlockPos pos = corePos.offset(i, -2, j);
                 BlockState state = level.getBlockState(pos);
-                ReactorKettleThermoregulator thermoregulator = ReactorKettleThermoregulator.REGISTRY.get(state.getBlock());
-                if (thermoregulator == null) {
-                    continue;
-                }
-
+                AirtightThermoregulatorHandler thermoregulator = AirtightThermoregulatorHandlerUtils.of(state.getBlock());
                 addedTemperature += thermoregulator.getHeat(level, pos, state);
             }
         }

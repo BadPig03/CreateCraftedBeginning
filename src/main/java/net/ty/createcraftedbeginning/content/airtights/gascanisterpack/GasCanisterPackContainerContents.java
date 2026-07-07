@@ -9,7 +9,7 @@ import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualItem;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -141,7 +141,7 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
             }
 
             existingGasTypes.add(gasType);
-            items.add(GasVirtualItem.getVirtualItem(gasContent));
+            items.add(GasVirtualUtils.createVirtualItem(gasContent));
         }
 
         return items.stream().toList();

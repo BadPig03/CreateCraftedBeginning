@@ -33,6 +33,10 @@
       "resource": "createcraftedbeginning:entity/train_hat"
     },
     {
+      "type": "single",
+      "resource": "createcraftedbeginning:entity/logistics_hat"
+    },
+    {
       "type": "paletted_permutations",
       "textures": [
         "createcraftedbeginning:trims/items/airtight_leggings_trim",

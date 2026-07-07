@@ -13,7 +13,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * KubeJS event used to register Airtight Turbine Handlers for gases.
  * <p>
  * This event is exposed through {@code CCBEvents.airtightTurbineHandler} and
- * allows scripts to associate a gas with an airtight turbine efficiency value.
+ * allows scripts to associate a gas with a Tesla Turbine efficiency value.
  * <p>
  * Example usage in KubeJS:
  *

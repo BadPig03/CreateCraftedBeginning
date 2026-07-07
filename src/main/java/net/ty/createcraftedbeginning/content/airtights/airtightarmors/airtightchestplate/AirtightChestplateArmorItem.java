@@ -25,7 +25,7 @@ import net.minecraft.world.item.armortrim.ArmorTrim;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.mixin.accessor.HumanoidArmorLayerAtlasAccessor;
+import net.ty.createcraftedbeginning.mixin.server.accessor.HumanoidArmorLayerAtlasAccessor;
 import net.ty.createcraftedbeginning.registry.CCBArmorMaterials;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
@@ -77,12 +77,12 @@ public class AirtightChestplateArmorItem extends ArmorItem implements CustomRend
 
         HumanoidModel<?> innerModel = accessor.getInnerModel();
         parentModel.copyPropertiesTo((HumanoidModel) innerModel);
-        accessor.callSetPartVisibility(innerModel, slot);
+        accessor.ccb$setPartVisibility(innerModel, slot);
         renderModel(poseStack, bufferSource, light, innerModel, locationCache.computeIfAbsent(getArmorTextureLocation(2), ResourceLocation::parse));
 
         HumanoidModel<?> outerModel = accessor.getOuterModel();
         parentModel.copyPropertiesTo((HumanoidModel) outerModel);
-        accessor.callSetPartVisibility(outerModel, slot);
+        accessor.ccb$setPartVisibility(outerModel, slot);
         renderModel(poseStack, bufferSource, light, outerModel, locationCache.computeIfAbsent(getArmorTextureLocation(1), ResourceLocation::parse));
 
         ArmorTrim trim = stack.get(DataComponents.TRIM);

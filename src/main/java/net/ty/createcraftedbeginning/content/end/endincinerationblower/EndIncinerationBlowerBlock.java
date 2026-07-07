@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.neoforged.neoforge.common.Tags.Items;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalBlock;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
@@ -42,10 +43,11 @@ public class EndIncinerationBlowerBlock extends EndMechanicalBlock implements IB
     }
 
     @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState blockState, @Nullable LivingEntity placer, ItemStack stack) {
-        super.setPlacedBy(level, pos, blockState, placer, stack);
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, entity, stack);
+        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
         withBlockEntityDo(level, pos, EndIncinerationBlowerBlockEntity::updateStructural);
-        if (!(placer instanceof ServerPlayer player)) {
+        if (!(entity instanceof ServerPlayer player)) {
             return;
         }
 

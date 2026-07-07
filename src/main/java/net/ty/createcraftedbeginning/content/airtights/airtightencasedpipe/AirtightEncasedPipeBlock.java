@@ -35,6 +35,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -53,9 +54,9 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
     }
 
     @Override
-    public void setPlacedBy(Level level, BlockPos blockPos, BlockState blockState, LivingEntity placer, ItemStack itemStack) {
-        super.setPlacedBy(level, blockPos, blockState, placer, itemStack);
-        CCBAdvancementBehaviour.setPlacedBy(level, blockPos, placer);
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, entity, stack);
+        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
     }
 
     @Override

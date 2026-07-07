@@ -96,6 +96,9 @@ public class CreativeGasCanisterItem extends Item implements IGasFilter {
         if (!(other.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents) || !(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents creativeCanisterContents)) {
             return false;
         }
+        if (action == ClickAction.PRIMARY) {
+            return false;
+        }
 
         creativeCanisterContents.setGasInTank(0, canisterContents.getGasInTank(0));
         return true;

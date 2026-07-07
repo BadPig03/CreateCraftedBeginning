@@ -22,9 +22,9 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -55,10 +55,7 @@ public abstract class AirtightUpgradableMenu extends MenuBase<ItemStack> {
     }
 
     protected static List<AirtightUpgradeStatus> normalizeStatusList(List<AirtightUpgradeStatus> saved, List<AirtightUpgrade> upgrades) {
-        Map<ResourceLocation, AirtightUpgradeStatus> byId = new HashMap<>();
-        for (AirtightUpgradeStatus status : saved) {
-            byId.put(status.id(), status);
-        }
+        Map<ResourceLocation, AirtightUpgradeStatus> byId = saved.stream().collect(Collectors.toMap(AirtightUpgradeStatus::id, status -> status, (a, b) -> b));
         List<AirtightUpgradeStatus> normalized = new ArrayList<>();
         for (AirtightUpgrade upgrade : upgrades) {
             AirtightUpgradeStatus old = byId.get(upgrade.getID());
@@ -77,7 +74,6 @@ public abstract class AirtightUpgradableMenu extends MenuBase<ItemStack> {
 
     private boolean isValidStatusSlot(AirtightUpgrade upgrade) {
         int index = upgrade.getIndex();
-
         if (index < 0 || index >= currentStatusList.size()) {
             return false;
         }

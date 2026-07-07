@@ -32,11 +32,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
+import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlerUtils;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
-import net.ty.createcraftedbeginning.api.gas.cannonhandlers.AirtightCannonHandler;
+import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.weatherflares.WeatherFlareSupplierUtils;
+import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlareSupplierUtils;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Nullable;
@@ -157,11 +158,7 @@ public class AirtightCannonItem extends ProjectileWeaponItem implements CustomAr
 
         tooltip.add(CommonComponents.EMPTY);
         tooltip.add(CCBLang.gasName(gasContent).add(CCBLang.translate("gui.tooltips.gas_tools.content")).style(ChatFormatting.GRAY).component());
-        AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasContent.getGasType());
-        if (cannonHandler == null) {
-            return;
-        }
-
+        AirtightCannonHandler cannonHandler = AirtightCannonHandlerUtils.of(gasContent.getGasType());
         cannonHandler.appendHoverText(cannon, context, tooltip, tooltipFlag);
         float consumptionMultiplier = cannonHandler.getGasConsumptionMultiplier();
         MutableComponent advancedConsumptionMultiplier = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + cannonHandler.getRenderStr(consumptionMultiplier) + ']').component() : Component.empty();

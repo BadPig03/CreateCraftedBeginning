@@ -17,6 +17,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
 import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -137,5 +138,19 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
             }
             guiGraphics.renderTooltip(font, tooltips, Optional.empty(), mouseX, mouseY);
         }
+
+        if (hoveredSlot == null || hoveredSlot.container == menu.playerInventory) {
+            return;
+        }
+
+        ItemStack virtualItem = hoveredSlot.getItem();
+        if (!GasVirtualUtils.isVirtualItem(virtualItem)) {
+            return;
+        }
+
+        List<Component> tooltips = new ArrayList<>();
+        tooltips.add(CCBLang.gasName(GasVirtualUtils.getGasType(virtualItem)).component());
+        tooltips.addAll(GasRequestClientUtils.getExtraTooltips(virtualItem));
+        guiGraphics.renderTooltip(font, tooltips, Optional.empty(), mouseX, mouseY);
     }
 }

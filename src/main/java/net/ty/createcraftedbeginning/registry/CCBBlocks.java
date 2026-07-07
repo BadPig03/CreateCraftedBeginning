@@ -39,6 +39,7 @@ import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.Crea
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterBlock;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterBlock;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlock;
+import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBlock;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceBlock;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlock;
 import net.ty.createcraftedbeginning.content.airtights.smartairtightpipe.SmartAirtightPipeBlock;
@@ -82,7 +83,11 @@ import static net.ty.createcraftedbeginning.data.CCBBlockBuilderTransformer.pick
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBBlocks {
-    private static final CCBRegistrate CCB_REGISTRATE = CreateCraftedBeginning.registrate().setCreativeTab(CCBCreativeTabs.BASE_CREATIVE_TAB);
+    private static final CCBRegistrate CCB_REGISTRATE = CreateCraftedBeginning.registrate();
+
+    static {
+        CCB_REGISTRATE.setCreativeTab(CCBCreativeTabs.BASE_CREATIVE_TAB);
+    }
 
     public static final BlockEntry<AndesiteCrateBlock> ANDESITE_CRATE_BLOCK = CCB_REGISTRATE.block("andesite_crate", AndesiteCrateBlock::new).initialProperties(CCBSharedProperties::stone).transform(CCBBlockBuilderTransformer.crate("andesite")).transform(axeOrPickaxe()).properties(p -> p.mapColor(MapColor.PODZOL).sound(SoundType.WOOD)).transform(mountedItemStorage(CCBMountedStorage.ANDESITE_CRATE)).register();
     public static final BlockEntry<BrassCrateBlock> BRASS_CRATE_BLOCK = CCB_REGISTRATE.block("brass_crate", BrassCrateBlock::new).initialProperties(CCBSharedProperties::stone).transform(CCBBlockBuilderTransformer.crate("brass")).transform(axeOrPickaxe()).properties(p -> p.mapColor(MapColor.TERRACOTTA_BROWN).sound(SoundType.WOOD)).transform(mountedItemStorage(CCBMountedStorage.BRASS_CRATE)).register();
@@ -102,13 +107,14 @@ public class CCBBlocks {
     public static final BlockEntry<BreezeCoolerBlock> BREEZE_COOLER_BLOCK = CCB_REGISTRATE.block("breeze_cooler", BreezeCoolerBlock::new).transform(CCBBlockBuilderTransformer.breezeCooler()).transform(breezes()).register();
     public static final BlockEntry<BreezeChamberBlock> BREEZE_CHAMBER_BLOCK = CCB_REGISTRATE.block("breeze_chamber", BreezeChamberBlock::new).transform(CCBBlockBuilderTransformer.breezeChamber()).transform(airtightPropertiesWithoutOcclusion()).register();
 
+    public static final BlockEntry<AirCompressorBlock> AIR_COMPRESSOR_BLOCK = CCB_REGISTRATE.block("air_compressor", AirCompressorBlock::new).transform(CCBBlockBuilderTransformer.airCompressor()).transform(CCBStress.setImpact(16)).transform(airtightPropertiesWithoutOcclusion()).register();
+
     public static final BlockEntry<AirtightEngineBlock> AIRTIGHT_ENGINE_BLOCK = CCB_REGISTRATE.block("airtight_engine", AirtightEngineBlock::new).transform(CCBBlockBuilderTransformer.airtightEngine()).transform(CCBStress.setCapacity(1024)).onRegister(BlockStressValues.setGeneratorSpeed(64, true)).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<ResidueOutletBlock> RESIDUE_OUTLET_BLOCK = CCB_REGISTRATE.block("residue_outlet", ResidueOutletBlock::new).transform(CCBBlockBuilderTransformer.residueOutlet()).transform(airtightPropertiesWithoutOcclusion()).register();
 
-    public static final BlockEntry<AirCompressorBlock> AIR_COMPRESSOR_BLOCK = CCB_REGISTRATE.block("air_compressor", AirCompressorBlock::new).transform(CCBBlockBuilderTransformer.airCompressor()).transform(CCBStress.setImpact(16)).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<TeslaTurbineBlock> TESLA_TURBINE_BLOCK = CCB_REGISTRATE.block("tesla_turbine", TeslaTurbineBlock::new).clientExtension(() -> TeslaTurbineRenderProperties::new).transform(CCBBlockBuilderTransformer.teslaTurbine()).transform(CCBStress.setCapacity(4096)).onRegister(BlockStressValues.setGeneratorSpeed(256, true)).transform(airtightPropertiesWithoutOcclusion()).register();
-    public static final BlockEntry<TeslaTurbineNozzleBlock> TESLA_TURBINE_NOZZLE_BLOCK = CCB_REGISTRATE.block("tesla_turbine_nozzle", TeslaTurbineNozzleBlock::new).transform(CCBBlockBuilderTransformer.teslaTurbineNozzle()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<TeslaTurbineStructuralBlock> TESLA_TURBINE_STRUCTURAL_BLOCK = CCB_REGISTRATE.block("tesla_turbine_structural", TeslaTurbineStructuralBlock::new).clientExtension(() -> TeslaTurbineStructuralRenderProperties::new).transform(CCBBlockBuilderTransformer.teslaTurbineStructural()).transform(airtightStructural()).register();
+    public static final BlockEntry<TeslaTurbineNozzleBlock> TESLA_TURBINE_NOZZLE_BLOCK = CCB_REGISTRATE.block("tesla_turbine_nozzle", TeslaTurbineNozzleBlock::new).transform(CCBBlockBuilderTransformer.teslaTurbineNozzle()).transform(airtightPropertiesWithoutOcclusion()).register();
 
     public static final BlockEntry<AirtightReactorKettleBlock> AIRTIGHT_REACTOR_KETTLE_BLOCK = CCB_REGISTRATE.block("airtight_reactor_kettle", AirtightReactorKettleBlock::new).clientExtension(() -> AirtightReactorKettleRenderProperties::new).transform(CCBBlockBuilderTransformer.airtightReactorKettle()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<AirtightReactorKettleStructuralBlock> AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK = CCB_REGISTRATE.block("airtight_reactor_kettle_structural", AirtightReactorKettleStructuralBlock::new).clientExtension(() -> AirtightReactorKettleStructuralRenderProperties::new).transform(CCBBlockBuilderTransformer.airtightReactorKettleStructural()).lang("Airtight Reactor Kettle").transform(airtightStructural()).register();
@@ -118,9 +124,10 @@ public class CCBBlocks {
     public static final BlockEntry<AirtightForgingPressStructuralBlock> AIRTIGHT_FORGING_PRESS_STRUCTURAL_BLOCK = CCB_REGISTRATE.block("airtight_forging_press_structural", AirtightForgingPressStructuralBlock::new).clientExtension(() -> AirtightForgingMachineStructuralRenderProperties::new).transform(CCBBlockBuilderTransformer.airtightForgingPressStructural()).lang("Airtight Forging Press").transform(airtightStructural()).register();
     public static final BlockEntry<AirtightForgingPressStructuralShaftBlock> AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT_BLOCK = CCB_REGISTRATE.block("airtight_forging_press_structural_shaft", AirtightForgingPressStructuralShaftBlock::new).clientExtension(() -> AirtightForgingMachineStructuralRenderProperties::new).transform(CCBStress.setImpact(16)).transform(CCBBlockBuilderTransformer.airtightForgingPressStructuralShaft()).lang("Airtight Forging Press").transform(airtightStructural()).register();
 
-    public static final BlockEntry<PortableGasInterfaceBlock> PORTABLE_GAS_INTERFACE_BLOCK = CCB_REGISTRATE.block("portable_gas_interface", PortableGasInterfaceBlock::new).transform(CCBBlockBuilderTransformer.portableGasInterface()).transform(airtightPropertiesWithoutOcclusion()).register();
+    public static final BlockEntry<GasPackagerBlock> GAS_PACKAGER_BLOCK = CCB_REGISTRATE.block("gas_packager", GasPackagerBlock::new).transform(CCBBlockBuilderTransformer.gasPackager()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<GasInjectionChamberBlock> GAS_INJECTION_CHAMBER_BLOCK = CCB_REGISTRATE.block("gas_injection_chamber", GasInjectionChamberBlock::new).transform(CCBBlockBuilderTransformer.gasInjectionChamber()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<AirtightHatchBlock> AIRTIGHT_HATCH_BLOCK = CCB_REGISTRATE.block("airtight_hatch", AirtightHatchBlock::new).transform(CCBBlockBuilderTransformer.airtightHatch()).transform(airtightPropertiesWithoutOcclusion()).register();
+    public static final BlockEntry<PortableGasInterfaceBlock> PORTABLE_GAS_INTERFACE_BLOCK = CCB_REGISTRATE.block("portable_gas_interface", PortableGasInterfaceBlock::new).transform(CCBBlockBuilderTransformer.portableGasInterface()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<GasCanisterBlock> GAS_CANISTER_BLOCK = CCB_REGISTRATE.block("gas_canister", GasCanisterBlock::new).transform(CCBBlockBuilderTransformer.gasCanister()).transform(airtightPropertiesWithoutAirtightComponents()).register();
     public static final BlockEntry<CreativeGasCanisterBlock> CREATIVE_GAS_CANISTER_BLOCK = CCB_REGISTRATE.block("creative_gas_canister", CreativeGasCanisterBlock::new).transform(CCBBlockBuilderTransformer.creativeGasCanister()).transform(airtightPropertiesWithoutAirtightComponents()).register();
 
@@ -140,9 +147,7 @@ public class CCBBlocks {
     }
 
     public static final BlockEntry<Block> AIRTIGHT_SHEET_BLOCK = CCB_REGISTRATE.block("airtight_sheet_block", Block::new).transform(CCBBlockBuilderTransformer.airtightSheetBlock()).transform(airtightPropertiesWithoutAirtightComponents()).register();
-
     public static final BlockEntry<Block> END_ALLOY_BLOCK = CCB_REGISTRATE.block("end_alloy_block", Block::new).initialProperties(CCBSharedProperties::obsidian).transform(pickaxeOnly()).transform(CCBBlockBuilderTransformer.simpleBlock("end_alloy_block", p -> p.rarity(Rarity.UNCOMMON))).properties(p -> p.mapColor(MapColor.COLOR_GREEN)).register();
-
     public static final BlockEntry<ColoredFallingBlock> POWDERED_AMETHYST_BLOCK = CCB_REGISTRATE.block("powdered_amethyst_block", properties -> new ColoredFallingBlock(new ColorRGBA(0xFF8D6ACC), properties)).transform(minableWithShovel()).tag(BlockTags.CAMEL_SAND_STEP_SOUND_BLOCKS).transform(CCBBlockBuilderTransformer.simpleBlock("powdered_amethyst_block", p -> p)).properties(p -> p.mapColor(MapColor.COLOR_PURPLE).strength(0.5f).sound(SoundType.SAND)).register();
 
     public static final BlockEntry<Block> OBSIDIAN_BRICKS = CCB_REGISTRATE.block("obsidian_bricks", Block::new).transform(CCBBlockBuilderTransformer.obsidianAlikeBlocks("obsidian_bricks")).register();
@@ -221,6 +226,9 @@ public class CCBBlocks {
     public static final BlockEntry<Block> CRYING_OBSIDIAN_BRICKS_Y = CCB_REGISTRATE.block("crying_obsidian_bricks_y", Block::new).transform(CCBBlockBuilderTransformer.cryingObsidianAlikeBlocks("crying_obsidian_bricks_y")).tag(BlockTags.ENCHANTMENT_POWER_PROVIDER).register();
     public static final BlockEntry<Block> CRYING_OBSIDIAN_BRICKS_Z = CCB_REGISTRATE.block("crying_obsidian_bricks_z", Block::new).transform(CCBBlockBuilderTransformer.cryingObsidianAlikeBlocks("crying_obsidian_bricks_z")).tag(BlockTags.ENCHANTMENT_POWER_PROVIDER).register();
 
+    static {
+        CCB_REGISTRATE.setCreativeTab(CCBCreativeTabs.CANISTERS_CREATIVE_TAB);
+    }
 
     public static void register() {
     }
