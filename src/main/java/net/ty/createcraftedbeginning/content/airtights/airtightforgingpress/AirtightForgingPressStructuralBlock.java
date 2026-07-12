@@ -172,7 +172,7 @@ public class AirtightForgingPressStructuralBlock extends Block implements IBE<Ai
 
     @Override
     public boolean stillValid(BlockGetter level, BlockPos pos, BlockState state) {
-        return state.is(this) && level.getBlockState(AirtightForgingPressUtils.getMaster(pos, state)).is(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK);
+        return state.getBlock() instanceof AirtightForgingPressStructuralBlock && level.getBlockState(AirtightForgingPressUtils.getMaster(pos, state)).getBlock() instanceof AirtightForgingPressBlock;
     }
 
     @Override

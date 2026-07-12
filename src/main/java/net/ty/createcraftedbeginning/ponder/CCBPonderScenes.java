@@ -26,6 +26,7 @@ import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.PortableGasIn
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.ResidueOutletScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.TeslaTurbineScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AirtightCheckValveScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AirtightEncasedPipeScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AirtightPipeScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AirtightPumpScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.SmartAirtightPipeScenes;
@@ -45,11 +46,13 @@ public class CCBPonderScenes {
         entryHelper.forComponents(CCBBlocks.CARDBOARD_CRATE_BLOCK).addStoryBoard("crates_story_board", CardboardCrateScenes::scene, CCBPonderTags.CRATES_TAG_ID);
 
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_PIPE_BLOCK).addStoryBoard("airtight_pipe_moving_story_board", AirtightPipeScenes::moving, CCBPonderTags.GAS_PIPES_TAG_ID).addStoryBoard("airtight_pipe_interaction_story_board", AirtightPipeScenes::interaction, CCBPonderTags.GAS_PIPES_TAG_ID);
+        entryHelper.forComponents(CCBBlocks.AIRTIGHT_ENCASED_PIPE_BLOCK).addStoryBoard("airtight_encased_pipe_story_board", AirtightEncasedPipeScenes::scene, CCBPonderTags.GAS_PIPES_TAG_ID);
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_CHECK_VALVE_BLOCK).addStoryBoard("airtight_check_valve_story_board", AirtightCheckValveScenes::scene, CCBPonderTags.GAS_PIPES_TAG_ID);
         entryHelper.forComponents(CCBBlocks.SMART_AIRTIGHT_PIPE_BLOCK).addStoryBoard("smart_airtight_pipe_story_board", SmartAirtightPipeScenes::scene, CCBPonderTags.GAS_PIPES_TAG_ID);
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_PUMP_BLOCK).addStoryBoard("airtight_pump_story_board", AirtightPumpScenes::scene, CCBPonderTags.GAS_PIPES_TAG_ID);
 
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_TANK_BLOCK).addStoryBoard("airtight_tank_storage_story_board", AirtightTankScenes::storage, CCBPonderTags.GAS_CONTAINERS_TAG_ID).addStoryBoard("airtight_tank_size_story_board", AirtightTankScenes::size, CCBPonderTags.GAS_CONTAINERS_TAG_ID);
+        entryHelper.forComponents(CCBBlocks.HORIZONTAL_AIRTIGHT_TANK_BLOCK).addStoryBoard("airtight_tank_storage_story_board", AirtightTankScenes::storage, CCBPonderTags.GAS_CONTAINERS_TAG_ID).addStoryBoard("airtight_tank_size_story_board", AirtightTankScenes::size, CCBPonderTags.GAS_CONTAINERS_TAG_ID);
         entryHelper.forComponents(CCBBlocks.CREATIVE_AIRTIGHT_TANK_BLOCK).addStoryBoard("creative_airtight_tank_storage_story_board", CreativeAirtightTankScenes::storage, CCBPonderTags.GAS_CONTAINERS_TAG_ID).addStoryBoard("creative_airtight_tank_size_story_board", CreativeAirtightTankScenes::size, CCBPonderTags.GAS_CONTAINERS_TAG_ID);
 
         entryHelper.forComponents(CCBBlocks.EMPTY_BREEZE_COOLER_BLOCK).addStoryBoard("empty_breeze_cooler_story_board", EmptyBreezeCoolerScenes::scene, CCBPonderTags.BREEZES_TAG_ID);

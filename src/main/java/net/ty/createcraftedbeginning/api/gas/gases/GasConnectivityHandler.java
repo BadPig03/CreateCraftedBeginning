@@ -41,24 +41,25 @@ public class GasConnectivityHandler {
         PriorityQueue<Pair<Integer, T>> creationQueue = makeCreationQueue();
         Set<BlockPos> visited = new HashSet<>();
         Axis mainAxis = frontier.getFirst().getMainConnectionAxis();
-        int minX = mainAxis == Axis.Y ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+        int minX = mainAxis == Axis.X ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         int minY = mainAxis == Axis.Y ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-        int minZ = mainAxis == Axis.Y ? Integer.MAX_VALUE : Integer.MIN_VALUE;
-
+        int minZ = mainAxis == Axis.Z ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         for (T be : frontier) {
             BlockPos pos = be.getBlockPos();
             minX = Math.min(pos.getX(), minX);
             minY = Math.min(pos.getY(), minY);
             minZ = Math.min(pos.getZ(), minZ);
         }
-        if (mainAxis == Axis.Y) {
-            minX -= frontier.getFirst().getMaxWidth();
+
+        int maxWidth = frontier.getFirst().getMaxWidth();
+        if (mainAxis != Axis.X) {
+            minX -= maxWidth;
         }
         if (mainAxis != Axis.Y) {
-            minY -= frontier.getFirst().getMaxWidth();
+            minY -= maxWidth;
         }
-        if (mainAxis == Axis.Y) {
-            minZ -= frontier.getFirst().getMaxWidth();
+        if (mainAxis != Axis.Z) {
+            minZ -= maxWidth;
         }
 
         while (!frontier.isEmpty()) {
@@ -395,13 +396,13 @@ public class GasConnectivityHandler {
     }
 
     private static class SearchCache<T extends BlockEntity & IGasTankMultiBlockEntityContainer> {
-        Map<BlockPos, Optional<@NotNull T>> controllerMap;
+        protected Map<BlockPos, Optional<@NotNull T>> controllerMap;
 
         public SearchCache() {
             controllerMap = new HashMap<>();
         }
 
-        Optional<@NotNull T> getOrCache(BlockEntityType<?> type, BlockGetter level, BlockPos pos) {
+        protected Optional<@NotNull T> getOrCache(BlockEntityType<?> type, BlockGetter level, BlockPos pos) {
             if (hasVisited(pos)) {
                 return controllerMap.get(pos);
             }
@@ -412,7 +413,7 @@ public class GasConnectivityHandler {
                 return Optional.empty();
             }
 
-            T controller = checked(level.getBlockEntity(partAt.getController()));
+            T controller = partAt(type, level, partAt.getController());
             if (controller == null) {
                 putEmpty(pos);
                 return Optional.empty();
@@ -422,15 +423,15 @@ public class GasConnectivityHandler {
             return Optional.of(controller);
         }
 
-        void put(BlockPos pos, T target) {
+        protected void put(BlockPos pos, T target) {
             controllerMap.put(pos, Optional.of(target));
         }
 
-        void putEmpty(BlockPos pos) {
+        protected void putEmpty(BlockPos pos) {
             controllerMap.put(pos, Optional.empty());
         }
 
-        boolean hasVisited(BlockPos pos) {
+        protected boolean hasVisited(BlockPos pos) {
             return controllerMap.containsKey(pos);
         }
     }

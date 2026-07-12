@@ -21,6 +21,7 @@ import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasThresholdCondition;
 import net.ty.createcraftedbeginning.api.gas.recipes.DeployerApplicationWithGasRecipe;
 import net.ty.createcraftedbeginning.compat.CCBCompatMods;
@@ -86,6 +87,7 @@ public class CCBCommonEvents {
         GasCanisterBlockEntity.registerCapabilities(event);
         GasInjectionChamberBlockEntity.registerCapabilities(event);
         GasPackagerBlockEntity.registerCapabilities(event);
+        HorizontalAirtightTankBlockEntity.registerCapabilities(event);
         PortableGasInterfaceBlockEntity.registerCapabilities(event);
         ResidueOutletBlockEntity.registerCapabilities(event);
         SturdyCrateBlockEntity.registerCapabilities(event);

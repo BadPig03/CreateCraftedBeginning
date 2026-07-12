@@ -83,7 +83,7 @@ public abstract class ChainConveyorRendererMixin {
         float xRot = Mth.clamp(Mth.wrapDegrees((float) Mth.atan2(dangleDiff.z, dangleDiff.y) * Mth.RAD_TO_DEG) / 2, -25, 25);
         int light = LightTexture.pack(level.getBrightness(LightLayer.BLOCK, containingPos), level.getBrightness(LightLayer.SKY, containingPos));
 
-        for (SuperByteBuffer buf : new SuperByteBuffer[]{ rigBuffer, boxBuffer }) {
+        for (SuperByteBuffer buf : new SuperByteBuffer[]{rigBuffer, boxBuffer}) {
             buf.translate(offset).translate(0, 0.625f, 0).rotateYDegrees(yaw).rotateZDegrees(zRot).rotateXDegrees(xRot);
             if (physicsData.flipped && buf == rigBuffer) {
                 buf.rotateYDegrees(180);

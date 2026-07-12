@@ -92,7 +92,7 @@ public abstract class ChainConveyorVisualMixin extends SingleAxisRotatingVisual<
         float xRot = Mth.clamp(Mth.wrapDegrees((float) Mth.atan2(dangleDiff.z, dangleDiff.y) * Mth.RAD_TO_DEG) / 2, -25, 25);
         int light = LightTexture.pack(level.getBrightness(LightLayer.BLOCK, containingPos), level.getBrightness(LightLayer.SKY, containingPos));
 
-        for (TransformedInstance buf : new TransformedInstance[]{ rigBuffer, boxBuffer }) {
+        for (TransformedInstance buf : new TransformedInstance[]{rigBuffer, boxBuffer}) {
             buf.setIdentityTransform().translate(getVisualPosition()).translate(offset).translate(0, 0.625f, 0).rotateYDegrees(yaw).rotateZDegrees(zRot).rotateXDegrees(xRot);
             if (physicsData.flipped && buf == rigBuffer) {
                 buf.rotateYDegrees(180);

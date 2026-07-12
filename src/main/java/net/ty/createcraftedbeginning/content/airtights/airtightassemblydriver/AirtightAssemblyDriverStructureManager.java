@@ -4,16 +4,16 @@ import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Direction.Axis;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.api.gas.gases.GasConnectivityHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineBlock;
-import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashSet;
@@ -58,7 +58,7 @@ public class AirtightAssemblyDriverStructureManager {
         attachedChambers = 0;
         attachedWindChargingLevel = 0;
         structureValid = true;
-        scanMultiblockStructure(controller.getBlockPos(), level, controller.getWidth(), controller.getHeight());
+        scanMultiblockStructure(controller, level);
         if (previousOutlets > attachedOutlets) {
             driverCore.getResidueManager().applyRemovalPenalty(false);
         }
@@ -69,19 +69,25 @@ public class AirtightAssemblyDriverStructureManager {
         return changed;
     }
 
-    private void scanMultiblockStructure(BlockPos controllerPos, Level level, int width, int height) {
+    private void scanMultiblockStructure(AirtightTankBlockEntity controller, Level level) {
         Set<BlockPos> visitedPositions = new HashSet<>();
         Set<BlockPos> outletsPositions = new HashSet<>();
+
+        BlockPos controllerPos = controller.getBlockPos();
+        Axis axis = controller.getMainConnectionAxis();
+        int width = controller.getWidth();
+        int length = controller.getHeight();
         int chamberLevels = 0;
-        for (int yOffset = 0; yOffset < height; yOffset++) {
-            for (int xOffset = 0; xOffset < width; xOffset++) {
-                for (int zOffset = 0; zOffset < width; zOffset++) {
-                    BlockPos pos = controllerPos.offset(xOffset, yOffset, zOffset);
+        for (int lengthOffset = 0; lengthOffset < length; lengthOffset++) {
+            for (int uOffset = 0; uOffset < width; uOffset++) {
+                for (int vOffset = 0; vOffset < width; vOffset++) {
+                    BlockPos pos = AirtightTankBlockEntity.offsetInMulti(controllerPos, axis, lengthOffset, uOffset, vOffset);
                     if (visitedPositions.contains(pos)) {
                         continue;
                     }
 
-                    if (!(level.getBlockState(pos).getBlock() instanceof AirtightTankBlock)) {
+                    AirtightTankBlockEntity tank = GasConnectivityHandler.partAt(controller.getType(), level, pos);
+                    if (tank == null || !tank.getController().equals(controllerPos)) {
                         structureValid = false;
                         continue;
                     }
@@ -92,6 +98,7 @@ public class AirtightAssemblyDriverStructureManager {
                 }
             }
         }
+
         attachedWindChargingLevel = chamberLevels;
         driverCore.getResidueManager().updateOutletsPositions(outletsPositions);
         driverCore.getLevelCalculator().updateWindChargingLevel(chamberLevels);
@@ -116,7 +123,7 @@ public class AirtightAssemblyDriverStructureManager {
 
     private int scanChamberBlocks(BlockPos pos, Level level) {
         BlockPos attachedPos = pos.above();
-        if (!level.getBlockState(attachedPos).is(CCBBlocks.BREEZE_CHAMBER_BLOCK) || !(level.getBlockEntity(attachedPos) instanceof BreezeChamberBlockEntity chamber)) {
+        if (!(level.getBlockEntity(attachedPos) instanceof BreezeChamberBlockEntity chamber)) {
             return 0;
         }
 

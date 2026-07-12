@@ -15,7 +15,6 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock.CanisterType;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -35,12 +34,12 @@ public class AirtightHatchEvents {
         }
 
         BlockPos pos = event.getPos();
-        BlockState blockState = level.getBlockState(pos);
-        if (!blockState.is(CCBBlocks.AIRTIGHT_HATCH_BLOCK)) {
+        BlockState state = level.getBlockState(pos);
+        if (!(state.getBlock() instanceof AirtightHatchBlock)) {
             return;
         }
 
-        if (blockState.getValue(AirtightHatchBlock.CANISTER_TYPE) != CanisterType.EMPTY) {
+        if (state.getValue(AirtightHatchBlock.CANISTER_TYPE) != CanisterType.EMPTY) {
             if (event.getUseItem() == TriState.DEFAULT) {
                 event.setUseItem(TriState.FALSE);
                 event.setUseBlock(TriState.TRUE);
@@ -60,7 +59,7 @@ public class AirtightHatchEvents {
             return;
         }
 
-        Direction facing = blockState.getValue(AirtightHatchBlock.FACING);
+        Direction facing = state.getValue(AirtightHatchBlock.FACING);
         BlockPos targetPos = pos.relative(facing);
         BlockState targetState = level.getBlockState(targetPos);
         if (targetState.getBlock() instanceof IAirtightComponent airtightComponent && !airtightComponent.isAirtight(targetPos, targetState, facing.getOpposite())) {

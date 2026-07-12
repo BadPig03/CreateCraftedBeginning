@@ -34,6 +34,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.Air
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralBlock.AirtightReactorKettleStructuralRenderProperties;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralCogBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankBlock;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankBlock;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterBlock;
@@ -101,6 +102,7 @@ public class CCBBlocks {
     public static final BlockEntry<AirtightPumpBlock> AIRTIGHT_PUMP_BLOCK = CCB_REGISTRATE.block("airtight_pump", AirtightPumpBlock::new).transform(CCBStress.setImpact(8.0f)).transform(CCBBlockBuilderTransformer.airtightPump()).transform(airtightPropertiesWithoutOcclusion()).register();
 
     public static final BlockEntry<AirtightTankBlock> AIRTIGHT_TANK_BLOCK = CCB_REGISTRATE.block("airtight_tank", AirtightTankBlock::new).transform(CCBBlockBuilderTransformer.airtightTank()).transform(airtightPropertiesWithoutOcclusion()).register();
+    public static final BlockEntry<HorizontalAirtightTankBlock> HORIZONTAL_AIRTIGHT_TANK_BLOCK = CCB_REGISTRATE.block("horizontal_airtight_tank", HorizontalAirtightTankBlock::new).transform(CCBBlockBuilderTransformer.horizontalAirtightTank()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<CreativeAirtightTankBlock> CREATIVE_AIRTIGHT_TANK_BLOCK = CCB_REGISTRATE.block("creative_airtight_tank", CreativeAirtightTankBlock::new).transform(CCBBlockBuilderTransformer.creativeAirtightTank()).transform(airtightPropertiesWithoutOcclusion()).register();
 
     public static final BlockEntry<EmptyBreezeCoolerBlock> EMPTY_BREEZE_COOLER_BLOCK = CCB_REGISTRATE.block("empty_breeze_cooler", EmptyBreezeCoolerBlock::new).transform(CCBBlockBuilderTransformer.emptyBreezeCooler()).transform(breezes()).register();

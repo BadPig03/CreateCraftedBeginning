@@ -1,0 +1,32 @@
+{
+  "variants": {
+    "axis=x,bottom=false,top=false": {
+      "model": "createcraftedbeginning:block/horizontal_airtight_tank",
+      "y": 90
+    },
+    "axis=x,bottom=false,top=true": {
+      "model": "createcraftedbeginning:block/horizontal_airtight_tank",
+      "y": 90
+    },
+    "axis=x,bottom=true,top=false": {
+      "model": "createcraftedbeginning:block/horizontal_airtight_tank",
+      "y": 90
+    },
+    "axis=x,bottom=true,top=true": {
+      "model": "createcraftedbeginning:block/horizontal_airtight_tank",
+      "y": 90
+    },
+    "axis=z,bottom=false,top=false": {
+      "model": "createcraftedbeginning:block/horizontal_airtight_tank"
+    },
+    "axis=z,bottom=false,top=true": {
+      "model": "createcraftedbeginning:block/horizontal_airtight_tank"
+    },
+    "axis=z,bottom=true,top=false": {
+      "model": "createcraftedbeginning:block/horizontal_airtight_tank"
+    },
+    "axis=z,bottom=true,top=true": {
+      "model": "createcraftedbeginning:block/horizontal_airtight_tank"
+    }
+  }
+}

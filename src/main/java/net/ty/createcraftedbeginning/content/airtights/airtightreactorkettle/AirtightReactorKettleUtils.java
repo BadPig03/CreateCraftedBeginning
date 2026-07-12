@@ -42,7 +42,6 @@ import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
 import net.ty.createcraftedbeginning.recipe.trie.AbstractVariant;
 import net.ty.createcraftedbeginning.recipe.trie.AirtightWithGasRecipeTrie;
 import net.ty.createcraftedbeginning.recipe.trie.AirtightWithGasRecipeTrieFinder;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBDamageSources;
 import org.jetbrains.annotations.NotNull;
 
@@ -60,13 +59,11 @@ public final class AirtightReactorKettleUtils {
     }
 
     public static BlockPos getMaster(BlockPos pos, BlockState state) {
-        if (state.is(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK)) {
-            return pos.offset(state.getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION).getPosition());
-        }
-        else if (state.is(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG_BLOCK)) {
-            return pos.offset(state.getValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION).getPosition());
-        }
-        return pos;
+        return switch (state.getBlock()) {
+            case AirtightReactorKettleStructuralBlock ignored -> pos.offset(state.getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION).getPosition());
+            case AirtightReactorKettleStructuralCogBlock ignored -> pos.offset(state.getValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION).getPosition());
+            default -> pos;
+        };
     }
 
     public static List<ReactorKettleRecipe> getMatchingRecipes(AirtightReactorKettleBlockEntity kettle, Object cacheObject) {

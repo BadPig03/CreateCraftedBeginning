@@ -2,6 +2,8 @@ package net.ty.createcraftedbeginning.content.airtights.airtightforgingpress;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
+import com.simibubi.create.api.packager.InventoryIdentifier;
+import com.simibubi.create.api.packager.InventoryIdentifier.Single;
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
@@ -15,6 +17,7 @@ import net.createmod.catnip.math.VecHelper;
 import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
@@ -38,8 +41,9 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.recipe.ForgingPressRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
@@ -52,7 +56,7 @@ import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation {
+public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, IGasInventoryIdentifierProvider {
     public static final int MAX_FLUID_CAPACITY = 3000;
 
     private static final int MAX_INPUT_SLOT = 1;
@@ -230,6 +234,11 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     @Override
     protected AABB createRenderBoundingBox() {
         return super.createRenderBoundingBox().inflate(1, 1, 1);
+    }
+
+    @Override
+    public InventoryIdentifier getGasInventoryIdentifier(Direction direction) {
+        return new Single(worldPosition);
     }
 
     public void scheduleUpdate() {

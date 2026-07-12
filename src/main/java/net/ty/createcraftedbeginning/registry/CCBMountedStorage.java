@@ -28,6 +28,7 @@ public class CCBMountedStorage {
     public static final RegistryEntry<MountedItemStorageType<?>, SturdyCrateMountedStorageType> STURDY_CRATE = simpleItem("sturdy_crate", SturdyCrateMountedStorageType::new);
 
     public static final RegistryEntry<MountedGasStorageType<?>, AirtightTankMountedStorageType> AIRTIGHT_TANK = simpleGas("airtight_tank", AirtightTankMountedStorageType::new);
+    public static final RegistryEntry<MountedGasStorageType<?>, AirtightTankMountedStorageType> HORIZONTAL_AIRTIGHT_TANK = simpleGas("horizontal_airtight_tank", AirtightTankMountedStorageType::new);
     public static final RegistryEntry<MountedGasStorageType<?>, CreativeAirtightTankMountedStorageType> CREATIVE_AIRTIGHT_TANK = simpleGas("creative_airtight_tank", CreativeAirtightTankMountedStorageType::new);
 
     private static <T extends MountedItemStorageType<?>> @NotNull RegistryEntry<MountedItemStorageType<?>, T> simpleItem(String name, Supplier<T> supplier) {

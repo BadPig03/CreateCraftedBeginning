@@ -17,7 +17,6 @@ import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehavi
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlockEntity;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBBlockTags;
 import org.jetbrains.annotations.Nullable;
 
@@ -62,7 +61,7 @@ public final class GasPropagator {
 
                 visited.add(targetPos);
                 BlockState targetState = level.getBlockState(targetPos);
-                if (targetState.is(CCBBlocks.AIRTIGHT_PUMP_BLOCK)) {
+                if (targetState.getBlock() instanceof AirtightPumpBlock) {
                     Direction facing = targetState.getValue(AirtightPumpBlock.FACING);
                     if (facing.getAxis() == direction.getAxis() && level.getBlockEntity(targetPos) instanceof AirtightPumpBlockEntity pump) {
                         discoveredPumps.add(Pair.of(pump, direction.getOpposite()));

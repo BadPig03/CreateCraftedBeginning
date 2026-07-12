@@ -9,6 +9,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.ty.createcraftedbeginning.content.end.endcasing.EndCasingBlock;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Contract;
 
@@ -27,7 +28,7 @@ public class EndSculkSilencerPlacementHelper implements IPlacementHelper {
     @Contract(pure = true)
     @Override
     public Predicate<BlockState> getStatePredicate() {
-        return CCBBlocks.END_CASING_BLOCK::has;
+        return state -> state.getBlock() instanceof EndCasingBlock;
     }
 
     @Contract(pure = true)

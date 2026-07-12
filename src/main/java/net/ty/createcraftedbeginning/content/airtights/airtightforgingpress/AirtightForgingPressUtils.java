@@ -35,7 +35,6 @@ import net.ty.createcraftedbeginning.recipe.ForgingPressRecipe;
 import net.ty.createcraftedbeginning.recipe.trie.AbstractVariant;
 import net.ty.createcraftedbeginning.recipe.trie.AirtightWithGasRecipeTrie;
 import net.ty.createcraftedbeginning.recipe.trie.AirtightWithGasRecipeTrieFinder;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -50,13 +49,11 @@ public final class AirtightForgingPressUtils {
     }
 
     public static BlockPos getMaster(BlockPos pos, BlockState state) {
-        if (state.is(CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_BLOCK)) {
-            return pos.offset(state.getValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION).getPosition());
-        }
-        else if (state.is(CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT_BLOCK)) {
-            return pos.offset(state.getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION).getPosition());
-        }
-        return pos;
+        return switch (state.getBlock()) {
+            case AirtightForgingPressStructuralBlock ignored -> pos.offset(state.getValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION).getPosition());
+            case AirtightForgingPressStructuralShaftBlock ignored -> pos.offset(state.getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION).getPosition());
+            default -> pos;
+        };
     }
 
     public static List<ForgingPressRecipe> getMatchingRecipes(AirtightForgingPressBlockEntity press, Object cacheObject) {
@@ -66,13 +63,14 @@ public final class AirtightForgingPressUtils {
         }
 
         Level level = press.getLevel();
+        if (level == null) {
+            return list;
+        }
+
         try {
             IItemHandler availableItems = press.getItemCapability();
             IFluidHandler availableFluids = press.getFluidCapability();
             IGasHandler availableGases = press.getGasCapability();
-            if (availableItems == null && availableFluids == null && availableGases == null) {
-                return list;
-            }
 
             AirtightWithGasRecipeTrie<?> trie = AirtightWithGasRecipeTrieFinder.get(cacheObject, level, holder -> holder.value() instanceof ForgingPressRecipe);
             Set<AbstractVariant> availableVariants = AirtightWithGasRecipeTrie.getVariants(availableItems, availableFluids, availableGases);

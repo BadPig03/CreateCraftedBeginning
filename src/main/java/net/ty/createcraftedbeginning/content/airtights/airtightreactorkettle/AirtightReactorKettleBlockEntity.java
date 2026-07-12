@@ -3,6 +3,8 @@ package net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
+import com.simibubi.create.api.packager.InventoryIdentifier;
+import com.simibubi.create.api.packager.InventoryIdentifier.Single;
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
@@ -22,6 +24,7 @@ import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -53,6 +56,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.CombinedGasTankWrapper;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -65,7 +69,7 @@ import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation {
+public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, IGasInventoryIdentifierProvider {
     public static final int MAX_FLUID_CAPACITY = 9000;
 
     private static final int LAZY_TICK_RATE = 4;
@@ -271,6 +275,11 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         return super.createRenderBoundingBox().inflate(1, 1, 1);
     }
 
+    @Override
+    public InventoryIdentifier getGasInventoryIdentifier(Direction direction) {
+        return new Single(worldPosition);
+    }
+
     public AirtightReactorKettleCore getCore() {
         return core;
     }
@@ -399,8 +408,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
             }
 
             return true;
-        }
-        finally {
+        } finally {
             outputInventory.forbidInsertion();
             outputFluidTank.forbidInsertion();
             outputGasTank.forbidInsertion();

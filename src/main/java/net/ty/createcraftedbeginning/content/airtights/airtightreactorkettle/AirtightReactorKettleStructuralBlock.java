@@ -192,7 +192,7 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
 
     @Override
     public boolean stillValid(BlockGetter level, BlockPos pos, BlockState state) {
-        return state.is(this) && level.getBlockState(AirtightReactorKettleUtils.getMaster(pos, state)).is(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK);
+        return state.getBlock() instanceof AirtightReactorKettleStructuralBlock && level.getBlockState(AirtightReactorKettleUtils.getMaster(pos, state)).getBlock() instanceof AirtightReactorKettleBlock;
     }
 
     @Override

@@ -198,7 +198,7 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
                 BlockState structureState = ProperWaterloggedBlock.withWater(level, CCBBlocks.TESLA_TURBINE_STRUCTURAL_BLOCK.getDefaultState().setValue(TeslaTurbineStructuralBlock.AXIS, axis).setValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION, structuralPos), structurePos);
                 BlockState occupiedState = level.getBlockState(structurePos);
                 if (!occupiedState.canBeReplaced()) {
-                    if (occupiedState.getBlock() != CCBBlocks.TESLA_TURBINE_STRUCTURAL_BLOCK.get() || occupiedState.getValue(TeslaTurbineStructuralBlock.AXIS) != axis || occupiedState.getValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION) != structuralPos) {
+                    if (!(occupiedState.getBlock() instanceof TeslaTurbineStructuralBlock) || occupiedState.getValue(TeslaTurbineStructuralBlock.AXIS) != axis || occupiedState.getValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION) != structuralPos) {
                         level.destroyBlock(pos, false);
                         return;
                     }

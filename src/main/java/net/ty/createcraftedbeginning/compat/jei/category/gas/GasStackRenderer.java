@@ -14,9 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.FastColor.ARGB32;
 import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.TooltipFlag;
@@ -34,11 +32,11 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
+@SuppressWarnings("unused")
 public class GasStackRenderer implements IIngredientRenderer<GasStack> {
     private static final int TEXTURE_SIZE = 16;
-    private static final int MIN_GAS_HEIGHT = 1;
 
-    private final long capacityMb;
+    private final long capacity;
     private final TooltipMode tooltipMode;
     private final int width;
     private final int height;
@@ -47,23 +45,23 @@ public class GasStackRenderer implements IIngredientRenderer<GasStack> {
         this(FluidType.BUCKET_VOLUME, TooltipMode.ITEM_LIST, TEXTURE_SIZE, TEXTURE_SIZE);
     }
 
-    private GasStackRenderer(long capacityMb, TooltipMode tooltipMode, int width, int height) {
-        if (capacityMb <= 0) {
+    private GasStackRenderer(long capacity, TooltipMode tooltipMode, int width, int height) {
+        if (capacity <= 0) {
             throw new IllegalArgumentException("Capacity must be bigger than 0");
         }
 
-        this.capacityMb = capacityMb;
+        this.capacity = capacity;
         this.tooltipMode = tooltipMode;
         this.width = width;
         this.height = height;
     }
 
-    public GasStackRenderer(long capacityMb, int width, int height) {
-        this(capacityMb, TooltipMode.SHOW_AMOUNT, width, height);
+    public GasStackRenderer(long capacity, int width, int height) {
+        this(capacity, TooltipMode.SHOW_AMOUNT, width, height);
     }
 
-    private static void drawTiledSprite(GuiGraphics guiGraphics, int yOffset, int desiredWidth, int desiredHeight, TextureAtlasSprite sprite) {
-        if (desiredWidth == 0 || desiredHeight == 0 || TEXTURE_SIZE == 0) {
+    private static void drawTiledSprite(GuiGraphics guiGraphics, int yOffset, int desiredWidth, TextureAtlasSprite sprite) {
+        if (desiredWidth == 0) {
             return;
         }
 
@@ -71,8 +69,6 @@ public class GasStackRenderer implements IIngredientRenderer<GasStack> {
         RenderSystem.setShaderTexture(0, sprite.atlasLocation());
         int xTileCount = desiredWidth / TEXTURE_SIZE;
         int xRemainder = desiredWidth - xTileCount * TEXTURE_SIZE;
-        int yTileCount = desiredHeight / TEXTURE_SIZE;
-        int yRemainder = desiredHeight - yTileCount * TEXTURE_SIZE;
         float uMin = sprite.getU0();
         float uMax = sprite.getU1();
         float vMin = sprite.getV0();
@@ -92,39 +88,20 @@ public class GasStackRenderer implements IIngredientRenderer<GasStack> {
             int maskRight = TEXTURE_SIZE - width;
             int shiftedX = x + TEXTURE_SIZE - maskRight;
             float uLocalDif = uDif * maskRight / TEXTURE_SIZE;
-            float uLocalMin;
-            float uLocalMax;
-            if (TilingDirection.UP_RIGHT.right) {
-                uLocalMin = uMin;
-                uLocalMax = uMax - uLocalDif;
-            }
-            else {
-                uLocalMin = uMin + uLocalDif;
-                uLocalMax = uMax;
-            }
-            for (int yTile = 0; yTile <= yTileCount; yTile++) {
-                int height = yTile == yTileCount ? yRemainder : TEXTURE_SIZE;
+            float uLocalMax = uMax - uLocalDif;
+            int yTile = 0;
+            while (true) {
+                int height = yTile == 1 ? 0 : TEXTURE_SIZE;
                 if (height == 0) {
                     break;
                 }
 
                 int y = yOffset - (yTile + 1) * TEXTURE_SIZE;
-                int maskTop = TEXTURE_SIZE - height;
-                float vLocalDif = vDif * maskTop / TEXTURE_SIZE;
-                float vLocalMin;
-                float vLocalMax;
-                if (TilingDirection.UP_RIGHT.down) {
-                    vLocalMin = vMin;
-                    vLocalMax = vMax - vLocalDif;
-                }
-                else {
-                    vLocalMin = vMin + vLocalDif;
-                    vLocalMax = vMax;
-                }
-                vertexBuffer.addVertex(matrix4f, x, y + TEXTURE_SIZE, 100).setUv(uLocalMin, vLocalMax);
-                vertexBuffer.addVertex(matrix4f, shiftedX, y + TEXTURE_SIZE, 100).setUv(uLocalMax, vLocalMax);
-                vertexBuffer.addVertex(matrix4f, shiftedX, y + maskTop, 100).setUv(uLocalMax, vLocalMin);
-                vertexBuffer.addVertex(matrix4f, x, y + maskTop, 100).setUv(uLocalMin, vLocalMin);
+                vertexBuffer.addVertex(matrix4f, x, y + TEXTURE_SIZE, 100).setUv(uMin, vMax);
+                vertexBuffer.addVertex(matrix4f, shiftedX, y + TEXTURE_SIZE, 100).setUv(uLocalMax, vMax);
+                vertexBuffer.addVertex(matrix4f, shiftedX, y, 100).setUv(uLocalMax, vMin);
+                vertexBuffer.addVertex(matrix4f, x, y, 100).setUv(uMin, vMin);
+                yTile++;
             }
         }
         BufferUploader.drawWithShader(vertexBuffer.buildOrThrow());
@@ -137,24 +114,15 @@ public class GasStackRenderer implements IIngredientRenderer<GasStack> {
             return;
         }
 
-        int desiredHeight = Math.clamp(Math.round(height * (double) stack.getAmount() / capacityMb), 0, Integer.MAX_VALUE);
-        if (desiredHeight < MIN_GAS_HEIGHT) {
-            desiredHeight = MIN_GAS_HEIGHT;
-        }
-        if (desiredHeight > height) {
-            desiredHeight = height;
-        }
         int color = stack.getHint();
         guiGraphics.setColor(ARGB32.red(color) / 255.0f, ARGB32.green(color) / 255.0f, ARGB32.blue(color) / 255.0f, ARGB32.alpha(color) / 255.0f);
-        drawTiledSprite(guiGraphics, height, width, desiredHeight, Gas.getGasTexture(stack.getGasHolder()));
+        drawTiledSprite(guiGraphics, height, width, Gas.getGasTexture(stack.getGasHolder()));
         guiGraphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
     @Override
-    @SuppressWarnings("removal")
     public List<Component> getTooltip(GasStack stack, TooltipFlag tooltipFlag) {
-        Holder<Gas> gasHolder = stack.getGasHolder();
-        if (gasHolder.value().isEmpty()) {
+        if (stack.isEmpty()) {
             return Collections.emptyList();
         }
 
@@ -181,21 +149,18 @@ public class GasStackRenderer implements IIngredientRenderer<GasStack> {
     }
 
     private void collectTooltips(GasStack stack, List<Component> tooltips, TooltipFlag tooltipFlag) {
-        Holder<Gas> gasHolder = stack.getGasHolder();
-        if (gasHolder.value().isEmpty()) {
+        if (stack.isEmpty()) {
             return;
         }
 
-        tooltips.add(Component.translatable(gasHolder.value().getTranslationKey()));
+        tooltips.add(Component.translatable(stack.getTranslationKey()));
         if (tooltipMode == TooltipMode.SHOW_AMOUNT_AND_CAPACITY) {
-            MutableComponent text = CCBLang.number(stack.getAmount()).style(ChatFormatting.AQUA).add(CCBLang.number(capacityMb).style(ChatFormatting.BLUE)).component();
-            tooltips.add(text);
+            tooltips.add(CCBLang.number(stack.getAmount()).style(ChatFormatting.AQUA).add(CCBLang.number(capacity).style(ChatFormatting.BLUE)).component());
         }
         else if (tooltipMode == TooltipMode.SHOW_AMOUNT) {
-            MutableComponent text = CCBLang.number(stack.getAmount()).style(ChatFormatting.AQUA).component();
-            tooltips.add(text);
+            tooltips.add(CCBLang.number(stack.getAmount()).style(ChatFormatting.AQUA).component());
         }
-        tooltips.add(CCBLang.text(gasHolder.getRegisteredName()).style(ChatFormatting.DARK_GRAY).component());
+        tooltips.add(CCBLang.text(stack.getGasType().getResourceLocation().toString()).style(ChatFormatting.DARK_GRAY).component());
     }
 
     private static TooltipContext getTooltipContext() {
@@ -206,26 +171,10 @@ public class GasStackRenderer implements IIngredientRenderer<GasStack> {
         else if (Minecraft.getInstance().isSameThread()) {
             return TooltipContext.of(level);
         }
-
         return TooltipContext.of(level.registryAccess());
     }
 
-    public enum TilingDirection {
-        DOWN_RIGHT(true, true),
-        DOWN_LEFT(true, false),
-        UP_RIGHT(false, true),
-        UP_LEFT(false, false);
-
-        private final boolean down;
-        private final boolean right;
-
-        TilingDirection(boolean down, boolean right) {
-            this.down = down;
-            this.right = right;
-        }
-    }
-
-    enum TooltipMode {
+    private enum TooltipMode {
         SHOW_AMOUNT,
         SHOW_AMOUNT_AND_CAPACITY,
         ITEM_LIST

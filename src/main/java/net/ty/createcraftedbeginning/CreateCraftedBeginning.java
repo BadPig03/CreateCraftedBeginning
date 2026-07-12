@@ -136,16 +136,16 @@ public class CreateCraftedBeginning {
         AirtightBootsUpgradeRegistry.registerUpgrades();
         AirtightHandheldDrillUpgradeRegistry.registerUpgrades();
         event.enqueueWork(() -> {
+            CCBAirtightArmHandlers.register();
             CCBAirtightArmorsHandlers.register();
             CCBAirtightCannonHandlers.register();
-            CCBAirtightEngineHandlers.register();
-            CCBAirtightTurbineHandlers.register();
-            CCBAirtightArmHandlers.register();
-            CCBAirtightDrillHandlers.register();
-            CCBAirtightThermoregulatorHandlers.register();
             CCBAirtightCoolantHandlers.register();
             CCBAirtightDrainageHandlers.register();
+            CCBAirtightDrillHandlers.register();
+            CCBAirtightEngineHandlers.register();
             CCBAirtightFillHandlers.register();
+            CCBAirtightThermoregulatorHandlers.register();
+            CCBAirtightTurbineHandlers.register();
             CCBUnpackingHandlers.register();
         });
     }

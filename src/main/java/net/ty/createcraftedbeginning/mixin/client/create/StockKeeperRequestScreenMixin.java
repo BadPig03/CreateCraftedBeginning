@@ -33,6 +33,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.compat.jei.category.stockkeeper.GasCraftableBigItemStack;
+import net.ty.createcraftedbeginning.compat.jei.utils.StockKeeperTransferUtils;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUtils;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.FrostLevel;
@@ -63,6 +65,22 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
     private WeakReference<BreezeCoolerBlockEntity> ccb$breeze = new WeakReference<>(null);
     @Unique
     private boolean ccb$renderingGasVirtualItem;
+    @Shadow
+    private StockTickerBlockEntity blockEntity;
+    @Shadow
+    private WeakReference<BlazeBurnerBlockEntity> blaze;
+    @Shadow
+    private int windowHeight;
+    @Shadow
+    private List<BigItemStack> itemsToOrder;
+    @Shadow
+    private List<List<BigItemStack>> displayedItems;
+    @Shadow
+    private boolean canRequestCraftingPackage;
+
+    private StockKeeperRequestScreenMixin(StockKeeperRequestMenu container, Inventory inv, Component title) {
+        super(container, inv, title);
+    }
 
     @Unique
     private void ccb$changeDirectGasOrder(BigItemStack entry, boolean orderClicked, boolean remove, int transfer) {
@@ -110,24 +128,6 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
                 playUiSound(AllSoundEvents.SCROLL_VALUE.getMainEvent(), 0.25f, 1.2f);
             }
         }
-        //updateCraftableAmounts();
-    }
-
-    @Shadow
-    private StockTickerBlockEntity blockEntity;
-    @Shadow
-    private WeakReference<BlazeBurnerBlockEntity> blaze;
-    @Shadow
-    private int windowHeight;
-    @Shadow
-    private List<BigItemStack> itemsToOrder;
-    @Shadow
-    private List<CraftableBigItemStack> recipesToOrder;
-    @Shadow
-    private List<List<BigItemStack>> displayedItems;
-
-    private StockKeeperRequestScreenMixin(StockKeeperRequestMenu container, Inventory inv, Component title) {
-        super(container, inv, title);
     }
 
     @Shadow
@@ -350,7 +350,7 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
 
     @Inject(method = "renderTooltip", at = @At("HEAD"), cancellable = true)
     private void ccb$renderTooltip(GuiGraphics graphics, int mouseX, int mouseY, CallbackInfo ci) {
-                Couple<Integer> hoveredSlot = getHoveredSlot(mouseX, mouseY);
+        Couple<Integer> hoveredSlot = getHoveredSlot(mouseX, mouseY);
         if (hoveredSlot.getFirst() == -1 && hoveredSlot.getSecond() == -1 || hoveredSlot.getFirst() == -2) {
             return;
         }
@@ -364,7 +364,8 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
             }
 
             entry = itemsToOrder.get(index);
-        } else {
+        }
+        else {
             int row = hoveredSlot.getFirst();
             int column = hoveredSlot.getSecond();
             if (row < 0 || row >= displayedItems.size()) {
@@ -391,6 +392,27 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
         tooltip.add(CCBLang.translate("gui.tooltips.gas_virtual_item.alt_to_scroll", GasRequestUtils.getAltStep()).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
         tooltip.add(CCBLang.translate("gui.tooltips.gas_virtual_item.ctrl_to_scroll", GasRequestUtils.getCtrlStep()).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
         graphics.renderComponentTooltip(font, tooltip, mouseX, mouseY);
+        ci.cancel();
+    }
+
+    @Inject(method = "requestCraftable", at = @At("HEAD"), cancellable = true)
+    private void ccb$requestCraftable(CraftableBigItemStack craftable, int requestedDifference, CallbackInfo ci) {
+        if (!(craftable instanceof GasCraftableBigItemStack gasCraftable)) {
+            return;
+        }
+
+        StockKeeperTransferUtils.requestCraftable(this, gasCraftable, requestedDifference);
+        ci.cancel();
+    }
+
+    @Inject(method = "updateCraftableAmounts", at = @At("HEAD"), cancellable = true)
+    private void ccb$updateCraftableAmounts(CallbackInfo ci) {
+        if (!StockKeeperTransferUtils.hasGasCraftable(this)) {
+            return;
+        }
+
+        StockKeeperTransferUtils.updateCraftableAmounts(this);
+        canRequestCraftingPackage = true;
         ci.cancel();
     }
 }

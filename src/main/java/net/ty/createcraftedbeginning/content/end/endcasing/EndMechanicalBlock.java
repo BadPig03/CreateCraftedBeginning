@@ -14,7 +14,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -47,7 +46,7 @@ public abstract class EndMechanicalBlock extends KineticBlock {
         Level level = context.getLevel();
         Direction direction = context.getClickedFace();
         BlockPos placePos = context.getClickedPos().relative(direction);
-        if (!level.getBlockState(placePos).is(CCBBlocks.END_CASING_BLOCK)) {
+        if (!(level.getBlockState(placePos).getBlock() instanceof EndCasingBlock)) {
             return null;
         }
 

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:horizontal_airtight_tank"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:airtight_tank"
+  }
+}

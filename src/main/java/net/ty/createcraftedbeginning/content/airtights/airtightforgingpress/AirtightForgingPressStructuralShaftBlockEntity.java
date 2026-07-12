@@ -1,9 +1,12 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightforgingpress;
 
+import com.simibubi.create.api.packager.InventoryIdentifier;
+import com.simibubi.create.api.packager.InventoryIdentifier.Single;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -14,6 +17,7 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
@@ -22,7 +26,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlockEntity implements ThresholdSwitchObservable {
+public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlockEntity implements ThresholdSwitchObservable, IGasInventoryIdentifierProvider {
     public AirtightForgingPressStructuralShaftBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
     }
@@ -48,7 +52,7 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
         return masterBlockEntity;
     }
 
-    public IItemHandlerModifiable getItemCapability() {
+    public @Nullable IItemHandlerModifiable getItemCapability() {
         AirtightForgingPressBlockEntity master = getMasterBlockEntity();
         if (master == null || !isUpperStore(getBlockState())) {
             return null;
@@ -57,7 +61,7 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
         return master.getProcessingInventories().getSecond();
     }
 
-    public IFluidHandler getFluidCapability() {
+    public @Nullable IFluidHandler getFluidCapability() {
         AirtightForgingPressBlockEntity master = getMasterBlockEntity();
         if (master == null || !isUpperStore(getBlockState())) {
             return null;
@@ -66,7 +70,7 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
         return master.getFluidCapability();
     }
 
-    public IGasHandler getGasCapability() {
+    public @Nullable IGasHandler getGasCapability() {
         AirtightForgingPressBlockEntity master = getMasterBlockEntity();
         if (master == null || !isUpperStore(getBlockState())) {
             return null;
@@ -86,15 +90,22 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
             return 0;
         }
 
+        IItemHandlerModifiable item = getItemCapability();
+        IFluidHandler fluid = getFluidCapability();
+        IGasHandler gas = getGasCapability();
+        if (item == null || fluid == null || gas == null) {
+            return 0;
+        }
+
         long maxValue = 0;
-        for (int i = 0; i < getItemCapability().getSlots(); i++) {
-            maxValue += getItemCapability().getSlotLimit(i);
+        for (int i = 0; i < item.getSlots(); i++) {
+            maxValue += item.getSlotLimit(i);
         }
-        for (int i = 0; i < getFluidCapability().getTanks(); i++) {
-            maxValue += getFluidCapability().getTankCapacity(i);
+        for (int i = 0; i < fluid.getTanks(); i++) {
+            maxValue += fluid.getTankCapacity(i);
         }
-        for (int i = 0; i < getGasCapability().getTanks(); i++) {
-            maxValue += getGasCapability().getTankCapacity(i);
+        for (int i = 0; i < gas.getTanks(); i++) {
+            maxValue += gas.getTankCapacity(i);
         }
         return Math.clamp(maxValue, 0, Integer.MAX_VALUE);
     }
@@ -111,15 +122,22 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
             return 0;
         }
 
+        IItemHandlerModifiable item = getItemCapability();
+        IFluidHandler fluid = getFluidCapability();
+        IGasHandler gas = getGasCapability();
+        if (item == null || fluid == null || gas == null) {
+            return 0;
+        }
+
         long currentValue = 0;
-        for (int i = 0; i < getItemCapability().getSlots(); i++) {
-            currentValue += getItemCapability().getStackInSlot(i).getCount();
+        for (int i = 0; i < item.getSlots(); i++) {
+            currentValue += item.getStackInSlot(i).getCount();
         }
-        for (int i = 0; i < getFluidCapability().getTanks(); i++) {
-            currentValue += getFluidCapability().getFluidInTank(i).getAmount();
+        for (int i = 0; i < fluid.getTanks(); i++) {
+            currentValue += fluid.getFluidInTank(i).getAmount();
         }
-        for (int i = 0; i < getGasCapability().getTanks(); i++) {
-            currentValue += getGasCapability().getGasInTank(i).getAmount();
+        for (int i = 0; i < gas.getTanks(); i++) {
+            currentValue += gas.getGasInTank(i).getAmount();
         }
         return Math.clamp(currentValue, 0, Integer.MAX_VALUE);
     }
@@ -127,5 +145,11 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
     @Override
     public MutableComponent format(int value) {
         return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.items")).component();
+    }
+
+    @Override
+    public @Nullable InventoryIdentifier getGasInventoryIdentifier(Direction direction) {
+        BlockPos masterPos = AirtightForgingPressUtils.getMaster(getBlockPos(), getBlockState());
+        return new Single(masterPos);
     }
 }

@@ -1,6 +1,8 @@
 package net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
+import com.simibubi.create.api.packager.InventoryIdentifier;
+import com.simibubi.create.api.packager.InventoryIdentifier.MultiFace;
 import com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessingBehaviour;
 import com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessingBehaviour.ProcessingResult;
 import com.simibubi.create.content.kinetics.belt.behaviour.TransportedItemStackHandlerBehaviour;
@@ -28,26 +30,29 @@ import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
+import net.ty.createcraftedbeginning.content.particles.ColoredBreezeCloudParticleType.ColoredBreezeCloudParticleOptions;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessingBehaviour.ProcessingResult.HOLD;
 import static com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessingBehaviour.ProcessingResult.PASS;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ThresholdSwitchObservable {
+public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ThresholdSwitchObservable, IGasInventoryIdentifierProvider {
     public static final int PROCESSING_TIME = 60;
     public static final int NOZZLE_TIME = 15;
     public static final int NOZZLE_PART_TIME = 15;
@@ -55,7 +60,9 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
 
     private static final String COMPOUND_KEY_PROCESSING_TICKS = "ProcessingTicks";
     private static final String COMPOUND_KEY_CLOUD = "Cloud";
+    private static final String COMPOUND_KEY_CLOUD_COLOR = "CloudColor";
 
+    private int cloudColor = 0xFFFFFFFF;
     private int processingTicks = -1;
     private boolean sendCloud;
     private SmartGasTankBehaviour tankBehaviour;
@@ -99,6 +106,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         }
 
         compoundTag.putBoolean(COMPOUND_KEY_CLOUD, true);
+        compoundTag.putInt(COMPOUND_KEY_CLOUD_COLOR, cloudColor);
         sendCloud = false;
     }
 
@@ -112,7 +120,14 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             return;
         }
 
-        spawnCloud();
+        int color;
+        if (compoundTag.contains(COMPOUND_KEY_CLOUD_COLOR)) {
+            color = compoundTag.getInt(COMPOUND_KEY_CLOUD_COLOR);
+        }
+        else {
+            color = 0xFFFFFFFF;
+        }
+        spawnCloud(color);
     }
 
     @Override
@@ -166,11 +181,19 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.buckets")).component();
     }
 
+    @Override
+    public @Nullable InventoryIdentifier getGasInventoryIdentifier(Direction direction) {
+        if (direction == Direction.UP) {
+            return new MultiFace(worldPosition, Set.of(Direction.UP));
+        }
+        return null;
+    }
+
     public int getProcessingTicks() {
         return processingTicks;
     }
 
-    private void spawnCloud() {
+    private void spawnCloud(int color) {
         if (level == null || !level.isClientSide || isVirtual()) {
             return;
         }
@@ -179,7 +202,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         for (int i = 0; i < level.random.nextInt(3, 6); i++) {
             Vec3 offset = VecHelper.offsetRandomly(Vec3.ZERO, level.random, 0.125f);
             offset = new Vec3(offset.x, Math.abs(offset.y), offset.z);
-            level.addAlwaysVisibleParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), subtracted.x, subtracted.y, subtracted.z, offset.x, offset.y, offset.z);
+            level.addAlwaysVisibleParticle(new ColoredBreezeCloudParticleOptions(color), subtracted.x, subtracted.y, subtracted.z, offset.x, offset.y, offset.z);
         }
     }
 
@@ -238,6 +261,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             long filled = canisterContents.fill(0, tankGas.copyWithAmount(requiredAmount), GasAction.EXECUTE);
             tankBehaviour.getPrimaryHandler().drain(filled, GasAction.EXECUTE);
             CCBSoundEvents.INJECTING.playOnServer(level, worldPosition, 0.75f, 0.9f + 0.2f * level.random.nextFloat());
+            cloudColor = tankGas.getHint();
             sendCloud = true;
             notifyUpdate();
             return HOLD;
@@ -263,6 +287,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         }
         tankGas.shrink(requiredAmount);
         setGasInTank(tankGas);
+        cloudColor = tankGas.getHint();
         sendCloud = true;
         notifyUpdate();
         CCBSoundEvents.INJECTING.playOnServer(level, worldPosition, 0.75f, 0.9f + 0.2f * level.random.nextFloat());

@@ -9,14 +9,13 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightEngine;
 import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
@@ -37,25 +36,13 @@ public class ResidueGenerationCategory extends CCBRecipeCategory<ResidueGenerati
 
     @Override
     protected void setRecipe(IRecipeLayoutBuilder builder, ResidueGenerationRecipe recipe, IFocusGroup focuses) {
-        addGasInputSlot(builder, recipe.getIngredientsGas());
-        addOutputSlot(builder, recipe);
-    }
-
-    private static void addGasInputSlot(IRecipeLayoutBuilder builder, SizedGasIngredient gasIngredient) {
-        GasStack[] gasStackList = gasIngredient.getGases();
-        List<GasStack> fullStacks = new ArrayList<>();
-        for (GasStack stack : gasStackList) {
-            fullStacks.add(stack.copyWithAmount(FluidType.BUCKET_VOLUME));
-        }
-        builder.addSlot(RecipeIngredientRole.INPUT, 27, 74).setFluidRenderer(FluidType.BUCKET_VOLUME, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, fullStacks);
-    }
-
-    private static void addOutputSlot(IRecipeLayoutBuilder builder, ResidueGenerationRecipe recipe) {
+        List<GasStack> stacks = Arrays.stream(recipe.getIngredientsGas().getGases()).map(GasStack::copy).toList();
+        builder.addSlot(RecipeIngredientRole.INPUT, 27, 74).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, stacks);
         if (recipe.getFluidResults().isEmpty()) {
             builder.addSlot(RecipeIngredientRole.OUTPUT, 132, 74).setBackground(getRenderedSlot(), -1, -1).addItemStack(getResultItem(recipe));
+            return;
         }
-        else {
-            builder.addSlot(RecipeIngredientRole.OUTPUT, 132, 74).setBackground(getRenderedSlot(), -1, -1).addIngredient(NeoForgeTypes.FLUID_STACK, recipe.getFluidResults().getFirst()).setFluidRenderer(FluidType.BUCKET_VOLUME, false, 16, 16);
-        }
+
+        builder.addSlot(RecipeIngredientRole.OUTPUT, 132, 74).setBackground(getRenderedSlot(), -1, -1).addIngredient(NeoForgeTypes.FLUID_STACK, recipe.getFluidResults().getFirst()).setFluidRenderer(FluidType.BUCKET_VOLUME, false, 16, 16);
     }
 }

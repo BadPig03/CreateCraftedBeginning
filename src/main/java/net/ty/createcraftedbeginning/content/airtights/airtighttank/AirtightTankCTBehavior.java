@@ -1,7 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighttank;
 
 import com.simibubi.create.foundation.block.connected.CTSpriteShiftEntry;
-import com.simibubi.create.foundation.block.connected.HorizontalCTBehaviour;
+import com.simibubi.create.foundation.block.connected.ConnectedTextureBehaviour.Base;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
@@ -17,11 +17,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightTankCTBehavior extends HorizontalCTBehaviour {
-    public AirtightTankCTBehavior() {
-        super(CCBSpriteShifts.AIRTIGHT_TANK, CCBSpriteShifts.AIRTIGHT_TANK_TOP);
-    }
-
+public class AirtightTankCTBehavior extends Base {
     @Override
     public boolean connectsTo(BlockState state, BlockState other, BlockAndTintGetter level, BlockPos pos, BlockPos otherPos, Direction face) {
         return state.getBlock() == other.getBlock() && GasConnectivityHandler.isConnected(level, pos, otherPos);

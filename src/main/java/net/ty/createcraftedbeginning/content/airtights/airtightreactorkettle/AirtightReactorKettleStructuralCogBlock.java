@@ -155,7 +155,7 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
 
     @Override
     public boolean stillValid(BlockGetter level, BlockPos pos, BlockState state) {
-        return state.is(this) && level.getBlockState(AirtightReactorKettleUtils.getMaster(pos, state)).is(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK);
+        return state.getBlock() instanceof AirtightReactorKettleStructuralCogBlock && level.getBlockState(AirtightReactorKettleUtils.getMaster(pos, state)).getBlock() instanceof AirtightReactorKettleBlock;
     }
 
     @Override

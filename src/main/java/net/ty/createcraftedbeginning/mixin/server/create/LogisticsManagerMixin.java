@@ -19,15 +19,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public abstract class LogisticsManagerMixin {
     @Inject(method = "getInventoryIdentifierFromLink", at = @At("HEAD"), cancellable = true)
     private static void ccb$getInventoryIdentifierFromLink(LogisticallyLinkedBehaviour link, CallbackInfoReturnable<InventoryIdentifier> cir) {
-        if (!(link.blockEntity instanceof PackagerLinkBlockEntity plbe) || !(plbe.getPackager() instanceof GasPackagerBlockEntity gasPackager)) {
+        if (!(link.blockEntity instanceof PackagerLinkBlockEntity be) || !(be.getPackager() instanceof GasPackagerBlockEntity gasPackager)) {
             return;
         }
 
-        InventoryIdentifier identifier = gasPackager.getGasInventoryIdentifier();
-        if (identifier == null) {
-            return;
-        }
-
-        cir.setReturnValue(identifier);
+        cir.setReturnValue(gasPackager.getGasInventoryIdentifier());
     }
 }

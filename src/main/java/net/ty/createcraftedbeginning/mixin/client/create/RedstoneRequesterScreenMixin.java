@@ -42,6 +42,10 @@ public abstract class RedstoneRequesterScreenMixin extends AbstractSimiContainer
     @Final
     private List<Integer> amounts;
 
+    private RedstoneRequesterScreenMixin(RedstoneRequesterMenu container, Inventory inv, Component title) {
+        super(container, inv, title);
+    }
+
     @Unique
     private int ccb$getRequesterSlotAt(double mouseX, double mouseY) {
         double relX = mouseX - getGuiLeft() - 27;
@@ -56,10 +60,6 @@ public abstract class RedstoneRequesterScreenMixin extends AbstractSimiContainer
             return -1;
         }
         return slot;
-    }
-
-    private RedstoneRequesterScreenMixin(RedstoneRequesterMenu container, Inventory inv, Component title) {
-        super(container, inv, title);
     }
 
     @ModifyArgs(method = "renderForeground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;renderItemDecorations(Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;IILjava/lang/String;)V"))

@@ -47,6 +47,7 @@
     "client.create.FrogportVisualMixin",
     "client.create.RedstoneRequesterScreenMixin",
     "client.create.StockKeeperRequestScreenMixin",
+    "client.create.StockKeeperTransferHandlerMixin",
     "client.minecraft.AbstractContainerScreenMixin",
     "client.minecraft.GuiGraphicsMixin"
   ],

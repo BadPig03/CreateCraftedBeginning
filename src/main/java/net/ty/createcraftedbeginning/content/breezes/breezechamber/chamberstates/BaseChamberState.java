@@ -11,7 +11,6 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamber
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock.WindLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity.ChargerType;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -65,7 +64,7 @@ public abstract class BaseChamberState {
 
         BlockPos pos = chamber.getBlockPos();
         BlockState state = level.getBlockState(pos);
-        if (!state.is(CCBBlocks.BREEZE_CHAMBER_BLOCK)) {
+        if (!(state.getBlock() instanceof BreezeChamberBlock)) {
             return;
         }
 

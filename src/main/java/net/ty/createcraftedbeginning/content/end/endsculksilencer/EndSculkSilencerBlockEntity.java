@@ -11,6 +11,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.ty.createcraftedbeginning.content.end.endcasing.EndCasingBlock;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -76,7 +77,7 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
         }
 
         BlockPos structuralPos = worldPosition.below();
-        if (!level.getBlockState(structuralPos).is(CCBBlocks.END_CASING_BLOCK)) {
+        if (!(level.getBlockState(structuralPos).getBlock() instanceof EndCasingBlock)) {
             return;
         }
         if (!level.setBlockAndUpdate(structuralPos, CCBBlocks.END_SCULK_SILENCER_STRUCTURAL_BLOCK.getDefaultState())) {

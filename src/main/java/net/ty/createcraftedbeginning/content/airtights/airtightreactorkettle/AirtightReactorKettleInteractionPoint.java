@@ -6,7 +6,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -20,7 +19,7 @@ public class AirtightReactorKettleInteractionPoint extends ArmInteractionPoint {
     public static class ReactorKettleType extends ArmInteractionPointType {
 		@Override
 		public boolean canCreatePoint(Level level, BlockPos pos, BlockState state) {
-			return state.is(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK) && state.getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION).canStore();
+			return state.getBlock() instanceof AirtightReactorKettleStructuralBlock && state.getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION).canStore();
 		}
 
 		@Override

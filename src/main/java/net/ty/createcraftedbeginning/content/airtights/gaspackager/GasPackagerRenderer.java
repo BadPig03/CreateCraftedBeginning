@@ -20,7 +20,6 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -32,8 +31,11 @@ public class GasPackagerRenderer extends SmartBlockEntityRenderer<GasPackagerBlo
         super(context);
     }
 
-    public static PartialModel getTrayModel(BlockState blockState) {
-        return CCBBlocks.GAS_PACKAGER_BLOCK.has(blockState) ? CCBPartialModels.GAS_PACKAGER_TRAY_REGULAR : CCBPartialModels.GAS_PACKAGER_TRAY_DEFRAG;
+    public static PartialModel getTrayModel(BlockState state) {
+        if (state.getBlock() instanceof GasPackagerBlock) {
+            return CCBPartialModels.GAS_PACKAGER_TRAY_REGULAR;
+        }
+        return CCBPartialModels.GAS_PACKAGER_TRAY_DEFRAG;
     }
 
     public static PartialModel getHatchModel(GasPackagerBlockEntity be) {

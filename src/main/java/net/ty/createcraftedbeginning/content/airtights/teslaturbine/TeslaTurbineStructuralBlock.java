@@ -394,7 +394,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         @Contract(pure = true)
         @Override
         public Predicate<BlockState> getStatePredicate() {
-            return CCBBlocks.TESLA_TURBINE_STRUCTURAL_BLOCK::has;
+            return state -> state.getBlock() instanceof TeslaTurbineStructuralBlock;
         }
 
         @Override

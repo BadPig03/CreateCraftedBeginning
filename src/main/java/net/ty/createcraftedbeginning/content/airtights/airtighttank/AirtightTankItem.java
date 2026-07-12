@@ -37,7 +37,7 @@ public class AirtightTankItem extends BlockItem {
 
     @Override
     public InteractionResult place(BlockPlaceContext context) {
-        InteractionResult initialResult = super.place(context);
+        InteractionResult initialResult = placeSingleBlock(context);
         if (!initialResult.consumesAction()) {
             return initialResult;
         }
@@ -67,7 +67,11 @@ public class AirtightTankItem extends BlockItem {
         return super.updateCustomBlockEntityTag(blockPos, level, player, itemStack, blockState);
     }
 
-    private void tryMultiPlace(BlockPlaceContext context) {
+    protected InteractionResult placeSingleBlock(BlockPlaceContext context) {
+        return super.place(context);
+    }
+
+    protected void tryMultiPlace(BlockPlaceContext context) {
         Player player = context.getPlayer();
         if (player == null || player.isShiftKeyDown()) {
             return;

@@ -11,12 +11,10 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedBreezeCooler;
+import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
-import net.ty.createcraftedbeginning.data.CCBGUITextures;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
@@ -52,12 +50,10 @@ public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, CoolingRecipe recipe, IFocusGroup focuses) {
         if (recipe.isFluidIngredients()) {
-            SizedFluidIngredient fluidIngredient = recipe.getFluidIngredient();
-            builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setFluidRenderer(1000, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredients(NeoForgeTypes.FLUID_STACK, Arrays.asList(fluidIngredient.getFluids()));
+            builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setFluidRenderer(1000, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredients(NeoForgeTypes.FLUID_STACK, Arrays.asList(recipe.getFluidIngredient().getFluids()));
+            return;
         }
-        else {
-            Ingredient ingredient = recipe.getIngredient();
-            builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setBackground(getRenderedSlot(), -1, -1).addIngredients(ingredient);
-        }
+
+        builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setBackground(getRenderedSlot(), -1, -1).addIngredients(recipe.getIngredient());
     }
 }

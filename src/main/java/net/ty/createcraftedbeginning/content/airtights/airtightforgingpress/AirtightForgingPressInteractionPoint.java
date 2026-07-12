@@ -6,7 +6,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -20,16 +19,12 @@ public class AirtightForgingPressInteractionPoint extends ArmInteractionPoint {
     public static class ForgingPressType extends ArmInteractionPointType {
         @Override
         public boolean canCreatePoint(Level level, BlockPos pos, BlockState state) {
-            if (state.is(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK)) {
-                return true;
-            }
-            else if (state.is(CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_BLOCK)) {
-                return state.getValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION).isLowerStore();
-            }
-            else if (state.is(CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT_BLOCK)) {
-                return state.getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION) == AirtightForgingPressStructuralPosition.TOP_CENTER;
-            }
-            return false;
+            return switch (state.getBlock()) {
+                case AirtightForgingPressBlock ignored -> true;
+                case AirtightForgingPressStructuralBlock ignored -> state.getValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION).isLowerStore();
+                case AirtightForgingPressStructuralShaftBlock ignored -> state.getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION) == AirtightForgingPressStructuralPosition.TOP_CENTER;
+                default -> false;
+            };
         }
 
         @Override

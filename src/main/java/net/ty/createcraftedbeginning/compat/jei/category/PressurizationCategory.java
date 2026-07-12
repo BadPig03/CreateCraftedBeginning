@@ -17,7 +17,6 @@ import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,18 +30,6 @@ public class PressurizationCategory extends CCBRecipeCategory<PressurizationReci
         super(info);
     }
 
-    private static void addGasInputSlot(IRecipeLayoutBuilder builder, SizedGasIngredient gasIngredient) {
-        List<GasStack> fullStacks = new ArrayList<>();
-        for (GasStack stack : gasIngredient.getGases()) {
-            fullStacks.add(stack.copyWithAmount(MAX_CAPACITY));
-        }
-        builder.addSlot(RecipeIngredientRole.INPUT, 27, 51).setFluidRenderer(MAX_CAPACITY, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, fullStacks).addRichTooltipCallback((recipeSlotView, tooltip) -> Arrays.stream(gasIngredient.getGases()).map(stack -> Component.translatable("jei.tooltip.gas.amount", stack.getAmount()).withStyle(ChatFormatting.GRAY)).forEach(tooltip::add));
-    }
-
-    private static void addGasOutputSlot(IRecipeLayoutBuilder builder, GasStack outputGas) {
-        builder.addSlot(RecipeIngredientRole.OUTPUT, 131, 50).setFluidRenderer(MAX_CAPACITY, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEIPlugin.GAS_STACK, outputGas.copyWithAmount(MAX_CAPACITY)).addRichTooltipCallback((recipeSlotView, tooltip) -> tooltip.add(Component.translatable("jei.tooltip.gas.amount", outputGas.getAmount()).withStyle(ChatFormatting.GRAY)));
-    }
-
     @Override
     public void draw(PressurizationRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         CCBGUITextures.JEI_SHADOW.render(graphics, 61, 41);
@@ -52,7 +39,10 @@ public class PressurizationCategory extends CCBRecipeCategory<PressurizationReci
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, PressurizationRecipe recipe, IFocusGroup focuses) {
-        addGasInputSlot(builder, recipe.getGasIngredient());
-        addGasOutputSlot(builder, recipe.getGasResult());
+        SizedGasIngredient gasIngredient = recipe.getGasIngredient();
+        List<GasStack> stacks = Arrays.stream(gasIngredient.getGases()).map(GasStack::copy).toList();
+        GasStack outputGas = recipe.getGasResult();
+        builder.addSlot(RecipeIngredientRole.INPUT, 27, 51).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, stacks).addRichTooltipCallback((v, t) -> Arrays.stream(gasIngredient.getGases()).map(stack -> Component.translatable("jei.tooltip.gas.amount", stack.getAmount()).withStyle(ChatFormatting.GRAY)).forEach(t::add));
+        builder.addSlot(RecipeIngredientRole.OUTPUT, 131, 50).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEIPlugin.GAS_STACK, outputGas.copy()).addRichTooltipCallback((v, t) -> t.add(Component.translatable("jei.tooltip.gas.amount", outputGas.getAmount()).withStyle(ChatFormatting.GRAY)));
     }
 }

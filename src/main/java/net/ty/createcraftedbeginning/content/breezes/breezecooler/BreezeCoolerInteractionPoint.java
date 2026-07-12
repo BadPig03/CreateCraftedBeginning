@@ -10,7 +10,6 @@ import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -39,7 +38,7 @@ public class BreezeCoolerInteractionPoint extends DepositOnlyArmInteractionPoint
     public static class BreezeCoolerType extends ArmInteractionPointType {
         @Override
         public boolean canCreatePoint(Level level, BlockPos pos, BlockState state) {
-            return CCBBlocks.BREEZE_COOLER_BLOCK.has(state);
+            return state.getBlock() instanceof BreezeCoolerBlock;
         }
 
         @Override

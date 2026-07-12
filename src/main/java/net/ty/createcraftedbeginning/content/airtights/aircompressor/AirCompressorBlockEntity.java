@@ -2,6 +2,8 @@ package net.ty.createcraftedbeginning.content.airtights.aircompressor;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
+import com.simibubi.create.api.packager.InventoryIdentifier;
+import com.simibubi.create.api.packager.InventoryIdentifier.MultiFace;
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
 import com.simibubi.create.content.kinetics.base.IRotate.StressImpact;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
@@ -33,6 +35,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatstates.IOverheatState;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatstates.MeltdownOverheatState;
@@ -43,13 +46,15 @@ import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
+import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirCompressorBlockEntity extends KineticBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, ThresholdSwitchObservable {
+public class AirCompressorBlockEntity extends KineticBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, ThresholdSwitchObservable, IGasInventoryIdentifierProvider {
     private static final int SYNC_RATE = 4;
     private static final int LAZY_TICK_RATE = 5;
     private static final int PRESSURIZATION_RATIO = 10;
@@ -448,6 +453,21 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         CCBLang.translate("gui.goggles.stress_impact").style(ChatFormatting.GRAY).forGoggles(tooltip);
         CCBLang.number(calculateStressApplied() * Mth.abs(getTheoreticalSpeed())).translate("gui.goggles.unit.stress").style(ChatFormatting.AQUA).space().add(CCBLang.translate("gui.goggles.at_current_speed").style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
         return true;
+    }
+
+    @Override
+    public @Nullable InventoryIdentifier getGasInventoryIdentifier(Direction queriedSide) {
+        Direction inputDir = AirCompressorBlock.getInputSide(getBlockState());
+        if (queriedSide == inputDir) {
+            return new MultiFace(worldPosition, Set.of(inputDir));
+        }
+
+        Direction outputDir = inputDir.getOpposite();
+        if (queriedSide == outputDir) {
+            return new MultiFace(worldPosition, Set.of(outputDir));
+        }
+
+        return null;
     }
 
     private void tickCooldown() {

@@ -8,7 +8,6 @@ import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.subtypes.UidContext;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Holder;
-import net.minecraft.core.HolderSet.Named;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
@@ -20,9 +19,6 @@ import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 @ParametersAreNonnullByDefault
@@ -48,12 +44,12 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
     @Override
     @SuppressWarnings("removal")
     public String getUniqueId(GasStack ingredient, UidContext context) {
-        return "gas:" + ingredient.getGasType();
+        return "gas:" + getResourceLocation(ingredient);
     }
 
     @Override
     public Object getUid(GasStack ingredient, UidContext context) {
-        return ingredient.getGasType();
+        return getResourceLocation(ingredient);
     }
 
     @Override
@@ -93,6 +89,7 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
         if (ingredient == null) {
             ingredient = GasStack.EMPTY;
         }
+
         ToStringHelper stringHelper = MoreObjects.toStringHelper(GasStack.class);
         Holder<Gas> gasHolder = ingredient.getGasHolder();
         stringHelper.add("Gas", gasHolder.value().isEmpty() ? "none" : ingredient.getTranslationKey());
@@ -100,26 +97,5 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
             stringHelper.add("Amount", ingredient.getAmount());
         }
         return stringHelper.toString();
-    }
-
-    @Override
-    public Optional<TagKey<?>> getTagKeyEquivalent(Collection<GasStack> stacks) {
-        List<Holder<Gas>> gasHolders = stacks.stream().map(GasStack::getGasHolder).distinct().toList();
-        if (gasHolders.isEmpty()) {
-            return Optional.empty();
-        }
-
-        Holder<Gas> firstGas = gasHolders.getFirst();
-        List<TagKey<Gas>> candidateTags = firstGas.tags().toList();
-        for (TagKey<Gas> tagKey : candidateTags) {
-            Optional<Named<Gas>> optionalTag = CCBGasRegistries.GAS_REGISTRY.getTag(tagKey);
-            if (optionalTag.isEmpty() || !gasHolders.stream().allMatch(optionalTag.get()::contains)) {
-                continue;
-            }
-
-            return Optional.of(tagKey);
-        }
-
-        return Optional.empty();
     }
 }

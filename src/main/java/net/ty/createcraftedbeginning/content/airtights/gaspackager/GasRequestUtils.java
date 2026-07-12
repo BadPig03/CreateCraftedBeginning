@@ -10,7 +10,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasRequestUtils {
-    public static final long GAS_PER_UNIT = 1;
 
     private GasRequestUtils() {
     }
@@ -82,9 +81,5 @@ public final class GasRequestUtils {
             return BigItemStack.INF;
         }
         return (int) gasAmount;
-    }
-
-    public static long toGasAmount(int logisticsAmount) {
-        return Math.max(0, logisticsAmount) * GAS_PER_UNIT;
     }
 }

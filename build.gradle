@@ -182,3 +182,12 @@ idea {
         downloadJavadoc = true
     }
 }
+
+processResources {
+    from(rootProject.file("THIRD_PARTY_NOTICES.md")) {
+        into("META-INF")
+    }
+    from(rootProject.file("licenses/Create-LICENSE.md")) {
+        into("META-INF/licenses")
+    }
+}

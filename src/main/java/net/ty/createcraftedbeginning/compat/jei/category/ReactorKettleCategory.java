@@ -18,13 +18,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
-import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.TemperatureCondition;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightReactorKettle;
+import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.TemperatureCondition;
 import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
@@ -115,7 +114,7 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
             int x = getInputX(i, xOffset);
             int y = getInputY(i);
             GasStack gasStack = gasIngredient.getFirstGas();
-            builder.addSlot(RecipeIngredientRole.INPUT, x, y).setFluidRenderer(FluidType.BUCKET_VOLUME, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEIPlugin.GAS_STACK, gasStack.copyWithAmount(FluidType.BUCKET_VOLUME)).addRichTooltipCallback((recipeSlotView, tooltip) -> tooltip.add(Component.translatable("jei.tooltip.gas.amount", gasStack.getAmount()).withStyle(ChatFormatting.GRAY)));
+            builder.addSlot(RecipeIngredientRole.INPUT, x, y).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEIPlugin.GAS_STACK, gasStack.copy()).addRichTooltipCallback((v, t) -> t.add(Component.translatable("jei.tooltip.gas.amount", gasStack.getAmount()).withStyle(ChatFormatting.GRAY)));
             i++;
         }
 
@@ -136,7 +135,7 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
         for (GasStack gasResult : gasResults) {
             int x = getOutputX(i, size);
             int y = getOutputY(i);
-            builder.addSlot(RecipeIngredientRole.OUTPUT, x, y).setFluidRenderer(FluidType.BUCKET_VOLUME, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEIPlugin.GAS_STACK, gasResult.copyWithAmount(FluidType.BUCKET_VOLUME)).addRichTooltipCallback((recipeSlotView, tooltip) -> tooltip.add(Component.translatable("jei.tooltip.gas.amount", gasResult.getAmount()).withStyle(ChatFormatting.GRAY)));
+            builder.addSlot(RecipeIngredientRole.OUTPUT, x, y).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEIPlugin.GAS_STACK, gasResult.copy()).addRichTooltipCallback((v, t) -> t.add(Component.translatable("jei.tooltip.gas.amount", gasResult.getAmount()).withStyle(ChatFormatting.GRAY)));
             i++;
         }
 

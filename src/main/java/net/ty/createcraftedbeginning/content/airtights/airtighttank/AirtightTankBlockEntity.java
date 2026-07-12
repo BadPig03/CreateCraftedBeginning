@@ -16,6 +16,7 @@ import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -90,6 +91,18 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IGasTan
 
     public static long getCapacityPerTank() {
         return CCBConfig.server().airtights.maxCanisterCapacity.get() * 4000L;
+    }
+
+    public static BlockPos offsetInMulti(BlockPos origin, Axis axis, int lengthOffset, int uOffset, int vOffset) {
+        return switch (axis) {
+            case X -> origin.offset(lengthOffset, uOffset, vOffset);
+            case Y -> origin.offset(uOffset, lengthOffset, vOffset);
+            case Z -> origin.offset(uOffset, vOffset, lengthOffset);
+        };
+    }
+
+    protected static int calculateCoords(BlockPos pos, Axis axis) {
+        return axis.choose(pos.getX(), pos.getY(), pos.getZ());
     }
 
     @Override
@@ -248,7 +261,7 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IGasTan
         GasConnectivityHandler.formMulti(this, level);
     }
 
-    private void onPositionChanged() {
+    protected void onPositionChanged() {
         removeController(true);
         lastKnownPos = worldPosition;
     }
@@ -270,10 +283,13 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IGasTan
         boolean wasActive = structureManager.isActive();
         boolean changed = structureManager.evaluate(this);
         if (wasActive != structureManager.isActive()) {
-            for (int yOffset = 0; yOffset < height; yOffset++) {
-                for (int xOffset = 0; xOffset < width; xOffset++) {
-                    for (int zOffset = 0; zOffset < width; zOffset++) {
-                        if (!(level.getBlockEntity(worldPosition.offset(xOffset, yOffset, zOffset)) instanceof AirtightTankBlockEntity tank)) {
+            Axis axis = getMainConnectionAxis();
+            for (int lengthOffset = 0; lengthOffset < height; lengthOffset++) {
+                for (int uOffset = 0; uOffset < width; uOffset++) {
+                    for (int vOffset = 0; vOffset < width; vOffset++) {
+                        BlockPos partPos = offsetInMulti(worldPosition, axis, lengthOffset, uOffset, vOffset);
+                        AirtightTankBlockEntity tank = GasConnectivityHandler.partAt(getType(), level, partPos);
+                        if (tank == null) {
                             continue;
                         }
 
@@ -289,12 +305,12 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IGasTan
         notifyUpdate();
     }
 
-    private void refreshCapability() {
+    protected void refreshCapability() {
         gasCapability = handlerForCapability();
         invalidateCapabilities();
     }
 
-    private IGasHandler handlerForCapability() {
+    protected IGasHandler handlerForCapability() {
         if (isController()) {
             return driverCore.getStructureManager().isActive() ? driverCore.createGasHandler() : tankInventory;
         }
@@ -318,7 +334,12 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IGasTan
             return this;
         }
 
-        return level.getBlockEntity(controllerPos) instanceof AirtightTankBlockEntity tank ? tank : null;
+        BlockEntity be = level.getBlockEntity(controllerPos);
+        if (be == null || be.getType() != getType()) {
+            return null;
+        }
+
+        return be instanceof AirtightTankBlockEntity tank ? tank : null;
     }
 
     @Override
@@ -376,10 +397,11 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IGasTan
 
         BlockState state = getBlockState();
         if (state.getBlock() instanceof AirtightTankBlock) {
-            int controllerPosY = getController().getY();
-            int posY = getBlockPos().getY();
-            state = state.setValue(AirtightTankBlock.BOTTOM, controllerPosY == posY);
-            state = state.setValue(AirtightTankBlock.TOP, controllerPosY + height - 1 == posY);
+            Axis axis = getMainConnectionAxis();
+            int controllerCoords = calculateCoords(getController(), axis);
+            int posCoords = calculateCoords(getBlockPos(), axis);
+            state = state.setValue(AirtightTankBlock.BOTTOM, controllerCoords == posCoords);
+            state = state.setValue(AirtightTankBlock.TOP, controllerCoords + height - 1 == posCoords);
             level.setBlock(worldPosition, state, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE);
         }
         onGasStackChanged(tankInventory.getGasStack());
@@ -424,7 +446,15 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IGasTan
 
     @Override
     protected AABB createRenderBoundingBox() {
-        return isController() ? super.createRenderBoundingBox().expandTowards(width - 1, height - 1, width - 1) : super.createRenderBoundingBox();
+        if (!isController()) {
+            return super.createRenderBoundingBox();
+        }
+
+        Axis axis = getMainConnectionAxis();
+        int xSize = axis == Axis.X ? height : width;
+        int ySize = axis == Axis.Y ? height : width;
+        int zSize = axis == Axis.Z ? height : width;
+        return super.createRenderBoundingBox().expandTowards(xSize - 1, ySize - 1, zSize - 1);
     }
 
     @Override
@@ -469,13 +499,8 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IGasTan
     }
 
     @Override
-    public boolean hasTank() {
-        return true;
-    }
-
-    @Override
-    public long getTankSize(int tank) {
-        return getCapacityPerTank();
+    public IGasTank getTank(int tank) {
+        return tankInventory;
     }
 
     @Override
@@ -484,13 +509,18 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IGasTan
     }
 
     @Override
-    public IGasTank getTank(int tank) {
-        return tankInventory;
+    public boolean hasTank() {
+        return true;
     }
 
     @Override
     public GasStack getGas(int tank) {
         return tankInventory.getGasStack().copy();
+    }
+
+    @Override
+    public long getTankSize(int tank) {
+        return getCapacityPerTank();
     }
 
     public void applyGasTankSize(int blocks) {

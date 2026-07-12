@@ -4,10 +4,12 @@ import com.simibubi.create.AllItems;
 import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.content.kinetics.press.MechanicalPressBlockEntity;
 import com.simibubi.create.content.logistics.redstoneRequester.RedstoneRequesterScreen;
+import com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestScreen;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
+import mezz.jei.api.registration.IAdvancedRegistration;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IModIngredientRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
@@ -49,6 +51,7 @@ import net.ty.createcraftedbeginning.compat.jei.category.gas.GasStackRenderer;
 import net.ty.createcraftedbeginning.compat.jei.utils.AirtightHandheldDrillGhostIngredientHandler;
 import net.ty.createcraftedbeginning.compat.jei.utils.GasFilterGhostIngredientHandler;
 import net.ty.createcraftedbeginning.compat.jei.utils.RedstoneRequesterGhostIngredientHandler;
+import net.ty.createcraftedbeginning.compat.jei.utils.StockKeeperRequestGasGuiHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillScreen;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreen;
 import net.ty.createcraftedbeginning.data.CCBGasRegistries;
@@ -146,6 +149,13 @@ public class CCBJEIPlugin implements IModPlugin {
         registration.addGhostIngredientHandler(AirtightHandheldDrillScreen.class, new AirtightHandheldDrillGhostIngredientHandler());
         registration.addGhostIngredientHandler(GasFilterScreen.class, new GasFilterGhostIngredientHandler());
         registration.addGhostIngredientHandler(RedstoneRequesterScreen.class, new RedstoneRequesterGhostIngredientHandler());
+
+        registration.addGuiContainerHandler(StockKeeperRequestScreen.class, new StockKeeperRequestGasGuiHandler());
+    }
+
+    @Override
+    public void registerAdvanced(IAdvancedRegistration registration) {
+        registration.addRecipeManagerPlugin(new VirtualGasItemRecipeLookupPlugin(registration.getJeiHelpers(), () -> runtime));
     }
 
     @Override

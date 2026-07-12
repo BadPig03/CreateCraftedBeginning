@@ -7,7 +7,6 @@ import com.simibubi.create.AllPartialModels;
 import com.simibubi.create.compat.jei.category.CreateRecipeCategory;
 import com.simibubi.create.compat.jei.category.animations.AnimatedKinetics;
 import com.simibubi.create.content.processing.recipe.ProcessingOutput;
-import com.simibubi.create.foundation.gui.AllGuiTextures;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.recipe.IFocusGroup;
@@ -16,6 +15,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
+import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.ChillingRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -42,13 +42,13 @@ public class ChillingCategory extends CCBRecipeCategory<ChillingRecipe> {
 
     @Override
     protected void draw(ChillingRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
-        int xOffsetAmount = 1 - Math.min(3, recipe.getRollableResultsAsItemStacks().size());
-        AllGuiTextures.JEI_SHADOW.render(graphics, 46, 29);
-        AllGuiTextures.JEI_SHADOW.render(graphics, 65, 39);
-        AllGuiTextures.JEI_LONG_ARROW.render(graphics, 7 * xOffsetAmount + 54, 51);
-        PoseStack matrixStack = graphics.pose();
+        CCBGUITextures.JEI_SHADOW.render(graphics, 46, 29);
+        CCBGUITextures.JEI_SHADOW.render(graphics, 65, 39);
+        CCBGUITextures.JEI_LONG_ARROW.render(graphics, 7 * (1 - Math.min(3, recipe.getRollableResultsAsItemStacks().size())) + 54, 51);
 
+        PoseStack matrixStack = graphics.pose();
         matrixStack.pushPose();
+
         matrixStack.translate(56, 33, 0);
         matrixStack.mulPose(Axis.XP.rotationDegrees(-12.5f));
         matrixStack.mulPose(Axis.YP.rotationDegrees(22.5f));
@@ -64,12 +64,14 @@ public class ChillingCategory extends CCBRecipeCategory<ChillingRecipe> {
     @Override
     protected void setRecipe(IRecipeLayoutBuilder builder, ChillingRecipe recipe, IFocusGroup focuses) {
         List<ProcessingOutput> results = recipe.getRollableResults();
-        int xOffsetAmount = 1 - Math.min(3, results.size());
-        builder.addSlot(RecipeIngredientRole.INPUT, 5 * xOffsetAmount + 21, 48).setBackground(getRenderedSlot(), -1, -1).addIngredients(recipe.getIngredients().getFirst());
         boolean excessive = results.size() > 9;
+
+        int x = 1 - Math.min(3, results.size());
+        builder.addSlot(RecipeIngredientRole.INPUT, 5 * x + 21, 48).setBackground(getRenderedSlot(), -1, -1).addIngredients(recipe.getIngredients().getFirst());
+
         int i = 0;
         for (ProcessingOutput output : results) {
-            builder.addSlot(RecipeIngredientRole.OUTPUT, 141 + i % 3 * 19 + 9 * xOffsetAmount, 48 + i / 3 * -19 + (excessive ? 8 : 0)).setBackground(getRenderedSlot(output), -1, -1).addItemStack(output.getStack()).addRichTooltipCallback(CreateRecipeCategory.addStochasticTooltip(output));
+            builder.addSlot(RecipeIngredientRole.OUTPUT, 141 + i % 3 * 19 + 9 * x, 48 + i / 3 * -19 + (excessive ? 8 : 0)).setBackground(getRenderedSlot(output), -1, -1).addItemStack(output.getStack()).addRichTooltipCallback(CreateRecipeCategory.addStochasticTooltip(output));
             i++;
         }
     }

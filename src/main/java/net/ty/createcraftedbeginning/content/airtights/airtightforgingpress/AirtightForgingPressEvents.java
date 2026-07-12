@@ -21,12 +21,12 @@ public class AirtightForgingPressEvents {
     @SubscribeEvent
     public static void onItemTooltip(ItemTooltipEvent event) {
         Player player = event.getEntity();
-        if (player == null || !event.getItemStack().is(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK.asItem())) {
+        if (player == null || !CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK.isIn(event.getItemStack())) {
             return;
         }
 
-        List<Component> tooltip = event.getToolTip();
-        tooltip.add(CommonComponents.EMPTY);
-        tooltip.addAll(KineticStats.getKineticStats(CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT_BLOCK.get(), player));
+        List<Component> tooltips = event.getToolTip();
+        tooltips.add(CommonComponents.EMPTY);
+        tooltips.addAll(KineticStats.getKineticStats(CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT_BLOCK.get(), player));
     }
 }

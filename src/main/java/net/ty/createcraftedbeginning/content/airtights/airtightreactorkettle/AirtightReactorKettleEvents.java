@@ -21,12 +21,12 @@ public class AirtightReactorKettleEvents {
     @SubscribeEvent
     public static void onItemTooltip(ItemTooltipEvent event) {
         Player player = event.getEntity();
-        if (player == null || !event.getItemStack().is(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK.asItem())) {
+        if (player == null || !CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK.isIn(event.getItemStack())) {
             return;
         }
 
-        List<Component> tooltip = event.getToolTip();
-        tooltip.add(CommonComponents.EMPTY);
-        tooltip.addAll(KineticStats.getKineticStats(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG_BLOCK.get(), player));
+        List<Component> tooltips = event.getToolTip();
+        tooltips.add(CommonComponents.EMPTY);
+        tooltips.addAll(KineticStats.getKineticStats(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG_BLOCK.get(), player));
     }
 }

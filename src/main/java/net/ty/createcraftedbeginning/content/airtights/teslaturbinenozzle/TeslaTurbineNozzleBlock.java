@@ -32,9 +32,8 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.TeslaTurbineStructuralPosition;
-import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.data.CCBShapes;
+import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -97,7 +96,7 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
             }
 
             BlockState candidateState = level.getBlockState(candidatePos);
-            if (candidateState.getBlock() == CCBBlocks.TESLA_TURBINE_NOZZLE_BLOCK.get()) {
+            if (candidateState.getBlock() instanceof TeslaTurbineNozzleBlock) {
                 return true;
             }
         }

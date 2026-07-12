@@ -42,7 +42,6 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
@@ -88,7 +87,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
     @Override
     public InteractionResult onWrenched(BlockState state, UseOnContext context) {
         Player player = context.getPlayer();
-        if (player != null && player.getInBlockState().is(CCBBlocks.AIR_VENT_BLOCK)) {
+        if (player != null && player.getInBlockState().getBlock() instanceof AirVentBlock) {
             return InteractionResult.FAIL;
         }
 
@@ -98,7 +97,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
     @Override
     public InteractionResult onSneakWrenched(BlockState state, UseOnContext context) {
         Player player = context.getPlayer();
-        if (player != null && player.getInBlockState().is(CCBBlocks.AIR_VENT_BLOCK)) {
+        if (player != null && player.getInBlockState().getBlock() instanceof AirVentBlock) {
             return InteractionResult.FAIL;
         }
 
@@ -112,7 +111,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
         }
 
         BlockState inBlockState = player.getInBlockState();
-        return inBlockState.is(CCBBlocks.AIR_VENT_BLOCK) && (inBlockState.getValue(PROPERTY_BY_DIRECTION.get(Direction.UP)).isConnected() || inBlockState.getValue(PROPERTY_BY_DIRECTION.get(Direction.DOWN)).isConnected());
+        return inBlockState.getBlock() instanceof AirVentBlock && (inBlockState.getValue(PROPERTY_BY_DIRECTION.get(Direction.UP)).isConnected() || inBlockState.getValue(PROPERTY_BY_DIRECTION.get(Direction.DOWN)).isConnected());
     }
 
     @Override
@@ -123,7 +122,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
 
         EnumProperty<VentState> property = PROPERTY_BY_DIRECTION.get(direction);
         VentState ventState = state.getValue(property);
-        boolean isAirVent = neighbourState.is(CCBBlocks.AIR_VENT_BLOCK);
+        boolean isAirVent = neighbourState.getBlock() instanceof AirVentBlock;
         if (ventState != VentState.CONNECTED && isAirVent) {
             return state.setValue(property, VentState.CONNECTED);
         }
@@ -135,12 +134,12 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
 
     @Override
     protected boolean skipRendering(BlockState blockState, BlockState adjacentState, Direction direction) {
-        return adjacentState.is(CCBBlocks.AIR_VENT_BLOCK);
+        return adjacentState.getBlock() instanceof AirVentBlock;
     }
 
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        if (player.getInBlockState().is(CCBBlocks.AIR_VENT_BLOCK)) {
+        if (player.getInBlockState().getBlock() instanceof AirVentBlock) {
             return ItemInteractionResult.FAIL;
         }
 

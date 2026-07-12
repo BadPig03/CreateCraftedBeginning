@@ -1,6 +1,8 @@
 package net.ty.createcraftedbeginning.content.breezes.breezechamber;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
+import com.simibubi.create.api.packager.InventoryIdentifier;
+import com.simibubi.create.api.packager.InventoryIdentifier.Single;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import dev.engine_room.flywheel.api.visualization.VisualizationManager;
@@ -38,6 +40,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightassemblydriver.AirtightAssemblyDriverCore;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlock;
@@ -67,7 +70,7 @@ import static net.ty.createcraftedbeginning.content.breezes.breezechamber.Breeze
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
+public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IGasInventoryIdentifierProvider {
     public static final int MAX_WIND_CAPACITY = 72000;
     private static final int LAZY_TICK_RATE = 20;
     private static final int MAX_EFFECTIVE_THRESHOLD = MAX_WIND_CAPACITY / 2;
@@ -263,6 +266,11 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             }
         }
         return true;
+    }
+
+    @Override
+    public InventoryIdentifier getGasInventoryIdentifier(Direction direction) {
+        return new Single(worldPosition);
     }
 
     public boolean hasGoggles() {

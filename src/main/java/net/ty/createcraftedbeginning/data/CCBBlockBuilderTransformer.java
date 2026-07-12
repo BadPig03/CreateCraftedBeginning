@@ -40,6 +40,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe.DirectionalFacing;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightencasedpipe.AirtightEncasedPipeBlockItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralShaftBlock;
@@ -52,6 +53,9 @@ import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.Air
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankCTBehavior;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankItem;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankMovementBehavior;
+import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankCTBehavior;
+import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankItem;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentCTBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankCTBehavior;
@@ -182,7 +186,7 @@ public final class CCBBlockBuilderTransformer {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtightEncasedPipe() {
-        return b -> b.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(customItemModel("airtight_encased_pipe", "item"));
+        return b -> b.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item(AirtightEncasedPipeBlockItem::new).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(customItemModel("airtight_encased_pipe", "item"));
     }
 
     @Contract(pure = true)
@@ -280,6 +284,11 @@ public final class CCBBlockBuilderTransformer {
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtightTank() {
         return b -> b.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.standardModel(c, p))).transform(mountedGasStorage(CCBMountedStorage.AIRTIGHT_TANK)).onRegister(connectedTextures(AirtightTankCTBehavior::new)).onRegister(movementBehaviour(new AirtightTankMovementBehavior())).item(AirtightTankItem::new).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> horizontalAirtightTank() {
+        return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(s -> ConfiguredModel.builder().modelFile(AssetLookup.standardModel(c, p)).rotationY(s.getValue(HorizontalAirtightTankBlock.HORIZONTAL_AXIS) == Axis.X ? 90 : 0).build())).transform(mountedGasStorage(CCBMountedStorage.HORIZONTAL_AIRTIGHT_TANK)).onRegister(connectedTextures(HorizontalAirtightTankCTBehavior::new)).onRegister(movementBehaviour(new AirtightTankMovementBehavior())).item(HorizontalAirtightTankItem::new).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)

@@ -23,9 +23,9 @@ import net.neoforged.neoforge.common.util.FakePlayer;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonUtils;
+import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceBlock;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -54,15 +54,19 @@ public class GasPackagerBlock extends PackagerBlock {
         Level level = context.getLevel();
         BlockPos clickedPos = context.getClickedPos();
         for (Direction direction : context.getNearestLookingDirections()) {
-            BlockEntity be = level.getBlockEntity(clickedPos.relative(direction));
+            BlockPos targetPos = clickedPos.relative(direction);
+            BlockEntity be = level.getBlockEntity(targetPos);
             if (be instanceof GasPackagerBlockEntity) {
                 continue;
             }
 
-            if (be != null && level.getCapability(GasHandler.BLOCK, be.getBlockPos(), null) != null) {
-                preferred = direction.getOpposite();
-                break;
+            Direction targetSide = direction.getOpposite();
+            if (be == null || level.getCapability(GasHandler.BLOCK, targetPos, targetSide) == null) {
+                continue;
             }
+
+            preferred = direction.getOpposite();
+            break;
         }
 
         Player player = context.getPlayer();
@@ -72,7 +76,7 @@ public class GasPackagerBlock extends PackagerBlock {
         }
 
         if (player != null && !(player instanceof FakePlayer)) {
-            if (CCBBlocks.PORTABLE_GAS_INTERFACE_BLOCK.has(level.getBlockState(clickedPos.relative(preferred.getOpposite())))) {
+            if (level.getBlockState(clickedPos.relative(preferred.getOpposite())).getBlock() instanceof PortableGasInterfaceBlock) {
                 CCBLang.translate("gui.warnings.no_gas_portable_interface").sendStatus(player);
                 return null;
             }

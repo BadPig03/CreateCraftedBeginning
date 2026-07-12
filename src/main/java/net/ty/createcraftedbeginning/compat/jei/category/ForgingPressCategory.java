@@ -17,7 +17,6 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.SmithingRecipe;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
@@ -146,7 +145,7 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
         }
         if (!gasIngredients.isEmpty()) {
             GasStack gasStack = gasIngredients.getFirst().getFirstGas();
-            builder.addSlot(RecipeIngredientRole.INPUT, getInputX(i), 6).setFluidRenderer(FluidType.BUCKET_VOLUME, false, 16, 16).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEIPlugin.GAS_STACK, gasStack.copyWithAmount(FluidType.BUCKET_VOLUME)).addRichTooltipCallback((recipeSlotView, tooltip) -> tooltip.add(Component.translatable("jei.tooltip.gas.amount", gasStack.getAmount()).withStyle(ChatFormatting.GRAY)));
+            builder.addSlot(RecipeIngredientRole.INPUT, getInputX(i), 6).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEIPlugin.GAS_STACK, gasStack.copy()).addRichTooltipCallback((v, t) -> t.add(Component.translatable("jei.tooltip.gas.amount", gasStack.getAmount()).withStyle(ChatFormatting.GRAY)));
         }
         if (recipe.getSmithingRecipe() != null) {
             builder.addSlot(RecipeIngredientRole.OUTPUT, getOutputX(1), 82).setSlotName(SLOT_OUTPUT).setBackground(BASIC_SLOT, -1, -1).addItemStack(ItemStack.EMPTY);

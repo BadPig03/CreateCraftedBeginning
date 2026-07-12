@@ -4,6 +4,7 @@ import com.mojang.serialization.MapCodec;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
+import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -15,6 +16,7 @@ import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -31,10 +33,13 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.TickPriority;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.GasPropagator;
+import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
+import net.ty.createcraftedbeginning.registry.CCBTags.CCBBlockTags;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -46,11 +51,38 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
 
     public AirtightEncasedPipeBlock(Properties properties) {
         super(PIPE_APOTHEM, properties);
-        registerDefaultState(defaultBlockState().setValue(NORTH, false).setValue(EAST, false).setValue(SOUTH, false).setValue(WEST, false).setValue(WEST, false).setValue(UP, false).setValue(DOWN, false));
+        registerDefaultState(defaultBlockState().setValue(NORTH, false).setValue(EAST, false).setValue(SOUTH, false).setValue(WEST, false).setValue(UP, false).setValue(DOWN, false));
     }
 
     public static boolean isOpenAt(BlockState state, Direction direction) {
         return state.getValue(PROPERTY_BY_DIRECTION.get(direction));
+    }
+
+    private static boolean hasPlacementConnection(Level level, BlockPos pos, Direction direction) {
+        BlockPos otherPos = pos.relative(direction);
+        BlockState otherState = level.getBlockState(otherPos);
+        return !otherState.isAir() && (!otherState.canBeReplaced() || CCBBlockTags.GAS_SOURCES.matches(otherState)) && GasTransportBehaviour.isValidAirtightComponents(level, otherPos, otherState, direction);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        BlockState state = defaultBlockState();
+        Player player = context.getPlayer();
+        if (player != null && player.isShiftKeyDown()) {
+            return state;
+        }
+
+        Level level = context.getLevel();
+        BlockPos pos = context.getClickedPos();
+        BlockState replacedState = level.getBlockState(pos);
+        for (Direction direction : Iterate.directions) {
+            boolean shouldOpen = hasPlacementConnection(level, pos, direction);
+            if (replacedState.getBlock() instanceof AirtightPipeBlock) {
+                shouldOpen |= replacedState.getValue(AirtightPipeBlock.AXIS) == direction.getAxis();
+            }
+            state = state.setValue(PROPERTY_BY_DIRECTION.get(direction), shouldOpen);
+        }
+        return state;
     }
 
     @Override

@@ -3,8 +3,6 @@ package net.ty.createcraftedbeginning.content.airtights.gaspackager;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.Create;
 import com.simibubi.create.api.packager.InventoryIdentifier;
-import com.simibubi.create.api.packager.InventoryIdentifier.MultiFace;
-import com.simibubi.create.api.packager.InventoryIdentifier.Single;
 import com.simibubi.create.compat.computercraft.ComputerCraftProxy;
 import com.simibubi.create.compat.computercraft.events.PackageEvent;
 import com.simibubi.create.content.contraptions.actors.psi.PortableStorageInterfaceBlockEntity;
@@ -43,7 +41,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasManipulationBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTankMultiBlockEntityContainer;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonUtils;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceBlockEntity;
@@ -120,8 +118,13 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
 
     @Override
     public InventorySummary getAvailableItems() {
-        IGasHandler handler = gasInventory.getInventory();
         InventorySummary summary = new InventorySummary();
+        if (getGasInventoryIdentifier() == null) {
+            availableItems = summary;
+            return summary;
+        }
+
+        IGasHandler handler = gasInventory.getInventory();
         if (handler == null) {
             availableItems = summary;
             return summary;
@@ -233,10 +236,10 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         BlockFace targetFace = gasInventory.getTarget().getOpposite();
         BlockPos targetPos = targetFace.getPos();
         BlockEntity targetBE = level.getBlockEntity(targetPos);
-        if (targetBE instanceof IGasTankMultiBlockEntityContainer tank) {
-            return new Single(tank.getController());
+        if (!(targetBE instanceof IGasInventoryIdentifierProvider provider)) {
+            return null;
         }
-        return new MultiFace(targetPos, Set.of(targetFace.getFace()));
+        return provider.getGasInventoryIdentifier(targetFace.getFace());
     }
 
     private void attemptToPackageAnyGas() {
@@ -284,6 +287,11 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
             return;
         }
 
+        if (getGasInventoryIdentifier() == null) {
+            queuedRequests.removeFirst();
+            return;
+        }
+
         IGasHandler handler = gasInventory.getInventory();
         if (handler == null) {
             return;
@@ -303,7 +311,7 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         }
 
         int packageIndexAtLink = request.packageCounter().getAndIncrement();
-        long requestedAmount = GasRequestUtils.toGasAmount(request.getCount());
+        long requestedAmount = Math.max(0, request.getCount());
         long maxAmount = Math.min(BalloonUtils.getCapacity(), requestedAmount);
         GasStack toDrain = gasType.copyWithAmount(maxAmount);
         GasStack simulated = handler.drain(toDrain, GasAction.SIMULATE);

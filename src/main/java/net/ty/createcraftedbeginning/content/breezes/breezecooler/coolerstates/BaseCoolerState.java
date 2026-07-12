@@ -79,7 +79,7 @@ public abstract class BaseCoolerState {
 
         BlockPos pos = cooler.getBlockPos();
         BlockState state = level.getBlockState(pos);
-        if (!state.is(CCBBlocks.BREEZE_COOLER_BLOCK)) {
+        if (!(state.getBlock() instanceof BreezeCoolerBlock)) {
             return;
         }
 

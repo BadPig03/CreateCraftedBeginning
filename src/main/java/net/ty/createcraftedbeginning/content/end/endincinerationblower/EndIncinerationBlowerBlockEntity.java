@@ -25,6 +25,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.ty.createcraftedbeginning.content.end.endcasing.EndCasingBlock;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -186,7 +187,7 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         }
 
         BlockPos structuralPos = worldPosition.below();
-        if (!level.getBlockState(structuralPos).is(CCBBlocks.END_CASING_BLOCK)) {
+        if (!(level.getBlockState(structuralPos).getBlock() instanceof EndCasingBlock)) {
             return;
         }
         if (!level.setBlockAndUpdate(structuralPos, CCBBlocks.END_INCINERATION_BLOWER_STRUCTURAL_BLOCK.getDefaultState())) {

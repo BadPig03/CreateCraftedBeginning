@@ -11,7 +11,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -26,7 +25,7 @@ public class AirVentEvents {
             return;
         }
 
-        if (player.getInBlockState().is(CCBBlocks.AIR_VENT_BLOCK)) {
+        if (player.getInBlockState().getBlock() instanceof AirVentBlock) {
             player.setPose(Pose.SWIMMING);
             return;
         }
@@ -35,7 +34,7 @@ public class AirVentEvents {
         Direction direction = player.getDirection();
         BlockPos blockPos = player.blockPosition();
         BlockState blockState = level.getBlockState(blockPos.relative(direction));
-        if (!blockState.is(CCBBlocks.AIR_VENT_BLOCK) || !blockState.getValue(AirVentBlock.PROPERTY_BY_DIRECTION.get(direction.getOpposite())).canPassThrough() ) {
+        if (!(blockState.getBlock() instanceof AirVentBlock) || !blockState.getValue(AirVentBlock.PROPERTY_BY_DIRECTION.get(direction.getOpposite())).canPassThrough() ) {
             return;
         }
 

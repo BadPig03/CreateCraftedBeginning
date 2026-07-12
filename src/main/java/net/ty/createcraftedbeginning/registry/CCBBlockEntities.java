@@ -27,6 +27,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.Air
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralCogBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralCogRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentRenderer;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankBlockEntity;
@@ -88,6 +89,7 @@ public class CCBBlockEntities {
     public static final BlockEntityEntry<AirtightPumpBlockEntity> AIRTIGHT_PUMP = CCB_REGISTRATE.blockEntity("airtight_pump", AirtightPumpBlockEntity::new).visual(() -> SingleAxisRotatingVisual.ofZ(CCBPartialModels.AIRTIGHT_PUMP_COGS)).validBlock(CCBBlocks.AIRTIGHT_PUMP_BLOCK).renderer(() -> AirtightPumpRenderer::new).register();
 
     public static final BlockEntityEntry<AirtightTankBlockEntity> AIRTIGHT_TANK = CCB_REGISTRATE.blockEntity("airtight_tank", AirtightTankBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_TANK_BLOCK).register();
+    public static final BlockEntityEntry<HorizontalAirtightTankBlockEntity> HORIZONTAL_AIRTIGHT_TANK = CCB_REGISTRATE.blockEntity("horizontal_airtight_tank", HorizontalAirtightTankBlockEntity::new).validBlock(CCBBlocks.HORIZONTAL_AIRTIGHT_TANK_BLOCK).register();
     public static final BlockEntityEntry<CreativeAirtightTankBlockEntity> CREATIVE_AIRTIGHT_TANK = CCB_REGISTRATE.blockEntity("creative_airtight_tank", CreativeAirtightTankBlockEntity::new).validBlock(CCBBlocks.CREATIVE_AIRTIGHT_TANK_BLOCK).register();
 
     public static final BlockEntityEntry<BreezeCoolerBlockEntity> BREEZE_COOLER = CCB_REGISTRATE.blockEntity("breeze_cooler", BreezeCoolerBlockEntity::new).visual(() -> BreezeCoolerVisual::new, false).validBlock(CCBBlocks.BREEZE_COOLER_BLOCK).renderer(() -> BreezeCoolerRenderer::new).register();

@@ -33,8 +33,88 @@ public class CombinedGasTankWrapper implements IGasHandler {
     }
 
     @Override
-    public int getTanks() {
-        return tankCount;
+    public boolean isGasValid(int tank, GasStack stack) {
+        int index = getIndexForSlot(tank);
+        int localSlot = getSlotFromIndex(tank, index);
+        return getHandlerFromIndex(index).isGasValid(localSlot, stack);
+    }
+
+    @Override
+    public GasStack drain(GasStack resource, GasAction action) {
+        if (resource.isEmpty()) {
+            return GasStack.EMPTY;
+        }
+
+        long remaining = resource.getAmount();
+        GasStack total = GasStack.EMPTY;
+        for (IGasHandler handler : gasHandlers) {
+            if (remaining <= 0) {
+                break;
+            }
+
+            GasStack request = resource.copyWithAmount(remaining);
+            GasStack preview = handler.drain(request, GasAction.SIMULATE);
+            if (preview.isEmpty() || !GasStack.isSameGasSameComponents(preview, resource)) {
+                continue;
+            }
+
+            GasStack part = action.simulate() ? preview : handler.drain(preview, GasAction.EXECUTE);
+            if (part.isEmpty() || !GasStack.isSameGasSameComponents(part, resource)) {
+                continue;
+            }
+
+            if (total.isEmpty()) {
+                total = part.copy();
+            }
+            else {
+                total.grow(part.getAmount());
+            }
+            remaining -= part.getAmount();
+        }
+
+        return total;
+    }
+
+    @Override
+    public GasStack drain(long maxDrain, GasAction action) {
+        if (maxDrain <= 0) {
+            return GasStack.EMPTY;
+        }
+
+        long remaining = maxDrain;
+        GasStack total = GasStack.EMPTY;
+        for (IGasHandler handler : gasHandlers) {
+            if (remaining <= 0) {
+                break;
+            }
+
+            GasStack preview;
+            if (total.isEmpty()) {
+                preview = handler.drain(remaining, GasAction.SIMULATE);
+            }
+            else {
+                preview = handler.drain(total.copyWithAmount(remaining), GasAction.SIMULATE);
+            }
+
+            if (preview.isEmpty() || !total.isEmpty() && !GasStack.isSameGasSameComponents(preview, total)) {
+                continue;
+            }
+
+            GasStack request = preview.copyWithAmount(Math.min(remaining, preview.getAmount()));
+            GasStack part = action.simulate() ? request : handler.drain(request, GasAction.EXECUTE);
+            if (part.isEmpty() || !total.isEmpty() && !GasStack.isSameGasSameComponents(part, total)) {
+                continue;
+            }
+
+            if (total.isEmpty()) {
+                total = part.copy();
+            }
+            else {
+                total.grow(part.getAmount());
+            }
+            remaining -= part.getAmount();
+        }
+        return total;
     }
 
     @Override
@@ -45,17 +125,8 @@ public class CombinedGasTankWrapper implements IGasHandler {
     }
 
     @Override
-    public long getTankCapacity(int tank) {
-        int index = getIndexForSlot(tank);
-        int localSlot = getSlotFromIndex(tank, index);
-        return getHandlerFromIndex(index).getTankCapacity(localSlot);
-    }
-
-    @Override
-    public boolean isGasValid(int tank, GasStack stack) {
-        int index = getIndexForSlot(tank);
-        int localSlot = getSlotFromIndex(tank, index);
-        return getHandlerFromIndex(index).isGasValid(localSlot, stack);
+    public int getTanks() {
+        return tankCount;
     }
 
     @Override
@@ -66,27 +137,26 @@ public class CombinedGasTankWrapper implements IGasHandler {
 
         long filled = 0;
         resource = resource.copy();
-        boolean fittingHandlerFound = false;
+        boolean found = false;
         for (boolean searchPass : Iterate.trueAndFalse) {
             for (IGasHandler gasHandler : gasHandlers) {
                 for (int i = 0; i < gasHandler.getTanks(); i++) {
                     if (searchPass && GasStack.isSameGasSameComponents(gasHandler.getGasInTank(i), resource)) {
-                        fittingHandlerFound = true;
+                        found = true;
                     }
                 }
 
-                if (searchPass && !fittingHandlerFound) {
+                if (searchPass && !found) {
                     continue;
                 }
 
                 long filledIntoCurrent = gasHandler.fill(resource, action);
                 resource.shrink(filledIntoCurrent);
                 filled += filledIntoCurrent;
-
                 if (resource.isEmpty()) {
                     return filled;
                 }
-                if (fittingHandlerFound && (enforceVariety || filledIntoCurrent != 0)) {
+                if (found && (enforceVariety || filledIntoCurrent != 0)) {
                     return filled;
                 }
             }
@@ -96,46 +166,10 @@ public class CombinedGasTankWrapper implements IGasHandler {
     }
 
     @Override
-    public GasStack drain(GasStack resource, GasAction action) {
-        if (resource.isEmpty()) {
-            return GasStack.EMPTY;
-        }
-
-        GasStack drained = GasStack.EMPTY;
-        resource = resource.copy();
-        for (IGasHandler gasHandler : gasHandlers) {
-            GasStack drainedFromCurrent = gasHandler.drain(resource, action);
-            long amount = drainedFromCurrent.getAmount();
-            resource.shrink(amount);
-
-            if (!drainedFromCurrent.isEmpty() && (drained.isEmpty() || GasStack.isSameGasSameComponents(drainedFromCurrent, drained))) {
-                drained = new GasStack(drainedFromCurrent.getGasHolder(), amount + drained.getAmount());
-            }
-            if (resource.isEmpty()) {
-                return drained;
-            }
-        }
-
-        return drained;
-    }
-
-    @Override
-    public GasStack drain(long maxDrain, GasAction action) {
-        GasStack drained = GasStack.EMPTY;
-        for (IGasHandler gasHandler : gasHandlers) {
-            GasStack drainedFromCurrent = gasHandler.drain(maxDrain, action);
-            long amount = drainedFromCurrent.getAmount();
-            maxDrain -= amount;
-
-            if (!drainedFromCurrent.isEmpty() && (drained.isEmpty() || GasStack.isSameGasSameComponents(drainedFromCurrent, drained))) {
-                drained = new GasStack(drainedFromCurrent.getGasHolder(), amount + drained.getAmount());
-            }
-            if (maxDrain == 0) {
-                return drained;
-            }
-        }
-
-        return drained;
+    public long getTankCapacity(int tank) {
+        int index = getIndexForSlot(tank);
+        int localSlot = getSlotFromIndex(tank, index);
+        return getHandlerFromIndex(index).getTankCapacity(localSlot);
     }
 
     protected int getIndexForSlot(int slot) {
