@@ -35,6 +35,10 @@ public class BalloonItem extends PackageItem {
         (rare ? BalloonStyleUtils.RARE_BALLOONS : BalloonStyleUtils.REGULAR_BALLOONS).add(this);
     }
 
+    public boolean isRare() {
+        return rare;
+    }
+
     @Override
     public String getDescriptionId() {
         return "item." + CreateCraftedBeginning.MOD_ID + (rare ? ".rare_balloon" : ".balloon");
@@ -43,15 +47,25 @@ public class BalloonItem extends PackageItem {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, context, tooltip, flag);
-        GasStack gas = BalloonUtils.getGasContents(stack);
-        if (gas.isEmpty()) {
+        BalloonGasContents contents = BalloonUtils.getGasContents(stack);
+        if (contents.isEmpty()) {
             return;
         }
 
         long capacity = BalloonUtils.getCapacity();
         LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
-        tooltip.add(CCBLang.translate("gui.tooltips.balloon.content").add(CCBLang.gasName(gas).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
-        tooltip.add(CCBLang.translate("gui.tooltips.balloon.capacity").add(CCBLang.number(Mth.clamp(gas.getAmount(), 0, capacity)).add(mb).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.DARK_GRAY))).style(ChatFormatting.GRAY).component());
+        tooltip.add(CCBLang.translate("gui.tooltips.balloon.content").style(ChatFormatting.GRAY).component());
+        for (GasStack gas : contents.gases()) {
+            Component amount = CCBLang.number(gas.getAmount()).add(CCBLang.translate("gui.goggles.unit.milli_buckets")).component();
+            Component line = Component.literal("  • ").withStyle(ChatFormatting.DARK_GRAY).append(gas.getHoverName().copy().withStyle(ChatFormatting.GOLD)).append(Component.literal(": ").withStyle(ChatFormatting.GRAY)).append(amount.copy().withStyle(ChatFormatting.GRAY));
+            tooltip.add(line);
+            if (flag.isAdvanced()) {
+                tooltip.add(Component.literal("    " + gas.getGasType().getResourceLocation()).withStyle(ChatFormatting.DARK_GRAY));
+            }
+        }
+
+        long displayedAmount = Math.clamp(contents.totalAmount(), 0, Math.max(0, capacity));
+        tooltip.add(CCBLang.translate("gui.tooltips.balloon.capacity").add(CCBLang.number(displayedAmount).add(mb).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.DARK_GRAY))).style(ChatFormatting.GRAY).component());
     }
 
     @Override
@@ -62,5 +76,26 @@ public class BalloonItem extends PackageItem {
         }
 
         return super.open(level, player, hand);
+    }
+
+    @Override
+    public boolean isBarVisible(ItemStack stack) {
+        return BalloonUtils.containsGasContents(stack);
+    }
+
+    @Override
+    public int getBarWidth(ItemStack stack) {
+        BalloonGasContents contents = BalloonUtils.getGasContents(stack);
+        long capacity = BalloonUtils.getCapacity();
+        if (contents.isEmpty() || capacity <= 0) {
+            return 0;
+        }
+
+        return Mth.clamp((int) Math.round(13 * contents.totalAmount() / (double) capacity), 0, 13);
+    }
+
+    @Override
+    public int getBarColor(ItemStack stack) {
+        return BalloonUtils.getDisplayColor(BalloonUtils.getGasContents(stack));
     }
 }

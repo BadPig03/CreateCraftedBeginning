@@ -15,12 +15,13 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+@SuppressWarnings("MethodMayBeStatic")
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(value = ThresholdSwitchBlock.class, remap = false)
 public abstract class ThresholdSwitchBlockMixin {
     @WrapOperation(method = "getStateForPlacement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getCapability(Lnet/neoforged/neoforge/capabilities/BlockCapability;Lnet/minecraft/core/BlockPos;Ljava/lang/Object;)Ljava/lang/Object;", ordinal = 1))
-    private static @Nullable Object ccb$getStateForPlacement(Level level, BlockCapability<?, ?> capability, BlockPos pos, Object context, Operation<Object> original) {
+    private @Nullable Object ccb$getStateForPlacement(Level level, BlockCapability<?, ?> capability, BlockPos pos, Object context, Operation<Object> original) {
         Object fluid = original.call(level, capability, pos, context);
         if (fluid != null) {
             return fluid;

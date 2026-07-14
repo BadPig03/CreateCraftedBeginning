@@ -342,7 +342,7 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
             return;
         }
 
-        boolean remove = button == 1;
+        boolean remove = orderClicked || button == 1;
         int transfer = GasRequestUtils.getStep(hasAltDown(), hasControlDown(), hasShiftDown()) * (orderClicked ? 1 : 10);
         ccb$changeDirectGasOrder(entry, orderClicked, remove, transfer);
         cir.setReturnValue(true);

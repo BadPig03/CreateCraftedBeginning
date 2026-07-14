@@ -47,6 +47,14 @@ public final class BalloonStyleUtils {
         return new ItemStack(styles.get(RANDOM.nextInt(styles.size())));
     }
 
+    public static boolean isRareBalloon(ItemStack stack) {
+        return stack.getItem() instanceof BalloonItem balloon && balloon.isRare();
+    }
+
+    public static boolean isRegularBalloon(ItemStack stack) {
+        return stack.getItem() instanceof BalloonItem balloon && !balloon.isRare();
+    }
+
     public static float getHookDistance(ItemStack box) {
         if (!(box.getItem() instanceof BalloonItem balloon)) {
             return 1;

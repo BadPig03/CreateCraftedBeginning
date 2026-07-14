@@ -16,6 +16,7 @@ import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -24,7 +25,7 @@ public final class BalloonUtils {
     }
 
     public static boolean containsGasContents(ItemStack stack) {
-        return isBalloon(stack) && !stack.getOrDefault(CCBDataComponents.BALLOON_GAS_CONTENT, GasStack.EMPTY).isEmpty();
+        return isBalloon(stack) && !stack.getOrDefault(CCBDataComponents.BALLOON_GAS_CONTENTS, BalloonGasContents.EMPTY).isEmpty();
     }
 
     public static boolean isBalloon(ItemStack stack) {
@@ -39,21 +40,34 @@ public final class BalloonUtils {
         return state.getFluidState().is(FluidTags.WATER) || state.hasProperty(BlockStateProperties.WATERLOGGED) && state.getValue(BlockStateProperties.WATERLOGGED);
     }
 
-    public static GasStack getGasContents(ItemStack stack) {
-        GasStack gas = stack.getOrDefault(CCBDataComponents.BALLOON_GAS_CONTENT, GasStack.EMPTY);
-        if (gas.isEmpty()) {
-            return GasStack.EMPTY;
+    public static BalloonGasContents getGasContents(ItemStack stack) {
+        if (!isBalloon(stack)) {
+            return BalloonGasContents.EMPTY;
         }
-        return gas.copy();
+
+        BalloonGasContents contents = stack.getOrDefault(CCBDataComponents.BALLOON_GAS_CONTENTS, BalloonGasContents.EMPTY);
+        return contents.isEmpty() ? BalloonGasContents.EMPTY : contents.copy();
     }
 
-    public static ItemStack containing(GasStack gas) {
-        if (gas.isEmpty()) {
+    public static ItemStack containing(BalloonGasContents contents) {
+        BalloonGasContents normalized = contents.normalized();
+        if (normalized.isEmpty()) {
             return ItemStack.EMPTY;
         }
 
         ItemStack balloon = BalloonStyleUtils.getRandomBalloon();
-        setGasContents(balloon, gas);
+        setGasContents(balloon, normalized);
+        return balloon;
+    }
+
+    public static ItemStack containingLike(ItemStack template, BalloonGasContents contents) {
+        BalloonGasContents normalized = contents.normalized();
+        if (normalized.isEmpty() || !isBalloon(template)) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack balloon = new ItemStack(template.getItem());
+        setGasContents(balloon, normalized);
         return balloon;
     }
 
@@ -61,17 +75,41 @@ public final class BalloonUtils {
         return CCBConfig.server().airtights.maxGasPerBalloon.get();
     }
 
-    public static void setGasContents(ItemStack stack, GasStack gas) {
+    public static void setGasContents(ItemStack stack, BalloonGasContents contents) {
         if (!isBalloon(stack)) {
             return;
         }
 
-        if (gas.isEmpty()) {
-            stack.remove(CCBDataComponents.BALLOON_GAS_CONTENT);
+        BalloonGasContents normalized = contents.normalized();
+        if (normalized.isEmpty()) {
+            stack.remove(CCBDataComponents.BALLOON_GAS_CONTENTS);
             return;
         }
 
-        stack.set(CCBDataComponents.BALLOON_GAS_CONTENT, gas.copy());
+        stack.set(CCBDataComponents.BALLOON_GAS_CONTENTS, normalized.copy());
+    }
+
+    public static int getDisplayColor(BalloonGasContents contents) {
+        if (contents.isEmpty()) {
+            return 0xFFFFFF;
+        }
+
+        long total = contents.totalAmount();
+        if (total <= 0) {
+            return 0xFFFFFF;
+        }
+
+        double red = 0;
+        double green = 0;
+        double blue = 0;
+        for (GasStack gas : contents.gases()) {
+            int tint = gas.getGasType().getTint();
+            double weight = gas.getAmount() / (double) total;
+            red += (tint >> 16 & 0xFF) * weight;
+            green += (tint >> 8 & 0xFF) * weight;
+            blue += (tint & 0xFF) * weight;
+        }
+        return Mth.clamp((int) Math.round(red), 0, 255) << 16 | Mth.clamp((int) Math.round(green), 0, 255) << 8 | Mth.clamp((int) Math.round(blue), 0, 255);
     }
 
     public static void tickInWater(PackageEntity entity) {
@@ -84,25 +122,51 @@ public final class BalloonUtils {
             return;
         }
 
+        BalloonGasContents contents = getGasContents(entity.getBox());
+        long capacity = getCapacity();
+        double fillRatio = capacity <= 0 ? 0 : Mth.clamp(contents.totalAmount() / (double) capacity, 0, 1);
         Vec3 motion = entity.getDeltaMovement();
-        entity.setDeltaMovement(motion.x * 0.85, motion.y + 0.01, motion.z * 0.85);
+        entity.setDeltaMovement(motion.x * 0.85, motion.y + 0.003 + 0.007 * Math.sqrt(fillRatio), motion.z * 0.85);
         entity.setOnGround(false);
         entity.hasImpulse = true;
     }
 
+    public static void renderGasEffects(PackageEntity entity) {
+        if (!entity.level().isClientSide || !containsGasContents(entity.getBox()) || entity.getDeltaMovement().lengthSqr() < 1.0E-4 || (entity.tickCount & 1) != 0) {
+            return;
+        }
+
+        List<GasStack> gases = getGasContents(entity.getBox()).gases();
+        if (gases.isEmpty()) {
+            return;
+        }
+
+        int index = Math.floorMod(entity.tickCount / 2 + entity.getId(), gases.size());
+        AirtightCannonHandlerUtils.of(gases.get(index).getGasType()).renderTrailParticles(entity.level(), entity.position().add(0, 0.25, 0));
+    }
+
     public static void windBurst(PackageEntity entity) {
-        if (!containsGasContents(entity.getBox())) {
+        BalloonGasContents contents = getGasContents(entity.getBox());
+        if (contents.isEmpty()) {
             return;
         }
 
-        ItemStack box = entity.getBox();
-        GasStack gas = getGasContents(box);
-        if (gas.isEmpty()) {
+        long total = contents.totalAmount();
+        long capacity = getCapacity();
+        if (total <= 0 || capacity <= 0) {
             return;
         }
 
-        float multiplier = Mth.clamp(Mth.sqrt((float) gas.getAmount() / getCapacity()), 0.5f, 2);
-        AirtightCannonHandler cannonHandler = AirtightCannonHandlerUtils.of(gas.getGasType());
-        cannonHandler.explode(entity.level(), entity.position(), entity, multiplier);
+        float totalMultiplier = Mth.clamp(Mth.sqrt((float) total / capacity), 0.5f, 2);
+        for (GasStack gas : contents.gases()) {
+            float share = (float) (gas.getAmount() / (double) total);
+            float multiplier = totalMultiplier * share;
+            if (multiplier <= 0) {
+                continue;
+            }
+
+            AirtightCannonHandler cannonHandler = AirtightCannonHandlerUtils.of(gas.getGasType());
+            cannonHandler.explode(entity.level(), entity.position(), entity, multiplier);
+        }
     }
 }

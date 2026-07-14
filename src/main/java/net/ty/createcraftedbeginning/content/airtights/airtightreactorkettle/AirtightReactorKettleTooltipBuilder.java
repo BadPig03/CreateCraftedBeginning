@@ -80,6 +80,7 @@ public class AirtightReactorKettleTooltipBuilder {
     }
 
     private boolean addStoredInfo(List<Component> tooltip) {
+        int startIndex = tooltip.size();
         CCBLang.translate("gui.goggles.airtight_reactor_kettle").forGoggles(tooltip);
         CCBLang.translate("gui.goggles.airtight_reactor_kettle.contents").style(ChatFormatting.GRAY).forGoggles(tooltip);
         int maxDisplay = CCBConfig.client().maxItemStackDisplay.get();
@@ -125,7 +126,9 @@ public class AirtightReactorKettleTooltipBuilder {
         }
 
         if (listCount == 0) {
-            tooltip.remove(1);
+            while (tooltip.size() > startIndex) {
+                tooltip.removeLast();
+            }
             return false;
         }
 

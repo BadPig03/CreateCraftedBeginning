@@ -39,7 +39,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public abstract class ChainConveyorRendererMixin {
     @SuppressWarnings("SuspiciousNameCombination")
     @Inject(method = "renderBox", at = @At("HEAD"), cancellable = true)
-    private static void ccb$renderBox(ChainConveyorBlockEntity be, PoseStack ms, MultiBufferSource buffer, int overlay, BlockPos pos, ChainConveyorPackage box, float partialTicks, CallbackInfo ci) {
+    private void ccb$renderBox(ChainConveyorBlockEntity be, PoseStack ms, MultiBufferSource buffer, int overlay, BlockPos pos, ChainConveyorPackage box, float partialTicks, CallbackInfo ci) {
         if (box.worldPosition == null) {
             return;
         }

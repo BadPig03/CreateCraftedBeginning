@@ -161,7 +161,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
 
         BlockPos offsetPos = pos.relative(direction);
         BlockState facingState = level.getBlockState(offsetPos);
-        if (facingState.getBlock() instanceof AirtightPumpBlock && facingState.getValue(AirtightPumpBlock.FACING) == direction.getOpposite()) {
+        if (facingState.getBlock() instanceof AirtightPumpBlock && direction.getOpposite() == facingState.getValue(AirtightPumpBlock.FACING)) {
             return AttachmentTypes.NONE;
         }
 

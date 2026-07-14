@@ -62,6 +62,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     private static final int MAX_INPUT_SLOT = 1;
     private static final int MAX_OUTPUT_SLOT = 8;
     private static final int LAZY_TICK_RATE = 4;
+    private static final int RECIPE_FALLBACK_CHECK_RATE = 40;
     private static final int OPERATING_FINISHED = 30;
     private static final int PROCESSING_STARTED = 15;
     private static final float PRESS_HEAD_IDLE_OFFSET = -0.625f;
@@ -92,6 +93,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     private ForgingPressRecipe currentRecipe;
     private SmithingRecipe currentSmithingRecipe;
     private IFluidHandler fluidCapability;
+    private int fallbackRecipeCheckTicks;
     private IGasHandler gasCapability;
     private float operatingTicks;
     private SmartFluidTankBehaviour fluidTank;
@@ -116,6 +118,20 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS.get(), (be, direction) -> be.pressHeadInventory);
+    }
+
+    private static boolean insertOutputs(SmartInventory inventory, List<ItemStack> outputItems) {
+        for (ItemStack stack : outputItems) {
+            if (stack.isEmpty()) {
+                continue;
+            }
+
+            ItemStack remainder = ItemHandlerHelper.insertItemStacked(inventory, stack.copy(), false);
+            if (!remainder.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -145,6 +161,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         }
 
         contentsChanged = false;
+        fallbackRecipeCheckTicks = 0;
         updateChecker.scheduleUpdate();
     }
 
@@ -156,6 +173,12 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         }
 
         core.lazyTick();
+        fallbackRecipeCheckTicks += LAZY_TICK_RATE;
+        if (fallbackRecipeCheckTicks < RECIPE_FALLBACK_CHECK_RATE) {
+            return;
+        }
+
+        fallbackRecipeCheckTicks = 0;
         updateChecker.scheduleUpdate();
     }
 
@@ -254,6 +277,10 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         return inputInventory.isEmpty() && outputInventory.isEmpty() && processingInventory.isEmpty() && pressHeadInventory.isEmpty() && fluidTank.isEmpty() && gasTank.isEmpty();
     }
 
+    public boolean hasRecipeInputs() {
+        return !inputInventory.isEmpty() || !processingInventory.isEmpty() || !fluidTank.isEmpty() || !gasTank.isEmpty();
+    }
+
     public void notifyContentsChanged() {
         contentsChanged = true;
     }
@@ -308,20 +335,9 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     }
 
     public boolean acceptOutputs(List<ItemStack> outputItems, boolean simulate) {
-        SmartInventory simulatedOutput = new SmartInventory(outputInventory.getSlots(), this);
-        simulatedOutput.allowInsertion();
-        for (int slot = 0; slot < outputInventory.getSlots(); slot++) {
-            simulatedOutput.setStackInSlot(slot, outputInventory.getStackInSlot(slot).copy());
-        }
-        for (ItemStack stack : outputItems) {
-            if (stack.isEmpty()) {
-                continue;
-            }
-
-            ItemStack remainder = ItemHandlerHelper.insertItemStacked(simulatedOutput, stack.copy(), false);
-            if (!remainder.isEmpty()) {
-                return false;
-            }
+        SmartInventory simulatedOutput = createOutputSimulation();
+        if (!insertOutputs(simulatedOutput, outputItems)) {
+            return false;
         }
 
         if (simulate) {
@@ -330,23 +346,19 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
 
         outputInventory.allowInsertion();
         try {
-            for (ItemStack stack : outputItems) {
-                if (stack.isEmpty()) {
-                    continue;
-                }
-
-                ItemStack remainder = ItemHandlerHelper.insertItemStacked(outputInventory, stack.copy(), false);
-                if (remainder.isEmpty()) {
-                    continue;
-                }
-
-                return false;
-            }
-
-            return true;
+            return insertOutputs(outputInventory, outputItems);
         } finally {
             outputInventory.forbidInsertion();
         }
+    }
+
+    private SmartInventory createOutputSimulation() {
+        SmartInventory simulatedOutput = new SmartInventory(outputInventory.getSlots(), this);
+        simulatedOutput.allowInsertion();
+        for (int slot = 0; slot < outputInventory.getSlots(); slot++) {
+            simulatedOutput.setStackInSlot(slot, outputInventory.getStackInSlot(slot).copy());
+        }
+        return simulatedOutput;
     }
 
     public float getPressHeadDistance(float partialTicks) {
@@ -389,9 +401,9 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
             return true;
         }
 
-        List<ForgingPressRecipe> recipes = AirtightForgingPressUtils.getMatchingRecipes(this, core);
-        if (!recipes.isEmpty()) {
-            currentRecipe = recipes.getFirst();
+        Optional<ForgingPressRecipe> recipe = AirtightForgingPressUtils.getMatchingRecipe(this);
+        if (recipe.isPresent()) {
+            currentRecipe = recipe.get();
             currentSmithingRecipe = null;
             operating = true;
             operatingTicks = 0;
@@ -436,11 +448,9 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
             return;
         }
 
-
-
         float previousTicks = operatingTicks;
         operatingTicks = Mth.clamp(operatingTicks + operationSpeed, 0, OPERATING_FINISHED);
-        if (level == null || level.isClientSide ) {
+        if (level == null || level.isClientSide) {
             return;
         }
 

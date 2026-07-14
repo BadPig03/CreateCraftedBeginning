@@ -38,6 +38,9 @@ import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasIn
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerRenderer;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerVisual;
+import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerRenderer;
+import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerVisual;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceRenderer;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceVisual;
@@ -112,6 +115,7 @@ public class CCBBlockEntities {
     public static final BlockEntityEntry<AirtightForgingPressStructuralShaftBlockEntity> AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT = CCB_REGISTRATE.blockEntity("airtight_forging_press_structural_shaft", AirtightForgingPressStructuralShaftBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT_BLOCK).renderer(() -> AirtightForgingPressStructuralShaftRenderer::new).register();
 
     public static final BlockEntityEntry<GasPackagerBlockEntity> GAS_PACKAGER = CCB_REGISTRATE.blockEntity("gas_packager", GasPackagerBlockEntity::new).visual(() -> GasPackagerVisual::new).renderer(() -> GasPackagerRenderer::new).validBlock(CCBBlocks.GAS_PACKAGER_BLOCK).register();
+    public static final BlockEntityEntry<GasRepackagerBlockEntity> GAS_REPACKAGER = CCB_REGISTRATE.blockEntity("gas_repackager", GasRepackagerBlockEntity::new).visual(() -> GasRepackagerVisual::new).renderer(() -> GasRepackagerRenderer::new).validBlock(CCBBlocks.GAS_REPACKAGER_BLOCK).register();
     public static final BlockEntityEntry<GasInjectionChamberBlockEntity> GAS_INJECTION_CHAMBER = CCB_REGISTRATE.blockEntity("gas_injection_chamber", GasInjectionChamberBlockEntity::new).validBlock(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK).renderer(() -> GasInjectionChamberRenderer::new).register();
     public static final BlockEntityEntry<AirtightHatchBlockEntity> AIRTIGHT_HATCH = CCB_REGISTRATE.blockEntity("airtight_hatch", AirtightHatchBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_HATCH_BLOCK).register();
     public static final BlockEntityEntry<PortableGasInterfaceBlockEntity> PORTABLE_GAS_INTERFACE = CCB_REGISTRATE.blockEntity("portable_gas_interface", PortableGasInterfaceBlockEntity::new).visual(() -> PortableGasInterfaceVisual::new).validBlock(CCBBlocks.PORTABLE_GAS_INTERFACE_BLOCK).renderer(() -> PortableGasInterfaceRenderer::new).register();

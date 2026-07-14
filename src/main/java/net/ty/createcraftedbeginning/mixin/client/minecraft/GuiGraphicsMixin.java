@@ -28,7 +28,7 @@ public abstract class GuiGraphicsMixin {
     @Unique
     private static boolean ccb$renderingGasTooltip;
 
-    @SuppressWarnings("DataFlowIssue")
+    @SuppressWarnings({"DataFlowIssue", "UnusedAssignment"})
     @Inject(method = "renderTooltip(Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;II)V", at = @At("HEAD"), cancellable = true)
     private void ccb$renderTooltip(Font font, ItemStack stack, int mouseX, int mouseY, CallbackInfo ci) {
         if (ccb$renderingGasTooltip) {

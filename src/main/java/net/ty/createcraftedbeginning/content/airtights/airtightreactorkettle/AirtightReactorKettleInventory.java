@@ -3,6 +3,9 @@ package net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle;
 import com.simibubi.create.foundation.item.SmartInventory;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import net.neoforged.neoforge.items.ItemStackHandler;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -16,23 +19,44 @@ public class AirtightReactorKettleInventory extends SmartInventory {
         this.blockEntity = blockEntity;
     }
 
-    @Override
-    public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-        int firstFreeSlot = -1;
-        for (int i = 0; i < getSlots(); i++) {
-            if (i != slot && ItemStack.isSameItemSameComponents(stack, inv.getStackInSlot(i))) {
-                return stack;
+    public static IItemHandlerModifiable createSimulation(int slots) {
+        return new ItemStackHandler(slots) {
+            @Override
+            public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+                if (!isInsertionAllowed(this, slot, stack)) {
+                    return stack;
+                }
+                return super.insertItem(slot, stack, simulate);
             }
-            if (!inv.getStackInSlot(i).isEmpty() || firstFreeSlot != -1) {
+
+            @Override
+            public int getSlotLimit(int slot) {
+                return 64;
+            }
+        };
+    }
+
+    private static boolean isInsertionAllowed(IItemHandler inventory, int slot, ItemStack stack) {
+        int firstFreeSlot = -1;
+        for (int i = 0; i < inventory.getSlots(); i++) {
+            ItemStack stackInSlot = inventory.getStackInSlot(i);
+            if (i != slot && ItemStack.isSameItemSameComponents(stack, stackInSlot)) {
+                return false;
+            }
+            if (!stackInSlot.isEmpty() || firstFreeSlot != -1) {
                 continue;
             }
 
             firstFreeSlot = i;
         }
-        if (inv.getStackInSlot(slot).isEmpty() && firstFreeSlot != slot) {
+        return !inventory.getStackInSlot(slot).isEmpty() || firstFreeSlot == slot;
+    }
+
+    @Override
+    public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+        if (!isInsertionAllowed(this, slot, stack)) {
             return stack;
         }
-
         return super.insertItem(slot, stack, simulate);
     }
 

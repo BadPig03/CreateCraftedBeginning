@@ -8,6 +8,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
+import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonUtils;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Unmodifiable;
@@ -53,6 +54,10 @@ public final class GasVirtualUtils {
 
         if (isVirtualItem(stack)) {
             return List.of(stack.copyWithCount(1));
+        }
+
+        if (BalloonUtils.containsGasContents(stack)) {
+            return BalloonUtils.getGasContents(stack).gases().stream().map(GasVirtualUtils::createVirtualItem).filter(virtual -> !virtual.isEmpty()).map(virtual -> virtual.copyWithCount(1)).toList();
         }
 
         IGasCanisterContainer container = stack.getCapability(GasHandler.ITEM);

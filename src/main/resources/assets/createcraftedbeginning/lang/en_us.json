@@ -185,6 +185,7 @@
   "block.createcraftedbeginning.gas_canister": "Gas Canister",
   "block.createcraftedbeginning.gas_injection_chamber": "Gas Injection Chamber",
   "block.createcraftedbeginning.gas_packager": "Gas Packager",
+  "block.createcraftedbeginning.gas_repackager": "Gas Repackager",
   "block.createcraftedbeginning.horizontal_airtight_tank": "Horizontal Airtight Tank",
   "block.createcraftedbeginning.obsidian_bricks": "Obsidian Bricks",
   "block.createcraftedbeginning.obsidian_bricks_a": "Obsidian Bricks - A",

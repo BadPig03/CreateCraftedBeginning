@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightforgingpress;
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.AllSoundEvents;
@@ -41,10 +42,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class AirtightForgingPressUtils {
+    private static final Object FORGING_RECIPE_CACHE_KEY = new Object();
+    private static final AtomicBoolean RECIPE_TRIE_FAILURE_LOGGED = new AtomicBoolean();
+
     private AirtightForgingPressUtils() {
     }
 
@@ -56,43 +62,43 @@ public final class AirtightForgingPressUtils {
         };
     }
 
-    public static List<ForgingPressRecipe> getMatchingRecipes(AirtightForgingPressBlockEntity press, Object cacheObject) {
-        List<ForgingPressRecipe> list = new ArrayList<>();
-        if (press.isEmpty()) {
-            return list;
+    public static Optional<ForgingPressRecipe> getMatchingRecipe(AirtightForgingPressBlockEntity press) {
+        if (!press.hasRecipeInputs()) {
+            return Optional.empty();
         }
 
         Level level = press.getLevel();
         if (level == null) {
-            return list;
+            return Optional.empty();
         }
 
         try {
             IItemHandler availableItems = press.getItemCapability();
             IFluidHandler availableFluids = press.getFluidCapability();
             IGasHandler availableGases = press.getGasCapability();
-
-            AirtightWithGasRecipeTrie<?> trie = AirtightWithGasRecipeTrieFinder.get(cacheObject, level, holder -> holder.value() instanceof ForgingPressRecipe);
+            AirtightWithGasRecipeTrie<?> trie = AirtightWithGasRecipeTrieFinder.get(FORGING_RECIPE_CACHE_KEY, level, holder -> holder.value() instanceof ForgingPressRecipe);
             Set<AbstractVariant> availableVariants = AirtightWithGasRecipeTrie.getVariants(availableItems, availableFluids, availableGases);
-            for (Recipe<?> r : trie.lookup(availableVariants)) {
-                if (!(r instanceof ForgingPressRecipe pressRecipe) || !ForgingPressRecipe.match(press, pressRecipe)) {
-                    continue;
+            for (Recipe<?> candidate : trie.lookup(availableVariants)) {
+                if (candidate instanceof ForgingPressRecipe pressRecipe && ForgingPressRecipe.match(press, pressRecipe)) {
+                    return Optional.of(pressRecipe);
                 }
-
-                list.add(pressRecipe);
             }
-        } catch (Exception e) {
-            CreateCraftedBeginning.LOGGER.error("Failed to get recipe trie, falling back to slow logic: ", e);
-            list.clear();
-            for (RecipeHolder<? extends Recipe<?>> r : RecipeFinder.get(cacheObject, level, holder -> holder.value() instanceof ForgingPressRecipe)) {
-                if (!(r.value() instanceof ForgingPressRecipe pressRecipe) || !ForgingPressRecipe.match(press, pressRecipe)) {
-                    continue;
-                }
-
-                list.add(pressRecipe);
+        } catch (ExecutionException | UncheckedExecutionException e) {
+            if (RECIPE_TRIE_FAILURE_LOGGED.compareAndSet(false, true)) {
+                CreateCraftedBeginning.LOGGER.error("Failed to build the airtight forging press recipe trie; falling back to a linear recipe search", e);
             }
         }
-        return list;
+
+        for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(FORGING_RECIPE_CACHE_KEY, level, recipe -> recipe.value() instanceof ForgingPressRecipe)) {
+            if (holder.value() instanceof ForgingPressRecipe pressRecipe && ForgingPressRecipe.match(press, pressRecipe)) {
+                return Optional.of(pressRecipe);
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static void invalidateRecipeCaches() {
+        RECIPE_TRIE_FAILURE_LOGGED.set(false);
     }
 
     public static void insertItemEntity(AirtightForgingPressStructuralBlockEntity structural, ItemEntity itemEntity) {

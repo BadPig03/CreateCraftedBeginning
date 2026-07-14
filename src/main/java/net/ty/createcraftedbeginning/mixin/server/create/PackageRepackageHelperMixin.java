@@ -11,12 +11,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+@SuppressWarnings("MethodMayBeStatic")
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(value = PackageRepackageHelper.class, remap = false)
 public abstract class PackageRepackageHelperMixin {
     @Inject(method = "isFragmented", at = @At("HEAD"), cancellable = true)
-    private static void ccb$isFragmented(ItemStack box, CallbackInfoReturnable<Boolean> cir) {
+    private void ccb$isFragmented(ItemStack box, CallbackInfoReturnable<Boolean> cir) {
         if (!BalloonUtils.containsGasContents(box)) {
             return;
         }

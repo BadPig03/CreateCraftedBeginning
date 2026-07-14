@@ -40,6 +40,8 @@ public class SmartGasTankBehaviour extends BlockEntityBehaviour {
     protected boolean extractionAllowed;
     protected boolean insertionAllowed;
     protected Runnable gasUpdateCallback;
+    protected int mutationDepth;
+    protected boolean mutationDirty;
 
     public SmartGasTankBehaviour(BehaviourType<SmartGasTankBehaviour> type, SmartBlockEntity be, int tanks, long tankCapacity, boolean enforceVariety) {
         super(be);
@@ -89,9 +91,47 @@ public class SmartGasTankBehaviour extends BlockEntityBehaviour {
     }
 
     public void sendDataImmediately() {
+        if (mutationDepth > 0) {
+            mutationDirty = true;
+            return;
+        }
         syncCooldown = 0;
         queuedSync = false;
         updateGases();
+    }
+
+    public void beginMutation() {
+        mutationDepth++;
+    }
+
+    public boolean endMutation() {
+        if (mutationDepth <= 0) {
+            throw new IllegalStateException("Unbalanced gas tank mutation scope");
+        }
+        mutationDepth--;
+        if (mutationDepth != 0) {
+            return false;
+        }
+        boolean changed = mutationDirty;
+        mutationDirty = false;
+        return changed;
+    }
+
+    public void replaceContents(GasStack[] contents, int offset) {
+        if (offset < 0 || offset + tanks.length > contents.length) {
+            throw new IllegalArgumentException("Invalid gas tank snapshot");
+        }
+        for (int tank = 0; tank < tanks.length; tank++) {
+            GasStack replacement = contents[offset + tank].copy();
+            GasStack current = tanks[tank].tank.getGasStack();
+            if (replacement.getAmount() > tanks[tank].tank.getCapacity()) {
+                throw new IllegalArgumentException("Gas snapshot exceeds tank capacity");
+            }
+            if (replacement.isEmpty() && current.isEmpty() || replacement.getAmount() == current.getAmount() && GasStack.isSameGasSameComponents(replacement, current)) {
+                continue;
+            }
+            tanks[tank].tank.setGasStack(replacement);
+        }
     }
 
     protected void updateGases() {
@@ -101,6 +141,10 @@ public class SmartGasTankBehaviour extends BlockEntityBehaviour {
     }
 
     public void sendDataLazily() {
+        if (mutationDepth > 0) {
+            mutationDirty = true;
+            return;
+        }
         if (syncCooldown > 0) {
             queuedSync = true;
             return;

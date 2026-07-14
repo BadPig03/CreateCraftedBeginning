@@ -15,12 +15,13 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+@SuppressWarnings("MethodMayBeStatic")
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(value = SmartObserverBlock.class, remap = false)
 public abstract class SmartObserverBlockMixin {
     @ModifyVariable(method = "getStateForPlacement", at = @At("LOAD"), ordinal = 0)
-    private static boolean ccb$canDetect(boolean canDetect, BlockPlaceContext context, @Local @Nullable BlockEntity blockEntity) {
+    private boolean ccb$getStateForPlacement(boolean canDetect, BlockPlaceContext context, @Local @Nullable BlockEntity blockEntity) {
         if (canDetect || blockEntity == null) {
             return canDetect;
         }

@@ -309,6 +309,18 @@ public final class CCBBlockBuilderTransformer {
     }
 
     @Contract(pure = true)
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> gasRepackager() {
+        return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.getEntry()).forAllStates(state -> {
+            String suffix = state.getValue(PackagerBlock.POWERED) ? "powered" : "";
+            Direction facing = state.getValue(PackagerBlock.FACING);
+            boolean isVertical = facing.getAxis() == Axis.Y;
+            ModelFile model = isVertical ? AssetLookup.partialBaseModel(c, p, "vertical", suffix) : AssetLookup.partialBaseModel(c, p, suffix);
+            int rotationY = isVertical ? 0 : (int) facing.toYRot();
+            return ConfiguredModel.builder().modelFile(model).rotationY(rotationY).build();
+        })).properties(p -> p.isRedstoneConductor((state, level, pos) -> false)).item().model(AssetLookup::customItemModel).build();
+    }
+
+    @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> portableGasInterface() {
         return b -> b.blockstate((c, p) -> p.directionalBlock(c.get(), AssetLookup.partialBaseModel(c, p))).onRegister(movementBehaviour(new PortableGasInterfaceMovement())).item().properties(Properties::fireResistant).tag(AllItemTags.CONTRAPTION_CONTROLLED.tag).transform(customItemModel());
     }

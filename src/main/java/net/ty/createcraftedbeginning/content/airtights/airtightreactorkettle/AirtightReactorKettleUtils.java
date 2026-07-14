@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle;
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.content.fluids.transfer.GenericItemEmptying;
 import com.simibubi.create.content.fluids.transfer.GenericItemFilling;
@@ -9,7 +10,6 @@ import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTank
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour.TankSegment;
 import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.simibubi.create.foundation.recipe.RecipeFinder;
-import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -28,7 +28,6 @@ import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.ShapelessRecipe;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -51,10 +50,16 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class AirtightReactorKettleUtils {
+    private static final Object CRAFTING_RECIPE_CACHE_KEY = new Object();
+    private static final Object REACTOR_RECIPE_CACHE_KEY = new Object();
+    private static final AtomicBoolean RECIPE_TRIE_FAILURE_LOGGED = new AtomicBoolean();
+
     private AirtightReactorKettleUtils() {
     }
 
@@ -66,69 +71,73 @@ public final class AirtightReactorKettleUtils {
         };
     }
 
-    public static List<ReactorKettleRecipe> getMatchingRecipes(AirtightReactorKettleBlockEntity kettle, Object cacheObject) {
-        List<ReactorKettleRecipe> list = new ArrayList<>();
+    public static Optional<ReactorKettleRecipe> getMatchingRecipe(AirtightReactorKettleBlockEntity kettle) {
         if (kettle.isEmpty()) {
-            return list;
+            return Optional.empty();
         }
 
         Level level = kettle.getLevel();
         if (level == null) {
-            return list;
+            return Optional.empty();
         }
 
         try {
             IItemHandler availableItems = kettle.getItemCapability();
             IFluidHandler availableFluids = kettle.getFluidCapability();
             IGasHandler availableGases = kettle.getGasCapability();
-            AirtightWithGasRecipeTrie<?> trie = AirtightWithGasRecipeTrieFinder.get(cacheObject, level, holder -> holder.value() instanceof ReactorKettleRecipe);
+            AirtightWithGasRecipeTrie<?> trie = AirtightWithGasRecipeTrieFinder.get(REACTOR_RECIPE_CACHE_KEY, level, holder -> holder.value() instanceof ReactorKettleRecipe);
             Set<AbstractVariant> availableVariants = AirtightWithGasRecipeTrie.getVariants(availableItems, availableFluids, availableGases);
-            for (Recipe<?> r : trie.lookup(availableVariants)) {
-                if (!(r instanceof ReactorKettleRecipe kettleRecipe) || !ReactorKettleRecipe.match(kettle, kettleRecipe)) {
-                    continue;
+            for (Recipe<?> candidate : trie.lookup(availableVariants)) {
+                if (candidate instanceof ReactorKettleRecipe kettleRecipe && ReactorKettleRecipe.match(kettle, kettleRecipe)) {
+                    return Optional.of(kettleRecipe);
                 }
-
-                list.add(kettleRecipe);
             }
-        } catch (Exception e) {
-            CreateCraftedBeginning.LOGGER.error("Failed to get recipe trie, falling back to slow logic: ", e);
-            list.clear();
-            for (RecipeHolder<? extends Recipe<?>> r : RecipeFinder.get(cacheObject, level, holder -> holder.value() instanceof ReactorKettleRecipe)) {
-                if (!(r.value() instanceof ReactorKettleRecipe kettleRecipe) || !ReactorKettleRecipe.match(kettle, kettleRecipe)) {
-                    continue;
-                }
-
-                list.add(kettleRecipe);
+        } catch (ExecutionException | UncheckedExecutionException e) {
+            if (RECIPE_TRIE_FAILURE_LOGGED.compareAndSet(false, true)) {
+                CreateCraftedBeginning.LOGGER.error("Failed to build the reactor kettle recipe trie; falling back to a linear recipe search", e);
             }
         }
-        return list;
+
+        for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(REACTOR_RECIPE_CACHE_KEY, level, recipe -> recipe.value() instanceof ReactorKettleRecipe)) {
+            if (holder.value() instanceof ReactorKettleRecipe kettleRecipe && ReactorKettleRecipe.match(kettle, kettleRecipe)) {
+                return Optional.of(kettleRecipe);
+            }
+        }
+        return Optional.empty();
     }
 
-    public static float getTotalFluidUnits(Couple<SmartFluidTankBehaviour> fluidTanks, float partialTicks) {
-        int fluids = 0;
+    public static void invalidateRecipeCaches() {
+        RECIPE_TRIE_FAILURE_LOGGED.set(false);
+    }
+
+    public static float getTotalFluidUnits(SmartFluidTankBehaviour inputTank, SmartFluidTankBehaviour outputTank, float partialTicks) {
+        return getFluidUnits(inputTank, partialTicks) + getFluidUnits(outputTank, partialTicks);
+    }
+
+    public static int getTotalFluidCapacity(SmartFluidTankBehaviour inputTank, SmartFluidTankBehaviour outputTank) {
+        return getFluidCapacity(inputTank) + getFluidCapacity(outputTank);
+    }
+
+    private static int getFluidCapacity(SmartFluidTankBehaviour behaviour) {
+        IFluidHandler capability = behaviour.getCapability();
+        int capacity = 0;
+        for (int tank = 0; tank < capability.getTanks(); tank++) {
+            capacity += capability.getTankCapacity(tank);
+        }
+        return capacity;
+    }
+
+    private static float getFluidUnits(SmartFluidTankBehaviour behaviour, float partialTicks) {
         float totalUnits = 0;
-        for (SmartFluidTankBehaviour behaviour : fluidTanks) {
-            if (behaviour == null) {
+        for (TankSegment tankSegment : behaviour.getTanks()) {
+            if (tankSegment.getRenderedFluid().isEmpty()) {
                 continue;
             }
 
-            for (TankSegment tankSegment : behaviour.getTanks()) {
-                if (tankSegment.getRenderedFluid().isEmpty()) {
-                    continue;
-                }
-
-                float units = tankSegment.getTotalUnits(partialTicks);
-                if (units < 1) {
-                    continue;
-                }
-
+            float units = tankSegment.getTotalUnits(partialTicks);
+            if (units >= 1) {
                 totalUnits += units;
-                fluids++;
             }
-        }
-
-        if (fluids == 0 || totalUnits < 1) {
-            return 0;
         }
         return totalUnits;
     }
@@ -243,23 +252,12 @@ public final class AirtightReactorKettleUtils {
             return Optional.empty();
         }
 
-        try {
-            for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(kettle, level, AirtightReactorKettleUtils::isAllowedRecipe)) {
-                if (!(holder.value() instanceof CraftingRecipe craftingRecipe) || !canResultPassTest(kettle, craftingRecipe) || !canApplyCraftingRecipe(kettle, craftingRecipe)) {
-                    continue;
-                }
-
-                return Optional.of(new RecipeHolder<>(holder.id(), craftingRecipe));
+        for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(CRAFTING_RECIPE_CACHE_KEY, level, AirtightReactorKettleUtils::isAllowedRecipe)) {
+            if (!(holder.value() instanceof CraftingRecipe craftingRecipe) || !canResultPassTest(kettle, craftingRecipe) || !canApplyCraftingRecipe(kettle, craftingRecipe)) {
+                continue;
             }
-        } catch (Exception e) {
-            CreateCraftedBeginning.LOGGER.error("Failed to get shapeless crafting recipes, falling back to slow logic: ", e);
-            for (RecipeHolder<CraftingRecipe> holder : level.getRecipeManager().getAllRecipesFor(RecipeType.CRAFTING)) {
-                if (!isAllowedRecipe(holder) || !canResultPassTest(kettle, holder.value()) || !canApplyCraftingRecipe(kettle, holder.value())) {
-                    continue;
-                }
 
-                return Optional.of(holder);
-            }
+            return Optional.of(new RecipeHolder<>(holder.id(), craftingRecipe));
         }
         return Optional.empty();
     }

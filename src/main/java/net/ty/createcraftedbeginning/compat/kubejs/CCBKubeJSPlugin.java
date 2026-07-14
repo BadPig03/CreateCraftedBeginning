@@ -8,13 +8,13 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightArmHandlerEvent;
 import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightArmorsHandlerEvent;
 import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightCannonHandlerEvent;
+import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightCoolantHandlerEvent;
 import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightDrainageHandlerEvent;
 import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightDrillHandlerEvent;
 import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightEngineHandlerEvent;
 import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightFillHandlerEvent;
 import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightThermoregulatorHandlerEvent;
 import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightTurbineHandlerEvent;
-import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightCoolantHandlerEvent;
 import net.ty.createcraftedbeginning.compat.kubejs.registry.GasKubeJSBuilder;
 import net.ty.createcraftedbeginning.registry.CCBRegistries;
 

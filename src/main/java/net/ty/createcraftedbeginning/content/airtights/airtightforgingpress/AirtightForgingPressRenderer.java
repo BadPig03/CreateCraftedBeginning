@@ -25,6 +25,11 @@ import java.util.Random;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<AirtightForgingPressBlockEntity> {
+    private static final float OUTPUT_RADIUS = 0.5f;
+    private static final int MAX_OUTPUT_SLOTS = 8;
+    private static final OutputPlacement[] OUTPUT_PLACEMENTS = createOutputPlacements();
+    private static final ThreadLocal<Random> RENDER_RANDOM = ThreadLocal.withInitial(Random::new);
+
     public AirtightForgingPressRenderer(Context context) {
         super(context);
     }
@@ -56,7 +61,7 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
         }
         TransformStack.of(ms).nudge(0);
 
-        Random random = new Random(be.getBlockPos().asLong());
+        Random random = getRenderRandom(be.getBlockPos().asLong());
         DepotRenderer.renderItem(ms, buffer, light, overlay, stack, Mth.floor(360 * random.nextFloat()), random, itemPosition, false);
 
         ms.popPose();
@@ -73,7 +78,7 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
         ms.translate(0.5f, -0.0625f, 0.5f);
         TransformStack.of(ms).nudge(0);
 
-        Random random = new Random(be.getBlockPos().asLong());
+        Random random = getRenderRandom(be.getBlockPos().asLong());
         DepotRenderer.renderItem(ms, buffer, light, overlay, stack, Mth.floor(360 * random.nextFloat()), random, itemPosition, false);
 
         ms.popPose();
@@ -90,8 +95,6 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
         ms.translate(0.5f, -0.0625f, 0.5f);
 
         long posLong = be.getBlockPos().asLong();
-        float radius = 0.5f;
-        float outputBaseAngle = 0;
         for (int slot = 0; slot < slots; slot++) {
             ItemStack stack = outputInventory.getStackInSlot(slot);
             if (stack.isEmpty()) {
@@ -100,17 +103,16 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
 
             ms.pushPose();
 
-            float angle = outputBaseAngle + 360.0f / slots * slot;
-            TransformStack.of(ms).rotateYDegrees(angle);
-            ms.translate(radius, 0, 0);
+            OutputPlacement placement = OUTPUT_PLACEMENTS[slot];
+            TransformStack.of(ms).rotateYDegrees(placement.angle());
+            ms.translate(OUTPUT_RADIUS, 0, 0);
 
-            Random random = new Random(slot + posLong);
-            float rad = angle / 180.0f * Mth.PI;
-            Vec3 outputItemPosition = itemPosition.add(Mth.cos(rad) * radius, 0, -Mth.sin(rad) * radius);
+            Random random = getRenderRandom(slot + posLong);
+            Vec3 outputItemPosition = itemPosition.add(placement.offset());
             int itemAngle = Mth.floor(360 * random.nextFloat());
             boolean renderUpright = BeltHelper.isItemUpright(stack);
             if (renderUpright) {
-                TransformStack.of(ms).rotateYDegrees(-angle);
+                TransformStack.of(ms).rotateYDegrees(-placement.angle());
             }
 
             DepotRenderer.renderItem(ms, buffer, light, overlay, stack, renderUpright ? itemAngle + 90 : itemAngle, random, outputItemPosition, false);
@@ -121,6 +123,23 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
         ms.popPose();
     }
 
+    private static Random getRenderRandom(long seed) {
+        Random random = RENDER_RANDOM.get();
+        random.setSeed(seed);
+        return random;
+    }
+
+    private static OutputPlacement[] createOutputPlacements() {
+        OutputPlacement[] placements = new OutputPlacement[MAX_OUTPUT_SLOTS];
+        for (int slot = 0; slot < placements.length; slot++) {
+            float angle = 360.0f / placements.length * slot;
+            float radians = angle / 180.0f * Mth.PI;
+            Vec3 offset = new Vec3(Mth.cos(radians) * OUTPUT_RADIUS, 0, -Mth.sin(radians) * OUTPUT_RADIUS);
+            placements[slot] = new OutputPlacement(angle, offset);
+        }
+        return placements;
+    }
+
     @Override
     protected void renderSafe(AirtightForgingPressBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         super.renderSafe(be, partialTicks, ms, buffer, light, overlay);
@@ -128,8 +147,5 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
         renderItems(be, partialTicks, ms, buffer, light, overlay);
     }
 
-    @Override
-    public boolean shouldRenderOffScreen(AirtightForgingPressBlockEntity kettle) {
-        return true;
-    }
+    private record OutputPlacement(float angle, Vec3 offset) {}
 }

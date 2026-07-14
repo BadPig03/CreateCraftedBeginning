@@ -62,8 +62,7 @@ public final class GasPropagator {
                 visited.add(targetPos);
                 BlockState targetState = level.getBlockState(targetPos);
                 if (targetState.getBlock() instanceof AirtightPumpBlock) {
-                    Direction facing = targetState.getValue(AirtightPumpBlock.FACING);
-                    if (facing.getAxis() == direction.getAxis() && level.getBlockEntity(targetPos) instanceof AirtightPumpBlockEntity pump) {
+                    if (targetState.getBlock() instanceof AirtightPumpBlock && targetState.getValue(AirtightPumpBlock.FACING).getAxis() == direction.getAxis() && level.getBlockEntity(targetPos) instanceof AirtightPumpBlockEntity pump) {
                         discoveredPumps.add(Pair.of(pump, direction.getOpposite()));
                     }
                     continue;
@@ -163,7 +162,7 @@ public final class GasPropagator {
             return false;
         }
 
-        if (AirtightPumpBlock.isPump(targetState) && targetState.getValue(AirtightPumpBlock.FACING).getAxis() == side.getAxis()) {
+        if (targetState.getBlock() instanceof AirtightPumpBlock && targetState.getValue(AirtightPumpBlock.FACING).getAxis() == side.getAxis()) {
             return false;
         }
 

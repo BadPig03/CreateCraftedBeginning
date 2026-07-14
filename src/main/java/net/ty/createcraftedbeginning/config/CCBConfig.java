@@ -16,7 +16,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.function.Supplier;
 
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
@@ -31,11 +30,7 @@ public class CCBConfig {
         common = register(CCBCommon::new, Type.COMMON);
         server = register(CCBServer::new, Type.SERVER);
         client = register(CCBClient::new, Type.CLIENT);
-
-        for (Entry<Type, ConfigBase> pair : CONFIGS.entrySet()) {
-            container.registerConfig(pair.getKey(), pair.getValue().specification);
-        }
-
+        CONFIGS.forEach((key, value) -> container.registerConfig(key, value.specification));
         CCBStress stress = server().stressValues;
         BlockStressValues.IMPACTS.registerProvider(stress::getImpact);
         BlockStressValues.CAPACITIES.registerProvider(stress::getCapacity);
@@ -68,23 +63,11 @@ public class CCBConfig {
 
     @SubscribeEvent
     public static void onLoad(Loading event) {
-        for (ConfigBase config : CONFIGS.values()) {
-            if (config.specification != event.getConfig().getSpec()) {
-                continue;
-            }
-
-            config.onLoad();
-        }
+        CONFIGS.values().stream().filter(config -> config.specification == event.getConfig().getSpec()).forEach(ConfigBase::onLoad);
     }
 
     @SubscribeEvent
     public static void onReload(Reloading event) {
-        for (ConfigBase config : CONFIGS.values()) {
-            if (config.specification != event.getConfig().getSpec()) {
-                continue;
-            }
-
-            config.onReload();
-        }
+        CONFIGS.values().stream().filter(config -> config.specification == event.getConfig().getSpec()).forEach(ConfigBase::onReload);
     }
 }

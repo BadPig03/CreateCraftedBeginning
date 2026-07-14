@@ -25,12 +25,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@SuppressWarnings("MethodMayBeStatic")
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(value = StockKeeperTransferHandler.class, remap = false)
 public abstract class StockKeeperTransferHandlerMixin {
     @Inject(method = "transferRecipeOnClient", at = @At("HEAD"), cancellable = true)
-    private static void ccb$transferRecipeOnClient(StockKeeperRequestMenu container, RecipeHolder<Recipe<?>> recipeHolder, IRecipeSlotsView recipeSlots, Player player, boolean maxTransfer, boolean doTransfer, CallbackInfoReturnable<@Nullable IRecipeTransferError> cir) {
+    private void ccb$transferRecipeOnClient(StockKeeperRequestMenu container, RecipeHolder<Recipe<?>> recipeHolder, IRecipeSlotsView recipeSlots, Player player, boolean maxTransfer, boolean doTransfer, CallbackInfoReturnable<@Nullable IRecipeTransferError> cir) {
         if (!(StockKeeperTransferUtils.containsGasIngredient(recipeSlots, RecipeIngredientRole.INPUT) || StockKeeperTransferUtils.containsGasIngredient(recipeSlots, RecipeIngredientRole.OUTPUT))) {
             return;
         }

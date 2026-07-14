@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:gas_repackager"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:gas_packager"
+  }
+}

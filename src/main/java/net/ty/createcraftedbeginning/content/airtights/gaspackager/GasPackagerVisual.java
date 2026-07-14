@@ -58,7 +58,6 @@ public class GasPackagerVisual extends AbstractBlockEntityVisual<GasPackagerBloc
 
     @Override
     public void collectCrumblingInstances(Consumer<@Nullable Instance> consumer) {
-
     }
 
     @Override

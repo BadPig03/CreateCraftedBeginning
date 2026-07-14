@@ -73,6 +73,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     public static final int MAX_FLUID_CAPACITY = 9000;
 
     private static final int LAZY_TICK_RATE = 4;
+    private static final int RECIPE_FALLBACK_CHECK_RATE = 40;
     private static final int MAX_ITEM_SLOT = 27;
     private static final int OPERATING_FINISHED = 40;
     private static final int PROCESSING_STARTED = 20;
@@ -87,8 +88,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
 
     private final AirtightReactorKettleCore core;
     private final AirtightReactorKettleInventory inputInventory;
-    private final Couple<SmartFluidTankBehaviour> fluidTanks;
-    private final Couple<SmartGasTankBehaviour> gasTanks;
     private final Couple<SmartInventory> inventories;
     private final IItemHandlerModifiable itemCapability;
     private final LerpedFloat ingredientRotation;
@@ -105,6 +104,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     private DeferralBehaviour updateChecker;
     private IFluidHandler fluidCapability;
     private IGasHandler gasCapability;
+    private int fallbackRecipeCheckTicks;
     private int operatingTicks;
     private int processingTicks = -1;
     private CraftingRecipe currentCraftingRecipe;
@@ -126,9 +126,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         outputInventory.whenContentsChanged($ -> contentsChanged = true);
         itemCapability = new CombinedInvWrapper(inputInventory, outputInventory);
         inventories = Couple.create(inputInventory, outputInventory);
-
-        fluidTanks = Couple.create(inputFluidTank, outputFluidTank);
-        gasTanks = Couple.create(inputGasTank, outputGasTank);
 
         ingredientRotation = LerpedFloat.angular().startWithValue(0);
         ingredientRotationSpeed = LerpedFloat.linear().startWithValue(0);
@@ -185,6 +182,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         }
 
         contentsChanged = false;
+        fallbackRecipeCheckTicks = 0;
         updateChecker.scheduleUpdate();
     }
 
@@ -196,6 +194,12 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         }
 
         core.lazyTick();
+        fallbackRecipeCheckTicks += LAZY_TICK_RATE;
+        if (fallbackRecipeCheckTicks < RECIPE_FALLBACK_CHECK_RATE) {
+            return;
+        }
+
+        fallbackRecipeCheckTicks = 0;
         updateChecker.scheduleUpdate();
     }
 
@@ -296,7 +300,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
                 return false;
             }
 
-            SmartInventory simulatedOutput = new SmartInventory(outputInventory.getSlots(), this);
+            IItemHandlerModifiable simulatedOutput = AirtightReactorKettleInventory.createSimulation(outputInventory.getSlots());
             for (int slot = 0; slot < outputInventory.getSlots(); slot++) {
                 simulatedOutput.setStackInSlot(slot, outputInventory.getStackInSlot(slot).copy());
             }
@@ -427,12 +431,20 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         return filterChanged;
     }
 
-    public Couple<SmartFluidTankBehaviour> getFluidTanks() {
-        return fluidTanks;
+    public SmartFluidTankBehaviour getInputFluidTank() {
+        return inputFluidTank;
     }
 
-    public Couple<SmartGasTankBehaviour> getGasTanks() {
-        return gasTanks;
+    public SmartFluidTankBehaviour getOutputFluidTank() {
+        return outputFluidTank;
+    }
+
+    public SmartGasTankBehaviour getInputGasTank() {
+        return inputGasTank;
+    }
+
+    public SmartGasTankBehaviour getOutputGasTank() {
+        return outputGasTank;
     }
 
     public Couple<SmartInventory> getInventories() {
@@ -547,9 +559,9 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
             return true;
         }
 
-        List<ReactorKettleRecipe> recipes = AirtightReactorKettleUtils.getMatchingRecipes(this, core);
-        if (!recipes.isEmpty()) {
-            currentRecipe = recipes.getFirst();
+        Optional<ReactorKettleRecipe> recipe = AirtightReactorKettleUtils.getMatchingRecipe(this);
+        if (recipe.isPresent()) {
+            currentRecipe = recipe.get();
             currentCraftingRecipe = null;
             operating = true;
             operatingTicks = 0;
@@ -593,18 +605,25 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     }
 
     private void tickOperation() {
-        if (filterChanged) {
-            filterChanged = false;
-            update(true);
-            return;
-        }
-
         if (level == null) {
             return;
         }
 
+        boolean clientSide = level.isClientSide && !isVirtual();
+        if (filterChanged) {
+            filterChanged = false;
+            if (!clientSide) {
+                update(true);
+            }
+            return;
+        }
+
         if (!level.isClientSide) {
-            windowsOpenState = shouldKeepWindowsOpen();
+            boolean newWindowsOpenState = shouldKeepWindowsOpen();
+            if (newWindowsOpenState != windowsOpenState) {
+                windowsOpenState = newWindowsOpenState;
+                sendData();
+            }
         }
         updateRotationSpeed(operating && operatingTicks <= PROCESSING_STARTED);
         updateWindowDistance();
@@ -613,17 +632,23 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         }
 
         if (operatingTicks >= OPERATING_FINISHED) {
-            update(true);
+            if (!clientSide) {
+                update(true);
+            }
             return;
         }
 
-        if ((level instanceof PonderLevel ? SpeedLevel.FAST.getSpeedValue() : Mth.abs(core.getStructureManager().getSpeed())) < SpeedLevel.FAST.getSpeedValue()) {
+        if (!clientSide && (level instanceof PonderLevel ? SpeedLevel.FAST.getSpeedValue() : Mth.abs(core.getStructureManager().getSpeed())) < SpeedLevel.FAST.getSpeedValue()) {
             update(false);
             return;
         }
 
         if (operatingTicks != PROCESSING_STARTED) {
             operatingTicks++;
+            return;
+        }
+
+        if (clientSide) {
             return;
         }
 
@@ -637,7 +662,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
                 absSpeed = SpeedLevel.FAST.getSpeedValue();
             }
             processingTicks = Mth.clamp(Mth.log2((int) (256 / absSpeed)) * Mth.ceil(recipeSpeed * 15) + 1, 1, 1000);
-            if (fluidTanks.both(SmartFluidTankBehaviour::isEmpty)) {
+            if (inputFluidTank.isEmpty() && outputFluidTank.isEmpty()) {
                 return;
             }
 
@@ -673,7 +698,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
 
         inputFluidTank.sendDataImmediately();
         inputGasTank.sendDataImmediately();
-        sendData();
         contentsChanged = true;
 
         boolean canContinue;
@@ -683,11 +707,11 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         else {
             canContinue = currentCraftingRecipe != null && AirtightReactorKettleUtils.matchCraftingRecipe(this, currentCraftingRecipe);
         }
-        if (!canContinue) {
-            return;
+        if (canContinue) {
+            operatingTicks = PROCESSING_STARTED;
         }
 
-        operatingTicks = PROCESSING_STARTED;
+        sendData();
     }
 
     private void update(boolean schedule) {

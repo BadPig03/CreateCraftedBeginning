@@ -185,6 +185,7 @@
   "block.createcraftedbeginning.gas_canister": "气罐",
   "block.createcraftedbeginning.gas_injection_chamber": "注气室",
   "block.createcraftedbeginning.gas_packager": "气体打包机",
+  "block.createcraftedbeginning.gas_repackager": "气体理包机",
   "block.createcraftedbeginning.horizontal_airtight_tank": "横向气密储罐",
   "block.createcraftedbeginning.obsidian_bricks": "黑曜石砖块",
   "block.createcraftedbeginning.obsidian_bricks_a": "黑曜石砖块-A",

@@ -41,6 +41,7 @@ import net.ty.createcraftedbeginning.content.airtights.creativegascanister.Creat
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterBlock;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlock;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBlock;
+import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerBlock;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceBlock;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlock;
 import net.ty.createcraftedbeginning.content.airtights.smartairtightpipe.SmartAirtightPipeBlock;
@@ -127,6 +128,7 @@ public class CCBBlocks {
     public static final BlockEntry<AirtightForgingPressStructuralShaftBlock> AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT_BLOCK = CCB_REGISTRATE.block("airtight_forging_press_structural_shaft", AirtightForgingPressStructuralShaftBlock::new).clientExtension(() -> AirtightForgingMachineStructuralRenderProperties::new).transform(CCBStress.setImpact(16)).transform(CCBBlockBuilderTransformer.airtightForgingPressStructuralShaft()).lang("Airtight Forging Press").transform(airtightStructural()).register();
 
     public static final BlockEntry<GasPackagerBlock> GAS_PACKAGER_BLOCK = CCB_REGISTRATE.block("gas_packager", GasPackagerBlock::new).transform(CCBBlockBuilderTransformer.gasPackager()).transform(airtightPropertiesWithoutOcclusion()).register();
+    public static final BlockEntry<GasRepackagerBlock> GAS_REPACKAGER_BLOCK = CCB_REGISTRATE.block("gas_repackager", GasRepackagerBlock::new).transform(CCBBlockBuilderTransformer.gasRepackager()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<GasInjectionChamberBlock> GAS_INJECTION_CHAMBER_BLOCK = CCB_REGISTRATE.block("gas_injection_chamber", GasInjectionChamberBlock::new).transform(CCBBlockBuilderTransformer.gasInjectionChamber()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<AirtightHatchBlock> AIRTIGHT_HATCH_BLOCK = CCB_REGISTRATE.block("airtight_hatch", AirtightHatchBlock::new).transform(CCBBlockBuilderTransformer.airtightHatch()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<PortableGasInterfaceBlock> PORTABLE_GAS_INTERFACE_BLOCK = CCB_REGISTRATE.block("portable_gas_interface", PortableGasInterfaceBlock::new).transform(CCBBlockBuilderTransformer.portableGasInterface()).transform(airtightPropertiesWithoutOcclusion()).register();

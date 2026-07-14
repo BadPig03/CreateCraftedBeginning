@@ -17,6 +17,7 @@ import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.templates.AirtightHandheldDrillMiningTemplates;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
+import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonGasContents;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateContents;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe.SequencedAssemblyWithGas;
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +52,7 @@ public class CCBDataComponents {
     public static final DataComponentType<ItemContainerContents> AIRTIGHT_UPGRADABLE_INVENTORY = register("airtight_upgradable_inventory", builder -> builder.persistent(ItemContainerContents.CODEC).networkSynchronized(ItemContainerContents.STREAM_CODEC));
     public static final DataComponentType<List<AirtightUpgradeStatus>> AIRTIGHT_UPGRADE_STATUS = register("airtight_upgrade_status", builder -> builder.persistent(AirtightUpgradeStatus.CODEC.listOf()).networkSynchronized(CatnipStreamCodecBuilders.list(AirtightUpgradeStatus.STREAM_CODEC)));
 
-    public static final DataComponentType<GasStack> BALLOON_GAS_CONTENT = register("balloon_gas_content", builder -> builder.persistent(GasStack.OPTIONAL_CODEC).networkSynchronized(GasStack.OPTIONAL_STREAM_CODEC));
+    public static final DataComponentType<BalloonGasContents> BALLOON_GAS_CONTENTS = register("balloon_gas_contents", builder -> builder.persistent(BalloonGasContents.CODEC).networkSynchronized(BalloonGasContents.STREAM_CODEC));
     public static final DataComponentType<Integer> GAS_VIRTUAL_ITEM_COLOR = register("gas_virtual_item_color", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
     public static final DataComponentType<GasStack> GAS_VIRTUAL_ITEM_TYPE = register("gas_virtual_item_type", builder -> builder.persistent(GasStack.OPTIONAL_CODEC).networkSynchronized(GasStack.OPTIONAL_STREAM_CODEC));
 

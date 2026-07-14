@@ -23,12 +23,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+@SuppressWarnings("MethodMayBeStatic")
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(value = FrogportRenderer.class, remap = false)
 public abstract class FrogportRendererMixin {
     @Inject(method = "renderPackage", at = @At("HEAD"), cancellable = true)
-    private static void ccb$renderPackage(FrogportBlockEntity blockEntity, PoseStack ms, MultiBufferSource buffer, int light, int overlay, Vec3 diff, float scale, float itemDistance, CallbackInfo ci) {
+    private void ccb$renderPackage(FrogportBlockEntity blockEntity, PoseStack ms, MultiBufferSource buffer, int light, int overlay, Vec3 diff, float scale, float itemDistance, CallbackInfo ci) {
         ItemStack boxItem = blockEntity.animatedPackage;
         if (boxItem == null || !BalloonUtils.isBalloon(boxItem)) {
             return;

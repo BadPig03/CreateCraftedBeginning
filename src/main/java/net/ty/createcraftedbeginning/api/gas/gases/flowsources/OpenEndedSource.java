@@ -17,8 +17,8 @@ import net.ty.createcraftedbeginning.api.fillhandlers.AirtightFillHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTransporter;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTransporter;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.data.CCBGases;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
@@ -133,17 +133,22 @@ public final class OpenEndedSource extends GasFlowSource {
                 return GasStack.EMPTY;
             }
 
-            boolean isEmpty = resource == null;
+            boolean isEmptyRequest = resource == null;
             if (amount > BUFFER_CAPACITY) {
                 amount = BUFFER_CAPACITY;
-                if (!isEmpty) {
+                if (!isEmptyRequest) {
                     resource = resource.copyWithAmount(amount);
                 }
             }
 
-            GasStack drainedInternal = isEmpty ? super.drain(amount, action) : super.drain(resource, action);
+            GasStack drainedTotal = GasStack.EMPTY;
+            GasStack drainedInternal = isEmptyRequest ? super.drain(amount, action) : super.drain(resource, action);
             if (!drainedInternal.isEmpty()) {
-                return drainedInternal;
+                drainedTotal = drainedInternal.copy();
+                amount -= drainedInternal.getAmount();
+                if (amount <= 0) {
+                    return drainedTotal;
+                }
             }
 
             GasStack drainedFromWorld = GasStack.EMPTY;
@@ -156,29 +161,45 @@ public final class OpenEndedSource extends GasFlowSource {
                     drainedFromWorld = new GasStack(fillHandler.apply(level, targetPos, targetState), BUFFER_CAPACITY);
                 }
             }
+            if (drainedFromWorld.isEmpty()) {
+                return drainedTotal;
+            }
 
-            if (drainedFromWorld.isEmpty() || !isEmpty && !GasStack.isSameGasSameComponents(drainedFromWorld, resource)) {
-                return GasStack.EMPTY;
+            if (!isEmptyRequest && !GasStack.isSameGasSameComponents(drainedFromWorld, resource)) {
+                return drainedTotal;
+            }
+
+            if (isEmptyRequest && !drainedTotal.isEmpty() && !GasStack.isSameGasSameComponents(drainedFromWorld, drainedTotal)) {
+                return drainedTotal;
             }
 
             long drainedAmount = Math.min(amount, drainedFromWorld.getAmount());
-            long remainder = drainedFromWorld.getAmount() - drainedAmount;
-            drainedFromWorld.setAmount(drainedAmount);
-            if (action.simulate()) {
-                return drainedFromWorld;
+            if (drainedAmount <= 0) {
+                return drainedTotal;
             }
 
-            if (remainder > 0) {
-                GasStack gasStack = getGasStack();
-                if (!gasStack.isEmpty() && !GasStack.isSameGasSameComponents(gasStack, drainedFromWorld)) {
-                    setGasStack(GasStack.EMPTY);
+            long remainder = drainedFromWorld.getAmount() - drainedAmount;
+            GasStack worldPart = drainedFromWorld.copyWithAmount(drainedAmount);
+
+            if (action.execute()) {
+                if (remainder > 0) {
+                    GasStack gasStack = getGasStack();
+                    if (!gasStack.isEmpty() && !GasStack.isSameGasSameComponents(gasStack, worldPart)) {
+                        setGasStack(GasStack.EMPTY);
+                    }
+                    super.fill(worldPart.copyWithAmount(remainder), GasAction.EXECUTE);
                 }
-                super.fill(drainedFromWorld.copyWithAmount(remainder), GasAction.EXECUTE);
+                if (worldPart.is(CCBGases.SPORE_AIR) && level.getBlockEntity(pos) instanceof IGasTransporter transporter) {
+                    transporter.getAdvancementBehaviour().awardPlayer(CCBAdvancements.GASEOUS_VARIATIONS);
+                }
             }
-            if (drainedFromWorld.is(CCBGases.SPORE_AIR) && level.getBlockEntity(pos) instanceof IGasTransporter transporter) {
-                transporter.getAdvancementBehaviour().awardPlayer(CCBAdvancements.GASEOUS_VARIATIONS);
+
+            if (drainedTotal.isEmpty()) {
+                return worldPart;
             }
-            return drainedFromWorld;
+
+            drainedTotal.grow(worldPart.getAmount());
+            return drainedTotal;
         }
     }
 }

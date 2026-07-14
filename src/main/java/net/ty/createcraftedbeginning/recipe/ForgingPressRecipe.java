@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.recipe;
 
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
-import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour.TankSegment;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
@@ -15,12 +14,13 @@ import net.minecraft.world.item.crafting.SmithingTrimRecipe;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.neoforged.neoforge.items.IItemHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
 import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity;
@@ -73,21 +73,15 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
         }
 
         IItemHandler pressHeadInv = press.getProcessingInventories().getFirst();
-        IItemHandler topInv = press.getProcessingInventories().getSecond();
-        IItemHandler bottomInv = press.getInputOutputInventories().getFirst();
-        IFluidHandler availableFluids = press.getFluidCapability();
-        IGasHandler availableGases = press.getGasCapability();
-        if (availableFluids == null || availableGases == null) {
-            return false;
-        }
-
-        Ingredient bottomIngredient = getIngredient(recipe, 0);
         Ingredient pressHeadIngredient = getIngredient(recipe, 1);
-        Ingredient topIngredient = getIngredient(recipe, 2);
         if (!matchesNonConsumableSlot(pressHeadInv, pressHeadIngredient)) {
             return false;
         }
 
+        IItemHandler topInv = press.getProcessingInventories().getSecond();
+        IItemHandler bottomInv = press.getInputOutputInventories().getFirst();
+        Ingredient bottomIngredient = getIngredient(recipe, 0);
+        Ingredient topIngredient = getIngredient(recipe, 2);
         int crafts = getMaxItemCrafts(topInv, topIngredient, bottomInv, bottomIngredient);
         if (crafts <= 0) {
             return false;
@@ -98,6 +92,8 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
             return false;
         }
 
+        IFluidHandler availableFluids = press.getFluidCapability();
+        IGasHandler availableGases = press.getGasCapability();
         int[] extractedFluidsFromTank = new int[availableFluids.getTanks()];
         long[] extractedGasesFromTank = new long[availableGases.getTanks()];
         while (crafts > 0) {
@@ -139,8 +135,7 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
         if (!bottomIngredient.isEmpty()) {
             bottomInv.extractItem(0, crafts, false);
         }
-        executePlannedFluidAndGasConsumption(press, availableFluids, availableGases, extractedFluidsFromTank, extractedGasesFromTank);
-        return press.acceptOutputs(outputItems, false);
+        return executePlannedFluidAndGasConsumption(availableFluids, availableGases, extractedFluidsFromTank, extractedGasesFromTank) && press.acceptOutputs(outputItems, false);
     }
 
     private static Ingredient getIngredient(ForgingPressRecipe recipe, int index) {
@@ -285,34 +280,41 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
         return true;
     }
 
-    private static void executePlannedFluidAndGasConsumption(AirtightForgingPressBlockEntity press, IFluidHandler availableFluids, IGasHandler availableGases, int @NotNull [] extractedFluidsFromTank, long[] extractedGasesFromTank) {
-        boolean fluidsAffected = false;
+    private static boolean executePlannedFluidAndGasConsumption(IFluidHandler availableFluids, IGasHandler availableGases, int @NotNull [] extractedFluidsFromTank, long[] extractedGasesFromTank) {
         for (int tank = 0; tank < extractedFluidsFromTank.length; tank++) {
             int amount = extractedFluidsFromTank[tank];
             if (amount <= 0) {
                 continue;
             }
 
-            availableFluids.getFluidInTank(tank).shrink(amount);
-            fluidsAffected = true;
-        }
-        if (fluidsAffected) {
-            press.getFluidTank().forEach(TankSegment::onFluidStackChanged);
+            FluidStack stored = availableFluids.getFluidInTank(tank);
+            if (stored.isEmpty()) {
+                return false;
+            }
+
+            FluidStack drained = availableFluids.drain(stored.copyWithAmount(amount), FluidAction.EXECUTE);
+            if (drained.getAmount() != amount) {
+                return false;
+            }
         }
 
-        boolean gasesAffected = false;
         for (int tank = 0; tank < extractedGasesFromTank.length; tank++) {
             long amount = extractedGasesFromTank[tank];
             if (amount <= 0) {
                 continue;
             }
 
-            availableGases.getGasInTank(tank).shrink(amount);
-            gasesAffected = true;
+            GasStack stored = availableGases.getGasInTank(tank);
+            if (stored.isEmpty()) {
+                return false;
+            }
+
+            GasStack drained = availableGases.drain(stored.copyWithAmount(amount), GasAction.EXECUTE);
+            if (drained.getAmount() != amount) {
+                return false;
+            }
         }
-        if (gasesAffected) {
-            press.getGasTank().forEach(SmartGasTankBehaviour.TankSegment::onGasStackChanged);
-        }
+        return true;
     }
 
     private static boolean outputsPassFilter(AirtightForgingPressBlockEntity press, List<ItemStack> outputs) {

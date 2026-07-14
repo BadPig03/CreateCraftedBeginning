@@ -10,7 +10,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasRequestUtils {
-
     private GasRequestUtils() {
     }
 
