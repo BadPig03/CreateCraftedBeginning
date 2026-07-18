@@ -12,12 +12,12 @@ import net.ty.createcraftedbeginning.registry.CCBArmorMaterials;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Locale;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightBaseArmorItem extends ArmorItem {
-    protected final ResourceLocation textureLoc = CreateCraftedBeginning.asResource("airtight");
+    private static final ResourceLocation OUTER_TEXTURE = CreateCraftedBeginning.asResource("textures/models/armor/airtight_layer_1.png");
+    private static final ResourceLocation INNER_TEXTURE = CreateCraftedBeginning.asResource("textures/models/armor/airtight_layer_2.png");
 
     public AirtightBaseArmorItem(Type type, Properties properties) {
         super(CCBArmorMaterials.AIRTIGHT, type, properties.stacksTo(1));
@@ -25,6 +25,6 @@ public class AirtightBaseArmorItem extends ArmorItem {
 
     @Override
     public @Nullable ResourceLocation getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot, Layer layer, boolean innerModel) {
-        return ResourceLocation.parse(String.format(Locale.ROOT, "%s:textures/models/armor/%s_layer_%d.png", textureLoc.getNamespace(), textureLoc.getPath(), slot == EquipmentSlot.LEGS ? 2 : 1));
+        return slot == EquipmentSlot.LEGS ? INNER_TEXTURE : OUTER_TEXTURE;
     }
 }

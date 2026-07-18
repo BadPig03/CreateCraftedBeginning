@@ -15,9 +15,12 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock.VentState;
+import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -58,37 +61,33 @@ public class AirVentScenes {
         scene.overlay().showText(60).text("Placed Air Vents automatically connect to adjacent vents").pointAt(centerVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(30);
-        scene.world().setBlock(centerAbovePos, CCBBlocks.AIR_VENT_BLOCK.getDefaultState(), false);
+        placeAirVent(scene, centerAbovePos);
         scene.world().showSection(centerAboveSelection, Direction.DOWN);
 
         scene.idle(5);
-        scene.world().setBlock(centerAbove2Pos, CCBBlocks.AIR_VENT_BLOCK.getDefaultState(), false);
+        placeAirVent(scene, centerAbove2Pos);
         scene.world().showSection(centerAbove2Selection, Direction.DOWN);
 
         scene.idle(5);
         scene.effects().indicateSuccess(centerPos);
         scene.effects().indicateSuccess(centerAbovePos);
-        scene.world().modifyBlock(centerPos, s -> s.setValue(AirVentBlock.UP, VentState.CONNECTED), false);
-        scene.world().modifyBlock(centerAbovePos, s -> s.setValue(AirVentBlock.DOWN, VentState.CONNECTED), false);
 
         scene.idle(5);
         scene.effects().indicateSuccess(centerAbovePos);
         scene.effects().indicateSuccess(centerAbove2Pos);
-        scene.world().modifyBlock(centerAbovePos, s -> s.setValue(AirVentBlock.UP, VentState.CONNECTED), false);
-        scene.world().modifyBlock(centerAbove2Pos, s -> s.setValue(AirVentBlock.DOWN, VentState.CONNECTED), false);
 
         scene.idle(35);
         scene.overlay().showControls(eastControlVec, Pointing.RIGHT, 67).rightClick().withItem(wrenchItem.copy());
 
         scene.idle(7);
-        scene.world().modifyBlock(centerPos, s -> s.setValue(AirVentBlock.NORTH, VentState.CLOSED), false);
+        scene.world().modifyBlockEntity(centerPos, AirVentBlockEntity.class, be -> be.setLouverState(Direction.NORTH, VentState.CLOSED));
         scene.overlay().showText(60).text("Use a Wrench to install Louvered Vents on Air Vents").colored(PonderPalette.BLUE).pointAt(centerVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.overlay().showControls(eastControlVec, Pointing.RIGHT, 67).rightClick();
 
         scene.idle(7);
-        scene.world().modifyBlock(centerPos, s -> s.setValue(AirVentBlock.NORTH, VentState.OPENED), false);
+        scene.world().modifyBlockEntity(centerPos, AirVentBlockEntity.class, be -> be.setLouverState(Direction.NORTH, VentState.OPENED));
         scene.overlay().showText(60).text("Right-click with empty hand to open Louvered Vents").colored(PonderPalette.BLUE).pointAt(centerVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
@@ -111,13 +110,13 @@ public class AirVentScenes {
         scene.overlay().showControls(westControlVec, Pointing.RIGHT, 27).rightClick().withItem(wrenchItem.copy());
 
         scene.idle(7);
-        scene.world().modifyBlock(centerPos, s -> s.setValue(AirVentBlock.SOUTH, VentState.CLOSED), false);
+        scene.world().modifyBlockEntity(centerPos, AirVentBlockEntity.class, be -> be.setLouverState(Direction.SOUTH, VentState.CLOSED));
 
         scene.idle(27);
         scene.overlay().showControls(westControlVec, Pointing.RIGHT, 27).rightClick();
 
         scene.idle(7);
-        scene.world().modifyBlock(centerPos, s -> s.setValue(AirVentBlock.SOUTH, VentState.OPENED), false);
+        scene.world().modifyBlockEntity(centerPos, AirVentBlockEntity.class, be -> be.setLouverState(Direction.SOUTH, VentState.OPENED));
         scene.special().rotateParrot(parrot, 0, 360, 0, 60);
         scene.special().moveParrot(parrot, util.vector().of(0, 0, 3), 60);
 
@@ -126,5 +125,13 @@ public class AirVentScenes {
 
         scene.idle(60);
         scene.markAsFinished();
+    }
+
+    private static void placeAirVent(CreateSceneBuilder scene, BlockPos pos) {
+        scene.addInstruction(ponderScene -> {
+            Level level = ponderScene.getWorld();
+            BlockState state = AirVentBlock.withConnections(CCBBlocks.AIR_VENT_BLOCK.getDefaultState(), level, pos);
+            level.setBlockAndUpdate(pos, state);
+        });
     }
 }

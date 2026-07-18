@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.smartairtightpipe;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.simibubi.create.content.fluids.pipes.IAxisPipe;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform;
@@ -13,24 +12,19 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes;
 import net.ty.createcraftedbeginning.api.gas.gases.GasPropagator;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasFilteringBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe.DirectionalFacing;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTransporter;
-import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
-import net.ty.createcraftedbeginning.content.airtights.airtightpipe.IAirtightPipeDrain;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AxisGasTransportBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -54,8 +48,8 @@ public class SmartAirtightPipeBlockEntity extends SmartBlockEntity implements IG
         advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.GASEOUS_VARIATIONS, CCBAdvancements.MINTY_FRESH);
         behaviours.add(advancementBehaviour);
 
-        SmartPipeTransportBehaviour transportBehaviour = new SmartPipeTransportBehaviour(this);
-        behaviours.add(transportBehaviour);
+        SmartPipeTransportBehaviour transport = new SmartPipeTransportBehaviour(this);
+        behaviours.add(transport);
     }
 
     @Override
@@ -80,38 +74,9 @@ public class SmartAirtightPipeBlockEntity extends SmartBlockEntity implements IG
         GasPropagator.propagatePipe(level, worldPosition, getBlockState());
     }
 
-    public class SmartPipeTransportBehaviour extends GasTransportBehaviour {
+    public class SmartPipeTransportBehaviour extends AxisGasTransportBehaviour {
         public SmartPipeTransportBehaviour(SmartBlockEntity be) {
             super(be);
-        }
-
-        @Override
-        public boolean canHaveFlowToward(BlockState state, Direction direction) {
-            if (state.getValue(SmartAirtightPipeBlock.AXIS) != direction.getAxis()) {
-                return false;
-            }
-
-            BlockPos otherPos = worldPosition.relative(direction);
-            Level level = getWorld();
-            return isValidAirtightComponents(level, otherPos, level.getBlockState(otherPos), direction);
-        }
-
-        @Override
-        public AttachmentTypes getRenderedRimAttachment(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction direction) {
-            if (isIncorrectAxis(state, direction)) {
-                return AttachmentTypes.NONE;
-            }
-
-            BlockState otherState = level.getBlockState(pos.relative(direction));
-            Block otherBlock = otherState.getBlock();
-            Axis axis = state.getValue(AirtightCheckValveBlock.AXIS);
-            if (otherBlock instanceof IAxisPipe axisPipe && axisPipe.getAxis(otherState) == axis) {
-                return AttachmentTypes.NONE;
-            }
-            else if (otherBlock instanceof IAirtightPipeDrain) {
-                return AttachmentTypes.DRAIN;
-            }
-            return AttachmentTypes.RIM;
         }
 
         @Override
@@ -124,31 +89,30 @@ public class SmartAirtightPipeBlockEntity extends SmartBlockEntity implements IG
         @Override
         public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, BlockState state) {
             Axis axis = state.getValue(SmartAirtightPipeBlock.AXIS);
-            if (axis == Axis.Y) {
-                DirectionalFacing facing = state.getValue(IDirectionalPipe.DIRECTIONAL_FACING);
-                return switch (facing) {
-                    case SOUTH -> VecHelper.voxelSpace(8, 8, 1.5f);
-                    case WEST -> VecHelper.voxelSpace(14.5f, 8, 8);
-                    case EAST -> VecHelper.voxelSpace(1.5f, 8, 8);
-                    default -> VecHelper.voxelSpace(8, 8, 14.5f);
-                };
+            if (axis != Axis.Y) {
+                return VecHelper.rotateCentered(VecHelper.voxelSpace(8, 14.5f, 8), 90, Axis.Y);
             }
-            return VecHelper.rotateCentered(VecHelper.voxelSpace(8, 14.5f, 8), 90, Axis.Y);
+
+            DirectionalFacing facing = state.getValue(IDirectionalPipe.DIRECTIONAL_FACING);
+            return switch (facing) {
+                case SOUTH -> VecHelper.voxelSpace(8, 8, 1.5f);
+                case WEST -> VecHelper.voxelSpace(14.5f, 8, 8);
+                case EAST -> VecHelper.voxelSpace(1.5f, 8, 8);
+                default -> VecHelper.voxelSpace(8, 8, 14.5f);
+            };
         }
 
         @Override
         public void rotate(LevelAccessor level, BlockPos pos, BlockState state, PoseStack ms) {
             Axis axis = state.getValue(SmartAirtightPipeBlock.AXIS);
             DirectionalFacing facing = state.getValue(IDirectionalPipe.DIRECTIONAL_FACING);
-            TransformStack<PoseTransformStack> transformStack = TransformStack.of(ms);
-            if (axis == Axis.Y) {
-                transformStack.rotateYDegrees(DirectionalFacing.getYAngle(facing));
-            }
-            else if (axis == Axis.Z) {
-                transformStack.rotateYDegrees(DirectionalFacing.getYAngle(facing)).rotateXDegrees(90);
-            }
-            else {
-                transformStack.rotateYDegrees(DirectionalFacing.getYAngle(facing) + 90).rotateXDegrees(90);
+            TransformStack<PoseTransformStack> transform = TransformStack.of(ms);
+            int yAngle = DirectionalFacing.getYAngle(facing);
+
+            switch (axis) {
+                case Y -> transform.rotateYDegrees(yAngle);
+                case Z -> transform.rotateYDegrees(yAngle).rotateXDegrees(90);
+                case X -> transform.rotateYDegrees(yAngle + 90).rotateXDegrees(90);
             }
         }
 

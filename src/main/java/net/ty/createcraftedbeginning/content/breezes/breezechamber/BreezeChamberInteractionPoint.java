@@ -27,12 +27,11 @@ public class BreezeChamberInteractionPoint extends DepositOnlyArmInteractionPoin
         if (input.isEmpty()) {
             return remainder;
         }
-        else {
-            if (!simulate) {
-                Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), remainder);
-            }
-            return input;
+
+        if (!simulate) {
+            Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), remainder);
         }
+        return input;
     }
 
     public static class BreezeChamberType extends ArmInteractionPointType {

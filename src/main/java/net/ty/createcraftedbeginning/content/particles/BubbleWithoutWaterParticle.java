@@ -20,7 +20,7 @@ public class BubbleWithoutWaterParticle extends TextureSheetParticle {
     protected BubbleWithoutWaterParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
         super(level, x, y, z);
         setSize(0.02f, 0.02f);
-        quadSize = quadSize * (random.nextFloat() * 0.6f + 0.2f);
+        quadSize *= random.nextFloat() * 0.6f + 0.2f;
         xd = xSpeed * 0.2f + (Math.random() * 2 - 1) * 0.02f;
         yd = ySpeed * 0.2f + (Math.random() * 2 - 1) * 0.02f;
         zd = zSpeed * 0.2f + (Math.random() * 2 - 1) * 0.02f;
@@ -51,16 +51,16 @@ public class BubbleWithoutWaterParticle extends TextureSheetParticle {
 
     @OnlyIn(Dist.CLIENT)
     public static class Provider implements ParticleProvider<SimpleParticleType> {
-        private final SpriteSet sprite;
+        private final SpriteSet sprites;
 
         public Provider(SpriteSet sprites) {
-            sprite = sprites;
+            this.sprites = sprites;
         }
 
         @Override
         public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
             BubbleWithoutWaterParticle particle = new BubbleWithoutWaterParticle(level, x, y, z, xSpeed, ySpeed, zSpeed);
-            particle.pickSprite(sprite);
+            particle.pickSprite(sprites);
             return particle;
         }
     }

@@ -23,19 +23,20 @@ public class AirtightReactorKettleStructuralCogRenderer extends KineticBlockEnti
     }
 
     @Override
-    protected void renderSafe(AirtightReactorKettleStructuralCogBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        BlockState state = be.getBlockState();
-        if (state.getValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION) == AirtightReactorKettleStructuralPosition.TOP_CENTER) {
+    protected void renderSafe(AirtightReactorKettleStructuralCogBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        BlockState state = blockEntity.getBlockState();
+        AirtightReactorKettleStructuralPosition position = state.getValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION);
+        if (position == AirtightReactorKettleStructuralPosition.TOP_CENTER) {
             return;
         }
 
-        BlockPos pos = be.getBlockPos();
-        SuperByteBuffer cogsModel = getRotatedModel(be, be.getBlockState());
-        kineticRotationTransform(cogsModel, be, Axis.Y, getAngleForBe(be, pos, Axis.Y), light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
+        BlockPos pos = blockEntity.getBlockPos();
+        SuperByteBuffer cogsModel = getRotatedModel(blockEntity, state);
+        kineticRotationTransform(cogsModel, blockEntity, Axis.Y, getAngleForBe(blockEntity, pos, Axis.Y), light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
     }
 
     @Override
-    protected SuperByteBuffer getRotatedModel(AirtightReactorKettleStructuralCogBlockEntity be, BlockState blockState) {
-        return CachedBuffers.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_COGS, blockState);
+    protected SuperByteBuffer getRotatedModel(AirtightReactorKettleStructuralCogBlockEntity blockEntity, BlockState state) {
+        return CachedBuffers.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_COGS, state);
     }
 }

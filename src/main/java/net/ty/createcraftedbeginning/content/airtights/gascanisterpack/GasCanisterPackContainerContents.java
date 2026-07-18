@@ -5,23 +5,23 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.GasStackLinkedSet;
+import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
+@SuppressWarnings("unused")
 public class GasCanisterPackContainerContents implements IGasCanisterContainer {
     public static final int MAX_COUNT = 4;
 
@@ -39,18 +39,18 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
         creatives = new ArrayList<>(pack.getOrDefault(CCBDataComponents.CANISTER_PACK_CONTAINER_CREATIVES, new ArrayList<>(List.of(false, false, false, false))));
     }
 
-    private static boolean validateSlot(int tank) {
+    private static boolean isInvalidTank(int tank) {
         return tank < 0 || tank >= MAX_COUNT;
     }
 
     @Override
     public boolean isEmpty() {
-        return IntStream.range(0, MAX_COUNT).allMatch(i -> getGasInTank(i).isEmpty());
+        return IntStream.range(0, MAX_COUNT).allMatch(tank -> getGasInTank(tank).isEmpty());
     }
 
     @Override
     public boolean isFull() {
-        return IntStream.range(0, MAX_COUNT).noneMatch(i -> getGasInTank(i).getAmount() < getTankCapacity(i));
+        return IntStream.range(0, MAX_COUNT).noneMatch(tank -> getGasInTank(tank).getAmount() < getTankCapacity(tank));
     }
 
     @Override
@@ -60,7 +60,7 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
 
     @Override
     public GasStack drain(int tank, GasStack resource, GasAction action) {
-        if (validateSlot(tank) || resource.isEmpty() || !GasStack.isSameGasSameComponents(resource, getGasInTank(tank))) {
+        if (isInvalidTank(tank) || resource.isEmpty() || !GasStack.isSameGasSameComponents(resource, getGasInTank(tank))) {
             return GasStack.EMPTY;
         }
 
@@ -69,7 +69,7 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
 
     @Override
     public GasStack drain(int tank, long maxDrain, GasAction action) {
-        if (validateSlot(tank)) {
+        if (isInvalidTank(tank)) {
             return GasStack.EMPTY;
         }
 
@@ -82,17 +82,17 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
         }
 
         long drained = Math.min(maxDrain, gas.getAmount());
-        GasStack copied = gas.copyWithAmount(drained);
+        GasStack drainedGas = gas.copyWithAmount(drained);
         if (action.execute() && drained > 0) {
             gases.get(tank).shrink(drained);
             save();
         }
-        return copied;
+        return drainedGas;
     }
 
     @Override
     public GasStack getGasInTank(int tank) {
-        if (validateSlot(tank)) {
+        if (isInvalidTank(tank)) {
             return GasStack.EMPTY;
         }
 
@@ -127,21 +127,15 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
             return List.of(ItemStack.EMPTY);
         }
 
-        Set<Gas> existingGasTypes = new HashSet<>();
+        Set<GasStack> uniqueGases = GasStackLinkedSet.createTypeAndComponentsSet();
         List<ItemStack> items = new ArrayList<>();
-        for (int i = 0; i < MAX_COUNT; i++) {
-            GasStack gasContent = getGasInTank(i);
-            if (gasContent.isEmpty()) {
+        for (int tank = 0; tank < MAX_COUNT; tank++) {
+            GasStack gas = getGasInTank(tank).copyWithAmount(1);
+            if (gas.isEmpty() || !uniqueGases.add(gas)) {
                 continue;
             }
 
-            Gas gasType = gasContent.getGasType();
-            if (existingGasTypes.contains(gasType)) {
-                continue;
-            }
-
-            existingGasTypes.add(gasType);
-            items.add(GasVirtualUtils.createVirtualItem(gasContent));
+            items.add(GasVirtualUtils.createVirtualItem(gas));
         }
 
         return items.stream().toList();
@@ -149,7 +143,7 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
 
     @Override
     public long fill(int tank, GasStack resource, GasAction action) {
-        if (resource.isEmpty() || validateSlot(tank)) {
+        if (resource.isEmpty() || isInvalidTank(tank)) {
             return 0;
         }
 
@@ -164,28 +158,28 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
         }
 
         if (gas.isEmpty()) {
-            long amountToAdd = Math.min(capacity, resource.getAmount());
-            gases.set(tank, resource.copyWithAmount(amountToAdd));
+            long filled = Math.min(capacity, resource.getAmount());
+            gases.set(tank, resource.copyWithAmount(filled));
             save();
-            return amountToAdd;
+            return filled;
         }
 
         if (!GasStack.isSameGasSameComponents(gas, resource)) {
             return 0;
         }
 
-        long remainingSpace = capacity - gas.getAmount();
-        long amountToTransfer = Math.min(remainingSpace, resource.getAmount());
-        gases.get(tank).grow(amountToTransfer);
-        if (amountToTransfer > 0) {
+        long space = capacity - gas.getAmount();
+        long filled = Math.min(space, resource.getAmount());
+        gases.get(tank).grow(filled);
+        if (filled > 0) {
             save();
         }
-        return amountToTransfer;
+        return filled;
     }
 
     @Override
     public long getTankCapacity(int tank) {
-        if (validateSlot(tank)) {
+        if (isInvalidTank(tank)) {
             return 0;
         }
 
@@ -215,7 +209,7 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
     }
 
     public CompoundTag getCompoundTag(int tank) {
-        if (validateSlot(tank)) {
+        if (isInvalidTank(tank)) {
             return new CompoundTag();
         }
 
@@ -223,7 +217,7 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
     }
 
     public void setCompoundTag(int tank, CompoundTag compoundTag) {
-        if (validateSlot(tank)) {
+        if (isInvalidTank(tank)) {
             return;
         }
 
@@ -232,11 +226,11 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
     }
 
     public boolean getCreatives(int tank) {
-        return !validateSlot(tank) && creatives.get(tank);
+        return !isInvalidTank(tank) && creatives.get(tank);
     }
 
     public void setCreatives(int tank, boolean creative) {
-        if (validateSlot(tank)) {
+        if (isInvalidTank(tank)) {
             return;
         }
 
@@ -261,13 +255,13 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
     }
 
     public Pair<GasStack, Pair<Long, Boolean>> getFirstNonEmptyPair() {
-        for (int i = 0; i < MAX_COUNT; i++) {
-            GasStack gasContent = getGasInTank(i);
-            if (gasContent.isEmpty()) {
+        for (int tank = 0; tank < MAX_COUNT; tank++) {
+            GasStack gas = getGasInTank(tank);
+            if (gas.isEmpty()) {
                 continue;
             }
 
-            return Pair.of(gasContent, Pair.of(getTankCapacity(i), getCreatives(i)));
+            return Pair.of(gas, Pair.of(getTankCapacity(tank), getCreatives(tank)));
         }
         return Pair.of(GasStack.EMPTY, Pair.of(0L, false));
     }

@@ -19,23 +19,14 @@ public final class CrateContainersUtils {
     }
 
     public static void dropContents(Level level, Vec3 pos, SturdyCrateContents contents) {
-        ItemStack content = contents.content();
-        int count = contents.count();
-        if (content.isEmpty() || count <= 0) {
-            return;
-        }
-
-        int limit = content.getMaxStackSize();
-        while (count > 0) {
-            int dropCount = Math.min(count, limit);
-            Containers.dropItemStack(level, pos.x, pos.y, pos.z, content.copyWithCount(dropCount));
-            count -= dropCount;
-        }
+        dropContents(level, pos.x, pos.y, pos.z, contents.content(), contents.count());
     }
 
     public static void dropContents(Level level, double x, double y, double z, CrateItemStackHandler handler) {
-        ItemStack content = handler.getStackInSlot(0);
-        int count = handler.getCountInSlot(0);
+        dropContents(level, x, y, z, handler.getStackInSlot(0), handler.getCountInSlot(0));
+    }
+
+    private static void dropContents(Level level, double x, double y, double z, ItemStack content, int count) {
         if (content.isEmpty() || count <= 0) {
             return;
         }
@@ -56,27 +47,70 @@ public final class CrateContainersUtils {
         }
 
         int limit = handler.getSlotLimit(0);
-        return Mth.floor((float) count / limit * 14) + 1;
+        if (limit <= 0) {
+            return 0;
+        }
+
+        return Mth.clamp(Mth.floor((double) count / limit * 14) + 1, 0, 15);
     }
 
     public static boolean defaultUnpack(Level level, BlockPos pos, List<ItemStack> items, boolean simulate) {
-        if (!(level.getBlockEntity(pos) instanceof CratesBlockEntity crateBlockEntity)) {
+        if (!(level.getBlockEntity(pos) instanceof CratesBlockEntity crate)) {
             return false;
         }
 
-        CrateItemStackHandler handler = crateBlockEntity.getHandler();
-        if (handler == null) {
-            return false;
+        CrateItemStackHandler handler = crate.getHandler();
+        ItemStack originalContent = handler.getStoredItem(0);
+        int originalCount = handler.getCountInSlot(0);
+        long available = (long) handler.getSlotLimit(0) - originalCount;
+        long addedCount = 0;
+        ItemStack expectedContent = originalContent;
+        for (ItemStack stack : items) {
+            if (stack.isEmpty()) {
+                continue;
+            }
+
+            if (expectedContent.isEmpty()) {
+                expectedContent = stack;
+            }
+            if (!ItemStack.isSameItemSameComponents(expectedContent, stack) || !handler.isItemValid(0, stack)) {
+                return false;
+            }
+
+            addedCount += stack.getCount();
+            if (addedCount > available) {
+                return false;
+            }
         }
 
-        int maxCount = handler.getSlotLimit(0);
-        int space = maxCount - handler.getCountInSlot(0);
-        int totalCount = items.stream().mapToInt(ItemStack::getCount).sum();
-        if (totalCount > space) {
-            return false;
+        if (simulate) {
+            return true;
         }
 
-        items.forEach(stack -> handler.insertItem(0, stack, simulate));
-        return true;
+        ItemStack validatedContent = expectedContent;
+        int expectedCount = originalCount + (int) addedCount;
+        return handler.runInBatch(() -> {
+            for (ItemStack stack : items) {
+                if (stack.isEmpty()) {
+                    continue;
+                }
+
+                ItemStack remainder = handler.insertItem(0, stack, false);
+                if (remainder.isEmpty()) {
+                    continue;
+                }
+
+                handler.setStoredItems(0, originalContent, originalCount);
+                return false;
+            }
+
+            ItemStack storedContent = handler.getStoredItem(0);
+            boolean hasExpectedState = handler.getCountInSlot(0) == expectedCount && (expectedCount == 0 || ItemStack.isSameItemSameComponents(storedContent, validatedContent));
+            if (!hasExpectedState) {
+                handler.setStoredItems(0, originalContent, originalCount);
+                return false;
+            }
+            return true;
+        });
     }
 }

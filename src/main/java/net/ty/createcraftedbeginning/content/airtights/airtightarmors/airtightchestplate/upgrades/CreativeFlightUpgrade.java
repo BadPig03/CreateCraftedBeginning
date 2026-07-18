@@ -13,7 +13,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePowerMode;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.TickingAirtightUpgrade;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -26,23 +27,50 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public enum CreativeFlightUpgrade implements AirtightUpgrade {
+public enum CreativeFlightUpgrade implements TickingAirtightUpgrade {
     INSTANCE;
 
-    private static final int DURATION_THRESHOLD = 30;
+    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("creative_flight");
+    private static final Couple<Integer> OFFSET = Couple.create(36, 55);
+
+    private static final int EFFECT_DURATION = 40;
+    private static final int REFRESH_THRESHOLD = 20;
 
     public static void spawnParticles(Player player, Level level) {
-        if (!CCBConfig.client().enableChestplateJetpackParticles.get() || player.isCreative() || player.isSpectator() || !INSTANCE.canApply(player) || !player.getAbilities().flying || player.getEffect(CCBMobEffects.JETPACK_FLIGHT) == null) {
+        if (!CCBConfig.client().enableChestplateJetpackParticles.get()
+                || player.isCreative()
+                || player.isSpectator()) {
+            return;
+        }
+        if (!player.getAbilities().flying
+                || !INSTANCE.canApply(player)
+                || player.getEffect(CCBMobEffects.JETPACK_FLIGHT) == null) {
             return;
         }
 
-        double playerX = player.getX();
-        double playerY = player.getY();
-        double playerZ = player.getZ();
+        double x = player.getX();
+        double y = player.getY();
+        double z = player.getZ();
         double angle = -player.yBodyRot * Math.PI / 180;
-        double finalY = player.getEyeHeight() * 0.4;
-        level.addParticle(CCBParticleTypes.AIRTIGHT_JETPACK.getParticleOptions(), playerX + -0.48 * Math.sin(angle) - Math.cos(angle) * 0.24, playerY + finalY, playerZ + -0.48 * Math.cos(angle) + Math.sin(angle) * 0.24, 0, -0.24, 0);
-        level.addParticle(CCBParticleTypes.AIRTIGHT_JETPACK.getParticleOptions(), playerX + -0.48 * Math.sin(angle) + Math.cos(angle) * 0.24, playerY + finalY, playerZ + -0.48 * Math.cos(angle) - Math.sin(angle) * 0.24, 0, -0.24, 0);
+        double yOffset = player.getEyeHeight() * 0.4;
+        level.addParticle(
+                CCBParticleTypes.AIRTIGHT_JETPACK.getParticleOptions(),
+                x + -0.48 * Math.sin(angle) - Math.cos(angle) * 0.24,
+                y + yOffset,
+                z + -0.48 * Math.cos(angle) + Math.sin(angle) * 0.24,
+                0,
+                -0.24,
+                0
+        );
+        level.addParticle(
+                CCBParticleTypes.AIRTIGHT_JETPACK.getParticleOptions(),
+                x + -0.48 * Math.sin(angle) + Math.cos(angle) * 0.24,
+                y + yOffset,
+                z + -0.48 * Math.cos(angle) - Math.sin(angle) * 0.24,
+                0,
+                -0.24,
+                0
+        );
     }
 
     @Override
@@ -61,8 +89,7 @@ public enum CreativeFlightUpgrade implements AirtightUpgrade {
 
     @Override
     public boolean meetsConditions(Player player, ItemStack item) {
-        MobEffectInstance existingEffect = player.getEffect(CCBMobEffects.JETPACK_FLIGHT);
-        return existingEffect == null || existingEffect.getAmplifier() == 0 && existingEffect.endsWithin(DURATION_THRESHOLD);
+        return true;
     }
 
     @Override
@@ -87,20 +114,20 @@ public enum CreativeFlightUpgrade implements AirtightUpgrade {
 
     @Override
     public Couple<Integer> getOffset() {
-        return Couple.create(36, 55);
+        return OFFSET;
+    }
+
+    @Override
+    public AirtightUpgradePowerMode getPowerMode() {
+        return AirtightUpgradePowerMode.CONTINUOUS;
     }
 
     @Override
     public int getGasConsumptionPerSecond(Player player, ItemStack item) {
-        if (player.getAbilities().flying) {
-            return CCBConfig.server().equipments.creativeFlightConsumption.get();
+        if (!player.getAbilities().flying) {
+            return 0;
         }
-        return 0;
-    }
-
-    @Override
-    public int getIndex() {
-        return 1;
+        return CCBConfig.server().equipments.creativeFlightConsumption.get();
     }
 
     @Override
@@ -110,16 +137,22 @@ public enum CreativeFlightUpgrade implements AirtightUpgrade {
 
     @Override
     public ResourceLocation getID() {
-        return CreateCraftedBeginning.asResource("creative_flight");
+        return ID;
     }
 
     @Override
     public void applyEffect(Player player) {
-        player.addEffect(new MobEffectInstance(CCBMobEffects.JETPACK_FLIGHT, DURATION_THRESHOLD, 0, true, false));
+        player.addEffect(new MobEffectInstance(CCBMobEffects.JETPACK_FLIGHT, EFFECT_DURATION, 0, true, false));
     }
 
     @Override
     public boolean isActive(Player player, ItemStack item) {
-        return item.is(CCBItems.AIRTIGHT_CHESTPLATE) && AirtightUpgrade.super.isActive(player, item);
+        return item.is(CCBItems.AIRTIGHT_CHESTPLATE) && TickingAirtightUpgrade.super.isActive(player, item);
+    }
+
+    @Override
+    public boolean shouldApplyEffect(Player player, ItemStack item) {
+        MobEffectInstance effect = player.getEffect(CCBMobEffects.JETPACK_FLIGHT);
+        return effect == null || effect.getAmplifier() == 0 && effect.endsWithin(REFRESH_THRESHOLD);
     }
 }

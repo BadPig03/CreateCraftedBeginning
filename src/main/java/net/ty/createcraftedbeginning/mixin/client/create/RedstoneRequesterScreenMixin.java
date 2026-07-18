@@ -4,6 +4,7 @@ import com.simibubi.create.content.logistics.redstoneRequester.RedstoneRequester
 import com.simibubi.create.content.logistics.redstoneRequester.RedstoneRequesterMenu.SorterProofSlot;
 import com.simibubi.create.content.logistics.redstoneRequester.RedstoneRequesterScreen;
 import com.simibubi.create.foundation.gui.menu.AbstractSimiContainerScreen;
+import com.simibubi.create.foundation.gui.widget.ScrollInput;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
@@ -14,6 +15,7 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.ItemStackHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUtils;
@@ -32,6 +34,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
@@ -94,8 +97,13 @@ public abstract class RedstoneRequesterScreenMixin extends AbstractSimiContainer
             return;
         }
 
-        List<Component> tooltip = GasRequestClientUtils.getTooltipLines(stack, amounts, slotIndex);
-        cir.setReturnValue(tooltip);
+        List<Component> tooltips = new ArrayList<>();
+        tooltips.add(CCBLang.translate("gui.gas_virtual_item.send_item", CCBLang.itemName(stack).add(CCBLang.text(" x" + GasRequestUtils.formatPrecise(amounts.get(slotIndex))))).color(ScrollInput.HEADER_RGB).component());
+        tooltips.add(CCBLang.translate("gui.gas_virtual_item.scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getScrollStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltips.add(CCBLang.translate("gui.gas_virtual_item.shift_to_scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getShiftStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltips.add(CCBLang.translate("gui.gas_virtual_item.alt_to_scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getAltStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltips.add(CCBLang.translate("gui.gas_virtual_item.ctrl_to_scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getCtrlStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        cir.setReturnValue(tooltips);
     }
 
     @Inject(method = "renderForeground", at = @At("TAIL"))
@@ -119,10 +127,10 @@ public abstract class RedstoneRequesterScreenMixin extends AbstractSimiContainer
         ItemStack existing = inventory.getStackInSlot(slotIndex);
         String text;
         if (GasVirtualUtils.isVirtualItem(existing) && !ItemStack.isSameItemSameComponents(existing, virtualItems.getFirst())) {
-            text = "gui.tooltips.gas_virtual_item.replace_gas_types";
+            text = "gui.gas_virtual_item.replace_gas_types";
         }
         else if (existing.isEmpty()) {
-            text = "gui.tooltips.gas_virtual_item.set_gas_types";
+            text = "gui.gas_virtual_item.set_gas_types";
         }
         else {
             return;
@@ -145,8 +153,8 @@ public abstract class RedstoneRequesterScreenMixin extends AbstractSimiContainer
 
         int current = amounts.get(slot);
         int step = GasRequestUtils.getStep(hasAltDown(), hasControlDown(), hasShiftDown());
-        if (step != GasRequestUtils.getCtrlStep()) {
-            step += current == 1 ? -1 : 0;
+        if (!hasControlDown() && scrollY > 0 && current == 1 && step > 1) {
+            step--;
         }
         int next = Mth.clamp(current + (scrollY >= 0 ? step : -step), 1, Integer.MAX_VALUE);
         amounts.set(slot, next);

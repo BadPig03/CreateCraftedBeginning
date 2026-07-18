@@ -27,11 +27,13 @@ public class HoneyIceCreamItem extends Item {
     }
 
     @Override
-    public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entityLiving) {
-        ItemStack result = super.finishUsingItem(stack, level, entityLiving);
-        if (!level.isClientSide) {
-            entityLiving.removeEffectsCuredBy(EffectCures.MILK);
+    public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
+        ItemStack result = super.finishUsingItem(stack, level, entity);
+        if (level.isClientSide) {
+            return result;
         }
+
+        entity.removeEffectsCuredBy(EffectCures.MILK);
         return result;
     }
 

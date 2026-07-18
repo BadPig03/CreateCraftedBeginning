@@ -13,7 +13,6 @@ import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -23,6 +22,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -34,6 +34,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class BreezeCoolerMovementBehaviour implements MovementBehaviour {
     private static final String COMPOUND_KEY_CONDUCTOR = "Conductor";
+    private static CameraEntityProvider cameraEntityProvider = context -> null;
+
+    public static void setCameraEntityProvider(CameraEntityProvider provider) {
+        cameraEntityProvider = provider;
+    }
 
     private static LerpedFloat getHeadAngle(MovementContext context) {
         if (!(context.temporaryData instanceof LerpedFloat)) {
@@ -44,26 +49,26 @@ public class BreezeCoolerMovementBehaviour implements MovementBehaviour {
 
     @SuppressWarnings("SuspiciousNameCombination")
     private static float getTargetAngle(MovementContext context) {
-        if (shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0) && context.contraption.entity instanceof CarriageContraptionEntity cce) {
+        if (shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0) && context.contraption.entity instanceof CarriageContraptionEntity carriage) {
             float angle = AngleHelper.deg(-Mth.atan2(context.relativeMotion.x, context.relativeMotion.z));
-            return cce.getInitialOrientation().getAxis() == Axis.X ? angle + 180 : angle;
+            return carriage.getInitialOrientation().getAxis() == Axis.X ? angle + 180 : angle;
         }
 
-        Entity player = Minecraft.getInstance().cameraEntity;
+        Entity player = cameraEntityProvider.getCameraEntity(context);
         if (player == null || player.isInvisible() || context.position == null) {
             return 0;
         }
 
-        Vec3 applyRotation = context.contraption.entity.reverseRotation(player.position().subtract(context.position), 1);
-        return AngleHelper.deg(-Mth.atan2(applyRotation.z, applyRotation.x)) - 90;
+        Vec3 relativePosition = context.contraption.entity.reverseRotation(player.position().subtract(context.position), 1);
+        return AngleHelper.deg(-Mth.atan2(relativePosition.z, relativePosition.x)) - 90;
     }
 
     private static boolean shouldRenderHat(MovementContext context) {
-        CompoundTag compoundTag = context.data;
-        if (!compoundTag.contains(COMPOUND_KEY_CONDUCTOR)) {
-            compoundTag.putBoolean(COMPOUND_KEY_CONDUCTOR, determineIfConducting(context));
+        CompoundTag data = context.data;
+        if (!data.contains(COMPOUND_KEY_CONDUCTOR)) {
+            data.putBoolean(COMPOUND_KEY_CONDUCTOR, determineIfConducting(context));
         }
-        return compoundTag.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity cce && cce.hasSchedule();
+        return data.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
     }
 
     private static boolean determineIfConducting(MovementContext context) {
@@ -86,19 +91,22 @@ public class BreezeCoolerMovementBehaviour implements MovementBehaviour {
 
     @Override
     public void tick(MovementContext context) {
-        if (!context.world.isClientSide()) {
+        Level level = context.world;
+        if (!level.isClientSide()) {
             return;
         }
 
-        RandomSource random = context.world.getRandom();
+        RandomSource random = level.getRandom();
         Vec3 position = context.position;
         Vec3 added = position.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125f).multiply(1, 0, 1));
         if (random.nextInt(3) == 0 && context.motion.length() < 0.015625f) {
-            context.world.addParticle(ParticleTypes.SNOWFLAKE, added.x, added.y, added.z, 0, 0, 0);
+            level.addParticle(ParticleTypes.SNOWFLAKE, added.x, added.y, added.z, 0, 0, 0);
         }
         LerpedFloat headAngle = getHeadAngle(context);
         boolean quickTurn = shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0);
-        headAngle.chase(headAngle.getValue() + AngleHelper.getShortestAngleDiff(headAngle.getValue(), getTargetAngle(context)), 0.5f, quickTurn ? Chaser.EXP : Chaser.exp(5));
+        float currentAngle = headAngle.getValue();
+        float targetAngle = getTargetAngle(context);
+        headAngle.chase(currentAngle + AngleHelper.getShortestAngleDiff(currentAngle, targetAngle), 0.5f, quickTurn ? Chaser.EXP : Chaser.exp(5));
         headAngle.tickChaser();
     }
 
@@ -116,5 +124,10 @@ public class BreezeCoolerMovementBehaviour implements MovementBehaviour {
     @OnlyIn(Dist.CLIENT)
     public void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource buffer) {
         BreezeCoolerRenderer.renderInContraption(context, matrices, buffer, getHeadAngle(context), shouldRenderHat(context), renderWorld);
+    }
+
+    @FunctionalInterface
+    public interface CameraEntityProvider {
+        @Nullable Entity getCameraEntity(MovementContext context);
     }
 }

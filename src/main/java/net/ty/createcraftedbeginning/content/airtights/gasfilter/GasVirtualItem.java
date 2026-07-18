@@ -18,7 +18,7 @@ public class GasVirtualItem extends Item {
 
     @Override
     public void inventoryTick(ItemStack stack, Level level, Entity entity, int slotId, boolean isSelected) {
-        if (entity instanceof Player player && player.containerMenu instanceof GasFilterMenu) {
+        if (level.isClientSide || entity instanceof Player player && player.containerMenu instanceof GasFilterMenu) {
             return;
         }
 

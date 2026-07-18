@@ -5,18 +5,19 @@ import com.simibubi.create.Create;
 import com.simibubi.create.api.packager.InventoryIdentifier;
 import com.simibubi.create.compat.computercraft.ComputerCraftProxy;
 import com.simibubi.create.compat.computercraft.events.PackageEvent;
-import com.simibubi.create.content.contraptions.actors.psi.PortableStorageInterfaceBlockEntity;
 import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.box.PackageItem;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBehaviour;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBlock;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBlockEntity;
+import com.simibubi.create.content.logistics.packager.IdentifiedInventory;
 import com.simibubi.create.content.logistics.packager.InventorySummary;
 import com.simibubi.create.content.logistics.packager.PackagerBlockEntity;
 import com.simibubi.create.content.logistics.packager.PackagingRequest;
 import com.simibubi.create.content.logistics.packagerLink.PackagerLinkBlock;
 import com.simibubi.create.content.logistics.packagerLink.PackagerLinkBlockEntity;
 import com.simibubi.create.content.logistics.packagerLink.RequestPromiseQueue;
+import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.inventory.CapManipulationBehaviourBase.InterfaceProvider;
 import com.simibubi.create.foundation.blockEntity.behaviour.inventory.InvManipulationBehaviour;
@@ -46,7 +47,6 @@ import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasInventoryIdent
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonGasContents;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonUtils;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
-import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
@@ -62,7 +62,15 @@ import java.util.UUID;
 public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clearable {
     private static final String COMPOUND_KEY_PENDING_GASES = "PendingGases";
 
-    private InventorySummary availableItems;
+    private static final ItemStackHandler EMPTY_GAS_INVENTORY_HANDLER = new ItemStackHandler(0);
+
+    private InventorySummary availableItems = new InventorySummary();
+    @Nullable
+    private InventoryIdentifier availableItemsIdentifier;
+    @Nullable
+    private IGasHandler availableItemsHandler;
+    private List<GasStack> availableTankSnapshot = List.of();
+    private long availableItemsScanTick = Long.MIN_VALUE;
     private GasManipulationBehaviour gasInventory;
     private CCBAdvancementBehaviour advancementBehaviour;
     private BalloonGasContents pendingGases = BalloonGasContents.EMPTY;
@@ -75,113 +83,192 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.GAS_PACKAGER.get(), (be, context) -> be.inventory);
     }
 
-    private static boolean supportsGasHandler(@Nullable BlockEntity target) {
-        return target != null && !(target instanceof PortableGasInterfaceBlockEntity);
+    private static boolean containsMatchingGas(List<GasStack> gases, GasStack target) {
+        return gases.stream().anyMatch(gas -> GasStack.isSameGasSameComponents(gas, target));
     }
 
-    private static boolean supportsItemHandler(@Nullable BlockEntity target) {
-        return target != null && !(target instanceof PortableStorageInterfaceBlockEntity);
-    }
-
-    private static boolean isSameLink(PackagingRequest first, PackagingRequest second) {
-        return first.orderId() == second.orderId() && first.linkIndex() == second.linkIndex() && first.address().equals(second.address());
-    }
-
-    private static boolean propagatePackageCounter(PackagingRequest completed, List<PackagingRequest> queue, int nextPackageIndex) {
-        while (!queue.isEmpty() && isSameLink(completed, queue.getFirst())) {
-            PackagingRequest next = queue.getFirst();
-            if (next.getCount() > 0 && GasVirtualUtils.isVirtualItem(next.item()) && !GasVirtualUtils.getGasType(next.item()).isEmpty()) {
-                next.packageCounter().setValue(nextPackageIndex);
-                return false;
+    private static void addPackedGas(List<GasStack> gases, GasStack added) {
+        for (int i = 0; i < gases.size(); i++) {
+            GasStack existing = gases.get(i);
+            if (!GasStack.isSameGasSameComponents(existing, added)) {
+                continue;
             }
-            queue.removeFirst();
+
+            gases.set(i, existing.copyWithAmount(existing.getAmount() + added.getAmount()));
+            return;
         }
-        return true;
+        gases.add(added.copy());
     }
 
-    private static BalloonGasContents snapshotContents(IGasHandler handler) {
-        List<GasStack> gases = new ArrayList<>();
-        for (int tank = 0; tank < handler.getTanks(); tank++) {
-            GasStack gas = handler.getGasInTank(tank);
-            if (!gas.isEmpty()) {
-                gases.add(gas.copy());
+    private static void discardInvalidLeadingGasRequests(List<PackagingRequest> queuedRequests) {
+        while (!queuedRequests.isEmpty() && !isValidGasRequest(queuedRequests.getFirst())) {
+            queuedRequests.removeFirst();
+        }
+    }
+
+    private static boolean isValidGasRequest(PackagingRequest request) {
+        return request.getCount() > 0 && GasVirtualUtils.isVirtualItem(request.item()) && !GasVirtualUtils.getGasType(request.item()).isEmpty();
+    }
+
+    private static GasRequestPlan planGasRequestBatch(List<PackagingRequest> queuedRequests, long capacity) {
+        if (queuedRequests.isEmpty() || capacity <= 0) {
+            return GasRequestPlan.EMPTY;
+        }
+
+        PackagingRequest metadata = queuedRequests.getFirst();
+        List<PlannedGasRequest> planned = new ArrayList<>();
+        List<GasStack> plannedGases = new ArrayList<>();
+        long remaining = capacity;
+        for (PackagingRequest request : queuedRequests) {
+            if (!GasPackagerUtils.isSameLink(metadata, request)) {
+                break;
             }
-        }
-        return new BalloonGasContents(gases);
-    }
+            if (!isValidGasRequest(request)) {
+                continue;
+            }
 
-    private static BalloonGasContents drainContents(IGasHandler handler, BalloonGasContents available, long maxAmount) {
-        if (available.isEmpty() || maxAmount <= 0) {
-            return BalloonGasContents.EMPTY;
-        }
-
-        List<GasStack> drainedGases = new ArrayList<>();
-        long remaining = maxAmount;
-        for (GasStack gas : available.gases()) {
-            if (remaining <= 0) {
+            ItemStack token = request.item().copyWithCount(1);
+            GasStack gasType = GasVirtualUtils.getGasType(token);
+            if (!containsMatchingGas(plannedGases, gasType) && plannedGases.size() >= BalloonGasContents.MAX_GAS_TYPES) {
                 break;
             }
 
-            long amount = Math.min(remaining, gas.getAmount());
-            GasStack simulated = handler.drain(gas.copyWithAmount(amount), GasAction.SIMULATE);
-            if (simulated.isEmpty() || !GasStack.isSameGasSameComponents(simulated, gas)) {
+            long requested = Math.max(0, request.getCount());
+            long amount = Math.min(remaining, requested);
+            if (amount <= 0) {
+                break;
+            }
+
+            planned.add(new PlannedGasRequest(request, token, gasType, amount));
+            addPackedGas(plannedGases, gasType.copyWithAmount(amount));
+            remaining -= amount;
+            if (remaining > 0) {
                 continue;
             }
 
-            GasStack drained = handler.drain(simulated.copyWithAmount(Math.min(amount, simulated.getAmount())), GasAction.EXECUTE);
-            if (drained.isEmpty() || !GasStack.isSameGasSameComponents(drained, gas)) {
-                continue;
-            }
-
-            drainedGases.add(drained.copy());
-            remaining -= drained.getAmount();
+            break;
         }
-        return new BalloonGasContents(drainedGases);
+
+        return planned.isEmpty() ? GasRequestPlan.EMPTY : new GasRequestPlan(List.copyOf(planned));
     }
 
-    private static boolean canInsertAll(IGasHandler handler, BalloonGasContents contents) {
-        List<SimulatedTank> tanks = new ArrayList<>(handler.getTanks());
-        for (int tank = 0; tank < handler.getTanks(); tank++) {
-            tanks.add(new SimulatedTank(handler.getGasInTank(tank).copy(), Math.max(0, handler.getTankCapacity(tank))));
-        }
-
-        for (GasStack gas : contents.gases()) {
-            if (handler.fill(gas.copy(), GasAction.SIMULATE) < gas.getAmount()) {
-                return false;
+    private static GasRequestExtraction extractGasRequestBatch(IGasHandler handler, GasRequestPlan plan) {
+        List<ExtractedGasRequest> transfers = new ArrayList<>(plan.requests().size());
+        List<GasStack> packedGases = new ArrayList<>();
+        for (PlannedGasRequest planned : plan.requests()) {
+            GasStack simulated = handler.drain(planned.gasType().copyWithAmount(planned.amount()), GasAction.SIMULATE);
+            if (simulated.isEmpty() || !GasStack.isSameGasSameComponents(simulated, planned.gasType())) {
+                break;
             }
 
-            long remaining = gas.getAmount();
-            for (int tank = 0; tank < tanks.size() && remaining > 0; tank++) {
-                SimulatedTank simulatedTank = tanks.get(tank);
-                if (simulatedTank.gas().isEmpty() || !GasStack.isSameGasSameComponents(simulatedTank.gas(), gas) || !handler.isGasValid(tank, gas)) {
-                    continue;
-                }
-
-                remaining -= simulatedTank.fill(gas, remaining);
+            long executableAmount = Math.min(planned.amount(), simulated.getAmount());
+            GasStack drained = handler.drain(planned.gasType().copyWithAmount(executableAmount), GasAction.EXECUTE);
+            if (drained.isEmpty() || !GasStack.isSameGasSameComponents(drained, planned.gasType())) {
+                break;
             }
 
-            for (int tank = 0; tank < tanks.size() && remaining > 0; tank++) {
-                SimulatedTank simulatedTank = tanks.get(tank);
-                if (!simulatedTank.gas().isEmpty() || !handler.isGasValid(tank, gas)) {
-                    continue;
-                }
-
-                remaining -= simulatedTank.fill(gas, remaining);
+            int transferred = Math.min(GasRequestUtils.toLogisticsAmount(drained.getAmount()), GasRequestUtils.toLogisticsAmount(planned.amount()));
+            if (transferred <= 0) {
+                break;
             }
 
-            if (remaining > 0) {
-                return false;
+            transfers.add(new ExtractedGasRequest(planned.request(), planned.token(), transferred));
+            addPackedGas(packedGases, drained.copyWithAmount(transferred));
+            if (transferred < planned.amount()) {
+                break;
             }
         }
-        return true;
+
+        if (transfers.isEmpty()) {
+            return GasRequestExtraction.EMPTY;
+        }
+        return new GasRequestExtraction(List.copyOf(transfers), new BalloonGasContents(packedGases));
+    }
+
+    private static GasRequestCommit commitGasRequestBatch(List<PackagingRequest> queuedRequests, GasRequestExtraction extraction) {
+        ExtractedGasRequest firstTransfer = extraction.transfers().getFirst();
+        PackagingRequest packageMetadata = firstTransfer.request();
+        int packageIndexAtLink = packageMetadata.packageCounter().getAndIncrement();
+        boolean finalPackageAtLink = false;
+        PackageOrderWithCrafts orderContext = null;
+        List<GasDeduction> deductions = new ArrayList<>();
+
+        for (ExtractedGasRequest transfer : extraction.transfers()) {
+            PackagingRequest request = transfer.request();
+            if (queuedRequests.isEmpty() || queuedRequests.getFirst() != request) {
+                throw new IllegalStateException("Gas packaging request queue changed during commit");
+            }
+            if (request.context() != null) {
+                orderContext = request.context();
+            }
+
+            request.subtract(transfer.amount());
+            addGasDeduction(deductions, transfer.token(), transfer.amount());
+            if (!request.isEmpty()) {
+                break;
+            }
+
+            PackagingRequest completed = queuedRequests.removeFirst();
+            finalPackageAtLink = GasPackagerUtils.propagatePackageCounter(completed, queuedRequests, packageIndexAtLink + 1);
+            if (finalPackageAtLink) {
+                break;
+            }
+        }
+
+        return new GasRequestCommit(packageMetadata, extraction.contents(), orderContext, packageIndexAtLink, finalPackageAtLink, List.copyOf(deductions));
+    }
+
+    private static void addGasDeduction(List<GasDeduction> deductions, ItemStack token, int amount) {
+        for (int i = 0; i < deductions.size(); i++) {
+            GasDeduction existing = deductions.get(i);
+            if (!ItemStack.isSameItemSameComponents(existing.token(), token)) {
+                continue;
+            }
+
+            int mergedAmount = GasRequestUtils.toLogisticsAmount((long) existing.amount() + amount);
+            deductions.set(i, new GasDeduction(existing.token(), mergedAmount));
+            return;
+        }
+        deductions.add(new GasDeduction(token.copyWithCount(1), amount));
+    }
+
+    private static ItemStack createRequestedBalloon(GasRequestCommit committed) {
+        PackagingRequest metadata = committed.metadata();
+        ItemStack balloon = BalloonUtils.containing(committed.contents());
+        if (balloon.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+
+        PackageItem.clearAddress(balloon);
+        PackageItem.addAddress(balloon, metadata.address());
+        PackageItem.setOrder(balloon, metadata.orderId(), metadata.linkIndex(), metadata.finalLink().booleanValue(), committed.packageIndexAtLink(), committed.finalPackageAtLink(), committed.orderContext());
+        return balloon;
+    }
+
+    private static InventorySummary createGasInventorySummary(List<GasStack> snapshot) {
+        InventorySummary summary = new InventorySummary();
+        for (GasStack gas : snapshot) {
+            int amount = GasRequestUtils.toLogisticsAmount(gas.getAmount());
+            if (amount <= 0) {
+                continue;
+            }
+
+            ItemStack virtualItem = GasVirtualUtils.createVirtualItem(gas.copyWithAmount(1));
+            if (virtualItem.isEmpty()) {
+                continue;
+            }
+
+            summary.add(virtualItem, amount);
+        }
+        return summary;
     }
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        gasInventory = new GasManipulationBehaviour(this, InterfaceProvider.oppositeOfBlockFacing()).withFilter(GasPackagerBlockEntity::supportsGasHandler);
+        gasInventory = new GasManipulationBehaviour(this, InterfaceProvider.oppositeOfBlockFacing()).withFilter(GasPackagerUtils::supportsGasHandler);
         behaviours.add(gasInventory);
 
-        targetInventory = new InvManipulationBehaviour(this, InterfaceProvider.oppositeOfBlockFacing()).withFilter(GasPackagerBlockEntity::supportsItemHandler);
+        targetInventory = new InvManipulationBehaviour(this, InterfaceProvider.oppositeOfBlockFacing()).withFilter(GasPackagerUtils::supportsItemHandler);
         behaviours.add(targetInventory);
 
         advancementBehaviour = new CCBAdvancementBehaviour(this);
@@ -205,33 +292,35 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
 
     @Override
     public InventorySummary getAvailableItems() {
-        InventorySummary summary = new InventorySummary();
-        if (getGasInventoryIdentifier() == null) {
-            availableItems = summary;
-            return summary;
+        InventoryIdentifier identifier = getGasInventoryIdentifier();
+        if (identifier == null || gasInventory == null) {
+            return clearAvailableItemsCache();
         }
 
         IGasHandler handler = gasInventory.getInventory();
         if (handler == null) {
-            availableItems = summary;
-            return summary;
+            return clearAvailableItemsCache();
         }
 
-        for (GasStack gas : snapshotContents(handler).gases()) {
-            int amount = GasRequestUtils.toLogisticsAmount(gas.getAmount());
-            if (amount <= 0) {
-                continue;
-            }
-
-            ItemStack virtualItem = GasVirtualUtils.createVirtualItem(gas.copyWithAmount(1));
-            if (virtualItem.isEmpty()) {
-                continue;
-            }
-
-            summary.add(virtualItem, amount);
+        boolean sameSource = handler == availableItemsHandler && identifier.equals(availableItemsIdentifier);
+        long currentTick = level == null ? Long.MIN_VALUE : level.getGameTime();
+        if (sameSource && availableItemsScanTick == currentTick) {
+            return availableItems;
         }
-        submitNewGasArrivals(availableItems, summary);
+
+        availableItemsScanTick = currentTick;
+        if (sameSource && GasPackagerUtils.matchesTankSnapshot(handler, availableTankSnapshot)) {
+            return availableItems;
+        }
+
+        InventorySummary previous = sameSource ? availableItems : null;
+        List<GasStack> snapshot = GasPackagerUtils.snapshotTanks(handler);
+        InventorySummary summary = createGasInventorySummary(snapshot);
         availableItems = summary;
+        availableItemsIdentifier = identifier;
+        availableItemsHandler = handler;
+        availableTankSnapshot = snapshot;
+        submitNewGasArrivals(previous, identifier, summary);
         return summary;
     }
 
@@ -247,7 +336,7 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         }
 
         BalloonGasContents contents = BalloonUtils.getGasContents(box);
-        if (contents.isEmpty() || !canInsertAll(handler, contents)) {
+        if (contents.isEmpty() || !BalloonUtils.fitsInBalloon(contents) || !GasPackagerUtils.canInsertAll(handler, contents)) {
             return false;
         }
 
@@ -312,6 +401,45 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         super.destroy();
     }
 
+    @Override
+    public boolean isTargetingSameInventory(@Nullable IdentifiedInventory inventory) {
+        if (inventory == null) {
+            return false;
+        }
+
+        InventoryIdentifier identifier = inventory.identifier();
+        InventoryIdentifier ownIdentifier = getGasInventoryIdentifier();
+        if (ownIdentifier != null && ownIdentifier.equals(identifier)) {
+            return true;
+        }
+        if (identifier == null || gasInventory == null || !gasInventory.hasInventory()) {
+            return super.isTargetingSameInventory(inventory);
+        }
+
+        BlockFace targetFace = gasInventory.getTarget().getOpposite();
+        return identifier.contains(targetFace) || super.isTargetingSameInventory(inventory);
+    }
+
+    private InventorySummary clearAvailableItemsCache() {
+        if (availableItemsIdentifier != null || availableItemsHandler != null || !availableTankSnapshot.isEmpty()) {
+            availableItems = new InventorySummary();
+        }
+        availableItemsIdentifier = null;
+        availableItemsHandler = null;
+        availableTankSnapshot = List.of();
+        availableItemsScanTick = Long.MIN_VALUE;
+        return availableItems;
+    }
+
+    private void invalidateAvailableItemsCache() {
+        availableItemsScanTick = Long.MIN_VALUE;
+    }
+
+    private void onGasInventoryChanged() {
+        invalidateAvailableItemsCache();
+        triggerStockCheck();
+    }
+
     @Nullable
     public InventoryIdentifier getGasInventoryIdentifier() {
         if (level == null || gasInventory == null || !gasInventory.hasInventory()) {
@@ -320,11 +448,21 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
 
         BlockFace targetFace = gasInventory.getTarget().getOpposite();
         BlockPos targetPos = targetFace.getPos();
-        BlockEntity targetBE = level.getBlockEntity(targetPos);
-        if (!(targetBE instanceof IGasInventoryIdentifierProvider provider)) {
+        BlockEntity target = level.getBlockEntity(targetPos);
+        if (!(target instanceof IGasInventoryIdentifierProvider provider)) {
             return null;
         }
         return provider.getGasInventoryIdentifier(targetFace.getFace());
+    }
+
+    @Nullable
+    public IdentifiedInventory getIdentifiedGasInventory() {
+        InventoryIdentifier identifier = getGasInventoryIdentifier();
+        if (identifier == null) {
+            return null;
+        }
+
+        return new IdentifiedInventory(identifier, EMPTY_GAS_INVENTORY_HANDLER);
     }
 
     private void attemptToPackageAnyGas() {
@@ -337,7 +475,7 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
             return;
         }
 
-        BalloonGasContents drained = drainContents(handler, snapshotContents(handler), BalloonUtils.getCapacity());
+        BalloonGasContents drained = GasPackagerUtils.drainContents(handler, BalloonUtils.getCapacity());
         if (drained.isEmpty()) {
             return;
         }
@@ -348,7 +486,7 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
             PackageItem.addAddress(balloon, signBasedAddress);
         }
         enqueueCreatedBalloon(balloon);
-        triggerStockCheck();
+        onGasInventoryChanged();
         notifyUpdate();
     }
 
@@ -368,100 +506,41 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
             return;
         }
 
-        List<GasStack> packedGases = new ArrayList<>();
-        List<GasDeduction> deductions = new ArrayList<>();
-        PackagingRequest packageMetadata = null;
-        int packageIndexAtLink = -1;
-        boolean finalPackageAtLink = false;
-        long remainingCapacity = capacity;
-
-        while (remainingCapacity > 0 && !queuedRequests.isEmpty()) {
-            PackagingRequest request = queuedRequests.getFirst();
-            if (packageMetadata != null && !isSameLink(packageMetadata, request)) {
-                break;
-            }
-
-            ItemStack requestedToken = request.item();
-            GasStack gasType = GasVirtualUtils.isVirtualItem(requestedToken) ? GasVirtualUtils.getGasType(requestedToken) : GasStack.EMPTY;
-            long requestedAmount = Math.max(0, request.getCount());
-            if (gasType.isEmpty() || requestedAmount <= 0) {
-                PackagingRequest discarded = queuedRequests.removeFirst();
-                if (packageMetadata == null) {
-                    continue;
-                }
-                finalPackageAtLink = propagatePackageCounter(discarded, queuedRequests, packageIndexAtLink + 1);
-                if (finalPackageAtLink) {
-                    break;
-                }
-                continue;
-            }
-
-            long amountToDrain = Math.min(remainingCapacity, requestedAmount);
-            GasStack toDrain = gasType.copyWithAmount(amountToDrain);
-            GasStack simulated = handler.drain(toDrain, GasAction.SIMULATE);
-            if (simulated.isEmpty() || !GasStack.isSameGasSameComponents(simulated, gasType)) {
-                if (packageMetadata == null) {
-                    return;
-                }
-                break;
-            }
-
-            GasStack drained = handler.drain(simulated.copyWithAmount(Math.min(amountToDrain, simulated.getAmount())), GasAction.EXECUTE);
-            if (drained.isEmpty() || !GasStack.isSameGasSameComponents(drained, gasType)) {
-                if (packageMetadata == null) {
-                    return;
-                }
-                break;
-            }
-
-            if (packageMetadata == null) {
-                packageMetadata = request;
-                packageIndexAtLink = request.packageCounter().getAndIncrement();
-            }
-
-            int transferred = GasRequestUtils.toLogisticsAmount(drained.getAmount());
-            if (transferred <= 0) {
-                break;
-            }
-
-            packedGases.add(drained.copyWithAmount(transferred));
-            deductions.add(new GasDeduction(requestedToken.copyWithCount(1), transferred));
-            request.subtract(transferred);
-            remainingCapacity -= transferred;
-
-            if (!request.isEmpty()) {
-                break;
-            }
-
-            PackagingRequest completed = queuedRequests.removeFirst();
-            finalPackageAtLink = propagatePackageCounter(completed, queuedRequests, packageIndexAtLink + 1);
-            if (finalPackageAtLink) {
-                break;
-            }
-        }
-
-        BalloonGasContents contents = new BalloonGasContents(packedGases);
-        if (packageMetadata == null || contents.isEmpty()) {
+        discardInvalidLeadingGasRequests(queuedRequests);
+        GasRequestPlan plan = planGasRequestBatch(queuedRequests, capacity);
+        if (plan.isEmpty()) {
             return;
         }
 
-        ItemStack balloon = BalloonUtils.containing(contents);
-        PackageItem.clearAddress(balloon);
-        PackageItem.addAddress(balloon, packageMetadata.address());
-        PackageItem.setOrder(balloon, packageMetadata.orderId(), packageMetadata.linkIndex(), packageMetadata.finalLink().booleanValue(), packageIndexAtLink, finalPackageAtLink, packageMetadata.context());
-
-        PackagerLinkBlockEntity link = getConnectedStockLink();
-        if (link != null) {
-            for (GasDeduction deduction : deductions) {
-                ItemStackHandler fakeContents = new ItemStackHandler(1);
-                fakeContents.setStackInSlot(0, deduction.token().copyWithCount(deduction.amount()));
-                link.behaviour.deductFromAccurateSummary(fakeContents);
-            }
+        GasRequestExtraction extraction = extractGasRequestBatch(handler, plan);
+        if (extraction.isEmpty()) {
+            return;
         }
 
+        GasRequestCommit committed = commitGasRequestBatch(queuedRequests, extraction);
+        ItemStack balloon = createRequestedBalloon(committed);
+        if (balloon.isEmpty()) {
+            return;
+        }
+
+        deductFromAccurateGasSummary(committed.deductions());
         enqueueCreatedBalloon(balloon);
-        triggerStockCheck();
+        onGasInventoryChanged();
         notifyUpdate();
+    }
+
+    private void deductFromAccurateGasSummary(List<GasDeduction> deductions) {
+        PackagerLinkBlockEntity link = getConnectedStockLink();
+        if (link == null || deductions.isEmpty()) {
+            return;
+        }
+
+        ItemStackHandler contents = new ItemStackHandler(deductions.size());
+        for (int slot = 0; slot < deductions.size(); slot++) {
+            GasDeduction deduction = deductions.get(slot);
+            contents.setStackInSlot(slot, deduction.token().copyWithCount(deduction.amount()));
+        }
+        link.behaviour.deductFromAccurateSummary(contents);
     }
 
     @Nullable
@@ -476,11 +555,11 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
             if (!AllBlocks.STOCK_LINK.has(adjacentState) || PackagerLinkBlock.getConnectedDirection(adjacentState) != direction) {
                 continue;
             }
-            if (!(level.getBlockEntity(linkPos) instanceof PackagerLinkBlockEntity plbe)) {
+            if (!(level.getBlockEntity(linkPos) instanceof PackagerLinkBlockEntity link)) {
                 continue;
             }
 
-            return plbe;
+            return link;
         }
         return null;
     }
@@ -503,49 +582,55 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         animationTicks = CYCLE;
     }
 
-    private void submitNewGasArrivals(@Nullable InventorySummary before, InventorySummary after) {
-        if (before == null || after.isEmpty() || level == null) {
+    private void submitNewGasArrivals(@Nullable InventorySummary previous, InventoryIdentifier identifier, InventorySummary current) {
+        if (level == null || level.isClientSide()) {
             return;
         }
 
         Set<RequestPromiseQueue> promiseQueues = new HashSet<>();
         for (Direction direction : Iterate.directions) {
-            if (!level.isLoaded(worldPosition.relative(direction))) {
+            BlockPos adjacentPos = worldPosition.relative(direction);
+            if (!level.isLoaded(adjacentPos)) {
                 continue;
             }
 
-            BlockState adjacentState = level.getBlockState(worldPosition.relative(direction));
-            if (AllBlocks.FACTORY_GAUGE.has(adjacentState)) {
-                if (FactoryPanelBlock.connectedDirection(adjacentState) != direction) {
-                    continue;
-                }
-                if (!(level.getBlockEntity(worldPosition.relative(direction)) instanceof FactoryPanelBlockEntity fpbe) || !fpbe.restocker) {
-                    continue;
-                }
-
-                fpbe.panels.values().stream().filter(FactoryPanelBehaviour::isActive).map(behaviour -> behaviour.restockerPromises).forEach(promiseQueues::add);
-            }
-
-            if (AllBlocks.STOCK_LINK.has(adjacentState)) {
-                if (PackagerLinkBlock.getConnectedDirection(adjacentState) != direction) {
-                    continue;
-                }
-                if (!(level.getBlockEntity(worldPosition.relative(direction)) instanceof PackagerLinkBlockEntity plbe)) {
-                    continue;
-                }
-
-                UUID freqId = plbe.behaviour.freqId;
-                if (Create.LOGISTICS.hasQueuedPromises(freqId)) {
-                    promiseQueues.add(Create.LOGISTICS.getQueuedPromises(freqId));
-                }
-            }
+            BlockState adjacentState = level.getBlockState(adjacentPos);
+            addFactoryPanelPromiseQueues(promiseQueues, direction, adjacentPos, adjacentState);
+            addStockLinkPromiseQueue(promiseQueues, direction, adjacentPos, adjacentState);
         }
-        if (promiseQueues.isEmpty()) {
+
+        GasLogisticsUtils.submitNewArrivals(promiseQueues, identifier, previous, current);
+    }
+
+    private void addFactoryPanelPromiseQueues(Set<RequestPromiseQueue> promiseQueues, Direction direction, BlockPos panelPos, BlockState panelState) {
+        if (!(panelState.getBlock() instanceof FactoryPanelBlock) || FactoryPanelBlock.connectedDirection(panelState) != direction) {
+            return;
+        }
+        if (level == null || !(level.getBlockEntity(panelPos) instanceof FactoryPanelBlockEntity panel) || !panel.restocker) {
             return;
         }
 
-        after.getStacks().forEach(entry -> before.add(entry.stack, -entry.count));
-        promiseQueues.forEach(queue -> before.getStacks().stream().filter(entry -> entry.count < 0).forEach(entry -> queue.itemEnteredSystem(entry.stack, -entry.count)));
+        for (FactoryPanelBehaviour behaviour : panel.panels.values()) {
+            if (behaviour.isActive()) {
+                promiseQueues.add(behaviour.restockerPromises);
+            }
+        }
+    }
+
+    private void addStockLinkPromiseQueue(Set<RequestPromiseQueue> promiseQueues, Direction direction, BlockPos linkPos, BlockState linkState) {
+        if (!(linkState.getBlock() instanceof PackagerLinkBlock) || PackagerLinkBlock.getConnectedDirection(linkState) != direction) {
+            return;
+        }
+        if (level == null || !(level.getBlockEntity(linkPos) instanceof PackagerLinkBlockEntity link)) {
+            return;
+        }
+
+        UUID network = link.behaviour.freqId;
+        if (!Create.LOGISTICS.hasQueuedPromises(network)) {
+            return;
+        }
+
+        promiseQueues.add(Create.LOGISTICS.getQueuedPromises(network));
     }
 
     private void performPendingGasInsertion() {
@@ -560,8 +645,19 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
             return;
         }
 
+        List<GasStack> gases = contents.copyGasStacks();
+        if (gases.size() > 1) {
+            if (!handler.tryFillAtomically(gases, GasAction.EXECUTE).isSuccess()) {
+                returnPreviouslyUnwrapped();
+                return;
+            }
+
+            finishPendingGasInsertion();
+            return;
+        }
+
         List<GasStack> remainders = new ArrayList<>();
-        for (GasStack gas : contents.gases()) {
+        for (GasStack gas : gases) {
             long filled = handler.fill(gas.copy(), GasAction.EXECUTE);
             if (filled < gas.getAmount()) {
                 remainders.add(gas.copyWithAmount(gas.getAmount() - filled));
@@ -575,8 +671,12 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
             queuedExitingPackages.addFirst(new BigItemStack(returned, 1));
         }
 
+        finishPendingGasInsertion();
+    }
+
+    private void finishPendingGasInsertion() {
         pendingGases = BalloonGasContents.EMPTY;
-        triggerStockCheck();
+        onGasInventoryChanged();
         notifyUpdate();
     }
 
@@ -589,30 +689,27 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         notifyUpdate();
     }
 
-    private record GasDeduction(ItemStack token, int amount) {}
+    private record PlannedGasRequest(PackagingRequest request, ItemStack token, GasStack gasType, long amount) {}
 
-    private static final class SimulatedTank {
-        private final long capacity;
-        private GasStack gas;
+    private record GasRequestPlan(List<PlannedGasRequest> requests) {
+        private static final GasRequestPlan EMPTY = new GasRequestPlan(List.of());
 
-        private SimulatedTank(GasStack gas, long capacity) {
-            this.gas = gas.isEmpty() ? GasStack.EMPTY : gas.copy();
-            this.capacity = capacity;
-        }
-
-        private GasStack gas() {
-            return gas;
-        }
-
-        private long fill(GasStack resource, long requested) {
-            long current = gas.getAmount();
-            long accepted = Math.clamp(capacity - current, 0, requested);
-            if (accepted <= 0) {
-                return 0;
-            }
-
-            gas = resource.copyWithAmount(current + accepted);
-            return accepted;
+        private boolean isEmpty() {
+            return requests.isEmpty();
         }
     }
+
+    private record ExtractedGasRequest(PackagingRequest request, ItemStack token, int amount) {}
+
+    private record GasRequestExtraction(List<ExtractedGasRequest> transfers, BalloonGasContents contents) {
+        private static final GasRequestExtraction EMPTY = new GasRequestExtraction(List.of(), BalloonGasContents.EMPTY);
+
+        private boolean isEmpty() {
+            return transfers.isEmpty() || contents.isEmpty();
+        }
+    }
+
+    private record GasRequestCommit(PackagingRequest metadata, BalloonGasContents contents, @Nullable PackageOrderWithCrafts orderContext, int packageIndexAtLink, boolean finalPackageAtLink, List<GasDeduction> deductions) {}
+
+    private record GasDeduction(ItemStack token, int amount) {}
 }

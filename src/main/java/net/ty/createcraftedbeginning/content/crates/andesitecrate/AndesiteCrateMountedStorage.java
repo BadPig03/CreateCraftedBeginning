@@ -4,37 +4,30 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorageType;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.core.BlockPos;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.crates.CrateItemStackHandler;
 import net.ty.createcraftedbeginning.content.crates.CrateMountedItemStorage;
 import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AndesiteCrateMountedStorage extends CrateMountedItemStorage {
-    public static final MapCodec<AndesiteCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(ItemStack.CODEC.fieldOf("content").forGetter(storage -> storage.content), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("count").forGetter(storage -> storage.count), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("maxCount").forGetter(storage -> storage.maxCount)).apply(instance, AndesiteCrateMountedStorage::new));
+public class AndesiteCrateMountedStorage extends CrateMountedItemStorage<AndesiteCrateBlockEntity> {
+    public static final MapCodec<AndesiteCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(ItemStack.OPTIONAL_CODEC.fieldOf("content").forGetter(AndesiteCrateMountedStorage::getStoredItem), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("count").forGetter(AndesiteCrateMountedStorage::getStoredCount)).apply(instance, AndesiteCrateMountedStorage::new));
 
-    public AndesiteCrateMountedStorage(ItemStack content, int count, int maxCount) {
-        this(CCBMountedStorage.ANDESITE_CRATE.get(), content, count, maxCount);
+    public AndesiteCrateMountedStorage(ItemStack content, int count) {
+        this(CCBMountedStorage.ANDESITE_CRATE.get(), content, count);
     }
 
-    protected AndesiteCrateMountedStorage(MountedItemStorageType<?> type, ItemStack content, int count, int maxCount) {
-        super(type, content, count, maxCount);
+    protected AndesiteCrateMountedStorage(MountedItemStorageType<?> type, ItemStack content, int count) {
+        super(type, AndesiteCrateBlockEntity.class, content, count, () -> CCBConfig.server().crates.maxAndesiteCapacity.get());
     }
 
-    @Override
-    public void unmount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity be) {
-        if (!(be instanceof AndesiteCrateBlockEntity crate)) {
-            return;
-        }
-
-        crate.setStoredItems(content, count);
+    public static AndesiteCrateMountedStorage fromBlockEntity(AndesiteCrateBlockEntity crate) {
+        CrateItemStackHandler handler = crate.getHandler();
+        return new AndesiteCrateMountedStorage(handler.getStoredItem(0), handler.getCountInSlot(0));
     }
 }

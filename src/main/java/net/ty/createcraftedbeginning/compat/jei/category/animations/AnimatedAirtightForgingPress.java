@@ -34,41 +34,37 @@ public class AnimatedAirtightForgingPress extends AnimatedKinetics {
 
     @Override
     public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
-        PoseStack matrixStack = graphics.pose();
-        matrixStack.pushPose();
+        PoseStack poseStack = graphics.pose();
+        poseStack.pushPose();
 
-        matrixStack.translate(xOffset, yOffset, 192);
-        matrixStack.mulPose(Axis.XP.rotationDegrees(-15.5f));
-        matrixStack.mulPose(Axis.YP.rotationDegrees(22.5f));
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                for (int k = -1; k <= 1; k++) {
-                    if (i == 0 && j == 0 && k == 0) {
-                        matrixStack.pushPose();
-                        float cycle = (AnimationTickHolder.getRenderTime() - offset * 8) % 45;
-                        matrixStack.translate(0, getSqueeze(cycle), 0);
-                        blockElement(CCBPartialModels.AIRTIGHT_FORGING_PRESS_PRESS_HEAD).atLocal(0, -0.5, 0).scale(SCALE).render(graphics);
-                        matrixStack.popPose();
-                        continue;
-                    }
+        poseStack.translate(xOffset, yOffset, 192);
+        poseStack.mulPose(Axis.XP.rotationDegrees(-15.5f));
+        poseStack.mulPose(Axis.YP.rotationDegrees(22.5f));
+        poseStack.pushPose();
+        float cycle = (AnimationTickHolder.getRenderTime() - offset * 8) % 45;
+        poseStack.translate(0, getSqueeze(cycle), 0);
+        blockElement(CCBPartialModels.AIRTIGHT_FORGING_PRESS_PRESS_HEAD).atLocal(0, -0.5, 0).scale(SCALE).render(graphics);
+        poseStack.popPose();
 
-                    AirtightForgingPressStructuralPosition structuralPosition = AirtightForgingPressStructuralPosition.fromOffset(i, j, k);
-                    if (structuralPosition.isShaft()) {
-                        blockElement(CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT_BLOCK.getDefaultState().setValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION, structuralPosition)).atLocal(i, -j, k).scale(SCALE).render(graphics);
-                        if (structuralPosition == AirtightForgingPressStructuralPosition.TOP_LEFT_MID) {
-                            blockElement(CCBPartialModels.SHAFT_HALF_UP).rotateBlock(0, -getCurrentAngle() * 2, 90).atLocal(i, -j, k).scale(SCALE).render(graphics);
-                        }
-                        else if (structuralPosition == AirtightForgingPressStructuralPosition.TOP_MID_DOWN) {
-                            blockElement(CCBPartialModels.SHAFT_HALF_UP).rotateBlock(90, getCurrentAngle() * 2, 0).atLocal(i, -j, k).scale(SCALE).render(graphics);
-                        }
-                    }
-                    else {
-                        blockElement(CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_BLOCK.getDefaultState().setValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION, structuralPosition)).atLocal(i, -j, k).scale(SCALE).render(graphics);
-                    }
-                }
+        for (AirtightForgingPressStructuralPosition structuralPosition : AirtightForgingPressStructuralPosition.all()) {
+            var structureOffset = structuralPosition.getStructureOffset();
+            int x = structureOffset.getX();
+            int y = structureOffset.getY();
+            int z = structureOffset.getZ();
+            if (!structuralPosition.isShaft()) {
+                blockElement(CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_BLOCK.getDefaultState().setValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION, structuralPosition)).atLocal(x, -y, z).scale(SCALE).render(graphics);
+                continue;
+            }
+
+            blockElement(CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT_BLOCK.getDefaultState().setValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION, structuralPosition)).atLocal(x, -y, z).scale(SCALE).render(graphics);
+            if (structuralPosition == AirtightForgingPressStructuralPosition.TOP_LEFT_MID) {
+                blockElement(CCBPartialModels.SHAFT_HALF_UP).rotateBlock(0, -getCurrentAngle() * 2, 90).atLocal(x, -y, z).scale(SCALE).render(graphics);
+            }
+            else if (structuralPosition == AirtightForgingPressStructuralPosition.TOP_MID_DOWN) {
+                blockElement(CCBPartialModels.SHAFT_HALF_UP).rotateBlock(90, getCurrentAngle() * 2, 0).atLocal(x, -y, z).scale(SCALE).render(graphics);
             }
         }
 
-        matrixStack.popPose();
+        poseStack.popPose();
     }
 }

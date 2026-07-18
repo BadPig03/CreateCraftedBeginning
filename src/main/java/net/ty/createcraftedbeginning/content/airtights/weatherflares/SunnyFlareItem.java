@@ -15,7 +15,7 @@ public class SunnyFlareItem extends Item implements IWeatherFlare {
     }
 
     @Override
-    public void setWeather(ServerLevel serverLevel, double ratio) {
-        serverLevel.setWeatherParameters(Mth.ceil(DEFAULT_DURATION * ratio), 0, false, false);
+    public void setWeather(ServerLevel level, double ratio) {
+        level.setWeatherParameters(Mth.ceil(DEFAULT_DURATION * ratio), 0, false, false);
     }
 }

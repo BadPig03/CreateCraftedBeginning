@@ -30,8 +30,8 @@ public class AirtightCannonWindChargeItem extends Item {
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand usedHand) {
-        ItemStack itemStack = player.getItemInHand(usedHand);
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
         if (!level.isClientSide) {
             shoot(level, player);
         }
@@ -40,8 +40,8 @@ public class AirtightCannonWindChargeItem extends Item {
         player.getCooldowns().addCooldown(this, COOLDOWN);
         player.awardStat(Stats.ITEM_USED.get(this));
 
-        itemStack.consume(1, player);
-        return InteractionResultHolder.sidedSuccess(itemStack, level.isClientSide);
+        stack.consume(1, player);
+        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
     }
 
     private void shoot(Level level, Player player) {
@@ -49,9 +49,9 @@ public class AirtightCannonWindChargeItem extends Item {
         Vec3 lookVec = player.getLookAngle();
         Vec3 barrelPos = eyePos.add(lookVec.scale(0.75));
         Vec3 motion = lookVec.normalize().scale(2);
-        Holder<Gas> holder = gasSupplier.get().getHolder();
+        Holder<Gas> gasHolder = gasSupplier.get().getHolder();
 
-        AirtightCannonWindChargeProjectileEntity windCharge = new AirtightCannonWindChargeProjectileEntity(level, holder, motion);
+        AirtightCannonWindChargeProjectileEntity windCharge = new AirtightCannonWindChargeProjectileEntity(level, gasHolder, motion);
         windCharge.setPos(barrelPos);
         windCharge.setOwner(player);
         windCharge.setDeltaMovement(motion);

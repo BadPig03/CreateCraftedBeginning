@@ -11,6 +11,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class EnergizedUltrawarmAirEffectHandler extends UltrawarmAirEffectHandler {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void apply(Level level, BlockPos pos, Direction direction, Gas gasType) {
         applyEffects(level, pos, direction, getInflation(), gasType.getTint(), 5);

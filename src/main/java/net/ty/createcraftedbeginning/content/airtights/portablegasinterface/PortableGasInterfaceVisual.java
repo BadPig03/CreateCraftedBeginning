@@ -30,13 +30,13 @@ public class PortableGasInterfaceVisual extends AbstractBlockEntityVisual<Portab
     }
 
     @Override
-    public void tick(TickableVisual.Context ctx) {
+    public void tick(TickableVisual.Context context) {
         instance.tick(isLit());
     }
 
     @Override
-    public void beginFrame(DynamicVisual.@NotNull Context ctx) {
-        instance.beginFrame(blockEntity.getExtensionDistance(ctx.partialTick()));
+    public void beginFrame(DynamicVisual.@NotNull Context context) {
+        instance.beginFrame(blockEntity.getExtensionDistance(context.partialTick()));
     }
 
     @Override

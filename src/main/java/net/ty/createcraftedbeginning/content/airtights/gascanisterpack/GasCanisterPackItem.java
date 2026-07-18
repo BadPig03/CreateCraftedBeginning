@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.content.airtights.gascanisterpack;
 
-import net.createmod.catnip.lang.LangBuilder;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -22,8 +21,10 @@ import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.GasStackLinkedSet;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.IGasFilter;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -32,6 +33,8 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -66,18 +69,18 @@ public class GasCanisterPackItem extends Item implements MenuProvider, IGasFilte
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        ItemStack drill = player.getItemInHand(hand);
+        ItemStack pack = player.getItemInHand(hand);
         if (hand == InteractionHand.OFF_HAND) {
-            return InteractionResultHolder.fail(drill);
+            return InteractionResultHolder.fail(pack);
         }
 
         if (level.isClientSide) {
-            return InteractionResultHolder.sidedSuccess(drill, true);
+            return InteractionResultHolder.sidedSuccess(pack, true);
         }
 
-        player.openMenu(this, buf -> ItemStack.STREAM_CODEC.encode(buf, drill));
+        player.openMenu(this, buffer -> ItemStack.STREAM_CODEC.encode(buffer, pack));
         player.getCooldowns().addCooldown(this, 10);
-        return InteractionResultHolder.sidedSuccess(drill, false);
+        return InteractionResultHolder.sidedSuccess(pack, false);
     }
 
     @Override
@@ -88,29 +91,27 @@ public class GasCanisterPackItem extends Item implements MenuProvider, IGasFilte
             return;
         }
 
-        LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
-        for (int slot = 0; slot < 4; slot++) {
-            tooltip.add(CCBLang.translate("gui.tooltips.gas_canister_pack.number", slot + 1).style(ChatFormatting.GRAY).component());
-            GasStack gasContent = packContents.getGasInTank(slot);
+        for (int slot = 0; slot < GasCanisterPackContainerContents.MAX_COUNT; slot++) {
+            tooltip.add(CCBLang.translate("gui.gas_canister_pack.number", slot + 1).style(ChatFormatting.GRAY).component());
+
+            GasStack gas = packContents.getGasInTank(slot);
             long capacity = packContents.getTankCapacity(slot);
-            boolean creative = packContents.getCreatives(slot);
-            if (gasContent.isEmpty()) {
-                if (creative) {
-                    tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.capacity").add(CCBLang.translate("gui.goggles.gas_container.infinity").style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
-                }
-                else {
-                    tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.capacity").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
-                }
+            boolean isCreative = packContents.getCreatives(slot);
+            if (!gas.isEmpty()) {
+                tooltip.add(CCBLang.translate("gui.gas_canister.content").add(CCBLang.gasName(gas).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
+            }
+
+            if (isCreative) {
+                tooltip.add(CCBLang.translate("gui.gas_canister.capacity").add(CCBLang.translate("gui.gas_container.infinity").style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
                 continue;
             }
 
-            tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.content").add(CCBLang.gasName(gasContent).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
-            if (creative) {
-                tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.capacity").add(CCBLang.translate("gui.goggles.gas_container.infinity").style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
+            if (gas.isEmpty()) {
+                tooltip.add(CCBLang.translate("gui.gas_canister.capacity").add(GasAmountUtils.precise(capacity).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
+                continue;
             }
-            else {
-                tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.capacity").add(CCBLang.number(gasContent.getAmount()).add(mb).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.DARK_GRAY))).style(ChatFormatting.GRAY).component());
-            }
+
+            tooltip.add(CCBLang.translate("gui.gas_canister.capacity").add(GasAmountUtils.precise(gas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmountUtils.precise(capacity).style(ChatFormatting.DARK_GRAY))).style(ChatFormatting.GRAY).component());
         }
     }
 
@@ -126,19 +127,23 @@ public class GasCanisterPackItem extends Item implements MenuProvider, IGasFilte
 
     @Override
     public boolean test(ItemStack filterItem, GasStack filterGasStack) {
+        return compile(filterItem).test(filterGasStack);
+    }
+
+    @Override
+    public Predicate<GasStack> compile(ItemStack filterItem) {
         if (!(filterItem.getCapability(GasHandler.ITEM) instanceof GasCanisterPackContainerContents packContents)) {
-            return false;
+            return gas -> false;
         }
 
-        for (int i = 0; i < packContents.getTanks(); i++) {
-            GasStack gasContent = packContents.getGasInTank(i);
-            if (gasContent.isEmpty() || !GasStack.isSameGasSameComponents(gasContent, filterGasStack)) {
-                continue;
+        Set<GasStack> gases = GasStackLinkedSet.createTypeAndComponentsSet();
+        for (int tank = 0; tank < packContents.getTanks(); tank++) {
+            GasStack gas = packContents.getGasInTank(tank).copyWithAmount(1);
+            if (!gas.isEmpty()) {
+                gases.add(gas);
             }
-
-            return true;
         }
 
-        return false;
+        return gas -> !gas.isEmpty() && gases.contains(gas);
     }
 }

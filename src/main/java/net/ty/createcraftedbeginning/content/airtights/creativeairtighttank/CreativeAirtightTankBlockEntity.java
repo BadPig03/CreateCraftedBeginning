@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.content.airtights.creativeairtighttank;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
+import com.simibubi.create.foundation.blockEntity.IMultiBlockEntityContainer;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.createmod.catnip.nbt.NBTHelper;
@@ -21,6 +22,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasConnectivityHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
@@ -29,6 +31,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTankMultiBlockEntityContainer;
+import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.IChamberGasTank;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -41,8 +44,6 @@ import java.util.Objects;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements IGasTankMultiBlockEntityContainer, IHaveGoggleInformation, IChamberGasTank, ICreativeGasContainer, ThresholdSwitchObservable {
-    private static final int MAX_LENGTH = 4;
-    private static final int MAX_WIDTH = 3;
     private static final int SYNC_RATE = 4;
 
     private static final String COMPOUND_KEY_UPDATE_CONNECTIVITY = "UpdateConnectivity";
@@ -83,7 +84,12 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
     }
 
     public static long getCapacityPerTank() {
-        return Integer.MAX_VALUE * 1000L;
+        return Integer.MAX_VALUE * GasAmountUtils.MILLIBUCKETS_PER_BUCKET;
+    }
+
+    @Nullable
+    private static BlockPos readOptionalBlockPos(CompoundTag tag, String key) {
+        return tag.contains(key) ? NBTHelper.readBlockPos(tag, key) : null;
     }
 
     @Override
@@ -101,12 +107,6 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
     }
 
     @Override
-	public void invalidate() {
-		super.invalidate();
-		invalidateCapabilities();
-	}
-
-    @Override
     public void initialize() {
         super.initialize();
         sendData();
@@ -120,12 +120,7 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
     @Override
     public void tick() {
         super.tick();
-        if (syncCooldown > 0) {
-            syncCooldown--;
-            if (syncCooldown == 0 && queuedSync) {
-                sendData();
-            }
-        }
+        tickSyncCooldown();
 
         if (lastKnownPos == null) {
             lastKnownPos = getBlockPos();
@@ -139,11 +134,9 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
             updateCapability = false;
             refreshCapability();
         }
-        if (!updateConnectivity) {
-            return;
+        if (updateConnectivity) {
+            updateConnectivity();
         }
-
-        updateConnectivity();
     }
 
     @Override
@@ -180,25 +173,17 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        BlockPos controllerBefore = controllerPos;
-        int previousSize = width;
+        BlockPos previousController = controllerPos;
+        int previousWidth = width;
         int previousHeight = height;
+
         if (!clientPacket) {
-            updateConnectivity = compoundTag.getBoolean(COMPOUND_KEY_UPDATE_CONNECTIVITY);
-            lastKnownPos = compoundTag.contains(COMPOUND_KEY_LAST_KNOWN_POS) ? NBTHelper.readBlockPos(compoundTag, COMPOUND_KEY_LAST_KNOWN_POS) : null;
+            readServerData(compoundTag);
         }
-        controllerPos = compoundTag.contains(COMPOUND_KEY_CONTROLLER_POS) ? NBTHelper.readBlockPos(compoundTag, COMPOUND_KEY_CONTROLLER_POS) : null;
+
+        controllerPos = readOptionalBlockPos(compoundTag, COMPOUND_KEY_CONTROLLER_POS);
         if (isController()) {
-            if (compoundTag.contains(COMPOUND_KEY_WIDTH)) {
-                width = compoundTag.getInt(COMPOUND_KEY_WIDTH);
-            }
-            if (compoundTag.contains(COMPOUND_KEY_HEIGHT)) {
-                height = compoundTag.getInt(COMPOUND_KEY_HEIGHT);
-            }
-            tankInventory.setCapacity(getCapacityPerTank());
-            if (compoundTag.contains(COMPOUND_KEY_TANK_CONTENT)) {
-                tankInventory.read(provider, compoundTag.getCompound(COMPOUND_KEY_TANK_CONTENT));
-            }
+            readControllerData(compoundTag, provider);
         }
 
         updateCapability = true;
@@ -206,10 +191,51 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
             return;
         }
 
-        boolean changed = !Objects.equals(controllerBefore, controllerPos);
-        if (!changed && previousSize == width && previousHeight == height) {
+        boolean controllerChanged = !Objects.equals(previousController, controllerPos);
+        if (!controllerChanged && previousWidth == width && previousHeight == height) {
             return;
         }
+
+        updateClientState();
+    }
+
+    @Override
+    public void invalidate() {
+        super.invalidate();
+        invalidateCapabilities();
+    }
+
+    private void tickSyncCooldown() {
+        if (syncCooldown <= 0) {
+            return;
+        }
+
+        syncCooldown--;
+        if (syncCooldown == 0 && queuedSync) {
+            sendData();
+        }
+    }
+
+    private void readServerData(CompoundTag tag) {
+        updateConnectivity = tag.getBoolean(COMPOUND_KEY_UPDATE_CONNECTIVITY);
+        lastKnownPos = readOptionalBlockPos(tag, COMPOUND_KEY_LAST_KNOWN_POS);
+    }
+
+    private void readControllerData(CompoundTag tag, Provider provider) {
+        if (tag.contains(COMPOUND_KEY_WIDTH)) {
+            width = Math.clamp(tag.getInt(COMPOUND_KEY_WIDTH), 1, getConfiguredMaxWidth());
+        }
+        if (tag.contains(COMPOUND_KEY_HEIGHT)) {
+            height = Math.clamp(tag.getInt(COMPOUND_KEY_HEIGHT), 1, getConfiguredMaxLength());
+        }
+
+        tankInventory.setCapacity(getCapacityPerTank());
+        if (tag.contains(COMPOUND_KEY_TANK_CONTENT)) {
+            tankInventory.read(provider, tag.getCompound(COMPOUND_KEY_TANK_CONTENT));
+        }
+    }
+
+    private void updateClientState() {
         if (level != null) {
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 16);
         }
@@ -255,12 +281,17 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
             return tankInventory;
         }
 
-        return getControllerBE() != null ? getControllerBE().handlerForCapability() : new GasTank(0);
+        CreativeAirtightTankBlockEntity controller = getControllerBE();
+        return controller != null ? controller.handlerForCapability() : new GasTank(0);
     }
 
     @Override
     protected AABB createRenderBoundingBox() {
-        return isController() ? super.createRenderBoundingBox().expandTowards(width - 1, height - 1, width - 1) : super.createRenderBoundingBox();
+        if (!isController()) {
+            return super.createRenderBoundingBox();
+        }
+
+        return super.createRenderBoundingBox().expandTowards(width - 1, height - 1, width - 1);
     }
 
     protected void onGasStackChanged(GasStack newStack) {
@@ -287,31 +318,16 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
             return false;
         }
 
-        CCBLang.translate("gui.goggles.gas_container").forGoggles(tooltip);
-        GasStack stack = handler.getGasInTank(0);
-        if (stack.isEmpty()) {
-            CCBLang.translate("gui.goggles.gas_container.empty").style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+        CCBLang.translate("gui.gas_container").forGoggles(tooltip);
+        GasStack gas = handler.getGasInTank(0);
+        if (gas.isEmpty()) {
+            CCBLang.translate("gui.gas_container.empty").style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+            return true;
         }
-        else {
-            CCBLang.gasName(stack).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-            CCBLang.translate("gui.goggles.gas_container.infinity").style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
-        }
+
+        CCBLang.gasName(gas).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+        CCBLang.translate("gui.gas_container.infinity").style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
         return true;
-    }
-
-    @Override
-    public boolean hasTank() {
-        return true;
-    }
-
-    @Override
-    public long getTankSize(int tank) {
-        return getCapacityPerTank();
-    }
-
-    @Override
-    public void setTankSize(int tank, int blocks) {
-        tankInventory.setCapacity(getCapacityPerTank());
     }
 
     @Override
@@ -320,14 +336,32 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
     }
 
     @Override
+    public void setTankSize(int tank, int blocks) {
+        tankInventory.setCapacity(getCapacityPerTank());
+    }
+
+    @Override
+    public boolean hasTank() {
+        return true;
+    }
+
+    @Override
     public GasStack getGas(int tank) {
         return tankInventory.getGasStack().copy();
     }
 
     @Override
+    public long getTankSize(int tank) {
+        return getCapacityPerTank();
+    }
+
+    @Override
     public int getMaxValue() {
         CreativeAirtightTankBlockEntity controller = getControllerBE();
-        return controller == null ? 0 : Math.clamp(getCapacityPerTank() / 1000, 0, Integer.MAX_VALUE);
+        if (controller == null) {
+            return 0;
+        }
+        return GasAmountUtils.toWholeBucketsClamped(getCapacityPerTank());
     }
 
     @Override
@@ -342,14 +376,17 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
             return 0;
         }
 
-        IGasHandler gasHandler = controller.gasCapability;
-        GasStack gasStack = gasHandler.getGasInTank(0);
-        return gasStack.isEmpty() ? 0 : Math.clamp(getCapacityPerTank() / 1000, 0, Integer.MAX_VALUE);
+        IGasHandler handler = controller.gasCapability;
+        GasStack gas = handler.getGasInTank(0);
+        if (gas.isEmpty()) {
+            return 0;
+        }
+        return GasAmountUtils.toWholeBucketsClamped(getCapacityPerTank());
     }
 
     @Override
     public MutableComponent format(int value) {
-        return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.buckets")).component();
+        return GasAmountUtils.formatWholeBuckets(value);
     }
 
     @Override
@@ -357,15 +394,15 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
         return isController() ? worldPosition : controllerPos;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public @Nullable CreativeAirtightTankBlockEntity getControllerBE() {
+    @SuppressWarnings("unchecked")
+    public <T extends BlockEntity & IMultiBlockEntityContainer> @Nullable T getControllerBE() {
         if (isController() || level == null) {
-            return this;
+            return (T) this;
         }
 
         BlockEntity blockEntity = level.getBlockEntity(controllerPos);
-        return blockEntity instanceof CreativeAirtightTankBlockEntity ? (CreativeAirtightTankBlockEntity) blockEntity : null;
+        return blockEntity instanceof CreativeAirtightTankBlockEntity tank ? (T) tank : null;
     }
 
     @Override
@@ -423,8 +460,10 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
 
         BlockState state = getBlockState();
         if (state.getBlock() instanceof CreativeAirtightTankBlock) {
-            state = state.setValue(CreativeAirtightTankBlock.BOTTOM, getController().getY() == getBlockPos().getY());
-            state = state.setValue(CreativeAirtightTankBlock.TOP, getController().getY() + height - 1 == getBlockPos().getY());
+            int controllerY = getController().getY();
+            int blockY = getBlockPos().getY();
+            state = state.setValue(CreativeAirtightTankBlock.BOTTOM, controllerY == blockY);
+            state = state.setValue(CreativeAirtightTankBlock.TOP, controllerY + height - 1 == blockY);
             level.setBlock(worldPosition, state, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE);
         }
         onGasStackChanged(tankInventory.getGasStack());
@@ -438,12 +477,12 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
 
     @Override
     public int getMaxLength(Axis longAxis, int width) {
-        return MAX_LENGTH;
+        return getConfiguredMaxLength();
     }
 
     @Override
     public int getMaxWidth() {
-        return MAX_WIDTH;
+        return getConfiguredMaxWidth();
     }
 
     @Override
@@ -453,7 +492,7 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
 
     @Override
     public void setHeight(int height) {
-        this.height = height;
+        this.height = Math.clamp(height, 1, getConfiguredMaxLength());
     }
 
     @Override
@@ -463,7 +502,15 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
 
     @Override
     public void setWidth(int width) {
-        this.width = width;
+        this.width = Math.clamp(width, 1, getConfiguredMaxWidth());
+    }
+
+    private static int getConfiguredMaxLength() {
+        return Math.max(1, CCBConfig.server().airtights.maxAirtightTankLength.get());
+    }
+
+    private static int getConfiguredMaxWidth() {
+        return Math.max(1, CCBConfig.server().airtights.maxAirtightTankWidth.get());
     }
 
     @Override

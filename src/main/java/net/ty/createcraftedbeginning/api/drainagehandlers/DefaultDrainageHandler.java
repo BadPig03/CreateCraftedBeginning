@@ -11,11 +11,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class DefaultDrainageHandler implements AirtightDrainageHandler {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public float getInflation() {
         return 1;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void apply(Level level, BlockPos pos, Direction direction, Gas gasType) {
         showOutline(level, pos, direction, getInflation(), gasType.getTint());

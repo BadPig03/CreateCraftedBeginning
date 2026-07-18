@@ -22,7 +22,6 @@ import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -45,18 +44,16 @@ public class EndCasingBlock extends CasingBlock {
 
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        for (Entry<Item, Integer> entry : PLACEMENT_HELPERS.entrySet()) {
-            if (!stack.is(entry.getKey())) {
-                continue;
-            }
-
-            IPlacementHelper placementHelper = PlacementHelpers.get(entry.getValue());
-            if (!placementHelper.matchesItem(stack)) {
-                return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-            }
-
-            return placementHelper.getOffset(player, level, state, pos, hitResult).placeInWorld(level, (BlockItem) stack.getItem(), player, hand, hitResult);
+        Integer helperId = PLACEMENT_HELPERS.get(stack.getItem());
+        if (helperId == null) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+
+        IPlacementHelper helper = PlacementHelpers.get(helperId);
+        if (!helper.matchesItem(stack)) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        return helper.getOffset(player, level, state, pos, hitResult).placeInWorld(level, (BlockItem) stack.getItem(), player, hand, hitResult);
     }
 }

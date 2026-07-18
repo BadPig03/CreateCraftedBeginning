@@ -7,6 +7,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class PressurizedEtherealAirEffectHandler extends EtherealAirEffectHandler {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public float getInflation() {
         return 2;

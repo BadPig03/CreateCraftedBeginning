@@ -3,20 +3,17 @@ package net.ty.createcraftedbeginning.api.cannonhandlers;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandler;
+import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Utility methods for querying and registering Airtight Cannon Handlers.
- * <p>
- * An {@link AirtightCannonHandler} defines cannon-related behavior for a
- * specific {@link Gas}, including render icon, trail particles, explosion logic,
- * projectile texture, model animation, tooltip text, and gas consumption.
- * <p>
- * This class acts as the common entry point for resolving handlers from gases or
- * gas stacks, and for registering custom airtight cannon behavior.
+ * Provides lookup and registration helpers for gas-specific airtight cannon behavior.
+ * Handlers define explosion behavior, gas consumption, and contextual tooltip content.
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -25,63 +22,35 @@ public final class AirtightCannonHandlerUtils {
     }
 
     /**
-     * Gets the Airtight Cannon Handler for the gas type contained in the given
-     * {@link GasStack}.
-     * <p>
-     * This method delegates to {@link #of(Gas)} using
-     * {@link GasStack#getGasType()}.
+     * Resolves the airtight cannon handler associated with the supplied input.
      *
-     * @param gasStack the gas stack whose gas type should be used
-     * @return the registered Airtight Cannon Handler for the gas type, or a
-     * {@link DefaultCannonHandler} if no custom handler is registered
-     * @throws IllegalArgumentException if the gas stack contains an empty gas type
+     * @param gasStack the gas stack to inspect or process
+     * @return the resolved airtight cannon handler
      */
-    public static AirtightCannonHandler of(GasStack gasStack) throws IllegalArgumentException {
+    public static AirtightCannonHandler of(GasStack gasStack) {
         return of(gasStack.getGasType());
     }
 
     /**
-     * Gets the Airtight Cannon Handler registered for the given gas type.
-     * <p>
-     * If the gas type has no custom handler registered in
-     * {@link AirtightCannonHandler#REGISTRY}, this method returns a new
-     * {@link DefaultCannonHandler}.
+     * Resolves the airtight cannon handler associated with the supplied input.
      *
-     * @param gasType the gas type to resolve the cannon handler for
-     * @return the registered Airtight Cannon Handler, or a default handler if no
-     * custom handler exists
-     * @throws IllegalArgumentException if the given gas type is empty
+     * @param gasType the gas type to inspect or process
+     * @return the resolved airtight cannon handler
      */
-    public static AirtightCannonHandler of(Gas gasType) throws IllegalArgumentException {
+    public static AirtightCannonHandler of(Gas gasType) {
         if (gasType.isEmpty()) {
-            throw new IllegalArgumentException();
+            return DefaultCannonHandler.INSTANCE;
         }
 
         AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasType);
-        if (cannonHandler == null) {
-            return new DefaultCannonHandler();
-        }
-        return cannonHandler;
+        return cannonHandler != null ? cannonHandler : DefaultCannonHandler.INSTANCE;
     }
 
     /**
-     * Registers a custom Airtight Cannon Handler for the gas identified by the
-     * given resource location.
-     * <p>
-     * The gas is resolved using {@link Gas#getGasTypeByName(ResourceLocation)}. If
-     * the given {@link ResourceLocation} does not point to an existing gas,
-     * registration is skipped and an error is logged.
-     * <p>
-     * This method does not override existing handlers. If the target gas already
-     * has an {@link AirtightCannonHandler} registered in
-     * {@link AirtightCannonHandler#REGISTRY}, registration is skipped and an error
-     * is logged.
+     * Registers a custom airtight cannon handler for the supplied target.
      *
-     * @param location the resource location of the gas to register a cannon handler for
-     * @param handler  the Airtight Cannon Handler to associate with the gas
-     * @see AirtightCannonHandler
-     * @see AirtightCannonHandler#REGISTRY
-     * @see Gas#getGasTypeByName(ResourceLocation)
+     * @param location the resource location identifying the target value
+     * @param handler  the handler to register or invoke
      */
     public static void register(ResourceLocation location, AirtightCannonHandler handler) {
         Gas gasType = Gas.getGasTypeByName(location);
@@ -95,7 +64,19 @@ public final class AirtightCannonHandlerUtils {
             CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Cannon Handler for gas '{}': a handler is already registered.", location);
             return;
         }
+        float consumptionMultiplier = handler.getGasConsumptionMultiplier();
+        if (!GasConsumptionUtils.isNonNegativeFinite(consumptionMultiplier)) {
+            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Cannon Handler for gas '{}': consumption multiplier must be finite and non-negative, got {}.", location, consumptionMultiplier);
+            return;
+        }
+        if (handler instanceof AirtightCannonVisualHandler visualHandler && !GasConsumptionUtils.isFinite(visualHandler.getRotationSpeed())) {
+            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Cannon Handler for gas '{}': rotation speed must be finite, got {}.", location, visualHandler.getRotationSpeed());
+            return;
+        }
 
         AirtightCannonHandler.REGISTRY.register(gasType, handler);
+        if (handler instanceof AirtightCannonVisualHandler visualHandler) {
+            AirtightCannonVisualHandlerUtils.register(location, visualHandler);
+        }
     }
 }

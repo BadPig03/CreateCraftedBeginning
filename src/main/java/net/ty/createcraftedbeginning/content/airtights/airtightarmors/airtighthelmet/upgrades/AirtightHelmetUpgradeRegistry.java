@@ -4,68 +4,55 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightHelmetUpgradeRegistry {
-    private static final Map<ResourceLocation, AirtightUpgrade> REGISTRY = new HashMap<>();
-    private static final List<AirtightUpgrade> ORDERED_UPGRADES = new ArrayList<>();
+public final class AirtightHelmetUpgradeRegistry {
+    private static final AirtightUpgradeRegistry REGISTRY = new AirtightUpgradeRegistry("airtight_helmet");
+
+    private AirtightHelmetUpgradeRegistry() {
+    }
 
     public static @Nullable AirtightUpgrade getByID(ResourceLocation id) {
-        return REGISTRY.getOrDefault(id, null);
+        return REGISTRY.getById(id);
     }
 
-    public static @Nullable AirtightUpgrade getByItem(Item item) {
-        return REGISTRY.values().stream().filter(upgrade -> upgrade.getUpgradeItem() == item).findFirst().orElse(null);
+    public static @Nullable AirtightUpgrade getByStack(ItemStack stack) {
+        return REGISTRY.getByStack(stack);
     }
 
-    public static boolean allUpgradesActive(Player player) {
-        ItemStack helmet = player.getItemBySlot(EquipmentSlot.HEAD);
-        return helmet.is(CCBItems.AIRTIGHT_HELMET) && ORDERED_UPGRADES.stream().allMatch(upgrade -> upgrade.isEnabled(helmet));
+    public static boolean allUpgradesEnabled(Player player) {
+        ItemStack item = player.getItemBySlot(EquipmentSlot.HEAD);
+        return item.is(CCBItems.AIRTIGHT_HELMET) && REGISTRY.allUpgradesEnabled(item);
     }
 
     public static List<AirtightUpgrade> getAll() {
-        return new ArrayList<>(ORDERED_UPGRADES);
+        return REGISTRY.getAll();
     }
 
     public static List<AirtightUpgradeStatus> getDefaultUpgradeList() {
-        List<AirtightUpgradeStatus> list = new ArrayList<>();
-        for (AirtightUpgrade upgrade : getAll()) {
-            list.add(new AirtightUpgradeStatus(upgrade.getID(), upgrade.startsEnabled(), upgrade.startsInstalled()));
-        }
-        return list;
+        return REGISTRY.getDefaultStatuses();
     }
 
     public static void forEach(Consumer<AirtightUpgrade> action) {
-        getAll().forEach(action);
+        REGISTRY.forEach(action);
     }
 
-    public static void register(AirtightUpgrade upgrade) {
-        REGISTRY.put(upgrade.getID(), upgrade);
-        ORDERED_UPGRADES.add(upgrade);
-        ORDERED_UPGRADES.sort(Comparator.comparingInt(AirtightUpgrade::getIndex));
+    public static void tick(Player player, ItemStack item) {
+        REGISTRY.tick(player, item);
     }
 
     public static void registerUpgrades() {
-        register(EffectsProtectionUpgrade.INSTANCE);
-        register(WaterBreathingUpgrade.INSTANCE);
-        register(GogglesUpgrade.INSTANCE);
-        register(VisionUpgrade.INSTANCE);
-        register(SpectralUpgrade.INSTANCE);
-        register(HelmetResistanceUpgrade.INSTANCE);
+        REGISTRY.registerAll(EffectsProtectionUpgrade.INSTANCE, WaterBreathingUpgrade.INSTANCE, GogglesUpgrade.INSTANCE, VisionUpgrade.INSTANCE, SpectralUpgrade.INSTANCE, HelmetResistanceUpgrade.INSTANCE);
     }
 }

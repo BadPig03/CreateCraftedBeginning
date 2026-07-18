@@ -5,7 +5,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
@@ -30,6 +29,7 @@ public class AirtightTankItem extends BlockItem {
     private static final String COMPOUND_KEY_LAST_KNOWN_POS = "LastKnownPos";
     private static final String COMPOUND_KEY_CONTROLLER_POS = "Controller";
     private static final String COMPOUND_KEY_TANK_CONTENT = "TankContent";
+    private static final int INVALID_PLACEMENT = -1;
 
     public AirtightTankItem(Block block, Properties properties) {
         super(block, properties);
@@ -37,32 +37,31 @@ public class AirtightTankItem extends BlockItem {
 
     @Override
     public InteractionResult place(BlockPlaceContext context) {
-        InteractionResult initialResult = placeSingleBlock(context);
-        if (!initialResult.consumesAction()) {
-            return initialResult;
+        InteractionResult result = placeSingleBlock(context);
+        if (!result.consumesAction()) {
+            return result;
         }
 
         tryMultiPlace(context);
-        return initialResult;
+        return result;
     }
 
     @Override
     protected boolean updateCustomBlockEntityTag(BlockPos blockPos, Level level, @Nullable Player player, ItemStack itemStack, BlockState blockState) {
-        MinecraftServer server = level.getServer();
-        if (server == null) {
+        if (level.getServer() == null) {
             return false;
         }
 
-        CustomData blockEntityData = itemStack.get(DataComponents.BLOCK_ENTITY_DATA);
-        if (blockEntityData != null) {
-            CompoundTag compoundTag = blockEntityData.copyTag();
-            compoundTag.remove(COMPOUND_KEY_WIDTH);
-            compoundTag.remove(COMPOUND_KEY_HEIGHT);
-            compoundTag.remove(COMPOUND_KEY_CONTROLLER_POS);
-            compoundTag.remove(COMPOUND_KEY_LAST_KNOWN_POS);
-            compoundTag.remove(COMPOUND_KEY_CORE);
-            compoundTag.remove(COMPOUND_KEY_TANK_CONTENT);
-            itemStack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(compoundTag));
+        CustomData data = itemStack.get(DataComponents.BLOCK_ENTITY_DATA);
+        if (data != null) {
+            CompoundTag tag = data.copyTag();
+            tag.remove(COMPOUND_KEY_WIDTH);
+            tag.remove(COMPOUND_KEY_HEIGHT);
+            tag.remove(COMPOUND_KEY_CONTROLLER_POS);
+            tag.remove(COMPOUND_KEY_LAST_KNOWN_POS);
+            tag.remove(COMPOUND_KEY_CORE);
+            tag.remove(COMPOUND_KEY_TANK_CONTENT);
+            itemStack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(tag));
         }
         return super.updateCustomBlockEntityTag(blockPos, level, player, itemStack, blockState);
     }
@@ -91,12 +90,12 @@ public class AirtightTankItem extends BlockItem {
             return;
         }
 
-        AirtightTankBlockEntity tankAt = GasConnectivityHandler.partAt(CCBBlockEntities.AIRTIGHT_TANK.get(), level, placedOnPos);
-        if (tankAt == null) {
+        AirtightTankBlockEntity tank = GasConnectivityHandler.partAt(CCBBlockEntities.AIRTIGHT_TANK.get(), level, placedOnPos);
+        if (tank == null) {
             return;
         }
 
-        AirtightTankBlockEntity controller = tankAt.getControllerBE();
+        AirtightTankBlockEntity controller = tank.getControllerBE();
         if (controller == null) {
             return;
         }
@@ -106,37 +105,45 @@ public class AirtightTankItem extends BlockItem {
             return;
         }
 
-        int tanksToPlace = 0;
-        BlockPos startPos = face == Direction.DOWN ? controller.getBlockPos().below() : controller.getBlockPos().above(controller.height);
+        BlockPos controllerPos = controller.getBlockPos();
+        BlockPos startPos = face == Direction.DOWN ? controllerPos.below() : controllerPos.above(controller.height);
         if (startPos.getY() != pos.getY()) {
             return;
         }
 
+        int tanksToPlace = countTanksToPlace(level, startPos, width);
+        if (tanksToPlace == INVALID_PLACEMENT || !player.isCreative() && stack.getCount() < tanksToPlace) {
+            return;
+        }
+
+        placeTankLayer(context, level, startPos, face, width);
+    }
+
+    private int countTanksToPlace(Level level, BlockPos startPos, int width) {
+        int tanksToPlace = 0;
         for (int xOffset = 0; xOffset < width; xOffset++) {
             for (int zOffset = 0; zOffset < width; zOffset++) {
                 BlockPos offsetPos = startPos.offset(xOffset, 0, zOffset);
-                BlockState blockState = level.getBlockState(offsetPos);
-                if (blockState.getBlock() == getBlock()) {
+                BlockState state = level.getBlockState(offsetPos);
+                if (state.getBlock() == getBlock()) {
                     continue;
                 }
-
-                if (!blockState.canBeReplaced()) {
-                    return;
+                if (!state.canBeReplaced()) {
+                    return INVALID_PLACEMENT;
                 }
 
                 tanksToPlace++;
             }
         }
+        return tanksToPlace;
+    }
 
-        if (!player.isCreative() && stack.getCount() < tanksToPlace) {
-            return;
-        }
-
+    private void placeTankLayer(BlockPlaceContext context, Level level, BlockPos startPos, Direction face, int width) {
         for (int xOffset = 0; xOffset < width; xOffset++) {
             for (int zOffset = 0; zOffset < width; zOffset++) {
                 BlockPos offsetPos = startPos.offset(xOffset, 0, zOffset);
-                BlockState blockState = level.getBlockState(offsetPos);
-                if (blockState.getBlock() == getBlock()) {
+                BlockState state = level.getBlockState(offsetPos);
+                if (state.getBlock() == getBlock()) {
                     continue;
                 }
 

@@ -57,8 +57,11 @@ public class WindChargingCategory extends CCBRecipeCategory<WindChargingRecipe> 
         }
 
         boolean isBadFood = recipe.isBadFood();
-        MutableComponent realTime = (isBadFood ? CCBLang.text("-").component() : Component.empty()).append(CCBLang.secondsWithGameTicks(Math.abs(recipe.getProcessingDuration()), 20).component());
-        graphics.drawString(font, realTime, getBackground().getWidth() / 2 - font.width(realTime) / 2 - 12, 22, isBadFood ? COLOR_BAD : COLOR_NORMAL, false);
+        MutableComponent time = isBadFood ? CCBLang.text("-").component() : Component.empty();
+        time.append(CCBLang.secondsWithGameTicks(Math.abs(recipe.getProcessingDuration()), 20).component());
+        int textX = getBackground().getWidth() / 2 - font.width(time) / 2 - 12;
+        int color = isBadFood ? COLOR_BAD : COLOR_NORMAL;
+        graphics.drawString(font, time, textX, 22, color, false);
         if (isBadFood) {
             illChamber.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
         }

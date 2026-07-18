@@ -10,7 +10,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock.VentState;
 import net.ty.createcraftedbeginning.data.CCBSpriteShifts;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,8 +20,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AirVentCTBehaviour extends Base {
     @Override
     public boolean connectsTo(BlockState state, BlockState other, BlockAndTintGetter level, BlockPos pos, BlockPos otherPos, Direction face, Direction primaryOffset, Direction secondaryOffset) {
-        VentState ventState = state.getValue(AirVentBlock.PROPERTY_BY_DIRECTION.get(face));
-        return !ventState.canHandInteract() && connectsTo(state, other, level, pos, otherPos, face);
+        return !AirVentBlock.getVentState(level, pos, state, face).canHandInteract() && connectsTo(state, other, level, pos, otherPos, face);
     }
 
     @Override

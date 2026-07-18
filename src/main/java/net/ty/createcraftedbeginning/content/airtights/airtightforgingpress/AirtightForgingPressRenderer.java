@@ -34,93 +34,89 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
         super(context);
     }
 
-    private static void renderHeadModels(AirtightForgingPressBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light) {
-        SuperByteBuffer headModel = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_FORGING_PRESS_PRESS_HEAD, be.getBlockState());
-        headModel.translate(0, -be.getPressHeadDistance(partialTicks), 0).light(light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
+    private static void renderPressHead(AirtightForgingPressBlockEntity press, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light) {
+        SuperByteBuffer head = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_FORGING_PRESS_PRESS_HEAD, press.getBlockState());
+        head.translate(0, -press.getPressHeadDistance(partialTicks), 0).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
     }
 
-    private static void renderItems(AirtightForgingPressBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        Vec3 itemPosition = VecHelper.getCenterOf(be.getBlockPos());
-        renderInputItem(be, ms, buffer, light, overlay, itemPosition);
-        renderOutputItems(be, ms, buffer, light, overlay, itemPosition);
-        renderPressHeadItem(be, partialTicks, ms, buffer, light, overlay, itemPosition);
+    private static void renderItems(AirtightForgingPressBlockEntity press, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        Vec3 itemPosition = VecHelper.getCenterOf(press.getBlockPos());
+        renderInputItem(press, poseStack, buffer, light, overlay, itemPosition);
+        renderOutputItems(press, poseStack, buffer, light, overlay, itemPosition);
+        renderPressHeadItem(press, partialTicks, poseStack, buffer, light, overlay, itemPosition);
     }
 
-    private static void renderPressHeadItem(AirtightForgingPressBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay, Vec3 itemPosition) {
-        SmartInventory inventory = be.getProcessingInventories().getFirst();
-        ItemStack stack = inventory.getStackInSlot(0);
+    private static void renderPressHeadItem(AirtightForgingPressBlockEntity press, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay, Vec3 itemPosition) {
+        ItemStack stack = press.getPressHeadInventory().getStackInSlot(0);
         if (stack.isEmpty()) {
             return;
         }
 
-        ms.pushPose();
-
-        ms.translate(0.5f, -0.1f - be.getPressHeadDistance(partialTicks), 0.5f);
+        poseStack.pushPose();
+        poseStack.translate(0.5f, -0.1f - press.getPressHeadDistance(partialTicks), 0.5f);
         if (!Minecraft.getInstance().getItemRenderer().getModel(stack, null, null, 0).isGui3d()) {
-            ms.translate(0, 0.1875f, 0);
+            poseStack.translate(0, 0.1875f, 0);
         }
-        TransformStack.of(ms).nudge(0);
+        TransformStack.of(poseStack).nudge(0);
 
-        Random random = getRenderRandom(be.getBlockPos().asLong());
-        DepotRenderer.renderItem(ms, buffer, light, overlay, stack, Mth.floor(360 * random.nextFloat()), random, itemPosition, false);
-
-        ms.popPose();
+        Random random = getRenderRandom(press.getBlockPos().asLong());
+        int angle = Mth.floor(360 * random.nextFloat());
+        DepotRenderer.renderItem(poseStack, buffer, light, overlay, stack, angle, random, itemPosition, false);
+        poseStack.popPose();
     }
 
-    private static void renderInputItem(AirtightForgingPressBlockEntity be, PoseStack ms, MultiBufferSource buffer, int light, int overlay, Vec3 itemPosition) {
-        SmartInventory inputInventory = be.getInputOutputInventories().getFirst();
-        ItemStack stack = inputInventory.getStackInSlot(0);
+    private static void renderInputItem(AirtightForgingPressBlockEntity press, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay, Vec3 itemPosition) {
+        ItemStack stack = press.getInputInventory().getStackInSlot(0);
         if (stack.isEmpty()) {
             return;
         }
 
-        ms.pushPose();
-        ms.translate(0.5f, -0.0625f, 0.5f);
-        TransformStack.of(ms).nudge(0);
+        poseStack.pushPose();
+        poseStack.translate(0.5f, -0.0625f, 0.5f);
+        TransformStack.of(poseStack).nudge(0);
 
-        Random random = getRenderRandom(be.getBlockPos().asLong());
-        DepotRenderer.renderItem(ms, buffer, light, overlay, stack, Mth.floor(360 * random.nextFloat()), random, itemPosition, false);
-
-        ms.popPose();
+        Random random = getRenderRandom(press.getBlockPos().asLong());
+        int angle = Mth.floor(360 * random.nextFloat());
+        DepotRenderer.renderItem(poseStack, buffer, light, overlay, stack, angle, random, itemPosition, false);
+        poseStack.popPose();
     }
 
-    private static void renderOutputItems(AirtightForgingPressBlockEntity be, PoseStack ms, MultiBufferSource buffer, int light, int overlay, Vec3 itemPosition) {
-        SmartInventory outputInventory = be.getInputOutputInventories().getSecond();
-        int slots = outputInventory.getSlots();
+    private static void renderOutputItems(AirtightForgingPressBlockEntity press, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay, Vec3 itemPosition) {
+        SmartInventory inventory = press.getOutputInventory();
+        int slots = inventory.getSlots();
         if (slots <= 0) {
             return;
         }
 
-        ms.pushPose();
-        ms.translate(0.5f, -0.0625f, 0.5f);
+        poseStack.pushPose();
+        poseStack.translate(0.5f, -0.0625f, 0.5f);
 
-        long posLong = be.getBlockPos().asLong();
+        long posSeed = press.getBlockPos().asLong();
         for (int slot = 0; slot < slots; slot++) {
-            ItemStack stack = outputInventory.getStackInSlot(slot);
+            ItemStack stack = inventory.getStackInSlot(slot);
             if (stack.isEmpty()) {
                 continue;
             }
 
-            ms.pushPose();
-
+            poseStack.pushPose();
             OutputPlacement placement = OUTPUT_PLACEMENTS[slot];
-            TransformStack.of(ms).rotateYDegrees(placement.angle());
-            ms.translate(OUTPUT_RADIUS, 0, 0);
+            TransformStack.of(poseStack).rotateYDegrees(placement.angle());
+            poseStack.translate(OUTPUT_RADIUS, 0, 0);
 
-            Random random = getRenderRandom(slot + posLong);
-            Vec3 outputItemPosition = itemPosition.add(placement.offset());
-            int itemAngle = Mth.floor(360 * random.nextFloat());
-            boolean renderUpright = BeltHelper.isItemUpright(stack);
-            if (renderUpright) {
-                TransformStack.of(ms).rotateYDegrees(-placement.angle());
+            Random random = getRenderRandom(slot + posSeed);
+            Vec3 outputPosition = itemPosition.add(placement.offset());
+            int angle = Mth.floor(360 * random.nextFloat());
+            boolean isUpright = BeltHelper.isItemUpright(stack);
+            if (isUpright) {
+                TransformStack.of(poseStack).rotateYDegrees(-placement.angle());
+                angle += 90;
             }
 
-            DepotRenderer.renderItem(ms, buffer, light, overlay, stack, renderUpright ? itemAngle + 90 : itemAngle, random, outputItemPosition, false);
-
-            ms.popPose();
+            DepotRenderer.renderItem(poseStack, buffer, light, overlay, stack, angle, random, outputPosition, false);
+            poseStack.popPose();
         }
 
-        ms.popPose();
+        poseStack.popPose();
     }
 
     private static Random getRenderRandom(long seed) {
@@ -141,10 +137,10 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
     }
 
     @Override
-    protected void renderSafe(AirtightForgingPressBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        super.renderSafe(be, partialTicks, ms, buffer, light, overlay);
-        renderHeadModels(be, partialTicks, ms, buffer, light);
-        renderItems(be, partialTicks, ms, buffer, light, overlay);
+    protected void renderSafe(AirtightForgingPressBlockEntity press, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        super.renderSafe(press, partialTicks, poseStack, buffer, light, overlay);
+        renderPressHead(press, partialTicks, poseStack, buffer, light);
+        renderItems(press, partialTicks, poseStack, buffer, light, overlay);
     }
 
     private record OutputPlacement(float angle, Vec3 offset) {}

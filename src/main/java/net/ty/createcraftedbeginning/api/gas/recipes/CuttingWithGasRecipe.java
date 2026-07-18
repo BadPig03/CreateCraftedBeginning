@@ -22,13 +22,21 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CuttingWithGasRecipe extends StandardProcessingWithGasRecipe<RecipeWrapper> implements IAssemblyRecipeWithGas {
+    /**
+     * Creates a new {@code CuttingWithGasRecipe} instance.
+     *
+     * @param params the parameters used to configure the operation
+     */
     public CuttingWithGasRecipe(ProcessingWithGasRecipeParams params) {
         super(CCBRecipeTypes.CUTTING_WITH_GAS, params);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public boolean matches(RecipeWrapper inv, Level level) {
-        return !inv.isEmpty() && ingredients.getFirst().test(inv.getItem(0));
+    public boolean matches(RecipeWrapper input, Level level) {
+        return !input.isEmpty() && ingredients.getFirst().test(input.getItem(0));
     }
 
     @Override
@@ -46,23 +54,35 @@ public class CuttingWithGasRecipe extends StandardProcessingWithGasRecipe<Recipe
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @OnlyIn(Dist.CLIENT)
     public Component getDescriptionForAssembly() {
         return CreateLang.translateDirect("recipe.assembly.cutting");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void addRequiredMachines(Set<ItemLike> list) {
-        list.add(AllBlocks.MECHANICAL_SAW.get());
+    public Supplier<Supplier<SequencedAssemblyWithGasSubCategory>> getJEISubCategory() {
+        return () -> AssemblyCutting::new;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void addAssemblyIngredients(List<Ingredient> list) {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public Supplier<Supplier<SequencedAssemblyWithGasSubCategory>> getJEISubCategory() {
-        return () -> AssemblyCutting::new;
+    public void addRequiredMachines(Set<ItemLike> list) {
+        list.add(AllBlocks.MECHANICAL_SAW.get());
     }
 }

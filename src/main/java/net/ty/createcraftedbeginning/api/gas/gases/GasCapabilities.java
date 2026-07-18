@@ -22,13 +22,17 @@ public final class GasCapabilities {
     private GasCapabilities() {
     }
 
-    public static boolean hasGasCapability(BlockGetter getter, BlockPos pos, Direction side) {
-        if (!(getter instanceof Level level)) {
-            return false;
-        }
-
-        IGasHandler capability = level.getCapability(GasHandler.BLOCK, pos, side);
-        return capability != null;
+    /**
+     * Checks whether the target exposes a gas capability on the requested side.
+     *
+     * @param level the level in which the operation is performed
+     * @param pos   the target block position
+     * @param side  the side from which the target is accessed
+     * @return {@code true} if the target exposes a gas capability on the requested side; otherwise {@code
+     * false}
+     */
+    public static boolean hasGasCapability(BlockGetter level, BlockPos pos, Direction side) {
+        return level instanceof Level l && l.getCapability(GasHandler.BLOCK, pos, side) != null;
     }
 
     public static final class GasHandler {

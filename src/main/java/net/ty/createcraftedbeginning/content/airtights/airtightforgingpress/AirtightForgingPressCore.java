@@ -31,9 +31,9 @@ public class AirtightForgingPressCore {
     }
 
     public CompoundTag write() {
-        CompoundTag compoundTag = new CompoundTag();
-        compoundTag.put(COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.write());
-        return compoundTag;
+        CompoundTag tag = new CompoundTag();
+        tag.put(COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.write());
+        return tag;
     }
 
     public void read(CompoundTag compoundTag) {

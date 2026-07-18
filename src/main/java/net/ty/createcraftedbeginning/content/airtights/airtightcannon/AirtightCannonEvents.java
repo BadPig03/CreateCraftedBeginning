@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightcannon;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
@@ -30,8 +29,7 @@ public class AirtightCannonEvents {
             return;
         }
 
-        DamageSource damageSource = event.getSource();
-        Entity directEntity = damageSource.getDirectEntity();
+        Entity directEntity = event.getSource().getDirectEntity();
         if (!(directEntity instanceof AirtightCannonWindChargeProjectileEntity projectile)) {
             return;
         }
@@ -58,7 +56,10 @@ public class AirtightCannonEvents {
             return;
         }
 
-        float fovModifier = 1 - Math.min((float) (usingItem.getUseDuration(player) - player.getUseItemRemainingTicks()) / (AirtightCannonUtils.getEfficientUseTime(usingItem) * 2), 1) * 0.15f;
+        int useTime = usingItem.getUseDuration(player) - player.getUseItemRemainingTicks();
+        int efficientUseTime = AirtightCannonUtils.getEfficientUseTime(usingItem);
+        float chargeProgress = Math.min((float) useTime / (efficientUseTime * 2), 1);
+        float fovModifier = 1 - chargeProgress * 0.15f;
         event.setNewFovModifier(event.getFovModifier() * fovModifier);
     }
 }

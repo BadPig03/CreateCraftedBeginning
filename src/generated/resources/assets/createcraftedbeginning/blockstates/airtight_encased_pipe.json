@@ -1,7 +1,57 @@
 {
-  "variants": {
-    "": {
-      "model": "createcraftedbeginning:block/airtight_encased_pipe/block"
+  "multipart": [
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_encased_pipe/block"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_encased_pipe/down"
+      },
+      "when": {
+        "down": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_encased_pipe/up"
+      },
+      "when": {
+        "up": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_encased_pipe/north"
+      },
+      "when": {
+        "north": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_encased_pipe/south"
+      },
+      "when": {
+        "south": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_encased_pipe/west"
+      },
+      "when": {
+        "west": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_encased_pipe/east"
+      },
+      "when": {
+        "east": "false"
+      }
     }
-  }
+  ]
 }

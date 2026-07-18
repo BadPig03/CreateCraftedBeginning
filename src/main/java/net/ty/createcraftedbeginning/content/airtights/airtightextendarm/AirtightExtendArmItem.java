@@ -14,9 +14,9 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.armhandlers.AirtightArmHandler;
 import net.ty.createcraftedbeginning.api.armhandlers.AirtightArmHandlerUtils;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
 import net.ty.createcraftedbeginning.data.CCBLang;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -27,11 +27,6 @@ import java.util.List;
 public class AirtightExtendArmItem extends Item {
     public AirtightExtendArmItem(Properties properties) {
         super(properties);
-    }
-
-    @Override
-    public boolean isDamageable(ItemStack arm) {
-        return false;
     }
 
     @Override
@@ -53,37 +48,25 @@ public class AirtightExtendArmItem extends Item {
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack arm, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
         LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null || !CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
+        if (player == null) {
             return;
         }
 
-        Gas gasType = CanisterContainerSuppliers.getFirstAvailableGasContent(player).getGasType();
-        if (gasType.isEmpty()) {
+        GasStack gas = CanisterContainerClients.getDisplayedGasContent();
+        if (gas.isEmpty()) {
             return;
         }
+
+        AirtightArmHandler handler = AirtightArmHandlerUtils.of(gas.getGasType());
 
         tooltip.add(CommonComponents.EMPTY);
-        tooltip.add(CCBLang.gasName(gasType).add(CCBLang.translate("gui.tooltips.gas_tools.content")).style(ChatFormatting.GRAY).component());
-        AirtightArmHandler armHandler = AirtightArmHandlerUtils.of(gasType);
-        float consumptionMultiplier = armHandler.getGasConsumptionMultiplier();
-        MutableComponent advancedConsumptionMultiplier = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + armHandler.getRenderStr(consumptionMultiplier) + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.tooltips.gas_tools.gas_consumption", armHandler.getRenderStr(consumptionMultiplier * 100)).add(advancedConsumptionMultiplier.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        tooltip.add(CCBLang.gasName(gas).add(CCBLang.translate("gui.gas_tools.content")).style(ChatFormatting.GRAY).component());
 
-        String blockRangeRenderStr = armHandler.getRenderStr(armHandler.getIncreasedBlockInteractionRange());
-        MutableComponent advancedBlockRange = tooltipFlag.isAdvanced() ? CCBLang.text(" [+" + blockRangeRenderStr + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.tooltips.airtight_extend_arm.block_interaction_range", blockRangeRenderStr).add(advancedBlockRange.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
-
-        String entityRangeRenderStr = armHandler.getRenderStr(armHandler.getIncreasedEntityInteractionRange());
-        MutableComponent advancedEntityRange = tooltipFlag.isAdvanced() ? CCBLang.text(" [+" + entityRangeRenderStr + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.tooltips.airtight_extend_arm.entity_interaction_range", entityRangeRenderStr).add(advancedEntityRange.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
-
-        String knockbackRenderStr = armHandler.getRenderStr(armHandler.getIncreasedKnockback());
-        MutableComponent advancedKnockback = tooltipFlag.isAdvanced() ? CCBLang.text(" [+" + knockbackRenderStr + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.tooltips.airtight_extend_arm.attack_knockback", knockbackRenderStr).add(advancedKnockback.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
-    }
-
-    @Override
-    public boolean isValidRepairItem(ItemStack arm, ItemStack repair) {
-        return false;
+        float consumptionMultiplier = handler.getGasConsumptionMultiplier();
+        MutableComponent advancedConsumption = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptionUtils.format(consumptionMultiplier) + ']').component() : Component.empty();
+        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptionUtils.formatPercent(consumptionMultiplier)).add(advancedConsumption.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        tooltip.add(CCBLang.translate("gui.airtight_extend_arm.block_interaction_range", GasConsumptionUtils.format(handler.getIncreasedBlockInteractionRange())).style(ChatFormatting.DARK_GREEN).component());
+        tooltip.add(CCBLang.translate("gui.airtight_extend_arm.entity_interaction_range", GasConsumptionUtils.format(handler.getIncreasedEntityInteractionRange())).style(ChatFormatting.DARK_GREEN).component());
+        tooltip.add(CCBLang.translate("gui.airtight_extend_arm.attack_knockback", GasConsumptionUtils.format(handler.getIncreasedKnockback())).style(ChatFormatting.DARK_GREEN).component());
     }
 }

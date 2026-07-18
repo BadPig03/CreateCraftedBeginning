@@ -17,6 +17,7 @@ import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageWrapper;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IMountedStorageManagerWithGas;
@@ -25,6 +26,7 @@ import net.ty.createcraftedbeginning.data.CCBLang;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -32,12 +34,29 @@ public class GasThresholdCondition extends CargoThresholdCondition {
     private static final String COMPOUND_KEY_GAS_FILTER = "GasFilter";
 
     private ItemStack filterItem = ItemStack.EMPTY;
+    private Predicate<GasStack> compiledFilter = GasFilterUtils.compile(ItemStack.EMPTY);
+
+    private static long saturatedAdd(long current, long addition) {
+        if (addition <= 0) {
+            return current;
+        }
+
+        return current > Long.MAX_VALUE - addition ? Long.MAX_VALUE : current + addition;
+    }
+
+    private static boolean testLong(Ops operator, long current, long target) {
+        return switch (operator) {
+            case GREATER -> current > target;
+            case EQUAL -> current == target;
+            case LESS -> current < target;
+        };
+    }
 
     @Override
     protected boolean test(Level level, Train train, CompoundTag context) {
         Ops operator = getOperator();
-        int target = getThreshold();
-        long foundGas = 0;
+        long targetAmount = Math.max(0L, (long) getThreshold() * GasAmountUtils.MILLIBUCKETS_PER_BUCKET);
+        long totalAmount = 0;
         for (Carriage carriage : train.carriages) {
             if (!(carriage.storage instanceof IMountedStorageManagerWithGas withGas)) {
                 continue;
@@ -45,18 +64,17 @@ public class GasThresholdCondition extends CargoThresholdCondition {
 
             MountedGasStorageWrapper gases = withGas.ccb$getGases();
             for (int i = 0; i < gases.getTanks(); i++) {
-                GasStack gasInTank = gases.getGasInTank(i);
-                if (!filterItem.isEmpty() && (!(filterItem.getItem() instanceof IGasFilter filter) || !filter.test(filterItem, gasInTank))) {
+                GasStack gas = gases.getGasInTank(i);
+                if (gas.isEmpty() || !compiledFilter.test(gas)) {
                     continue;
                 }
 
-                foundGas += gasInTank.getAmount();
+                totalAmount = saturatedAdd(totalAmount, gas.getAmount());
             }
         }
 
-        int finalGas = Math.clamp(foundGas, 0, Integer.MAX_VALUE);
-        requestStatusToUpdate(finalGas / 1000, context);
-        return operator.test(finalGas, target * 1000);
+        requestStatusToUpdate(GasAmountUtils.toWholeBucketsClamped(totalAmount), context);
+        return testLong(operator, totalAmount, targetAmount);
     }
 
     @Override
@@ -73,7 +91,7 @@ public class GasThresholdCondition extends CargoThresholdCondition {
     @OnlyIn(Dist.CLIENT)
     public void initConfigurationWidgets(ModularGuiLineBuilder builder) {
         super.initConfigurationWidgets(builder);
-        builder.addSelectionScrollInput(71, 50, (i, l) -> i.forOptions(List.of(CCBLang.translateDirect("gui.threshold.buckets"))).titled(null), "Measure");
+        builder.addSelectionScrollInput(71, 50, (input, ignoredLabel) -> input.forOptions(List.of(CCBLang.translateDirect("gui.threshold.buckets"))).titled(null), "Measure");
     }
 
     @Override
@@ -85,11 +103,11 @@ public class GasThresholdCondition extends CargoThresholdCondition {
     @Override
     protected void readAdditional(Provider provider, CompoundTag compoundTag) {
         super.readAdditional(provider, compoundTag);
-        if (!compoundTag.contains(COMPOUND_KEY_GAS_FILTER)) {
-            return;
+        ItemStack savedFilter = ItemStack.EMPTY;
+        if (compoundTag.contains(COMPOUND_KEY_GAS_FILTER)) {
+            savedFilter = ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_GAS_FILTER));
         }
-
-        filterItem = ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_GAS_FILTER));
+        updateFilter(savedFilter);
     }
 
     @Override
@@ -99,7 +117,11 @@ public class GasThresholdCondition extends CargoThresholdCondition {
             return Component.empty();
         }
 
-        int offset = getOperator() == Ops.LESS ? -1 : getOperator() == Ops.GREATER ? 1 : 0;
+        int offset = switch (getOperator()) {
+            case LESS -> -1;
+            case GREATER -> 1;
+            case EQUAL -> 0;
+        };
         return CCBLang.translateDirect("schedule.condition.threshold.status", lastDisplaySnapshot, Math.max(0, getThreshold() + offset), CCBLang.translateDirect("gui.threshold.buckets"));
     }
 
@@ -110,29 +132,35 @@ public class GasThresholdCondition extends CargoThresholdCondition {
 
     @Override
     public List<Component> getTitleAs(String type) {
-        List<Component> list = new ArrayList<>();
-        list.add(CCBLang.translateDirect("schedule.condition.threshold.train_holds", CCBLang.translateDirect("schedule.condition.threshold." + Lang.asId(getOperator().name()))));
+        List<Component> lines = new ArrayList<>();
+        Component operatorName = CCBLang.translateDirect("schedule.condition.threshold." + Lang.asId(getOperator().name()));
+        lines.add(CCBLang.translateDirect("schedule.condition.threshold.train_holds", operatorName));
         Component content;
         if (filterItem.isEmpty()) {
             content = CCBLang.translateDirect("schedule.condition.threshold.anything");
         }
-        else if (filterItem.getItem() instanceof IGasFilter) {
+        else if (GasFilterUtils.isFilter(filterItem)) {
             content = CCBLang.translateDirect("schedule.condition.threshold.matching_gas_content");
         }
         else {
             content = GasStack.EMPTY.getHoverName();
         }
-        list.add(CCBLang.translateDirect("schedule.condition.threshold.x_units_of_item", getThreshold(), CCBLang.translateDirect("gui.threshold.buckets"), content).withStyle(ChatFormatting.DARK_AQUA));
-        return list;
+        lines.add(CCBLang.translateDirect("schedule.condition.threshold.x_units_of_item", getThreshold(), CCBLang.translateDirect("gui.threshold.buckets"), content).withStyle(ChatFormatting.DARK_AQUA));
+        return lines;
     }
 
     @Override
     public void setItem(int slot, ItemStack stack) {
-        filterItem = stack.copy();
+        updateFilter(stack);
     }
 
     @Override
     public ItemStack getItem(int slot) {
         return filterItem.copy();
+    }
+
+    private void updateFilter(ItemStack stack) {
+        filterItem = stack.isEmpty() || GasFilterUtils.isFilter(stack) ? GasFilterUtils.normalizeStack(stack) : ItemStack.EMPTY;
+        compiledFilter = GasFilterUtils.compile(filterItem);
     }
 }

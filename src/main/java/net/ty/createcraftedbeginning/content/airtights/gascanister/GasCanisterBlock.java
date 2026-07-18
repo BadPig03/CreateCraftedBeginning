@@ -61,6 +61,16 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
     }
 
     @Override
+    public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
+        BlockState state = super.getStateForPlacement(context);
+        if (state == null) {
+            return null;
+        }
+
+        return ProperWaterloggedBlock.withWater(context.getLevel(), state, context.getClickedPos());
+    }
+
+    @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
         super.setPlacedBy(level, pos, state, entity, stack);
         CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
@@ -72,23 +82,21 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
     }
 
     @Override
+    protected void createBlockStateDefinition(StateDefinition.@NotNull Builder<Block, BlockState> builder) {
+        builder.add(WATERLOGGED);
+    }
+
+    @Override
     public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
-        if (!(asItem() instanceof GasCanisterBlockItem) || !(level.getBlockEntity(pos) instanceof GasCanisterBlockEntity canisterBlockEntity)) {
+        if (!(asItem() instanceof GasCanisterBlockItem)) {
             return ItemStack.EMPTY;
         }
 
-        return canisterBlockEntity.getCanister().copy();
-    }
+        if (!(level.getBlockEntity(pos) instanceof GasCanisterBlockEntity canister)) {
+            return ItemStack.EMPTY;
+        }
 
-    @Override
-    public BlockState getStateForPlacement(BlockPlaceContext context) {
-        BlockState state = super.getStateForPlacement(context);
-        return state == null ? null : ProperWaterloggedBlock.withWater(context.getLevel(), state, context.getClickedPos());
-    }
-
-    @Override
-    protected void createBlockStateDefinition(StateDefinition.@NotNull Builder<Block, BlockState> builder) {
-        builder.add(WATERLOGGED);
+        return canister.getCanister().copy();
     }
 
     @Override
@@ -111,10 +119,10 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
 
     @Override
     public List<ItemStack> getDrops(BlockState state, Builder builder) {
-        List<ItemStack> lootDrops = super.getDrops(state, builder);
+        List<ItemStack> drops = super.getDrops(state, builder);
         BlockEntity blockEntity = builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
         if (!(blockEntity instanceof GasCanisterBlockEntity canister)) {
-            return lootDrops;
+            return drops;
         }
 
         return List.of(canister.getCanister().copy());
@@ -126,7 +134,7 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
     }
 
     @Override
-    public ItemRequirement getRequiredItems(BlockState state, BlockEntity blockEntity) {
+    public ItemRequirement getRequiredItems(BlockState state, @Nullable BlockEntity blockEntity) {
         Item item = asItem();
         if (item instanceof GasCanisterBlockItem placeable) {
             item = placeable.getActualItem();

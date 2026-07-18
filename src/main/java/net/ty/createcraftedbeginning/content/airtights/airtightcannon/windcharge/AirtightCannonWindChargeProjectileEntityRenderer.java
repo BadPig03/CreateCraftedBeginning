@@ -11,16 +11,19 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandler;
-import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlerUtils;
+import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandler;
+import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandlerUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.IdentityHashMap;
+import java.util.Map;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class AirtightCannonWindChargeProjectileEntityRenderer extends EntityRenderer<AirtightCannonWindChargeProjectileEntity> {
     private static final double MIN_CAMERA_DISTANCE_SQUARED = 16.0d;
+    private final Map<AirtightCannonVisualHandler, AirtightCannonWindChargeModel> models = new IdentityHashMap<>();
 
     public AirtightCannonWindChargeProjectileEntityRenderer(Context context) {
         super(context);
@@ -32,21 +35,18 @@ public class AirtightCannonWindChargeProjectileEntityRenderer extends EntityRend
             return;
         }
 
-        AirtightCannonWindChargeModel model = windCharge.getWindChargeModel();
-        if (model == null) {
-            return;
-        }
+        AirtightCannonVisualHandler handler = AirtightCannonVisualHandlerUtils.of(windCharge.getGasHolder().value());
+        AirtightCannonWindChargeModel model = models.computeIfAbsent(handler, visualHandler -> new AirtightCannonWindChargeModel(AirtightCannonWindChargeModel.createLayerDefinition(visualHandler.getModelType()).bakeRoot()));
+        float animationTick = windCharge.tickCount + partialTick;
+        model.setupAnimation(handler.getAnimationType(), handler.getRotationSpeed(), animationTick);
 
-        float tick = (float) windCharge.tickCount + partialTick;
-        VertexConsumer buffer = bufferSource.getBuffer(RenderType.breezeWind(getTextureLocation(windCharge), tick * 0.03f % 1.0f, 0.0f));
-        model.setupAnim(windCharge, 0.0f, 0.0f, tick, 0.0f, 0.0f);
-        model.renderToBuffer(poseStack, buffer, light, OverlayTexture.NO_OVERLAY);
+        VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.breezeWind(handler.getTextureLocation(), animationTick * 0.03f % 1.0f, 0.0f));
+        model.renderToBuffer(poseStack, vertexConsumer, light, OverlayTexture.NO_OVERLAY);
         super.render(windCharge, entityYaw, partialTick, poseStack, bufferSource, light);
     }
 
     @Override
     public ResourceLocation getTextureLocation(AirtightCannonWindChargeProjectileEntity entity) {
-        AirtightCannonHandler cannonHandler = AirtightCannonHandlerUtils.of(entity.getGasHolder().value());
-        return cannonHandler.getTextureLocation();
+        return AirtightCannonVisualHandlerUtils.of(entity.getGasHolder().value()).getTextureLocation();
     }
 }

@@ -14,11 +14,11 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.NonNullList;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
@@ -31,6 +31,7 @@ import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.simibubi.create.compat.jei.category.CreateRecipeCategory.addFluidSlot;
@@ -46,20 +47,23 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
         super(info);
     }
 
-    private static int getInputX(int i, int xOffset) {
-        return 14 + xOffset + i % 3 * 19;
+    private static int getInputX(int index, int xOffset) {
+        return 14 + xOffset + index % 3 * 19;
     }
 
-    private static int getInputY(int i) {
-        return 59 - i / 3 * 19;
+    private static int getInputY(int index) {
+        return 59 - index / 3 * 19;
     }
 
-    private static int getOutputX(int i, int size) {
-        return 142 - (size % 2 != 0 && i == size - 1 ? 0 : i % 2 == 0 ? 10 : -9);
+    private static int getOutputX(int index, int size) {
+        if (size % 2 != 0 && index == size - 1) {
+            return 142;
+        }
+        return index % 2 == 0 ? 132 : 151;
     }
 
-    private static int getOutputY(int i) {
-        return -19 * (i / 2) + 59;
+    private static int getOutputY(int index) {
+        return -19 * (index / 2) + 59;
     }
 
     @Override
@@ -77,10 +81,10 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
 
         if (recipe.getGasIngredients().isEmpty() && recipe.getGasResults().isEmpty()) {
             reactorKettleOpened.draw(graphics, getBackground().getWidth() / 2 + 6, 58);
+            return;
         }
-        else {
-            reactorKettleClosed.draw(graphics, getBackground().getWidth() / 2 + 6, 58);
-        }
+
+        reactorKettleClosed.draw(graphics, getBackground().getWidth() / 2 + 6, 58);
     }
 
     @Override
@@ -91,52 +95,52 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
         List<ProcessingOutput> results = recipe.getRollableResults();
         NonNullList<FluidStack> fluidResults = recipe.getFluidResults();
         NonNullList<GasStack> gasResults = recipe.getGasResults();
-        int size = condensedIngredients.size() + fluidIngredients.size() + gasIngredients.size();
-        int xOffset = size < 3 ? (3 - size) * 19 / 2 : 0;
-        int i = 0;
+        int inputCount = condensedIngredients.size() + fluidIngredients.size() + gasIngredients.size();
+        int xOffset = inputCount < 3 ? (3 - inputCount) * 19 / 2 : 0;
+        int inputIndex = 0;
         for (Pair<Ingredient, Integer> pair : condensedIngredients) {
             List<ItemStack> stacks = new ArrayList<>();
-            for (ItemStack itemStack : pair.getFirst().getItems()) {
-                stacks.add(itemStack.copyWithCount(pair.getSecond()));
+            for (ItemStack stack : pair.getFirst().getItems()) {
+                stacks.add(stack.copyWithCount(pair.getSecond()));
             }
-            int x = getInputX(i, xOffset);
-            int y = getInputY(i);
+            int x = getInputX(inputIndex, xOffset);
+            int y = getInputY(inputIndex);
             builder.addSlot(RecipeIngredientRole.INPUT, x, y).setBackground(getRenderedSlot(), -1, -1).addItemStacks(stacks);
-            i++;
+            inputIndex++;
         }
         for (SizedFluidIngredient fluidIngredient : fluidIngredients) {
-            int x = getInputX(i, xOffset);
-            int y = getInputY(i);
+            int x = getInputX(inputIndex, xOffset);
+            int y = getInputY(inputIndex);
             addFluidSlot(builder, x, y, fluidIngredient);
-            i++;
+            inputIndex++;
         }
         for (SizedGasIngredient gasIngredient : gasIngredients) {
-            int x = getInputX(i, xOffset);
-            int y = getInputY(i);
-            GasStack gasStack = gasIngredient.getFirstGas();
-            builder.addSlot(RecipeIngredientRole.INPUT, x, y).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEIPlugin.GAS_STACK, gasStack.copy()).addRichTooltipCallback((v, t) -> t.add(Component.translatable("jei.tooltip.gas.amount", gasStack.getAmount()).withStyle(ChatFormatting.GRAY)));
-            i++;
+            int x = getInputX(inputIndex, xOffset);
+            int y = getInputY(inputIndex);
+            List<GasStack> gases = Arrays.stream(gasIngredient.getGases()).map(GasStack::copy).toList();
+            builder.addSlot(RecipeIngredientRole.INPUT, x, y).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gases).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmountUtils.precise(gasIngredient.amount()).style(ChatFormatting.GRAY).component()));
+            inputIndex++;
         }
 
-        size = results.size() + fluidResults.size() + gasResults.size();
-        i = 0;
+        int outputCount = results.size() + fluidResults.size() + gasResults.size();
+        int outputIndex = 0;
         for (ProcessingOutput result : results) {
-            int x = getOutputX(i, size);
-            int y = getOutputY(i);
+            int x = getOutputX(outputIndex, outputCount);
+            int y = getOutputY(outputIndex);
             builder.addSlot(RecipeIngredientRole.OUTPUT, x, y).setBackground(getRenderedSlot(result), -1, -1).addItemStack(result.getStack()).addRichTooltipCallback(addStochasticTooltip(result));
-            i++;
+            outputIndex++;
         }
         for (FluidStack fluidResult : fluidResults) {
-            int x = getOutputX(i, size);
-            int y = getOutputY(i);
+            int x = getOutputX(outputIndex, outputCount);
+            int y = getOutputY(outputIndex);
             addFluidSlot(builder, x, y, fluidResult);
-            i++;
+            outputIndex++;
         }
         for (GasStack gasResult : gasResults) {
-            int x = getOutputX(i, size);
-            int y = getOutputY(i);
-            builder.addSlot(RecipeIngredientRole.OUTPUT, x, y).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEIPlugin.GAS_STACK, gasResult.copy()).addRichTooltipCallback((v, t) -> t.add(Component.translatable("jei.tooltip.gas.amount", gasResult.getAmount()).withStyle(ChatFormatting.GRAY)));
-            i++;
+            int x = getOutputX(outputIndex, outputCount);
+            int y = getOutputY(outputIndex);
+            builder.addSlot(RecipeIngredientRole.OUTPUT, x, y).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEIPlugin.GAS_STACK, gasResult.copy()).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmountUtils.precise(gasResult.getAmount()).style(ChatFormatting.GRAY).component()));
+            outputIndex++;
         }
 
         TemperatureCondition condition = recipe.getTemperatureCondition();

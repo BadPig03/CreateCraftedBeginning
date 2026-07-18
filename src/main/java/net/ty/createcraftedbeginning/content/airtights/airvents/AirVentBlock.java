@@ -2,18 +2,14 @@ package net.ty.createcraftedbeginning.content.airtights.airvents;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.mojang.serialization.Codec;
-import com.simibubi.create.AllItems;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import net.createmod.catnip.data.Iterate;
-import net.createmod.catnip.lang.Lang;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
@@ -28,12 +24,12 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
@@ -43,61 +39,131 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Arrays;
 import java.util.Map;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, SimpleWaterloggedBlock, IWrenchable {
-    public static final EnumProperty<VentState> NORTH = EnumProperty.create("north", VentState.class);
-    public static final EnumProperty<VentState> EAST = EnumProperty.create("east", VentState.class);
-    public static final EnumProperty<VentState> SOUTH = EnumProperty.create("south", VentState.class);
-    public static final EnumProperty<VentState> WEST = EnumProperty.create("west", VentState.class);
-    public static final EnumProperty<VentState> UP = EnumProperty.create("up", VentState.class);
-    public static final EnumProperty<VentState> DOWN = EnumProperty.create("down", VentState.class);
-    public static final Map<Direction, EnumProperty<VentState>> PROPERTY_BY_DIRECTION = ImmutableMap.copyOf(Util.make(Maps.newEnumMap(Direction.class), property -> {
-        property.put(Direction.NORTH, NORTH);
-        property.put(Direction.EAST, EAST);
-        property.put(Direction.SOUTH, SOUTH);
-        property.put(Direction.WEST, WEST);
-        property.put(Direction.UP, UP);
-        property.put(Direction.DOWN, DOWN);
+    public static final BooleanProperty NORTH = BooleanProperty.create("north");
+    public static final BooleanProperty EAST = BooleanProperty.create("east");
+    public static final BooleanProperty SOUTH = BooleanProperty.create("south");
+    public static final BooleanProperty WEST = BooleanProperty.create("west");
+    public static final BooleanProperty UP = BooleanProperty.create("up");
+    public static final BooleanProperty DOWN = BooleanProperty.create("down");
+    public static final Map<Direction, BooleanProperty> PROPERTY_BY_DIRECTION = ImmutableMap.copyOf(Util.make(Maps.newEnumMap(Direction.class), properties -> {
+        properties.put(Direction.NORTH, NORTH);
+        properties.put(Direction.EAST, EAST);
+        properties.put(Direction.SOUTH, SOUTH);
+        properties.put(Direction.WEST, WEST);
+        properties.put(Direction.UP, UP);
+        properties.put(Direction.DOWN, DOWN);
     }));
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     public AirVentBlock(Properties properties) {
         super(properties);
-        registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(NORTH, VentState.EMPTY).setValue(EAST, VentState.EMPTY).setValue(SOUTH, VentState.EMPTY).setValue(WEST, VentState.EMPTY).setValue(UP, VentState.EMPTY).setValue(DOWN, VentState.EMPTY));
+        registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(NORTH, false).setValue(EAST, false).setValue(SOUTH, false).setValue(WEST, false).setValue(UP, false).setValue(DOWN, false));
     }
 
-    private static VoxelShape getShape(BlockState blockState) {
-        int mask = Arrays.stream(Iterate.directions).filter(direction -> blockState.getValue(PROPERTY_BY_DIRECTION.get(direction)).isConnected()).mapToInt(direction -> 1 << direction.get3DDataValue()).reduce(0, (a, b) -> a | b);
+    private static VoxelShape getConnectedShape(BlockState state) {
+        return AirVentVoxelShapes.getShape(getConnectionMask(state));
+    }
+
+    public static int getConnectionMask(BlockState state) {
+        int mask = 0;
+        for (Direction direction : Iterate.directions) {
+            if (!isConnected(state, direction)) {
+                continue;
+            }
+
+            mask |= 1 << direction.get3DDataValue();
+        }
+        return mask;
+    }
+
+    private static VoxelShape getPassableShape(BlockState state, BlockGetter level, BlockPos pos) {
+        int mask = 0;
+        for (Direction direction : Iterate.directions) {
+            if (!getVentState(level, pos, state, direction).canPassThrough()) {
+                continue;
+            }
+
+            mask |= 1 << direction.get3DDataValue();
+        }
         return AirVentVoxelShapes.getShape(mask);
     }
 
-    private static VoxelShape getCollisionShape(BlockState blockState) {
-        int mask = Arrays.stream(Iterate.directions).filter(direction -> blockState.getValue(PROPERTY_BY_DIRECTION.get(direction)).canPassThrough()).mapToInt(direction -> 1 << direction.get3DDataValue()).reduce(0, (a, b) -> a | b);
-        return AirVentVoxelShapes.getShape(mask);
+    public static boolean isConnected(BlockState state, Direction direction) {
+        return state.getValue(PROPERTY_BY_DIRECTION.get(direction));
+    }
+
+    public static BlockState withConnections(BlockState state, BlockGetter level, BlockPos pos) {
+        for (Direction direction : Iterate.directions) {
+            boolean connected = level.getBlockState(pos.relative(direction)).getBlock() instanceof AirVentBlock;
+            state = state.setValue(PROPERTY_BY_DIRECTION.get(direction), connected);
+        }
+        return state;
+    }
+
+    public static VentState getVentState(BlockGetter level, BlockPos pos, BlockState state, Direction direction) {
+        if (isConnected(state, direction)) {
+            return VentState.CONNECTED;
+        }
+
+        AirVentBlockEntity airVent = getAirVentBlockEntity(level, pos);
+        return airVent == null ? VentState.EMPTY : airVent.getLouverState(direction);
+    }
+
+    private static @Nullable AirVentBlockEntity getAirVentBlockEntity(BlockGetter level, BlockPos pos) {
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+        return blockEntity instanceof AirVentBlockEntity airVent ? airVent : null;
+    }
+
+    private static boolean isInsideAirVent(@Nullable Player player) {
+        return player != null && player.getInBlockState().getBlock() instanceof AirVentBlock;
     }
 
     @Override
     public InteractionResult onWrenched(BlockState state, UseOnContext context) {
         Player player = context.getPlayer();
-        if (player != null && player.getInBlockState().getBlock() instanceof AirVentBlock) {
+        if (isInsideAirVent(player)) {
             return InteractionResult.FAIL;
         }
 
-        return InteractionResult.PASS;
+        Direction direction = context.getClickedFace();
+        if (isConnected(state, direction)) {
+            return InteractionResult.PASS;
+        }
+
+        Level level = context.getLevel();
+        BlockPos pos = context.getClickedPos();
+        AirVentBlockEntity airVent = getAirVentBlockEntity(level, pos);
+        if (airVent == null) {
+            return InteractionResult.PASS;
+        }
+
+        if (level.isClientSide) {
+            return InteractionResult.SUCCESS;
+        }
+
+        boolean hadLouver = airVent.hasLouver(direction);
+        airVent.toggleLouver(direction);
+        if (hadLouver) {
+            CCBSoundEvents.AIR_VENT_OUTLET_REMOVED.playOnServer(level, pos, 1.0f, 1.0f);
+        }
+        else {
+            CCBSoundEvents.AIR_VENT_OUTLET_PLACED.playOnServer(level, pos, 1.0f, 1.0f);
+        }
+        return InteractionResult.SUCCESS;
     }
 
     @Override
     public InteractionResult onSneakWrenched(BlockState state, UseOnContext context) {
         Player player = context.getPlayer();
-        if (player != null && player.getInBlockState().getBlock() instanceof AirVentBlock) {
+        if (isInsideAirVent(player)) {
             return InteractionResult.FAIL;
         }
 
@@ -106,12 +172,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
 
     @Override
     public boolean isLadder(BlockState state, LevelReader level, BlockPos pos, LivingEntity entity) {
-        if (!(entity instanceof Player player)) {
-            return false;
-        }
-
-        BlockState inBlockState = player.getInBlockState();
-        return inBlockState.getBlock() instanceof AirVentBlock && (inBlockState.getValue(PROPERTY_BY_DIRECTION.get(Direction.UP)).isConnected() || inBlockState.getValue(PROPERTY_BY_DIRECTION.get(Direction.DOWN)).isConnected());
+        return entity instanceof Player && (isConnected(state, Direction.UP) || isConnected(state, Direction.DOWN));
     }
 
     @Override
@@ -120,66 +181,44 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
             level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
 
-        EnumProperty<VentState> property = PROPERTY_BY_DIRECTION.get(direction);
-        VentState ventState = state.getValue(property);
-        boolean isAirVent = neighbourState.getBlock() instanceof AirVentBlock;
-        if (ventState != VentState.CONNECTED && isAirVent) {
-            return state.setValue(property, VentState.CONNECTED);
-        }
-        else if (ventState == VentState.CONNECTED && !isAirVent) {
-            return state.setValue(property, VentState.EMPTY);
-        }
-        return state;
+        BooleanProperty property = PROPERTY_BY_DIRECTION.get(direction);
+        boolean connected = neighbourState.getBlock() instanceof AirVentBlock;
+        return state.getValue(property) == connected ? state : state.setValue(property, connected);
     }
 
     @Override
     protected boolean skipRendering(BlockState blockState, BlockState adjacentState, Direction direction) {
-        return adjacentState.getBlock() instanceof AirVentBlock;
+        return adjacentState.getBlock() instanceof AirVentBlock && isConnected(blockState, direction) && isConnected(adjacentState, direction.getOpposite());
     }
 
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        if (player.getInBlockState().getBlock() instanceof AirVentBlock) {
-            return ItemInteractionResult.FAIL;
+        if (!stack.isEmpty() || isInsideAirVent(player)) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
         Direction direction = hitResult.getDirection();
-        VentState ventState = state.getValue(PROPERTY_BY_DIRECTION.get(direction));
-        ItemStack handItem = player.getItemInHand(hand);
-        if (handItem.is(AllItems.WRENCH.asItem())) {
-            if (ventState.isConnected()) {
-                return ItemInteractionResult.FAIL;
-            }
-
-            if (level.isClientSide) {
-                return ItemInteractionResult.sidedSuccess(true);
-            }
-
-            if (ventState == VentState.EMPTY) {
-                CCBSoundEvents.AIR_VENT_OUTLET_PLACED.playOnServer(level, pos, 1.0f, 1.0f);
-            }
-            else {
-                CCBSoundEvents.AIR_VENT_OUTLET_REMOVED.playOnServer(level, pos, 1.0f, 1.0f);
-            }
-            level.setBlockAndUpdate(pos, state.setValue(PROPERTY_BY_DIRECTION.get(direction), VentState.getWrenchInteractedState(ventState)));
-            return ItemInteractionResult.sidedSuccess(false);
+        if (isConnected(state, direction)) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        if (!handItem.isEmpty() || !ventState.canHandInteract()) {
-            return ItemInteractionResult.FAIL;
+        AirVentBlockEntity airVent = getAirVentBlockEntity(level, pos);
+        if (airVent == null || !airVent.hasLouver(direction)) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
         if (level.isClientSide) {
             return ItemInteractionResult.sidedSuccess(true);
         }
 
-        if (ventState == VentState.CLOSED) {
-            CCBSoundEvents.AIR_VENT_OUTLET_OPENED.playOnServer(level, pos, 1.0f, 1.0f);
-        }
-        else {
+        boolean wasOpen = airVent.isLouverOpen(direction);
+        airVent.toggleLouverOpen(direction);
+        if (wasOpen) {
             CCBSoundEvents.AIR_VENT_OUTLET_CLOSED.playOnServer(level, pos, 1.0f, 1.0f);
         }
-        level.setBlockAndUpdate(pos, state.setValue(PROPERTY_BY_DIRECTION.get(direction), VentState.getHandInteractedState(ventState)));
+        else {
+            CCBSoundEvents.AIR_VENT_OUTLET_OPENED.playOnServer(level, pos, 1.0f, 1.0f);
+        }
         return ItemInteractionResult.sidedSuccess(false);
     }
 
@@ -189,33 +228,36 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
     }
 
     @Override
-    protected VoxelShape getOcclusionShape(BlockState blockState, BlockGetter level, BlockPos blockPos) {
+    protected VoxelShape getOcclusionShape(BlockState state, BlockGetter level, BlockPos pos) {
         return Shapes.empty();
     }
 
     @Override
-    protected VoxelShape getBlockSupportShape(BlockState blockState, BlockGetter level, BlockPos blockPos) {
-        return Shapes.block();
+    protected VoxelShape getBlockSupportShape(BlockState state, BlockGetter level, BlockPos pos) {
+        return getPassableShape(state, level, pos);
     }
 
     @Override
-    protected VoxelShape getShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
-        return getShape(blockState);
+    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return getConnectedShape(state);
     }
 
     @Override
-    protected VoxelShape getCollisionShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
-        return getCollisionShape(blockState);
+    protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return getPassableShape(state, level, pos);
     }
 
     @Override
-    protected VoxelShape getVisualShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
+    protected VoxelShape getVisualShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return Shapes.block();
     }
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        return ProperWaterloggedBlock.withWater(context.getLevel(), defaultBlockState(), context.getClickedPos());
+        Level level = context.getLevel();
+        BlockPos pos = context.getClickedPos();
+        BlockState state = ProperWaterloggedBlock.withWater(level, defaultBlockState(), pos);
+        return withConnections(state, level, pos);
     }
 
     @Override
@@ -240,37 +282,11 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
         return CCBBlockEntities.AIR_VENT.get();
     }
 
-    public enum VentState implements StringRepresentable {
+    public enum VentState {
         OPENED,
         CLOSED,
         EMPTY,
         CONNECTED;
-
-        public static final Codec<VentState> CODEC = StringRepresentable.fromEnum(VentState::values);
-
-        @Contract(pure = true)
-        public static VentState getHandInteractedState(VentState oldState) {
-            return switch (oldState) {
-                case CLOSED -> OPENED;
-                case OPENED -> CLOSED;
-                case EMPTY -> EMPTY;
-                case CONNECTED -> CONNECTED;
-            };
-        }
-
-        @Contract(pure = true)
-        public static VentState getWrenchInteractedState(VentState oldState) {
-            return switch (oldState) {
-                case CLOSED, OPENED -> EMPTY;
-                case EMPTY -> CLOSED;
-                case CONNECTED -> CONNECTED;
-            };
-        }
-
-        @Override
-        public String getSerializedName() {
-            return Lang.asId(name());
-        }
 
         public boolean canHandInteract() {
             return this == OPENED || this == CLOSED;

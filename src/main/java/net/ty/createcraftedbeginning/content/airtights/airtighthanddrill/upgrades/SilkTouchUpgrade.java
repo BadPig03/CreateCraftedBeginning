@@ -24,6 +24,9 @@ import java.util.List;
 public enum SilkTouchUpgrade implements AirtightUpgrade {
     INSTANCE;
 
+    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("silk_touch");
+    private static final Couple<Integer> OFFSET = Couple.create(123, 78);
+
     @Override
     public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
         float multiplier = CCBConfig.server().equipments.silkTouchMultiplier.getF();
@@ -62,17 +65,7 @@ public enum SilkTouchUpgrade implements AirtightUpgrade {
 
     @Override
     public Couple<Integer> getOffset() {
-        return Couple.create(123, 78);
-    }
-
-    @Override
-    public int getGasConsumptionPerSecond(Player player, ItemStack item) {
-        return -1;
-    }
-
-    @Override
-    public int getIndex() {
-        return 0;
+        return OFFSET;
     }
 
     @Override
@@ -82,7 +75,7 @@ public enum SilkTouchUpgrade implements AirtightUpgrade {
 
     @Override
     public ResourceLocation getID() {
-        return CreateCraftedBeginning.asResource("silk_touch");
+        return ID;
     }
 
     @Override

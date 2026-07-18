@@ -15,9 +15,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public record AirtightHandheldDrillGhostItemSubmitPacket(ItemStack item) implements ServerboundPacketPayload {
-    private static final int PLAYER_INVENTORY_SLOTS = Inventory.INVENTORY_SIZE;
-
     public static final StreamCodec<RegistryFriendlyByteBuf, AirtightHandheldDrillGhostItemSubmitPacket> STREAM_CODEC = StreamCodec.composite(ItemStack.OPTIONAL_STREAM_CODEC, AirtightHandheldDrillGhostItemSubmitPacket::item, AirtightHandheldDrillGhostItemSubmitPacket::new);
+    private static final int PLAYER_INVENTORY_SLOTS = Inventory.INVENTORY_SIZE;
 
     @Override
     public void handle(ServerPlayer player) {

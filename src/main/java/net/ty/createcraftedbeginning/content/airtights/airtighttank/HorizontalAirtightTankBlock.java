@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighttank;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -39,7 +40,8 @@ public class HorizontalAirtightTankBlock extends AirtightTankBlock {
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         Player player = context.getPlayer();
         if (player == null || !player.isShiftKeyDown()) {
-            BlockState placedOn = context.getLevel().getBlockState(context.getClickedPos().relative(context.getClickedFace().getOpposite()));
+            BlockPos placedOnPos = context.getClickedPos().relative(context.getClickedFace().getOpposite());
+            BlockState placedOn = context.getLevel().getBlockState(placedOnPos);
             if (placedOn.getBlock() == this && placedOn.hasProperty(HORIZONTAL_AXIS)) {
                 return defaultBlockState().setValue(HORIZONTAL_AXIS, placedOn.getValue(HORIZONTAL_AXIS)).setValue(TOP, true).setValue(BOTTOM, true);
             }

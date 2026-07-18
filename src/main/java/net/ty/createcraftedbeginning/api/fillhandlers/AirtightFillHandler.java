@@ -16,5 +16,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public interface AirtightFillHandler {
     SimpleRegistry<Block, AirtightFillHandler> REGISTRY = SimpleRegistry.create();
 
+    /**
+     * Applies this operation to the supplied context.
+     *
+     * @param level the level in which the operation is performed
+     * @param pos   the target block position
+     * @param state the block state to inspect or process
+     * @return the resulting gas
+     */
     Gas apply(Level level, BlockPos pos, BlockState state);
 }

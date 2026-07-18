@@ -87,27 +87,37 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
         return blockState.getValue(WIND_LEVEL);
     }
 
+    private static ItemInteractionResult setGoggles(BreezeChamberBlockEntity chamber, boolean goggles) {
+        if (chamber.hasGoggles() == goggles) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        chamber.setGoggles(goggles);
+        chamber.notifyUpdate();
+        return ItemInteractionResult.SUCCESS;
+    }
+
     public static InteractionResultHolder<ItemStack> tryInsert(Level level, BlockPos pos, ItemStack stack, boolean doNotConsume, boolean forceOverflow, boolean simulate) {
-        if (!(level.getBlockEntity(pos) instanceof BreezeChamberBlockEntity bcbe) || !bcbe.tryUpdateChargerByItem(stack, forceOverflow, simulate)) {
+        if (!(level.getBlockEntity(pos) instanceof BreezeChamberBlockEntity chamber) || !chamber.tryUpdateChargerByItem(stack, forceOverflow, simulate)) {
             return InteractionResultHolder.fail(ItemStack.EMPTY);
         }
 
-        if (!doNotConsume) {
-            ItemStack container = ItemStack.EMPTY;
-            FoodProperties foodProperties = stack.getItem().getFoodProperties(stack, null);
-            if (foodProperties != null) {
-                container = foodProperties.usingConvertsTo().orElse(ItemStack.EMPTY);
-            }
-            if (container.isEmpty()) {
-                container = stack.hasCraftingRemainingItem() ? stack.getCraftingRemainingItem() : ItemStack.EMPTY;
-            }
-            if (!level.isClientSide) {
-                stack.shrink(1);
-            }
-            return InteractionResultHolder.success(container);
+        if (doNotConsume) {
+            return InteractionResultHolder.success(ItemStack.EMPTY);
         }
 
-        return InteractionResultHolder.success(ItemStack.EMPTY);
+        ItemStack container = ItemStack.EMPTY;
+        FoodProperties food = stack.getItem().getFoodProperties(stack, null);
+        if (food != null) {
+            container = food.usingConvertsTo().orElse(ItemStack.EMPTY);
+        }
+        if (container.isEmpty()) {
+            container = stack.hasCraftingRemainingItem() ? stack.getCraftingRemainingItem() : ItemStack.EMPTY;
+        }
+        if (!simulate && !level.isClientSide) {
+            stack.shrink(1);
+        }
+        return InteractionResultHolder.success(container);
     }
 
     @Override
@@ -156,33 +166,20 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
         if (AllItems.GOGGLES.isIn(stack)) {
-            return onBlockEntityUseItemOn(level, pos, bcbe -> {
-                if (bcbe.hasGoggles()) {
-                    return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-                }
-                bcbe.setGoggles(true);
-                bcbe.notifyUpdate();
-                return ItemInteractionResult.SUCCESS;
-            });
+            return onBlockEntityUseItemOn(level, pos, chamber -> setGoggles(chamber, true));
         }
 
         if (stack.isEmpty()) {
-            return onBlockEntityUseItemOn(level, pos, bcbe -> {
-                if (!bcbe.hasGoggles()) {
-                    return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-                }
-                bcbe.setGoggles(false);
-                bcbe.notifyUpdate();
-                return ItemInteractionResult.SUCCESS;
-            });
+            return onBlockEntityUseItemOn(level, pos, chamber -> setGoggles(chamber, false));
         }
 
         boolean doNotConsume = player.isCreative();
         boolean forceOverflow = !(player instanceof FakePlayer);
         InteractionResultHolder<ItemStack> resultHolder = tryInsert(level, pos, stack, doNotConsume, forceOverflow, false);
+        ItemInteractionResult interactionResult = resultHolder.getResult() == InteractionResult.SUCCESS ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         ItemStack leftover = resultHolder.getObject();
         if (level.isClientSide || doNotConsume || leftover.isEmpty()) {
-            return resultHolder.getResult() == InteractionResult.SUCCESS ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+            return interactionResult;
         }
 
         if (stack.isEmpty()) {
@@ -191,7 +188,7 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
         else if (!player.getInventory().add(leftover)) {
             player.drop(leftover, false);
         }
-        return resultHolder.getResult() == InteractionResult.SUCCESS ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        return interactionResult;
     }
 
     @Override
@@ -210,9 +207,9 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
             return super.getDrops(state, params);
         }
 
-        ItemStack chamberItemEntity = new ItemStack(this);
-        chamber.saveToItem(chamberItemEntity);
-        return Collections.singletonList(chamberItemEntity);
+        ItemStack chamberItem = new ItemStack(this);
+        chamber.saveToItem(chamberItem);
+        return Collections.singletonList(chamberItem);
     }
 
     @Override
@@ -275,9 +272,9 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     @Override
     public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         if (!level.isClientSide && player.isCreative() && player.isShiftKeyDown() && level.getBlockEntity(pos) instanceof BreezeChamberBlockEntity chamber && chamber.getWindRemainingTime() != 0) {
-            ItemStack chamberItemEntity = new ItemStack(this);
-            chamber.saveToItem(chamberItemEntity);
-            Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, chamberItemEntity);
+            ItemStack chamberItem = new ItemStack(this);
+            chamber.saveToItem(chamberItem);
+            Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, chamberItem);
         }
         super.playerWillDestroy(level, pos, state, player);
         return state;
@@ -299,23 +296,29 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
         else if (time < 0) {
             windLevel = WindLevel.ILL;
         }
-        tooltips.add(CCBLang.translate("gui.tooltips.breeze_chamber.state").style(ChatFormatting.GRAY).add(CCBLang.translate(windLevel.getTranslatable()).style(windLevel.getChatFormatting())).component());
+        tooltips.add(CCBLang.translate("gui.breeze_chamber.state").style(ChatFormatting.GRAY).add(CCBLang.translate(windLevel.getTranslatable()).style(windLevel.getChatFormatting())).component());
         if (time == 0) {
             return;
         }
 
-        tooltips.add(CCBLang.translate("gui.tooltips.breeze_chamber.time").style(ChatFormatting.GRAY).add(CCBLang.seconds(Mth.abs(time), context.tickRate()).style(ChatFormatting.GOLD)).component());
+        boolean creative = chamber.getOrDefault(CCBDataComponents.BREEZE_CREATIVE, false);
+        if (creative) {
+            tooltips.add(CCBLang.translate("gui.breeze_chamber.time").style(ChatFormatting.GRAY).add(CCBLang.translate("gui.gas_container.infinity").style(ChatFormatting.GOLD)).component());
+            return;
+        }
+
+        tooltips.add(CCBLang.translate("gui.breeze_chamber.time").style(ChatFormatting.GRAY).add(CCBLang.seconds(Mth.abs(time), context.tickRate()).style(ChatFormatting.GOLD)).component());
     }
 
     @Override
     public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
-        ItemStack chamberItemEntity = new ItemStack(this);
+        ItemStack chamberItem = new ItemStack(this);
         if (!(level.getBlockEntity(pos) instanceof BreezeChamberBlockEntity chamber) || chamber.getWindRemainingTime() == 0 || !player.isShiftKeyDown()) {
-            return chamberItemEntity;
+            return chamberItem;
         }
 
-        chamber.saveToItem(chamberItemEntity);
-        return chamberItemEntity;
+        chamber.saveToItem(chamberItem);
+        return chamberItem;
     }
 
     @Override
@@ -352,9 +355,9 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
         @Contract(pure = true)
         public String getTranslatable() {
             return switch (this) {
-                case ILL -> "gui.goggles.breeze_chamber.ill";
-                case CALM -> "gui.goggles.breeze_chamber.calm";
-                case GALE -> "gui.goggles.breeze_chamber.gale";
+                case ILL -> "gui.breeze_chamber.ill";
+                case CALM -> "gui.breeze_chamber.calm";
+                case GALE -> "gui.breeze_chamber.gale";
             };
         }
 

@@ -18,6 +18,13 @@ import java.util.function.UnaryOperator;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class ProcessingWithGasRecipeGen<P extends ProcessingWithGasRecipeParams, R extends ProcessingWithGasRecipe<?, P>, B extends ProcessingWithGasRecipeBuilder<P, R, B>> extends BaseRecipeProviderWithGas {
+    /**
+     * Creates a new {@code ProcessingWithGasRecipeGen} instance.
+     *
+     * @param output           the output to add or process
+     * @param registries       the registries to use
+     * @param defaultNamespace the default namespace to use
+     */
     public ProcessingWithGasRecipeGen(PackOutput output, CompletableFuture<Provider> registries, String defaultNamespace) {
         super(output, registries, defaultNamespace);
     }
@@ -27,12 +34,14 @@ public abstract class ProcessingWithGasRecipeGen<P extends ProcessingWithGasReci
     }
 
     protected GeneratedRecipe create(String namespace, Supplier<ItemLike> singleIngredient, UnaryOperator<B> transform) {
-        GeneratedRecipe generatedRecipe = output -> {
-            ItemLike itemLike = singleIngredient.get();
-            transform.apply(getBuilder(ResourceLocation.fromNamespaceAndPath(namespace, RegisteredObjectsHelper.getKeyOrThrow(itemLike.asItem()).getPath())).withItemIngredients(Ingredient.of(itemLike))).build(output);
+        GeneratedRecipe recipe = output -> {
+            ItemLike item = singleIngredient.get();
+            ResourceLocation id = ResourceLocation.fromNamespaceAndPath(namespace, RegisteredObjectsHelper.getKeyOrThrow(item.asItem()).getPath());
+            B builder = getBuilder(id).withItemIngredients(Ingredient.of(item));
+            transform.apply(builder).build(output);
         };
-        all.add(generatedRecipe);
-        return generatedRecipe;
+        all.add(recipe);
+        return recipe;
     }
 
     protected abstract B getBuilder(ResourceLocation id);
@@ -46,14 +55,10 @@ public abstract class ProcessingWithGasRecipeGen<P extends ProcessingWithGasReci
     }
 
     protected GeneratedRecipe createWithDeferredId(Supplier<ResourceLocation> name, UnaryOperator<B> transform) {
-        GeneratedRecipe generatedRecipe = output -> transform.apply(getBuilder(name.get())).build(output);
-        all.add(generatedRecipe);
-        return generatedRecipe;
+        GeneratedRecipe recipe = output -> transform.apply(getBuilder(name.get())).build(output);
+        all.add(recipe);
+        return recipe;
     }
 
     protected abstract IRecipeTypeInfo getRecipeType();
-
-    protected Supplier<ResourceLocation> idWithSuffix(Supplier<ItemLike> item, String suffix) {
-        return () -> asResource(RegisteredObjectsHelper.getKeyOrThrow(item.get().asItem()).getPath() + suffix);
-    }
 }

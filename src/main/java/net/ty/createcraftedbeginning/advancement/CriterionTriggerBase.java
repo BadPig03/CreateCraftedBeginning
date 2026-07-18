@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.advancement;
 
-import com.google.common.collect.Maps;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.advancements.CriterionTrigger;
 import net.minecraft.advancements.critereon.SimpleCriterionTrigger.SimpleInstance;
@@ -12,8 +11,9 @@ import net.ty.createcraftedbeginning.advancement.CriterionTriggerBase.Instance;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,7 +22,7 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class CriterionTriggerBase<T extends Instance> implements CriterionTrigger<T> {
-    protected final Map<PlayerAdvancements, Set<Listener<T>>> listeners = Maps.newHashMap();
+    protected final Map<PlayerAdvancements, Set<Listener<T>>> listeners = new HashMap<>();
 
     private final ResourceLocation id;
 
@@ -31,14 +31,14 @@ public abstract class CriterionTriggerBase<T extends Instance> implements Criter
     }
 
     @Override
-    public void addPlayerListener(PlayerAdvancements playerAdvancementsIn, Listener<T> listener) {
-        Set<Listener<T>> playerListeners = listeners.computeIfAbsent(playerAdvancementsIn, advancements -> new HashSet<>());
+    public void addPlayerListener(PlayerAdvancements advancements, Listener<T> listener) {
+        Set<Listener<T>> playerListeners = listeners.computeIfAbsent(advancements, $ -> new HashSet<>());
         playerListeners.add(listener);
     }
 
     @Override
-    public void removePlayerListener(PlayerAdvancements playerAdvancementsIn, Listener<T> listener) {
-        Set<Listener<T>> playerListeners = listeners.get(playerAdvancementsIn);
+    public void removePlayerListener(PlayerAdvancements advancements, Listener<T> listener) {
+        Set<Listener<T>> playerListeners = listeners.get(advancements);
         if (playerListeners == null) {
             return;
         }
@@ -48,12 +48,12 @@ public abstract class CriterionTriggerBase<T extends Instance> implements Criter
             return;
         }
 
-        listeners.remove(playerAdvancementsIn);
+        listeners.remove(advancements);
     }
 
     @Override
-    public void removePlayerListeners(PlayerAdvancements playerAdvancementsIn) {
-        listeners.remove(playerAdvancementsIn);
+    public void removePlayerListeners(PlayerAdvancements advancements) {
+        listeners.remove(advancements);
     }
 
     public ResourceLocation getId() {
@@ -67,13 +67,18 @@ public abstract class CriterionTriggerBase<T extends Instance> implements Criter
             return;
         }
 
-        List<Listener<T>> list = new LinkedList<>();
+        List<Listener<T>> triggeredListeners = new ArrayList<>();
         for (Listener<T> listener : playerListeners) {
-            if (listener.trigger().test(suppliers)) {
-                list.add(listener);
+            if (!listener.trigger().test(suppliers)) {
+                continue;
             }
+
+            triggeredListeners.add(listener);
         }
-        list.forEach(listener -> listener.run(advancements));
+
+        for (Listener<T> listener : triggeredListeners) {
+            listener.run(advancements);
+        }
     }
 
     public abstract static class Instance implements SimpleInstance {

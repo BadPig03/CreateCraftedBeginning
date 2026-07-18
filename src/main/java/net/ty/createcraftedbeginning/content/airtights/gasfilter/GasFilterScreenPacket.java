@@ -17,7 +17,7 @@ public record GasFilterScreenPacket(boolean blacklist) implements ServerboundPac
 
     @Override
     public void handle(ServerPlayer player) {
-        if (!(player.containerMenu instanceof GasFilterMenu menu)) {
+        if (!(player.containerMenu instanceof GasFilterMenu menu) || !menu.stillValid(player)) {
             return;
         }
 

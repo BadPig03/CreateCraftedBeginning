@@ -11,13 +11,13 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.NonNullList;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.SmithingRecipe;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
@@ -26,6 +26,7 @@ import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import net.ty.createcraftedbeginning.recipe.ForgingPressRecipe;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,8 +47,8 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
         super(info);
     }
 
-    private static int getInputX(int i) {
-        return 42 - i * 19;
+    private static int getInputX(int index) {
+        return 42 - index * 19;
     }
 
     private static int getOutputX(int size) {
@@ -102,11 +103,11 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
     protected void draw(ForgingPressRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         NonNullList<SizedFluidIngredient> fluidIngredients = recipe.getFluidIngredients();
         NonNullList<SizedGasIngredient> gasIngredients = recipe.getGasIngredients();
-        int size = recipe.getIngredients().size() + fluidIngredients.size() + gasIngredients.size();
-        if (size > 1) {
+        int inputCount = recipe.getIngredients().size() + fluidIngredients.size() + gasIngredients.size();
+        if (inputCount > 1) {
             CCBGUITextures.JEI_PRESS_HEAD_TOOL.render(graphics, 24, 43);
         }
-        if (size > 2) {
+        if (inputCount > 2) {
             CCBGUITextures.JEI_DOWN_ARROW.render(graphics, 73, 10);
         }
         CCBGUITextures.JEI_SHADOW.render(graphics, 66, 66);
@@ -124,28 +125,24 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
             return;
         }
 
-        Level level = Minecraft.getInstance().level;
-        if (level == null) {
-            return;
-        }
-
-        int size = ingredients.size();
-        int i = 0;
+        int itemCount = ingredients.size();
+        int inputIndex = 0;
         builder.addSlot(RecipeIngredientRole.INPUT, 18, 82).setSlotName(SLOT_BASE).setBackground(getRenderedSlot(), -1, -1).addItemStacks(List.of(ingredients.getFirst().getItems()));
-        if (size > 1) {
+        if (itemCount > 1) {
             builder.addSlot(RecipeIngredientRole.INPUT, 42, 45).setSlotName(SLOT_TEMPLATE).setBackground(getRenderedSlot(), -1, -1).addItemStacks(List.of(ingredients.get(1).getItems()));
         }
-        if (size > 2) {
-            builder.addSlot(RecipeIngredientRole.INPUT, getInputX(i), 6).setSlotName(SLOT_ADDITION).setBackground(getRenderedSlot(), -1, -1).addItemStacks(List.of(ingredients.get(2).getItems()));
-            i++;
+        if (itemCount > 2) {
+            builder.addSlot(RecipeIngredientRole.INPUT, getInputX(inputIndex), 6).setSlotName(SLOT_ADDITION).setBackground(getRenderedSlot(), -1, -1).addItemStacks(List.of(ingredients.get(2).getItems()));
+            inputIndex++;
         }
         if (!fluidIngredients.isEmpty()) {
-            addFluidSlot(builder, getInputX(i), 6, fluidIngredients.getFirst());
-            i++;
+            addFluidSlot(builder, getInputX(inputIndex), 6, fluidIngredients.getFirst());
+            inputIndex++;
         }
         if (!gasIngredients.isEmpty()) {
-            GasStack gasStack = gasIngredients.getFirst().getFirstGas();
-            builder.addSlot(RecipeIngredientRole.INPUT, getInputX(i), 6).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEIPlugin.GAS_STACK, gasStack.copy()).addRichTooltipCallback((v, t) -> t.add(Component.translatable("jei.tooltip.gas.amount", gasStack.getAmount()).withStyle(ChatFormatting.GRAY)));
+            SizedGasIngredient gasIngredient = gasIngredients.getFirst();
+            List<GasStack> gases = Arrays.stream(gasIngredient.getGases()).map(GasStack::copy).toList();
+            builder.addSlot(RecipeIngredientRole.INPUT, getInputX(inputIndex), 6).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gases).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmountUtils.precise(gasIngredient.amount()).style(ChatFormatting.GRAY).component()));
         }
         if (recipe.getSmithingRecipe() != null) {
             builder.addSlot(RecipeIngredientRole.OUTPUT, getOutputX(1), 82).setSlotName(SLOT_OUTPUT).setBackground(BASIC_SLOT, -1, -1).addItemStack(ItemStack.EMPTY);

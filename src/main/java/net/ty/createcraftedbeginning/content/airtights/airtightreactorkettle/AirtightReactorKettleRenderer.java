@@ -49,7 +49,7 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
         super(context);
     }
 
-    private static float renderFluids(AirtightReactorKettleBlockEntity kettle, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light) {
+    private static float renderFluids(AirtightReactorKettleBlockEntity kettle, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light) {
         SmartFluidTankBehaviour inputTank = kettle.getInputFluidTank();
         SmartFluidTankBehaviour outputTank = kettle.getOutputFluidTank();
         float totalUnits = AirtightReactorKettleUtils.getTotalFluidUnits(inputTank, outputTank, partialTicks);
@@ -58,46 +58,46 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
             return 0;
         }
 
-        ms.pushPose();
-        ms.translate(0, -1, 0);
+        poseStack.pushPose();
+        poseStack.translate(0, -1, 0);
         float fluidLevel = Mth.clamp(totalUnits / totalCapacity, 0, 1);
         fluidLevel = 1 - (1 - fluidLevel) * (1 - fluidLevel);
         float xMin = -0.875f;
         float yMin = 0.125f;
         float yMax = yMin + (0.875f - yMin) * fluidLevel;
         float zMax = 1.875f;
-        xMin = renderFluidTank(inputTank, totalUnits, partialTicks, xMin, yMin, yMax, zMax, ms, buffer, light);
-        renderFluidTank(outputTank, totalUnits, partialTicks, xMin, yMin, yMax, zMax, ms, buffer, light);
+        xMin = renderFluidTank(inputTank, totalUnits, partialTicks, xMin, yMin, yMax, zMax, poseStack, buffer, light);
+        renderFluidTank(outputTank, totalUnits, partialTicks, xMin, yMin, yMax, zMax, poseStack, buffer, light);
 
-        ms.popPose();
+        poseStack.popPose();
         return yMax;
     }
 
-    private static float renderFluidTank(SmartFluidTankBehaviour behaviour, float totalUnits, float partialTicks, float xMin, float yMin, float yMax, float zMax, PoseStack ms, MultiBufferSource buffer, int light) {
-        for (TankSegment tankSegment : behaviour.getTanks()) {
-            FluidStack renderedFluid = tankSegment.getRenderedFluid();
-            if (renderedFluid.isEmpty()) {
+    private static float renderFluidTank(SmartFluidTankBehaviour behaviour, float totalUnits, float partialTicks, float xMin, float yMin, float yMax, float zMax, PoseStack poseStack, MultiBufferSource buffer, int light) {
+        for (TankSegment segment : behaviour.getTanks()) {
+            FluidStack fluid = segment.getRenderedFluid();
+            if (fluid.isEmpty()) {
                 continue;
             }
 
-            float units = tankSegment.getTotalUnits(partialTicks);
+            float units = segment.getTotalUnits(partialTicks);
             if (units < 1) {
                 continue;
             }
 
             float partial = Mth.clamp(units / totalUnits, 0, 1);
             float xMax = xMin + partial * 2.75f;
-            NeoForgeCatnipServices.FLUID_RENDERER.renderFluidBox(renderedFluid, xMin, yMin, -0.875f, xMax, yMax, zMax, buffer, ms, light, false, true);
+            NeoForgeCatnipServices.FLUID_RENDERER.renderFluidBox(fluid, xMin, yMin, -0.875f, xMax, yMax, zMax, buffer, poseStack, light, false, true);
             xMin = xMax;
         }
         return xMin;
     }
 
-    private static void renderItems(AirtightReactorKettleBlockEntity kettle, float fluidLevel, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        ms.pushPose();
-        ms.translate(0.5f, -0.8f, 0.5f);
+    private static void renderItems(AirtightReactorKettleBlockEntity kettle, float fluidLevel, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        poseStack.pushPose();
+        poseStack.translate(0.5f, -0.8f, 0.5f);
         float blockRotation = (kettle.getBlockPos().hashCode() & 255) * 1.40625f;
-        TransformStack.of(ms).rotateYDegrees(kettle.getIngredientRotation().getValue(partialTicks) + blockRotation);
+        TransformStack.of(poseStack).rotateYDegrees(kettle.getIngredientRotation().getValue(partialTicks) + blockRotation);
 
         float itemSurfaceY = fluidLevel <= 0 ? 0.05f : fluidLevel - 0.13f;
         IItemHandlerModifiable inventory = kettle.getItemCapability();
@@ -113,7 +113,7 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
             float angle = placement.angle();
             Vec3 itemPosition = placement.position();
 
-            ms.pushPose();
+            poseStack.pushPose();
 
             float itemOffset = 0.035f;
             if (!renderer.getModel(stack, null, null, 0).isGui3d()) {
@@ -122,35 +122,35 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
             if (fluidLevel > 0) {
                 itemOffset += Mth.sin(AnimationTickHolder.getRenderTime(kettle.getLevel()) / 12.0f + angle) * 0.025f;
             }
-            ms.translate(itemPosition.x, itemSurfaceY + itemOffset, itemPosition.z);
-            TransformStack.of(ms).rotateYDegrees(angle + 35).rotateXDegrees(90);
+            poseStack.translate(itemPosition.x, itemSurfaceY + itemOffset, itemPosition.z);
+            TransformStack.of(poseStack).rotateYDegrees(angle + 35).rotateXDegrees(90);
 
             int copies = getRenderedCopyCount(stack.getCount());
             for (int i = 0; i < copies; i++) {
-                ms.pushPose();
+                poseStack.pushPose();
 
                 Vec3 offset = placement.copyOffsets()[i];
-                ms.translate(offset.x, offset.y, offset.z);
-                renderer.renderStatic(stack, ItemDisplayContext.GROUND, light, overlay, ms, buffer, level, 0);
+                poseStack.translate(offset.x, offset.y, offset.z);
+                renderer.renderStatic(stack, ItemDisplayContext.GROUND, light, overlay, poseStack, buffer, level, 0);
 
-                ms.popPose();
+                poseStack.popPose();
             }
 
-            ms.popPose();
+            poseStack.popPose();
         }
 
-        ms.popPose();
+        poseStack.popPose();
     }
 
-    private static void renderMixerModels(AirtightReactorKettleBlockEntity kettle, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light) {
+    private static void renderMixerModels(AirtightReactorKettleBlockEntity kettle, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light) {
         BlockState state = kettle.getBlockState();
         SuperByteBuffer mixerModel = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_MIXER, state);
         float angle = kettle.getMixerRotation().getValue(partialTicks) * Mth.DEG_TO_RAD;
         float offset = kettle.getMixerOffset(partialTicks);
-        mixerModel.translate(0, -offset, 0).rotateCentered(angle, Direction.UP).light(light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
+        mixerModel.translate(0, -offset, 0).rotateCentered(angle, Direction.UP).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
     }
 
-    private static void renderWindowsModels(AirtightReactorKettleBlockEntity kettle, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light) {
+    private static void renderWindowsModels(AirtightReactorKettleBlockEntity kettle, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light) {
         BlockState state = kettle.getBlockState();
         SuperByteBuffer leftWindowModel = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_LEFT_WINDOW, state);
         SuperByteBuffer rightWindowModel = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_RIGHT_WINDOW, state);
@@ -158,8 +158,8 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
         for (Direction direction : Iterate.horizontalDirections) {
             Vec3i leftDistance = direction.getClockWise().getNormal();
             Vec3i rightDistance = direction.getCounterClockWise().getNormal();
-            leftWindowModel.translate(direction.getNormal()).translate(leftDistance.getX() * distanceScale, leftDistance.getY() * distanceScale, leftDistance.getZ() * distanceScale).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).light(light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
-            rightWindowModel.translate(direction.getNormal()).translate(rightDistance.getX() * distanceScale, rightDistance.getY() * distanceScale, rightDistance.getZ() * distanceScale).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).light(light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
+            leftWindowModel.translate(direction.getNormal()).translate(leftDistance.getX() * distanceScale, leftDistance.getY() * distanceScale, leftDistance.getZ() * distanceScale).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
+            rightWindowModel.translate(direction.getNormal()).translate(rightDistance.getX() * distanceScale, rightDistance.getY() * distanceScale, rightDistance.getZ() * distanceScale).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
         }
     }
 
@@ -198,11 +198,13 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
             double preferredRadius = MAX_RADIUS * 0.55f;
             double radiusPenalty = Math.abs(radius - preferredRadius) * 0.04f;
             double score = nearestDistanceSqr - radiusPenalty + random.nextDouble() * 0.025f;
-            if (score > bestScore) {
-                bestScore = score;
-                bestPosition = candidate;
-                bestAngle = angle;
+            if (score <= bestScore) {
+                continue;
             }
+
+            bestScore = score;
+            bestPosition = candidate;
+            bestAngle = angle;
         }
 
         Vec3[] copyOffsets = new Vec3[MAX_RENDERED_COPIES];
@@ -227,12 +229,12 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
     }
 
     @Override
-    protected void renderSafe(AirtightReactorKettleBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        super.renderSafe(be, partialTicks, ms, buffer, light, overlay);
-        renderMixerModels(be, partialTicks, ms, buffer, light);
-        float fluidLevel = renderFluids(be, partialTicks, ms, buffer, light);
-        renderWindowsModels(be, partialTicks, ms, buffer, light);
-        renderItems(be, fluidLevel, partialTicks, ms, buffer, light, overlay);
+    protected void renderSafe(AirtightReactorKettleBlockEntity kettle, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        super.renderSafe(kettle, partialTicks, poseStack, buffer, light, overlay);
+        renderMixerModels(kettle, partialTicks, poseStack, buffer, light);
+        float fluidLevel = renderFluids(kettle, partialTicks, poseStack, buffer, light);
+        renderWindowsModels(kettle, partialTicks, poseStack, buffer, light);
+        renderItems(kettle, fluidLevel, partialTicks, poseStack, buffer, light, overlay);
     }
 
     private record ItemPlacement(Vec3 position, float angle, Vec3[] copyOffsets) {}

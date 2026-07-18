@@ -6,11 +6,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.CreativeSmartGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageType;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.WrapperMountedGasStorage;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
@@ -27,13 +27,13 @@ public class CreativeAirtightTankMountedStorage extends WrapperMountedGasStorage
     }
 
     protected CreativeAirtightTankMountedStorage(MountedGasStorageType<?> type, CreativeSmartGasTank tank) {
-		super(type, tank);
-	}
+        super(type, tank);
+    }
 
     @Contract("_ -> new")
     public static CreativeAirtightTankMountedStorage fromTank(CreativeAirtightTankBlockEntity tank) {
         GasTank inventory = tank.getTankInventory();
-        CreativeSmartGasTank copy = new CreativeSmartGasTank(inventory.getCapacity(), $ -> {});
+        CreativeSmartGasTank copy = new CreativeSmartGasTank(inventory.getCapacity(), ignored -> {});
         copy.setContainedGas(inventory.getGasStack());
         return new CreativeAirtightTankMountedStorage(copy);
     }

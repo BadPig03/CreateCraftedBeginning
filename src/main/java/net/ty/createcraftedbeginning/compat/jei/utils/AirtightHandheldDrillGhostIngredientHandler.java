@@ -14,7 +14,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.Airtigh
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
@@ -24,7 +24,7 @@ public class AirtightHandheldDrillGhostIngredientHandler implements IGhostIngred
 
     @Override
     public <I> @NotNull List<Target<I>> getTargetsTyped(AirtightHandheldDrillScreen gui, ITypedIngredient<I> ingredient, boolean doStart) {
-        List<Target<I>> targets = new LinkedList<>();
+        List<Target<I>> targets = new ArrayList<>();
         if (ingredient.getType() != VanillaTypes.ITEM_STACK) {
             return targets;
         }

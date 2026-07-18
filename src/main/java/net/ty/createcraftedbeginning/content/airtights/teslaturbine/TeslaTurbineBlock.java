@@ -52,7 +52,6 @@ import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -64,29 +63,12 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<TeslaTurbineBlockEntity>, SimpleWaterloggedBlock, SpecialBlockItemRequirement {
+    public static final IntegerProperty ROTOR = IntegerProperty.create("rotor", 0, TeslaTurbineUtils.MAX_ROTORS);
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
-    private static final int ROTOR_MAX_COUNT = 8;
-
-    public static final IntegerProperty ROTOR = IntegerProperty.create("rotor", 0, ROTOR_MAX_COUNT);
 
     public TeslaTurbineBlock(Properties properties) {
         super(properties);
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(ROTOR, 0));
-    }
-
-    @Contract("_, _, _, _ -> new")
-    public static BlockPos calculateStructurePos(BlockPos pos, Axis axis, int u, int v) {
-        switch (axis) {
-            case X -> {
-                return new BlockPos(pos.getX(), pos.getY() + v, pos.getZ() + u);
-            }
-            case Z -> {
-                return new BlockPos(pos.getX() + u, pos.getY() + v, pos.getZ());
-            }
-            default -> {
-                return new BlockPos(pos.getX() + u, pos.getY(), pos.getZ() + v);
-            }
-        }
     }
 
     public @Nullable Axis getAxisForPlacement(BlockPlaceContext context) {
@@ -124,12 +106,19 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
             return;
         }
 
-        Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, new ItemStack(CCBItems.TESLA_TURBINE_ROTOR.asItem(), rotorCount));
+        ItemStack rotors = new ItemStack(CCBItems.TESLA_TURBINE_ROTOR.asItem(), rotorCount);
+        Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, rotors);
     }
 
     @Override
     public boolean hasShaftTowards(LevelReader world, BlockPos pos, BlockState state, Direction face) {
         return face.getAxis() == getRotationAxis(state);
+    }
+
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity entity, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, entity, stack);
+        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
     }
 
     @Override
@@ -148,35 +137,46 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
     }
 
     @Override
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos) {
+        if (state.getValue(WATERLOGGED)) {
+            level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
+        }
+        return state;
+    }
+
+    @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        ItemStack itemStack = player.getItemInHand(hand);
+        ItemStack heldItem = player.getItemInHand(hand);
         int rotorCount = state.getValue(ROTOR);
-        if (itemStack.is(CCBItems.TESLA_TURBINE_ROTOR)) {
-            if (rotorCount >= ROTOR_MAX_COUNT) {
+        if (heldItem.is(CCBItems.TESLA_TURBINE_ROTOR)) {
+            if (rotorCount >= TeslaTurbineUtils.MAX_ROTORS) {
                 return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
             }
 
             level.setBlockAndUpdate(pos, state.setValue(ROTOR, rotorCount + 1));
             CCBSoundEvents.ROTOR_ADDED.playOnServer(level, pos, 1.0f, 1.0f);
             if (!player.isCreative()) {
-                itemStack.shrink(1);
-            }
-            return ItemInteractionResult.SUCCESS;
-        }
-        else if (itemStack.is(AllItems.WRENCH)) {
-            if (rotorCount == 0) {
-                return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-            }
-
-            level.setBlockAndUpdate(pos, state.setValue(ROTOR, rotorCount - 1));
-            CCBSoundEvents.ROTOR_REMOVED.playOnServer(level, pos, 1.0f, 1.0f);
-            if (!player.isCreative()) {
-                ItemHandlerHelper.giveItemToPlayer(player, new ItemStack(CCBItems.TESLA_TURBINE_ROTOR.asItem()));
+                heldItem.shrink(1);
             }
             return ItemInteractionResult.SUCCESS;
         }
 
-        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        if (!heldItem.is(AllItems.WRENCH) || rotorCount == 0) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        level.setBlockAndUpdate(pos, state.setValue(ROTOR, rotorCount - 1));
+        CCBSoundEvents.ROTOR_REMOVED.playOnServer(level, pos, 1.0f, 1.0f);
+        if (!player.isCreative()) {
+            ItemStack rotor = new ItemStack(CCBItems.TESLA_TURBINE_ROTOR.asItem());
+            ItemHandlerHelper.giveItemToPlayer(player, rotor);
+        }
+        return ItemInteractionResult.SUCCESS;
+    }
+
+    @Override
+    public FluidState getFluidState(BlockState state) {
+        return state.getValue(WATERLOGGED) ? Fluids.WATER.defaultFluidState() : super.getFluidState(state);
     }
 
     @Override
@@ -193,57 +193,30 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
                     continue;
                 }
 
-                BlockPos structurePos = calculateStructurePos(pos, axis, i, j);
-                TeslaTurbineStructuralPosition structuralPos = TeslaTurbineStructuralPosition.fromOffset(i, j);
-                BlockState structureState = ProperWaterloggedBlock.withWater(level, CCBBlocks.TESLA_TURBINE_STRUCTURAL_BLOCK.getDefaultState().setValue(TeslaTurbineStructuralBlock.AXIS, axis).setValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION, structuralPos), structurePos);
-                BlockState occupiedState = level.getBlockState(structurePos);
-                if (!occupiedState.canBeReplaced()) {
-                    if (!(occupiedState.getBlock() instanceof TeslaTurbineStructuralBlock) || occupiedState.getValue(TeslaTurbineStructuralBlock.AXIS) != axis || occupiedState.getValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION) != structuralPos) {
+                BlockPos partPos = TeslaTurbineUtils.calculateStructurePos(pos, axis, i, j);
+                TeslaTurbineStructuralPosition structuralPosition = TeslaTurbineStructuralPosition.fromOffset(i, j);
+                BlockState partState = CCBBlocks.TESLA_TURBINE_STRUCTURAL_BLOCK.getDefaultState().setValue(TeslaTurbineStructuralBlock.AXIS, axis).setValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION, structuralPosition);
+                partState = ProperWaterloggedBlock.withWater(level, partState, partPos);
+
+                BlockState existingState = level.getBlockState(partPos);
+                if (!existingState.canBeReplaced()) {
+                    boolean matchesStructure = existingState.getBlock() instanceof TeslaTurbineStructuralBlock && existingState.getValue(TeslaTurbineStructuralBlock.AXIS) == axis && existingState.getValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION) == structuralPosition;
+                    if (!matchesStructure) {
                         level.destroyBlock(pos, false);
                         return;
                     }
                     continue;
                 }
 
-                level.setBlockAndUpdate(structurePos, structureState);
+                level.setBlockAndUpdate(partPos, partState);
             }
         }
-    }
-
-    @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity entity, ItemStack stack) {
-        super.setPlacedBy(level, pos, state, entity, stack);
-        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
-    }
-
-    @Override
-    public FluidState getFluidState(BlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.defaultFluidState() : super.getFluidState(state);
-    }
-
-    @Override
-    public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos) {
-        if (state.getValue(WATERLOGGED)) {
-            level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
-        }
-        return state;
     }
 
     @Override
     protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
         builder.add(WATERLOGGED).add(ROTOR);
         super.createBlockStateDefinition(builder);
-    }
-
-    @Override
-    public ItemRequirement getRequiredItems(BlockState state, @Nullable BlockEntity blockEntity) {
-        List<StackRequirement> requirements = new ArrayList<>();
-        requirements.add(new StackRequirement(new ItemStack(asItem()), ItemUseType.CONSUME));
-        int rotorCount = state.getValue(ROTOR);
-        if (rotorCount > 0) {
-            requirements.add(new StackRequirement(new ItemStack(CCBItems.TESLA_TURBINE_ROTOR.asItem(), rotorCount), ItemUseType.CONSUME));
-        }
-        return new ItemRequirement(requirements);
     }
 
     @Override
@@ -262,13 +235,26 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
                     continue;
                 }
 
-                BlockState occupiedState = level.getBlockState(calculateStructurePos(pos, axis, i, j));
-                if (!occupiedState.canBeReplaced()) {
+                BlockPos partPos = TeslaTurbineUtils.calculateStructurePos(pos, axis, i, j);
+                BlockState existingState = level.getBlockState(partPos);
+                if (!existingState.canBeReplaced()) {
                     return null;
                 }
             }
         }
         return ProperWaterloggedBlock.withWater(level, state, pos);
+    }
+
+    @Override
+    public ItemRequirement getRequiredItems(BlockState state, @Nullable BlockEntity blockEntity) {
+        List<StackRequirement> requirements = new ArrayList<>();
+        requirements.add(new StackRequirement(new ItemStack(asItem()), ItemUseType.CONSUME));
+        int rotorCount = state.getValue(ROTOR);
+        if (rotorCount > 0) {
+            ItemStack rotors = new ItemStack(CCBItems.TESLA_TURBINE_ROTOR.asItem(), rotorCount);
+            requirements.add(new StackRequirement(rotors, ItemUseType.CONSUME));
+        }
+        return new ItemRequirement(requirements);
     }
 
     public static class TeslaTurbineRenderProperties implements IClientBlockExtensions, MultiPosDestructionHandler {
@@ -283,7 +269,7 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
                         continue;
                     }
 
-                    positions.add(calculateStructurePos(pos, axis, i, j));
+                    positions.add(TeslaTurbineUtils.calculateStructurePos(pos, axis, i, j));
                 }
             }
             return positions;

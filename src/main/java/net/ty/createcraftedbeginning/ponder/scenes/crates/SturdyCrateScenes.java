@@ -23,7 +23,7 @@ import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import static net.ty.createcraftedbeginning.ponder.PonderHelpers.generateItemDropVelocity;
+import static net.ty.createcraftedbeginning.ponder.CCBPonderScenes.generateItemDropVelocity;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -59,7 +59,7 @@ public class SturdyCrateScenes {
         scene.world().showIndependentSection(crateSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Sturdy Crate has four times the storage capacity of Andesite Crate").colored(PonderPalette.GREEN).pointAt(crateVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Sturdy Crate has eight times the storage capacity of Andesite Crate").colored(PonderPalette.GREEN).pointAt(crateVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.overlay().showFilterSlotInput(filterVec, Direction.UP, 60);

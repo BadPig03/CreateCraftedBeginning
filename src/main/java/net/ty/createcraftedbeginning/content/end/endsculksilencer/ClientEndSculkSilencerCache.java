@@ -4,33 +4,27 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public enum ClientEndSculkSilencerCache {
     INSTANCE;
 
-    private final Map<UUID, EndSculkSilencerInstance> silencers = new HashMap<>();
+    private final EndSculkSilencerIndex index = new EndSculkSilencerIndex();
 
     public boolean checkWithinRange(BlockPos soundPos, String dimension) {
-        return silencers.values().stream().anyMatch(instance -> Objects.equals(instance.dimension, dimension) && EndSculkSilencerInstance.isWithinChunkRange(soundPos, instance.blockPos, instance.range));
+        return index.isCovered(soundPos, dimension);
     }
 
     public void add(BlockPos blockPos, String dimension, short range) {
-        UUID uuid = EndSculkSilencerInstance.calculateUUID(blockPos, dimension);
-        silencers.put(uuid, new EndSculkSilencerInstance(blockPos, dimension, range));
+        index.update(blockPos, dimension, range);
     }
 
     public void remove(BlockPos blockPos, String dimension) {
-        UUID uuid = EndSculkSilencerInstance.calculateUUID(blockPos, dimension);
-        silencers.remove(uuid);
+        index.remove(blockPos, dimension);
     }
 
     public void clear() {
-        silencers.clear();
+        index.clear();
     }
 }

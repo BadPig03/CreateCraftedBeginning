@@ -35,53 +35,57 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public final class GasFilteringRenderer {
+    /**
+     * Updates this object for one game tick.
+     */
     public static void tick() {
-        Minecraft mc = Minecraft.getInstance();
-        HitResult target = mc.hitResult;
-        if (!(target instanceof BlockHitResult result)) {
+        Minecraft minecraft = Minecraft.getInstance();
+        HitResult target = minecraft.hitResult;
+        if (!(target instanceof BlockHitResult hitResult)) {
             return;
         }
 
-        ClientLevel level = mc.level;
+        ClientLevel level = minecraft.level;
         if (level == null) {
             return;
         }
 
-        BlockPos pos = result.getBlockPos();
-        if (!(level.getBlockEntity(pos) instanceof SmartBlockEntity smartBlockEntity)) {
+        BlockPos pos = hitResult.getBlockPos();
+        if (!(level.getBlockEntity(pos) instanceof SmartBlockEntity blockEntity)) {
             return;
         }
 
-        LocalPlayer player = mc.player;
+        LocalPlayer player = minecraft.player;
         if (player == null || player.isShiftKeyDown()) {
             return;
         }
 
-        ItemStack mainHandItem = player.getItemInHand(InteractionHand.MAIN_HAND);
-        for (BlockEntityBehaviour blockEntityBehaviour : smartBlockEntity.getAllBehaviours()) {
-            if (!(blockEntityBehaviour instanceof GasFilteringBehaviour behaviour) || !behaviour.isActive()) {
+        ItemStack heldItem = player.getItemInHand(InteractionHand.MAIN_HAND);
+        for (BlockEntityBehaviour candidate : blockEntity.getAllBehaviours()) {
+            if (!(candidate instanceof GasFilteringBehaviour behaviour) || !behaviour.isActive()) {
                 continue;
             }
 
-            ValueBoxTransform slotPositioning = behaviour.getSlotPositioning();
             BlockState state = level.getBlockState(pos);
-            if (!slotPositioning.shouldRender(level, pos, state) || !behaviour.mayInteract(player)) {
+            Vec3 localHit = target.getLocation().subtract(Vec3.atLowerCornerOf(pos));
+            ValueBoxTransform transform = behaviour.getSlotPositioning();
+            if (!transform.shouldRender(level, pos, state) || !behaviour.mayInteract(player)) {
                 continue;
             }
 
             Component label = behaviour.getLabel();
-            boolean hit = slotPositioning.testHit(level, pos, state, target.getLocation().subtract(Vec3.atLowerCornerOf(pos)));
+            boolean hit = transform.testHit(level, pos, state, localHit);
             ValueBox box = new ItemValueBox(label, new AABB(Vec3.ZERO, Vec3.ZERO).inflate(0.25f), pos, behaviour.getFilter(), Component.empty());
-            box.passive(!hit || behaviour.bypassesInput(mainHandItem));
-            Outliner.getInstance().showOutline(Pair.of("filter" + behaviour.netId(), pos), box.transform(slotPositioning)).lineWidth(0.015625f).withFaceTexture(hit ? AllSpecialTextures.THIN_CHECKERED : null).highlightFace(result.getDirection());
+            box.passive(!hit || behaviour.bypassesInput(heldItem));
+            Outliner.getInstance().showOutline(Pair.of("filter" + behaviour.netId(), pos), box.transform(transform)).lineWidth(0.015625f).withFaceTexture(hit ? AllSpecialTextures.THIN_CHECKERED : null).highlightFace(hitResult.getDirection());
             if (!hit) {
                 continue;
             }
 
-            List<MutableComponent> tip = new ArrayList<>();
-            tip.add(label.copy());
-            tip.add(behaviour.getTip());
-            CreateClient.VALUE_SETTINGS_HANDLER.showHoverTip(tip);
+            List<MutableComponent> tooltip = new ArrayList<>();
+            tooltip.add(label.copy());
+            tooltip.add(behaviour.getTip());
+            CreateClient.VALUE_SETTINGS_HANDLER.showHoverTip(tooltip);
         }
     }
 }

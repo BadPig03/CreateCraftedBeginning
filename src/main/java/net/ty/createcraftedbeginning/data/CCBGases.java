@@ -51,20 +51,20 @@ public class CCBGases {
 
     private static String formatGasName(String registryName) {
         String[] words = registryName.replace('_', ' ').split("\\s+");
-        StringBuilder builder = new StringBuilder();
+        StringBuilder result = new StringBuilder();
         for (String word : words) {
             if (word.isEmpty()) {
                 continue;
             }
 
-            if (!builder.isEmpty()) {
-                builder.append(' ');
+            if (!result.isEmpty()) {
+                result.append(' ');
             }
-            builder.append(Character.toUpperCase(word.charAt(0)));
+            result.append(Character.toUpperCase(word.charAt(0)));
             if (word.length() > 1) {
-                builder.append(word.substring(1).toLowerCase());
+                result.append(word.substring(1).toLowerCase());
             }
         }
-        return builder.toString();
+        return result.toString();
     }
 }

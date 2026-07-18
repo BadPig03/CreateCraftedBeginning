@@ -15,7 +15,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePowerMode;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.TickingAirtightUpgrade;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -26,11 +27,26 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public enum SpectralUpgrade implements AirtightUpgrade {
+public enum SpectralUpgrade implements TickingAirtightUpgrade {
     INSTANCE;
 
+    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("spectral");
+    private static final Couple<Integer> OFFSET = Couple.create(132, 55);
+
     private static final int RADIUS = 24;
-    private static final int DURATION_THRESHOLD = 30;
+    private static final int SCAN_INTERVAL = 20;
+    private static final int EFFECT_DURATION = 60;
+    private static final int REFRESH_THRESHOLD = 20;
+
+    private static List<LivingEntity> getNearbyEntities(Player player) {
+        BlockPos origin = player.getOnPos();
+        AABB bounds = new AABB(origin).inflate(RADIUS);
+        return player.level().getEntitiesOfClass(LivingEntity.class, bounds, entity -> isValidTarget(origin, entity));
+    }
+
+    private static boolean isValidTarget(BlockPos origin, LivingEntity entity) {
+        return !(entity instanceof Player) && entity.isAlive() && !entity.isRemoved() && origin.closerToCenterThan(entity.position(), RADIUS);
+    }
 
     @Override
     public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
@@ -44,9 +60,7 @@ public enum SpectralUpgrade implements AirtightUpgrade {
 
     @Override
     public boolean meetsConditions(Player player, ItemStack item) {
-        BlockPos pos = player.getOnPos();
-        List<LivingEntity> nearbyEntities = player.level().getEntitiesOfClass(LivingEntity.class, new AABB(pos).inflate(RADIUS)).stream().filter(e -> !(e instanceof Player) && e.isAlive() && !e.isRemoved() && pos.closerToCenterThan(e.position(), RADIUS)).toList();
-        return !nearbyEntities.isEmpty();
+        return true;
     }
 
     @Override
@@ -71,17 +85,12 @@ public enum SpectralUpgrade implements AirtightUpgrade {
 
     @Override
     public Couple<Integer> getOffset() {
-        return Couple.create(132, 55);
+        return OFFSET;
     }
 
     @Override
-    public int getGasConsumptionPerSecond(Player player, ItemStack item) {
-        return 0;
-    }
-
-    @Override
-    public int getIndex() {
-        return 4;
+    public AirtightUpgradePowerMode getPowerMode() {
+        return AirtightUpgradePowerMode.SUPPLY_REQUIRED;
     }
 
     @Override
@@ -91,29 +100,28 @@ public enum SpectralUpgrade implements AirtightUpgrade {
 
     @Override
     public ResourceLocation getID() {
-        return CreateCraftedBeginning.asResource("spectral");
+        return ID;
     }
 
     @Override
     public void applyEffect(Player player) {
-        BlockPos pos = player.getOnPos();
-        List<LivingEntity> nearbyEntities = player.level().getEntitiesOfClass(LivingEntity.class, new AABB(pos).inflate(RADIUS)).stream().filter(e -> !(e instanceof Player) && e.isAlive() && !e.isRemoved() && pos.closerToCenterThan(e.position(), RADIUS)).toList();
-        if (nearbyEntities.isEmpty()) {
-            return;
-        }
-
-        nearbyEntities.forEach(entity -> {
-            MobEffectInstance existingEffect = entity.getEffect(MobEffects.GLOWING);
-            if (existingEffect != null && (existingEffect.getAmplifier() != 0 || !existingEffect.endsWithin(DURATION_THRESHOLD))) {
-                return;
+        for (LivingEntity entity : getNearbyEntities(player)) {
+            MobEffectInstance effect = entity.getEffect(MobEffects.GLOWING);
+            if (effect != null && (effect.getAmplifier() != 0 || !effect.endsWithin(REFRESH_THRESHOLD))) {
+                continue;
             }
 
-            entity.addEffect(new MobEffectInstance(MobEffects.GLOWING, DURATION_THRESHOLD, 0));
-        });
+            entity.addEffect(new MobEffectInstance(MobEffects.GLOWING, EFFECT_DURATION, 0));
+        }
     }
 
     @Override
     public boolean isActive(Player player, ItemStack item) {
-        return item.is(CCBItems.AIRTIGHT_HELMET) && AirtightUpgrade.super.isActive(player, item);
+        return item.is(CCBItems.AIRTIGHT_HELMET) && TickingAirtightUpgrade.super.isActive(player, item);
+    }
+
+    @Override
+    public boolean shouldApplyEffect(Player player, ItemStack item) {
+        return player.tickCount % SCAN_INTERVAL == 0;
     }
 }

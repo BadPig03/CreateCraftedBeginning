@@ -41,11 +41,14 @@ public class TeslaTurbineBlockItem extends BlockItem {
         Axis axis = turbine.getAxisForPlacement(context);
         Direction direction = context.getClickedFace();
         if (direction.getAxis() != axis) {
-            result = super.place(BlockPlaceContext.at(context, context.getClickedPos().relative(direction), direction));
+            BlockPlaceContext offsetContext = BlockPlaceContext.at(context, context.getClickedPos().relative(direction), direction);
+            result = super.place(offsetContext);
         }
-        if (result == InteractionResult.FAIL && context.getLevel().isClientSide()) {
-            CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> showBounds(context));
+        if (result != InteractionResult.FAIL || !context.getLevel().isClientSide()) {
+            return result;
         }
+
+        CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> showBounds(context));
         return result;
     }
 

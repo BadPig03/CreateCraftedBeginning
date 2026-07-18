@@ -1,18 +1,22 @@
 package net.ty.createcraftedbeginning.compat.jade;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import org.jetbrains.annotations.NotNull;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IBlockComponentProvider;
 import snownee.jade.api.IServerDataProvider;
 import snownee.jade.api.ITooltip;
 import snownee.jade.api.config.IPluginConfig;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public enum BreezeChamberProvider implements IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
     INSTANCE;
 
@@ -26,7 +30,7 @@ public enum BreezeChamberProvider implements IBlockComponentProvider, IServerDat
     }
 
     @Override
-    public void appendServerData(@NotNull CompoundTag compoundTag, @NotNull BlockAccessor accessor) {
+    public void appendServerData(CompoundTag compoundTag, BlockAccessor accessor) {
         if (!(accessor.getBlockEntity() instanceof BreezeChamberBlockEntity chamber)) {
             return;
         }
@@ -37,7 +41,7 @@ public enum BreezeChamberProvider implements IBlockComponentProvider, IServerDat
     }
 
     @Override
-    public @NotNull ResourceLocation getUid() {
+    public ResourceLocation getUid() {
         return CCBBlockEntities.BREEZE_CHAMBER.getId();
     }
 }

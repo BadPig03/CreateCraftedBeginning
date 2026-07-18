@@ -1,9 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightforgingpress;
 
-import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
@@ -32,34 +30,36 @@ public class AirtightForgingPressStructureManager {
         this.press = press;
     }
 
-    private static float getSpeed(BlockPos corePos, Level level) {
-        if (!(level.getBlockEntity(corePos.above()) instanceof AirtightForgingPressStructuralShaftBlockEntity shaftBlockEntity)) {
+    private static float getSpeed(BlockPos pressPos, Level level) {
+        BlockPos shaftPos = pressPos.offset(AirtightForgingPressStructuralPosition.TOP_CENTER.getStructureOffset());
+        if (!(level.getBlockEntity(shaftPos) instanceof AirtightForgingPressStructuralShaftBlockEntity shaft)) {
             return 0;
         }
 
-        return shaftBlockEntity.getSpeed();
+        return shaft.getSpeed();
     }
 
-    private static float getTheoreticalSpeed(BlockPos corePos, Level level) {
-        float speed = 0;
-        for (Direction direction : Iterate.horizontalDirections) {
-            if (!(level.getBlockEntity(corePos.above().relative(direction)) instanceof AirtightForgingPressStructuralShaftBlockEntity shaftBlockEntity)) {
-                return 0;
-            }
-
-            float theoreticalSpeed = Mth.abs(shaftBlockEntity.getTheoreticalSpeed());
-            if (theoreticalSpeed <= speed) {
+    private static float getTheoreticalSpeed(BlockPos pressPos, Level level) {
+        float maxSpeed = 0;
+        for (AirtightForgingPressStructuralPosition position : AirtightForgingPressStructuralPosition.all()) {
+            if (!position.isShaft() || position == AirtightForgingPressStructuralPosition.TOP_CENTER) {
                 continue;
             }
 
-            speed = theoreticalSpeed;
+            BlockPos shaftPos = pressPos.offset(position.getStructureOffset());
+            if (!(level.getBlockEntity(shaftPos) instanceof AirtightForgingPressStructuralShaftBlockEntity shaft)) {
+                return 0;
+            }
+
+            maxSpeed = Math.max(maxSpeed, Mth.abs(shaft.getTheoreticalSpeed()));
         }
 
-        return speed;
+        return maxSpeed;
     }
 
-    private static boolean isOverstressed(BlockPos corePos, Level level) {
-        return level.getBlockEntity(corePos.above()) instanceof AirtightForgingPressStructuralShaftBlockEntity shaftBlockEntity && shaftBlockEntity.getOverstressed();
+    private static boolean isOverstressed(BlockPos pressPos, Level level) {
+        BlockPos shaftPos = pressPos.offset(AirtightForgingPressStructuralPosition.TOP_CENTER.getStructureOffset());
+        return level.getBlockEntity(shaftPos) instanceof AirtightForgingPressStructuralShaftBlockEntity shaft && shaft.getOverstressed();
     }
 
     public void tick() {
@@ -77,25 +77,29 @@ public class AirtightForgingPressStructureManager {
             return false;
         }
 
-        BlockPos corePos = press.getBlockPos();
+        BlockPos pressPos = press.getBlockPos();
         previousSpeed = speed;
-        speed = getSpeed(corePos, level);
+        speed = getSpeed(pressPos, level);
         previousTheoreticalSpeed = theoreticalSpeed;
-        theoreticalSpeed = getTheoreticalSpeed(corePos, level);
+        theoreticalSpeed = getTheoreticalSpeed(pressPos, level);
         previousOverstressed = overstressed;
-        overstressed = isOverstressed(corePos, level);
-        return previousSpeed != speed || previousTheoreticalSpeed != theoreticalSpeed || previousOverstressed != overstressed;
+        overstressed = isOverstressed(pressPos, level);
+
+        boolean speedChanged = previousSpeed != speed;
+        boolean theoreticalSpeedChanged = previousTheoreticalSpeed != theoreticalSpeed;
+        boolean stressChanged = previousOverstressed != overstressed;
+        return speedChanged || theoreticalSpeedChanged || stressChanged;
     }
 
     public CompoundTag write() {
-        CompoundTag compoundTag = new CompoundTag();
-        compoundTag.putFloat(COMPOUND_KEY_SPEED, speed);
-        compoundTag.putFloat(COMPOUND_KEY_PREVIOUS_SPEED, previousSpeed);
-        compoundTag.putFloat(COMPOUND_KEY_THEORETICAL_SPEED, theoreticalSpeed);
-        compoundTag.putFloat(COMPOUND_KEY_PREVIOUS_THEORETICAL_SPEED, previousTheoreticalSpeed);
-        compoundTag.putBoolean(COMPOUND_KEY_OVERSTRESSED, overstressed);
-        compoundTag.putBoolean(COMPOUND_KEY_PREVIOUS_OVERSTRESSED, previousOverstressed);
-        return compoundTag;
+        CompoundTag tag = new CompoundTag();
+        tag.putFloat(COMPOUND_KEY_SPEED, speed);
+        tag.putFloat(COMPOUND_KEY_PREVIOUS_SPEED, previousSpeed);
+        tag.putFloat(COMPOUND_KEY_THEORETICAL_SPEED, theoreticalSpeed);
+        tag.putFloat(COMPOUND_KEY_PREVIOUS_THEORETICAL_SPEED, previousTheoreticalSpeed);
+        tag.putBoolean(COMPOUND_KEY_OVERSTRESSED, overstressed);
+        tag.putBoolean(COMPOUND_KEY_PREVIOUS_OVERSTRESSED, previousOverstressed);
+        return tag;
     }
 
     public void read(CompoundTag compoundTag) {

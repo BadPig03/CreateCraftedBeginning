@@ -1,13 +1,11 @@
 package net.ty.createcraftedbeginning.compat.kubejs.events;
 
 import dev.latvian.mods.kubejs.event.KubeEvent;
-import dev.latvian.mods.rhino.util.HideFromJS;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.api.drainagehandlers.AirtightDrainageHandler;
 import net.ty.createcraftedbeginning.api.drainagehandlers.AirtightDrainageHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 
@@ -33,43 +31,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightDrainageHandlerEvent implements KubeEvent {
-    /**
-     * Registers an Airtight Drainage Handler for the given gas type.
-     * <p>
-     * This overload is hidden from JavaScript and is intended for internal Java-side
-     * usage. The gas is converted to its {@link ResourceLocation}, then delegated to
-     * {@link AirtightDrainageHandlerUtils#register(ResourceLocation, float, boolean, DrainageHandler)}.
-     *
-     * @param gasType     the gas type to register
-     * @param inflation   the inflation value to assign to the drainage handler
-     * @param showOutline whether the drainage outline should be shown
-     * @param handler     the drainage handler to execute
-     * @see Gas#getResourceLocation()
-     * @see AirtightDrainageHandlerUtils#register(ResourceLocation, float, boolean, DrainageHandler)
-     */
-    @HideFromJS
-    public static void add(Gas gasType, float inflation, boolean showOutline, DrainageHandler handler) {
-        AirtightDrainageHandlerUtils.register(gasType.getResourceLocation(), inflation, showOutline, handler);
-    }
-
-    /**
-     * Registers an Airtight Drainage Handler for the given gas type.
-     * <p>
-     * This overload is hidden from JavaScript and is intended for internal Java-side
-     * usage. The gas is converted to its {@link ResourceLocation}, while the inflation
-     * value is read from the provided {@link AirtightDrainageHandler}.
-     *
-     * @param gasType the gas type to register
-     * @param handler the airtight drainage handler to register
-     * @see Gas#getResourceLocation()
-     * @see AirtightDrainageHandler#getInflation()
-     * @see AirtightDrainageHandlerUtils#register(ResourceLocation, float, AirtightDrainageHandler)
-     */
-    @HideFromJS
-    public static void add(Gas gasType, AirtightDrainageHandler handler) {
-        AirtightDrainageHandlerUtils.register(gasType.getResourceLocation(), handler.getInflation(), handler);
-    }
-
     /**
      * Registers an Airtight Drainage Handler for the gas identified by the given
      * resource location.

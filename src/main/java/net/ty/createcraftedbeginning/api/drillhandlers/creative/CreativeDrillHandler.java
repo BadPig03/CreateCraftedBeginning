@@ -8,11 +8,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CreativeDrillHandler implements AirtightDrillHandler {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getDamageAddition() {
         return Integer.MAX_VALUE - 1;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public float getConsumptionMultiplier() {
         return 0;

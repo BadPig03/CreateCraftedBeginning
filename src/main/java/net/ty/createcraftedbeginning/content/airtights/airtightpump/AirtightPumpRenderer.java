@@ -18,7 +18,7 @@ public class AirtightPumpRenderer extends KineticBlockEntityRenderer<AirtightPum
     }
 
     @Override
-    protected SuperByteBuffer getRotatedModel(AirtightPumpBlockEntity be, BlockState state) {
+    protected SuperByteBuffer getRotatedModel(AirtightPumpBlockEntity blockEntity, BlockState state) {
         return CachedBuffers.partialFacing(CCBPartialModels.AIRTIGHT_PUMP_COGS, state);
     }
 }

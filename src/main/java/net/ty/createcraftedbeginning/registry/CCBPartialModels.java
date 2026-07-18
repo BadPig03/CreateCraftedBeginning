@@ -54,13 +54,6 @@ public class CCBPartialModels {
 
     public static final PartialModel TESLA_TURBINE_ROTOR = block("tesla_turbine/rotor");
 
-    public static final PartialModel ENCASED_UP = block("airtight_encased_pipe/up");
-    public static final PartialModel ENCASED_DOWN = block("airtight_encased_pipe/down");
-    public static final PartialModel ENCASED_NORTH = block("airtight_encased_pipe/north");
-    public static final PartialModel ENCASED_EAST = block("airtight_encased_pipe/east");
-    public static final PartialModel ENCASED_SOUTH = block("airtight_encased_pipe/south");
-    public static final PartialModel ENCASED_WEST = block("airtight_encased_pipe/west");
-
     public static final PartialModel AIRTIGHT_CANNON_BARREL = item("airtight_cannon/barrel");
     public static final PartialModel AIRTIGHT_CANNON_PISTON_LEFT = item("airtight_cannon/piston_left");
     public static final PartialModel AIRTIGHT_CANNON_PISTON_RIGHT = item("airtight_cannon/piston_right");
@@ -120,6 +113,13 @@ public class CCBPartialModels {
     public static final PartialModel GAS_PACKAGER_TRAY_DEFRAG = block("gas_repackager/tray");
     public static final PartialModel GAS_PACKAGER_HATCH_OPEN = block("gas_packager/hatch_open");
     public static final PartialModel GAS_PACKAGER_HATCH_CLOSED = block("gas_packager/hatch_closed");
+
+    public static final PartialModel GAS_FACTORY_GAUGE_PANEL = block("gas_factory_gauge/panel");
+    public static final PartialModel GAS_FACTORY_GAUGE_PANEL_WITH_BULB = block("gas_factory_gauge/panel_with_bulb");
+    public static final PartialModel GAS_FACTORY_GAUGE_PANEL_RESTOCKER = block("gas_factory_gauge/panel_restocker");
+    public static final PartialModel GAS_FACTORY_GAUGE_PANEL_RESTOCKER_WITH_BULB = block("gas_factory_gauge/panel_restocker_with_bulb");
+    public static final PartialModel GAS_FACTORY_GAUGE_BULB_LIGHT = block("gas_factory_gauge/bulb_light");
+    public static final PartialModel GAS_FACTORY_GAUGE_BULB_RED = block("gas_factory_gauge/bulb_red");
 
     public static final Map<ComponentPartials, Map<Direction, PartialModel>> AIRTIGHT_PIPE_ATTACHMENTS = new EnumMap<>(ComponentPartials.class);
 

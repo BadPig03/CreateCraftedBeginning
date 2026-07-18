@@ -50,6 +50,7 @@ public class CCBAdvancement {
             builtinTrigger = CCBTriggers.addSimple(id + "_builtin");
             advancementBuilder.addCriterion("0", builtinTrigger.createCriterion(SimpleCCBTrigger.instance()));
         }
+
         CCBAdvancements.ENTRIES.add(this);
     }
 
@@ -61,8 +62,8 @@ public class CCBAdvancement {
             return false;
         }
 
-        AdvancementHolder advancement = serverPlayer.getServer().getAdvancements().get(CreateCraftedBeginning.asResource(id));
-        return advancement == null || serverPlayer.getAdvancements().getOrStartProgress(advancement).isDone();
+        AdvancementHolder holder = serverPlayer.getServer().getAdvancements().get(CreateCraftedBeginning.asResource(id));
+        return holder == null || serverPlayer.getAdvancements().getOrStartProgress(holder).isDone();
     }
 
     public void awardTo(@Nullable Player player) {
@@ -77,11 +78,11 @@ public class CCBAdvancement {
         if (parent != null) {
             advancementBuilder.parent(parent.dataGenResult);
         }
-        if (builder.func != null) {
-            builder.icon(builder.func.apply(provider));
+        if (builder.iconFactory != null) {
+            builder.icon(builder.iconFactory.apply(provider));
         }
 
-        advancementBuilder.display(builder.icon, Component.translatable(titleKey()), Component.translatable(descriptionKey()).withStyle(s -> s.withColor(0xDBA213)), "root".equals(id) ? BACKGROUND : null, builder.type.advancementType, builder.type.toast, builder.type.announce, builder.type.hide);
+        advancementBuilder.display(builder.icon, Component.translatable(titleKey()), Component.translatable(descriptionKey()).withStyle(style -> style.withColor(0xDBA213)), "root".equals(id) ? BACKGROUND : null, builder.type.advancementType, builder.type.toast, builder.type.announce, builder.type.hide);
         dataGenResult = advancementBuilder.save(consumer, CreateCraftedBeginning.asResource(id).toString());
     }
 
@@ -127,7 +128,7 @@ public class CCBAdvancement {
         private boolean externalTrigger;
         private int keyIndex;
         private ItemStack icon;
-        private Function<Provider, ItemStack> func;
+        private Function<Provider, ItemStack> iconFactory;
 
         public Builder special(TaskType type) {
             this.type = type;
@@ -152,8 +153,8 @@ public class CCBAdvancement {
             return icon(new ItemStack(item));
         }
 
-        public Builder icon(Function<Provider, ItemStack> func) {
-            this.func = func;
+        public Builder icon(Function<Provider, ItemStack> iconFactory) {
+            this.iconFactory = iconFactory;
             return this;
         }
 
@@ -178,10 +179,6 @@ public class CCBAdvancement {
             return whenItemCollected(icon.getItem());
         }
 
-        public Builder whenItemCollected(ItemProviderEntry<?, ?> item) {
-            return whenItemCollected(item.asItem());
-        }
-
         public Builder whenItemCollected(ItemLike itemProvider) {
             return externalTrigger(TriggerInstance.hasItems(itemProvider));
         }
@@ -191,8 +188,8 @@ public class CCBAdvancement {
         }
 
         public Builder whenItemsCollected(List<ItemProviderEntry<?, ?>> items) {
-            for (var item: items) {
-                whenItemCollected(item);
+            for (ItemProviderEntry<?, ?> item : items) {
+                externalTrigger(TriggerInstance.hasItems(item.asItem()));
             }
             return this;
         }

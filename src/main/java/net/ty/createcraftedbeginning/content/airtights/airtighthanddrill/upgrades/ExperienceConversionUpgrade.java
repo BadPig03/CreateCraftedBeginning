@@ -24,6 +24,9 @@ import java.util.List;
 public enum ExperienceConversionUpgrade implements AirtightUpgrade {
     INSTANCE;
 
+    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("experience_conversion");
+    private static final Couple<Integer> OFFSET = Couple.create(159, 78);
+
     @Override
     public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
         float multiplier = CCBConfig.server().equipments.experienceConversionMultiplier.getF();
@@ -62,17 +65,7 @@ public enum ExperienceConversionUpgrade implements AirtightUpgrade {
 
     @Override
     public Couple<Integer> getOffset() {
-        return Couple.create(159, 78);
-    }
-
-    @Override
-    public int getGasConsumptionPerSecond(Player player, ItemStack item) {
-        return -1;
-    }
-
-    @Override
-    public int getIndex() {
-        return 2;
+        return OFFSET;
     }
 
     @Override
@@ -82,7 +75,7 @@ public enum ExperienceConversionUpgrade implements AirtightUpgrade {
 
     @Override
     public ResourceLocation getID() {
-        return CreateCraftedBeginning.asResource("experience_conversion");
+        return ID;
     }
 
     @Override

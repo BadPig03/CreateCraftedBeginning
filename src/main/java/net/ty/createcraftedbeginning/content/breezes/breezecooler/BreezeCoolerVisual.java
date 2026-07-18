@@ -7,6 +7,7 @@ import dev.engine_room.flywheel.api.visualization.VisualizationContext;
 import dev.engine_room.flywheel.lib.instance.InstanceTypes;
 import dev.engine_room.flywheel.lib.instance.TransformedInstance;
 import dev.engine_room.flywheel.lib.model.Models;
+import dev.engine_room.flywheel.lib.model.baked.PartialModel;
 import dev.engine_room.flywheel.lib.transform.Translate;
 import dev.engine_room.flywheel.lib.visual.AbstractBlockEntityVisual;
 import dev.engine_room.flywheel.lib.visual.SimpleDynamicVisual;
@@ -17,6 +18,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.FrostLevel;
+import net.ty.createcraftedbeginning.content.breezes.breezecooler.client.BreezeCoolerClientAnimation;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,12 +30,15 @@ import java.util.function.Consumer;
 @MethodsReturnNonnullByDefault
 public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBlockEntity> implements SimpleDynamicVisual, SimpleTickableVisual {
     private final TransformedInstance head;
-    private final boolean isRiming;
     private FrostLevel frostLevel;
     @Nullable
     private TransformedInstance goggles;
     @Nullable
+    private PartialModel gogglesModel;
+    @Nullable
     private TransformedInstance hat;
+    @Nullable
+    private PartialModel hatModel;
     @Nullable
     private TransformedInstance wind;
 
@@ -42,8 +47,7 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
     public BreezeCoolerVisual(VisualizationContext ctx, BreezeCoolerBlockEntity blockEntity, float partialTick) {
         super(ctx, blockEntity, partialTick);
         frostLevel = FrostLevel.RIMING;
-        validBlockAbove = blockEntity.isValidBlockAbove();
-        isRiming = !blockEntity.getFrostLevel().isAtLeast(FrostLevel.CHILLED);
+        validBlockAbove = blockEntity.getBlockState().getValue(BreezeCoolerBlock.ATTACHED);
         head = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(BreezeCoolerRenderer.getBreezeModel(frostLevel, validBlockAbove))).createInstance();
         animate(partialTick);
     }
@@ -58,22 +62,35 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
             frostLevel = currentFrostLevel;
         }
 
+        PartialModel desiredGogglesModel = currentFrostLevel.isAtLeast(FrostLevel.CHILLED) ? CCBPartialModels.BREEZE_COOLER_GOGGLES : CCBPartialModels.BREEZE_COOLER_GOGGLES_SMALL;
         boolean hasGoggles = blockEntity.hasGoggles();
         if (hasGoggles && goggles == null) {
-            goggles = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(isRiming ? CCBPartialModels.BREEZE_COOLER_GOGGLES_SMALL : CCBPartialModels.BREEZE_COOLER_GOGGLES)).createInstance();
+            goggles = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredGogglesModel)).createInstance();
+            gogglesModel = desiredGogglesModel;
+        }
+        else if (hasGoggles && gogglesModel != desiredGogglesModel) {
+            instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredGogglesModel)).stealInstance(goggles);
+            gogglesModel = desiredGogglesModel;
         }
         else if (!hasGoggles && goggles != null) {
             goggles.delete();
             goggles = null;
+            gogglesModel = null;
         }
 
-        boolean hatPresent = blockEntity.hasTrainHat() || blockEntity.isStockKeeper();
-        if (hatPresent && hat == null) {
-            hat = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(blockEntity.isStockKeeper() ? CCBPartialModels.BREEZE_LOGISTICS_HAT : CCBPartialModels.BREEZE_TRAIN_HAT)).createInstance();
+        PartialModel desiredHatModel = blockEntity.isStockKeeper() ? CCBPartialModels.BREEZE_LOGISTICS_HAT : blockEntity.hasTrainHat() ? CCBPartialModels.BREEZE_TRAIN_HAT : null;
+        if (desiredHatModel != null && hat == null) {
+            hat = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredHatModel)).createInstance();
+            hatModel = desiredHatModel;
         }
-        else if (!hatPresent && hat != null) {
+        else if (desiredHatModel != null && hatModel != desiredHatModel) {
+            instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredHatModel)).stealInstance(hat);
+            hatModel = desiredHatModel;
+        }
+        else if (desiredHatModel == null && hat != null) {
             hat.delete();
             hat = null;
+            hatModel = null;
         }
 
         boolean hasWind = blockEntity.getFrostLevel().isAtLeast(FrostLevel.CHILLED);
@@ -104,7 +121,7 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
 
     @Override
     public void tick(TickableVisual.Context context) {
-        blockEntity.tickAnimation();
+        BreezeCoolerClientAnimation.tickAnimation(blockEntity);
     }
 
     @Override

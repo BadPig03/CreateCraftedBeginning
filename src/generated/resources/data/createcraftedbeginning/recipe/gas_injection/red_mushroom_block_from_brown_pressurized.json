@@ -2,7 +2,7 @@
   "type": "createcraftedbeginning:gas_injection",
   "ingredients": [
     {
-      "item": "minecraft:red_mushroom_block"
+      "item": "minecraft:brown_mushroom_block"
     },
     {
       "type": "createcraftedbeginning:single",
@@ -12,7 +12,7 @@
   ],
   "results": [
     {
-      "id": "minecraft:brown_mushroom_block"
+      "id": "minecraft:red_mushroom_block"
     }
   ]
 }

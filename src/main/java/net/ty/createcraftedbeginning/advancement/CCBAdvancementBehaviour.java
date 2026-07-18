@@ -38,11 +38,11 @@ public class CCBAdvancementBehaviour extends BlockEntityBehaviour {
 
     public static void setPlacedBy(Level level, BlockPos pos, @Nullable LivingEntity entity) {
         CCBAdvancementBehaviour behaviour = get(level, pos, TYPE);
-        if (behaviour == null || entity instanceof FakePlayer || !(entity instanceof ServerPlayer)) {
+        if (behaviour == null || entity instanceof FakePlayer || !(entity instanceof ServerPlayer player)) {
             return;
         }
 
-        behaviour.setPlayer(entity.getUUID());
+        behaviour.setPlayer(player.getUUID());
     }
 
     public void add(CCBAdvancement... advancements) {
@@ -55,7 +55,10 @@ public class CCBAdvancementBehaviour extends BlockEntityBehaviour {
             return;
         }
 
-        award(advancement, player);
+        if (advancements.contains(advancement)) {
+            advancement.awardTo(player);
+        }
+        removeAwarded();
     }
 
     public @Nullable Player getPlayer() {
@@ -67,21 +70,13 @@ public class CCBAdvancementBehaviour extends BlockEntityBehaviour {
     }
 
     public void setPlayer(UUID id) {
-        Player player = getWorld().getPlayerByUUID(id);
-        if (player == null) {
+        if (getWorld().getPlayerByUUID(id) == null) {
             return;
         }
 
         playerId = id;
         removeAwarded();
         blockEntity.setChanged();
-    }
-
-    private void award(CCBAdvancement advancement, Player player) {
-        if (advancements.contains(advancement)) {
-            advancement.awardTo(player);
-        }
-        removeAwarded();
     }
 
     private void removeAwarded() {
@@ -111,22 +106,22 @@ public class CCBAdvancementBehaviour extends BlockEntityBehaviour {
     }
 
     @Override
-    public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        super.read(compoundTag, provider, clientPacket);
-        if (!compoundTag.contains(COMPOUND_KEY_OWNER)) {
+    public void read(CompoundTag tag, Provider provider, boolean clientPacket) {
+        super.read(tag, provider, clientPacket);
+        if (!tag.contains(COMPOUND_KEY_OWNER)) {
             return;
         }
 
-        playerId = compoundTag.getUUID(COMPOUND_KEY_OWNER);
+        playerId = tag.getUUID(COMPOUND_KEY_OWNER);
     }
 
     @Override
-    public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        super.write(compoundTag, provider, clientPacket);
+    public void write(CompoundTag tag, Provider provider, boolean clientPacket) {
+        super.write(tag, provider, clientPacket);
         if (playerId == null) {
             return;
         }
 
-        compoundTag.putUUID(COMPOUND_KEY_OWNER, playerId);
+        tag.putUUID(COMPOUND_KEY_OWNER, playerId);
     }
 }

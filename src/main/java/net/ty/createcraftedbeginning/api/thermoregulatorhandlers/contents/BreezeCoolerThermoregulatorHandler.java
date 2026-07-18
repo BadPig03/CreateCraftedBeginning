@@ -13,6 +13,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class BreezeCoolerThermoregulatorHandler implements AirtightThermoregulatorHandler {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public float getHeat(Level level, BlockPos pos, BlockState state) {
         if (!state.hasProperty(BreezeCoolerBlock.FROST_LEVEL)) {

@@ -1,15 +1,15 @@
 package net.ty.createcraftedbeginning.config;
 
 import net.createmod.catnip.config.ConfigBase;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.MethodsReturnNonnullByDefault;
 
-@SuppressWarnings("unused")
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBCommon extends ConfigBase {
     @Override
-    public @NotNull String getName() {
+    public String getName() {
         return "common";
-    }
-
-    private static class Comments {
     }
 }

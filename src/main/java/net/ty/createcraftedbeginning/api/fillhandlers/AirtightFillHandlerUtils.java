@@ -11,14 +11,8 @@ import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Utility class for resolving and registering Airtight Fill Handlers.
- * <p>
- * Fill handlers are used to determine which gas should be produced when a block
- * is used as an airtight fill source.
- * <p>
- * This class provides both Java-side registration methods using
- * {@link AirtightFillHandler} directly and KubeJS-friendly registration methods
- * using {@link FillHandler}, where scripts return a gas resource location.
+ * Provides lookup and registration helpers for airtight gas-fill sources.
+ * Handlers may be associated with individual blocks or selected dynamically through block-state predicates.
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -27,13 +21,10 @@ public final class AirtightFillHandlerUtils {
     }
 
     /**
-     * Gets the Airtight Fill Handler registered for the given block.
-     * <p>
-     * If no handler is registered for the block, a {@link DefaultFillHandlers}
-     * instance is returned.
+     * Resolves the airtight fill handler associated with the supplied input.
      *
-     * @param block the block to get the fill handler for
-     * @return the registered fill handler, or the default fill handler if none is registered
+     * @param block the target block
+     * @return the resolved airtight fill handler
      */
     public static AirtightFillHandler of(Block block) {
         AirtightFillHandler fillHandler = AirtightFillHandler.REGISTRY.get(block);
@@ -44,45 +35,30 @@ public final class AirtightFillHandlerUtils {
     }
 
     /**
-     * Registers a KubeJS fill handler for the given block.
-     * <p>
-     * The provided {@link FillHandler} returns a gas resource location, which is
-     * resolved through {@link CCBGasRegistries#GAS_REGISTRY}. If the returned
-     * location does not point to a registered gas, the empty gas is used instead.
+     * Registers a custom airtight fill handler for the supplied target.
      *
-     * @param block   the block to register the fill handler for
-     * @param handler the KubeJS fill handler to register
-     * @see #register(Block, AirtightFillHandler)
-     * @see Gas#EMPTY_GAS_HOLDER
+     * @param block   the target block
+     * @param handler the handler to register or invoke
      */
     public static void register(Block block, FillHandler handler) {
         register(block, (AirtightFillHandler) (l, p, s) -> CCBGasRegistries.GAS_REGISTRY.getOptional(handler.apply(l, p, s)).orElse(Gas.EMPTY_GAS_HOLDER.value()));
     }
 
     /**
-     * Registers a KubeJS fill handler for blocks matching the given predicate.
-     * <p>
-     * The provided {@link FillHandler} returns a gas resource location, which is
-     * resolved through {@link CCBGasRegistries#GAS_REGISTRY}. If the returned
-     * location does not point to a registered gas, the empty gas is used instead.
+     * Registers a custom airtight fill handler for the supplied target.
      *
-     * @param predicate the block state predicate used to select matching blocks
-     * @param handler   the KubeJS fill handler to register
-     * @see #register(BlockStatePredicate, AirtightFillHandler)
-     * @see Gas#EMPTY_GAS_HOLDER
+     * @param predicate the predicate used to select matching values
+     * @param handler   the handler to register or invoke
      */
     public static void register(BlockStatePredicate predicate, FillHandler handler) {
         register(predicate, (AirtightFillHandler) (level, pos, state) -> CCBGasRegistries.GAS_REGISTRY.getOptional(handler.apply(level, pos, state)).orElse(Gas.EMPTY_GAS_HOLDER.value()));
     }
 
     /**
-     * Registers an Airtight Fill Handler for the given block.
-     * <p>
-     * If a handler is already registered for the block, registration is skipped and
-     * an error is written to the mod logger.
+     * Registers a custom airtight fill handler for the supplied target.
      *
-     * @param block   the block to register the fill handler for
-     * @param handler the airtight fill handler to register
+     * @param block   the target block
+     * @param handler the handler to register or invoke
      */
     public static void register(Block block, AirtightFillHandler handler) {
         AirtightFillHandler fillHandler = AirtightFillHandler.REGISTRY.get(block);
@@ -95,15 +71,10 @@ public final class AirtightFillHandlerUtils {
     }
 
     /**
-     * Registers an Airtight Fill Handler provider for blocks matching the given
-     * predicate.
-     * <p>
-     * The registered provider returns the supplied handler when the predicate
-     * matches a block, otherwise it returns {@code null} so that other handlers or
-     * fallback behavior may be used.
+     * Registers a custom airtight fill handler for the supplied target.
      *
-     * @param predicate the block state predicate used to select matching blocks
-     * @param handler   the airtight fill handler to register
+     * @param predicate the predicate used to select matching values
+     * @param handler   the handler to register or invoke
      */
     public static void register(BlockStatePredicate predicate, AirtightFillHandler handler) {
         AirtightFillHandler.REGISTRY.registerProvider(b -> predicate.testBlock(b) ? handler : null);

@@ -23,16 +23,19 @@ public class BreezeCoolerInteractionPoint extends DepositOnlyArmInteractionPoint
     @Override
     public ItemStack insert(ArmBlockEntity armBlockEntity, ItemStack stack, boolean simulate) {
         ItemStack input = stack.copy();
-        ItemStack remainder = BreezeCoolerBlock.tryInsert(cachedState, level, pos, input, false, false, simulate).getObject();
+        var result = BreezeCoolerBlock.tryInsert(cachedState, level, pos, input, false, false, simulate);
+        ItemStack remainder = result.getObject();
+        if (simulate && result.getResult().consumesAction()) {
+            input.shrink(1);
+        }
         if (input.isEmpty()) {
             return remainder;
         }
-        else {
-            if (!simulate) {
-                Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), remainder);
-            }
-            return input;
+
+        if (!simulate) {
+            Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), remainder);
         }
+        return input;
     }
 
     public static class BreezeCoolerType extends ArmInteractionPointType {

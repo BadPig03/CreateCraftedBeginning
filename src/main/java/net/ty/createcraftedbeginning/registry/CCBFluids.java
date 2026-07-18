@@ -16,11 +16,11 @@ import net.neoforged.neoforge.fluids.FluidInteractionRegistry;
 import net.neoforged.neoforge.fluids.FluidInteractionRegistry.InteractionInformation;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.content.amethystcrystals.AmethystSuspensionBucketItem;
-import net.ty.createcraftedbeginning.content.brimstone.BrimstoneFluidBlock;
-import net.ty.createcraftedbeginning.content.brimstone.BrimstoneFluidType;
-import net.ty.createcraftedbeginning.content.fluids.AmethystSuspensionVirtualFluid;
-import net.ty.createcraftedbeginning.content.fluids.SlushVirtualFluid;
+import net.ty.createcraftedbeginning.content.fluids.amethystsuspension.AmethystSuspensionBucketItem;
+import net.ty.createcraftedbeginning.content.fluids.brimstone.BrimstoneFluidBlock;
+import net.ty.createcraftedbeginning.content.fluids.brimstone.BrimstoneFluidType;
+import net.ty.createcraftedbeginning.content.fluids.amethystsuspension.AmethystSuspensionVirtualFluid;
+import net.ty.createcraftedbeginning.content.fluids.slush.SlushVirtualFluid;
 import net.ty.createcraftedbeginning.data.CCBRegistrate;
 
 import javax.annotation.ParametersAreNonnullByDefault;

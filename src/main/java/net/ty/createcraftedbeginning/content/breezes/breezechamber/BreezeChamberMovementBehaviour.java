@@ -13,7 +13,6 @@ import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -34,6 +33,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class BreezeChamberMovementBehaviour implements MovementBehaviour {
     private static final String COMPOUND_KEY_CONDUCTOR = "Conductor";
+    private static CameraEntityProvider cameraEntityProvider = context -> null;
+
+    public static void setCameraEntityProvider(CameraEntityProvider provider) {
+        cameraEntityProvider = provider;
+    }
 
     private static LerpedFloat getHeadAngle(MovementContext context) {
         if (!(context.temporaryData instanceof LerpedFloat)) {
@@ -44,26 +48,26 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
 
     @SuppressWarnings("SuspiciousNameCombination")
     private static float getTargetAngle(MovementContext context) {
-        if (shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0) && context.contraption.entity instanceof CarriageContraptionEntity cce) {
+        if (shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0) && context.contraption.entity instanceof CarriageContraptionEntity carriage) {
             float angle = AngleHelper.deg(-Mth.atan2(context.relativeMotion.x, context.relativeMotion.z));
-            return cce.getInitialOrientation().getAxis() == Axis.X ? angle + 180 : angle;
+            return carriage.getInitialOrientation().getAxis() == Axis.X ? angle + 180 : angle;
         }
 
-        Entity player = Minecraft.getInstance().cameraEntity;
+        Entity player = cameraEntityProvider.getCameraEntity(context);
         if (player == null || player.isInvisible() || context.position == null) {
             return 0;
         }
 
-        Vec3 applyRotation = context.contraption.entity.reverseRotation(player.position().subtract(context.position), 1);
-        return AngleHelper.deg(-Mth.atan2(applyRotation.z, applyRotation.x)) - 90;
+        Vec3 relativePosition = context.contraption.entity.reverseRotation(player.position().subtract(context.position), 1);
+        return AngleHelper.deg(-Mth.atan2(relativePosition.z, relativePosition.x)) - 90;
     }
 
     private static boolean shouldRenderHat(MovementContext context) {
-        CompoundTag compoundTag = context.data;
-        if (!compoundTag.contains(COMPOUND_KEY_CONDUCTOR)) {
-            compoundTag.putBoolean(COMPOUND_KEY_CONDUCTOR, determineIfConducting(context));
+        CompoundTag data = context.data;
+        if (!data.contains(COMPOUND_KEY_CONDUCTOR)) {
+            data.putBoolean(COMPOUND_KEY_CONDUCTOR, determineIfConducting(context));
         }
-        return compoundTag.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity cce && cce.hasSchedule();
+        return data.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
     }
 
     private static boolean determineIfConducting(MovementContext context) {
@@ -97,7 +101,9 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
         }
         LerpedFloat headAngle = getHeadAngle(context);
         boolean quickTurn = shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0);
-        headAngle.chase(headAngle.getValue() + AngleHelper.getShortestAngleDiff(headAngle.getValue(), getTargetAngle(context)), 0.5f, quickTurn ? Chaser.EXP : Chaser.exp(5));
+        float currentAngle = headAngle.getValue();
+        float targetAngle = getTargetAngle(context);
+        headAngle.chase(currentAngle + AngleHelper.getShortestAngleDiff(currentAngle, targetAngle), 0.5f, quickTurn ? Chaser.EXP : Chaser.exp(5));
         headAngle.tickChaser();
     }
 
@@ -115,5 +121,10 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
     @OnlyIn(Dist.CLIENT)
     public void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource buffer) {
         BreezeChamberRenderer.renderInContraption(context, matrices, buffer, getHeadAngle(context), shouldRenderHat(context), renderWorld);
+    }
+
+    @FunctionalInterface
+    public interface CameraEntityProvider {
+        @Nullable Entity getCameraEntity(MovementContext context);
     }
 }

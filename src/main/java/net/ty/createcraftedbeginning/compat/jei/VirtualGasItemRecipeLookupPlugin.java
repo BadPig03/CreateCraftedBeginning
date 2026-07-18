@@ -47,7 +47,7 @@ public class VirtualGasItemRecipeLookupPlugin implements IRecipeManagerPlugin {
         if (role == RecipeIngredientRole.INPUT) {
             return matchesInput;
         }
-        else if (role == RecipeIngredientRole.OUTPUT) {
+        if (role == RecipeIngredientRole.OUTPUT) {
             return matchesOutput;
         }
         return matchesInput || matchesOutput;
@@ -86,7 +86,8 @@ public class VirtualGasItemRecipeLookupPlugin implements IRecipeManagerPlugin {
 
         List<RecipeType<?>> matchingTypes = new ArrayList<>();
         runtime.getRecipeManager().createRecipeCategoryLookup().get().forEach(category -> {
-            if (runtime.getRecipeManager().createRecipeLookup(category.getRecipeType()).get().anyMatch(recipe -> recipeMatches(recipe, gasFocus))) {
+            boolean hasMatch = runtime.getRecipeManager().createRecipeLookup(category.getRecipeType()).get().anyMatch(recipe -> recipeMatches(recipe, gasFocus));
+            if (hasMatch) {
                 matchingTypes.add(category.getRecipeType());
             }
         });

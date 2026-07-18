@@ -21,14 +21,11 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
-import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
-import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipe;
 import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasRecipeSerializer;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
@@ -37,11 +34,9 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -63,46 +58,49 @@ public class SequencedAssemblyWithGasRecipe implements Recipe<RecipeWrapper> {
     }
 
     public static <I extends RecipeInput, R extends ProcessingWithGasRecipe<I, ?>> @NotNull Optional<RecipeHolder<R>> getRecipe(Level level, I inv, RecipeType<R> type, Class<R> recipeClass) {
-        return getRecipe(level, inv, type, recipeClass, r -> r.value().matches(inv, level));
+        return getRecipe(level, inv, type, recipeClass, holder -> holder.value().matches(inv, level));
     }
 
     public static <I extends RecipeInput, R extends ProcessingWithGasRecipe<I, ?>> @NotNull Optional<RecipeHolder<R>> getRecipe(Level level, I inv, RecipeType<R> type, Class<R> recipeClass, Predicate<? super RecipeHolder<R>> recipeFilter) {
         return getRecipes(level, inv.getItem(0), type, recipeClass).filter(recipeFilter).findFirst();
     }
 
-    public static <R extends ProcessingWithGasRecipe<?, ?>> @NotNull Stream<RecipeHolder<R>> getRecipes(Level world, ItemStack item, RecipeType<R> type, Class<R> recipeClass) {
-        List<RecipeHolder<SequencedAssemblyWithGasRecipe>> all = world.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.SEQUENCED_ASSEMBLY_WITH_GAS.getType());
-        List<RecipeHolder<R>> result = new ArrayList<>();
-        for (RecipeHolder<SequencedAssemblyWithGasRecipe> holder : all) {
-            if (holder.value().appliesTo(holder.id(), item)) {
-                ProcessingWithGasRecipe<?, ?> recipe = holder.value().getNextRecipe(item).getRecipe();
-                if (recipe.getType() != type || !recipeClass.isInstance(recipe)) {
-                    continue;
-                }
-
-                recipe.enforceNextResult(() -> holder.value().advance(holder.id(), item));
-                result.add(new RecipeHolder<>(holder.id(), recipeClass.cast(recipe)));
-            }
-        }
-
-        return result.stream();
-    }
-
-    public static <R extends ProcessingWithGasRecipe<?, ?>> Optional<RecipeHolder<R>> getRecipe(Level world, ItemStack item, RecipeType<R> type, Class<R> recipeClass) {
-        List<RecipeHolder<SequencedAssemblyWithGasRecipe>> all = world.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.SEQUENCED_ASSEMBLY_WITH_GAS.getType());
-        for (RecipeHolder<SequencedAssemblyWithGasRecipe> sequencedAssemblyRecipe : all) {
-            if (!sequencedAssemblyRecipe.value().appliesTo(sequencedAssemblyRecipe.id(), item)) {
+    public static <R extends ProcessingWithGasRecipe<?, ?>> @NotNull Stream<RecipeHolder<R>> getRecipes(Level level, ItemStack item, RecipeType<R> type, Class<R> recipeClass) {
+        List<RecipeHolder<SequencedAssemblyWithGasRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.SEQUENCED_ASSEMBLY_WITH_GAS.getType());
+        List<RecipeHolder<R>> matches = new ArrayList<>();
+        for (RecipeHolder<SequencedAssemblyWithGasRecipe> holder : recipes) {
+            SequencedAssemblyWithGasRecipe assembly = holder.value();
+            if (!assembly.appliesTo(holder.id(), item)) {
                 continue;
             }
 
-            SequencedWithGasRecipe<?> nextRecipe = sequencedAssemblyRecipe.value().getNextRecipe(item);
-            ProcessingWithGasRecipe<?, ?> recipe = nextRecipe.getRecipe();
+            ProcessingWithGasRecipe<?, ?> recipe = assembly.getNextRecipe(item).getRecipe();
             if (recipe.getType() != type || !recipeClass.isInstance(recipe)) {
                 continue;
             }
 
-            recipe.enforceNextResult(() -> sequencedAssemblyRecipe.value().advance(sequencedAssemblyRecipe.id(), item));
-            return Optional.of(new RecipeHolder<>(sequencedAssemblyRecipe.id(), recipeClass.cast(recipe)));
+            recipe.enforceNextResult(() -> assembly.advance(holder.id(), item));
+            matches.add(new RecipeHolder<>(holder.id(), recipeClass.cast(recipe)));
+        }
+
+        return matches.stream();
+    }
+
+    public static <R extends ProcessingWithGasRecipe<?, ?>> Optional<RecipeHolder<R>> getRecipe(Level level, ItemStack item, RecipeType<R> type, Class<R> recipeClass) {
+        List<RecipeHolder<SequencedAssemblyWithGasRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.SEQUENCED_ASSEMBLY_WITH_GAS.getType());
+        for (RecipeHolder<SequencedAssemblyWithGasRecipe> holder : recipes) {
+            SequencedAssemblyWithGasRecipe assembly = holder.value();
+            if (!assembly.appliesTo(holder.id(), item)) {
+                continue;
+            }
+
+            ProcessingWithGasRecipe<?, ?> recipe = assembly.getNextRecipe(item).getRecipe();
+            if (recipe.getType() != type || !recipeClass.isInstance(recipe)) {
+                continue;
+            }
+
+            recipe.enforceNextResult(() -> assembly.advance(holder.id(), item));
+            return Optional.of(new RecipeHolder<>(holder.id(), recipeClass.cast(recipe)));
         }
 
         return Optional.empty();
@@ -116,13 +114,13 @@ public class SequencedAssemblyWithGasRecipe implements Recipe<RecipeWrapper> {
             return;
         }
 
-        SequencedAssemblyWithGas sequencedAssemblyWithGas = stack.get(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS);
-        Optional<RecipeHolder<? extends Recipe<?>>> optionalRecipe = (Optional<RecipeHolder<?>>) Minecraft.getInstance().level.getRecipeManager().byKey(sequencedAssemblyWithGas.id());
-        if (optionalRecipe.isEmpty()) {
+        SequencedAssemblyWithGas assemblyData = stack.get(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS);
+        Optional<RecipeHolder<? extends Recipe<?>>> recipeHolder = (Optional<RecipeHolder<?>>) Minecraft.getInstance().level.getRecipeManager().byKey(assemblyData.id());
+        if (recipeHolder.isEmpty()) {
             return;
         }
 
-        Recipe<?> recipe = optionalRecipe.get().value();
+        Recipe<?> recipe = recipeHolder.get().value();
         if (!(recipe instanceof SequencedAssemblyWithGasRecipe sequencedAssemblyRecipe)) {
             return;
         }
@@ -140,33 +138,46 @@ public class SequencedAssemblyWithGasRecipe implements Recipe<RecipeWrapper> {
                 break;
             }
 
-            Component textComponent = sequencedAssemblyRecipe.sequence.get((i + step) % length).getAsAssemblyRecipe().getDescriptionForAssembly();
-            tooltip.add(i == 0 ? CreateLang.translateDirect("recipe.assembly.next", textComponent).withStyle(ChatFormatting.AQUA) : Component.literal("-> ").append(textComponent).withStyle(ChatFormatting.DARK_AQUA));
+            Component description = sequencedAssemblyRecipe.sequence.get((i + step) % length).getAsAssemblyRecipe().getDescriptionForAssembly();
+            Component line = i == 0 ? CreateLang.translateDirect("recipe.assembly.next", description).withStyle(ChatFormatting.AQUA) : Component.literal("-> ").append(description).withStyle(ChatFormatting.DARK_AQUA);
+            tooltip.add(line);
         }
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    private static int getStep(ItemStack input) {
+        if (!input.has(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS)) {
+            return 0;
+        }
+
+        return input.get(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS).step();
     }
 
     private ItemStack advance(ResourceLocation id, ItemStack input) {
         int step = getStep(input);
-        if ((step + 1) / sequence.size() >= loops) {
+        int nextStep = step + 1;
+        if (nextStep / sequence.size() >= loops) {
             return rollResult();
         }
 
         ItemStack advancedItem = getTransitionalItem().copyWithCount(1);
-        SequencedAssemblyWithGas sequencedAssemblyWithGas = new SequencedAssemblyWithGas(id, step + 1, (step + 1.0f) / (sequence.size() * loops));
-        advancedItem.set(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS, sequencedAssemblyWithGas);
+        float progress = (step + 1.0f) / (sequence.size() * loops);
+        SequencedAssemblyWithGas assemblyData = new SequencedAssemblyWithGas(id, nextStep, progress);
+        advancedItem.set(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS, assemblyData);
         return advancedItem;
     }
 
     private ItemStack rollResult() {
         float totalWeight = 0;
-        for (ProcessingOutput entry : resultPool) {
-            totalWeight += entry.getChance();
+        for (ProcessingOutput result : resultPool) {
+            totalWeight += result.getChance();
         }
-        float number = new Random().nextFloat() * totalWeight;
-        for (ProcessingOutput entry : resultPool) {
-            number -= entry.getChance();
-            if (number < 0) {
-                return entry.getStack().copy();
+
+        float roll = new Random().nextFloat() * totalWeight;
+        for (ProcessingOutput result : resultPool) {
+            roll -= result.getChance();
+            if (roll < 0) {
+                return result.getStack().copy();
             }
         }
 
@@ -175,7 +186,15 @@ public class SequencedAssemblyWithGasRecipe implements Recipe<RecipeWrapper> {
 
     @SuppressWarnings("DataFlowIssue")
     private boolean appliesTo(ResourceLocation id, ItemStack input) {
-        return ingredient.test(input) || getTransitionalItem().getItem() == input.getItem() && input.has(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS) && input.get(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS).id().equals(id);
+        if (ingredient.test(input)) {
+            return true;
+        }
+        if (getTransitionalItem().getItem() != input.getItem() || !input.has(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS)) {
+            return false;
+        }
+
+        SequencedAssemblyWithGas assemblyData = input.get(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS);
+        return assemblyData.id().equals(id);
     }
 
     public ItemStack getTransitionalItem() {
@@ -186,28 +205,8 @@ public class SequencedAssemblyWithGasRecipe implements Recipe<RecipeWrapper> {
         return sequence.get(getStep(input) % sequence.size());
     }
 
-    @SuppressWarnings("DataFlowIssue")
-    private static int getStep(ItemStack input) {
-        return input.has(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS) ? input.get(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS).step() : 0;
-    }
-
     public int getLoops() {
         return loops;
-    }
-
-    public void addAdditionalIngredientsAndMachines(List<Ingredient> list) {
-        sequence.forEach(recipe -> recipe.getAsAssemblyRecipe().addAssemblyIngredients(list));
-        Set<ItemLike> machines = new HashSet<>();
-        sequence.forEach(recipe -> recipe.getAsAssemblyRecipe().addRequiredMachines(machines));
-        machines.stream().map(Ingredient::of).forEach(list::add);
-    }
-
-    public void addAdditionalFluidIngredients(List<SizedFluidIngredient> list) {
-        sequence.forEach(recipe -> recipe.getAsAssemblyRecipe().addAssemblyFluidIngredients(list));
-    }
-
-    public void addAdditionalGasIngredients(List<SizedGasIngredient> list) {
-        sequence.forEach(recipe -> recipe.getAsAssemblyRecipe().addAssemblyGasIngredients(list));
     }
 
     @Override
@@ -262,7 +261,7 @@ public class SequencedAssemblyWithGasRecipe implements Recipe<RecipeWrapper> {
     }
 
     public record SequencedAssemblyWithGas(ResourceLocation id, int step, float progress) {
-        public static final Codec<SequencedAssemblyWithGas> CODEC = RecordCodecBuilder.create(i -> i.group(ResourceLocation.CODEC.fieldOf("id").forGetter(SequencedAssemblyWithGas::id), Codec.INT.fieldOf("step").forGetter(SequencedAssemblyWithGas::step), Codec.FLOAT.fieldOf("progress").forGetter(SequencedAssemblyWithGas::progress)).apply(i, SequencedAssemblyWithGas::new));
+        public static final Codec<SequencedAssemblyWithGas> CODEC = RecordCodecBuilder.create(instance -> instance.group(ResourceLocation.CODEC.fieldOf("id").forGetter(SequencedAssemblyWithGas::id), Codec.INT.fieldOf("step").forGetter(SequencedAssemblyWithGas::step), Codec.FLOAT.fieldOf("progress").forGetter(SequencedAssemblyWithGas::progress)).apply(instance, SequencedAssemblyWithGas::new));
         public static final StreamCodec<ByteBuf, SequencedAssemblyWithGas> STREAM_CODEC = StreamCodec.composite(ResourceLocation.STREAM_CODEC, SequencedAssemblyWithGas::id, ByteBufCodecs.INT, SequencedAssemblyWithGas::step, ByteBufCodecs.FLOAT, SequencedAssemblyWithGas::progress, SequencedAssemblyWithGas::new);
     }
 }

@@ -17,7 +17,6 @@ import net.ty.createcraftedbeginning.api.cannonhandlers.ultrawarm.EnergizedUltra
 import net.ty.createcraftedbeginning.api.cannonhandlers.ultrawarm.PressurizedEnergizedUltrawarmAirCannonHandler;
 import net.ty.createcraftedbeginning.api.cannonhandlers.ultrawarm.PressurizedUltrawarmAirCannonHandler;
 import net.ty.createcraftedbeginning.api.cannonhandlers.ultrawarm.UltrawarmAirCannonHandler;
-import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightCannonHandlerEvent;
 import net.ty.createcraftedbeginning.data.CCBGases;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -25,26 +24,29 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBAirtightCannonHandlers {
+    /**
+     * Registers the built-in airtight cannon handlers.
+     */
     public static void register() {
-        AirtightCannonHandlerEvent.add(CCBGases.NATURAL_AIR.get(), new NaturalAirCannonHandler());
-        AirtightCannonHandlerEvent.add(CCBGases.ENERGIZED_NATURAL_AIR.get(), new EnergizedNaturalAirCannonHandler());
-        AirtightCannonHandlerEvent.add(CCBGases.PRESSURIZED_NATURAL_AIR.get(), new PressurizedNaturalAirCannonHandler());
-        AirtightCannonHandlerEvent.add(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get(), new PressurizedEnergizedNaturalAirCannonHandler());
+        AirtightCannonHandlerUtils.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), new NaturalAirCannonHandler());
+        AirtightCannonHandlerUtils.register(CCBGases.ENERGIZED_NATURAL_AIR.get().getResourceLocation(), new EnergizedNaturalAirCannonHandler());
+        AirtightCannonHandlerUtils.register(CCBGases.PRESSURIZED_NATURAL_AIR.get().getResourceLocation(), new PressurizedNaturalAirCannonHandler());
+        AirtightCannonHandlerUtils.register(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get().getResourceLocation(), new PressurizedEnergizedNaturalAirCannonHandler());
 
-        AirtightCannonHandlerEvent.add(CCBGases.ULTRAWARM_AIR.get(), new UltrawarmAirCannonHandler());
-        AirtightCannonHandlerEvent.add(CCBGases.ENERGIZED_ULTRAWARM_AIR.get(), new EnergizedUltrawarmAirCannonHandler());
-        AirtightCannonHandlerEvent.add(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get(), new PressurizedUltrawarmAirCannonHandler());
-        AirtightCannonHandlerEvent.add(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get(), new PressurizedEnergizedUltrawarmAirCannonHandler());
+        AirtightCannonHandlerUtils.register(CCBGases.ULTRAWARM_AIR.get().getResourceLocation(), new UltrawarmAirCannonHandler());
+        AirtightCannonHandlerUtils.register(CCBGases.ENERGIZED_ULTRAWARM_AIR.get().getResourceLocation(), new EnergizedUltrawarmAirCannonHandler());
+        AirtightCannonHandlerUtils.register(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get().getResourceLocation(), new PressurizedUltrawarmAirCannonHandler());
+        AirtightCannonHandlerUtils.register(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get().getResourceLocation(), new PressurizedEnergizedUltrawarmAirCannonHandler());
 
-        AirtightCannonHandlerEvent.add(CCBGases.ETHEREAL_AIR.get(), new EtherealAirCannonHandler());
-        AirtightCannonHandlerEvent.add(CCBGases.ENERGIZED_ETHEREAL_AIR.get(), new EnergizedEtherealAirCannonHandler());
-        AirtightCannonHandlerEvent.add(CCBGases.PRESSURIZED_ETHEREAL_AIR.get(), new PressurizedEtherealAirCannonHandler());
-        AirtightCannonHandlerEvent.add(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR.get(), new PressurizedEnergizedEtherealAirCannonHandler());
+        AirtightCannonHandlerUtils.register(CCBGases.ETHEREAL_AIR.get().getResourceLocation(), new EtherealAirCannonHandler());
+        AirtightCannonHandlerUtils.register(CCBGases.ENERGIZED_ETHEREAL_AIR.get().getResourceLocation(), new EnergizedEtherealAirCannonHandler());
+        AirtightCannonHandlerUtils.register(CCBGases.PRESSURIZED_ETHEREAL_AIR.get().getResourceLocation(), new PressurizedEtherealAirCannonHandler());
+        AirtightCannonHandlerUtils.register(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR.get().getResourceLocation(), new PressurizedEnergizedEtherealAirCannonHandler());
 
-        AirtightCannonHandlerEvent.add(CCBGases.MOIST_AIR.get(), new MoistAirCannonHandler());
-        AirtightCannonHandlerEvent.add(CCBGases.SPORE_AIR.get(), new SporeAirCannonHandler());
-        AirtightCannonHandlerEvent.add(CCBGases.SCULK_AIR.get(), new SculkAirCannonHandler());
+        AirtightCannonHandlerUtils.register(CCBGases.MOIST_AIR.get().getResourceLocation(), new MoistAirCannonHandler());
+        AirtightCannonHandlerUtils.register(CCBGases.SPORE_AIR.get().getResourceLocation(), new SporeAirCannonHandler());
+        AirtightCannonHandlerUtils.register(CCBGases.SCULK_AIR.get().getResourceLocation(), new SculkAirCannonHandler());
 
-        AirtightCannonHandlerEvent.add(CCBGases.CREATIVE_AIR.get(), new CreativeAirCannonHandler());
+        AirtightCannonHandlerUtils.register(CCBGases.CREATIVE_AIR.get().getResourceLocation(), new CreativeAirCannonHandler());
     }
 }

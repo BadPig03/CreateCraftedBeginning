@@ -2,30 +2,34 @@ package net.ty.createcraftedbeginning.api.gascanisters;
 
 import net.createmod.catnip.data.Pair;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterItem;
-import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterItem;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackContainerContents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.function.Function;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class CanisterContainerSuppliers {
     private static final List<Function<Player, List<IGasCanisterContainer>>> CANISTER_CONTAINER_SUPPLIERS = new ArrayList<>();
+    private static final Map<Player, SupplierCache> SUPPLIER_CACHE = Collections.synchronizedMap(new WeakHashMap<>());
 
     static {
         addCanisterContainerSuppliers(CanisterContainerSuppliers::getCanisterContainersInInventory);
@@ -35,287 +39,194 @@ public final class CanisterContainerSuppliers {
     }
 
     /**
-     * Registers a new supplier function for gas canister containers.
-     * <p>
-     * The registered supplier function will be called when retrieving gas canister containers
-     * for a player. This allows for extending the sources of gas canister containers beyond
-     * the default inventory search.
-     * </p>
-     * <p>
-     * Supplier functions should return a list of {@link IGasCanisterContainer} instances
-     * available to the specified player.
-     * </p>
+     * Adds the supplied canister container supplier.
      *
-     * @param supplier the function that provides a list of gas canister containers for a player
-     * @see #getAllSuppliers(Player)
-     * @see #CANISTER_CONTAINER_SUPPLIERS
+     * @param supplier the supplier used to obtain the value
      */
     public static void addCanisterContainerSuppliers(Function<Player, List<IGasCanisterContainer>> supplier) {
         CANISTER_CONTAINER_SUPPLIERS.add(supplier);
+        synchronized (SUPPLIER_CACHE) {
+            SUPPLIER_CACHE.clear();
+        }
     }
 
     /**
-     * Retrieves all valid gas canister containers from the player's inventory.
-     * <p>
-     * This method searches through the player's entire inventory, including the offhand slot,
-     * to find all items that are valid gas canister containers. It checks both the offhand slot
-     * and all main inventory slots, ensuring that the same offhand stack is not added twice when
-     * the inventory scan also includes the offhand slot.
-     * </p>
-     * <p>
-     * The returned list is sorted by container priority in descending order (highest priority first).
-     * This ensures that higher priority containers are processed before lower priority ones.
-     * </p>
+     * Returns the canister containers in inventory.
      *
-     * @param player the player whose inventory will be searched (must not be null)
-     * @return a sorted list of gas canister containers found in the player's inventory,
-     * sorted by priority in descending order
-     * @see #isValidCanisterContainer(ItemStack)
-     * @see IGasCanisterContainer#getPriority()
+     * @param player the player performing the operation
+     * @return the canister containers in inventory
      */
     public static List<IGasCanisterContainer> getCanisterContainersInInventory(Player player) {
         List<IGasCanisterContainer> containers = new ArrayList<>();
-        ItemStack offHandItem = player.getOffhandItem();
-        if (isValidCanisterContainer(offHandItem)) {
-            containers.add(offHandItem.getCapability(GasHandler.ITEM));
+        ItemStack offhand = player.getOffhandItem();
+        if (isValidCanisterContainer(offhand)) {
+            containers.add(offhand.getCapability(GasHandler.ITEM));
         }
 
         Inventory inventory = player.getInventory();
         for (int i = 0; i < inventory.getContainerSize(); i++) {
-            ItemStack item = inventory.getItem(i);
-            if (!isValidCanisterContainer(item) || offHandItem == item) {
+            ItemStack stack = inventory.getItem(i);
+            if (!isValidCanisterContainer(stack) || offhand == stack) {
                 continue;
             }
 
-            containers.add(item.getCapability(GasHandler.ITEM));
+            containers.add(stack.getCapability(GasHandler.ITEM));
         }
-
-        containers.sort((c1, c2) -> Integer.compare(c2.getPriority(), c1.getPriority()));
         return containers;
     }
 
     /**
-     * Checks if an ItemStack represents a valid, non-empty gas canister container.
-     * <p>
-     * This method determines validity by first checking if the ItemStack is not empty,
-     * and then verifying if it has the gas handler capability. A valid gas canister
-     * container must be a non-empty item that implements the gas handling functionality.
-     * </p>
+     * Checks whether the supplied item stack exposes a supported gas container.
      *
-     * @param itemStack the ItemStack to check for gas canister container capability (must not be null)
-     * @return true if the ItemStack is non-empty and has gas handler capability, false otherwise
+     * @param itemStack the item stack to inspect or process
+     * @return {@code true} if the supplied item stack exposes a supported gas container; otherwise {@code
+     * false}
      */
     public static boolean isValidCanisterContainer(ItemStack itemStack) {
         return !itemStack.isEmpty() && itemStack.getCapability(GasHandler.ITEM) != null;
     }
 
     /**
-     * Checks if an ItemStack represents a valid gas canister item.
-     * <p>
-     * This method determines if the ItemStack is both a valid gas canister container
-     * and specifically a gas canister item by checking if it matches the registered
-     * gas canister item or is an instance of {@link GasCanisterItem}.
-     * </p>
-     * <p>
-     * This is more specific than {@link #isValidCanisterContainer(ItemStack)} as it
-     * verifies the item is actually a gas canister rather than just having gas container capabilities.
-     * </p>
+     * Checks whether the supplied item stack is a supported gas canister.
      *
-     * @param itemStack the ItemStack to check for gas canister validity (must not be null)
-     * @return true if the ItemStack is a valid gas canister item, false otherwise
-     * @see #isValidCanisterContainer(ItemStack)
+     * @param itemStack the item stack to inspect or process
+     * @return {@code true} if the supplied item stack is a supported gas canister; otherwise {@code false}
      */
     public static boolean isValidGasCanister(ItemStack itemStack) {
         return isValidCanisterContainer(itemStack) && (itemStack.is(CCBItems.GAS_CANISTER) || itemStack.getItem() instanceof GasCanisterItem);
     }
 
     /**
-     * Checks if an ItemStack represents a valid creative gas canister item.
-     * <p>
-     * This method determines if the ItemStack is both a valid gas canister container
-     * and specifically a creative gas canister item by checking if it matches the registered
-     * creative gas canister item or is an instance of {@link CreativeGasCanisterItem}.
-     * </p>
-     * <p>
-     * This is a specialized version of {@link #isValidGasCanister(ItemStack)} that specifically
-     * checks for creative variants of gas canisters, which typically have unlimited capacity
-     * or other creative-mode properties.
-     * </p>
+     * Checks whether the supplied item stack is a supported creative gas canister.
      *
-     * @param itemStack the ItemStack to check for creative gas canister validity (must not be null)
-     * @return true if the ItemStack is a valid creative gas canister item, false otherwise
-     * @see #isValidCanisterContainer(ItemStack)
-     * @see #isValidGasCanister(ItemStack)
+     * @param itemStack the item stack to inspect or process
+     * @return {@code true} if the supplied item stack is a supported creative gas canister; otherwise {@code
+     * false}
      */
     public static boolean isValidCreativeGasCanister(ItemStack itemStack) {
         return isValidCanisterContainer(itemStack) && (itemStack.is(CCBItems.CREATIVE_GAS_CANISTER) || itemStack.getItem() instanceof CreativeGasCanisterItem);
     }
 
     /**
-     * Retrieves all gas canister containers from all registered suppliers for the specified player.
-     * <p>
-     * This method collects gas canister containers by applying all registered supplier functions
-     * to the player, then combines and returns the results as an unmodifiable list.
-     * The suppliers are called in the order they were registered.
-     * </p>
+     * Returns all suppliers.
      *
-     * @param player the player to get canister containers for (must not be null)
-     * @return an unmodifiable list containing all gas canister containers from all registered suppliers
-     * @see #CANISTER_CONTAINER_SUPPLIERS
-     * @see #addCanisterContainerSuppliers(Function)
+     * @param player the player performing the operation
+     * @return all suppliers
      */
     public static @Unmodifiable List<IGasCanisterContainer> getAllSuppliers(Player player) {
-        return CANISTER_CONTAINER_SUPPLIERS.stream().map(supplier -> supplier.apply(player)).filter(list -> list != null).flatMap(List::stream).sorted((c1, c2) -> Integer.compare(c2.getPriority(), c1.getPriority())).toList();
-    }
-
-    /**
-     * Retrieves the first available gas canister container supplier for the player.
-     * <p>
-     * This method collects all gas canister containers from all registered suppliers
-     * and returns the first one in the list. If no containers are available from any
-     * supplier, returns null.
-     * </p>
-     * <p>
-     * The order of containers is determined by the order of supplier registration and
-     * the internal sorting logic of each supplier (e.g., priority-based sorting).
-     * </p>
-     *
-     * @param player the player to get the first gas canister container for
-     * @return the first gas canister container from all suppliers, or null if no containers are available
-     * @see #getAllSuppliers(Player)
-     */
-    @Nullable
-    public static IGasCanisterContainer getFirstCanisterSupplier(Player player) {
-        List<IGasCanisterContainer> suppliers = getAllSuppliers(player);
-        if (suppliers.isEmpty()) {
-            return null;
+        Level level = player.level();
+        long gameTime = level.getGameTime();
+        synchronized (SUPPLIER_CACHE) {
+            SupplierCache cache = SUPPLIER_CACHE.get(player);
+            if (cache != null && cache.level() == level && cache.gameTime() == gameTime) {
+                return cache.containers();
+            }
         }
 
-        return suppliers.getFirst();
+        List<IGasCanisterContainer> containers = new ArrayList<>();
+        Set<IGasCanisterContainer> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+        Map<ItemStack, Integer> stackIndexes = new IdentityHashMap<>();
+        for (Function<Player, List<IGasCanisterContainer>> supplier : CANISTER_CONTAINER_SUPPLIERS) {
+            List<IGasCanisterContainer> supplied = supplier.apply(player);
+            if (supplied == null) {
+                continue;
+            }
+
+            for (IGasCanisterContainer container : supplied) {
+                if (container == null || !seen.add(container)) {
+                    continue;
+                }
+
+                ItemStack stack = container.getContainer();
+                if (stack.isEmpty()) {
+                    containers.add(container);
+                    continue;
+                }
+
+                Integer index = stackIndexes.get(stack);
+                if (index == null) {
+                    stackIndexes.put(stack, containers.size());
+                    containers.add(container);
+                    continue;
+                }
+
+                IGasCanisterContainer existing = containers.get(index);
+                if (container.getPriority() <= existing.getPriority()) {
+                    continue;
+                }
+
+                containers.set(index, container);
+            }
+        }
+
+        containers.sort((first, second) -> Integer.compare(second.getPriority(), first.getPriority()));
+        List<IGasCanisterContainer> result = List.copyOf(containers);
+        synchronized (SUPPLIER_CACHE) {
+            SUPPLIER_CACHE.put(player, new SupplierCache(level, gameTime, result));
+        }
+        return result;
     }
 
     /**
-     * Retrieves the first available gas content from the player's gas canister containers.
-     * <p>
-     * Retrieves the first non-empty gas stack from the highest-priority available gas canister container.
-     * For gas canister packs, all internal slots of the selected pack are searched.
-     * For individual canisters, the first tank is returned if non-empty.
-     * </p>
-     * <p>
-     * For gas canister packs, it iterates through all slots until it finds a non-empty gas stack.
-     * For individual canisters, it returns the gas content of the first tank if not empty.
-     * </p>
+     * Returns the first available available gas content.
      *
-     * @param player the player whose gas canister containers will be searched
-     * @return the first non-empty gas stack found, or {@link GasStack#EMPTY} if no gas is available
-     * @see #getFirstCanisterSupplier(Player)
-     * @see GasCanisterPackContainerContents
-     * @see GasCanisterContainerContents
+     * @param player the player performing the operation
+     * @return the first available available gas content
      */
     public static GasStack getFirstAvailableGasContent(Player player) {
-        IGasCanisterContainer container = getFirstCanisterSupplier(player);
-        return switch (container) {
-            case GasCanisterPackContainerContents packContents -> {
-                if (packContents.isEmpty()) {
-                    yield GasStack.EMPTY;
+        for (IGasCanisterContainer container : getAllSuppliers(player)) {
+            for (int tank = 0; tank < container.getTanks(); tank++) {
+                GasStack gasContent = container.getGasInTank(tank);
+                if (gasContent.isEmpty()) {
+                    continue;
                 }
 
-                for (int i = 0; i < GasCanisterPackContainerContents.MAX_COUNT; i++) {
-                    if (packContents.isEmpty(i)) {
-                        continue;
-                    }
-
-                    yield packContents.getGasInTank(i);
-                }
-
-                yield GasStack.EMPTY;
+                return gasContent;
             }
-            case GasCanisterContainerContents canisterContents -> {
-                if (container.isEmpty()) {
-                    yield GasStack.EMPTY;
-                }
-
-                yield canisterContents.getGasInTank(0);
-            }
-            case null, default -> GasStack.EMPTY;
-        };
+        }
+        return GasStack.EMPTY;
     }
 
     /**
-     * Checks if the player has any gas canister containers available from all registered suppliers.
-     * <p>
-     * This method determines whether there are any gas canister containers accessible to the player
-     * by checking all registered container suppliers. It returns true if at least one container
-     * is available, regardless of its content or state.
-     * </p>
+     * Checks whether this value is any container available.
      *
-     * @param player the player to check for available gas canister containers
-     * @return true if the player has at least one gas canister container available, false otherwise
-     * @see #getAllSuppliers(Player)
+     * @param player the player performing the operation
+     * @return {@code true} if this value is any container available; otherwise {@code false}
      */
     public static boolean isAnyContainerAvailable(Player player) {
-        List<IGasCanisterContainer> suppliers = getAllSuppliers(player);
-        return !suppliers.isEmpty();
+        return !getAllSuppliers(player).isEmpty();
     }
 
     /**
-     * Retrieves the gas content, capacity, and creative status from the first available gas canister container.
-     * <p>
-     * This method attempts to find the first available gas canister container for the player and returns
-     * a pair containing the gas stack, capacity, and a boolean flag indicating whether the container is
-     * a creative gas canister. The method handles different container types including gas canister packs,
-     * creative canisters, and regular individual canisters.
-     * </p>
-     * <p>
-     * For gas canister packs, it delegates to {@link GasCanisterPackContainerContents#getFirstNonEmptyPair()}
-     * to obtain the appropriate data.
-     * For creative gas canisters ({@link CreativeGasCanisterContainerContents}), it returns the gas content
-     * and capacity with the creative flag set to {@code true}.
-     * For regular individual canisters ({@link GasCanisterContainerContents}), it returns the gas content
-     * and capacity with the creative flag set to {@code false}.
-     * If no container is found or the container type is not recognized, returns an empty pair with
-     * capacity 0 and creative flag {@code false}.
-     * </p>
+     * Returns the first available canister supplier pair.
      *
-     * @param player the player whose first gas canister container will be checked
-     * @return a pair where the first element is the {@link GasStack}, and the second element is a pair
-     * containing the container's capacity (Long) and a boolean indicating whether the container
-     * is a creative gas canister ({@code true}) or not ({@code false})
-     * @see #getFirstCanisterSupplier(Player)
-     * @see GasCanisterPackContainerContents#getFirstNonEmptyPair()
-     * @see CreativeGasCanisterContainerContents
-     * @see GasCanisterContainerContents
+     * @param player the player performing the operation
+     * @return the first available canister supplier pair
      */
     public static Pair<GasStack, Pair<Long, Boolean>> getFirstCanisterSupplierPair(Player player) {
-        IGasCanisterContainer container = getFirstCanisterSupplier(player);
-        return switch (container) {
-            case GasCanisterPackContainerContents packContents -> packContents.getFirstNonEmptyPair();
-            case CreativeGasCanisterContainerContents canisterContents -> Pair.of(canisterContents.getGasInTank(0), Pair.of(canisterContents.getTankCapacity(0), true));
-            case GasCanisterContainerContents canisterContents -> Pair.of(canisterContents.getGasInTank(0), Pair.of(canisterContents.getTankCapacity(0), false));
-            case null, default -> Pair.of(GasStack.EMPTY, Pair.of(0L, false));
-        };
-    }
+        for (IGasCanisterContainer container : getAllSuppliers(player)) {
+            if (container instanceof GasCanisterPackContainerContents pack) {
+                Pair<GasStack, Pair<Long, Boolean>> content = pack.getFirstNonEmptyPair();
+                if (!content.getFirst().isEmpty()) {
+                    return content;
+                }
 
-    /**
-     * Calculates the fill ratio of the first available gas canister container for the player.
-     * <p>
-     * This method retrieves the first available gas canister container (either a canister pack
-     * or an individual canister) and calculates the ratio of current gas amount to maximum capacity.
-     * The ratio is clamped between 0.0 and 1.0 to represent empty (0) to full (1) states.
-     * </p>
-     *
-     * @param player the player whose first gas canister container will be checked
-     * @return the fill ratio of the first available container (0.0 to 1.0), or 0.0 if no container is found
-     * @see #getFirstCanisterSupplierPair(Player)
-     */
-    public static float getFirstCanisterSupplierRatio(Player player) {
-        Pair<GasStack, Pair<Long, Boolean>> pair = getFirstCanisterSupplierPair(player);
-        GasStack content = pair.getFirst();
-        long capacity = pair.getSecond().getFirst();
-        if (capacity == 0) {
-            return 0;
+                continue;
+            }
+
+            for (int tank = 0; tank < container.getTanks(); tank++) {
+                GasStack gasContent = container.getGasInTank(tank);
+                if (gasContent.isEmpty()) {
+                    continue;
+                }
+
+                boolean creative = container instanceof CreativeGasCanisterContainerContents;
+                return Pair.of(gasContent, Pair.of(container.getTankCapacity(tank), creative));
+            }
         }
 
-        return Mth.clamp((float) content.getAmount() / capacity, 0, 1);
+        return Pair.of(GasStack.EMPTY, Pair.of(0L, false));
     }
+
+    private record SupplierCache(Level level, long gameTime, List<IGasCanisterContainer> containers) {}
 }

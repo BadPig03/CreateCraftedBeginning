@@ -29,21 +29,24 @@ public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
         super(info);
     }
 
+    private static MutableComponent getProcessingTime(CoolingRecipe recipe) {
+        if (!recipe.isFluidIngredients() && recipe.isCreativeIceCream()) {
+            return Component.translatable("jade.gas.infinity_mark");
+        }
+
+        return CCBLang.secondsWithGameTicks(recipe.getProcessingDuration(), 20).component();
+    }
+
     @Override
     public void draw(CoolingRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         Font font = Minecraft.getInstance().font;
         CCBGUITextures.JEI_SHADOW.render(graphics, 122, 37);
         CCBGUITextures.JEI_LONG_ARROW.render(graphics, 42, 30);
         CCBGUITextures.JEI_COOLING_BACKGROUND.render(graphics, 16, 8);
-        if (!recipe.isFluidIngredients() && recipe.isCreativeIceCream()) {
-            MutableComponent text = Component.translatable("jade.gas.infinity_mark");
-            graphics.drawString(font, text, getBackground().getWidth() / 2 - font.width(text) / 2 - 12, 22, COLOR, false);
-            cooler.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
-            return;
-        }
 
-        MutableComponent time = CCBLang.secondsWithGameTicks(recipe.getProcessingDuration(), 20).component();
-        graphics.drawString(font, time, getBackground().getWidth() / 2 - font.width(time) / 2 - 12, 22, COLOR, false);
+        MutableComponent time = getProcessingTime(recipe);
+        int textX = getBackground().getWidth() / 2 - font.width(time) / 2 - 12;
+        graphics.drawString(font, time, textX, 22, COLOR, false);
         cooler.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
     }
 

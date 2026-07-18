@@ -21,7 +21,7 @@ import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import static net.ty.createcraftedbeginning.ponder.PonderHelpers.generateItemDropVelocity;
+import static net.ty.createcraftedbeginning.ponder.CCBPonderScenes.generateItemDropVelocity;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault

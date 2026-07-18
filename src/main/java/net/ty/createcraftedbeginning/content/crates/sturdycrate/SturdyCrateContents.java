@@ -8,6 +8,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.item.ItemStack;
+import net.ty.createcraftedbeginning.content.crates.CrateInventoryState;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -16,8 +17,15 @@ import java.util.Objects;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public record SturdyCrateContents(ItemStack content, int count, ItemStack filterItem) {
-    public static final Codec<SturdyCrateContents> CODEC = RecordCodecBuilder.create(instance -> instance.group(ItemStack.OPTIONAL_CODEC.fieldOf("content").forGetter(contents -> contents.content), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("count").forGetter(contents -> contents.count), ItemStack.OPTIONAL_CODEC.fieldOf("filterItem").forGetter(contents -> contents.filterItem)).apply(instance, SturdyCrateContents::new));
+    public static final Codec<SturdyCrateContents> CODEC = RecordCodecBuilder.create(instance -> instance.group(ItemStack.OPTIONAL_CODEC.fieldOf("content").forGetter(SturdyCrateContents::content), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("count").forGetter(SturdyCrateContents::count), ItemStack.OPTIONAL_CODEC.fieldOf("filterItem").forGetter(SturdyCrateContents::filterItem)).apply(instance, SturdyCrateContents::new));
     public static final StreamCodec<RegistryFriendlyByteBuf, SturdyCrateContents> STREAM_CODEC = StreamCodec.composite(ItemStack.OPTIONAL_STREAM_CODEC, SturdyCrateContents::content, ByteBufCodecs.VAR_INT, SturdyCrateContents::count, ItemStack.OPTIONAL_STREAM_CODEC, SturdyCrateContents::filterItem, SturdyCrateContents::new);
+
+    public SturdyCrateContents {
+        CrateInventoryState normalized = CrateInventoryState.normalize(content, count, Integer.MAX_VALUE);
+        content = normalized.content();
+        count = normalized.count();
+        filterItem = filterItem.isEmpty() ? ItemStack.EMPTY : filterItem.copyWithCount(1);
+    }
 
     @Contract(" -> new")
     public static SturdyCrateContents empty() {
@@ -25,8 +33,30 @@ public record SturdyCrateContents(ItemStack content, int count, ItemStack filter
     }
 
     @Override
+    public ItemStack content() {
+        return content.isEmpty() ? ItemStack.EMPTY : content.copy();
+    }
+
+    @Override
+    public ItemStack filterItem() {
+        return filterItem.isEmpty() ? ItemStack.EMPTY : filterItem.copy();
+    }
+
+    public boolean hasInventory() {
+        return !content.isEmpty() && count > 0;
+    }
+
+    public boolean hasFilter() {
+        return !filterItem.isEmpty();
+    }
+
+    public boolean hasData() {
+        return hasInventory() || hasFilter();
+    }
+
+    @Override
     public boolean equals(Object other) {
-        return this == other || other instanceof SturdyCrateContents(ItemStack content1, int count1, ItemStack filterItem1) && ItemStack.matches(content, content1) && count == count1 && ItemStack.matches(filterItem, filterItem1);
+        return this == other || other instanceof SturdyCrateContents(ItemStack otherContent, int otherCount, ItemStack otherFilter) && ItemStack.matches(content, otherContent) && count == otherCount && ItemStack.matches(filterItem, otherFilter);
     }
 
     @Override

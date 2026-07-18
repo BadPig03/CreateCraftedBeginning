@@ -22,12 +22,12 @@ public class AnimatedBreezeChamberWithTank extends AnimatedKinetics {
 
     @Override
     public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
-        PoseStack matrixStack = graphics.pose();
-        matrixStack.pushPose();
+        PoseStack poseStack = graphics.pose();
+        poseStack.pushPose();
 
-        matrixStack.translate(xOffset, yOffset, 192);
-        matrixStack.mulPose(Axis.XP.rotationDegrees(-15.5f));
-        matrixStack.mulPose(Axis.YP.rotationDegrees(22.5f));
+        poseStack.translate(xOffset, yOffset, 192);
+        poseStack.mulPose(Axis.XP.rotationDegrees(-15.5f));
+        poseStack.mulPose(Axis.YP.rotationDegrees(22.5f));
         blockElement(CCBBlocks.BREEZE_CHAMBER_BLOCK.getDefaultState()).scale(SCALE).render(graphics);
         if (illState) {
             blockElement(CCBPartialModels.BREEZE_ILL).rotateBlock(0, 180, 0).scale(SCALE).render(graphics);
@@ -38,6 +38,6 @@ public class AnimatedBreezeChamberWithTank extends AnimatedKinetics {
         }
         blockElement(CCBBlocks.AIRTIGHT_TANK_BLOCK.getDefaultState()).atLocal(0, 1, 0).scale(SCALE).render(graphics);
 
-        matrixStack.popPose();
+        poseStack.popPose();
     }
 }

@@ -13,15 +13,13 @@ import net.minecraft.core.Holder;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.context.UseOnContext;
@@ -32,11 +30,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
+import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandler;
 import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlerUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
-import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
 import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlareSupplierUtils;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -44,11 +43,11 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.OptionalDouble;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightCannonItem extends ProjectileWeaponItem implements CustomArmPoseItem {
+public class AirtightCannonItem extends Item implements CustomArmPoseItem {
     private static final int MAX_CHARGE_TIME = 72000;
 
     public AirtightCannonItem(Properties properties) {
@@ -67,7 +66,11 @@ public class AirtightCannonItem extends ProjectileWeaponItem implements CustomAr
             return InteractionResult.FAIL;
         }
 
-        return CanisterContainerSuppliers.isAnyContainerAvailable(player) ? use(context.getLevel(), player, context.getHand()).getResult() : InteractionResult.FAIL;
+        if (!CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
+            return InteractionResult.FAIL;
+        }
+
+        return use(context.getLevel(), player, context.getHand()).getResult();
     }
 
     @Override
@@ -78,7 +81,7 @@ public class AirtightCannonItem extends ProjectileWeaponItem implements CustomAr
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack cannon = player.getItemInHand(hand);
-        if (!CanisterContainerSuppliers.isAnyContainerAvailable(player) || CanisterContainerSuppliers.getFirstAvailableGasContent(player) == GasStack.EMPTY) {
+        if (!CanisterContainerSuppliers.isAnyContainerAvailable(player) || CanisterContainerSuppliers.getFirstAvailableGasContent(player).isEmpty()) {
             return InteractionResultHolder.fail(cannon);
         }
         if (ShootableGadgetItemMethods.shouldSwap(player, cannon, hand, stack -> stack.is(CCBItems.AIRTIGHT_CANNON))) {
@@ -129,11 +132,12 @@ public class AirtightCannonItem extends ProjectileWeaponItem implements CustomAr
             return;
         }
 
-        float chargedRatio = AirtightCannonUtils.getChargedRatio(cannon, player, MAX_CHARGE_TIME - timeCharged);
-        if (chargedRatio == -1) {
+        OptionalDouble ratioResult = AirtightCannonUtils.getChargedRatio(cannon, player, MAX_CHARGE_TIME - timeCharged);
+        if (ratioResult.isEmpty()) {
             return;
         }
 
+        float chargedRatio = (float) ratioResult.getAsDouble();
         ItemStack flareItem = WeatherFlareSupplierUtils.getFirstFlare(player);
         if (!flareItem.isEmpty()) {
             AirtightCannonUtils.fireFlares(level, player, flareItem, chargedRatio);
@@ -151,18 +155,20 @@ public class AirtightCannonItem extends ProjectileWeaponItem implements CustomAr
             return;
         }
 
-        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
+        GasStack gasContent = CanisterContainerClients.getDisplayedGasContent();
         if (gasContent.isEmpty()) {
             return;
         }
 
         tooltip.add(CommonComponents.EMPTY);
-        tooltip.add(CCBLang.gasName(gasContent).add(CCBLang.translate("gui.tooltips.gas_tools.content")).style(ChatFormatting.GRAY).component());
-        AirtightCannonHandler cannonHandler = AirtightCannonHandlerUtils.of(gasContent.getGasType());
-        cannonHandler.appendHoverText(cannon, context, tooltip, tooltipFlag);
-        float consumptionMultiplier = cannonHandler.getGasConsumptionMultiplier();
-        MutableComponent advancedConsumptionMultiplier = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + cannonHandler.getRenderStr(consumptionMultiplier) + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.tooltips.gas_tools.gas_consumption", cannonHandler.getRenderStr(consumptionMultiplier * 100)).add(advancedConsumptionMultiplier.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        tooltip.add(CCBLang.gasName(gasContent).add(CCBLang.translate("gui.gas_tools.content")).style(ChatFormatting.GRAY).component());
+
+        AirtightCannonHandler handler = AirtightCannonHandlerUtils.of(gasContent.getGasType());
+        float consumptionMultiplier = handler.getGasConsumptionMultiplier();
+        handler.appendHoverText(cannon, context, tooltip, tooltipFlag);
+
+        MutableComponent advancedMultiplier = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptionUtils.format(consumptionMultiplier) + ']').component() : Component.empty();
+        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptionUtils.formatPercent(consumptionMultiplier)).add(advancedMultiplier.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
     }
 
     @Override
@@ -193,25 +199,6 @@ public class AirtightCannonItem extends ProjectileWeaponItem implements CustomAr
     @Override
     public boolean isDamageable(ItemStack cannon) {
         return false;
-    }
-
-    @Override
-    @SuppressWarnings({"deprecation", "RedundantSuppression"})
-    public Predicate<ItemStack> getAllSupportedProjectiles() {
-        return ItemStack::isEmpty;
-    }
-
-    @Override
-    public int getDefaultProjectileRange() {
-        return 15;
-    }
-
-    @Override
-    protected void shoot(ServerLevel level, LivingEntity shooter, InteractionHand hand, ItemStack weapon, List<ItemStack> projectileItems, float velocity, float inaccuracy, boolean isCrit, @Nullable LivingEntity target) {
-    }
-
-    @Override
-    protected void shootProjectile(LivingEntity shooter, Projectile projectile, int index, float velocity, float inaccuracy, float angle, @Nullable LivingEntity target) {
     }
 
     @Override

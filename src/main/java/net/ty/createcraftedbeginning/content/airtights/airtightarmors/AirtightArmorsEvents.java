@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightarmors;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageEffects;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
@@ -8,6 +9,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.living.LivingDamageEvent.Pre;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
@@ -33,8 +35,10 @@ public class AirtightArmorsEvents {
             return;
         }
 
-        DamageSource damageSource = event.getSource();
-        if (damageSource.type().effects() != DamageEffects.BURNING || !(damageSource.is(DamageTypes.LAVA) || damageSource.is(DamageTypes.IN_FIRE) || damageSource.is(DamageTypes.ON_FIRE))) {
+        DamageSource source = event.getSource();
+        boolean isBurning = source.type().effects() == DamageEffects.BURNING;
+        boolean isFireDamage = source.is(DamageTypes.LAVA) || source.is(DamageTypes.IN_FIRE) || source.is(DamageTypes.ON_FIRE);
+        if (!isBurning || !isFireDamage) {
             return;
         }
 
@@ -42,6 +46,16 @@ public class AirtightArmorsEvents {
             player.setRemainingFireTicks(0);
         }
         event.setCanceled(true);
+    }
+
+    @SubscribeEvent
+    public static void onPlayerPreTakeDamage(Pre event) {
+        if (!(event.getEntity() instanceof Player player) || event.getSource().is(DamageTypeTags.BYPASSES_RESISTANCE)) {
+            return;
+        }
+
+        float reducedDamage = AirtightArmorsUtils.applyPaidResistance(player, event.getOriginalDamage(), event.getNewDamage());
+        event.setNewDamage(reducedDamage);
     }
 
     @SubscribeEvent
@@ -53,14 +67,13 @@ public class AirtightArmorsEvents {
         }
 
         GlobalAirtightUpgradesConsumptionManager.tick(player);
-        AirtightArmorsUtils.applyResistance(player);
-
         if (level.getGameTime() % 20 != 0 || !AirtightArmorsUtils.isEntireArmoredUp(player)) {
             return;
         }
 
         CCBAdvancements.SEALED_TO_PERFECTION.awardTo(player);
-        if (!AirtightHelmetUpgradeRegistry.allUpgradesActive(player) || !AirtightChestplateUpgradeRegistry.allUpgradesActive(player) || !AirtightLeggingsUpgradeRegistry.allUpgradesActive(player) || !AirtightBootsUpgradeRegistry.allUpgradesActive(player)) {
+        boolean allUpgradesEnabled = AirtightHelmetUpgradeRegistry.allUpgradesEnabled(player) && AirtightChestplateUpgradeRegistry.allUpgradesEnabled(player) && AirtightLeggingsUpgradeRegistry.allUpgradesEnabled(player) && AirtightBootsUpgradeRegistry.allUpgradesEnabled(player);
+        if (!allUpgradesEnabled) {
             return;
         }
 
@@ -74,7 +87,7 @@ public class AirtightArmorsEvents {
             return;
         }
 
-        GlobalAirtightUpgradesConsumptionManager.syncToClient(player);
+        GlobalAirtightUpgradesConsumptionManager.forceSyncToClient(player);
     }
 
     @SubscribeEvent
@@ -84,7 +97,7 @@ public class AirtightArmorsEvents {
             return;
         }
 
-        GlobalAirtightUpgradesConsumptionManager.clear(player);
+        GlobalAirtightUpgradesConsumptionManager.clearTracking(player);
     }
 
     @SubscribeEvent

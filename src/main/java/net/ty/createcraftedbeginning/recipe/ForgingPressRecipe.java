@@ -1,6 +1,6 @@
 package net.ty.createcraftedbeginning.recipe;
 
-import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
+import com.simibubi.create.content.processing.recipe.ProcessingOutput;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
@@ -14,30 +14,32 @@ import net.minecraft.world.item.crafting.SmithingTrimRecipe;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.neoforged.neoforge.items.IItemHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
 import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity.ConsumptionPlan;
+import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity.OutputPlan;
 import net.ty.createcraftedbeginning.mixin.server.accessor.SmithingTransformRecipeAccessor;
 import net.ty.createcraftedbeginning.mixin.server.accessor.SmithingTrimRecipeAccessor;
 import net.ty.createcraftedbeginning.recipe.trie.IAirtightWithGasRecipe;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeInput> implements IAirtightWithGasRecipe {
+    private static final int PRIMARY_RESULT_INDEX = 0;
+
     @Nullable
     private SmithingRecipe smithingRecipe;
 
@@ -47,12 +49,14 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
 
     public static RecipeHolder<ForgingPressRecipe> convertToForgingPressRecipe(RecipeHolder<?> holder) {
         Builder<ForgingPressRecipe> builder = new Builder<>(ForgingPressRecipe::new, holder.id());
-        Recipe<?> holderValue = holder.value();
-        if (holderValue instanceof SmithingTransformRecipe smithingRecipe && holderValue instanceof SmithingTransformRecipeAccessor accessor) {
-            return new RecipeHolder<>(holder.id(), builder.require(accessor.getBase()).require(accessor.getTemplate()).require(accessor.getAddition()).build().setSmithingRecipe(smithingRecipe));
+        Recipe<?> source = holder.value();
+        if (source instanceof SmithingTransformRecipe smithingRecipe && source instanceof SmithingTransformRecipeAccessor accessor) {
+            ForgingPressRecipe recipe = builder.require(accessor.getBase()).require(accessor.getTemplate()).require(accessor.getAddition()).build().setSmithingRecipe(smithingRecipe);
+            return new RecipeHolder<>(holder.id(), recipe);
         }
-        else if (holderValue instanceof SmithingTrimRecipe smithingRecipe && holderValue instanceof SmithingTrimRecipeAccessor accessor) {
-            return new RecipeHolder<>(holder.id(), builder.require(accessor.getBase()).require(accessor.getTemplate()).require(accessor.getAddition()).build().setSmithingRecipe(smithingRecipe));
+        if (source instanceof SmithingTrimRecipe smithingRecipe && source instanceof SmithingTrimRecipeAccessor accessor) {
+            ForgingPressRecipe recipe = builder.require(accessor.getBase()).require(accessor.getTemplate()).require(accessor.getAddition()).build().setSmithingRecipe(smithingRecipe);
+            return new RecipeHolder<>(holder.id(), recipe);
         }
 
         return new RecipeHolder<>(holder.id(), builder.build());
@@ -66,76 +70,78 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
         return apply(press, recipe, false);
     }
 
-    private static boolean apply(AirtightForgingPressBlockEntity press, ForgingPressRecipe recipe, boolean test) {
+    private static boolean apply(AirtightForgingPressBlockEntity press, ForgingPressRecipe recipe, boolean simulate) {
         Level level = press.getLevel();
         if (level == null) {
             return false;
         }
 
-        IItemHandler pressHeadInv = press.getProcessingInventories().getFirst();
+        IItemHandler pressHead = press.getPressHeadInventory();
         Ingredient pressHeadIngredient = getIngredient(recipe, 1);
-        if (!matchesNonConsumableSlot(pressHeadInv, pressHeadIngredient)) {
+        if (!matchesNonConsumableSlot(pressHead, pressHeadIngredient)) {
             return false;
         }
 
-        IItemHandler topInv = press.getProcessingInventories().getSecond();
-        IItemHandler bottomInv = press.getInputOutputInventories().getFirst();
-        Ingredient bottomIngredient = getIngredient(recipe, 0);
-        Ingredient topIngredient = getIngredient(recipe, 2);
-        int crafts = getMaxItemCrafts(topInv, topIngredient, bottomInv, bottomIngredient);
-        if (crafts <= 0) {
+        IItemHandler addition = press.getAdditionInventory();
+        IItemHandler input = press.getInputInventory();
+        Ingredient inputIngredient = getIngredient(recipe, 0);
+        Ingredient additionIngredient = getIngredient(recipe, 2);
+        int maxCrafts = getMaxItemCrafts(addition, additionIngredient, input, inputIngredient);
+        if (maxCrafts <= 0) {
             return false;
         }
 
-        ItemStack bottomInput = getConsumableStack(bottomInv, bottomIngredient);
-        if (bottomInput == null) {
+        ItemStack inputStack = getConsumableStack(input, inputIngredient);
+        if (inputStack == null) {
             return false;
         }
 
-        IFluidHandler availableFluids = press.getFluidCapability();
-        IGasHandler availableGases = press.getGasCapability();
-        int[] extractedFluidsFromTank = new int[availableFluids.getTanks()];
-        long[] extractedGasesFromTank = new long[availableGases.getTanks()];
-        while (crafts > 0) {
-            extractedFluidsFromTank = new int[availableFluids.getTanks()];
-            extractedGasesFromTank = new long[availableGases.getTanks()];
-            if (!planFluidAndGasConsumption(recipe, availableFluids, availableGases, extractedFluidsFromTank, extractedGasesFromTank, crafts)) {
-                crafts--;
-                continue;
-            }
-
-            List<ItemStack> simulatedOutputItems = createRecipeOutputItems(recipe, level, bottomInput, false, crafts);
-            if (simulatedOutputItems.isEmpty() || !outputsPassFilter(press, simulatedOutputItems)) {
-                return false;
-            }
-
-            if (press.acceptOutputs(simulatedOutputItems, true)) {
-                break;
-            }
-
-            crafts--;
-        }
-
-        if (crafts <= 0) {
+        IFluidHandler fluids = press.getFluidCapability();
+        IGasHandler gases = press.getGasCapability();
+        CraftPlan craftPlan = findLargestCraftPlan(press, recipe, level, inputStack, fluids, gases, maxCrafts);
+        if (craftPlan == null) {
             return false;
         }
-
-        if (test) {
+        if (simulate) {
             return true;
         }
 
-        List<ItemStack> outputItems = createRecipeOutputItems(recipe, level, bottomInput, true, crafts);
-        if (!press.acceptOutputs(outputItems, true)) {
+        List<ItemStack> outputs = createRecipeOutputItems(recipe, level, inputStack, true, craftPlan.crafts());
+        Optional<OutputPlan> outputPlan = press.planOutputs(outputs);
+        if (outputPlan.isEmpty()) {
             return false;
         }
 
-        if (!topIngredient.isEmpty()) {
-            topInv.extractItem(0, crafts, false);
+        int additionAmount = additionIngredient.isEmpty() ? 0 : craftPlan.crafts();
+        int inputAmount = inputIngredient.isEmpty() ? 0 : craftPlan.crafts();
+        ConsumptionPlan consumptionPlan = press.createConsumptionPlan(addition.getStackInSlot(0).copy(), additionAmount, input.getStackInSlot(0).copy(), inputAmount, craftPlan.fluidAmounts(), craftPlan.gasAmounts());
+        return press.commitCraft(consumptionPlan, outputPlan.get());
+    }
+
+    private static @Nullable CraftPlan findLargestCraftPlan(AirtightForgingPressBlockEntity press, ForgingPressRecipe recipe, Level level, ItemStack input, IFluidHandler fluids, IGasHandler gases, int maxCrafts) {
+        List<ItemStack> singleCraftOutputs = createRecipeOutputItems(recipe, level, input, false, 1);
+        if (singleCraftOutputs.isEmpty() || !outputsPassFilter(press, singleCraftOutputs)) {
+            return null;
         }
-        if (!bottomIngredient.isEmpty()) {
-            bottomInv.extractItem(0, crafts, false);
+
+        int low = 1;
+        int high = maxCrafts;
+        CraftPlan bestPlan = null;
+        while (low <= high) {
+            int crafts = low + high >>> 1;
+            int[] fluidAmounts = new int[fluids.getTanks()];
+            long[] gasAmounts = new long[gases.getTanks()];
+            boolean hasResources = planFluidAndGasConsumption(recipe, fluids, gases, fluidAmounts, gasAmounts, crafts);
+            boolean outputsFit = hasResources && press.acceptOutputs(createRecipeOutputItems(recipe, level, input, false, crafts), true);
+            if (!outputsFit) {
+                high = crafts - 1;
+                continue;
+            }
+
+            bestPlan = new CraftPlan(crafts, fluidAmounts, gasAmounts);
+            low = crafts + 1;
         }
-        return executePlannedFluidAndGasConsumption(availableFluids, availableGases, extractedFluidsFromTank, extractedGasesFromTank) && press.acceptOutputs(outputItems, false);
+        return bestPlan;
     }
 
     private static Ingredient getIngredient(ForgingPressRecipe recipe, int index) {
@@ -143,7 +149,6 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
         if (index < 0 || index >= ingredients.size()) {
             return Ingredient.EMPTY;
         }
-
         return ingredients.get(index);
     }
 
@@ -165,15 +170,12 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
         if (extracted.isEmpty() || !ingredient.test(extracted)) {
             return null;
         }
-
         return extracted.copy();
     }
 
-    private static int getMaxItemCrafts(IItemHandler topInv, Ingredient topIngredient, IItemHandler bottomInv, Ingredient bottomIngredient) {
-        int crafts = 64;
-        crafts = Math.min(crafts, getAvailableCrafts(topInv, topIngredient, crafts));
-        crafts = Math.min(crafts, getAvailableCrafts(bottomInv, bottomIngredient, crafts));
-        return crafts;
+    private static int getMaxItemCrafts(IItemHandler addition, Ingredient additionIngredient, IItemHandler input, Ingredient inputIngredient) {
+        int maxCrafts = getAvailableCrafts(addition, additionIngredient, 64);
+        return getAvailableCrafts(input, inputIngredient, maxCrafts);
     }
 
     private static int getAvailableCrafts(IItemHandler inventory, Ingredient ingredient, int maxCrafts) {
@@ -189,137 +191,113 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
         return extracted.getCount();
     }
 
-    private static List<ItemStack> createRecipeOutputItems(ForgingPressRecipe recipe, Level level, ItemStack bottomInput, boolean rollRandomOutputs) {
+    private static List<ItemStack> createRecipeOutputItems(ForgingPressRecipe recipe, Level level, ItemStack input, boolean rollRandomOutputs) {
         List<ItemStack> outputs = new ArrayList<>();
-        if (rollRandomOutputs) {
-            recipe.rollResults(level.random).stream().filter(stack -> !stack.isEmpty()).map(ItemStack::copy).forEach(outputs::add);
-        }
-        else {
-            recipe.getRollableResults().stream().map(output -> output.getStack().copy()).filter(stack -> !stack.isEmpty()).forEach(outputs::add);
-        }
-        if (!bottomInput.isEmpty() && !outputs.isEmpty()) {
-            ItemStack result = outputs.getFirst();
-            ItemStack copied = result.copyWithCount(result.getCount());
-            copied.applyComponents(bottomInput.getComponentsPatch());
-            outputs.set(0, copied);
+        List<ProcessingOutput> rollableResults = recipe.getRollableResults();
+        for (int resultIndex = 0; resultIndex < rollableResults.size(); resultIndex++) {
+            ProcessingOutput output = rollableResults.get(resultIndex);
+            ItemStack stack = rollRandomOutputs ? output.rollOutput(level.random) : output.getStack();
+            if (stack.isEmpty()) {
+                continue;
+            }
+
+            ItemStack copied = stack.copy();
+            if (resultIndex == PRIMARY_RESULT_INDEX && !input.isEmpty()) {
+                copied.applyComponents(input.getComponentsPatch());
+            }
+            outputs.add(copied);
         }
         return outputs;
     }
 
-    private static List<ItemStack> createRecipeOutputItems(ForgingPressRecipe recipe, Level level, ItemStack bottomInput, boolean rollRandomOutputs, int crafts) {
+    private static List<ItemStack> createRecipeOutputItems(ForgingPressRecipe recipe, Level level, ItemStack input, boolean rollRandomOutputs, int crafts) {
         List<ItemStack> outputs = new ArrayList<>();
         for (int i = 0; i < crafts; i++) {
-            outputs.addAll(createRecipeOutputItems(recipe, level, bottomInput, rollRandomOutputs));
+            outputs.addAll(createRecipeOutputItems(recipe, level, input, rollRandomOutputs));
         }
         return outputs;
     }
 
-    private static boolean planFluidAndGasConsumption(ForgingPressRecipe recipe, IFluidHandler availableFluids, IGasHandler availableGases, int[] extractedFluidsFromTank, long[] extractedGasesFromTank, int crafts) {
-        FluidIngredients:
-        for (SizedFluidIngredient fluidIngredient : recipe.getFluidIngredients()) {
-            int amountRequired = fluidIngredient.amount() * crafts;
-            if (amountRequired <= 0) {
-                continue;
+    private static boolean planFluidAndGasConsumption(ForgingPressRecipe recipe, IFluidHandler fluids, IGasHandler gases, int[] fluidAmounts, long[] gasAmounts, int crafts) {
+        return planFluidConsumption(recipe.getFluidIngredients(), fluids, fluidAmounts, crafts) && planGasConsumption(recipe.getGasIngredients(), gases, gasAmounts, crafts);
+    }
+
+    private static boolean planFluidConsumption(List<SizedFluidIngredient> ingredients, IFluidHandler fluids, int[] amounts, int crafts) {
+        for (SizedFluidIngredient ingredient : ingredients) {
+            long required = (long) ingredient.amount() * crafts;
+            if (required <= 0 || required > Integer.MAX_VALUE) {
+                return false;
             }
-
-            for (int tank = 0; tank < availableFluids.getTanks(); tank++) {
-                FluidStack fluidStack = availableFluids.getFluidInTank(tank);
-                if (!fluidIngredient.test(fluidStack)) {
-                    continue;
-                }
-
-                int availableAmount = fluidStack.getAmount() - extractedFluidsFromTank[tank];
-                if (availableAmount <= 0) {
-                    continue;
-                }
-
-                int drainedAmount = Math.min(amountRequired, availableAmount);
-                extractedFluidsFromTank[tank] += drainedAmount;
-                amountRequired -= drainedAmount;
-                if (amountRequired > 0) {
-                    continue;
-                }
-
-                continue FluidIngredients;
+            if (!consumeFluid(ingredient, fluids, amounts, (int) required)) {
+                return false;
             }
-
-            return false;
         }
-
-        GasIngredients:
-        for (SizedGasIngredient gasIngredient : recipe.getGasIngredients()) {
-            long amountRequired = gasIngredient.amount() * crafts;
-            if (amountRequired <= 0) {
-                continue;
-            }
-
-            for (int tank = 0; tank < availableGases.getTanks(); tank++) {
-                GasStack gasStack = availableGases.getGasInTank(tank);
-                if (!gasIngredient.test(gasStack)) {
-                    continue;
-                }
-
-                long availableAmount = gasStack.getAmount() - extractedGasesFromTank[tank];
-                if (availableAmount <= 0) {
-                    continue;
-                }
-
-                long drainedAmount = Math.min(amountRequired, availableAmount);
-                extractedGasesFromTank[tank] += drainedAmount;
-                amountRequired -= drainedAmount;
-                if (amountRequired > 0) {
-                    continue;
-                }
-
-                continue GasIngredients;
-            }
-
-            return false;
-        }
-
         return true;
     }
 
-    private static boolean executePlannedFluidAndGasConsumption(IFluidHandler availableFluids, IGasHandler availableGases, int @NotNull [] extractedFluidsFromTank, long[] extractedGasesFromTank) {
-        for (int tank = 0; tank < extractedFluidsFromTank.length; tank++) {
-            int amount = extractedFluidsFromTank[tank];
-            if (amount <= 0) {
+    private static boolean consumeFluid(SizedFluidIngredient ingredient, IFluidHandler fluids, int[] amounts, int required) {
+        for (int tank = 0; tank < fluids.getTanks(); tank++) {
+            FluidStack stack = fluids.getFluidInTank(tank);
+            if (!ingredient.test(stack)) {
                 continue;
             }
 
-            FluidStack stored = availableFluids.getFluidInTank(tank);
-            if (stored.isEmpty()) {
-                return false;
+            int available = stack.getAmount() - amounts[tank];
+            if (available <= 0) {
+                continue;
             }
 
-            FluidStack drained = availableFluids.drain(stored.copyWithAmount(amount), FluidAction.EXECUTE);
-            if (drained.getAmount() != amount) {
-                return false;
+            int drained = Math.min(required, available);
+            amounts[tank] += drained;
+            required -= drained;
+            if (required <= 0) {
+                return true;
             }
         }
+        return false;
+    }
 
-        for (int tank = 0; tank < extractedGasesFromTank.length; tank++) {
-            long amount = extractedGasesFromTank[tank];
-            if (amount <= 0) {
-                continue;
-            }
-
-            GasStack stored = availableGases.getGasInTank(tank);
-            if (stored.isEmpty()) {
+    private static boolean planGasConsumption(List<SizedGasIngredient> ingredients, IGasHandler gases, long[] amounts, int crafts) {
+        for (SizedGasIngredient ingredient : ingredients) {
+            long amountPerCraft = ingredient.amount();
+            if (amountPerCraft <= 0 || amountPerCraft > Long.MAX_VALUE / crafts) {
                 return false;
             }
-
-            GasStack drained = availableGases.drain(stored.copyWithAmount(amount), GasAction.EXECUTE);
-            if (drained.getAmount() != amount) {
+            if (!consumeGas(ingredient, gases, amounts, amountPerCraft * crafts)) {
                 return false;
             }
         }
         return true;
+    }
+
+    private static boolean consumeGas(SizedGasIngredient ingredient, IGasHandler gases, long[] amounts, long required) {
+        for (int tank = 0; tank < gases.getTanks(); tank++) {
+            GasStack stack = gases.getGasInTank(tank);
+            if (!ingredient.test(stack)) {
+                continue;
+            }
+
+            long available = stack.getAmount() - amounts[tank];
+            if (available <= 0) {
+                continue;
+            }
+
+            long drained = Math.min(required, available);
+            amounts[tank] += drained;
+            required -= drained;
+            if (required <= 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean outputsPassFilter(AirtightForgingPressBlockEntity press, List<ItemStack> outputs) {
-        FilteringBehaviour filter = press.getFilteringBehaviour();
-        return filter != null && !outputs.isEmpty() && filter.test(outputs.getFirst());
+        return !outputs.isEmpty() && press.testRecipeFilter(outputs.getFirst());
+    }
+
+    private static boolean hasIngredient(NonNullList<Ingredient> ingredients, int index) {
+        return index >= 0 && index < ingredients.size() && !ingredients.get(index).isEmpty();
     }
 
     public @Nullable SmithingRecipe getSmithingRecipe() {
@@ -352,22 +330,72 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
     }
 
     @Override
-    protected boolean specialValidateCondition() {
-        int type = 0;
-        if (getIngredients().size() == getMaxInputCount()) {
-            type++;
+    protected void validateSpecial(List<String> errors) {
+        NonNullList<Ingredient> itemIngredients = getIngredients();
+        boolean usesBaseItem = hasIngredient(itemIngredients, 0);
+        boolean usesPressHead = hasIngredient(itemIngredients, 1);
+        boolean usesAdditionItem = hasIngredient(itemIngredients, 2);
+        boolean usesFullItemPattern = usesBaseItem && usesPressHead && usesAdditionItem;
+        boolean usesFluid = !getFluidIngredients().isEmpty();
+        boolean usesGas = !getGasIngredients().isEmpty();
+        int advancedInputModes = (usesFullItemPattern ? 1 : 0) + (usesFluid ? 1 : 0) + (usesGas ? 1 : 0);
+        if (advancedInputModes > 1) {
+            errors.add("Forging Press recipes may use at most one advanced input mode: a complete three-item pattern, a fluid input, or a gas input.");
         }
-        if (!getFluidIngredients().isEmpty()) {
-            type++;
+        if (!usesBaseItem && !usesAdditionItem && !usesFluid && !usesGas) {
+            errors.add("Forging Press recipes must define at least one consumable base item, addition item, fluid, or gas input.");
         }
-        if (!getGasIngredients().isEmpty()) {
-            type++;
+        if (getRollableResults().isEmpty()) {
+            errors.add("Forging Press recipes must define at least one item output.");
         }
-        return type > 1;
     }
 
     @Override
     public boolean matches(RecipeInput input, Level level) {
+        if (!matchesItemInputs(input)) {
+            return false;
+        }
+        if (getFluidIngredients().isEmpty() && getGasIngredients().isEmpty()) {
+            return true;
+        }
+        if (!(input instanceof ForgingPressRecipeInput forgingInput)) {
+            return false;
+        }
+
+        IFluidHandler fluids = forgingInput.getFluidHandler();
+        IGasHandler gases = forgingInput.getGasHandler();
+        return planFluidAndGasConsumption(this, fluids, gases, new int[fluids.getTanks()], new long[gases.getTanks()], 1);
+    }
+
+    private boolean matchesItemInputs(RecipeInput input) {
+        NonNullList<Ingredient> ingredients = getIngredients();
+        int slots = Math.max(input.size(), ingredients.size());
+        for (int slot = 0; slot < slots; slot++) {
+            Ingredient ingredient = slot < ingredients.size() ? ingredients.get(slot) : Ingredient.EMPTY;
+            ItemStack stack = slot < input.size() ? input.getItem(slot) : ItemStack.EMPTY;
+            if (ingredient.isEmpty()) {
+                if (!stack.isEmpty()) {
+                    return false;
+                }
+                continue;
+            }
+            if (stack.isEmpty() || !ingredient.test(stack)) {
+                return false;
+            }
+        }
         return true;
+    }
+
+    public interface ForgingPressRecipeInput extends RecipeInput {
+        IFluidHandler getFluidHandler();
+
+        IGasHandler getGasHandler();
+    }
+
+    private record CraftPlan(int crafts, int[] fluidAmounts, long[] gasAmounts) {
+        private CraftPlan {
+            fluidAmounts = fluidAmounts.clone();
+            gasAmounts = gasAmounts.clone();
+        }
     }
 }

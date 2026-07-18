@@ -17,6 +17,7 @@ import net.neoforged.neoforge.client.event.ClientTickEvent.Post;
 import net.neoforged.neoforge.client.event.ClientTickEvent.Pre;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent.AddLayers;
 import net.neoforged.neoforge.client.event.ModelEvent.RegisterAdditional;
+import net.neoforged.neoforge.client.event.RecipesUpdatedEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RegisterItemDecorationsEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
@@ -33,6 +34,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightle
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonItemRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillOutlineRenderer;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlay;
+import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberRecipeIndex;
 import net.ty.createcraftedbeginning.ponder.CCBPonderPlugin;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -47,6 +49,11 @@ public class CCBClientEvents {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> PonderIndex.addPlugin(new CCBPonderPlugin()));
+    }
+
+    @SubscribeEvent
+    public static void onRecipesUpdated(RecipesUpdatedEvent event) {
+        BreezeChamberRecipeIndex.rebuild(event.getRecipeManager());
     }
 
     @SubscribeEvent
@@ -117,9 +124,11 @@ public class CCBClientEvents {
 
     private static void onRenderWorld(PoseStack ms) {
         ms.pushPose();
+
         SuperRenderTypeBuffer buffer = DefaultSuperRenderTypeBuffer.getInstance();
         CCBOutliner.INSTANCE.renderOutlines(ms, buffer, Minecraft.getInstance().gameRenderer.getMainCamera().getPosition(), AnimationTickHolder.getPartialTicks());
         buffer.draw();
+
         ms.popPose();
     }
 }

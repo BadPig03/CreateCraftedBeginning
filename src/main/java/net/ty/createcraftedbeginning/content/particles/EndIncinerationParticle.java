@@ -18,33 +18,21 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class EndIncinerationParticle extends TextureSheetParticle {
-    protected EndIncinerationParticle(ClientLevel level, double x, double y, double z) {
-        super(level, x, y, z, 0.0, 0.0, 0.0);
-        gravity = 0.75f;
-        friction = 0.999f;
-        xd *= 0.8f;
-        yd *= 0.8f;
-        zd *= 0.8f;
-        yd = random.nextFloat() * 0.4f + 0.05f;
-        quadSize = quadSize * (random.nextFloat() * 2 + 0.2f);
-        lifetime = (int) (16.0 / (Math.random() * 0.8 + 0.2));
-    }
-
-    @Override
-    public ParticleRenderType getRenderType() {
-        return ParticleRenderType.PARTICLE_SHEET_OPAQUE;
-    }
-
-    @Override
-    public int getLightColor(float partialTick) {
-        int i = super.getLightColor(partialTick);
-        return 240 | (i >> 16 & 0xFF) << 16;
+    protected EndIncinerationParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+        super(level, x, y, z, xSpeed, ySpeed, zSpeed);
+        gravity = 0;
+        friction = 0.96f;
+        xd = xSpeed;
+        yd = ySpeed;
+        zd = zSpeed;
+        quadSize *= random.nextFloat() * 2 + 0.2f;
+        lifetime = (int) (16.0 / (random.nextDouble() * 0.8 + 0.2));
     }
 
     @Override
     public float getQuadSize(float scaleFactor) {
-        float f = (age + scaleFactor) / lifetime;
-        return quadSize * (1.0f - f * f);
+        float progress = (age + scaleFactor) / lifetime;
+        return quadSize * (1.0f - progress * progress);
     }
 
     @Override
@@ -54,12 +42,23 @@ public class EndIncinerationParticle extends TextureSheetParticle {
             return;
         }
 
-        float f = (float) age / lifetime;
-        if (!(random.nextFloat() > f)) {
+        float progress = (float) age / lifetime;
+        if (random.nextFloat() <= progress) {
             return;
         }
 
         level.addParticle(ParticleTypes.SMOKE, x, y, z, xd, yd, zd);
+    }
+
+    @Override
+    public ParticleRenderType getRenderType() {
+        return ParticleRenderType.PARTICLE_SHEET_OPAQUE;
+    }
+
+    @Override
+    public int getLightColor(float partialTick) {
+        int light = super.getLightColor(partialTick);
+        return 240 | (light >> 16 & 0xFF) << 16;
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -72,7 +71,7 @@ public class EndIncinerationParticle extends TextureSheetParticle {
 
         @Override
         public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
-            EndIncinerationParticle particle = new EndIncinerationParticle(level, x, y, z);
+            EndIncinerationParticle particle = new EndIncinerationParticle(level, x, y, z, xSpeed, ySpeed, zSpeed);
             particle.pickSprite(sprites);
             return particle;
         }

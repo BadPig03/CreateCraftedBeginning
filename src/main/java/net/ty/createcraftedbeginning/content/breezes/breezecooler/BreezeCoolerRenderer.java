@@ -110,9 +110,7 @@ public class BreezeCoolerRenderer extends SmartBlockEntityRenderer<BreezeCoolerB
         if (frostLevel.isAtLeast(FrostLevel.CHILLED)) {
             return blockAbove ? CCBPartialModels.BREEZE_CHILLED_ACTIVE : CCBPartialModels.BREEZE_CHILLED;
         }
-        else {
-            return CCBPartialModels.BREEZE_RIMING;
-        }
+        return CCBPartialModels.BREEZE_RIMING;
     }
 
     @Override
@@ -123,6 +121,13 @@ public class BreezeCoolerRenderer extends SmartBlockEntityRenderer<BreezeCoolerB
         }
 
         boolean isChilled = be.getFrostLevel().isAtLeast(FrostLevel.CHILLED);
-        renderShared(ms, null, bufferSource, level, be.getBlockState(), be.getFrostLevelForRender(), be.getHeadAnimation().getValue(partialTicks) * 0.175f, AngleHelper.rad(be.headAngle.getValue(partialTicks)), be.hasGoggles(), be.hasTrainHat() ? CCBPartialModels.BREEZE_TRAIN_HAT : be.isStockKeeper() ? CCBPartialModels.BREEZE_LOGISTICS_HAT : null, isChilled, isChilled ? 24 : 0, be.hashCode(), light, null);
+        PartialModel hatModel = null;
+        if (be.hasTrainHat()) {
+            hatModel = CCBPartialModels.BREEZE_TRAIN_HAT;
+        }
+        else if (be.isStockKeeper()) {
+            hatModel = CCBPartialModels.BREEZE_LOGISTICS_HAT;
+        }
+        renderShared(ms, null, bufferSource, level, be.getBlockState(), be.getFrostLevelForRender(), be.getHeadAnimation().getValue(partialTicks) * 0.175f, AngleHelper.rad(be.headAngle.getValue(partialTicks)), be.hasGoggles(), hatModel, isChilled, isChilled ? 24 : 0, be.hashCode(), light, null);
     }
 }

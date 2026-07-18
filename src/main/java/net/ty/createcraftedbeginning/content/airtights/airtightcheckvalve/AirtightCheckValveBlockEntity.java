@@ -1,24 +1,17 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve;
 
-import com.simibubi.create.content.fluids.pipes.IAxisPipe;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Direction.Axis;
-import net.minecraft.core.Direction.AxisDirection;
-import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTransporter;
-import net.ty.createcraftedbeginning.content.airtights.airtightpipe.IAirtightPipeDrain;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AxisGasTransportBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -38,13 +31,12 @@ public class AirtightCheckValveBlockEntity extends SmartBlockEntity implements I
         advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.GASEOUS_VARIATIONS, CCBAdvancements.MINTY_FRESH);
         behaviours.add(advancementBehaviour);
 
-        CheckValvePipeTransportBehaviour transportBehaviour = new CheckValvePipeTransportBehaviour(this);
-        behaviours.add(transportBehaviour);
+        behaviours.add(new CheckValvePipeTransportBehaviour(this));
     }
 
     @Override
-    public boolean canTransport(Level level, BlockState blockState, BlockPos blockPos, Direction direction) {
-        return true;
+    public boolean canTransport(Level level, BlockState state, BlockPos pos, Direction direction) {
+        return AirtightCheckValveBlock.isInputSide(state, direction);
     }
 
     @Override
@@ -52,45 +44,24 @@ public class AirtightCheckValveBlockEntity extends SmartBlockEntity implements I
         return advancementBehaviour;
     }
 
-    public class CheckValvePipeTransportBehaviour extends GasTransportBehaviour {
-        public CheckValvePipeTransportBehaviour(SmartBlockEntity be) {
-            super(be);
+    public class CheckValvePipeTransportBehaviour extends AxisGasTransportBehaviour {
+        public CheckValvePipeTransportBehaviour(SmartBlockEntity blockEntity) {
+            super(blockEntity);
         }
 
         @Override
-        public boolean canHaveFlowToward(BlockState state, Direction direction) {
-            if (state.getValue(AirtightCheckValveBlock.AXIS) != direction.getAxis()) {
-                return false;
-            }
-
-            BlockPos otherPos = worldPosition.relative(direction);
-            Level level = getWorld();
-            return isValidAirtightComponents(level, otherPos, level.getBlockState(otherPos), direction);
+        public boolean allowsInboundFlow(BlockState state, Direction direction) {
+            return canHaveFlowToward(state, direction) && AirtightCheckValveBlock.isInputSide(state, direction);
         }
 
         @Override
-        public AttachmentTypes getRenderedRimAttachment(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction direction) {
-            if (isIncorrectAxis(state, direction)) {
-                return AttachmentTypes.NONE;
-            }
-
-            BlockState otherState = level.getBlockState(pos.relative(direction));
-            Block otherBlock = otherState.getBlock();
-            Axis axis = state.getValue(AirtightCheckValveBlock.AXIS);
-            if (otherBlock instanceof IAxisPipe axisPipe && axisPipe.getAxis(otherState) == axis) {
-                return AttachmentTypes.NONE;
-            }
-            else if (otherBlock instanceof IAirtightPipeDrain) {
-                return AttachmentTypes.DRAIN;
-            }
-            return AttachmentTypes.RIM;
+        public boolean allowsOutboundFlow(BlockState state, Direction direction) {
+            return canHaveFlowToward(state, direction) && AirtightCheckValveBlock.isOutputSide(state, direction);
         }
 
         @Override
         public boolean canPullGasFrom(GasStack gas, BlockState state, Direction direction) {
-            boolean isInverted = state.getValue(AirtightCheckValveBlock.INVERTED);
-            AxisDirection axisDirection = direction.getAxisDirection();
-            return axisDirection == AxisDirection.POSITIVE && !isInverted || axisDirection == AxisDirection.NEGATIVE && isInverted;
+            return AirtightCheckValveBlock.isInputSide(state, direction);
         }
     }
 }

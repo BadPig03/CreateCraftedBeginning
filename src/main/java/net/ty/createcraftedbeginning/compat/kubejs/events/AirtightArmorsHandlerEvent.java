@@ -1,13 +1,10 @@
 package net.ty.createcraftedbeginning.compat.kubejs.events;
 
 import dev.latvian.mods.kubejs.event.KubeEvent;
-import dev.latvian.mods.rhino.util.HideFromJS;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandler;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlerUtils;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -33,23 +30,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightArmorsHandlerEvent implements KubeEvent {
-    /**
-     * Registers a custom Airtight Armors Handler for the given gas type.
-     * <p>
-     * This overload is hidden from JavaScript and is intended for internal
-     * Java-side usage. The gas is converted to its {@link ResourceLocation}, then
-     * delegated to {@link AirtightArmorsHandlerUtils#register(ResourceLocation, AirtightArmorsHandler)}.
-     *
-     * @param gasType the gas type to register
-     * @param handler the Airtight Armors Handler to associate with the gas
-     * @see Gas#getResourceLocation()
-     * @see AirtightArmorsHandlerUtils#register(ResourceLocation, AirtightArmorsHandler)
-     */
-    @HideFromJS
-    public static void add(Gas gasType, AirtightArmorsHandler handler) {
-        AirtightArmorsHandlerUtils.register(gasType.getResourceLocation(), handler);
-    }
-
     /**
      * Registers Airtight Armors behavior values for the gas identified by the given
      * resource location.

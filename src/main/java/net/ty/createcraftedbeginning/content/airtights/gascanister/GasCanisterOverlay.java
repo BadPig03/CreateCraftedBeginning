@@ -2,7 +2,6 @@ package net.ty.createcraftedbeginning.content.airtights.gascanister;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.createmod.catnip.gui.element.GuiGameElement;
-import net.createmod.catnip.lang.LangBuilder;
 import net.createmod.catnip.theme.Color;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -20,6 +19,7 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.data.CCBLang;
@@ -34,11 +34,34 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public enum GasCanisterOverlay implements Layer {
     INSTANCE;
 
+    public static final ResourceLocation RESOURCE = CreateCraftedBeginning.asResource("gas_canister_overlay");
     private static final ItemStack CANISTER = new ItemStack(CCBItems.GAS_CANISTER.asItem());
     private static final ItemStack CREATIVE_CANISTER = new ItemStack(CCBItems.CREATIVE_GAS_CANISTER.asItem());
     private static final ItemStack PACK = new ItemStack(CCBItems.GAS_CANISTER_PACK.asItem());
 
-    public static final ResourceLocation RESOURCE = CreateCraftedBeginning.asResource("gas_canister_overlay");
+    private static void renderCanister(GuiGraphics guiGraphics, int packType, int xOffset, int yOffset) {
+        if (packType == -1) {
+            GuiGameElement.of(CANISTER).at(xOffset, yOffset).render(guiGraphics);
+            return;
+        }
+
+        if (packType == -2) {
+            GuiGameElement.of(CREATIVE_CANISTER).at(xOffset, yOffset).render(guiGraphics);
+            return;
+        }
+
+        ItemStack pack = PACK.copy();
+        pack.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, packType);
+        GuiGameElement.of(pack).at(xOffset, yOffset).render(guiGraphics);
+    }
+
+    private static MutableComponent getAmountText(boolean isCreative, long amount, long capacity) {
+        if (isCreative) {
+            return CCBLang.translateDirect("gui.gas_container.infinity").withStyle(ChatFormatting.GOLD);
+        }
+
+        return GasAmountUtils.precise(amount).color(Color.mixColors(GasCanisterUtils.COLOR_RED, GasCanisterUtils.COLOR_WHITE, Mth.clamp(2.0f * amount / capacity, 0, 1))).add(CCBLang.text(" / ").style(ChatFormatting.WHITE)).add(GasAmountUtils.precise(capacity).style(ChatFormatting.GRAY)).component();
+    }
 
     @Override
     public void render(GuiGraphics guiGraphics, DeltaTracker deltaTracker) {
@@ -57,8 +80,8 @@ public enum GasCanisterOverlay implements Layer {
             return;
         }
 
-        CompoundTag compoundTag = overlayData.getCompound(GasCanisterOverlayPacket.COMPOUND_KEY_OVERLAY);
-        long capacity = compoundTag.getLong(GasCanisterOverlayPacket.COMPOUND_KEY_CAPACITY);
+        CompoundTag data = overlayData.getCompound(GasCanisterOverlayPacket.COMPOUND_KEY_OVERLAY);
+        long capacity = data.getLong(GasCanisterOverlayPacket.COMPOUND_KEY_CAPACITY);
         if (capacity < 0) {
             return;
         }
@@ -70,33 +93,16 @@ public enum GasCanisterOverlay implements Layer {
 
         int xOffset = CCBConfig.client().gasInfoXOffset.get();
         int yOffset = CCBConfig.client().gasInfoYOffset.get();
-        int packType = compoundTag.getInt(GasCanisterOverlayPacket.COMPOUND_KEY_PACK_TYPE);
-        if (packType == -1) {
-            GuiGameElement.of(CANISTER).at(xOffset, yOffset).render(guiGraphics);
-        }
-        else if (packType == -2) {
-            GuiGameElement.of(CREATIVE_CANISTER).at(xOffset, yOffset).render(guiGraphics);
-        }
-        else {
-            ItemStack copied = PACK.copy();
-            copied.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, packType);
-            GuiGameElement.of(copied).at(xOffset, yOffset).render(guiGraphics);
-        }
+        renderCanister(guiGraphics, data.getInt(GasCanisterOverlayPacket.COMPOUND_KEY_PACK_TYPE), xOffset, yOffset);
 
-        GasStack content = GasStack.parseOptional(player.level().registryAccess(), compoundTag.getCompound(GasCanisterOverlayPacket.COMPOUND_KEY_CONTENT));
+        GasStack content = GasStack.parseOptional(player.level().registryAccess(), data.getCompound(GasCanisterOverlayPacket.COMPOUND_KEY_CONTENT));
         long amount = content.getAmount();
 
         Font font = mc.font;
         guiGraphics.drawString(font, CCBLang.gasName(content).style(ChatFormatting.GOLD).component(), 17 + xOffset, yOffset + (content.isEmpty() ? font.lineHeight / 2 : 0), 0);
-        MutableComponent text;
-        if (compoundTag.getBoolean(GasCanisterOverlayPacket.COMPOUND_KEY_CREATIVE)) {
-            text = CCBLang.translateDirect("gui.goggles.gas_container.infinity").withStyle(ChatFormatting.GOLD);
-        }
-        else {
-            LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
-            text = CCBLang.number(amount).add(mb).color(Color.mixColors(GasCanisterUtils.COLOR_RED, GasCanisterUtils.COLOR_WHITE, Mth.clamp(2.0f * amount / capacity, 0, 1))).add(CCBLang.text(" / ").style(ChatFormatting.WHITE)).add(CCBLang.number(capacity).add(mb).style(ChatFormatting.GRAY)).component();
-        }
-        guiGraphics.drawString(font, text, 17 + xOffset, font.lineHeight + yOffset, 0);
+
+        MutableComponent amountText = getAmountText(data.getBoolean(GasCanisterOverlayPacket.COMPOUND_KEY_CREATIVE), amount, capacity);
+        guiGraphics.drawString(font, amountText, 17 + xOffset, font.lineHeight + yOffset, 0);
 
         poseStack.popPose();
     }

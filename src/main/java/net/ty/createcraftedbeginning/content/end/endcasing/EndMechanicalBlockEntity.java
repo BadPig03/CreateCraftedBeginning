@@ -27,44 +27,38 @@ public abstract class EndMechanicalBlockEntity<T extends EndMechanicalStructural
     public abstract void addBehaviours(List<BlockEntityBehaviour> behaviours);
 
     @Override
-    public void tick() {
-        super.tick();
-        verifyStructural();
-    }
-
-    @Override
     public void onLoad() {
         super.onLoad();
         if (level == null || level.isClientSide) {
             return;
         }
 
-        updateStructural();
+        structural = getStructural();
+        if (structural == null && level.getBlockState(worldPosition.below()).getBlock() instanceof EndCasingBlock) {
+            updateStructural();
+        }
+        level.scheduleTick(worldPosition, getBlockState().getBlock(), 1);
     }
 
-    @SuppressWarnings("unchecked")
+    protected abstract Class<T> getStructuralClass();
+
     protected @Nullable T getStructural() {
         if (level == null) {
             return null;
         }
 
-        BlockEntity be = level.getBlockEntity(worldPosition.below());
-        if (!(be instanceof EndMechanicalStructuralBlockEntity)) {
-            return null;
-        }
-
-        return (T) be;
+        BlockEntity blockEntity = level.getBlockEntity(worldPosition.below());
+        Class<T> structuralClass = getStructuralClass();
+        return structuralClass.isInstance(blockEntity) ? structuralClass.cast(blockEntity) : null;
     }
 
-    protected void verifyStructural() {
-        if (level == null) {
+    public void verifyStructural() {
+        if (level == null || level.isClientSide) {
             return;
         }
 
-        if (structural == null || structural.isRemoved()) {
-            structural = getStructural();
-        }
-        if (structural != null || level.isClientSide) {
+        structural = getStructural();
+        if (structural != null) {
             return;
         }
 

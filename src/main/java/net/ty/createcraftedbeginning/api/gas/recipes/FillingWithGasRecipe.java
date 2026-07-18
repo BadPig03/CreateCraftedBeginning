@@ -17,7 +17,6 @@ import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasSub
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -25,13 +24,21 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class FillingWithGasRecipe extends StandardProcessingWithGasRecipe<SingleRecipeInput> implements IAssemblyRecipeWithGas {
+    /**
+     * Creates a new {@code FillingWithGasRecipe} instance.
+     *
+     * @param params the parameters used to configure the operation
+     */
     public FillingWithGasRecipe(ProcessingWithGasRecipeParams params) {
         super(CCBRecipeTypes.FILLING_WITH_GAS, params);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public boolean matches(SingleRecipeInput inv, Level level) {
-        return ingredients.getFirst().test(inv.getItem(0));
+    public boolean matches(SingleRecipeInput input, Level level) {
+        return ingredients.getFirst().test(input.getItem(0));
     }
 
     @Override
@@ -49,32 +56,56 @@ public class FillingWithGasRecipe extends StandardProcessingWithGasRecipe<Single
         return 1;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @OnlyIn(Dist.CLIENT)
     public Component getDescriptionForAssembly() {
-        List<FluidStack> matchingFluidStacks = Arrays.asList(fluidIngredients.getFirst().getFluids());
-        return matchingFluidStacks.isEmpty() ? Component.literal("Invalid") : CreateLang.translateDirect("recipe.assembly.spout_filling_fluid", matchingFluidStacks.getFirst().getHoverName().getString());
+        FluidStack[] stacks = fluidIngredients.getFirst().getFluids();
+        if (stacks.length == 0) {
+            return Component.literal("Invalid");
+        }
+
+        return CreateLang.translateDirect("recipe.assembly.spout_filling_fluid", stacks[0].getHoverName().getString());
     }
 
-    @Override
-    public void addRequiredMachines(Set<ItemLike> list) {
-        list.add(AllBlocks.SPOUT.get());
-    }
-
-    @Override
-    public void addAssemblyIngredients(List<Ingredient> list) {
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void addAssemblyFluidIngredients(List<SizedFluidIngredient> list) {
         list.add(getRequiredFluid());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Supplier<Supplier<SequencedAssemblyWithGasSubCategory>> getJEISubCategory() {
         return () -> AssemblySpouting::new;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addAssemblyIngredients(List<Ingredient> list) {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addRequiredMachines(Set<ItemLike> list) {
+        list.add(AllBlocks.SPOUT.get());
+    }
+
+    /**
+     * Returns the required fluid.
+     *
+     * @return the required fluid
+     */
     public SizedFluidIngredient getRequiredFluid() {
         if (fluidIngredients.isEmpty()) {
             throw new IllegalStateException("Filling Recipe has no fluid ingredient!");

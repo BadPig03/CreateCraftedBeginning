@@ -18,6 +18,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.templates.AirtightHandheldDrillMiningTemplates;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonGasContents;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterUtils;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateContents;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe.SequencedAssemblyWithGas;
 import org.jetbrains.annotations.NotNull;
@@ -41,8 +42,10 @@ public class CCBDataComponents {
     public static final DataComponentType<Integer> GAS_CANISTER_PACK_FLAGS = register("gas_canister_pack_flags", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
 
     public static final DataComponentType<String> COMPRESSOR_OVERHEAT_STATE = register("compressor_overheat_state", builder -> builder.persistent(Codec.STRING).networkSynchronized(ByteBufCodecs.STRING_UTF8));
+    public static final DataComponentType<Integer> COMPRESSOR_STORED_HEAT = register("compressor_stored_heat", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
 
     public static final DataComponentType<Integer> BREEZE_TIME = register("breeze_time", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
+    public static final DataComponentType<Boolean> BREEZE_CREATIVE = register("breeze_creative", builder -> builder.persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL));
 
     public static final DataComponentType<AirtightHandheldDrillMiningTemplates> DRILL_MINING_TEMPLATE = register("drill_mining_template", builder -> builder.persistent(AirtightHandheldDrillMiningTemplates.CODEC).networkSynchronized(AirtightHandheldDrillMiningTemplates.STREAM_CODEC));
     public static final DataComponentType<BlockPos> DRILL_MINING_SIZE = register("drill_mining_size", builder -> builder.persistent(BlockPos.CODEC).networkSynchronized(BlockPos.STREAM_CODEC));
@@ -55,6 +58,7 @@ public class CCBDataComponents {
     public static final DataComponentType<BalloonGasContents> BALLOON_GAS_CONTENTS = register("balloon_gas_contents", builder -> builder.persistent(BalloonGasContents.CODEC).networkSynchronized(BalloonGasContents.STREAM_CODEC));
     public static final DataComponentType<Integer> GAS_VIRTUAL_ITEM_COLOR = register("gas_virtual_item_color", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
     public static final DataComponentType<GasStack> GAS_VIRTUAL_ITEM_TYPE = register("gas_virtual_item_type", builder -> builder.persistent(GasStack.OPTIONAL_CODEC).networkSynchronized(GasStack.OPTIONAL_STREAM_CODEC));
+    public static final DataComponentType<GasFilterUtils.GasFilterData> GAS_FILTER_DATA = register("gas_filter_data", builder -> builder.persistent(GasFilterUtils.GasFilterData.CODEC).networkSynchronized(GasFilterUtils.GasFilterData.STREAM_CODEC));
 
     public static final DataComponentType<SequencedAssemblyWithGas> SEQUENCED_ASSEMBLY_WITH_GAS = register("sequenced_assembly_with_gas", builder -> builder.persistent(SequencedAssemblyWithGas.CODEC).networkSynchronized(SequencedAssemblyWithGas.STREAM_CODEC));
 

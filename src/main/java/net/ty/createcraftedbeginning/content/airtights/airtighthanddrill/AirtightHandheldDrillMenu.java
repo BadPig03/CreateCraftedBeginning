@@ -5,6 +5,7 @@ import net.minecraft.client.HotbarManager;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickType;
@@ -31,8 +32,8 @@ public class AirtightHandheldDrillMenu extends AirtightUpgradableMenu {
         super(type, id, inv, extraData);
     }
 
-    public AirtightHandheldDrillMenu(MenuType<?> type, int id, Inventory inv, ItemStack contentHolder) {
-        super(type, id, inv, contentHolder);
+    public AirtightHandheldDrillMenu(MenuType<?> type, int id, Inventory inv, ItemStack contentHolder, InteractionHand sourceHand) {
+        super(type, id, inv, contentHolder, sourceHand);
     }
 
     @Override
@@ -76,13 +77,33 @@ public class AirtightHandheldDrillMenu extends AirtightUpgradableMenu {
     }
 
     @Override
+    protected boolean isValidUpgrade(ItemStack stack) {
+        AirtightUpgrade upgrade = AirtightHandheldDrillUpgradeRegistry.getByStack(stack);
+        return upgrade != null && !getStatus(upgrade).isInstalled();
+    }
+
+    @Override
+    protected int getMaxSlots() {
+        return MAX_SLOTS;
+    }
+
+    @Override
+    public void updateStatus(ItemStack stack) {
+        currentStatusList = stack.get(CCBDataComponents.AIRTIGHT_UPGRADE_STATUS);
+        if (currentStatusList == null) {
+            currentStatusList = AirtightHandheldDrillUpgradeRegistry.getDefaultUpgradeList();
+        }
+        currentStatusList = normalizeStatusList(currentStatusList, AirtightHandheldDrillUpgradeRegistry.getAll());
+    }
+
+    @Override
     public ItemStack quickMoveStack(Player player, int slotIndex) {
         Slot slot = slots.get(slotIndex);
         if (!slot.hasItem()) {
             return ItemStack.EMPTY;
         }
 
-        ItemStack slotStack = slot.getItem();
+        ItemStack stack = slot.getItem();
         if (slotIndex >= PLAYER_INVENTORY_SLOTS) {
             int menuSlotIndex = slotIndex - PLAYER_INVENTORY_SLOTS;
             if (menuSlotIndex == FILTER_SLOT_INDEX) {
@@ -90,33 +111,36 @@ public class AirtightHandheldDrillMenu extends AirtightUpgradableMenu {
                 slot.setChanged();
                 return ItemStack.EMPTY;
             }
-            else if (!moveItemStackTo(slotStack, 0, PLAYER_INVENTORY_SLOTS, true)) {
-                slot.setChanged();
-                return ItemStack.EMPTY;
-            }
-        }
-        else {
-            if (menuInventory.getStackInSlot(FILTER_SLOT_INDEX).isEmpty() && AirtightHandheldDrillUtils.isValidFilter(slotStack)) {
-                menuInventory.setStackInSlot(FILTER_SLOT_INDEX, slotStack.copyWithCount(1));
-                slot.setChanged();
-                return ItemStack.EMPTY;
-            }
 
-            if (menuInventory.getStackInSlot(UPGRADE_SLOT_INDEX).isEmpty() && isValidUpgrade(slotStack)) {
-                if (moveItemStackTo(slotStack, PLAYER_INVENTORY_SLOTS + UPGRADE_SLOT_INDEX, PLAYER_INVENTORY_SLOTS + UPGRADE_SLOT_INDEX + 1, false)) {
-                    slot.setChanged();
-                    return slotStack;
-                }
-                return ItemStack.EMPTY;
+            if (!moveItemStackTo(stack, 0, PLAYER_INVENTORY_SLOTS, true)) {
+                slot.setChanged();
             }
+            return ItemStack.EMPTY;
         }
 
-        return ItemStack.EMPTY;
+        if (menuInventory.getStackInSlot(FILTER_SLOT_INDEX).isEmpty() && AirtightHandheldDrillUtils.isValidFilter(stack)) {
+            menuInventory.setStackInSlot(FILTER_SLOT_INDEX, stack.copyWithCount(1));
+            slot.setChanged();
+            return ItemStack.EMPTY;
+        }
+
+        if (!menuInventory.getStackInSlot(UPGRADE_SLOT_INDEX).isEmpty() || !isValidUpgrade(stack)) {
+            return ItemStack.EMPTY;
+        }
+
+        int upgradeSlot = PLAYER_INVENTORY_SLOTS + UPGRADE_SLOT_INDEX;
+        if (!moveItemStackTo(stack, upgradeSlot, upgradeSlot + 1, false)) {
+            return ItemStack.EMPTY;
+        }
+
+        slot.setChanged();
+        return stack;
     }
 
     @Override
     public void clicked(int slotIndex, int dragType, ClickType clickType, Player player) {
-        if (slotIndex == playerInventory.selected + PLAYER_INVENTORY_SLOTS - HotbarManager.NUM_HOTBAR_GROUPS && clickType != ClickType.THROW) {
+        int selectedSlot = playerInventory.selected + PLAYER_INVENTORY_SLOTS - HotbarManager.NUM_HOTBAR_GROUPS;
+        if (slotIndex == selectedSlot && clickType != ClickType.THROW) {
             return;
         }
 
@@ -136,13 +160,12 @@ public class AirtightHandheldDrillMenu extends AirtightUpgradableMenu {
             case PICKUP -> {
                 Slot filterSlot = getSlot(slotIndex);
                 if (!carried.isEmpty() && filterSlot.mayPlace(carried)) {
-                    ItemStack insert = carried.copyWithCount(1);
-                    menuInventory.setStackInSlot(FILTER_SLOT_INDEX, insert);
-                    getSlot(slotIndex).setChanged();
+                    menuInventory.setStackInSlot(FILTER_SLOT_INDEX, carried.copyWithCount(1));
+                    filterSlot.setChanged();
                 }
                 else if (carried.isEmpty()) {
                     menuInventory.setStackInSlot(FILTER_SLOT_INDEX, ItemStack.EMPTY);
-                    getSlot(slotIndex).setChanged();
+                    filterSlot.setChanged();
                 }
             }
             case QUICK_MOVE -> {
@@ -152,21 +175,5 @@ public class AirtightHandheldDrillMenu extends AirtightUpgradableMenu {
                 }
             }
         }
-    }
-
-    @Override
-    protected int getMaxSlots() {
-        return MAX_SLOTS;
-    }
-
-    @Override
-    protected boolean isValidUpgrade(ItemStack stack) {
-        AirtightUpgrade upgrade = AirtightHandheldDrillUpgradeRegistry.getByItem(stack.getItem());
-        return upgrade != null && !currentStatusList.get(upgrade.getIndex()).isInstalled();
-    }
-
-    @Override
-    public void updateStatus(ItemStack stack) {
-        currentStatusList = normalizeStatusList(stack.getOrDefault(CCBDataComponents.AIRTIGHT_UPGRADE_STATUS, AirtightHandheldDrillUpgradeRegistry.getDefaultUpgradeList()), AirtightHandheldDrillUpgradeRegistry.getAll());
     }
 }

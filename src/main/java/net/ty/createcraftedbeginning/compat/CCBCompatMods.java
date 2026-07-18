@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
+@SuppressWarnings("unused")
 public enum CCBCompatMods {
     JEI("jei"),
     KUBEJS("kubeJS");

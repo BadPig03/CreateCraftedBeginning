@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 @MethodsReturnNonnullByDefault
 public class PortableGasInterfaceInstance {
     private final InstancerProvider instancerProvider;
-    private final BlockPos instancePos;
+    private final BlockPos pos;
     private final float angleX;
     private final float angleY;
 
@@ -29,22 +29,33 @@ public class PortableGasInterfaceInstance {
 
     public PortableGasInterfaceInstance(InstancerProvider instancerProvider, BlockState blockState, BlockPos instancePos, boolean lit) {
         this.instancerProvider = instancerProvider;
-        this.instancePos = instancePos;
+        pos = instancePos;
         this.lit = lit;
+
         Direction facing = blockState.getValue(PortableGasInterfaceBlock.FACING);
-        angleX = facing == Direction.UP ? 0 : facing == Direction.DOWN ? 180 : 90;
+        angleX = switch (facing) {
+            case UP -> 0;
+            case DOWN -> 180;
+            default -> 90;
+        };
         angleY = AngleHelper.horizontalAngle(facing);
+
         middle = instancerProvider.instancer(InstanceTypes.TRANSFORMED, Models.partial(PortableGasInterfaceRenderer.getMiddleForState(lit))).createInstance();
         top = instancerProvider.instancer(InstanceTypes.TRANSFORMED, Models.partial(PortableGasInterfaceRenderer.getTopForState())).createInstance();
     }
 
     public void beginFrame(float progress) {
-        middle.setIdentityTransform().translate(instancePos).center().rotateYDegrees(angleY).rotateXDegrees(angleX).uncenter();
+        applyBaseTransform(middle);
         middle.translate(0, progress * 0.5f + 0.375f, 0);
         middle.setChanged();
-        top.setIdentityTransform().translate(instancePos).center().rotateYDegrees(angleY).rotateXDegrees(angleX).uncenter();
+
+        applyBaseTransform(top);
         top.translate(0, progress, 0);
         top.setChanged();
+    }
+
+    private void applyBaseTransform(TransformedInstance instance) {
+        instance.setIdentityTransform().translate(pos).center().rotateYDegrees(angleY).rotateXDegrees(angleX).uncenter();
     }
 
     public void tick(boolean lit) {

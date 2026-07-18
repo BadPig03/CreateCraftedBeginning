@@ -18,8 +18,8 @@ public abstract class SequencedAssemblyWithGasRecipeGen extends BaseRecipeProvid
     }
 
     protected GeneratedRecipe create(String name, UnaryOperator<SequencedAssemblyWithGasRecipeBuilder> transform) {
-        GeneratedRecipe generatedRecipe = c -> transform.apply(new SequencedAssemblyWithGasRecipeBuilder(asResource(name))).build(c);
-        all.add(generatedRecipe);
-        return generatedRecipe;
+        GeneratedRecipe recipe = consumer -> transform.apply(new SequencedAssemblyWithGasRecipeBuilder(asResource(name))).build(consumer);
+        all.add(recipe);
+        return recipe;
     }
 }

@@ -26,6 +26,7 @@ import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonUtils;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceBlock;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
+import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -35,6 +36,56 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class GasPackagerBlock extends PackagerBlock {
     public GasPackagerBlock(Properties properties) {
         super(properties);
+    }
+
+    @Nullable
+    private static Direction findConnectedGasDirection(BlockPlaceContext context, Level level, BlockPos clickedPos) {
+        for (Direction direction : context.getNearestLookingDirections()) {
+            BlockPos targetPos = clickedPos.relative(direction);
+            BlockEntity target = level.getBlockEntity(targetPos);
+            if (target instanceof GasPackagerBlockEntity) {
+                continue;
+            }
+
+            Direction targetSide = direction.getOpposite();
+            if (target == null || level.getCapability(GasHandler.BLOCK, targetPos, targetSide) == null) {
+                continue;
+            }
+
+            return targetSide;
+        }
+        return null;
+    }
+
+    private static void handleInteraction(ItemStack stack, Level level, BlockPos pos, Player player, InteractionHand hand, PackagerBlockEntity blockEntity) {
+        if (blockEntity.animationTicks > 0) {
+            return;
+        }
+
+        if (!blockEntity.heldBox.isEmpty()) {
+            if (!level.isClientSide()) {
+                player.getInventory().placeItemBackInInventory(blockEntity.heldBox.copy());
+                AllSoundEvents.playItemPickup(player);
+                blockEntity.heldBox = ItemStack.EMPTY;
+                blockEntity.notifyUpdate();
+            }
+            return;
+        }
+
+        if (!BalloonUtils.isBalloon(stack) || level.isClientSide()) {
+            return;
+        }
+
+        ItemStack inserted = stack.copyWithCount(1);
+        if (!blockEntity.unwrapBox(inserted, false)) {
+            return;
+        }
+
+        stack.shrink(1);
+        AllSoundEvents.DEPOT_PLOP.playOnServer(level, pos);
+        if (stack.isEmpty()) {
+            player.setItemInHand(hand, ItemStack.EMPTY);
+        }
     }
 
     @Override
@@ -50,36 +101,19 @@ public class GasPackagerBlock extends PackagerBlock {
             return null;
         }
 
-        Direction preferred = null;
         Level level = context.getLevel();
         BlockPos clickedPos = context.getClickedPos();
-        for (Direction direction : context.getNearestLookingDirections()) {
-            BlockPos targetPos = clickedPos.relative(direction);
-            BlockEntity be = level.getBlockEntity(targetPos);
-            if (be instanceof GasPackagerBlockEntity) {
-                continue;
-            }
-
-            Direction targetSide = direction.getOpposite();
-            if (be == null || level.getCapability(GasHandler.BLOCK, targetPos, targetSide) == null) {
-                continue;
-            }
-
-            preferred = direction.getOpposite();
-            break;
-        }
-
+        Direction preferred = findConnectedGasDirection(context, level, clickedPos);
         Player player = context.getPlayer();
         if (preferred == null) {
             Direction direction = context.getNearestLookingDirection();
             preferred = player != null && player.isShiftKeyDown() ? direction : direction.getOpposite();
         }
 
-        if (player != null && !(player instanceof FakePlayer)) {
-            if (level.getBlockState(clickedPos.relative(preferred.getOpposite())).getBlock() instanceof PortableGasInterfaceBlock) {
-                CCBLang.translate("gui.warnings.no_gas_portable_interface").sendStatus(player);
-                return null;
-            }
+        BlockPos targetPos = clickedPos.relative(preferred.getOpposite());
+        if (player != null && !(player instanceof FakePlayer) && level.getBlockState(targetPos).getBlock() instanceof PortableGasInterfaceBlock) {
+            CCBLang.translate("gui.warnings.no_gas_portable_interface").sendStatus(player);
+            return null;
         }
 
         return state.setValue(POWERED, level.hasNeighborSignal(clickedPos)).setValue(FACING, preferred);
@@ -87,49 +121,14 @@ public class GasPackagerBlock extends PackagerBlock {
 
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        if (AllItems.WRENCH.isIn(stack) || AllBlocks.FACTORY_GAUGE.isIn(stack) || AllBlocks.STOCK_LINK.isIn(stack) && !(state.hasProperty(LINKED) && state.getValue(LINKED)) || AllBlocks.PACKAGE_FROGPORT.isIn(stack)) {
+        if (AllItems.WRENCH.isIn(stack) || AllBlocks.FACTORY_GAUGE.isIn(stack) || CCBBlocks.GAS_FACTORY_GAUGE_BLOCK.isIn(stack) || AllBlocks.STOCK_LINK.isIn(stack) && !(state.hasProperty(LINKED) && state.getValue(LINKED)) || AllBlocks.PACKAGE_FROGPORT.isIn(stack)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        onBlockEntityUseItemOn(level, pos, be -> {
-            if (be.heldBox.isEmpty()) {
-                if (be.animationTicks > 0) {
-                    return ItemInteractionResult.SUCCESS;
-                }
-
-                if (BalloonUtils.isBalloon(stack)) {
-                    if (level.isClientSide()) {
-                        return ItemInteractionResult.SUCCESS;
-                    }
-
-                    if (!be.unwrapBox(stack.copy(), true)) {
-                        return ItemInteractionResult.SUCCESS;
-                    }
-
-                    be.unwrapBox(stack.copy(), false);
-                    stack.shrink(1);
-                    AllSoundEvents.DEPOT_PLOP.playOnServer(level, pos);
-                    if (stack.isEmpty()) {
-                        player.setItemInHand(hand, ItemStack.EMPTY);
-                    }
-                    return ItemInteractionResult.SUCCESS;
-                }
-                return ItemInteractionResult.SUCCESS;
-            }
-
-            if (be.animationTicks > 0) {
-                return ItemInteractionResult.SUCCESS;
-            }
-
-            if (!level.isClientSide()) {
-                player.getInventory().placeItemBackInInventory(be.heldBox.copy());
-                AllSoundEvents.playItemPickup(player);
-                be.heldBox = ItemStack.EMPTY;
-                be.notifyUpdate();
-            }
+        onBlockEntityUseItemOn(level, pos, blockEntity -> {
+            handleInteraction(stack, level, pos, player, hand, blockEntity);
             return ItemInteractionResult.SUCCESS;
         });
-
         return ItemInteractionResult.SUCCESS;
     }
 

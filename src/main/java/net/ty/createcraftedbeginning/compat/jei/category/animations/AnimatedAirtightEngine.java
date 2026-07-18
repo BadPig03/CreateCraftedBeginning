@@ -29,12 +29,12 @@ public class AnimatedAirtightEngine extends AnimatedKinetics {
 
     @Override
     public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
-        PoseStack matrixStack = graphics.pose();
-        matrixStack.pushPose();
+        PoseStack poseStack = graphics.pose();
+        poseStack.pushPose();
 
-        matrixStack.translate(xOffset, yOffset, 192);
-        matrixStack.mulPose(Axis.XP.rotationDegrees(-15.5f));
-        matrixStack.mulPose(Axis.YP.rotationDegrees(22.5f));
+        poseStack.translate(xOffset, yOffset, 192);
+        poseStack.mulPose(Axis.XP.rotationDegrees(-15.5f));
+        poseStack.mulPose(Axis.YP.rotationDegrees(22.5f));
         blockElement(CCBBlocks.BREEZE_CHAMBER_BLOCK.getDefaultState()).atLocal(0.25, 0, -0.5).scale(SCALE).render(graphics);
         blockElement(CCBPartialModels.BREEZE_CHAMBER_WIND).rotateBlock(0, getCurrentAngle() * 4, 0).atLocal(0.25, 0.125, -0.5).scale(SCALE).render(graphics);
         blockElement(CCBPartialModels.BREEZE_GALE).rotateBlock(0, 180, 0).atLocal(0.25, 0.125, -0.5).scale(SCALE).render(graphics);
@@ -43,9 +43,9 @@ public class AnimatedAirtightEngine extends AnimatedKinetics {
         blockElement(CCBBlocks.AIRTIGHT_TANK_BLOCK.getDefaultState()).atLocal(0.25, 1, -0.5).scale(SCALE).render(graphics);
         blockElement(CCBBlocks.RESIDUE_OUTLET_BLOCK.getDefaultState().setValue(ResidueOutletBlock.FACE, AttachFace.WALL).setValue(ResidueOutletBlock.FACING, Direction.NORTH)).atLocal(0.25, 1, 0.5).scale(SCALE).render(graphics);
 
-        matrixStack.translate(getPistonOffset() * SCALE, 0, 0);
+        poseStack.translate(getPistonOffset() * SCALE, 0, 0);
         blockElement(CCBPartialModels.AIRTIGHT_ENGINE_PISTON).rotateBlock(0, 0, 90).atLocal(-0.75, 1, -0.5).scale(SCALE).render(graphics);
 
-        matrixStack.popPose();
+        poseStack.popPose();
     }
 }

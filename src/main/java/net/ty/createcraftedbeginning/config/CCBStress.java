@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import net.createmod.catnip.config.ConfigBase;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.common.ModConfigSpec.Builder;
@@ -15,10 +16,13 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.DoubleSupplier;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBStress extends ConfigBase {
     private static final Object2DoubleMap<ResourceLocation> DEFAULT_IMPACTS = new Object2DoubleOpenHashMap<>();
     private static final Object2DoubleMap<ResourceLocation> DEFAULT_CAPACITIES = new Object2DoubleOpenHashMap<>();
@@ -28,65 +32,67 @@ public class CCBStress extends ConfigBase {
 
     @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> setImpact(double value) {
-        return builder -> {
-            assertFromCreateCraftedBeginning(builder);
-            ResourceLocation id = CreateCraftedBeginning.asResource(builder.getName());
-            DEFAULT_IMPACTS.put(id, value);
-            return builder;
-        };
-    }
-
-    private static void assertFromCreateCraftedBeginning(@NotNull BlockBuilder<?, ?> builder) {
-        if (builder.getOwner().getModid().equals(CreateCraftedBeginning.MOD_ID)) {
-            return;
-        }
-
-        throw new IllegalStateException("Non-relative blocks cannot be added to Create Crafted Beginning's config.");
+        return registerDefault(DEFAULT_IMPACTS, value);
     }
 
     @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> setCapacity(double value) {
+        return registerDefault(DEFAULT_CAPACITIES, value);
+    }
+
+    private static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> registerDefault(Object2DoubleMap<ResourceLocation> defaults, double value) {
         return builder -> {
             assertFromCreateCraftedBeginning(builder);
             ResourceLocation id = CreateCraftedBeginning.asResource(builder.getName());
-            DEFAULT_CAPACITIES.put(id, value);
+            defaults.put(id, value);
             return builder;
         };
     }
 
-    @Override
-    public void registerAll(@NotNull Builder builder) {
-        builder.comment(".", Comments.su, Comments.impact).push("impact");
-        DEFAULT_IMPACTS.forEach((id, value) -> impacts.put(id, builder.define(id.getPath(), value)));
-        builder.pop();
+    private static void assertFromCreateCraftedBeginning(BlockBuilder<?, ?> builder) {
+        if (builder.getOwner().getModid().equals(CreateCraftedBeginning.MOD_ID)) {
+            return;
+        }
 
-        builder.comment(".", Comments.su, Comments.capacity).push("capacity");
-        DEFAULT_CAPACITIES.forEach((id, value) -> capacities.put(id, builder.define(id.getPath(), value)));
+        throw new IllegalStateException("Blocks from other mods cannot be added to Create: Crafted Beginning's stress configuration.");
+    }
+
+    private static void registerValues(Builder builder, String name, String comment, Object2DoubleMap<ResourceLocation> defaults, Map<ResourceLocation, ConfigValue<Double>> values) {
+        builder.comment(".", Comments.su, comment).push(name);
+        defaults.forEach((id, value) -> values.put(id, builder.define(id.getPath(), value)));
         builder.pop();
     }
 
+    private static @Nullable DoubleSupplier getValue(Block block, Map<ResourceLocation, ConfigValue<Double>> values) {
+        ResourceLocation id = RegisteredObjectsHelper.getKeyOrThrow(block);
+        ConfigValue<Double> value = values.get(id);
+        return value == null ? null : value::get;
+    }
+
     @Override
-    public @NotNull String getName() {
+    public void registerAll(Builder builder) {
+        registerValues(builder, "impact", Comments.impact, DEFAULT_IMPACTS, impacts);
+        registerValues(builder, "capacity", Comments.capacity, DEFAULT_CAPACITIES, capacities);
+    }
+
+    @Override
+    public String getName() {
         return "stressValues";
     }
 
     @Nullable
     public DoubleSupplier getImpact(Block block) {
-        ResourceLocation id = RegisteredObjectsHelper.getKeyOrThrow(block);
-        ConfigValue<Double> value = impacts.get(id);
-        return value == null ? null : value::get;
+        return getValue(block, impacts);
     }
 
     @Nullable
     public DoubleSupplier getCapacity(Block block) {
-        ResourceLocation id = RegisteredObjectsHelper.getKeyOrThrow(block);
-        ConfigValue<Double> value = capacities.get(id);
-        return value == null ? null : value::get;
+        return getValue(block, capacities);
     }
 
     private static class Comments {
         static String su = "[in Stress Units]";
-        static String impact = "Configure the individual stress impact of mechanical blocks. Note that this cost is doubled for every speed increase it receives.";
-        static String capacity = "Configure how much stress a source can accommodate for.";
+        static String impact = "Configure the stress impact of individual mechanical blocks. Stress impact scales proportionally with rotational speed.";
+        static String capacity = "Configure the stress capacity of individual kinetic sources.";
     }
 }

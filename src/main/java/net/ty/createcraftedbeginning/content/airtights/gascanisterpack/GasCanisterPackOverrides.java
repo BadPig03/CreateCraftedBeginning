@@ -30,6 +30,36 @@ public class GasCanisterPackOverrides {
     private static final int LEFT_DOWN = 4;
     private static final int RIGHT_DOWN = 8;
 
+    @OnlyIn(Dist.CLIENT)
+    public static void registerModelOverridesClient(GasCanisterPackItem item) {
+        ItemProperties.register(item, GasCanisterPackType.TYPE, (stack, level, entity, seed) -> GasCanisterPackType.getTypeFromFlags(stack.getOrDefault(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, 0)).ordinal());
+    }
+
+    public static void addOverrideModels(DataGenContext<Item, GasCanisterPackItem> context, RegistrateItemModelProvider provider) {
+        ItemModelBuilder builder = provider.generated(context::get);
+        for (GasCanisterPackType type : GasCanisterPackType.values()) {
+            int index = type.ordinal();
+            builder.override().predicate(GasCanisterPackType.TYPE, index).model(provider.getBuilder(context.getName() + '_' + index).parent(new UncheckedModelFile("item/generated")).texture("layer0", CreateCraftedBeginning.asResource("item/gas_canister_pack" + type.getSerializedName()))).end();
+        }
+    }
+
+    public static int calculateFlags(boolean leftUp, boolean rightUp, boolean leftDown, boolean rightDown) {
+        int flags = 0;
+        if (leftUp) {
+            flags |= LEFT_UP;
+        }
+        if (rightUp) {
+            flags |= RIGHT_UP;
+        }
+        if (leftDown) {
+            flags |= LEFT_DOWN;
+        }
+        if (rightDown) {
+            flags |= RIGHT_DOWN;
+        }
+        return flags;
+    }
+
     public enum GasCanisterPackType implements StringRepresentable {
         _0000,
         _0001,
@@ -80,35 +110,5 @@ public class GasCanisterPackOverrides {
         public boolean hasRightDown() {
             return (getFlags() & RIGHT_DOWN) != 0;
         }
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public static void registerModelOverridesClient(GasCanisterPackItem item) {
-        ItemProperties.register(item, GasCanisterPackType.TYPE, (stack, level, entity, seed) -> GasCanisterPackType.getTypeFromFlags(stack.getOrDefault(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, 0)).ordinal());
-    }
-
-    public static void addOverrideModels(DataGenContext<Item, GasCanisterPackItem> context, RegistrateItemModelProvider provider) {
-        ItemModelBuilder builder = provider.generated(context::get);
-        for (GasCanisterPackType type : GasCanisterPackType.values()) {
-            int i = type.ordinal();
-            builder.override().predicate(GasCanisterPackType.TYPE, i).model(provider.getBuilder(context.getName() + '_' + i).parent(new UncheckedModelFile("item/generated")).texture("layer0", CreateCraftedBeginning.asResource("item/gas_canister_pack" + type.getSerializedName()))).end();
-        }
-    }
-
-    public static int calculateFlags(boolean leftUp, boolean rightUp, boolean leftDown, boolean rightDown) {
-        int flags = 0;
-        if (leftUp) {
-            flags |= LEFT_UP;
-        }
-        if (rightUp) {
-            flags |= RIGHT_UP;
-        }
-        if (leftDown) {
-            flags |= LEFT_DOWN;
-        }
-        if (rightDown) {
-            flags |= RIGHT_DOWN;
-        }
-        return flags;
     }
 }

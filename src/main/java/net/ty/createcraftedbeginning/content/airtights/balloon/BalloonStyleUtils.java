@@ -6,6 +6,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
+import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -42,9 +43,13 @@ public final class BalloonStyleUtils {
     private BalloonStyleUtils() {
     }
 
+    public static ItemStack getDefaultBalloon() {
+        return new ItemStack(CCBItems.BALLOON_10X12.asItem());
+    }
+
     public static ItemStack getRandomBalloon() {
-        List<PackageItem> styles = RANDOM.nextInt(RARE_CHANCE) == 0 ? RARE_BALLOONS : REGULAR_BALLOONS;
-        return new ItemStack(styles.get(RANDOM.nextInt(styles.size())));
+        List<PackageItem> balloons = RANDOM.nextInt(RARE_CHANCE) == 0 ? RARE_BALLOONS : REGULAR_BALLOONS;
+        return new ItemStack(balloons.get(RANDOM.nextInt(balloons.size())));
     }
 
     public static boolean isRareBalloon(ItemStack stack) {
@@ -83,16 +88,18 @@ public final class BalloonStyleUtils {
         if (!depositing) {
             return 0.1875f;
         }
+
         return Mth.lerp(getFrogportChainBlend(diff, distance), 0.1875f, 0.625f);
     }
 
     public static Vec3 getPackageOffset(Vec3 diff, float distance, boolean depositing) {
         Vec3 direction = diff.lengthSqr() < 1.0E-6 ? Vec3.ZERO : diff.normalize();
         Vec3 offset = direction.scale(distance);
-        if (depositing) {
-            offset = offset.subtract(0, 0.75, 0);
+        if (!depositing) {
+            return offset;
         }
-        return offset;
+
+        return offset.subtract(0, 0.75, 0);
     }
 
     private static float getFrogportChainBlend(Vec3 diff, float itemDistance) {

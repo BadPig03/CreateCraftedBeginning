@@ -3,47 +3,36 @@ package net.ty.createcraftedbeginning.content.crates.sturdycrate;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorageType;
-import com.simibubi.create.content.logistics.filter.FilterItem;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.core.BlockPos;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.content.crates.CrateMountedItemStorage;
+import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.crates.CrateItemStackHandler;
+import net.ty.createcraftedbeginning.content.crates.FilteredCrateMountedItemStorage;
 import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class SturdyCrateMountedStorage extends CrateMountedItemStorage {
-    public static final MapCodec<SturdyCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(ItemStack.CODEC.fieldOf("content").forGetter(storage -> storage.content), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("count").forGetter(storage -> storage.count), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("maxCount").forGetter(storage -> storage.maxCount), ItemStack.CODEC.fieldOf("filterItem").forGetter(storage -> storage.filterItem)).apply(instance, SturdyCrateMountedStorage::new));
+public class SturdyCrateMountedStorage extends FilteredCrateMountedItemStorage<SturdyCrateBlockEntity> {
+    public static final MapCodec<SturdyCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(ItemStack.OPTIONAL_CODEC.fieldOf("content").forGetter(SturdyCrateMountedStorage::getStoredItem), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("count").forGetter(SturdyCrateMountedStorage::getStoredCount), ItemStack.OPTIONAL_CODEC.fieldOf("filterItem").forGetter(SturdyCrateMountedStorage::getFilterItem)).apply(instance, SturdyCrateMountedStorage::new));
 
-    private final ItemStack filterItem;
-
-    public SturdyCrateMountedStorage(ItemStack content, int count, int maxCount, ItemStack filterItem) {
-        this(CCBMountedStorage.STURDY_CRATE.get(), content, count, maxCount, filterItem);
+    public SturdyCrateMountedStorage(ItemStack content, int count, ItemStack filterItem) {
+        this(CCBMountedStorage.STURDY_CRATE.get(), content, count, filterItem);
     }
 
-    protected SturdyCrateMountedStorage(MountedItemStorageType<?> type, ItemStack content, int count, int maxCount, ItemStack filterItem) {
-        super(type, content, count, maxCount);
-        this.filterItem = filterItem.copy();
+    protected SturdyCrateMountedStorage(MountedItemStorageType<?> type, ItemStack content, int count, ItemStack filterItem) {
+        super(type, SturdyCrateBlockEntity.class, content, count, filterItem, () -> CCBConfig.server().crates.maxSturdyCapacity.get());
     }
 
-    @Override
-    public void unmount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity be) {
-        if (!(be instanceof SturdyCrateBlockEntity crate)) {
-            return;
-        }
-
-        crate.setStoredItems(content, count);
+    public static SturdyCrateMountedStorage fromBlockEntity(SturdyCrateBlockEntity crate) {
+        CrateItemStackHandler handler = crate.getHandler();
+        return new SturdyCrateMountedStorage(handler.getStoredItem(0), handler.getCountInSlot(0), crate.getFilterItem());
     }
 
     @Override
-    public boolean isItemValid(int slot, ItemStack stack) {
-        return slot == 0 && stack.canFitInsideContainerItems() && (filterItem.isEmpty() || FilterItem.testDirect(filterItem, stack, false)) && (content.isEmpty() || ItemStack.isSameItemSameComponents(content, stack));
+    protected boolean canStoreItem(ItemStack stack) {
+        return stack.canFitInsideContainerItems() && super.canStoreItem(stack);
     }
 }

@@ -40,8 +40,23 @@ public class CCBWindChargingRecipes extends WindChargingRecipeGen {
         return item instanceof OminousBottleItem || item instanceof MilkIceCreamItem || item instanceof BuildersTeaItem;
     }
 
-    private void addFoodRecipes(CompletableFuture<Provider> registriesFuture) {
-        registriesFuture.thenAccept(registries -> {
+    private static int getEffectScore(List<PossibleEffect> effects) {
+        int score = 0;
+        for (PossibleEffect effect : effects) {
+            MobEffectCategory category = effect.effect().getEffect().value().getCategory();
+            int amplifier = effect.effect().getAmplifier() + 1;
+            switch (category) {
+                case BENEFICIAL -> score += amplifier;
+                case HARMFUL -> score -= amplifier;
+                default -> {
+                }
+            }
+        }
+        return score;
+    }
+
+    private void addFoodRecipes(CompletableFuture<Provider> registryFuture) {
+        registryFuture.thenAccept(registries -> {
             HolderLookup<Item> items = registries.lookupOrThrow(Registries.ITEM);
             items.listElements().forEach(holder -> {
                 Item item = holder.value();
@@ -52,24 +67,12 @@ public class CCBWindChargingRecipes extends WindChargingRecipeGen {
 
                 int nutrition = properties.nutrition();
                 float saturation = properties.saturation();
-                int effectsCount = 0;
-                List<PossibleEffect> effectList = properties.effects();
-                if (!effectList.isEmpty()) {
-                    for (PossibleEffect effect : effectList) {
-                        MobEffectCategory category = effect.effect().getEffect().value().getCategory();
-                        int amplifier = effect.effect().getAmplifier() + 1;
-                        if (category == MobEffectCategory.BENEFICIAL) {
-                            effectsCount = effectsCount + amplifier;
-                        }
-                        else if (category == MobEffectCategory.HARMFUL) {
-                            effectsCount = effectsCount - amplifier;
-                        }
-                    }
-                }
-
-                int time = Mth.ceil(Math.pow(0.5 * nutrition + saturation, 1.5) * 100 * (Mth.abs(effectsCount) + 1));
+                int effectScore = getEffectScore(properties.effects());
+                int time = Mth.ceil(Math.pow(0.5 * nutrition + saturation, 1.5) * 100 * (Mth.abs(effectScore) + 1));
+                int duration = effectScore < 0 ? -time * 2 : time;
                 String itemName = item.getDescriptionId().split("\\.")[2];
-                create(itemName, effectsCount < 0 ? b -> b.require(item).duration(-time * 2) : b -> b.require(item).duration(time));
+
+                create(itemName, builder -> builder.require(item).duration(duration));
             });
         });
     }

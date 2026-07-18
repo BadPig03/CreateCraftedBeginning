@@ -76,18 +76,13 @@ public class ResidueOutletBlock extends HorizontalDirectionalBlock implements IB
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
-        Direction direction = context.getClickedFace();
-        Direction horizontalDirection = context.getHorizontalDirection();
-        BlockState state;
-        if (direction == Direction.UP) {
-            state = defaultBlockState().setValue(FACE, AttachFace.FLOOR).setValue(FACING, horizontalDirection);
-        }
-        else if (direction == Direction.DOWN) {
-            state = defaultBlockState().setValue(FACE, AttachFace.CEILING).setValue(FACING, horizontalDirection);
-        }
-        else {
-            state = defaultBlockState().setValue(FACE, AttachFace.WALL).setValue(FACING, direction.getOpposite());
-        }
+        Direction clickedFace = context.getClickedFace();
+        Direction horizontalFacing = context.getHorizontalDirection();
+        BlockState state = switch (clickedFace) {
+            case UP -> defaultBlockState().setValue(FACE, AttachFace.FLOOR).setValue(FACING, horizontalFacing);
+            case DOWN -> defaultBlockState().setValue(FACE, AttachFace.CEILING).setValue(FACING, horizontalFacing);
+            default -> defaultBlockState().setValue(FACE, AttachFace.WALL).setValue(FACING, clickedFace.getOpposite());
+        };
         return ProperWaterloggedBlock.withWater(level, state, pos);
     }
 
@@ -133,15 +128,14 @@ public class ResidueOutletBlock extends HorizontalDirectionalBlock implements IB
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-        super.onRemove(state, level, pos, newState, isMoving);
-        if (state.is(newState.getBlock()) || isMoving) {
-            return;
-        }
+        if (!state.is(newState.getBlock()) && !isMoving) {
+            if (level.getBlockEntity(pos) instanceof ResidueOutletBlockEntity outlet) {
+                Containers.dropContents(level, pos, outlet.getInventory());
+            }
 
-        if (level.getBlockEntity(pos) instanceof ResidueOutletBlockEntity outlet) {
-            Containers.dropContents(level, pos, outlet.getInventory());
+            AirtightTankBlock.updateTankState(level, pos.relative(getFacing(state)));
         }
-        AirtightTankBlock.updateTankState(level, pos.relative(getFacing(state)));
+        super.onRemove(state, level, pos, newState, isMoving);
     }
 
     @Override
@@ -151,7 +145,8 @@ public class ResidueOutletBlock extends HorizontalDirectionalBlock implements IB
 
     @Override
     public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
-        return level.getBlockState(pos.relative(getFacing(state))).getBlock() instanceof AirtightTankBlock;
+        BlockPos tankPos = pos.relative(getFacing(state));
+        return level.getBlockState(tankPos).getBlock() instanceof AirtightTankBlock;
     }
 
     @Override

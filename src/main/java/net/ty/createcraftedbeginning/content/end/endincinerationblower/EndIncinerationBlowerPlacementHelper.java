@@ -9,7 +9,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.ty.createcraftedbeginning.content.end.endcasing.EndCasingBlock;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Contract;
 
@@ -28,17 +27,20 @@ public class EndIncinerationBlowerPlacementHelper implements IPlacementHelper {
     @Contract(pure = true)
     @Override
     public Predicate<BlockState> getStatePredicate() {
-        return state -> state.getBlock() instanceof EndCasingBlock;
+        return state -> state.is(CCBBlocks.END_CASING_BLOCK.get());
     }
 
-    @Contract(pure = true)
     @Override
     public PlacementOffset getOffset(Player player, Level level, BlockState state, BlockPos pos, BlockHitResult ray) {
+        if (!state.is(CCBBlocks.END_CASING_BLOCK.get()) || !level.getBlockState(pos).is(CCBBlocks.END_CASING_BLOCK.get())) {
+            return PlacementOffset.fail();
+        }
+
         BlockPos newPos = pos.above();
         if (!level.getBlockState(newPos).canBeReplaced()) {
             return PlacementOffset.fail();
         }
 
-        return PlacementOffset.success(newPos, s -> CCBBlocks.END_INCINERATION_BLOWER_BLOCK.get().defaultBlockState());
+        return PlacementOffset.success(newPos, placedState -> CCBBlocks.END_INCINERATION_BLOWER_BLOCK.get().defaultBlockState());
     }
 }

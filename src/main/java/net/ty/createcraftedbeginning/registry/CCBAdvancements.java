@@ -88,7 +88,7 @@ public class CCBAdvancements implements DataProvider {
     public static final CCBAdvancement ALL_HANDS_ACQUIRED = create("all_hands_acquired", b -> b.icon(CCBItems.AIRTIGHT_EXTEND_ARM).title("All Hands Acquired").description("Assembly an Airtight Extend Arm").whenIconCollected().after(UPDRAFT));
     public static final CCBAdvancement THREE_WAY_HANDSHAKE = create("three_way_handshake", b -> b.icon(CCBItems.AIRTIGHT_EXTEND_ARM).title("Three-way Handshake").description("Hold two Airtight Extend Arms at the same time\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(ALL_HANDS_ACQUIRED));
     public static final CCBAdvancement SEALED_TO_PERFECTION = create("sealed_to_perfection", b -> b.icon(CCBItems.AIRTIGHT_HELMET).title("Sealed to Perfection").description("Wear a full set of Airtight Armor").after(UPDRAFT));
-    public static final CCBAdvancement PHANTOM_DIVER = create("phantom_diver", b-> b.icon(CCBItems.AIRTIGHT_BOOTS).title("Phantom Divers").description("Activate every upgrade on a full set of Airtight Armor\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(SEALED_TO_PERFECTION));
+    public static final CCBAdvancement PHANTOM_DIVER = create("phantom_diver", b-> b.icon(CCBItems.AIRTIGHT_BOOTS).title("Phantom Divers").description("Enable every upgrade on a full set of Airtight Armor\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(SEALED_TO_PERFECTION));
 
     public static final CCBAdvancement ITEM_TANK = create("item_tank", b -> b.icon(CCBBlocks.ANDESITE_CRATE_BLOCK).title("Item Tank").description("Obtain an Andesite Crate").whenIconCollected().after(ROOT));
     public static final CCBAdvancement CAPACITY_UPGRADE = create("capacity_upgrade", b -> b.icon(CCBBlocks.BRASS_CRATE_BLOCK).title("Capacity Upgrade").description("Obtain a Brass Crate").whenIconCollected().after(ITEM_TANK));
@@ -96,7 +96,7 @@ public class CCBAdvancements implements DataProvider {
     public static final CCBAdvancement BOTTOMLESS_PIT = create("bottomless_pit", b -> b.icon(CCBBlocks.CARDBOARD_CRATE_BLOCK).title("Bottomless Pit").description("Obtain a Cardboard Crate").whenIconCollected().after(ULTIMATE_STORAGE_STRATEGY));
     public static final CCBAdvancement CUT_FROM_THE_SAME_CARDBOARD = create("cut_from_the_same_cardboard", b -> b.icon(CCBBlocks.CARDBOARD_CRATE_BLOCK).title("Cut from the Same Cardboard").description("Dispose a Cardboard Package with a Cardboard Crate\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(BOTTOMLESS_PIT));
     public static final CCBAdvancement A_HOUSE_OF_GOLD_IN_THE_CRATE = create("a_house_of_gold_in_the_crate", b -> b.icon(Items.GOLD_INGOT).title("A House of Gold in the Crate").description("Fill a Brass Crate with Gold Ingots\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(ITEM_TANK));
-    public static final CCBAdvancement PORTABLE_LAVA_SEA = create("portable_lava_sea", b -> b.icon(Items.LAVA_BUCKET).title("Portable Lava Sea").description("Store at least 10,000 Lava Buckets in a Sturdy Crate\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(A_HOUSE_OF_GOLD_IN_THE_CRATE));
+    public static final CCBAdvancement PORTABLE_LAVA_SEA = create("portable_lava_sea", b -> b.icon(Items.LAVA_BUCKET).title("Portable Lava Sea").description("Store 10,000 Lava Buckets in a Sturdy Crate\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(A_HOUSE_OF_GOLD_IN_THE_CRATE));
 
     private final PackOutput output;
     private final CompletableFuture<Provider> registries;

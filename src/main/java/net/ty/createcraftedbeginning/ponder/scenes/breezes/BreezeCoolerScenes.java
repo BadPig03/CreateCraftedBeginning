@@ -71,9 +71,9 @@ public class BreezeCoolerScenes {
 
         scene.idle(80);
         scene.overlay().showControls(util.vector().blockSurface(coolerPos, Direction.UP).subtract(0, 0.125, 0), Pointing.DOWN, 67).rightClick().withItem(iceBlockItem.copy());
-        
+
         scene.idle(7);
-        scene.world().modifyBlockEntity(coolerPos, BreezeCoolerBlockEntity.class, BreezeCoolerBlockEntity::SwitchToChilledState);
+        scene.world().modifyBlockEntity(coolerPos, BreezeCoolerBlockEntity.class, BreezeCoolerBlockEntity::switchToChilledState);
         scene.world().modifyBlock(coolerPos, s -> s.setValue(BreezeCoolerBlock.FROST_LEVEL, FrostLevel.CHILLED), false);
 		scene.overlay().showText(60).text("Requires feeding low-temperature items to the Breeze Cooler").colored(PonderPalette.INPUT).pointAt(coolerVec).placeNearTarget().attachKeyFrame();
 

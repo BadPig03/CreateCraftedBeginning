@@ -11,14 +11,15 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IMountedStorageManagerWithGas;
-import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -33,14 +34,8 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.PORTABLE_GAS_INTERFACE.get(), (be, context) -> be.capability);
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.PORTABLE_GAS_INTERFACE.get(), (blockEntity, context) -> blockEntity.capability);
     }
-
-    @Override
-	public void invalidate() {
-		super.invalidate();
-		invalidateCapabilities();
-	}
 
     @Contract(" -> new")
     private IGasHandler createEmptyHandler() {
@@ -70,15 +65,22 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
         invalidateCapabilities();
     }
 
+    @Override
+    public void invalidate() {
+        super.invalidate();
+        invalidateCapabilities();
+    }
+
     public boolean isConnected() {
-        int timeUnit = getTransferTimeout();
-        return transferTimer >= ANIMATION && transferTimer <= timeUnit + ANIMATION;
+        int timeout = getTransferTimeout();
+        return transferTimer >= ANIMATION && transferTimer <= timeout + ANIMATION;
     }
 
     public float getExtensionDistance(float partialTicks) {
         return (float) (Math.pow(connectionAnimation.getValue(partialTicks), 2) * distance / 2);
     }
 
+    @Nullable
     public Entity getConnectedEntity() {
         return connectedEntity;
     }
@@ -93,7 +95,7 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
 
     @Override
     public int getMaxValue() {
-        return Math.clamp(capability.getTankCapacity(0) / 1000, 0, Integer.MAX_VALUE);
+        return GasAmountUtils.toWholeBucketsClamped(capability.getTankCapacity(0));
     }
 
     @Override
@@ -103,12 +105,12 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
 
     @Override
     public int getCurrentValue() {
-        return Math.clamp(capability.getGasInTank(0).getAmount() / 1000, 0, Integer.MAX_VALUE);
+        return GasAmountUtils.toWholeBucketsClamped(capability.getGasInTank(0).getAmount());
     }
 
     @Override
     public MutableComponent format(int value) {
-        return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.buckets")).component();
+        return GasAmountUtils.formatWholeBuckets(value);
     }
 
     public class InterfaceGasHandler implements IGasHandler {
@@ -119,36 +121,8 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
         }
 
         @Override
-        public int getTanks() {
-            return wrapped.getTanks();
-        }
-
-        @Override
-        public GasStack getGasInTank(int tank) {
-            return wrapped.getGasInTank(tank);
-        }
-
-        @Override
-        public long getTankCapacity(int tank) {
-            return wrapped.getTankCapacity(tank);
-        }
-
-        @Override
         public boolean isGasValid(int tank, GasStack stack) {
             return wrapped.isGasValid(tank, stack);
-        }
-
-        @Override
-        public long fill(GasStack resource, GasAction action) {
-            if (!isConnected()) {
-                return 0;
-            }
-
-            long fill = wrapped.fill(resource, action);
-            if (fill > 0 && action.execute()) {
-                keepAlive();
-            }
-            return fill;
         }
 
         @Override
@@ -157,11 +131,9 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
                 return GasStack.EMPTY;
             }
 
-            GasStack drain = wrapped.drain(resource, action);
-            if (!drain.isEmpty() && action.execute()) {
-                keepAlive();
-            }
-            return drain;
+            GasStack drained = wrapped.drain(resource, action);
+            keepAliveIfTransferred(!drained.isEmpty(), action);
+            return drained;
         }
 
         @Override
@@ -170,11 +142,41 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
                 return GasStack.EMPTY;
             }
 
-            GasStack drain = wrapped.drain(maxDrain, action);
-            if (!drain.isEmpty() && action.execute()) {
+            GasStack drained = wrapped.drain(maxDrain, action);
+            keepAliveIfTransferred(!drained.isEmpty(), action);
+            return drained;
+        }
+
+        @Override
+        public GasStack getGasInTank(int tank) {
+            return wrapped.getGasInTank(tank);
+        }
+
+        @Override
+        public int getTanks() {
+            return wrapped.getTanks();
+        }
+
+        @Override
+        public long fill(GasStack resource, GasAction action) {
+            if (!isConnected()) {
+                return 0;
+            }
+
+            long filled = wrapped.fill(resource, action);
+            keepAliveIfTransferred(filled > 0, action);
+            return filled;
+        }
+
+        @Override
+        public long getTankCapacity(int tank) {
+            return wrapped.getTankCapacity(tank);
+        }
+
+        private void keepAliveIfTransferred(boolean transferred, GasAction action) {
+            if (transferred && action.execute()) {
                 keepAlive();
             }
-            return drain;
         }
 
         public void keepAlive() {

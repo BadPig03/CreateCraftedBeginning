@@ -13,7 +13,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.content.airtights.gasfilter.IGasFilter;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Predicate;
@@ -26,6 +26,15 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
 
     private final BehaviourType<GasManipulationBehaviour> behaviourType;
 
+    private ItemStack compiledFilterStack = ItemStack.EMPTY;
+    private Predicate<GasStack> compiledFilter = GasFilterUtils.compile(ItemStack.EMPTY);
+
+    /**
+     * Creates a new {@code GasManipulationBehaviour} instance.
+     *
+     * @param be     the block entity that participates in the operation
+     * @param target the target to use
+     */
     public GasManipulationBehaviour(SmartBlockEntity be, InterfaceProvider target) {
         this(OBSERVE, be, target);
     }
@@ -35,20 +44,26 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
         behaviourType = type;
     }
 
+    /**
+     * Computes and returns the extract any result.
+     *
+     * @return the resulting gas stack
+     */
     public GasStack extractAny() {
         IGasHandler gasHandler = getInventory();
         if (gasHandler == null) {
             return GasStack.EMPTY;
         }
 
-        Predicate<GasStack> filterTest = getFilterTest(Predicates.alwaysTrue());
+        Predicate<GasStack> filter = getFilterTest(Predicates.alwaysTrue());
         for (int i = 0; i < gasHandler.getTanks(); i++) {
             GasStack gasInTank = gasHandler.getGasInTank(i);
-            if (gasInTank.isEmpty() || !filterTest.test(gasInTank)) {
+            if (gasInTank.isEmpty() || !filter.test(gasInTank)) {
                 continue;
             }
 
-            GasStack drained = gasHandler.drain(gasInTank, simulateNext ? GasAction.SIMULATE : GasAction.EXECUTE);
+            GasAction action = simulateNext ? GasAction.SIMULATE : GasAction.EXECUTE;
+            GasStack drained = gasHandler.drain(gasInTank, action);
             if (drained.isEmpty()) {
                 continue;
             }
@@ -65,21 +80,26 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
             return test.and(gasFilter::test);
         }
 
-        FilteringBehaviour filter = blockEntity.getBehaviour(FilteringBehaviour.TYPE);
-        if (filter != null) {
-            ItemStack filterStack = filter.getFilter();
-            if (filterStack.isEmpty()) {
-                return test;
-            }
-
-            if (!(filterStack.getItem() instanceof IGasFilter gasFilterItem)) {
-                return gasStack -> false;
-            }
-
-            return test.and(gasStack -> gasFilterItem.test(filterStack, gasStack));
+        FilteringBehaviour itemFilter = blockEntity.getBehaviour(FilteringBehaviour.TYPE);
+        if (itemFilter == null) {
+            return test;
         }
 
-        return test;
+        ItemStack filterStack = itemFilter.getFilter();
+        if (filterStack.isEmpty()) {
+            return test;
+        }
+        return test.and(getCompiledFilter(filterStack));
+    }
+
+    private Predicate<GasStack> getCompiledFilter(ItemStack filterStack) {
+        if (ItemStack.isSameItemSameComponents(compiledFilterStack, filterStack)) {
+            return compiledFilter;
+        }
+
+        compiledFilterStack = GasFilterUtils.normalizeStack(filterStack);
+        compiledFilter = GasFilterUtils.compile(compiledFilterStack);
+        return compiledFilter;
     }
 
     @Override
@@ -87,6 +107,9 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
         return GasHandler.BLOCK;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public BehaviourType<?> getType() {
         return behaviourType;

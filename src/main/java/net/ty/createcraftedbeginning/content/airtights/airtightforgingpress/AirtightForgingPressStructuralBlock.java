@@ -36,6 +36,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
+import net.ty.createcraftedbeginning.content.particles.CCBParticleUtils;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Nullable;
@@ -68,9 +69,10 @@ public class AirtightForgingPressStructuralBlock extends Block implements IBE<Ai
         }
 
         BlockPos masterPos = AirtightForgingPressUtils.getMaster(clickedPos, state);
-        context = new UseOnContext(level, context.getPlayer(), context.getHand(), context.getItemInHand(), new BlockHitResult(context.getClickLocation(), context.getClickedFace(), masterPos, context.isInside()));
-        state = level.getBlockState(masterPos);
-        return IWrenchable.super.onSneakWrenched(state, context);
+        BlockHitResult masterHit = new BlockHitResult(context.getClickLocation(), context.getClickedFace(), masterPos, context.isInside());
+        UseOnContext masterContext = new UseOnContext(level, context.getPlayer(), context.getHand(), context.getItemInHand(), masterHit);
+        BlockState masterState = level.getBlockState(masterPos);
+        return IWrenchable.super.onSneakWrenched(masterState, masterContext);
     }
 
     @Override
@@ -110,19 +112,17 @@ public class AirtightForgingPressStructuralBlock extends Block implements IBE<Ai
 
     @Override
     public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor accessor, BlockPos pos, BlockPos neighborPos) {
-        if (stillValid(accessor, pos, state)) {
-            BlockPos masterPos = AirtightForgingPressUtils.getMaster(pos, state);
-            if (!accessor.getBlockTicks().hasScheduledTick(masterPos, CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK.get())) {
-                accessor.scheduleTick(masterPos, CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK.get(), 1);
+        if (!stillValid(accessor, pos, state)) {
+            if (accessor instanceof Level level && !level.isClientSide && !level.getBlockTicks().hasScheduledTick(pos, this)) {
+                level.scheduleTick(pos, this, 1);
             }
             return state;
         }
-        if (!(accessor instanceof Level level) || level.isClientSide) {
-            return state;
-        }
 
-        if (!level.getBlockTicks().hasScheduledTick(pos, this)) {
-            level.scheduleTick(pos, this, 1);
+        BlockPos masterPos = AirtightForgingPressUtils.getMaster(pos, state);
+        Block masterBlock = CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK.get();
+        if (!accessor.getBlockTicks().hasScheduledTick(masterPos, masterBlock)) {
+            accessor.scheduleTick(masterPos, masterBlock, 1);
         }
         return state;
     }
@@ -143,13 +143,13 @@ public class AirtightForgingPressStructuralBlock extends Block implements IBE<Ai
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        return onBlockEntityUseItemOn(level, blockPos, be -> AirtightForgingPressUtils.getUseItemOnResult(be, level, player, blockPos, hand, stack));
+        return onBlockEntityUseItemOn(level, blockPos, structural -> AirtightForgingPressUtils.getUseItemOnResult(structural, level, player, blockPos, hand, stack));
     }
 
     @Override
     protected VoxelShape getShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
-        AirtightForgingPressStructuralPosition structuralPosition = blockState.getValue(STRUCTURAL_POSITION);
-        return AirtightForgingPressVoxelShapes.getShape(structuralPosition);
+        AirtightForgingPressStructuralPosition position = blockState.getValue(STRUCTURAL_POSITION);
+        return AirtightForgingPressVoxelShapes.getShape(position);
     }
 
     @Override
@@ -167,12 +167,17 @@ public class AirtightForgingPressStructuralBlock extends Block implements IBE<Ai
             return;
         }
 
-        withBlockEntityDo(level, blockPos, be -> AirtightForgingPressUtils.insertItemEntity(be, itemEntity));
+        withBlockEntityDo(level, blockPos, structural -> AirtightForgingPressUtils.insertItemEntity(structural, itemEntity));
     }
 
     @Override
     public boolean stillValid(BlockGetter level, BlockPos pos, BlockState state) {
-        return state.getBlock() instanceof AirtightForgingPressStructuralBlock && level.getBlockState(AirtightForgingPressUtils.getMaster(pos, state)).getBlock() instanceof AirtightForgingPressBlock;
+        if (!(state.getBlock() instanceof AirtightForgingPressStructuralBlock)) {
+            return false;
+        }
+
+        BlockPos masterPos = AirtightForgingPressUtils.getMaster(pos, state);
+        return level.getBlockState(masterPos).getBlock() instanceof AirtightForgingPressBlock;
     }
 
     @Override
@@ -208,13 +213,21 @@ public class AirtightForgingPressStructuralBlock extends Block implements IBE<Ai
             }
 
             BlockPos targetPos = result.getBlockPos();
-            return level.getBlockState(targetPos).getBlock() instanceof IAirtightForgingPressStructural structural && !structural.stillValid(level, targetPos, state);
+            BlockState targetState = level.getBlockState(targetPos);
+            return targetState.getBlock() instanceof IAirtightForgingPressStructural structural && !structural.stillValid(level, targetPos, state);
+        }
+
+        @Override
+        public boolean addDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager) {
+            CCBParticleUtils.addReducedDestroyEffects(state, level, pos, manager);
+            return true;
         }
 
         @Override
         @Nullable
         public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
-            if (level.getBlockState(pos).getBlock() instanceof IAirtightForgingPressStructural structural && !structural.stillValid(level, pos, blockState)) {
+            BlockState currentState = level.getBlockState(pos);
+            if (currentState.getBlock() instanceof IAirtightForgingPressStructural structural && !structural.stillValid(level, pos, blockState)) {
                 return null;
             }
 

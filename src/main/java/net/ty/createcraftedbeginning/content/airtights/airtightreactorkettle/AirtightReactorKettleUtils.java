@@ -82,12 +82,12 @@ public final class AirtightReactorKettleUtils {
         }
 
         try {
-            IItemHandler availableItems = kettle.getItemCapability();
-            IFluidHandler availableFluids = kettle.getFluidCapability();
-            IGasHandler availableGases = kettle.getGasCapability();
+            IItemHandler items = kettle.getItemCapability();
+            IFluidHandler fluids = kettle.getFluidCapability();
+            IGasHandler gases = kettle.getGasCapability();
             AirtightWithGasRecipeTrie<?> trie = AirtightWithGasRecipeTrieFinder.get(REACTOR_RECIPE_CACHE_KEY, level, holder -> holder.value() instanceof ReactorKettleRecipe);
-            Set<AbstractVariant> availableVariants = AirtightWithGasRecipeTrie.getVariants(availableItems, availableFluids, availableGases);
-            for (Recipe<?> candidate : trie.lookup(availableVariants)) {
+            Set<AbstractVariant> variants = AirtightWithGasRecipeTrie.getVariants(items, fluids, gases);
+            for (Recipe<?> candidate : trie.lookup(variants)) {
                 if (candidate instanceof ReactorKettleRecipe kettleRecipe && ReactorKettleRecipe.match(kettle, kettleRecipe)) {
                     return Optional.of(kettleRecipe);
                 }
@@ -148,13 +148,13 @@ public final class AirtightReactorKettleUtils {
             return;
         }
 
-        ItemStack insertItem = ItemHandlerHelper.insertItemStacked(master.getInventories().getFirst(), itemEntity.getItem().copy(), false);
-        if (insertItem.isEmpty()) {
+        ItemStack remainder = ItemHandlerHelper.insertItemStacked(master.getInventories().getFirst(), itemEntity.getItem().copy(), false);
+        if (remainder.isEmpty()) {
             itemEntity.discard();
             return;
         }
 
-        itemEntity.setItem(insertItem);
+        itemEntity.setItem(remainder);
     }
 
     public static void hurtInsideLivingEntities(AirtightReactorKettleStructuralBlockEntity structure, LivingEntity livingEntity) {
@@ -181,37 +181,51 @@ public final class AirtightReactorKettleUtils {
         if (master == null) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-
-        if (level.isClientSide) {
+        if (stack.isEmpty()) {
+            extractStoredItems(master, level, player, pos);
             return ItemInteractionResult.SUCCESS;
         }
 
-        if (!stack.isEmpty()) {
-            if (FluidHelper.tryEmptyItemIntoBE(level, player, hand, stack, master) || GenericItemEmptying.canItemBeEmptied(level, stack)) {
-                return ItemInteractionResult.SUCCESS;
-            }
-            if (FluidHelper.tryFillItemFromBE(level, player, hand, stack, master) || GenericItemFilling.canItemBeFilled(level, stack)) {
-                return ItemInteractionResult.SUCCESS;
-            }
-            return ItemInteractionResult.CONSUME;
+        return transferFluidContainer(master, level, player, hand, stack);
+    }
+
+    private static ItemInteractionResult transferFluidContainer(AirtightReactorKettleBlockEntity master, Level level, Player player, InteractionHand hand, ItemStack stack) {
+        if (level.isClientSide) {
+            boolean canEmpty = GenericItemEmptying.canItemBeEmptied(level, stack);
+            boolean canFill = GenericItemFilling.canItemBeFilled(level, stack);
+            return canEmpty || canFill ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        if (FluidHelper.tryEmptyItemIntoBE(level, player, hand, stack, master) || GenericItemEmptying.canItemBeEmptied(level, stack)) {
+            return ItemInteractionResult.SUCCESS;
+        }
+        if (FluidHelper.tryFillItemFromBE(level, player, hand, stack, master) || GenericItemFilling.canItemBeFilled(level, stack)) {
+            return ItemInteractionResult.SUCCESS;
+        }
+
+        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    }
+
+    private static void extractStoredItems(AirtightReactorKettleBlockEntity master, Level level, Player player, BlockPos pos) {
+        if (level.isClientSide) {
+            return;
         }
 
         IItemHandlerModifiable inventory = master.getItemCapability();
-        boolean success = false;
+        boolean extractedAny = false;
         for (int slot = 0; slot < inventory.getSlots(); slot++) {
-            ItemStack stackInSlot = inventory.getStackInSlot(slot);
-            if (stackInSlot.isEmpty()) {
+            ItemStack stack = inventory.getStackInSlot(slot);
+            if (stack.isEmpty()) {
                 continue;
             }
 
-            ItemHandlerHelper.giveItemToPlayer(player, stackInSlot);
+            ItemHandlerHelper.giveItemToPlayer(player, stack);
             inventory.setStackInSlot(slot, ItemStack.EMPTY);
-            success = true;
+            extractedAny = true;
         }
-        if (success) {
+        if (extractedAny) {
             level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1.0f + level.getRandom().nextFloat());
         }
-        return ItemInteractionResult.SUCCESS;
     }
 
     public static void refreshOtherFilters(AirtightReactorKettleStructuralBlockEntity structural, ItemStack stack) {
@@ -233,11 +247,11 @@ public final class AirtightReactorKettleUtils {
             if (filterPos.equals(structural.getBlockPos())) {
                 continue;
             }
-            if (!(level.getBlockEntity(filterPos) instanceof AirtightReactorKettleStructuralBlockEntity structuralBlockEntity)) {
+            if (!(level.getBlockEntity(filterPos) instanceof AirtightReactorKettleStructuralBlockEntity otherFilter)) {
                 continue;
             }
 
-            structuralBlockEntity.getFilteringBehaviour().setFilter(stack);
+            otherFilter.getFilteringBehaviour().setFilter(stack);
         }
     }
 
@@ -326,7 +340,14 @@ public final class AirtightReactorKettleUtils {
     }
 
     private static boolean planCraftingInputConsumption(CraftingRecipe recipe, IItemHandler inputInventory, int[] extractedItemsFromSlot, List<ItemStack> craftingStacks) {
-        List<Ingredient> ingredients = new ArrayList<>(recipe.getIngredients().stream().filter(ingredient -> !ingredient.isEmpty()).toList());
+        List<Ingredient> ingredients = new ArrayList<>();
+        for (Ingredient ingredient : recipe.getIngredients()) {
+            if (ingredient.isEmpty()) {
+                continue;
+            }
+
+            ingredients.add(ingredient);
+        }
         if (ingredients.isEmpty() || ingredients.size() > 9) {
             return false;
         }
@@ -401,9 +422,11 @@ public final class AirtightReactorKettleUtils {
         outputs.add(result.copy());
         NonNullList<ItemStack> remainingItems = recipe.getRemainingItems(input);
         for (ItemStack remaining : remainingItems) {
-            if (!remaining.isEmpty()) {
-                outputs.add(remaining.copy());
+            if (remaining.isEmpty()) {
+                continue;
             }
+
+            outputs.add(remaining.copy());
         }
 
         return outputs;
@@ -411,7 +434,12 @@ public final class AirtightReactorKettleUtils {
 
     private static boolean isAllowedRecipe(RecipeHolder<? extends Recipe<?>> holder) {
         Recipe<?> recipe = holder.value();
-        return recipe instanceof ShapelessRecipe && recipe.getIngredients().stream().filter(ingredient -> !ingredient.isEmpty()).count() > 1 && !MechanicalPressBlockEntity.canCompress(recipe) && !AllRecipeTypes.shouldIgnoreInAutomation(holder);
+        if (!(recipe instanceof ShapelessRecipe)) {
+            return false;
+        }
+
+        long ingredientCount = recipe.getIngredients().stream().filter(ingredient -> !ingredient.isEmpty()).count();
+        return ingredientCount > 1 && !MechanicalPressBlockEntity.canCompress(recipe) && !AllRecipeTypes.shouldIgnoreInAutomation(holder);
     }
 
     private static boolean canResultPassTest(AirtightReactorKettleBlockEntity kettle, CraftingRecipe recipe) {

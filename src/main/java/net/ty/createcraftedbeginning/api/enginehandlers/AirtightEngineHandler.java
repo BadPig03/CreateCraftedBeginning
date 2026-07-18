@@ -12,5 +12,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public interface AirtightEngineHandler {
     SimpleRegistry<Gas, AirtightEngineHandler> REGISTRY = SimpleRegistry.create();
 
+    /**
+     * Returns the efficiency.
+     *
+     * @return the efficiency
+     */
     int getEfficiency();
 }

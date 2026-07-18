@@ -17,7 +17,6 @@ import net.ty.createcraftedbeginning.api.drillhandlers.ultrawarm.EnergizedUltraw
 import net.ty.createcraftedbeginning.api.drillhandlers.ultrawarm.PressurizedEnergizedUltrawarmAirDrillHandler;
 import net.ty.createcraftedbeginning.api.drillhandlers.ultrawarm.PressurizedUltrawarmAirDrillHandler;
 import net.ty.createcraftedbeginning.api.drillhandlers.ultrawarm.UltrawarmAirDrillHandler;
-import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightDrillHandlerEvent;
 import net.ty.createcraftedbeginning.data.CCBGases;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -25,26 +24,29 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBAirtightDrillHandlers {
+    /**
+     * Registers the built-in airtight drill handlers.
+     */
     public static void register() {
-        AirtightDrillHandlerEvent.add(CCBGases.NATURAL_AIR.get(), new NaturalAirDrillHandler());
-        AirtightDrillHandlerEvent.add(CCBGases.ENERGIZED_NATURAL_AIR.get(), new EnergizedNaturalAirDrillHandler());
-        AirtightDrillHandlerEvent.add(CCBGases.PRESSURIZED_NATURAL_AIR.get(), new PressurizedNaturalAirDrillHandler());
-        AirtightDrillHandlerEvent.add(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get(), new PressurizedEnergizedNaturalAirDrillHandler());
+        AirtightDrillHandlerUtils.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), new NaturalAirDrillHandler());
+        AirtightDrillHandlerUtils.register(CCBGases.ENERGIZED_NATURAL_AIR.get().getResourceLocation(), new EnergizedNaturalAirDrillHandler());
+        AirtightDrillHandlerUtils.register(CCBGases.PRESSURIZED_NATURAL_AIR.get().getResourceLocation(), new PressurizedNaturalAirDrillHandler());
+        AirtightDrillHandlerUtils.register(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get().getResourceLocation(), new PressurizedEnergizedNaturalAirDrillHandler());
 
-        AirtightDrillHandlerEvent.add(CCBGases.ULTRAWARM_AIR.get(), new UltrawarmAirDrillHandler());
-        AirtightDrillHandlerEvent.add(CCBGases.ENERGIZED_ULTRAWARM_AIR.get(), new EnergizedUltrawarmAirDrillHandler());
-        AirtightDrillHandlerEvent.add(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get(), new PressurizedUltrawarmAirDrillHandler());
-        AirtightDrillHandlerEvent.add(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get(), new PressurizedEnergizedUltrawarmAirDrillHandler());
+        AirtightDrillHandlerUtils.register(CCBGases.ULTRAWARM_AIR.get().getResourceLocation(), new UltrawarmAirDrillHandler());
+        AirtightDrillHandlerUtils.register(CCBGases.ENERGIZED_ULTRAWARM_AIR.get().getResourceLocation(), new EnergizedUltrawarmAirDrillHandler());
+        AirtightDrillHandlerUtils.register(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get().getResourceLocation(), new PressurizedUltrawarmAirDrillHandler());
+        AirtightDrillHandlerUtils.register(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get().getResourceLocation(), new PressurizedEnergizedUltrawarmAirDrillHandler());
 
-        AirtightDrillHandlerEvent.add(CCBGases.ETHEREAL_AIR.get(), new EtherealAirDrillHandler());
-        AirtightDrillHandlerEvent.add(CCBGases.ENERGIZED_ETHEREAL_AIR.get(), new EnergizedEtherealAirDrillHandler());
-        AirtightDrillHandlerEvent.add(CCBGases.PRESSURIZED_ETHEREAL_AIR.get(), new PressurizedEtherealAirDrillHandler());
-        AirtightDrillHandlerEvent.add(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR.get(), new PressurizedEnergizedEtherealAirDrillHandler());
+        AirtightDrillHandlerUtils.register(CCBGases.ETHEREAL_AIR.get().getResourceLocation(), new EtherealAirDrillHandler());
+        AirtightDrillHandlerUtils.register(CCBGases.ENERGIZED_ETHEREAL_AIR.get().getResourceLocation(), new EnergizedEtherealAirDrillHandler());
+        AirtightDrillHandlerUtils.register(CCBGases.PRESSURIZED_ETHEREAL_AIR.get().getResourceLocation(), new PressurizedEtherealAirDrillHandler());
+        AirtightDrillHandlerUtils.register(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR.get().getResourceLocation(), new PressurizedEnergizedEtherealAirDrillHandler());
 
-        AirtightDrillHandlerEvent.add(CCBGases.MOIST_AIR.get(), new MoistAirDrillHandler());
-        AirtightDrillHandlerEvent.add(CCBGases.SPORE_AIR.get(), new SporeAirDrillHandler());
-        AirtightDrillHandlerEvent.add(CCBGases.SCULK_AIR.get(), new SculkAirDrillHandler());
+        AirtightDrillHandlerUtils.register(CCBGases.MOIST_AIR.get().getResourceLocation(), new MoistAirDrillHandler());
+        AirtightDrillHandlerUtils.register(CCBGases.SPORE_AIR.get().getResourceLocation(), new SporeAirDrillHandler());
+        AirtightDrillHandlerUtils.register(CCBGases.SCULK_AIR.get().getResourceLocation(), new SculkAirDrillHandler());
 
-        AirtightDrillHandlerEvent.add(CCBGases.CREATIVE_AIR.get(), new CreativeDrillHandler());
+        AirtightDrillHandlerUtils.register(CCBGases.CREATIVE_AIR.get().getResourceLocation(), new CreativeDrillHandler());
     }
 }

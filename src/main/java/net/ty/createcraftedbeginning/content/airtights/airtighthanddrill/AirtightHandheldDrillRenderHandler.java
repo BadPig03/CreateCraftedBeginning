@@ -80,8 +80,8 @@ public class AirtightHandheldDrillRenderHandler {
             return;
         }
 
-        Minecraft mc = Minecraft.getInstance();
-        LocalPlayer player = mc.player;
+        Minecraft minecraft = Minecraft.getInstance();
+        LocalPlayer player = minecraft.player;
         if (player == null) {
             return;
         }
@@ -89,10 +89,11 @@ public class AirtightHandheldDrillRenderHandler {
         PoseStack ms = event.getPoseStack();
         boolean rightHand = event.getHand() == InteractionHand.MAIN_HAND ^ player.getMainArm() == HumanoidArm.LEFT;
         float flip = rightHand ? 1 : -1;
+        ItemDisplayContext displayContext = rightHand ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
 
         ms.pushPose();
         ms.translate(flip * 0.56f, -0.52f + event.getEquipProgress() * -0.6f, -0.72f);
-        mc.getEntityRenderDispatcher().getItemInHandRenderer().renderItem(player, drill, rightHand ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND, !rightHand, ms, event.getMultiBufferSource(), event.getPackedLight());
+        minecraft.getEntityRenderDispatcher().getItemInHandRenderer().renderItem(player, drill, displayContext, !rightHand, ms, event.getMultiBufferSource(), event.getPackedLight());
         ms.popPose();
 
         event.setCanceled(true);

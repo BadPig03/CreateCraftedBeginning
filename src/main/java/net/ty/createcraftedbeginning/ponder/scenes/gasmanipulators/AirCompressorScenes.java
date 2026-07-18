@@ -292,17 +292,17 @@ public class AirCompressorScenes {
 
         scene.idle(40);
         scene.world().restoreBlocks(coolantSelection);
-        scene.world().modifyBlock(coolantPos, s -> s.setValue(BreezeCoolerBlock.COOLER, false), false);
+        scene.world().modifyBlock(coolantPos, s -> s.setValue(BreezeCoolerBlock.ATTACHED, false), false);
         scene.world().showSection(coolantSelection, Direction.SOUTH);
 
         scene.idle(15);
-        scene.world().modifyBlock(coolantPos, s -> s.setValue(BreezeCoolerBlock.COOLER, true), false);
+        scene.world().modifyBlock(coolantPos, s -> s.setValue(BreezeCoolerBlock.ATTACHED, true), false);
 
         scene.idle(5);
         scene.overlay().showText(60).text("Breeze Coolers provide more durable and efficient cooling").colored(PonderPalette.GREEN).pointAt(coolantVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(20);
-        scene.world().modifyBlockEntity(coolantPos, BreezeCoolerBlockEntity.class, BreezeCoolerBlockEntity::SwitchToChilledState);
+        scene.world().modifyBlockEntity(coolantPos, BreezeCoolerBlockEntity.class, BreezeCoolerBlockEntity::switchToChilledState);
         scene.world().modifyBlock(coolantPos, s -> s.setValue(BreezeCoolerBlock.FROST_LEVEL, FrostLevel.CHILLED), false);
 
         scene.idle(40);

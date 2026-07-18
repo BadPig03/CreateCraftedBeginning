@@ -21,21 +21,21 @@ public final class CCBItemBuilderTransformer {
 
     @Contract(pure = true)
     public static <T extends Item, P> @NotNull NonNullFunction<ItemBuilder<T, P>, ItemBuilder<T, P>> gasCanister() {
-        return b -> b.model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/gas_canister")));
+        return builder -> builder.model((context, provider) -> provider.withExistingParent(context.getName(), provider.modLoc("block/gas_canister")));
     }
 
     @Contract(pure = true)
     public static <T extends Item, P> @NotNull NonNullFunction<ItemBuilder<T, P>, ItemBuilder<T, P>> creativeGasCanister() {
-        return b -> b.model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/creative_gas_canister")));
+        return builder -> builder.model((context, provider) -> provider.withExistingParent(context.getName(), provider.modLoc("block/creative_gas_canister")));
     }
 
     @Contract(pure = true)
     public static <T extends Item, P> @NotNull NonNullFunction<ItemBuilder<T, P>, ItemBuilder<T, P>> balloon(PackageStyle style) {
-        return b -> b.properties(p -> p.stacksTo(1)).tag(AllItemTags.PACKAGES.tag).model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("item/balloon/balloon_" + style.width() + 'x' + style.height()))).lang("Balloon").setData(ProviderType.LANG, NonNullBiConsumer.noop());
+        return builder -> builder.properties(properties -> properties.stacksTo(1)).tag(AllItemTags.PACKAGES.tag).model((context, provider) -> provider.withExistingParent(context.getName(), provider.modLoc("item/balloon/balloon_" + style.width() + 'x' + style.height()))).lang("Balloon").setData(ProviderType.LANG, NonNullBiConsumer.noop());
     }
 
     @Contract(pure = true)
     public static <T extends Item, P> @NotNull NonNullFunction<ItemBuilder<T, P>, ItemBuilder<T, P>> balloonRare(PackageStyle style) {
-        return b -> b.properties(p -> p.stacksTo(1)).tag(AllItemTags.PACKAGES.tag).model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("item/balloon/balloon_rare_reverted")).texture("0", p.modLoc("item/balloon/" + style.type()))).lang("Rare Balloon").setData(ProviderType.LANG, NonNullBiConsumer.noop());
+        return builder -> builder.properties(properties -> properties.stacksTo(1)).tag(AllItemTags.PACKAGES.tag).model((context, provider) -> provider.withExistingParent(context.getName(), provider.modLoc("item/balloon/balloon_rare_reverted")).texture("0", provider.modLoc("item/balloon/" + style.type()))).lang("Rare Balloon").setData(ProviderType.LANG, NonNullBiConsumer.noop());
     }
 }

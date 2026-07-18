@@ -6,24 +6,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class DefaultArmHandler implements AirtightArmHandler {
-    @Override
-    public float getGasConsumptionMultiplier() {
-        return 1;
-    }
+public final class DefaultArmHandler {
+    public static final AirtightArmStats INSTANCE = new AirtightArmStats(1, 2, 2, 0.5f);
 
-    @Override
-    public float getIncreasedBlockInteractionRange() {
-        return 2;
-    }
-
-    @Override
-    public float getIncreasedEntityInteractionRange() {
-        return 2;
-    }
-
-    @Override
-    public float getIncreasedKnockback() {
-        return 0.5f;
+    private DefaultArmHandler() {
     }
 }

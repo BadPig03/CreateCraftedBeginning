@@ -40,46 +40,45 @@ public class AirtightReactorKettleStructureManager {
     }
 
     private static float calculateTemperature(BlockPos corePos, Level level) {
-        float addedTemperature = 0;
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                BlockPos pos = corePos.offset(i, -2, j);
+        float totalTemperature = 0;
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                BlockPos pos = corePos.offset(x, -2, z);
                 BlockState state = level.getBlockState(pos);
                 AirtightThermoregulatorHandler thermoregulator = AirtightThermoregulatorHandlerUtils.of(state.getBlock());
-                addedTemperature += thermoregulator.getHeat(level, pos, state);
+                totalTemperature += thermoregulator.getHeat(level, pos, state);
             }
         }
-        return addedTemperature;
+        return totalTemperature;
     }
 
     private static float getSpeed(BlockPos corePos, Level level) {
-        if (!(level.getBlockEntity(corePos.above()) instanceof AirtightReactorKettleStructuralCogBlockEntity cogBlockEntity)) {
+        if (!(level.getBlockEntity(corePos.above()) instanceof AirtightReactorKettleStructuralCogBlockEntity cog)) {
             return 0;
         }
 
-        return cogBlockEntity.getSpeed();
+        return cog.getSpeed();
     }
 
     private static float getTheoreticalSpeed(BlockPos corePos, Level level) {
-        float speed = 0;
+        float maxSpeed = 0;
         for (Direction direction : Iterate.horizontalDirections) {
-            if (!(level.getBlockEntity(corePos.above().relative(direction)) instanceof AirtightReactorKettleStructuralCogBlockEntity cogBlockEntity)) {
+            BlockPos cogPos = corePos.above().relative(direction);
+            if (!(level.getBlockEntity(cogPos) instanceof AirtightReactorKettleStructuralCogBlockEntity cog)) {
                 return 0;
             }
 
-            float theoreticalSpeed = Mth.abs(cogBlockEntity.getTheoreticalSpeed());
-            if (theoreticalSpeed <= speed) {
-                continue;
+            float candidateSpeed = Mth.abs(cog.getTheoreticalSpeed());
+            if (candidateSpeed > maxSpeed) {
+                maxSpeed = candidateSpeed;
             }
-
-            speed = theoreticalSpeed;
         }
 
-        return speed;
+        return maxSpeed;
     }
 
     private static boolean isOverstressed(BlockPos corePos, Level level) {
-        return level.getBlockEntity(corePos.above()) instanceof AirtightReactorKettleStructuralCogBlockEntity cogBlockEntity && cogBlockEntity.getOverstressed();
+        return level.getBlockEntity(corePos.above()) instanceof AirtightReactorKettleStructuralCogBlockEntity cog && cog.getOverstressed();
     }
 
     public void tick() {
@@ -110,42 +109,42 @@ public class AirtightReactorKettleStructureManager {
     }
 
     public CompoundTag write() {
-        CompoundTag compoundTag = new CompoundTag();
-        compoundTag.putFloat(COMPOUND_KEY_TEMPERATURE, temperature);
-        compoundTag.putFloat(COMPOUND_KEY_PREVIOUS_TEMPERATURE, previousTemperature);
-        compoundTag.putFloat(COMPOUND_KEY_SPEED, speed);
-        compoundTag.putFloat(COMPOUND_KEY_PREVIOUS_SPEED, previousSpeed);
-        compoundTag.putFloat(COMPOUND_KEY_THEORETICAL_SPEED, theoreticalSpeed);
-        compoundTag.putFloat(COMPOUND_KEY_PREVIOUS_THEORETICAL_SPEED, previousTheoreticalSpeed);
-        compoundTag.putBoolean(COMPOUND_KEY_OVERSTRESSED, overstressed);
-        compoundTag.putBoolean(COMPOUND_KEY_PREVIOUS_OVERSTRESSED, previousOverstressed);
-        return compoundTag;
+        CompoundTag tag = new CompoundTag();
+        tag.putFloat(COMPOUND_KEY_TEMPERATURE, temperature);
+        tag.putFloat(COMPOUND_KEY_PREVIOUS_TEMPERATURE, previousTemperature);
+        tag.putFloat(COMPOUND_KEY_SPEED, speed);
+        tag.putFloat(COMPOUND_KEY_PREVIOUS_SPEED, previousSpeed);
+        tag.putFloat(COMPOUND_KEY_THEORETICAL_SPEED, theoreticalSpeed);
+        tag.putFloat(COMPOUND_KEY_PREVIOUS_THEORETICAL_SPEED, previousTheoreticalSpeed);
+        tag.putBoolean(COMPOUND_KEY_OVERSTRESSED, overstressed);
+        tag.putBoolean(COMPOUND_KEY_PREVIOUS_OVERSTRESSED, previousOverstressed);
+        return tag;
     }
 
-    public void read(CompoundTag compoundTag) {
-        if (compoundTag.contains(COMPOUND_KEY_TEMPERATURE)) {
-            temperature = compoundTag.getFloat(COMPOUND_KEY_TEMPERATURE);
+    public void read(CompoundTag tag) {
+        if (tag.contains(COMPOUND_KEY_TEMPERATURE)) {
+            temperature = tag.getFloat(COMPOUND_KEY_TEMPERATURE);
         }
-        if (compoundTag.contains(COMPOUND_KEY_PREVIOUS_TEMPERATURE)) {
-            previousTemperature = compoundTag.getFloat(COMPOUND_KEY_PREVIOUS_TEMPERATURE);
+        if (tag.contains(COMPOUND_KEY_PREVIOUS_TEMPERATURE)) {
+            previousTemperature = tag.getFloat(COMPOUND_KEY_PREVIOUS_TEMPERATURE);
         }
-        if (compoundTag.contains(COMPOUND_KEY_SPEED)) {
-            speed = compoundTag.getFloat(COMPOUND_KEY_SPEED);
+        if (tag.contains(COMPOUND_KEY_SPEED)) {
+            speed = tag.getFloat(COMPOUND_KEY_SPEED);
         }
-        if (compoundTag.contains(COMPOUND_KEY_PREVIOUS_SPEED)) {
-            previousSpeed = compoundTag.getFloat(COMPOUND_KEY_PREVIOUS_SPEED);
+        if (tag.contains(COMPOUND_KEY_PREVIOUS_SPEED)) {
+            previousSpeed = tag.getFloat(COMPOUND_KEY_PREVIOUS_SPEED);
         }
-        if (compoundTag.contains(COMPOUND_KEY_THEORETICAL_SPEED)) {
-            theoreticalSpeed = compoundTag.getFloat(COMPOUND_KEY_THEORETICAL_SPEED);
+        if (tag.contains(COMPOUND_KEY_THEORETICAL_SPEED)) {
+            theoreticalSpeed = tag.getFloat(COMPOUND_KEY_THEORETICAL_SPEED);
         }
-        if (compoundTag.contains(COMPOUND_KEY_PREVIOUS_THEORETICAL_SPEED)) {
-            previousTheoreticalSpeed = compoundTag.getFloat(COMPOUND_KEY_PREVIOUS_THEORETICAL_SPEED);
+        if (tag.contains(COMPOUND_KEY_PREVIOUS_THEORETICAL_SPEED)) {
+            previousTheoreticalSpeed = tag.getFloat(COMPOUND_KEY_PREVIOUS_THEORETICAL_SPEED);
         }
-        if (compoundTag.contains(COMPOUND_KEY_OVERSTRESSED)) {
-            overstressed = compoundTag.getBoolean(COMPOUND_KEY_OVERSTRESSED);
+        if (tag.contains(COMPOUND_KEY_OVERSTRESSED)) {
+            overstressed = tag.getBoolean(COMPOUND_KEY_OVERSTRESSED);
         }
-        if (compoundTag.contains(COMPOUND_KEY_PREVIOUS_OVERSTRESSED)) {
-            previousOverstressed = compoundTag.getBoolean(COMPOUND_KEY_PREVIOUS_OVERSTRESSED);
+        if (tag.contains(COMPOUND_KEY_PREVIOUS_OVERSTRESSED)) {
+            previousOverstressed = tag.getBoolean(COMPOUND_KEY_PREVIOUS_OVERSTRESSED);
         }
     }
 

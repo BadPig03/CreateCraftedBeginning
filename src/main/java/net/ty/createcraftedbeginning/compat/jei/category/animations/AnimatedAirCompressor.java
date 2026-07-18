@@ -20,18 +20,18 @@ public class AnimatedAirCompressor extends AnimatedKinetics {
 
     @Override
     public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
-        PoseStack matrixStack = graphics.pose();
-        matrixStack.pushPose();
+        PoseStack poseStack = graphics.pose();
+        poseStack.pushPose();
 
-        matrixStack.translate(xOffset, yOffset, 192);
-        matrixStack.mulPose(Axis.XP.rotationDegrees(-15.5f));
-        matrixStack.mulPose(Axis.YP.rotationDegrees(22.5f));
+        poseStack.translate(xOffset, yOffset, 192);
+        poseStack.mulPose(Axis.XP.rotationDegrees(-15.5f));
+        poseStack.mulPose(Axis.YP.rotationDegrees(22.5f));
         blockElement(CCBBlocks.AIR_COMPRESSOR_BLOCK.getDefaultState().setValue(AirCompressorBlock.HORIZONTAL_FACING, Direction.SOUTH)).scale(SCALE).render(graphics);
-        blockElement(CCBBlocks.BREEZE_COOLER_BLOCK.getDefaultState().setValue(BreezeCoolerBlock.COOLER, true)).atLocal(0, 1, 0).scale(SCALE).render(graphics);
+        blockElement(CCBBlocks.BREEZE_COOLER_BLOCK.getDefaultState().setValue(BreezeCoolerBlock.ATTACHED, true)).atLocal(0, 1, 0).scale(SCALE).render(graphics);
         blockElement(CCBPartialModels.BREEZE_CHILLED_ACTIVE).rotateBlock(0, 180, 0).atLocal(0, 1, 0).scale(SCALE).render(graphics);
         blockElement(CCBPartialModels.BREEZE_COOLER_WIND).rotateBlock(0, getCurrentAngle() * 4, 0).atLocal(0, 1, 0).scale(SCALE).render(graphics);
         blockElement(CCBPartialModels.SHAFT_HALF_UP).rotateBlock(0, getCurrentAngle() * 2, 0).atLocal(0, 0, 0).scale(SCALE).render(graphics);
 
-        matrixStack.popPose();
+        poseStack.popPose();
     }
 }

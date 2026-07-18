@@ -23,6 +23,9 @@ import java.util.List;
 public enum BlastResistanceUpgrade implements AirtightUpgrade {
     INSTANCE;
 
+    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("blast_resistance");
+    private static final Couple<Integer> OFFSET = Couple.create(132, 55);
+
     @Override
     public List<Component> getComponents(Player player, ItemStack item) {
         return List.of();
@@ -60,17 +63,7 @@ public enum BlastResistanceUpgrade implements AirtightUpgrade {
 
     @Override
     public Couple<Integer> getOffset() {
-        return Couple.create(132, 55);
-    }
-
-    @Override
-    public int getGasConsumptionPerSecond(Player player, ItemStack item) {
-        return -1;
-    }
-
-    @Override
-    public int getIndex() {
-        return 4;
+        return OFFSET;
     }
 
     @Override
@@ -80,7 +73,7 @@ public enum BlastResistanceUpgrade implements AirtightUpgrade {
 
     @Override
     public ResourceLocation getID() {
-        return CreateCraftedBeginning.asResource("blast_resistance");
+        return ID;
     }
 
     @Override
@@ -92,8 +85,7 @@ public enum BlastResistanceUpgrade implements AirtightUpgrade {
         return item.is(CCBItems.AIRTIGHT_LEGGINGS) && AirtightUpgrade.super.isActive(player, item);
     }
 
-    public boolean canApply(ItemStack item)
-    {
+    public boolean canApply(ItemStack item) {
         return item.is(CCBItems.AIRTIGHT_LEGGINGS) && isEnabled(item);
     }
 }

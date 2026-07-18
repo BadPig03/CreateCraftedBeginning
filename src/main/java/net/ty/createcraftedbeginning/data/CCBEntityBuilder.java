@@ -55,13 +55,13 @@ public class CCBEntityBuilder<T extends Entity, P> extends EntityBuilder<T, P> {
     }
 
     protected void registerVisualizer() {
-        OneTimeEventReceiver.addModListener(getOwner(), FMLClientSetupEvent.class, $ -> {
-            NonNullSupplier<Factory<T>> visualFactory = this.visualFactory;
-            if (visualFactory == null) {
+        OneTimeEventReceiver.addModListener(getOwner(), FMLClientSetupEvent.class, ignoredEvent -> {
+            NonNullSupplier<Factory<T>> factory = visualFactory;
+            if (factory == null) {
                 return;
             }
 
-            SimpleEntityVisualizer.builder(getEntry()).factory(visualFactory.get()).skipVanillaRender(entity -> !renderNormally.test(entity)).apply();
+            SimpleEntityVisualizer.builder(getEntry()).factory(factory.get()).skipVanillaRender(entity -> !renderNormally.test(entity)).apply();
         });
     }
 }

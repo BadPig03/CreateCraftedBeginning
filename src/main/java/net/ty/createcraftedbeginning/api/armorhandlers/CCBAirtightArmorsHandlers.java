@@ -17,7 +17,6 @@ import net.ty.createcraftedbeginning.api.armorhandlers.ultrawarm.EnergizedUltraw
 import net.ty.createcraftedbeginning.api.armorhandlers.ultrawarm.PressurizedEnergizedUltrawarmAirArmorsHandler;
 import net.ty.createcraftedbeginning.api.armorhandlers.ultrawarm.PressurizedUltrawarmAirArmorsHandler;
 import net.ty.createcraftedbeginning.api.armorhandlers.ultrawarm.UltrawarmAirArmorsHandler;
-import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightArmorsHandlerEvent;
 import net.ty.createcraftedbeginning.data.CCBGases;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -25,26 +24,29 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBAirtightArmorsHandlers {
+    /**
+     * Registers the built-in airtight armors handlers.
+     */
     public static void register() {
-        AirtightArmorsHandlerEvent.add(CCBGases.NATURAL_AIR.get(), new NaturalAirArmorsHandler());
-        AirtightArmorsHandlerEvent.add(CCBGases.ENERGIZED_NATURAL_AIR.get(), new EnergizedNaturalAirArmorsHandler());
-        AirtightArmorsHandlerEvent.add(CCBGases.PRESSURIZED_NATURAL_AIR.get(), new PressurizedNaturalAirArmorsHandler());
-        AirtightArmorsHandlerEvent.add(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get(), new PressurizedEnergizedNaturalAirArmorsHandler());
+        AirtightArmorsHandlerUtils.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), new NaturalAirArmorsHandler());
+        AirtightArmorsHandlerUtils.register(CCBGases.ENERGIZED_NATURAL_AIR.get().getResourceLocation(), new EnergizedNaturalAirArmorsHandler());
+        AirtightArmorsHandlerUtils.register(CCBGases.PRESSURIZED_NATURAL_AIR.get().getResourceLocation(), new PressurizedNaturalAirArmorsHandler());
+        AirtightArmorsHandlerUtils.register(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get().getResourceLocation(), new PressurizedEnergizedNaturalAirArmorsHandler());
 
-        AirtightArmorsHandlerEvent.add(CCBGases.ULTRAWARM_AIR.get(), new UltrawarmAirArmorsHandler());
-        AirtightArmorsHandlerEvent.add(CCBGases.ENERGIZED_ULTRAWARM_AIR.get(), new EnergizedUltrawarmAirArmorsHandler());
-        AirtightArmorsHandlerEvent.add(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get(), new PressurizedUltrawarmAirArmorsHandler());
-        AirtightArmorsHandlerEvent.add(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get(), new PressurizedEnergizedUltrawarmAirArmorsHandler());
+        AirtightArmorsHandlerUtils.register(CCBGases.ULTRAWARM_AIR.get().getResourceLocation(), new UltrawarmAirArmorsHandler());
+        AirtightArmorsHandlerUtils.register(CCBGases.ENERGIZED_ULTRAWARM_AIR.get().getResourceLocation(), new EnergizedUltrawarmAirArmorsHandler());
+        AirtightArmorsHandlerUtils.register(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get().getResourceLocation(), new PressurizedUltrawarmAirArmorsHandler());
+        AirtightArmorsHandlerUtils.register(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get().getResourceLocation(), new PressurizedEnergizedUltrawarmAirArmorsHandler());
 
-        AirtightArmorsHandlerEvent.add(CCBGases.ETHEREAL_AIR.get(), new EtherealAirArmorsHandler());
-        AirtightArmorsHandlerEvent.add(CCBGases.ENERGIZED_ETHEREAL_AIR.get(), new EnergizedEtherealAirArmorsHandler());
-        AirtightArmorsHandlerEvent.add(CCBGases.PRESSURIZED_ETHEREAL_AIR.get(), new PressurizedEtherealAirArmorsHandler());
-        AirtightArmorsHandlerEvent.add(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR.get(), new PressurizedEnergizedEtherealAirArmorsHandler());
+        AirtightArmorsHandlerUtils.register(CCBGases.ETHEREAL_AIR.get().getResourceLocation(), new EtherealAirArmorsHandler());
+        AirtightArmorsHandlerUtils.register(CCBGases.ENERGIZED_ETHEREAL_AIR.get().getResourceLocation(), new EnergizedEtherealAirArmorsHandler());
+        AirtightArmorsHandlerUtils.register(CCBGases.PRESSURIZED_ETHEREAL_AIR.get().getResourceLocation(), new PressurizedEtherealAirArmorsHandler());
+        AirtightArmorsHandlerUtils.register(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR.get().getResourceLocation(), new PressurizedEnergizedEtherealAirArmorsHandler());
 
-        AirtightArmorsHandlerEvent.add(CCBGases.MOIST_AIR.get(), new MoistAirArmorsHandler());
-        AirtightArmorsHandlerEvent.add(CCBGases.SPORE_AIR.get(), new SporeAirArmorsHandler());
-        AirtightArmorsHandlerEvent.add(CCBGases.SCULK_AIR.get(), new SculkAirArmorsHandler());
+        AirtightArmorsHandlerUtils.register(CCBGases.MOIST_AIR.get().getResourceLocation(), new MoistAirArmorsHandler());
+        AirtightArmorsHandlerUtils.register(CCBGases.SPORE_AIR.get().getResourceLocation(), new SporeAirArmorsHandler());
+        AirtightArmorsHandlerUtils.register(CCBGases.SCULK_AIR.get().getResourceLocation(), new SculkAirArmorsHandler());
 
-        AirtightArmorsHandlerEvent.add(CCBGases.CREATIVE_AIR.get(), new CreativeAirArmorsHandler());
+        AirtightArmorsHandlerUtils.register(CCBGases.CREATIVE_AIR.get().getResourceLocation(), new CreativeAirArmorsHandler());
     }
 }

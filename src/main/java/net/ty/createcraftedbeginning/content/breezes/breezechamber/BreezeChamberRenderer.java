@@ -50,7 +50,8 @@ public class BreezeChamberRenderer extends SmartBlockEntityRenderer<BreezeChambe
 
         ms.pushPose();
 
-        SuperByteBuffer breezeBuffer = CachedBuffers.partial(getBreezeModel(windLevel, animation > 0.125f), blockState);
+        PartialModel breezeModel = getBreezeModel(windLevel, animation > 0.125f);
+        SuperByteBuffer breezeBuffer = CachedBuffers.partial(breezeModel, blockState);
         if (modelTransform != null) {
             breezeBuffer.transform(modelTransform);
         }
@@ -78,7 +79,7 @@ public class BreezeChamberRenderer extends SmartBlockEntityRenderer<BreezeChambe
                 hatBuffer.transform(modelTransform);
             }
             hatBuffer.translate(0, headY - 0.125f, 0);
-            if (getBreezeModel(windLevel, animation > 0.125f) == CCBPartialModels.BREEZE_CALM) {
+            if (breezeModel == CCBPartialModels.BREEZE_CALM) {
                 hatBuffer.translateY(0.5f).center().scale(0.75f).uncenter();
             }
             else {
@@ -109,12 +110,10 @@ public class BreezeChamberRenderer extends SmartBlockEntityRenderer<BreezeChambe
         if (windLevel.isAtLeast(WindLevel.GALE)) {
             return blockBelow ? CCBPartialModels.BREEZE_GALE_ACTIVE : CCBPartialModels.BREEZE_GALE;
         }
-        else if (windLevel == WindLevel.CALM) {
+        if (windLevel == WindLevel.CALM) {
             return CCBPartialModels.BREEZE_CALM;
         }
-        else {
-            return CCBPartialModels.BREEZE_ILL;
-        }
+        return CCBPartialModels.BREEZE_ILL;
     }
 
     @Override
@@ -124,6 +123,8 @@ public class BreezeChamberRenderer extends SmartBlockEntityRenderer<BreezeChambe
             return;
         }
 
-        renderShared(ms, null, bufferSource, level, be.getBlockState(), be.getWindLevelForRender(), be.getHeadAnimation().getValue(partialTicks) * 0.175f, AngleHelper.rad(be.headAngle.getValue(partialTicks)), be.hasGoggles(), be.hasTrainHat() ? CCBPartialModels.BREEZE_TRAIN_HAT : null, be.getWindLevel().isAtLeast(WindLevel.GALE), be.getWindLevel().isAtLeast(WindLevel.GALE) ? 24 : 0, be.hashCode(), light, null);
+        WindLevel windLevel = be.getWindLevel();
+        boolean isGale = windLevel.isAtLeast(WindLevel.GALE);
+        renderShared(ms, null, bufferSource, level, be.getBlockState(), be.getWindLevelForRender(), be.getHeadAnimation().getValue(partialTicks) * 0.175f, AngleHelper.rad(be.headAngle.getValue(partialTicks)), be.hasGoggles(), be.hasTrainHat() ? CCBPartialModels.BREEZE_TRAIN_HAT : null, isGale, isGale ? 24 : 0, be.hashCode(), light, null);
     }
 }

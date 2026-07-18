@@ -21,13 +21,13 @@ public class BreezeCoreItem extends Item {
     }
 
     @Override
-	public boolean onEntityItemUpdate(ItemStack stack, ItemEntity entity) {
-		Level level = entity.level();
+    public boolean onEntityItemUpdate(ItemStack stack, ItemEntity entity) {
+        Level level = entity.level();
         if (level.isClientSide || entity.isNoGravity()) {
-			return false;
-		}
+            return false;
+        }
 
         entity.setNoGravity(true);
-		return false;
-	}
+        return false;
+    }
 }

@@ -32,28 +32,39 @@ public class PortableGasInterfaceRenderer extends SafeBlockEntityRenderer<Portab
 
     public static void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource bufferSource) {
         LerpedFloat animation = PortableGasInterfaceMovement.getAnimation(context);
-        render(context.state, animation.settled(), animation.getValue(AnimationTickHolder.getPartialTicks()), matrices.getModel(), byteBuffer -> byteBuffer.light(LevelRenderer.getLightColor(renderWorld, context.localPos)).useLevelLight(context.world, matrices.getWorld()).renderInto(matrices.getViewProjection(), bufferSource.getBuffer(RenderType.solid())));
+        boolean lit = animation.settled();
+        float progress = animation.getValue(AnimationTickHolder.getPartialTicks());
+        PoseStack model = matrices.getModel();
+        Consumer<SuperByteBuffer> draw = buffer -> buffer.light(LevelRenderer.getLightColor(renderWorld, context.localPos)).useLevelLight(context.world, matrices.getWorld()).renderInto(matrices.getViewProjection(), bufferSource.getBuffer(RenderType.solid()));
+
+        render(context.state, lit, progress, model, draw);
     }
 
-    private static void render(BlockState blockState, boolean lit, float progress, @Nullable PoseStack local, Consumer<SuperByteBuffer> drawCallback) {
-        SuperByteBuffer middle = CachedBuffers.partial(getMiddleForState(lit), blockState);
-        SuperByteBuffer top = CachedBuffers.partial(getTopForState(), blockState);
-        if (local != null) {
-            middle.transform(local);
-            top.transform(local);
+    private static void render(BlockState state, boolean lit, float progress, @Nullable PoseStack poseStack, Consumer<SuperByteBuffer> draw) {
+        SuperByteBuffer middle = CachedBuffers.partial(getMiddleForState(lit), state);
+        SuperByteBuffer top = CachedBuffers.partial(getTopForState(), state);
+        if (poseStack != null) {
+            middle.transform(poseStack);
+            top.transform(poseStack);
         }
-        Direction facing = blockState.getValue(PortableGasInterfaceBlock.FACING);
+
+        Direction facing = state.getValue(PortableGasInterfaceBlock.FACING);
         rotateToFacing(middle, facing);
         rotateToFacing(top, facing);
         middle.translate(0, progress * 0.5f + 0.375f, 0);
         top.translate(0, progress, 0);
 
-        drawCallback.accept(middle);
-        drawCallback.accept(top);
+        draw.accept(middle);
+        draw.accept(top);
     }
 
     private static void rotateToFacing(SuperByteBuffer buffer, Direction facing) {
-        buffer.center().rotateYDegrees(AngleHelper.horizontalAngle(facing)).rotateXDegrees(facing == Direction.UP ? 0 : facing == Direction.DOWN ? 180 : 90).uncenter();
+        float angleX = switch (facing) {
+            case UP -> 0;
+            case DOWN -> 180;
+            default -> 90;
+        };
+        buffer.center().rotateYDegrees(AngleHelper.horizontalAngle(facing)).rotateXDegrees(angleX).uncenter();
     }
 
     public static PartialModel getTopForState() {
@@ -65,7 +76,7 @@ public class PortableGasInterfaceRenderer extends SafeBlockEntityRenderer<Portab
     }
 
     @Override
-    protected void renderSafe(PortableGasInterfaceBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource bufferSource, int light, int overlay) {
-        render(be.getBlockState(), be.isConnected(), be.getExtensionDistance(partialTicks), null, byteBuffer -> byteBuffer.light(light).renderInto(ms, bufferSource.getBuffer(RenderType.solid())));
+    protected void renderSafe(PortableGasInterfaceBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int light, int overlay) {
+        render(blockEntity.getBlockState(), blockEntity.isConnected(), blockEntity.getExtensionDistance(partialTicks), null, buffer -> buffer.light(light).renderInto(poseStack, bufferSource.getBuffer(RenderType.solid())));
     }
 }

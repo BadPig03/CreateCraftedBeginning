@@ -38,53 +38,41 @@ public class AirtightHandheldDrillOutlineRenderer {
             return;
         }
 
-        BlockPos basePosition = AirtightHandheldDrillUtils.getHitResult(player);
-        if (basePosition == null) {
+        BlockPos basePos = AirtightHandheldDrillUtils.getHitResult(player);
+        if (basePos == null) {
             return;
         }
 
-        renderOutline(player.level(), drill, basePosition);
+        renderOutline(player.level(), drill, basePos);
     }
 
     private static void renderOutline(Level level, ItemStack drill, BlockPos basePos) {
         CCBOutliner outliner = CCBOutliner.INSTANCE;
         AirtightHandheldDrillMiningContext context = AirtightHandheldDrillMiningContext.of(drill, basePos, level);
         Set<BlockPos> totalPos = context.totalPos();
-        boolean second = false;
-
-        Set<BlockPos> protectedPos = context.protectedPos();
-        if (!protectedPos.isEmpty()) {
-            outliner.showCluster("handheldDrillProtected", protectedPos).colored(COLOR_ORANGE).disableLineNormals().disableCull().lineWidth(0.03125f).withFaceTexture(AllSpecialTextures.HIGHLIGHT_CHECKERED);
-            second = true;
-        }
-
-        Set<BlockPos> instantDestructionPos = context.instantDestructionPos();
-        if (!instantDestructionPos.isEmpty()) {
-            outliner.showCluster("handheldDrillInstant", instantDestructionPos).colored(COLOR_GREEN).disableLineNormals().disableCull().lineWidth(0.03125f).withFaceTexture(AllSpecialTextures.HIGHLIGHT_CHECKERED);
-            second = true;
-        }
-
-        Set<BlockPos> unbreakablePos = context.unbreakablePos();
-        if (!unbreakablePos.isEmpty()) {
-            outliner.showCluster("handheldDrillUnbreakable", unbreakablePos).colored(COLOR_RED).disableLineNormals().disableCull().lineWidth(0.03125f).withFaceTexture(AllSpecialTextures.HIGHLIGHT_CHECKERED);
-            second = true;
-        }
-
-        Set<BlockPos> liquidPos = context.liquidPos();
-        if (!liquidPos.isEmpty()) {
-            outliner.showCluster("handheldDrillLiquid", liquidPos).colored(COLOR_BLUE).disableLineNormals().disableCull().lineWidth(0.03125f).withFaceTexture(AllSpecialTextures.HIGHLIGHT_CHECKERED);
-            second = true;
-        }
+        boolean hasSecondaryOutline = showHighlightedCluster(outliner, "handheldDrillProtected", context.protectedPos(), COLOR_ORANGE);
+        hasSecondaryOutline |= showHighlightedCluster(outliner, "handheldDrillInstant", context.instantDestructionPos(), COLOR_GREEN);
+        hasSecondaryOutline |= showHighlightedCluster(outliner, "handheldDrillUnbreakable", context.unbreakablePos(), COLOR_RED);
+        hasSecondaryOutline |= showHighlightedCluster(outliner, "handheldDrillLiquid", context.liquidPos(), COLOR_BLUE);
 
         if (totalPos.isEmpty()) {
             return;
         }
 
         outliner.showCluster("handheldDrillTotalFirst", totalPos).colored(COLOR_WHITE).disableLineNormals().disableCull().lineWidth(0.015625f).withFaceTexture(CCBSpecialTextures.LOW_TRANSLUCENT);
-        if (second) {
+        if (hasSecondaryOutline) {
             return;
         }
 
         outliner.showCluster("handheldDrillTotalSecond", totalPos).colored(COLOR_WHITE).disableLineNormals().disableCull().lineWidth(0.015625f).withFaceTexture(CCBSpecialTextures.LOW_TRANSLUCENT_HIGHLIGHTED);
+    }
+
+    private static boolean showHighlightedCluster(CCBOutliner outliner, String key, Set<BlockPos> positions, int color) {
+        if (positions.isEmpty()) {
+            return false;
+        }
+
+        outliner.showCluster(key, positions).colored(color).disableLineNormals().disableCull().lineWidth(0.03125f).withFaceTexture(AllSpecialTextures.HIGHLIGHT_CHECKERED);
+        return true;
     }
 }

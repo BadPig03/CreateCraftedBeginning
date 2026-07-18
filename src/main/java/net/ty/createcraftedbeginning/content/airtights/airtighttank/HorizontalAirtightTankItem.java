@@ -20,6 +20,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class HorizontalAirtightTankItem extends AirtightTankItem {
+    private static final int INVALID_PLACEMENT = -1;
+
     public HorizontalAirtightTankItem(Block block, Properties properties) {
         super(block, properties);
     }
@@ -73,12 +75,12 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
             return;
         }
 
-        HorizontalAirtightTankBlockEntity tankAt = GasConnectivityHandler.partAt(CCBBlockEntities.HORIZONTAL_AIRTIGHT_TANK.get(), level, placedOnPos);
-        if (tankAt == null) {
+        HorizontalAirtightTankBlockEntity tank = GasConnectivityHandler.partAt(CCBBlockEntities.HORIZONTAL_AIRTIGHT_TANK.get(), level, placedOnPos);
+        if (tank == null) {
             return;
         }
 
-        AirtightTankBlockEntity controller = tankAt.getControllerBE();
+        AirtightTankBlockEntity controller = tank.getControllerBE();
         if (!(controller instanceof HorizontalAirtightTankBlockEntity horizontalController)) {
             return;
         }
@@ -98,37 +100,45 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
         }
 
         Direction positive = Direction.fromAxisAndDirection(tankAxis, AxisDirection.POSITIVE);
-        BlockPos startPos = face == positive.getOpposite() ? horizontalController.getBlockPos().relative(positive.getOpposite()) : horizontalController.getBlockPos().relative(positive, horizontalController.getHeight());
+        BlockPos controllerPos = horizontalController.getBlockPos();
+        BlockPos startPos = face == positive.getOpposite() ? controllerPos.relative(positive.getOpposite()) : controllerPos.relative(positive, horizontalController.getHeight());
         if (coordinate(startPos, tankAxis) != coordinate(pos, tankAxis)) {
             return;
         }
 
+        int tanksToPlace = countTanksToPlace(level, startPos, tankAxis, width);
+        if (tanksToPlace == INVALID_PLACEMENT || !player.isCreative() && stack.getCount() < tanksToPlace) {
+            return;
+        }
+
+        placeTankLayer(context, level, startPos, face, tankAxis, width);
+    }
+
+    private int countTanksToPlace(Level level, BlockPos startPos, Axis axis, int width) {
         int tanksToPlace = 0;
         for (int uOffset = 0; uOffset < width; uOffset++) {
             for (int vOffset = 0; vOffset < width; vOffset++) {
-                BlockPos offsetPos = offsetLayer(startPos, tankAxis, uOffset, vOffset);
-                BlockState blockState = level.getBlockState(offsetPos);
-                if (isCompatibleHorizontalTank(blockState, tankAxis)) {
+                BlockPos offsetPos = offsetLayer(startPos, axis, uOffset, vOffset);
+                BlockState state = level.getBlockState(offsetPos);
+                if (isCompatibleHorizontalTank(state, axis)) {
                     continue;
                 }
-
-                if (blockState.getBlock() == getBlock() || !blockState.canBeReplaced()) {
-                    return;
+                if (state.getBlock() == getBlock() || !state.canBeReplaced()) {
+                    return INVALID_PLACEMENT;
                 }
 
                 tanksToPlace++;
             }
         }
+        return tanksToPlace;
+    }
 
-        if (!player.isCreative() && stack.getCount() < tanksToPlace) {
-            return;
-        }
-
+    private void placeTankLayer(BlockPlaceContext context, Level level, BlockPos startPos, Direction face, Axis axis, int width) {
         for (int uOffset = 0; uOffset < width; uOffset++) {
             for (int vOffset = 0; vOffset < width; vOffset++) {
-                BlockPos offsetPos = offsetLayer(startPos, tankAxis, uOffset, vOffset);
-                BlockState blockState = level.getBlockState(offsetPos);
-                if (isCompatibleHorizontalTank(blockState, tankAxis)) {
+                BlockPos offsetPos = offsetLayer(startPos, axis, uOffset, vOffset);
+                BlockState state = level.getBlockState(offsetPos);
+                if (isCompatibleHorizontalTank(state, axis)) {
                     continue;
                 }
 

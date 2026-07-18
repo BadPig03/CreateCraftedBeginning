@@ -36,28 +36,26 @@ public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEnt
     }
 
     public static void updateTankState(Level level, BlockPos tankPos) {
-        BlockState tankState = level.getBlockState(tankPos);
-        if (!(tankState.getBlock() instanceof AirtightTankBlock tank)) {
+        if (level.isClientSide) {
             return;
         }
 
-        AirtightTankBlockEntity tankBlockEntity = tank.getBlockEntity(level, tankPos);
-        if (tankBlockEntity == null) {
+        BlockState state = level.getBlockState(tankPos);
+        if (!(state.getBlock() instanceof AirtightTankBlock tank)) {
             return;
         }
 
-        AirtightTankBlockEntity controller = tankBlockEntity.getControllerBE();
+        AirtightTankBlockEntity tankEntity = tank.getBlockEntity(level, tankPos);
+        if (tankEntity == null) {
+            return;
+        }
+
+        AirtightTankBlockEntity controller = tankEntity.getControllerBE();
         if (controller == null) {
             return;
         }
 
         controller.updateTankState();
-    }
-
-    @Override
-    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
-        builder.add(TOP, BOTTOM);
-        super.createBlockStateDefinition(builder);
     }
 
     @Override
@@ -76,16 +74,11 @@ public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEnt
     }
 
     @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
-        super.setPlacedBy(level, pos, state, entity, stack);
-        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
-    }
-
-    @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.hasBlockEntity() || state.is(newState.getBlock())) {
             return;
         }
+
         if (!(level.getBlockEntity(pos) instanceof AirtightTankBlockEntity tank)) {
             return;
         }
@@ -97,6 +90,18 @@ public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEnt
     @Override
     public VoxelShape getBlockSupportShape(BlockState state, BlockGetter level, BlockPos pos) {
         return Shapes.block();
+    }
+
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, entity, stack);
+        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
+    }
+
+    @Override
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
+        builder.add(TOP, BOTTOM);
+        super.createBlockStateDefinition(builder);
     }
 
     @Override

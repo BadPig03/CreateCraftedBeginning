@@ -33,41 +33,36 @@ public class AirtightLeggingsLayer<T extends LivingEntity, M extends EntityModel
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static void registerOn(EntityRenderer<?> entityRenderer) {
-        if (!(entityRenderer instanceof LivingEntityRenderer<?, ?> livingRenderer)) {
+    public static void registerOn(EntityRenderer<?> renderer) {
+        if (!(renderer instanceof LivingEntityRenderer<?, ?> livingRenderer) || !(livingRenderer.getModel() instanceof HumanoidModel)) {
             return;
         }
-        if (!(livingRenderer.getModel() instanceof HumanoidModel)) {
-            return;
-        }
+
         AirtightLeggingsLayer<?, ?> layer = new AirtightLeggingsLayer<>(livingRenderer);
         livingRenderer.addLayer((AirtightLeggingsLayer) layer);
     }
 
-    public static void registerOnAll(EntityRenderDispatcher renderManager) {
-        for (EntityRenderer<? extends Player> renderer : renderManager.getSkinMap().values()) {
+    public static void registerOnAll(EntityRenderDispatcher dispatcher) {
+        for (EntityRenderer<? extends Player> renderer : dispatcher.getSkinMap().values()) {
             registerOn(renderer);
         }
-        for (EntityRenderer<?> renderer : ((EntityRenderDispatcherAccessor) renderManager).create$getRenderers().values()) {
+        for (EntityRenderer<?> renderer : ((EntityRenderDispatcherAccessor) dispatcher).create$getRenderers().values()) {
             registerOn(renderer);
         }
     }
 
     @Override
-    public void render(PoseStack ms, MultiBufferSource buffer, int light, LivingEntity entity, float yaw, float pitch, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
-        if (!(getParentModel() instanceof HumanoidModel<?> model)) {
-            return;
-        }
-        if (!(entity instanceof Player player) || !player.getItemBySlot(EquipmentSlot.LEGS).is(CCBItems.AIRTIGHT_LEGGINGS)) {
+    public void render(PoseStack poseStack, MultiBufferSource bufferSource, int light, LivingEntity entity, float yaw, float pitch, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
+        if (!(getParentModel() instanceof HumanoidModel<?> model) || !(entity instanceof Player player) || !player.getItemBySlot(EquipmentSlot.LEGS).is(CCBItems.AIRTIGHT_LEGGINGS)) {
             return;
         }
 
-        VertexConsumer vertexConsumer = buffer.getBuffer(Sheets.cutoutBlockSheet());
+        VertexConsumer consumer = bufferSource.getBuffer(Sheets.cutoutBlockSheet());
         SuperByteBuffer shield = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_SHIELD, CCBBlocks.GAS_CANISTER_BLOCK.getDefaultState());
-        ms.pushPose();
-        model.body.translateAndRotate(ms);
-        ms.translate(0.5f, 0.75f, 0);
-        shield.rotateZ(Mth.PI).disableDiffuse().light(light).renderInto(ms, vertexConsumer);
-        ms.popPose();
+        poseStack.pushPose();
+        model.body.translateAndRotate(poseStack);
+        poseStack.translate(0.5f, 0.75f, 0);
+        shield.rotateZ(Mth.PI).disableDiffuse().light(light).renderInto(poseStack, consumer);
+        poseStack.popPose();
     }
 }

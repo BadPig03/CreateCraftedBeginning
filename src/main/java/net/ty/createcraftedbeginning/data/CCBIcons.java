@@ -29,6 +29,7 @@ public class CCBIcons extends AllIcons {
 
     private static int ccbX;
     private static int ccbY = -1;
+
     public static final CCBIcons I_NO_TRANSFER = newRow();
     public static final CCBIcons I_INPUT_ONLY = next();
     public static final CCBIcons I_OUTPUT_ONLY = next();
@@ -70,6 +71,7 @@ public class CCBIcons extends AllIcons {
     public static final CCBIcons I_STEP_HEIGHT = next();
     public static final CCBIcons I_ENVIRONMENTAL_DAMAGE_PROTECTION = next();
     public static final CCBIcons I_FALL_PROTECTION = next();
+
     private final int iconX;
     private final int iconY;
 
@@ -90,8 +92,8 @@ public class CCBIcons extends AllIcons {
     }
 
     @OnlyIn(Dist.CLIENT)
-    private static void vertex(VertexConsumer builder, Matrix4f matrix, Vec3 vec, Color rgb, float u, float v, int light) {
-        builder.addVertex(matrix, (float) vec.x, (float) vec.y, (float) vec.z).setColor(rgb.getRed(), rgb.getGreen(), rgb.getBlue(), 255).setUv(u, v).setLight(light);
+    private static void vertex(VertexConsumer consumer, Matrix4f matrix, Vec3 position, Color color, float u, float v, int light) {
+        consumer.addVertex(matrix, (float) position.x, (float) position.y, (float) position.z).setColor(color.getRed(), color.getGreen(), color.getBlue(), 255).setUv(u, v).setLight(light);
     }
 
     @Override
@@ -103,30 +105,29 @@ public class CCBIcons extends AllIcons {
     @OnlyIn(Dist.CLIENT)
     @Override
     public void render(GuiGraphics graphics, int x, int y) {
-        graphics.blit(CCB_ICON_ATLAS, x, y, 0, iconX, iconY, 16, 16, 256, 256);
+        graphics.blit(CCB_ICON_ATLAS, x, y, 0, iconX, iconY, 16, 16, CCB_ICON_ATLAS_SIZE, CCB_ICON_ATLAS_SIZE);
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
     public void render(PoseStack ms, MultiBufferSource buffer, int color) {
-        VertexConsumer builder = buffer.getBuffer(RenderType.text(CCB_ICON_ATLAS));
+        VertexConsumer consumer = buffer.getBuffer(RenderType.text(CCB_ICON_ATLAS));
         Matrix4f matrix = ms.last().pose();
-        Color rgb = new Color(color);
-        int light = LightTexture.FULL_BRIGHT;
+        Color tint = new Color(color);
 
-        Vec3 vec1 = new Vec3(0, 0, 0);
-        Vec3 vec2 = new Vec3(0, 1, 0);
-        Vec3 vec3 = new Vec3(1, 1, 0);
-        Vec3 vec4 = new Vec3(1, 0, 0);
+        Vec3 bottomLeft = new Vec3(0, 0, 0);
+        Vec3 topLeft = new Vec3(0, 1, 0);
+        Vec3 topRight = new Vec3(1, 1, 0);
+        Vec3 bottomRight = new Vec3(1, 0, 0);
 
         float u1 = iconX * 1.0f / CCB_ICON_ATLAS_SIZE;
         float u2 = (iconX + 16) * 1.0f / CCB_ICON_ATLAS_SIZE;
         float v1 = iconY * 1.0f / CCB_ICON_ATLAS_SIZE;
         float v2 = (iconY + 16) * 1.0f / CCB_ICON_ATLAS_SIZE;
 
-        vertex(builder, matrix, vec1, rgb, u1, v1, light);
-        vertex(builder, matrix, vec2, rgb, u1, v2, light);
-        vertex(builder, matrix, vec3, rgb, u2, v2, light);
-        vertex(builder, matrix, vec4, rgb, u2, v1, light);
+        vertex(consumer, matrix, bottomLeft, tint, u1, v1, LightTexture.FULL_BRIGHT);
+        vertex(consumer, matrix, topLeft, tint, u1, v2, LightTexture.FULL_BRIGHT);
+        vertex(consumer, matrix, topRight, tint, u2, v2, LightTexture.FULL_BRIGHT);
+        vertex(consumer, matrix, bottomRight, tint, u2, v1, LightTexture.FULL_BRIGHT);
     }
 }

@@ -21,33 +21,38 @@ public abstract class EndMechanicalStructuralBlockEntity<T extends EndMechanical
     }
 
     @Override
-    public void tick() {
-        super.tick();
+    public void onLoad() {
+        super.onLoad();
         if (level == null || level.isClientSide) {
             return;
         }
 
-        if (master == null || master.isRemoved()) {
-            master = getMaster();
-        }
-        if (master != null) {
-            return;
-        }
-
-        level.setBlockAndUpdate(worldPosition, CCBBlocks.END_CASING_BLOCK.get().defaultBlockState());
+        master = getMaster();
+        level.scheduleTick(worldPosition, getBlockState().getBlock(), 1);
     }
 
-    @SuppressWarnings("unchecked")
+    protected abstract Class<T> getMasterClass();
+
     protected @Nullable T getMaster() {
         if (level == null) {
             return null;
         }
 
-        BlockEntity be = level.getBlockEntity(worldPosition.above());
-        if (!(be instanceof EndMechanicalBlockEntity)) {
-            return null;
+        BlockEntity blockEntity = level.getBlockEntity(worldPosition.above());
+        Class<T> masterClass = getMasterClass();
+        return masterClass.isInstance(blockEntity) ? masterClass.cast(blockEntity) : null;
+    }
+
+    public void verifyMaster() {
+        if (level == null || level.isClientSide) {
+            return;
         }
 
-        return (T) be;
+        master = getMaster();
+        if (master != null) {
+            return;
+        }
+
+        level.setBlockAndUpdate(worldPosition, CCBBlocks.END_CASING_BLOCK.get().defaultBlockState());
     }
 }

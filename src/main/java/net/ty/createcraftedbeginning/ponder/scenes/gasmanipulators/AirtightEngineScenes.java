@@ -4,7 +4,6 @@ import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
 import com.simibubi.create.content.kinetics.motor.CreativeMotorBlock;
-import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour.InternalFluidHandler;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.api.PonderPalette;
@@ -271,8 +270,7 @@ public class AirtightEngineScenes {
 
         scene.idle(3);
         scene.world().modifyBlockEntity(outletPos, ResidueOutletBlockEntity.class, be -> {
-            InternalFluidHandler handler = (InternalFluidHandler) be.getFluidTankBehaviour().getCapability();
-            handler.forceFill(new FluidStack(Fluids.WATER, 4000), FluidAction.EXECUTE);
+            be.insertResidueFluid(new FluidStack(Fluids.WATER, 4000), FluidAction.EXECUTE);
         });
         scene.world().propagatePipeChange(fluidPumpPos);
         outletUpArea = outletUpArea.expandTowards(-1, 0, 0);

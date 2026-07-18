@@ -9,9 +9,9 @@ import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.provider.CCBDamageTypeTagsProvider;
+import net.ty.createcraftedbeginning.provider.CCBDatapackBuiltinEntriesProvider;
 import net.ty.createcraftedbeginning.provider.CCBEnchantmentTagsProvider;
 import net.ty.createcraftedbeginning.provider.CCBGasTagsProvider;
-import net.ty.createcraftedbeginning.provider.CCBDatapackBuiltinEntriesProvider;
 import net.ty.createcraftedbeginning.provider.CCBRecipeProvider;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBRegistrateTags;
@@ -51,24 +51,24 @@ public class CCBDataGen {
 
         DataGenerator generator = event.getGenerator();
         PackOutput output = generator.getPackOutput();
-        CompletableFuture<Provider> lookupProvider = event.getLookupProvider();
-        ExistingFileHelper existingFileHelper = event.getExistingFileHelper();
+        CompletableFuture<Provider> registries = event.getLookupProvider();
+        ExistingFileHelper existingFiles = event.getExistingFileHelper();
 
-        CCBDatapackBuiltinEntriesProvider generatedEntriesProvider = new CCBDatapackBuiltinEntriesProvider(output, lookupProvider);
-        lookupProvider = generatedEntriesProvider.getRegistryProvider();
+        CCBDatapackBuiltinEntriesProvider entriesProvider = new CCBDatapackBuiltinEntriesProvider(output, registries);
+        registries = entriesProvider.getRegistryProvider();
 
         generator.addProvider(event.includeClient(), CCBSoundEvents.provider(generator));
-        generator.addProvider(event.includeServer(), generatedEntriesProvider);
-        generator.addProvider(event.includeServer(), new CCBAdvancements(output, lookupProvider));
-        generator.addProvider(event.includeServer(), new CCBDamageTypeTagsProvider(output, lookupProvider, existingFileHelper));
-        generator.addProvider(event.includeServer(), new CCBEnchantmentTagsProvider(output, lookupProvider, existingFileHelper));
-        generator.addProvider(event.includeServer(), new CCBGasTagsProvider(output, lookupProvider, existingFileHelper));
-        generator.addProvider(event.includeServer(), new CCBSequencedAssemblyWithGasRecipes(output, lookupProvider));
+        generator.addProvider(event.includeServer(), entriesProvider);
+        generator.addProvider(event.includeServer(), new CCBAdvancements(output, registries));
+        generator.addProvider(event.includeServer(), new CCBDamageTypeTagsProvider(output, registries, existingFiles));
+        generator.addProvider(event.includeServer(), new CCBEnchantmentTagsProvider(output, registries, existingFiles));
+        generator.addProvider(event.includeServer(), new CCBGasTagsProvider(output, registries, existingFiles));
+        generator.addProvider(event.includeServer(), new CCBSequencedAssemblyWithGasRecipes(output, registries));
         if (!event.includeServer()) {
             return;
         }
 
-        CCBRecipeProvider.registerAllProcessing(generator, output, lookupProvider);
-        CCBRecipeProvider.registerAllProcessingWithGas(generator, output, lookupProvider);
+        CCBRecipeProvider.registerAllProcessing(generator, output, registries);
+        CCBRecipeProvider.registerAllProcessingWithGas(generator, output, registries);
     }
 }

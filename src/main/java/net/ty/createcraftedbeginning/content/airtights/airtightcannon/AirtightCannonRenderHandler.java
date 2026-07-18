@@ -33,28 +33,28 @@ public class AirtightCannonRenderHandler extends ShootableGadgetRenderHandler {
     }
 
     @Override
-    protected void transformTool(PoseStack ms, float flip, float equipProgress, float recoil, float pt) {
-        ms.translate(flip * -0.1f, 0, 0.14f);
-        ms.scale(0.75f, 0.75f, 0.75f);
-        TransformStack.of(ms).rotateXDegrees(recoil * 80);
+    protected void transformTool(PoseStack poseStack, float flip, float equipProgress, float recoil, float partialTick) {
+        poseStack.translate(flip * -0.1f, 0, 0.14f);
+        poseStack.scale(0.75f, 0.75f, 0.75f);
+        TransformStack.of(poseStack).rotateXDegrees(recoil * 80);
     }
 
     @Override
-    protected void transformHand(PoseStack ms, float flip, float equipProgress, float recoil, float pt) {
-        ms.translate(flip * -0.09, -0.275, -0.25);
-        TransformStack.of(ms).rotateZDegrees(flip * -10);
+    protected void transformHand(PoseStack poseStack, float flip, float equipProgress, float recoil, float partialTick) {
+        poseStack.translate(flip * -0.09, -0.275, -0.25);
+        TransformStack.of(poseStack).rotateZDegrees(flip * -10);
     }
 
     public void beforeShoot(float pitch, Vec3 location, Vec3 motion, ItemStack stack) {
         nextPitch = pitch;
-        ClientLevel clientLevel = Minecraft.getInstance().level;
-        if (stack.isEmpty() || clientLevel == null) {
+        ClientLevel level = Minecraft.getInstance().level;
+        if (stack.isEmpty() || level == null) {
             return;
         }
 
         for (int i = 0; i < 2; i++) {
-            Vec3 m = VecHelper.offsetRandomly(motion.scale(0.1f), clientLevel.random, 0.025f);
-            clientLevel.addParticle(new ItemParticleOption(ParticleTypes.ITEM, stack), location.x, location.y, location.z, m.x, m.y, m.z);
+            Vec3 particleMotion = VecHelper.offsetRandomly(motion.scale(0.1f), level.random, 0.025f);
+            level.addParticle(new ItemParticleOption(ParticleTypes.ITEM, stack), location.x, location.y, location.z, particleMotion.x, particleMotion.y, particleMotion.z);
         }
     }
 }

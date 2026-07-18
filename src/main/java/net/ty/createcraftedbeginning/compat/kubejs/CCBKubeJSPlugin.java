@@ -38,12 +38,12 @@ public class CCBKubeJSPlugin implements KubeJSPlugin {
     }
 
     @Override
-    public void registerEvents(EventGroupRegistry registry) {
-        registry.register(CCBEvents.GROUP);
+    public void registerBuilderTypes(BuilderTypeRegistry registry) {
+        registry.addDefault(CCBRegistries.GAS_REGISTRY_KEY, GasKubeJSBuilder.class, GasKubeJSBuilder::new);
     }
 
     @Override
-    public void registerBuilderTypes(BuilderTypeRegistry registry) {
-        registry.addDefault(CCBRegistries.GAS_REGISTRY_KEY, GasKubeJSBuilder.class, GasKubeJSBuilder::new);
+    public void registerEvents(EventGroupRegistry registry) {
+        registry.register(CCBEvents.GROUP);
     }
 }

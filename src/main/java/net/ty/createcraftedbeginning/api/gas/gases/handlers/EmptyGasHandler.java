@@ -12,38 +12,59 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public enum EmptyGasHandler implements IGasHandler {
     INSTANCE;
 
-    @Override
-    public int getTanks() {
-        return 1;
-    }
-
-    @Override
-    public GasStack getGasInTank(int tank) {
-        return GasStack.EMPTY;
-    }
-
-    @Override
-    public long getTankCapacity(int tank) {
-        return 0;
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isGasValid(int tank, GasStack stack) {
         return true;
     }
 
-    @Override
-    public long fill(GasStack resource, GasAction action) {
-        return 0;
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public GasStack drain(GasStack resource, GasAction action) {
         return GasStack.EMPTY;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public GasStack drain(long maxDrain, GasAction action) {
         return GasStack.EMPTY;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public GasStack getGasInTank(int tank) {
+        return GasStack.EMPTY;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getTanks() {
+        return 1;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long fill(GasStack resource, GasAction action) {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long getTankCapacity(int tank) {
+        return 0;
     }
 }

@@ -34,11 +34,11 @@ public class AirtightPipeBlock extends AxisGasPipeBlock implements IBE<AirtightP
     @Override
     public boolean canBeReplaced(BlockState state, BlockPlaceContext context) {
         Player player = context.getPlayer();
-        boolean replace = super.canBeReplaced(state, context);
+        boolean canReplace = super.canBeReplaced(state, context);
         if (player != null && player.isShiftKeyDown()) {
-            return replace;
+            return canReplace;
         }
-        return context.getItemInHand().is(CCBBlocks.AIRTIGHT_ENCASED_PIPE_BLOCK.asItem()) || replace;
+        return context.getItemInHand().is(CCBBlocks.AIRTIGHT_ENCASED_PIPE_BLOCK.asItem()) || canReplace;
     }
 
     @Override

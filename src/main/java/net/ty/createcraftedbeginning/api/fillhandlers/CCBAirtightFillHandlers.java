@@ -12,6 +12,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBAirtightFillHandlers {
+    /**
+     * Registers the built-in airtight fill handlers.
+     */
     public static void register() {
         AirtightFillHandlerUtils.register(Blocks.BUBBLE_COLUMN, new BubbleColumnFillHandler());
 

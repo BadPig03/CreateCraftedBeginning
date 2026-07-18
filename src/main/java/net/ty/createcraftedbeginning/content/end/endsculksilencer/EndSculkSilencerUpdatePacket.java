@@ -21,11 +21,12 @@ public record EndSculkSilencerUpdatePacket(BlockPos blockPos, String dimension, 
     @Override
     @OnlyIn(Dist.CLIENT)
     public void handle(LocalPlayer player) {
-        if (active) {
-            ClientEndSculkSilencerCache.INSTANCE.add(blockPos, dimension, range);
-        } else {
+        if (!active || range <= 0) {
             ClientEndSculkSilencerCache.INSTANCE.remove(blockPos, dimension);
+            return;
         }
+
+        ClientEndSculkSilencerCache.INSTANCE.add(blockPos, dimension, range);
     }
 
     @Override

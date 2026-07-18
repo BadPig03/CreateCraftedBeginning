@@ -6,6 +6,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
@@ -16,8 +17,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.data.CCBShapes;
+import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -40,8 +41,8 @@ public class PortableGasInterfaceBlock extends WrenchableDirectionalBlock implem
     }
 
     @Override
-    public int getAnalogOutputSignal(BlockState blockState, Level level, BlockPos pos) {
-        return getBlockEntityOptional(level, pos).map(be -> be.isConnected() ? 15 : 0).orElse(0);
+    public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
+        return getBlockEntityOptional(level, pos).map(blockEntity -> blockEntity.isConnected() ? 15 : 0).orElse(0);
     }
 
     @Override
@@ -62,8 +63,13 @@ public class PortableGasInterfaceBlock extends WrenchableDirectionalBlock implem
             return null;
         }
 
-        Direction direction = context.getNearestLookingDirection();
-        return context.getPlayer() != null && context.getPlayer().isShiftKeyDown() ? state.setValue(FACING, direction) : state.setValue(FACING, direction.getOpposite());
+        Direction facing = context.getNearestLookingDirection();
+        Player player = context.getPlayer();
+        if (player == null || !player.isShiftKeyDown()) {
+            facing = facing.getOpposite();
+        }
+
+        return state.setValue(FACING, facing);
     }
 
     @Override

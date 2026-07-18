@@ -4,6 +4,8 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -14,6 +16,7 @@ import java.util.stream.Collectors;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
+@SuppressWarnings("unused")
 public abstract class BaseTemplate {
     public abstract Set<BlockPos> getBaseArea(int[] params);
 
@@ -26,6 +29,18 @@ public abstract class BaseTemplate {
         int[] relativePosition = AirtightHandheldDrillUtils.getRelativePositionParams(drill);
         Direction direction = AirtightHandheldDrillUtils.getMiningDirection(drill);
         return getOffset(params, direction, relativePosition);
+    }
+
+    public Set<BlockPos> getTargetPositions(ItemStack drill, BlockPos basePos, Level level) {
+        return getTargetPositions(drill, basePos, level, level.getBlockState(basePos));
+    }
+
+    public Set<BlockPos> getTargetPositions(ItemStack drill, BlockPos basePos, Level level, BlockState baseState) {
+        return getFinalOffset(drill).stream().map(basePos::offset).collect(Collectors.toSet());
+    }
+
+    public boolean usesSpatialParameters() {
+        return true;
     }
 
     public int getMinValue(int index) {

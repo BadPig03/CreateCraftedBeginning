@@ -4,7 +4,6 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BehaviourType;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.createmod.catnip.data.Iterate;
-import net.createmod.catnip.data.WorldAttached;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -12,7 +11,6 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities;
@@ -27,10 +25,10 @@ import net.ty.createcraftedbeginning.registry.CCBTags.CCBBlockTags;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.Map;
+import java.util.EnumMap;
+import java.util.List;
 import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
@@ -38,48 +36,81 @@ import java.util.function.Predicate;
 @SuppressWarnings("unused")
 public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     public static final BehaviourType<GasTransportBehaviour> TYPE = new BehaviourType<>();
-    public static final WorldAttached<Map<BlockPos, Map<Direction, GasPipeConnection>>> interfaceTransfer = new WorldAttached<>($ -> new HashMap<>());
 
-    public Map<Direction, GasPipeConnection> interfaces;
-    public UpdatePhase phase;
+    private EnumMap<Direction, GasPipeConnection> interfaces;
+    @Nullable
+    private List<GasPipeConnection> retiredConnections;
+    private UpdatePhase phase;
 
+    /**
+     * Creates a new {@code GasTransportBehaviour} instance.
+     *
+     * @param be the block entity that participates in the operation
+     */
     public GasTransportBehaviour(SmartBlockEntity be) {
         super(be);
         phase = UpdatePhase.WAIT_FOR_PUMPS;
     }
 
-    public static void cacheFlows(LevelAccessor level, BlockPos pos) {
-        GasTransportBehaviour pipe = get(level, pos, TYPE);
-        if (pipe == null) {
-            return;
-        }
-
-        interfaceTransfer.get(level).put(pos, pipe.interfaces);
-    }
-
-    public static void loadFlows(LevelAccessor level, BlockPos pos) {
-        GasTransportBehaviour newPipe = get(level, pos, TYPE);
-        if (newPipe == null) {
-            return;
-        }
-
-        newPipe.interfaces = interfaceTransfer.get(level).remove(pos);
-    }
-
+    /**
+     * Checks whether this value is valid airtight components.
+     *
+     * @param level     the level in which the operation is performed
+     * @param pos       the target block position
+     * @param state     the block state to inspect or process
+     * @param direction the direction associated with the operation
+     * @return {@code true} if this value is valid airtight components; otherwise {@code false}
+     */
     public static boolean isValidAirtightComponents(Level level, BlockPos pos, BlockState state, Direction direction) {
         boolean openEnded = state.getDestroySpeed(level, pos) != -1 && (state.canBeReplaced() || CCBBlockTags.GAS_SOURCES.matches(state));
-        return openEnded || GasCapabilities.hasGasCapability(level, pos, direction) || state.getBlock() instanceof IAirtightComponent airtightComponent && airtightComponent.isAirtight(pos, state, direction);
+        boolean hasGasCapability = GasCapabilities.hasGasCapability(level, pos, direction.getOpposite());
+        boolean isAirtight = state.getBlock() instanceof IAirtightComponent component && component.isAirtight(pos, state, direction);
+        return openEnded || hasGasCapability || isAirtight;
     }
 
+    /**
+     * Checks whether the requested operation can have flow toward.
+     *
+     * @param state     the block state to inspect or process
+     * @param direction the direction associated with the operation
+     * @return {@code true} if the requested operation can have flow toward; otherwise {@code false}
+     */
     public abstract boolean canHaveFlowToward(BlockState state, Direction direction);
 
+    /**
+     * Checks whether inbound flow is allowed.
+     *
+     * @param state     the block state to inspect or process
+     * @param direction the direction associated with the operation
+     * @return {@code true} if inbound flow is allowed; otherwise {@code false}
+     */
+    public boolean allowsInboundFlow(BlockState state, Direction direction) {
+        return canHaveFlowToward(state, direction);
+    }
+
+    /**
+     * Checks whether outbound flow is allowed.
+     *
+     * @param state     the block state to inspect or process
+     * @param direction the direction associated with the operation
+     * @return {@code true} if outbound flow is allowed; otherwise {@code false}
+     */
+    public boolean allowsOutboundFlow(BlockState state, Direction direction) {
+        return canHaveFlowToward(state, direction);
+    }
+
+    /**
+     * Returns the provided outward gas.
+     *
+     * @param side the side from which the target is accessed
+     * @return the provided outward gas
+     */
     public GasStack getProvidedOutwardGas(Direction side) {
-        createConnectionData();
-        if (!interfaces.containsKey(side)) {
+        GasPipeConnection connection = getConnection(side);
+        if (connection == null || !allowsOutboundFlow(blockEntity.getBlockState(), side)) {
             return GasStack.EMPTY;
         }
-
-        return interfaces.get(side).provideOutboundFlow();
+        return connection.provideOutboundFlow();
     }
 
     private void createConnectionData() {
@@ -87,9 +118,10 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
             return;
         }
 
-        interfaces = new IdentityHashMap<>();
+        interfaces = new EnumMap<>(Direction.class);
+        BlockState state = blockEntity.getBlockState();
         for (Direction direction : Iterate.directions) {
-            if (!canHaveFlowToward(blockEntity.getBlockState(), direction)) {
+            if (!canHaveFlowToward(state, direction)) {
                 continue;
             }
 
@@ -97,63 +129,158 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         }
     }
 
+    private void refreshConnectionData() {
+        if (interfaces == null) {
+            createConnectionData();
+            return;
+        }
+
+        boolean flowRemoved = false;
+        BlockState state = blockEntity.getBlockState();
+        for (Direction direction : Iterate.directions) {
+            if (canHaveFlowToward(state, direction)) {
+                if (interfaces.containsKey(direction)) {
+                    continue;
+                }
+
+                interfaces.put(direction, new GasPipeConnection(direction));
+                continue;
+            }
+
+            GasPipeConnection connection = interfaces.remove(direction);
+            if (connection == null) {
+                continue;
+            }
+
+            flowRemoved |= connection.getFlow() != null;
+            retireConnection(connection);
+        }
+        Level level = getWorld();
+        if (!flowRemoved || level == null || level.isClientSide && !blockEntity.isVirtual()) {
+            return;
+        }
+
+        blockEntity.notifyUpdate();
+    }
+
+    private void retireConnection(GasPipeConnection connection) {
+        if (connection.prepareForRemoval()) {
+            return;
+        }
+        if (retiredConnections == null) {
+            retiredConnections = new ArrayList<>();
+        }
+        retiredConnections.add(connection);
+    }
+
+    private void recoverRetiredConnections() {
+        if (retiredConnections == null) {
+            return;
+        }
+
+        retiredConnections.removeIf(GasPipeConnection::prepareForRemoval);
+        if (!retiredConnections.isEmpty()) {
+            return;
+        }
+
+        retiredConnections = null;
+    }
+
+    protected final void refreshConnections() {
+        refreshConnectionData();
+        recoverRetiredConnections();
+    }
+
+    /**
+     * Returns the connection.
+     *
+     * @param side the side from which the target is accessed
+     * @return the connection
+     */
     @Nullable
     public GasPipeConnection getConnection(Direction side) {
         createConnectionData();
         return interfaces.get(side);
     }
 
+    /**
+     * Checks whether at least one connection has pressure.
+     *
+     * @return {@code true} if at least one connection has pressure; otherwise {@code false}
+     */
     public boolean hasAnyPressure() {
         createConnectionData();
         for (GasPipeConnection pipeConnection : interfaces.values()) {
-            if (pipeConnection.hasPressure()) {
-                return true;
+            if (!pipeConnection.hasPressure()) {
+                continue;
             }
+
+            return true;
         }
         return false;
     }
 
+    /**
+     * Returns the flow.
+     *
+     * @param side the side from which the target is accessed
+     * @return the flow
+     */
     @Nullable
     public AirFlow getFlow(Direction side) {
-        createConnectionData();
-        if (!interfaces.containsKey(side)) {
-            return null;
-        }
-
-        return interfaces.get(side).flow.orElse(null);
+        GasPipeConnection connection = getConnection(side);
+        return connection == null ? null : connection.getFlow();
     }
 
+    /**
+     * Adds the supplied pressure.
+     *
+     * @param side     the side from which the target is accessed
+     * @param inbound  whether inbound is enabled
+     * @param pressure the pressure value to use
+     */
     public void addPressure(Direction side, boolean inbound, float pressure) {
-        createConnectionData();
-        if (!interfaces.containsKey(side)) {
+        GasPipeConnection connection = getConnection(side);
+        BlockState state = blockEntity.getBlockState();
+        boolean flowAllowed = inbound ? allowsInboundFlow(state, side) : allowsOutboundFlow(state, side);
+        if (connection == null || !flowAllowed) {
             return;
         }
 
-        interfaces.get(side).addPressure(inbound, pressure);
-        blockEntity.sendData();
+        connection.addPressure(inbound, pressure);
     }
 
+    /**
+     * Clears the pressure stored by this connection.
+     */
     public void wipePressure() {
-        if (interfaces != null) {
-            for (Direction direction : Iterate.directions) {
-                if (canHaveFlowToward(blockEntity.getBlockState(), direction)) {
-                    interfaces.computeIfAbsent(direction, GasPipeConnection::new);
-                }
-                else {
-                    interfaces.remove(direction);
-                }
-            }
-        }
+        refreshConnectionData();
         phase = UpdatePhase.WAIT_FOR_PUMPS;
-        createConnectionData();
-        interfaces.values().forEach(GasPipeConnection::wipePressure);
-        blockEntity.sendData();
+        for (GasPipeConnection connection : interfaces.values()) {
+            connection.wipePressure();
+        }
     }
 
+    /**
+     * Checks whether this value is incorrect axis.
+     *
+     * @param state     the block state to inspect or process
+     * @param direction the direction associated with the operation
+     * @return {@code true} if this value is incorrect axis; otherwise {@code false}
+     */
     public boolean isIncorrectAxis(BlockState state, Direction direction) {
         return state.getValue(BlockStateProperties.AXIS) != direction.getAxis();
     }
 
+    /**
+     * Returns the rendered rim attachment.
+     *
+     * @param level     the level in which the operation is performed
+     * @param pos       the target block position
+     * @param state     the block state to inspect or process
+     * @param direction the direction associated with the operation
+     * @return the rendered rim attachment
+     */
     public AttachmentTypes getRenderedRimAttachment(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction direction) {
         if (!canHaveFlowToward(state, direction)) {
             return AttachmentTypes.NONE;
@@ -168,47 +295,44 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         if (GasCapabilities.hasGasCapability(level, offsetPos, direction.getOpposite())) {
             return AttachmentTypes.DRAIN;
         }
-
         return AttachmentTypes.RIM;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public BehaviourType<?> getType() {
         return TYPE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void initialize() {
         super.initialize();
         createConnectionData();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void tick() {
         super.tick();
         Level level = getWorld();
         BlockPos pos = getPos();
-        boolean onServer = !level.isClientSide || blockEntity.isVirtual();
-        if (interfaces == null) {
-            return;
-        }
-
+        boolean isClientSide = level.isClientSide && !blockEntity.isVirtual();
+        refreshConnections();
         Collection<GasPipeConnection> connections = interfaces.values();
-        GasPipeConnection singleSource = null;
         if (phase == UpdatePhase.WAIT_FOR_PUMPS) {
             phase = UpdatePhase.FLIP_FLOWS;
             return;
         }
 
-        if (onServer) {
-            boolean sendUpdate = false;
-            for (GasPipeConnection connection : connections) {
-                sendUpdate |= connection.flipFlowsIfPressureReversed();
-                connection.manageSource(level, pos, blockEntity);
-            }
-            if (sendUpdate) {
-                blockEntity.notifyUpdate();
-            }
+        if (!isClientSide) {
+            updateSources(level, pos, connections);
         }
 
         if (phase == UpdatePhase.FLIP_FLOWS) {
@@ -216,43 +340,8 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
             return;
         }
 
-        if (onServer) {
-            GasStack availableFlow = GasStack.EMPTY;
-            GasStack collidingFlow = GasStack.EMPTY;
-            for (GasPipeConnection connection : connections) {
-                GasStack gasInFlow = connection.getProvidedGas();
-                if (gasInFlow.isEmpty()) {
-                    continue;
-                }
-                if (availableFlow.isEmpty()) {
-                    singleSource = connection;
-                    availableFlow = gasInFlow;
-                    continue;
-                }
-                if (GasStack.isSameGasSameComponents(availableFlow, gasInFlow)) {
-                    singleSource = null;
-                    availableFlow = gasInFlow;
-                    continue;
-                }
-
-                collidingFlow = gasInFlow;
-                break;
-            }
-
-            if (!collidingFlow.isEmpty()) {
-                GasCollisionEvent.handleCollision(level, pos, availableFlow, collidingFlow);
-                return;
-            }
-
-            boolean sendUpdate = false;
-            for (GasPipeConnection connection : connections) {
-                GasStack internalGas = singleSource == connection ? GasStack.EMPTY : availableFlow;
-                Predicate<GasStack> extractionPredicate = extracted -> canPullGasFrom(extracted, blockEntity.getBlockState(), connection.side);
-                sendUpdate |= connection.manageFlows(level, pos, internalGas, extractionPredicate);
-            }
-            if (sendUpdate) {
-                blockEntity.notifyUpdate();
-            }
+        if (!isClientSide && updateFlows(level, pos, connections)) {
+            return;
         }
 
         for (GasPipeConnection connection : connections) {
@@ -260,44 +349,105 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void read(CompoundTag compoundTag, Provider registries, boolean clientPacket) {
-        super.read(compoundTag, registries, clientPacket);
-        if (interfaces == null) {
-            interfaces = new IdentityHashMap<>();
+    public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.read(compoundTag, provider, clientPacket);
+        refreshConnectionData();
+        if (!clientPacket) {
+            phase = UpdatePhase.WAIT_FOR_PUMPS;
         }
-        for (Direction face : Iterate.directions) {
-            if (compoundTag.contains(face.getName())) {
-                interfaces.computeIfAbsent(face, GasPipeConnection::new);
+        for (GasPipeConnection connection : interfaces.values()) {
+            connection.read(compoundTag, provider, blockEntity.getBlockPos(), clientPacket);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.write(compoundTag, provider, clientPacket);
+        createConnectionData();
+        for (GasPipeConnection connection : interfaces.values()) {
+            connection.write(compoundTag, provider, clientPacket);
+        }
+    }
+
+    private void updateSources(Level level, BlockPos pos, Collection<GasPipeConnection> connections) {
+        boolean sendUpdate = false;
+        for (GasPipeConnection connection : connections) {
+            sendUpdate |= connection.flipFlowsIfPressureReversed();
+            connection.manageSource(level, pos, blockEntity);
+        }
+        if (sendUpdate) {
+            blockEntity.notifyUpdate();
+        }
+    }
+
+    private boolean updateFlows(Level level, BlockPos pos, Collection<GasPipeConnection> connections) {
+        BlockState state = blockEntity.getBlockState();
+        GasPipeConnection singleSource = null;
+        GasStack availableFlow = GasStack.EMPTY;
+        GasStack collidingFlow = GasStack.EMPTY;
+        for (GasPipeConnection connection : connections) {
+            Direction side = connection.getSide();
+            GasStack gasInFlow = connection.getProvidedGas();
+            if (gasInFlow.isEmpty() || !allowsInboundFlow(state, side) || !canPullGasFrom(gasInFlow, state, side)) {
+                continue;
             }
+
+            if (availableFlow.isEmpty()) {
+                singleSource = connection;
+                availableFlow = gasInFlow;
+                continue;
+            }
+
+            if (GasStack.isSameGasSameComponents(availableFlow, gasInFlow)) {
+                singleSource = null;
+                availableFlow = gasInFlow;
+                continue;
+            }
+
+            collidingFlow = gasInFlow;
+            break;
         }
 
-        if (interfaces.isEmpty()) {
-            interfaces = null;
-            return;
+        if (!collidingFlow.isEmpty()) {
+            GasCollisionEvent.handleCollision(level, pos, availableFlow, collidingFlow);
+            return true;
         }
 
-        interfaces.values().forEach(connection -> connection.read(compoundTag, registries, blockEntity.getBlockPos(), clientPacket));
+        boolean sendUpdate = false;
+        for (GasPipeConnection connection : connections) {
+            Direction side = connection.getSide();
+            boolean allowsInbound = allowsInboundFlow(state, side);
+            boolean allowsOutbound = allowsOutboundFlow(state, side);
+            GasStack internalGas = singleSource == connection || !allowsOutbound ? GasStack.EMPTY : availableFlow;
+            Predicate<GasStack> extractionPredicate = extracted -> allowsInbound && canPullGasFrom(extracted, state, side);
+            sendUpdate |= connection.manageFlows(level, pos, internalGas, extractionPredicate);
+        }
+        if (sendUpdate) {
+            blockEntity.notifyUpdate();
+        }
+        return false;
     }
 
-    @Override
-    public void write(CompoundTag compoundTag, Provider registries, boolean clientPacket) {
-        super.write(compoundTag, registries, clientPacket);
-        if (clientPacket) {
-            createConnectionData();
-        }
-        if (interfaces == null) {
-            return;
-        }
-
-        interfaces.values().forEach(connection -> connection.write(compoundTag, registries, clientPacket));
-    }
-
+    /**
+     * Checks whether the requested operation can pull gas from.
+     *
+     * @param gas       the gas to inspect or process
+     * @param state     the block state to inspect or process
+     * @param direction the direction associated with the operation
+     * @return {@code true} if the requested operation can pull gas from; otherwise {@code false}
+     */
     public boolean canPullGasFrom(GasStack gas, BlockState state, Direction direction) {
         return true;
     }
 
-    public enum UpdatePhase {
+    private enum UpdatePhase {
         WAIT_FOR_PUMPS,
         FLIP_FLOWS,
         IDLE

@@ -1,8 +1,12 @@
 package net.ty.createcraftedbeginning.config;
 
 import net.createmod.catnip.config.ConfigBase;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.MethodsReturnNonnullByDefault;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBServer extends ConfigBase {
     public final ConfigGroup infrastructure = group(0, "infrastructure", Comments.infrastructure);
@@ -10,18 +14,22 @@ public class CCBServer extends ConfigBase {
     public final CCBCrates crates = nested(0, CCBCrates::new, Comments.crates);
     public final CCBAirtights airtights = nested(0, CCBAirtights::new, Comments.airtights);
     public final CCBEquipments equipments = nested(0, CCBEquipments::new, Comments.equipments);
+    public final CCBEndDevices endDevices = nested(0, CCBEndDevices::new, Comments.endDevices);
+    public final CCBFluids fluids = nested(0, CCBFluids::new, Comments.fluids);
 
     @Override
-    public @NotNull String getName() {
+    public String getName() {
         return "server";
     }
 
     private static class Comments {
-        static String infrastructure = "The Backbone of Create: Crafted Beginning";
-        static String stress = "Fine tune the kinetic stats of individual components.";
-        static String crates = "Everything related to crates.";
-        static String gas = "Everything related to gases.";
-        static String airtights = "Airtight Blocks and Items added by Create: Crafted Beginning.";
-        static String equipments = "Tools and weapons added by Create: Crafted Beginning.";
+        static String infrastructure = "Core settings for Create: Crafted Beginning.";
+        static String stress = "Fine-tune the kinetic properties of individual components.";
+        static String crates = "Settings for crates added by Create: Crafted Beginning.";
+        static String gas = "Settings for gases added by Create: Crafted Beginning.";
+        static String airtights = "Settings for airtight blocks and items added by Create: Crafted Beginning.";
+        static String equipments = "Settings for equipment added by Create: Crafted Beginning.";
+        static String endDevices = "Settings for endgame mechanical devices added by Create: Crafted Beginning.";
+        static String fluids = "Settings for custom fluid behavior added by Create: Crafted Beginning.";
     }
 }

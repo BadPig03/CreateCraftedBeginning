@@ -67,10 +67,8 @@ public class GasPackagerRenderer extends SmartBlockEntityRenderer<GasPackagerBlo
         }
 
         ms.pushPose();
-
         TransformStack.of(ms).translate(Vec3.atLowerCornerOf(facing.getNormal()).scale(trayOffset)).translate(0.5f, 0.5f, 0.5f).rotateYDegrees(facing.toYRot()).translate(0, 0.125f, 0).scale(1.5f, 1.5f, 1.5f);
         Minecraft.getInstance().getItemRenderer().renderStatic(null, renderedBox, ItemDisplayContext.FIXED, false, ms, buffer, be.getLevel(), light, overlay, 0);
-
         ms.popPose();
     }
 }

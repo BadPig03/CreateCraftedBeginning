@@ -2,8 +2,9 @@ package net.ty.createcraftedbeginning.content.airtights.gaspackager;
 
 import com.simibubi.create.content.logistics.BigItemStack;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.network.chat.Component;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.data.CCBLang;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -30,43 +31,27 @@ public final class GasRequestUtils {
     }
 
     public static String format(int amount, boolean keeper) {
-        String bucket = keeper ? "b" : "B";
         if (amount >= BigItemStack.INF) {
-            return keeper ? "+" : CCBLang.translateDirect("jade.gas.infinity_mark").getString();
+            return keeper ? "+" : Component.translatable("jade.gas.infinity_mark").getString();
         }
-        else if (amount >= 1000000) {
-            if (amount % 1000000 == 0) {
-                return amount / 1000000 + "k" + bucket;
-            }
-            return String.format("%.1f", Math.floor(amount / 100000.0f) / 10.0f) + 'k' + bucket;
-        }
-        else if (amount >= 1000) {
-            if (amount % 1000 == 0) {
-                return amount / 1000 + bucket;
-            }
-            return String.format("%.1f", Math.floor(amount / 100.0f) / 10.0f) + bucket;
-        }
-        else if (amount >= 100) {
-            return "0." + amount / 100 + bucket;
-        }
-        return amount + "m" + bucket;
+        return keeper ? GasAmountUtils.formatStockKeeper(amount) : GasAmountUtils.formatCompact(amount);
     }
 
     public static String formatPrecise(int amount) {
         if (amount >= BigItemStack.INF) {
-            return "∞";
+            return Component.translatable("jade.gas.infinity_mark").getString();
         }
-        return amount + "mB";
+        return GasAmountUtils.formatPrecise(amount);
     }
 
     public static int getStep(boolean alt, boolean ctrl, boolean shift) {
         if (alt) {
             return getAltStep();
         }
-        else if (ctrl) {
+        if (ctrl) {
             return getCtrlStep();
         }
-        else if (shift) {
+        if (shift) {
             return getShiftStep();
         }
         return getScrollStep();

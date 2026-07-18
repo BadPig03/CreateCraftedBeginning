@@ -5,6 +5,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.syncher.SynchedEntityData.Builder;
 import net.minecraft.server.level.ServerLevel;
@@ -39,6 +40,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile implements ItemSupplier, IEntityWithComplexSpawn {
     public static final double MIN_DELTA_MOVEMENT_LENGTH = 0.01;
+    private static final double MIN_DELTA_MOVEMENT_LENGTH_SQR = MIN_DELTA_MOVEMENT_LENGTH * MIN_DELTA_MOVEMENT_LENGTH;
+    private static final double MIN_WEATHER_DURATION_RATIO = MIN_DELTA_MOVEMENT_LENGTH;
     private static final float DEFAULT_SIZE = 0.25f;
     private static final float INERTIA = 0.95f;
     private static final int DEFAULT_Y = 32;
@@ -73,8 +76,8 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
 
     @SuppressWarnings("unchecked")
     public static EntityType.Builder<?> build(EntityType.Builder<?> builder) {
-        EntityType.Builder<WeatherFlareProjectileEntity> entityBuilder = (EntityType.Builder<WeatherFlareProjectileEntity>) builder;
-        return entityBuilder.sized(DEFAULT_SIZE, DEFAULT_SIZE).eyeHeight(0);
+        EntityType.Builder<WeatherFlareProjectileEntity> typedBuilder = (EntityType.Builder<WeatherFlareProjectileEntity>) builder;
+        return typedBuilder.sized(DEFAULT_SIZE, DEFAULT_SIZE).eyeHeight(0);
     }
 
     public void setCopied(boolean copied) {
@@ -113,11 +116,15 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
             return;
         }
 
-        if (getBlockY() > level.getMaxBuildHeight() + 30 || ++lifeTime > MAX_LIFE_TIME) {
+        if (getBlockY() >= level.getMaxBuildHeight()) {
+            explode();
+            return;
+        }
+        if (++lifeTime > MAX_LIFE_TIME) {
             destroy();
             return;
         }
-        if (getDeltaMovement().length() >= MIN_DELTA_MOVEMENT_LENGTH) {
+        if (getDeltaMovement().lengthSqr() >= MIN_DELTA_MOVEMENT_LENGTH_SQR) {
             return;
         }
 
@@ -126,7 +133,7 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
 
     @Override
     protected boolean canHitEntity(Entity target) {
-        return true;
+        return super.canHitEntity(target);
     }
 
     @Override
@@ -151,49 +158,52 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
     }
 
     @Override
-    public void addAdditionalSaveData(CompoundTag compoundTag) {
-        super.addAdditionalSaveData(compoundTag);
-        compoundTag.put(COMPOUND_KEY_ITEM, itemStack.save(registryAccess()));
-        compoundTag.putInt(COMPOUND_KEY_LIFE_TIME, lifeTime);
-        compoundTag.putDouble(COMPOUND_KEY_START_Y, startY);
-        compoundTag.putBoolean(COMPOUND_KEY_COPIED, copied);
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        tag.put(COMPOUND_KEY_ITEM, itemStack.save(registryAccess()));
+        tag.putInt(COMPOUND_KEY_LIFE_TIME, lifeTime);
+        tag.putDouble(COMPOUND_KEY_START_Y, startY);
+        tag.putBoolean(COMPOUND_KEY_COPIED, copied);
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundTag compoundTag) {
-        super.readAdditionalSaveData(compoundTag);
-        if (compoundTag.contains(COMPOUND_KEY_ITEM)) {
-            itemStack = ItemStack.parse(registryAccess(), compoundTag.getCompound(COMPOUND_KEY_ITEM)).orElseGet(WeatherFlareProjectileEntity::getDefaultItem);
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        if (tag.contains(COMPOUND_KEY_ITEM, Tag.TAG_COMPOUND)) {
+            itemStack = ItemStack.parse(registryAccess(), tag.getCompound(COMPOUND_KEY_ITEM)).orElseGet(WeatherFlareProjectileEntity::getDefaultItem);
         }
         else {
             itemStack = getDefaultItem();
         }
-        if (compoundTag.contains(COMPOUND_KEY_LIFE_TIME)) {
-            lifeTime = compoundTag.getInt(COMPOUND_KEY_LIFE_TIME);
+        if (tag.contains(COMPOUND_KEY_LIFE_TIME, Tag.TAG_ANY_NUMERIC)) {
+            lifeTime = Math.clamp(tag.getInt(COMPOUND_KEY_LIFE_TIME), 0, MAX_LIFE_TIME);
         }
-        if (compoundTag.contains(COMPOUND_KEY_START_Y)) {
-            startY = compoundTag.getDouble(COMPOUND_KEY_START_Y);
+        if (tag.contains(COMPOUND_KEY_START_Y, Tag.TAG_ANY_NUMERIC)) {
+            double storedStartY = tag.getDouble(COMPOUND_KEY_START_Y);
+            if (Double.isFinite(storedStartY)) {
+                startY = storedStartY;
+            }
         }
-        if (compoundTag.contains(COMPOUND_KEY_COPIED)) {
-            copied = compoundTag.getBoolean(COMPOUND_KEY_COPIED);
+        if (tag.contains(COMPOUND_KEY_COPIED, Tag.TAG_BYTE)) {
+            copied = tag.getBoolean(COMPOUND_KEY_COPIED);
         }
     }
 
     @Override
     public void writeSpawnData(RegistryFriendlyByteBuf buffer) {
-        CompoundTag compoundTag = new CompoundTag();
-        addAdditionalSaveData(compoundTag);
-        buffer.writeNbt(compoundTag);
+        CompoundTag tag = new CompoundTag();
+        addAdditionalSaveData(tag);
+        buffer.writeNbt(tag);
     }
 
     @Override
-    public void readSpawnData(RegistryFriendlyByteBuf additionalData) {
-        CompoundTag compoundTag = additionalData.readNbt();
-        if (compoundTag == null) {
+    public void readSpawnData(RegistryFriendlyByteBuf buffer) {
+        CompoundTag tag = buffer.readNbt();
+        if (tag == null) {
             return;
         }
 
-        readAdditionalSaveData(compoundTag);
+        readAdditionalSaveData(tag);
     }
 
     @Override
@@ -219,26 +229,31 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
     }
 
     private void explode() {
-        if (!(level() instanceof ServerLevel serverLevel) || !(itemStack.getItem() instanceof IWeatherFlare flareItem)) {
+        if (!(level() instanceof ServerLevel level) || !(itemStack.getItem() instanceof IWeatherFlare flare)) {
             return;
         }
 
         Vec3 pos = position();
-        serverLevel.explode(null, pos.x, pos.y, pos.z, 0, ExplosionInteraction.NONE);
-        flareItem.setWeather(serverLevel, Mth.clamp((pos.y - startY) / DEFAULT_Y, MIN_DELTA_MOVEMENT_LENGTH, 16));
-        grantAdvancements(serverLevel);
+        boolean wasStormy = level.isRaining() || level.isThundering();
+        level.explode(null, pos.x, pos.y, pos.z, 0, ExplosionInteraction.NONE);
+        double ratio = Mth.clamp((pos.y - startY) / DEFAULT_Y, MIN_WEATHER_DURATION_RATIO, 16);
+        flare.setWeather(level, ratio);
+        grantAdvancements(level, wasStormy);
         discard();
     }
 
-    private void grantAdvancements(ServerLevel serverLevel) {
+    private void grantAdvancements(ServerLevel level, boolean wasStormy) {
         if (!(getOwner() instanceof Player player)) {
             return;
         }
 
-        if ((serverLevel.isRaining() || serverLevel.isThundering()) && itemStack.is(CCBItems.SUNNY_FLARE)) {
+        if (wasStormy && itemStack.is(CCBItems.SUNNY_FLARE)) {
             CCBAdvancements.LOOKS_LIKE_THE_WEATHERS_CLEARING_UP.awardTo(player);
         }
-        if (serverLevel.isThundering() && itemStack.is(CCBItems.ANCHOR_FLARE) || !serverLevel.getGameRules().getRule(GameRules.RULE_WEATHER_CYCLE).get() && itemStack.is(CCBItems.THUNDERSTORM_FLARE)) {
+
+        boolean isWeatherCycleDisabled = !level.getGameRules().getRule(GameRules.RULE_WEATHER_CYCLE).get();
+        boolean isStormAnchored = level.isThundering() && isWeatherCycleDisabled && (itemStack.is(CCBItems.ANCHOR_FLARE) || itemStack.is(CCBItems.THUNDERSTORM_FLARE));
+        if (isStormAnchored) {
             CCBAdvancements.I_AM_THE_STORM_THAT_IS_APPROACHING.awardTo(player);
         }
     }

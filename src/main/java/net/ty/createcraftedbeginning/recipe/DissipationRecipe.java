@@ -1,10 +1,8 @@
 package net.ty.createcraftedbeginning.recipe;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
@@ -12,27 +10,12 @@ import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRe
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class DissipationRecipe extends StandardProcessingWithGasRecipe<SingleRecipeInput> {
     public DissipationRecipe(ProcessingWithGasRecipeParams params) {
         super(CCBRecipeTypes.DISSIPATION, params);
-    }
-
-    public static Gas getResultGasType(Level level, Gas gasType) {
-        List<RecipeHolder<DissipationRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.DISSIPATION.getType());
-        for (RecipeHolder<DissipationRecipe> holder : recipes) {
-            DissipationRecipe recipe = holder.value();
-            if (!recipe.getGasIngredient().test(gasType)) {
-                continue;
-            }
-
-            return recipe.getGasResult().getGasType();
-        }
-
-        return Gas.EMPTY_GAS_HOLDER.value();
     }
 
     public SizedGasIngredient getGasIngredient() {

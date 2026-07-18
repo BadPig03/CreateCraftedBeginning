@@ -11,7 +11,6 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
@@ -25,34 +24,43 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implements IHaveGoggleInformation {
     private static final String COMPOUND_KEY_CORE = "Core";
-    private static final int BASE_ROTATION_SPEED = 16;
-    private static final int LAZY_TICK_RATE = 4;
-
     private final TeslaTurbineCore core;
 
     private CCBAdvancementBehaviour advancementBehaviour;
+    private float lastGeneratedSpeed = Float.NaN;
 
     public TeslaTurbineBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
         core = new TeslaTurbineCore(this);
-        setLazyTickRate(LAZY_TICK_RATE);
+        setLazyTickRate(TeslaTurbineUtils.LAZY_TICK_RATE);
+    }
+
+    public static float calculateStressCapacity(float generatedSpeed) {
+        float speed = Math.abs(generatedSpeed);
+        int maxSpeed = AllConfigs.server().kinetics.maxRotationSpeed.get();
+        double baseCapacity = BlockStressValues.getCapacity(CCBBlocks.TESLA_TURBINE_BLOCK.get());
+        return (float) (speed * baseCapacity / maxSpeed);
     }
 
     @Override
     public void tick() {
         super.tick();
-        core.tick();
-        if (isOverStressed()) {
+        if (level == null || level.isClientSide) {
             return;
         }
 
-        updateGeneratedRotation();
+        core.tick();
+        if (isOverStressed()) {
+            lastGeneratedSpeed = Float.NaN;
+            return;
+        }
+
+        refreshGeneratedRotationIfNeeded();
     }
 
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        core.getTooltipBuilder().addToGoggleTooltip(tooltip);
-        return true;
+        return core.addToGoggleTooltip(tooltip);
     }
 
     @Override
@@ -64,22 +72,30 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
     @Override
     public void initialize() {
         super.initialize();
-        updateGeneratedRotation();
+        lastGeneratedSpeed = Float.NaN;
+        refreshGeneratedRotationIfNeeded();
+    }
+
+    @Override
+    public float calculateAddedStressCapacity() {
+        float capacity = calculateStressCapacity(getGeneratedSpeed());
+        lastCapacityProvided = capacity;
+        return capacity;
     }
 
     @Override
     public void onSpeedChanged(float previousSpeed) {
         super.onSpeedChanged(previousSpeed);
-        if (level == null || level.isClientSide || getSpeed() == 0) {
+        if (level == null || level.isClientSide || getSpeed() == 0 || getGeneratedSpeed() == 0) {
             return;
         }
 
-        if (core == null || !core.getStructureManager().isActive()) {
+        if (!core.getStructureManager().isActive()) {
             return;
         }
 
         advancementBehaviour.awardPlayer(CCBAdvancements.GENIUS_ENGINEER);
-        if (core.getLevelCalculator().getCurrentLevel() != TeslaTurbineCore.MAX_LEVEL) {
+        if (core.getLevelCalculator().getCurrentLevel() != TeslaTurbineUtils.MAX_LEVEL) {
             return;
         }
 
@@ -87,41 +103,32 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
     }
 
     @Override
-    public float calculateAddedStressCapacity() {
-        float capacity = Mth.abs(getGeneratedSpeed()) * (float) BlockStressValues.getCapacity(CCBBlocks.TESLA_TURBINE_BLOCK.get()) / AllConfigs.server().kinetics.maxRotationSpeed.get();
-        lastCapacityProvided = capacity;
-        return capacity;
-    }
-
-    @Override
     public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        compoundTag.put(COMPOUND_KEY_CORE, core.write(provider));
+        compoundTag.put(COMPOUND_KEY_CORE, core.write(provider, clientPacket));
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        if (!compoundTag.contains(COMPOUND_KEY_CORE)) {
-            return;
-        }
-
-        core.read(compoundTag.getCompound(COMPOUND_KEY_CORE), provider);
-    }
-
-    @Override
-    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        super.addBehaviours(behaviours);
-		
-		advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.MIRACLE_OF_ENGINEERING, CCBAdvancements.GENIUS_ENGINEER, CCBAdvancements.TESLA_TURBINE_EASY_AS_PIE);
-        behaviours.add(advancementBehaviour);
+        CompoundTag coreTag = compoundTag.contains(COMPOUND_KEY_CORE) ? compoundTag.getCompound(COMPOUND_KEY_CORE) : new CompoundTag();
+        core.read(coreTag, provider, clientPacket);
+        lastGeneratedSpeed = Float.NaN;
     }
 
     @Override
     public float getGeneratedSpeed() {
         int direction = core.getFlowMeter().isClockwiseFlow() ? -1 : 1;
         int modifier = getBlockState().getValue(TeslaTurbineBlock.AXIS) == Axis.Z ? -1 : 1;
-        return BASE_ROTATION_SPEED * core.getLevelCalculator().getCurrentLevel() * direction * modifier;
+        return TeslaTurbineUtils.BASE_ROTATION_SPEED * core.getLevelCalculator().getCurrentLevel() * direction * modifier;
+    }
+
+    @Override
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+        super.addBehaviours(behaviours);
+
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.MIRACLE_OF_ENGINEERING, CCBAdvancements.GENIUS_ENGINEER, CCBAdvancements.TESLA_TURBINE_EASY_AS_PIE);
+        behaviours.add(advancementBehaviour);
     }
 
     public TeslaTurbineCore getCore() {
@@ -130,5 +137,19 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
 
     public CCBAdvancementBehaviour getAdvancementBehaviour() {
         return advancementBehaviour;
+    }
+
+    private void refreshGeneratedRotationIfNeeded() {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+
+        float generatedSpeed = getGeneratedSpeed();
+        if (Float.compare(generatedSpeed, lastGeneratedSpeed) == 0) {
+            return;
+        }
+
+        lastGeneratedSpeed = generatedSpeed;
+        updateGeneratedRotation();
     }
 }

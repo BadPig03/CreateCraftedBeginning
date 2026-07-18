@@ -54,84 +54,39 @@ public enum AirtightReactorKettleStructuralPosition implements StringRepresentab
     }
 
     public static AirtightReactorKettleStructuralPosition fromOffset(int x, int y, int z) {
-        if (x == -1 && y == 1 && z == -1) {
-            return TOP_LEFT_UP;
-        }
-        else if (x == 0 && y == 1 && z == -1) {
-            return TOP_MID_UP;
-        }
-        else if (x == 1 && y == 1 && z == -1) {
-            return TOP_RIGHT_UP;
-        }
-        else if (x == -1 && y == 1 && z == 0) {
-            return TOP_LEFT_MID;
-        }
-        else if (x == 1 && y == 1 && z == 0) {
-            return TOP_RIGHT_MID;
-        }
-        else if (x == -1 && y == 1 && z == 1) {
-            return TOP_LEFT_DOWN;
-        }
-        else if (x == 0 && y == 1 && z == 1) {
-            return TOP_MID_DOWN;
-        }
-        else if (x == 1 && y == 1 && z == 1) {
-            return TOP_RIGHT_DOWN;
-        }
-        else if (x == -1 && y == 0 && z == -1) {
-            return MID_LEFT_UP;
-        }
-        else if (x == 0 && y == 0 && z == -1) {
-            return MID_MID_UP;
-        }
-        else if (x == 1 && y == 0 && z == -1) {
-            return MID_RIGHT_UP;
-        }
-        else if (x == -1 && y == 0 && z == 0) {
-            return MID_LEFT_MID;
-        }
-        else if (x == 1 && y == 0 && z == 0) {
-            return MID_RIGHT_MID;
-        }
-        else if (x == -1 && y == 0 && z == 1) {
-            return MID_LEFT_DOWN;
-        }
-        else if (x == 0 && y == 0 && z == 1) {
-            return MID_MID_DOWN;
-        }
-        else if (x == 1 && y == 0 && z == 1) {
-            return MID_RIGHT_DOWN;
-        }
-        if (x == -1 && y == -1 && z == -1) {
-            return BOTTOM_LEFT_UP;
-        }
-        else if (x == 0 && y == -1 && z == -1) {
-            return BOTTOM_MID_UP;
-        }
-        else if (x == 1 && y == -1 && z == -1) {
-            return BOTTOM_RIGHT_UP;
-        }
-        else if (x == -1 && y == -1 && z == 0) {
-            return BOTTOM_LEFT_MID;
-        }
-        else if (x == 0 && y == -1 && z == 0){
-            return BOTTOM_CENTER;
-        }
-        else if (x == 1 && y == -1 && z == 0) {
-            return BOTTOM_RIGHT_MID;
-        }
-        else if (x == -1 && y == -1 && z == 1) {
-            return BOTTOM_LEFT_DOWN;
-        }
-        else if (x == 0 && y == -1 && z == 1) {
-            return BOTTOM_MID_DOWN;
-        }
-        else if (x == 1 && y == -1 && z == 1) {
-            return BOTTOM_RIGHT_DOWN;
-        }
-        else {
+        if (x < -1 || x > 1 || y < -1 || y > 1 || z < -1 || z > 1) {
             return TOP_CENTER;
         }
+
+        int index = (x + 1) * 9 + (y + 1) * 3 + z + 1;
+        return switch (index) {
+            case 0 -> BOTTOM_LEFT_UP;
+            case 1 -> BOTTOM_LEFT_MID;
+            case 2 -> BOTTOM_LEFT_DOWN;
+            case 3 -> MID_LEFT_UP;
+            case 4 -> MID_LEFT_MID;
+            case 5 -> MID_LEFT_DOWN;
+            case 6 -> TOP_LEFT_UP;
+            case 7 -> TOP_LEFT_MID;
+            case 8 -> TOP_LEFT_DOWN;
+            case 9 -> BOTTOM_MID_UP;
+            case 10 -> BOTTOM_CENTER;
+            case 11 -> BOTTOM_MID_DOWN;
+            case 12 -> MID_MID_UP;
+            case 14 -> MID_MID_DOWN;
+            case 15 -> TOP_MID_UP;
+            case 17 -> TOP_MID_DOWN;
+            case 18 -> BOTTOM_RIGHT_UP;
+            case 19 -> BOTTOM_RIGHT_MID;
+            case 20 -> BOTTOM_RIGHT_DOWN;
+            case 21 -> MID_RIGHT_UP;
+            case 22 -> MID_RIGHT_MID;
+            case 23 -> MID_RIGHT_DOWN;
+            case 24 -> TOP_RIGHT_UP;
+            case 25 -> TOP_RIGHT_MID;
+            case 26 -> TOP_RIGHT_DOWN;
+            default -> TOP_CENTER;
+        };
     }
 
     public boolean isCog() {

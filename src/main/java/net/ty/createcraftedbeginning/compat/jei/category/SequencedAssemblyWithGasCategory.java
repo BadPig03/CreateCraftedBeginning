@@ -23,6 +23,7 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasSubCategory;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.data.CCBGUITextures;
+import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
 import net.ty.createcraftedbeginning.recipe.SequencedWithGasRecipe;
 
@@ -36,7 +37,9 @@ import java.util.Map;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<SequencedAssemblyWithGasRecipe> {
-    public static final String[] ROMANS = {"I", "II", "III", "IV", "V", "VI", "-"};
+    private static final String[] ROMANS = {"I", "II", "III", "IV", "V", "VI", "-"};
+    private static final int STEP_MARGIN = 3;
+    private static final int RANDOM_OUTPUT_OFFSET = -7;
     public Map<ResourceLocation, SequencedAssemblyWithGasSubCategory> subCategories = new HashMap<>();
 
     public SequencedAssemblyWithGasCategory(Info<SequencedAssemblyWithGasRecipe> info) {
@@ -44,11 +47,11 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
     }
 
     @Override
-    public List<Component> getTooltipStrings(SequencedAssemblyWithGasRecipe recipe, IRecipeSlotsView iRecipeSlotsView, double mouseX, double mouseY) {
+    public List<Component> getTooltipStrings(SequencedAssemblyWithGasRecipe recipe, IRecipeSlotsView recipeSlots, double mouseX, double mouseY) {
         List<Component> tooltip = new ArrayList<>();
         boolean singleOutput = recipe.getOutputChance() == 1;
         boolean willRepeat = recipe.getLoops() > 1;
-        int xOffset = -7;
+        int xOffset = RANDOM_OUTPUT_OFFSET;
         int minX = 150 + xOffset;
         int maxX = minX + 18;
         int minY = 90;
@@ -69,40 +72,37 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
             return tooltip;
         }
 
-        if (mouseY > 5 && mouseY < 84) {
-            int width = 0;
-            int margin = 3;
-            for (SequencedWithGasRecipe<?> sequencedRecipe : recipe.getSequence()) {
-                width += getSubCategory(sequencedRecipe).getWidth() + margin;
+        if (mouseY <= 5 || mouseY >= 84) {
+            return tooltip;
+        }
+
+        int width = getSequenceWidth(recipe);
+        xOffset = width / 2 + getBackground().getWidth() / -2;
+        double relativeX = mouseX + xOffset;
+        List<SequencedWithGasRecipe<?>> sequence = recipe.getSequence();
+        for (int i = 0; i < sequence.size(); i++) {
+            SequencedWithGasRecipe<?> step = sequence.get(i);
+            SequencedAssemblyWithGasSubCategory subCategory = getSubCategory(step);
+            if (relativeX >= 0 && relativeX < subCategory.getWidth()) {
+                tooltip.add(CreateLang.translateDirect("recipe.assembly.step", i + 1));
+                tooltip.add(step.getAsAssemblyRecipe().getDescriptionForAssembly().plainCopy().withStyle(ChatFormatting.DARK_GREEN));
+                return tooltip;
             }
-            width -= margin;
-            xOffset = width / 2 + getBackground().getWidth() / -2;
-            double relativeX = mouseX + xOffset;
-            List<SequencedWithGasRecipe<?>> sequence = recipe.getSequence();
-            for (int i = 0; i < sequence.size(); i++) {
-                SequencedWithGasRecipe<?> sequencedRecipe = sequence.get(i);
-                SequencedAssemblyWithGasSubCategory subCategory = getSubCategory(sequencedRecipe);
-                if (relativeX >= 0 && relativeX < subCategory.getWidth()) {
-                    tooltip.add(CreateLang.translateDirect("recipe.assembly.step", i + 1));
-                    tooltip.add(sequencedRecipe.getAsAssemblyRecipe().getDescriptionForAssembly().plainCopy().withStyle(ChatFormatting.DARK_GREEN));
-                    return tooltip;
-                }
-                relativeX -= subCategory.getWidth() + margin;
-            }
+            relativeX -= subCategory.getWidth() + STEP_MARGIN;
         }
 
         return tooltip;
     }
 
     @Override
-    public void draw(SequencedAssemblyWithGasRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
+    public void draw(SequencedAssemblyWithGasRecipe recipe, IRecipeSlotsView recipeSlots, GuiGraphics graphics, double mouseX, double mouseY) {
         Font font = Minecraft.getInstance().font;
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
         poseStack.pushPose();
         poseStack.translate(0, 15, 0);
         boolean singleOutput = recipe.getOutputChance() == 1;
-        int xOffset = singleOutput ? 0 : -7;
+        int xOffset = singleOutput ? 0 : RANDOM_OUTPUT_OFFSET;
         CCBGUITextures.JEI_LONG_ARROW.render(graphics, 52 + xOffset, 79);
         if (!singleOutput) {
             AllGuiTextures.JEI_CHANCE_SLOT.render(graphics, 150 + xOffset, 75);
@@ -117,12 +117,7 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
             poseStack.popPose();
         }
         poseStack.popPose();
-        int width = 0;
-        int margin = 3;
-        for (SequencedWithGasRecipe<?> sequencedRecipe : recipe.getSequence()) {
-            width += getSubCategory(sequencedRecipe).getWidth() + margin;
-        }
-        width -= margin;
+        int width = getSequenceWidth(recipe);
         poseStack.translate((float) width / -2 + (float) getBackground().getWidth() / 2, 0, 0);
         poseStack.pushPose();
         List<SequencedWithGasRecipe<?>> sequence = recipe.getSequence();
@@ -133,7 +128,7 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
             MutableComponent component = Component.literal(ROMANS[Math.min(i, 6)]);
             graphics.drawString(font, component, font.width(component) / -2 + subWidth / 2, 2, 0x888888, false);
             subCategory.draw(sequencedRecipe, graphics, mouseX, mouseY, i);
-            poseStack.translate(subWidth + margin, 0, 0);
+            poseStack.translate(subWidth + STEP_MARGIN, 0, 0);
         }
         poseStack.popPose();
         poseStack.popPose();
@@ -142,44 +137,62 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, SequencedAssemblyWithGasRecipe recipe, IFocusGroup focuses) {
         boolean noRandomOutput = recipe.getOutputChance() == 1;
-        int xOffset = noRandomOutput ? 0 : -7;
+        int xOffset = noRandomOutput ? 0 : RANDOM_OUTPUT_OFFSET;
         builder.addSlot(RecipeIngredientRole.INPUT, 27 + xOffset, 91).setBackground(getRenderedSlot(), -1, -1).addItemStacks(List.of(recipe.getIngredient().getItems()));
-        builder.addSlot(RecipeIngredientRole.OUTPUT, 132 + xOffset, 91).setBackground(getRenderedSlot(recipe.getOutputChance()), -1, -1).addItemStack(getResultItem(recipe)).addRichTooltipCallback((recipeSlotView, tooltip) -> {
+        builder.addSlot(RecipeIngredientRole.OUTPUT, 132 + xOffset, 91).setBackground(getRenderedSlot(recipe.getOutputChance()), -1, -1).addItemStack(getResultItem(recipe)).addRichTooltipCallback((view, tooltip) -> {
             if (noRandomOutput) {
                 return;
             }
 
-            float chance = recipe.getOutputChance();
-            tooltip.add(chanceComponent(chance));
+            tooltip.add(chanceComponent(recipe.getOutputChance()));
         });
-        int width = 0;
-        int margin = 3;
-        for (SequencedWithGasRecipe<?> sequencedRecipe : recipe.getSequence()) {
-            width += getSubCategory(sequencedRecipe).getWidth() + margin;
-        }
-        width -= margin;
+
+        int width = getSequenceWidth(recipe);
         int x = width / -2 + getBackground().getWidth() / 2;
-        for (SequencedWithGasRecipe<?> sequencedRecipe : recipe.getSequence()) {
-            SequencedAssemblyWithGasSubCategory subCategory = getSubCategory(sequencedRecipe);
-            subCategory.setRecipe(builder, sequencedRecipe, focuses, x);
-            x += subCategory.getWidth() + margin;
+        for (SequencedWithGasRecipe<?> step : recipe.getSequence()) {
+            SequencedAssemblyWithGasSubCategory subCategory = getSubCategory(step);
+            subCategory.setRecipe(builder, step, focuses, x);
+            x += subCategory.getWidth() + STEP_MARGIN;
         }
-        for (int i = 1; i < recipe.getLoops(); i++) {
-            recipe.getSequence().forEach(sequencedRecipe -> {
-                NonNullList<Ingredient> sequencedIngredients = sequencedRecipe.getRecipe().getIngredients();
-                sequencedIngredients.subList(1, sequencedIngredients.size()).forEach(ingredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(ingredient));
-                sequencedRecipe.getRecipe().getFluidIngredients().forEach(fluidIngredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(NeoForgeTypes.FLUID_STACK, Arrays.asList(fluidIngredient.getFluids())));
-                sequencedRecipe.getRecipe().getGasIngredients().forEach(gasIngredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(CCBJEIPlugin.GAS_STACK, Arrays.asList(gasIngredient.getGases())));
-            });
+        for (int repeat = 1; repeat < recipe.getLoops(); repeat++) {
+            for (SequencedWithGasRecipe<?> step : recipe.getSequence()) {
+                addInvisibleInputs(builder, step);
+            }
         }
     }
 
-    private SequencedAssemblyWithGasSubCategory getSubCategory(SequencedWithGasRecipe<?> sequencedRecipe) {
-        return subCategories.computeIfAbsent(RegisteredObjectsHelper.getKeyOrThrow(sequencedRecipe.getRecipe().getSerializer()), rl -> sequencedRecipe.getAsAssemblyRecipe().getJEISubCategory().get().get());
+    private int getSequenceWidth(SequencedAssemblyWithGasRecipe recipe) {
+        int width = 0;
+        for (SequencedWithGasRecipe<?> step : recipe.getSequence()) {
+            width += getSubCategory(step).getWidth() + STEP_MARGIN;
+        }
+        return width - STEP_MARGIN;
+    }
+
+    private void addInvisibleInputs(IRecipeLayoutBuilder builder, SequencedWithGasRecipe<?> step) {
+        var stepRecipe = step.getRecipe();
+        NonNullList<Ingredient> ingredients = stepRecipe.getIngredients();
+        ingredients.subList(1, ingredients.size()).forEach(ingredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(ingredient));
+        stepRecipe.getFluidIngredients().forEach(fluidIngredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(NeoForgeTypes.FLUID_STACK, Arrays.asList(fluidIngredient.getFluids())));
+        stepRecipe.getGasIngredients().forEach(gasIngredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(CCBJEIPlugin.GAS_STACK, Arrays.asList(gasIngredient.getGases())));
+    }
+
+    private SequencedAssemblyWithGasSubCategory getSubCategory(SequencedWithGasRecipe<?> step) {
+        ResourceLocation serializerId = RegisteredObjectsHelper.getKeyOrThrow(step.getRecipe().getSerializer());
+        return subCategories.computeIfAbsent(serializerId, ignored -> step.getAsAssemblyRecipe().getJEISubCategory().get().get());
     }
 
     protected MutableComponent chanceComponent(float chance) {
-        String number = chance < 0.01 ? "<1" : chance > 0.99 ? ">99" : String.valueOf(Math.round(chance * 100));
-        return CreateLang.translateDirect("recipe.processing.chance", number).withStyle(ChatFormatting.GOLD);
+        String number;
+        if (chance < 0.01) {
+            number = "<1";
+        }
+        else if (chance > 0.99) {
+            number = ">99";
+        }
+        else {
+            number = String.valueOf(Math.round(chance * 100));
+        }
+        return CCBLang.translate("recipe.processing.chance", number).style(ChatFormatting.GOLD).component();
     }
 }

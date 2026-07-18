@@ -34,6 +34,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.HandheldDrillAttackModeButton;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.Nullable;
@@ -44,6 +45,8 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvider {
+    private static final int USE_DURATION = 72000;
+
     public AirtightHandheldDrillItem(Tier tier, Properties properties) {
         super(tier, properties);
     }
@@ -89,7 +92,7 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
             return;
         }
 
-        int usedTicks = 72000 - remainingUseDuration;
+        int usedTicks = USE_DURATION - remainingUseDuration;
         if (usedTicks <= 4 || usedTicks % 4 != 0) {
             return;
         }
@@ -128,7 +131,7 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
                 return InteractionResultHolder.sidedSuccess(drill, true);
             }
 
-            player.openMenu(this, buf -> ItemStack.STREAM_CODEC.encode(buf, drill));
+            player.openMenu(this, buf -> AirtightUpgradableMenu.writeOpeningData(buf, drill, InteractionHand.MAIN_HAND));
             player.getCooldowns().addCooldown(this, 10);
             return InteractionResultHolder.sidedSuccess(drill, false);
         }
@@ -162,7 +165,7 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
             return false;
         }
 
-        AirtightHandheldDrillUtils.mineAreaBlocks(drill, serverLevel, pos, player);
+        AirtightHandheldDrillUtils.mineAreaBlocks(drill, serverLevel, state, pos, player);
         return true;
     }
 
@@ -178,24 +181,24 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
 
     @Override
     public int getUseDuration(ItemStack drill, LivingEntity entity) {
-        return 72000;
+        return USE_DURATION;
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack drill, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
         LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null || !CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
+        if (player == null) {
             return;
         }
 
-        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
+        GasStack gasContent = CanisterContainerClients.getDisplayedGasContent();
         if (gasContent.isEmpty()) {
             return;
         }
 
         tooltip.add(CommonComponents.EMPTY);
-        tooltip.add(CCBLang.gasName(gasContent).add(CCBLang.translate("gui.tooltips.gas_tools.content")).style(ChatFormatting.GRAY).component());
+        tooltip.add(CCBLang.gasName(gasContent).add(CCBLang.translate("gui.gas_tools.content")).style(ChatFormatting.GRAY).component());
         AirtightDrillHandler drillHandler = AirtightDrillHandlerUtils.of(gasContent.getGasType());
         drillHandler.appendHoverText(drill, context, tooltip, tooltipFlag);
     }
@@ -212,6 +215,6 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
 
     @Override
     public @Nullable AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
-        return new AirtightHandheldDrillMenu(CCBMenuTypes.AIRTIGHT_HANDHELD_DRILL_MENU.get(), containerId, playerInventory, player.getMainHandItem());
+        return new AirtightHandheldDrillMenu(CCBMenuTypes.AIRTIGHT_HANDHELD_DRILL_MENU.get(), containerId, playerInventory, player.getMainHandItem(), InteractionHand.MAIN_HAND);
     }
 }

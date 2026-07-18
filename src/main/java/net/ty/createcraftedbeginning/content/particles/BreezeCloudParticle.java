@@ -44,15 +44,16 @@ public class BreezeCloudParticle extends TextureSheetParticle {
         alpha = ARGB32.alpha(color) / 255.0f;
 
         quadSize *= 1.875f;
-        int i = (int) (8.0 / (Math.random() * 0.8 + 0.3));
-        lifetime = (int) Math.max((float) i * 2.5f, 1.0f);
+        int baseLifetime = (int) (8.0 / (Math.random() * 0.8 + 0.3));
+        lifetime = (int) Math.max((float) baseLifetime * 2.5f, 1.0f);
         hasPhysics = false;
         setSpriteFromAge(sprites);
     }
 
     @Override
     public float getQuadSize(float scaleFactor) {
-        return quadSize * Mth.clamp(((float) age + scaleFactor) / (float) lifetime * 32.0f, 0.0f, 1.0f);
+        float progress = ((float) age + scaleFactor) / (float) lifetime * 32.0f;
+        return quadSize * Mth.clamp(progress, 0.0f, 1.0f);
     }
 
     @Override

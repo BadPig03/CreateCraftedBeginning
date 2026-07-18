@@ -7,15 +7,13 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreen;
-import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
@@ -25,7 +23,7 @@ public class GasFilterGhostIngredientHandler implements IGhostIngredientHandler<
 
     @Override
     public <I> @NotNull List<Target<I>> getTargetsTyped(GasFilterScreen gui, ITypedIngredient<I> ingredient, boolean doStart) {
-        List<Target<I>> targets = new LinkedList<>();
+        List<Target<I>> targets = new ArrayList<>();
         if (ingredient.getType() != CCBJEIPlugin.GAS_STACK) {
             return targets;
         }
@@ -43,9 +41,11 @@ public class GasFilterGhostIngredientHandler implements IGhostIngredientHandler<
     private static class GhostTarget<I> implements Target<I> {
         private final Rect2i area;
         private final GasFilterScreen gui;
+        private final int slotIndex;
 
         public GhostTarget(GasFilterScreen gui, int slotIndex) {
             this.gui = gui;
+            this.slotIndex = slotIndex;
             Slot slot = gui.getMenu().slots.get(slotIndex + PLAYER_INVENTORY_SLOTS);
             area = new Rect2i(gui.getGuiLeft() + slot.x, gui.getGuiTop() + slot.y, 16, 16);
         }
@@ -57,13 +57,13 @@ public class GasFilterGhostIngredientHandler implements IGhostIngredientHandler<
 
         @Override
         public void accept(I ingredient) {
-            if (!(ingredient instanceof GasStack gasStack)) {
+            if (!(ingredient instanceof GasStack gasStack) || gasStack.isEmpty()) {
                 return;
             }
 
-            ItemStack virtualItem = GasVirtualUtils.createVirtualItem(gasStack);
-            gui.getMenu().insertDirectly(List.of(virtualItem));
-            CatnipServices.NETWORK.sendToServer(new GasFilterGhostItemSubmitPacket(virtualItem));
+            GasStack normalizedGas = gasStack.copyWithAmount(1);
+            gui.getMenu().setGas(slotIndex, normalizedGas);
+            CatnipServices.NETWORK.sendToServer(new GasFilterGhostItemSubmitPacket(normalizedGas, slotIndex));
         }
     }
 }

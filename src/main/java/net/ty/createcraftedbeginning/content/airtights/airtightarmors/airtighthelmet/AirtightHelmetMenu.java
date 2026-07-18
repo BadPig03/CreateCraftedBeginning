@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighth
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
@@ -21,8 +22,8 @@ public class AirtightHelmetMenu extends AirtightUpgradableMenu {
         super(type, id, inv, extraData);
     }
 
-    public AirtightHelmetMenu(MenuType<?> type, int id, Inventory inv, ItemStack contentHolder) {
-        super(type, id, inv, contentHolder);
+    public AirtightHelmetMenu(MenuType<?> type, int id, Inventory inv, ItemStack contentHolder, InteractionHand sourceHand) {
+        super(type, id, inv, contentHolder, sourceHand);
     }
 
     @Override
@@ -32,8 +33,8 @@ public class AirtightHelmetMenu extends AirtightUpgradableMenu {
 
     @Override
     protected boolean isValidUpgrade(ItemStack stack) {
-        AirtightUpgrade upgrade = AirtightHelmetUpgradeRegistry.getByItem(stack.getItem());
-        return upgrade != null && !currentStatusList.get(upgrade.getIndex()).isInstalled();
+        AirtightUpgrade upgrade = AirtightHelmetUpgradeRegistry.getByStack(stack);
+        return upgrade != null && !getStatus(upgrade).isInstalled();
     }
 
     @Override

@@ -21,12 +21,12 @@ public class AirtightWithGasRecipeTrieFinder {
     private static final Cache<CacheKey, AirtightWithGasRecipeTrie<?>> CACHED_TRIES = CacheBuilder.newBuilder().maximumSize(16).build();
 
     public static AirtightWithGasRecipeTrie<?> get(Object cacheKey, Level level, Predicate<RecipeHolder<? extends Recipe<?>>> conditions) throws ExecutionException {
-        CacheKey scopedCacheKey = new CacheKey(cacheKey, level.getRecipeManager());
-        return CACHED_TRIES.get(scopedCacheKey, () -> {
+        CacheKey scopedKey = new CacheKey(cacheKey, level.getRecipeManager());
+        return CACHED_TRIES.get(scopedKey, () -> {
             Builder<Recipe<?>> builder = AirtightWithGasRecipeTrie.builder();
-            List<RecipeHolder<? extends Recipe<?>>> list = RecipeFinder.get(scopedCacheKey, level, conditions);
-            for (RecipeHolder<? extends Recipe<?>> recipe : list) {
-                builder.insert(recipe.value());
+            List<RecipeHolder<? extends Recipe<?>>> recipes = RecipeFinder.get(scopedKey, level, conditions);
+            for (RecipeHolder<? extends Recipe<?>> holder : recipes) {
+                builder.insert(holder.value());
             }
             return builder.build();
         });

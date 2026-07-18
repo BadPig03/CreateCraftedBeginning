@@ -8,8 +8,8 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.api.VerticalIndicator;
-import net.ty.createcraftedbeginning.api.VerticalIndicator.State;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.VerticalIndicator;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.VerticalIndicator.State;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.AirtightLeggingsUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableScreen;
@@ -24,6 +24,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AirtightLeggingsScreen extends AirtightUpgradableScreen<AirtightLeggingsMenu> {
     public AirtightLeggingsScreen(AirtightLeggingsMenu menu, Inventory inv, Component title) {
         super(menu, inv, title, CCBGUITextures.ARMORS);
+    }
+
+    private static State getIndicatorState(AirtightUpgradeStatus status, boolean canInstall) {
+        if (!status.isInstalled()) {
+            return canInstall ? State.YELLOW : State.OFF;
+        }
+
+        return status.isEnabled() ? State.GREEN : State.RED;
     }
 
     @Override
@@ -41,11 +49,13 @@ public class AirtightLeggingsScreen extends AirtightUpgradableScreen<AirtightLeg
             IconButton button = new IconButton(leftPos + offset.getFirst(), topPos + offset.getSecond(), upgrade.getIcon()).withCallback(() -> onUpgradeButtonPressed(upgrade));
             upgradeButtons.put(upgrade, button);
 
-            boolean isRight = upgrade.isRightIndicator();
-            VerticalIndicator indicator = new VerticalIndicator(leftPos + (isRight ? offset.getFirst() + 18 : offset.getFirst() - 6), topPos + offset.getSecond(), isRight);
+            boolean rightAligned = upgrade.isRightIndicator();
+            int indicatorX = leftPos + offset.getFirst() + (rightAligned ? 18 : -6);
+            VerticalIndicator indicator = new VerticalIndicator(indicatorX, topPos + offset.getSecond(), rightAligned);
             upgradeIndicators.put(upgrade, indicator);
 
-            buttonConfigsMap.put(upgrade, new AirtightUpgradableScreen.ScreenButtonConfig(button, upgrade.getTitle(), upgrade.getDescription(), () -> button.green, () -> !menu.getStatus(upgrade).isInstalled() && button.active, () -> upgrade.getComponents(menu.player, menu.contentHolder.copy()), upgrade.getUpgradeItem()));
+            AirtightUpgradableScreen.ScreenButtonConfig config = new AirtightUpgradableScreen.ScreenButtonConfig(button, upgrade.getTitle(), upgrade.getDescription(), () -> button.green, () -> !menu.getStatus(upgrade).isInstalled() && button.active, () -> upgrade.getComponents(menu.player, menu.contentHolder.copy()), upgrade.getUpgradeItem());
+            buttonConfigsMap.put(upgrade, config);
             addRenderableWidgets(button, indicator);
         });
     }
@@ -56,11 +66,11 @@ public class AirtightLeggingsScreen extends AirtightUpgradableScreen<AirtightLeg
         AirtightLeggingsUpgradeRegistry.forEach(upgrade -> {
             IconButton button = upgradeButtons.get(upgrade);
             VerticalIndicator indicator = (VerticalIndicator) upgradeIndicators.get(upgrade);
-            AirtightUpgradeStatus upgradeStatus = menu.getStatus(upgrade);
+            AirtightUpgradeStatus status = menu.getStatus(upgrade);
 
-            button.active = upgradeStatus.isInstalled() || stack.is(upgrade.getUpgradeItem());
-            button.green = upgradeStatus.isInstalled() && upgradeStatus.isEnabled();
-            indicator.state = upgradeStatus.isInstalled() ? upgradeStatus.isEnabled() ? State.GREEN : State.RED : button.active ? State.YELLOW : State.OFF;
+            button.active = status.isInstalled() || upgrade.testUpgradeItem(stack);
+            button.green = status.isInstalled() && status.isEnabled();
+            indicator.state = getIndicatorState(status, button.active);
         });
         disableUpgradeButton.visible = menu.getCurrentStatusList().stream().allMatch(AirtightUpgradeStatus::isInstalled);
     }

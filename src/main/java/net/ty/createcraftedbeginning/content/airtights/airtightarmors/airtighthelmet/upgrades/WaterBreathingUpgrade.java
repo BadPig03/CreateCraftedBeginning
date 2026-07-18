@@ -16,6 +16,7 @@ import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePowerMode;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -28,6 +29,9 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public enum WaterBreathingUpgrade implements AirtightUpgrade {
     INSTANCE;
+
+    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("water_breathing");
+    private static final Couple<Integer> OFFSET = Couple.create(36, 55);
 
     @Override
     public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
@@ -45,8 +49,13 @@ public enum WaterBreathingUpgrade implements AirtightUpgrade {
 
     @Override
     public boolean meetsConditions(Player player, ItemStack item) {
-        FluidType fluidType = player.getEyeInFluidType();
-        return !fluidType.isAir() && !player.level().getBlockState(BlockPos.containing(player.position())).is(Blocks.BUBBLE_COLUMN) && !MobEffectUtil.hasWaterBreathing(player) && player.canDrownInFluidType(fluidType) && !player.getAbilities().invulnerable;
+        FluidType fluid = player.getEyeInFluidType();
+        if (fluid.isAir()) {
+            return false;
+        }
+
+        BlockPos pos = BlockPos.containing(player.position());
+        return !player.level().getBlockState(pos).is(Blocks.BUBBLE_COLUMN) && !MobEffectUtil.hasWaterBreathing(player) && player.canDrownInFluidType(fluid) && !player.getAbilities().invulnerable;
     }
 
     @Override
@@ -71,17 +80,17 @@ public enum WaterBreathingUpgrade implements AirtightUpgrade {
 
     @Override
     public Couple<Integer> getOffset() {
-        return Couple.create(36, 55);
+        return OFFSET;
+    }
+
+    @Override
+    public AirtightUpgradePowerMode getPowerMode() {
+        return AirtightUpgradePowerMode.CONTINUOUS;
     }
 
     @Override
     public int getGasConsumptionPerSecond(Player player, ItemStack item) {
         return CCBConfig.server().equipments.waterBreathingConsumption.get();
-    }
-
-    @Override
-    public int getIndex() {
-        return 1;
     }
 
     @Override
@@ -91,7 +100,7 @@ public enum WaterBreathingUpgrade implements AirtightUpgrade {
 
     @Override
     public ResourceLocation getID() {
-        return CreateCraftedBeginning.asResource("water_breathing");
+        return ID;
     }
 
     @Override

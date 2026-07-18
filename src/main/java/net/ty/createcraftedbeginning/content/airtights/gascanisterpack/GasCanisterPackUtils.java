@@ -33,15 +33,17 @@ public final class GasCanisterPackUtils {
             return !(newComponents.isEmpty() && oldComponents.isEmpty());
         }
 
-        Set<DataComponentType<?>> newKeys = new HashSet<>(newComponents.keySet());
-        Set<DataComponentType<?>> oldKeys = new HashSet<>(oldComponents.keySet());
-        newKeys.remove(CCBDataComponents.GAS_CANISTER_PACK_FLAGS);
-        newKeys.remove(CCBDataComponents.CANISTER_CONTAINER_CONTENTS);
-        newKeys.remove(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES);
-        oldKeys.remove(CCBDataComponents.GAS_CANISTER_PACK_FLAGS);
-        oldKeys.remove(CCBDataComponents.CANISTER_CONTAINER_CONTENTS);
-        oldKeys.remove(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES);
+        Set<DataComponentType<?>> newKeys = getComparedKeys(newComponents);
+        Set<DataComponentType<?>> oldKeys = getComparedKeys(oldComponents);
         return !newKeys.equals(oldKeys) || !newKeys.stream().allMatch(key -> Objects.equals(newComponents.get(key), oldComponents.get(key)));
+    }
+
+    private static Set<DataComponentType<?>> getComparedKeys(DataComponentMap components) {
+        Set<DataComponentType<?>> keys = new HashSet<>(components.keySet());
+        keys.remove(CCBDataComponents.GAS_CANISTER_PACK_FLAGS);
+        keys.remove(CCBDataComponents.CANISTER_CONTAINER_CONTENTS);
+        keys.remove(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES);
+        return keys;
     }
 
     public static boolean isCanisterPackMenuOpened(Player player, ItemStack pack) {

@@ -14,7 +14,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.neoforged.neoforge.common.Tags.Items;
-import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalBlock;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
@@ -31,7 +30,7 @@ public class EndIncinerationBlowerBlock extends EndMechanicalBlock implements IB
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
         if (!stack.is(Items.TOOLS_WRENCH)) {
-            return ItemInteractionResult.FAIL;
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
         if (level.isClientSide) {
@@ -45,7 +44,6 @@ public class EndIncinerationBlowerBlock extends EndMechanicalBlock implements IB
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
         super.setPlacedBy(level, pos, state, entity, stack);
-        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
         withBlockEntityDo(level, pos, EndIncinerationBlowerBlockEntity::updateStructural);
         if (!(entity instanceof ServerPlayer player)) {
             return;
@@ -53,14 +51,6 @@ public class EndIncinerationBlowerBlock extends EndMechanicalBlock implements IB
 
         withBlockEntityDo(level, pos, be -> be.setOwner(player.getUUID()));
     }
-
-    @Override
-	public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-		if (!isMoving && !state.is(newState.getBlock())) {
-            withBlockEntityDo(level, pos, EndIncinerationBlowerBlockEntity::discardPlayer);
-        }
-		super.onRemove(state, level, pos, newState, isMoving);
-	}
 
     @Override
     public Class<EndIncinerationBlowerBlockEntity> getBlockEntityClass() {

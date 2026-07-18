@@ -40,16 +40,9 @@ public class AirtightExtendArmItemRenderer extends CustomRenderedItemModelRender
 
     @Override
     protected void render(ItemStack arm, CustomRenderedItemModel model, PartialItemModelRenderer renderer, ItemDisplayContext transformType, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        PoseTransformStack transformStack = TransformStack.of(ms);
         AirtightExtendArmRenderHandler renderHandler = CreateCraftedBeginningClient.AIRTIGHT_EXTEND_ARM_RENDER_HANDLER;
-        float animation;
-        boolean shouldRender = transformType == ItemDisplayContext.FIRST_PERSON_LEFT_HAND || transformType == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND;
-        if (shouldRender) {
-            animation = renderHandler.getAnimation(AnimationTickHolder.getPartialTicks());
-        }
-        else {
-            animation = 0.0f;
-        }
+        boolean firstPerson = transformType == ItemDisplayContext.FIRST_PERSON_LEFT_HAND || transformType == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND;
+        float animation = firstPerson ? renderHandler.getAnimation(AnimationTickHolder.getPartialTicks()) : 0.0f;
         renderer.renderSolid(model.getOriginalModel(), light);
 
         ms.pushPose();
@@ -68,15 +61,16 @@ public class AirtightExtendArmItemRenderer extends CustomRenderedItemModelRender
 
         ms.pushPose();
         ms.translate(0, 0, -animation * 2.25);
-        renderer.renderSolid(shouldRender ? renderHandler.pose.get() : POINTING.get(), light);
+        renderer.renderSolid(firstPerson ? renderHandler.getPose().get() : POINTING.get(), light);
         ms.popPose();
 
         ms.pushPose();
         float angle = AnimationTickHolder.getRenderTime() * -2;
-        if (shouldRender) {
+        if (firstPerson) {
             angle += 360 * animation * animation * animation;
         }
         angle %= 360;
+        PoseTransformStack transformStack = TransformStack.of(ms);
         transformStack.translate(0, 0.0625, 0).rotateZDegrees(angle).translateBack(0, 0.0625, 0);
         renderer.renderSolid(COGS.get(), light);
         ms.popPose();

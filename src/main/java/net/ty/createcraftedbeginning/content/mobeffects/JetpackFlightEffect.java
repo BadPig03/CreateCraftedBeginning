@@ -13,10 +13,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class JetpackFlightEffect extends MobEffect {
-    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("jetpack_flight_effect");
+    private static final ResourceLocation MODIFIER_ID = CreateCraftedBeginning.asResource("jetpack_flight_effect");
 
     public JetpackFlightEffect(MobEffectCategory category, int color) {
         super(category, color);
-        addAttributeModifier(NeoForgeMod.CREATIVE_FLIGHT, ID, 1, Operation.ADD_VALUE);
+        addAttributeModifier(NeoForgeMod.CREATIVE_FLIGHT, MODIFIER_ID, 1, Operation.ADD_VALUE);
     }
 }

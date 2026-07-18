@@ -46,19 +46,20 @@ public class CCBBlockEntityBuilder<T extends BlockEntity, P> extends BlockEntity
         if (this.visualFactory == null) {
             CatnipServices.PLATFORM.executeOnClientOnly(() -> this::registerVisualizer);
         }
+
         this.visualFactory = visualFactory;
         this.renderNormally = renderNormally;
         return this;
     }
 
     private void registerVisualizer() {
-        OneTimeEventReceiver.addModListener(getOwner(), FMLClientSetupEvent.class, event -> {
-            NonNullSupplier<Factory<T>> visualFactory = this.visualFactory;
-            if (visualFactory == null) {
+        OneTimeEventReceiver.addModListener(getOwner(), FMLClientSetupEvent.class, ignoredEvent -> {
+            NonNullSupplier<Factory<T>> factory = visualFactory;
+            if (factory == null) {
                 return;
             }
 
-            SimpleBlockEntityVisualizer.builder(getEntry()).factory(visualFactory.get()).skipVanillaRender(be -> !renderNormally.test(be)).apply();
+            SimpleBlockEntityVisualizer.builder(getEntry()).factory(factory.get()).skipVanillaRender(blockEntity -> !renderNormally.test(blockEntity)).apply();
         });
     }
 }

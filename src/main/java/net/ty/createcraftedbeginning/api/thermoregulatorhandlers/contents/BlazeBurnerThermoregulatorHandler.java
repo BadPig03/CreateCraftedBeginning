@@ -13,6 +13,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class BlazeBurnerThermoregulatorHandler implements AirtightThermoregulatorHandler {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public float getHeat(Level level, BlockPos pos, BlockState state) {
         if (!state.hasProperty(BlazeBurnerBlock.HEAT_LEVEL)) {

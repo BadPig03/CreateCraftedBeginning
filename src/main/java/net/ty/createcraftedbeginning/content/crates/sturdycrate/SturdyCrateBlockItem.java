@@ -24,19 +24,22 @@ public class SturdyCrateBlockItem extends BlockItem {
     }
 
     @Override
-    public int getMaxStackSize(ItemStack stack) {
-        SturdyCrateContents contents = stack.getOrDefault(CCBDataComponents.STURDY_CRATE_CONTENTS, SturdyCrateContents.empty());
-        return contents.equals(SturdyCrateContents.empty()) ? super.getMaxStackSize(stack) : 1;
-    }
-
-    @Override
     public void onDestroyed(ItemEntity itemEntity) {
         Level level = itemEntity.level();
         if (level.isClientSide) {
             return;
         }
 
-        SturdyCrateContents contents = itemEntity.getItem().getOrDefault(CCBDataComponents.STURDY_CRATE_CONTENTS, SturdyCrateContents.empty());
+        SturdyCrateContents contents = itemEntity.getItem().get(CCBDataComponents.STURDY_CRATE_CONTENTS);
+        if (contents == null) {
+            return;
+        }
+
         CrateContainersUtils.dropContents(level, itemEntity.position(), contents);
+    }
+
+    @Override
+    public int getMaxStackSize(ItemStack stack) {
+        return stack.has(CCBDataComponents.STURDY_CRATE_CONTENTS) ? 1 : super.getMaxStackSize(stack);
     }
 }

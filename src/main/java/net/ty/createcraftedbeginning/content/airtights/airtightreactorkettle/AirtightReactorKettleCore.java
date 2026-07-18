@@ -31,13 +31,13 @@ public class AirtightReactorKettleCore {
     }
 
     public CompoundTag write() {
-        CompoundTag compoundTag = new CompoundTag();
-        compoundTag.put(COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.write());
-        return compoundTag;
+        CompoundTag tag = new CompoundTag();
+        tag.put(COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.write());
+        return tag;
     }
 
-    public void read(CompoundTag compoundTag) {
-        structureManager.read(compoundTag.getCompound(COMPOUND_KEY_STRUCTURE_MANAGER));
+    public void read(CompoundTag tag) {
+        structureManager.read(tag.getCompound(COMPOUND_KEY_STRUCTURE_MANAGER));
     }
 
     public AirtightReactorKettleStructureManager getStructureManager() {

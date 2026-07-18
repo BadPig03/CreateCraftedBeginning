@@ -7,6 +7,7 @@ import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
@@ -30,14 +31,24 @@ public class AirVentEvents {
             return;
         }
 
+        Vec3 lookAngle = player.getLookAngle();
+        Direction lookDirection = Direction.getNearest(lookAngle.x, lookAngle.y, lookAngle.z);
         Level level = player.level();
-        Direction direction = player.getDirection();
-        BlockPos blockPos = player.blockPosition();
-        BlockState blockState = level.getBlockState(blockPos.relative(direction));
-        if (!(blockState.getBlock() instanceof AirVentBlock) || !blockState.getValue(AirVentBlock.PROPERTY_BY_DIRECTION.get(direction.getOpposite())).canPassThrough() ) {
+        BlockPos pos = player.blockPosition();
+        if (canEnterFrom(level, pos.relative(lookDirection), lookDirection)) {
+            player.setPose(Pose.SWIMMING);
+            return;
+        }
+
+        if (lookDirection != Direction.UP || !canEnterFrom(level, pos.above(2), lookDirection)) {
             return;
         }
 
         player.setPose(Pose.SWIMMING);
+    }
+
+    private static boolean canEnterFrom(Level level, BlockPos pos, Direction direction) {
+        BlockState state = level.getBlockState(pos);
+        return state.getBlock() instanceof AirVentBlock && AirVentBlock.getVentState(level, pos, state, direction.getOpposite()).canPassThrough();
     }
 }

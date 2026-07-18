@@ -22,13 +22,21 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class PressingWithGasRecipe extends StandardProcessingWithGasRecipe<SingleRecipeInput> implements IAssemblyRecipeWithGas {
+    /**
+     * Creates a new {@code PressingWithGasRecipe} instance.
+     *
+     * @param params the parameters used to configure the operation
+     */
     public PressingWithGasRecipe(ProcessingWithGasRecipeParams params) {
         super(CCBRecipeTypes.PRESSING_WITH_GAS, params);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public boolean matches(SingleRecipeInput inv, Level level) {
-        return !inv.isEmpty() && ingredients.getFirst().test(inv.getItem(0));
+    public boolean matches(SingleRecipeInput input, Level level) {
+        return !input.isEmpty() && ingredients.getFirst().test(input.getItem(0));
     }
 
     @Override
@@ -41,23 +49,35 @@ public class PressingWithGasRecipe extends StandardProcessingWithGasRecipe<Singl
         return 2;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @OnlyIn(Dist.CLIENT)
     public Component getDescriptionForAssembly() {
         return CreateLang.translateDirect("recipe.assembly.pressing");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void addRequiredMachines(Set<ItemLike> list) {
-        list.add(AllBlocks.MECHANICAL_PRESS.get());
+    public Supplier<Supplier<SequencedAssemblyWithGasSubCategory>> getJEISubCategory() {
+        return () -> AssemblyPressing::new;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void addAssemblyIngredients(List<Ingredient> list) {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public Supplier<Supplier<SequencedAssemblyWithGasSubCategory>> getJEISubCategory() {
-        return () -> AssemblyPressing::new;
+    public void addRequiredMachines(Set<ItemLike> list) {
+        list.add(AllBlocks.MECHANICAL_PRESS.get());
     }
 }

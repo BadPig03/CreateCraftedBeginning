@@ -17,7 +17,6 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -29,12 +28,11 @@ public abstract class TintedFluidType extends FluidType {
         super(properties);
         this.stillTexture = stillTexture;
         this.flowingTexture = flowingTexture;
+        CCBFluidClientExtensions.track(this, this::createClientExtensions);
     }
 
-    @SuppressWarnings("removal")
-    @Override
-    public void initializeClient(Consumer<IClientFluidTypeExtensions> consumer) {
-        consumer.accept(new IClientFluidTypeExtensions() {
+    private IClientFluidTypeExtensions createClientExtensions() {
+        return new IClientFluidTypeExtensions() {
             @Override
             public ResourceLocation getStillTexture() {
                 return stillTexture;
@@ -46,9 +44,9 @@ public abstract class TintedFluidType extends FluidType {
             }
 
             @Override
-            public Vector3f modifyFogColor(Camera camera, float partialTick, ClientLevel level, int renderDistance, float darkenWorldAmount, Vector3f fluidFogColor) {
-                Vector3f customFogColor = getCustomFogColor();
-                return customFogColor == null ? fluidFogColor : customFogColor;
+            public Vector3f modifyFogColor(Camera camera, float partialTick, ClientLevel level, int renderDistance, float darkenWorldAmount, Vector3f fogColor) {
+                Vector3f customColor = getCustomFogColor();
+                return customColor == null ? fogColor : customColor;
             }
 
             @Override
@@ -72,7 +70,7 @@ public abstract class TintedFluidType extends FluidType {
             public int getTintColor(FluidStack stack) {
                 return TintedFluidType.this.getTintColor(stack);
             }
-        });
+        };
     }
 
     protected abstract int getTintColor(FluidStack stack);

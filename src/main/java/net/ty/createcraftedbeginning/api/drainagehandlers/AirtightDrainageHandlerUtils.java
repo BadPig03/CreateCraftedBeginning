@@ -9,51 +9,38 @@ import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightDrainageHandlerEvent.DrainageHandler;
-import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Utility methods for querying and registering Airtight Drainage Handlers.
- * <p>
- * An {@link AirtightDrainageHandler} defines the effect applied when a specific
- * {@link Gas} is drained from an airtight pipe. This class acts as the common
- * entry point for resolving handlers from gases or gas stacks, and for
- * registering custom drainage behavior.
+ * Provides lookup and registration helpers for gas-specific airtight drainage effects.
+ * Handlers control effect application, outline rendering, and the outline inflation applied to drained gas.
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class AirtightDrainageHandlerUtils {
+    private static final AirtightDrainageHandler DEFAULT_HANDLER = new DefaultDrainageHandler();
+
     private AirtightDrainageHandlerUtils() {
     }
 
     /**
-     * Gets the Airtight Drainage Handler for the gas type contained in the given
-     * {@link GasStack}.
-     * <p>
-     * This method delegates to {@link #of(Gas)} using
-     * {@link GasStack#getGasType()}.
+     * Resolves the airtight drainage handler associated with the supplied input.
      *
-     * @param gasStack the gas stack whose gas type should be used
-     * @return the registered Airtight Drainage Handler for the gas type, or a
-     * {@link DefaultDrainageHandler} if no custom handler is registered
-     * @throws IllegalArgumentException if the gas stack contains an empty gas type
+     * @param gasStack the gas stack to inspect or process
+     * @return the resolved airtight drainage handler
+     * @throws IllegalArgumentException if an argument is invalid
      */
     public static AirtightDrainageHandler of(GasStack gasStack) throws IllegalArgumentException {
         return of(gasStack.getGasType());
     }
 
     /**
-     * Gets the Airtight Drainage Handler registered for the given gas type.
-     * <p>
-     * If the gas type has no custom handler registered in
-     * {@link AirtightDrainageHandler#REGISTRY}, this method returns a new
-     * {@link DefaultDrainageHandler}.
+     * Resolves the airtight drainage handler associated with the supplied input.
      *
-     * @param gasType the gas type to resolve the drainage handler for
-     * @return the registered Airtight Drainage Handler, or a default handler if no
-     * custom handler exists
-     * @throws IllegalArgumentException if the given gas type is empty
+     * @param gasType the gas type to inspect or process
+     * @return the resolved airtight drainage handler
+     * @throws IllegalArgumentException if an argument is invalid
      */
     public static AirtightDrainageHandler of(Gas gasType) throws IllegalArgumentException {
         if (gasType.isEmpty()) {
@@ -62,38 +49,40 @@ public final class AirtightDrainageHandlerUtils {
 
         AirtightDrainageHandler drainageHandler = AirtightDrainageHandler.REGISTRY.get(gasType);
         if (drainageHandler == null) {
-            return new DefaultDrainageHandler();
+            return DEFAULT_HANDLER;
         }
         return drainageHandler;
     }
 
     /**
-     * Registers an Airtight Drainage Handler for the gas identified by the given
-     * resource location.
-     * <p>
-     * The supplied {@link DrainageHandler} is wrapped as an
-     * {@link AirtightDrainageHandler}. The wrapped handler returns the provided
-     * inflation value from {@link AirtightDrainageHandler#getInflation()} and
-     * delegates its drainage behavior to the given KubeJS handler.
-     * <p>
-     * If {@code showOutline} is {@code true}, the wrapped handler shows the default
-     * drainage outline before running the custom drainage behavior.
+     * Registers a custom airtight drainage handler for the supplied target.
      *
-     * @param location    the resource location of the gas to register a drainage
-     *                    handler for
-     * @param inflation   the non-negative drainage area inflation radius
-     * @param showOutline whether the default drainage outline should be shown before
-     *                    running the custom handler
-     * @param handler     the custom drainage behavior to run
-     * @see AirtightDrainageHandler
+     * @param location    the resource location identifying the target value
+     * @param inflation   the inflation value to use
+     * @param showOutline whether show outline is enabled
+     * @param handler     the handler to register or invoke
      */
     public static void register(ResourceLocation location, float inflation, boolean showOutline, DrainageHandler handler) {
-        register(location, inflation, new AirtightDrainageHandler() {
+        register(location, new AirtightDrainageHandler() {
+            /**
+             * {@inheritDoc}
+             */
             @Override
             public float getInflation() {
                 return inflation;
             }
 
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public boolean shouldShowOutline() {
+                return showOutline;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
             @Override
             public void apply(Level level, BlockPos pos, Direction direction, Gas gasType) {
                 if (showOutline) {
@@ -105,29 +94,12 @@ public final class AirtightDrainageHandlerUtils {
     }
 
     /**
-     * Registers an Airtight Drainage Handler for the gas identified by the given
-     * resource location.
-     * <p>
-     * The gas is resolved from {@link CCBGasRegistries#GAS_REGISTRY}. If the given
-     * {@link ResourceLocation} does not point to an existing gas, registration is
-     * skipped and an error is logged.
-     * <p>
-     * This method does not override existing handlers. If the target gas already has
-     * an {@link AirtightDrainageHandler} registered in
-     * {@link AirtightDrainageHandler#REGISTRY}, registration is skipped and an error
-     * is logged.
-     * <p>
-     * The inflation value must be non-negative. Negative values are rejected and
-     * will not be registered.
+     * Registers a custom airtight drainage handler for the supplied target.
      *
-     * @param location  the resource location of the gas to register a drainage
-     *                  handler for
-     * @param inflation the non-negative drainage area inflation radius
-     * @param handler   the Airtight Drainage Handler to register
-     * @see AirtightDrainageHandler
-     * @see Gas#EMPTY_GAS_HOLDER
+     * @param location the resource location identifying the target value
+     * @param handler  the handler to register or invoke
      */
-    public static void register(ResourceLocation location, float inflation, AirtightDrainageHandler handler) {
+    public static void register(ResourceLocation location, AirtightDrainageHandler handler) {
         Gas gasType = Gas.getGasTypeByName(location);
         if (gasType.isEmpty()) {
             CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Drainage Handler: gas '{}' does not exist.", location);
@@ -137,11 +109,6 @@ public final class AirtightDrainageHandlerUtils {
         AirtightDrainageHandler drainageHandler = AirtightDrainageHandler.REGISTRY.get(gasType);
         if (drainageHandler != null) {
             CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Drainage Handler for gas '{}': a handler is already registered.", location);
-            return;
-        }
-
-        if (inflation < 0) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Drainage Handler for gas '{}': inflation must be non-negative.", location);
             return;
         }
 

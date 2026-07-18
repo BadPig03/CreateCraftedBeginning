@@ -4,10 +4,11 @@ import com.simibubi.create.api.packager.unpacking.UnpackingHandler;
 import com.simibubi.create.api.registry.SimpleRegistry;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.level.block.Block;
-import net.ty.createcraftedbeginning.content.crates.andesitecrate.AndesiteCrateUnpackingHandler;
-import net.ty.createcraftedbeginning.content.crates.brasscrate.BrassCrateUnpackingHandler;
-import net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateUnpackingHandler;
-import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateUnpackingHandler;
+import net.ty.createcraftedbeginning.content.crates.CrateUnpackingHandler;
+import net.ty.createcraftedbeginning.content.crates.andesitecrate.AndesiteCrateBlockEntity;
+import net.ty.createcraftedbeginning.content.crates.brasscrate.BrassCrateBlockEntity;
+import net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateBlockEntity;
+import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlockEntity;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -18,9 +19,9 @@ public class CCBUnpackingHandlers {
     public static void register() {
         SimpleRegistry<Block, UnpackingHandler> registry = UnpackingHandler.REGISTRY;
 
-        registry.register(CCBBlocks.ANDESITE_CRATE_BLOCK.get(), AndesiteCrateUnpackingHandler.INSTANCE);
-        registry.register(CCBBlocks.BRASS_CRATE_BLOCK.get(), BrassCrateUnpackingHandler.INSTANCE);
-        registry.register(CCBBlocks.STURDY_CRATE_BLOCK.get(), SturdyCrateUnpackingHandler.INSTANCE);
-        registry.register(CCBBlocks.CARDBOARD_CRATE_BLOCK.get(), CardboardCrateUnpackingHandler.INSTANCE);
+        registry.register(CCBBlocks.ANDESITE_CRATE_BLOCK.get(), CrateUnpackingHandler.standard(AndesiteCrateBlockEntity.class));
+        registry.register(CCBBlocks.BRASS_CRATE_BLOCK.get(), CrateUnpackingHandler.standard(BrassCrateBlockEntity.class));
+        registry.register(CCBBlocks.STURDY_CRATE_BLOCK.get(), CrateUnpackingHandler.standard(SturdyCrateBlockEntity.class));
+        registry.register(CCBBlocks.CARDBOARD_CRATE_BLOCK.get(), CrateUnpackingHandler.discarding(CardboardCrateBlockEntity.class));
     }
 }

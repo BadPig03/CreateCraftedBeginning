@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.compat.jade;
 
 import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -9,12 +10,15 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamber
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity;
-import org.jetbrains.annotations.NotNull;
 import snownee.jade.api.IWailaClientRegistration;
 import snownee.jade.api.IWailaCommonRegistration;
 import snownee.jade.api.IWailaPlugin;
 import snownee.jade.api.WailaPlugin;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @WailaPlugin
 public class JadePlugin implements IWailaPlugin {
     public static final ResourceLocation GAS = CreateCraftedBeginning.asResource("gas");
@@ -22,7 +26,7 @@ public class JadePlugin implements IWailaPlugin {
     public static final ResourceLocation GAS_CONTRAPTION_TOOLTIP = CreateCraftedBeginning.asResource("gas_contraption_tooltip");
 
     @Override
-    public void register(@NotNull IWailaCommonRegistration registration) {
+    public void register(IWailaCommonRegistration registration) {
         registration.registerEntityDataProvider(GasTooltipContraptionProvider.INSTANCE, AbstractContraptionEntity.class);
         registration.registerBlockDataProvider(GasTooltipProvider.INSTANCE, BlockEntity.class);
 
@@ -31,7 +35,7 @@ public class JadePlugin implements IWailaPlugin {
     }
 
     @Override
-    public void registerClient(@NotNull IWailaClientRegistration registration) {
+    public void registerClient(IWailaClientRegistration registration) {
         registration.addConfig(GAS, true);
 
         registration.registerEntityComponent(GasTooltipContraptionProvider.INSTANCE, AbstractContraptionEntity.class);

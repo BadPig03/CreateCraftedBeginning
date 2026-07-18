@@ -26,12 +26,12 @@ public record GasCanisterOverlayPacket(GasStack content, long capacity, int pack
 
     @Override
     public void handle(LocalPlayer player) {
-        CompoundTag compoundTag = new CompoundTag();
-        compoundTag.put(COMPOUND_KEY_CONTENT, content.saveOptional(player.level().registryAccess()));
-        compoundTag.putLong(COMPOUND_KEY_CAPACITY, capacity);
-        compoundTag.putInt(COMPOUND_KEY_PACK_TYPE, packType);
-        compoundTag.putBoolean(COMPOUND_KEY_CREATIVE, creative);
-        player.getPersistentData().put(COMPOUND_KEY_OVERLAY, compoundTag);
+        CompoundTag overlay = new CompoundTag();
+        overlay.put(COMPOUND_KEY_CONTENT, content.saveOptional(player.level().registryAccess()));
+        overlay.putLong(COMPOUND_KEY_CAPACITY, capacity);
+        overlay.putInt(COMPOUND_KEY_PACK_TYPE, packType);
+        overlay.putBoolean(COMPOUND_KEY_CREATIVE, creative);
+        player.getPersistentData().put(COMPOUND_KEY_OVERLAY, overlay);
     }
 
     @Contract(pure = true)

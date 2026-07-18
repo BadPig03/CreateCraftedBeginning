@@ -11,9 +11,9 @@ import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtension
 import net.neoforged.neoforge.fluids.BaseFlowingFluid;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.fluids.FluidType.Properties;
+import net.ty.createcraftedbeginning.content.fluids.CCBFluidClientExtensions;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -23,22 +23,22 @@ public class CCBVirtualFluidBuilder<T extends BaseFlowingFluid, P> extends Fluid
         source(sourceFactory);
     }
 
-    @SuppressWarnings("removal")
     private static FluidType defaultFluidType(Properties properties, ResourceLocation stillTexture, ResourceLocation flowingTexture) {
-        return new FluidType(properties) {
-            @Override
-            public void initializeClient(Consumer<IClientFluidTypeExtensions> consumer) {
-                consumer.accept(new IClientFluidTypeExtensions() {
-                    @Override
-                    public ResourceLocation getStillTexture() {
-                        return stillTexture;
-                    }
+        FluidType fluidType = new FluidType(properties);
+        CCBFluidClientExtensions.track(fluidType, () -> createClientExtensions(stillTexture, flowingTexture));
+        return fluidType;
+    }
 
-                    @Override
-                    public ResourceLocation getFlowingTexture() {
-                        return flowingTexture;
-                    }
-                });
+    private static IClientFluidTypeExtensions createClientExtensions(ResourceLocation stillTexture, ResourceLocation flowingTexture) {
+        return new IClientFluidTypeExtensions() {
+            @Override
+            public ResourceLocation getStillTexture() {
+                return stillTexture;
+            }
+
+            @Override
+            public ResourceLocation getFlowingTexture() {
+                return flowingTexture;
             }
         };
     }

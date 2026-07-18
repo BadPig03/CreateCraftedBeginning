@@ -21,29 +21,50 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class DeployerApplicationWithGasRecipe extends ItemApplicationWithGasRecipe implements IAssemblyRecipeWithGas {
+    /**
+     * Creates a new {@code DeployerApplicationWithGasRecipe} instance.
+     *
+     * @param params the parameters used to configure the operation
+     */
     public DeployerApplicationWithGasRecipe(ItemApplicationWithGasRecipeParams params) {
         super(CCBRecipeTypes.DEPLOYING_WITH_GAS, params);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @OnlyIn(Dist.CLIENT)
     public Component getDescriptionForAssembly() {
-        ItemStack[] matchingStacks = ingredients.get(1).getItems();
-        return matchingStacks.length == 0 ? Component.literal("Invalid") : CreateLang.translateDirect("recipe.assembly.deploying_item", Component.translatable(matchingStacks[0].getDescriptionId()).getString());
+        ItemStack[] stacks = ingredients.get(1).getItems();
+        if (stacks.length == 0) {
+            return Component.literal("Invalid");
+        }
+
+        return CreateLang.translateDirect("recipe.assembly.deploying_item", Component.translatable(stacks[0].getDescriptionId()).getString());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void addRequiredMachines(Set<ItemLike> list) {
-        list.add(AllBlocks.DEPLOYER.get());
+    public Supplier<Supplier<SequencedAssemblyWithGasSubCategory>> getJEISubCategory() {
+        return () -> AssemblyDeploying::new;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void addAssemblyIngredients(List<Ingredient> list) {
         list.add(ingredients.get(1));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public Supplier<Supplier<SequencedAssemblyWithGasSubCategory>> getJEISubCategory() {
-        return () -> AssemblyDeploying::new;
+    public void addRequiredMachines(Set<ItemLike> list) {
+        list.add(AllBlocks.DEPLOYER.get());
     }
 }

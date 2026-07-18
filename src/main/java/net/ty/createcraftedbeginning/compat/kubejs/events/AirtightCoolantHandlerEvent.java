@@ -2,14 +2,12 @@ package net.ty.createcraftedbeginning.compat.kubejs.events;
 
 import dev.latvian.mods.kubejs.block.state.BlockStatePredicate;
 import dev.latvian.mods.kubejs.event.KubeEvent;
-import dev.latvian.mods.rhino.util.HideFromJS;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.coolantshandlers.AirtightCoolantHandler;
 import net.ty.createcraftedbeginning.api.coolantshandlers.AirtightCoolantHandlerUtils;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.CoolantEfficiency;
 
@@ -51,21 +49,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class AirtightCoolantHandlerEvent implements KubeEvent {
-    /**
-     * Registers an Airtight Coolant Handler for the given block.
-     * <p>
-     * This overload is hidden from JavaScript and is intended for internal
-     * Java-side usage.
-     *
-     * @param block   the block to register the coolant handler for
-     * @param handler the airtight coolant handler to register
-     * @see AirtightCoolantHandlerUtils#register(Block, AirtightCoolantHandler)
-     */
-    @HideFromJS
-    public static void add(Block block, AirtightCoolantHandler handler) {
-        AirtightCoolantHandlerUtils.register(block, handler);
-    }
-
     /**
      * Registers an Airtight Coolant Handler for the given block.
      * <p>

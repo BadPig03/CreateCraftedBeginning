@@ -11,33 +11,43 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.ClipContext.Block;
+import net.minecraft.world.level.ClipContext.Fluid;
 import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.SimpleExplosionDamageCalculator;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlerUtils;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerConsumers;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandler;
+import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlerUtils;
+import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonShotContext;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerConsumers;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerConsumers.AffordableFuel;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.windcharge.AirtightCannonWindChargeProjectileEntity;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
 import net.ty.createcraftedbeginning.content.airtights.weatherflares.projectile.WeatherFlareProjectileEntity;
 import net.ty.createcraftedbeginning.registry.CCBItems;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.function.Function;
 
 @ParametersAreNonnullByDefault
@@ -53,24 +63,69 @@ public final class AirtightCannonUtils {
         return new SimpleExplosionDamageCalculator(true, false, Optional.of(knockbackMultiplier), BuiltInRegistries.BLOCK.getTag(BlockTags.BLOCKS_WIND_CHARGE_EXPLOSIONS).map(Function.identity()));
     }
 
-    public static List<LivingEntity> getNearbyEntities(Level level, Vec3 pos, float radius, Entity source) {
+    public static List<LivingEntity> getNearbyEntities(Level level, Vec3 pos, float radius, AirtightCannonShotContext context) {
+        return getNearbyEntities(level, pos, radius, context.projectile(), context.owner());
+    }
+
+    private static List<LivingEntity> getNearbyEntities(Level level, Vec3 pos, float radius, Entity source, @Nullable Entity owner) {
         float affectRadius = radius * 2;
         float affectRadiusSqr = affectRadius * affectRadius;
         AABB aabb = new AABB(pos, pos).inflate(affectRadius, affectRadius, affectRadius);
-        return level.getEntitiesOfClass(LivingEntity.class, aabb, entity -> (!(source instanceof AirtightCannonWindChargeProjectileEntity projectile) || !(projectile.getOwner() instanceof Player player) || entity != player) && entity.getBoundingBox().getCenter().distanceToSqr(pos) <= affectRadiusSqr);
+        return level.getEntitiesOfClass(LivingEntity.class, aabb, entity -> entity.getBoundingBox().getCenter().distanceToSqr(pos) <= affectRadiusSqr && !isProtectedTarget(owner, entity) && hasLineOfSight(level, pos, entity, source));
     }
 
-    public static float getChargedRatio(ItemStack cannon, Player player, int timeCharged) {
-        if (!CanisterContainerSuppliers.isAnyContainerAvailable(player) || timeCharged < MIN_USE_TIME) {
-            return -1;
+    private static boolean isProtectedTarget(@Nullable Entity owner, LivingEntity target) {
+        if (owner == null) {
+            return false;
+        }
+        if (target == owner || owner.isAlliedTo(target) || target.isAlliedTo(owner)) {
+            return true;
+        }
+        if (!(target instanceof TamableAnimal animal)) {
+            return false;
         }
 
-        return Mth.clamp((float) timeCharged / getEfficientUseTime(cannon), 0, 2);
+        LivingEntity petOwner = animal.getOwner();
+        return petOwner != null && (petOwner == owner || owner.isAlliedTo(petOwner) || petOwner.isAlliedTo(owner));
+    }
+
+    private static boolean hasLineOfSight(Level level, Vec3 sourcePos, LivingEntity target, Entity source) {
+        return isRayClear(level, sourcePos, target.getBoundingBox().getCenter(), source) || isRayClear(level, sourcePos, target.getEyePosition(), source);
+    }
+
+    private static boolean isRayClear(Level level, Vec3 sourcePos, Vec3 targetPos, Entity source) {
+        Vec3 ray = targetPos.subtract(sourcePos);
+        Vec3 rayStart = ray.lengthSqr() > 1.0e-8 ? sourcePos.add(ray.normalize().scale(1.0e-4)) : sourcePos;
+        ClipContext clipContext = new ClipContext(rayStart, targetPos, Block.COLLIDER, Fluid.NONE, source);
+        return level.clip(clipContext).getType() == Type.MISS;
+    }
+
+    public static void applyBonusDamage(List<LivingEntity> entities, DamageSource damageSource, float bonusDamage) {
+        applyBonusDamage(entities, damageSource, entity -> bonusDamage);
+    }
+
+    public static void applyBonusDamage(LivingEntity entity, DamageSource damageSource, float bonusDamage) {
+        entity.hurt(damageSource, bonusDamage);
+    }
+
+    public static void applyBonusDamage(List<LivingEntity> entities, DamageSource damageSource, BonusDamageFunction damageFunction) {
+        for (LivingEntity entity : entities) {
+            entity.hurt(damageSource, damageFunction.getDamage(entity));
+        }
+    }
+
+    public static OptionalDouble getChargedRatio(ItemStack cannon, Player player, int timeCharged) {
+        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
+        if (!CanisterContainerSuppliers.isAnyContainerAvailable(player) || gasContent.isEmpty() || timeCharged < MIN_USE_TIME) {
+            return OptionalDouble.empty();
+        }
+
+        return OptionalDouble.of(Mth.clamp((double) timeCharged / getEfficientUseTime(cannon), 0, 2));
     }
 
     public static int getEfficientUseTime(ItemStack cannon) {
         int quickChargeLevel = getEnchantmentLevel(cannon, Enchantments.QUICK_CHARGE);
-        return Math.max(EFFICIENT_USE_TIME - quickChargeLevel * 3, 0);
+        return Math.max(EFFICIENT_USE_TIME - quickChargeLevel * 3, 1);
     }
 
     public static int getEnchantmentLevel(ItemStack cannon, ResourceKey<Enchantment> enchantment) {
@@ -81,26 +136,36 @@ public final class AirtightCannonUtils {
         return cannon.getTagEnchantments().entrySet().stream().filter(entry -> entry.getKey().is(enchantment)).findFirst().map(Entry::getValue).orElse(0);
     }
 
-    public static int getGasConsumption(ItemStack cannon, float chargedRatio) {
+    public static double getRawGasConsumption(ItemStack cannon, float chargedRatio) {
         int multiShotMultiplier = 2 * getEnchantmentLevel(cannon, Enchantments.MULTISHOT) + 1;
-        float ratio = chargedRatio >= 1 ? Mth.square(chargedRatio) : Mth.sqrt(chargedRatio);
+        double ratio = chargedRatio >= 1 ? Mth.square(chargedRatio) : Mth.sqrt(chargedRatio);
         int gasConsumption = CCBConfig.server().equipments.perShotConsumption.get();
-        return Math.round(gasConsumption * multiShotMultiplier * ratio);
+        return gasConsumption * (double) multiShotMultiplier * ratio;
     }
 
-    public static void fireFlares(Level level, Player player, ItemStack flareItemStack, float chargedRatio) {
-        if (!CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
+    private static Optional<AffordableFuel> findShotFuel(Player player, ItemStack cannon, float chargedRatio) {
+        double rawBaseCost = getRawGasConsumption(cannon, chargedRatio);
+        return CanisterContainerConsumers.findAffordableFuel(player, gasType -> {
+            AirtightCannonHandler handler = AirtightCannonHandlerUtils.of(gasType);
+            return rawBaseCost * handler.getGasConsumptionMultiplier();
+        });
+    }
+
+    private static void displayInsufficientGasWarning(Player player) {
+        GasStack firstGas = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
+        if (firstGas.isEmpty()) {
+            GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas");
             return;
         }
 
-        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
-        Gas gasType = gasContent.getGasType();
+        GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", firstGas.getHoverName());
+    }
+
+    public static void fireFlares(Level level, Player player, ItemStack flareStack, float chargedRatio) {
         InteractionHand hand = player.getUsedItemHand();
         ItemStack cannon = player.getItemInHand(hand);
-        AirtightCannonHandler cannonHandler = AirtightCannonHandlerUtils.of(gasType);
-        int gasConsumption = Mth.ceil(getGasConsumption(cannon, chargedRatio) * cannonHandler.getGasConsumptionMultiplier());
-        if (!CanisterContainerConsumers.interactContainer(player, gasType, gasConsumption, () -> true, false)) {
-            GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", gasContent.getHoverName());
+        Optional<AffordableFuel> fuel = consumeShotFuel(player, cannon, chargedRatio);
+        if (fuel.isEmpty()) {
             return;
         }
 
@@ -110,53 +175,46 @@ public final class AirtightCannonUtils {
         Vec3 barrelPos = eyePos.add(lookVec.scale(0.75));
         Vec3 motion = lookVec.normalize().scale(chargedRatio);
 
-        WeatherFlareProjectileEntity flare = new WeatherFlareProjectileEntity(level, flareItemStack.getItem(), barrelPos.y);
+        WeatherFlareProjectileEntity flare = new WeatherFlareProjectileEntity(level, flareStack.getItem(), barrelPos.y);
         flare.setPos(barrelPos);
         flare.setOwner(player);
         flare.setDeltaMovement(motion);
         flare.setCopied(infinityLevel > 0);
         level.addFreshEntity(flare);
         if (!player.isCreative() && infinityLevel == 0) {
-            flareItemStack.shrink(1);
+            flareStack.shrink(1);
         }
-        ShootableGadgetItemMethods.applyCooldown(player, cannon, hand, s -> s.getItem() instanceof AirtightCannonItem, getEfficientUseTime(cannon));
-        ShootableGadgetItemMethods.sendPackets(player, b -> new AirtightCannonPacket(player.getEyePosition().add(player.getLookAngle().scale(0.75)), player.getLookAngle().normalize(), ItemStack.EMPTY, hand, 1, b));
+
+        finishShot(player, cannon, hand);
     }
 
     public static void spawnWindCharges(Level level, Player player, float chargedRatio) {
-        if (!CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
-            return;
-        }
-
-        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
-        Gas gasType = gasContent.getGasType();
         InteractionHand hand = player.getUsedItemHand();
         ItemStack cannon = player.getItemInHand(hand);
-        AirtightCannonHandler cannonHandler = AirtightCannonHandlerUtils.of(gasType);
-        int gasConsumption = Mth.ceil(getGasConsumption(cannon, chargedRatio) * cannonHandler.getGasConsumptionMultiplier());
-        if (!CanisterContainerConsumers.interactContainer(player, gasType, gasConsumption, () -> true, false)) {
-            GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", gasContent.getHoverName());
+        Optional<AffordableFuel> fuel = consumeShotFuel(player, cannon, chargedRatio);
+        if (fuel.isEmpty()) {
             return;
         }
 
+        AffordableFuel selectedFuel = fuel.get();
         RandomSource random = level.getRandom();
         Vec3 sprayBase = VecHelper.rotate(new Vec3(0, 0.1, 0), 360 * random.nextFloat(), Axis.Z);
         int multiShotLevel = getEnchantmentLevel(cannon, Enchantments.MULTISHOT);
         int punchLevel = getEnchantmentLevel(cannon, Enchantments.PUNCH);
         int powerLevel = getEnchantmentLevel(cannon, Enchantments.POWER);
         int flameLevel = getEnchantmentLevel(cannon, Enchantments.FLAME);
-        int windChargesCount = multiShotLevel * 2 + 1;
-        float sprayChange = 360.0f / windChargesCount;
-        Holder<Gas> gasHolder = gasContent.getGasHolder();
-        for (int i = 0; i < windChargesCount; i++) {
+        int windChargeCount = multiShotLevel * 2 + 1;
+        float sprayStep = 360.0f / windChargeCount;
+        Holder<Gas> gasHolder = selectedFuel.gasContent().getGasHolder();
+        for (int i = 0; i < windChargeCount; i++) {
             Vec3 eyePos = player.getEyePosition();
             Vec3 lookVec = player.getLookAngle();
             Vec3 barrelPos = eyePos.add(lookVec.scale(0.75));
             Vec3 motion = lookVec.normalize().scale(2);
             Vec3 splitMotion = motion;
-            if (windChargesCount > 1) {
+            if (windChargeCount > 1) {
                 float imperfection = 45 * (random.nextFloat() - 0.5f);
-                Vec3 sprayOffset = VecHelper.rotate(sprayBase, i * sprayChange + imperfection, Axis.Z);
+                Vec3 sprayOffset = VecHelper.rotate(sprayBase, i * sprayStep + imperfection, Axis.Z);
                 splitMotion = splitMotion.add(VecHelper.lookAt(sprayOffset, motion));
             }
 
@@ -170,7 +228,33 @@ public final class AirtightCannonUtils {
             level.addFreshEntity(windCharge);
         }
 
-        ShootableGadgetItemMethods.applyCooldown(player, cannon, hand, s -> s.getItem() instanceof AirtightCannonItem, getEfficientUseTime(cannon));
-        ShootableGadgetItemMethods.sendPackets(player, b -> new AirtightCannonPacket(player.getEyePosition().add(player.getLookAngle().scale(0.75)), player.getLookAngle().normalize(), ItemStack.EMPTY, hand, 1, b));
+        finishShot(player, cannon, hand);
+    }
+
+    private static Optional<AffordableFuel> consumeShotFuel(Player player, ItemStack cannon, float chargedRatio) {
+        Optional<AffordableFuel> fuel = findShotFuel(player, cannon, chargedRatio);
+        if (fuel.isEmpty()) {
+            displayInsufficientGasWarning(player);
+            return Optional.empty();
+        }
+
+        AffordableFuel selectedFuel = fuel.get();
+        boolean consumed = CanisterContainerConsumers.interactContainer(player, selectedFuel.gasType(), selectedFuel.amount(), () -> true, false);
+        if (consumed) {
+            return fuel;
+        }
+
+        GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", selectedFuel.gasContent().getHoverName());
+        return Optional.empty();
+    }
+
+    private static void finishShot(Player player, ItemStack cannon, InteractionHand hand) {
+        ShootableGadgetItemMethods.applyCooldown(player, cannon, hand, stack -> stack.getItem() instanceof AirtightCannonItem, getEfficientUseTime(cannon));
+        ShootableGadgetItemMethods.sendPackets(player, self -> new AirtightCannonPacket(player.getEyePosition().add(player.getLookAngle().scale(0.75)), player.getLookAngle().normalize(), ItemStack.EMPTY, hand, 1, self));
+    }
+
+    @FunctionalInterface
+    public interface BonusDamageFunction {
+        float getDamage(LivingEntity entity);
     }
 }

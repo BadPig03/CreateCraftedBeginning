@@ -1,17 +1,24 @@
 package net.ty.createcraftedbeginning.api.armorhandlers.natural;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.world.entity.EquipmentSlot;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class PressurizedNaturalAirArmorsHandler extends NaturalAirArmorsHandler {
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public float[] getConsumptionMultiplier() {
-        return new float[]{0.65f, 0.65f, 0.65f, 0.65f};
+    public float getConsumptionMultiplier(EquipmentSlot slot) {
+        return 0.65f;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public float getMultiplierForBoostingElytra() {
         return super.getMultiplierForBoostingElytra() * 1.5f;

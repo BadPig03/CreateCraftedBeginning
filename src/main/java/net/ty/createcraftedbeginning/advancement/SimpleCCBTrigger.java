@@ -22,13 +22,13 @@ public class SimpleCCBTrigger extends CriterionTriggerBase<Instance> {
         super(id);
     }
 
-    public void trigger(ServerPlayer player) {
-        trigger(player, null);
-    }
-
     @Contract(" -> new")
     public static Instance instance() {
         return new Instance();
+    }
+
+    public void trigger(ServerPlayer player) {
+        trigger(player, null);
     }
 
     @Override
@@ -37,12 +37,12 @@ public class SimpleCCBTrigger extends CriterionTriggerBase<Instance> {
     }
 
     public static class Instance extends CriterionTriggerBase.Instance {
-        private static final Codec<Instance> CODEC = RecordCodecBuilder.create(instance -> instance.group(EntityPredicate.ADVANCEMENT_CODEC.optionalFieldOf("player").forGetter(Instance::player)).apply(instance, Instance::new));
+        private static final Codec<Instance> CODEC = RecordCodecBuilder.create(builder -> builder.group(EntityPredicate.ADVANCEMENT_CODEC.optionalFieldOf("player").forGetter(Instance::player)).apply(builder, Instance::new));
 
         private final Optional<ContextAwarePredicate> player;
 
         public Instance() {
-            player = Optional.empty();
+            this(Optional.empty());
         }
 
         public Instance(Optional<ContextAwarePredicate> player) {

@@ -21,7 +21,7 @@ public enum CCBGUITextures implements ScreenElement, TextureSheetSegment {
     JEI_DOWN_ARROW("jei/widgets", 0, 21, 18, 14),
     JEI_HEAT_BAR("jei/widgets", 0, 201, 169, 19),
     JEI_LONG_ARROW("jei/widgets", 19, 0, 71, 10),
-	JEI_NO_HEAT_BAR("jei/widgets", 0, 221, 169, 19),
+    JEI_NO_HEAT_BAR("jei/widgets", 0, 221, 169, 19),
     JEI_PRESS_HEAD_TOOL("jei/widgets", 0, 72, 19, 19),
     JEI_QUESTION_MARK("jei/widgets", 0, 178, 12, 16),
     JEI_SHADOW("jei/widgets", 0, 56, 52, 11),
@@ -34,6 +34,10 @@ public enum CCBGUITextures implements ScreenElement, TextureSheetSegment {
     GAS_CANISTER_PACK_CANISTER("gas_canister_pack", 0, 144, 16, 38),
     GAS_CANISTER_PACK_CREATIVE_CANISTER("gas_canister_pack", 16, 144, 16, 38),
     GAS_FILTER("gas_filter", 0, 0, 214, 104),
+
+    GAS_FACTORY_GAUGE_RECIPE("gas_factory_gauge", 0, 0, 200, 160),
+    GAS_FACTORY_GAUGE_RESTOCK("gas_factory_gauge_restocker", 0, 0, 200, 125),
+    GAS_FACTORY_GAUGE_SET_GAS("gas_factory_gauge_set_gas", 0, 0, 184, 88),
 
     INDICATOR_RIGHT("widgets", 0, 0, 6, 18),
     INDICATOR_WHITE_RIGHT("widgets", 6, 0, 6, 18),

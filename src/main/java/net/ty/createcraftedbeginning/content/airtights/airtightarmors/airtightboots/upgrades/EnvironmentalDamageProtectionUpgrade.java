@@ -23,6 +23,9 @@ import java.util.List;
 public enum EnvironmentalDamageProtectionUpgrade implements AirtightUpgrade {
     INSTANCE;
 
+    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("environmental_damage_protection");
+    private static final Couple<Integer> OFFSET = Couple.create(132, 31);
+
     @Override
     public List<Component> getComponents(Player player, ItemStack item) {
         return List.of();
@@ -60,17 +63,7 @@ public enum EnvironmentalDamageProtectionUpgrade implements AirtightUpgrade {
 
     @Override
     public Couple<Integer> getOffset() {
-        return Couple.create(132, 31);
-    }
-
-    @Override
-    public int getGasConsumptionPerSecond(Player player, ItemStack item) {
-        return -1;
-    }
-
-    @Override
-    public int getIndex() {
-        return 3;
+        return OFFSET;
     }
 
     @Override
@@ -80,7 +73,7 @@ public enum EnvironmentalDamageProtectionUpgrade implements AirtightUpgrade {
 
     @Override
     public ResourceLocation getID() {
-        return CreateCraftedBeginning.asResource("environmental_damage_protection");
+        return ID;
     }
 
     @Override

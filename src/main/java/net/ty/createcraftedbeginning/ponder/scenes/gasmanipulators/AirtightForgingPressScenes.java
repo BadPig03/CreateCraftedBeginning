@@ -292,7 +292,7 @@ public class AirtightForgingPressScenes {
         scene.world().moveDeployer(deployerPos, 1, 20);
 
         scene.idle(20);
-        scene.world().modifyBlockEntity(corePos, AirtightForgingPressBlockEntity.class, be -> be.getProcessingInventories().getFirst().insertItem(0, templateItem.copy(), false));
+        scene.world().modifyBlockEntity(corePos, AirtightForgingPressBlockEntity.class, be -> be.getPressHeadInventory().insertItem(0, templateItem.copy(), false));
         scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> compoundTag.put("HeldItem", ItemStack.EMPTY.saveOptional(scene.world().getHolderLookupProvider())));
         scene.world().moveDeployer(deployerPos, -1, 20);
 
@@ -308,13 +308,13 @@ public class AirtightForgingPressScenes {
         scene.idle(2);
         scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, netheriteIngotItem.copy());
         scene.world().modifyEntity(remove, Entity::discard);
-        scene.world().modifyBlockEntity(corePos, AirtightForgingPressBlockEntity.class, be -> be.getProcessingInventories().getSecond().insertItem(0, netheriteIngotItem.copy(), false));
+        scene.world().modifyBlockEntity(corePos, AirtightForgingPressBlockEntity.class, be -> be.getAdditionInventory().insertItem(0, netheriteIngotItem.copy(), false));
         scene.overlay().showText(60).text("The press head tool will not be consumed").colored(PonderPalette.GREEN).pointAt(coreVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(20);
-        scene.world().modifyBlockEntity(corePos, AirtightForgingPressBlockEntity.class, be -> be.getInputOutputCapability().setStackInSlot(0, ItemStack.EMPTY));
-        scene.world().modifyBlockEntity(corePos, AirtightForgingPressBlockEntity.class, be -> be.getProcessingInventories().getSecond().setStackInSlot(0, ItemStack.EMPTY));
-        scene.world().modifyBlockEntity(corePos, AirtightForgingPressBlockEntity.class, be -> be.getInputOutputCapability().setStackInSlot(1, netheriteAxeItem.copy()));
+        scene.world().modifyBlockEntity(corePos, AirtightForgingPressBlockEntity.class, be -> be.getPressHeadInventory().setStackInSlot(0, ItemStack.EMPTY));
+        scene.world().modifyBlockEntity(corePos, AirtightForgingPressBlockEntity.class, be -> be.getAdditionInventory().setStackInSlot(0, ItemStack.EMPTY));
+        scene.world().modifyBlockEntity(corePos, AirtightForgingPressBlockEntity.class, be -> be.getOutputInventory().setStackInSlot(0, netheriteAxeItem.copy()));
 
         scene.idle(20);
         scene.addInstruction(new RotateSceneInstruction(-15, -15, true));
@@ -334,7 +334,7 @@ public class AirtightForgingPressScenes {
         scene.world().setKineticSpeed(brassFunnelSelection, -mediumSpeed);
         scene.world().setKineticSpeed(brassMotorSelection, -mediumSpeed);
         scene.world().flapFunnel(brassFunnelPos, true);
-        scene.world().modifyBlockEntity(corePos, AirtightForgingPressBlockEntity.class, be -> be.getInputOutputCapability().setStackInSlot(1, ItemStack.EMPTY));
+        scene.world().modifyBlockEntity(corePos, AirtightForgingPressBlockEntity.class, be -> be.getOutputInventory().setStackInSlot(0, ItemStack.EMPTY));
         scene.world().createItemOnBeltLike(brassFunnelPos.below(), Direction.UP, netheriteAxeItem.copy());
 
         scene.idle(40);

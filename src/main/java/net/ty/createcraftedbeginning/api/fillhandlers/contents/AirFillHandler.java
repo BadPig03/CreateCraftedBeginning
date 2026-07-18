@@ -18,6 +18,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirFillHandler implements AirtightFillHandler {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Gas apply(Level level, BlockPos pos, BlockState state) {
         Holder<Biome> biome = level.getBiome(pos);

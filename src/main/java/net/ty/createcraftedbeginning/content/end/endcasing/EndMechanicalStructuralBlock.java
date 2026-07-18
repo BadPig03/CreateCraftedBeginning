@@ -5,10 +5,14 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootParams.Builder;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
@@ -40,19 +44,33 @@ public abstract class EndMechanicalStructuralBlock extends KineticBlock {
     }
 
     @Override
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block otherBlock, BlockPos neighborPos, boolean isMoving) {
+        super.neighborChanged(state, level, pos, otherBlock, neighborPos, isMoving);
+        if (level.isClientSide || isMoving || !neighborPos.equals(pos.above())) {
+            return;
+        }
+
+        level.scheduleTick(pos, this, 1);
+    }
+
+    @Override
     public List<ItemStack> getDrops(BlockState state, Builder builder) {
-        List<ItemStack> lootDrops = super.getDrops(state, builder);
-        BlockState blockState = builder.getOptionalParameter(LootContextParams.BLOCK_STATE);
-        if (blockState == null || !(blockState.getBlock() instanceof EndMechanicalStructuralBlock)) {
-            return lootDrops;
+        List<ItemStack> drops = super.getDrops(state, builder);
+        BlockState lootState = builder.getOptionalParameter(LootContextParams.BLOCK_STATE);
+        if (lootState == null || !(lootState.getBlock() instanceof EndMechanicalStructuralBlock)) {
+            return drops;
         }
 
         return List.of(new ItemStack(CCBBlocks.END_CASING_BLOCK));
     }
 
     @Override
-    public SpeedLevel getMinimumRequiredSpeedLevel() {
-        return SpeedLevel.MEDIUM;
+    public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        if (!(level.getBlockEntity(pos) instanceof EndMechanicalStructuralBlockEntity<?> blockEntity)) {
+            return;
+        }
+
+        blockEntity.verifyMaster();
     }
 
     @Override
@@ -63,5 +81,10 @@ public abstract class EndMechanicalStructuralBlock extends KineticBlock {
     @Override
     public Axis getRotationAxis(BlockState state) {
         return Axis.Y;
+    }
+
+    @Override
+    public SpeedLevel getMinimumRequiredSpeedLevel() {
+        return SpeedLevel.MEDIUM;
     }
 }

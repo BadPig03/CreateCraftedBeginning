@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -20,20 +21,13 @@ public class InactiveCoolerState extends BaseCoolerState {
     }
 
     @Override
-    public void tick(BreezeCoolerBlockEntity cooler) {
-        super.tick(cooler);
-
-        Level level = cooler.getLevel();
-        if (level == null || level.getGameTime() % NOTIFY_INTERVAL != 0) {
-            return;
-        }
-
-        cooler.notifyUpdate();
+    public FrostLevel getFrostLevel() {
+        return FrostLevel.RIMING;
     }
 
     @Override
-    public FrostLevel getFrostLevel() {
-        return FrostLevel.RIMING;
+    public CoolantType getCoolantType() {
+        return CoolantType.NONE;
     }
 
     @Override
@@ -49,11 +43,13 @@ public class InactiveCoolerState extends BaseCoolerState {
             return InteractionResult.FAIL;
         }
 
-        if (!simulate) {
-            cooler.setCoolerState(new ChilledCoolerState(time, false));
-            cooler.playSound();
-            cooler.spawnParticleBurst();
+        if (simulate) {
+            return InteractionResult.SUCCESS;
         }
+
+        cooler.setCoolerState(new ChilledCoolerState(Mth.clamp(time, 1, BreezeCoolerBlockEntity.getMaxCoolantCapacity()), false));
+        cooler.playSound();
+        cooler.spawnParticleBurst();
         return InteractionResult.SUCCESS;
     }
 
@@ -64,14 +60,14 @@ public class InactiveCoolerState extends BaseCoolerState {
             return false;
         }
 
-        cooler.setCoolerState(new ChilledCoolerState(20, false));
+        int snowballCoolingTime = BreezeCoolerBlockEntity.getSnowballCoolingTime();
+        if (snowballCoolingTime <= 0) {
+            return false;
+        }
+
+        cooler.setCoolerState(new ChilledCoolerState(Math.min(snowballCoolingTime, BreezeCoolerBlockEntity.getMaxCoolantCapacity()), false));
         cooler.playSound();
         cooler.spawnParticleBurst();
         return true;
-    }
-
-    @Override
-    public CoolantType getCoolantType() {
-        return CoolantType.NONE;
     }
 }

@@ -18,8 +18,10 @@ public class PortableGasInterfaceActorVisual extends ActorVisual {
     public PortableGasInterfaceActorVisual(VisualizationContext context, VirtualRenderWorld world, MovementContext movementContext) {
         super(context, world, movementContext);
         instance = new PortableGasInterfaceInstance(context.instancerProvider(), movementContext.state, movementContext.localPos, false);
-        instance.middle.light(localBlockLight(), 0);
-        instance.top.light(localBlockLight(), 0);
+
+        int light = localBlockLight();
+        instance.middle.light(light, 0);
+        instance.top.light(light, 0);
     }
 
     @Override

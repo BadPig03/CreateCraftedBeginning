@@ -32,24 +32,24 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (be, context) -> be.getItemCapability());
-        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (be, direction) -> be.getFluidCapability());
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (be, direction) -> be.getGasCapability());
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, context) -> shaft.getItemCapability());
+        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, direction) -> shaft.getFluidCapability());
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, direction) -> shaft.getGasCapability());
     }
 
     public static boolean isUpperStore(BlockState blockState) {
-        AirtightForgingPressStructuralPosition structuralPosition = blockState.getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION);
-        return structuralPosition.isUpperStore() && structuralPosition == AirtightForgingPressStructuralPosition.TOP_CENTER;
+        AirtightForgingPressStructuralPosition position = blockState.getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION);
+        return position.isUpperStore() && position == AirtightForgingPressStructuralPosition.TOP_CENTER;
     }
 
     @Nullable
     public AirtightForgingPressBlockEntity getMasterBlockEntity() {
         BlockPos masterPos = AirtightForgingPressUtils.getMaster(getBlockPos(), getBlockState());
-        if (level == null || !(level.getBlockEntity(masterPos) instanceof AirtightForgingPressBlockEntity masterBlockEntity)) {
+        if (level == null || !(level.getBlockEntity(masterPos) instanceof AirtightForgingPressBlockEntity master)) {
             return null;
         }
 
-        return masterBlockEntity;
+        return master;
     }
 
     public @Nullable IItemHandlerModifiable getItemCapability() {
@@ -58,7 +58,7 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
             return null;
         }
 
-        return master.getProcessingInventories().getSecond();
+        return master.getAdditionInventory();
     }
 
     public @Nullable IFluidHandler getFluidCapability() {
@@ -90,22 +90,22 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
             return 0;
         }
 
-        IItemHandlerModifiable item = getItemCapability();
-        IFluidHandler fluid = getFluidCapability();
-        IGasHandler gas = getGasCapability();
-        if (item == null || fluid == null || gas == null) {
+        IItemHandlerModifiable items = getItemCapability();
+        IFluidHandler fluids = getFluidCapability();
+        IGasHandler gases = getGasCapability();
+        if (items == null || fluids == null || gases == null) {
             return 0;
         }
 
         long maxValue = 0;
-        for (int i = 0; i < item.getSlots(); i++) {
-            maxValue += item.getSlotLimit(i);
+        for (int i = 0; i < items.getSlots(); i++) {
+            maxValue += items.getSlotLimit(i);
         }
-        for (int i = 0; i < fluid.getTanks(); i++) {
-            maxValue += fluid.getTankCapacity(i);
+        for (int i = 0; i < fluids.getTanks(); i++) {
+            maxValue += fluids.getTankCapacity(i);
         }
-        for (int i = 0; i < gas.getTanks(); i++) {
-            maxValue += gas.getTankCapacity(i);
+        for (int i = 0; i < gases.getTanks(); i++) {
+            maxValue += gases.getTankCapacity(i);
         }
         return Math.clamp(maxValue, 0, Integer.MAX_VALUE);
     }
@@ -122,22 +122,22 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
             return 0;
         }
 
-        IItemHandlerModifiable item = getItemCapability();
-        IFluidHandler fluid = getFluidCapability();
-        IGasHandler gas = getGasCapability();
-        if (item == null || fluid == null || gas == null) {
+        IItemHandlerModifiable items = getItemCapability();
+        IFluidHandler fluids = getFluidCapability();
+        IGasHandler gases = getGasCapability();
+        if (items == null || fluids == null || gases == null) {
             return 0;
         }
 
         long currentValue = 0;
-        for (int i = 0; i < item.getSlots(); i++) {
-            currentValue += item.getStackInSlot(i).getCount();
+        for (int i = 0; i < items.getSlots(); i++) {
+            currentValue += items.getStackInSlot(i).getCount();
         }
-        for (int i = 0; i < fluid.getTanks(); i++) {
-            currentValue += fluid.getFluidInTank(i).getAmount();
+        for (int i = 0; i < fluids.getTanks(); i++) {
+            currentValue += fluids.getFluidInTank(i).getAmount();
         }
-        for (int i = 0; i < gas.getTanks(); i++) {
-            currentValue += gas.getGasInTank(i).getAmount();
+        for (int i = 0; i < gases.getTanks(); i++) {
+            currentValue += gases.getGasInTank(i).getAmount();
         }
         return Math.clamp(currentValue, 0, Integer.MAX_VALUE);
     }

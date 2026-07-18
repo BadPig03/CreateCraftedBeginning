@@ -41,8 +41,7 @@ public class GasKubeJSBuilder extends BuilderBase<Gas> {
     }
 
     public GasKubeJSBuilder tag(ResourceLocation location) {
-        TagKey<Gas> tagKey = TagKey.create(CCBRegistries.GAS_REGISTRY_KEY, location);
-        builder.tag(tagKey);
+        builder.tag(TagKey.create(CCBRegistries.GAS_REGISTRY_KEY, location));
         return this;
     }
 

@@ -57,7 +57,7 @@ public final class GasVirtualUtils {
         }
 
         if (BalloonUtils.containsGasContents(stack)) {
-            return BalloonUtils.getGasContents(stack).gases().stream().map(GasVirtualUtils::createVirtualItem).filter(virtual -> !virtual.isEmpty()).map(virtual -> virtual.copyWithCount(1)).toList();
+            return BalloonUtils.getGasContents(stack).gases().stream().map(gas -> createVirtualItem(gas.toStack(1))).filter(item -> !item.isEmpty()).map(item -> item.copyWithCount(1)).toList();
         }
 
         IGasCanisterContainer container = stack.getCapability(GasHandler.ITEM);
@@ -65,6 +65,6 @@ public final class GasVirtualUtils {
             return List.of();
         }
 
-        return container.getVirtualItems().stream().map(virtual -> virtual.copyWithCount(1)).toList();
+        return container.getVirtualItems().stream().map(item -> item.copyWithCount(1)).toList();
     }
 }

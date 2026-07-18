@@ -15,6 +15,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
 import net.ty.createcraftedbeginning.data.CCBLang;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -27,25 +28,46 @@ public interface AirtightDrillHandler {
 
     int BASE_DAMAGE_AMOUNT = 1;
 
+    /**
+     * Returns the damage addition.
+     *
+     * @return the damage addition
+     */
     int getDamageAddition();
 
+    /**
+     * Returns the consumption multiplier.
+     *
+     * @return the consumption multiplier
+     */
     float getConsumptionMultiplier();
 
-    default String getRenderStr(float n) {
-        return String.format("%.2f", n).replaceAll("\\.?0+$", "");
-    }
-
+    /**
+     * Appends this object's contextual information to the supplied tooltip.
+     *
+     * @param drill   the airtight drill item stack
+     * @param context the context for the operation
+     * @param tooltip the tooltip entries to append to
+     * @param flag    the tooltip display flags
+     */
     default void appendHoverText(ItemStack drill, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         float consumptionMultiplier = getConsumptionMultiplier();
-        MutableComponent advancedGasConsumption = flag.isAdvanced() ? CCBLang.text(" [x" + getRenderStr(consumptionMultiplier) + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.tooltips.gas_tools.gas_consumption", getRenderStr(consumptionMultiplier * 100)).add(advancedGasConsumption.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        MutableComponent advancedGasConsumption = flag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptionUtils.format(consumptionMultiplier) + ']').component() : Component.empty();
+        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptionUtils.formatPercent(consumptionMultiplier)).add(advancedGasConsumption.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
 
         int additionDamage = getDamageAddition();
         int damage = BASE_DAMAGE_AMOUNT + additionDamage;
         MutableComponent advancedAttackDamage = flag.isAdvanced() ? CCBLang.text(" [" + (additionDamage != 0 ? "" : "+") + BASE_DAMAGE_AMOUNT + (additionDamage != 0 ? " + " + additionDamage : "") + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.tooltips.airtight_handheld_drill.attack_damage", damage).add(advancedAttackDamage.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        tooltip.add(CCBLang.translate("gui.airtight_handheld_drill.attack_damage", damage).add(advancedAttackDamage.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
     }
 
+    /**
+     * Updates state by performing extra behaviour.
+     *
+     * @param entity      the entity associated with the operation
+     * @param player      the player performing the operation
+     * @param serverLevel the server level to use
+     */
     default void extraBehaviour(LivingEntity entity, Player player, ServerLevel serverLevel) {
         Vec3 position = entity.position();
         RandomSource random = serverLevel.random;

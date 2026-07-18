@@ -28,24 +28,22 @@ public class CoolingRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
         List<RecipeHolder<CoolingRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.COOLING.getType());
         for (RecipeHolder<CoolingRecipe> holder : recipes) {
             CoolingRecipe recipe = holder.value();
-            if (recipe.isFluidIngredients()) {
-                if (itemStack != null || fluidStack == null) {
-                    continue;
-                }
-                if (!recipe.getFluidIngredient().ingredient().test(fluidStack)) {
-                    continue;
-                }
+            boolean usesFluid = recipe.isFluidIngredients();
+            if (usesFluid && (itemStack != null || fluidStack == null)) {
+                continue;
             }
-            else {
-                if (itemStack == null || fluidStack != null) {
-                    continue;
-                }
-                if (!recipe.getIngredient().test(itemStack)) {
-                    continue;
-                }
+            if (!usesFluid && (itemStack == null || fluidStack != null)) {
+                continue;
+            }
+            if (usesFluid && !recipe.getFluidIngredient().ingredient().test(fluidStack)) {
+                continue;
+            }
+            if (!usesFluid && !recipe.getIngredient().test(itemStack)) {
+                continue;
             }
 
-            return new CoolingData(recipe.processingDuration, recipe.isFluidIngredients() ? recipe.fluidIngredients.getFirst().amount() : 1);
+            int amount = usesFluid ? recipe.fluidIngredients.getFirst().amount() : 1;
+            return new CoolingData(recipe.processingDuration, amount);
         }
 
         return new CoolingData(0, 0);
@@ -69,7 +67,7 @@ public class CoolingRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
 
     @Override
     public boolean matches(SingleRecipeInput inv, Level level) {
-        return true;
+        return !isFluidIngredients() && !inv.isEmpty() && !ingredients.isEmpty() && ingredients.getFirst().test(inv.getItem(0));
     }
 
     @Override
@@ -92,5 +90,7 @@ public class CoolingRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
         return 1;
     }
 
-    public record CoolingData(int time, int amount) {}
+    public record CoolingData(int time, int amount) {
+        public static final CoolingData EMPTY = new CoolingData(0, 0);
+    }
 }

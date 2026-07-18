@@ -1,8 +1,12 @@
 package net.ty.createcraftedbeginning.config;
 
 import net.createmod.catnip.config.ConfigBase;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.MethodsReturnNonnullByDefault;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBEquipments extends ConfigBase {
     public final ConfigGroup airtightCannon = group(0, "airtight_cannon", "Airtight Cannon");
@@ -13,6 +17,7 @@ public class CCBEquipments extends ConfigBase {
 
     public final ConfigGroup airtightHandheldDrill = group(0, "airtight_handheld_drill", "Airtight Handheld Drill");
     public final ConfigInt perBlockConsumption = i(5, 0, "per_block_consumption", Comments.perBlockConsumption);
+    public final ConfigInt chainMiningMaxBlocks = i(64, 1, 512, "chain_mining_max_blocks", Comments.chainMiningMaxBlocks);
     public final ConfigInt perEntityHitConsumption = i(3, 0, "per_entity_hit_consumption", Comments.perEntityHitConsumption);
     public final ConfigFloat silkTouchMultiplier = f(2, 1, "silk_touch_multiplier", Comments.silkTouchMultiplier);
     public final ConfigFloat liquidReplacementMultiplier = f(1, 1, "liquid_replacement_multiplier", Comments.liquidReplacementMultiplier);
@@ -41,16 +46,17 @@ public class CCBEquipments extends ConfigBase {
     public final ConfigFloat bootsResistanceMultiplier = f(5, 0, "boots_resistance_multiplier", Comments.bootsResistanceMultiplier);
 
     @Override
-    public @NotNull String getName() {
+    public String getName() {
         return "equipments";
     }
 
     private static class Comments {
         static String perShotConsumption = "The amount of gas consumed by the Airtight Cannon per shot.";
 
-        static String perUseConsumption = "The amount of gas consumed by the Airtight Extend Arm per use";
+        static String perUseConsumption = "The base amount of gas consumed by each powered action performed with an Airtight Extend Arm.";
 
         static String perBlockConsumption = "The amount of gas consumed by the Airtight Handheld Drill per block mined.";
+        static String chainMiningMaxBlocks = "The maximum number of face-connected blocks of the same type that the Chain Mining template can select.";
         static String perEntityHitConsumption = "The amount of gas consumed by the Airtight Handheld Drill each time it hits an entity.";
         static String silkTouchMultiplier = "The gas consumption multiplier of the Airtight Handheld Drill while the Silk Touch Upgrade is active.";
         static String liquidReplacementMultiplier = "The gas consumption multiplier of the Airtight Handheld Drill while the Liquid Replacement Upgrade is active.";
@@ -62,7 +68,7 @@ public class CCBEquipments extends ConfigBase {
         static String visionConsumption = "The amount of gas consumed per second by the Airtight Helmet while the Vision Upgrade is active.";
         static String helmetResistanceMultiplier = "The gas consumption multiplier of the Airtight Helmet while the Resistance Upgrade is active and the wearer takes damage that does not bypass the Resistance effect.";
 
-        static String elytraConsumption = "The amount of gas consumed per second by the Airtight Chestplate while the Elytra Upgrade is active and the wearer is gliding.";
+        static String elytraConsumption = "The amount of gas consumed by the Airtight Chestplate each time the Elytra Upgrade provides a boost.";
         static String creativeFlightConsumption = "The amount of gas consumed per second by the Airtight Chestplate while the Creative Flight Upgrade is active and the wearer is flying.";
         static String regenerationConsumption = "The amount of gas consumed per second by the Airtight Chestplate while the Regeneration Upgrade is active and the wearer is regenerating health.";
         static String invisibilityConsumption = "The amount of gas consumed per second by the Airtight Chestplate while the Invisibility Upgrade is active.";

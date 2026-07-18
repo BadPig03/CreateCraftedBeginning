@@ -24,6 +24,9 @@ import java.util.List;
 public enum LiquidReplacementUpgrade implements AirtightUpgrade {
     INSTANCE;
 
+    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("liquid_replacement");
+    private static final Couple<Integer> OFFSET = Couple.create(177, 78);
+
     @Override
     public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
         float multiplier = CCBConfig.server().equipments.liquidReplacementMultiplier.getF();
@@ -62,17 +65,7 @@ public enum LiquidReplacementUpgrade implements AirtightUpgrade {
 
     @Override
     public Couple<Integer> getOffset() {
-        return Couple.create(177, 78);
-    }
-
-    @Override
-    public int getGasConsumptionPerSecond(Player player, ItemStack item) {
-        return -1;
-    }
-
-    @Override
-    public int getIndex() {
-        return 3;
+        return OFFSET;
     }
 
     @Override
@@ -82,7 +75,7 @@ public enum LiquidReplacementUpgrade implements AirtightUpgrade {
 
     @Override
     public ResourceLocation getID() {
-        return CreateCraftedBeginning.asResource("liquid_replacement");
+        return ID;
     }
 
     @Override

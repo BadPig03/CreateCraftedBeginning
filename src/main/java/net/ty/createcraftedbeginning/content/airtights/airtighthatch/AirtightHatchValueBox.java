@@ -21,23 +21,22 @@ public class AirtightHatchValueBox extends Sided {
     private static final int COLOR = 0x191C26;
 
     @Override
+    public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, BlockState state) {
+        Vec3 location = getSouthLocation();
+        Direction facing = state.getValue(AirtightHatchBlock.FACING);
+        location = VecHelper.rotateCentered(location, -90, Axis.X);
+        return VecHelper.rotateCentered(location, AngleHelper.horizontalAngle(facing), Axis.Y);
+    }
+
+    @Override
     protected Vec3 getSouthLocation() {
         return VecHelper.voxelSpace(8, 5, 15.5);
     }
 
     @Override
-    public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, BlockState state) {
-        Vec3 location = getSouthLocation();
-        Direction facing = state.getValue(AirtightHatchBlock.FACING);
-        location = VecHelper.rotateCentered(location, -90, Axis.X);
-        location = VecHelper.rotateCentered(location, AngleHelper.horizontalAngle(facing), Axis.Y);
-        return location;
-    }
-
-    @Override
-    public void rotate(LevelAccessor level, BlockPos pos, BlockState state, PoseStack ms) {
-        super.rotate(level, pos, state, ms);
-        TransformStack.of(ms).rotateZDegrees(180 - AngleHelper.horizontalAngle(state.getValue(AirtightHatchBlock.FACING)));
+    public void rotate(LevelAccessor level, BlockPos pos, BlockState state, PoseStack poseStack) {
+        super.rotate(level, pos, state, poseStack);
+        TransformStack.of(poseStack).rotateZDegrees(180 - AngleHelper.horizontalAngle(state.getValue(AirtightHatchBlock.FACING)));
     }
 
     @Override
@@ -46,7 +45,7 @@ public class AirtightHatchValueBox extends Sided {
     }
 
     @Override
-	public int getOverrideColor() {
-		return COLOR;
-	}
+    public int getOverrideColor() {
+        return COLOR;
+    }
 }

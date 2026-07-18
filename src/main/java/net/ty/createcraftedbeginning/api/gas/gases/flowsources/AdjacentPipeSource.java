@@ -17,15 +17,54 @@ import java.util.function.Predicate;
 public final class AdjacentPipeSource extends GasFlowSource {
     private WeakReference<GasTransportBehaviour> cached;
 
+    /**
+     * Creates a new {@code AdjacentPipeSource} instance.
+     *
+     * @param location the resource location identifying the target value
+     */
     public AdjacentPipeSource(BlockFace location) {
         super(location);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isEndpoint() {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void manageSource(Level level, BlockEntity networkBE) {
+        GasTransportBehaviour behaviour;
+        if (cached != null) {
+            behaviour = cached.get();
+            if (behaviour != null && !behaviour.blockEntity.isRemoved()) {
+                return;
+            }
+        }
+
+        cached = null;
+        BlockEntity targetBlockEntity = level.getBlockEntity(location.getConnectedPos());
+        if (targetBlockEntity != null) {
+            behaviour = BlockEntityBehaviour.get(targetBlockEntity, GasTransportBehaviour.TYPE);
+        }
+        else {
+            behaviour = BlockEntityBehaviour.get(level, location.getConnectedPos(), GasTransportBehaviour.TYPE);
+        }
+        if (behaviour == null) {
+            return;
+        }
+
+        cached = new WeakReference<>(behaviour);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public GasStack provideGas(Predicate<GasStack> predicate) {
         if (cached == null || cached.get() == null) {
@@ -43,30 +82,5 @@ public final class AdjacentPipeSource extends GasFlowSource {
         }
 
         return outwardGas;
-    }
-
-    @Override
-    public void manageSource(Level level, BlockEntity networkBE) {
-        GasTransportBehaviour behaviour;
-        if (cached != null) {
-            behaviour = cached.get();
-            if (behaviour != null && !behaviour.blockEntity.isRemoved()) {
-                return;
-            }
-        }
-
-        cached = null;
-        BlockEntity targetBE = level.getBlockEntity(location.getConnectedPos());
-        if (targetBE != null) {
-            behaviour = BlockEntityBehaviour.get(targetBE, GasTransportBehaviour.TYPE);
-        }
-        else {
-            behaviour = BlockEntityBehaviour.get(level, location.getConnectedPos(), GasTransportBehaviour.TYPE);
-        }
-        if (behaviour == null) {
-            return;
-        }
-
-        cached = new WeakReference<>(behaviour);
     }
 }

@@ -12,6 +12,7 @@ import net.minecraft.world.item.Items;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePowerMode;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.GlobalAirtightUpgradesConsumptionManager;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
@@ -25,6 +26,9 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public enum BootsResistanceUpgrade implements AirtightUpgrade {
     INSTANCE;
+
+    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("boots_resistance");
+    private static final Couple<Integer> OFFSET = Couple.create(132, 79);
 
     @Override
     public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
@@ -66,17 +70,12 @@ public enum BootsResistanceUpgrade implements AirtightUpgrade {
 
     @Override
     public Couple<Integer> getOffset() {
-        return Couple.create(132, 79);
+        return OFFSET;
     }
 
     @Override
-    public int getGasConsumptionPerSecond(Player player, ItemStack item) {
-        return 0;
-    }
-
-    @Override
-    public int getIndex() {
-        return 5;
+    public AirtightUpgradePowerMode getPowerMode() {
+        return AirtightUpgradePowerMode.ON_DEMAND;
     }
 
     @Override
@@ -86,7 +85,7 @@ public enum BootsResistanceUpgrade implements AirtightUpgrade {
 
     @Override
     public ResourceLocation getID() {
-        return CreateCraftedBeginning.asResource("boots_resistance");
+        return ID;
     }
 
     @Override
@@ -103,11 +102,7 @@ public enum BootsResistanceUpgrade implements AirtightUpgrade {
         return item.is(CCBItems.AIRTIGHT_BOOTS) && AirtightUpgrade.super.isActive(player, item);
     }
 
-    public void canApply(Player player, float consumption) {
-        if (!isActive(player, player.getItemBySlot(EquipmentSlot.FEET)) || player.level().isClientSide) {
-            return;
-        }
-
-        GlobalAirtightUpgradesConsumptionManager.tryConsumeGas(player, this, EquipmentSlot.FEET, consumption);
+    public boolean tryConsumeGas(Player player, float consumption) {
+        return !player.level().isClientSide && isActive(player, player.getItemBySlot(EquipmentSlot.FEET)) && GlobalAirtightUpgradesConsumptionManager.tryConsumeGas(player, this, EquipmentSlot.FEET, consumption);
     }
 }

@@ -2,14 +2,12 @@ package net.ty.createcraftedbeginning.compat.kubejs.events;
 
 import dev.latvian.mods.kubejs.block.state.BlockStatePredicate;
 import dev.latvian.mods.kubejs.event.KubeEvent;
-import dev.latvian.mods.rhino.util.HideFromJS;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.fillhandlers.AirtightFillHandler;
 import net.ty.createcraftedbeginning.api.fillhandlers.AirtightFillHandlerUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -45,21 +43,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class AirtightFillHandlerEvent implements KubeEvent {
-    /**
-     * Registers an Airtight Fill Handler for the given block.
-     * <p>
-     * This overload is hidden from JavaScript and is intended for internal
-     * Java-side usage.
-     *
-     * @param block   the block to register the fill handler for
-     * @param handler the airtight fill handler to register
-     * @see AirtightFillHandlerUtils#register(Block, AirtightFillHandler)
-     */
-    @HideFromJS
-    public static void add(Block block, AirtightFillHandler handler) {
-        AirtightFillHandlerUtils.register(block, handler);
-    }
-
     /**
      * Registers an Airtight Fill Handler for the given block.
      * <p>

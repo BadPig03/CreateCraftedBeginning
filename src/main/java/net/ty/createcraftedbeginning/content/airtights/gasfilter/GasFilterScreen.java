@@ -40,13 +40,11 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
     private static final Component OPTION_ENABLED = CCBLang.translateDirect("gui.option_enabled");
     private static final Component OPTION_DISABLED = CCBLang.translateDirect("gui.option_disabled");
 
-    private final ItemStack filter;
     private IconButton whitelistButton;
     private IconButton blacklistButton;
 
     public GasFilterScreen(GasFilterMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
-        filter = menu.player.getMainHandItem();
     }
 
     @Override
@@ -61,7 +59,7 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
     @Override
     protected void containerTick() {
         Player player = menu.player;
-        if (!ItemStack.isSameItem(player.getMainHandItem(), menu.contentHolder)) {
+        if (!menu.stillValid(player)) {
             player.closeContainer();
         }
         super.containerTick();
@@ -83,7 +81,7 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         renderPlayerInventory(graphics, getLeftOfCentered(PLAYER_INVENTORY.getWidth()), topPos + BACKGROUND.getHeight() - 1);
         BACKGROUND.render(graphics, leftPos, topPos - 5);
-        Component filterHoverName = filter.getHoverName();
+        Component filterHoverName = menu.contentHolder.getHoverName();
         graphics.drawString(font, filterHoverName, leftPos + (BACKGROUND.getWidth() - 8) / 2 - font.width(filterHoverName) / 2, topPos - 1, 0xFFFFFF, false);
         GuiGameElement.of(FILTER).scale(4).at(leftPos + BACKGROUND.getWidth() + 8, topPos + BACKGROUND.getHeight() - 53, -200).render(graphics);
     }
@@ -104,9 +102,9 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
         addRenderableWidget(whitelistButton);
 
         IconButton resetButton = new IconButton(leftPos + BACKGROUND.getWidth() - 62, topPos + BACKGROUND.getHeight() - 29, AllIcons.I_TRASH).withCallback(() -> {
-			menu.clearContents();
-			menu.sendClearPacket();
-		});
+            menu.clearContents();
+            menu.sendClearPacket();
+        });
         addRenderableWidget(resetButton);
     }
 
@@ -115,29 +113,10 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
         whitelistButton.green = !menu.blacklist;
     }
 
-    private void renderTooltips(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        boolean hasShiftDown = hasShiftDown();
-        if (blacklistButton.isHovered()) {
-            List<Component> tooltips = new ArrayList<>(List.of(BLACKLIST_TITLE));
-            boolean isEnabled = blacklistButton.green;
-            tooltips.add((isEnabled ? OPTION_ENABLED : OPTION_DISABLED).plainCopy().withStyle(isEnabled ? ChatFormatting.DARK_GREEN : ChatFormatting.RED));
-            tooltips.add(CCBLang.translateDirect("gui.hold_for_description", CCBLang.translateDirect("gui.key.shift").withStyle(hasShiftDown ? ChatFormatting.WHITE : ChatFormatting.GRAY)).withStyle(ChatFormatting.DARK_GRAY));
-            if (hasShiftDown) {
-                tooltips.addAll(TooltipHelper.cutTextComponent(BLACKLIST_DESCRIPTION, Palette.ALL_GRAY));
-            }
-            guiGraphics.renderTooltip(font, tooltips, Optional.empty(), mouseX, mouseY);
-        }
-
-        if (whitelistButton.isHovered()) {
-            List<Component> tooltips = new ArrayList<>(List.of(WHITELIST_TITLE));
-            boolean isEnabled = whitelistButton.green;
-            tooltips.add((isEnabled ? OPTION_ENABLED : OPTION_DISABLED).plainCopy().withStyle(isEnabled ? ChatFormatting.DARK_GREEN : ChatFormatting.RED));
-            tooltips.add(CCBLang.translateDirect("gui.hold_for_description", CCBLang.translateDirect("gui.key.shift").withStyle(hasShiftDown ? ChatFormatting.WHITE : ChatFormatting.GRAY)).withStyle(ChatFormatting.DARK_GRAY));
-            if (hasShiftDown) {
-                tooltips.addAll(TooltipHelper.cutTextComponent(WHITELIST_DESCRIPTION, Palette.ALL_GRAY));
-            }
-            guiGraphics.renderTooltip(font, tooltips, Optional.empty(), mouseX, mouseY);
-        }
+    private void renderTooltips(GuiGraphics graphics, int mouseX, int mouseY) {
+        boolean isShiftDown = hasShiftDown();
+        renderModeTooltip(graphics, blacklistButton, BLACKLIST_TITLE, BLACKLIST_DESCRIPTION, isShiftDown, mouseX, mouseY);
+        renderModeTooltip(graphics, whitelistButton, WHITELIST_TITLE, WHITELIST_DESCRIPTION, isShiftDown, mouseX, mouseY);
 
         if (hoveredSlot == null || hoveredSlot.container == menu.playerInventory) {
             return;
@@ -151,6 +130,25 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
         List<Component> tooltips = new ArrayList<>();
         tooltips.add(CCBLang.gasName(GasVirtualUtils.getGasType(virtualItem)).component());
         tooltips.addAll(GasRequestClientUtils.getExtraTooltips(virtualItem));
-        guiGraphics.renderTooltip(font, tooltips, Optional.empty(), mouseX, mouseY);
+        graphics.renderTooltip(font, tooltips, Optional.empty(), mouseX, mouseY);
+    }
+
+    private void renderModeTooltip(GuiGraphics graphics, IconButton button, Component title, Component description, boolean isShiftDown, int mouseX, int mouseY) {
+        if (!button.isHovered()) {
+            return;
+        }
+
+        List<Component> tooltips = new ArrayList<>(List.of(title));
+        boolean isEnabled = button.green;
+        ChatFormatting statusColor = isEnabled ? ChatFormatting.DARK_GREEN : ChatFormatting.RED;
+        tooltips.add((isEnabled ? OPTION_ENABLED : OPTION_DISABLED).plainCopy().withStyle(statusColor));
+
+        Component shiftKey = CCBLang.translateDirect("gui.key.shift").withStyle(isShiftDown ? ChatFormatting.WHITE : ChatFormatting.GRAY);
+        tooltips.add(CCBLang.translateDirect("gui.hold_for_description", shiftKey).withStyle(ChatFormatting.DARK_GRAY));
+        if (isShiftDown) {
+            tooltips.addAll(TooltipHelper.cutTextComponent(description, Palette.ALL_GRAY));
+        }
+
+        graphics.renderTooltip(font, tooltips, Optional.empty(), mouseX, mouseY);
     }
 }

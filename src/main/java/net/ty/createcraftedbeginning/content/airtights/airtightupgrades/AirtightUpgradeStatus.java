@@ -13,6 +13,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public record AirtightUpgradeStatus(ResourceLocation id, boolean isEnabled, boolean isInstalled) {
-    public static final Codec<AirtightUpgradeStatus> CODEC = RecordCodecBuilder.create(i -> i.group(ResourceLocation.CODEC.fieldOf("id").forGetter(AirtightUpgradeStatus::id), Codec.BOOL.fieldOf("isEnabled").forGetter(AirtightUpgradeStatus::isEnabled), Codec.BOOL.fieldOf("isInstalled").forGetter(AirtightUpgradeStatus::isInstalled)).apply(i, AirtightUpgradeStatus::new));
-    public static final StreamCodec<ByteBuf, AirtightUpgradeStatus> STREAM_CODEC = StreamCodec.composite(ResourceLocation.STREAM_CODEC, AirtightUpgradeStatus::id,ByteBufCodecs.BOOL, AirtightUpgradeStatus::isEnabled, ByteBufCodecs.BOOL, AirtightUpgradeStatus::isInstalled, AirtightUpgradeStatus::new);
+    public static final Codec<AirtightUpgradeStatus> CODEC = RecordCodecBuilder.create(instance -> instance.group(ResourceLocation.CODEC.fieldOf("id").forGetter(AirtightUpgradeStatus::id), Codec.BOOL.fieldOf("isEnabled").forGetter(AirtightUpgradeStatus::isEnabled), Codec.BOOL.fieldOf("isInstalled").forGetter(AirtightUpgradeStatus::isInstalled)).apply(instance, AirtightUpgradeStatus::new));
+    public static final StreamCodec<ByteBuf, AirtightUpgradeStatus> STREAM_CODEC = StreamCodec.composite(ResourceLocation.STREAM_CODEC, AirtightUpgradeStatus::id, ByteBufCodecs.BOOL, AirtightUpgradeStatus::isEnabled, ByteBufCodecs.BOOL, AirtightUpgradeStatus::isInstalled, AirtightUpgradeStatus::new);
 }

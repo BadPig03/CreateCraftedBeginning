@@ -1,8 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.gasfilter;
 
-import com.simibubi.create.AllDataComponents;
 import com.simibubi.create.AllKeys;
-import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.foundation.recipe.ItemCopyingRecipe.SupportsItemCopying;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -19,21 +17,20 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.items.ItemStackHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterUtils.GasFilterData;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -42,32 +39,26 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
         super(properties);
     }
 
-    public static boolean isBlacklist(ItemStack filter) {
-        return filter.getOrDefault(AllDataComponents.FILTER_ITEMS_BLACKLIST, false);
+    public static GasFilterData getFilterData(ItemStack filter) {
+        return filter.getOrDefault(CCBDataComponents.GAS_FILTER_DATA, GasFilterData.EMPTY);
     }
 
-    public static ItemStackHandler getGasFilterItemHandler(ItemStack filter) {
-        ItemStackHandler inv = new ItemStackHandler(18);
-        ItemHelper.fillItemStackHandler(filter.getOrDefault(AllDataComponents.FILTER_ITEMS, ItemContainerContents.EMPTY), inv);
-        return inv;
-    }
-
-    public static List<Gas> getExistingGasTypes(ItemStackHandler filterInventory) {
-        List<Gas> existingGasTypes = new ArrayList<>();
-        for (int i = 0; i < filterInventory.getSlots(); i++) {
-            ItemStack stack = filterInventory.getStackInSlot(i);
-            if (stack.isEmpty()) {
-                continue;
-            }
-
-            Gas gasType = stack.getOrDefault(CCBDataComponents.GAS_VIRTUAL_ITEM_TYPE, GasStack.EMPTY).getGasType();
-            if (gasType.isEmpty()) {
-                continue;
-            }
-
-            existingGasTypes.add(gasType);
+    public static void setFilterData(ItemStack filter, GasFilterData data) {
+        if (data.isDefault()) {
+            filter.remove(CCBDataComponents.GAS_FILTER_DATA);
+            return;
         }
-        return existingGasTypes;
+
+        filter.set(CCBDataComponents.GAS_FILTER_DATA, data);
+    }
+
+    public static ItemStackHandler createFilterInventory(GasFilterData data) {
+        ItemStackHandler inventory = new ItemStackHandler(GasFilterData.MAX_ENTRIES);
+        List<GasStack> gases = data.gases();
+        for (int i = 0; i < gases.size(); i++) {
+            inventory.setStackInSlot(i, GasVirtualUtils.createVirtualItem(gases.get(i)));
+        }
+        return inventory;
     }
 
     @Override
@@ -100,13 +91,14 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
             return;
         }
 
-        List<Gas> existingGasTypes = getExistingGasTypes(getGasFilterItemHandler(filter));
-        if (existingGasTypes.isEmpty()) {
+        GasFilterData data = getFilterData(filter);
+        List<GasStack> gases = data.gases();
+        if (gases.isEmpty()) {
             return;
         }
 
         tooltips.add(CommonComponents.EMPTY);
-        if (isBlacklist(filter)) {
+        if (data.blacklist()) {
             tooltips.add(CCBLang.translateDirect("gui.gas_filter.blacklist").withStyle(ChatFormatting.GOLD));
         }
         else {
@@ -114,13 +106,13 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
         }
 
         int count = 0;
-        for (Gas gasType : existingGasTypes) {
+        for (GasStack gas : gases) {
             if (count > 3) {
                 tooltips.add(CCBLang.text("- ...").style(ChatFormatting.DARK_GRAY).component());
                 return;
             }
 
-            tooltips.add(CCBLang.text("- ").add(Component.translatable(gasType.getTranslationKey())).style(ChatFormatting.GRAY).component());
+            tooltips.add(CCBLang.text("- ").add(Component.translatable(gas.getGasType().getTranslationKey())).style(ChatFormatting.GRAY).component());
             count++;
         }
     }
@@ -132,7 +124,7 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
 
     @Override
     public DataComponentType<?> getComponentType() {
-        return AllDataComponents.FILTER_ITEMS;
+        return CCBDataComponents.GAS_FILTER_DATA;
     }
 
     @Override
@@ -142,16 +134,15 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
 
     @Override
     public boolean test(ItemStack filterItem, GasStack filterGasStack) {
+        return filterItem.is(CCBItems.GAS_FILTER) && getFilterData(filterItem).test(filterGasStack);
+    }
+
+    @Override
+    public Predicate<GasStack> compile(ItemStack filterItem) {
         if (!filterItem.is(CCBItems.GAS_FILTER)) {
-            return false;
+            return gas -> false;
         }
 
-        List<Gas> existingGasTypes = getExistingGasTypes(getGasFilterItemHandler(filterItem));
-        if (isBlacklist(filterItem)) {
-            return existingGasTypes.stream().noneMatch(filterGasStack::is);
-        }
-        else {
-            return existingGasTypes.stream().anyMatch(filterGasStack::is);
-        }
+        return getFilterData(filterItem).compile();
     }
 }

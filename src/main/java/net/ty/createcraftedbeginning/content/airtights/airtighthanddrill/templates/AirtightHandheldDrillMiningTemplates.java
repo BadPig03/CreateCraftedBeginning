@@ -18,6 +18,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public enum AirtightHandheldDrillMiningTemplates implements StringRepresentable {
+    CHAIN_MINING(new ChainMiningTemplate()),
     CUBOID(new CuboidTemplate()),
     HOLLOW_CUBOID(new HollowCuboidTemplate()),
     FRAME_CUBOID(new FrameCuboidTemplate());

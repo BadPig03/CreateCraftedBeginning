@@ -15,6 +15,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickB
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Pre;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -44,7 +45,9 @@ public class AirtightHandheldDrillEvents {
 
         Minecraft minecraft = Minecraft.getInstance();
         boolean hasAnimation = renderHandler.hasHandAnimation(0);
-        boolean shouldRotate = player.isUsingItem() && player.getUseItem().is(CCBItems.AIRTIGHT_HANDHELD_DRILL) || minecraft.options.keyAttack.isDown() && minecraft.hitResult != null && minecraft.hitResult.getType() == Type.BLOCK;
+        boolean isUsingDrill = player.isUsingItem() && player.getUseItem().is(CCBItems.AIRTIGHT_HANDHELD_DRILL);
+        boolean isMiningBlock = minecraft.options.keyAttack.isDown() && minecraft.hitResult != null && minecraft.hitResult.getType() == Type.BLOCK;
+        boolean shouldRotate = isUsingDrill || isMiningBlock;
         if (shouldRotate && !hasAnimation) {
             renderHandler.start();
         }
@@ -61,8 +64,7 @@ public class AirtightHandheldDrillEvents {
             return;
         }
 
-        Action action = event.getAction();
-        if (action != Action.START) {
+        if (event.getAction() != Action.START) {
             return;
         }
 
@@ -77,7 +79,13 @@ public class AirtightHandheldDrillEvents {
         }
 
         if (newSpeed == -1) {
-            GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", CanisterContainerSuppliers.getFirstAvailableGasContent(player).getHoverName());
+            GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
+            if (gasContent.isEmpty()) {
+                GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas");
+            }
+            else {
+                GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", gasContent.getHoverName());
+            }
         }
         else if (newSpeed == -2) {
             GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_mining_target");

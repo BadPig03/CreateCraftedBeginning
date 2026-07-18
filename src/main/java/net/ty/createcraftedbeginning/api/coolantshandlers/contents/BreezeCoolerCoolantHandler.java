@@ -16,14 +16,23 @@ import static net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeC
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class BreezeCoolerCoolantHandler implements AirtightCoolantHandler {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public CoolantEfficiency getCoolantEfficiency(Level level, BlockPos pos, BlockState blockState) {
+        if (!blockState.hasProperty(FROST_LEVEL)) {
+            return CoolantEfficiency.NONE;
+        }
         if (blockState.getValue(FROST_LEVEL).isAtLeast(FrostLevel.CHILLED)) {
             return CoolantEfficiency.EXTREME;
         }
         return CoolantEfficiency.BASIC;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public @Nullable BlockState getMeltBlockState(Level level, BlockPos pos, BlockState blockState) {
         return null;

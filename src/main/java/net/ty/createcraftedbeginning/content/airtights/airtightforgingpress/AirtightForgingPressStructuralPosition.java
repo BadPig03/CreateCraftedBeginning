@@ -2,14 +2,15 @@ package net.ty.createcraftedbeginning.content.airtights.airtightforgingpress;
 
 import net.createmod.catnip.lang.Lang;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
-import net.minecraft.core.Vec3i;
 import net.minecraft.util.StringRepresentable;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -41,103 +42,26 @@ public enum AirtightForgingPressStructuralPosition implements StringRepresentabl
     BOTTOM_MID_DOWN(0, 1, -1, false, Axis.Y, AxisDirection.POSITIVE, Direction.SOUTH),
     BOTTOM_RIGHT_DOWN(-1, 1, -1, false, Axis.Y, AxisDirection.POSITIVE, Direction.UP);
 
+    private static final List<AirtightForgingPressStructuralPosition> ALL = List.of(values());
+
     private final Axis axis;
     private final AxisDirection axisDirection;
     private final boolean isShaft;
     private final Direction direction;
-    private final int x;
-    private final int y;
-    private final int z;
+    private final BlockPos masterOffset;
+    private final BlockPos structureOffset;
 
-    AirtightForgingPressStructuralPosition(int x, int y, int z, boolean isShaft, Axis axis, AxisDirection axisDirection, Direction direction) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
+    AirtightForgingPressStructuralPosition(int masterOffsetX, int masterOffsetY, int masterOffsetZ, boolean isShaft, Axis axis, AxisDirection axisDirection, Direction direction) {
+        masterOffset = new BlockPos(masterOffsetX, masterOffsetY, masterOffsetZ);
+        structureOffset = new BlockPos(-masterOffsetX, -masterOffsetY, -masterOffsetZ);
         this.isShaft = isShaft;
         this.axis = axis;
         this.axisDirection = axisDirection;
         this.direction = direction;
     }
 
-    public static AirtightForgingPressStructuralPosition fromOffset(int x, int y, int z) {
-        if (x == -1 && y == 1 && z == -1) {
-            return TOP_LEFT_UP;
-        }
-        else if (x == 0 && y == 1 && z == -1) {
-            return TOP_MID_UP;
-        }
-        else if (x == 1 && y == 1 && z == -1) {
-            return TOP_RIGHT_UP;
-        }
-        else if (x == -1 && y == 1 && z == 0) {
-            return TOP_LEFT_MID;
-        }
-        else if (x == 1 && y == 1 && z == 0) {
-            return TOP_RIGHT_MID;
-        }
-        else if (x == -1 && y == 1 && z == 1) {
-            return TOP_LEFT_DOWN;
-        }
-        else if (x == 0 && y == 1 && z == 1) {
-            return TOP_MID_DOWN;
-        }
-        else if (x == 1 && y == 1 && z == 1) {
-            return TOP_RIGHT_DOWN;
-        }
-        else if (x == -1 && y == 0 && z == -1) {
-            return MID_LEFT_UP;
-        }
-        else if (x == 0 && y == 0 && z == -1) {
-            return MID_MID_UP;
-        }
-        else if (x == 1 && y == 0 && z == -1) {
-            return MID_RIGHT_UP;
-        }
-        else if (x == -1 && y == 0 && z == 0) {
-            return MID_LEFT_MID;
-        }
-        else if (x == 1 && y == 0 && z == 0) {
-            return MID_RIGHT_MID;
-        }
-        else if (x == -1 && y == 0 && z == 1) {
-            return MID_LEFT_DOWN;
-        }
-        else if (x == 0 && y == 0 && z == 1) {
-            return MID_MID_DOWN;
-        }
-        else if (x == 1 && y == 0 && z == 1) {
-            return MID_RIGHT_DOWN;
-        }
-        if (x == -1 && y == -1 && z == -1) {
-            return BOTTOM_LEFT_UP;
-        }
-        else if (x == 0 && y == -1 && z == -1) {
-            return BOTTOM_MID_UP;
-        }
-        else if (x == 1 && y == -1 && z == -1) {
-            return BOTTOM_RIGHT_UP;
-        }
-        else if (x == -1 && y == -1 && z == 0) {
-            return BOTTOM_LEFT_MID;
-        }
-        else if (x == 0 && y == -1 && z == 0){
-            return BOTTOM_CENTER;
-        }
-        else if (x == 1 && y == -1 && z == 0) {
-            return BOTTOM_RIGHT_MID;
-        }
-        else if (x == -1 && y == -1 && z == 1) {
-            return BOTTOM_LEFT_DOWN;
-        }
-        else if (x == 0 && y == -1 && z == 1) {
-            return BOTTOM_MID_DOWN;
-        }
-        else if (x == 1 && y == -1 && z == 1) {
-            return BOTTOM_RIGHT_DOWN;
-        }
-        else {
-            return TOP_CENTER;
-        }
+    public static List<AirtightForgingPressStructuralPosition> all() {
+        return ALL;
     }
 
     public boolean isShaft() {
@@ -145,11 +69,11 @@ public enum AirtightForgingPressStructuralPosition implements StringRepresentabl
     }
 
     public boolean isLowerStore() {
-        return y == 1;
+        return masterOffset.getY() == 1;
     }
 
     public boolean isUpperStore() {
-        return y == -1;
+        return masterOffset.getY() == -1;
     }
 
     public boolean isFilter() {
@@ -168,9 +92,12 @@ public enum AirtightForgingPressStructuralPosition implements StringRepresentabl
         return axisDirection;
     }
 
-    @Contract(value = " -> new", pure = true)
-    public Vec3i getPosition() {
-        return new Vec3i(x, y, z);
+    public BlockPos getMasterOffset() {
+        return masterOffset;
+    }
+
+    public BlockPos getStructureOffset() {
+        return structureOffset;
     }
 
     @Contract(pure = true)

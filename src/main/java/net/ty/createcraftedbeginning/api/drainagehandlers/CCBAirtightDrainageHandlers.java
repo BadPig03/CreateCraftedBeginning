@@ -17,7 +17,6 @@ import net.ty.createcraftedbeginning.api.drainagehandlers.ultrawarm.EnergizedUlt
 import net.ty.createcraftedbeginning.api.drainagehandlers.ultrawarm.PressurizedEnergizedUltrawarmAirEffectHandler;
 import net.ty.createcraftedbeginning.api.drainagehandlers.ultrawarm.PressurizedUltrawarmAirEffectHandler;
 import net.ty.createcraftedbeginning.api.drainagehandlers.ultrawarm.UltrawarmAirEffectHandler;
-import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightDrainageHandlerEvent;
 import net.ty.createcraftedbeginning.data.CCBGases;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -25,26 +24,29 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBAirtightDrainageHandlers {
+    /**
+     * Registers the built-in airtight drainage handlers.
+     */
     public static void register() {
-        AirtightDrainageHandlerEvent.add(CCBGases.NATURAL_AIR.get(), new NaturalAirEffectHandler());
-        AirtightDrainageHandlerEvent.add(CCBGases.ENERGIZED_NATURAL_AIR.get(), new EnergizedNaturalAirEffectHandler());
-        AirtightDrainageHandlerEvent.add(CCBGases.PRESSURIZED_NATURAL_AIR.get(), new PressurizedNaturalAirEffectHandler());
-        AirtightDrainageHandlerEvent.add(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get(), new PressurizedEnergizedNaturalAirEffectHandler());
+        AirtightDrainageHandlerUtils.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), new NaturalAirEffectHandler());
+        AirtightDrainageHandlerUtils.register(CCBGases.ENERGIZED_NATURAL_AIR.get().getResourceLocation(), new EnergizedNaturalAirEffectHandler());
+        AirtightDrainageHandlerUtils.register(CCBGases.PRESSURIZED_NATURAL_AIR.get().getResourceLocation(), new PressurizedNaturalAirEffectHandler());
+        AirtightDrainageHandlerUtils.register(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get().getResourceLocation(), new PressurizedEnergizedNaturalAirEffectHandler());
 
-        AirtightDrainageHandlerEvent.add(CCBGases.ULTRAWARM_AIR.get(), new UltrawarmAirEffectHandler());
-        AirtightDrainageHandlerEvent.add(CCBGases.ENERGIZED_ULTRAWARM_AIR.get(), new EnergizedUltrawarmAirEffectHandler());
-        AirtightDrainageHandlerEvent.add(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get(), new PressurizedUltrawarmAirEffectHandler());
-        AirtightDrainageHandlerEvent.add(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get(), new PressurizedEnergizedUltrawarmAirEffectHandler());
+        AirtightDrainageHandlerUtils.register(CCBGases.ULTRAWARM_AIR.get().getResourceLocation(), new UltrawarmAirEffectHandler());
+        AirtightDrainageHandlerUtils.register(CCBGases.ENERGIZED_ULTRAWARM_AIR.get().getResourceLocation(), new EnergizedUltrawarmAirEffectHandler());
+        AirtightDrainageHandlerUtils.register(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get().getResourceLocation(), new PressurizedUltrawarmAirEffectHandler());
+        AirtightDrainageHandlerUtils.register(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get().getResourceLocation(), new PressurizedEnergizedUltrawarmAirEffectHandler());
 
-        AirtightDrainageHandlerEvent.add(CCBGases.ETHEREAL_AIR.get(), new EtherealAirEffectHandler());
-        AirtightDrainageHandlerEvent.add(CCBGases.ENERGIZED_ETHEREAL_AIR.get(), new EnergizedEtherealAirEffectHandler());
-        AirtightDrainageHandlerEvent.add(CCBGases.PRESSURIZED_ETHEREAL_AIR.get(), new PressurizedEtherealAirEffectHandler());
-        AirtightDrainageHandlerEvent.add(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR.get(), new PressurizedEnergizedEtherealAirEffectHandler());
+        AirtightDrainageHandlerUtils.register(CCBGases.ETHEREAL_AIR.get().getResourceLocation(), new EtherealAirEffectHandler());
+        AirtightDrainageHandlerUtils.register(CCBGases.ENERGIZED_ETHEREAL_AIR.get().getResourceLocation(), new EnergizedEtherealAirEffectHandler());
+        AirtightDrainageHandlerUtils.register(CCBGases.PRESSURIZED_ETHEREAL_AIR.get().getResourceLocation(), new PressurizedEtherealAirEffectHandler());
+        AirtightDrainageHandlerUtils.register(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR.get().getResourceLocation(), new PressurizedEnergizedEtherealAirEffectHandler());
 
-        AirtightDrainageHandlerEvent.add(CCBGases.MOIST_AIR.get(), new MoistAirEffectHandler());
-        AirtightDrainageHandlerEvent.add(CCBGases.SPORE_AIR.get(), new SporeAirEffectHandler());
-        AirtightDrainageHandlerEvent.add(CCBGases.SCULK_AIR.get(), new SculkAirEffectHandler());
+        AirtightDrainageHandlerUtils.register(CCBGases.MOIST_AIR.get().getResourceLocation(), new MoistAirEffectHandler());
+        AirtightDrainageHandlerUtils.register(CCBGases.SPORE_AIR.get().getResourceLocation(), new SporeAirEffectHandler());
+        AirtightDrainageHandlerUtils.register(CCBGases.SCULK_AIR.get().getResourceLocation(), new SculkAirEffectHandler());
 
-        AirtightDrainageHandlerEvent.add(CCBGases.CREATIVE_AIR.get(), new CreativeAirEffectHandler());
+        AirtightDrainageHandlerUtils.register(CCBGases.CREATIVE_AIR.get().getResourceLocation(), new CreativeAirEffectHandler());
     }
 }

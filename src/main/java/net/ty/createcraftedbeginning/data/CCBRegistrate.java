@@ -36,8 +36,8 @@ import net.neoforged.neoforge.fluids.BaseFlowingFluid.Flowing;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageType;
-import net.ty.createcraftedbeginning.content.fluids.AmethystSuspensionVirtualFluid;
-import net.ty.createcraftedbeginning.content.fluids.SlushVirtualFluid;
+import net.ty.createcraftedbeginning.content.fluids.amethystsuspension.AmethystSuspensionVirtualFluid;
+import net.ty.createcraftedbeginning.content.fluids.slush.SlushVirtualFluid;
 import net.ty.createcraftedbeginning.registry.CCBRegistries;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -82,8 +82,8 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
     }
 
     @OnlyIn(Dist.CLIENT)
-    private static void registerBlockModel(Block entry, Supplier<NonNullFunction<BakedModel, ? extends BakedModel>> func) {
-        CreateClient.MODEL_SWAPPER.getCustomBlockModels().register(RegisteredObjectsHelper.getKeyOrThrow(entry), func.get());
+    private static void registerBlockModel(Block entry, Supplier<NonNullFunction<BakedModel, ? extends BakedModel>> modelFactory) {
+        CreateClient.MODEL_SWAPPER.getCustomBlockModels().register(RegisteredObjectsHelper.getKeyOrThrow(entry), modelFactory.get());
     }
 
     public CCBRegistrate setTooltipModifierFactory(@Nullable Function<Item, TooltipModifier> factory) {
@@ -148,11 +148,11 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
     }
 
     public FluidBuilder<SlushVirtualFluid, CCBRegistrate> slush_fluid(String name) {
-        return entry(name, c -> new CCBVirtualFluidBuilder<>(self(), self(), name, c, SLUSH, SlushVirtualFluid::createSource, SlushVirtualFluid::createFlowing));
+        return entry(name, callback -> new CCBVirtualFluidBuilder<>(self(), self(), name, callback, SLUSH, SlushVirtualFluid::createSource, SlushVirtualFluid::createFlowing));
     }
 
     public FluidBuilder<AmethystSuspensionVirtualFluid, CCBRegistrate> amethyst_suspension_fluid(String name) {
-        return entry(name, c -> new CCBVirtualFluidBuilder<>(self(), self(), name, c, AMETHYST_SUSPENSION, AmethystSuspensionVirtualFluid::createSource, AmethystSuspensionVirtualFluid::createFlowing));
+        return entry(name, callback -> new CCBVirtualFluidBuilder<>(self(), self(), name, callback, AMETHYST_SUSPENSION, AmethystSuspensionVirtualFluid::createSource, AmethystSuspensionVirtualFluid::createFlowing));
     }
 
     public FluidBuilder<Flowing, CCBRegistrate> standardFluid(String name, FluidTypeFactory typeFactory) {

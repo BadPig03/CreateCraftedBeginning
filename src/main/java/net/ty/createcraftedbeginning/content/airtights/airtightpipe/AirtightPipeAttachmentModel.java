@@ -17,9 +17,9 @@ import net.neoforged.neoforge.client.model.data.ModelData;
 import net.neoforged.neoforge.client.model.data.ModelData.Builder;
 import net.neoforged.neoforge.client.model.data.ModelProperty;
 import net.neoforged.neoforge.common.util.TriState;
+import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes.ComponentPartials;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
@@ -50,21 +50,24 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
         for (Direction direction : Iterate.directions) {
             AttachmentTypes type = pipeData.getAttachment(direction);
             for (ComponentPartials partial : type.partials) {
-                quads.addAll(CCBPartialModels.AIRTIGHT_PIPE_ATTACHMENTS.get(partial).get(direction).get().getQuads(state, side, rand, data, renderType));
+                BakedModel model = CCBPartialModels.AIRTIGHT_PIPE_ATTACHMENTS.get(partial).get(direction).get();
+                quads.addAll(model.getQuads(state, side, rand, data, renderType));
             }
         }
     }
 
     @Override
     protected Builder gatherModelData(Builder builder, BlockAndTintGetter level, BlockPos pos, BlockState state, ModelData blockEntityData) {
-        PipeModelData data = new PipeModelData();
+        PipeModelData pipeData = new PipeModelData();
         GasTransportBehaviour transport = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
         if (transport == null) {
-            return builder.with(PIPE_PROPERTY, data);
+            return builder.with(PIPE_PROPERTY, pipeData);
         }
 
-        Arrays.stream(Iterate.directions).forEach(direction -> data.putAttachment(direction, transport.getRenderedRimAttachment(level, pos, state, direction)));
-        return builder.with(PIPE_PROPERTY, data);
+        for (Direction direction : Iterate.directions) {
+            pipeData.putAttachment(direction, transport.getRenderedRimAttachment(level, pos, state, direction));
+        }
+        return builder.with(PIPE_PROPERTY, pipeData);
     }
 
     @Override
@@ -74,10 +77,7 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
 
     @Override
     public TriState useAmbientOcclusion(BlockState state, ModelData data, RenderType renderType) {
-        if (ambientOcclusion) {
-            return TriState.TRUE;
-        }
-        return TriState.FALSE;
+        return ambientOcclusion ? TriState.TRUE : TriState.FALSE;
     }
 
     @Override
@@ -89,33 +89,35 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
 
         PipeModelData pipeData = data.get(PIPE_PROPERTY);
         quads = new ArrayList<>(quads);
-        if (pipeData != null) {
-            addQuads(quads, state, side, rand, data, pipeData, renderType);
+        if (pipeData == null) {
+            return quads;
         }
+
+        addQuads(quads, state, side, rand, data, pipeData, renderType);
         return quads;
     }
 
     @Override
     public ChunkRenderTypeSet getRenderTypes(BlockState state, RandomSource rand, ModelData data) {
-        List<ChunkRenderTypeSet> set = new ArrayList<>();
-        set.add(super.getRenderTypes(state, rand, data));
+        List<ChunkRenderTypeSet> renderTypes = new ArrayList<>();
+        renderTypes.add(super.getRenderTypes(state, rand, data));
         if (!data.has(PIPE_PROPERTY)) {
-            return ChunkRenderTypeSet.union(set);
+            return ChunkRenderTypeSet.union(renderTypes);
         }
 
         PipeModelData pipeData = data.get(PIPE_PROPERTY);
-        for (Direction direction : Iterate.directions) {
-            AttachmentTypes type = null;
-            if (pipeData != null) {
-                type = pipeData.getAttachment(direction);
-            }
-            if (type == null) {
-                continue;
-            }
-
-            Arrays.stream(type.partials).map(partial -> CCBPartialModels.AIRTIGHT_PIPE_ATTACHMENTS.get(partial).get(direction).get().getRenderTypes(state, rand, data)).forEach(set::add);
+        if (pipeData == null) {
+            return ChunkRenderTypeSet.union(renderTypes);
         }
-        return ChunkRenderTypeSet.union(set);
+
+        for (Direction direction : Iterate.directions) {
+            AttachmentTypes type = pipeData.getAttachment(direction);
+            for (ComponentPartials partial : type.partials) {
+                BakedModel model = CCBPartialModels.AIRTIGHT_PIPE_ATTACHMENTS.get(partial).get(direction).get();
+                renderTypes.add(model.getRenderTypes(state, rand, data));
+            }
+        }
+        return ChunkRenderTypeSet.union(renderTypes);
     }
 
     private static class PipeModelData {
@@ -126,13 +128,13 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
             Arrays.fill(attachments, AttachmentTypes.NONE);
         }
 
-        public void putAttachment(Direction face, AttachmentTypes rim) {
-            attachments[face.get3DDataValue()] = rim;
+        public void putAttachment(Direction direction, AttachmentTypes attachment) {
+            attachments[direction.get3DDataValue()] = attachment;
         }
 
         @Contract(pure = true)
-        public AttachmentTypes getAttachment(Direction face) {
-            return attachments[face.get3DDataValue()];
+        public AttachmentTypes getAttachment(Direction direction) {
+            return attachments[direction.get3DDataValue()];
         }
     }
 }

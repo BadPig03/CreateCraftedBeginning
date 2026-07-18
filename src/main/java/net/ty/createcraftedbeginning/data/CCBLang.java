@@ -64,34 +64,31 @@ public class CCBLang extends Lang {
     }
 
     public static LangBuilder seconds(int ticks, float tickRate) {
-        ticks = Mth.abs(ticks);
-        int totalSeconds = Mth.floor(ticks / tickRate);
-
-        if (totalSeconds >= 60) {
-            int minutes = totalSeconds / 60;
-            int seconds = totalSeconds % 60;
-
-            return seconds == 0 ? builder().translate("gui.minutes", minutes) : builder().translate("gui.minutes_seconds", minutes, seconds);
-        }
-        return builder().translate("gui.seconds", totalSeconds);
+        int totalSeconds = Mth.floor(Mth.abs(ticks) / tickRate);
+        return formatSeconds(totalSeconds);
     }
 
     public static LangBuilder secondsWithGameTicks(int ticks, float tickRate) {
         float totalSeconds = ticks / tickRate;
-
         if (totalSeconds < 1.0f) {
             return builder().translate("gui.ticks", ticks);
         }
 
-        int wholeSeconds = Mth.floor(totalSeconds);
+        return formatSeconds(Mth.floor(totalSeconds));
+    }
 
-        if (wholeSeconds >= 60) {
-            int minutes = wholeSeconds / 60;
-            int seconds = wholeSeconds % 60;
-
-            return seconds == 0 ? builder().translate("gui.minutes", minutes) : builder().translate("gui.minutes_seconds", minutes, seconds);
+    private static LangBuilder formatSeconds(int totalSeconds) {
+        if (totalSeconds < 60) {
+            return builder().translate("gui.seconds", totalSeconds);
         }
-        return builder().translate("gui.seconds", wholeSeconds);
+
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        if (seconds == 0) {
+            return builder().translate("gui.minutes", minutes);
+        }
+
+        return builder().translate("gui.minutes_seconds", minutes, seconds);
     }
 
     public static MutableComponent translateDirect(String key, Object... args) {
@@ -101,15 +98,15 @@ public class CCBLang extends Lang {
     public static List<Component> translatedOptions(String prefix, String @NotNull ... keys) {
         List<Component> result = new ArrayList<>(keys.length);
         for (String key : keys) {
-            result.add(translate(prefix + '.' + key).component());
+            result.add(translateDirect(prefix + '.' + key));
         }
         return result;
     }
 
     public static void addToGoggles(List<Component> tooltip, String text, Object... args) {
         MutableComponent hint = translateDirect(text, args);
-        List<Component> cutString = TooltipHelper.cutTextComponent(hint, Palette.GRAY_AND_WHITE);
-        for (Component component : cutString) {
+        List<Component> lines = TooltipHelper.cutTextComponent(hint, Palette.GRAY_AND_WHITE);
+        for (Component component : lines) {
             builder().add(component.copy()).forGoggles(tooltip);
         }
     }

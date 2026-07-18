@@ -21,12 +21,11 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.CreativeSmartGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasConnectivityHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.CreativeSmartGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
@@ -45,24 +44,12 @@ public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirt
     }
 
     @Override
-    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
-        builder.add(TOP, BOTTOM);
-        super.createBlockStateDefinition(builder);
-    }
-
-    @Override
     public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean moved) {
         if (oldState.getBlock() == state.getBlock() || moved) {
             return;
         }
 
         withBlockEntityDo(level, pos, CreativeAirtightTankBlockEntity::updateConnectivity);
-    }
-
-    @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
-        super.setPlacedBy(level, pos, state, entity, stack);
-        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
     }
 
     @Override
@@ -80,25 +67,20 @@ public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirt
 
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        if (player.isShiftKeyDown() || !(stack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
+        if (player.isShiftKeyDown() || !(stack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canister)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        if (!(level.getBlockEntity(pos) instanceof CreativeAirtightTankBlockEntity tankBlockEntity)) {
+        if (!(level.getBlockEntity(pos) instanceof CreativeAirtightTankBlockEntity tank)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        CreativeAirtightTankBlockEntity controller = tankBlockEntity.getControllerBE();
+        CreativeAirtightTankBlockEntity controller = tank.getControllerBE();
         if (controller == null) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        IGasHandler gasHandler = level.getCapability(GasHandler.BLOCK, controller.getBlockPos(), null);
-        if (gasHandler == null) {
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        }
-
-        if (!(gasHandler instanceof CreativeSmartGasTank creativeTankHandler)) {
+        if (!(level.getCapability(GasHandler.BLOCK, controller.getBlockPos(), null) instanceof CreativeSmartGasTank creativeTank)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
@@ -106,19 +88,26 @@ public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirt
             return ItemInteractionResult.sidedSuccess(true);
         }
 
-        GasStack gasContent = canisterContents.getGasInTank(0);
-        if (gasContent.isEmpty()) {
-            creativeTankHandler.setContainedGas(GasStack.EMPTY);
-            return ItemInteractionResult.sidedSuccess(false);
-        }
-
-        creativeTankHandler.setContainedGas(gasContent);
+        GasStack gas = canister.getGasInTank(0);
+        creativeTank.setContainedGas(gas.isEmpty() ? GasStack.EMPTY : gas);
         return ItemInteractionResult.sidedSuccess(false);
     }
 
     @Override
     public VoxelShape getBlockSupportShape(BlockState state, BlockGetter level, BlockPos pos) {
         return Shapes.block();
+    }
+
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, entity, stack);
+        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
+    }
+
+    @Override
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
+        builder.add(TOP, BOTTOM);
+        super.createBlockStateDefinition(builder);
     }
 
     @Override

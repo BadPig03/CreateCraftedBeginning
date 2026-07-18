@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasFilteringBehaviour;
@@ -24,6 +25,20 @@ public class SmartAirtightPipeRenderer extends SmartBlockEntityRenderer<SmartAir
         super(context);
     }
 
+    private static boolean isBeyondRenderDistance(SmartAirtightPipeBlockEntity pipe, Level level, BlockPos pos, GasFilteringBehaviour behaviour) {
+        if (pipe.isVirtual()) {
+            return false;
+        }
+
+        Entity camera = Minecraft.getInstance().cameraEntity;
+        if (camera == null || level != camera.level()) {
+            return false;
+        }
+
+        float maxDistance = behaviour.getRenderDistance();
+        return camera.position().distanceToSqr(VecHelper.getCenterOf(pos)) > maxDistance * maxDistance;
+    }
+
     @Override
     protected void renderSafe(SmartAirtightPipeBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         if (be.isRemoved()) {
@@ -31,32 +46,35 @@ public class SmartAirtightPipeRenderer extends SmartBlockEntityRenderer<SmartAir
         }
 
         Level level = be.getLevel();
-        BlockPos blockPos = be.getBlockPos();
-        GasFilteringBehaviour behaviour = be.getFilter();
-        if (!be.isVirtual()) {
-            Entity cameraEntity = Minecraft.getInstance().cameraEntity;
-            if (cameraEntity != null && level == cameraEntity.level()) {
-                float max = behaviour.getRenderDistance();
-                if (cameraEntity.position().distanceToSqr(VecHelper.getCenterOf(blockPos)) > max * max) {
-                    return;
-                }
-            }
-        }
-
-        if (!behaviour.isActive() || behaviour.getFilter().isEmpty()) {
+        if (level == null) {
             return;
         }
 
-        ValueBoxTransform positioning = behaviour.getSlotPositioning();
-        BlockState blockState = be.getBlockState();
-        if (!positioning.shouldRender(level, blockPos, blockState)) {
+        BlockPos pos = be.getBlockPos();
+        GasFilteringBehaviour behaviour = be.getFilter();
+        if (isBeyondRenderDistance(be, level, pos, behaviour)) {
+            return;
+        }
+
+        if (!behaviour.isActive()) {
+            return;
+        }
+
+        ItemStack filter = behaviour.getFilter();
+        if (filter.isEmpty()) {
+            return;
+        }
+
+        ValueBoxTransform slot = behaviour.getSlotPositioning();
+        BlockState state = be.getBlockState();
+        if (!slot.shouldRender(level, pos, state)) {
             return;
         }
 
         ms.pushPose();
 
-        positioning.transform(level, blockPos, blockState, ms);
-        ValueBoxRenderer.renderItemIntoValueBox(behaviour.getFilter(), ms, buffer, light, overlay);
+        slot.transform(level, pos, state, ms);
+        ValueBoxRenderer.renderItemIntoValueBox(filter, ms, buffer, light, overlay);
 
         ms.popPose();
     }

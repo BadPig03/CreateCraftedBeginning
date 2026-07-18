@@ -37,20 +37,19 @@ public class SmartAirtightPipeBlock extends AxisGasPipeBlock implements IBE<Smar
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        BlockState state = super.getStateForPlacement(context);
         Direction horizontalFacing = context.getHorizontalDirection();
-        return state.setValue(DIRECTIONAL_FACING, DirectionalFacing.getFacingDirection(horizontalFacing));
+        return super.getStateForPlacement(context).setValue(DIRECTIONAL_FACING, DirectionalFacing.getFacingDirection(horizontalFacing));
     }
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos blockPos, CollisionContext context) {
         Axis axis = state.getValue(AXIS);
-        if (axis == Axis.Y) {
-            DirectionalFacing facing = state.getValue(DIRECTIONAL_FACING);
-            return CCBShapes.SMART_AIRTIGHT_PIPE_VERTICAL.get(DirectionalFacing.getDirection(facing).getOpposite());
+        if (axis != Axis.Y) {
+            return CCBShapes.SMART_AIRTIGHT_PIPE.get(axis);
         }
 
-        return CCBShapes.SMART_AIRTIGHT_PIPE.get(state.getValue(AXIS));
+        DirectionalFacing facing = state.getValue(DIRECTIONAL_FACING);
+        return CCBShapes.SMART_AIRTIGHT_PIPE_VERTICAL.get(DirectionalFacing.getDirection(facing).getOpposite());
     }
 
     @Override

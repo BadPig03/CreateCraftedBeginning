@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.airtights.gascanister;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
-import net.createmod.catnip.lang.LangBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -15,10 +14,11 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.SmartGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.SmartGasTank;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 
@@ -38,7 +38,7 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.GAS_CANISTER.get(), (be, context) -> be.tankBehaviour.getCapability());
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.GAS_CANISTER.get(), (blockEntity, context) -> blockEntity.tankBehaviour.getCapability());
     }
 
     @Override
@@ -46,12 +46,6 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
         tankBehaviour = SmartGasTankBehaviour.single(this, GasCanisterContainerContents.getDefaultCapacity()).forbidInsertion().forbidExtraction();
         behaviours.add(tankBehaviour);
     }
-
-    @Override
-	public void invalidate() {
-		super.invalidate();
-		invalidateCapabilities();
-	}
 
     @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
@@ -70,14 +64,20 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
         updateCapacity();
     }
 
+    @Override
+    public void invalidate() {
+        super.invalidate();
+        invalidateCapabilities();
+    }
+
     public void setCanisterContent(ItemStack itemStack) {
         canister = itemStack.copy();
-        if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
+        if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents contents)) {
             return;
         }
 
-        tankBehaviour.getPrimaryHandler().setCapacity(canisterContents.getTankCapacity(0));
-        tankBehaviour.getInternalGasHandler().forceFill(canisterContents.getGasInTank(0), GasAction.EXECUTE);
+        tankBehaviour.getPrimaryHandler().setCapacity(contents.getTankCapacity(0));
+        tankBehaviour.getInternalGasHandler().forceFill(contents.getGasInTank(0), GasAction.EXECUTE);
         notifyUpdate();
     }
 
@@ -87,21 +87,17 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
             return false;
         }
 
-        SmartGasTank gasTank = tankBehaviour.getPrimaryHandler();
-        if (gasTank == null) {
-            return false;
+        SmartGasTank tank = tankBehaviour.getPrimaryHandler();
+        CCBLang.translate("gui.gas_container").forGoggles(tooltip);
+
+        GasStack content = tank.getGasStack();
+        if (content.isEmpty()) {
+            CCBLang.translate("gui.gas_container.capacity").add(GasAmountUtils.precise(tank.getCapacity()).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+            return true;
         }
 
-        LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
-        CCBLang.translate("gui.goggles.gas_container").forGoggles(tooltip);
-        GasStack stack = gasTank.getGasStack();
-        if (stack.isEmpty()) {
-            CCBLang.translate("gui.goggles.gas_container.capacity").add(CCBLang.number(gasTank.getCapacity()).add(mb).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-        }
-        else {
-            CCBLang.gasName(stack).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-            CCBLang.number(stack.getAmount()).add(mb).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(gasTank.getCapacity()).add(mb).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
-        }
+        CCBLang.gasName(content).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+        GasAmountUtils.precise(content.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmountUtils.precise(tank.getCapacity()).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
         return true;
     }
 
@@ -110,11 +106,11 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
     }
 
     private void updateCapacity() {
-        if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
+        if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents contents)) {
             return;
         }
 
-        long newCapacity = canisterContents.getTankCapacity(0);
+        long newCapacity = contents.getTankCapacity(0);
         if (tankBehaviour.getPrimaryHandler().getCapacity() == newCapacity) {
             return;
         }

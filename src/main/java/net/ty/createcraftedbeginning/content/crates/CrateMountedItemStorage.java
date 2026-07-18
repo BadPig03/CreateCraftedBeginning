@@ -11,111 +11,95 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.function.IntSupplier;
+import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CrateMountedItemStorage extends MountedItemStorage {
-    protected ItemStack content;
-    protected int count;
-    protected final int maxCount;
+public class CrateMountedItemStorage<B extends CratesBlockEntity> extends MountedItemStorage {
+    private final Class<B> blockEntityClass;
+    private final CrateItemStackHandler handler;
 
-    protected CrateMountedItemStorage(MountedItemStorageType<?> type, ItemStack content, int count, int maxCount) {
+    protected CrateMountedItemStorage(MountedItemStorageType<?> type, Class<B> blockEntityClass, ItemStack content, int count, IntSupplier maxCountSupplier) {
+        this(type, blockEntityClass, content, count, maxCountSupplier, null);
+    }
+
+    protected CrateMountedItemStorage(MountedItemStorageType<?> type, Class<B> blockEntityClass, ItemStack content, int count, IntSupplier maxCountSupplier, @Nullable Predicate<ItemStack> trackedDiscardPredicate) {
         super(type);
-        this.content = content;
-        this.count = count;
-        this.maxCount = maxCount;
+        this.blockEntityClass = blockEntityClass;
+        if (trackedDiscardPredicate == null) {
+            handler = new CrateItemStackHandler(maxCountSupplier, this::canStoreItem, this::onContentsChanged);
+        }
+        else {
+            handler = new DiscardingCrateItemStackHandler(maxCountSupplier, this::canStoreItem, this::onContentsChanged, trackedDiscardPredicate, this::onTrackedItemDiscarded);
+        }
+        handler.initializeStoredItems(content, count);
     }
 
     @Override
     public void unmount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity be) {
+        if (!blockEntityClass.isInstance(be)) {
+            return;
+        }
+
+        B crate = blockEntityClass.cast(be);
+        crate.setStoredItems(getStoredItem(), getStoredCount());
+        afterUnmount(crate);
+    }
+
+    protected void afterUnmount(B crate) {
+    }
+
+    protected boolean canStoreItem(ItemStack stack) {
+        return true;
+    }
+
+    protected void onContentsChanged() {
+    }
+
+    protected void onTrackedItemDiscarded() {
     }
 
     @Override
     public int getSlots() {
-        return 1;
-    }
-
-    @Override
-    public void setStackInSlot(int slot, ItemStack stack) {
-        if (slot != 0) {
-            return;
-        }
-
-        content = stack.copyWithCount(1);
-        count = stack.isEmpty() ? 0 : 1;
+        return handler.getSlots();
     }
 
     @Override
     public ItemStack getStackInSlot(int slot) {
-        return slot != 0 || content.isEmpty() || count == 0 ? ItemStack.EMPTY : content.copyWithCount(count);
+        return handler.getStackInSlot(slot);
     }
 
     @Override
     public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-        if (stack.isEmpty()) {
-            return ItemStack.EMPTY;
-        }
-
-        if (slot != 0 || !isItemValid(slot, stack)) {
-            return stack;
-        }
-
-        if (content.isEmpty()) {
-            int newCount = Math.min(stack.getCount(), maxCount);
-            if (!simulate) {
-                content = stack.copyWithCount(1);
-                count = newCount;
-            }
-            int remaining = stack.getCount() - newCount;
-            return remaining > 0 ? stack.copyWithCount(remaining) : ItemStack.EMPTY;
-        }
-
-        if (!ItemStack.isSameItemSameComponents(content, stack)) {
-            return stack;
-        }
-
-        int space = maxCount - count;
-        if (space <= 0) {
-            return stack;
-        }
-
-        int toInsert = Math.min(stack.getCount(), space);
-        if (!simulate) {
-            count += toInsert;
-        }
-
-        int remaining = stack.getCount() - toInsert;
-        return remaining > 0 ? stack.copyWithCount(remaining) : ItemStack.EMPTY;
+        return handler.insertItem(slot, stack, simulate);
     }
 
     @Override
     public ItemStack extractItem(int slot, int amount, boolean simulate) {
-        if (slot != 0 || amount <= 0 || content.isEmpty() || count == 0) {
-            return ItemStack.EMPTY;
-        }
-
-        int toExtract = Math.min(Math.min(amount, count), content.getMaxStackSize());
-        ItemStack result = content.copyWithCount(toExtract);
-
-        if (!simulate) {
-            count -= toExtract;
-            if (count <= 0) {
-                content = ItemStack.EMPTY;
-                count = 0;
-            }
-        }
-
-        return result;
+        return handler.extractItem(slot, amount, simulate);
     }
 
     @Override
     public int getSlotLimit(int slot) {
-        return slot != 0 ? 0 : maxCount;
+        return handler.getSlotLimit(slot);
     }
 
     @Override
     public boolean isItemValid(int slot, ItemStack stack) {
-        return slot == 0 && (content.isEmpty() || ItemStack.isSameItemSameComponents(content, stack));
+        return handler.isItemValid(slot, stack);
+    }
+
+    @Override
+    public void setStackInSlot(int slot, ItemStack stack) {
+        handler.setStackInSlot(slot, stack);
+    }
+
+    public final ItemStack getStoredItem() {
+        return handler.getStoredItem(0);
+    }
+
+    public final int getStoredCount() {
+        return handler.getCountInSlot(0);
     }
 }
-

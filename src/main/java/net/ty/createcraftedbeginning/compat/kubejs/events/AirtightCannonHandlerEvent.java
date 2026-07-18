@@ -1,13 +1,11 @@
 package net.ty.createcraftedbeginning.compat.kubejs.events;
 
 import dev.latvian.mods.kubejs.event.KubeEvent;
-import dev.latvian.mods.rhino.util.HideFromJS;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -16,8 +14,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandler;
 import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlerUtils;
+import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonShotContext;
 import net.ty.createcraftedbeginning.api.cannonhandlers.DefaultCannonHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -50,8 +48,8 @@ import java.util.List;
  *         (level, pos) => {
  *             level.addParticle(ParticleTypes.FLAME, pos.x(), pos.y(), pos.z(), 0, 0, 0)
  *         },
- *         (level, pos, source, multiplier) => {
- *             level.explode(source, pos.x(), pos.y(), pos.z(), 1.2 * multiplier, false, ExplosionInteraction.TRIGGER)
+ *         (level, pos, shot) => {
+ *             level.explode(shot.projectile(), pos.x(), pos.y(), pos.z(), 1.2 * shot.effectMultiplier(), false, ExplosionInteraction.TRIGGER)
  *         },
  *         'createcraftedbeginning:textures/entity/projectiles/creative_wind_charge.png',
  *         1.0,
@@ -69,22 +67,44 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightCannonHandlerEvent implements KubeEvent {
-    /**
-     * Registers a custom Airtight Cannon Handler for the given gas type.
-     * <p>
-     * This overload is hidden from JavaScript and is intended for internal
-     * Java-side usage. The gas is converted to its {@link ResourceLocation}, then
-     * delegated to
-     * {@link AirtightCannonHandlerUtils#register(ResourceLocation, AirtightCannonHandler)}.
-     *
-     * @param gasType the gas type to register
-     * @param handler the Airtight Cannon Handler to associate with the gas
-     * @see Gas#getResourceLocation()
-     * @see AirtightCannonHandlerUtils#register(ResourceLocation, AirtightCannonHandler)
-     */
-    @HideFromJS
-    public static void add(Gas gasType, AirtightCannonHandler handler) {
-        AirtightCannonHandlerUtils.register(gasType.getResourceLocation(), handler);
+    private static AirtightCannonHandler createHandler(IconCannonHandler icon, ParticlesCannonHandler particles, ExplodeCannonHandler explode, ResourceLocation texture, float speed, float consumption, TextCannonHandler text) {
+        return new DefaultCannonHandler() {
+            @Override
+            public ItemStack getRenderIcon(Level level) {
+                Item item = BuiltInRegistries.ITEM.getOptional(icon.apply(level)).orElse(Items.BARRIER);
+                return new ItemStack(item);
+            }
+
+            @Override
+            public void renderTrailParticles(Level level, Vec3 pos) {
+                particles.apply(level, pos);
+            }
+
+            @Override
+            public ResourceLocation getTextureLocation() {
+                return texture;
+            }
+
+            @Override
+            public float getRotationSpeed() {
+                return 24 * speed;
+            }
+
+            @Override
+            public void explode(Level level, Vec3 pos, AirtightCannonShotContext context) {
+                explode.apply(level, pos, context);
+            }
+
+            @Override
+            public float getGasConsumptionMultiplier() {
+                return consumption;
+            }
+
+            @Override
+            public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+                text.apply(cannon, context, tooltip, flag);
+            }
+        };
     }
 
     /**
@@ -119,42 +139,8 @@ public class AirtightCannonHandlerEvent implements KubeEvent {
      * @see DefaultCannonHandler
      */
     public void add(ResourceLocation location, IconCannonHandler icon, ParticlesCannonHandler particles, ExplodeCannonHandler explode, ResourceLocation texture, float speed, float consumption, TextCannonHandler text) {
-        AirtightCannonHandlerUtils.register(location, new DefaultCannonHandler() {
-            @Override
-            public ItemStack getRenderIcon(Level level) {
-                return new ItemStack(BuiltInRegistries.ITEM.getOptional(icon.apply(level)).orElse(Items.BARRIER));
-            }
-
-            @Override
-            public void renderTrailParticles(Level level, Vec3 pos) {
-                particles.apply(level, pos);
-            }
-
-            @Override
-            public void explode(Level level, Vec3 pos, Entity source, float multiplier) {
-                explode.apply(level, pos, source, multiplier);
-            }
-
-            @Override
-            public ResourceLocation getTextureLocation() {
-                return texture;
-            }
-
-            @Override
-            public float[] getSetupAnim(float ageInTicks) {
-                return new float[]{0, -ageInTicks * 24 * Mth.PI / 180 * speed, 0, 0, 0, 0, 0, 0, 0};
-            }
-
-            @Override
-            public float getGasConsumptionMultiplier() {
-                return consumption;
-            }
-
-            @Override
-            public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-                text.apply(cannon, context, tooltip, flag);
-            }
-        });
+        AirtightCannonHandler handler = createHandler(icon, particles, explode, texture, speed, consumption, text);
+        AirtightCannonHandlerUtils.register(location, handler);
     }
 
     /**
@@ -196,8 +182,8 @@ public class AirtightCannonHandlerEvent implements KubeEvent {
      * Functional interface used by KubeJS scripts to define cannon explosion
      * behavior.
      * <p>
-     * This handler receives the explosion position, source entity, and runtime
-     * multiplier. The implementation is responsible for performing any damage,
+     * This handler receives the explosion position and complete shot context.
+     * The implementation is responsible for performing any damage,
      * explosion, knockback, particle, or world interaction logic.
      */
     @FunctionalInterface
@@ -205,12 +191,11 @@ public class AirtightCannonHandlerEvent implements KubeEvent {
         /**
          * Executes the cannon explosion behavior.
          *
-         * @param level      the level where the explosion occurs
-         * @param pos        the explosion position
-         * @param source     the entity responsible for the explosion
-         * @param multiplier the effect multiplier applied by the cannon projectile
+         * @param level   the level where the explosion occurs
+         * @param pos     the explosion position
+         * @param context the complete cannon shot context
          */
-        void apply(Level level, Vec3 pos, Entity source, float multiplier);
+        void apply(Level level, Vec3 pos, AirtightCannonShotContext context);
     }
 
     /**

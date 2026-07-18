@@ -57,7 +57,7 @@ public class ChillingFanProcessingType implements FanProcessingType {
     public void morphAirFlow(AirFlowParticleAccess particleAccess, RandomSource random) {
         particleAccess.setColor(COLOR);
         particleAccess.setAlpha(1);
-        if (random.nextFloat() >= 0.03125f) {
+        if (random.nextDouble() >= 0.03125) {
             return;
         }
 
@@ -71,7 +71,8 @@ public class ChillingFanProcessingType implements FanProcessingType {
         }
 
         if (entity.canFreeze()) {
-            entity.setTicksFrozen(Math.min(entity.getTicksRequiredToFreeze(), entity.getTicksFrozen()) + 7);
+            int ticks = Math.min(entity.getTicksRequiredToFreeze(), entity.getTicksFrozen() + 7);
+            entity.setTicksFrozen(ticks);
         }
         entity.extinguishFire();
     }

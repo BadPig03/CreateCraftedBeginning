@@ -1,15 +1,11 @@
 package net.ty.createcraftedbeginning.content.breezes.breezecooler;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.core.BlockPos;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.Snowball;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.phys.HitResult.Type;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.BlockHitResult;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
@@ -24,24 +20,20 @@ public class BreezeCoolerEvents {
     @SubscribeEvent
     public static void onSnowballImpact(ProjectileImpactEvent event) {
         Projectile projectile = event.getProjectile();
-        if (!(projectile instanceof Snowball) || event.getRayTraceResult().getType() != Type.BLOCK) {
+        if (!(projectile instanceof Snowball) || !(event.getRayTraceResult() instanceof BlockHitResult hitResult)) {
             return;
         }
 
         Level level = projectile.level();
-        BlockEntity blockEntity = level.getBlockEntity(BlockPos.containing(event.getRayTraceResult().getLocation()));
-        if (!(blockEntity instanceof BreezeCoolerBlockEntity cooler)) {
+        BlockEntity blockEntity = level.getBlockEntity(hitResult.getBlockPos());
+        if (!(blockEntity instanceof BreezeCoolerBlockEntity cooler) || level.isClientSide) {
+            return;
+        }
+        if (!cooler.getCurrentState().onSnowballImpact(cooler)) {
             return;
         }
 
         event.setCanceled(true);
-        projectile.setDeltaMovement(Vec3.ZERO);
         projectile.discard();
-        boolean result = cooler.getCurrentState().onSnowballImpact(cooler);
-        if (!result) {
-            return;
-        }
-
-        level.playSound(null, cooler.getBlockPos(), SoundEvents.BREEZE_SHOOT, SoundSource.BLOCKS, 0.125f + level.random.nextFloat() * 0.125f, 0.75f - level.random.nextFloat() * 0.25f);
     }
 }

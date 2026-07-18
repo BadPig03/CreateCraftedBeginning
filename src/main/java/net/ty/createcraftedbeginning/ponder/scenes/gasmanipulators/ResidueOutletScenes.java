@@ -4,7 +4,6 @@ import com.simibubi.create.AllBlocks;
 import com.simibubi.create.content.fluids.pipes.FluidPipeBlock;
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
 import com.simibubi.create.content.kinetics.motor.CreativeMotorBlock;
-import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour.InternalFluidHandler;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.scene.SceneBuilder;
@@ -137,8 +136,7 @@ public class ResidueOutletScenes {
         scene.effects().rotationSpeedIndicator(pumpPos);
         scene.effects().rotationSpeedIndicator(motorPos);
         scene.world().modifyBlockEntity(rightOutletPos, ResidueOutletBlockEntity.class, be -> {
-            InternalFluidHandler handler = (InternalFluidHandler) be.getFluidTankBehaviour().getCapability();
-            handler.forceFill(new FluidStack(Fluids.WATER, 4000), FluidAction.EXECUTE);
+            be.insertResidueFluid(new FluidStack(Fluids.WATER, 4000), FluidAction.EXECUTE);
         });
         scene.world().propagatePipeChange(pumpPos);
 
@@ -163,8 +161,7 @@ public class ResidueOutletScenes {
         scene.idle(10);
         scene.world().modifyBlock(middlePipePos, s -> s.setValue(FluidPipeBlock.EAST, true), false);
         scene.world().modifyBlockEntity(leftOutletPos, ResidueOutletBlockEntity.class, be -> {
-            InternalFluidHandler handler = (InternalFluidHandler) be.getFluidTankBehaviour().getCapability();
-            handler.forceFill(new FluidStack(Fluids.WATER, 4000), FluidAction.EXECUTE);
+            be.insertResidueFluid(new FluidStack(Fluids.WATER, 4000), FluidAction.EXECUTE);
         });
         scene.world().propagatePipeChange(pumpPos);
 

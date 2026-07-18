@@ -1,8 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighthatch;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.EventPriority;
@@ -12,7 +10,6 @@ import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock.CanisterType;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 
@@ -23,8 +20,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
 public class AirtightHatchEvents {
     @SubscribeEvent(priority = EventPriority.HIGH)
-    public static void useOnItemHatchIgnoresSneak(RightClickBlock event) {
-        if (event.getEntity().isShiftKeyDown()) {
+    public static void routeCanisterInteractionToHatch(RightClickBlock event) {
+        if (event.getEntity().isShiftKeyDown() || event.getUseItem() != TriState.DEFAULT) {
             return;
         }
 
@@ -33,47 +30,14 @@ public class AirtightHatchEvents {
             return;
         }
 
-        BlockPos pos = event.getPos();
-        BlockState state = level.getBlockState(pos);
+        BlockState state = level.getBlockState(event.getPos());
         if (!(state.getBlock() instanceof AirtightHatchBlock)) {
             return;
         }
 
-        if (state.getValue(AirtightHatchBlock.CANISTER_TYPE) != CanisterType.EMPTY) {
-            if (event.getUseItem() == TriState.DEFAULT) {
-                event.setUseItem(TriState.FALSE);
-                event.setUseBlock(TriState.TRUE);
-            }
-            return;
-        }
-
-        if (!(level.getBlockEntity(pos) instanceof AirtightHatchBlockEntity hatch)) {
-            return;
-        }
-
-        if (hatch.getTargetGasHandler(level) == null) {
-            if (event.getUseItem() == TriState.DEFAULT) {
-                event.setUseItem(TriState.FALSE);
-                event.setUseBlock(TriState.TRUE);
-            }
-            return;
-        }
-
-        Direction facing = state.getValue(AirtightHatchBlock.FACING);
-        BlockPos targetPos = pos.relative(facing);
-        BlockState targetState = level.getBlockState(targetPos);
-        if (targetState.getBlock() instanceof IAirtightComponent airtightComponent && !airtightComponent.isAirtight(targetPos, targetState, facing.getOpposite())) {
-            if (event.getUseItem() == TriState.DEFAULT) {
-                event.setUseItem(TriState.FALSE);
-                event.setUseBlock(TriState.TRUE);
-            }
-            return;
-        }
-
-        if (!(event.getItemStack().getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents)) {
-            return;
-        }
-        if (event.getUseItem() != TriState.DEFAULT) {
+        boolean isOccupied = state.getValue(AirtightHatchBlock.CANISTER_TYPE) != CanisterType.EMPTY;
+        boolean hasCanister = event.getItemStack().getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents;
+        if (!isOccupied && !hasCanister) {
             return;
         }
 

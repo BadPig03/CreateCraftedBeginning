@@ -13,6 +13,13 @@ import java.util.concurrent.CompletableFuture;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class StandardProcessingWithGasRecipeGen<R extends StandardProcessingWithGasRecipe<?>> extends ProcessingWithGasRecipeGen<ProcessingWithGasRecipeParams, R, Builder<R>> {
+    /**
+     * Creates a new {@code StandardProcessingWithGasRecipeGen} instance.
+     *
+     * @param output           the output to add or process
+     * @param registries       the registries to use
+     * @param defaultNamespace the default namespace to use
+     */
     public StandardProcessingWithGasRecipeGen(PackOutput output, CompletableFuture<Provider> registries, String defaultNamespace) {
         super(output, registries, defaultNamespace);
     }

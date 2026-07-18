@@ -5,13 +5,15 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import org.jetbrains.annotations.Nullable;
@@ -31,27 +33,14 @@ public abstract class EndMechanicalBlock extends KineticBlock {
     }
 
     @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
-        super.setPlacedBy(level, pos, state, entity, stack);
-        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
-    }
-
-    @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState state = super.getStateForPlacement(context);
         if (state == null) {
             return null;
         }
 
-        Level level = context.getLevel();
-        Direction direction = context.getClickedFace();
-        BlockPos placePos = context.getClickedPos().relative(direction);
-        if (!(level.getBlockState(placePos).getBlock() instanceof EndCasingBlock)) {
-            return null;
-        }
-
-        Player player = context.getPlayer();
-        if (player != null && player.isShiftKeyDown()) {
+        BlockPos pos = context.getClickedPos();
+        if (!(context.getLevel().getBlockState(pos.below()).getBlock() instanceof EndCasingBlock)) {
             return null;
         }
 
@@ -59,8 +48,22 @@ public abstract class EndMechanicalBlock extends KineticBlock {
     }
 
     @Override
-    public SpeedLevel getMinimumRequiredSpeedLevel() {
-        return SpeedLevel.MEDIUM;
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block otherBlock, BlockPos neighborPos, boolean isMoving) {
+        super.neighborChanged(state, level, pos, otherBlock, neighborPos, isMoving);
+        if (level.isClientSide || isMoving || !neighborPos.equals(pos.below())) {
+            return;
+        }
+
+        level.scheduleTick(pos, this, 1);
+    }
+
+    @Override
+    public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        if (!(level.getBlockEntity(pos) instanceof EndMechanicalBlockEntity<?> blockEntity)) {
+            return;
+        }
+
+        blockEntity.verifyStructural();
     }
 
     @Override
@@ -69,7 +72,23 @@ public abstract class EndMechanicalBlock extends KineticBlock {
     }
 
     @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, entity, stack);
+        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
+        if (level.isClientSide) {
+            return;
+        }
+
+        level.scheduleTick(pos, this, 1);
+    }
+
+    @Override
     public Axis getRotationAxis(BlockState state) {
         return Axis.Y;
+    }
+
+    @Override
+    public SpeedLevel getMinimumRequiredSpeedLevel() {
+        return SpeedLevel.MEDIUM;
     }
 }

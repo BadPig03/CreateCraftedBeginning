@@ -2,9 +2,9 @@ package net.ty.createcraftedbeginning.recipe;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
@@ -12,27 +12,45 @@ import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRe
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.WeakHashMap;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class PressurizationRecipe extends StandardProcessingWithGasRecipe<SingleRecipeInput> {
+    private static final Map<RecipeManager, Map<GasStack, Optional<PressurizationRecipe>>> RECIPE_CACHES = new WeakHashMap<>();
+
     public PressurizationRecipe(ProcessingWithGasRecipeParams params) {
         super(CCBRecipeTypes.PRESSURIZATION, params);
     }
 
-    public static Gas getResultGasType(Level level, Gas gasType) {
-        List<RecipeHolder<PressurizationRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.PRESSURIZATION.getType());
-        for (RecipeHolder<PressurizationRecipe> holder : recipes) {
-            PressurizationRecipe recipe = holder.value();
-            if (!recipe.getGasIngredient().test(gasType)) {
+    public static synchronized Optional<PressurizationRecipe> findRecipe(Level level, GasStack input) {
+        if (input.isEmpty()) {
+            return Optional.empty();
+        }
+
+        RecipeManager manager = level.getRecipeManager();
+        Map<GasStack, Optional<PressurizationRecipe>> cache = RECIPE_CACHES.computeIfAbsent(manager, ignored -> new HashMap<>());
+        return cache.computeIfAbsent(input.copyWithAmount(1), ignored -> findUncached(level, input));
+    }
+
+    private static Optional<PressurizationRecipe> findUncached(Level level, GasStack input) {
+        List<? extends RecipeHolder<?>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.PRESSURIZATION.getType());
+        for (RecipeHolder<?> holder : recipes) {
+            if (!(holder.value() instanceof PressurizationRecipe recipe) || !recipe.getGasIngredient().ingredient().test(input)) {
                 continue;
             }
 
-            return recipe.getGasResult().getGasType();
+            return Optional.of(recipe);
         }
+        return Optional.empty();
+    }
 
-        return Gas.EMPTY_GAS_HOLDER.value();
+    public static synchronized void invalidateCaches() {
+        RECIPE_CACHES.clear();
     }
 
     @Override

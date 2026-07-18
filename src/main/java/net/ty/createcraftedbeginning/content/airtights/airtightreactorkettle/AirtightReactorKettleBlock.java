@@ -39,6 +39,35 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
         super(properties);
     }
 
+    private static boolean canPlaceStructure(Level level, BlockPos pos) {
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                for (int z = -1; z <= 1; z++) {
+                    if (x == 0 && y == 0 && z == 0) {
+                        continue;
+                    }
+                    if (!level.getBlockState(pos.offset(x, y, z)).canBeReplaced()) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private static BlockState getStructuralState(AirtightReactorKettleStructuralPosition position) {
+        if (position.isCog()) {
+            return CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION, position);
+        }
+
+        return CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION, position);
+    }
+
+    private static boolean isMatchingStructure(BlockState state, AirtightReactorKettleStructuralPosition position) {
+        return state.getBlock() instanceof IAirtightReactorKettleStructural structural && state.getValue(structural.getStructuralPosition()) == position;
+    }
+
     @Override
     protected boolean skipRendering(BlockState state, BlockState adjacentState, Direction direction) {
         return true;
@@ -60,38 +89,33 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
     }
 
     @Override
-    protected VoxelShape getShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
+    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return CCBShapes.AIRTIGHT_REACTOR_KETTLE_CENTER_SHAPE;
     }
 
     @Override
     public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                for (int k = -1; k <= 1; k++) {
-                    if (i == 0 && j == 0 && k == 0) {
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                for (int z = -1; z <= 1; z++) {
+                    if (x == 0 && y == 0 && z == 0) {
                         continue;
                     }
 
-                    BlockPos structurePos = pos.offset(i, j, k);
-                    AirtightReactorKettleStructuralPosition structuralPos = AirtightReactorKettleStructuralPosition.fromOffset(i, j, k);
-                    BlockState structureState;
-                    if (structuralPos.isCog()) {
-                        structureState = CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION, structuralPos);
-                    }
-                    else {
-                        structureState = CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION, structuralPos);
-                    }
+                    BlockPos structurePos = pos.offset(x, y, z);
+                    AirtightReactorKettleStructuralPosition structuralPos = AirtightReactorKettleStructuralPosition.fromOffset(x, y, z);
+                    BlockState structureState = getStructuralState(structuralPos);
                     BlockState occupiedState = level.getBlockState(structurePos);
-                    if (!occupiedState.canBeReplaced()) {
-                        if (!(occupiedState.getBlock() instanceof IAirtightReactorKettleStructural structural) || occupiedState.getValue(structural.getStructuralPosition()) != structuralPos) {
-                            level.destroyBlock(pos, false);
-                            return;
-                        }
+                    if (occupiedState.canBeReplaced()) {
+                        level.setBlockAndUpdate(structurePos, structureState);
+                        continue;
+                    }
+                    if (isMatchingStructure(occupiedState, structuralPos)) {
                         continue;
                     }
 
-                    level.setBlockAndUpdate(structurePos, structureState);
+                    level.destroyBlock(pos, false);
+                    return;
                 }
             }
         }
@@ -105,26 +129,10 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
     @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState state = super.getStateForPlacement(context);
-        if (state == null) {
+        if (state == null || !canPlaceStructure(context.getLevel(), context.getClickedPos())) {
             return null;
         }
 
-        Level level = context.getLevel();
-        BlockPos pos = context.getClickedPos();
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                for (int k = -1; k <= 1; k++) {
-                    if (i == 0 && j == 0 && k == 0) {
-                        continue;
-                    }
-
-                    BlockState occupiedState = level.getBlockState(new BlockPos(pos.getX() + i, pos.getY() + j, pos.getZ() + k));
-                    if (!occupiedState.canBeReplaced()) {
-                        return null;
-                    }
-                }
-            }
-        }
         return state;
     }
 
@@ -149,14 +157,14 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
         @Nullable
         public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
             HashSet<BlockPos> positions = new HashSet<>();
-            for (int i = -1; i <= 1; i++) {
-                for (int j = -1; j <= 1; j++) {
-                    for (int k = -1; k <= 1; k++) {
-                        if (i == 0 && j == 0 && k == 0) {
+            for (int x = -1; x <= 1; x++) {
+                for (int y = -1; y <= 1; y++) {
+                    for (int z = -1; z <= 1; z++) {
+                        if (x == 0 && y == 0 && z == 0) {
                             continue;
                         }
 
-                        positions.add(new BlockPos(pos.getX() + i, pos.getY() + j, pos.getZ() + k));
+                        positions.add(pos.offset(x, y, z));
                     }
                 }
             }

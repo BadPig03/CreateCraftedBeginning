@@ -37,6 +37,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
+import net.ty.createcraftedbeginning.content.particles.CCBParticleUtils;
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -70,9 +71,13 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
         }
 
         BlockPos masterPos = AirtightReactorKettleUtils.getMaster(clickedPos, state);
-        context = new UseOnContext(level, context.getPlayer(), context.getHand(), context.getItemInHand(), new BlockHitResult(context.getClickLocation(), context.getClickedFace(), masterPos, context.isInside()));
-        state = level.getBlockState(masterPos);
-        return IWrenchable.super.onSneakWrenched(state, context);
+        Player player = context.getPlayer();
+        InteractionHand hand = context.getHand();
+        ItemStack stack = context.getItemInHand();
+        BlockHitResult masterHit = new BlockHitResult(context.getClickLocation(), context.getClickedFace(), masterPos, context.isInside());
+        UseOnContext masterContext = new UseOnContext(level, player, hand, stack, masterHit);
+        BlockState masterState = level.getBlockState(masterPos);
+        return IWrenchable.super.onSneakWrenched(masterState, masterContext);
     }
 
     @Override
@@ -101,7 +106,7 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
     }
 
     @Override
-    public boolean addLandingEffects(BlockState blockState1, ServerLevel level, BlockPos pos, BlockState blockState2, LivingEntity entity, int numberOfParticles) {
+    public boolean addLandingEffects(BlockState state, ServerLevel level, BlockPos pos, BlockState landingState, LivingEntity entity, int particleCount) {
         return true;
     }
 
@@ -140,27 +145,27 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
     }
 
     @Override
-    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        if (!blockState.getValue(STRUCTURAL_POSITION).canStore() || hitResult.getDirection() == Direction.DOWN) {
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (!state.getValue(STRUCTURAL_POSITION).canStore() || hit.getDirection() == Direction.DOWN) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        return onBlockEntityUseItemOn(level, blockPos, be -> AirtightReactorKettleUtils.getUseItemOnResult(be, level, player, blockPos, hand, stack));
+        return onBlockEntityUseItemOn(level, pos, structural -> AirtightReactorKettleUtils.getUseItemOnResult(structural, level, player, pos, hand, stack));
     }
 
     @Override
-    protected VoxelShape getShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
-        AirtightReactorKettleStructuralPosition structuralPosition = blockState.getValue(STRUCTURAL_POSITION);
-        VoxelShape shape = AirtightReactorKettleVoxelShapes.getShape(structuralPosition);
-        BlockPos masterPos = AirtightReactorKettleUtils.getMaster(blockPos, blockState);
-        if (!(level.getBlockEntity(masterPos) instanceof AirtightReactorKettleBlockEntity masterBlockEntity) || masterBlockEntity.getWindowsOpenState()) {
+    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        AirtightReactorKettleStructuralPosition position = state.getValue(STRUCTURAL_POSITION);
+        VoxelShape shape = AirtightReactorKettleVoxelShapes.getShape(position);
+        BlockPos masterPos = AirtightReactorKettleUtils.getMaster(pos, state);
+        if (!(level.getBlockEntity(masterPos) instanceof AirtightReactorKettleBlockEntity master) || master.getWindowsOpenState()) {
             return shape;
         }
-        if (!structuralPosition.isWindow(0)) {
+        if (!position.isWindow(0)) {
             return shape;
         }
 
-        return CCBShapes.AIRTIGHT_REACTOR_KETTLE_MID_MID_CLOSED.get(structuralPosition.getDirection());
+        return CCBShapes.AIRTIGHT_REACTOR_KETTLE_MID_MID_CLOSED.get(position.getDirection());
     }
 
     @Override
@@ -192,7 +197,12 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
 
     @Override
     public boolean stillValid(BlockGetter level, BlockPos pos, BlockState state) {
-        return state.getBlock() instanceof AirtightReactorKettleStructuralBlock && level.getBlockState(AirtightReactorKettleUtils.getMaster(pos, state)).getBlock() instanceof AirtightReactorKettleBlock;
+        if (!(state.getBlock() instanceof AirtightReactorKettleStructuralBlock)) {
+            return false;
+        }
+
+        BlockPos masterPos = AirtightReactorKettleUtils.getMaster(pos, state);
+        return level.getBlockState(masterPos).getBlock() instanceof AirtightReactorKettleBlock;
     }
 
     @Override
@@ -232,6 +242,12 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
         }
 
         @Override
+        public boolean addDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager) {
+            CCBParticleUtils.addReducedDestroyEffects(state, level, pos, manager);
+            return true;
+        }
+
+        @Override
         @Nullable
         public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
             if (level.getBlockState(pos).getBlock() instanceof IAirtightReactorKettleStructural structural && !structural.stillValid(level, pos, blockState)) {
@@ -240,14 +256,14 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
 
             BlockPos masterPos = AirtightReactorKettleUtils.getMaster(pos, blockState);
             HashSet<BlockPos> positions = new HashSet<>();
-            for (int i = -1; i <= 1; i++) {
-                for (int j = -1; j <= 1; j++) {
-                    for (int k = -1; k <= 1; k++) {
-                        if (i == 0 && j == 0 && k == 0) {
+            for (int x = -1; x <= 1; x++) {
+                for (int y = -1; y <= 1; y++) {
+                    for (int z = -1; z <= 1; z++) {
+                        if (x == 0 && y == 0 && z == 0) {
                             continue;
                         }
 
-                        positions.add(masterPos.offset(i, j, k));
+                        positions.add(masterPos.offset(x, y, z));
                     }
                 }
             }

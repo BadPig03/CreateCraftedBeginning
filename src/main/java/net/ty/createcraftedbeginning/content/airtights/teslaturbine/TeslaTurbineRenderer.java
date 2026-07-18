@@ -23,20 +23,24 @@ public class TeslaTurbineRenderer extends KineticBlockEntityRenderer<TeslaTurbin
         super(context);
     }
 
-    @Override
-    protected void renderSafe(TeslaTurbineBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        super.renderSafe(be, partialTicks, ms, buffer, light, overlay);
-        BlockState state = be.getBlockState();
-        Axis axis = state.getValue(TeslaTurbineBlock.AXIS);
-        SuperByteBuffer shaft = getRotatedModel(be, state);
-        float angle = getAngleForBe(be, be.getBlockPos(), axis);
+    private static SuperByteBuffer rotateToAxis(SuperByteBuffer buffer, Axis axis) {
         if (axis == Axis.Z) {
-            shaft.rotateCentered(Mth.HALF_PI, Axis.X);
+            buffer.rotateCentered(Mth.HALF_PI, Axis.X);
         }
         else if (axis == Axis.X) {
-            shaft.rotateCentered(-Mth.HALF_PI, Axis.Z);
+            buffer.rotateCentered(-Mth.HALF_PI, Axis.Z);
         }
-        kineticRotationTransform(shaft, be, Axis.Y, angle, light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
+        return buffer;
+    }
+
+    @Override
+    protected void renderSafe(TeslaTurbineBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        super.renderSafe(blockEntity, partialTicks, poseStack, buffer, light, overlay);
+        BlockState state = blockEntity.getBlockState();
+        Axis axis = state.getValue(TeslaTurbineBlock.AXIS);
+        SuperByteBuffer shaft = rotateToAxis(getRotatedModel(blockEntity, state), axis);
+        float angle = getAngleForBe(blockEntity, blockEntity.getBlockPos(), axis);
+        kineticRotationTransform(shaft, blockEntity, Axis.Y, angle, light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
 
         int rotorCount = state.getValue(TeslaTurbineBlock.ROTOR);
         if (rotorCount == 0) {
@@ -47,23 +51,17 @@ public class TeslaTurbineRenderer extends KineticBlockEntityRenderer<TeslaTurbin
         for (int i = 0; i < rotorCount; i++) {
             SuperByteBuffer rotor = getRotorModel(state, axis);
             rotor.translate(0, (spacing * (i + 1) - 7.0f) / 16.0f, 0);
-            kineticRotationTransform(rotor, be, Axis.Y, angle, light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
+            kineticRotationTransform(rotor, blockEntity, Axis.Y, angle, light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
         }
     }
 
     @Override
-    protected SuperByteBuffer getRotatedModel(TeslaTurbineBlockEntity be, BlockState blockState) {
+    protected SuperByteBuffer getRotatedModel(TeslaTurbineBlockEntity blockEntity, BlockState blockState) {
         return CachedBuffers.partial(AllPartialModels.SHAFT, blockState);
     }
 
     protected SuperByteBuffer getRotorModel(BlockState state, Axis axis) {
         SuperByteBuffer rotor = CachedBuffers.partial(CCBPartialModels.TESLA_TURBINE_ROTOR, state);
-        if (axis == Axis.Z) {
-            rotor.rotateCentered(Mth.HALF_PI, Axis.X);
-        }
-        else if (axis == Axis.X) {
-            rotor.rotateCentered(-Mth.HALF_PI, Axis.Z);
-        }
-        return rotor;
+        return rotateToAxis(rotor, axis);
     }
 }

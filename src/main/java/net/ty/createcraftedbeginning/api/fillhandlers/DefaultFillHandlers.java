@@ -11,6 +11,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class DefaultFillHandlers implements AirtightFillHandler {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Gas apply(Level level, BlockPos pos, BlockState state) {
         return Gas.EMPTY_GAS_HOLDER.value();

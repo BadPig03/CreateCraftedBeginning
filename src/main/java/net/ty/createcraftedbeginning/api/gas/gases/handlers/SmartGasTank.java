@@ -11,11 +11,20 @@ import java.util.function.Consumer;
 public class SmartGasTank extends GasTank {
     private final Consumer<GasStack> updateCallback;
 
+    /**
+     * Creates a new {@code SmartGasTank} instance.
+     *
+     * @param capacity       the capacity to use
+     * @param updateCallback the callback invoked when the stored gas changes
+     */
     public SmartGasTank(long capacity, Consumer<GasStack> updateCallback) {
         super(capacity);
         this.updateCallback = updateCallback;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setGasStack(GasStack stack) {
         super.setGasStack(stack);

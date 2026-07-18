@@ -9,14 +9,8 @@ import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightThermoregulato
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Utility class for resolving and registering Airtight Thermoregulator Handlers.
- * <p>
- * Thermoregulator handlers are used to determine the thermoregulator value
- * provided by a block.
- * <p>
- * This class provides both Java-side registration methods using
- * {@link AirtightThermoregulatorHandler} directly and KubeJS-friendly
- * registration methods using {@link ThermoregulatorHandler}.
+ * Provides lookup and registration helpers for airtight thermoregulator handlers.
+ * The overloads support direct Java handlers as well as script-facing adapters and block-state predicates.
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -25,14 +19,10 @@ public final class AirtightThermoregulatorHandlerUtils {
     }
 
     /**
-     * Gets the Airtight Thermoregulator Handler registered for the given block.
-     * <p>
-     * If no handler is registered for the block, a
-     * {@link DefaultThermoregulatorHandler} instance is returned.
+     * Resolves the airtight thermoregulator handler associated with the supplied input.
      *
-     * @param block the block to get the thermoregulator handler for
-     * @return the registered thermoregulator handler, or the default
-     * thermoregulator handler if none is registered
+     * @param block the target block
+     * @return the resolved airtight thermoregulator handler
      */
     public static AirtightThermoregulatorHandler of(Block block) {
         AirtightThermoregulatorHandler thermoregulatorHandler = AirtightThermoregulatorHandler.REGISTRY.get(block);
@@ -43,42 +33,30 @@ public final class AirtightThermoregulatorHandlerUtils {
     }
 
     /**
-     * Registers a KubeJS thermoregulator handler for the given block.
-     * <p>
-     * The provided {@link ThermoregulatorHandler} returns the thermoregulator value
-     * used by the target block.
+     * Registers a custom airtight thermoregulator handler for the supplied target.
      *
-     * @param block   the block to register the thermoregulator handler for
-     * @param handler the KubeJS thermoregulator handler to register
-     * @see #register(Block, AirtightThermoregulatorHandler)
+     * @param block   the target block
+     * @param handler the handler to register or invoke
      */
     public static void register(Block block, ThermoregulatorHandler handler) {
         register(block, (AirtightThermoregulatorHandler) handler::apply);
     }
 
     /**
-     * Registers a KubeJS thermoregulator handler for blocks matching the given
-     * predicate.
-     * <p>
-     * The provided {@link ThermoregulatorHandler} returns the thermoregulator value
-     * used by each matching block.
+     * Registers a custom airtight thermoregulator handler for the supplied target.
      *
-     * @param predicate the block state predicate used to select matching blocks
-     * @param handler   the KubeJS thermoregulator handler to register
-     * @see #register(BlockStatePredicate, AirtightThermoregulatorHandler)
+     * @param predicate the predicate used to select matching values
+     * @param handler   the handler to register or invoke
      */
     public static void register(BlockStatePredicate predicate, ThermoregulatorHandler handler) {
         register(predicate, (AirtightThermoregulatorHandler) handler::apply);
     }
 
     /**
-     * Registers an Airtight Thermoregulator Handler for the given block.
-     * <p>
-     * If a handler is already registered for the block, registration is skipped and
-     * an error is written to the mod logger.
+     * Registers a custom airtight thermoregulator handler for the supplied target.
      *
-     * @param block   the block to register the thermoregulator handler for
-     * @param handler the airtight thermoregulator handler to register
+     * @param block   the target block
+     * @param handler the handler to register or invoke
      */
     public static void register(Block block, AirtightThermoregulatorHandler handler) {
         AirtightThermoregulatorHandler thermoregulatorHandler = AirtightThermoregulatorHandler.REGISTRY.get(block);
@@ -91,15 +69,10 @@ public final class AirtightThermoregulatorHandlerUtils {
     }
 
     /**
-     * Registers an Airtight Thermoregulator Handler provider for blocks matching
-     * the given predicate.
-     * <p>
-     * The registered provider returns the supplied handler when the predicate
-     * matches a block, otherwise it returns {@code null} so that other handlers or
-     * fallback behavior may be used.
+     * Registers a custom airtight thermoregulator handler for the supplied target.
      *
-     * @param predicate the block state predicate used to select matching blocks
-     * @param handler   the airtight thermoregulator handler to register
+     * @param predicate the predicate used to select matching values
+     * @param handler   the handler to register or invoke
      */
     public static void register(BlockStatePredicate predicate, AirtightThermoregulatorHandler handler) {
         AirtightThermoregulatorHandler.REGISTRY.registerProvider(b -> predicate.testBlock(b) ? handler : null);

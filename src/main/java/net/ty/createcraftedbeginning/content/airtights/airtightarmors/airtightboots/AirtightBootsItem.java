@@ -13,6 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -30,14 +31,15 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandler;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlerUtils;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsUtils;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightBaseArmorItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.upgrades.JumpStrengthUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.upgrades.MovementEfficiencyUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.upgrades.StepHeightUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
@@ -99,26 +101,27 @@ public class AirtightBootsItem extends AirtightBaseArmorItem implements MenuProv
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack boots, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
         LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null || !CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
+        if (player == null) {
             return;
         }
 
         if (AirtightArmorsUtils.isEntireArmoredUp(player) && tooltipFlag.hasShiftDown()) {
-            tooltip.add(CCBLang.translate("gui.tooltips.airtight_armors.fire_immune_condition").style(ChatFormatting.GRAY).component());
-            tooltip.addAll(TooltipHelper.cutTextComponent(CCBLang.translateDirect("gui.tooltips.airtight_armors.fire_immune_behaviour"), Palette.STANDARD_CREATE));
+            tooltip.add(CCBLang.translate("gui.airtight_armors.fire_immune_condition").style(ChatFormatting.GRAY).component());
+            tooltip.addAll(TooltipHelper.cutTextComponent(CCBLang.translateDirect("gui.airtight_armors.fire_immune_behaviour"), Palette.STANDARD_CREATE));
         }
 
-        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
-        if (gasContent.isEmpty()) {
+        GasStack gas = CanisterContainerClients.getDisplayedGasContent();
+        if (gas.isEmpty()) {
             return;
         }
 
-        AirtightArmorsHandler armorsHandler = AirtightArmorsHandlerUtils.of(gasContent.getGasType());
+        AirtightArmorsHandler handler = AirtightArmorsHandlerUtils.of(gas.getGasType());
         tooltip.add(CommonComponents.EMPTY);
-        tooltip.add(CCBLang.gasName(gasContent).add(CCBLang.translate("gui.tooltips.gas_tools.content")).style(ChatFormatting.GRAY).component());
-        float consumptionMultiplier = armorsHandler.getConsumptionMultiplier()[3];
-        MutableComponent advancedConsumptionMultiplier = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + armorsHandler.getRenderStr(consumptionMultiplier) + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.tooltips.gas_tools.gas_consumption", armorsHandler.getRenderStr(consumptionMultiplier * 100)).add(advancedConsumptionMultiplier.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        tooltip.add(CCBLang.gasName(gas).add(CCBLang.translate("gui.gas_tools.content")).style(ChatFormatting.GRAY).component());
+
+        float multiplier = handler.getConsumptionMultiplier(EquipmentSlot.FEET);
+        MutableComponent advancedMultiplier = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptionUtils.format(multiplier) + ']').component() : Component.empty();
+        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptionUtils.formatPercent(multiplier)).add(advancedMultiplier.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
     }
 
     @Override
@@ -142,13 +145,26 @@ public class AirtightBootsItem extends AirtightBaseArmorItem implements MenuProv
             return InteractionResultHolder.sidedSuccess(boots, true);
         }
 
-        player.openMenu(this, buf -> ItemStack.STREAM_CODEC.encode(buf, boots));
+        MenuProvider provider = new MenuProvider() {
+            @Override
+            public Component getDisplayName() {
+                return AirtightBootsItem.this.getDisplayName();
+            }
+
+            @Override
+            public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player menuPlayer) {
+                return new AirtightBootsMenu(CCBMenuTypes.AIRTIGHT_BOOTS_MENU.get(), containerId, playerInventory, boots, hand);
+            }
+        };
+        player.openMenu(provider, buffer -> AirtightUpgradableMenu.writeOpeningData(buffer, boots, hand));
         player.getCooldowns().addCooldown(this, 10);
         return InteractionResultHolder.sidedSuccess(boots, false);
     }
 
     @Override
     public @Nullable AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
-        return new AirtightBootsMenu(CCBMenuTypes.AIRTIGHT_BOOTS_MENU.get(), containerId, playerInventory, player.getMainHandItem());
+        InteractionHand hand = player.getMainHandItem().is(this) ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
+        ItemStack boots = player.getItemInHand(hand);
+        return new AirtightBootsMenu(CCBMenuTypes.AIRTIGHT_BOOTS_MENU.get(), containerId, playerInventory, boots, hand);
     }
 }

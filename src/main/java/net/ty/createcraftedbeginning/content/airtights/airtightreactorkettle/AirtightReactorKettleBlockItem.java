@@ -35,8 +35,9 @@ public class AirtightReactorKettleBlockItem extends BlockItem {
             return result;
         }
 
-        Direction direction = context.getClickedFace();
-        result = super.place(BlockPlaceContext.at(context, context.getClickedPos().relative(direction), direction));
+        Direction face = context.getClickedFace();
+        BlockPos adjacentPos = context.getClickedPos().relative(face);
+        result = super.place(BlockPlaceContext.at(context, adjacentPos, face));
         if (result == InteractionResult.FAIL && context.getLevel().isClientSide()) {
             CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> showBounds(context));
         }

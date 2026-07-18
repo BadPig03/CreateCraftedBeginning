@@ -2,14 +2,12 @@ package net.ty.createcraftedbeginning.api.cannonhandlers.natural;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.core.HolderLookup.RegistryLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
@@ -17,8 +15,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonUtils;
+import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonShotContext;
 import net.ty.createcraftedbeginning.data.CCBLang;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -27,6 +24,9 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class PressurizedEnergizedNaturalAirCannonHandler extends EnergizedNaturalAirCannonHandler {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ItemStack getRenderIcon(Level level) {
         ItemStack icon = super.getRenderIcon(level);
@@ -36,48 +36,28 @@ public class PressurizedEnergizedNaturalAirCannonHandler extends EnergizedNatura
     }
 
     @Override
-    public void renderTrailParticles(Level level, Vec3 pos) {
-        super.renderTrailParticles(level, pos);
-    }
-
-    @Override
-    public void explode(Level level, Vec3 pos, Entity source, float multiplier) {
-        super.explode(level, pos, source, multiplier);
-
-        List<LivingEntity> entities = AirtightCannonUtils.getNearbyEntities(level, pos, DEFAULT_RADIUS * multiplier, source);
-        if (entities.isEmpty()) {
-            return;
-        }
-
-        MobEffectInstance effectInstance = new MobEffectInstance(MobEffects.WIND_CHARGED, Math.round(DEFAULT_DURATION * multiplier), 0);
+    protected void applyAdditionalEffects(Level level, List<LivingEntity> entities, DamageSource explosionDamageSource, AirtightCannonShotContext context) {
+        super.applyAdditionalEffects(level, entities, explosionDamageSource, context);
+        int duration = Math.round(DEFAULT_DURATION * context.effectMultiplier());
         for (LivingEntity entity : entities) {
-            entity.addEffect(effectInstance);
+            entity.addEffect(new MobEffectInstance(MobEffects.WIND_CHARGED, duration, 0));
         }
     }
 
-    @Override
-    public ResourceLocation getTextureLocation() {
-        return super.getTextureLocation();
-    }
-
-    @Override
-    public LayerDefinition getLayerDefinition() {
-        return super.getLayerDefinition();
-    }
-
-    @Override
-    public float[] getSetupAnim(float ageInTicks) {
-        return super.getSetupAnim(ageInTicks);
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public float getGasConsumptionMultiplier() {
         return 0.5f;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(CCBLang.translate("gui.tooltips.airtight_cannon.energized_natural_air").style(ChatFormatting.DARK_GREEN).component());
-        tooltip.add(CCBLang.translate("gui.tooltips.airtight_cannon.pressurized_natural_air").style(ChatFormatting.DARK_GREEN).component());
+        tooltip.add(CCBLang.translate("gui.airtight_cannon.energized_natural_air").style(ChatFormatting.DARK_GREEN).component());
+        tooltip.add(CCBLang.translate("gui.airtight_cannon.pressurized_natural_air").style(ChatFormatting.DARK_GREEN).component());
     }
 }

@@ -10,11 +10,9 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.infrastructure.config.AllConfigs;
-import net.createmod.catnip.lang.LangBuilder;
 import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup.Provider;
@@ -24,28 +22,23 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.coolantshandlers.AirtightCoolantHandler;
-import net.ty.createcraftedbeginning.api.coolantshandlers.AirtightCoolantHandlerUtils;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasInventoryIdentifierProvider;
-import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatstates.IOverheatState;
-import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatstates.MeltdownOverheatState;
-import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatstates.OverheatManager;
+import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorUtils.CompressionPlan;
+import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorUtils.WorkState;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -56,148 +49,79 @@ import java.util.Set;
 @MethodsReturnNonnullByDefault
 public class AirCompressorBlockEntity extends KineticBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, ThresholdSwitchObservable, IGasInventoryIdentifierProvider {
     private static final int SYNC_RATE = 4;
-    private static final int LAZY_TICK_RATE = 5;
-    private static final int PRESSURIZATION_RATIO = 10;
-    private static final int SLOW_SPEED_HEAT = 1;
-    private static final int MEDIUM_SPEED_HEAT = 3;
-    private static final int FAST_SPEED_HEAT = 5;
-
-    private static final String COMPOUND_KEY_OVERHEAT_TIME = "OverheatTime";
-    private static final String COMPOUND_KEY_COOLANT_EFFICIENCY = "CoolantEfficiency";
-    private static final String COMPOUND_KEY_OVERHEAT_STATE = "OverheatState";
-
     private SmartGasTankBehaviour inputTankBehaviour;
     private SmartGasTankBehaviour outputTankBehaviour;
     private CCBAdvancementBehaviour advancementBehaviour;
 
-    private int overheatTime;
-    private int saveCooldown;
-    private CoolantEfficiency coolantEfficiency = CoolantEfficiency.NONE;
-    private IOverheatState overheatState = OverheatManager.NORMAL;
-    private int ponderCounter;
-    private int syncCooldown;
     private boolean queuedSync;
+    private CoolantEfficiency coolantEfficiency = CoolantEfficiency.NONE;
+    private int ponderCounter;
+    private int saveCooldown;
+    private int storedHeat;
+    private int syncCooldown;
+    private OverheatState overheatState = OverheatState.NORMAL;
+    private WorkState workState = WorkState.EMPTY;
 
     public AirCompressorBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
-        overheatTime = getNextOverheatThreshold() / 2;
-        setLazyTickRate(LAZY_TICK_RATE);
-    }
-
-    private static int getNextOverheatThreshold() {
-        return CCBConfig.server().airtights.nextOverheatThreshold.get();
-    }
-
-    private static int getPressurizationRateMultiplier() {
-        return CCBConfig.server().airtights.pressurizationRateMultiplier.get();
-    }
-
-    private static long getMaxCapacity() {
-        return CCBConfig.server().airtights.maxCanisterCapacity.get() * 500L;
+        setLazyTickRate(AirCompressorUtils.LAZY_TICK_RATE);
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIR_COMPRESSOR.get(), (be, context) -> {
-            Direction inputDir = AirCompressorBlock.getInputSide(be.getBlockState());
-            if (context == inputDir) {
-                return be.inputTankBehaviour.getCapability();
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIR_COMPRESSOR.get(), (compressor, side) -> {
+            Direction inputSide = AirCompressorBlock.getInputSide(compressor.getBlockState());
+            if (side == inputSide) {
+                return compressor.inputTankBehaviour.getCapability();
             }
-            else if (context == inputDir.getOpposite()) {
-                return be.outputTankBehaviour.getCapability();
+            if (side == inputSide.getOpposite()) {
+                return compressor.outputTankBehaviour.getCapability();
             }
             return null;
         });
     }
 
-    private Gas getPressurizedGasType() {
-        if (level == null) {
-            return Gas.EMPTY_GAS_HOLDER.value();
+    private static void addTankTooltip(List<Component> tooltip, String titleKey, GasStack gas, long maxCapacity) {
+        CCBLang.translate(titleKey).style(ChatFormatting.GRAY).forGoggles(tooltip);
+        if (gas.isEmpty()) {
+            CCBLang.gasName(GasStack.EMPTY).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+            GasAmountUtils.precise(maxCapacity).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
+            return;
         }
 
-        return PressurizationRecipe.getResultGasType(level, inputTankBehaviour.getPrimaryHandler().getGasStack().getGasType());
-    }
-
-    private boolean isInactive() {
-        return overStressed || isNotFastEnough() || isProductionAmountTooSmall() || isInputNotEnough() || isOutputFull() || isInputGasInvalid() || isOutputMismatched();
+        CCBLang.gasName(gas).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+        GasAmountUtils.precise(gas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmountUtils.precise(maxCapacity).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
     }
 
     private boolean isInputGasInvalid() {
-        return !inputTankBehaviour.getPrimaryHandler().isEmpty() && getPressurizedGasType().isEmpty();
-    }
-
-    private boolean isInputNotEnough() {
-        return inputTankBehaviour.getPrimaryHandler().getGasAmount() < PRESSURIZATION_RATIO;
-    }
-
-    private boolean isNotFastEnough() {
-        return Mth.abs(getSpeed()) < SpeedLevel.MEDIUM.getSpeedValue();
-    }
-
-    private boolean isOutputFull() {
-        return outputTankBehaviour.getPrimaryHandler().getSpace() == 0;
-    }
-
-    private boolean isOutputMismatched() {
-        Gas pressurizedGasType = getPressurizedGasType();
-        if (pressurizedGasType.isEmpty()) {
+        if (level == null) {
             return false;
         }
 
-        GasStack outputGas = outputTankBehaviour.getPrimaryHandler().getGasStack();
-        return !outputGas.isEmpty() && !outputGas.is(pressurizedGasType);
+        GasStack input = inputTankBehaviour.getPrimaryHandler().getGasStack();
+        return !input.isEmpty() && PressurizationRecipe.findRecipe(level, input).isEmpty();
     }
 
-    private boolean isProductionAmountTooSmall() {
-        return getRoundedPressurizationAmountPerCycle() < PRESSURIZATION_RATIO;
-    }
-
-    private long getRoundedPressurizationAmountPerCycle() {
-        return getRawPressurizationAmountPerCycle() / PRESSURIZATION_RATIO * PRESSURIZATION_RATIO;
-    }
-
-    private long getRawPressurizationAmountPerCycle() {
-        float efficiency = overheatState.getEfficiency();
-        return (long) (Mth.abs(getSpeed()) * getPressurizationRateMultiplier() * LAZY_TICK_RATE * efficiency);
-    }
-
-    private long getMaxAmount() {
-        if (isInactive()) {
-            return 0;
+    public void increaseHeat() {
+        if (overheatState == OverheatState.MELTDOWN) {
+            return;
         }
 
-        return getRoundedPressurizationAmountPerCycle();
+        int previousStoredHeat = storedHeat;
+        setStoredHeat(AirCompressorUtils.getNextStateHeat(overheatState));
+        markDirty(previousStoredHeat, true);
     }
 
     private void doPressurization() {
-        if (isNotFastEnough() || isInputGasInvalid()) {
+        if (level == null) {
             return;
         }
 
-        Gas pressurizedGasType = getPressurizedGasType();
-        if (pressurizedGasType.isEmpty()) {
-            return;
-        }
-        if (isOutputFull() || isOutputMismatched() || inputTankBehaviour.getPrimaryHandler().isEmpty()) {
+        CompressionPlan plan = AirCompressorUtils.createCompressionPlan(level, inputTankBehaviour.getPrimaryHandler().getGasStack());
+        if (plan == null || !AirCompressorUtils.canOperate(plan, overStressed, getSpeed(), overheatState, inputTankBehaviour, outputTankBehaviour)) {
             return;
         }
 
-        long outputLimited = outputTankBehaviour.getPrimaryHandler().getSpace() * PRESSURIZATION_RATIO;
-        long drainAmount = Math.min(Math.min(inputTankBehaviour.getPrimaryHandler().getGasAmount(), getMaxAmount()), outputLimited);
-        drainAmount = drainAmount / PRESSURIZATION_RATIO * PRESSURIZATION_RATIO;
-        if (drainAmount < PRESSURIZATION_RATIO) {
-            return;
-        }
-
-        long fillAmount = inputTankBehaviour.getInternalGasHandler().forceDrain(drainAmount, GasAction.EXECUTE).getAmount() / PRESSURIZATION_RATIO;
-        if (fillAmount <= 0) {
-            return;
-        }
-
-        outputTankBehaviour.getInternalGasHandler().forceFill(new GasStack(pressurizedGasType, fillAmount), GasAction.EXECUTE);
-    }
-
-    public CoolantEfficiency getCoolantEfficiency() {
-        return coolantEfficiency;
+        workState = AirCompressorUtils.pressurize(workState, plan, inputTankBehaviour, outputTankBehaviour);
     }
 
     public void setCoolantEfficiency(CoolantEfficiency newEfficiency) {
@@ -206,52 +130,37 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         }
 
         coolantEfficiency = newEfficiency;
-        notifyUpdate();
+        if (level == null || level.isClientSide) {
+            return;
+        }
+
+        setChanged();
+    }
+
+    public int getStoredHeat() {
+        return storedHeat;
+    }
+
+    private void setStoredHeat(int heat) {
+        storedHeat = AirCompressorUtils.clampStoredHeat(heat);
+        setOverheatState(AirCompressorUtils.getOverheatState(storedHeat));
     }
 
     public int getAnalogOutputSignal() {
         return overheatState.getAnalogOutputSignal();
     }
 
-    public int getHeatAdded() {
-        if (isInactive()) {
-            return 0;
-        }
-
-        float absSpeed = Mth.abs(getSpeed());
-        if (absSpeed >= SpeedLevel.FAST.getSpeedValue()) {
-            return FAST_SPEED_HEAT;
-        }
-        else if (absSpeed >= SpeedLevel.MEDIUM.getSpeedValue()) {
-            return MEDIUM_SPEED_HEAT;
-        }
-        else {
-            return SLOW_SPEED_HEAT;
-        }
-    }
-
-    public IOverheatState getOverheatState() {
+    public OverheatState getOverheatState() {
         return overheatState;
     }
 
-    public void setOverheatState(IOverheatState newState) {
+    private void setOverheatState(OverheatState newState) {
         if (overheatState == newState) {
             return;
         }
 
         overheatState = newState;
         notifyUpdate();
-    }
-
-    public void decreaseHeat() {
-        if (overheatState.getNextState() instanceof MeltdownOverheatState) {
-            advancementBehaviour.awardPlayer(CCBAdvancements.A_CLOSE_CALL);
-        }
-        setOverheatState(overheatState.getPreviousState());
-    }
-
-    public void increaseHeat() {
-        setOverheatState(overheatState.getNextState());
     }
 
     @Override
@@ -271,11 +180,11 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     }
 
     public void loadFromItem(ItemStack stack) {
-        setOverheatState(OverheatManager.getStateByItem(stack));
+        setStoredHeat(AirCompressorUtils.readStoredHeat(stack));
     }
 
     public void saveToItem(ItemStack stack) {
-        stack.set(CCBDataComponents.COMPRESSOR_OVERHEAT_STATE, overheatState.getSerializedName());
+        AirCompressorUtils.saveToItem(stack, overheatState, storedHeat);
     }
 
     @Override
@@ -293,40 +202,18 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     @Override
     public void tick() {
         super.tick();
-        if (syncCooldown > 0) {
-            syncCooldown--;
-            if (syncCooldown == 0 && queuedSync) {
-                sendData();
-            }
-        }
-
-        tickCooldown();
-        int nextOverheatThreshold = getNextOverheatThreshold();
-        if (level != null && level.isClientSide && level instanceof PonderLevel ponderLevel) {
-            ponderCounter = (ponderCounter + 1) % nextOverheatThreshold;
-            overheatState.spawnParticlesInPonderLevel(ponderLevel, worldPosition, ponderCounter);
-        }
-
-        overheatState.tick(this);
-        int netHeat = overheatState.tryAddHeat(this);
-        if (netHeat == 0) {
+        tickSyncCooldown();
+        tickSaveCooldown();
+        if (level == null) {
             return;
         }
 
-        int previousOverheatTime = overheatTime;
-        overheatTime += netHeat;
-        boolean overheatStateChanged = false;
-        if (netHeat > 0 && overheatTime > nextOverheatThreshold) {
-            increaseHeat();
-            overheatTime = nextOverheatThreshold / 2;
-            overheatStateChanged = true;
+        if (level.isClientSide) {
+            tickClient(level);
+            return;
         }
-        else if (netHeat < 0 && overheatTime < 0) {
-            decreaseHeat();
-            overheatTime = nextOverheatThreshold / 2;
-            overheatStateChanged = true;
-        }
-        markDirty(previousOverheatTime, overheatStateChanged);
+
+        tickServer(level);
     }
 
     @Override
@@ -343,33 +230,23 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     }
 
     @Override
-    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        super.write(compoundTag, provider, clientPacket);
-        compoundTag.putString(COMPOUND_KEY_OVERHEAT_STATE, overheatState.getSerializedName());
-        if (clientPacket) {
-            return;
-        }
-
-        compoundTag.putInt(COMPOUND_KEY_OVERHEAT_TIME, overheatTime);
-        compoundTag.putInt(COMPOUND_KEY_COOLANT_EFFICIENCY, coolantEfficiency.ordinal());
+    protected void write(CompoundTag tag, Provider provider, boolean clientPacket) {
+        super.write(tag, provider, clientPacket);
+        AirCompressorUtils.writeData(tag, overheatState, storedHeat, coolantEfficiency, clientPacket);
     }
 
     @Override
-    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        super.read(compoundTag, provider, clientPacket);
-        if (compoundTag.contains(COMPOUND_KEY_OVERHEAT_STATE)) {
-            overheatState = OverheatManager.getStateByName(compoundTag.getString(COMPOUND_KEY_OVERHEAT_STATE));
-        }
+    protected void read(CompoundTag tag, Provider provider, boolean clientPacket) {
+        super.read(tag, provider, clientPacket);
+        OverheatState savedState = AirCompressorUtils.readOverheatState(tag);
+        overheatState = savedState;
         if (clientPacket) {
             return;
         }
 
-        if (compoundTag.contains(COMPOUND_KEY_OVERHEAT_TIME)) {
-            overheatTime = compoundTag.getInt(COMPOUND_KEY_OVERHEAT_TIME);
-        }
-        if (compoundTag.contains(COMPOUND_KEY_COOLANT_EFFICIENCY)) {
-            coolantEfficiency = CoolantEfficiency.values()[compoundTag.getInt(COMPOUND_KEY_COOLANT_EFFICIENCY)];
-        }
+        storedHeat = AirCompressorUtils.readStoredHeat(tag, savedState);
+        overheatState = AirCompressorUtils.getOverheatState(storedHeat);
+        coolantEfficiency = AirCompressorUtils.readCoolantEfficiency(tag);
     }
 
     @Override
@@ -379,7 +256,7 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.FEELING_THE_PRESSURE, CCBAdvancements.A_CLOSE_CALL);
         behaviours.add(advancementBehaviour);
 
-        long maxCapacity = getMaxCapacity();
+        long maxCapacity = AirCompressorUtils.getMaxCapacity();
         inputTankBehaviour = new SmartGasTankBehaviour(SmartGasTankBehaviour.INPUT, this, 1, maxCapacity, false);
         outputTankBehaviour = new SmartGasTankBehaviour(SmartGasTankBehaviour.OUTPUT, this, 1, maxCapacity, false).forbidInsertion();
         behaviours.add(inputTankBehaviour);
@@ -390,24 +267,24 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     public boolean addToTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         boolean added = false;
         if (isInputGasInvalid()) {
-            CCBLang.translate("gui.goggles.invalid_ingredient").style(ChatFormatting.GOLD).forGoggles(tooltip);
-            CCBLang.addToGoggles(tooltip, "gui.goggles.air_compressor.invalid_gas", inputTankBehaviour.getPrimaryHandler().getGasStack().getHoverName());
+            CCBLang.translate("gui.invalid_ingredient").style(ChatFormatting.GOLD).forGoggles(tooltip);
+            CCBLang.addToGoggles(tooltip, "gui.air_compressor.invalid_gas", inputTankBehaviour.getPrimaryHandler().getGasStack().getHoverName());
             added = true;
         }
         if (overStressed && AllConfigs.client().enableOverstressedTooltip.get()) {
             if (added) {
                 tooltip.add(CommonComponents.EMPTY);
             }
-            CCBLang.translate("gui.goggles.overstressed").style(ChatFormatting.GOLD).forGoggles(tooltip);
-            CCBLang.addToGoggles(tooltip, "gui.goggles.network_overstressed");
+            CCBLang.translate("gui.overstressed").style(ChatFormatting.GOLD).forGoggles(tooltip);
+            CCBLang.addToGoggles(tooltip, "gui.network_overstressed");
             return true;
         }
         if (!isSpeedRequirementFulfilled() && getSpeed() != 0) {
             if (added) {
                 tooltip.add(CommonComponents.EMPTY);
             }
-            CCBLang.translate("gui.goggles.speed_requirement").style(ChatFormatting.GOLD).forGoggles(tooltip);
-            CCBLang.addToGoggles(tooltip, "gui.goggles.not_fast_enough", I18n.get(CCBBlocks.AIR_COMPRESSOR_BLOCK.getDefaultState().getBlock().getDescriptionId()));
+            CCBLang.translate("gui.speed_requirement").style(ChatFormatting.GOLD).forGoggles(tooltip);
+            CCBLang.addToGoggles(tooltip, "gui.not_fast_enough", Component.translatable(CCBBlocks.AIR_COMPRESSOR_BLOCK.get().getDescriptionId()));
             added = true;
         }
         return added;
@@ -415,62 +292,99 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
 
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        CCBLang.translate("gui.goggles.air_compressor").forGoggles(tooltip);
-        CCBLang.translate("gui.goggles.air_compressor.overheat_state").style(ChatFormatting.GRAY).forGoggles(tooltip);
+        CCBLang.translate("gui.air_compressor").forGoggles(tooltip);
+        CCBLang.translate("gui.air_compressor.overheat_state").style(ChatFormatting.GRAY).forGoggles(tooltip);
         CCBLang.translate(overheatState.getTranslationKey()).style(overheatState.getDisplayColor()).forGoggles(tooltip, 1);
         if (isPlayerSneaking) {
-            tooltip.add(CommonComponents.EMPTY);
-            GasStack inputGasStack = inputTankBehaviour.getPrimaryHandler().getGasStack();
-            GasStack outputGasStack = outputTankBehaviour.getPrimaryHandler().getGasStack();
-            long maxCapacity = getMaxCapacity();
-            LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
-            CCBLang.translate("gui.goggles.air_compressor.input_capacity").style(ChatFormatting.GRAY).forGoggles(tooltip);
-            if (inputGasStack.isEmpty()) {
-                CCBLang.gasName(GasStack.EMPTY).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-                CCBLang.number(maxCapacity).add(mb).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
-            }
-            else {
-                CCBLang.gasName(inputGasStack).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-                CCBLang.number(inputGasStack.getAmount()).add(mb).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(maxCapacity).add(mb).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
-            }
-
-            tooltip.add(CommonComponents.EMPTY);
-            CCBLang.translate("gui.goggles.air_compressor.output_capacity").style(ChatFormatting.GRAY).forGoggles(tooltip);
-            if (outputGasStack.isEmpty()) {
-                CCBLang.gasName(GasStack.EMPTY).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-                CCBLang.number(maxCapacity).add(mb).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
-            }
-            else {
-                CCBLang.gasName(outputGasStack).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-                CCBLang.number(outputGasStack.getAmount()).add(mb).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(maxCapacity).add(mb).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
-            }
+            addTankDetails(tooltip);
         }
         if (!StressImpact.isEnabled()) {
             return true;
         }
 
         tooltip.add(CommonComponents.EMPTY);
-        CCBLang.translate("gui.goggles.stress_impact").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        CCBLang.number(calculateStressApplied() * Mth.abs(getTheoreticalSpeed())).translate("gui.goggles.unit.stress").style(ChatFormatting.AQUA).space().add(CCBLang.translate("gui.goggles.at_current_speed").style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+        CCBLang.translate("gui.stress_impact").style(ChatFormatting.GRAY).forGoggles(tooltip);
+        CCBLang.number(calculateStressApplied() * Mth.abs(getTheoreticalSpeed())).translate("gui.unit.stress").style(ChatFormatting.AQUA).space().add(CCBLang.translate("gui.at_current_speed").style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
         return true;
+    }
+
+    private void tickClient(Level level) {
+        int threshold = AirCompressorUtils.getNextOverheatThreshold();
+        if (level instanceof PonderLevel ponderLevel) {
+            ponderCounter = (ponderCounter + 1) % threshold;
+            overheatState.spawnParticlesInPonderLevel(ponderLevel, worldPosition, ponderCounter);
+        }
+        overheatState.tick(this);
+    }
+
+    private void tickServer(Level level) {
+        if (overheatState == OverheatState.MELTDOWN) {
+            AirCompressorUtils.updateOperatingBlockState(level, worldPosition, getBlockState(), false);
+            overheatState.tick(this);
+            return;
+        }
+
+        CompressionPlan plan = AirCompressorUtils.createCompressionPlan(level, inputTankBehaviour.getPrimaryHandler().getGasStack());
+        boolean operating = plan != null && AirCompressorUtils.canOperate(plan, overStressed, getSpeed(), overheatState, inputTankBehaviour, outputTankBehaviour);
+        AirCompressorUtils.updateOperatingBlockState(level, worldPosition, getBlockState(), operating);
+        if (operating) {
+            workState = AirCompressorUtils.accumulateWork(workState, plan, getSpeed(), overheatState);
+        }
+
+        OverheatState previousState = overheatState;
+        int previousStoredHeat = storedHeat;
+        storedHeat = AirCompressorUtils.updateStoredHeat(storedHeat, getSpeed(), operating, coolantEfficiency, level);
+        OverheatState newState = AirCompressorUtils.getOverheatState(storedHeat);
+        if (previousState == OverheatState.SEVERE && newState.ordinal() < OverheatState.SEVERE.ordinal()) {
+            advancementBehaviour.awardPlayer(CCBAdvancements.A_CLOSE_CALL);
+        }
+        setOverheatState(newState);
+        if (newState == OverheatState.MELTDOWN) {
+            AirCompressorUtils.updateOperatingBlockState(level, worldPosition, getBlockState(), false);
+        }
+        markDirty(previousStoredHeat, previousState != newState);
+    }
+
+    private void addTankDetails(List<Component> tooltip) {
+        tooltip.add(CommonComponents.EMPTY);
+        GasStack inputGas = inputTankBehaviour.getPrimaryHandler().getGasStack();
+        GasStack outputGas = outputTankBehaviour.getPrimaryHandler().getGasStack();
+        long maxCapacity = AirCompressorUtils.getMaxCapacity();
+        addTankTooltip(tooltip, "gui.air_compressor.input_capacity", inputGas, maxCapacity);
+
+        tooltip.add(CommonComponents.EMPTY);
+        addTankTooltip(tooltip, "gui.air_compressor.output_capacity", outputGas, maxCapacity);
     }
 
     @Override
     public @Nullable InventoryIdentifier getGasInventoryIdentifier(Direction queriedSide) {
-        Direction inputDir = AirCompressorBlock.getInputSide(getBlockState());
-        if (queriedSide == inputDir) {
-            return new MultiFace(worldPosition, Set.of(inputDir));
+        Direction inputSide = AirCompressorBlock.getInputSide(getBlockState());
+        if (queriedSide == inputSide) {
+            return new MultiFace(worldPosition, Set.of(inputSide));
         }
 
-        Direction outputDir = inputDir.getOpposite();
-        if (queriedSide == outputDir) {
-            return new MultiFace(worldPosition, Set.of(outputDir));
+        Direction outputSide = inputSide.getOpposite();
+        if (queriedSide == outputSide) {
+            return new MultiFace(worldPosition, Set.of(outputSide));
         }
 
         return null;
     }
 
-    private void tickCooldown() {
+    private void tickSyncCooldown() {
+        if (syncCooldown <= 0) {
+            return;
+        }
+
+        syncCooldown--;
+        if (syncCooldown != 0 || !queuedSync) {
+            return;
+        }
+
+        sendData();
+    }
+
+    private void tickSaveCooldown() {
         if (level == null || level.isClientSide || saveCooldown <= 0) {
             return;
         }
@@ -478,12 +392,12 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         saveCooldown--;
     }
 
-    private void markDirty(int previousOverheatTime, boolean force) {
+    private void markDirty(int previousStoredHeat, boolean force) {
         if (level == null || level.isClientSide) {
             return;
         }
 
-        if (!force && (previousOverheatTime == overheatTime || saveCooldown > 0)) {
+        if (!force && (previousStoredHeat == storedHeat || saveCooldown > 0)) {
             return;
         }
 
@@ -491,29 +405,18 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         saveCooldown = 20;
     }
 
-    public boolean isGeneratingHeat() {
-        return getHeatAdded() > 0;
-    }
-
-    public boolean shouldConsumeCoolant() {
-        return isGeneratingHeat() || overheatState != OverheatManager.NORMAL;
-    }
-
     public void updateCoolant(BlockPos coolantPos) {
         if (level == null) {
             return;
         }
 
-        AirtightCoolantHandler coolantHandler = AirtightCoolantHandlerUtils.of(level.getBlockState(coolantPos).getBlock());
-        setCoolantEfficiency(coolantHandler.getCoolantEfficiency(level, coolantPos, level.getBlockState(coolantPos)));
+        setCoolantEfficiency(AirCompressorUtils.getCoolantEfficiency(level, coolantPos));
     }
 
     @Override
     public int getMaxValue() {
-        long maxValue = 0;
-        maxValue += inputTankBehaviour.getPrimaryHandler().getCapacity();
-        maxValue += outputTankBehaviour.getPrimaryHandler().getCapacity();
-        return Math.clamp(maxValue, 0, Integer.MAX_VALUE);
+        long totalCapacity = inputTankBehaviour.getPrimaryHandler().getCapacity() + outputTankBehaviour.getPrimaryHandler().getCapacity();
+        return GasAmountUtils.toWholeBucketsClamped(totalCapacity);
     }
 
     @Override
@@ -523,14 +426,12 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
 
     @Override
     public int getCurrentValue() {
-        long currentValue = 0;
-        currentValue += inputTankBehaviour.getPrimaryHandler().getGasAmount();
-        currentValue += outputTankBehaviour.getPrimaryHandler().getGasAmount();
-        return Math.clamp(currentValue, 0, Integer.MAX_VALUE);
+        long totalAmount = inputTankBehaviour.getPrimaryHandler().getGasAmount() + outputTankBehaviour.getPrimaryHandler().getGasAmount();
+        return GasAmountUtils.toWholeBucketsClamped(totalAmount);
     }
 
     @Override
     public MutableComponent format(int value) {
-        return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.buckets")).component();
+        return GasAmountUtils.formatWholeBuckets(value);
     }
 }

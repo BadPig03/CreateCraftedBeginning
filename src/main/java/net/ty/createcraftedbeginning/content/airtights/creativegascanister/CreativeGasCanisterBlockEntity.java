@@ -17,8 +17,8 @@ import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.SmartGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.SmartGasTank;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.ICreativeGasContainer;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -49,36 +49,37 @@ public class CreativeGasCanisterBlockEntity extends SmartBlockEntity implements 
     }
 
     @Override
-	public void invalidate() {
-		super.invalidate();
-		invalidateCapabilities();
-	}
-
-    @Override
-    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        super.write(compoundTag, provider, clientPacket);
-        compoundTag.put(COMPOUND_KEY_CANISTER, canister.saveOptional(provider));
+    protected void write(CompoundTag tag, Provider provider, boolean clientPacket) {
+        super.write(tag, provider, clientPacket);
+        tag.put(COMPOUND_KEY_CANISTER, canister.saveOptional(provider));
     }
 
     @Override
-    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        super.read(compoundTag, provider, clientPacket);
-        if (!compoundTag.contains(COMPOUND_KEY_CANISTER)) {
+    protected void read(CompoundTag tag, Provider provider, boolean clientPacket) {
+        super.read(tag, provider, clientPacket);
+        if (!tag.contains(COMPOUND_KEY_CANISTER)) {
             return;
         }
 
-        canister = ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_CANISTER));
+        canister = ItemStack.parseOptional(provider, tag.getCompound(COMPOUND_KEY_CANISTER));
         updateCapacity();
     }
 
-    public void setCanisterContent(ItemStack itemStack) {
-        canister = itemStack.copy();
-        if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents canisterContents)) {
+    @Override
+    public void invalidate() {
+        super.invalidate();
+        invalidateCapabilities();
+    }
+
+    public void setCanisterContent(ItemStack stack) {
+        canister = stack.copy();
+        if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents)) {
             return;
         }
 
-        tankBehaviour.getPrimaryHandler().setCapacity(canisterContents.getTankCapacity(0));
-        tankBehaviour.getInternalGasHandler().forceFill(canisterContents.getGasInTank(0), GasAction.EXECUTE);
+        SmartGasTank tank = tankBehaviour.getPrimaryHandler();
+        tank.setCapacity(contents.getTankCapacity(0));
+        tankBehaviour.getInternalGasHandler().forceFill(contents.getGasInTank(0), GasAction.EXECUTE);
         notifyUpdate();
     }
 
@@ -88,16 +89,16 @@ public class CreativeGasCanisterBlockEntity extends SmartBlockEntity implements 
             return false;
         }
 
-        SmartGasTank gasTank = tankBehaviour.getPrimaryHandler();
-        CCBLang.translate("gui.goggles.gas_container").forGoggles(tooltip);
-        GasStack stack = gasTank.getGasStack();
-        if (stack.isEmpty()) {
-            CCBLang.translate("gui.tooltips.creative_gas_canister.empty").style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+        SmartGasTank tank = tankBehaviour.getPrimaryHandler();
+        CCBLang.translate("gui.gas_container").forGoggles(tooltip);
+        GasStack gas = tank.getGasStack();
+        if (gas.isEmpty()) {
+            CCBLang.translate("gui.creative_gas_canister.empty").style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+            return true;
         }
-        else {
-            CCBLang.gasName(stack).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-            CCBLang.translate("gui.goggles.gas_container.infinity").style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
-        }
+
+        CCBLang.gasName(gas).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+        CCBLang.translate("gui.gas_container.infinity").style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
         return true;
     }
 
@@ -106,20 +107,21 @@ public class CreativeGasCanisterBlockEntity extends SmartBlockEntity implements 
     }
 
     private void updateCapacity() {
-        if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents canisterContents)) {
+        if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents)) {
             return;
         }
 
-        long newCapacity = canisterContents.getTankCapacity(0);
-        if (tankBehaviour.getPrimaryHandler().getCapacity() == newCapacity) {
+        SmartGasTank tank = tankBehaviour.getPrimaryHandler();
+        long capacity = contents.getTankCapacity(0);
+        if (tank.getCapacity() == capacity) {
             return;
         }
 
-        tankBehaviour.getPrimaryHandler().setCapacity(newCapacity);
+        tank.setCapacity(capacity);
     }
 
     @Override
-    public boolean isCreative(Level level, BlockState blockState, BlockPos blockPos) {
+    public boolean isCreative(Level level, BlockState state, BlockPos pos) {
         return true;
     }
 }

@@ -7,11 +7,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class EnergizedEtherealAirDrillHandler extends EtherealAirDrillHandler {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getDamageAddition() {
         return 2;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public float getConsumptionMultiplier() {
         return 0.64f;

@@ -51,7 +51,6 @@ import net.neoforged.neoforge.common.Tags.Items;
 import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
@@ -79,6 +78,29 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(CANISTER_TYPE, CanisterType.EMPTY));
     }
 
+    public static boolean hasValidAttachment(LevelReader level, BlockPos hatchPos, BlockState hatchState) {
+        Direction facing = hatchState.getValue(FACING);
+        BlockPos targetPos = hatchPos.relative(facing);
+        BlockState targetState = level.getBlockState(targetPos);
+        return canSupportCenter(level, targetPos, facing.getOpposite()) && targetState.getBlock() instanceof IAirtightComponent component && component.isAirtight(targetPos, targetState, facing);
+    }
+
+    private static ItemInteractionResult useOccupiedHatch(ItemStack stack, Level level, BlockPos pos, Player player, boolean isWrench) {
+        if (!isWrench) {
+            if (!stack.isEmpty()) {
+                GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_item", stack.getHoverName());
+            }
+            return ItemInteractionResult.FAIL;
+        }
+
+        if (!(level.getBlockEntity(pos) instanceof AirtightHatchBlockEntity hatch) || !hatch.giveCanisterToPlayer(player)) {
+            return ItemInteractionResult.FAIL;
+        }
+
+        CCBSoundEvents.CANISTER_REMOVED.playOnServer(player.level(), player.blockPosition(), 1, 1);
+        return ItemInteractionResult.SUCCESS;
+    }
+
     @Override
     protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
         return simpleCodec(AirtightHatchBlock::new);
@@ -98,6 +120,12 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
 
         state = state.setValue(FACING, direction.getOpposite()).setValue(CANISTER_TYPE, CanisterType.EMPTY);
         return ProperWaterloggedBlock.withWater(context.getLevel(), state, context.getClickedPos());
+    }
+
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, entity, stack);
+        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
     }
 
     @Override
@@ -128,7 +156,7 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
 
         BlockEntity blockEntity = level.getBlockEntity(pos);
         if (!player.isCreative()) {
-            getDrops(state, serverLevel, pos, blockEntity, player, context.getItemInHand()).forEach(itemStack -> ItemHandlerHelper.giveItemToPlayer(player, itemStack));
+            getDrops(state, serverLevel, pos, blockEntity, player, context.getItemInHand()).forEach(stack -> ItemHandlerHelper.giveItemToPlayer(player, stack));
         }
         else if (blockEntity instanceof AirtightHatchBlockEntity hatch && state.getValue(CANISTER_TYPE) != CanisterType.EMPTY) {
             hatch.giveCanisterToPlayer(player);
@@ -153,117 +181,6 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
     }
 
     @Override
-    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        if (level.isClientSide) {
-            return ItemInteractionResult.SUCCESS;
-        }
-
-        Direction facing = state.getValue(FACING);
-        BlockPos targetPos = pos.relative(facing);
-        if (level.getBlockEntity(targetPos) == null) {
-            GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_face");
-            return ItemInteractionResult.FAIL;
-        }
-
-        IGasHandler targetHandler = level.getCapability(GasHandler.BLOCK, targetPos, facing.getOpposite());
-        if (targetHandler == null) {
-            GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_face");
-            return ItemInteractionResult.FAIL;
-        }
-
-        if (level.getBlockState(targetPos).getBlock() instanceof IAirtightComponent airtightComponent) {
-            boolean isFaceAirtight = airtightComponent.isAirtight(targetPos, level.getBlockState(targetPos), facing.getOpposite());
-            if (!isFaceAirtight) {
-                GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_face");
-                return ItemInteractionResult.FAIL;
-            }
-        }
-
-        boolean isEmpty = stack.isEmpty();
-        boolean isWrench = stack.is(Items.TOOLS_WRENCH);
-        if (player.isShiftKeyDown() && isWrench) {
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        }
-
-        if (state.getValue(CANISTER_TYPE) == CanisterType.EMPTY) {
-            if (stack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents) {
-                withBlockEntityDo(level, pos, be -> be.setCanisterContent(stack));
-                level.setBlockAndUpdate(pos, state.setValue(CANISTER_TYPE, CanisterContainerSuppliers.isValidCreativeGasCanister(stack) ? CanisterType.CREATIVE : CanisterType.NORMAL));
-                stack.shrink(1);
-                CCBSoundEvents.CANISTER_ADDED.playOnServer(player.level(), player.blockPosition(), 1, 1);
-                return ItemInteractionResult.SUCCESS;
-            }
-            else {
-                if (isWrench) {
-                    return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-                }
-
-                if (!isEmpty) {
-                    GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_item", stack.getHoverName());
-                }
-                return ItemInteractionResult.FAIL;
-            }
-        }
-        else {
-            if (isWrench) {
-                withBlockEntityDo(level, pos, be -> be.giveCanisterToPlayer(player));
-                level.setBlockAndUpdate(pos, state.setValue(CANISTER_TYPE, CanisterType.EMPTY));
-                CCBSoundEvents.CANISTER_REMOVED.playOnServer(player.level(), player.blockPosition(), 1, 1);
-                return ItemInteractionResult.SUCCESS;
-            }
-            else {
-                if (!isEmpty) {
-                    GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_item", stack.getHoverName());
-                }
-                return ItemInteractionResult.FAIL;
-            }
-        }
-    }
-
-    @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
-        super.setPlacedBy(level, pos, state, entity, stack);
-        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
-    }
-
-    @Override
-    public FluidState getFluidState(BlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : Fluids.EMPTY.defaultFluidState();
-    }
-
-    @Override
-    public List<ItemStack> getDrops(BlockState state, Builder builder) {
-        List<ItemStack> lootDrops = super.getDrops(state, builder);
-        if (!(builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof AirtightHatchBlockEntity hatch) || state.getValue(CANISTER_TYPE) == CanisterType.EMPTY) {
-            return lootDrops;
-        }
-        lootDrops.add(hatch.createCanisterItemStack());
-        return lootDrops;
-    }
-
-    @Override
-    public ItemRequirement getRequiredItems(BlockState state, @Nullable BlockEntity blockEntity) {
-        List<StackRequirement> requirements = new ArrayList<>();
-        requirements.add(new StackRequirement(new ItemStack(asItem()), ItemUseType.CONSUME));
-        CanisterType canisterType = state.getValue(CANISTER_TYPE);
-        if (canisterType == CanisterType.NORMAL) {
-            requirements.add(new StrictNbtStackRequirement(new ItemStack(CCBItems.GAS_CANISTER.asItem()), ItemUseType.CONSUME));
-        }
-        else if (canisterType == CanisterType.CREATIVE) {
-            requirements.add(new StrictNbtStackRequirement(new ItemStack(CCBItems.CREATIVE_GAS_CANISTER.asItem()), ItemUseType.CONSUME));
-        }
-        return new ItemRequirement(requirements);
-    }
-
-    @Override
-    public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
-        Direction direction = state.getValue(FACING);
-        BlockPos relativePos = pos.relative(direction);
-        BlockState relativeState = level.getBlockState(relativePos);
-        return canSupportCenter(level, relativePos, direction.getOpposite()) && relativeState.getBlock() instanceof IAirtightComponent airtightComponent && airtightComponent.isAirtight(relativePos, relativeState, direction);
-    }
-
-    @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block otherBlock, BlockPos neighborPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, otherBlock, neighborPos, isMoving);
         if (canSurvive(state, level, pos)) {
@@ -274,8 +191,95 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
     }
 
     @Override
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+        if (level.isClientSide) {
+            return ItemInteractionResult.SUCCESS;
+        }
+
+        boolean isWrench = stack.is(Items.TOOLS_WRENCH);
+        if (player.isShiftKeyDown() && isWrench) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        if (state.getValue(CANISTER_TYPE) != CanisterType.EMPTY) {
+            return useOccupiedHatch(stack, level, pos, player, isWrench);
+        }
+
+        if (!(stack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents)) {
+            if (isWrench) {
+                return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+            }
+
+            if (!stack.isEmpty()) {
+                GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_item", stack.getHoverName());
+            }
+            return ItemInteractionResult.FAIL;
+        }
+
+        Direction facing = state.getValue(FACING);
+        BlockPos targetPos = pos.relative(facing);
+        if (level.getBlockEntity(targetPos) == null) {
+            GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_face");
+            return ItemInteractionResult.FAIL;
+        }
+
+        IGasHandler target = level.getCapability(GasHandler.BLOCK, targetPos, facing.getOpposite());
+        if (target == null || !hasValidAttachment(level, pos, state)) {
+            GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_face");
+            return ItemInteractionResult.FAIL;
+        }
+
+        if (!(level.getBlockEntity(pos) instanceof AirtightHatchBlockEntity hatch) || !hatch.installCanister(stack)) {
+            return ItemInteractionResult.FAIL;
+        }
+
+        CCBSoundEvents.CANISTER_ADDED.playOnServer(player.level(), player.blockPosition(), 1, 1);
+        return ItemInteractionResult.SUCCESS;
+    }
+
+    @Override
+    public FluidState getFluidState(BlockState state) {
+        return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : Fluids.EMPTY.defaultFluidState();
+    }
+
+    @Override
+    public List<ItemStack> getDrops(BlockState state, Builder builder) {
+        List<ItemStack> drops = super.getDrops(state, builder);
+        if (!(builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof AirtightHatchBlockEntity hatch) || state.getValue(CANISTER_TYPE) == CanisterType.EMPTY) {
+            return drops;
+        }
+
+        drops.add(hatch.createCanisterItemStack());
+        return drops;
+    }
+
+    @Override
+    public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
+        return hasValidAttachment(level, pos, state);
+    }
+
+    @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return CCBShapes.AIRTIGHT_HATCH.get(state.getValue(FACING).getOpposite());
+    }
+
+    @Override
+    public ItemRequirement getRequiredItems(BlockState state, @Nullable BlockEntity blockEntity) {
+        List<StackRequirement> requirements = new ArrayList<>(2);
+        requirements.add(new StackRequirement(new ItemStack(asItem()), ItemUseType.CONSUME));
+
+        CanisterType canisterType = state.getValue(CANISTER_TYPE);
+        if (canisterType == CanisterType.EMPTY) {
+            return new ItemRequirement(requirements);
+        }
+
+        ItemStack requiredCanister = blockEntity instanceof AirtightHatchBlockEntity hatch ? hatch.createCanisterItemStack() : ItemStack.EMPTY;
+        if (requiredCanister.isEmpty()) {
+            requiredCanister = new ItemStack(canisterType == CanisterType.CREATIVE ? CCBItems.CREATIVE_GAS_CANISTER.asItem() : CCBItems.GAS_CANISTER.asItem());
+        }
+
+        requirements.add(new StrictNbtStackRequirement(requiredCanister, ItemUseType.CONSUME));
+        return new ItemRequirement(requirements);
     }
 
     @Override

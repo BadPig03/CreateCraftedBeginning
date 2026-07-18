@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.compat.jade.gas;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
@@ -11,25 +12,26 @@ import net.minecraft.world.phys.Vec2;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import org.apache.commons.lang3.mutable.MutableFloat;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import snownee.jade.api.config.IWailaConfig.IConfigOverlay;
 import snownee.jade.api.ui.Element;
 import snownee.jade.overlay.OverlayRenderer;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.BiConsumer;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class GasStackElement extends Element {
     private static final ResourceLocation BACKGROUND = CreateCraftedBeginning.asResource("gas/full");
     private final GasObject gas;
 
-    public GasStackElement(@NotNull GasObject gas) {
+    public GasStackElement(GasObject gas) {
         this.gas = gas;
     }
 
-    private static void getGasSpriteAndColor(@NotNull GasObject gas, BiConsumer<@Nullable TextureAtlasSprite, Integer> consumer) {
+    private static void getGasSpriteAndColor(GasObject gas, BiConsumer<@Nullable TextureAtlasSprite, Integer> consumer) {
         int tint = gas.gasType().getTint();
         if (OverlayRenderer.alpha != 1) {
             tint = IConfigOverlay.applyAlpha(tint, OverlayRenderer.alpha);
@@ -37,39 +39,42 @@ public class GasStackElement extends Element {
         consumer.accept(Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(BACKGROUND), tint);
     }
 
-    private static void fill(@NotNull GuiGraphics guiGraphics, float minX, float minY, float maxX, float maxY, int color) {
-        Matrix4f matrix = guiGraphics.pose().last().pose();
+    private static void fill(GuiGraphics graphics, float minX, float minY, float maxX, float maxY, int color) {
+        Matrix4f matrix = graphics.pose().last().pose();
         if (minX < maxX) {
-            float i = minX;
+            float swapX = minX;
             minX = maxX;
-            maxX = i;
+            maxX = swapX;
         }
         if (minY < maxY) {
-            float j = minY;
+            float swapY = minY;
             minY = maxY;
-            maxY = j;
+            maxY = swapY;
         }
+
         color = IConfigOverlay.applyAlpha(color, OverlayRenderer.alpha);
-        VertexConsumer buffer = guiGraphics.bufferSource().getBuffer(RenderType.gui());
+        VertexConsumer buffer = graphics.bufferSource().getBuffer(RenderType.gui());
         buffer.addVertex(matrix, minX, maxY, 0).setColor(color);
         buffer.addVertex(matrix, maxX, maxY, 0).setColor(color);
         buffer.addVertex(matrix, maxX, minY, 0).setColor(color);
         buffer.addVertex(matrix, minX, minY, 0).setColor(color);
-        guiGraphics.flush();
+        graphics.flush();
     }
 
-    private static void drawGas(GuiGraphics guiGraphics, float xPosition, float yPosition, @NotNull GasObject gas, float width, float height, long capacityMb) {
+    private static void drawGas(GuiGraphics graphics, float x, float y, GasObject gas, float width, float height, long capacity) {
         long amount = GasObject.bucketVolume();
-        MutableFloat scaledAmount = new MutableFloat((float) amount * height / capacityMb);
-        if (amount > 0 && scaledAmount.floatValue() < 1) {
-            scaledAmount.setValue(1);
+        float scaledAmount = (float) amount * height / capacity;
+        if (amount > 0 && scaledAmount < 1) {
+            scaledAmount = 1;
         }
-        if (scaledAmount.floatValue() > height) {
-            scaledAmount.setValue(height);
+        if (scaledAmount > height) {
+            scaledAmount = height;
         }
+
+        float gasHeight = scaledAmount;
         getGasSpriteAndColor(gas, (sprite, color) -> {
-            float maxY = yPosition + height;
-            fill(guiGraphics, xPosition, maxY - scaledAmount.floatValue(), xPosition + width, maxY, color);
+            float maxY = y + height;
+            fill(graphics, x, maxY - gasHeight, x + width, maxY, color);
         });
     }
 

@@ -2,63 +2,45 @@ package net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrad
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightHandheldDrillUpgradeRegistry {
-    private static final Map<ResourceLocation, AirtightUpgrade> REGISTRY = new HashMap<>();
-    private static final List<AirtightUpgrade> ORDERED_UPGRADES = new ArrayList<>();
+public final class AirtightHandheldDrillUpgradeRegistry {
+    private static final AirtightUpgradeRegistry REGISTRY = new AirtightUpgradeRegistry("airtight_handheld_drill");
 
-    public static @Nullable AirtightUpgrade getByID(ResourceLocation id) {
-        return REGISTRY.getOrDefault(id, null);
+    private AirtightHandheldDrillUpgradeRegistry() {
     }
 
-    public static @Nullable AirtightUpgrade getByItem(Item item) {
-        return REGISTRY.values().stream().filter(upgrade -> upgrade.getUpgradeItem() == item).findFirst().orElse(null);
+    public static @Nullable AirtightUpgrade getByID(ResourceLocation id) {
+        return REGISTRY.getById(id);
+    }
+
+    public static @Nullable AirtightUpgrade getByStack(ItemStack stack) {
+        return REGISTRY.getByStack(stack);
     }
 
     public static List<AirtightUpgrade> getAll() {
-        return new ArrayList<>(ORDERED_UPGRADES);
+        return REGISTRY.getAll();
     }
 
     public static List<AirtightUpgradeStatus> getDefaultUpgradeList() {
-        List<AirtightUpgradeStatus> list = new ArrayList<>();
-        for (AirtightUpgrade upgrade : getAll()) {
-            list.add(new AirtightUpgradeStatus(upgrade.getID(), upgrade.startsEnabled(), upgrade.startsInstalled()));
-        }
-        return list;
+        return REGISTRY.getDefaultStatuses();
     }
 
     public static void forEach(Consumer<AirtightUpgrade> action) {
-        getAll().forEach(action);
-    }
-
-    public static void register(AirtightUpgrade upgrade) {
-        REGISTRY.put(upgrade.getID(), upgrade);
-        ORDERED_UPGRADES.add(upgrade);
-        ORDERED_UPGRADES.sort(Comparator.comparingInt(AirtightUpgrade::getIndex));
+        REGISTRY.forEach(action);
     }
 
     public static void registerUpgrades() {
-        register(SilkTouchUpgrade.INSTANCE);
-        register(MagnetUpgrade.INSTANCE);
-        register(ExperienceConversionUpgrade.INSTANCE);
-        register(LiquidReplacementUpgrade.INSTANCE);
-        register(HandheldDrillFilterButton.INSTANCE);
-        register(HandheldDrillContainerProtectionButton.INSTANCE);
-        register(HandheldDrillOutlineDisplayButton.INSTANCE);
-        register(HandheldDrillAttackModeButton.INSTANCE);
+        REGISTRY.registerAll(SilkTouchUpgrade.INSTANCE, MagnetUpgrade.INSTANCE, ExperienceConversionUpgrade.INSTANCE, LiquidReplacementUpgrade.INSTANCE, HandheldDrillFilterButton.INSTANCE, HandheldDrillContainerProtectionButton.INSTANCE, HandheldDrillOutlineDisplayButton.INSTANCE, HandheldDrillAttackModeButton.INSTANCE);
     }
 }

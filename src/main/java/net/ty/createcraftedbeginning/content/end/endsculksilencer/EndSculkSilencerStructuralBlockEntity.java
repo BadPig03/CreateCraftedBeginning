@@ -1,17 +1,14 @@
 package net.ty.createcraftedbeginning.content.end.endsculksilencer;
 
-import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.INamedIconOptions;
 import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.ScrollOptionBehaviour;
 import net.createmod.catnip.lang.Lang;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalStructuralBlockEntity;
-import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerValueBox;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
 
@@ -28,20 +25,40 @@ public class EndSculkSilencerStructuralBlockEntity extends EndMechanicalStructur
     }
 
     @Override
+    protected Class<EndSculkSilencerBlockEntity> getMasterClass() {
+        return EndSculkSilencerBlockEntity.class;
+    }
+
+    @Override
     public boolean isSpeedRequirementFulfilled() {
-        short range = getWorkingRange();
-        return Mth.abs(getSpeed()) >= SpeedLevel.MEDIUM.getSpeedValue() * range * Mth.sqrt(range);
+        return EndSculkSilencerBlockEntity.hasRequiredSpeed(getSpeed(), getWorkingRange());
     }
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         super.addBehaviours(behaviours);
-        silencerWorkingRange = new ScrollOptionBehaviour<>(SilencerWorkingRange.class, CCBLang.translateDirect("gui.end_sculk_silencer.working_range"), this, new EndIncinerationBlowerValueBox());
+        silencerWorkingRange = new ScrollOptionBehaviour<>(SilencerWorkingRange.class, CCBLang.translateDirect("gui.end_sculk_silencer.working_range"), this, new EndSculkSilencerValueBox());
+        silencerWorkingRange.withCallback(this::onWorkingRangeChanged);
         behaviours.add(silencerWorkingRange);
     }
 
     public short getWorkingRange() {
-        return silencerWorkingRange.get().getWorkingRange();
+        return silencerWorkingRange == null ? SilencerWorkingRange.ONE_BY_ONE.getWorkingRange() : silencerWorkingRange.get().getWorkingRange();
+    }
+
+    private void onWorkingRangeChanged(int ignored) {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+
+        if (master == null || master.isRemoved()) {
+            master = getMaster();
+        }
+        if (master == null) {
+            return;
+        }
+
+        master.refreshSilencerState();
     }
 
     public enum SilencerWorkingRange implements INamedIconOptions {

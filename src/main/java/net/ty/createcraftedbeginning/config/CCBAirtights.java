@@ -1,21 +1,33 @@
 package net.ty.createcraftedbeginning.config;
 
 import net.createmod.catnip.config.ConfigBase;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.MethodsReturnNonnullByDefault;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBAirtights extends ConfigBase {
+    public static final int MAX_AIRTIGHT_ENGINE_BASE_ROTATION_SPEED = 256;
+    public static final int MAX_TESLA_TURBINE_ROTATION_SPEED_PER_LEVEL = 256;
+
     public final ConfigGroup airCompressor = group(0, "air_compressor", "Air Compressor");
-    public final ConfigInt nextOverheatThreshold = i(1200, 20, "next_overheat_threshold", Comments.gameTicks, Comments.nextOverheatThreshold);
-    public final ConfigInt pressurizationRateMultiplier = i(4, 1, "pressurization_rate_multiplier", Comments.pressurizationRateMultiplier);
     public final ConfigBool explodesOnMeltdown = b(true, "explodes_on_meltdown", Comments.explodesOnMeltdown);
+    public final ConfigFloat coolantConsumptionChance = f(0.5f, 0, 1, "coolant_consumption_chance", Comments.coolantConsumptionChance);
+    public final ConfigInt maxAirCompressorCapacity = i(10, 1, "max_capacity", Comments.buckets, Comments.maxAirCompressorCapacity);
+    public final ConfigInt nextOverheatThreshold = i(1200, 20, "next_overheat_threshold", Comments.heatUnits, Comments.nextOverheatThreshold);
+    public final ConfigFloat pressurizationRateMultiplier = f(4, 0.0625f, "pressurization_rate_multiplier", Comments.pressurizationRateMultiplier);
 
     public final ConfigGroup airtightAssemblyDriver = group(0, "airtight_assembly_driver", "Airtight Assembly Driver");
-    public final ConfigInt residueFailureCooldown = i(120, 20, "residue_failure_cooldown", Comments.gameTicks, Comments.residueFailureCooldown);
-    public final ConfigInt residueGenerationCooldown = i(12, 1, "residue_generation_cooldown", Comments.gameTicks, Comments.residueGenerationCooldown);
-    public final ConfigInt consecutiveSuccessesCount = i(20, 1, "consecutive_successes_count", Comments.consecutiveSuccessesCount);
-    public final ConfigInt itemQuantityMultiplier = i(8, 1, 64, "item_quantity_multiplier", Comments.itemQuantityMultiplier);
     public final ConfigInt fluidQuantityMultiplier = i(8, 1, 512, "fluid_quantity_multiplier", Comments.fluidQuantityMultiplier);
+    public final ConfigInt itemQuantityMultiplier = i(8, 1, 64, "item_quantity_multiplier", Comments.itemQuantityMultiplier);
+    public final ConfigInt residueOutletCapacity = i(4, 1, "residue_outlet_capacity", Comments.buckets, Comments.residueOutletCapacity);
+
+    public final ConfigGroup airtightForgingPress = group(0, "airtight_forging_press", "Airtight Forging Press");
+    public final ConfigBool enableAutomaticSmithingRecipes = b(true, "enable_automatic_smithing_recipes", Comments.enableAutomaticSmithingRecipes);
+    public final ConfigInt forgingPressFluidCapacity = i(3, 1, "fluid_capacity", Comments.buckets, Comments.forgingPressFluidCapacity);
+    public final ConfigInt forgingPressGasCapacity = i(30, 1, "gas_capacity", Comments.buckets, Comments.forgingPressGasCapacity);
 
     public final ConfigGroup airtightHatch = group(0, "airtight_hatch", "Airtight Hatch");
     public final ConfigInt maxTransferRate = i(50, 1, "max_transfer_rate", Comments.milliBuckets, Comments.maxTransferRate);
@@ -23,43 +35,94 @@ public class CCBAirtights extends ConfigBase {
     public final ConfigGroup airtightPump = group(0, "airtight_pump", "Airtight Pump");
     public final ConfigInt maxPumpRange = i(32, 1, "max_pump_range", Comments.blocks, Comments.maxPumpRange);
 
+    public final ConfigGroup airtightReactorKettle = group(0, "airtight_reactor_kettle", "Airtight Reactor Kettle");
+    public final ConfigBool enableAutomaticMixingRecipes = b(true, "enable_automatic_mixing_recipes", Comments.enableAutomaticMixingRecipes);
+    public final ConfigFloat reactorKettleMixerDamageMultiplier = f(1, 0, "mixer_damage_multiplier", Comments.reactorKettleMixerDamageMultiplier);
+    public final ConfigInt reactorKettleFluidCapacity = i(9, 1, "fluid_capacity_per_tank", Comments.buckets, Comments.reactorKettleFluidCapacity);
+    public final ConfigInt reactorKettleGasCapacity = i(90, 1, "gas_capacity_per_tank", Comments.buckets, Comments.reactorKettleGasCapacity);
+
+    public final ConfigGroup airtightTank = group(0, "airtight_tank", "Airtight Tank");
+    public final ConfigInt maxAirtightTankCapacityPerBlock = i(80, 1, "capacity_per_block", Comments.buckets, Comments.maxAirtightTankCapacityPerBlock);
+    public final ConfigInt maxAirtightTankLength = i(4, 1, 32, "max_length", Comments.blocks, Comments.maxAirtightTankLength);
+    public final ConfigInt maxAirtightTankWidth = i(3, 1, 16, "max_width", Comments.blocks, Comments.maxAirtightTankWidth);
+
+    public final ConfigGroup breezeChamber = group(0, "breeze_chamber", "Breeze Chamber");
+    public final ConfigInt maxBreezeChamberCapacity = i(10, 1, "max_gas_capacity", Comments.buckets, Comments.maxBreezeChamberCapacity);
+    public final ConfigInt maxProcessingRate = i(1000, 1, "max_processing_rate", Comments.milliBuckets, Comments.maxProcessingRate);
+    public final ConfigInt maxWindCapacity = i(72000, 20, "max_wind_capacity", Comments.gameTicks, Comments.maxWindCapacity);
+
+    public final ConfigGroup breezeCooler = group(0, "breeze_cooler", "Breeze Cooler");
+    public final ConfigInt breezeCoolerFluidCapacity = i(4, 1, "fluid_capacity", Comments.buckets, Comments.breezeCoolerFluidCapacity);
+    public final ConfigInt dangerousFluidTemperature = i(1300, 1, "dangerous_fluid_temperature", Comments.kelvin, Comments.dangerousFluidTemperature);
+    public final ConfigInt maxCoolantCapacity = i(72000, 20, "max_coolant_capacity", Comments.gameTicks, Comments.maxCoolantCapacity);
+    public final ConfigInt snowballCoolingTime = i(20, 0, "snowball_cooling_time", Comments.gameTicks, Comments.snowballCoolingTime);
+
     public final ConfigGroup gasCanister = group(0, "gas_canister", "Gas Canister");
     public final ConfigInt maxCanisterCapacity = i(20, 1, "max_canister_capacity", Comments.buckets, Comments.maxCanisterCapacity);
 
-    public final ConfigGroup gasPackager = group(0, "gas_packager", "Gas Packager");
-    public final ConfigInt maxGasPerBalloon = i(100000, 1, "max_gas_per_balloon", Comments.milliBuckets, Comments.maxGasPerBalloon);
+    public final ConfigGroup gasInjectionChamber = group(0, "gas_injection_chamber", "Gas Injection Chamber");
+    public final ConfigInt maxGasInjectionChamberCapacity = i(10, 1, "max_capacity", Comments.buckets, Comments.maxGasInjectionChamberCapacity);
 
-    public final ConfigGroup breezeChamber = group(0, "breeze_chamber", "Breeze Chamber");
-    public final ConfigInt maxProcessingRate = i(1000, 1, "max_processing_rate", Comments.milliBuckets, Comments.maxProcessingRate);
+    public final ConfigGroup gasPackager = group(0, "gas_packager", "Gas Packager");
+    public final ConfigInt maxGasPerBalloon = i(10, 1, "max_gas_per_balloon", Comments.buckets, Comments.maxGasPerBalloon);
+
+    public final ConfigGroup teslaTurbine = group(0, "tesla_turbine", "Tesla Turbine");
+    public final ConfigBool teslaTurbineExplodesOnMixedGases = b(true, "explodes_on_mixed_gases", Comments.teslaTurbineExplodesOnMixedGases);
+    public final ConfigFloat teslaTurbineExplosionStrengthMultiplier = f(1, 0, "explosion_strength_multiplier", Comments.teslaTurbineExplosionStrengthMultiplier);
 
     public final ConfigGroup worldSettings = group(0, "world_settings", "World Settings");
-    public final ConfigBool canExtractAirFromWorld = b(true, "canExtractAirFromWorld", Comments.canExtractAirFromWorld);
     public final ConfigBool canCoolerGetFromSpawners = b(true, "canCoolerGetFromSpawners", Comments.canCoolerGetFromSpawners);
+    public final ConfigBool canExtractAirFromWorld = b(true, "canExtractAirFromWorld", Comments.canExtractAirFromWorld);
 
     @Override
-    public @NotNull String getName() {
+    public String getName() {
         return "airtights";
     }
 
     private static class Comments {
         static String gameTicks = "[in game ticks]";
-        static String blocks = "[in Blocks]";
-        static String buckets = "[in Buckets]";
-        static String milliBuckets = "[in milli-Buckets]";
-        static String canCoolerGetFromSpawners = "Allows using an Empty Breeze Cooler on Spawners and Trial Spawners to obtain a Breeze Cooler with Breeze.";
-        static String canExtractAirFromWorld = "Allows opened pipes to extract air from the environment.";
-        static String consecutiveSuccessesCount = "The number of consecutive successful Residue Generations required for the Airtight Assembly Driver to increase its Residue Level.";
-        static String explodesOnMeltdown = "Whether the Air Compressor explodes upon entering Meltdown state. If explosion is disabled, it will only be destroyed without exploding.";
+        static String heatUnits = "[in heat units]";
+        static String heatUnitsPerTick = "[in heat units per tick]";
+        static String blocks = "[in blocks]";
+        static String buckets = "[in buckets]";
+        static String milliBuckets = "[in millibuckets]";
+        static String milliBucketsPerTick = "[in millibuckets per tick]";
+        static String rpm = "[in RPM]";
+        static String kelvin = "[in Kelvin]";
+
+        static String breezeCoolerFluidCapacity = "The fluid input capacity of a Breeze Cooler.";
+        static String canCoolerGetFromSpawners = "Whether an Empty Breeze Cooler can capture a Breeze from a spawner or trial spawner.";
+        static String canExtractAirFromWorld = "Whether open-ended pipes can extract air from the environment.";
+        static String coolantConsumptionChance = "The chance, from 0.0 to 1.0, that an operating Air Compressor consumes or melts the coolant block during a coolant check.";
+        static String dangerousFluidTemperature = "Fluids at or above this temperature destroy a non-creative Breeze Cooler.";
+        static String enableAutomaticMixingRecipes = "Whether the Airtight Reactor Kettle can automatically process eligible shapeless crafting recipes.";
+        static String enableAutomaticSmithingRecipes = "Whether the Airtight Forging Press can automatically process smithing recipes.";
+        static String explodesOnMeltdown = "Whether the Air Compressor explodes upon entering the Meltdown state. If explosions are disabled, the Air Compressor is destroyed without exploding.";
         static String fluidQuantityMultiplier = "The quantity multiplier for Fluid Residue generated by the Airtight Assembly Driver.";
+        static String forgingPressFluidCapacity = "The fluid capacity of the Airtight Forging Press input tank.";
+        static String forgingPressGasCapacity = "The gas capacity of the Airtight Forging Press input tank.";
         static String itemQuantityMultiplier = "The quantity multiplier for Item Residue generated by the Airtight Assembly Driver.";
-        static String maxCanisterCapacity = "The maximum gas capacity of the Gas Canister, which also determines the capacity of many other gas containers.";
-        static String maxGasPerBalloon = "The maximum amount of gas a single balloon package can carry.";
-        static String maxProcessingRate = "The maximum per-second processing rate of the Breeze Chamber.";
-        static String maxPumpRange = "The maximum distance an Airtight Pump can push or pull gas on either side.";
-        static String maxTransferRate = "The maximum per-second transfer rate of the Airtight Hatch.";
-        static String nextOverheatThreshold = "The time required for the Air Compressor to advance to the next overheat state.";
-        static String pressurizationRateMultiplier = "The pressurization rate multiplier of the Air Compressor when pressurizing gases.";
-        static String residueFailureCooldown = "The cooldown period applied to the Airtight Assembly Driver when decreases its Residue Level due to residue generation failure.";
-        static String residueGenerationCooldown = "The cooldown period between each Residue generation attempt by the Airtight Assembly Driver.";
+        static String maxAirCompressorCapacity = "The capacity of each gas tank in an Air Compressor.";
+        static String maxAirtightTankCapacityPerBlock = "The gas capacity contributed by each block in an Airtight Tank multiblock.";
+        static String maxAirtightTankLength = "The maximum height of an Airtight Tank or Creative Airtight Tank multiblock. Existing tanks may need to be reassembled after changing this value.";
+        static String maxAirtightTankWidth = "The maximum width and depth of an Airtight Tank or Creative Airtight Tank multiblock. Existing tanks may need to be reassembled after changing this value.";
+        static String maxBreezeChamberCapacity = "The gas capacity of a Breeze Chamber.";
+        static String maxCanisterCapacity = "The maximum gas capacity of the Gas Canister.";
+        static String maxCoolantCapacity = "The maximum stored cooling time of a Breeze Cooler.";
+        static String maxGasInjectionChamberCapacity = "The maximum gas capacity of the Gas Injection Chamber.";
+        static String maxGasPerBalloon = "The maximum amount of gas that a single balloon can carry.";
+        static String maxProcessingRate = "The maximum amount of gas a Breeze Chamber can process per second.";
+        static String maxPumpRange = "The maximum distance an Airtight Pump can push or pull gas in either direction.";
+        static String maxTransferRate = "The maximum amount of gas an Airtight Hatch can transfer per second.";
+        static String maxWindCapacity = "The maximum duration of positive or negative wind charge that a Breeze Chamber can store.";
+        static String nextOverheatThreshold = "The net heat required for the Air Compressor to advance to the next overheat state.";
+        static String pressurizationRateMultiplier = "The multiplier applied to the Air Compressor's gas pressurization rate.";
+        static String reactorKettleFluidCapacity = "The capacity of each fluid tank segment in the Airtight Reactor Kettle.";
+        static String reactorKettleGasCapacity = "The capacity of each gas tank segment in the Airtight Reactor Kettle.";
+        static String reactorKettleMixerDamageMultiplier = "The multiplier applied to damage dealt by an operating Airtight Reactor Kettle mixer. Set to 0 to disable mixer damage.";
+        static String residueOutletCapacity = "The fluid capacity of a Residue Outlet.";
+        static String snowballCoolingTime = "The amount of cooling time added when a snowball hits a Breeze Cooler. Set to 0 to disable cooling with snowballs.";
+        static String teslaTurbineExplodesOnMixedGases = "Whether a Tesla Turbine explodes and loses its rotors after incompatible gases are mixed.";
+        static String teslaTurbineExplosionStrengthMultiplier = "The multiplier applied to the strength of explosions caused by mixing incompatible gases in a Tesla Turbine. The base strength equals the number of installed rotors.";
     }
 }

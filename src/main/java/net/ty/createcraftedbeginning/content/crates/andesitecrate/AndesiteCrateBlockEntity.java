@@ -1,103 +1,18 @@
 package net.ty.createcraftedbeginning.content.crates.andesitecrate;
 
-import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
-import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup.Provider;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.crates.CrateItemStackHandler;
 import net.ty.createcraftedbeginning.content.crates.CratesBlockEntity;
-import net.ty.createcraftedbeginning.data.CCBLang;
-import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AndesiteCrateBlockEntity extends CratesBlockEntity implements IHaveGoggleInformation, ThresholdSwitchObservable {
-    private static final String COMPOUND_KEY_INVENTORY = "Inventory";
-
-    private final CrateItemStackHandler handler;
-
+public class AndesiteCrateBlockEntity extends CratesBlockEntity {
     public AndesiteCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
-        super(type, pos, state);
-        handler = new AndesiteItemHandler();
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.ANDESITE_CRATE.get(), (be, context) -> be.handler);
-    }
-
-    @Override
-	public void invalidate() {
-		super.invalidate();
-		invalidateCapabilities();
-	}
-
-    @Override
-    public CrateItemStackHandler getHandler() {
-        return handler;
-    }
-
-    @Override
-    public void setStoredItems(ItemStack content, int count) {
-        handler.setStackInSlot(0, content);
-        handler.setCountInSlot(0, count);
-        notifyUpdate();
-    }
-
-    @Override
-    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        super.write(compoundTag, provider, clientPacket);
-        compoundTag.put(COMPOUND_KEY_INVENTORY, handler.serializeNBT(provider));
-    }
-
-    @Override
-    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        super.read(compoundTag, provider, clientPacket);
-        if (!compoundTag.contains(COMPOUND_KEY_INVENTORY)) {
-            return;
-        }
-
-        handler.deserializeNBT(provider, compoundTag.getCompound(COMPOUND_KEY_INVENTORY));
-    }
-
-    @Override
-    public int getMaxValue() {
-        return handler.getSlotLimit(0);
-    }
-
-    @Override
-    public int getMinValue() {
-        return 0;
-    }
-
-    @Override
-    public int getCurrentValue() {
-        return handler.getCountInSlot(0);
-    }
-
-    @Override
-    public MutableComponent format(int value) {
-        return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.items")).component();
-    }
-
-    private class AndesiteItemHandler extends CrateItemStackHandler {
-        AndesiteItemHandler() {
-            super(CCBConfig.server().crates.maxAndesiteCapacity.get(), null);
-        }
-
-        @Override
-        protected void onContentsChanged(int slot) {
-            notifyUpdate();
-        }
+        super(type, pos, state, () -> CCBConfig.server().crates.maxAndesiteCapacity.get());
     }
 }

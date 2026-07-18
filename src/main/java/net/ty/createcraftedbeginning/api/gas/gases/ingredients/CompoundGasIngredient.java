@@ -19,6 +19,11 @@ public final class CompoundGasIngredient extends GasIngredient {
 
     private final List<GasIngredient> children;
 
+    /**
+     * Creates a new {@code CompoundGasIngredient} instance.
+     *
+     * @param children the children to inspect or process
+     */
     public CompoundGasIngredient(List<? extends GasIngredient> children) {
         if (children.isEmpty()) {
             throw new IllegalArgumentException("Compound gas ingredient must have at least one child");
@@ -26,64 +31,101 @@ public final class CompoundGasIngredient extends GasIngredient {
         this.children = List.copyOf(children);
     }
 
+    /**
+     * Creates a gas ingredient from the supplied value.
+     *
+     * @param children the children to use
+     * @return the created value
+     */
     public static GasIngredient of(GasIngredient @NotNull ... children) {
         if (children.length == 0) {
             return empty();
         }
-        else if (children.length == 1) {
+        if (children.length == 1) {
             return children[0];
         }
-        else {
-            return new CompoundGasIngredient(List.of(children));
-        }
+        return new CompoundGasIngredient(List.of(children));
     }
 
+    /**
+     * Creates a gas ingredient from the supplied value.
+     *
+     * @param children the children to inspect or process
+     * @return the created value
+     */
     public static GasIngredient of(List<GasIngredient> children) {
         if (children.isEmpty()) {
             return empty();
         }
-        else if (children.size() == 1) {
+        if (children.size() == 1) {
             return children.getFirst();
         }
-        else {
-            return new CompoundGasIngredient(children);
-        }
+        return new CompoundGasIngredient(children);
     }
 
+    /**
+     * Creates a gas ingredient from the supplied value.
+     *
+     * @param stream the stream to use
+     * @return the created value
+     */
     public static GasIngredient of(Stream<GasIngredient> stream) {
         return of(stream.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Stream<GasStack> generateStacks() {
         return children.stream().flatMap(GasIngredient::generateStacks);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isSimple() {
         return children.stream().allMatch(GasIngredient::isSimple);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public GasIngredientType<?> getType() {
         return CCBGasRegistries.COMPOUND_GAS_INGREDIENT_TYPE.get();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean test(GasStack stack) {
         return children.stream().anyMatch(child -> child.test(stack));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         return Objects.hash(children);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object obj) {
         return this == obj || obj instanceof CompoundGasIngredient other && other.children() == children;
     }
 
+    /**
+     * Returns the child ingredients that compose this ingredient.
+     *
+     * @return the resulting values
+     */
     public List<GasIngredient> children() {
         return children;
     }

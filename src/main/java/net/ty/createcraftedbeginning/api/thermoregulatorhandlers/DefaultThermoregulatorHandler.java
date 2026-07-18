@@ -10,6 +10,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class DefaultThermoregulatorHandler implements AirtightThermoregulatorHandler {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public float getHeat(Level level, BlockPos pos, BlockState state) {
         return 0;

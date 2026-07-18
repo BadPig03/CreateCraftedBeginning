@@ -11,5 +11,5 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public interface IWeatherFlare {
     int DEFAULT_DURATION = 24000;
 
-    void setWeather(ServerLevel serverLevel, double radio);
+    void setWeather(ServerLevel level, double ratio);
 }

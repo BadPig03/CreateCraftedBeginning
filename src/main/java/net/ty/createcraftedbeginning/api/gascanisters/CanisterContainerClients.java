@@ -12,7 +12,9 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlayPacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
 import net.ty.createcraftedbeginning.data.CCBDistExecutor;
 
@@ -23,109 +25,102 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public final class CanisterContainerClients {
     public static final String COMPOUND_KEY_STORED_GAS_TYPE = "CreateCraftedBeginningStoredGasType";
 
+    private static final int BAR_WIDTH = 13;
+
     private CanisterContainerClients() {
     }
 
     /**
-     * Determines whether the gas canister status bar should be visible in the client's HUD.
-     * <p>
-     * This client-side method checks if the local player has at least one non-empty gas canister container
-     * that can be displayed in the user interface. The bar is only visible when there is a valid container
-     * with gas content to display.
-     * </p>
+     * Checks whether this value is bar visible.
      *
-     * @return true if the gas canister status bar should be rendered, false otherwise
-     * @see CanisterContainerSuppliers#getFirstCanisterSupplier(Player)
-     * @see IGasCanisterContainer#isEmpty()
+     * @return {@code true} if this value is bar visible; otherwise {@code false}
      */
     @OnlyIn(Dist.CLIENT)
     public static boolean isBarVisible() {
-        Player player = CCBDistExecutor.getClientPlayer();
-        if (player == null) {
-            return false;
-        }
-
-        IGasCanisterContainer container = CanisterContainerSuppliers.getFirstCanisterSupplier(player);
-        return container != null && !container.isEmpty();
+        DisplayedGasState state = getDisplayedGasState();
+        return !state.content().isEmpty() && (state.creative() || state.capacity() > 0);
     }
 
     /**
-     * Calculates the color for the gas canister status bar based on the current fill level.
-     * <p>
-     * This client-side method determines the visual color of the gas canister HUD element
-     * by interpolating between cyan (empty) and white (full) based on the fill ratio
-     * of the player's first available gas canister container.
-     * </p>
-     * <p>
-     * The color transition provides a visual indication of the gas level, with cyan
-     * representing low levels and white representing full capacity.
-     * </p>
+     * Returns the bar color.
      *
-     * @return the interpolated color value for the gas bar display, or 0 if no valid container is found
-     * @see CanisterContainerSuppliers#getFirstCanisterSupplierRatio(Player)
-     * @see Color#mixColors(int, int, float)
+     * @return the bar color
      */
     @OnlyIn(Dist.CLIENT)
     public static int getBarColor() {
-        Player player = CCBDistExecutor.getClientPlayer();
-        if (player == null) {
-            return 0;
-        }
-
-        float ratio = CanisterContainerSuppliers.getFirstCanisterSupplierRatio(player);
+        float ratio = getDisplayedGasRatio();
         if (ratio == 0) {
             return 0;
         }
-
         return Color.mixColors(GasCanisterUtils.COLOR_CYAN, GasCanisterUtils.COLOR_WHITE, ratio);
     }
 
     /**
-     * Calculates the visual width of the gas canister status bar in the HUD.
-     * <p>
-     * This client-side method determines the width of the gas canister HUD element
-     * based on the fill ratio of the player's first available gas canister container.
-     * The bar width ranges from 0 to 13 pixels, representing empty to full capacity.
-     * </p>
-     * <p>
-     * The width is calculated by multiplying the maximum bar width (13 pixels)
-     * by the current fill ratio of the gas container.
-     * </p>
+     * Returns the bar width.
      *
-     * @return the width of the gas bar in pixels (0-13), or 0 if no valid container is found
-     * @see CanisterContainerSuppliers#getFirstCanisterSupplierRatio(Player)
+     * @return the bar width
      */
     @OnlyIn(Dist.CLIENT)
     public static int getBarWidth() {
-        Player player = CCBDistExecutor.getClientPlayer();
-        if (player == null) {
-            return 0;
-        }
-
-        float ratio = CanisterContainerSuppliers.getFirstCanisterSupplierRatio(player);
-        if (ratio == 0) {
-            return 0;
-        }
-
-        return Math.round(13 * ratio);
+        float ratio = getDisplayedGasRatio();
+        return ratio == 0 ? 0 : Math.round(BAR_WIDTH * ratio);
     }
 
     /**
-     * Calculates the color for the gas canister status bar based on its current fill level.
-     * <p>
-     * This method determines the visual color of a gas canister's status bar by interpolating
-     * between cyan (empty) and white (full) based on the fill ratio of the gas canister.
-     * The fill ratio is calculated as the current gas amount divided by the canister's total capacity.
-     * </p>
-     * <p>
-     * If the canister is invalid, empty, or has zero capacity, the method returns 0 indicating
-     * that no bar should be displayed.
-     * </p>
+     * Returns the displayed gas content.
      *
-     * @param canister the gas canister ItemStack to check (cannot be null)
-     * @return the interpolated color value for the gas bar, or 0 if the canister is invalid, empty, or has zero capacity
-     * @see GasCanisterContainerContents
-     * @see Color#mixColors(int, int, float)
+     * @return the displayed gas content
+     */
+    @OnlyIn(Dist.CLIENT)
+    public static GasStack getDisplayedGasContent() {
+        return getDisplayedGasState().content().copy();
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    private static float getDisplayedGasRatio() {
+        DisplayedGasState state = getDisplayedGasState();
+        if (state.content().isEmpty()) {
+            return 0;
+        }
+
+        if (state.creative()) {
+            return 1;
+        }
+
+        if (state.capacity() <= 0) {
+            return 0;
+        }
+        return Mth.clamp((float) state.content().getAmount() / state.capacity(), 0, 1);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    private static DisplayedGasState getDisplayedGasState() {
+        Player player = CCBDistExecutor.getClientPlayer();
+        if (player == null) {
+            return DisplayedGasState.EMPTY;
+        }
+
+        CompoundTag data = player.getPersistentData();
+        if (data.contains(GasCanisterOverlayPacket.COMPOUND_KEY_OVERLAY)) {
+            CompoundTag overlay = data.getCompound(GasCanisterOverlayPacket.COMPOUND_KEY_OVERLAY);
+            GasStack content = GasStack.parseOptional(player.level().registryAccess(), overlay.getCompound(GasCanisterOverlayPacket.COMPOUND_KEY_CONTENT));
+            return new DisplayedGasState(content, overlay.getLong(GasCanisterOverlayPacket.COMPOUND_KEY_CAPACITY), overlay.getBoolean(GasCanisterOverlayPacket.COMPOUND_KEY_CREATIVE));
+        }
+
+        var fallback = CanisterContainerSuppliers.getFirstCanisterSupplierPair(player);
+        GasStack content = fallback.getFirst();
+        if (content.isEmpty()) {
+            return DisplayedGasState.EMPTY;
+        }
+
+        return new DisplayedGasState(content, fallback.getSecond().getFirst(), fallback.getSecond().getSecond());
+    }
+
+    /**
+     * Returns the bar color.
+     *
+     * @param canister the canister to use
+     * @return the bar color
      */
     public static int getBarColor(ItemStack canister) {
         if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
@@ -137,29 +132,15 @@ public final class CanisterContainerClients {
         if (amount == 0 || capacity == 0) {
             return 0;
         }
-
-        return Color.mixColors(GasCanisterUtils.COLOR_CYAN, GasCanisterUtils.COLOR_WHITE, Mth.clamp((float) amount / capacity, 0, 1));
+        float ratio = Mth.clamp((float) amount / capacity, 0, 1);
+        return Color.mixColors(GasCanisterUtils.COLOR_CYAN, GasCanisterUtils.COLOR_WHITE, ratio);
     }
 
     /**
-     * Calculates the visual width of the gas canister status bar based on its current fill level.
-     * <p>
-     * This method determines the width of the gas canister's status bar by calculating
-     * the fill ratio of the gas canister and converting it to a pixel width.
-     * The width ranges from 0 to 13 pixels, representing empty to full capacity.
-     * </p>
-     * <p>
-     * The fill ratio is calculated as the current gas amount divided by the canister's total capacity,
-     * clamped between 0.0 and 1.0, then multiplied by the maximum bar width of 13 pixels.
-     * </p>
-     * <p>
-     * If the canister is invalid, empty, or has zero capacity, the method returns 0 indicating
-     * that no bar should be displayed.
-     * </p>
+     * Returns the bar width.
      *
-     * @param canister the gas canister ItemStack to check (cannot be null)
-     * @return the width of the gas bar in pixels (0-13), or 0 if the canister is invalid, empty, or has zero capacity
-     * @see GasCanisterContainerContents
+     * @param canister the canister to use
+     * @return the bar width
      */
     public static int getBarWidth(ItemStack canister) {
         if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
@@ -171,23 +152,22 @@ public final class CanisterContainerClients {
         if (amount == 0 || capacity == 0) {
             return 0;
         }
-
-        return Math.round(13 * Mth.clamp((float) amount / capacity, 0, 1));
+        float ratio = Mth.clamp((float) amount / capacity, 0, 1);
+        return Math.round(BAR_WIDTH * ratio);
     }
 
     /**
-     * Retrieves the stored gas type from the player's persistent data.
-     * <p>
-     * This method reads the gas type that was previously stored in the player's persistent NBT data.
-     * The gas type is stored as a ResourceLocation string and converted back to a Gas object.
-     * </p>
+     * Returns the stored gas type.
      *
-     * @param player the player whose stored gas type will be retrieved (cannot be null)
-     * @return the stored gas type (never null)
-     * @see NBTHelper#readResourceLocation(CompoundTag, String) 
-     * @see Gas#getGasTypeByName(ResourceLocation)
+     * @param player the player performing the operation
+     * @return the stored gas type
      */
     public static Gas getStoredGasType(Player player) {
-        return Gas.getGasTypeByName(NBTHelper.readResourceLocation(player.getPersistentData(), COMPOUND_KEY_STORED_GAS_TYPE));
+        ResourceLocation gasId = NBTHelper.readResourceLocation(player.getPersistentData(), COMPOUND_KEY_STORED_GAS_TYPE);
+        return Gas.getGasTypeByName(gasId);
+    }
+
+    private record DisplayedGasState(GasStack content, long capacity, boolean creative) {
+        private static final DisplayedGasState EMPTY = new DisplayedGasState(GasStack.EMPTY, -1, false);
     }
 }

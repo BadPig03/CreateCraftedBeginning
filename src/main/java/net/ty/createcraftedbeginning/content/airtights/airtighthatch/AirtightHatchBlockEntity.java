@@ -7,7 +7,6 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.INamedIconOptions;
 import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.ScrollOptionBehaviour;
 import net.createmod.catnip.lang.Lang;
-import net.createmod.catnip.lang.LangBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -25,10 +24,13 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.handlers.SmartGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock.CanisterType;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.ICreativeGasContainer;
@@ -36,6 +38,7 @@ import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterCo
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
+import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -44,17 +47,17 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ICreativeGasContainer, ThresholdSwitchObservable {
-    private static final int SYNC_RATE = 4;
     private static final int LAZY_TICK_RATE = 20;
+    private static final int TICKS_PER_SECOND = 20;
 
     private static final String COMPOUND_KEY_CANISTER = "Canister";
+    private static final String COMPOUND_KEY_CAPACITY = "Capacity";
 
     private ItemStack canister = ItemStack.EMPTY;
     private SmartGasTankBehaviour tankBehaviour;
     private ScrollOptionBehaviour<HatchTransferMode> hatchTransferMode;
 
-    private int syncCooldown;
-    private boolean queuedSync;
+    private long transferRemainder;
 
     public AirtightHatchBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -62,63 +65,136 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_HATCH.get(), (be, context) -> be.getBlockState().getValue(AirtightHatchBlock.CANISTER_TYPE) == CanisterType.EMPTY ? SmartGasTankBehaviour.single(be, 0).forbidExtraction().forbidInsertion().getCapability() : be.tankBehaviour.getCapability());
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_HATCH.get(), (be, context) -> be.tankBehaviour.getCapability());
     }
 
     private static int getMaxTransferRate() {
         return CCBConfig.server().airtights.maxTransferRate.get();
     }
 
-    private static void inputOnly(IGasHandler hatchHandler, IGasHandler targetHandler, long maxTransferRate, boolean creative) {
-        GasStack hatchGasContent = hatchHandler.getGasInTank(0);
-        GasStack toDrain = hatchGasContent.isEmpty() ? targetHandler.drain(maxTransferRate, GasAction.SIMULATE) : targetHandler.drain(hatchGasContent.copyWithAmount(maxTransferRate), GasAction.SIMULATE);
-        if (toDrain.isEmpty()) {
-            return;
+    private static GasStack executeMatchingDrain(IGasHandler source, GasStack request) {
+        if (request.isEmpty()) {
+            return GasStack.EMPTY;
         }
 
-        long filled = hatchHandler.fill(toDrain, GasAction.SIMULATE);
-        if (!creative && filled == 0) {
-            return;
+        GasStack drained = source.drain(request, GasAction.EXECUTE);
+        if (!drained.isEmpty()) {
+            return validateDrainedGas(source, request, drained);
         }
 
-        GasStack drained = targetHandler.drain(maxTransferRate, GasAction.EXECUTE);
-        if (creative) {
-            return;
+        GasStack genericPreview = source.drain(request.getAmount(), GasAction.SIMULATE);
+        if (genericPreview.isEmpty() || !GasStack.isSameGasSameComponents(genericPreview, request)) {
+            return GasStack.EMPTY;
         }
 
-        hatchHandler.fill(drained, GasAction.EXECUTE);
+        drained = source.drain(request.getAmount(), GasAction.EXECUTE);
+        return validateDrainedGas(source, request, drained);
     }
 
-    private static void outputOnly(IGasHandler hatchHandler, IGasHandler targetHandler, long maxTransferRate, boolean creative) {
-        GasStack hatchGasContent = hatchHandler.getGasInTank(0);
-        if (hatchGasContent.isEmpty()) {
-            return;
+    private static GasStack validateDrainedGas(IGasHandler source, GasStack request, GasStack drained) {
+        if (drained.isEmpty()) {
+            return GasStack.EMPTY;
+        }
+        if (!GasStack.isSameGasSameComponents(drained, request)) {
+            source.fill(drained, GasAction.EXECUTE);
+            return GasStack.EMPTY;
         }
 
-        GasStack toFill = hatchHandler.drain(maxTransferRate, GasAction.SIMULATE);
-        long filled = targetHandler.fill(toFill, GasAction.SIMULATE);
-        if (filled == 0) {
-            return;
+        long requestedAmount = request.getAmount();
+        if (drained.getAmount() <= requestedAmount) {
+            return drained;
         }
 
-        GasStack drained = hatchHandler.drain(maxTransferRate, creative ? GasAction.SIMULATE : GasAction.EXECUTE);
-        targetHandler.fill(drained, GasAction.EXECUTE);
+        GasStack excess = drained.copyWithAmount(drained.getAmount() - requestedAmount);
+        source.fill(excess, GasAction.EXECUTE);
+        return drained.copyWithAmount(requestedAmount);
     }
 
-    private static void stayHalf(IGasHandler hatchHandler, IGasHandler targetHandler, boolean creative) {
-        GasStack hatchGasContent = hatchHandler.getGasInTank(0);
-        long delta = hatchGasContent.getAmount() - hatchHandler.getTankCapacity(0) / 2;
-        long transferAmount = Math.min(getMaxTransferRate(), Math.abs(delta));
+    private static void transferGas(IGasHandler source, IGasHandler target, GasStack offered, boolean isInfiniteSource, boolean isVoidTarget) {
+        if (offered.isEmpty()) {
+            return;
+        }
+
+        long accepted = isVoidTarget ? offered.getAmount() : target.fill(offered, GasAction.SIMULATE);
+        accepted = Math.clamp(accepted, 0, offered.getAmount());
+        if (accepted == 0) {
+            return;
+        }
+
+        GasStack request = offered.copyWithAmount(accepted);
+        GasStack drained = isInfiniteSource ? request : executeMatchingDrain(source, request);
+        if (drained.isEmpty()) {
+            return;
+        }
+        if (isVoidTarget) {
+            return;
+        }
+
+        long filled = target.fill(drained, GasAction.EXECUTE);
+        filled = Math.clamp(filled, 0, drained.getAmount());
+        if (isInfiniteSource || filled >= drained.getAmount()) {
+            return;
+        }
+
+        GasStack remainder = drained.copyWithAmount(drained.getAmount() - filled);
+        source.fill(remainder, GasAction.EXECUTE);
+    }
+
+    private static void inputOnly(IGasHandler hatch, IGasHandler target, long limit, boolean isCreative) {
+        GasStack hatchGas = hatch.getGasInTank(0);
+        GasStack available = hatchGas.isEmpty() ? target.drain(limit, GasAction.SIMULATE) : target.drain(hatchGas.copyWithAmount(limit), GasAction.SIMULATE);
+        if (available.isEmpty()) {
+            return;
+        }
+
+        long amount = Math.min(limit, available.getAmount());
+        transferGas(target, hatch, available.copyWithAmount(amount), false, isCreative);
+    }
+
+    private static void outputOnly(IGasHandler hatch, IGasHandler target, long limit, boolean isCreative) {
+        GasStack hatchGas = hatch.getGasInTank(0);
+        if (hatchGas.isEmpty()) {
+            return;
+        }
+
+        long amount = Math.min(limit, hatchGas.getAmount());
+        transferGas(hatch, target, hatchGas.copyWithAmount(amount), isCreative, false);
+    }
+
+    private static void stayHalf(IGasHandler hatch, IGasHandler target, long limit, boolean isCreative) {
+        GasStack hatchGas = hatch.getGasInTank(0);
+        long delta = hatchGas.getAmount() - hatch.getTankCapacity(0) / 2;
         if (delta == 0) {
             return;
         }
 
+        long amount = Math.min(limit, Math.abs(delta));
         if (delta > 0) {
-            outputOnly(hatchHandler, targetHandler, transferAmount, creative);
+            outputOnly(hatch, target, amount, isCreative);
+            return;
         }
-        else {
-            inputOnly(hatchHandler, targetHandler, transferAmount, creative);
+
+        inputOnly(hatch, target, amount, isCreative);
+    }
+
+    private static void addCreativeTooltip(List<Component> tooltip, GasStack gas) {
+        if (gas.isEmpty()) {
+            CCBLang.translate("gui.creative_gas_canister.empty").style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+            return;
         }
+
+        CCBLang.gasName(gas).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+        CCBLang.translate("gui.gas_container.infinity").style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
+    }
+
+    private static void addStandardTooltip(List<Component> tooltip, GasStack gas, long capacity) {
+        if (gas.isEmpty()) {
+            CCBLang.translate("gui.gas_container.capacity").add(GasAmountUtils.precise(capacity).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+            return;
+        }
+
+        CCBLang.gasName(gas).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+        GasAmountUtils.precise(gas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmountUtils.precise(capacity).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
     }
 
     @Override
@@ -132,19 +208,16 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
     @Override
     public void tick() {
         super.tick();
-        if (syncCooldown > 0) {
-            syncCooldown--;
-            if (syncCooldown == 0 && queuedSync) {
-                sendData();
-            }
+        if (level == null || level.isClientSide || isEmpty()) {
             return;
         }
 
-        if (isEmpty()) {
+        long transferQuota = getTransferQuota();
+        if (transferQuota <= 0) {
             return;
         }
 
-        tryTransferGas();
+        tryTransferGas(transferQuota);
     }
 
     @Override
@@ -155,28 +228,50 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         }
 
         BlockState state = getBlockState();
-        if (!(state.getBlock() instanceof AirtightHatchBlock hatch) || hatch.canSurvive(state, level, getBlockPos())) {
+        if (!(state.getBlock() instanceof AirtightHatchBlock hatch)) {
             return;
         }
 
-        level.destroyBlock(worldPosition, true);
-    }
-
-    @Override
-    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        super.write(compoundTag, provider, clientPacket);
-        compoundTag.put(COMPOUND_KEY_CANISTER, canister.saveOptional(provider));
-    }
-
-    @Override
-    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        super.read(compoundTag, provider, clientPacket);
-        if (!compoundTag.contains(COMPOUND_KEY_CANISTER)) {
+        if (!hatch.canSurvive(state, level, getBlockPos())) {
+            level.destroyBlock(worldPosition, true);
             return;
         }
 
-        canister = ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_CANISTER));
-        updateCapacity();
+        if (isEmpty()) {
+            return;
+        }
+
+        updateCapacity(true);
+    }
+
+    @Override
+    protected void write(CompoundTag tag, Provider provider, boolean clientPacket) {
+        super.write(tag, provider, clientPacket);
+        if (clientPacket) {
+            tag.putLong(COMPOUND_KEY_CAPACITY, getHatchCapacity());
+            return;
+        }
+
+        if (canister.isEmpty()) {
+            return;
+        }
+
+        tag.put(COMPOUND_KEY_CANISTER, canister.saveOptional(provider));
+    }
+
+    @Override
+    protected void read(CompoundTag tag, Provider provider, boolean clientPacket) {
+        super.read(tag, provider, clientPacket);
+        if (clientPacket) {
+            if (tag.contains(COMPOUND_KEY_CAPACITY)) {
+                long capacity = Math.max(0, tag.getLong(COMPOUND_KEY_CAPACITY));
+                tankBehaviour.getPrimaryHandler().setCapacity(capacity);
+            }
+            return;
+        }
+
+        canister = tag.contains(COMPOUND_KEY_CANISTER) ? ItemStack.parseOptional(provider, tag.getCompound(COMPOUND_KEY_CANISTER)) : ItemStack.EMPTY;
+        updateCapacity(false);
     }
 
     @Override
@@ -191,50 +286,21 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
             return false;
         }
 
-        CCBLang.translate("gui.goggles.gas_container").forGoggles(tooltip);
-        GasStack hatchGasContent = getHatchGasContent();
+        CCBLang.translate("gui.gas_container").forGoggles(tooltip);
+        GasStack gas = getHatchGasContent();
         long capacity = getHatchCapacity();
-        LangBuilder mb = CCBLang.translate("gui.goggles.unit.milli_buckets");
         if (isCreative()) {
-            if (hatchGasContent.isEmpty()) {
-                CCBLang.translate("gui.tooltips.creative_gas_canister.empty").style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-            }
-            else {
-                CCBLang.gasName(hatchGasContent).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-                CCBLang.translate("gui.goggles.gas_container.infinity").style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
-            }
+            addCreativeTooltip(tooltip, gas);
         }
         else {
-            if (hatchGasContent.isEmpty()) {
-                CCBLang.translate("gui.goggles.gas_container.capacity").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-            }
-            else {
-                CCBLang.gasName(hatchGasContent).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-                CCBLang.number(hatchGasContent.getAmount()).add(mb).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(capacity).add(mb).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
-            }
+            addStandardTooltip(tooltip, gas, capacity);
         }
         return true;
     }
 
     @Override
-    public void sendData() {
-        if (syncCooldown > 0) {
-            queuedSync = true;
-            return;
-        }
-
-        super.sendData();
-        queuedSync = false;
-        syncCooldown = SYNC_RATE;
-    }
-
-    @Override
     public int getMaxValue() {
-        if (isEmpty()) {
-            return 0;
-        }
-
-        return Math.clamp(getHatchCapacity() / 1000, 0, Integer.MAX_VALUE);
+        return isEmpty() ? 0 : GasAmountUtils.toWholeBucketsClamped(getHatchCapacity());
     }
 
     @Override
@@ -244,16 +310,12 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
 
     @Override
     public int getCurrentValue() {
-        if (isEmpty()) {
-            return 0;
-        }
-
-        return Math.clamp(getHatchGasContent().getAmount() / 1000, 0, Integer.MAX_VALUE);
+        return isEmpty() ? 0 : GasAmountUtils.toWholeBucketsClamped(getHatchGasContent().getAmount());
     }
 
     @Override
     public MutableComponent format(int value) {
-        return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.buckets")).component();
+        return GasAmountUtils.formatWholeBuckets(value);
     }
 
     @Override
@@ -263,33 +325,41 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
 
     @Nullable
     public IGasHandler getTargetGasHandler(Level level) {
-        BlockEntity blockEntity = level.getBlockEntity(getBlockPos().relative(getBlockState().getValue(AirtightHatchBlock.FACING)));
-        if (blockEntity == null || blockEntity instanceof AirtightHatchBlockEntity) {
+        BlockState state = getBlockState();
+        BlockPos pos = getBlockPos();
+        if (!AirtightHatchBlock.hasValidAttachment(level, pos, state)) {
             return null;
         }
 
-        Direction direction = getBlockState().getValue(AirtightHatchBlock.FACING);
-        BlockPos targetPos = getBlockPos().relative(direction);
-        return level.getCapability(GasHandler.BLOCK, targetPos, direction.getOpposite());
+        Direction facing = state.getValue(AirtightHatchBlock.FACING);
+        BlockPos targetPos = pos.relative(facing);
+        BlockEntity target = level.getBlockEntity(targetPos);
+        if (target == null || target instanceof AirtightHatchBlockEntity) {
+            return null;
+        }
+
+        return level.getCapability(GasHandler.BLOCK, targetPos, facing.getOpposite());
     }
 
     public ItemStack createCanisterItemStack() {
-        ItemStack itemStack = canister.copy();
-        if (!(itemStack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
+        ItemStack stack = canister.copyWithCount(1);
+        if (stack.isEmpty() || !(stack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents)) {
             return ItemStack.EMPTY;
         }
 
-        canisterContents.setCapacity(0, GasCanisterContainerContents.getEnchantedCapacity(itemStack));
-        canisterContents.drain(0, canisterContents.getGasInTank(0), GasAction.EXECUTE);
-        canisterContents.fill(0, getHatchGasContent(), GasAction.EXECUTE);
-        return itemStack;
+        stack.set(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES, List.of(Math.max(0, getHatchCapacity())));
+        stack.set(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, List.of(getHatchGasContent()));
+        return stack;
     }
 
-    public void giveCanisterToPlayer(Player player) {
-        ItemHandlerHelper.giveItemToPlayer(player, createCanisterItemStack());
-        tankBehaviour.getInternalGasHandler().forceDrain(getHatchGasContent(), GasAction.EXECUTE);
-        canister = ItemStack.EMPTY;
-        tankBehaviour.getPrimaryHandler().setCapacity(0);
+    public boolean giveCanisterToPlayer(Player player) {
+        ItemStack removedCanister = removeCanister();
+        if (removedCanister.isEmpty()) {
+            return false;
+        }
+
+        ItemHandlerHelper.giveItemToPlayer(player, removedCanister);
+        return true;
     }
 
     public boolean isEmpty() {
@@ -301,63 +371,158 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     public GasStack getHatchGasContent() {
-        return tankBehaviour.getPrimaryHandler().getGasStack();
+        return getInternalHatchGasContent().copy();
     }
 
     public long getHatchCapacity() {
         return tankBehaviour.getPrimaryHandler().getCapacity();
     }
 
-    public void setCanisterContent(ItemStack itemStack) {
-        canister = itemStack.copy();
+    public boolean installCanister(ItemStack sourceStack) {
+        if (level == null || level.isClientSide || sourceStack.isEmpty() || !isEmpty()) {
+            return false;
+        }
+
+        BlockState state = getBlockState();
+        if (!(state.getBlock() instanceof AirtightHatchBlock)) {
+            return false;
+        }
+
+        ItemStack newCanister = sourceStack.copyWithCount(1);
+        if (!(newCanister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents contents)) {
+            return false;
+        }
+
+        CanisterType type = CanisterContainerSuppliers.isValidCreativeGasCanister(newCanister) ? CanisterType.CREATIVE : CanisterType.NORMAL;
+        long capacity = Math.max(0, contents.getTankCapacity(0));
+        GasStack gas = contents.getGasInTank(0).copy();
+
+        ItemStack oldCanister = canister;
+        long oldCapacity = getHatchCapacity();
+        GasStack oldGas = getInternalHatchGasContent().copy();
+        SmartGasTank tank = tankBehaviour.getPrimaryHandler();
+        boolean updated = false;
+
+        tankBehaviour.beginMutation();
+        try {
+            canister = newCanister;
+            tank.setCapacity(capacity);
+            tank.setGasStack(gas);
+            updated = level.setBlockAndUpdate(worldPosition, state.setValue(AirtightHatchBlock.CANISTER_TYPE, type));
+            if (!updated) {
+                canister = oldCanister;
+                tank.setCapacity(oldCapacity);
+                tank.setGasStack(oldGas);
+                return false;
+            }
+
+            sourceStack.shrink(1);
+            transferRemainder = 0;
+            setChanged();
+            return true;
+        } finally {
+            boolean hasTankChanged = tankBehaviour.endMutation();
+            if (updated && hasTankChanged) {
+                tankBehaviour.sendDataImmediately();
+            }
+        }
+    }
+
+    public ItemStack removeCanister() {
+        if (level == null || level.isClientSide || isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+
+        BlockState state = getBlockState();
+        if (!(state.getBlock() instanceof AirtightHatchBlock)) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack removed = createCanisterItemStack();
+        if (removed.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack oldCanister = canister;
+        long oldCapacity = getHatchCapacity();
+        GasStack oldGas = getInternalHatchGasContent().copy();
+        SmartGasTank tank = tankBehaviour.getPrimaryHandler();
+        boolean updated = false;
+
+        tankBehaviour.beginMutation();
+        try {
+            canister = ItemStack.EMPTY;
+            tank.setGasStack(GasStack.EMPTY);
+            tank.setCapacity(0);
+            updated = level.setBlockAndUpdate(worldPosition, state.setValue(AirtightHatchBlock.CANISTER_TYPE, CanisterType.EMPTY));
+            if (!updated) {
+                canister = oldCanister;
+                tank.setCapacity(oldCapacity);
+                tank.setGasStack(oldGas);
+                return ItemStack.EMPTY;
+            }
+
+            transferRemainder = 0;
+            setChanged();
+            return removed;
+        } finally {
+            boolean hasTankChanged = tankBehaviour.endMutation();
+            if (updated && hasTankChanged) {
+                tankBehaviour.sendDataImmediately();
+            }
+        }
+    }
+
+    private GasStack getInternalHatchGasContent() {
+        return tankBehaviour.getPrimaryHandler().getGasStack();
+    }
+
+    private void updateCapacity(boolean syncImmediately) {
         if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
             return;
         }
 
-        updateCapacity();
-        tankBehaviour.getInternalGasHandler().forceDrain(getHatchGasContent(), GasAction.EXECUTE);
-        tankBehaviour.getInternalGasHandler().forceFill(canisterContents.getGasInTank(0), GasAction.EXECUTE);
+        long capacity = Math.max(0, canisterContents.getTankCapacity(0));
+        if (getHatchCapacity() == capacity) {
+            return;
+        }
+
+        tankBehaviour.getPrimaryHandler().setCapacity(capacity);
+        if (!syncImmediately || level == null || level.isClientSide) {
+            return;
+        }
+
+        tankBehaviour.sendDataImmediately();
     }
 
-    private void updateCapacity() {
-        if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
-            return;
-        }
-
-        long newCapacity = canisterContents.getTankCapacity(0);
-        if (getHatchCapacity() == newCapacity) {
-            return;
-        }
-
-        tankBehaviour.getPrimaryHandler().setCapacity(newCapacity);
+    private long getTransferQuota() {
+        transferRemainder += getMaxTransferRate();
+        long quota = transferRemainder / TICKS_PER_SECOND;
+        transferRemainder %= TICKS_PER_SECOND;
+        return quota;
     }
 
-    private void tryTransferGas() {
-        if (level == null || level.isClientSide) {
+    private void tryTransferGas(long quota) {
+        if (level == null) {
             return;
         }
 
-        IGasHandler targetHandler = getTargetGasHandler(level);
-        if (targetHandler == null) {
+        HatchTransferMode mode = HatchTransferMode.fromValue(hatchTransferMode.getValue());
+        if (mode == HatchTransferMode.NO_TRANSFER) {
             return;
         }
 
-        int currentMode = hatchTransferMode.getValue();
-        if (currentMode == HatchTransferMode.NO_TRANSFER.ordinal()) {
+        IGasHandler target = getTargetGasHandler(level);
+        if (target == null) {
             return;
         }
 
-        IGasHandler hatchHandler = tankBehaviour.getPrimaryHandler();
-        long transfer = getMaxTransferRate();
-        boolean creative = isCreative();
-        if (currentMode == HatchTransferMode.INPUT_ONLY.ordinal()) {
-            inputOnly(hatchHandler, targetHandler, transfer, creative);
-        }
-        else if (currentMode == HatchTransferMode.OUTPUT_ONLY.ordinal()) {
-            outputOnly(hatchHandler, targetHandler, transfer, creative);
-        }
-        else if (currentMode == HatchTransferMode.STAY_HALF.ordinal()) {
-            stayHalf(hatchHandler, targetHandler, creative);
+        IGasHandler hatch = tankBehaviour.getPrimaryHandler();
+        boolean isCreative = isCreative();
+        switch (mode) {
+            case INPUT_ONLY -> inputOnly(hatch, target, quota, isCreative);
+            case OUTPUT_ONLY -> outputOnly(hatch, target, quota, isCreative);
+            case STAY_HALF -> stayHalf(hatch, target, quota, isCreative);
         }
     }
 
@@ -367,12 +532,18 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         OUTPUT_ONLY(CCBIcons.I_OUTPUT_ONLY),
         STAY_HALF(CCBIcons.I_STAY_HALF);
 
+        private static final HatchTransferMode[] VALUES = values();
+
         private final String translationKey;
         private final CCBIcons icon;
 
         HatchTransferMode(CCBIcons icon) {
             this.icon = icon;
             translationKey = "createcraftedbeginning.gui.airtight_hatch.transfer_mode." + Lang.asId(name());
+        }
+
+        private static HatchTransferMode fromValue(int value) {
+            return VALUES[Math.clamp(value, 0, VALUES.length - 1)];
         }
 
         @Override

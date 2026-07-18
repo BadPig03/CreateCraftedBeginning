@@ -13,7 +13,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePowerMode;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.TickingAirtightUpgrade;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -24,11 +25,14 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public enum RegenerationUpgrade implements AirtightUpgrade {
+public enum RegenerationUpgrade implements TickingAirtightUpgrade {
     INSTANCE;
 
-    private static final int DURATION_THRESHOLD = 30;
-    private static final int DURATION_LIMIT = 10;
+    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("regeneration");
+    private static final Couple<Integer> OFFSET = Couple.create(132, 31);
+
+    private static final int EFFECT_DURATION = 30;
+    private static final int REFRESH_THRESHOLD = 10;
     private static final int AMPLIFIER = 1;
 
     @Override
@@ -47,8 +51,12 @@ public enum RegenerationUpgrade implements AirtightUpgrade {
 
     @Override
     public boolean meetsConditions(Player player, ItemStack item) {
-        MobEffectInstance effectInstance = player.getEffect(MobEffects.REGENERATION);
-        return (effectInstance == null || effectInstance.getAmplifier() <= AMPLIFIER && effectInstance.endsWithin(DURATION_LIMIT)) && player.getHealth() < player.getMaxHealth();
+        if (player.getHealth() >= player.getMaxHealth()) {
+            return false;
+        }
+
+        MobEffectInstance effect = player.getEffect(MobEffects.REGENERATION);
+        return effect == null || effect.getAmplifier() <= AMPLIFIER;
     }
 
     @Override
@@ -73,17 +81,17 @@ public enum RegenerationUpgrade implements AirtightUpgrade {
 
     @Override
     public Couple<Integer> getOffset() {
-        return Couple.create(132, 31);
+        return OFFSET;
+    }
+
+    @Override
+    public AirtightUpgradePowerMode getPowerMode() {
+        return AirtightUpgradePowerMode.CONTINUOUS;
     }
 
     @Override
     public int getGasConsumptionPerSecond(Player player, ItemStack item) {
         return CCBConfig.server().equipments.regenerationConsumption.get();
-    }
-
-    @Override
-    public int getIndex() {
-        return 3;
     }
 
     @Override
@@ -93,16 +101,22 @@ public enum RegenerationUpgrade implements AirtightUpgrade {
 
     @Override
     public ResourceLocation getID() {
-        return CreateCraftedBeginning.asResource("regeneration");
+        return ID;
     }
 
     @Override
     public void applyEffect(Player player) {
-        player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, DURATION_THRESHOLD, AMPLIFIER, true, false));
+        player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, EFFECT_DURATION, AMPLIFIER, true, false));
     }
 
     @Override
     public boolean isActive(Player player, ItemStack item) {
-        return item.is(CCBItems.AIRTIGHT_CHESTPLATE) && AirtightUpgrade.super.isActive(player, item);
+        return item.is(CCBItems.AIRTIGHT_CHESTPLATE) && TickingAirtightUpgrade.super.isActive(player, item);
+    }
+
+    @Override
+    public boolean shouldApplyEffect(Player player, ItemStack item) {
+        MobEffectInstance effect = player.getEffect(MobEffects.REGENERATION);
+        return effect == null || effect.getAmplifier() <= AMPLIFIER && effect.endsWithin(REFRESH_THRESHOLD);
     }
 }

@@ -12,6 +12,11 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonRenderHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.AirtightExtendArmRenderHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillRenderHandler;
+import net.ty.createcraftedbeginning.content.breezes.breezechamber.client.BreezeChamberClientAnimation;
+import net.ty.createcraftedbeginning.content.breezes.breezecooler.client.BreezeCoolerClientAnimation;
+import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerClient;
+import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerClient;
+import net.ty.createcraftedbeginning.content.fluids.CCBFluidClientExtensions;
 import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -26,7 +31,13 @@ public class CreateCraftedBeginningClient {
 
     public CreateCraftedBeginningClient(IEventBus modEventBus) {
         IEventBus eventBus = NeoForge.EVENT_BUS;
+        modEventBus.addListener(CCBFluidClientExtensions::register);
         modEventBus.addListener(CCBParticleTypes::registerFactories);
+
+        BreezeChamberClientAnimation.initialize();
+        BreezeCoolerClientAnimation.initialize();
+        EndIncinerationBlowerClient.initialize();
+        EndSculkSilencerClient.initialize();
 
         AIRTIGHT_CANNON_RENDER_HANDLER.registerListeners(eventBus);
         AIRTIGHT_EXTEND_ARM_RENDER_HANDLER.registerListeners(eventBus);

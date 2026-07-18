@@ -13,13 +13,13 @@ import java.util.concurrent.CompletableFuture;
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBPressurizationRecipes extends PressurizationRecipeGen {
-    GeneratedRecipe PRESSURIZED_NATURAL = create("pressurized_natural", b -> b.require(CCBGases.NATURAL_AIR.get(), 10).output(CCBGases.PRESSURIZED_NATURAL_AIR.get(), 1));
-    GeneratedRecipe PRESSURIZED_ULTRAWARM = create("pressurized_ultrawarm", b -> b.require(CCBGases.ULTRAWARM_AIR.get(), 10).output(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get(), 1));
-    GeneratedRecipe PRESSURIZED_ETHEREAL = create("pressurized_ethereal", b -> b.require(CCBGases.ETHEREAL_AIR.get(), 10).output(CCBGases.PRESSURIZED_ETHEREAL_AIR.get(), 1));
+    GeneratedRecipe PRESSURIZED_NATURAL = create("pressurized_natural", builder -> builder.require(CCBGases.NATURAL_AIR.get(), 10).output(CCBGases.PRESSURIZED_NATURAL_AIR.get(), 1));
+    GeneratedRecipe PRESSURIZED_ULTRAWARM = create("pressurized_ultrawarm", builder -> builder.require(CCBGases.ULTRAWARM_AIR.get(), 10).output(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get(), 1));
+    GeneratedRecipe PRESSURIZED_ETHEREAL = create("pressurized_ethereal", builder -> builder.require(CCBGases.ETHEREAL_AIR.get(), 10).output(CCBGases.PRESSURIZED_ETHEREAL_AIR.get(), 1));
 
-    GeneratedRecipe PRESSURIZED_ENERGIZED_NATURAL = create("pressurized_energized_natural", b -> b.require(CCBGases.ENERGIZED_NATURAL_AIR.get(), 10).output(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get(), 1));
-    GeneratedRecipe PRESSURIZED_ENERGIZED_ULTRAWARM = create("pressurized_energized_ultrawarm", b -> b.require(CCBGases.ENERGIZED_ULTRAWARM_AIR.get(), 10).output(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get(), 1));
-    GeneratedRecipe PRESSURIZED_ENERGIZED_ETHEREAL = create("pressurized_energized_ethereal", b -> b.require(CCBGases.ENERGIZED_ETHEREAL_AIR.get(), 10).output(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR.get(), 1));
+    GeneratedRecipe PRESSURIZED_ENERGIZED_NATURAL = create("pressurized_energized_natural", builder -> builder.require(CCBGases.ENERGIZED_NATURAL_AIR.get(), 10).output(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get(), 1));
+    GeneratedRecipe PRESSURIZED_ENERGIZED_ULTRAWARM = create("pressurized_energized_ultrawarm", builder -> builder.require(CCBGases.ENERGIZED_ULTRAWARM_AIR.get(), 10).output(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get(), 1));
+    GeneratedRecipe PRESSURIZED_ENERGIZED_ETHEREAL = create("pressurized_energized_ethereal", builder -> builder.require(CCBGases.ENERGIZED_ETHEREAL_AIR.get(), 10).output(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR.get(), 1));
 
     public CCBPressurizationRecipes(PackOutput output, CompletableFuture<Provider> registries) {
         super(output, registries, CreateCraftedBeginning.MOD_ID);

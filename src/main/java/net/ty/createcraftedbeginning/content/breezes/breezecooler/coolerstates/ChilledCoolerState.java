@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -21,23 +20,25 @@ public class ChilledCoolerState extends BaseCoolerState {
     }
 
     @Override
-    public void tick(BreezeCoolerBlockEntity cooler) {
-        super.tick(cooler);
+    public boolean tick(BreezeCoolerBlockEntity cooler) {
+        if (!super.tick(cooler)) {
+            return false;
+        }
+
         Level level = cooler.getLevel();
-        if (level == null || isCreative || remainingTime <= 0) {
-            return;
+        if (level == null || cooler.isRemoved() || isCreative || remainingTime <= 0) {
+            return true;
         }
 
         remainingTime--;
         if (remainingTime <= 0) {
             cooler.setCoolerState(new InactiveCoolerState());
-            return;
+            return true;
         }
-        if (level.getGameTime() % NOTIFY_INTERVAL != 0) {
-            return;
+        if (!level.isClientSide) {
+            cooler.syncCoolingProgress();
         }
-
-        cooler.notifyUpdate();
+        return true;
     }
 
     @Override
@@ -63,22 +64,23 @@ public class ChilledCoolerState extends BaseCoolerState {
             return InteractionResult.FAIL;
         }
 
-        int newTime = remainingTime + time;
-        if (!forceOverflow && Mth.abs(newTime) > OVERFLOW_THRESHOLD) {
+        long newTime = (long) remainingTime + time;
+        if (!forceOverflow && Math.abs(newTime) > BreezeCoolerBlockEntity.getOverflowThreshold()) {
             return InteractionResult.FAIL;
         }
 
-        if (!simulate) {
-            remainingTime = Mth.clamp(newTime, 0, BreezeCoolerBlockEntity.MAX_COOLANT_CAPACITY);
-            if (remainingTime == 0) {
-                cooler.setCoolerState(new InactiveCoolerState());
-            }
-            if (time > 0) {
-                cooler.playSound();
-                cooler.spawnParticleBurst();
-            }
+        if (simulate) {
+            return InteractionResult.SUCCESS;
         }
 
+        remainingTime = (int) Math.clamp(newTime, 0, BreezeCoolerBlockEntity.getMaxCoolantCapacity());
+        if (remainingTime == 0) {
+            cooler.setCoolerState(new InactiveCoolerState());
+        }
+        if (time > 0) {
+            cooler.playSound();
+            cooler.spawnParticleBurst();
+        }
         return InteractionResult.SUCCESS;
     }
 
@@ -89,12 +91,17 @@ public class ChilledCoolerState extends BaseCoolerState {
             return false;
         }
 
-        int newTime = remainingTime + 20;
-        if (Mth.abs(newTime) > OVERFLOW_THRESHOLD) {
+        int snowballCoolingTime = BreezeCoolerBlockEntity.getSnowballCoolingTime();
+        if (snowballCoolingTime <= 0) {
             return false;
         }
 
-        remainingTime = Math.min(newTime, BreezeCoolerBlockEntity.MAX_COOLANT_CAPACITY);
+        long newTime = (long) remainingTime + snowballCoolingTime;
+        if (Math.abs(newTime) > BreezeCoolerBlockEntity.getOverflowThreshold()) {
+            return false;
+        }
+
+        remainingTime = (int) Math.min(newTime, BreezeCoolerBlockEntity.getMaxCoolantCapacity());
         cooler.playSound();
         cooler.spawnParticleBurst();
         return true;

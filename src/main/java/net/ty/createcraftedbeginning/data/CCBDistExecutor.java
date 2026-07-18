@@ -18,14 +18,15 @@ import java.util.function.Supplier;
 public final class CCBDistExecutor {
     @Nullable
     public static <T> T unsafeCallWhenOn(Dist dist, Supplier<Callable<T>> toRun) {
-        if (FMLLoader.getDist() == dist) {
-            try {
-                return toRun.get().call();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        if (FMLLoader.getDist() != dist) {
+            return null;
         }
-        return null;
+
+        try {
+            return toRun.get().call();
+        } catch (Exception exception) {
+            throw new RuntimeException(exception);
+        }
     }
 
     @Nullable

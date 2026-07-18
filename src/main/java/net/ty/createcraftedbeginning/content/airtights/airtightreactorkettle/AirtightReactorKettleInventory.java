@@ -39,11 +39,11 @@ public class AirtightReactorKettleInventory extends SmartInventory {
     private static boolean isInsertionAllowed(IItemHandler inventory, int slot, ItemStack stack) {
         int firstFreeSlot = -1;
         for (int i = 0; i < inventory.getSlots(); i++) {
-            ItemStack stackInSlot = inventory.getStackInSlot(i);
-            if (i != slot && ItemStack.isSameItemSameComponents(stack, stackInSlot)) {
+            ItemStack storedStack = inventory.getStackInSlot(i);
+            if (i != slot && ItemStack.isSameItemSameComponents(stack, storedStack)) {
                 return false;
             }
-            if (!stackInSlot.isEmpty() || firstFreeSlot != -1) {
+            if (!storedStack.isEmpty() || firstFreeSlot != -1) {
                 continue;
             }
 
@@ -62,10 +62,10 @@ public class AirtightReactorKettleInventory extends SmartInventory {
 
     @Override
     public ItemStack extractItem(int slot, int amount, boolean simulate) {
-        ItemStack extractItem = super.extractItem(slot, amount, simulate);
-        if (!simulate && !extractItem.isEmpty()) {
+        ItemStack extracted = super.extractItem(slot, amount, simulate);
+        if (!simulate && !extracted.isEmpty()) {
             blockEntity.notifyContentsChanged();
         }
-        return extractItem;
+        return extracted;
     }
 }

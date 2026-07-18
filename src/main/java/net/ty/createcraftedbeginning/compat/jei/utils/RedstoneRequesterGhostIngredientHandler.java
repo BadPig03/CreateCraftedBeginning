@@ -15,7 +15,7 @@ import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUti
 import net.ty.createcraftedbeginning.mixin.client.accessor.RedstoneRequesterScreenAccessor;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
@@ -25,7 +25,7 @@ public class RedstoneRequesterGhostIngredientHandler implements IGhostIngredient
 
     @Override
     public <I> List<Target<I>> getTargetsTyped(RedstoneRequesterScreen gui, ITypedIngredient<I> ingredient, boolean doStart) {
-        List<Target<I>> targets = new LinkedList<>();
+        List<Target<I>> targets = new ArrayList<>();
         if (ingredient.getType() != CCBJEIPlugin.GAS_STACK) {
             return targets;
         }

@@ -55,12 +55,12 @@ public class ProcessingWithGasRecipeParams {
     @SuppressWarnings({"removal", "UnstableApiUsage"})
     @Contract("_ -> new")
     protected static <P extends ProcessingWithGasRecipeParams> @NotNull MapCodec<P> codec(Supplier<P> factory) {
-        return RecordCodecBuilder.mapCodec(instance -> instance.group(Codec.either(Codec.either(CreateCodecs.SIZED_FLUID_INGREDIENT, SizedGasIngredient.SIZED_GAS_INGREDIENT), Ingredient.CODEC).listOf().fieldOf("ingredients").forGetter(ProcessingWithGasRecipeParams::ingredients), Codec.either(Codec.either(FluidStack.CODEC, GasStack.CODEC), ProcessingOutput.CODEC).listOf().fieldOf("results").forGetter(ProcessingWithGasRecipeParams::results), Codec.INT.optionalFieldOf("processing_time", 0).forGetter(ProcessingWithGasRecipeParams::processingDuration), TemperatureCondition.CODEC.optionalFieldOf("temperature", TemperatureCondition.NONE).forGetter(ProcessingWithGasRecipeParams::temperatureCondition)).apply(instance, (ingredients, results, processingDuration, temperatureCondition) -> {
+        return RecordCodecBuilder.mapCodec(instance -> instance.group(Codec.either(Codec.either(CreateCodecs.SIZED_FLUID_INGREDIENT, SizedGasIngredient.SIZED_GAS_INGREDIENT), Ingredient.CODEC).listOf().fieldOf("ingredients").forGetter(ProcessingWithGasRecipeParams::ingredients), Codec.either(Codec.either(FluidStack.CODEC, GasStack.CODEC), ProcessingOutput.CODEC).listOf().fieldOf("results").forGetter(ProcessingWithGasRecipeParams::results), Codec.INT.optionalFieldOf("processing_time", 0).forGetter(ProcessingWithGasRecipeParams::processingDuration), TemperatureCondition.CODEC.optionalFieldOf("temperature", TemperatureCondition.NONE).forGetter(ProcessingWithGasRecipeParams::temperatureCondition)).apply(instance, (ingredients, results, duration, temperature) -> {
             P params = factory.get();
-            ingredients.forEach(either -> either.ifRight(params.ingredients::add).ifLeft(innerEither -> innerEither.ifLeft(params.fluidIngredients::add).ifRight(params.gasIngredients::add)));
-            results.forEach(either -> either.ifRight(params.results::add).ifLeft(innerEither -> innerEither.ifLeft(params.fluidResults::add).ifRight(params.gasResults::add)));
-            params.processingDuration = processingDuration;
-            params.temperatureCondition = temperatureCondition;
+            ingredients.forEach(ingredient -> ingredient.ifRight(params.ingredients::add).ifLeft(fluidOrGas -> fluidOrGas.ifLeft(params.fluidIngredients::add).ifRight(params.gasIngredients::add)));
+            results.forEach(result -> result.ifRight(params.results::add).ifLeft(fluidOrGas -> fluidOrGas.ifLeft(params.fluidResults::add).ifRight(params.gasResults::add)));
+            params.processingDuration = duration;
+            params.temperatureCondition = temperature;
             return params;
         }));
     }
@@ -75,19 +75,21 @@ public class ProcessingWithGasRecipeParams {
     }
 
     protected final List<Either<Either<SizedFluidIngredient, SizedGasIngredient>, Ingredient>> ingredients() {
-        List<Either<Either<SizedFluidIngredient, SizedGasIngredient>, Ingredient>> ingredients = new ArrayList<>(this.ingredients.size() + gasIngredients.size() + fluidIngredients.size());
-        this.ingredients.forEach(ingredient -> ingredients.add(Either.right(ingredient)));
-        fluidIngredients.forEach(ingredient -> ingredients.add(Either.left(Either.left(ingredient))));
-        gasIngredients.forEach(ingredient -> ingredients.add(Either.left(Either.right(ingredient))));
-        return ingredients;
+        int size = ingredients.size() + fluidIngredients.size() + gasIngredients.size();
+        List<Either<Either<SizedFluidIngredient, SizedGasIngredient>, Ingredient>> combined = new ArrayList<>(size);
+        ingredients.forEach(ingredient -> combined.add(Either.right(ingredient)));
+        fluidIngredients.forEach(ingredient -> combined.add(Either.left(Either.left(ingredient))));
+        gasIngredients.forEach(ingredient -> combined.add(Either.left(Either.right(ingredient))));
+        return combined;
     }
 
     protected final List<Either<Either<FluidStack, GasStack>, ProcessingOutput>> results() {
-        List<Either<Either<FluidStack, GasStack>, ProcessingOutput>> results = new ArrayList<>(this.results.size() + gasResults.size() + fluidResults.size());
-        this.results.forEach(result -> results.add(Either.right(result)));
-        fluidResults.forEach(result -> results.add(Either.left(Either.left(result))));
-        gasResults.forEach(result -> results.add(Either.left(Either.right(result))));
-        return results;
+        int size = results.size() + fluidResults.size() + gasResults.size();
+        List<Either<Either<FluidStack, GasStack>, ProcessingOutput>> combined = new ArrayList<>(size);
+        results.forEach(result -> combined.add(Either.right(result)));
+        fluidResults.forEach(result -> combined.add(Either.left(Either.left(result))));
+        gasResults.forEach(result -> combined.add(Either.left(Either.right(result))));
+        return combined;
     }
 
     protected final int processingDuration() {

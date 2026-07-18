@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.registry;
 
-import com.simibubi.create.api.stress.BlockStressValues;
 import com.tterrag.registrate.util.entry.BlockEntry;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.tags.BlockTags;
@@ -39,6 +38,7 @@ import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankBlock;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterBlock;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterBlock;
+import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeBlock;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlock;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBlock;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerBlock;
@@ -47,6 +47,7 @@ import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutl
 import net.ty.createcraftedbeginning.content.airtights.smartairtightpipe.SmartAirtightPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlock;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlock.TeslaTurbineRenderProperties;
+import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineUtils;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.TeslaTurbineStructuralRenderProperties;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlock;
@@ -112,10 +113,10 @@ public class CCBBlocks {
 
     public static final BlockEntry<AirCompressorBlock> AIR_COMPRESSOR_BLOCK = CCB_REGISTRATE.block("air_compressor", AirCompressorBlock::new).transform(CCBBlockBuilderTransformer.airCompressor()).transform(CCBStress.setImpact(16)).transform(airtightPropertiesWithoutOcclusion()).register();
 
-    public static final BlockEntry<AirtightEngineBlock> AIRTIGHT_ENGINE_BLOCK = CCB_REGISTRATE.block("airtight_engine", AirtightEngineBlock::new).transform(CCBBlockBuilderTransformer.airtightEngine()).transform(CCBStress.setCapacity(1024)).onRegister(BlockStressValues.setGeneratorSpeed(64, true)).transform(airtightPropertiesWithoutOcclusion()).register();
+    public static final BlockEntry<AirtightEngineBlock> AIRTIGHT_ENGINE_BLOCK = CCB_REGISTRATE.block("airtight_engine", AirtightEngineBlock::new).transform(CCBBlockBuilderTransformer.airtightEngine()).transform(CCBStress.setCapacity(1024)).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<ResidueOutletBlock> RESIDUE_OUTLET_BLOCK = CCB_REGISTRATE.block("residue_outlet", ResidueOutletBlock::new).transform(CCBBlockBuilderTransformer.residueOutlet()).transform(airtightPropertiesWithoutOcclusion()).register();
 
-    public static final BlockEntry<TeslaTurbineBlock> TESLA_TURBINE_BLOCK = CCB_REGISTRATE.block("tesla_turbine", TeslaTurbineBlock::new).clientExtension(() -> TeslaTurbineRenderProperties::new).transform(CCBBlockBuilderTransformer.teslaTurbine()).transform(CCBStress.setCapacity(4096)).onRegister(BlockStressValues.setGeneratorSpeed(256, true)).transform(airtightPropertiesWithoutOcclusion()).register();
+    public static final BlockEntry<TeslaTurbineBlock> TESLA_TURBINE_BLOCK = CCB_REGISTRATE.block("tesla_turbine", TeslaTurbineBlock::new).clientExtension(() -> TeslaTurbineRenderProperties::new).transform(CCBBlockBuilderTransformer.teslaTurbine()).transform(CCBStress.setCapacity(TeslaTurbineUtils.BASE_STRESS_CAPACITY)).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<TeslaTurbineStructuralBlock> TESLA_TURBINE_STRUCTURAL_BLOCK = CCB_REGISTRATE.block("tesla_turbine_structural", TeslaTurbineStructuralBlock::new).clientExtension(() -> TeslaTurbineStructuralRenderProperties::new).transform(CCBBlockBuilderTransformer.teslaTurbineStructural()).transform(airtightStructural()).register();
     public static final BlockEntry<TeslaTurbineNozzleBlock> TESLA_TURBINE_NOZZLE_BLOCK = CCB_REGISTRATE.block("tesla_turbine_nozzle", TeslaTurbineNozzleBlock::new).transform(CCBBlockBuilderTransformer.teslaTurbineNozzle()).transform(airtightPropertiesWithoutOcclusion()).register();
 
@@ -129,6 +130,7 @@ public class CCBBlocks {
 
     public static final BlockEntry<GasPackagerBlock> GAS_PACKAGER_BLOCK = CCB_REGISTRATE.block("gas_packager", GasPackagerBlock::new).transform(CCBBlockBuilderTransformer.gasPackager()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<GasRepackagerBlock> GAS_REPACKAGER_BLOCK = CCB_REGISTRATE.block("gas_repackager", GasRepackagerBlock::new).transform(CCBBlockBuilderTransformer.gasRepackager()).transform(airtightPropertiesWithoutOcclusion()).register();
+    public static final BlockEntry<GasFactoryGaugeBlock> GAS_FACTORY_GAUGE_BLOCK = CCB_REGISTRATE.block("gas_factory_gauge", GasFactoryGaugeBlock::new).transform(CCBBlockBuilderTransformer.gasFactoryGauge()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<GasInjectionChamberBlock> GAS_INJECTION_CHAMBER_BLOCK = CCB_REGISTRATE.block("gas_injection_chamber", GasInjectionChamberBlock::new).transform(CCBBlockBuilderTransformer.gasInjectionChamber()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<AirtightHatchBlock> AIRTIGHT_HATCH_BLOCK = CCB_REGISTRATE.block("airtight_hatch", AirtightHatchBlock::new).transform(CCBBlockBuilderTransformer.airtightHatch()).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<PortableGasInterfaceBlock> PORTABLE_GAS_INTERFACE_BLOCK = CCB_REGISTRATE.block("portable_gas_interface", PortableGasInterfaceBlock::new).transform(CCBBlockBuilderTransformer.portableGasInterface()).transform(airtightPropertiesWithoutOcclusion()).register();

@@ -22,8 +22,8 @@ import net.neoforged.neoforge.items.IItemHandler;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.recipe.trie.AbstractIngredient.Universal;
 import net.ty.createcraftedbeginning.recipe.trie.AbstractVariant.AbstractFluid;
 import net.ty.createcraftedbeginning.recipe.trie.AbstractVariant.AbstractGas;
@@ -61,40 +61,49 @@ public class AirtightWithGasRecipeTrie<R extends Recipe<?>> {
 
     public static Set<AbstractVariant> getVariants(@Nullable IItemHandler itemStorage, @Nullable IFluidHandler fluidStorage, @Nullable IGasHandler gasStorage) {
         Set<AbstractVariant> variants = new HashSet<>();
-        if (itemStorage != null) {
-            for (int slot = 0; slot < itemStorage.getSlots(); slot++) {
-                ItemStack item = itemStorage.getStackInSlot(slot);
-                if (item.isEmpty()) {
-                    continue;
-                }
-
-                variants.add(new AbstractItem(item.getItem()));
-            }
-        }
-
-        if (fluidStorage != null) {
-            for (int tank = 0; tank < fluidStorage.getTanks(); tank++) {
-                FluidStack fluid = fluidStorage.getFluidInTank(tank);
-                if (fluid.isEmpty()) {
-                    continue;
-                }
-
-                variants.add(new AbstractFluid(fluid.getFluid()));
-            }
-        }
-
-        if (gasStorage != null) {
-            for (int tank = 0; tank < gasStorage.getTanks(); tank++) {
-                GasStack gas = gasStorage.getGasInTank(tank);
-                if (gas.isEmpty()) {
-                    continue;
-                }
-
-                variants.add(new AbstractGas(gas.getGasType()));
-            }
-        }
-
+        addItemVariants(variants, itemStorage);
+        addFluidVariants(variants, fluidStorage);
+        addGasVariants(variants, gasStorage);
         return variants;
+    }
+
+    private static void addItemVariants(Set<AbstractVariant> variants, @Nullable IItemHandler storage) {
+        if (storage == null) {
+            return;
+        }
+
+        for (int slot = 0; slot < storage.getSlots(); slot++) {
+            ItemStack stack = storage.getStackInSlot(slot);
+            if (!stack.isEmpty()) {
+                variants.add(new AbstractItem(stack.getItem()));
+            }
+        }
+    }
+
+    private static void addFluidVariants(Set<AbstractVariant> variants, @Nullable IFluidHandler storage) {
+        if (storage == null) {
+            return;
+        }
+
+        for (int tank = 0; tank < storage.getTanks(); tank++) {
+            FluidStack stack = storage.getFluidInTank(tank);
+            if (!stack.isEmpty()) {
+                variants.add(new AbstractFluid(stack.getFluid()));
+            }
+        }
+    }
+
+    private static void addGasVariants(Set<AbstractVariant> variants, @Nullable IGasHandler storage) {
+        if (storage == null) {
+            return;
+        }
+
+        for (int tank = 0; tank < storage.getTanks(); tank++) {
+            GasStack stack = storage.getGasInTank(tank);
+            if (!stack.isEmpty()) {
+                variants.add(new AbstractGas(stack.getGasType()));
+            }
+        }
     }
 
     @Contract(" -> new")
@@ -102,13 +111,13 @@ public class AirtightWithGasRecipeTrie<R extends Recipe<?>> {
         return new Builder<>();
     }
 
-    private IntSet getAvailableIngredients(Set<AbstractVariant> pool) {
-        pool.retainAll(variantToId.keySet());
+    private IntSet getAvailableIngredients(Set<AbstractVariant> variants) {
+        variants.retainAll(variantToId.keySet());
         try {
-            return ingredientCache.get(Set.copyOf(pool), () -> {
+            return ingredientCache.get(Set.copyOf(variants), () -> {
                 IntSet ingredients = new IntOpenHashSet();
                 ingredients.add(universalIngredientId);
-                for (AbstractVariant variant : pool) {
+                for (AbstractVariant variant : variants) {
                     int id = variantToId.getInt(variant);
                     if (id < 0) {
                         continue;
@@ -123,8 +132,8 @@ public class AirtightWithGasRecipeTrie<R extends Recipe<?>> {
                 }
                 return ingredients;
             });
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
+        } catch (ExecutionException exception) {
+            throw new RuntimeException(exception);
         }
     }
 
@@ -150,33 +159,33 @@ public class AirtightWithGasRecipeTrie<R extends Recipe<?>> {
         }
 
         private int getOrAssignId(AbstractIngredient ingredient) {
-            return ingredientToId.computeIfAbsent(ingredient, $ -> {
+            return ingredientToId.computeIfAbsent(ingredient, ignored -> {
                 int id = nextIngredientId++;
                 for (AbstractVariant variant : ingredient.variants) {
-                    variantToIngredients.computeIfAbsent(getOrAssignId(variant), $1 -> new IntOpenHashSet()).add(id);
+                    variantToIngredients.computeIfAbsent(getOrAssignId(variant), ignoredId -> new IntOpenHashSet()).add(id);
                 }
                 return id;
             });
         }
 
         private int getOrAssignId(AbstractVariant variant) {
-            return variantToId.computeIfAbsent(variant, $ -> nextVariantId++);
+            return variantToId.computeIfAbsent(variant, ignored -> nextVariantId++);
         }
 
         private AbstractVariant getOrAssignVariant(Item item) {
-            AbstractVariant variant = variantCache.computeIfAbsent(item, $ -> new AbstractItem(item));
+            AbstractVariant variant = variantCache.computeIfAbsent(item, ignored -> new AbstractItem(item));
             getOrAssignId(variant);
             return variant;
         }
 
         private AbstractVariant getOrAssignVariant(Fluid fluid) {
-            AbstractVariant variant = variantCache.computeIfAbsent(fluid, $ -> new AbstractFluid(fluid));
+            AbstractVariant variant = variantCache.computeIfAbsent(fluid, ignored -> new AbstractFluid(fluid));
             getOrAssignId(variant);
             return variant;
         }
 
         private AbstractVariant getOrAssignVariant(Gas gasType) {
-            AbstractVariant variant = variantCache.computeIfAbsent(gasType, $ -> new AbstractGas(gasType));
+            AbstractVariant variant = variantCache.computeIfAbsent(gasType, ignored -> new AbstractGas(gasType));
             getOrAssignId(variant);
             return variant;
         }
@@ -199,52 +208,55 @@ public class AirtightWithGasRecipeTrie<R extends Recipe<?>> {
         private <R1 extends R> @NotNull AbstractRecipe<R1> createRecipe(R1 recipe) {
             Set<AbstractIngredient> ingredients = new HashSet<>();
             for (Ingredient ingredient : recipe.getIngredients()) {
-                if (ingredient.isEmpty()) {
-                    ingredients.add(Universal.INSTANCE);
-                    continue;
-                }
-
-                if (!ingredient.isSimple()) {
-                    ingredients.add(Universal.INSTANCE);
-                    continue;
-                }
-
-                Set<AbstractVariant> variants = new HashSet<>();
-                for (ItemStack stack : ingredient.getItems()) {
-                    variants.add(getOrAssignVariant(stack.getItem()));
-                }
-                ingredients.add(new AbstractIngredient(variants));
+                ingredients.add(createIngredient(ingredient));
             }
 
             if (recipe instanceof IAirtightWithGasRecipe withGasRecipe) {
                 for (SizedFluidIngredient ingredient : withGasRecipe.getFluidIngredients()) {
-                    if (ingredient.amount() == 0) {
-                        ingredients.add(Universal.INSTANCE);
-                        continue;
-                    }
-
-                    Set<AbstractVariant> variants = new HashSet<>();
-                    for (FluidStack stack : ingredient.getFluids()) {
-                        variants.add(getOrAssignVariant(stack.getFluid()));
-                    }
-                    ingredients.add(new AbstractIngredient(variants));
+                    ingredients.add(createIngredient(ingredient));
                 }
-
                 for (SizedGasIngredient ingredient : withGasRecipe.getGasIngredients()) {
-                    if (ingredient.amount() == 0) {
-                        ingredients.add(Universal.INSTANCE);
-                        continue;
-                    }
-
-                    Set<AbstractVariant> variants = new HashSet<>();
-                    for (GasStack stack : ingredient.getGases()) {
-                        variants.add(getOrAssignVariant(stack.getGasType()));
-                    }
-                    ingredients.add(new AbstractIngredient(variants));
+                    ingredients.add(createIngredient(ingredient));
                 }
             }
 
             return new AbstractRecipe<>(recipe, ingredients);
+        }
+
+        private AbstractIngredient createIngredient(Ingredient ingredient) {
+            if (ingredient.isEmpty() || !ingredient.isSimple()) {
+                return Universal.INSTANCE;
+            }
+
+            Set<AbstractVariant> variants = new HashSet<>();
+            for (ItemStack stack : ingredient.getItems()) {
+                variants.add(getOrAssignVariant(stack.getItem()));
+            }
+            return new AbstractIngredient(variants);
+        }
+
+        private AbstractIngredient createIngredient(SizedFluidIngredient ingredient) {
+            if (ingredient.amount() == 0) {
+                return Universal.INSTANCE;
+            }
+
+            Set<AbstractVariant> variants = new HashSet<>();
+            for (FluidStack stack : ingredient.getFluids()) {
+                variants.add(getOrAssignVariant(stack.getFluid()));
+            }
+            return new AbstractIngredient(variants);
+        }
+
+        private AbstractIngredient createIngredient(SizedGasIngredient ingredient) {
+            if (ingredient.amount() == 0) {
+                return Universal.INSTANCE;
+            }
+
+            Set<AbstractVariant> variants = new HashSet<>();
+            for (GasStack stack : ingredient.getGases()) {
+                variants.add(getOrAssignVariant(stack.getGasType()));
+            }
+            return new AbstractIngredient(variants);
         }
 
         public AirtightWithGasRecipeTrie<R> build() {

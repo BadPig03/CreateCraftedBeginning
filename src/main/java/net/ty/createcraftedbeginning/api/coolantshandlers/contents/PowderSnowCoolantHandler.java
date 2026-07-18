@@ -13,11 +13,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class PowderSnowCoolantHandler implements AirtightCoolantHandler {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public CoolantEfficiency getCoolantEfficiency(Level level, BlockPos pos, BlockState blockState) {
         return CoolantEfficiency.EXTREME;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public BlockState getMeltBlockState(Level level, BlockPos pos, BlockState blockState) {
         return Blocks.AIR.defaultBlockState();

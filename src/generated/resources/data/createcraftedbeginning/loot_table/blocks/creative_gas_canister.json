@@ -21,7 +21,7 @@
               "source": "block_entity"
             }
           ],
-          "name": "createcraftedbeginning:gas_canister"
+          "name": "createcraftedbeginning:creative_gas_canister"
         }
       ],
       "rolls": 1.0

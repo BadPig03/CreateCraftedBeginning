@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.api.turbinehandlers;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightTurbineHandlerEvent;
 import net.ty.createcraftedbeginning.data.CCBGases;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -9,26 +8,29 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBAirtightTurbineHandlers {
+    /**
+     * Registers the built-in airtight turbine handlers.
+     */
     public static void register() {
-        AirtightTurbineHandlerEvent.add(CCBGases.NATURAL_AIR.get(), 1);
-        AirtightTurbineHandlerEvent.add(CCBGases.ENERGIZED_NATURAL_AIR.get(), 2);
-        AirtightTurbineHandlerEvent.add(CCBGases.PRESSURIZED_NATURAL_AIR.get(), 4);
-        AirtightTurbineHandlerEvent.add(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get(), 8);
+        AirtightTurbineHandlerUtils.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), 1);
+        AirtightTurbineHandlerUtils.register(CCBGases.ENERGIZED_NATURAL_AIR.get().getResourceLocation(), 2);
+        AirtightTurbineHandlerUtils.register(CCBGases.PRESSURIZED_NATURAL_AIR.get().getResourceLocation(), 4);
+        AirtightTurbineHandlerUtils.register(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get().getResourceLocation(), 8);
 
-        AirtightTurbineHandlerEvent.add(CCBGases.ULTRAWARM_AIR.get(), 1);
-        AirtightTurbineHandlerEvent.add(CCBGases.ENERGIZED_ULTRAWARM_AIR.get(), 3);
-        AirtightTurbineHandlerEvent.add(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get(), 6);
-        AirtightTurbineHandlerEvent.add(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get(), 12);
+        AirtightTurbineHandlerUtils.register(CCBGases.ULTRAWARM_AIR.get().getResourceLocation(), 1);
+        AirtightTurbineHandlerUtils.register(CCBGases.ENERGIZED_ULTRAWARM_AIR.get().getResourceLocation(), 3);
+        AirtightTurbineHandlerUtils.register(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get().getResourceLocation(), 6);
+        AirtightTurbineHandlerUtils.register(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get().getResourceLocation(), 12);
 
-        AirtightTurbineHandlerEvent.add(CCBGases.ETHEREAL_AIR.get(), 2);
-        AirtightTurbineHandlerEvent.add(CCBGases.ENERGIZED_ETHEREAL_AIR.get(), 4);
-        AirtightTurbineHandlerEvent.add(CCBGases.PRESSURIZED_ETHEREAL_AIR.get(), 8);
-        AirtightTurbineHandlerEvent.add(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR.get(), 16);
+        AirtightTurbineHandlerUtils.register(CCBGases.ETHEREAL_AIR.get().getResourceLocation(), 2);
+        AirtightTurbineHandlerUtils.register(CCBGases.ENERGIZED_ETHEREAL_AIR.get().getResourceLocation(), 4);
+        AirtightTurbineHandlerUtils.register(CCBGases.PRESSURIZED_ETHEREAL_AIR.get().getResourceLocation(), 8);
+        AirtightTurbineHandlerUtils.register(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR.get().getResourceLocation(), 16);
 
-        AirtightTurbineHandlerEvent.add(CCBGases.MOIST_AIR.get(), 1);
-        AirtightTurbineHandlerEvent.add(CCBGases.SPORE_AIR.get(), 1);
-        AirtightTurbineHandlerEvent.add(CCBGases.SCULK_AIR.get(), 1);
+        AirtightTurbineHandlerUtils.register(CCBGases.MOIST_AIR.get().getResourceLocation(), 1);
+        AirtightTurbineHandlerUtils.register(CCBGases.SPORE_AIR.get().getResourceLocation(), 1);
+        AirtightTurbineHandlerUtils.register(CCBGases.SCULK_AIR.get().getResourceLocation(), 1);
 
-        AirtightTurbineHandlerEvent.add(CCBGases.CREATIVE_AIR.get(), 16);
+        AirtightTurbineHandlerUtils.register(CCBGases.CREATIVE_AIR.get().getResourceLocation(), 16);
     }
 }

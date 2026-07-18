@@ -2,13 +2,11 @@ package net.ty.createcraftedbeginning.compat.kubejs.events;
 
 import dev.latvian.mods.kubejs.block.state.BlockStatePredicate;
 import dev.latvian.mods.kubejs.event.KubeEvent;
-import dev.latvian.mods.rhino.util.HideFromJS;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.thermoregulatorhandlers.AirtightThermoregulatorHandler;
 import net.ty.createcraftedbeginning.api.thermoregulatorhandlers.AirtightThermoregulatorHandlerUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -44,21 +42,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class AirtightThermoregulatorHandlerEvent implements KubeEvent {
-    /**
-     * Registers an Airtight Thermoregulator Handler for the given block.
-     * <p>
-     * This overload is hidden from JavaScript and is intended for internal
-     * Java-side usage.
-     *
-     * @param block   the block to register the thermoregulator handler for
-     * @param handler the airtight thermoregulator handler to register
-     * @see AirtightThermoregulatorHandlerUtils#register(Block, AirtightThermoregulatorHandler)
-     */
-    @HideFromJS
-    public static void add(Block block, AirtightThermoregulatorHandler handler) {
-        AirtightThermoregulatorHandlerUtils.register(block, handler);
-    }
-
     /**
      * Registers an Airtight Thermoregulator Handler for the given block.
      * <p>

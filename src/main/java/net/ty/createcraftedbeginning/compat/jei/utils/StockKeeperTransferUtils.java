@@ -101,7 +101,7 @@ public final class StockKeeperTransferUtils {
     }
 
     public static boolean containsGasIngredient(IRecipeSlotsView recipeSlots, RecipeIngredientRole role) {
-        return recipeSlots.getSlotViews(role).stream().anyMatch(slotView -> slotView.getIngredients(CCBJEIPlugin.GAS_STACK).anyMatch(gas -> gas != null && !gas.isEmpty()));
+        return recipeSlots.getSlotViews(role).stream().anyMatch(slot -> slot.getIngredients(CCBJEIPlugin.GAS_STACK).anyMatch(gas -> gas != null && !gas.isEmpty()));
     }
 
     public static boolean requestCraftable(AbstractContainerScreen<?> screen, GasCraftableBigItemStack recipe, int requestedOutputDifference) {
@@ -174,9 +174,11 @@ public final class StockKeeperTransferUtils {
     public static int getMatchingCount(List<BigItemStack> stacks, ItemStack target) {
         int total = 0;
         for (BigItemStack entry : stacks) {
-            if (ItemStack.isSameItemSameComponents(entry.stack, target)) {
-                total = GasRequestUtils.toLogisticsAmount((long) total + entry.count);
+            if (!ItemStack.isSameItemSameComponents(entry.stack, target)) {
+                continue;
             }
+
+            total = GasRequestUtils.toLogisticsAmount((long) total + entry.count);
         }
 
         return total;
@@ -268,6 +270,12 @@ public final class StockKeeperTransferUtils {
 
     private static List<BigItemStack> getCandidates(IRecipeSlotView slotView) {
         List<BigItemStack> candidates = new ArrayList<>();
+        addItemCandidates(slotView, candidates);
+        addGasCandidates(slotView, candidates);
+        return candidates;
+    }
+
+    private static void addItemCandidates(IRecipeSlotView slotView, List<BigItemStack> candidates) {
         slotView.getItemStacks().forEach(stack -> {
             if (stack.isEmpty()) {
                 return;
@@ -275,7 +283,9 @@ public final class StockKeeperTransferUtils {
 
             candidates.add(new BigItemStack(stack.copyWithCount(1), Math.max(1, stack.getCount())));
         });
+    }
 
+    private static void addGasCandidates(IRecipeSlotView slotView, List<BigItemStack> candidates) {
         slotView.getIngredients(CCBJEIPlugin.GAS_STACK).forEach(gas -> {
             if (gas == null || gas.isEmpty()) {
                 return;
@@ -293,7 +303,6 @@ public final class StockKeeperTransferUtils {
 
             candidates.add(new BigItemStack(virtualGas.copyWithCount(1), amount));
         });
-        return candidates;
     }
 
     private static boolean addSets(StockKeeperRequestScreen screen, GasCraftableBigItemStack recipe, int requestedSets) {
@@ -318,9 +327,7 @@ public final class StockKeeperTransferUtils {
         }
         recipe.count = GasRequestUtils.toLogisticsAmount((long) recipe.count + (long) recipe.getOutputPerCraft() * setsToAdd);
         requirements.forEach(requirement -> addToOrders(screen.itemsToOrder, requirement, setsToAdd));
-        screen.searchBox.setValue("");
-        screen.refreshSearchNextTick = true;
-        screen.moveToTopNextTick = true;
+        refreshScreen(screen);
         return true;
     }
 
@@ -336,23 +343,27 @@ public final class StockKeeperTransferUtils {
         if (recipe.count <= 0) {
             screen.recipesToOrder.remove(recipe);
         }
-        screen.searchBox.setValue("");
-        screen.refreshSearchNextTick = true;
-        screen.moveToTopNextTick = true;
+        refreshScreen(screen);
         return true;
     }
 
-    private static int getMaxSetsFromOrderedItems(InventorySummary ordered, InventorySummary used, List<BigItemStack> requirements) {
+    private static int getMaxSetsFromOrderedItems(InventorySummary orderedItems, InventorySummary usedItems, List<BigItemStack> requirements) {
         int maxSets = Integer.MAX_VALUE;
         for (BigItemStack requirement : requirements) {
             if (requirement.count <= 0) {
                 return 0;
             }
 
-            int available = ordered.getCountOf(requirement.stack) - used.getCountOf(requirement.stack);
+            int available = orderedItems.getCountOf(requirement.stack) - usedItems.getCountOf(requirement.stack);
             maxSets = Math.min(maxSets, available / requirement.count);
         }
         return maxSets == Integer.MAX_VALUE ? 0 : Math.max(0, maxSets);
+    }
+
+    private static void refreshScreen(StockKeeperRequestScreen screen) {
+        screen.searchBox.setValue("");
+        screen.refreshSearchNextTick = true;
+        screen.moveToTopNextTick = true;
     }
 
     private static void addToOrders(List<BigItemStack> orders, BigItemStack requirement, int sets) {
@@ -467,17 +478,17 @@ public final class StockKeeperTransferUtils {
                 continue;
             }
 
-            ItemStack normalized = candidateStack.copyWithCount(1);
+            ItemStack stack = candidateStack.copyWithCount(1);
             int requiredCount = Math.max(1, candidateStack.getCount());
-            int alreadyUsed = usedItems.getCountOf(normalized);
-            int alreadySelected = getMatchingCount(selectedRequirements, normalized);
-            int available = orderedItems.getCountOf(normalized) - alreadyUsed - alreadySelected;
+            int alreadyUsed = usedItems.getCountOf(stack);
+            int alreadySelected = getMatchingCount(selectedRequirements, stack);
+            int available = orderedItems.getCountOf(stack) - alreadyUsed - alreadySelected;
             if (available < requiredCount || available <= bestAvailable) {
                 continue;
             }
 
             bestAvailable = available;
-            best = new BigItemStack(normalized, requiredCount);
+            best = new BigItemStack(stack, requiredCount);
         }
         return best;
     }

@@ -45,6 +45,7 @@ public class AirtightJetpackParticle extends TextureSheetParticle {
         if (lifetime-- <= 0) {
             remove();
         }
+
         if (!level.getFluidState(BlockPos.containing(x, y, z)).is(FluidTags.WATER)) {
             return;
         }

@@ -17,21 +17,32 @@ public class CombinedGasTankWrapper implements IGasHandler {
     protected final int tankCount;
     protected boolean enforceVariety;
 
+    /**
+     * Creates a new {@code CombinedGasTankWrapper} instance.
+     *
+     * @param gasHandlers the gas handlers to use
+     */
     public CombinedGasTankWrapper(IGasHandler @NotNull ... gasHandlers) {
         this.gasHandlers = gasHandlers;
         baseIndex = new int[gasHandlers.length];
-        int index = 0;
+        int totalTanks = 0;
         for (int i = 0; i < gasHandlers.length; i++) {
-            index += gasHandlers[i].getTanks();
-            baseIndex[i] = index;
+            totalTanks += gasHandlers[i].getTanks();
+            baseIndex[i] = totalTanks;
         }
-        tankCount = index;
+        tankCount = totalTanks;
     }
 
+    /**
+     * Configures whether generated results must contain varied outputs.
+     */
     public void enforceVariety() {
         enforceVariety = true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isGasValid(int tank, GasStack stack) {
         int index = getIndexForSlot(tank);
@@ -39,6 +50,9 @@ public class CombinedGasTankWrapper implements IGasHandler {
         return getHandlerFromIndex(index).isGasValid(localSlot, stack);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public GasStack drain(GasStack resource, GasAction action) {
         if (resource.isEmpty()) {
@@ -75,6 +89,9 @@ public class CombinedGasTankWrapper implements IGasHandler {
         return total;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public GasStack drain(long maxDrain, GasAction action) {
         if (maxDrain <= 0) {
@@ -117,18 +134,27 @@ public class CombinedGasTankWrapper implements IGasHandler {
         return total;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public GasStack getGasInTank(int tank) {
         int index = getIndexForSlot(tank);
-        tank = getSlotFromIndex(tank, index);
-        return getHandlerFromIndex(index).getGasInTank(tank);
+        int localTank = getSlotFromIndex(tank, index);
+        return getHandlerFromIndex(index).getGasInTank(localTank);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getTanks() {
         return tankCount;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long fill(GasStack resource, GasAction action) {
         if (resource.isEmpty()) {
@@ -136,12 +162,12 @@ public class CombinedGasTankWrapper implements IGasHandler {
         }
 
         long filled = 0;
-        resource = resource.copy();
+        GasStack remaining = resource.copy();
         boolean found = false;
         for (boolean searchPass : Iterate.trueAndFalse) {
-            for (IGasHandler gasHandler : gasHandlers) {
-                for (int i = 0; i < gasHandler.getTanks(); i++) {
-                    if (searchPass && GasStack.isSameGasSameComponents(gasHandler.getGasInTank(i), resource)) {
+            for (IGasHandler handler : gasHandlers) {
+                for (int tank = 0; tank < handler.getTanks(); tank++) {
+                    if (searchPass && GasStack.isSameGasSameComponents(handler.getGasInTank(tank), remaining)) {
                         found = true;
                     }
                 }
@@ -150,12 +176,13 @@ public class CombinedGasTankWrapper implements IGasHandler {
                     continue;
                 }
 
-                long filledIntoCurrent = gasHandler.fill(resource, action);
-                resource.shrink(filledIntoCurrent);
+                long filledIntoCurrent = handler.fill(remaining, action);
+                remaining.shrink(filledIntoCurrent);
                 filled += filledIntoCurrent;
-                if (resource.isEmpty()) {
+                if (remaining.isEmpty()) {
                     return filled;
                 }
+
                 if (found && (enforceVariety || filledIntoCurrent != 0)) {
                     return filled;
                 }
@@ -165,6 +192,9 @@ public class CombinedGasTankWrapper implements IGasHandler {
         return filled;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long getTankCapacity(int tank) {
         int index = getIndexForSlot(tank);
@@ -178,9 +208,11 @@ public class CombinedGasTankWrapper implements IGasHandler {
         }
 
         for (int i = 0; i < baseIndex.length; i++) {
-            if (slot - baseIndex[i] < 0) {
-                return i;
+            if (slot >= baseIndex[i]) {
+                continue;
             }
+
+            return i;
         }
         return -1;
     }

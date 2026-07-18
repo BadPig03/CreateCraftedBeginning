@@ -11,6 +11,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -60,9 +61,13 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
         }
 
         BlockPos masterPos = AirtightReactorKettleUtils.getMaster(clickedPos, state);
-        context = new UseOnContext(level, context.getPlayer(), context.getHand(), context.getItemInHand(), new BlockHitResult(context.getClickLocation(), context.getClickedFace(), masterPos, context.isInside()));
-        state = level.getBlockState(masterPos);
-        return super.onSneakWrenched(state, context);
+        Player player = context.getPlayer();
+        InteractionHand hand = context.getHand();
+        ItemStack stack = context.getItemInHand();
+        BlockHitResult masterHit = new BlockHitResult(context.getClickLocation(), context.getClickedFace(), masterPos, context.isInside());
+        UseOnContext masterContext = new UseOnContext(level, player, hand, stack, masterHit);
+        BlockState masterState = level.getBlockState(masterPos);
+        return super.onSneakWrenched(masterState, masterContext);
     }
 
     @Override
@@ -71,7 +76,7 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
     }
 
     @Override
-    public boolean addLandingEffects(BlockState blockState1, ServerLevel level, BlockPos pos, BlockState blockState2, LivingEntity entity, int numberOfParticles) {
+    public boolean addLandingEffects(BlockState state, ServerLevel level, BlockPos pos, BlockState landingState, LivingEntity entity, int particleCount) {
         return true;
     }
 
@@ -120,18 +125,18 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
     }
 
     @Override
-    protected VoxelShape getShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
-        AirtightReactorKettleStructuralPosition structuralPosition = blockState.getValue(STRUCTURAL_POSITION);
-        VoxelShape shape = AirtightReactorKettleVoxelShapes.getShape(structuralPosition);
-        BlockPos masterPos = AirtightReactorKettleUtils.getMaster(blockPos, blockState);
-        if (!(level.getBlockEntity(masterPos) instanceof AirtightReactorKettleBlockEntity masterBlockEntity) || masterBlockEntity.getWindowsOpenState()) {
+    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        AirtightReactorKettleStructuralPosition position = state.getValue(STRUCTURAL_POSITION);
+        VoxelShape shape = AirtightReactorKettleVoxelShapes.getShape(position);
+        BlockPos masterPos = AirtightReactorKettleUtils.getMaster(pos, state);
+        if (!(level.getBlockEntity(masterPos) instanceof AirtightReactorKettleBlockEntity master) || master.getWindowsOpenState()) {
             return shape;
         }
-        if (!structuralPosition.isWindow(-1)) {
+        if (!position.isWindow(-1)) {
             return shape;
         }
 
-        return CCBShapes.AIRTIGHT_REACTOR_KETTLE_TOP_MID_CLOSED.get(structuralPosition.getDirection());
+        return CCBShapes.AIRTIGHT_REACTOR_KETTLE_TOP_MID_CLOSED.get(position.getDirection());
     }
 
     @Override
@@ -155,7 +160,12 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
 
     @Override
     public boolean stillValid(BlockGetter level, BlockPos pos, BlockState state) {
-        return state.getBlock() instanceof AirtightReactorKettleStructuralCogBlock && level.getBlockState(AirtightReactorKettleUtils.getMaster(pos, state)).getBlock() instanceof AirtightReactorKettleBlock;
+        if (!(state.getBlock() instanceof AirtightReactorKettleStructuralCogBlock)) {
+            return false;
+        }
+
+        BlockPos masterPos = AirtightReactorKettleUtils.getMaster(pos, state);
+        return level.getBlockState(masterPos).getBlock() instanceof AirtightReactorKettleBlock;
     }
 
     @Override

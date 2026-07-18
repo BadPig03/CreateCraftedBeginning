@@ -33,6 +33,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.compat.jei.category.stockkeeper.GasCraftableBigItemStack;
 import net.ty.createcraftedbeginning.compat.jei.utils.StockKeeperTransferUtils;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
@@ -100,34 +101,32 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
         }
 
         int current = existingOrder.count;
+        if (!hasControlDown() && !remove && current == 1 && transfer > 1) {
+            transfer--;
+        }
         int next;
         if (remove) {
             next = current - transfer;
         }
         else {
-            int addable = Math.max(0, available - current);
-            if (addable == 0) {
-                return;
-            }
-
-            next = current + Math.min(transfer, addable);
+            next = current + Math.clamp(available - current, 0, transfer);
         }
 
         if (next <= 0) {
             itemsToOrder.remove(existingOrder);
             playUiSound(SoundEvents.WOOL_STEP, 0.75f, 1.8f);
             playUiSound(SoundEvents.BAMBOO_WOOD_STEP, 0.75f, 1.8f);
+            return;
         }
-        else {
-            existingOrder.count = next;
-            if (current == 0) {
-                playUiSound(SoundEvents.WOOL_STEP, 0.75f, 1.2f);
-                playUiSound(SoundEvents.BAMBOO_WOOD_STEP, 0.75f, 0.8f);
-            }
-            else {
-                playUiSound(AllSoundEvents.SCROLL_VALUE.getMainEvent(), 0.25f, 1.2f);
-            }
+
+        existingOrder.count = next;
+        if (current == 0) {
+            playUiSound(SoundEvents.WOOL_STEP, 0.75f, 1.2f);
+            playUiSound(SoundEvents.BAMBOO_WOOD_STEP, 0.75f, 0.8f);
+            return;
         }
+
+        playUiSound(AllSoundEvents.SCROLL_VALUE.getMainEvent(), 0.25f, 1.2f);
     }
 
     @Shadow
@@ -226,7 +225,6 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
         }
 
         int textWidth = 0;
-
         for (int i = 0; i < text.length(); i++) {
             char c = Character.toLowerCase(text.charAt(i));
             if (c == ',') {
@@ -286,7 +284,6 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
             graphics.blit(AllGuiTextures.NUMBERS.location, 14 + x, 10, 0, AllGuiTextures.NUMBERS.getStartX() + xOffset, AllGuiTextures.NUMBERS.getStartY(), spriteWidth, AllGuiTextures.NUMBERS.getHeight(), 256, 256);
             x += spriteWidth - 1;
         }
-
         ci.cancel();
     }
 
@@ -320,8 +317,7 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
             return;
         }
 
-        boolean remove = scrollY < 0;
-        ccb$changeDirectGasOrder(entry, orderClicked, remove, transfer);
+        ccb$changeDirectGasOrder(entry, orderClicked, scrollY < 0, transfer);
         cir.setReturnValue(true);
     }
 
@@ -343,8 +339,8 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
         }
 
         boolean remove = orderClicked || button == 1;
-        int transfer = GasRequestUtils.getStep(hasAltDown(), hasControlDown(), hasShiftDown()) * (orderClicked ? 1 : 10);
-        ccb$changeDirectGasOrder(entry, orderClicked, remove, transfer);
+        int step = GasRequestUtils.getStep(hasAltDown(), hasControlDown(), hasShiftDown()) * (orderClicked ? 1 : 10);
+        ccb$changeDirectGasOrder(entry, orderClicked, remove, step);
         cir.setReturnValue(true);
     }
 
@@ -386,11 +382,11 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
 
         List<Component> tooltip = new ArrayList<>();
         int available = blockEntity.getLastClientsideStockSnapshotAsSummary().getCountOf(entry.stack);
-        tooltip.add(CCBLang.translate("gui.tooltips.gas_virtual_item.send_item", CCBLang.itemName(entry.stack).add(CCBLang.text(" x" + GasRequestUtils.formatPrecise(available)))).color(ScrollInput.HEADER_RGB).component());
-        tooltip.add(CCBLang.translate("gui.tooltips.gas_virtual_item.scroll", GasRequestUtils.getScrollStep()).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-        tooltip.add(CCBLang.translate("gui.tooltips.gas_virtual_item.shift_to_scroll", GasRequestUtils.getShiftStep()).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-        tooltip.add(CCBLang.translate("gui.tooltips.gas_virtual_item.alt_to_scroll", GasRequestUtils.getAltStep()).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-        tooltip.add(CCBLang.translate("gui.tooltips.gas_virtual_item.ctrl_to_scroll", GasRequestUtils.getCtrlStep()).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltip.add(CCBLang.translate("gui.gas_virtual_item.send_item", CCBLang.itemName(entry.stack).add(CCBLang.text(" x" + GasRequestUtils.formatPrecise(available)))).color(ScrollInput.HEADER_RGB).component());
+        tooltip.add(CCBLang.translate("gui.gas_virtual_item.scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getScrollStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltip.add(CCBLang.translate("gui.gas_virtual_item.shift_to_scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getShiftStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltip.add(CCBLang.translate("gui.gas_virtual_item.alt_to_scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getAltStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltip.add(CCBLang.translate("gui.gas_virtual_item.ctrl_to_scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getCtrlStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
         graphics.renderComponentTooltip(font, tooltip, mouseX, mouseY);
         ci.cancel();
     }

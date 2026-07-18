@@ -9,7 +9,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
-import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -32,22 +31,13 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
-import net.minecraft.world.phys.HitResult;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.coolantshandlers.AirtightCoolantHandler;
-import net.ty.createcraftedbeginning.api.coolantshandlers.AirtightCoolantHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
-import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatstates.IOverheatState;
-import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatstates.NormalOverheatState;
-import net.ty.createcraftedbeginning.content.airtights.aircompressor.overheatstates.OverheatManager;
-import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
-import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
-import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
-import net.ty.createcraftedbeginning.content.airtights.smartairtightpipe.SmartAirtightPipeBlock;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.NotNull;
@@ -60,72 +50,22 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<AirCompressorBlockEntity>, SimpleWaterloggedBlock, IWrenchable, IAirtightComponent {
-    private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
-    private static final float COOLANT_CONSUME_CHANCE = 0.5f;
+    public static final BooleanProperty ACTIVE = BooleanProperty.create("active");
+    public static final EnumProperty<Axis> AXIS = BlockStateProperties.AXIS;
+    public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     public AirCompressorBlock(Properties properties) {
         super(properties);
-        registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false));
+        registerDefaultState(defaultBlockState().setValue(ACTIVE, false).setValue(WATERLOGGED, false));
     }
 
     public static Direction getInputSide(BlockState state) {
         return state.getValue(HORIZONTAL_FACING).getClockWise();
     }
 
-    private static BlockState getStateForBasicPlacement(BlockPlaceContext context, BlockState state) {
-        Direction opposite = context.getHorizontalDirection().getOpposite();
-        Player player = context.getPlayer();
-        if (player != null && player.isShiftKeyDown()) {
-            return state.setValue(HORIZONTAL_FACING, opposite);
-        }
-
-        Level level = context.getLevel();
-        BlockPos pos = context.getClickedPos();
-        Direction clickDirection = context.getClickedFace().getOpposite();
-        BlockPos otherPos = pos.relative(clickDirection);
-        BlockState otherState = level.getBlockState(otherPos);
-        Block otherBlock = otherState.getBlock();
-        switch (otherBlock) {
-            case AirtightPumpBlock ignored -> {
-                Direction facing = otherState.getValue(AirtightPumpBlock.FACING);
-                return facing.getAxis() == Axis.Y ? state.setValue(HORIZONTAL_FACING, opposite) : state.setValue(HORIZONTAL_FACING, facing.getClockWise());
-            }
-            case AirtightPipeBlock ignored -> {
-                Axis axis = otherState.getValue(AirtightPipeBlock.AXIS);
-                boolean reverse = clickDirection.getAxisDirection() == AxisDirection.NEGATIVE;
-                return switch (axis) {
-                    case X -> state.setValue(HORIZONTAL_FACING, reverse ? Direction.SOUTH : Direction.NORTH);
-                    case Y -> state.setValue(HORIZONTAL_FACING, opposite);
-                    case Z -> state.setValue(HORIZONTAL_FACING, reverse ? Direction.EAST : Direction.WEST);
-                };
-            }
-            case SmartAirtightPipeBlock ignored -> {
-                Axis axis = otherState.getValue(AirtightPipeBlock.AXIS);
-                boolean reverse = clickDirection.getAxisDirection() == AxisDirection.NEGATIVE;
-                return switch (axis) {
-                    case X -> state.setValue(HORIZONTAL_FACING, reverse ? Direction.SOUTH : Direction.NORTH);
-                    case Y -> state.setValue(HORIZONTAL_FACING, opposite);
-                    case Z -> state.setValue(HORIZONTAL_FACING, reverse ? Direction.EAST : Direction.WEST);
-                };
-            }
-            case AirtightCheckValveBlock ignored -> {
-                Axis axis = otherState.getValue(AirtightCheckValveBlock.AXIS);
-                boolean inverted = otherState.getValue(AirtightCheckValveBlock.INVERTED);
-                return switch (axis) {
-                    case X -> state.setValue(HORIZONTAL_FACING, inverted ? Direction.NORTH : Direction.SOUTH);
-                    case Y -> state.setValue(HORIZONTAL_FACING, opposite);
-                    case Z -> state.setValue(HORIZONTAL_FACING, inverted ? Direction.WEST : Direction.EAST);
-                };
-            }
-            default -> {
-                return state.setValue(HORIZONTAL_FACING, opposite);
-            }
-        }
-    }
-
     @Override
     protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
-        builder.add(WATERLOGGED);
+        builder.add(ACTIVE, WATERLOGGED);
         super.createBlockStateDefinition(builder);
     }
 
@@ -135,8 +75,7 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
         if (state == null) {
             return null;
         }
-
-        return ProperWaterloggedBlock.withWater(context.getLevel(), getStateForBasicPlacement(context, state), context.getClickedPos());
+        return ProperWaterloggedBlock.withWater(context.getLevel(), AirCompressorUtils.getStateForBasicPlacement(context, state), context.getClickedPos());
     }
 
     @Override
@@ -151,19 +90,18 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
 
     @Override
     public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
-        if (!level.isClientSide && player.isCreative() && level.getBlockEntity(pos) instanceof AirCompressorBlockEntity compressor && !(compressor.getOverheatState() instanceof NormalOverheatState)) {
-            ItemStack item = new ItemStack(this);
-            compressor.saveToItem(item);
-            Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, item);
+        if (!level.isClientSide && player.isCreative()) {
+            dropStoredState(level, pos);
         }
+
         super.playerWillDestroy(level, pos, state, player);
         return state;
     }
 
     @Override
-    public void appendHoverText(ItemStack compressor, TooltipContext context, List<Component> tooltips, TooltipFlag flag) {
-        IOverheatState overheatState = OverheatManager.getStateByItem(compressor);
-        tooltips.add(CCBLang.translate("gui.tooltips.air_compressor.overheat_state").style(ChatFormatting.GRAY).add(CCBLang.translate(overheatState.getTranslationKey()).style(overheatState.getDisplayColor())).component());
+    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltips, TooltipFlag flag) {
+        OverheatState overheatState = OverheatState.fromItem(stack);
+        tooltips.add(CCBLang.translate("gui.air_compressor.overheat_state").style(ChatFormatting.GRAY).add(CCBLang.translate(overheatState.getTranslationKey()).style(overheatState.getDisplayColor())).component());
     }
 
     @Override
@@ -189,7 +127,6 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
         if (!state.getValue(WATERLOGGED)) {
             return super.getFluidState(state);
         }
-
         return Fluids.WATER.defaultFluidState();
     }
 
@@ -200,7 +137,7 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
 
     @Override
     public List<ItemStack> getDrops(BlockState state, LootParams.@NotNull Builder params) {
-        if (!(params.getParameter(LootContextParams.BLOCK_ENTITY) instanceof AirCompressorBlockEntity compressor) || compressor.getOverheatState() instanceof NormalOverheatState) {
+        if (!(params.getParameter(LootContextParams.BLOCK_ENTITY) instanceof AirCompressorBlockEntity compressor) || compressor.getStoredHeat() == 0) {
             return super.getDrops(state, params);
         }
 
@@ -214,7 +151,6 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
         if (!(level.getBlockEntity(pos) instanceof AirCompressorBlockEntity compressor)) {
             return 0;
         }
-
         return compressor.getAnalogOutputSignal();
     }
 
@@ -226,27 +162,13 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
         }
 
         BlockPos coolantPos = pos.below();
-        compressor.updateCoolant(coolantPos);
-        CoolantEfficiency efficiency = compressor.getCoolantEfficiency();
-        if (efficiency == CoolantEfficiency.NONE || !compressor.shouldConsumeCoolant() || random.nextFloat() >= COOLANT_CONSUME_CHANCE) {
-            return;
-        }
-
-        BlockState coolantState = level.getBlockState(coolantPos);
-        AirtightCoolantHandler coolantStrategy = AirtightCoolantHandlerUtils.of(coolantState.getBlock());
-        BlockState newState = coolantStrategy.getMeltBlockState(level, coolantPos, coolantState);
-        if (newState != null) {
-            level.destroyBlock(coolantPos, false);
-            if (!newState.isAir()) {
-                level.setBlockAndUpdate(coolantPos, newState);
-            }
-        }
-        compressor.updateCoolant(coolantPos);
+        CoolantEfficiency efficiency = AirCompressorUtils.tickCoolant(level, coolantPos, state.getValue(ACTIVE), random);
+        compressor.setCoolantEfficiency(efficiency);
     }
 
     @Override
     public boolean isRandomlyTicking(BlockState state) {
-        return true;
+        return state.getValue(ACTIVE);
     }
 
     @Override
@@ -281,23 +203,25 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
         return CCBBlockEntities.AIR_COMPRESSOR.get();
     }
 
+    private void dropStoredState(Level level, BlockPos pos) {
+        if (!(level.getBlockEntity(pos) instanceof AirCompressorBlockEntity compressor) || compressor.getOverheatState() == OverheatState.NORMAL) {
+            return;
+        }
+
+        ItemStack item = new ItemStack(this);
+        compressor.saveToItem(item);
+        Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, item);
+    }
+
     @Override
     public InteractionResult onWrenched(BlockState state, UseOnContext context) {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
-        level.setBlockAndUpdate(pos, state.setValue(HORIZONTAL_FACING, getInputSide(state).getOpposite().getCounterClockWise()));
+        level.setBlockAndUpdate(pos, state.setValue(HORIZONTAL_FACING, state.getValue(HORIZONTAL_FACING).getOpposite()));
+        if (!level.isClientSide) {
+            level.invalidateCapabilities(pos);
+        }
         IWrenchable.playRotateSound(level, pos);
         return InteractionResult.SUCCESS;
-    }
-
-    @Override
-    public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
-        ItemStack item = new ItemStack(this);
-        if (!(level.getBlockEntity(pos) instanceof AirCompressorBlockEntity compressor) || compressor.getOverheatState() instanceof NormalOverheatState || !player.isShiftKeyDown()) {
-            return item;
-        }
-
-        compressor.saveToItem(item);
-        return item;
     }
 }

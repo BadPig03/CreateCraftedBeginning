@@ -3,13 +3,19 @@ package net.ty.createcraftedbeginning.content.airtights.airtightcannon.windcharg
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.projectile.windcharge.AbstractWindCharge;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandler;
-import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlerUtils;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.cannonhandlers.visual.CannonAnimationType;
+import net.ty.createcraftedbeginning.api.cannonhandlers.visual.CannonModelType;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -35,28 +41,62 @@ public class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWin
         core = bone.getChild(NAME_CORE);
     }
 
+    public static LayerDefinition createLayerDefinition(CannonModelType modelType) {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+        PartDefinition bone = root.addOrReplaceChild(NAME_BONE, CubeListBuilder.create(), PartPose.offset(0.0f, 0.0f, 0.0f));
+
+        switch (modelType) {
+            case NATURAL -> {
+                bone.addOrReplaceChild(NAME_WIND_OUTER, CubeListBuilder.create().texOffs(15, 20).addBox(-4.0f, -1.0f, -4.0f, 8.0f, 2.0f, 8.0f, new CubeDeformation(0.0f)), PartPose.offsetAndRotation(0.0f, 0.0f, 0.0f, 0.0f, -0.7853982f, 0.0f));
+                bone.addOrReplaceChild(NAME_WIND_INNER, CubeListBuilder.create().texOffs(0, 9).addBox(-3.0f, -2.0f, -3.0f, 6.0f, 4.0f, 6.0f, new CubeDeformation(0.0f)), PartPose.offsetAndRotation(0.0f, 0.0f, 0.0f, 0.0f, -0.7853982f, 0.0f));
+            }
+            case ETHEREAL -> {
+                bone.addOrReplaceChild(NAME_WIND_OUTER, CubeListBuilder.create().texOffs(15, 20).addBox(-4.0f, -1.0f, -4.0f, 8.0f, 2.0f, 8.0f, new CubeDeformation(0.0f)), PartPose.offsetAndRotation(0.0f, 0.0f, 0.0f, -0.7853982f, -0.7853982f, 0.0f));
+                bone.addOrReplaceChild(NAME_WIND_INNER, CubeListBuilder.create().texOffs(0, 9).addBox(-3.0f, -2.0f, -3.0f, 6.0f, 4.0f, 6.0f, new CubeDeformation(0.0f)), PartPose.offsetAndRotation(0.0f, 0.0f, 0.0f, Mth.PI / 4, -0.7853982f, 0.0f));
+            }
+            case CORE_ONLY -> {
+                bone.addOrReplaceChild(NAME_WIND_OUTER, CubeListBuilder.create(), PartPose.offsetAndRotation(0.0f, 0.0f, 0.0f, 0.0f, -0.7853982f, 0.0f));
+                bone.addOrReplaceChild(NAME_WIND_INNER, CubeListBuilder.create(), PartPose.offsetAndRotation(0.0f, 0.0f, 0.0f, 0.0f, -0.7853982f, 0.0f));
+            }
+        }
+
+        bone.addOrReplaceChild(NAME_CORE, CubeListBuilder.create().texOffs(0, 0).addBox(-2.0f, -2.0f, -2.0f, 4.0f, 4.0f, 4.0f, new CubeDeformation(0.0f)), PartPose.offset(0.0f, 0.0f, 0.0f));
+        return LayerDefinition.create(mesh, 64, 32);
+    }
+
+    public void setupAnimation(CannonAnimationType animationType, float rotationSpeed, float ageInTicks) {
+        resetRotations();
+        float rotation = ageInTicks * rotationSpeed * Mth.PI / 180;
+        switch (animationType) {
+            case CORE_Y -> core.yRot = -rotation;
+            case NATURAL_Y -> {
+                core.yRot = -rotation;
+                windOuter.yRot = rotation;
+                windInner.yRot = rotation;
+            }
+            case ETHEREAL_Z -> {
+                core.yRot = -rotation;
+                windOuter.zRot = rotation;
+                windInner.zRot = rotation;
+            }
+        }
+    }
+
+    private void resetRotations() {
+        core.xRot = 0;
+        core.yRot = 0;
+        core.zRot = 0;
+        windOuter.xRot = 0;
+        windOuter.yRot = 0;
+        windOuter.zRot = 0;
+        windInner.xRot = 0;
+        windInner.yRot = 0;
+        windInner.zRot = 0;
+    }
+
     @Override
     public void setupAnim(AbstractWindCharge entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        if (!(entity instanceof AirtightCannonWindChargeProjectileEntity windCharge)) {
-            return;
-        }
-
-        Gas gasType = windCharge.getGasHolder().value();
-        AirtightCannonHandler cannonHandler = AirtightCannonHandlerUtils.of(gasType);
-        float[] anim = cannonHandler.getSetupAnim(ageInTicks);
-        if (anim.length != 9) {
-            return;
-        }
-
-        core.xRot = anim[0];
-        core.yRot = anim[1];
-        core.zRot = anim[2];
-        windOuter.xRot = anim[3];
-        windOuter.yRot = anim[4];
-        windOuter.zRot = anim[5];
-        windInner.xRot = anim[6];
-        windInner.yRot = anim[7];
-        windInner.zRot = anim[8];
     }
 
     @Override

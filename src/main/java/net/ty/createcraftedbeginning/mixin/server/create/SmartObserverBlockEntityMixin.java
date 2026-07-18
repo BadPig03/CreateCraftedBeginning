@@ -15,9 +15,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.gas.gases.GasPipeConnection.AirFlow;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasManipulationBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gasfilter.IGasFilter;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterUtils;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -27,6 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
+import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -34,6 +36,10 @@ import java.util.List;
 public abstract class SmartObserverBlockEntityMixin extends SmartBlockEntity {
     @Unique
     private GasManipulationBehaviour ccb$observedGasTank;
+    @Unique
+    private ItemStack ccb$compiledGasFilterStack = ItemStack.EMPTY;
+    @Unique
+    private Predicate<GasStack> ccb$compiledGasFilter = GasFilterUtils.compile(ItemStack.EMPTY);
 
     @Shadow
     private FilteringBehaviour filtering;
@@ -56,14 +62,14 @@ public abstract class SmartObserverBlockEntityMixin extends SmartBlockEntity {
         BlockPos targetPos = worldPosition.relative(SmartObserverBlock.getTargetDirection(getBlockState()));
         GasTransportBehaviour transportBehaviour = BlockEntityBehaviour.get(level, targetPos, GasTransportBehaviour.TYPE);
         if (transportBehaviour != null) {
+            Predicate<GasStack> filterTest = ccb$getCompiledGasFilter();
             for (Direction side : Iterate.directions) {
                 AirFlow flow = transportBehaviour.getFlow(side);
                 if (flow == null || !flow.inbound) {
                     continue;
                 }
 
-                ItemStack filterStack = filtering.getFilter();
-                if (!filterStack.isEmpty() && (!(filterStack.getItem() instanceof IGasFilter gasFilter) || !gasFilter.test(filterStack, flow.gas))) {
+                if (!filterTest.test(flow.gas)) {
                     continue;
                 }
 
@@ -78,5 +84,17 @@ public abstract class SmartObserverBlockEntityMixin extends SmartBlockEntity {
         }
 
         activate();
+    }
+
+    @Unique
+    private Predicate<GasStack> ccb$getCompiledGasFilter() {
+        ItemStack filterStack = filtering.getFilter();
+        if (ItemStack.isSameItemSameComponents(ccb$compiledGasFilterStack, filterStack)) {
+            return ccb$compiledGasFilter;
+        }
+
+        ccb$compiledGasFilterStack = GasFilterUtils.normalizeStack(filterStack);
+        ccb$compiledGasFilter = GasFilterUtils.compile(ccb$compiledGasFilterStack);
+        return ccb$compiledGasFilter;
     }
 }

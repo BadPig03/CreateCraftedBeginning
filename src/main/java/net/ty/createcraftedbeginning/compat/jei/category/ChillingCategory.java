@@ -44,35 +44,38 @@ public class ChillingCategory extends CCBRecipeCategory<ChillingRecipe> {
     protected void draw(ChillingRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         CCBGUITextures.JEI_SHADOW.render(graphics, 46, 29);
         CCBGUITextures.JEI_SHADOW.render(graphics, 65, 39);
-        CCBGUITextures.JEI_LONG_ARROW.render(graphics, 7 * (1 - Math.min(3, recipe.getRollableResultsAsItemStacks().size())) + 54, 51);
+        int resultCount = recipe.getRollableResultsAsItemStacks().size();
+        CCBGUITextures.JEI_LONG_ARROW.render(graphics, 7 * (1 - Math.min(3, resultCount)) + 54, 51);
 
-        PoseStack matrixStack = graphics.pose();
-        matrixStack.pushPose();
+        PoseStack poseStack = graphics.pose();
+        poseStack.pushPose();
+        poseStack.translate(56, 33, 0);
+        poseStack.mulPose(Axis.XP.rotationDegrees(-12.5f));
+        poseStack.mulPose(Axis.YP.rotationDegrees(22.5f));
 
-        matrixStack.translate(56, 33, 0);
-        matrixStack.mulPose(Axis.XP.rotationDegrees(-12.5f));
-        matrixStack.mulPose(Axis.YP.rotationDegrees(22.5f));
         AnimatedKinetics.defaultBlockElement(AllPartialModels.ENCASED_FAN_INNER).rotateBlock(180, 0, AnimatedKinetics.getCurrentAngle() * 16).scale(SCALE).render(graphics);
         AnimatedKinetics.defaultBlockElement(AllBlocks.ENCASED_FAN.getDefaultState()).rotateBlock(0, 180, 0).atLocal(0, 0, 0).scale(SCALE).render(graphics);
         AnimatedKinetics.defaultBlockElement(CCBBlocks.BREEZE_COOLER_BLOCK.getDefaultState()).atLocal(0, 0, 2).scale(SCALE).render(graphics);
         AnimatedKinetics.defaultBlockElement(CCBPartialModels.BREEZE_COOLER_WIND).rotateBlock(0, AnimatedKinetics.getCurrentAngle() * 4, 0).atLocal(0, 0, 2).scale(SCALE).render(graphics);
         AnimatedKinetics.defaultBlockElement(CCBPartialModels.BREEZE_CHILLED).rotateBlock(0, 180, 0).atLocal(0, 0, 2).scale(SCALE).render(graphics);
 
-        matrixStack.popPose();
+        poseStack.popPose();
     }
 
     @Override
     protected void setRecipe(IRecipeLayoutBuilder builder, ChillingRecipe recipe, IFocusGroup focuses) {
         List<ProcessingOutput> results = recipe.getRollableResults();
-        boolean excessive = results.size() > 9;
+        boolean hasManyResults = results.size() > 9;
+        int xOffset = 1 - Math.min(3, results.size());
 
-        int x = 1 - Math.min(3, results.size());
-        builder.addSlot(RecipeIngredientRole.INPUT, 5 * x + 21, 48).setBackground(getRenderedSlot(), -1, -1).addIngredients(recipe.getIngredients().getFirst());
+        builder.addSlot(RecipeIngredientRole.INPUT, 5 * xOffset + 21, 48).setBackground(getRenderedSlot(), -1, -1).addIngredients(recipe.getIngredients().getFirst());
 
-        int i = 0;
+        int index = 0;
         for (ProcessingOutput output : results) {
-            builder.addSlot(RecipeIngredientRole.OUTPUT, 141 + i % 3 * 19 + 9 * x, 48 + i / 3 * -19 + (excessive ? 8 : 0)).setBackground(getRenderedSlot(output), -1, -1).addItemStack(output.getStack()).addRichTooltipCallback(CreateRecipeCategory.addStochasticTooltip(output));
-            i++;
+            int x = 141 + index % 3 * 19 + 9 * xOffset;
+            int y = 48 - index / 3 * 19 + (hasManyResults ? 8 : 0);
+            builder.addSlot(RecipeIngredientRole.OUTPUT, x, y).setBackground(getRenderedSlot(output), -1, -1).addItemStack(output.getStack()).addRichTooltipCallback(CreateRecipeCategory.addStochasticTooltip(output));
+            index++;
         }
     }
 }

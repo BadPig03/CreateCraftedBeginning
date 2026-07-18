@@ -18,17 +18,28 @@ public class GasCraftableBigItemStack extends CraftableBigItemStack {
     private final int transferLimit;
     private final List<BigItemStack> requirements;
 
-    public GasCraftableBigItemStack(ItemStack displayStack, Recipe<?> recipe, int outputPerCraft, int transferLimit, List<BigItemStack> requirements) {
+    public GasCraftableBigItemStack(ItemStack displayStack,
+                                    Recipe<?> recipe,
+                                    int outputPerCraft,
+                                    int transferLimit,
+                                    List<BigItemStack> requirements) {
         super(displayStack.copyWithCount(1), recipe);
         count = 0;
         this.outputPerCraft = Math.max(1, outputPerCraft);
         this.transferLimit = Math.max(this.outputPerCraft, transferLimit);
-        this.requirements = requirements.stream().map(requirement -> new BigItemStack(requirement.stack.copyWithCount(1), requirement.count)).toList();
+        this.requirements = requirements.stream()
+                .map(requirement -> new BigItemStack(
+                        requirement.stack.copyWithCount(1),
+                        requirement.count))
+                .toList();
     }
 
     @Override
     public List<Ingredient> getIngredients() {
-        return requirements.stream().map(requirement -> Ingredient.of(requirement.stack.copyWithCount(Math.max(1, requirement.count)))).toList();
+        return requirements.stream()
+                .map(requirement -> Ingredient.of(
+                        requirement.stack.copyWithCount(Math.max(1, requirement.count))))
+                .toList();
     }
 
     @Override

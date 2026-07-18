@@ -7,11 +7,22 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class DefaultDrillHandler implements AirtightDrillHandler {
+    public static final DefaultDrillHandler INSTANCE = new DefaultDrillHandler();
+
+    private DefaultDrillHandler() {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getDamageAddition() {
         return 0;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public float getConsumptionMultiplier() {
         return 1;

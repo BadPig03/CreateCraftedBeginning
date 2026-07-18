@@ -5,6 +5,8 @@ import com.tterrag.registrate.util.entry.RegistryEntry;
 import net.createmod.ponder.api.registration.PonderSceneRegistrationHelper;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.ponder.scenes.breezes.BreezeChamberScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.breezes.BreezeCoolerScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.breezes.EmptyBreezeCoolerScenes;
@@ -22,6 +24,7 @@ import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.AirtightForgi
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.AirtightHatchScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.AirtightReactorKettleScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.GasInjectionChamberScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.GasPackagerScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.PortableGasInterfaceScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.ResidueOutletScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.TeslaTurbineScenes;
@@ -32,12 +35,15 @@ import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AirtightPumpScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.SmartAirtightPipeScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.other.AirVentScenes;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import org.jetbrains.annotations.Contract;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBPonderScenes {
+    private static final double DISTRIBUTION_DEVIATION = 0.11485000171139836;
+
     public static void register(PonderSceneRegistrationHelper<ResourceLocation> helper) {
         PonderSceneRegistrationHelper<RegistryEntry<?, ?>> entryHelper = helper.withKeyFunction(RegistryEntry::getId);
         entryHelper.forComponents(CCBBlocks.ANDESITE_CRATE_BLOCK).addStoryBoard("crates_story_board", AndesiteCrateScenes::scene, CCBPonderTags.CRATES_TAG_ID);
@@ -69,10 +75,16 @@ public class CCBPonderScenes {
         entryHelper.forComponents(CCBBlocks.PORTABLE_GAS_INTERFACE_BLOCK).addStoryBoard("portable_gas_interface_story_board", PortableGasInterfaceScenes::scene, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
         entryHelper.forComponents(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK).addStoryBoard("gas_injection_chamber_story_board", GasInjectionChamberScenes::scene, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_HATCH_BLOCK).addStoryBoard("airtight_hatch_story_board", AirtightHatchScenes::scene, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
+        entryHelper.forComponents(CCBBlocks.GAS_PACKAGER_BLOCK).addStoryBoard("gas_packager_packaging_story_board", GasPackagerScenes::packaging, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
 
         entryHelper.forComponents(CCBBlocks.AIR_VENT_BLOCK).addStoryBoard("air_vent_story_board", AirVentScenes::scene);
 
         entryHelper.forComponents(CCBBlocks.END_INCINERATION_BLOWER_BLOCK).addStoryBoard("end_incineration_blower_story_board", EndIncinerationBlowerScenes::scene, AllCreatePonderTags.KINETIC_APPLIANCES);
         entryHelper.forComponents(CCBBlocks.END_SCULK_SILENCER_BLOCK).addStoryBoard("end_sculk_silencer_story_board", EndSculkSilencerScenes::scene, AllCreatePonderTags.KINETIC_APPLIANCES);
+    }
+
+    @Contract("_ -> new")
+    public static Vec3 generateItemDropVelocity(RandomSource random) {
+        return new Vec3(random.triangle(0, DISTRIBUTION_DEVIATION), random.triangle(0.2, DISTRIBUTION_DEVIATION), random.triangle(0, DISTRIBUTION_DEVIATION));
     }
 }

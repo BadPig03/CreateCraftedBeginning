@@ -22,13 +22,13 @@ public class AirCompressorRenderer extends KineticBlockEntityRenderer<AirCompres
     }
 
     @Override
-    protected void renderSafe(AirCompressorBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        SuperByteBuffer shaft = getRotatedModel(be, be.getBlockState());
-        kineticRotationTransform(shaft, be, Axis.Y, getAngleForBe(be, be.getBlockPos(), Axis.Y), light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
+    protected void renderSafe(AirCompressorBlockEntity compressor, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        SuperByteBuffer shaft = getRotatedModel(compressor, compressor.getBlockState());
+        kineticRotationTransform(shaft, compressor, Axis.Y, getAngleForBe(compressor, compressor.getBlockPos(), Axis.Y), light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
     }
 
     @Override
-    protected SuperByteBuffer getRotatedModel(AirCompressorBlockEntity be, BlockState blockState) {
+    protected SuperByteBuffer getRotatedModel(AirCompressorBlockEntity compressor, BlockState blockState) {
         return CachedBuffers.partial(CCBPartialModels.SHAFT_HALF_UP, blockState);
     }
 }

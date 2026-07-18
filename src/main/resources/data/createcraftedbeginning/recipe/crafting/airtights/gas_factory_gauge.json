@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "create:factory_gauge"
+    },
+    {
+      "item": "createcraftedbeginning:airtight_sheet"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:gas_factory_gauge"
+  }
+}

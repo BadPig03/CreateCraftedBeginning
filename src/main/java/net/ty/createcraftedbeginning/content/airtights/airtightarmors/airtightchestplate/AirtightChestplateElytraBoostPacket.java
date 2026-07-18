@@ -27,11 +27,10 @@ public enum AirtightChestplateElytraBoostPacket implements ServerboundPacketPayl
         }
 
         ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
-        if (!chestplate.is(CCBItems.AIRTIGHT_CHESTPLATE)) {
+        if (!chestplate.is(CCBItems.AIRTIGHT_CHESTPLATE) || !ElytraUpgrade.tryApplySpeedBoost(player)) {
             return;
         }
 
-        ElytraUpgrade.applySpeedBoost(player);
         player.getCooldowns().addCooldown(chestplate.getItem(), 40);
     }
 

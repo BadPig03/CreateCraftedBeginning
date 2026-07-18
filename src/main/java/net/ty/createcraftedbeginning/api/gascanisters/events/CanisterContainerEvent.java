@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
+@SuppressWarnings("unused")
 public class CanisterContainerEvent extends Event implements ICancellableEvent {
     private final Player player;
     private final Gas gasType;
@@ -19,6 +20,15 @@ public class CanisterContainerEvent extends Event implements ICancellableEvent {
 
     private long amount;
 
+    /**
+     * Creates a new {@code CanisterContainerEvent} instance.
+     *
+     * @param player          the player performing the operation
+     * @param gasType         the gas type to inspect or process
+     * @param amount          the amount to use
+     * @param executeSupplier the supplier used to obtain the execute
+     * @param simulate        whether the operation should be simulated
+     */
     public CanisterContainerEvent(Player player, Gas gasType, long amount, Supplier<Boolean> executeSupplier, boolean simulate) {
         this.player = player;
         this.gasType = gasType;
@@ -27,26 +37,56 @@ public class CanisterContainerEvent extends Event implements ICancellableEvent {
         this.simulate = simulate;
     }
 
+    /**
+     * Returns the player.
+     *
+     * @return the player
+     */
     public Player getPlayer() {
         return player;
     }
 
+    /**
+     * Returns the gas type.
+     *
+     * @return the gas type
+     */
     public Gas getGasType() {
         return gasType;
     }
 
+    /**
+     * Returns the amount.
+     *
+     * @return the amount
+     */
     public long getAmount() {
         return amount;
     }
 
+    /**
+     * Sets the amount.
+     *
+     * @param amount the amount to use
+     */
     public void setAmount(long amount) {
         this.amount = amount;
     }
 
+    /**
+     * Returns the execute supplier.
+     *
+     * @return the execute supplier
+     */
     public Supplier<Boolean> getExecuteSupplier() {
         return executeSupplier;
     }
 
+    /**
+     * Checks whether the operation is configured for simulation.
+     *
+     * @return {@code true} if the operation is configured for simulation; otherwise {@code false}
+     */
     public boolean isSimulate() {
         return simulate;
     }

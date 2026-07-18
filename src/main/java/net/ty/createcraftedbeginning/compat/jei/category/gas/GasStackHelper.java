@@ -54,14 +54,21 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
 
     @Override
     public Iterable<Integer> getColors(GasStack ingredient) {
-        return colorHelper == null ? IIngredientHelper.super.getColors(ingredient) : colorHelper.getColors(Gas.getGasTexture(ingredient.getGasHolder()), ingredient.getHint(), 1);
+        if (colorHelper == null) {
+            return IIngredientHelper.super.getColors(ingredient);
+        }
+
+        return colorHelper.getColors(Gas.getGasTexture(ingredient.getGasHolder()), ingredient.getHint(), 1);
     }
 
     @Override
     public ResourceLocation getResourceLocation(GasStack ingredient) {
         Holder<Gas> holder = ingredient.getGasHolder();
         ResourceKey<?> key = holder.getKey();
-        return key == null ? CCBGasRegistries.GAS_REGISTRY.getKey(holder.value()) : key.location();
+        if (key != null) {
+            return key.location();
+        }
+        return CCBGasRegistries.GAS_REGISTRY.getKey(holder.value());
     }
 
     @Override
@@ -86,16 +93,13 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
 
     @Override
     public String getErrorInfo(@Nullable GasStack ingredient) {
-        if (ingredient == null) {
-            ingredient = GasStack.EMPTY;
+        GasStack stack = ingredient == null ? GasStack.EMPTY : ingredient;
+        ToStringHelper helper = MoreObjects.toStringHelper(GasStack.class);
+        Holder<Gas> gasHolder = stack.getGasHolder();
+        helper.add("Gas", gasHolder.value().isEmpty() ? "none" : stack.getTranslationKey());
+        if (!stack.isEmpty()) {
+            helper.add("Amount", stack.getAmount());
         }
-
-        ToStringHelper stringHelper = MoreObjects.toStringHelper(GasStack.class);
-        Holder<Gas> gasHolder = ingredient.getGasHolder();
-        stringHelper.add("Gas", gasHolder.value().isEmpty() ? "none" : ingredient.getTranslationKey());
-        if (!ingredient.isEmpty()) {
-            stringHelper.add("Amount", ingredient.getAmount());
-        }
-        return stringHelper.toString();
+        return helper.toString();
     }
 }

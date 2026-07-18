@@ -13,7 +13,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePowerMode;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.TickingAirtightUpgrade;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -24,10 +25,14 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public enum InvisibilityUpgrade implements AirtightUpgrade {
+public enum InvisibilityUpgrade implements TickingAirtightUpgrade {
     INSTANCE;
 
-    private static final int DURATION_THRESHOLD = 30;
+    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("invisibility");
+    private static final Couple<Integer> OFFSET = Couple.create(36, 79);
+
+    private static final int EFFECT_DURATION = 40;
+    private static final int REFRESH_THRESHOLD = 20;
 
     @Override
     public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
@@ -45,8 +50,7 @@ public enum InvisibilityUpgrade implements AirtightUpgrade {
 
     @Override
     public boolean meetsConditions(Player player, ItemStack item) {
-        MobEffectInstance effectInstance = player.getEffect(MobEffects.INVISIBILITY);
-        return effectInstance == null || effectInstance.getAmplifier() == 0 && effectInstance.endsWithin(DURATION_THRESHOLD);
+        return true;
     }
 
     @Override
@@ -71,17 +75,17 @@ public enum InvisibilityUpgrade implements AirtightUpgrade {
 
     @Override
     public Couple<Integer> getOffset() {
-        return Couple.create(36, 79);
+        return OFFSET;
+    }
+
+    @Override
+    public AirtightUpgradePowerMode getPowerMode() {
+        return AirtightUpgradePowerMode.CONTINUOUS;
     }
 
     @Override
     public int getGasConsumptionPerSecond(Player player, ItemStack item) {
         return CCBConfig.server().equipments.invisibilityConsumption.get();
-    }
-
-    @Override
-    public int getIndex() {
-        return 2;
     }
 
     @Override
@@ -91,16 +95,22 @@ public enum InvisibilityUpgrade implements AirtightUpgrade {
 
     @Override
     public ResourceLocation getID() {
-        return CreateCraftedBeginning.asResource("invisibility");
+        return ID;
     }
 
     @Override
     public void applyEffect(Player player) {
-        player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, DURATION_THRESHOLD, 0, true, false));
+        player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, EFFECT_DURATION, 0, true, false));
     }
 
     @Override
     public boolean isActive(Player player, ItemStack item) {
-        return item.is(CCBItems.AIRTIGHT_CHESTPLATE) && AirtightUpgrade.super.isActive(player, item);
+        return item.is(CCBItems.AIRTIGHT_CHESTPLATE) && TickingAirtightUpgrade.super.isActive(player, item);
+    }
+
+    @Override
+    public boolean shouldApplyEffect(Player player, ItemStack item) {
+        MobEffectInstance effect = player.getEffect(MobEffects.INVISIBILITY);
+        return effect == null || effect.getAmplifier() == 0 && effect.endsWithin(REFRESH_THRESHOLD);
     }
 }

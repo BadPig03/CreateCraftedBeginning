@@ -45,6 +45,7 @@ import static mezz.jei.api.recipe.RecipeType.createRecipeHolderType;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
+@SuppressWarnings("unused")
 public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeCategory<RecipeHolder<T>> {
     protected static final IDrawable BASIC_SLOT = asDrawable(AllGuiTextures.JEI_SLOT);
     protected static final IDrawable CHANCE_SLOT = asDrawable(AllGuiTextures.JEI_CHANCE_SLOT);
@@ -165,7 +166,7 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
     }
 
     public void registerCatalysts(IRecipeCatalystRegistration registration) {
-        catalysts.forEach(s -> registration.addRecipeCatalyst(s.get(), type));
+        catalysts.forEach(catalyst -> registration.addRecipeCatalyst(catalyst.get(), type));
     }
 
     @FunctionalInterface
@@ -206,11 +207,13 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
             return addRecipeListConsumer(recipes -> recipes.addAll(collection.get()));
         }
 
-        public Builder<T> addAllRecipesIf(Predicate<RecipeHolder<?>> pred, Function<RecipeHolder<?>, RecipeHolder<T>> converter) {
+        public Builder<T> addAllRecipesIf(Predicate<RecipeHolder<?>> predicate, Function<RecipeHolder<?>, RecipeHolder<T>> converter) {
             return addRecipeListConsumer(recipes -> CCBJEIPlugin.consumeAllRecipes(recipe -> {
-                if (pred.test(recipe)) {
-                    recipes.add(converter.apply(recipe));
+                if (!predicate.test(recipe)) {
+                    return;
                 }
+
+                recipes.add(converter.apply(recipe));
             }));
         }
 
@@ -263,16 +266,18 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
         }
 
         public CCBRecipeCategory<T> build(ResourceLocation id, Factory<T> factory) {
-            Supplier<List<RecipeHolder<T>>> recipesSupplier = config.get() ? () -> {
-                List<RecipeHolder<T>> recipes = new ArrayList<>();
-                for (Consumer<List<RecipeHolder<T>>> consumer : recipeListConsumers) {
-                    consumer.accept(recipes);
-                }
-                return recipes;
-            } : Collections::emptyList;
-
-            Info<T> info = new Info<>(createRecipeHolderType(id), Component.translatable(id.getNamespace() + ".recipe." + id.getPath()), background, icon, recipesSupplier, catalysts);
+            Supplier<List<RecipeHolder<T>>> recipes = config.get() ? this::collectRecipes : Collections::emptyList;
+            Component title = Component.translatable(id.getNamespace() + ".recipe." + id.getPath());
+            Info<T> info = new Info<>(createRecipeHolderType(id), title, background, icon, recipes, catalysts);
             return factory.create(info);
+        }
+
+        private List<RecipeHolder<T>> collectRecipes() {
+            List<RecipeHolder<T>> recipes = new ArrayList<>();
+            for (Consumer<List<RecipeHolder<T>>> consumer : recipeListConsumers) {
+                consumer.accept(recipes);
+            }
+            return recipes;
         }
     }
 }

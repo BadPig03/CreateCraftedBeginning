@@ -15,12 +15,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBRenderTypes {
+    private static final String RENDER_TYPE_NAME = "outline_solid_no_depth_test";
     public static final RenderType SOLID_NO_DEPTH_TEST = createSolidNoDepthTest();
-
-    private static final String NAME = "outline_solid_no_depth_test";
 
     @Contract(" -> new")
     private static RenderType createSolidNoDepthTest() {
-        return RenderType.create(NAME, DefaultVertexFormat.NEW_ENTITY, Mode.QUADS, 256, false, false, CompositeState.builder().setShaderState(RenderStateShard.RENDERTYPE_ENTITY_SOLID_SHADER).setTextureState(new TextureStateShard(PonderSpecialTextures.BLANK.getLocation(), false, false)).setCullState(RenderStateShard.NO_CULL).setLightmapState(RenderStateShard.LIGHTMAP).setOverlayState(RenderStateShard.OVERLAY).setDepthTestState(RenderStateShard.NO_DEPTH_TEST).createCompositeState(false));
+        CompositeState state = CompositeState.builder().setShaderState(RenderStateShard.RENDERTYPE_ENTITY_SOLID_SHADER).setTextureState(new TextureStateShard(PonderSpecialTextures.BLANK.getLocation(), false, false)).setCullState(RenderStateShard.NO_CULL).setLightmapState(RenderStateShard.LIGHTMAP).setOverlayState(RenderStateShard.OVERLAY).setDepthTestState(RenderStateShard.NO_DEPTH_TEST).createCompositeState(false);
+
+        return RenderType.create(RENDER_TYPE_NAME, DefaultVertexFormat.NEW_ENTITY, Mode.QUADS, 256, false, false, state);
     }
 }

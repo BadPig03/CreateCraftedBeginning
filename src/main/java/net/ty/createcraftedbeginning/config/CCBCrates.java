@@ -1,16 +1,22 @@
 package net.ty.createcraftedbeginning.config;
 
 import net.createmod.catnip.config.ConfigBase;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.MethodsReturnNonnullByDefault;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CCBCrates extends ConfigBase {
-    public final ConfigInt maxAndesiteCapacity = i(2048, 1, "max_andesite_crate_capacity", Comments.maxAndesiteCapacity);
-    public final ConfigInt maxBrassCapacity = i(4096, 1, "max_brass_crate_capacity", Comments.maxBrassCapacity);
-    public final ConfigInt maxSturdyCapacity = i(16384, 1, "max_sturdy_crate_capacity", Comments.maxSturdyCapacity);
-    public final ConfigInt maxCardboardCapacity = i(64, 1, "max_cardboard_crate_capacity", Comments.maxCardboardCapacity);
+    private static final int MAX_CRATE_CAPACITY = 1048576;
+
+    public final ConfigInt maxAndesiteCapacity = i(2048, 1, MAX_CRATE_CAPACITY, "max_andesite_crate_capacity", Comments.maxAndesiteCapacity);
+    public final ConfigInt maxBrassCapacity = i(4096, 1, MAX_CRATE_CAPACITY, "max_brass_crate_capacity", Comments.maxBrassCapacity);
+    public final ConfigInt maxSturdyCapacity = i(16384, 1, MAX_CRATE_CAPACITY, "max_sturdy_crate_capacity", Comments.maxSturdyCapacity);
+    public final ConfigInt maxCardboardCapacity = i(64, 1, 64, "max_cardboard_crate_capacity", Comments.maxCardboardCapacity);
 
     @Override
-    public @NotNull String getName() {
+    public String getName() {
         return "crates";
     }
 

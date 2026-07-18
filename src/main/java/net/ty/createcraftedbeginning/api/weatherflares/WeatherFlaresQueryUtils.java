@@ -9,6 +9,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class WeatherFlaresQueryUtils {
+    /**
+     * Checks whether the supplied item stack is a valid weather flare.
+     *
+     * @param flare the weather flare item stack
+     * @return {@code true} if the supplied item stack is a valid weather flare; otherwise {@code false}
+     */
     public static boolean isValidFlare(ItemStack flare) {
         return !flare.isEmpty() && flare.getItem() instanceof IWeatherFlare;
     }

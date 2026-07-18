@@ -32,6 +32,7 @@ import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
@@ -45,7 +46,11 @@ public class CreativeGasCanisterItem extends Item implements IGasFilter {
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerItem(GasHandler.ITEM, (itemStack, context) -> new CreativeGasCanisterContainerContents(itemStack), CCBItems.CREATIVE_GAS_CANISTER);
+        event.registerItem(GasHandler.ITEM, (stack, context) -> new CreativeGasCanisterContainerContents(stack), CCBItems.CREATIVE_GAS_CANISTER);
+    }
+
+    private static boolean hasGas(ItemStack canister) {
+        return canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents && !contents.isEmpty();
     }
 
     @Override
@@ -64,8 +69,8 @@ public class CreativeGasCanisterItem extends Item implements IGasFilter {
     }
 
     @Override
-    public InteractionResult useOn(UseOnContext ctx) {
-        return blockItem.get().useOn(ctx);
+    public InteractionResult useOn(UseOnContext context) {
+        return blockItem.get().useOn(context);
     }
 
     @Override
@@ -75,32 +80,27 @@ public class CreativeGasCanisterItem extends Item implements IGasFilter {
 
     @Override
     public int getBarWidth(ItemStack canister) {
-        if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents canisterContents) || canisterContents.isEmpty()) {
-            return 0;
-        }
-
-        return 13;
+        return hasGas(canister) ? 13 : 0;
     }
 
     @Override
     public int getBarColor(ItemStack canister) {
-        if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents canisterContents) || canisterContents.isEmpty()) {
-            return 0;
-        }
-
-        return GasCanisterUtils.COLOR_WHITE;
+        return hasGas(canister) ? GasCanisterUtils.COLOR_WHITE : 0;
     }
 
     @Override
     public boolean overrideOtherStackedOnMe(ItemStack canister, ItemStack other, Slot slot, ClickAction action, Player player, SlotAccess access) {
-        if (!(other.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents) || !(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents creativeCanisterContents)) {
+        if (!(other.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents sourceContents)) {
+            return false;
+        }
+        if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents targetContents)) {
             return false;
         }
         if (action == ClickAction.PRIMARY) {
             return false;
         }
 
-        creativeCanisterContents.setGasInTank(0, canisterContents.getGasInTank(0));
+        targetContents.setGasInTank(0, sourceContents.getGasInTank(0));
         return true;
     }
 
@@ -113,17 +113,17 @@ public class CreativeGasCanisterItem extends Item implements IGasFilter {
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack canister, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null || !(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents canisterContents)) {
+        if (player == null || !(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents)) {
             return;
         }
 
-        GasStack gasContent = canisterContents.getGasInTank(0);
-        if (gasContent.isEmpty()) {
-            tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.content").add(CCBLang.translate("gui.tooltips.creative_gas_canister.empty")).style(ChatFormatting.GRAY).component());
+        GasStack gas = contents.getGasInTank(0);
+        if (gas.isEmpty()) {
+            tooltip.add(CCBLang.translate("gui.gas_canister.content").add(CCBLang.translate("gui.creative_gas_canister.empty")).style(ChatFormatting.GRAY).component());
+            return;
         }
-        else {
-            tooltip.add(CCBLang.translate("gui.tooltips.gas_canister.content").add(CCBLang.gasName(gasContent).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
-        }
+
+        tooltip.add(CCBLang.translate("gui.gas_canister.content").add(CCBLang.gasName(gas).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
     }
 
     @Override
@@ -137,12 +137,21 @@ public class CreativeGasCanisterItem extends Item implements IGasFilter {
 
     @Override
     public boolean test(ItemStack filterItem, GasStack filterGasStack) {
-        if (!(filterItem.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents canisterContents)) {
-            return false;
+        return compile(filterItem).test(filterGasStack);
+    }
+
+    @Override
+    public Predicate<GasStack> compile(ItemStack filterItem) {
+        if (!(filterItem.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents)) {
+            return gas -> false;
         }
 
-        GasStack gasContent = canisterContents.getGasInTank(0);
-        return !gasContent.isEmpty() && GasStack.isSameGasSameComponents(gasContent, filterGasStack);
+        GasStack filterGas = contents.getGasInTank(0).copyWithAmount(1);
+        if (filterGas.isEmpty()) {
+            return gas -> false;
+        }
+
+        return gas -> !gas.isEmpty() && GasStack.isSameGasSameComponents(filterGas, gas);
     }
 
     public static class CreativeGasCanisterBlockItem extends BlockItem {

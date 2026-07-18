@@ -11,26 +11,45 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public enum CoolantEfficiency implements StringRepresentable {
-    NONE,
-    BASIC,
-    ADVANCED,
-    EXTREME;
+    NONE(0),
+    BASIC(2),
+    ADVANCED(4),
+    EXTREME(6);
 
     public static final Codec<CoolantEfficiency> CODEC = StringRepresentable.fromEnum(CoolantEfficiency::values);
+
+    private final int heatReduced;
+
+    CoolantEfficiency(int heatReduced) {
+        this.heatReduced = heatReduced;
+    }
 
     public static CoolantEfficiency fromInt(int index) {
         if (index <= 0) {
             return NONE;
         }
-        else if (index >= 3) {
+
+        CoolantEfficiency[] efficiencies = values();
+        if (index >= efficiencies.length - 1) {
             return EXTREME;
         }
-        return values()[index];
+        return efficiencies[index];
+    }
+
+    public static CoolantEfficiency fromName(String name) {
+        for (CoolantEfficiency efficiency : values()) {
+            if (!efficiency.getSerializedName().equals(name)) {
+                continue;
+            }
+
+            return efficiency;
+        }
+        return NONE;
     }
 
     public int getHeatReduced(Level level) {
-        int passive = level.dimensionType().ultraWarm() ? 0 : 1;
-        return Math.max(passive, ordinal() * 2);
+        int passiveCooling = level.dimensionType().ultraWarm() ? 0 : 1;
+        return Math.max(passiveCooling, heatReduced);
     }
 
     @Override

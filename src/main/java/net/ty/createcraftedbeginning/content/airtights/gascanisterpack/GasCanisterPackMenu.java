@@ -16,9 +16,9 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackOverrides.GasCanisterPackType;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
@@ -67,14 +67,14 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
         }
 
         packInventory = new PackItemHandler();
-        for (int i = 0; i < MAX_COUNT; i++) {
-            ItemStack canister = ItemStack.parseOptional(player.level().registryAccess(), packContents.getCompoundTag(i).getCompound(COMPOUND_KEY_CANISTER));
+        for (int slot = 0; slot < MAX_COUNT; slot++) {
+            ItemStack canister = ItemStack.parseOptional(player.level().registryAccess(), packContents.getCompoundTag(slot).getCompound(COMPOUND_KEY_CANISTER));
             if (canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents) {
                 canisterContents.drain(0, canisterContents.getGasInTank(0), GasAction.EXECUTE);
                 canisterContents.setCapacity(0, GasCanisterContainerContents.getEnchantedCapacity(canister));
-                canisterContents.fill(0, packContents.getGasInTank(i), GasAction.EXECUTE);
+                canisterContents.fill(0, packContents.getGasInTank(slot), GasAction.EXECUTE);
             }
-            packInventory.setStackInSlot(i, canister);
+            packInventory.setStackInSlot(slot, canister);
         }
     }
 
@@ -93,21 +93,8 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
             return;
         }
 
-        for (int i = 0; i < MAX_COUNT; i++) {
-            ItemStack canister = packInventory.getStackInSlot(i);
-            if (canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents) {
-                packContents.setCapacity(i, canisterContents.getTankCapacity(0));
-                packContents.drain(i, packContents.getGasInTank(i), GasAction.EXECUTE);
-                packContents.fill(i, canisterContents.getGasInTank(0), GasAction.EXECUTE);
-            }
-            else {
-                packContents.drain(i, packContents.getGasInTank(i), GasAction.EXECUTE);
-                packContents.setCapacity(i, 0);
-            }
-            CompoundTag compoundTag = new CompoundTag();
-            compoundTag.put(COMPOUND_KEY_CANISTER, canister.saveOptional(player.level().registryAccess()));
-            packContents.setCompoundTag(i, compoundTag);
-            packContents.setCreatives(i, CanisterContainerSuppliers.isValidCreativeGasCanister(canister));
+        for (int slot = 0; slot < MAX_COUNT; slot++) {
+            saveCanister(packContents, slot);
         }
         pack.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, getPackType());
     }
@@ -115,6 +102,24 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
     @Override
     public boolean stillValid(Player player) {
         return ItemStack.isSameItem(playerInventory.getSelected(), contentHolder);
+    }
+
+    private void saveCanister(GasCanisterPackContainerContents packContents, int slot) {
+        ItemStack canister = packInventory.getStackInSlot(slot);
+        if (canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents) {
+            packContents.setCapacity(slot, canisterContents.getTankCapacity(0));
+            packContents.drain(slot, packContents.getGasInTank(slot), GasAction.EXECUTE);
+            packContents.fill(slot, canisterContents.getGasInTank(0), GasAction.EXECUTE);
+        }
+        else {
+            packContents.drain(slot, packContents.getGasInTank(slot), GasAction.EXECUTE);
+            packContents.setCapacity(slot, 0);
+        }
+
+        CompoundTag tag = new CompoundTag();
+        tag.put(COMPOUND_KEY_CANISTER, canister.saveOptional(player.level().registryAccess()));
+        packContents.setCompoundTag(slot, tag);
+        packContents.setCreatives(slot, CanisterContainerSuppliers.isValidCreativeGasCanister(canister));
     }
 
     @Override
@@ -150,7 +155,8 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
 
     @Override
     public void clicked(int slotId, int dragType, ClickType clickType, Player player) {
-        if (slotId == playerInventory.selected + PLAYER_INVENTORY_SLOTS - HotbarManager.NUM_HOTBAR_GROUPS && clickType != ClickType.THROW) {
+        int selectedSlot = playerInventory.selected + PLAYER_INVENTORY_SLOTS - HotbarManager.NUM_HOTBAR_GROUPS;
+        if (slotId == selectedSlot && clickType != ClickType.THROW) {
             return;
         }
 
@@ -185,19 +191,17 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
     }
 
     protected int getPackType() {
-        ItemStack firstSlot = packInventory.getStackInSlot(I_SLOT_INDEX);
-        boolean rightDown = CanisterContainerSuppliers.isValidGasCanister(firstSlot) || CanisterContainerSuppliers.isValidCreativeGasCanister(firstSlot);
-
-        ItemStack secondSlot = packInventory.getStackInSlot(II_SLOT_INDEX);
-        boolean leftDown = CanisterContainerSuppliers.isValidGasCanister(secondSlot) || CanisterContainerSuppliers.isValidCreativeGasCanister(secondSlot);
-
-        ItemStack thirdSlot = packInventory.getStackInSlot(III_SLOT_INDEX);
-        boolean rightUp = CanisterContainerSuppliers.isValidGasCanister(thirdSlot) || CanisterContainerSuppliers.isValidCreativeGasCanister(thirdSlot);
-
-        ItemStack fourthSlot = packInventory.getStackInSlot(IV_SLOT_INDEX);
-        boolean leftUp = CanisterContainerSuppliers.isValidGasCanister(fourthSlot) || CanisterContainerSuppliers.isValidCreativeGasCanister(fourthSlot);
+        boolean rightDown = hasCanister(I_SLOT_INDEX);
+        boolean leftDown = hasCanister(II_SLOT_INDEX);
+        boolean rightUp = hasCanister(III_SLOT_INDEX);
+        boolean leftUp = hasCanister(IV_SLOT_INDEX);
         int flags = GasCanisterPackOverrides.calculateFlags(leftUp, rightUp, leftDown, rightDown);
         return GasCanisterPackType.getTypeFromFlags(flags).ordinal();
+    }
+
+    private boolean hasCanister(int slot) {
+        ItemStack canister = packInventory.getStackInSlot(slot);
+        return CanisterContainerSuppliers.isValidGasCanister(canister) || CanisterContainerSuppliers.isValidCreativeGasCanister(canister);
     }
 
     protected enum SlotType {

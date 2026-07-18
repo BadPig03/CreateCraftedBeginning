@@ -42,21 +42,22 @@ public class AirtightChestplateArmorItem extends ArmorItem implements CustomRend
         super(CCBArmorMaterials.AIRTIGHT, type, properties.stacksTo(1));
     }
 
-    private static void renderModel(PoseStack poseStack, MultiBufferSource bufferSource, int light, Model model, ResourceLocation armorResource) {
-        VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.armorCutoutNoCull(armorResource));
-        model.renderToBuffer(poseStack, vertexConsumer, light, OverlayTexture.NO_OVERLAY, -1);
+    private static void renderModel(PoseStack poseStack, MultiBufferSource bufferSource, int light, Model model, ResourceLocation texture) {
+        VertexConsumer consumer = bufferSource.getBuffer(RenderType.armorCutoutNoCull(texture));
+        model.renderToBuffer(poseStack, consumer, light, OverlayTexture.NO_OVERLAY, -1);
     }
 
-    private static void renderTrim(TextureAtlas armorTrimAtlas, PoseStack poseStack, MultiBufferSource bufferSource, int light, ArmorTrim trim, Model model, boolean inner) {
-        Holder<ArmorMaterial> materialHolder = CCBArmorMaterials.AIRTIGHT;
-        TextureAtlasSprite sprite = armorTrimAtlas.getSprite(inner ? trim.innerTexture(materialHolder) : trim.outerTexture(materialHolder));
-        VertexConsumer vertexConsumer = sprite.wrap(bufferSource.getBuffer(Sheets.armorTrimsSheet(trim.pattern().value().decal())));
-        model.renderToBuffer(poseStack, vertexConsumer, light, OverlayTexture.NO_OVERLAY);
+    private static void renderTrim(TextureAtlas trimAtlas, PoseStack poseStack, MultiBufferSource bufferSource, int light, ArmorTrim trim, Model model, boolean inner) {
+        Holder<ArmorMaterial> material = CCBArmorMaterials.AIRTIGHT;
+        ResourceLocation texture = inner ? trim.innerTexture(material) : trim.outerTexture(material);
+        TextureAtlasSprite sprite = trimAtlas.getSprite(texture);
+        VertexConsumer consumer = sprite.wrap(bufferSource.getBuffer(Sheets.armorTrimsSheet(trim.pattern().value().decal())));
+        model.renderToBuffer(poseStack, consumer, light, OverlayTexture.NO_OVERLAY);
     }
 
     private static void renderGlint(PoseStack poseStack, MultiBufferSource bufferSource, int light, Model model) {
-        VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.armorEntityGlint());
-        model.renderToBuffer(poseStack, vertexConsumer, light, OverlayTexture.NO_OVERLAY);
+        VertexConsumer consumer = bufferSource.getBuffer(RenderType.armorEntityGlint());
+        model.renderToBuffer(poseStack, consumer, light, OverlayTexture.NO_OVERLAY);
     }
 
     public String getArmorTextureLocation(int layer) {
@@ -87,9 +88,9 @@ public class AirtightChestplateArmorItem extends ArmorItem implements CustomRend
 
         ArmorTrim trim = stack.get(DataComponents.TRIM);
         if (trim != null) {
-            TextureAtlas textureAtlas = accessor.getArmorTrimAtlas();
-            renderTrim(textureAtlas, poseStack, bufferSource, light, trim, outerModel, false);
-            renderTrim(textureAtlas, poseStack, bufferSource, light, trim, innerModel, true);
+            TextureAtlas trimAtlas = accessor.getArmorTrimAtlas();
+            renderTrim(trimAtlas, poseStack, bufferSource, light, trim, outerModel, false);
+            renderTrim(trimAtlas, poseStack, bufferSource, light, trim, innerModel, true);
         }
 
         if (stack.hasFoil()) {

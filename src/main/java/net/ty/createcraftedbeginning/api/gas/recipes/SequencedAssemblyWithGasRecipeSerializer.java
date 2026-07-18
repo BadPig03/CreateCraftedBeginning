@@ -21,15 +21,15 @@ import java.util.Optional;
 public class SequencedAssemblyWithGasRecipeSerializer implements RecipeSerializer<SequencedAssemblyWithGasRecipe> {
     public final StreamCodec<RegistryFriendlyByteBuf, SequencedAssemblyWithGasRecipe> STREAM_CODEC = StreamCodec.of(this::toNetwork, this::fromNetwork);
     @SuppressWarnings({"UnstableApiUsage", "removal"})
-    private final MapCodec<SequencedAssemblyWithGasRecipe> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(Ingredient.CODEC.fieldOf("ingredient").forGetter(SequencedAssemblyWithGasRecipe::getIngredient), ProcessingOutput.CODEC.fieldOf("transitional_item").forGetter(r -> r.transitionalItem), SequencedWithGasRecipe.CODEC.listOf().fieldOf("sequence").forGetter(SequencedAssemblyWithGasRecipe::getSequence), ProcessingOutput.CODEC.listOf().fieldOf("results").forGetter(r -> r.resultPool), ExtraCodecs.NON_NEGATIVE_INT.optionalFieldOf("loops").forGetter(r -> Optional.of(r.getLoops()))).apply(i, (ingredient, transitionalItem, sequence, results, loops) -> {
+    private final MapCodec<SequencedAssemblyWithGasRecipe> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(Ingredient.CODEC.fieldOf("ingredient").forGetter(SequencedAssemblyWithGasRecipe::getIngredient), ProcessingOutput.CODEC.fieldOf("transitional_item").forGetter(recipe -> recipe.transitionalItem), SequencedWithGasRecipe.CODEC.listOf().fieldOf("sequence").forGetter(SequencedAssemblyWithGasRecipe::getSequence), ProcessingOutput.CODEC.listOf().fieldOf("results").forGetter(recipe -> recipe.resultPool), ExtraCodecs.NON_NEGATIVE_INT.optionalFieldOf("loops").forGetter(recipe -> Optional.of(recipe.getLoops()))).apply(instance, (ingredient, transitionalItem, sequence, results, loops) -> {
         SequencedAssemblyWithGasRecipe recipe = new SequencedAssemblyWithGasRecipe(this);
         recipe.ingredient = ingredient;
         recipe.transitionalItem = transitionalItem;
         recipe.sequence.addAll(sequence);
         recipe.resultPool.addAll(results);
         recipe.loops = loops.orElse(5);
-        for (int j = 0; j < recipe.sequence.size(); j++) {
-            sequence.get(j).initFromSequencedAssembly(recipe, j == 0);
+        for (int index = 0; index < recipe.sequence.size(); index++) {
+            sequence.get(index).initFromSequencedAssembly(recipe, index == 0);
         }
         return recipe;
     }));
@@ -49,14 +49,23 @@ public class SequencedAssemblyWithGasRecipeSerializer implements RecipeSerialize
         recipe.resultPool.addAll(ProcessingOutput.STREAM_CODEC.apply(ByteBufCodecs.list()).decode(buffer));
         recipe.transitionalItem = ProcessingOutput.STREAM_CODEC.decode(buffer);
         recipe.loops = buffer.readInt();
+        for (int i = 0; i < recipe.getSequence().size(); i++) {
+            recipe.getSequence().get(i).initFromSequencedAssembly(recipe, i == 0);
+        }
         return recipe;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public MapCodec<SequencedAssemblyWithGasRecipe> codec() {
         return CODEC;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public StreamCodec<RegistryFriendlyByteBuf, SequencedAssemblyWithGasRecipe> streamCodec() {
         return STREAM_CODEC;

@@ -28,11 +28,13 @@ public class AmethystIceCreamItem extends Item {
     }
 
     @Override
-    public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entityLiving) {
-        ItemStack result = super.finishUsingItem(stack, level, entityLiving);
-        if (!level.isClientSide) {
-            entityLiving.addEffect(new MobEffectInstance(MobEffects.GLOWING, 1200, 0));
+    public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
+        ItemStack result = super.finishUsingItem(stack, level, entity);
+        if (level.isClientSide) {
+            return result;
         }
+
+        entity.addEffect(new MobEffectInstance(MobEffects.GLOWING, 1200, 0));
         return result;
     }
 

@@ -3,80 +3,85 @@ package net.ty.createcraftedbeginning.content.end.endsculksilencer;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GlobalEndSculkSilencerManager {
-    private static final float TICK_RATE = 10;
-    private static final Map<UUID, EndSculkSilencerInstance> SILENCERS = new HashMap<>();
+    private static final int PRUNE_INTERVAL_TICKS = 100;
+    private static final EndSculkSilencerIndex INDEX = new EndSculkSilencerIndex();
 
     private GlobalEndSculkSilencerManager() {
     }
 
     public static void tick(Level level) {
-        if (level.getGameTime() % TICK_RATE != 0) {
+        if (!(level instanceof ServerLevel serverLevel) || level.getGameTime() % PRUNE_INTERVAL_TICKS != 0) {
             return;
         }
 
-        List<UUID> toRemove = new ArrayList<>();
-        SILENCERS.values().forEach(instance -> {
-            String dimension = instance.dimension;
-            if (!Objects.equals(dimension, level.dimension().location().toString())) {
-                return;
+        String dimension = level.dimension().location().toString();
+        for (EndSculkSilencerInstance instance : INDEX.getInstances(dimension)) {
+            BlockPos blockPos = instance.blockPos();
+            if (level.isLoaded(blockPos) && level.getBlockEntity(blockPos) instanceof EndSculkSilencerBlockEntity) {
+                continue;
             }
 
-            BlockPos blockPos = instance.blockPos;
-            if (level.getBlockEntity(blockPos) instanceof EndSculkSilencerBlockEntity) {
-                return;
-            }
-
-            toRemove.add(instance.uuid);
-        });
-        if (toRemove.isEmpty()) {
-            return;
+            remove(serverLevel, blockPos);
         }
-
-        toRemove.forEach(SILENCERS::remove);
     }
 
     public static boolean checkWithinRange(BlockPos soundPos, String dimension) {
-        return SILENCERS.values().stream().anyMatch(instance -> Objects.equals(instance.dimension, dimension) && EndSculkSilencerInstance.isWithinChunkRange(soundPos, instance.blockPos, instance.range));
+        return INDEX.isCovered(soundPos, dimension);
     }
 
-    public static boolean canUpdate(BlockPos blockPos, String dimension, short range) {
-        UUID uuid = EndSculkSilencerInstance.calculateUUID(blockPos, dimension);
-        return !SILENCERS.containsKey(uuid) || SILENCERS.get(uuid).range != range;
-    }
-
-    public static void add(BlockPos blockPos, String dimension, short range) {
-        UUID uuid = EndSculkSilencerInstance.calculateUUID(blockPos, dimension);
-        SILENCERS.put(uuid, new EndSculkSilencerInstance(blockPos, dimension, range));
-    }
-
-    public static void remove(BlockPos blockPos, String dimension) {
-        UUID uuid = EndSculkSilencerInstance.calculateUUID(blockPos, dimension);
-        if (!SILENCERS.containsKey(uuid)) {
+    public static void update(ServerLevel level, BlockPos blockPos, short range) {
+        String dimension = level.dimension().location().toString();
+        if (!INDEX.update(blockPos, dimension, range)) {
             return;
         }
 
-        SILENCERS.remove(uuid);
+        sendToDimension(level, new EndSculkSilencerUpdatePacket(blockPos, dimension, range, range > 0));
+    }
+
+    public static boolean remove(ServerLevel level, BlockPos blockPos) {
+        String dimension = level.dimension().location().toString();
+        if (!INDEX.remove(blockPos, dimension)) {
+            return false;
+        }
+
+        sendToDimension(level, new EndSculkSilencerUpdatePacket(blockPos, dimension, (short) 0, false));
+        return true;
+    }
+
+    public static void removeDimension(ServerLevel level) {
+        String dimension = level.dimension().location().toString();
+        List<EndSculkSilencerInstance> removed = INDEX.removeDimension(dimension);
+        for (EndSculkSilencerInstance instance : removed) {
+            sendToDimension(level, new EndSculkSilencerUpdatePacket(instance.blockPos(), dimension, (short) 0, false));
+        }
     }
 
     public static void clear() {
-        SILENCERS.clear();
+        INDEX.clear();
     }
 
-    public static void sendToClients(ServerPlayer serverPlayer) {
-        SILENCERS.values().forEach(instance -> CatnipServices.NETWORK.sendToClient(serverPlayer, new EndSculkSilencerUpdatePacket(instance.blockPos, instance.dimension, instance.range, true)));
+    public static void sendToClient(ServerPlayer serverPlayer) {
+        CatnipServices.NETWORK.sendToClient(serverPlayer, EndSculkSilencerResetPacket.INSTANCE);
+
+        String dimension = serverPlayer.level().dimension().location().toString();
+        for (EndSculkSilencerInstance instance : INDEX.getInstances(dimension)) {
+            CatnipServices.NETWORK.sendToClient(serverPlayer, new EndSculkSilencerUpdatePacket(instance.blockPos(), dimension, instance.range(), true));
+        }
+    }
+
+    private static void sendToDimension(ServerLevel level, EndSculkSilencerUpdatePacket packet) {
+        for (ServerPlayer player : level.players()) {
+            CatnipServices.NETWORK.sendToClient(player, packet);
+        }
     }
 }

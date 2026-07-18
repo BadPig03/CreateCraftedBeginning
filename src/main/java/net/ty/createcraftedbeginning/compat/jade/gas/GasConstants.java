@@ -1,5 +1,11 @@
 package net.ty.createcraftedbeginning.compat.jade.gas;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class GasConstants {
     public static String STORAGE_KEY = "JadeGasStorage";
     public static String STORAGE_UID_KEY = "JadeGasStorageUid";

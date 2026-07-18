@@ -1,86 +1,59 @@
 package net.ty.createcraftedbeginning.content.crates.cardboardcrate;
 
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorageType;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.core.BlockPos;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.crates.CrateItemStackHandler;
 import net.ty.createcraftedbeginning.content.crates.CrateMountedItemStorage;
 import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CardboardCrateMountedStorage extends CrateMountedItemStorage {
-    public static final MapCodec<CardboardCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(ItemStack.CODEC.fieldOf("content").forGetter(storage -> storage.content), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("count").forGetter(storage -> storage.count), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("maxCount").forGetter(storage -> storage.maxCount)).apply(instance, CardboardCrateMountedStorage::new));
+public class CardboardCrateMountedStorage extends CrateMountedItemStorage<CardboardCrateBlockEntity> {
+    public static final MapCodec<CardboardCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(ItemStack.OPTIONAL_CODEC.fieldOf("content").forGetter(CardboardCrateMountedStorage::getStoredItem), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("count").forGetter(CardboardCrateMountedStorage::getStoredCount), Codec.BOOL.optionalFieldOf("discardedPackage", false).forGetter(CardboardCrateMountedStorage::hasDiscardedPackage)).apply(instance, CardboardCrateMountedStorage::new));
 
-    public CardboardCrateMountedStorage(ItemStack content, int count, int maxCount) {
-        this(CCBMountedStorage.CARDBOARD_CRATE.get(), content, count, maxCount);
+    private boolean discardedPackage;
+
+    public CardboardCrateMountedStorage(ItemStack content, int count) {
+        this(content, count, false);
     }
 
-    protected CardboardCrateMountedStorage(MountedItemStorageType<?> type, ItemStack content, int count, int maxCount) {
-        super(type, content, count, maxCount);
+    public CardboardCrateMountedStorage(ItemStack content, int count, boolean discardedPackage) {
+        this(CCBMountedStorage.CARDBOARD_CRATE.get(), content, count, discardedPackage);
+    }
+
+    protected CardboardCrateMountedStorage(MountedItemStorageType<?> type, ItemStack content, int count, boolean discardedPackage) {
+        super(type, CardboardCrateBlockEntity.class, content, count, () -> CCBConfig.server().crates.maxCardboardCapacity.get(), CardboardCrateBlockEntity::isPackage);
+        this.discardedPackage = discardedPackage;
+    }
+
+    public static CardboardCrateMountedStorage fromBlockEntity(CardboardCrateBlockEntity crate) {
+        CrateItemStackHandler handler = crate.getHandler();
+        return new CardboardCrateMountedStorage(handler.getStoredItem(0), handler.getCountInSlot(0));
+    }
+
+    public boolean hasDiscardedPackage() {
+        return discardedPackage;
     }
 
     @Override
-    public void unmount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity be) {
-        if (!(be instanceof CardboardCrateBlockEntity crate)) {
+    protected void afterUnmount(CardboardCrateBlockEntity crate) {
+        if (!discardedPackage) {
             return;
         }
 
-        crate.setStoredItems(content, count);
+        crate.awardPackageDisposal();
     }
 
     @Override
-    public int getSlots() {
-        return 2;
-    }
-
-    @Override
-    public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-        if (stack.isEmpty()) {
-            return ItemStack.EMPTY;
-        }
-
-        if (content.isEmpty()) {
-            int newCount = Math.min(stack.getCount(), maxCount);
-            if (!simulate) {
-                content = stack.copyWithCount(1);
-                count = newCount;
-            }
-            return ItemStack.EMPTY;
-        }
-
-        if (ItemStack.isSameItemSameComponents(content, stack)) {
-            int space = maxCount - count;
-            if (space <= 0) {
-                return ItemStack.EMPTY;
-            }
-
-            int toInsert = Math.min(stack.getCount(), space);
-            if (!simulate) {
-                count += toInsert;
-            }
-
-            return ItemStack.EMPTY;
-        }
-
-        if (!simulate) {
-            content = stack.copyWithCount(1);
-            count = Math.min(stack.getCount(), maxCount);
-        }
-        return ItemStack.EMPTY;
-    }
-
-    @Override
-    public boolean isItemValid(int slot, ItemStack stack) {
-        return slot == 0;
+    protected void onTrackedItemDiscarded() {
+        discardedPackage = true;
     }
 }

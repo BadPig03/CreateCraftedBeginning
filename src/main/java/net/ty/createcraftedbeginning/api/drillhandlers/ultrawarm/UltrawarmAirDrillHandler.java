@@ -20,26 +20,38 @@ import java.util.List;
 public class UltrawarmAirDrillHandler implements AirtightDrillHandler {
     protected static final int BASE_BURNING_TIME = 4;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getDamageAddition() {
         return 0;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public float getConsumptionMultiplier() {
         return 0.9f;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void extraBehaviour(LivingEntity entity, Player player, ServerLevel serverLevel) {
         AirtightDrillHandler.super.extraBehaviour(entity, player, serverLevel);
         entity.igniteForSeconds(4);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void appendHoverText(ItemStack drill, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         AirtightDrillHandler.super.appendHoverText(drill, context, tooltip, flag);
         MutableComponent advancedBurningTime = flag.isAdvanced() ? CCBLang.text(" [+" + BASE_BURNING_TIME + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.tooltips.airtight_handheld_drill.burning_time", BASE_BURNING_TIME).add(advancedBurningTime.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        tooltip.add(CCBLang.translate("gui.airtight_handheld_drill.burning_time", BASE_BURNING_TIME).add(advancedBurningTime.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
     }
 }

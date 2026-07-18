@@ -9,11 +9,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsUtils;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.upgrades.AirtightBootsUpgradeRegistry;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.AirtightChestplateUpgradeRegistry;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.upgrades.AirtightHelmetUpgradeRegistry;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.AirtightLeggingsUpgradeRegistry;
-import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.AirtightHandheldDrillUpgradeRegistry;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.Nullable;
@@ -26,27 +21,7 @@ import java.util.List;
 public interface AirtightUpgrade {
     @Nullable
     static AirtightUpgrade getByID(ResourceLocation id) {
-        AirtightUpgrade helmet = AirtightHelmetUpgradeRegistry.getByID(id);
-        if (helmet != null) {
-            return helmet;
-        }
-
-        AirtightUpgrade chestplate = AirtightChestplateUpgradeRegistry.getByID(id);
-        if (chestplate != null) {
-            return chestplate;
-        }
-
-        AirtightUpgrade leggings = AirtightLeggingsUpgradeRegistry.getByID(id);
-        if (leggings != null) {
-            return leggings;
-        }
-
-        AirtightUpgrade boots = AirtightBootsUpgradeRegistry.getByID(id);
-        if (boots != null) {
-            return boots;
-        }
-
-        return AirtightHandheldDrillUpgradeRegistry.getByID(id);
+        return AirtightUpgradeRegistry.getGlobalById(id);
     }
 
     List<Component> getComponents(Player player, ItemStack item);
@@ -65,9 +40,13 @@ public interface AirtightUpgrade {
 
     Couple<Integer> getOffset();
 
-    int getGasConsumptionPerSecond(Player player, ItemStack item);
+    default AirtightUpgradePowerMode getPowerMode() {
+        return AirtightUpgradePowerMode.PASSIVE;
+    }
 
-    int getIndex();
+    default int getGasConsumptionPerSecond(Player player, ItemStack item) {
+        return 0;
+    }
 
     Item getUpgradeItem();
 
@@ -92,18 +71,11 @@ public interface AirtightUpgrade {
     }
 
     default boolean isActive(Player player, ItemStack item) {
-        if (!isEnabled(item) || !meetsConditions(player, item)) {
-            return false;
-        }
-
-        int consumption = getGasConsumptionPerSecond(player, item);
-        if (consumption < 0) {
-            return true;
-        }
-        else if (consumption == 0) {
-            return !CanisterContainerSuppliers.getFirstAvailableGasContent(player).getGasType().isEmpty();
-        }
-        return GlobalAirtightUpgradesConsumptionManager.isPowered(player, this);
+        return isEnabled(item) && meetsConditions(player, item) && switch (getPowerMode()) {
+            case PASSIVE, ON_DEMAND -> true;
+            case SUPPLY_REQUIRED -> !CanisterContainerSuppliers.getFirstAvailableGasContent(player).isEmpty();
+            case CONTINUOUS -> GlobalAirtightUpgradesConsumptionManager.isPowered(player, this);
+        };
     }
 
     default boolean isEnabled(ItemStack item) {
@@ -116,25 +88,25 @@ public interface AirtightUpgrade {
     }
 
     default boolean isRequesting(Player player, ItemStack item) {
-        return isEnabled(item) && meetsConditions(player, item) && getGasConsumptionPerSecond(player, item) > 0;
+        return getPowerMode() == AirtightUpgradePowerMode.CONTINUOUS && isEnabled(item) && meetsConditions(player, item) && getGasConsumptionPerSecond(player, item) >= 0;
     }
 
     default AirtightUpgradeStatus getUpgradeStatus(ItemStack item) {
-        List<AirtightUpgradeStatus> upgradeStatusList = item.getOrDefault(CCBDataComponents.AIRTIGHT_UPGRADE_STATUS, AirtightArmorsUtils.getDefaultUpgradeList(item));
-        if (upgradeStatusList.isEmpty()) {
-            return new AirtightUpgradeStatus(getID(), false, false);
+        List<AirtightUpgradeStatus> statuses = item.get(CCBDataComponents.AIRTIGHT_UPGRADE_STATUS);
+        if (statuses == null) {
+            statuses = AirtightArmorsUtils.getDefaultUpgradeList(item);
         }
 
-        int index = getIndex();
-        if (index < 0 || index >= upgradeStatusList.size()) {
-            return new AirtightUpgradeStatus(getID(), false, false);
+        ResourceLocation id = getID();
+        for (int i = statuses.size() - 1; i >= 0; i--) {
+            AirtightUpgradeStatus status = statuses.get(i);
+            if (!status.id().equals(id)) {
+                continue;
+            }
+
+            return status;
         }
 
-        AirtightUpgradeStatus status = upgradeStatusList.get(index);
-        if (!status.id().equals(getID())) {
-            return new AirtightUpgradeStatus(getID(), false, false);
-        }
-
-        return status;
+        return new AirtightUpgradeStatus(id, startsEnabled(), startsInstalled());
     }
 }

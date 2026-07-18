@@ -2,7 +2,7 @@
   "type": "createcraftedbeginning:gas_injection",
   "ingredients": [
     {
-      "item": "minecraft:dead_fire_coral_block"
+      "item": "minecraft:dead_bubble_coral_block"
     },
     {
       "type": "createcraftedbeginning:single",
@@ -12,7 +12,7 @@
   ],
   "results": [
     {
-      "id": "minecraft:fire_coral_block"
+      "id": "minecraft:bubble_coral_block"
     }
   ]
 }

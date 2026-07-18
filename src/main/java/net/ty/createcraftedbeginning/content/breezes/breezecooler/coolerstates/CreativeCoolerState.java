@@ -1,14 +1,9 @@
 package net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.FrostLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity.CoolantType;
-import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -16,14 +11,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CreativeCoolerState extends BaseCoolerState {
-    private static final String COMPOUND_KEY_CREATIVE_TYPE = "CreativeType";
-
-    private CoolantType creativeType;
+    private final CoolantType creativeType;
 
     public CreativeCoolerState(CoolantType type) {
         super(switch (type) {
             case NONE -> 0;
-            case NORMAL -> BreezeCoolerBlockEntity.MAX_COOLANT_CAPACITY;
+            case NORMAL -> BreezeCoolerBlockEntity.getMaxCoolantCapacity();
         }, true);
         creativeType = type;
     }
@@ -37,32 +30,6 @@ public class CreativeCoolerState extends BaseCoolerState {
     }
 
     @Override
-    public void tick(BreezeCoolerBlockEntity cooler) {
-        super.tick(cooler);
-
-        Level level = cooler.getLevel();
-        if (level == null || level.getGameTime() % NOTIFY_INTERVAL != 0) {
-            return;
-        }
-
-        cooler.notifyUpdate();
-    }
-
-    @Override
-    public void read(CompoundTag compoundTag) {
-        if (compoundTag.contains(COMPOUND_KEY_CREATIVE_TYPE)) {
-            creativeType = CoolantType.values()[compoundTag.getInt(COMPOUND_KEY_CREATIVE_TYPE)];
-        }
-        super.read(compoundTag);
-    }
-
-    @Override
-    public void save(CompoundTag compoundTag) {
-        compoundTag.putInt(COMPOUND_KEY_CREATIVE_TYPE, creativeType.ordinal());
-        super.save(compoundTag);
-    }
-
-    @Override
     public FrostLevel getFrostLevel() {
         return switch (creativeType) {
             case NORMAL -> FrostLevel.CHILLED;
@@ -73,21 +40,6 @@ public class CreativeCoolerState extends BaseCoolerState {
     @Override
     public CoolantType getCoolantType() {
         return creativeType;
-    }
-
-    @Override
-    public InteractionResult onItemInsert(BreezeCoolerBlockEntity cooler, ItemStack stack, boolean forceOverflow, boolean simulate) {
-        if (stack.getItem() != CCBItems.CREATIVE_ICE_CREAM.asItem()) {
-            return InteractionResult.PASS;
-        }
-
-        if (!simulate) {
-            CoolantType coolantType = getNextCoolantType(creativeType);
-            cooler.setCoolerState(coolantType == CoolantType.NONE ? new InactiveCoolerState() : new CreativeCoolerState(coolantType));
-            cooler.spawnParticleBurst();
-            cooler.playSound();
-        }
-        return InteractionResult.SUCCESS;
     }
 
     @Override

@@ -37,10 +37,13 @@ public class SequencedWithGasRecipe<T extends ProcessingWithGasRecipe<?, ?>> {
     }
 
     public void initFromSequencedAssembly(SequencedAssemblyWithGasRecipe parent, boolean isFirst) {
-        if (getAsAssemblyRecipe().supportsAssembly()) {
-            Ingredient transit = Ingredient.of(parent.getTransitionalItem());
-            wrapped.getIngredients().set(0, isFirst ? CompoundIngredient.of(transit, parent.getIngredient()) : transit);
+        if (!getAsAssemblyRecipe().supportsAssembly()) {
+            return;
         }
+
+        Ingredient transit = Ingredient.of(parent.getTransitionalItem());
+        Ingredient input = isFirst ? CompoundIngredient.of(transit, parent.getIngredient()) : transit;
+        wrapped.getIngredients().set(0, input);
     }
 
     public IAssemblyRecipeWithGas getAsAssemblyRecipe() {

@@ -17,6 +17,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public record CanisterContainerClientPacket(GasStack gasContent) implements ClientboundPacketPayload {
     public static final StreamCodec<RegistryFriendlyByteBuf, CanisterContainerClientPacket> STREAM_CODEC = StreamCodec.composite(GasStack.OPTIONAL_STREAM_CODEC, CanisterContainerClientPacket::gasContent, CanisterContainerClientPacket::new);
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @OnlyIn(Dist.CLIENT)
     public void handle(LocalPlayer player) {
@@ -27,6 +30,9 @@ public record CanisterContainerClientPacket(GasStack gasContent) implements Clie
         CanisterContainerConsumers.applyClientContainerSync(player, gasContent);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public PacketTypeProvider getTypeProvider() {
         return CCBPackets.CANISTER_CONTAINER_CLIENT;

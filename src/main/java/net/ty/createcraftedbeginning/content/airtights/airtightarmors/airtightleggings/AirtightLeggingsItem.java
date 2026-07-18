@@ -15,6 +15,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
@@ -35,13 +36,14 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandler;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlerUtils;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsUtils;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightBaseArmorItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.BlastResistanceUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.SwiftSneakUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.Nullable;
@@ -69,10 +71,11 @@ public class AirtightLeggingsItem extends AirtightBaseArmorItem implements MenuP
 
     @Override
     public int getEnchantmentLevel(ItemStack leggings, Holder<Enchantment> enchantment) {
+        int existingLevel = super.getEnchantmentLevel(leggings, enchantment);
         if (enchantment.is(Enchantments.BLAST_PROTECTION) && BlastResistanceUpgrade.INSTANCE.canApply(leggings)) {
-            return 4;
+            return Math.max(4, existingLevel);
         }
-        return super.getEnchantmentLevel(leggings, enchantment);
+        return existingLevel;
     }
 
     @Override
@@ -80,7 +83,8 @@ public class AirtightLeggingsItem extends AirtightBaseArmorItem implements MenuP
         ItemEnchantments enchantments = super.getAllEnchantments(leggings, lookup);
         Mutable enchants = new Mutable(enchantments);
         if (BlastResistanceUpgrade.INSTANCE.canApply(leggings)) {
-            enchants.set(lookup.getOrThrow(Enchantments.BLAST_PROTECTION), 4);
+            Holder<Enchantment> blastProtection = lookup.getOrThrow(Enchantments.BLAST_PROTECTION);
+            enchants.set(blastProtection, Math.max(4, enchantments.getLevel(blastProtection)));
         }
         return enchants.toImmutable();
     }
@@ -101,7 +105,18 @@ public class AirtightLeggingsItem extends AirtightBaseArmorItem implements MenuP
             return InteractionResultHolder.sidedSuccess(leggings, true);
         }
 
-        player.openMenu(this, buf -> ItemStack.STREAM_CODEC.encode(buf, leggings));
+        MenuProvider provider = new MenuProvider() {
+            @Override
+            public Component getDisplayName() {
+                return AirtightLeggingsItem.this.getDisplayName();
+            }
+
+            @Override
+            public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player menuPlayer) {
+                return new AirtightLeggingsMenu(CCBMenuTypes.AIRTIGHT_LEGGINGS_MENU.get(), containerId, playerInventory, leggings, hand);
+            }
+        };
+        player.openMenu(provider, buffer -> AirtightUpgradableMenu.writeOpeningData(buffer, leggings, hand));
         player.getCooldowns().addCooldown(this, 10);
         return InteractionResultHolder.sidedSuccess(leggings, false);
     }
@@ -125,26 +140,27 @@ public class AirtightLeggingsItem extends AirtightBaseArmorItem implements MenuP
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack leggings, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
         LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null || !CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
+        if (player == null) {
             return;
         }
 
         if (AirtightArmorsUtils.isEntireArmoredUp(player) && tooltipFlag.hasShiftDown()) {
-            tooltip.add(CCBLang.translate("gui.tooltips.airtight_armors.fire_immune_condition").style(ChatFormatting.GRAY).component());
-            tooltip.addAll(TooltipHelper.cutTextComponent(CCBLang.translateDirect("gui.tooltips.airtight_armors.fire_immune_behaviour"), Palette.STANDARD_CREATE));
+            tooltip.add(CCBLang.translate("gui.airtight_armors.fire_immune_condition").style(ChatFormatting.GRAY).component());
+            tooltip.addAll(TooltipHelper.cutTextComponent(CCBLang.translateDirect("gui.airtight_armors.fire_immune_behaviour"), Palette.STANDARD_CREATE));
         }
 
-        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
-        if (gasContent.isEmpty()) {
+        GasStack gas = CanisterContainerClients.getDisplayedGasContent();
+        if (gas.isEmpty()) {
             return;
         }
 
-        AirtightArmorsHandler armorsHandler = AirtightArmorsHandlerUtils.of(gasContent.getGasType());
+        AirtightArmorsHandler handler = AirtightArmorsHandlerUtils.of(gas.getGasType());
         tooltip.add(CommonComponents.EMPTY);
-        tooltip.add(CCBLang.gasName(gasContent).add(CCBLang.translate("gui.tooltips.gas_tools.content")).style(ChatFormatting.GRAY).component());
-        float consumptionMultiplier = armorsHandler.getConsumptionMultiplier()[2];
-        MutableComponent advancedConsumptionMultiplier = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + armorsHandler.getRenderStr(consumptionMultiplier) + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.tooltips.gas_tools.gas_consumption", armorsHandler.getRenderStr(consumptionMultiplier * 100)).add(advancedConsumptionMultiplier.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        tooltip.add(CCBLang.gasName(gas).add(CCBLang.translate("gui.gas_tools.content")).style(ChatFormatting.GRAY).component());
+
+        float multiplier = handler.getConsumptionMultiplier(EquipmentSlot.LEGS);
+        MutableComponent advancedMultiplier = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptionUtils.format(multiplier) + ']').component() : Component.empty();
+        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptionUtils.formatPercent(multiplier)).add(advancedMultiplier.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
     }
 
     @Override
@@ -159,6 +175,8 @@ public class AirtightLeggingsItem extends AirtightBaseArmorItem implements MenuP
 
     @Override
     public @Nullable AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
-        return new AirtightLeggingsMenu(CCBMenuTypes.AIRTIGHT_LEGGINGS_MENU.get(), containerId, playerInventory, player.getMainHandItem());
+        InteractionHand hand = player.getMainHandItem().is(this) ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
+        ItemStack leggings = player.getItemInHand(hand);
+        return new AirtightLeggingsMenu(CCBMenuTypes.AIRTIGHT_LEGGINGS_MENU.get(), containerId, playerInventory, leggings, hand);
     }
 }

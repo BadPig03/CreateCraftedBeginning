@@ -37,19 +37,19 @@ public class AirtightChestplateLayer<T extends LivingEntity, M extends EntityMod
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static void registerOn(EntityRenderer<?> entityRenderer) {
-        if (!(entityRenderer instanceof LivingEntityRenderer<?, ?> livingRenderer) || !(livingRenderer.getModel() instanceof HumanoidModel)) {
+    public static void registerOn(EntityRenderer<?> renderer) {
+        if (!(renderer instanceof LivingEntityRenderer<?, ?> livingRenderer) || !(livingRenderer.getModel() instanceof HumanoidModel)) {
             return;
         }
 
         livingRenderer.addLayer((AirtightChestplateLayer) new AirtightChestplateLayer<>(livingRenderer));
     }
 
-    public static void registerOnAll(EntityRenderDispatcher renderManager) {
-        for (EntityRenderer<? extends Player> renderer : renderManager.getSkinMap().values()) {
+    public static void registerOnAll(EntityRenderDispatcher dispatcher) {
+        for (EntityRenderer<? extends Player> renderer : dispatcher.getSkinMap().values()) {
             registerOn(renderer);
         }
-        for (EntityRenderer<?> renderer : ((EntityRenderDispatcherAccessor) renderManager).create$getRenderers().values()) {
+        for (EntityRenderer<?> renderer : ((EntityRenderDispatcherAccessor) dispatcher).create$getRenderers().values()) {
             registerOn(renderer);
         }
     }

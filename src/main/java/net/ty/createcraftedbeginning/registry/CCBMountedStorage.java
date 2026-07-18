@@ -7,10 +7,15 @@ import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageType;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankMountedStorageType;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankMountedStorageType;
-import net.ty.createcraftedbeginning.content.crates.andesitecrate.AndesiteCrateMountedStorageType;
-import net.ty.createcraftedbeginning.content.crates.brasscrate.BrassCrateMountedStorageType;
-import net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateMountedStorageType;
-import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateMountedStorageType;
+import net.ty.createcraftedbeginning.content.crates.CrateMountedStorageType;
+import net.ty.createcraftedbeginning.content.crates.andesitecrate.AndesiteCrateBlockEntity;
+import net.ty.createcraftedbeginning.content.crates.andesitecrate.AndesiteCrateMountedStorage;
+import net.ty.createcraftedbeginning.content.crates.brasscrate.BrassCrateBlockEntity;
+import net.ty.createcraftedbeginning.content.crates.brasscrate.BrassCrateMountedStorage;
+import net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateBlockEntity;
+import net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateMountedStorage;
+import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlockEntity;
+import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateMountedStorage;
 import net.ty.createcraftedbeginning.data.CCBRegistrate;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,10 +27,18 @@ import java.util.function.Supplier;
 public class CCBMountedStorage {
     private static final CCBRegistrate CCB_REGISTRATE = CreateCraftedBeginning.registrate();
 
-    public static final RegistryEntry<MountedItemStorageType<?>, AndesiteCrateMountedStorageType> ANDESITE_CRATE = simpleItem("andesite_crate", AndesiteCrateMountedStorageType::new);
-    public static final RegistryEntry<MountedItemStorageType<?>, BrassCrateMountedStorageType> BRASS_CRATE = simpleItem("brass_crate", BrassCrateMountedStorageType::new);
-    public static final RegistryEntry<MountedItemStorageType<?>, CardboardCrateMountedStorageType> CARDBOARD_CRATE = simpleItem("cardboard_crate", CardboardCrateMountedStorageType::new);
-    public static final RegistryEntry<MountedItemStorageType<?>, SturdyCrateMountedStorageType> STURDY_CRATE = simpleItem("sturdy_crate", SturdyCrateMountedStorageType::new);
+    public static final RegistryEntry<MountedItemStorageType<?>, CrateMountedStorageType<AndesiteCrateBlockEntity, AndesiteCrateMountedStorage>> ANDESITE_CRATE = simpleItem(
+            "andesite_crate", () -> new CrateMountedStorageType<>(AndesiteCrateMountedStorage.CODEC,
+                    AndesiteCrateBlockEntity.class, AndesiteCrateMountedStorage::fromBlockEntity));
+    public static final RegistryEntry<MountedItemStorageType<?>, CrateMountedStorageType<BrassCrateBlockEntity, BrassCrateMountedStorage>> BRASS_CRATE = simpleItem(
+            "brass_crate", () -> new CrateMountedStorageType<>(BrassCrateMountedStorage.CODEC,
+                    BrassCrateBlockEntity.class, BrassCrateMountedStorage::fromBlockEntity));
+    public static final RegistryEntry<MountedItemStorageType<?>, CrateMountedStorageType<CardboardCrateBlockEntity, CardboardCrateMountedStorage>> CARDBOARD_CRATE = simpleItem(
+            "cardboard_crate", () -> new CrateMountedStorageType<>(CardboardCrateMountedStorage.CODEC,
+                    CardboardCrateBlockEntity.class, CardboardCrateMountedStorage::fromBlockEntity));
+    public static final RegistryEntry<MountedItemStorageType<?>, CrateMountedStorageType<SturdyCrateBlockEntity, SturdyCrateMountedStorage>> STURDY_CRATE = simpleItem(
+            "sturdy_crate", () -> new CrateMountedStorageType<>(SturdyCrateMountedStorage.CODEC,
+                    SturdyCrateBlockEntity.class, SturdyCrateMountedStorage::fromBlockEntity));
 
     public static final RegistryEntry<MountedGasStorageType<?>, AirtightTankMountedStorageType> AIRTIGHT_TANK = simpleGas("airtight_tank", AirtightTankMountedStorageType::new);
     public static final RegistryEntry<MountedGasStorageType<?>, AirtightTankMountedStorageType> HORIZONTAL_AIRTIGHT_TANK = simpleGas("horizontal_airtight_tank", AirtightTankMountedStorageType::new);

@@ -5,6 +5,8 @@ import com.simibubi.create.foundation.block.IBE;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Direction.Axis;
+import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
@@ -19,7 +21,6 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.TickPriority;
-import net.ty.createcraftedbeginning.api.gas.gases.GasPropagator;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AxisGasPipeBlock;
@@ -38,6 +39,19 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
         registerDefaultState(defaultBlockState().setValue(INVERTED, false).setValue(DIRECTIONAL_FACING, DirectionalFacing.NULL));
     }
 
+    public static boolean isInputSide(BlockState state, Direction direction) {
+        if (state.getValue(AXIS) != direction.getAxis()) {
+            return false;
+        }
+
+        boolean isPositive = direction.getAxisDirection() == AxisDirection.POSITIVE;
+        return isPositive != state.getValue(INVERTED);
+    }
+
+    public static boolean isOutputSide(BlockState state, Direction direction) {
+        return state.getValue(AXIS) == direction.getAxis() && !isInputSide(state, direction);
+    }
+
     @Override
     public InteractionResult onWrenched(BlockState state, UseOnContext context) {
         Level level = context.getLevel();
@@ -46,10 +60,9 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
         }
 
         BlockPos pos = context.getClickedPos();
-        BlockState newState = state.setValue(INVERTED, !state.getValue(INVERTED));
-        level.setBlockAndUpdate(pos, newState);
+        BlockState updatedState = state.setValue(INVERTED, !state.getValue(INVERTED));
+        level.setBlockAndUpdate(pos, updatedState);
         level.scheduleTick(pos, this, 1, TickPriority.HIGH);
-        GasPropagator.propagatePipe(level, pos, newState);
         IWrenchable.playRotateSound(level, pos);
         return InteractionResult.SUCCESS;
     }
@@ -64,7 +77,18 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState state = super.getStateForPlacement(context);
         Direction horizontalFacing = context.getHorizontalDirection();
-        return state.setValue(DIRECTIONAL_FACING, DirectionalFacing.getFacingDirection(horizontalFacing));
+        Axis axis = state.getValue(AXIS);
+        Direction output = context.getNearestLookingDirection();
+        for (Direction direction : context.getNearestLookingDirections()) {
+            if (direction.getAxis() == axis) {
+                output = direction;
+                break;
+            }
+        }
+
+        boolean isInverted = output.getAxisDirection() == AxisDirection.POSITIVE;
+        DirectionalFacing facing = DirectionalFacing.getFacingDirection(horizontalFacing);
+        return state.setValue(INVERTED, isInverted).setValue(DIRECTIONAL_FACING, facing);
     }
 
     @Override

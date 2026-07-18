@@ -17,6 +17,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock.WindLevel;
+import net.ty.createcraftedbeginning.content.breezes.breezechamber.client.BreezeChamberClientAnimation;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -102,7 +103,7 @@ public class BreezeChamberVisual extends AbstractBlockEntityVisual<BreezeChamber
 
     @Override
     public void tick(TickableVisual.Context context) {
-        blockEntity.tickAnimation();
+        BreezeChamberClientAnimation.tickAnimation(blockEntity);
     }
 
     @Override

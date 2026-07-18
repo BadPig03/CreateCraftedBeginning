@@ -22,6 +22,9 @@ import java.util.List;
 public enum HandheldDrillFilterButton implements AirtightUpgrade {
     INSTANCE;
 
+    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("handheld_drill_filter");
+    private static final Couple<Integer> OFFSET = Couple.create(40, 114);
+
     @Override
     public List<Component> getComponents(Player player, ItemStack item) {
         return List.of();
@@ -59,17 +62,7 @@ public enum HandheldDrillFilterButton implements AirtightUpgrade {
 
     @Override
     public Couple<Integer> getOffset() {
-        return Couple.create(40, 114);
-    }
-
-    @Override
-    public int getGasConsumptionPerSecond(Player player, ItemStack item) {
-        return -1;
-    }
-
-    @Override
-    public int getIndex() {
-        return 4;
+        return OFFSET;
     }
 
     @Override
@@ -79,7 +72,7 @@ public enum HandheldDrillFilterButton implements AirtightUpgrade {
 
     @Override
     public ResourceLocation getID() {
-        return CreateCraftedBeginning.asResource("handheld_drill_filter");
+        return ID;
     }
 
     @Override

@@ -1,8 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightarmors;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -25,7 +24,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class AirtightArmorsUtils {
-    private static final int DURATION_THRESHOLD = 30;
+    private static final float RESISTANCE_REDUCTION_PER_LEVEL = 0.2f;
 
     private AirtightArmorsUtils() {
     }
@@ -34,16 +33,16 @@ public final class AirtightArmorsUtils {
         if (item.is(CCBItems.AIRTIGHT_HELMET)) {
             return AirtightHelmetUpgradeRegistry.getDefaultUpgradeList();
         }
-        else if (item.is(CCBItems.AIRTIGHT_CHESTPLATE)) {
+        if (item.is(CCBItems.AIRTIGHT_CHESTPLATE)) {
             return AirtightChestplateUpgradeRegistry.getDefaultUpgradeList();
         }
-        else if (item.is(CCBItems.AIRTIGHT_LEGGINGS)) {
+        if (item.is(CCBItems.AIRTIGHT_LEGGINGS)) {
             return AirtightLeggingsUpgradeRegistry.getDefaultUpgradeList();
         }
-        else if (item.is(CCBItems.AIRTIGHT_BOOTS)) {
+        if (item.is(CCBItems.AIRTIGHT_BOOTS)) {
             return AirtightBootsUpgradeRegistry.getDefaultUpgradeList();
         }
-        else if (item.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
+        if (item.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
             return AirtightHandheldDrillUpgradeRegistry.getDefaultUpgradeList();
         }
         return List.of();
@@ -53,16 +52,16 @@ public final class AirtightArmorsUtils {
         if (item.is(CCBItems.AIRTIGHT_HELMET)) {
             return AirtightHelmetUpgradeRegistry.getAll();
         }
-        else if (item.is(CCBItems.AIRTIGHT_CHESTPLATE)) {
+        if (item.is(CCBItems.AIRTIGHT_CHESTPLATE)) {
             return AirtightChestplateUpgradeRegistry.getAll();
         }
-        else if (item.is(CCBItems.AIRTIGHT_LEGGINGS)) {
+        if (item.is(CCBItems.AIRTIGHT_LEGGINGS)) {
             return AirtightLeggingsUpgradeRegistry.getAll();
         }
-        else if (item.is(CCBItems.AIRTIGHT_BOOTS)) {
+        if (item.is(CCBItems.AIRTIGHT_BOOTS)) {
             return AirtightBootsUpgradeRegistry.getAll();
         }
-        else if (item.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
+        if (item.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
             return AirtightHandheldDrillUpgradeRegistry.getAll();
         }
         return List.of();
@@ -88,34 +87,28 @@ public final class AirtightArmorsUtils {
         return boots.is(CCBItems.AIRTIGHT_BOOTS);
     }
 
-    public static void applyResistance(Player player) {
-        int resistanceLevel = getResistanceLevel(player);
-        if (resistanceLevel < 0) {
-            return;
+    public static float applyPaidResistance(Player player, float originalDamage, float currentDamage) {
+        if (originalDamage <= 0 || currentDamage <= 0) {
+            return currentDamage;
         }
 
-        MobEffectInstance existingEffect = player.getEffect(MobEffects.DAMAGE_RESISTANCE);
-        if (existingEffect != null && (existingEffect.getAmplifier() > resistanceLevel || !existingEffect.endsWithin(DURATION_THRESHOLD))) {
-            return;
+        int paidLevels = 0;
+        if (HelmetResistanceUpgrade.INSTANCE.tryConsumeGas(player, originalDamage)) {
+            paidLevels++;
+        }
+        if (ChestplateResistanceUpgrade.INSTANCE.tryConsumeGas(player, originalDamage)) {
+            paidLevels++;
+        }
+        if (LeggingsResistanceUpgrade.INSTANCE.tryConsumeGas(player, originalDamage)) {
+            paidLevels++;
+        }
+        if (BootsResistanceUpgrade.INSTANCE.tryConsumeGas(player, originalDamage)) {
+            paidLevels++;
         }
 
-        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, DURATION_THRESHOLD, resistanceLevel, true, false));
-    }
-
-    private static int getResistanceLevel(Player player) {
-        int level = -1;
-        if (HelmetResistanceUpgrade.INSTANCE.canApply(player)) {
-            level++;
+        if (paidLevels == 0) {
+            return currentDamage;
         }
-        if (ChestplateResistanceUpgrade.INSTANCE.canApply(player)) {
-            level++;
-        }
-        if (LeggingsResistanceUpgrade.INSTANCE.canApply(player)) {
-            level++;
-        }
-        if (BootsResistanceUpgrade.INSTANCE.canApply(player)) {
-            level++;
-        }
-        return level;
+        return currentDamage * Mth.clamp(1 - paidLevels * RESISTANCE_REDUCTION_PER_LEVEL, 0, 1);
     }
 }

@@ -18,12 +18,14 @@ import net.ty.createcraftedbeginning.compat.jei.utils.GasFilterGhostItemSubmitPa
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateElytraBoostPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillParametersPacket;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeMenuSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlayPacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackMenuSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreenPacket;
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerOutlinePacket;
+import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerResetPacket;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerUpdatePacket;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -41,6 +43,7 @@ public enum CCBPackets implements PacketTypeProvider {
     AIRTIGHT_BOOST_ELYTRA(AirtightChestplateElytraBoostPacket.class, AirtightChestplateElytraBoostPacket.STREAM_CODEC),
 
     AIRTIGHT_UPGRADE(AirtightUpgradePacket.class, AirtightUpgradePacket.STREAM_CODEC),
+    AIRTIGHT_UPGRADE_MENU_SYNC(AirtightUpgradeMenuSyncPacket.class, AirtightUpgradeMenuSyncPacket.STREAM_CODEC),
     AIRTIGHT_UPGRADE_SYNC(AirtightUpgradeSyncPacket.class, AirtightUpgradeSyncPacket.STREAM_CODEC),
 
     GAS_FILTER_SCREEN(GasFilterScreenPacket.class, GasFilterScreenPacket.STREAM_CODEC),
@@ -52,6 +55,7 @@ public enum CCBPackets implements PacketTypeProvider {
     CANISTER_CONTAINER_CLIENT(CanisterContainerClientPacket.class, CanisterContainerClientPacket.STREAM_CODEC),
 
     END_INCINERATION_BLOWER_OUTLINE(EndIncinerationBlowerOutlinePacket.class, EndIncinerationBlowerOutlinePacket.STREAM_CODEC),
+    END_SCULK_SILENCER_RESET(EndSculkSilencerResetPacket.class, EndSculkSilencerResetPacket.STREAM_CODEC),
     END_SCULK_SILENCER_UPDATE(EndSculkSilencerUpdatePacket.class, EndSculkSilencerUpdatePacket.STREAM_CODEC),
 
     MOUNTED_STORAGE_SYNC_WITH_GAS(MountedStorageSyncWithGasPacket.class, MountedStorageSyncWithGasPacket.STREAM_CODEC);
@@ -64,7 +68,7 @@ public enum CCBPackets implements PacketTypeProvider {
     }
 
     public static void register() {
-        CatnipPacketRegistry packetRegistry = new CatnipPacketRegistry(CreateCraftedBeginning.MOD_ID, 1);
+        CatnipPacketRegistry packetRegistry = new CatnipPacketRegistry(CreateCraftedBeginning.MOD_ID, 4);
         Arrays.stream(values()).map(packet -> packet.type).forEach(packetRegistry::registerPacket);
         packetRegistry.registerAllPackets();
     }

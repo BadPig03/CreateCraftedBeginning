@@ -25,6 +25,11 @@ public class EndIncinerationBlowerStructuralBlockEntity extends EndMechanicalStr
     }
 
     @Override
+    protected Class<EndIncinerationBlowerBlockEntity> getMasterClass() {
+        return EndIncinerationBlowerBlockEntity.class;
+    }
+
+    @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         super.addBehaviours(behaviours);
         blowerWorkingMode = new ScrollOptionBehaviour<>(BlowerWorkingMode.class, CCBLang.translateDirect("gui.end_incineration_blower.working_mode"), this, new EndIncinerationBlowerValueBox());

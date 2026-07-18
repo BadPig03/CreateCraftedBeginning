@@ -2,7 +2,6 @@ package net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightc
 
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -12,14 +11,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.living.LivingDamageEvent.Pre;
 import net.neoforged.neoforge.event.entity.living.LivingEvent.LivingVisibilityEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickEmpty;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.AirtightChestplateUpgradeRegistry;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.ChestplateResistanceUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.CreativeFlightUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.ElytraUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.InvisibilityUpgrade;
@@ -38,8 +35,10 @@ public class AirtightChestplateEvents {
         if (!player.level().isClientSide || event.getHand() != InteractionHand.MAIN_HAND || !player.getMainHandItem().isEmpty() || !ElytraUpgrade.canRequestBoost(player)) {
             return;
         }
+        if (!ElytraUpgrade.applyClientSpeedBoost(player)) {
+            return;
+        }
 
-        ElytraUpgrade.applySpeedBoost(player);
         CatnipServices.NETWORK.sendToServer(AirtightChestplateElytraBoostPacket.INSTANCE);
     }
 
@@ -55,20 +54,16 @@ public class AirtightChestplateEvents {
 
     @SubscribeEvent
     public static void onPlayerIncomingDamage(LivingIncomingDamageEvent event) {
-        if (!(event.getEntity() instanceof Player player) || !event.getSource().is(DamageTypes.FLY_INTO_WALL) || !ElytraUpgrade.INSTANCE.canApply(player)) {
+        if (!(event.getEntity() instanceof Player player) || !event.getSource().is(DamageTypes.FLY_INTO_WALL)) {
+            return;
+        }
+
+        ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
+        if (!ElytraUpgrade.INSTANCE.canFly(player, chestplate)) {
             return;
         }
 
         event.setCanceled(true);
-    }
-
-    @SubscribeEvent
-    public static void onPlayerPreTakeDamage(Pre event) {
-        if (!(event.getEntity() instanceof Player player) || event.getSource().is(DamageTypeTags.BYPASSES_RESISTANCE)) {
-            return;
-        }
-
-        ChestplateResistanceUpgrade.INSTANCE.canApply(player, event.getOriginalDamage());
     }
 
     @SubscribeEvent
@@ -85,14 +80,7 @@ public class AirtightChestplateEvents {
             return;
         }
 
-        AirtightChestplateUpgradeRegistry.forEach(upgrade -> {
-            if (!upgrade.canApply(player)) {
-                return;
-            }
-
-            upgrade.applyEffect(player);
-        });
-
+        AirtightChestplateUpgradeRegistry.tick(player, chestplate);
         if (level.getGameTime() % 20 != 0 || player.getEyePosition().y <= level.getMaxBuildHeight()) {
             return;
         }

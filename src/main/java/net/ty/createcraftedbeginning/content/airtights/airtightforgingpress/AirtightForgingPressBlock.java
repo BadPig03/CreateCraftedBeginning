@@ -43,6 +43,14 @@ public class AirtightForgingPressBlock extends Block implements IBE<AirtightForg
         super(properties);
     }
 
+    private static BlockState getStructureState(AirtightForgingPressStructuralPosition position) {
+        if (position.isShaft()) {
+            return CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT_BLOCK.getDefaultState().setValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION, position);
+        }
+
+        return CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_BLOCK.getDefaultState().setValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION, position);
+    }
+
     @Override
     protected boolean skipRendering(BlockState state, BlockState adjacentState, Direction direction) {
         return true;
@@ -65,7 +73,7 @@ public class AirtightForgingPressBlock extends Block implements IBE<AirtightForg
 
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        return onBlockEntityUseItemOn(level, blockPos, be -> AirtightForgingPressUtils.getUseItemOnResult(be, level, player, blockPos, hand, stack));
+        return onBlockEntityUseItemOn(level, blockPos, press -> AirtightForgingPressUtils.getUseItemOnResult(press, level, player, blockPos, hand, stack));
     }
 
     @Override
@@ -75,34 +83,22 @@ public class AirtightForgingPressBlock extends Block implements IBE<AirtightForg
 
     @Override
     public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                for (int k = -1; k <= 1; k++) {
-                    if (i == 0 && j == 0 && k == 0) {
-                        continue;
-                    }
-
-                    BlockPos structurePos = pos.offset(i, j, k);
-                    AirtightForgingPressStructuralPosition structuralPos = AirtightForgingPressStructuralPosition.fromOffset(i, j, k);
-                    BlockState structureState;
-                    if (structuralPos.isShaft()) {
-                        structureState = CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT_BLOCK.getDefaultState().setValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION, structuralPos);
-                    }
-                    else {
-                        structureState = CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_BLOCK.getDefaultState().setValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION, structuralPos);
-                    }
-                    BlockState occupiedState = level.getBlockState(structurePos);
-                    if (!occupiedState.canBeReplaced()) {
-                        if (!(occupiedState.getBlock() instanceof IAirtightForgingPressStructural structural) || occupiedState.getValue(structural.getStructuralPosition()) != structuralPos) {
-                            level.destroyBlock(pos, false);
-                            return;
-                        }
-                        continue;
-                    }
-
-                    level.setBlockAndUpdate(structurePos, structureState);
-                }
+        for (AirtightForgingPressStructuralPosition position : AirtightForgingPressStructuralPosition.all()) {
+            BlockPos structurePos = pos.offset(position.getStructureOffset());
+            BlockState structureState = getStructureState(position);
+            BlockState currentState = level.getBlockState(structurePos);
+            if (currentState.canBeReplaced()) {
+                level.setBlockAndUpdate(structurePos, structureState);
+                continue;
             }
+
+            boolean isExpectedStructure = currentState.getBlock() instanceof IAirtightForgingPressStructural structural && currentState.getValue(structural.getStructuralPosition()) == position;
+            if (isExpectedStructure) {
+                continue;
+            }
+
+            level.destroyBlock(pos, false);
+            return;
         }
     }
 
@@ -120,18 +116,10 @@ public class AirtightForgingPressBlock extends Block implements IBE<AirtightForg
 
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                for (int k = -1; k <= 1; k++) {
-                    if (i == 0 && j == 0 && k == 0) {
-                        continue;
-                    }
-
-                    BlockState occupiedState = level.getBlockState(new BlockPos(pos.getX() + i, pos.getY() + j, pos.getZ() + k));
-                    if (!occupiedState.canBeReplaced()) {
-                        return null;
-                    }
-                }
+        for (AirtightForgingPressStructuralPosition position : AirtightForgingPressStructuralPosition.all()) {
+            BlockState occupiedState = level.getBlockState(pos.offset(position.getStructureOffset()));
+            if (!occupiedState.canBeReplaced()) {
+                return null;
             }
         }
         return state;
@@ -158,16 +146,8 @@ public class AirtightForgingPressBlock extends Block implements IBE<AirtightForg
         @Nullable
         public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
             HashSet<BlockPos> positions = new HashSet<>();
-            for (int i = -1; i <= 1; i++) {
-                for (int j = -1; j <= 1; j++) {
-                    for (int k = -1; k <= 1; k++) {
-                        if (i == 0 && j == 0 && k == 0) {
-                            continue;
-                        }
-
-                        positions.add(new BlockPos(pos.getX() + i, pos.getY() + j, pos.getZ() + k));
-                    }
-                }
+            for (AirtightForgingPressStructuralPosition position : AirtightForgingPressStructuralPosition.all()) {
+                positions.add(pos.offset(position.getStructureOffset()));
             }
             return positions;
         }

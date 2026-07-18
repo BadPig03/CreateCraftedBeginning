@@ -12,7 +12,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -27,28 +26,28 @@ public class AirtightEncasedPipeBlockItem extends BlockItem {
     public InteractionResult place(BlockPlaceContext context) {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
-        BlockState state = level.getBlockState(pos);
-        InteractionResult result = super.place(context);
-        if (!result.consumesAction()) {
-            return result;
+        BlockState replacedState = level.getBlockState(pos);
+        InteractionResult placementResult = super.place(context);
+        if (!placementResult.consumesAction()) {
+            return placementResult;
         }
 
-        if (level.isClientSide || !(state.getBlock() instanceof AirtightPipeBlock)) {
-            return result;
+        if (level.isClientSide || !(replacedState.getBlock() instanceof AirtightPipeBlock)) {
+            return placementResult;
         }
 
         Player player = context.getPlayer();
-        ItemStack stack = new ItemStack(CCBBlocks.AIRTIGHT_PIPE_BLOCK.asItem());
+        ItemStack pipeStack = new ItemStack(replacedState.getBlock().asItem());
         if (player == null) {
-            Block.popResource(level, pos, stack);
-            return result;
+            Block.popResource(level, pos, pipeStack);
+            return placementResult;
         }
 
         if (player.isCreative()) {
-            return result;
+            return placementResult;
         }
 
-        ItemHandlerHelper.giveItemToPlayer(player, stack);
-        return result;
+        ItemHandlerHelper.giveItemToPlayer(player, pipeStack);
+        return placementResult;
     }
 }

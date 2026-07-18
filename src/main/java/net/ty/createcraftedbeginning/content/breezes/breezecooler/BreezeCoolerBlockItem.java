@@ -38,7 +38,7 @@ public class BreezeCoolerBlockItem extends BlockItem {
         super(block, properties);
     }
 
-    private static void giveChamberItemTo(Player player, ItemStack heldItem, InteractionHand hand) {
+    private static void giveCoolerItemTo(Player player, ItemStack heldItem, InteractionHand hand) {
         ItemStack cooler = new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK);
         if (!player.isCreative()) {
             heldItem.shrink(1);
@@ -51,21 +51,21 @@ public class BreezeCoolerBlockItem extends BlockItem {
         ItemHandlerHelper.giveItemToPlayer(player, cooler);
     }
 
-    private static void spawnCaptureEffects(Level level, Vec3 vec) {
+    private static void spawnCaptureEffects(Level level, Vec3 position) {
         if (level.isClientSide) {
             for (int i = 0; i < 40; i++) {
                 Vec3 motion = VecHelper.offsetRandomly(Vec3.ZERO, level.random, 0.125f);
-                level.addParticle(ParticleTypes.GUST, vec.x, vec.y + 1, vec.z, motion.x, motion.y, motion.z);
+                level.addParticle(ParticleTypes.GUST, position.x, position.y + 1, position.z, motion.x, motion.y, motion.z);
             }
             return;
         }
 
-        BlockPos soundPos = BlockPos.containing(vec);
+        BlockPos soundPos = BlockPos.containing(position);
         level.playSound(null, soundPos, SoundEvents.BREEZE_HURT, SoundSource.HOSTILE, 0.25f, 0.75f);
         level.playSound(null, soundPos, SoundEvents.BREEZE_LAND, SoundSource.HOSTILE, 0.5f, 0.75f);
     }
 
-    private static InteractionResult getResultFromTrialSpawner(TrialSpawnerBlockEntity spawnerBlockEntity, UseOnContext context) {
+    private static InteractionResult tryCaptureFromTrialSpawner(TrialSpawnerBlockEntity spawnerBlockEntity, UseOnContext context) {
         Level level = context.getLevel();
         Player player = context.getPlayer();
         if (player == null) {
@@ -79,16 +79,18 @@ public class BreezeCoolerBlockItem extends BlockItem {
 
         TrialSpawner spawner = spawnerBlockEntity.getTrialSpawner();
         TrialSpawnerData data = spawner.getData();
-        if (data.getOrCreateDisplayEntity(spawner, level, state) instanceof Breeze) {
-            giveChamberItemTo(player, context.getItemInHand(), context.getHand());
-            spawnCaptureEffects(level, VecHelper.getCenterOf(spawnerBlockEntity.getBlockPos().below()));
-            return InteractionResult.SUCCESS;
+        if (!(data.getOrCreateDisplayEntity(spawner, level, state) instanceof Breeze)) {
+            return InteractionResult.FAIL;
         }
 
-        return InteractionResult.FAIL;
+        spawnCaptureEffects(level, VecHelper.getCenterOf(spawnerBlockEntity.getBlockPos()));
+        if (!level.isClientSide) {
+            giveCoolerItemTo(player, context.getItemInHand(), context.getHand());
+        }
+        return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
-    private static InteractionResult getResultFromSpawner(SpawnerBlockEntity spawnerBlockEntity, UseOnContext context) {
+    private static InteractionResult tryCaptureFromSpawner(SpawnerBlockEntity spawnerBlockEntity, UseOnContext context) {
         Level level = context.getLevel();
         Player player = context.getPlayer();
         if (player == null) {
@@ -96,13 +98,15 @@ public class BreezeCoolerBlockItem extends BlockItem {
         }
 
         BaseSpawner spawner = spawnerBlockEntity.getSpawner();
-        if (spawner.getOrCreateDisplayEntity(level, context.getClickedPos()) instanceof Breeze) {
-            giveChamberItemTo(player, context.getItemInHand(), context.getHand());
-            spawnCaptureEffects(level, VecHelper.getCenterOf(spawnerBlockEntity.getBlockPos().below()));
-            return InteractionResult.SUCCESS;
+        if (!(spawner.getOrCreateDisplayEntity(level, context.getClickedPos()) instanceof Breeze)) {
+            return InteractionResult.FAIL;
         }
 
-        return InteractionResult.FAIL;
+        spawnCaptureEffects(level, VecHelper.getCenterOf(spawnerBlockEntity.getBlockPos()));
+        if (!level.isClientSide) {
+            giveCoolerItemTo(player, context.getItemInHand(), context.getHand());
+        }
+        return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
     @Override
@@ -113,29 +117,27 @@ public class BreezeCoolerBlockItem extends BlockItem {
 
         Level level = player.level();
         spawnCaptureEffects(level, entity.position());
-        if (level.isClientSide) {
-            return InteractionResult.FAIL;
+        if (!level.isClientSide) {
+            giveCoolerItemTo(player, heldItem, hand);
+            entity.discard();
         }
-
-        giveChamberItemTo(player, heldItem, hand);
-        entity.discard();
-        return InteractionResult.FAIL;
+        return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
     @Override
     public InteractionResult useOn(UseOnContext context) {
         Level level = context.getLevel();
-        BlockEntity be = level.getBlockEntity(context.getClickedPos());
+        BlockEntity blockEntity = level.getBlockEntity(context.getClickedPos());
         if (!CCBConfig.server().airtights.canCoolerGetFromSpawners.get()) {
             return super.useOn(context);
         }
 
-        if (be instanceof TrialSpawnerBlockEntity spawnerBlockEntity) {
-            InteractionResult result = getResultFromTrialSpawner(spawnerBlockEntity, context);
+        if (blockEntity instanceof TrialSpawnerBlockEntity spawnerBlockEntity) {
+            InteractionResult result = tryCaptureFromTrialSpawner(spawnerBlockEntity, context);
             return result == InteractionResult.FAIL ? super.useOn(context) : result;
         }
-        if (be instanceof SpawnerBlockEntity spawnerBlockEntity) {
-            InteractionResult result = getResultFromSpawner(spawnerBlockEntity, context);
+        if (blockEntity instanceof SpawnerBlockEntity spawnerBlockEntity) {
+            InteractionResult result = tryCaptureFromSpawner(spawnerBlockEntity, context);
             return result == InteractionResult.FAIL ? super.useOn(context) : result;
         }
 

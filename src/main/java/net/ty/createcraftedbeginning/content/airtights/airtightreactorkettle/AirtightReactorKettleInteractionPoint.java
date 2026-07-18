@@ -17,14 +17,14 @@ public class AirtightReactorKettleInteractionPoint extends ArmInteractionPoint {
     }
 
     public static class ReactorKettleType extends ArmInteractionPointType {
-		@Override
-		public boolean canCreatePoint(Level level, BlockPos pos, BlockState state) {
-			return state.getBlock() instanceof AirtightReactorKettleStructuralBlock && state.getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION).canStore();
-		}
+        @Override
+        public boolean canCreatePoint(Level level, BlockPos pos, BlockState state) {
+            return state.getBlock() instanceof AirtightReactorKettleStructuralBlock && state.getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION).canStore();
+        }
 
-		@Override
-		public ArmInteractionPoint createPoint(Level level, BlockPos pos, BlockState state) {
-			return new AirtightReactorKettleInteractionPoint(this, level, pos, state);
-		}
-	}
+        @Override
+        public ArmInteractionPoint createPoint(Level level, BlockPos pos, BlockState state) {
+            return new AirtightReactorKettleInteractionPoint(this, level, pos, state);
+        }
+    }
 }

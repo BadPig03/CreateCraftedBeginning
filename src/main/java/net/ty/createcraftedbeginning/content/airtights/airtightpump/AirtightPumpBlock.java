@@ -54,12 +54,13 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
     }
 
     public static boolean canConnectTo(Level level, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
-        if (GasCapabilities.hasGasCapability(level, neighbourPos, direction.getOpposite())) {
+        Direction opposite = direction.getOpposite();
+        if (GasCapabilities.hasGasCapability(level, neighbourPos, opposite)) {
             return true;
         }
 
         GasTransportBehaviour transport = BlockEntityBehaviour.get(level, neighbourPos, GasTransportBehaviour.TYPE);
-        return transport != null && transport.canHaveFlowToward(neighbour, direction.getOpposite());
+        return transport != null && transport.canHaveFlowToward(neighbour, opposite);
     }
 
     public static boolean isPump(BlockState state) {
@@ -68,6 +69,30 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
 
     public static boolean isOpenAt(BlockState state, Direction direction) {
         return direction.getAxis() == state.getValue(FACING).getAxis();
+    }
+
+    private static @Nullable Direction findBestConnection(Level level, BlockPos pos, Direction targetDirection) {
+        Direction bestDirection = null;
+        double bestDistance = Double.MAX_VALUE;
+        Vec3 targetVector = Vec3.atLowerCornerOf(targetDirection.getNormal());
+        for (Direction direction : Iterate.directions) {
+            BlockPos neighbourPos = pos.relative(direction);
+            BlockState neighbour = level.getBlockState(neighbourPos);
+            if (!canConnectTo(level, neighbourPos, neighbour, direction)) {
+                continue;
+            }
+
+            Vec3 directionVector = Vec3.atLowerCornerOf(direction.getNormal());
+            double distance = directionVector.distanceTo(targetVector);
+            if (distance > bestDistance) {
+                continue;
+            }
+
+            bestDistance = distance;
+            bestDirection = direction;
+        }
+
+        return bestDirection;
     }
 
     @Override
@@ -100,30 +125,17 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
 
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
-        boolean isShiftKeyDown = context.getPlayer() != null && context.getPlayer().isShiftKeyDown();
+        boolean isSneaking = context.getPlayer() != null && context.getPlayer().isShiftKeyDown();
+        Direction lookDirection = context.getNearestLookingDirection();
+        Direction targetDirection = isSneaking ? lookDirection : lookDirection.getOpposite();
+        Direction connectedDirection = findBestConnection(level, pos, targetDirection);
+
         state = ProperWaterloggedBlock.withWater(level, state, pos);
-
-        Direction nearestLookingDirection = context.getNearestLookingDirection();
-        Direction targetDirection = isShiftKeyDown ? nearestLookingDirection : nearestLookingDirection.getOpposite();
-        Direction bestConnectedDirection = null;
-        double bestDistance = Double.MAX_VALUE;
-        for (Direction direction : Iterate.directions) {
-            BlockPos adjPos = pos.relative(direction);
-            BlockState adjState = level.getBlockState(adjPos);
-            if (!canConnectTo(level, adjPos, adjState, direction)) {
-                continue;
-            }
-
-            double distance = Vec3.atLowerCornerOf(direction.getNormal()).distanceTo(Vec3.atLowerCornerOf(targetDirection.getNormal()));
-            if (distance > bestDistance) {
-                continue;
-            }
-
-            bestDistance = distance;
-            bestConnectedDirection = direction;
+        if (isSneaking || connectedDirection == null || connectedDirection.getAxis() == targetDirection.getAxis()) {
+            return state;
         }
 
-        return bestConnectedDirection != null && bestConnectedDirection.getAxis() != targetDirection.getAxis() && !isShiftKeyDown ? state.setValue(FACING, bestConnectedDirection) : state;
+        return state.setValue(FACING, connectedDirection);
     }
 
     @Override
@@ -148,11 +160,16 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-        boolean changed = !state.is(newState.getBlock());
-        if (changed && !level.isClientSide) {
+        if (!state.is(newState.getBlock()) && !level.isClientSide) {
             GasPropagator.propagatePipe(level, pos, state);
         }
         super.onRemove(state, level, pos, newState, isMoving);
+    }
+
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity entity, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, entity, stack);
+        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
     }
 
     @Override
@@ -161,9 +178,9 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
     }
 
     @Override
-    public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor world, BlockPos pos, BlockPos neighbourPos) {
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos) {
         if (state.getValue(WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
+            level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
         return state;
     }
@@ -180,12 +197,6 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
     }
 
     @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity entity, ItemStack stack) {
-        super.setPlacedBy(level, pos, state, entity, stack);
-        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
-    }
-
-    @Override
     public FluidState getFluidState(BlockState state) {
         return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : Fluids.EMPTY.defaultFluidState();
     }
@@ -197,7 +208,7 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
 
     @Override
     public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        GasPropagator.propagatePipe(level, pos, state);
+        GasPropagator.propagateChangedPipe(level, pos, state);
     }
 
     @Override

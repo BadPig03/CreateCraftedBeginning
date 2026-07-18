@@ -44,35 +44,69 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
     }
 
     private static @Nullable PortableGasInterfaceBlockEntity findStationaryInterface(Level level, BlockPos pos, BlockState state, Direction facing) {
-        for (int i = 0; i < 2; i++) {
-            PortableGasInterfaceBlockEntity interfaceAt = getStationaryInterfaceAt(level, pos.relative(facing, i), state, facing);
-            if (interfaceAt == null) {
+        for (int offset = 0; offset < 2; offset++) {
+            PortableGasInterfaceBlockEntity stationary = getStationaryInterfaceAt(level, pos.relative(facing, offset), state, facing);
+            if (stationary == null) {
                 continue;
             }
 
-            return interfaceAt;
+            return stationary;
         }
         return null;
     }
 
     private static @Nullable PortableGasInterfaceBlockEntity getStationaryInterfaceAt(Level level, BlockPos pos, BlockState state, Direction facing) {
-        if (!(level.getBlockEntity(pos) instanceof PortableGasInterfaceBlockEntity psi)) {
+        if (!(level.getBlockEntity(pos) instanceof PortableGasInterfaceBlockEntity stationary)) {
             return null;
         }
 
-        BlockState blockState = level.getBlockState(pos);
-        if (blockState.getBlock() != state.getBlock() || blockState.getValue(PortableGasInterfaceBlock.FACING) != facing.getOpposite()) {
+        BlockState stationaryState = level.getBlockState(pos);
+        if (stationaryState.getBlock() != state.getBlock() || stationaryState.getValue(PortableGasInterfaceBlock.FACING) != facing.getOpposite()) {
+            return null;
+        }
+        if (stationary.isPowered()) {
             return null;
         }
 
-        return psi.isPowered() ? null : psi;
+        return stationary;
     }
 
-    private static Optional<Direction> getCurrentFacingIfValid(MovementContext context) {
-        Vec3 directionVec = Vec3.atLowerCornerOf(context.state.getValue(PortableGasInterfaceBlock.FACING).getNormal());
-        directionVec = context.rotation.apply(directionVec);
-        Direction facingFromVector = Direction.getNearest(directionVec.x, directionVec.y, directionVec.z);
-        return directionVec.distanceTo(Vec3.atLowerCornerOf(facingFromVector.getNormal())) > 0.5f ? Optional.empty() : Optional.of(facingFromVector);
+    private static Optional<Direction> getValidFacing(MovementContext context) {
+        Vec3 facingVector = Vec3.atLowerCornerOf(context.state.getValue(PortableGasInterfaceBlock.FACING).getNormal());
+        Vec3 rotated = context.rotation.apply(facingVector);
+        Direction facing = Direction.getNearest(rotated.x, rotated.y, rotated.z);
+        Vec3 nearest = Vec3.atLowerCornerOf(facing.getNormal());
+        if (rotated.distanceTo(nearest) > 0.5f) {
+            return Optional.empty();
+        }
+
+        return Optional.of(facing);
+    }
+
+    private static boolean shouldStall(MovementContext context, Vec3 target, boolean isOnCarriage) {
+        if (context.stall || isOnCarriage) {
+            return false;
+        }
+
+        Vec3 nextPos = context.position.add(context.motion);
+        return context.position.closerThan(target, target.distanceTo(nextPos));
+    }
+
+    private static void updateClientConnection(MovementContext context, BlockPos pos, PortableGasInterfaceBlockEntity stationary) {
+        context.data.put(COMPOUND_KEY_CLIENT_PREVIOUS_POSITION, NbtUtils.writeBlockPos(pos));
+
+        boolean shouldAnimate = context.contraption instanceof CarriageContraption || context.contraption.entity.isStalled() || context.motion.lengthSqr() == 0;
+        if (!shouldAnimate) {
+            return;
+        }
+
+        getAnimation(context).chase(stationary.getDistance() / 2, 0.25f, Chaser.LINEAR);
+    }
+
+    private static void startTransfer(MovementContext context, PortableGasInterfaceBlockEntity stationary, Direction facing) {
+        Vec3 offset = VecHelper.getCenterOf(stationary.getBlockPos()).subtract(context.position);
+        Vec3 projected = VecHelper.project(offset, Vec3.atLowerCornerOf(facing.getNormal()));
+        stationary.startTransferringTo(context.contraption, (float) (projected.length() + 1.85f - 1));
     }
 
     @Override
@@ -114,52 +148,17 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
             getAnimation(context).tickChaser();
         }
 
-        boolean onCarriage = context.contraption instanceof CarriageContraption;
-        if (onCarriage && context.motion.length() > 0.25f) {
+        boolean isOnCarriage = context.contraption instanceof CarriageContraption;
+        if (isOnCarriage && context.motion.length() > 0.25f) {
             return;
         }
 
         if (context.world.isClientSide) {
-            if (findInterface(context, BlockPos.containing(context.position))) {
-                return;
-            }
-
-            reset(context);
+            tickClient(context);
             return;
         }
 
-        if (!context.data.contains(COMPOUND_KEY_WORKING_POSITION)) {
-            if (context.stall) {
-                cancelStall(context);
-            }
-            return;
-        }
-
-        BlockPos pos = NBTHelper.readBlockPos(context.data, COMPOUND_KEY_WORKING_POSITION);
-        Vec3 target = VecHelper.getCenterOf(pos);
-        if (!context.stall && !onCarriage && context.position.closerThan(target, target.distanceTo(context.position.add(context.motion)))) {
-            context.stall = true;
-        }
-        Optional<Direction> currentFacingIfValid = getCurrentFacingIfValid(context);
-        if (currentFacingIfValid.isEmpty()) {
-            return;
-        }
-
-        PortableGasInterfaceBlockEntity stationaryInterface = getStationaryInterfaceAt(context.world, pos, context.state, currentFacingIfValid.get());
-        if (stationaryInterface == null) {
-            reset(context);
-            return;
-        }
-
-        if (stationaryInterface.getConnectedEntity() == null) {
-            stationaryInterface.startTransferringTo(context.contraption, stationaryInterface.getDistance());
-        }
-        stationaryInterface.keepAlive = 2;
-        if (!context.stall || stationaryInterface.getTransferTimer() > PortableGasInterfaceBlockEntity.ANIMATION) {
-            return;
-        }
-
-        context.stall = false;
+        tickServer(context, isOnCarriage);
     }
 
     @Override
@@ -168,29 +167,24 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
             return false;
         }
 
-        Optional<Direction> currentFacingIfValid = getCurrentFacingIfValid(context);
-        if (currentFacingIfValid.isEmpty()) {
+        Optional<Direction> facing = getValidFacing(context);
+        if (facing.isEmpty()) {
             return false;
         }
 
-        Direction currentFacing = currentFacingIfValid.get();
-        PortableGasInterfaceBlockEntity psi = findStationaryInterface(context.world, pos, context.state, currentFacing);
-        if (psi == null || psi.isPowered()) {
+        Direction currentFacing = facing.get();
+        PortableGasInterfaceBlockEntity stationary = findStationaryInterface(context.world, pos, context.state, currentFacing);
+        if (stationary == null || stationary.isPowered()) {
             return false;
         }
 
-        context.data.put(COMPOUND_KEY_WORKING_POSITION, NbtUtils.writeBlockPos(psi.getBlockPos()));
+        context.data.put(COMPOUND_KEY_WORKING_POSITION, NbtUtils.writeBlockPos(stationary.getBlockPos()));
         if (context.world.isClientSide) {
-            context.data.put(COMPOUND_KEY_CLIENT_PREVIOUS_POSITION, NbtUtils.writeBlockPos(pos));
-            if (context.contraption instanceof CarriageContraption || context.contraption.entity.isStalled() || context.motion.lengthSqr() == 0) {
-                getAnimation(context).chase(psi.getDistance() / 2, 0.25f, Chaser.LINEAR);
-            }
+            updateClientConnection(context, pos, stationary);
+            return true;
         }
-        else {
-            Vec3 subtracted = VecHelper.getCenterOf(psi.getBlockPos()).subtract(context.position);
-            subtracted = VecHelper.project(subtracted, Vec3.atLowerCornerOf(currentFacing.getNormal()));
-            psi.startTransferringTo(context.contraption, (float) (subtracted.length() + 1.85f - 1));
-        }
+
+        startTransfer(context, stationary, currentFacing);
         return true;
     }
 
@@ -200,5 +194,49 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
         context.data.remove(COMPOUND_KEY_WORKING_POSITION);
         context.stall = false;
         getAnimation(context).chase(0, 0.25f, Chaser.LINEAR);
+    }
+
+    private void tickClient(MovementContext context) {
+        if (findInterface(context, BlockPos.containing(context.position))) {
+            return;
+        }
+
+        reset(context);
+    }
+
+    private void tickServer(MovementContext context, boolean isOnCarriage) {
+        if (!context.data.contains(COMPOUND_KEY_WORKING_POSITION)) {
+            if (context.stall) {
+                cancelStall(context);
+            }
+            return;
+        }
+
+        BlockPos pos = NBTHelper.readBlockPos(context.data, COMPOUND_KEY_WORKING_POSITION);
+        Vec3 target = VecHelper.getCenterOf(pos);
+        if (shouldStall(context, target, isOnCarriage)) {
+            context.stall = true;
+        }
+
+        Optional<Direction> facing = getValidFacing(context);
+        if (facing.isEmpty()) {
+            return;
+        }
+
+        PortableGasInterfaceBlockEntity stationary = getStationaryInterfaceAt(context.world, pos, context.state, facing.get());
+        if (stationary == null) {
+            reset(context);
+            return;
+        }
+
+        if (stationary.getConnectedEntity() == null) {
+            stationary.startTransferringTo(context.contraption, stationary.getDistance());
+        }
+        stationary.keepAlive = 2;
+        if (!context.stall || stationary.getTransferTimer() > PortableGasInterfaceBlockEntity.ANIMATION) {
+            return;
+        }
+
+        context.stall = false;
     }
 }

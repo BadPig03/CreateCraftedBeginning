@@ -34,7 +34,6 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
@@ -53,6 +52,7 @@ import net.neoforged.neoforge.common.util.FakePlayer;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
+import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -62,16 +62,26 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE<BreezeCoolerBlockEntity>, SimpleWaterloggedBlock, IWrenchable {
     public static final EnumProperty<FrostLevel> FROST_LEVEL = EnumProperty.create("frost_level", FrostLevel.class);
-    public static final BooleanProperty COOLER = BooleanProperty.create("cooler");
+    public static final BooleanProperty ATTACHED = BooleanProperty.create("attached");
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     public BreezeCoolerBlock(Properties properties) {
         super(properties);
-        registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(FROST_LEVEL, FrostLevel.RIMING).setValue(COOLER, false));
+        registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(FROST_LEVEL, FrostLevel.RIMING).setValue(ATTACHED, false));
     }
 
     public static FrostLevel getFrostLevelOf(BlockState blockState) {
         return blockState.getValue(FROST_LEVEL);
+    }
+
+    private static ItemInteractionResult setGoggles(BreezeCoolerBlockEntity cooler, boolean goggles) {
+        if (cooler.hasGoggles() == goggles) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        cooler.setGoggles(goggles);
+        cooler.notifyUpdate();
+        return ItemInteractionResult.SUCCESS;
     }
 
     public static InteractionResultHolder<ItemStack> tryInsert(BlockState state, Level level, BlockPos pos, ItemStack stack, boolean doNotConsume, boolean forceOverflow, boolean simulate) {
@@ -79,30 +89,29 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
             return InteractionResultHolder.fail(ItemStack.EMPTY);
         }
 
-        BlockEntity be = level.getBlockEntity(pos);
-        if (!(be instanceof BreezeCoolerBlockEntity bcbe)) {
+        if (!(level.getBlockEntity(pos) instanceof BreezeCoolerBlockEntity cooler)) {
             return InteractionResultHolder.fail(ItemStack.EMPTY);
         }
 
-        if (!bcbe.tryUpdateCoolantByItem(stack, forceOverflow, simulate)) {
+        if (!cooler.tryUpdateCoolantByItem(stack, forceOverflow, simulate)) {
             return InteractionResultHolder.fail(ItemStack.EMPTY);
         }
 
-        if (!doNotConsume) {
-            ItemStack container;
-            if (stack.getItem() instanceof DispensibleContainerItem) {
-                container = new ItemStack(Items.BUCKET);
-            }
-            else {
-                container = stack.hasCraftingRemainingItem() ? stack.getCraftingRemainingItem() : ItemStack.EMPTY;
-            }
-            if (!level.isClientSide) {
-                stack.shrink(1);
-            }
-            return InteractionResultHolder.success(container);
+        if (doNotConsume) {
+            return InteractionResultHolder.success(ItemStack.EMPTY);
         }
 
-        return InteractionResultHolder.success(ItemStack.EMPTY);
+        ItemStack container;
+        if (stack.getItem() instanceof DispensibleContainerItem) {
+            container = new ItemStack(Items.BUCKET);
+        }
+        else {
+            container = stack.hasCraftingRemainingItem() ? stack.getCraftingRemainingItem() : ItemStack.EMPTY;
+        }
+        if (!simulate && !level.isClientSide) {
+            stack.shrink(1);
+        }
+        return InteractionResultHolder.success(container);
     }
 
     @Override
@@ -115,24 +124,20 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
         if (state.getValue(WATERLOGGED)) {
             world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
         }
+        if (direction == Direction.UP) {
+            state = state.setValue(ATTACHED, neighbourState.is(CCBBlocks.AIR_COMPRESSOR_BLOCK.get()));
+        }
         return state;
     }
 
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
         if (AllItems.GOGGLES.isIn(stack)) {
-            return onBlockEntityUseItemOn(level, pos, bcbe -> {
-                if (bcbe.hasGoggles()) {
-                    return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-                }
-                bcbe.setGoggles(true);
-                bcbe.notifyUpdate();
-                return ItemInteractionResult.SUCCESS;
-            });
+            return onBlockEntityUseItemOn(level, pos, cooler -> setGoggles(cooler, true));
         }
 
-        BreezeCoolerBlockEntity be = getBlockEntity(level, pos);
-        if (be != null && be.isStockKeeper()) {
+        BreezeCoolerBlockEntity cooler = getBlockEntity(level, pos);
+        if (cooler != null && cooler.isStockKeeper()) {
             StockTickerBlockEntity stockTicker = BlazeBurnerBlockEntity.getStockTicker(level, pos);
             if (stockTicker != null) {
                 StockTickerInteractionHandler.interactWithLogisticsManagerAt(player, level, stockTicker.getBlockPos());
@@ -141,30 +146,25 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
         }
 
         if (stack.isEmpty()) {
-            return onBlockEntityUseItemOn(level, pos, bcbe -> {
-                if (!bcbe.hasGoggles()) {
-                    return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-                }
-                bcbe.setGoggles(false);
-                bcbe.notifyUpdate();
-                return ItemInteractionResult.SUCCESS;
-            });
+            return onBlockEntityUseItemOn(level, pos, blockEntity -> setGoggles(blockEntity, false));
         }
 
         boolean doNotConsume = player.isCreative();
         boolean forceOverflow = !(player instanceof FakePlayer);
         InteractionResultHolder<ItemStack> resultHolder = tryInsert(state, level, pos, stack, doNotConsume, forceOverflow, false);
+        ItemInteractionResult interactionResult = resultHolder.getResult() == InteractionResult.SUCCESS ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         ItemStack leftover = resultHolder.getObject();
-        if (!level.isClientSide && !doNotConsume && !leftover.isEmpty()) {
-            if (stack.isEmpty()) {
-                player.setItemInHand(hand, leftover);
-            }
-            else if (!player.getInventory().add(leftover)) {
-                player.drop(leftover, false);
-            }
+        if (level.isClientSide || doNotConsume || leftover.isEmpty()) {
+            return interactionResult;
         }
 
-        return resultHolder.getResult() == InteractionResult.SUCCESS ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        if (stack.isEmpty()) {
+            player.setItemInHand(hand, leftover);
+        }
+        else if (!player.getInventory().add(leftover)) {
+            player.drop(leftover, false);
+        }
+        return interactionResult;
     }
 
     @Override
@@ -179,12 +179,12 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
 
     @Override
     public int getAnalogOutputSignal(BlockState state, Level level, BlockPos blockPos) {
-        return Math.max(0, state.getValue(FROST_LEVEL).ordinal() - 1);
+        return state.getValue(FROST_LEVEL) == FrostLevel.CHILLED ? 15 : 0;
     }
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter reader, BlockPos pos, CollisionContext context) {
-        return state.getValue(COOLER) ? CCBShapes.COOLER_BLOCK_COOLER_SHAPE : CCBShapes.COOLER_BLOCK_SHAPE;
+        return state.getValue(ATTACHED) ? CCBShapes.COOLER_BLOCK_COOLER_SHAPE : CCBShapes.COOLER_BLOCK_SHAPE;
     }
 
     @Override
@@ -214,7 +214,8 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
             return null;
         }
 
-        state = state.setValue(FROST_LEVEL, FrostLevel.RIMING).setValue(FACING, context.getHorizontalDirection().getOpposite()).setValue(COOLER, false);
+        boolean compressorAttached = context.getLevel().getBlockState(context.getClickedPos().above()).is(CCBBlocks.AIR_COMPRESSOR_BLOCK.get());
+        state = state.setValue(FROST_LEVEL, FrostLevel.RIMING).setValue(FACING, context.getHorizontalDirection().getOpposite()).setValue(ATTACHED, compressorAttached);
         return ProperWaterloggedBlock.withWater(context.getLevel(), state, context.getClickedPos());
     }
 
@@ -226,7 +227,7 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
 
     @Override
     protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
-        builder.add(FROST_LEVEL, FACING, WATERLOGGED, COOLER);
+        builder.add(FROST_LEVEL, FACING, WATERLOGGED, ATTACHED);
         super.createBlockStateDefinition(builder);
     }
 
@@ -258,8 +259,8 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
         @Contract(pure = true)
         public String getTranslatable() {
             return switch (this) {
-                case RIMING -> "gui.goggles.breeze_cooler.riming";
-                case CHILLED -> "gui.goggles.breeze_cooler.chilled";
+                case RIMING -> "gui.breeze_cooler.riming";
+                case CHILLED -> "gui.breeze_cooler.chilled";
             };
         }
 

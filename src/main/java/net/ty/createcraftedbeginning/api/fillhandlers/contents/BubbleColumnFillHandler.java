@@ -13,6 +13,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class BubbleColumnFillHandler implements AirtightFillHandler {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Gas apply(Level level, BlockPos pos, BlockState state) {
         return CCBGases.MOIST_AIR.get();

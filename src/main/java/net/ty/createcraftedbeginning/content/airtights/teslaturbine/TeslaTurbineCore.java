@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.content.airtights.teslaturbine;
 
-import net.createmod.catnip.data.Pair;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
@@ -9,18 +8,14 @@ import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.turbinehandlers.AirtightTurbineHandlerUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
-import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class TeslaTurbineCore {
-    public static final int MAX_LEVEL = 16;
-
-    private static final Set<Pair<Integer, Integer>> CLOCKWISE_OFFSETS = Set.of(Pair.of(2, 1), Pair.of(-1, 2), Pair.of(1, -2), Pair.of(-2, -1));
-    private static final Set<Pair<Integer, Integer>> COUNTER_CLOCKWISE_OFFSETS = Set.of(Pair.of(-2, 1), Pair.of(-1, -2), Pair.of(1, 2), Pair.of(2, -1));
     private static final String COMPOUND_KEY_FLOW_METER = "FlowMeter";
     private static final String COMPOUND_KEY_LEVEL_CALCULATOR = "LevelCalculator";
     private static final String COMPOUND_KEY_STRUCTURE_MANAGER = "StructureManager";
@@ -33,6 +28,9 @@ public class TeslaTurbineCore {
     private final TeslaTurbineLevelCalculator levelCalculator;
     private final TeslaTurbineFlowMeter flowMeter;
 
+    private boolean saveDirty;
+    private boolean clientDirty;
+
     public TeslaTurbineCore(TeslaTurbineBlockEntity turbine) {
         this.turbine = turbine;
         structureManager = new TeslaTurbineStructureManager(this, turbine);
@@ -43,6 +41,10 @@ public class TeslaTurbineCore {
         counterClockwiseHandler = new TeslaTurbineGasHandler(false);
     }
 
+    private static CompoundTag getCompoundOrEmpty(CompoundTag tag, String key) {
+        return tag.contains(key) ? tag.getCompound(key) : new CompoundTag();
+    }
+
     public void tick() {
         Level level = turbine.getLevel();
         if (level == null || level.isClientSide) {
@@ -50,7 +52,7 @@ public class TeslaTurbineCore {
         }
 
         flowMeter.tick();
-        levelCalculator.update();
+        flushDirtyState();
     }
 
     public void lazyTick() {
@@ -79,44 +81,79 @@ public class TeslaTurbineCore {
         return levelCalculator;
     }
 
-    public TeslaTurbineTooltipBuilder getTooltipBuilder() {
-        return tooltipBuilder;
-    }
-
     public TeslaTurbineFlowMeter getFlowMeter() {
         return flowMeter;
     }
 
-    public Set<Pair<Integer, Integer>> getOffsets(boolean counterClockwise) {
-        return counterClockwise ? COUNTER_CLOCKWISE_OFFSETS : CLOCKWISE_OFFSETS;
+    public void markForSave() {
+        saveDirty = true;
     }
 
-    public CompoundTag write(Provider provider) {
-        CompoundTag compoundTag = new CompoundTag();
-        compoundTag.put(COMPOUND_KEY_FLOW_METER, flowMeter.write(provider));
-        compoundTag.put(COMPOUND_KEY_LEVEL_CALCULATOR, levelCalculator.write());
-        compoundTag.put(COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.write());
-        return compoundTag;
+    public void markForClientSync() {
+        clientDirty = true;
     }
 
-    public void read(CompoundTag compoundTag, Provider provider) {
-        if (compoundTag.contains(COMPOUND_KEY_FLOW_METER)) {
-            flowMeter.read(compoundTag.getCompound(COMPOUND_KEY_FLOW_METER), provider);
+    public void markForSaveAndClientSync() {
+        saveDirty = true;
+        clientDirty = true;
+    }
+
+    public CompoundTag write(Provider provider, boolean clientPacket) {
+        CompoundTag tag = new CompoundTag();
+        tag.put(COMPOUND_KEY_FLOW_METER, flowMeter.write(provider, clientPacket));
+        if (clientPacket) {
+            tag.put(COMPOUND_KEY_LEVEL_CALCULATOR, levelCalculator.write(true));
+            tag.put(COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.writeClient());
         }
-        if (compoundTag.contains(COMPOUND_KEY_LEVEL_CALCULATOR)) {
-            levelCalculator.read(compoundTag.getCompound(COMPOUND_KEY_LEVEL_CALCULATOR));
+        return tag;
+    }
+
+    public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        if (clientPacket) {
+            readClient(compoundTag, provider);
         }
-        if (compoundTag.contains(COMPOUND_KEY_STRUCTURE_MANAGER)) {
-            structureManager.read(compoundTag.getCompound(COMPOUND_KEY_STRUCTURE_MANAGER));
+        else {
+            readPersistent(compoundTag, provider);
         }
-        levelCalculator.update();
+
+        saveDirty = false;
+        clientDirty = false;
     }
 
     public IGasHandler createGasHandler(boolean clockwise) {
-        if (clockwise) {
-            return clockwiseHandler;
+        return clockwise ? clockwiseHandler : counterClockwiseHandler;
+    }
+
+    public TeslaTurbineBlockEntity getTurbine() {
+        return turbine;
+    }
+
+    private void readClient(CompoundTag tag, Provider provider) {
+        flowMeter.read(getCompoundOrEmpty(tag, COMPOUND_KEY_FLOW_METER), provider, true);
+        levelCalculator.read(getCompoundOrEmpty(tag, COMPOUND_KEY_LEVEL_CALCULATOR), true);
+        structureManager.readClient(getCompoundOrEmpty(tag, COMPOUND_KEY_STRUCTURE_MANAGER));
+    }
+
+    private void readPersistent(CompoundTag compoundTag, Provider provider) {
+        levelCalculator.read(new CompoundTag(), false);
+        if (compoundTag.contains(COMPOUND_KEY_FLOW_METER)) {
+            flowMeter.read(compoundTag.getCompound(COMPOUND_KEY_FLOW_METER), provider, false);
         }
-        return counterClockwiseHandler;
+        else {
+            flowMeter.loadEmptyState();
+        }
+        structureManager.invalidateForServerLoad();
+    }
+
+    private void flushDirtyState() {
+        if (saveDirty) {
+            turbine.setChanged();
+            saveDirty = false;
+        }
+        if (clientDirty) {
+            turbine.sendData();
+            clientDirty = false;
+        }
     }
 
     private class TeslaTurbineGasHandler implements IGasHandler {
@@ -128,7 +165,7 @@ public class TeslaTurbineCore {
 
         @Override
         public boolean isGasValid(int tank, GasStack stack) {
-            return true;
+            return !stack.isEmpty() && AirtightTurbineHandlerUtils.of(stack).getEfficiency() > 0;
         }
 
         @Override
@@ -153,7 +190,7 @@ public class TeslaTurbineCore {
 
         @Override
         public long fill(GasStack resource, GasAction action) {
-            return flowMeter.fill(resource, action, clockwise);
+            return isGasValid(0, resource) ? flowMeter.fill(resource, action, clockwise) : 0;
         }
 
         @Override

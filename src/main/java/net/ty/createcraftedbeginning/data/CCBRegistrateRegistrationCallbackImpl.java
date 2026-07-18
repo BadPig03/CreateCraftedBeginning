@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -22,27 +21,26 @@ public class CCBRegistrateRegistrationCallbackImpl {
     public static void provideRegistrate(CCBRegistrate registrate) {
         synchronized (CALLBACKS) {
             String modId = registrate.getModid();
-            Either<List<CallbackImpl<?, ?>>, CCBRegistrate> either = CALLBACKS.remove(modId);
-            if (either != null) {
-                Optional<List<CallbackImpl<?, ?>>> optionalCallbacks = either.left();
-                if (optionalCallbacks.isEmpty()) {
-                    throw new IllegalArgumentException("Tried to register a duplicate CCBRegistrate instance for mod Id: " + modId);
-                }
-
-                optionalCallbacks.get().forEach(callback -> callback.addToRegistrate(registrate));
+            Either<List<CallbackImpl<?, ?>>, CCBRegistrate> registration = CALLBACKS.remove(modId);
+            if (registration == null) {
+                CALLBACKS.put(modId, Either.right(registrate));
+                return;
             }
+
+            List<CallbackImpl<?, ?>> callbacks = registration.left().orElseThrow(() -> new IllegalArgumentException("Tried to register a duplicate CCBRegistrate instance for mod Id: " + modId));
+            callbacks.forEach(callback -> callback.addToRegistrate(registrate));
             CALLBACKS.put(modId, Either.right(registrate));
         }
     }
 
     public static <R, T extends R> void register(ResourceKey<? extends Registry<R>> registry, ResourceLocation id, NonNullConsumer<? super T> callback) {
         CallbackImpl<R, T> callbackImpl = new CallbackImpl<>(registry, id, callback);
-        Either<List<CallbackImpl<?, ?>>, CCBRegistrate> either;
+        Either<List<CallbackImpl<?, ?>>, CCBRegistrate> registration;
         synchronized (CALLBACKS) {
-            either = CALLBACKS.computeIfAbsent(id.getNamespace(), string -> Either.left(new ArrayList<>()));
-            either.ifLeft(callbacks -> callbacks.add(callbackImpl));
+            registration = CALLBACKS.computeIfAbsent(id.getNamespace(), namespace -> Either.left(new ArrayList<>()));
+            registration.ifLeft(callbacks -> callbacks.add(callbackImpl));
         }
-        either.ifRight(callbackImpl::addToRegistrate);
+        registration.ifRight(callbackImpl::addToRegistrate);
     }
 
     private record CallbackImpl<R, T extends R>(ResourceKey<? extends Registry<R>> registry, ResourceLocation id, NonNullConsumer<? super T> callback) {

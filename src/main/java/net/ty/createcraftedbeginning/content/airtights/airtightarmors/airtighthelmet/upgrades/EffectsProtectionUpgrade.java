@@ -11,12 +11,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandler;
-import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlerUtils;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePowerMode;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.GlobalAirtightUpgradesConsumptionManager;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
@@ -30,6 +27,9 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public enum EffectsProtectionUpgrade implements AirtightUpgrade {
     INSTANCE;
+
+    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("effects_protection");
+    private static final Couple<Integer> OFFSET = Couple.create(36, 31);
 
     @Override
     public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
@@ -71,17 +71,12 @@ public enum EffectsProtectionUpgrade implements AirtightUpgrade {
 
     @Override
     public Couple<Integer> getOffset() {
-        return Couple.create(36, 31);
+        return OFFSET;
     }
 
     @Override
-    public int getGasConsumptionPerSecond(Player player, ItemStack item) {
-        return 0;
-    }
-
-    @Override
-    public int getIndex() {
-        return 0;
+    public AirtightUpgradePowerMode getPowerMode() {
+        return AirtightUpgradePowerMode.ON_DEMAND;
     }
 
     @Override
@@ -91,7 +86,7 @@ public enum EffectsProtectionUpgrade implements AirtightUpgrade {
 
     @Override
     public ResourceLocation getID() {
-        return CreateCraftedBeginning.asResource("effects_protection");
+        return ID;
     }
 
     @Override
@@ -108,22 +103,16 @@ public enum EffectsProtectionUpgrade implements AirtightUpgrade {
         return item.is(CCBItems.AIRTIGHT_HELMET) && AirtightUpgrade.super.isActive(player, item);
     }
 
-    public boolean canApply(Player player, MobEffectInstance effectInstance) {
+    public boolean canApply(Player player, MobEffectInstance effect) {
         if (!canApply(player)) {
             return false;
         }
 
-        Gas gasType = CanisterContainerSuppliers.getFirstAvailableGasContent(player).getGasType();
-        AirtightArmorsHandler armorsHandler = AirtightArmorsHandlerUtils.of(gasType);
-        if (!armorsHandler.canCureEffect(effectInstance)) {
-            return false;
-        }
-
+        int consumption = (effect.getAmplifier() + 1) * effect.getDuration();
         if (player.level().isClientSide) {
-            return true;
+            return GlobalAirtightUpgradesConsumptionManager.canConsumeGas(player, this, EquipmentSlot.HEAD, consumption, handler -> handler.canCureEffect(effect));
         }
 
-        int consumption = (effectInstance.getAmplifier() + 1) * effectInstance.getDuration();
-        return GlobalAirtightUpgradesConsumptionManager.tryConsumeGas(player, this, EquipmentSlot.HEAD, consumption);
+        return GlobalAirtightUpgradesConsumptionManager.tryConsumeGas(player, this, EquipmentSlot.HEAD, consumption, handler -> handler.canCureEffect(effect));
     }
 }

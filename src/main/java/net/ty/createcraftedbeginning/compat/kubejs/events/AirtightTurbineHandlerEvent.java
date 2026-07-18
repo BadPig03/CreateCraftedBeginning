@@ -1,10 +1,8 @@
 package net.ty.createcraftedbeginning.compat.kubejs.events;
 
 import dev.latvian.mods.kubejs.event.KubeEvent;
-import dev.latvian.mods.rhino.util.HideFromJS;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.turbinehandlers.AirtightTurbineHandlerUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -27,23 +25,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightTurbineHandlerEvent implements KubeEvent {
-    /**
-     * Registers an Airtight Turbine efficiency value for the given gas type.
-     * <p>
-     * This overload is hidden from JavaScript and is intended for internal Java-side
-     * usage. The gas is converted to its {@link ResourceLocation}, then delegated to
-     * {@link AirtightTurbineHandlerUtils#register(ResourceLocation, int)}.
-     *
-     * @param gasType    the gas type to register
-     * @param efficiency the airtight turbine efficiency value to assign
-     * @see Gas#getResourceLocation()
-     * @see AirtightTurbineHandlerUtils#register(ResourceLocation, int)
-     */
-    @HideFromJS
-    public static void add(Gas gasType, int efficiency) {
-        AirtightTurbineHandlerUtils.register(gasType.getResourceLocation(), efficiency);
-    }
-
     /**
      * Registers an Airtight Turbine efficiency value for the gas identified by
      * the given resource location.
