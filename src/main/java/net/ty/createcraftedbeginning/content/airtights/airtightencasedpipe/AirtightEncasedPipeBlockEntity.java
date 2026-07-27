@@ -92,10 +92,23 @@ public class AirtightEncasedPipeBlockEntity extends SmartBlockEntity implements 
 
         @Override
         public boolean canHaveFlowToward(BlockState state, Direction direction) {
-            BlockPos otherPos = worldPosition.relative(direction);
+            if (!canHaveFlowTowardWithoutLevel(state, direction)) {
+                return false;
+            }
+
             Level level = getWorld();
+            if (level == null) {
+                return false;
+            }
+
+            BlockPos otherPos = worldPosition.relative(direction);
             BlockState otherState = level.getBlockState(otherPos);
-            return isValidAirtightComponents(level, otherPos, otherState, direction) && state.getValue(AirtightEncasedPipeBlock.PROPERTY_BY_DIRECTION.get(direction));
+            return isValidAirtightComponents(level, otherPos, otherState, direction);
+        }
+
+        @Override
+        public boolean canHaveFlowTowardWithoutLevel(BlockState state, Direction direction) {
+            return state.getValue(AirtightEncasedPipeBlock.PROPERTY_BY_DIRECTION.get(direction));
         }
     }
 }

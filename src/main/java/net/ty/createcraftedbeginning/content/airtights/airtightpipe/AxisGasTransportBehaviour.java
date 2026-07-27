@@ -25,13 +25,22 @@ public abstract class AxisGasTransportBehaviour extends GasTransportBehaviour {
 
     @Override
     public boolean canHaveFlowToward(BlockState state, Direction direction) {
-        if (state.getValue(BlockStateProperties.AXIS) != direction.getAxis()) {
+        if (!canHaveFlowTowardWithoutLevel(state, direction)) {
+            return false;
+        }
+
+        Level level = getWorld();
+        if (level == null) {
             return false;
         }
 
         BlockPos otherPos = blockEntity.getBlockPos().relative(direction);
-        Level level = getWorld();
         return isValidAirtightComponents(level, otherPos, level.getBlockState(otherPos), direction);
+    }
+
+    @Override
+    public boolean canHaveFlowTowardWithoutLevel(BlockState state, Direction direction) {
+        return state.getValue(BlockStateProperties.AXIS) == direction.getAxis();
     }
 
     @Override

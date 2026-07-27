@@ -32,6 +32,7 @@ public class AirtightAssemblyDriverResidueManager {
     private static final String COMPOUND_KEY_GENERATION_COOLDOWN = "GenerationCooldown";
     private static final String COMPOUND_KEY_FAILURE_COOLDOWN = "FailureCooldown";
     private static final String COMPOUND_KEY_SUCCESS_COUNT = "SuccessCount";
+    private static final String COMPOUND_KEY_ITEM_DISTRIBUTION_CURSOR = "ItemDistributionCursor";
     private static final String COMPOUND_KEY_FLUID_DISTRIBUTION_CURSOR = "FluidDistributionCursor";
 
     private final AirtightAssemblyDriverCore driverCore;
@@ -40,6 +41,7 @@ public class AirtightAssemblyDriverResidueManager {
     private int successCount;
     private int generationCooldown = GENERATION_MAX_COOLDOWN;
     private int failureCooldown = FAILURE_MAX_COOLDOWN;
+    private int itemDistributionCursor;
     private int fluidDistributionCursor;
 
     public AirtightAssemblyDriverResidueManager(AirtightAssemblyDriverCore driverCore) {
@@ -52,6 +54,14 @@ public class AirtightAssemblyDriverResidueManager {
 
     private static int getFluidQuantityMultiplier() {
         return CCBConfig.server().airtights.fluidQuantityMultiplier.get();
+    }
+
+    private static boolean useItemResidueRoundRobin() {
+        return CCBConfig.server().airtights.useItemResidueRoundRobin.get();
+    }
+
+    private static boolean useFluidResidueRoundRobin() {
+        return CCBConfig.server().airtights.useFluidResidueRoundRobin.get();
     }
 
     private static int readBoundedInt(CompoundTag compoundTag, String key, int fallback, int max) {
@@ -93,11 +103,12 @@ public class AirtightAssemblyDriverResidueManager {
     }
 
     public void reset() {
-        boolean changed = successCount != 0 || generationCooldown != GENERATION_MAX_COOLDOWN || failureCooldown != FAILURE_MAX_COOLDOWN || fluidDistributionCursor != 0 || !outletsPositions.isEmpty();
+        boolean changed = successCount != 0 || generationCooldown != GENERATION_MAX_COOLDOWN || failureCooldown != FAILURE_MAX_COOLDOWN || itemDistributionCursor != 0 || fluidDistributionCursor != 0 || !outletsPositions.isEmpty();
         outletsPositions = List.of();
         successCount = 0;
         generationCooldown = GENERATION_MAX_COOLDOWN;
         failureCooldown = FAILURE_MAX_COOLDOWN;
+        itemDistributionCursor = 0;
         fluidDistributionCursor = 0;
         if (changed) {
             driverCore.markForSave();
@@ -109,6 +120,7 @@ public class AirtightAssemblyDriverResidueManager {
         successCount = 0;
         generationCooldown = GENERATION_MAX_COOLDOWN;
         failureCooldown = FAILURE_MAX_COOLDOWN;
+        itemDistributionCursor = 0;
         fluidDistributionCursor = 0;
     }
 
@@ -120,9 +132,17 @@ public class AirtightAssemblyDriverResidueManager {
         List<BlockPos> sorted = new ArrayList<>(newPositions);
         sorted.sort(Comparator.comparingLong(BlockPos::asLong));
         outletsPositions = List.copyOf(sorted);
-        int previousCursor = fluidDistributionCursor;
-        fluidDistributionCursor = outletsPositions.isEmpty() ? 0 : Math.floorMod(fluidDistributionCursor, outletsPositions.size());
-        if (previousCursor != fluidDistributionCursor) {
+        int previousItemCursor = itemDistributionCursor;
+        int previousFluidCursor = fluidDistributionCursor;
+        if (outletsPositions.isEmpty()) {
+            itemDistributionCursor = 0;
+            fluidDistributionCursor = 0;
+        }
+        else {
+            itemDistributionCursor = Math.floorMod(itemDistributionCursor, outletsPositions.size());
+            fluidDistributionCursor = Math.floorMod(fluidDistributionCursor, outletsPositions.size());
+        }
+        if (previousItemCursor != itemDistributionCursor || previousFluidCursor != fluidDistributionCursor) {
             driverCore.markForSave();
         }
     }
@@ -136,6 +156,7 @@ public class AirtightAssemblyDriverResidueManager {
         tag.putInt(COMPOUND_KEY_GENERATION_COOLDOWN, generationCooldown);
         tag.putInt(COMPOUND_KEY_FAILURE_COOLDOWN, failureCooldown);
         tag.putInt(COMPOUND_KEY_SUCCESS_COUNT, successCount);
+        tag.putInt(COMPOUND_KEY_ITEM_DISTRIBUTION_CURSOR, itemDistributionCursor);
         tag.putInt(COMPOUND_KEY_FLUID_DISTRIBUTION_CURSOR, fluidDistributionCursor);
         return tag;
     }
@@ -145,6 +166,7 @@ public class AirtightAssemblyDriverResidueManager {
         generationCooldown = readBoundedInt(compoundTag, COMPOUND_KEY_GENERATION_COOLDOWN, GENERATION_MAX_COOLDOWN, GENERATION_MAX_COOLDOWN);
         failureCooldown = readBoundedInt(compoundTag, COMPOUND_KEY_FAILURE_COOLDOWN, FAILURE_MAX_COOLDOWN, FAILURE_MAX_COOLDOWN);
         successCount = readBoundedInt(compoundTag, COMPOUND_KEY_SUCCESS_COUNT, 0, CONSECUTIVE_SUCCESSES_COUNT);
+        itemDistributionCursor = compoundTag.contains(COMPOUND_KEY_ITEM_DISTRIBUTION_CURSOR) ? Math.max(0, compoundTag.getInt(COMPOUND_KEY_ITEM_DISTRIBUTION_CURSOR)) : 0;
         fluidDistributionCursor = compoundTag.contains(COMPOUND_KEY_FLUID_DISTRIBUTION_CURSOR) ? Math.max(0, compoundTag.getInt(COMPOUND_KEY_FLUID_DISTRIBUTION_CURSOR)) : 0;
     }
 
@@ -163,13 +185,14 @@ public class AirtightAssemblyDriverResidueManager {
 
         ResidueOutput output = ResidueGenerationRecipe.findOutput(level, flowMeter.getGasType());
         if (!output.hasFluid() && !output.hasItem()) {
-            handleGenerationSuccess(false, -1, outletCount);
+            handleGenerationSuccess(false, false, -1, outletCount);
             return;
         }
 
         int generatedAmount = output.hasFluid() ? getTotalFluidGenerationAmount() : getTotalItemGenerationUnits();
         int requiredCapacity = Math.max(1, generatedAmount);
-        GenerationPlan plan = createGenerationPlan(level, output, requiredCapacity);
+        boolean roundRobin = output.hasFluid() ? useFluidResidueRoundRobin() : useItemResidueRoundRobin();
+        GenerationPlan plan = createGenerationPlan(level, output, requiredCapacity, roundRobin);
         if (plan == null) {
             handleGenerationFailure();
             return;
@@ -180,12 +203,13 @@ public class AirtightAssemblyDriverResidueManager {
             return;
         }
 
-        handleGenerationSuccess(output.hasFluid() && generatedAmount > 0, plan.lastOutletIndex(), outletCount);
+        handleGenerationSuccess(roundRobin && generatedAmount > 0, output.hasFluid(), plan.lastOutletIndex(), outletCount);
     }
 
-    private @Nullable GenerationPlan createGenerationPlan(Level level, ResidueOutput output, int requiredAmount) {
+    private @Nullable GenerationPlan createGenerationPlan(Level level, ResidueOutput output, int requiredAmount, boolean roundRobin) {
         int outletCount = outletsPositions.size();
-        int startIndex = output.hasFluid() ? Math.floorMod(fluidDistributionCursor, outletCount) : 0;
+        int distributionCursor = output.hasFluid() ? fluidDistributionCursor : itemDistributionCursor;
+        int startIndex = roundRobin ? Math.floorMod(distributionCursor, outletCount) : 0;
         int remainingAmount = requiredAmount;
         int lastOutletIndex = -1;
         List<ResidueInsertionPlan> insertions = new ArrayList<>();
@@ -204,8 +228,8 @@ public class AirtightAssemblyDriverResidueManager {
         return remainingAmount == 0 ? new GenerationPlan(List.copyOf(insertions), lastOutletIndex) : null;
     }
 
-    private void handleGenerationSuccess(boolean advanceFluidCursor, int lastOutletIndex, int outletCount) {
-        boolean changed = advanceFluidCursor && advanceFluidDistributionCursor(lastOutletIndex, outletCount);
+    private void handleGenerationSuccess(boolean shouldAdvanceCursor, boolean fluidOutput, int lastOutletIndex, int outletCount) {
+        boolean changed = shouldAdvanceCursor && advanceDistributionCursor(fluidOutput, lastOutletIndex, outletCount);
         int residueLevel = driverCore.getLevelCalculator().getResidueLevel();
         if (residueLevel >= MAX_LEVEL) {
             if (successCount != 0) {
@@ -283,17 +307,26 @@ public class AirtightAssemblyDriverResidueManager {
         return Math.clamp(generatedUnits, 0, Integer.MAX_VALUE);
     }
 
-    private boolean advanceFluidDistributionCursor(int lastOutletIndex, int outletCount) {
+    private boolean advanceDistributionCursor(boolean fluidOutput, int lastOutletIndex, int outletCount) {
         if (lastOutletIndex < 0 || outletCount <= 0) {
             return false;
         }
 
         int newCursor = (lastOutletIndex + 1) % outletCount;
-        if (fluidDistributionCursor == newCursor) {
+        if (fluidOutput) {
+            if (fluidDistributionCursor == newCursor) {
+                return false;
+            }
+
+            fluidDistributionCursor = newCursor;
+            return true;
+        }
+
+        if (itemDistributionCursor == newCursor) {
             return false;
         }
 
-        fluidDistributionCursor = newCursor;
+        itemDistributionCursor = newCursor;
         return true;
     }
 

@@ -37,6 +37,7 @@ public class AirtightReactorKettleTooltipBuilder {
     }
 
     public void addToGoggleTooltip(List<Component> tooltip) {
+        CCBLang.translate("gui.airtight_reactor_kettle").forGoggles(tooltip);
         if (addStoredInfo(tooltip)) {
             tooltip.add(CommonComponents.EMPTY);
         }
@@ -85,7 +86,6 @@ public class AirtightReactorKettleTooltipBuilder {
 
     private boolean addStoredInfo(List<Component> tooltip) {
         int startIndex = tooltip.size();
-        CCBLang.translate("gui.airtight_reactor_kettle").forGoggles(tooltip);
         CCBLang.translate("gui.airtight_reactor_kettle.contents").style(ChatFormatting.GRAY).forGoggles(tooltip);
 
         int maxDisplay = CCBConfig.client().maxItemStackDisplay.get();

@@ -590,6 +590,11 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasT
 
         @Override
         public boolean canHaveFlowToward(BlockState state, Direction direction) {
+            return canHaveFlowTowardWithoutLevel(state, direction);
+        }
+
+        @Override
+        public boolean canHaveFlowTowardWithoutLevel(BlockState state, Direction direction) {
             return isSideAccessible(direction);
         }
 

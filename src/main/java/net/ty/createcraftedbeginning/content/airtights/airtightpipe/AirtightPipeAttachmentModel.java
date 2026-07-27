@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightpipe;
 
+import com.simibubi.create.content.fluids.pipes.IAxisPipe;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.model.BakedModelWrapperWithData;
 import net.createmod.catnip.data.Iterate;
@@ -9,9 +10,12 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Direction.Axis;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.neoforged.neoforge.client.ChunkRenderTypeSet;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import net.neoforged.neoforge.client.model.data.ModelData.Builder;
@@ -20,6 +24,7 @@ import net.neoforged.neoforge.common.util.TriState;
 import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes.ComponentPartials;
+import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
@@ -56,16 +61,43 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
         }
     }
 
+    private static AttachmentTypes getFallbackAttachment(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction direction) {
+        BlockState adjacentState = level.getBlockState(pos.relative(direction));
+        Block adjacentBlock = adjacentState.getBlock();
+
+        // The pump only renders a drain connector when it faces a compatible drain block.
+        // Its transport behaviour may not exist yet while a chunk is rebuilt after login.
+        if (state.getBlock() instanceof AirtightPumpBlock) {
+            return adjacentBlock instanceof IAirtightPipeDrain ? AttachmentTypes.DRAIN : AttachmentTypes.NONE;
+        }
+
+        // The other users of this model are axis-based pipes: normal pipe, smart pipe
+        // and check valve. Reproduce AxisGasTransportBehaviour's render-only decision
+        // without requiring the block entity to have finished creating its behaviours.
+        if (!state.hasProperty(BlockStateProperties.AXIS)) {
+            return AttachmentTypes.NONE;
+        }
+
+        Axis pipeAxis = state.getValue(BlockStateProperties.AXIS);
+        if (pipeAxis != direction.getAxis()) {
+            return AttachmentTypes.NONE;
+        }
+        if (adjacentBlock instanceof IAxisPipe axisPipe && axisPipe.getAxis(adjacentState) == pipeAxis) {
+            return AttachmentTypes.NONE;
+        }
+        if (adjacentBlock instanceof IAirtightPipeDrain) {
+            return AttachmentTypes.DRAIN;
+        }
+        return AttachmentTypes.RIM;
+    }
+
     @Override
     protected Builder gatherModelData(Builder builder, BlockAndTintGetter level, BlockPos pos, BlockState state, ModelData blockEntityData) {
         PipeModelData pipeData = new PipeModelData();
         GasTransportBehaviour transport = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
-        if (transport == null) {
-            return builder.with(PIPE_PROPERTY, pipeData);
-        }
-
         for (Direction direction : Iterate.directions) {
-            pipeData.putAttachment(direction, transport.getRenderedRimAttachment(level, pos, state, direction));
+            AttachmentTypes attachment = transport == null ? getFallbackAttachment(level, pos, state, direction) : transport.getRenderedRimAttachment(level, pos, state, direction);
+            pipeData.putAttachment(direction, attachment);
         }
         return builder.with(PIPE_PROPERTY, pipeData);
     }

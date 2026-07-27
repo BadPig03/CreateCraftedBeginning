@@ -72,6 +72,7 @@ import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
+@SuppressWarnings("unused")
 public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, IGasInventoryIdentifierProvider {
     private static final int LAZY_TICK_RATE = 4;
     private static final int RECIPE_FALLBACK_CHECK_RATE = 40;

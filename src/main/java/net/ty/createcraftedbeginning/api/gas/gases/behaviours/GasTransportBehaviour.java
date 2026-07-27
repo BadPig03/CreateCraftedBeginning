@@ -11,6 +11,7 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities;
@@ -20,6 +21,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.collisions.GasCollisionEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AxisGasPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBBlockTags;
 import org.jetbrains.annotations.Nullable;
@@ -41,6 +43,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     @Nullable
     private List<GasPipeConnection> retiredConnections;
     private UpdatePhase phase;
+    private boolean clientModelRefreshPending;
 
     /**
      * Creates a new {@code GasTransportBehaviour} instance.
@@ -50,6 +53,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     public GasTransportBehaviour(SmartBlockEntity be) {
         super(be);
         phase = UpdatePhase.WAIT_FOR_PUMPS;
+        clientModelRefreshPending = true;
     }
 
     /**
@@ -61,7 +65,11 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
      * @param direction the direction associated with the operation
      * @return {@code true} if this value is valid airtight components; otherwise {@code false}
      */
-    public static boolean isValidAirtightComponents(Level level, BlockPos pos, BlockState state, Direction direction) {
+    public static boolean isValidAirtightComponents(@Nullable Level level, BlockPos pos, BlockState state, Direction direction) {
+        if (level == null) {
+            return false;
+        }
+
         boolean openEnded = state.getDestroySpeed(level, pos) != -1 && (state.canBeReplaced() || CCBBlockTags.GAS_SOURCES.matches(state));
         boolean hasGasCapability = GasCapabilities.hasGasCapability(level, pos, direction.getOpposite());
         boolean isAirtight = state.getBlock() instanceof IAirtightComponent component && component.isAirtight(pos, state, direction);
@@ -76,6 +84,15 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
      * @return {@code true} if the requested operation can have flow toward; otherwise {@code false}
      */
     public abstract boolean canHaveFlowToward(BlockState state, Direction direction);
+
+    /**
+     * Checks whether a connection may exist while the block entity is being
+     * deserialized and has not received its level yet.
+     * <p>
+     * This method must only inspect the block state. Neighbor and capability
+     * checks are deferred until {@link #initialize()} or the next tick.
+     */
+    public abstract boolean canHaveFlowTowardWithoutLevel(BlockState state, Direction direction);
 
     /**
      * Checks whether inbound flow is allowed.
@@ -113,6 +130,26 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         return connection.provideOutboundFlow();
     }
 
+    private void refreshClientModelIfNeeded(@Nullable Level level) {
+        if (!clientModelRefreshPending || level == null) {
+            return;
+        }
+
+        clientModelRefreshPending = false;
+        if (!level.isClientSide || blockEntity.isVirtual()) {
+            return;
+        }
+
+        BlockState state = blockEntity.getBlockState();
+        Block block = state.getBlock();
+        if (!(block instanceof AxisGasPipeBlock) && !(block instanceof AirtightPumpBlock)) {
+            return;
+        }
+
+        blockEntity.requestModelDataUpdate();
+        level.sendBlockUpdated(getPos(), state, state, Block.UPDATE_CLIENTS);
+    }
+
     private void createConnectionData() {
         if (interfaces != null) {
             return;
@@ -120,8 +157,10 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
 
         interfaces = new EnumMap<>(Direction.class);
         BlockState state = blockEntity.getBlockState();
+        Level level = getWorld();
         for (Direction direction : Iterate.directions) {
-            if (!canHaveFlowToward(state, direction)) {
+            boolean canConnect = level == null ? canHaveFlowTowardWithoutLevel(state, direction) : canHaveFlowToward(state, direction);
+            if (!canConnect) {
                 continue;
             }
 
@@ -130,8 +169,11 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     }
 
     private void refreshConnectionData() {
+        Level level = getWorld();
         if (interfaces == null) {
             createConnectionData();
+        }
+        if (level == null) {
             return;
         }
 
@@ -155,8 +197,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
             flowRemoved |= connection.getFlow() != null;
             retireConnection(connection);
         }
-        Level level = getWorld();
-        if (!flowRemoved || level == null || level.isClientSide && !blockEntity.isVirtual()) {
+        if (!flowRemoved || level.isClientSide && !blockEntity.isVirtual()) {
             return;
         }
 
@@ -312,7 +353,8 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     @Override
     public void initialize() {
         super.initialize();
-        createConnectionData();
+        refreshConnections();
+        clientModelRefreshPending = true;
     }
 
     /**
@@ -320,8 +362,12 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
      */
     @Override
     public void tick() {
-        super.tick();
         Level level = getWorld();
+        if (level == null) {
+            return;
+        }
+
+        super.tick();
         BlockPos pos = getPos();
         boolean isClientSide = level.isClientSide && !blockEntity.isVirtual();
         refreshConnections();
@@ -361,6 +407,9 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         }
         for (GasPipeConnection connection : interfaces.values()) {
             connection.read(compoundTag, provider, blockEntity.getBlockPos(), clientPacket);
+        }
+        if (clientPacket) {
+            clientModelRefreshPending = true;
         }
     }
 

@@ -1,10 +1,11 @@
 {
+	"format_version": "1.21.11",
 	"credit": "Made with Blockbench",
 	"parent": "create:block/block",
 	"render_type": "minecraft:cutout_mipped",
 	"textures": {
 		"4": "createcraftedbeginning:block/airtight_pump/pump",
-		"particle": "createcraftedbeginning:block/airtight_pump/pump"
+		"particle": "createcraftedbeginning:block/airtight_sheet_block"
 	},
 	"elements": [
 		{

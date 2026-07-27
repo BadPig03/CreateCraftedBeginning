@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.airtights.airtightforgingpress;
 import com.simibubi.create.api.equipment.goggles.IProxyHoveringInformation;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.content.kinetics.base.KineticBlock;
-import com.simibubi.create.content.kinetics.simpleRelays.ICogWheel;
 import com.simibubi.create.foundation.block.IBE;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -39,7 +38,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightForgingPressStructuralShaftBlock extends KineticBlock implements IBE<AirtightForgingPressStructuralShaftBlockEntity>, IWrenchable, IProxyHoveringInformation, ICogWheel, IAirtightForgingPressStructural {
+public class AirtightForgingPressStructuralShaftBlock extends KineticBlock implements IBE<AirtightForgingPressStructuralShaftBlockEntity>, IWrenchable, IProxyHoveringInformation, IAirtightForgingPressStructural {
     public static final EnumProperty<AirtightForgingPressStructuralPosition> STRUCTURAL_POSITION = EnumProperty.create("structural_position", AirtightForgingPressStructuralPosition.class);
 
     public AirtightForgingPressStructuralShaftBlock(Properties properties) {
