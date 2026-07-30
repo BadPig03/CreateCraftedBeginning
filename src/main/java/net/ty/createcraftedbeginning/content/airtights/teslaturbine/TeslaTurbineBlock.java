@@ -10,7 +10,6 @@ import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import com.simibubi.create.foundation.block.render.MultiPosDestructionHandler;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -43,7 +42,6 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.TeslaTurbineStructuralPosition;
@@ -255,24 +253,5 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
             requirements.add(new StackRequirement(rotors, ItemUseType.CONSUME));
         }
         return new ItemRequirement(requirements);
-    }
-
-    public static class TeslaTurbineRenderProperties implements IClientBlockExtensions, MultiPosDestructionHandler {
-        @Override
-        @Nullable
-        public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
-            Axis axis = blockState.getValue(AXIS);
-            HashSet<BlockPos> positions = new HashSet<>();
-            for (int i = -1; i <= 1; i++) {
-                for (int j = -1; j <= 1; j++) {
-                    if (i == 0 && j == 0) {
-                        continue;
-                    }
-
-                    positions.add(TeslaTurbineUtils.calculateStructurePos(pos, axis, i, j));
-                }
-            }
-            return positions;
-        }
     }
 }

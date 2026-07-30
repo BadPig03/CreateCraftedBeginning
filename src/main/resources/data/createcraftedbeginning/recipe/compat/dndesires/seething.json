@@ -1,0 +1,23 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "dndesires"
+    }
+  ],
+  "type": "dndesires:seething",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:gas_injection_chamber_filter"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:gas_injection_chamber_filter",
+      "components": {
+        "createcraftedbeginning:gas_injection_chamber_filter_fan_processing_type": "dndesires:seething",
+        "createcraftedbeginning:gas_injection_chamber_filter_color": -11428110
+      }
+    }
+  ]
+}

@@ -27,12 +27,15 @@ import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.data.CCBRegistrate;
+import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.CCBCreativeTabSection;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumMap;
+import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -45,16 +48,18 @@ import java.util.function.Predicate;
 public class CCBCreativeTabs {
     private static final DeferredRegister<CreativeModeTab> REGISTER = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CreateCraftedBeginning.MOD_ID);
 
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CREATIVE_TAB = REGISTER.register("base", () -> builder().title(CCBLang.translateDirect("item_groups.base_creative_tab")).withTabsBefore(AllCreativeModeTabs.BASE_CREATIVE_TAB.getKey()).icon(() -> new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK)).displayItems(new RegistrateDisplayItemsGenerator()).build());
+
     @Internal
     public static void register(IEventBus eventBus) {
         REGISTER.register(eventBus);
-    }    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> BASE_CREATIVE_TAB = REGISTER.register("base", () -> builder().title(CCBLang.translateDirect("item_groups.base_creative_tab")).withTabsBefore(AllCreativeModeTabs.BASE_CREATIVE_TAB.getKey()).icon(() -> new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK)).displayItems(new RegistrateDisplayItemsGenerator(false, CCBCreativeTabs.BASE_CREATIVE_TAB)).build());
+    }
 
     private static Builder builder() {
         return CreativeModeTab.builder();
-    }    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> DECORATION_CREATIVE_TAB = REGISTER.register("decoration", () -> builder().title(CCBLang.translateDirect("item_groups.decoration_creative_tab")).withTabsBefore(AllCreativeModeTabs.BASE_CREATIVE_TAB.getKey()).icon(() -> new ItemStack(CCBBlocks.OBSIDIAN_BRICKS)).displayItems(new RegistrateDisplayItemsGenerator(false, CCBCreativeTabs.DECORATION_CREATIVE_TAB)).build());
+    }
 
-    private record RegistrateDisplayItemsGenerator(boolean addExtraItems, DeferredHolder<CreativeModeTab, CreativeModeTab> tabFilter) implements DisplayItemsGenerator {
+    private record RegistrateDisplayItemsGenerator() implements DisplayItemsGenerator {
         private static Predicate<Item> makeExclusionPredicate() {
             Set<Item> exclusions = new ReferenceOpenHashSet<>();
             List<ItemProviderEntry<?, ?>> itemsExclusions = new ArrayList<>();
@@ -70,8 +75,10 @@ public class CCBCreativeTabs {
 
         private static List<ItemOrdering> makeOrderings() {
             List<ItemOrdering> orderings = new ReferenceArrayList<>();
-            Map<ItemProviderEntry<?, ?>, ItemProviderEntry<?, ?>> simpleBeforeOrderings = Map.of(CCBItems.GAS_CANISTER, CCBItems.CREATIVE_GAS_CANISTER);
-            simpleBeforeOrderings.forEach((entry, otherEntry) -> orderings.add(ItemOrdering.order(entry.asItem(), otherEntry.asItem())));
+            orderings.add(ItemOrdering.before(CCBItems.AIRTIGHT_SHEET.asItem(), CCBBlocks.AIRTIGHT_PIPE_BLOCK.asItem()));
+            orderings.add(ItemOrdering.before(CCBItems.GAS_CANISTER.asItem(), CCBItems.CREATIVE_GAS_CANISTER.asItem()));
+            orderings.add(ItemOrdering.after(CCBItems.TESLA_TURBINE_ROTOR.asItem(), CCBBlocks.TESLA_TURBINE_NOZZLE_BLOCK.asItem()));
+            orderings.add(ItemOrdering.after(CCBItems.GAS_INJECTION_CHAMBER_FILTER.asItem(), CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK.asItem()));
             return orderings;
         }
 
@@ -80,7 +87,6 @@ public class CCBCreativeTabs {
             Map<Item, Function<Item, ItemStack>> factories = new Reference2ReferenceOpenHashMap<>();
             Map<ItemProviderEntry<?, ?>, Function<Item, ItemStack>> simpleFactories = Map.of();
             simpleFactories.forEach((entry, factory) -> factories.put(entry.asItem(), factory));
-
             return item -> {
                 Function<Item, ItemStack> factory = factories.get(item);
                 return factory != null ? factory.apply(item) : new ItemStack(item);
@@ -103,35 +109,19 @@ public class CCBCreativeTabs {
                     }
                 }
 
-                items.add(anchorIndex, item);
+                int insertionIndex = ordering.before ? anchorIndex : anchorIndex + 1;
+                items.add(insertionIndex, item);
             }
         }
 
-        private static void outputAll(Output output, List<Item> items, Function<Item, ItemStack> stackFunc) {
-            items.forEach(item -> output.accept(stackFunc.apply(item), TabVisibility.PARENT_AND_SEARCH_TABS));
+        private static void outputAll(Output output, List<ItemStack> stacks) {
+            stacks.forEach(stack -> output.accept(stack, TabVisibility.PARENT_AND_SEARCH_TABS));
         }
 
-        @Override
-        public void accept(ItemDisplayParameters parameters, Output output) {
-            Predicate<Item> exclusionPredicate = makeExclusionPredicate();
-            List<Item> items = new LinkedList<>();
-            items.addAll(collectBlocks(exclusionPredicate));
-            items.addAll(collectItems(exclusionPredicate));
-            applyOrderings(items, makeOrderings());
-            outputAll(output, items, makeStackFunc());
-            if (!addExtraItems) {
-                return;
-            }
-
-            for (ItemStack stack : GasCanisterUtils.getAllCanisters()) {
-                output.accept(stack, TabVisibility.PARENT_AND_SEARCH_TABS);
-            }
-        }
-
-        private List<Item> collectItems(Predicate<Item> exclusionPredicate) {
+        private static List<Item> collectItems(Predicate<Item> exclusionPredicate, CCBCreativeTabSection section) {
             List<Item> items = new ReferenceArrayList<>();
             for (RegistryEntry<Item, Item> entry : CreateCraftedBeginning.registrate().getAll(Registries.ITEM)) {
-                if (CCBRegistrate.isOutOfCreativeTab(entry, tabFilter)) {
+                if (CCBRegistrate.isOutOfCreativeSection(entry, section)) {
                     continue;
                 }
 
@@ -145,11 +135,11 @@ public class CCBCreativeTabs {
             return items;
         }
 
-        private List<Item> collectBlocks(Predicate<Item> exclusionPredicate) {
+        private static List<Item> collectBlocks(Predicate<Item> exclusionPredicate, CCBCreativeTabSection section) {
             List<Item> items = new ReferenceArrayList<>();
             Collection<RegistryEntry<Block, Block>> registryEntries = CreateCraftedBeginning.registrate().getAll(Registries.BLOCK);
             for (RegistryEntry<Block, Block> entry : registryEntries) {
-                if (CCBRegistrate.isOutOfCreativeTab(entry, tabFilter)) {
+                if (CCBRegistrate.isOutOfCreativeSection(entry, section)) {
                     continue;
                 }
 
@@ -160,16 +150,48 @@ public class CCBCreativeTabs {
 
                 items.add(item);
             }
-            items = new ReferenceArrayList<>(new ReferenceLinkedOpenHashSet<>(items));
-            return items;
+            return new ReferenceArrayList<>(new ReferenceLinkedOpenHashSet<>(items));
         }
 
-    }    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CANISTERS_CREATIVE_TAB = REGISTER.register("canisters", () -> builder().title(CCBLang.translateDirect("item_groups.canisters_creative_tab")).withTabsBefore(AllCreativeModeTabs.BASE_CREATIVE_TAB.getKey()).icon(() -> new ItemStack(CCBItems.GAS_CANISTER_PLACEABLE.asItem())).displayItems(new RegistrateDisplayItemsGenerator(true, CCBCreativeTabs.CANISTERS_CREATIVE_TAB)).build());
+        @Override
+        public void accept(ItemDisplayParameters parameters, Output output) {
+            Predicate<Item> exclusionPredicate = makeExclusionPredicate();
+            Function<Item, ItemStack> stackFunc = makeStackFunc();
+            List<ItemOrdering> orderings = makeOrderings();
+            EnumMap<CCBCreativeTabSection, List<ItemStack>> stacksBySection = new EnumMap<>(CCBCreativeTabSection.class);
+            Map<Item, CCBCreativeTabSection> itemSections = new IdentityHashMap<>();
+            for (CCBCreativeTabSection section : CCBCreativeTabSection.values()) {
+                List<Item> items = new LinkedList<>();
+                items.addAll(collectBlocks(exclusionPredicate, section));
+                items.addAll(collectItems(exclusionPredicate, section));
+                applyOrderings(items, orderings);
 
-    private record ItemOrdering(Item item, Item anchor) {
+                List<ItemStack> stacks = new ArrayList<>(items.size());
+                items.stream().map(stackFunc).forEach(stacks::add);
+                if (section == CCBCreativeTabSection.CANISTERS) {
+                    stacks.addAll(GasCanisterUtils.getAllCanisters());
+                }
+
+                stacksBySection.put(section, stacks);
+                stacks.forEach(stack -> itemSections.put(stack.getItem(), section));
+            }
+
+            CCBCreativeTabLayout.setItemSections(itemSections);
+            for (CCBCreativeTabSection section : CCBCreativeTabSection.values()) {
+                outputAll(output, stacksBySection.get(section));
+            }
+        }
+    }
+
+    private record ItemOrdering(Item item, Item anchor, boolean before) {
         @Contract("_, _ -> new")
-        public static ItemOrdering order(Item item, Item anchor) {
-            return new ItemOrdering(item, anchor);
+        public static ItemOrdering before(Item item, Item anchor) {
+            return new ItemOrdering(item, anchor, true);
+        }
+
+        @Contract("_, _ -> new")
+        public static ItemOrdering after(Item item, Item anchor) {
+            return new ItemOrdering(item, anchor, false);
         }
     }
 }

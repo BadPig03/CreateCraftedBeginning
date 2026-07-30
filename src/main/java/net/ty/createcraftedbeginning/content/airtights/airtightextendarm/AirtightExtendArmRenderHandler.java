@@ -25,7 +25,7 @@ import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.ClientHooks;
 import net.neoforged.neoforge.client.event.RenderHandEvent;
-import net.ty.createcraftedbeginning.mixin.server.accessor.ItemInHandRendererAccessor;
+import net.ty.createcraftedbeginning.mixin.client.accessor.ItemInHandRendererAccessor;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 

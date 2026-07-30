@@ -2,8 +2,6 @@ package net.ty.createcraftedbeginning.content.airtights.creativegascanister;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
@@ -112,8 +110,7 @@ public class CreativeGasCanisterItem extends Item implements IGasFilter {
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack canister, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null || !(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents)) {
+        if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents)) {
             return;
         }
 

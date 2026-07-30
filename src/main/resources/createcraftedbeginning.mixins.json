@@ -6,14 +6,13 @@
   "mixins": [
     "server.accessor.AbstractPiglinAccessor",
     "server.accessor.HoglinAccessor",
-    "server.accessor.HumanoidArmorLayerAtlasAccessor",
-    "server.accessor.ItemInHandRendererAccessor",
     "server.accessor.SmithingTransformRecipeAccessor",
     "server.accessor.SmithingTrimRecipeAccessor",
     "server.accessor.ZombieAccessor",
     "server.create.BeltMovementHandlerMixin",
     "server.create.FactoryPanelBehaviourMixin",
     "server.create.FactoryPanelConfigurationPacketMixin",
+    "server.create.FanProcessingMixin",
     "server.create.FillingBySpoutMixin",
     "server.create.LogisticsManagerMixin",
     "server.create.ManualApplicationRecipeMixin",
@@ -36,6 +35,10 @@
     "server.minecraft.PlayerMixin"
   ],
   "client": [
+    "client.accessor.CreativeModeInventoryScreenAccessor",
+    "client.accessor.HumanoidArmorLayerAtlasAccessor",
+    "client.accessor.ItemInHandRendererAccessor",
+    "client.accessor.ItemPickerMenuAccessor",
     "client.accessor.RedstoneRequesterScreenAccessor",
     "client.accessor.StockKeeperRequestScreenAccessor",
     "client.create.ChainConveyorRendererMixin",
@@ -49,6 +52,7 @@
     "client.create.StockKeeperRequestScreenMixin",
     "client.create.StockKeeperTransferHandlerMixin",
     "client.minecraft.AbstractContainerScreenMixin",
+    "client.minecraft.CreativeModeTabMixin",
     "client.minecraft.GuiGraphicsMixin"
   ],
   "minVersion": "0.8"

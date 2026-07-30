@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:wind_charging",
+  "ingredients": [
+    {
+      "item": "create:builders_tea"
+    }
+  ],
+  "processing_time": 445,
+  "results": [
+    {
+      "id": "minecraft:glass_bottle"
+    }
+  ]
+}

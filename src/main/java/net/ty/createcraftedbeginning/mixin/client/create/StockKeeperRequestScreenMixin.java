@@ -1,5 +1,7 @@
 package net.ty.createcraftedbeginning.mixin.client.create;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -49,7 +51,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -197,14 +198,14 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
         ms.popPose();
     }
 
-    @Redirect(method = "containerTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;closeContainer()V"))
-    private void ccb$containerTick(Player player) {
+    @WrapOperation(method = "containerTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;closeContainer()V"))
+    private void ccb$containerTick(Player player, Operation<Void> original) {
         BreezeCoolerBlockEntity breeze = ccb$breeze.get();
         if (breeze != null && !breeze.isRemoved()) {
             return;
         }
 
-        player.closeContainer();
+        original.call(player);
     }
 
     @Inject(method = "renderItemEntry", at = @At("HEAD"))

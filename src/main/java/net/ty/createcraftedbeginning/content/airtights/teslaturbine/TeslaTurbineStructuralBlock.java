@@ -8,8 +8,6 @@ import net.createmod.catnip.placement.IPlacementHelper;
 import net.createmod.catnip.placement.PlacementHelpers;
 import net.createmod.catnip.placement.PlacementOffset;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -44,10 +42,8 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineUtils.NozzlePort;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlock;
-import net.ty.createcraftedbeginning.content.particles.CCBParticleUtils;
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Contract;
@@ -269,54 +265,6 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         @Override
         public String getSerializedName() {
             return Lang.asId(name());
-        }
-    }
-
-    public static class TeslaTurbineStructuralRenderProperties implements IClientBlockExtensions, MultiPosDestructionHandler {
-        @Override
-        public boolean addHitEffects(BlockState state, Level level, HitResult target, ParticleEngine manager) {
-            if (!(target instanceof BlockHitResult result)) {
-                return IClientBlockExtensions.super.addHitEffects(state, level, target, manager);
-            }
-
-            BlockPos targetPos = result.getBlockPos();
-            TeslaTurbineStructuralBlock block = CCBBlocks.TESLA_TURBINE_STRUCTURAL_BLOCK.get();
-            if (!block.stillValid(level, targetPos, state, false)) {
-                return true;
-            }
-
-            manager.crack(getMaster(targetPos, state), result.getDirection());
-            return true;
-        }
-
-        @Override
-        public boolean addDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager) {
-            CCBParticleUtils.addReducedDestroyEffects(state, level, pos, manager);
-            return true;
-        }
-
-        @Override
-        @Nullable
-        public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
-            TeslaTurbineStructuralBlock block = CCBBlocks.TESLA_TURBINE_STRUCTURAL_BLOCK.get();
-            if (!block.stillValid(level, pos, blockState, false)) {
-                return null;
-            }
-
-            BlockPos masterPos = getMaster(pos, blockState);
-            Axis axis = blockState.getValue(AXIS);
-            Set<BlockPos> positions = new HashSet<>();
-            for (int i = -1; i <= 1; i++) {
-                for (int j = -1; j <= 1; j++) {
-                    if (i == 0 && j == 0) {
-                        continue;
-                    }
-
-                    positions.add(calculateStructurePos(masterPos, axis, i, j));
-                }
-            }
-            positions.add(masterPos);
-            return positions;
         }
     }
 

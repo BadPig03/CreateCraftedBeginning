@@ -8,12 +8,10 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
-import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasSubCategory;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -51,13 +49,6 @@ public interface IAssemblyRecipeWithGas {
      */
     default void addAssemblyGasIngredients(List<SizedGasIngredient> list) {
     }
-
-    /**
-     * Returns the JEI sub category.
-     *
-     * @return the JEI sub category
-     */
-    Supplier<Supplier<SequencedAssemblyWithGasSubCategory>> getJEISubCategory();
 
     /**
      * Adds the supplied assembly ingredient.

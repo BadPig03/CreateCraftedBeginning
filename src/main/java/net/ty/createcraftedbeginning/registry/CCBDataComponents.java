@@ -10,6 +10,7 @@ import net.minecraft.core.component.DataComponentType.Builder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -18,7 +19,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.templates.AirtightHandheldDrillMiningTemplates;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonGasContents;
-import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterUtils;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterUtils.GasFilterData;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateContents;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe.SequencedAssemblyWithGas;
 import org.jetbrains.annotations.NotNull;
@@ -55,10 +56,13 @@ public class CCBDataComponents {
     public static final DataComponentType<ItemContainerContents> AIRTIGHT_UPGRADABLE_INVENTORY = register("airtight_upgradable_inventory", builder -> builder.persistent(ItemContainerContents.CODEC).networkSynchronized(ItemContainerContents.STREAM_CODEC));
     public static final DataComponentType<List<AirtightUpgradeStatus>> AIRTIGHT_UPGRADE_STATUS = register("airtight_upgrade_status", builder -> builder.persistent(AirtightUpgradeStatus.CODEC.listOf()).networkSynchronized(CatnipStreamCodecBuilders.list(AirtightUpgradeStatus.STREAM_CODEC)));
 
+    public static final DataComponentType<Integer> GAS_INJECTION_CHAMBER_FILTER_COLOR = register("gas_injection_chamber_filter_color", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
+    public static final DataComponentType<ResourceLocation> GAS_INJECTION_CHAMBER_FILTER_FAN_PROCESSING_TYPE = register("gas_injection_chamber_filter_fan_processing_type", builder -> builder.persistent(ResourceLocation.CODEC).networkSynchronized(ResourceLocation.STREAM_CODEC));
+
     public static final DataComponentType<BalloonGasContents> BALLOON_GAS_CONTENTS = register("balloon_gas_contents", builder -> builder.persistent(BalloonGasContents.CODEC).networkSynchronized(BalloonGasContents.STREAM_CODEC));
     public static final DataComponentType<Integer> GAS_VIRTUAL_ITEM_COLOR = register("gas_virtual_item_color", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
     public static final DataComponentType<GasStack> GAS_VIRTUAL_ITEM_TYPE = register("gas_virtual_item_type", builder -> builder.persistent(GasStack.OPTIONAL_CODEC).networkSynchronized(GasStack.OPTIONAL_STREAM_CODEC));
-    public static final DataComponentType<GasFilterUtils.GasFilterData> GAS_FILTER_DATA = register("gas_filter_data", builder -> builder.persistent(GasFilterUtils.GasFilterData.CODEC).networkSynchronized(GasFilterUtils.GasFilterData.STREAM_CODEC));
+    public static final DataComponentType<GasFilterData> GAS_FILTER_DATA = register("gas_filter_data", builder -> builder.persistent(GasFilterData.CODEC).networkSynchronized(GasFilterData.STREAM_CODEC));
 
     public static final DataComponentType<SequencedAssemblyWithGas> SEQUENCED_ASSEMBLY_WITH_GAS = register("sequenced_assembly_with_gas", builder -> builder.persistent(SequencedAssemblyWithGas.CODEC).networkSynchronized(SequencedAssemblyWithGas.STREAM_CODEC));
 

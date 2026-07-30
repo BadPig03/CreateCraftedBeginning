@@ -11,13 +11,11 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAssemblyRecipeWithGas;
-import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasSubCategory.AssemblyCutting;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -61,14 +59,6 @@ public class CuttingWithGasRecipe extends StandardProcessingWithGasRecipe<Recipe
     @OnlyIn(Dist.CLIENT)
     public Component getDescriptionForAssembly() {
         return CreateLang.translateDirect("recipe.assembly.cutting");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Supplier<Supplier<SequencedAssemblyWithGasSubCategory>> getJEISubCategory() {
-        return () -> AssemblyCutting::new;
     }
 
     /**

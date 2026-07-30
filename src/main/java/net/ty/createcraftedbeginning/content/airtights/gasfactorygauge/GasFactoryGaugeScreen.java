@@ -29,10 +29,11 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.ty.createcraftedbeginning.client.GasFactoryGaugeClientUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonStyleUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUtils;
-import net.ty.createcraftedbeginning.data.CCBGUITextures;
+import net.ty.createcraftedbeginning.client.CCBGUITextures;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -244,7 +245,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
             ItemStack filter = behaviour.getFilter();
             String filterName = filter.getHoverName().getString();
             BigItemStack promisedGas = new BigItemStack(filter, promised);
-            tooltips.add(CCBLang.text(filterName + ' ' + GasFactoryGaugeUtils.formatPrecise(promisedGas)).component());
+            tooltips.add(CCBLang.text(filterName + ' ' + GasFactoryGaugeClientUtils.formatPrecise(promisedGas)).component());
             addActionTooltip(tooltips, "gui.gas_factory_gauge.left_click_reset");
         }
         graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
@@ -274,13 +275,13 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         int outputX = x + 160;
         int outputY = y + 48;
         graphics.renderItem(outputConfig.stack, outputX, outputY);
-        graphics.renderItemDecorations(font, behaviour.getFilter(), outputX, outputY, GasFactoryGaugeUtils.format(outputConfig, false));
+        graphics.renderItemDecorations(font, behaviour.getFilter(), outputX, outputY, GasFactoryGaugeClientUtils.format(outputConfig, false));
         if (mouseX <= outputX || mouseX > outputX + 18 || mouseY <= outputY || mouseY > outputY + 18) {
             return;
         }
 
         List<Component> tooltips = new ArrayList<>();
-        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.expected_output", CCBLang.itemName(outputConfig.stack).add(CCBLang.text(' ' + GasFactoryGaugeUtils.formatPrecise(outputConfig)))).color(ScrollInput.HEADER_RGB).component());
+        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.expected_output", CCBLang.itemName(outputConfig.stack).add(CCBLang.text(' ' + GasFactoryGaugeClientUtils.formatPrecise(outputConfig)))).color(ScrollInput.HEADER_RGB).component());
         tooltips.add(CCBLang.translate("gui.gas_factory_gauge.expected_output_tip").style(ChatFormatting.GRAY).component());
         tooltips.add(CCBLang.translate("gui.gas_factory_gauge.expected_output_tip_1").style(ChatFormatting.GRAY).component());
         addGasScrollTooltips(tooltips);
@@ -315,7 +316,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         int inputY = guiTop + (restocker ? 33 : 28) + slot / 3 * 20;
         graphics.renderItem(entry.stack, inputX, inputY);
         if (!restocker && !entry.stack.isEmpty()) {
-            graphics.renderItemDecorations(font, entry.stack, inputX, inputY, GasFactoryGaugeUtils.format(entry, false));
+            graphics.renderItemDecorations(font, entry.stack, inputX, inputY, GasFactoryGaugeClientUtils.format(entry, false));
         }
         if (mouseX < inputX - 2 || mouseX >= inputX - 2 + 20 || mouseY < inputY - 2 || mouseY >= inputY - 2 + 20) {
             return;
@@ -337,7 +338,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
             return;
         }
 
-        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.sending_item", CCBLang.itemName(entry.stack).add(CCBLang.text(' ' + GasFactoryGaugeUtils.format(entry, true)))).color(ScrollInput.HEADER_RGB).component());
+        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.sending_item", CCBLang.itemName(entry.stack).add(CCBLang.text(' ' + GasFactoryGaugeClientUtils.format(entry, true)))).color(ScrollInput.HEADER_RGB).component());
         addItemScrollTooltips(tooltips);
         addActionTooltip(tooltips, "gui.gas_factory_gauge.left_click_disconnect");
         graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
@@ -416,7 +417,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
                 return true;
             }
 
-            GasFactoryGaugeUtils.adjustAmount(itemStack, scrollY);
+            GasFactoryGaugeClientUtils.adjustAmount(itemStack, scrollY);
             return true;
         }
 
@@ -430,7 +431,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
             return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
         }
 
-        GasFactoryGaugeUtils.adjustAmount(outputConfig, scrollY);
+        GasFactoryGaugeClientUtils.adjustAmount(outputConfig, scrollY);
         return true;
     }
 

@@ -20,7 +20,6 @@ public class ResidueOutletInventory extends ItemHandlerContainer implements IIte
 
     private static final int MAX_SIZE = 1;
     private static final String COMPOUND_KEY_PARTIAL_ITEM_UNITS = "PartialItemUnits";
-    private static final String LEGACY_COMPOUND_KEY_PARTIAL_ITEM_COUNT = "PartialItemCount";
     private static final String COMPOUND_KEY_PARTIAL_ITEM = "PartialItem";
 
     private final ResidueOutletBlockEntity outlet;
@@ -62,24 +61,6 @@ public class ResidueOutletInventory extends ItemHandlerContainer implements IIte
                 return false;
             }
         };
-    }
-
-    private static int readPartialItemUnits(CompoundTag tag) {
-        if (tag.contains(COMPOUND_KEY_PARTIAL_ITEM_UNITS)) {
-            int units = tag.getInt(COMPOUND_KEY_PARTIAL_ITEM_UNITS);
-            return Mth.clamp(units, 0, ITEM_PROGRESS_UNITS_PER_ITEM - 1);
-        }
-        if (!tag.contains(LEGACY_COMPOUND_KEY_PARTIAL_ITEM_COUNT)) {
-            return 0;
-        }
-
-        float partialCount = tag.getFloat(LEGACY_COMPOUND_KEY_PARTIAL_ITEM_COUNT);
-        if (!Float.isFinite(partialCount) || partialCount <= 0) {
-            return 0;
-        }
-
-        int units = Math.round(partialCount * ITEM_PROGRESS_UNITS_PER_ITEM);
-        return Mth.clamp(units, 0, ITEM_PROGRESS_UNITS_PER_ITEM - 1);
     }
 
     @Override
@@ -131,26 +112,21 @@ public class ResidueOutletInventory extends ItemHandlerContainer implements IIte
     public void deserializeNBT(Provider provider, CompoundTag compoundTag) {
         ((InternalStackHandler) inv).deserializeNBT(provider, compoundTag);
         partialItem = ItemStack.EMPTY;
-        partialItemUnits = readPartialItemUnits(compoundTag);
+        partialItemUnits = Mth.clamp(compoundTag.getInt(COMPOUND_KEY_PARTIAL_ITEM_UNITS), 0, ITEM_PROGRESS_UNITS_PER_ITEM - 1);
         if (partialItemUnits <= 0) {
             return;
         }
 
-        ItemStack storedItem = readPartialItem(provider, compoundTag);
+        ItemStack storedItem = ItemStack.EMPTY;
+        if (compoundTag.contains(COMPOUND_KEY_PARTIAL_ITEM)) {
+            storedItem = ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_PARTIAL_ITEM));
+        }
         if (storedItem.isEmpty()) {
             partialItemUnits = 0;
             return;
         }
 
         partialItem = storedItem.copyWithCount(1);
-    }
-
-    private ItemStack readPartialItem(Provider provider, CompoundTag tag) {
-        if (tag.contains(COMPOUND_KEY_PARTIAL_ITEM)) {
-            return ItemStack.parseOptional(provider, tag.getCompound(COMPOUND_KEY_PARTIAL_ITEM));
-        }
-
-        return getStackInSlot(0).copyWithCount(1);
     }
 
     public IItemHandler getExtractionCapability() {

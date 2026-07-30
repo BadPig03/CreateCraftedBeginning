@@ -25,7 +25,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType.EntityFactory;
 import net.minecraft.world.entity.MobCategory;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -38,6 +37,7 @@ import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageType;
 import net.ty.createcraftedbeginning.content.fluids.amethystsuspension.AmethystSuspensionVirtualFluid;
 import net.ty.createcraftedbeginning.content.fluids.slush.SlushVirtualFluid;
+import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.CCBCreativeTabSection;
 import net.ty.createcraftedbeginning.registry.CCBRegistries;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -53,13 +53,13 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
-    private static final Map<RegistryEntry<?, ?>, DeferredHolder<CreativeModeTab, CreativeModeTab>> TAB_LOOKUP = Collections.synchronizedMap(new IdentityHashMap<>());
+    private static final Map<RegistryEntry<?, ?>, CCBCreativeTabSection> SECTION_LOOKUP = Collections.synchronizedMap(new IdentityHashMap<>());
     private static final ResourceLocation SLUSH = CreateCraftedBeginning.asResource("fluid/slush");
     private static final ResourceLocation AMETHYST_SUSPENSION = CreateCraftedBeginning.asResource("fluid/amethyst_suspension");
 
     @Nullable
     protected Function<Item, TooltipModifier> currentTooltipModifierFactory;
-    protected DeferredHolder<CreativeModeTab, CreativeModeTab> currentTab;
+    protected CCBCreativeTabSection currentCreativeSection;
 
     protected CCBRegistrate(String modId) {
         super(modId);
@@ -72,8 +72,8 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
         return registrate;
     }
 
-    public static boolean isOutOfCreativeTab(RegistryEntry<?, ?> entry, DeferredHolder<CreativeModeTab, CreativeModeTab> tab) {
-        return TAB_LOOKUP.get(entry) != tab;
+    public static boolean isOutOfCreativeSection(RegistryEntry<?, ?> entry, CCBCreativeTabSection section) {
+        return SECTION_LOOKUP.get(entry) != section;
     }
 
     @Contract(pure = true)
@@ -91,8 +91,8 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
         return self();
     }
 
-    public CCBRegistrate setCreativeTab(DeferredHolder<CreativeModeTab, CreativeModeTab> tab) {
-        currentTab = tab;
+    public CCBRegistrate setCreativeSection(CCBCreativeTabSection section) {
+        currentCreativeSection = section;
         return self();
     }
 
@@ -112,8 +112,8 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
                 TooltipModifier.REGISTRY.register(item, modifier);
             });
         }
-        if (currentTab != null) {
-            TAB_LOOKUP.put(entry, currentTab);
+        if (currentCreativeSection != null) {
+            SECTION_LOOKUP.put(entry, currentCreativeSection);
         }
 
         return entry;

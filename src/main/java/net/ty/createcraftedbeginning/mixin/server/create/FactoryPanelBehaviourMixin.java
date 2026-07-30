@@ -1,5 +1,7 @@
 package net.ty.createcraftedbeginning.mixin.server.create;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBehaviour;
 import com.tterrag.registrate.util.entry.BlockEntry;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -9,7 +11,6 @@ import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactor
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -31,8 +32,8 @@ public abstract class FactoryPanelBehaviourMixin {
     }
 
     @SuppressWarnings("MethodMayBeStatic")
-    @Redirect(method = "moveTo", at = @At(value = "INVOKE", target = "Lcom/tterrag/registrate/util/entry/BlockEntry;has(Lnet/minecraft/world/level/block/state/BlockState;)Z"))
-    private boolean ccb$moveTo(BlockEntry<?> entry, BlockState state) {
-        return entry.has(state) || state.getBlock() instanceof GasFactoryGaugeBlock;
+    @WrapOperation(method = "moveTo", at = @At(value = "INVOKE", target = "Lcom/tterrag/registrate/util/entry/BlockEntry;has(Lnet/minecraft/world/level/block/state/BlockState;)Z"))
+    private boolean ccb$moveTo(BlockEntry<?> entry, BlockState state, Operation<Boolean> original) {
+        return original.call(entry, state) || state.getBlock() instanceof GasFactoryGaugeBlock;
     }
 }

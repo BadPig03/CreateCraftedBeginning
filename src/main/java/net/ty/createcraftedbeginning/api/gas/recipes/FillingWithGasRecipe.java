@@ -13,13 +13,11 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAssemblyRecipeWithGas;
-import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasSubCategory.AssemblySpouting;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -76,14 +74,6 @@ public class FillingWithGasRecipe extends StandardProcessingWithGasRecipe<Single
     @Override
     public void addAssemblyFluidIngredients(List<SizedFluidIngredient> list) {
         list.add(getRequiredFluid());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Supplier<Supplier<SequencedAssemblyWithGasSubCategory>> getJEISubCategory() {
-        return () -> AssemblySpouting::new;
     }
 
     /**

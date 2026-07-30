@@ -59,10 +59,10 @@ public class AnimatedGasInjectionChamber extends AnimatedKinetics {
         blockElement(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK.getDefaultState()).scale(SCALE).render(graphics);
         float cycle = (AnimationTickHolder.getRenderTime() - offset * 8) % 100;
         poseStack.translate(0, getNozzleSqueeze(cycle), 0);
-        blockElement(CCBPartialModels.NOZZLE).scale(SCALE).render(graphics);
+        blockElement(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE).scale(SCALE).render(graphics);
         poseStack.translate(0, getNozzleTopSqueeze(cycle), 0);
-        blockElement(CCBPartialModels.NOZZLE_TOP).scale(SCALE).render(graphics);
-        blockElement(CCBPartialModels.NOZZLE_BOTTOM).scale(SCALE).render(graphics);
+        blockElement(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE_TOP).scale(SCALE).render(graphics);
+        blockElement(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE_BOTTOM).scale(SCALE).render(graphics);
 
         poseStack.popPose();
 

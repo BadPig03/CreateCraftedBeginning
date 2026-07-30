@@ -7,17 +7,10 @@ import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.core.registries.Registries;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.content.particles.AirtightJetpackParticle.Provider;
-import net.ty.createcraftedbeginning.content.particles.BreezeCloudParticle;
-import net.ty.createcraftedbeginning.content.particles.BreezeCloudParticle.ColoredProvider;
-import net.ty.createcraftedbeginning.content.particles.BubbleWithoutWaterParticle;
 import net.ty.createcraftedbeginning.content.particles.ColoredBreezeCloudParticleType;
-import net.ty.createcraftedbeginning.content.particles.ColoredBreezeCloudParticleType.ColoredBreezeCloudParticleOptions;
-import net.ty.createcraftedbeginning.content.particles.EndIncinerationParticle;
 import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -44,14 +37,6 @@ public enum CCBParticleTypes {
         ParticleEntry.REGISTER.register(modEventBus);
     }
 
-    @SuppressWarnings("unchecked")
-    public static void registerFactories(RegisterParticleProvidersEvent event) {
-        event.registerSpriteSet((SimpleParticleType) AIRTIGHT_JETPACK.get(), Provider::new);
-        event.registerSpriteSet((SimpleParticleType) BREEZE_CLOUD.get(), BreezeCloudParticle.Provider::new);
-        event.registerSpriteSet((ParticleType<ColoredBreezeCloudParticleOptions>) COLORED_BREEZE_CLOUD.get(), ColoredProvider::new);
-        event.registerSpriteSet((SimpleParticleType) BUBBLE_WITHOUT_WATER.get(), BubbleWithoutWaterParticle.Provider::new);
-        event.registerSpriteSet((SimpleParticleType) END_INCINERATION.get(), EndIncinerationParticle.Provider::new);
-    }
 
     public ParticleType<?> get() {
         return entry.object.get();

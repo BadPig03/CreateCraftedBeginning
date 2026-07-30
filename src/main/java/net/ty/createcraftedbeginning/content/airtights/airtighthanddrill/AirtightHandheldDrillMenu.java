@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighthanddrill;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.HotbarManager;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -139,7 +138,7 @@ public class AirtightHandheldDrillMenu extends AirtightUpgradableMenu {
 
     @Override
     public void clicked(int slotIndex, int dragType, ClickType clickType, Player player) {
-        int selectedSlot = playerInventory.selected + PLAYER_INVENTORY_SLOTS - HotbarManager.NUM_HOTBAR_GROUPS;
+        int selectedSlot = playerInventory.selected + PLAYER_INVENTORY_SLOTS - 9;
         if (slotIndex == selectedSlot && clickType != ClickType.THROW) {
             return;
         }

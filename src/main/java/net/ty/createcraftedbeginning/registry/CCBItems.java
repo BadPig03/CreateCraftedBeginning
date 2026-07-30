@@ -32,9 +32,9 @@ import net.ty.createcraftedbeginning.content.airtights.creativegascanister.Creat
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterItem;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterItem.GasCanisterBlockItem;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackItem;
-import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackOverrides;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterItem;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualItem;
+import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberFilterItem;
 import net.ty.createcraftedbeginning.content.airtights.weatherflares.AnchorFlareItem;
 import net.ty.createcraftedbeginning.content.airtights.weatherflares.RainFlareItem;
 import net.ty.createcraftedbeginning.content.airtights.weatherflares.SunnyFlareItem;
@@ -47,6 +47,8 @@ import net.ty.createcraftedbeginning.content.icecreams.MilkIceCreamItem;
 import net.ty.createcraftedbeginning.data.CCBGases;
 import net.ty.createcraftedbeginning.data.CCBItemBuilderTransformer;
 import net.ty.createcraftedbeginning.data.CCBRegistrate;
+import net.ty.createcraftedbeginning.data.model.GasCanisterPackModelGenerator;
+import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.CCBCreativeTabSection;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -58,24 +60,11 @@ public class CCBItems {
     private static final CCBRegistrate CCB_REGISTRATE = CreateCraftedBeginning.registrate();
 
     static {
-        CCB_REGISTRATE.setCreativeTab(CCBCreativeTabs.BASE_CREATIVE_TAB);
+        CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.AIRTIGHTS);
     }
-
-    public static final ItemEntry<Item> POWDERED_AMETHYST = CCB_REGISTRATE.item("powdered_amethyst", Item::new).tag(CCBItemTags.DUSTS.tag).tag(CCBItemTags.DUSTS_AMETHYST.tag).register();
-    public static final ItemEntry<Item> AMETHYST_CRYSTAL_SHEET = CCB_REGISTRATE.item("amethyst_crystal_sheet", Item::new).tag(CCBItemTags.PLATES_AMETHYST_CRYSTAL.tag).register();
-
-    public static final ItemEntry<Item> OBSIDIAN_CHUNK = CCB_REGISTRATE.item("obsidian_chunk", Item::new).tag(CCBItemTags.CHUNKS.tag).register();
-    public static final ItemEntry<Item> OBSIDIAN_BRICK = CCB_REGISTRATE.item("obsidian_brick", Item::new).tag(CCBItemTags.BRICKS.tag).tag(CCBItemTags.BRICKS_OBSIDIAN.tag).register();
-    public static final ItemEntry<Item> CRYING_OBSIDIAN_CHUNK = CCB_REGISTRATE.item("crying_obsidian_chunk", Item::new).tag(CCBItemTags.CHUNKS.tag).register();
-    public static final ItemEntry<Item> CRYING_OBSIDIAN_BRICK = CCB_REGISTRATE.item("crying_obsidian_brick", Item::new).tag(CCBItemTags.BRICKS.tag).tag(CCBItemTags.BRICKS_CRYING_OBSIDIAN.tag).register();
-    public static final ItemEntry<Item> POWDERED_CRYING_OBSIDIAN = CCB_REGISTRATE.item("powdered_crying_obsidian", Item::new).tag(CCBItemTags.DUSTS.tag).tag(CCBItemTags.DUSTS_CRYING_OBSIDIAN.tag).register();
 
     public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_SHEET = CCB_REGISTRATE.item("incomplete_airtight_sheet", SequencedAssemblyItem::new).properties(Properties::fireResistant).register();
     public static final ItemEntry<Item> AIRTIGHT_SHEET = CCB_REGISTRATE.item("airtight_sheet", Item::new).properties(Properties::fireResistant).register();
-    public static final ItemEntry<Item> END_ALLOY = CCB_REGISTRATE.item("end_alloy", Item::new).properties(p -> p.rarity(Rarity.UNCOMMON)).tag(CCBItemTags.INGOTS_END_ALLOY.tag).register();
-    public static final ItemEntry<Item> END_ALLOY_SHEET = CCB_REGISTRATE.item("end_alloy_sheet", Item::new).properties(p -> p.rarity(Rarity.UNCOMMON)).tag(CCBItemTags.PLATES_END_ALLOY.tag).register();
-
-    public static final ItemEntry<Item> CHORUS_FLOWER_POWDER = CCB_REGISTRATE.item("chorus_flower_powder", Item::new).tag(CCBItemTags.DUSTS.tag).tag(CCBItemTags.DUSTS_CHORUS_FLOWER.tag).register();
 
     public static final ItemEntry<SequencedAssemblyWithGasItem> INCOMPLETE_HEAVY_CORE = CCB_REGISTRATE.item("incomplete_heavy_core", SequencedAssemblyWithGasItem::new).properties(p -> p.rarity(Rarity.EPIC)).model(AssetLookup.existingItemModel()).register();
     public static final ItemEntry<SequencedAssemblyWithGasItem> INCOMPLETE_BREEZE_CORE = CCB_REGISTRATE.item("incomplete_breeze_core", SequencedAssemblyWithGasItem::new).properties(p -> p.rarity(Rarity.EPIC)).register();
@@ -83,6 +72,8 @@ public class CCBItems {
 
     public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_TESLA_TURBINE_ROTOR = CCB_REGISTRATE.item("incomplete_tesla_turbine_rotor", SequencedAssemblyItem::new).properties(p -> p.rarity(Rarity.UNCOMMON).fireResistant()).register();
     public static final ItemEntry<Item> TESLA_TURBINE_ROTOR = CCB_REGISTRATE.item("tesla_turbine_rotor", Item::new).properties(p -> p.stacksTo(16).rarity(Rarity.UNCOMMON).fireResistant()).register();
+
+    public static final ItemEntry<GasInjectionChamberFilterItem> GAS_INJECTION_CHAMBER_FILTER = CCB_REGISTRATE.item("gas_injection_chamber_filter", GasInjectionChamberFilterItem::new).properties(p -> p.stacksTo(16).fireResistant()).transform(CCBItemBuilderTransformer.gasInjectionChamberFilter()).register();
 
     public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_AIRTIGHT_CANNON = CCB_REGISTRATE.item("incomplete_airtight_cannon", SequencedAssemblyItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).register();
     public static final ItemEntry<AirtightCannonItem> AIRTIGHT_CANNON = CCB_REGISTRATE.item("airtight_cannon", AirtightCannonItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant().stacksTo(1)).model(AssetLookup.itemModelWithPartials()).tag(Items.ENCHANTABLES, ItemTags.BOW_ENCHANTABLE, ItemTags.CROSSBOW_ENCHANTABLE, ItemTags.VANISHING_ENCHANTABLE).register();
@@ -113,6 +104,32 @@ public class CCBItems {
     public static final ItemEntry<SequencedAssemblyWithGasItem> INCOMPLETE_ANCHOR_FLARE = CCB_REGISTRATE.item("incomplete_anchor_flare", SequencedAssemblyWithGasItem::new).properties(p -> p.rarity(Rarity.UNCOMMON)).register();
     public static final ItemEntry<AnchorFlareItem> ANCHOR_FLARE = CCB_REGISTRATE.item("anchor_flare", AnchorFlareItem::new).properties(p -> p.stacksTo(16).rarity(Rarity.UNCOMMON)).tag(CCBItemTags.WEATHER_FLARE.tag).register();
 
+    static {
+        CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.PHOTO_STRESSES);
+    }
+
+    public static final ItemEntry<Item> POWDERED_AMETHYST = CCB_REGISTRATE.item("powdered_amethyst", Item::new).tag(CCBItemTags.DUSTS.tag).tag(CCBItemTags.DUSTS_AMETHYST.tag).register();
+    public static final ItemEntry<Item> AMETHYST_CRYSTAL_SHEET = CCB_REGISTRATE.item("amethyst_crystal_sheet", Item::new).tag(CCBItemTags.PLATES_AMETHYST_CRYSTAL.tag).register();
+
+    static {
+        CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.ENDS);
+    }
+
+    public static final ItemEntry<Item> OBSIDIAN_CHUNK = CCB_REGISTRATE.item("obsidian_chunk", Item::new).tag(CCBItemTags.CHUNKS.tag).register();
+    public static final ItemEntry<Item> OBSIDIAN_BRICK = CCB_REGISTRATE.item("obsidian_brick", Item::new).tag(CCBItemTags.BRICKS.tag).tag(CCBItemTags.BRICKS_OBSIDIAN.tag).register();
+    public static final ItemEntry<Item> CRYING_OBSIDIAN_CHUNK = CCB_REGISTRATE.item("crying_obsidian_chunk", Item::new).tag(CCBItemTags.CHUNKS.tag).register();
+    public static final ItemEntry<Item> CRYING_OBSIDIAN_BRICK = CCB_REGISTRATE.item("crying_obsidian_brick", Item::new).tag(CCBItemTags.BRICKS.tag).tag(CCBItemTags.BRICKS_CRYING_OBSIDIAN.tag).register();
+    public static final ItemEntry<Item> POWDERED_CRYING_OBSIDIAN = CCB_REGISTRATE.item("powdered_crying_obsidian", Item::new).tag(CCBItemTags.DUSTS.tag).tag(CCBItemTags.DUSTS_CRYING_OBSIDIAN.tag).register();
+
+    public static final ItemEntry<Item> CHORUS_FLOWER_POWDER = CCB_REGISTRATE.item("chorus_flower_powder", Item::new).tag(CCBItemTags.DUSTS.tag).tag(CCBItemTags.DUSTS_CHORUS_FLOWER.tag).register();
+
+    public static final ItemEntry<Item> END_ALLOY = CCB_REGISTRATE.item("end_alloy", Item::new).properties(p -> p.rarity(Rarity.UNCOMMON)).tag(CCBItemTags.INGOTS_END_ALLOY.tag).register();
+    public static final ItemEntry<Item> END_ALLOY_SHEET = CCB_REGISTRATE.item("end_alloy_sheet", Item::new).properties(p -> p.rarity(Rarity.UNCOMMON)).tag(CCBItemTags.PLATES_END_ALLOY.tag).register();
+
+    static {
+        CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.DECORATIONS);
+    }
+
     public static final ItemEntry<Item> ICE_CREAM_CONE = CCB_REGISTRATE.item("ice_cream_cone", Item::new).properties(p -> p.food(new Builder().nutrition(4).saturationModifier(0.6f).build())).register();
     public static final ItemEntry<Item> ICE_CREAM = CCB_REGISTRATE.item("ice_cream", Item::new).properties(p -> p.stacksTo(16).food(new Builder().nutrition(4).saturationModifier(0.6f).alwaysEdible().build())).tag(CCBItemTags.ICE_CREAMS.tag).register();
     public static final ItemEntry<MilkIceCreamItem> MILK_ICE_CREAM = CCB_REGISTRATE.item("milk_ice_cream", MilkIceCreamItem::new).properties(p -> p.stacksTo(16).food(new Builder().nutrition(4).saturationModifier(0.6f).alwaysEdible().build())).tag(CCBItemTags.ICE_CREAM_WITH_FLAVOR.tag).tag(CCBItemTags.ICE_CREAMS.tag).register();
@@ -124,7 +141,7 @@ public class CCBItems {
     public static final ItemEntry<CreativeIceCreamItem> CREATIVE_ICE_CREAM = CCB_REGISTRATE.item("creative_ice_cream", CreativeIceCreamItem::new).properties(p -> p.stacksTo(16).rarity(Rarity.EPIC).food(new Builder().nutrition(20).saturationModifier(1.0f).alwaysEdible().build())).register();
 
     static {
-        CCB_REGISTRATE.setCreativeTab(CCBCreativeTabs.CANISTERS_CREATIVE_TAB);
+        CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.CANISTERS);
     }
 
     public static final ItemEntry<AirtightCannonWindChargeItem> NATURAL_WIND_CHARGE = CCB_REGISTRATE.item("natural_wind_charge", p -> new AirtightCannonWindChargeItem(p, CCBGases.NATURAL_AIR)).register();
@@ -160,7 +177,7 @@ public class CCBItems {
     public static final ItemEntry<GasFilterItem> GAS_FILTER = CCB_REGISTRATE.item("gas_filter", GasFilterItem::new).properties(p -> p.stacksTo(1)).register();
 
     public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_GAS_CANISTER_PACK = CCB_REGISTRATE.item("incomplete_gas_canister_pack", SequencedAssemblyItem::new).properties(Properties::fireResistant).register();
-    public static final ItemEntry<GasCanisterPackItem> GAS_CANISTER_PACK = CCB_REGISTRATE.item("gas_canister_pack", GasCanisterPackItem::new).properties(p -> p.stacksTo(1).fireResistant().rarity(Rarity.UNCOMMON)).onRegister(GasCanisterPackItem::registerModelOverrides).model(GasCanisterPackOverrides::addOverrideModels).register();
+    public static final ItemEntry<GasCanisterPackItem> GAS_CANISTER_PACK = CCB_REGISTRATE.item("gas_canister_pack", GasCanisterPackItem::new).properties(p -> p.stacksTo(1).fireResistant().rarity(Rarity.UNCOMMON)).model(GasCanisterPackModelGenerator::addOverrideModels).register();
 
     public static final ItemEntry<GasCanisterBlockItem> GAS_CANISTER_PLACEABLE = CCB_REGISTRATE.item("gas_canister_placeable", p -> new GasCanisterBlockItem(CCBBlocks.GAS_CANISTER_BLOCK.get(), CCBItems.GAS_CANISTER::get, p)).transform(CCBItemBuilderTransformer.gasCanister()).register();
     public static final ItemEntry<GasCanisterItem> GAS_CANISTER = CCB_REGISTRATE.item("gas_canister", p -> new GasCanisterItem(p, GAS_CANISTER_PLACEABLE)).properties(p -> p.stacksTo(1).fireResistant()).tag(Items.ENCHANTABLES, CCBItemTags.GAS_CANISTER_ENCHANTABLE.tag, AllItemTags.PRESSURIZED_AIR_SOURCES.tag, ItemTags.VANISHING_ENCHANTABLE).register();

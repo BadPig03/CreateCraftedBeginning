@@ -1,5 +1,7 @@
 package net.ty.createcraftedbeginning.mixin.client.create;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBehaviour;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBlock;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelConnectionHandler;
@@ -13,7 +15,6 @@ import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -22,9 +23,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @Mixin(value = FactoryPanelConnectionHandler.class, remap = false)
 public abstract class FactoryPanelConnectionHandlerMixin {
-    @Redirect(method = "clientTick", at = @At(value = "INVOKE", target = "Lcom/tterrag/registrate/util/entry/BlockEntry;has(Lnet/minecraft/world/level/block/state/BlockState;)Z"))
-    private static boolean ccb$clientTick(BlockEntry<?> entry, BlockState state) {
-        return entry.has(state) || state.getBlock() instanceof GasPackagerBlock;
+    @WrapOperation(method = "clientTick", at = @At(value = "INVOKE", target = "Lcom/tterrag/registrate/util/entry/BlockEntry;has(Lnet/minecraft/world/level/block/state/BlockState;)Z"))
+    private static boolean ccb$clientTick(BlockEntry<?> entry, BlockState state, Operation<Boolean> original) {
+        return original.call(entry, state) || state.getBlock() instanceof GasPackagerBlock;
     }
 
     @Inject(method = "checkForIssues(Lcom/simibubi/create/content/logistics/factoryBoard/FactoryPanelBehaviour;Lcom/simibubi/create/content/logistics/factoryBoard/FactoryPanelBehaviour;)Ljava/lang/String;", at = @At("HEAD"), cancellable = true)

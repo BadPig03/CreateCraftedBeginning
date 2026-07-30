@@ -4,10 +4,8 @@ import com.simibubi.create.content.equipment.zapper.ShootableGadgetItemMethods;
 import com.simibubi.create.foundation.item.CustomArmPoseItem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel.ArmPose;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.CommonComponents;
@@ -29,7 +27,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
+import net.ty.createcraftedbeginning.platform.CCBClientBridge;
 import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandler;
 import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
@@ -90,7 +88,7 @@ public class AirtightCannonItem extends Item implements CustomArmPoseItem {
 
         player.startUsingItem(hand);
         if (level.isClientSide) {
-            CreateCraftedBeginningClient.AIRTIGHT_CANNON_RENDER_HANDLER.dontAnimateItem(hand);
+            CCBClientBridge.dontAnimateAirtightCannon(hand);
         }
 
         return InteractionResultHolder.success(cannon);
@@ -150,11 +148,6 @@ public class AirtightCannonItem extends Item implements CustomArmPoseItem {
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null) {
-            return;
-        }
-
         GasStack gasContent = CanisterContainerClients.getDisplayedGasContent();
         if (gasContent.isEmpty()) {
             return;

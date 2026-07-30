@@ -63,6 +63,7 @@ public class CCBAirtights extends ConfigBase {
     public final ConfigInt maxCanisterCapacity = i(20, 1, "max_canister_capacity", Comments.buckets, Comments.maxCanisterCapacity);
 
     public final ConfigGroup gasInjectionChamber = group(0, "gas_injection_chamber", "Gas Injection Chamber");
+    public final ConfigInt baseFanProcessingGasPerItem = i(100, 0, 10000, "base_fan_processing_gas_per_item", Comments.milliBuckets, Comments.baseFanProcessingGasPerItem);
     public final ConfigInt maxGasInjectionChamberCapacity = i(10, 1, "max_capacity", Comments.buckets, Comments.maxGasInjectionChamberCapacity);
 
     public final ConfigGroup gasPackager = group(0, "gas_packager", "Gas Packager");
@@ -114,6 +115,7 @@ public class CCBAirtights extends ConfigBase {
         static String maxCanisterCapacity = "The maximum gas capacity of the Gas Canister.";
         static String maxCoolantCapacity = "The maximum stored cooling time of a Breeze Cooler.";
         static String maxGasInjectionChamberCapacity = "The maximum gas capacity of the Gas Injection Chamber.";
+        static String baseFanProcessingGasPerItem = "The base amount of gas consumed per item when the Gas Injection Chamber performs fan processing. Set to 0 to disable consumption.";
         static String maxGasPerBalloon = "The maximum amount of gas that a single balloon can carry.";
         static String maxProcessingRate = "The maximum amount of gas a Breeze Chamber can process per second.";
         static String maxPumpRange = "The maximum distance an Airtight Pump can push or pull gas in either direction.";

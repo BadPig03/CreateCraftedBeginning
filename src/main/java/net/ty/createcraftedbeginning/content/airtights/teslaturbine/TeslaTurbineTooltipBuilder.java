@@ -7,6 +7,7 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.platform.CCBClientBridge;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineLevelCalculator.LevelKey;
 import net.ty.createcraftedbeginning.data.CCBLang;
 
@@ -42,20 +43,30 @@ public class TeslaTurbineTooltipBuilder {
     private static void addProgressBars(Map<LevelKey, Integer> levels, List<Component> tooltip) {
         int minValue = levels.getOrDefault(LevelKey.MIN_VALUE, 0);
         int maxValue = levels.getOrDefault(LevelKey.MAX_VALUE, MAX_LEVEL);
-        CCBLang.builder().add(createProgressBar("supply", levels.getOrDefault(LevelKey.SUPPLY, 0), minValue, maxValue)).forGoggles(tooltip, 1);
-        CCBLang.builder().add(createProgressBar("rotor", levels.getOrDefault(LevelKey.ROTOR, 0), minValue, maxValue)).forGoggles(tooltip, 1);
-        CCBLang.builder().add(createProgressBar("type", levels.getOrDefault(LevelKey.TYPE, 0), minValue, maxValue)).forGoggles(tooltip, 1);
+        List<MutableComponent> labels = List.of(createLabel("supply"), createLabel("rotor"), createLabel("type"));
+        List<MutableComponent> bars = List.of(createProgressBar(levels.getOrDefault(LevelKey.SUPPLY, 0), minValue, maxValue), createProgressBar(levels.getOrDefault(LevelKey.ROTOR, 0), minValue, maxValue), createProgressBar(levels.getOrDefault(LevelKey.TYPE, 0), minValue, maxValue));
+        if (CCBClientBridge.addAlignedTooltipBars(tooltip, 1, labels, bars)) {
+            return;
+        }
+
+        for (int i = 0; i < labels.size(); i++) {
+            MutableComponent line = labels.get(i).copy().append(CCBLang.translateDirect("gui.tesla_turbine.dots").withStyle(ChatFormatting.DARK_GRAY)).append(bars.get(i));
+            CCBLang.builder().add(line).forGoggles(tooltip, 1);
+        }
     }
 
-    private static MutableComponent createProgressBar(String label, int level, int minValue, int maxValue) {
+    private static MutableComponent createLabel(String label) {
+        return CCBLang.translateDirect("gui.tesla_turbine." + label).withStyle(ChatFormatting.GRAY);
+    }
+
+    private static MutableComponent createProgressBar(int level, int minValue, int maxValue) {
         int beforeMin = Math.max(0, minValue - 1);
         int atMin = minValue > 0 ? 1 : 0;
         int completed = Math.max(0, level - minValue);
         int remaining = Math.max(0, maxValue - level);
         int padding = Math.max(0, Math.min(MAX_LEVEL - maxValue, (maxValue / 4 + 1) * 4 - maxValue));
 
-        MutableComponent bar = Component.empty().append(createBars(beforeMin, ChatFormatting.DARK_GREEN)).append(createBars(atMin, ChatFormatting.GREEN)).append(createBars(completed, ChatFormatting.DARK_GREEN)).append(createBars(remaining, ChatFormatting.DARK_RED)).append(createBars(padding, ChatFormatting.DARK_GRAY));
-        return CCBLang.translateDirect("gui.tesla_turbine." + label).withStyle(ChatFormatting.GRAY).append(CCBLang.translateDirect("gui.tesla_turbine.dots").withStyle(ChatFormatting.DARK_GRAY)).append(bar);
+        return Component.empty().append(createBars(beforeMin, ChatFormatting.DARK_GREEN)).append(createBars(atMin, ChatFormatting.GREEN)).append(createBars(completed, ChatFormatting.DARK_GREEN)).append(createBars(remaining, ChatFormatting.DARK_RED)).append(createBars(padding, ChatFormatting.DARK_GRAY));
     }
 
     private static MutableComponent createBars(int count, ChatFormatting formatting) {

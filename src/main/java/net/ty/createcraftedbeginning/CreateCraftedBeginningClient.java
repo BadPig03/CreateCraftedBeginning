@@ -9,6 +9,9 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
+import net.ty.createcraftedbeginning.client.CCBClientBridgeImpl;
+import net.ty.createcraftedbeginning.client.CCBFluidClientExtensions;
+import net.ty.createcraftedbeginning.client.CCBParticleProviders;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonRenderHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.AirtightExtendArmRenderHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillRenderHandler;
@@ -16,8 +19,7 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.client.Breeze
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.client.BreezeCoolerClientAnimation;
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerClient;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerClient;
-import net.ty.createcraftedbeginning.content.fluids.CCBFluidClientExtensions;
-import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
+import net.ty.createcraftedbeginning.platform.CCBClientBridge;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -30,9 +32,11 @@ public class CreateCraftedBeginningClient {
     public static final AirtightHandheldDrillRenderHandler AIRTIGHT_HAND_DRILL_RENDER_HANDLER = new AirtightHandheldDrillRenderHandler();
 
     public CreateCraftedBeginningClient(IEventBus modEventBus) {
+        CCBClientBridge.install(new CCBClientBridgeImpl());
+
         IEventBus eventBus = NeoForge.EVENT_BUS;
         modEventBus.addListener(CCBFluidClientExtensions::register);
-        modEventBus.addListener(CCBParticleTypes::registerFactories);
+        modEventBus.addListener(CCBParticleProviders::register);
 
         BreezeChamberClientAnimation.initialize();
         BreezeCoolerClientAnimation.initialize();

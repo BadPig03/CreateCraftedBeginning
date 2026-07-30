@@ -1,8 +1,5 @@
 {
   "values": [
-    "createcraftedbeginning:andesite_crate",
-    "createcraftedbeginning:brass_crate",
-    "createcraftedbeginning:sturdy_crate",
     "createcraftedbeginning:airtight_pipe",
     "createcraftedbeginning:airtight_encased_pipe",
     "createcraftedbeginning:airtight_check_valve",
@@ -11,6 +8,9 @@
     "createcraftedbeginning:airtight_tank",
     "createcraftedbeginning:horizontal_airtight_tank",
     "createcraftedbeginning:creative_airtight_tank",
+    "createcraftedbeginning:airtight_hatch",
+    "createcraftedbeginning:gas_injection_chamber",
+    "createcraftedbeginning:portable_gas_interface",
     "createcraftedbeginning:empty_breeze_cooler",
     "createcraftedbeginning:breeze_cooler",
     "createcraftedbeginning:breeze_chamber",
@@ -29,19 +29,18 @@
     "createcraftedbeginning:gas_packager",
     "createcraftedbeginning:gas_repackager",
     "createcraftedbeginning:gas_factory_gauge",
-    "createcraftedbeginning:gas_injection_chamber",
-    "createcraftedbeginning:airtight_hatch",
-    "createcraftedbeginning:portable_gas_interface",
     "createcraftedbeginning:gas_canister",
     "createcraftedbeginning:creative_gas_canister",
-    "createcraftedbeginning:air_vent",
+    "createcraftedbeginning:photo-stress_bearing",
     "createcraftedbeginning:end_casing",
     "createcraftedbeginning:end_incineration_blower",
     "createcraftedbeginning:end_incineration_blower_structural",
     "createcraftedbeginning:end_sculk_silencer",
     "createcraftedbeginning:end_sculk_silencer_structural",
-    "createcraftedbeginning:photo-stress_bearing",
-    "createcraftedbeginning:pneumatic_engine",
+    "createcraftedbeginning:andesite_crate",
+    "createcraftedbeginning:brass_crate",
+    "createcraftedbeginning:sturdy_crate",
+    "createcraftedbeginning:air_vent",
     "createcraftedbeginning:airtight_sheet_block",
     "createcraftedbeginning:end_alloy_block",
     "createcraftedbeginning:obsidian_bricks",
@@ -109,6 +108,7 @@
     "createcraftedbeginning:crying_obsidian_bricks_w",
     "createcraftedbeginning:crying_obsidian_bricks_x",
     "createcraftedbeginning:crying_obsidian_bricks_y",
-    "createcraftedbeginning:crying_obsidian_bricks_z"
+    "createcraftedbeginning:crying_obsidian_bricks_z",
+    "createcraftedbeginning:pneumatic_engine"
   ]
 }

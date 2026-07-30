@@ -86,12 +86,7 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
             return;
         }
 
-        if (!master.isRecipeFilterInitialized() && level != null && !level.isClientSide) {
-            master.initializeRecipeFilterFromLegacy(filteringBehaviour.getFilter());
-        }
-        if (master.isRecipeFilterInitialized()) {
-            syncFilterFromMaster(master.getRecipeFilter());
-        }
+        syncFilterFromMaster(master.getRecipeFilter());
     }
 
     private void onFilterChanged(ItemStack stack) {

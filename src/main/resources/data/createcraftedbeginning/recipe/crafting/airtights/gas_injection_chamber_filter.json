@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "tag": "c:strings"
+    },
+    {
+      "item": "createcraftedbeginning:airtight_sheet"
+    },
+    {
+      "tag": "c:plates/amethyst_crystal"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:gas_injection_chamber_filter"
+  }
+}

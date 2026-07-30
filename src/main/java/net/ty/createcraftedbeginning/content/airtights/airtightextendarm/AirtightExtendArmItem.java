@@ -2,8 +2,6 @@ package net.ty.createcraftedbeginning.content.airtights.airtightextendarm;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -47,11 +45,6 @@ public class AirtightExtendArmItem extends Item {
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack arm, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null) {
-            return;
-        }
-
         GasStack gas = CanisterContainerClients.getDisplayedGasContent();
         if (gas.isEmpty()) {
             return;

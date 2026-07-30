@@ -4,7 +4,6 @@ import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.render.MultiPosDestructionHandler;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -21,7 +20,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -150,25 +148,5 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
     @Override
     public BlockEntityType<? extends AirtightReactorKettleBlockEntity> getBlockEntityType() {
         return CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get();
-    }
-
-    public static class AirtightReactorKettleRenderProperties implements IClientBlockExtensions, MultiPosDestructionHandler {
-        @Override
-        @Nullable
-        public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
-            HashSet<BlockPos> positions = new HashSet<>();
-            for (int x = -1; x <= 1; x++) {
-                for (int y = -1; y <= 1; y++) {
-                    for (int z = -1; z <= 1; z++) {
-                        if (x == 0 && y == 0 && z == 0) {
-                            continue;
-                        }
-
-                        positions.add(pos.offset(x, y, z));
-                    }
-                }
-            }
-            return positions;
-        }
     }
 }

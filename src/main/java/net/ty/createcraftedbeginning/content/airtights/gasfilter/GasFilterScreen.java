@@ -18,7 +18,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
-import net.ty.createcraftedbeginning.data.CCBGUITextures;
+import net.ty.createcraftedbeginning.client.CCBGUITextures;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 

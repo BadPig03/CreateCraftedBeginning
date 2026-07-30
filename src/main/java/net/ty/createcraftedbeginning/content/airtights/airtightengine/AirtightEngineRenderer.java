@@ -18,8 +18,6 @@ import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import static net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineBlockEntity.DELTA_TIME;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightEngineRenderer extends KineticBlockEntityRenderer<AirtightEngineBlockEntity> {
@@ -49,8 +47,7 @@ public class AirtightEngineRenderer extends KineticBlockEntityRenderer<AirtightE
             cogs.rotateCentered(Mth.PI, Axis.X);
         }
 
-        float phase = Mth.lerp(0.1f, be.getPistonPhase() + Mth.abs(be.getSpeed()) * partialTicks * DELTA_TIME, be.getPreviousPhase());
-        be.setPreviousPhase(phase);
+        float phase = be.getPistonPhase(partialTicks);
         piston.translate(0, -0.2f * Mth.sin(phase) - 0.2f, 0).light(light).renderInto(ms, buffer.getBuffer(RenderType.solid()));
         kineticRotationTransform(cogs, be, Axis.Y, getAngleForBe(be, pos, axis) * rotationSign, light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
     }

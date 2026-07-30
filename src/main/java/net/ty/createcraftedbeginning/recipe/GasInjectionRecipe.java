@@ -18,8 +18,6 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAssemblyRecipeWithGas;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
-import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasSubCategory;
-import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasSubCategory.AssemblyInjecting;
 import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.trie.AbstractVariant;
@@ -40,7 +38,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -173,11 +170,6 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
     @Override
     public void addAssemblyGasIngredients(List<SizedGasIngredient> list) {
         list.add(getGasIngredient());
-    }
-
-    @Override
-    public Supplier<Supplier<SequencedAssemblyWithGasSubCategory>> getJEISubCategory() {
-        return () -> AssemblyInjecting::new;
     }
 
     @Override

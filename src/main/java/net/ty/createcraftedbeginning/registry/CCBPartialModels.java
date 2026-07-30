@@ -44,9 +44,11 @@ public class CCBPartialModels {
     public static final PartialModel BREEZE_COOLER_GOGGLES = block("breeze_cooler/breeze/goggles");
     public static final PartialModel BREEZE_COOLER_GOGGLES_SMALL = block("breeze_cooler/breeze/goggles_small");
 
-    public static final PartialModel NOZZLE = block("gas_injection_chamber/nozzle");
-    public static final PartialModel NOZZLE_TOP = block("gas_injection_chamber/nozzle_top");
-    public static final PartialModel NOZZLE_BOTTOM = block("gas_injection_chamber/nozzle_bottom");
+    public static final PartialModel GAS_INJECTION_CHAMBER_NOZZLE = block("gas_injection_chamber/nozzle");
+    public static final PartialModel GAS_INJECTION_CHAMBER_NOZZLE_TOP = block("gas_injection_chamber/nozzle_top");
+    public static final PartialModel GAS_INJECTION_CHAMBER_NOZZLE_BOTTOM = block("gas_injection_chamber/nozzle_bottom");
+    public static final PartialModel GAS_INJECTION_CHAMBER_FILTER = block("gas_injection_chamber/filter");
+    public static final PartialModel GAS_INJECTION_CHAMBER_FILTER_INNER = block("gas_injection_chamber/filter_inner");
 
     public static final PartialModel PORTABLE_GAS_INTERFACE_MIDDLE = block("portable_gas_interface/block_middle");
     public static final PartialModel PORTABLE_GAS_INTERFACE_MIDDLE_POWERED = block("portable_gas_interface/block_middle_powered");

@@ -61,6 +61,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTank
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.IChamberGasTank;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.data.CCBShapes;
+import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.Contract;
@@ -106,13 +107,15 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
             return InteractionResultHolder.success(ItemStack.EMPTY);
         }
 
-        ItemStack container = ItemStack.EMPTY;
-        FoodProperties food = stack.getItem().getFoodProperties(stack, null);
-        if (food != null) {
-            container = food.usingConvertsTo().orElse(ItemStack.EMPTY);
-        }
+        ItemStack container = WindChargingRecipe.getRecipeResult(level, stack);
         if (container.isEmpty()) {
-            container = stack.hasCraftingRemainingItem() ? stack.getCraftingRemainingItem() : ItemStack.EMPTY;
+            FoodProperties food = stack.getItem().getFoodProperties(stack, null);
+            if (food != null) {
+                container = food.usingConvertsTo().orElse(ItemStack.EMPTY);
+            }
+            if (container.isEmpty()) {
+                container = stack.hasCraftingRemainingItem() ? stack.getCraftingRemainingItem() : ItemStack.EMPTY;
+            }
         }
         if (!simulate && !level.isClientSide) {
             stack.shrink(1);

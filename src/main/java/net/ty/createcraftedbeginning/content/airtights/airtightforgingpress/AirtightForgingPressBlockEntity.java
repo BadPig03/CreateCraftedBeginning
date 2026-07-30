@@ -73,7 +73,6 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
 
     private static final String COMPOUND_KEY_CORE = "Core";
     private static final String COMPOUND_KEY_FILTER = "Filter";
-    private static final String COMPOUND_KEY_FILTER_INITIALIZED = "FilterInitialized";
     private static final String COMPOUND_KEY_INPUT_ITEMS = "InputItems";
     private static final String COMPOUND_KEY_OPERATING = "Operating";
     private static final String COMPOUND_KEY_OPERATING_TICKS = "OperatingTicks";
@@ -101,7 +100,6 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     private SmartFluidTankBehaviour fluidTank;
     private SmartGasTankBehaviour gasTank;
     private ItemStack recipeFilter = ItemStack.EMPTY;
-    private boolean filterInitialized = true;
     private long observedRecipeCacheEpoch = AirtightForgingPressUtils.getRecipeCacheEpoch();
 
     public AirtightForgingPressBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -109,7 +107,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         setLazyTickRate(LAZY_TICK_RATE);
         core = new AirtightForgingPressCore(this);
 
-        pressHeadInventory = new SmartInventory(MAX_INPUT_SLOT, this, 1, false, (slot, stack) -> stack.is(CCBItemTags.PRESS_HEAD_TOOLS.tag) || stack.getItem() instanceof SmithingTemplateItem).whenContentsChanged(ignored -> contentsChanged = true);
+        pressHeadInventory = new SmartInventory(MAX_INPUT_SLOT, this, 1, false, (slot, stack) -> stack.is(CCBItemTags.PRESS_HEAD_TOOLS.tag) || stack.getItem() instanceof SmithingTemplateItem).whenContentsChanged($ -> contentsChanged = true);
         processingInventory = new AirtightForgingPressInventory(MAX_INPUT_SLOT, this).whenContentsChanged(ignored -> contentsChanged = true);
         inputInventory = new AirtightForgingPressInventory(MAX_INPUT_SLOT, this).whenContentsChanged(ignored -> contentsChanged = true);
         outputInventory = new AirtightForgingPressInventory(MAX_OUTPUT_SLOT, this).forbidInsertion().whenContentsChanged(ignored -> contentsChanged = true);
@@ -230,7 +228,6 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         compoundTag.put(COMPOUND_KEY_PRESS_HEAD_ITEMS, pressHeadInventory.serializeNBT(provider));
         compoundTag.put(COMPOUND_KEY_PROCESSING_ITEMS, processingInventory.serializeNBT(provider));
         compoundTag.put(COMPOUND_KEY_FILTER, recipeFilter.saveOptional(provider));
-        compoundTag.putBoolean(COMPOUND_KEY_FILTER_INITIALIZED, filterInitialized);
         compoundTag.put(COMPOUND_KEY_INPUT_ITEMS, inputInventory.serializeNBT(provider));
         compoundTag.put(COMPOUND_KEY_OUTPUT_ITEMS, outputInventory.serializeNBT(provider));
         compoundTag.putFloat(COMPOUND_KEY_OPERATING_TICKS, operatingTicks);
@@ -250,12 +247,6 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
             processingInventory.deserializeNBT(provider, compoundTag.getCompound(COMPOUND_KEY_PROCESSING_ITEMS));
         }
         recipeFilter = compoundTag.contains(COMPOUND_KEY_FILTER) ? ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_FILTER)) : ItemStack.EMPTY;
-        if (compoundTag.contains(COMPOUND_KEY_FILTER_INITIALIZED)) {
-            filterInitialized = compoundTag.getBoolean(COMPOUND_KEY_FILTER_INITIALIZED);
-        }
-        else {
-            filterInitialized = compoundTag.contains(COMPOUND_KEY_FILTER);
-        }
         if (compoundTag.contains(COMPOUND_KEY_INPUT_ITEMS)) {
             inputInventory.deserializeNBT(provider, compoundTag.getCompound(COMPOUND_KEY_INPUT_ITEMS));
         }
@@ -373,12 +364,11 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
 
     public void setRecipeFilter(ItemStack stack) {
         ItemStack normalized = stack.isEmpty() ? ItemStack.EMPTY : stack.copyWithCount(1);
-        if (filterInitialized && ItemStack.matches(recipeFilter, normalized)) {
+        if (ItemStack.matches(recipeFilter, normalized)) {
             return;
         }
 
         recipeFilter = normalized;
-        filterInitialized = true;
         filterChanged = true;
         contentsChanged = true;
         syncRecipeFilterReplicas();
@@ -388,24 +378,6 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
 
     public boolean testRecipeFilter(ItemStack stack) {
         return recipeFilter.isEmpty() || level != null && FilterItemStack.of(recipeFilter).test(level, stack);
-    }
-
-    public void initializeRecipeFilterFromLegacy(ItemStack legacyFilter) {
-        if (filterInitialized || legacyFilter.isEmpty()) {
-            return;
-        }
-
-        recipeFilter = legacyFilter.copyWithCount(1);
-        filterInitialized = true;
-        filterChanged = true;
-        contentsChanged = true;
-        syncRecipeFilterReplicas();
-        setChanged();
-        sendData();
-    }
-
-    public boolean isRecipeFilterInitialized() {
-        return filterInitialized;
     }
 
     private void syncRecipeFilterReplicas() {

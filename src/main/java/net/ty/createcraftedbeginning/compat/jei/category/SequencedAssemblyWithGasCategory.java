@@ -20,10 +20,19 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasSubCategory;
+import net.ty.createcraftedbeginning.api.gas.recipes.CuttingWithGasRecipe;
+import net.ty.createcraftedbeginning.api.gas.recipes.DeployerApplicationWithGasRecipe;
+import net.ty.createcraftedbeginning.api.gas.recipes.FillingWithGasRecipe;
+import net.ty.createcraftedbeginning.api.gas.recipes.PressingWithGasRecipe;
+import net.ty.createcraftedbeginning.client.CCBGUITextures;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
-import net.ty.createcraftedbeginning.data.CCBGUITextures;
+import net.ty.createcraftedbeginning.compat.jei.category.SequencedAssemblyWithGasSubCategory.AssemblyCutting;
+import net.ty.createcraftedbeginning.compat.jei.category.SequencedAssemblyWithGasSubCategory.AssemblyDeploying;
+import net.ty.createcraftedbeginning.compat.jei.category.SequencedAssemblyWithGasSubCategory.AssemblyInjecting;
+import net.ty.createcraftedbeginning.compat.jei.category.SequencedAssemblyWithGasSubCategory.AssemblyPressing;
+import net.ty.createcraftedbeginning.compat.jei.category.SequencedAssemblyWithGasSubCategory.AssemblySpouting;
 import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
 import net.ty.createcraftedbeginning.recipe.SequencedWithGasRecipe;
 
@@ -44,6 +53,26 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
 
     public SequencedAssemblyWithGasCategory(Info<SequencedAssemblyWithGasRecipe> info) {
         super(info);
+    }
+
+    private static SequencedAssemblyWithGasSubCategory createSubCategory(SequencedWithGasRecipe<?> step) {
+        var recipe = step.getAsAssemblyRecipe();
+        return switch (recipe) {
+            case PressingWithGasRecipe ignored -> new AssemblyPressing();
+            case FillingWithGasRecipe ignored -> new AssemblySpouting();
+            case DeployerApplicationWithGasRecipe ignored -> new AssemblyDeploying();
+            case GasInjectionRecipe ignored -> new AssemblyInjecting();
+            case CuttingWithGasRecipe ignored -> new AssemblyCutting();
+            default -> throw new IllegalArgumentException("Unsupported sequenced assembly recipe: " + recipe.getClass().getName());
+        };
+    }
+
+    private static void addInvisibleInputs(IRecipeLayoutBuilder builder, SequencedWithGasRecipe<?> step) {
+        var stepRecipe = step.getRecipe();
+        NonNullList<Ingredient> ingredients = stepRecipe.getIngredients();
+        ingredients.subList(1, ingredients.size()).forEach(ingredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(ingredient));
+        stepRecipe.getFluidIngredients().forEach(fluidIngredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(NeoForgeTypes.FLUID_STACK, Arrays.asList(fluidIngredient.getFluids())));
+        stepRecipe.getGasIngredients().forEach(gasIngredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(CCBJEIPlugin.GAS_STACK, Arrays.asList(gasIngredient.getGases())));
     }
 
     @Override
@@ -169,17 +198,9 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
         return width - STEP_MARGIN;
     }
 
-    private void addInvisibleInputs(IRecipeLayoutBuilder builder, SequencedWithGasRecipe<?> step) {
-        var stepRecipe = step.getRecipe();
-        NonNullList<Ingredient> ingredients = stepRecipe.getIngredients();
-        ingredients.subList(1, ingredients.size()).forEach(ingredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(ingredient));
-        stepRecipe.getFluidIngredients().forEach(fluidIngredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(NeoForgeTypes.FLUID_STACK, Arrays.asList(fluidIngredient.getFluids())));
-        stepRecipe.getGasIngredients().forEach(gasIngredient -> builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(CCBJEIPlugin.GAS_STACK, Arrays.asList(gasIngredient.getGases())));
-    }
-
     private SequencedAssemblyWithGasSubCategory getSubCategory(SequencedWithGasRecipe<?> step) {
         ResourceLocation serializerId = RegisteredObjectsHelper.getKeyOrThrow(step.getRecipe().getSerializer());
-        return subCategories.computeIfAbsent(serializerId, ignored -> step.getAsAssemblyRecipe().getJEISubCategory().get().get());
+        return subCategories.computeIfAbsent(serializerId, ignored -> createSubCategory(step));
     }
 
     protected MutableComponent chanceComponent(float chance) {

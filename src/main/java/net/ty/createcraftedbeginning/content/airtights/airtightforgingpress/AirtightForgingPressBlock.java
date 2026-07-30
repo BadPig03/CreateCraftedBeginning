@@ -2,9 +2,7 @@ package net.ty.createcraftedbeginning.content.airtights.airtightforgingpress;
 
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
-import com.simibubi.create.foundation.block.render.MultiPosDestructionHandler;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -25,7 +23,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -33,8 +30,6 @@ import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.HashSet;
-import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -139,17 +134,5 @@ public class AirtightForgingPressBlock extends Block implements IBE<AirtightForg
     @Override
     public BlockEntityType<? extends AirtightForgingPressBlockEntity> getBlockEntityType() {
         return CCBBlockEntities.AIRTIGHT_FORGING_PRESS.get();
-    }
-
-    public static class AirtightForgingMachineRenderProperties implements IClientBlockExtensions, MultiPosDestructionHandler {
-        @Override
-        @Nullable
-        public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
-            HashSet<BlockPos> positions = new HashSet<>();
-            for (AirtightForgingPressStructuralPosition position : AirtightForgingPressStructuralPosition.all()) {
-                positions.add(pos.offset(position.getStructureOffset()));
-            }
-            return positions;
-        }
     }
 }

@@ -10,13 +10,11 @@ import net.minecraft.world.level.ItemLike;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAssemblyRecipeWithGas;
-import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasSubCategory.AssemblyDeploying;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -36,7 +34,7 @@ public class DeployerApplicationWithGasRecipe extends ItemApplicationWithGasReci
     @Override
     @OnlyIn(Dist.CLIENT)
     public Component getDescriptionForAssembly() {
-        ItemStack[] stacks = ingredients.get(1).getItems();
+        ItemStack[] stacks = getRequiredHeldItem().getItems();
         if (stacks.length == 0) {
             return Component.literal("Invalid");
         }
@@ -48,16 +46,8 @@ public class DeployerApplicationWithGasRecipe extends ItemApplicationWithGasReci
      * {@inheritDoc}
      */
     @Override
-    public Supplier<Supplier<SequencedAssemblyWithGasSubCategory>> getJEISubCategory() {
-        return () -> AssemblyDeploying::new;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void addAssemblyIngredients(List<Ingredient> list) {
-        list.add(ingredients.get(1));
+        list.add(getRequiredHeldItem());
     }
 
     /**

@@ -25,7 +25,7 @@ import net.minecraft.world.item.armortrim.ArmorTrim;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.mixin.server.accessor.HumanoidArmorLayerAtlasAccessor;
+import net.ty.createcraftedbeginning.mixin.client.accessor.HumanoidArmorLayerAtlasAccessor;
 import net.ty.createcraftedbeginning.registry.CCBArmorMaterials;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 

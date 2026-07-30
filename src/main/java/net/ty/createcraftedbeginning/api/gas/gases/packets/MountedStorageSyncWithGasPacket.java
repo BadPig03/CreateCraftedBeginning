@@ -6,7 +6,6 @@ import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.MountedStorageManager;
 import net.createmod.catnip.net.base.ClientboundPacketPayload;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -42,7 +41,7 @@ public record MountedStorageSyncWithGasPacket(int contraptionId, Map<BlockPos, M
     @Override
     @OnlyIn(Dist.CLIENT)
     public void handle(LocalPlayer player) {
-        Level level = Minecraft.getInstance().level;
+        Level level = player.level();
         if (level == null || !(level.getEntity(contraptionId) instanceof AbstractContraptionEntity contraption)) {
             return;
         }

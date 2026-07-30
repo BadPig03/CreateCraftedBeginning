@@ -2,8 +2,6 @@ package net.ty.createcraftedbeginning.content.airtights.airtighthanddrill;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -187,11 +185,6 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack drill, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null) {
-            return;
-        }
-
         GasStack gasContent = CanisterContainerClients.getDisplayedGasContent();
         if (gasContent.isEmpty()) {
             return;

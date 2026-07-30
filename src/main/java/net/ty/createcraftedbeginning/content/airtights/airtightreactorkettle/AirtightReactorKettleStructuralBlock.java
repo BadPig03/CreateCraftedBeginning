@@ -5,8 +5,6 @@ import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.render.MultiPosDestructionHandler;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -35,9 +33,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
-import net.ty.createcraftedbeginning.content.particles.CCBParticleUtils;
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -228,47 +224,5 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
     @Override
     public boolean isAirtight(BlockPos currentPos, BlockState currentState, Direction oppositeDirection) {
         return true;
-    }
-
-    public static class AirtightReactorKettleStructuralRenderProperties implements IClientBlockExtensions, MultiPosDestructionHandler {
-        @Override
-        public boolean addHitEffects(BlockState state, Level level, HitResult target, ParticleEngine manager) {
-            if (!(target instanceof BlockHitResult result)) {
-                return false;
-            }
-
-            BlockPos targetPos = result.getBlockPos();
-            return level.getBlockState(targetPos).getBlock() instanceof IAirtightReactorKettleStructural structural && !structural.stillValid(level, targetPos, state);
-        }
-
-        @Override
-        public boolean addDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager) {
-            CCBParticleUtils.addReducedDestroyEffects(state, level, pos, manager);
-            return true;
-        }
-
-        @Override
-        @Nullable
-        public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
-            if (level.getBlockState(pos).getBlock() instanceof IAirtightReactorKettleStructural structural && !structural.stillValid(level, pos, blockState)) {
-                return null;
-            }
-
-            BlockPos masterPos = AirtightReactorKettleUtils.getMaster(pos, blockState);
-            HashSet<BlockPos> positions = new HashSet<>();
-            for (int x = -1; x <= 1; x++) {
-                for (int y = -1; y <= 1; y++) {
-                    for (int z = -1; z <= 1; z++) {
-                        if (x == 0 && y == 0 && z == 0) {
-                            continue;
-                        }
-
-                        positions.add(masterPos.offset(x, y, z));
-                    }
-                }
-            }
-            positions.add(masterPos);
-            return positions;
-        }
     }
 }

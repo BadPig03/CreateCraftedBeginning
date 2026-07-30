@@ -4,7 +4,6 @@ import com.simibubi.create.foundation.gui.menu.MenuBase;
 import com.simibubi.create.foundation.item.ItemHelper;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.HotbarManager;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -255,7 +254,7 @@ public abstract class AirtightUpgradableMenu extends MenuBase<ItemStack> {
 
     @Override
     public void clicked(int slotIndex, int dragType, ClickType clickType, Player player) {
-        int selectedSlot = playerInventory.selected + PLAYER_INVENTORY_SLOTS - HotbarManager.NUM_HOTBAR_GROUPS;
+        int selectedSlot = playerInventory.selected + PLAYER_INVENTORY_SLOTS - 9;
         if (slotIndex == selectedSlot && clickType != ClickType.THROW) {
             return;
         }

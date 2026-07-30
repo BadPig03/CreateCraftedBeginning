@@ -8,13 +8,13 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.VerticalIndicator;
-import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.VerticalIndicator.State;
+import net.ty.createcraftedbeginning.client.VerticalIndicator;
+import net.ty.createcraftedbeginning.client.VerticalIndicator.State;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.upgrades.AirtightBootsUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableScreen;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
-import net.ty.createcraftedbeginning.data.CCBGUITextures;
+import net.ty.createcraftedbeginning.client.CCBGUITextures;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 

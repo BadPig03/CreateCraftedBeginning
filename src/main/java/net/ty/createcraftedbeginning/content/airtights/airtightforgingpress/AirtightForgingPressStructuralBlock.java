@@ -3,10 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.airtightforgingpress;
 import com.simibubi.create.api.equipment.goggles.IProxyHoveringInformation;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
-import com.simibubi.create.foundation.block.render.MultiPosDestructionHandler;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -34,16 +31,11 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
-import net.ty.createcraftedbeginning.content.particles.CCBParticleUtils;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.HashSet;
-import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -203,49 +195,5 @@ public class AirtightForgingPressStructuralBlock extends Block implements IBE<Ai
     @Override
     public boolean isAirtight(BlockPos currentPos, BlockState currentState, Direction oppositeDirection) {
         return true;
-    }
-
-    public static class AirtightForgingMachineStructuralRenderProperties implements IClientBlockExtensions, MultiPosDestructionHandler {
-        @Override
-        public boolean addHitEffects(BlockState state, Level level, HitResult target, ParticleEngine manager) {
-            if (!(target instanceof BlockHitResult result)) {
-                return false;
-            }
-
-            BlockPos targetPos = result.getBlockPos();
-            BlockState targetState = level.getBlockState(targetPos);
-            return targetState.getBlock() instanceof IAirtightForgingPressStructural structural && !structural.stillValid(level, targetPos, state);
-        }
-
-        @Override
-        public boolean addDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager) {
-            CCBParticleUtils.addReducedDestroyEffects(state, level, pos, manager);
-            return true;
-        }
-
-        @Override
-        @Nullable
-        public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
-            BlockState currentState = level.getBlockState(pos);
-            if (currentState.getBlock() instanceof IAirtightForgingPressStructural structural && !structural.stillValid(level, pos, blockState)) {
-                return null;
-            }
-
-            BlockPos masterPos = AirtightForgingPressUtils.getMaster(pos, blockState);
-            HashSet<BlockPos> positions = new HashSet<>();
-            for (int i = -1; i <= 1; i++) {
-                for (int j = -1; j <= 1; j++) {
-                    for (int k = -1; k <= 1; k++) {
-                        if (i == 0 && j == 0 && k == 0) {
-                            continue;
-                        }
-
-                        positions.add(masterPos.offset(i, j, k));
-                    }
-                }
-            }
-            positions.add(masterPos);
-            return positions;
-        }
     }
 }
