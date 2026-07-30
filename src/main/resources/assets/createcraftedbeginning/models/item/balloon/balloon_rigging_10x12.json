@@ -4,7 +4,7 @@
 	"render_type": "minecraft:cutout",
 	"textures": {
 		"0": "createcraftedbeginning:item/balloon/balloon",
-		"particle": "createcraftedbeginning:item/balloon/ballon_particle"
+		"particle": "createcraftedbeginning:item/balloon/balloon_particle"
 	},
 	"elements": [
 		{

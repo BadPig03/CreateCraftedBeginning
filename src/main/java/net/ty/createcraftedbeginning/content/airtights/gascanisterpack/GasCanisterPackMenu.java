@@ -2,7 +2,6 @@ package net.ty.createcraftedbeginning.content.airtights.gascanisterpack;
 
 import com.simibubi.create.foundation.gui.menu.MenuBase;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.HotbarManager;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
@@ -155,7 +154,7 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
 
     @Override
     public void clicked(int slotId, int dragType, ClickType clickType, Player player) {
-        int selectedSlot = playerInventory.selected + PLAYER_INVENTORY_SLOTS - HotbarManager.NUM_HOTBAR_GROUPS;
+        int selectedSlot = playerInventory.selected + PLAYER_INVENTORY_SLOTS - 9;
         if (slotId == selectedSlot && clickType != ClickType.THROW) {
             return;
         }

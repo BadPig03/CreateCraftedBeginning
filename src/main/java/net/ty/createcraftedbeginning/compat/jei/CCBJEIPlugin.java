@@ -5,6 +5,7 @@ import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.content.kinetics.press.MechanicalPressBlockEntity;
 import com.simibubi.create.content.logistics.redstoneRequester.RedstoneRequesterScreen;
 import com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestScreen;
+import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.ingredients.IIngredientType;
@@ -15,11 +16,16 @@ import mezz.jei.api.registration.IModIngredientRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
+import mezz.jei.api.registration.ISubtypeRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeInput;
@@ -31,6 +37,7 @@ import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.client.CCBClientRecipeUtils;
 import net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory.Builder;
 import net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory.Factory;
@@ -48,6 +55,7 @@ import net.ty.createcraftedbeginning.compat.jei.category.WindChargingCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.gas.GasStackHelper;
 import net.ty.createcraftedbeginning.compat.jei.category.gas.GasStackRenderer;
 import net.ty.createcraftedbeginning.compat.jei.utils.AirtightHandheldDrillGhostIngredientHandler;
+import net.ty.createcraftedbeginning.compat.jei.utils.FanProcessingFilterRecipeUtils;
 import net.ty.createcraftedbeginning.compat.jei.utils.GasFilterGhostIngredientHandler;
 import net.ty.createcraftedbeginning.compat.jei.utils.RedstoneRequesterGhostIngredientHandler;
 import net.ty.createcraftedbeginning.compat.jei.utils.StockKeeperRequestGasGuiHandler;
@@ -66,6 +74,7 @@ import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
 import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
+import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingData;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
@@ -119,9 +128,34 @@ public class CCBJEIPlugin implements IModPlugin {
         return recipe instanceof ShapelessRecipe && recipe.getIngredients().size() > 1 && !MechanicalPressBlockEntity.canCompress(recipe) && !AllRecipeTypes.shouldIgnoreInAutomation(holder);
     }
 
+    private static void addAutomaticWindChargingRecipes(List<RecipeHolder<WindChargingRecipe>> recipes) {
+        List<WindChargingRecipe> overrides = recipes.stream().map(RecipeHolder::value).toList();
+        for (Item item : BuiltInRegistries.ITEM) {
+            ItemStack stack = item.getDefaultInstance();
+            if (stack.isEmpty() || overrides.stream().anyMatch(recipe -> recipe.getIngredient().test(stack))) {
+                continue;
+            }
+
+            WindChargingData data = WindChargingRecipe.getAutomaticWindChargingTime(stack);
+            if (data.amount() <= 0) {
+                continue;
+            }
+
+            ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
+            ResourceLocation recipeId = CreateCraftedBeginning.asResource("jei/wind_charging/" + itemId.getNamespace() + '/' + itemId.getPath());
+            WindChargingRecipe recipe = new StandardProcessingRecipe.Builder<>(WindChargingRecipe::new, recipeId).withItemIngredients(Ingredient.of(item)).duration(data.time()).build();
+            recipes.add(new RecipeHolder<>(recipeId, recipe));
+        }
+    }
+
     @Override
     public ResourceLocation getPluginUid() {
         return CreateCraftedBeginning.asResource("jei_plugin");
+    }
+
+    @Override
+    public void registerItemSubtypes(ISubtypeRegistration registration) {
+        registration.registerSubtypeInterpreter(CCBItems.GAS_INJECTION_CHAMBER_FILTER.get(), FanProcessingFilterSubtypeInterpreter.INSTANCE);
     }
 
     @Override
@@ -138,6 +172,7 @@ public class CCBJEIPlugin implements IModPlugin {
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
         allCategories.forEach(category -> category.registerRecipes(registration));
+        FanProcessingFilterRecipeUtils.registerRecipes(registration);
     }
 
     @Override
@@ -157,6 +192,7 @@ public class CCBJEIPlugin implements IModPlugin {
     @Override
     public void registerAdvanced(IAdvancedRegistration registration) {
         registration.addRecipeManagerPlugin(new VirtualGasItemRecipeLookupPlugin(registration.getJeiHelpers(), () -> runtime));
+        registration.addRecipeManagerPlugin(new FanProcessingFilterRecipeLookupPlugin(() -> runtime));
     }
 
     @Override
@@ -181,10 +217,10 @@ public class CCBJEIPlugin implements IModPlugin {
         builder(GasInjectionRecipe.class).addTypedRecipes(CCBRecipeTypes.GAS_INJECTION).catalyst(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK::get).doubleItemIcon(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK, CCBItems.GAS_CANISTER).emptyBackground(177, 70).build("gas_injection", GasInjectionCategory::new);
         builder(PressurizationRecipe.class).addTypedRecipes(CCBRecipeTypes.PRESSURIZATION).catalyst(CCBBlocks.AIR_COMPRESSOR_BLOCK::get).catalyst(CCBBlocks.BREEZE_COOLER_BLOCK::get).doubleItemIcon(CCBBlocks.AIR_COMPRESSOR_BLOCK, CCBBlocks.BREEZE_COOLER_BLOCK).emptyBackground(177, 70).build("pressurization", PressurizationCategory::new);
         builder(ReactorKettleRecipe.class).addTypedRecipes(CCBRecipeTypes.REACTOR_KETTLE).catalyst(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK::get).emptyBackground(177, 103).build("reactor_kettle", ReactorKettleCategory::new);
-        builder(ReactorKettleRecipe.class).enableWhen(CCBConfig.server().airtights.enableAutomaticMixingRecipes).addAllRecipesIf(CCBJEIPlugin::isAutomatableMixingRecipe, ReactorKettleRecipe::convertToReactorKettleRecipe).catalyst(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK::get).doubleItemIcon(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK, Blocks.CRAFTING_TABLE).emptyBackground(177, 103).build("reactor_kettle_auto_mixing", ReactorKettleCategory::new);
+        builder(ReactorKettleRecipe.class).enableWhen(CCBConfig.server().airtights.enableAutomaticMixingRecipes).addAllRecipesIf(CCBJEIPlugin::isAutomatableMixingRecipe, CCBClientRecipeUtils::convertToReactorKettleRecipe).catalyst(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK::get).doubleItemIcon(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK, Blocks.CRAFTING_TABLE).emptyBackground(177, 103).build("reactor_kettle_auto_mixing", ReactorKettleCategory::new);
         builder(ResidueGenerationRecipe.class).addTypedRecipes(CCBRecipeTypes.RESIDUE_GENERATION).catalyst(CCBBlocks.RESIDUE_OUTLET_BLOCK::get).catalyst(CCBBlocks.AIRTIGHT_ENGINE_BLOCK::get).emptyBackground(177, 103).build("residue_generation", ResidueGenerationCategory::new);
         builder(SequencedAssemblyWithGasRecipe.class).addTypedRecipes(CCBRecipeTypes.SEQUENCED_ASSEMBLY_WITH_GAS).doubleItemIcon(AllItems.PRECISION_MECHANISM.get(), CCBItems.GAS_CANISTER).emptyBackground(180, 115).build("sequenced_assembly_with_gas", SequencedAssemblyWithGasCategory::new);
-        builder(WindChargingRecipe.class).addTypedRecipes(CCBRecipeTypes.WIND_CHARGING).catalyst(CCBBlocks.BREEZE_CHAMBER_BLOCK::get).itemIcon(CCBBlocks.BREEZE_CHAMBER_BLOCK).emptyBackground(177, 50).build("wind_charging", WindChargingCategory::new);
+        builder(WindChargingRecipe.class).addTypedRecipes(CCBRecipeTypes.WIND_CHARGING).addRecipeListConsumer(CCBJEIPlugin::addAutomaticWindChargingRecipes).catalyst(CCBBlocks.BREEZE_CHAMBER_BLOCK::get).itemIcon(CCBBlocks.BREEZE_CHAMBER_BLOCK).emptyBackground(177, 50).build("wind_charging", WindChargingCategory::new);
     }
 
     @Contract("_ -> new")

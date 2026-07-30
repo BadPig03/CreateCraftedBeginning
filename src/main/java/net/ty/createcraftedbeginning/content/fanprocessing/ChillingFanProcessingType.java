@@ -22,8 +22,6 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class ChillingFanProcessingType implements FanProcessingType {
-    private static final int COLOR = 0xEBF6FF;
-
     @Override
     public boolean isValidAt(Level level, BlockPos pos) {
         return level.getBlockEntity(pos) instanceof BreezeCoolerBlockEntity cooler && cooler.getFrostLevel().isAtLeast(FrostLevel.CHILLED);
@@ -55,7 +53,7 @@ public class ChillingFanProcessingType implements FanProcessingType {
 
     @Override
     public void morphAirFlow(AirFlowParticleAccess particleAccess, RandomSource random) {
-        particleAccess.setColor(COLOR);
+        particleAccess.setColor(0xEBF6FF);
         particleAccess.setAlpha(1);
         if (random.nextDouble() >= 0.03125) {
             return;

@@ -131,6 +131,7 @@ public class CCBTags {
         WEATHER_FLARE,
         ICE_CREAMS,
         ICE_CREAM_WITH_FLAVOR,
+        WIND_CHARGING_EXCLUDED,
         OBSIDIAN_BRICKS,
         CRYING_OBSIDIAN_BRICKS,
         PRESS_HEAD_TOOLS,

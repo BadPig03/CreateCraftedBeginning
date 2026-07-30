@@ -5,15 +5,12 @@ import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringB
 import com.simibubi.create.foundation.recipe.DummyCraftingContainer;
 import net.createmod.catnip.data.Pair;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.level.Level;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
@@ -51,18 +48,6 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
         super(CCBRecipeTypes.REACTOR_KETTLE, params);
     }
 
-    @OnlyIn(Dist.CLIENT)
-    public static RecipeHolder<ReactorKettleRecipe> convertToReactorKettleRecipe(RecipeHolder<?> holder) {
-        Builder<ReactorKettleRecipe> builder = new Builder<>(ReactorKettleRecipe::new, holder.id());
-        Level level = Minecraft.getInstance().level;
-        if (level == null) {
-            return new RecipeHolder<>(holder.id(), builder.build());
-        }
-
-        Builder<ReactorKettleRecipe> convertedBuilder = new Builder<>(ReactorKettleRecipe::new, holder.id());
-        ReactorKettleRecipe recipe = convertedBuilder.withItemIngredients(holder.value().getIngredients()).withSingleItemOutput(holder.value().getResultItem(level.registryAccess())).build();
-        return new RecipeHolder<>(holder.id(), recipe);
-    }
 
     public static boolean match(AirtightReactorKettleBlockEntity kettle, ReactorKettleRecipe recipe) {
         FilteringBehaviour filter = kettle.getFilteringBehaviour();

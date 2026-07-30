@@ -7,7 +7,6 @@ import com.simibubi.create.infrastructure.config.AllConfigs;
 import net.createmod.catnip.lang.LangBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -57,7 +56,7 @@ public class AirtightForgingPressTooltipBuilder {
         }
 
         CCBLang.translate("gui.speed_requirement").style(ChatFormatting.GOLD).forGoggles(tooltip);
-        String blockName = I18n.get(CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_BLOCK.getDefaultState().getBlock().getDescriptionId());
+        String blockName = Component.translatable(CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_BLOCK.getDefaultState().getBlock().getDescriptionId()).getString();
         CCBLang.addToGoggles(tooltip, "gui.not_fast_enough", blockName);
         return true;
     }

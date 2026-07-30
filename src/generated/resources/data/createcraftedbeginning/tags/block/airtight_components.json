@@ -8,6 +8,9 @@
     "createcraftedbeginning:airtight_tank",
     "createcraftedbeginning:horizontal_airtight_tank",
     "createcraftedbeginning:creative_airtight_tank",
+    "createcraftedbeginning:airtight_hatch",
+    "createcraftedbeginning:gas_injection_chamber",
+    "createcraftedbeginning:portable_gas_interface",
     "createcraftedbeginning:breeze_chamber",
     "createcraftedbeginning:air_compressor",
     "createcraftedbeginning:airtight_engine",
@@ -23,9 +26,6 @@
     "createcraftedbeginning:airtight_forging_press_structural_shaft",
     "createcraftedbeginning:gas_packager",
     "createcraftedbeginning:gas_repackager",
-    "createcraftedbeginning:gas_factory_gauge",
-    "createcraftedbeginning:gas_injection_chamber",
-    "createcraftedbeginning:airtight_hatch",
-    "createcraftedbeginning:portable_gas_interface"
+    "createcraftedbeginning:gas_factory_gauge"
   ]
 }

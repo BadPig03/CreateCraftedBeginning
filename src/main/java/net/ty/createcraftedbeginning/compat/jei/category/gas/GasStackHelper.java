@@ -14,6 +14,7 @@ import net.minecraft.tags.TagKey;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.client.CCBGasClientTextures;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 import org.jetbrains.annotations.Nullable;
@@ -58,7 +59,7 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
             return IIngredientHelper.super.getColors(ingredient);
         }
 
-        return colorHelper.getColors(Gas.getGasTexture(ingredient.getGasHolder()), ingredient.getHint(), 1);
+        return colorHelper.getColors(CCBGasClientTextures.getGasTexture(ingredient.getGasHolder()), ingredient.getHint(), 1);
     }
 
     @Override

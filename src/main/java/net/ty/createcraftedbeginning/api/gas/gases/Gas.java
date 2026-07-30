@@ -2,9 +2,6 @@ package net.ty.createcraftedbeginning.api.gas.gases;
 
 import com.mojang.serialization.Codec;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Holder.Reference;
 import net.minecraft.core.HolderLookup.Provider;
@@ -18,7 +15,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.FastColor.ARGB32;
-import net.minecraft.world.inventory.InventoryMenu;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.data.CCBGasRegistries;
@@ -98,19 +94,6 @@ public class Gas {
         return reference.isPresent() ? reference.get() : EMPTY_GAS_HOLDER;
     }
 
-    /**
-     * Returns the atlas sprite used to render the supplied gas.
-     *
-     * @param holder the gas holder to inspect or process
-     * @return the gas texture
-     */
-    public static TextureAtlasSprite getGasTexture(Holder<Gas> holder) {
-        ResourceLocation sprite = holder.value().texture;
-        if (sprite == null) {
-            sprite = MissingTextureAtlasSprite.getLocation();
-        }
-        return Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(sprite);
-    }
 
     /**
      * Resolves a registered gas from its resource location, falling back to the empty gas.

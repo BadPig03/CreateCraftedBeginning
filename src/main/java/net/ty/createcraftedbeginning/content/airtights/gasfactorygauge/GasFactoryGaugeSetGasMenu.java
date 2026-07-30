@@ -1,13 +1,9 @@
 package net.ty.createcraftedbeginning.content.airtights.gasfactorygauge;
 
 import com.simibubi.create.AllSoundEvents;
-import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBehaviour;
-import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelPosition;
 import com.simibubi.create.foundation.gui.menu.GhostItemMenu;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -21,6 +17,7 @@ import net.neoforged.neoforge.items.SlotItemHandler;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
+import net.ty.createcraftedbeginning.platform.CCBClientBridge;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -56,14 +53,7 @@ public class GasFactoryGaugeSetGasMenu extends GhostItemMenu<GasFactoryGaugeBeha
     @Override
     @OnlyIn(Dist.CLIENT)
     protected @Nullable GasFactoryGaugeBehaviour createOnClient(RegistryFriendlyByteBuf extraData) {
-        ClientLevel level = Minecraft.getInstance().level;
-        if (level == null) {
-            return null;
-        }
-
-        FactoryPanelPosition position = FactoryPanelPosition.STREAM_CODEC.decode(extraData);
-        FactoryPanelBehaviour panel = FactoryPanelBehaviour.at(level, position);
-        return panel instanceof GasFactoryGaugeBehaviour gasGauge ? gasGauge : null;
+        return CCBClientBridge.createGasFactoryGaugeBehaviour(extraData);
     }
 
     @Override

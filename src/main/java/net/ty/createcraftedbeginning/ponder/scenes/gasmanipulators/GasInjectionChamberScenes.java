@@ -99,14 +99,14 @@ public class GasInjectionChamberScenes {
 
         scene.idle(10);
         scene.world().createItemOnBeltLike(chamberTargetPos, Direction.NORTH, blazePowderItem.copy());
-        scene.overlay().showControls(chamberTargetVec, Pointing.UP, 30).withItem(blazePowderItem.copy());
+        scene.overlay().showControls(chamberTargetVec, Pointing.UP, 30).withItem(blazePowderItem.copyWithCount(16));
 
         scene.idle(30);
 		scene.world().modifyBlockEntityNBT(chamberSelection, GasInjectionChamberBlockEntity.class, compoundTag -> compoundTag.putInt("ProcessingTicks", 60));
 
         scene.idle(25);
         scene.world().removeItemsFromBelt(chamberTargetPos);
-        scene.world().createItemOnBeltLike(chamberTargetPos, Direction.UP, windChargeItem.copy());
+        scene.world().createItemOnBeltLike(chamberTargetPos, Direction.UP, windChargeItem.copyWithCount(32));
         for (int i = 0; i < random.nextInt(3, 6); i++) {
             Vec3 offset = VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125f);
             scene.effects().emitParticles(subtractedVec, scene.effects().simpleParticleEmitter(ParticleTypes.CLOUD, new Vec3(offset.x, Math.abs(offset.y), offset.z)), 1, 1);

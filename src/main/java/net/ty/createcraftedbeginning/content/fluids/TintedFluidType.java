@@ -1,16 +1,10 @@
 package net.ty.createcraftedbeginning.content.fluids;
 
-import com.mojang.blaze3d.shaders.FogShape;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Camera;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.FogRenderer.FogMode;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.material.FluidState;
-import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidType;
 import org.jetbrains.annotations.Nullable;
@@ -28,49 +22,31 @@ public abstract class TintedFluidType extends FluidType {
         super(properties);
         this.stillTexture = stillTexture;
         this.flowingTexture = flowingTexture;
-        CCBFluidClientExtensions.track(this, this::createClientExtensions);
+        CCBFluidClientExtensionRegistry.registerTinted(this);
     }
 
-    private IClientFluidTypeExtensions createClientExtensions() {
-        return new IClientFluidTypeExtensions() {
-            @Override
-            public ResourceLocation getStillTexture() {
-                return stillTexture;
-            }
+    public final ResourceLocation clientStillTexture() {
+        return stillTexture;
+    }
 
-            @Override
-            public ResourceLocation getFlowingTexture() {
-                return flowingTexture;
-            }
+    public final ResourceLocation clientFlowingTexture() {
+        return flowingTexture;
+    }
 
-            @Override
-            public Vector3f modifyFogColor(Camera camera, float partialTick, ClientLevel level, int renderDistance, float darkenWorldAmount, Vector3f fogColor) {
-                Vector3f customColor = getCustomFogColor();
-                return customColor == null ? fogColor : customColor;
-            }
+    public final int clientTintColor(FluidStack stack) {
+        return getTintColor(stack);
+    }
 
-            @Override
-            public void modifyFogRender(Camera camera, FogMode mode, float renderDistance, float partialTick, float nearDistance, float farDistance, FogShape shape) {
-                float modifier = getFogDistanceModifier();
-                if (modifier == 1.0f) {
-                    return;
-                }
+    public final int clientTintColor(FluidState state, BlockAndTintGetter getter, BlockPos pos) {
+        return getTintColor(state, getter, pos);
+    }
 
-                RenderSystem.setShaderFogShape(FogShape.CYLINDER);
-                RenderSystem.setShaderFogStart(-8);
-                RenderSystem.setShaderFogEnd(96.0f * modifier);
-            }
+    public final @Nullable Vector3f clientCustomFogColor() {
+        return getCustomFogColor();
+    }
 
-            @Override
-            public int getTintColor(FluidState state, BlockAndTintGetter getter, BlockPos pos) {
-                return TintedFluidType.this.getTintColor(state, getter, pos);
-            }
-
-            @Override
-            public int getTintColor(FluidStack stack) {
-                return TintedFluidType.this.getTintColor(stack);
-            }
-        };
+    public final float clientFogDistanceModifier() {
+        return getFogDistanceModifier();
     }
 
     protected abstract int getTintColor(FluidStack stack);
@@ -82,6 +58,6 @@ public abstract class TintedFluidType extends FluidType {
     }
 
     protected float getFogDistanceModifier() {
-        return 1.0f;
+        return 1;
     }
 }

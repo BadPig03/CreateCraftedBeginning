@@ -1,10 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.gascanisterpack;
 
-import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -47,9 +44,6 @@ public class GasCanisterPackItem extends Item implements MenuProvider, IGasFilte
         event.registerItem(GasHandler.ITEM, (itemStack, context) -> new GasCanisterPackContainerContents(itemStack), CCBItems.GAS_CANISTER_PACK);
     }
 
-    public void registerModelOverrides() {
-        CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> GasCanisterPackOverrides.registerModelOverridesClient(this));
-    }
 
     @Override
     public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
@@ -86,8 +80,7 @@ public class GasCanisterPackItem extends Item implements MenuProvider, IGasFilte
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack pack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null || !(pack.getCapability(GasHandler.ITEM) instanceof GasCanisterPackContainerContents packContents)) {
+        if (!(pack.getCapability(GasHandler.ITEM) instanceof GasCanisterPackContainerContents packContents)) {
             return;
         }
 

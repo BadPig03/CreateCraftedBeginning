@@ -45,6 +45,7 @@ public class CCBRegistrateTags {
         CCBTagsProvider<Item> provider = new CCBTagsProvider<>(provIn, Item::builtInRegistryHolder);
         provider.tag(CCBItemTags.END_CASING_RAW_MATERIALS.tag).add(Blocks.CRYING_OBSIDIAN.asItem());
         provider.tag(CCBItemTags.PRESS_HEAD_TOOLS.tag).add(Items.HEAVY_CORE).add(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE);
+        provider.tag(CCBItemTags.WIND_CHARGING_EXCLUDED.tag).add(Items.OMINOUS_BOTTLE).add(CCBItems.MILK_ICE_CREAM.get());
         provider.tag(ItemTags.PIGLIN_LOVED).add(CCBItems.GOLDEN_ICE_CREAM.get());
         Arrays.stream(CCBItemTags.values()).filter(tag -> tag.alwaysDataGen).map(tag -> tag.tag).forEach(provider::getOrCreateRawBuilder);
     }

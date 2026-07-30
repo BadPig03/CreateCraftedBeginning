@@ -2,6 +2,7 @@
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
 	"render_type": "minecraft:cutout_mipped",
+	"ambientocclusion": false,
 	"textures": {
 		"0": "createcraftedbeginning:block/airtight_pipe/pipe",
 		"particle": "createcraftedbeginning:block/airtight_tank/top"

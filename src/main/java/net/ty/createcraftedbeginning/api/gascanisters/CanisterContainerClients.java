@@ -16,7 +16,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlayPacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
-import net.ty.createcraftedbeginning.data.CCBDistExecutor;
+import net.ty.createcraftedbeginning.platform.CCBClientBridge;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -95,7 +95,7 @@ public final class CanisterContainerClients {
 
     @OnlyIn(Dist.CLIENT)
     private static DisplayedGasState getDisplayedGasState() {
-        Player player = CCBDistExecutor.getClientPlayer();
+        Player player = CCBClientBridge.getClientPlayer();
         if (player == null) {
             return DisplayedGasState.EMPTY;
         }

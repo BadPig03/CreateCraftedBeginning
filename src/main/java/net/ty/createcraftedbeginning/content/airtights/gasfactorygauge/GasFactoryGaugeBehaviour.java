@@ -17,11 +17,9 @@ import com.simibubi.create.content.schematics.requirement.ItemRequirement;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement.ItemUseType;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueSettingsBoard;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueSettingsFormatter;
-import net.createmod.catnip.gui.ScreenOpener;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
@@ -36,8 +34,6 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonUtils;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
@@ -46,6 +42,7 @@ import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBl
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUtils;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import net.ty.createcraftedbeginning.platform.CCBClientBridge;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -201,13 +198,8 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
     }
 
     @Override
-    @OnlyIn(Dist.CLIENT)
     public void displayScreen(Player player) {
-        if (!(player instanceof LocalPlayer)) {
-            return;
-        }
-
-        ScreenOpener.open(new GasFactoryGaugeScreen(this));
+        CCBClientBridge.openGasFactoryGaugeScreen(this, player);
     }
 
     @Override

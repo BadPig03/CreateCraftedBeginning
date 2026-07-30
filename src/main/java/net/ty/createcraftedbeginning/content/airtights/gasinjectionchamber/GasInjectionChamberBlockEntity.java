@@ -8,6 +8,7 @@ import com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessingBehavio
 import com.simibubi.create.content.kinetics.belt.behaviour.TransportedItemStackHandlerBehaviour;
 import com.simibubi.create.content.kinetics.belt.behaviour.TransportedItemStackHandlerBehaviour.TransportedResult;
 import com.simibubi.create.content.kinetics.belt.transport.TransportedItemStack;
+import com.simibubi.create.content.kinetics.fan.processing.FanProcessingType;
 import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
@@ -18,9 +19,14 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -66,21 +72,27 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     private static final String COMPOUND_KEY_PROCESSING_TICKS = "ProcessingTicks";
     private static final String COMPOUND_KEY_OPERATION_TYPE = "OperationType";
     private static final String COMPOUND_KEY_OPERATION_GAS = "OperationGas";
+    private static final String COMPOUND_KEY_OPERATION_FAN_PROCESSING_TYPE = "OperationFanProcessingType";
     private static final String COMPOUND_KEY_OPERATION_INPUT = "OperationInput";
-    private static final String COMPOUND_KEY_OPERATION_RESULT = "OperationResult";
+    private static final String COMPOUND_KEY_OPERATION_RESULTS = "OperationResults";
     private static final String COMPOUND_KEY_OPERATION_RESULT_PREPARED = "OperationResultPrepared";
     private static final String COMPOUND_KEY_OPERATION_EXECUTED = "OperationExecuted";
     private static final String COMPOUND_KEY_CLOUD = "Cloud";
     private static final String COMPOUND_KEY_CLOUD_COLOR = "CloudColor";
+    private static final String COMPOUND_KEY_INSTALLED_FILTER = "InstalledFilter";
+
+    private final List<ItemStack> operationResults = new ArrayList<>();
 
     private int cloudColor = 0xFFFFFFFF;
     private int processingTicks = -1;
+    private int previousProcessingTicks = -1;
     private boolean sendCloud;
     private boolean operationExecuted;
     private OperationType operationType = OperationType.NONE;
     private GasStack operationGas = GasStack.EMPTY;
+    private @Nullable ResourceLocation operationFanProcessingTypeId;
     private ItemStack operationInput = ItemStack.EMPTY;
-    private ItemStack operationResult = ItemStack.EMPTY;
+    private ItemStack installedFilter = ItemStack.EMPTY;
     private boolean operationResultPrepared;
     private @Nullable GasInjectionRecipe operationRecipe;
     private SmartGasTankBehaviour tankBehaviour;
@@ -98,6 +110,36 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         return CCBConfig.server().airtights.maxGasInjectionChamberCapacity.get() * GasAmountUtils.MILLIBUCKETS_PER_BUCKET;
     }
 
+    private static void addResultStack(List<ItemStack> results, ItemStack stack) {
+        if (stack.isEmpty()) {
+            return;
+        }
+
+        ItemStack remaining = stack.copy();
+        for (ItemStack existing : results) {
+            if (!ItemStack.isSameItemSameComponents(existing, remaining)) {
+                continue;
+            }
+
+            int space = existing.getMaxStackSize() - existing.getCount();
+            if (space <= 0) {
+                continue;
+            }
+
+            int moved = Math.min(space, remaining.getCount());
+            existing.grow(moved);
+            remaining.shrink(moved);
+            if (remaining.isEmpty()) {
+                return;
+            }
+        }
+
+        while (!remaining.isEmpty()) {
+            int count = Math.min(remaining.getCount(), remaining.getMaxStackSize());
+            results.add(remaining.split(count));
+        }
+    }
+
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         tankBehaviour = SmartGasTankBehaviour.single(this, getMaxCapacity());
@@ -110,6 +152,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     @Override
     public void tick() {
         super.tick();
+        previousProcessingTicks = processingTicks;
         if (processingTicks < 0) {
             return;
         }
@@ -127,55 +170,130 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
         compoundTag.putInt(COMPOUND_KEY_PROCESSING_TICKS, processingTicks);
-        if (operationType != OperationType.NONE) {
-            compoundTag.putString(COMPOUND_KEY_OPERATION_TYPE, operationType.serializedName);
-            compoundTag.put(COMPOUND_KEY_OPERATION_GAS, operationGas.saveOptional(provider));
-            compoundTag.put(COMPOUND_KEY_OPERATION_INPUT, operationInput.saveOptional(provider));
-            compoundTag.putBoolean(COMPOUND_KEY_OPERATION_RESULT_PREPARED, operationResultPrepared);
-            if (operationResultPrepared) {
-                compoundTag.put(COMPOUND_KEY_OPERATION_RESULT, operationResult.saveOptional(provider));
-            }
-            compoundTag.putBoolean(COMPOUND_KEY_OPERATION_EXECUTED, operationExecuted);
-        }
-        if (!sendCloud || !clientPacket) {
-            return;
+        if (!installedFilter.isEmpty()) {
+            compoundTag.put(COMPOUND_KEY_INSTALLED_FILTER, installedFilter.saveOptional(provider));
         }
 
-        compoundTag.putBoolean(COMPOUND_KEY_CLOUD, true);
-        compoundTag.putInt(COMPOUND_KEY_CLOUD_COLOR, cloudColor);
-        sendCloud = false;
+        writeOperation(compoundTag, provider);
+        writeCloud(compoundTag, clientPacket);
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
         if (compoundTag.contains(COMPOUND_KEY_PROCESSING_TICKS)) {
-            processingTicks = compoundTag.getInt(COMPOUND_KEY_PROCESSING_TICKS);
+            int synchronizedTicks = compoundTag.getInt(COMPOUND_KEY_PROCESSING_TICKS);
+
+            // The client advances this timer locally for smooth rendering. Mid-animation
+            // update packets may contain an older positive value and must not rewind it.
+            if (!clientPacket || processingTicks < 0 || synchronizedTicks < 0) {
+                processingTicks = synchronizedTicks;
+                previousProcessingTicks = synchronizedTicks;
+            }
         }
 
-        operationRecipe = null;
-        operationType = OperationType.byName(compoundTag.getString(COMPOUND_KEY_OPERATION_TYPE));
-        operationGas = compoundTag.contains(COMPOUND_KEY_OPERATION_GAS) ? GasStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_OPERATION_GAS)) : GasStack.EMPTY;
-        operationInput = compoundTag.contains(COMPOUND_KEY_OPERATION_INPUT) ? ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_OPERATION_INPUT)) : ItemStack.EMPTY;
-        operationResultPrepared = compoundTag.getBoolean(COMPOUND_KEY_OPERATION_RESULT_PREPARED);
-        operationResult = operationResultPrepared && compoundTag.contains(COMPOUND_KEY_OPERATION_RESULT) ? ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_OPERATION_RESULT)) : ItemStack.EMPTY;
-        operationExecuted = compoundTag.getBoolean(COMPOUND_KEY_OPERATION_EXECUTED);
-        if (operationType == OperationType.NONE || operationGas.isEmpty() || operationInput.isEmpty()) {
-            clearOperation();
+        installedFilter = compoundTag.contains(COMPOUND_KEY_INSTALLED_FILTER) ? ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_INSTALLED_FILTER)) : ItemStack.EMPTY;
+        if (!GasInjectionChamberUtils.isFilter(installedFilter)) {
+            installedFilter = ItemStack.EMPTY;
         }
 
-        if (!clientPacket || !compoundTag.contains(COMPOUND_KEY_CLOUD)) {
-            return;
-        }
-
-        int color = compoundTag.contains(COMPOUND_KEY_CLOUD_COLOR) ? compoundTag.getInt(COMPOUND_KEY_CLOUD_COLOR) : 0xFFFFFFFF;
-        spawnCloud(color);
+        readOperation(compoundTag, provider);
+        readCloud(compoundTag, clientPacket);
     }
 
     @Override
     public void invalidate() {
         super.invalidate();
         invalidateCapabilities();
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        if (level == null || level.isClientSide || installedFilter.isEmpty()) {
+            return;
+        }
+
+        Block.popResource(level, worldPosition, installedFilter);
+        installedFilter = ItemStack.EMPTY;
+    }
+
+    private void writeOperation(CompoundTag tag, Provider provider) {
+        if (operationType == OperationType.NONE) {
+            return;
+        }
+
+        tag.putString(COMPOUND_KEY_OPERATION_TYPE, operationType.serializedName);
+        if (!operationGas.isEmpty()) {
+            tag.put(COMPOUND_KEY_OPERATION_GAS, operationGas.saveOptional(provider));
+        }
+        if (operationFanProcessingTypeId != null) {
+            tag.putString(COMPOUND_KEY_OPERATION_FAN_PROCESSING_TYPE, operationFanProcessingTypeId.toString());
+        }
+        tag.put(COMPOUND_KEY_OPERATION_INPUT, operationInput.saveOptional(provider));
+        tag.putBoolean(COMPOUND_KEY_OPERATION_RESULT_PREPARED, operationResultPrepared);
+        if (operationResultPrepared) {
+            ListTag results = new ListTag();
+            for (ItemStack result : operationResults) {
+                results.add(result.saveOptional(provider));
+            }
+            tag.put(COMPOUND_KEY_OPERATION_RESULTS, results);
+        }
+        tag.putBoolean(COMPOUND_KEY_OPERATION_EXECUTED, operationExecuted);
+    }
+
+    private void writeCloud(CompoundTag tag, boolean clientPacket) {
+        if (!sendCloud || !clientPacket) {
+            return;
+        }
+
+        tag.putBoolean(COMPOUND_KEY_CLOUD, true);
+        tag.putInt(COMPOUND_KEY_CLOUD_COLOR, cloudColor);
+        sendCloud = false;
+    }
+
+    private void readOperation(CompoundTag tag, Provider provider) {
+        operationRecipe = null;
+        operationType = OperationType.byName(tag.getString(COMPOUND_KEY_OPERATION_TYPE));
+        operationGas = tag.contains(COMPOUND_KEY_OPERATION_GAS) ? GasStack.parseOptional(provider, tag.getCompound(COMPOUND_KEY_OPERATION_GAS)) : GasStack.EMPTY;
+        operationFanProcessingTypeId = tag.contains(COMPOUND_KEY_OPERATION_FAN_PROCESSING_TYPE) ? ResourceLocation.tryParse(tag.getString(COMPOUND_KEY_OPERATION_FAN_PROCESSING_TYPE)) : null;
+        operationInput = tag.contains(COMPOUND_KEY_OPERATION_INPUT) ? ItemStack.parseOptional(provider, tag.getCompound(COMPOUND_KEY_OPERATION_INPUT)) : ItemStack.EMPTY;
+        operationResultPrepared = tag.getBoolean(COMPOUND_KEY_OPERATION_RESULT_PREPARED);
+        operationResults.clear();
+        if (operationResultPrepared && tag.contains(COMPOUND_KEY_OPERATION_RESULTS, Tag.TAG_LIST)) {
+            ListTag results = tag.getList(COMPOUND_KEY_OPERATION_RESULTS, Tag.TAG_COMPOUND);
+            for (int i = 0; i < results.size(); i++) {
+                ItemStack result = ItemStack.parseOptional(provider, results.getCompound(i));
+                if (result.isEmpty()) {
+                    continue;
+                }
+
+                operationResults.add(result);
+            }
+        }
+        operationExecuted = tag.getBoolean(COMPOUND_KEY_OPERATION_EXECUTED);
+        if (!isLoadedOperationValid()) {
+            clearOperation();
+        }
+    }
+
+    private void readCloud(CompoundTag tag, boolean clientPacket) {
+        if (!clientPacket || !tag.contains(COMPOUND_KEY_CLOUD)) {
+            return;
+        }
+
+        int color = tag.contains(COMPOUND_KEY_CLOUD_COLOR) ? tag.getInt(COMPOUND_KEY_CLOUD_COLOR) : 0xFFFFFFFF;
+        spawnCloud(color);
+    }
+
+    private boolean isLoadedOperationValid() {
+        if (operationType == OperationType.NONE || operationInput.isEmpty()) {
+            return false;
+        }
+        if (operationType != OperationType.FAN_PROCESSING) {
+            return !operationType.usesGas || !operationGas.isEmpty();
+        }
+        return !operationGas.isEmpty() && operationFanProcessingTypeId != null && GasInjectionChamberUtils.getFanProcessingType(operationFanProcessingTypeId).isPresent() && isFanProcessingOperationStillValid();
     }
 
     @Override
@@ -224,14 +342,59 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
 
     @Override
     public @Nullable InventoryIdentifier getGasInventoryIdentifier(Direction direction) {
-        if (direction == Direction.UP) {
-            return new MultiFace(worldPosition, Set.of(Direction.UP));
+        if (direction != Direction.UP) {
+            return null;
         }
-        return null;
+        return new MultiFace(worldPosition, Set.of(Direction.UP));
     }
 
-    public int getProcessingTicks() {
-        return processingTicks;
+    public float getRenderedProcessingTicks(float partialTicks) {
+        if (processingTicks < 0) {
+            return -1;
+        }
+        if (previousProcessingTicks < 0) {
+            return processingTicks;
+        }
+        return Mth.lerp(partialTicks, previousProcessingTicks, processingTicks);
+    }
+
+    public boolean hasInstalledFilter() {
+        return !installedFilter.isEmpty();
+    }
+
+    public ItemStack getInstalledFilter() {
+        return installedFilter;
+    }
+
+    public Optional<ResourceLocation> getInstalledFilterFanProcessingType() {
+        return GasInjectionChamberUtils.getFanProcessingTypeId(installedFilter);
+    }
+
+    public boolean isFilterLocked() {
+        return operationType == OperationType.FAN_PROCESSING;
+    }
+
+    public boolean installFilter(ItemStack stack) {
+        if (hasInstalledFilter() || !GasInjectionChamberUtils.isFilter(stack)) {
+            return false;
+        }
+
+        installedFilter = stack.copyWithCount(1);
+        setChanged();
+        notifyUpdate();
+        return true;
+    }
+
+    public ItemStack removeInstalledFilter() {
+        if (!hasInstalledFilter() || isFilterLocked()) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack removed = installedFilter;
+        installedFilter = ItemStack.EMPTY;
+        setChanged();
+        notifyUpdate();
+        return removed;
     }
 
     private void spawnCloud(int color) {
@@ -240,7 +403,8 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         }
 
         Vec3 cloudPos = VecHelper.getCenterOf(worldPosition).subtract(0, 1.6875f, 0);
-        for (int i = 0; i < level.random.nextInt(3, 6); i++) {
+        int count = level.random.nextInt(3, 6);
+        for (int i = 0; i < count; i++) {
             Vec3 velocity = VecHelper.offsetRandomly(Vec3.ZERO, level.random, 0.125f);
             velocity = new Vec3(velocity.x, Math.abs(velocity.y), velocity.z);
             level.addAlwaysVisibleParticle(new ColoredBreezeCloudParticleOptions(color), cloudPos.x, cloudPos.y, cloudPos.z, velocity.x, velocity.y, velocity.z);
@@ -256,6 +420,10 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             return HOLD;
         }
 
+        if (wasProcessedByInstalledFilter(transported)) {
+            return PASS;
+        }
+
         clearOperation();
         return prepareOperation(transported.stack) ? HOLD : PASS;
     }
@@ -269,17 +437,21 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             return HOLD;
         }
 
+        if (operationExecuted) {
+            return HOLD;
+        }
+
+        if (operationType == OperationType.NONE && wasProcessedByInstalledFilter(transported)) {
+            return PASS;
+        }
+
         if (operationType == OperationType.NONE && !prepareOperation(transported.stack)) {
             return PASS;
         }
 
-        if (!operationExecuted && !ItemStack.isSameItemSameComponents(operationInput, transported.stack)) {
+        if (!matchesOperationInput(transported.stack)) {
             cancelOperation();
             return PASS;
-        }
-
-        if (operationExecuted) {
-            return HOLD;
         }
 
         if (processingTicks < 0) {
@@ -289,30 +461,33 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         if (processingTicks > PROCESSING_TIME - NOZZLE_TIME - NOZZLE_PART_TIME - NOZZLE_IDLE_TIME) {
             return HOLD;
         }
-
         return executeInjection(transported, handler);
     }
 
     private ProcessingResult startProcessing(ItemStack itemStack) {
-        GasStack tankGas = getGasInTank();
-        if (tankGas.isEmpty()) {
-            return HOLD;
+        if (operationType == OperationType.FAN_PROCESSING && !isFanProcessingOperationStillValid() && !reprepareOperation(itemStack)) {
+            return PASS;
         }
 
-        if (!GasStack.isSameGasSameComponents(tankGas, operationGas)) {
-            clearOperation();
-            if (!prepareOperation(itemStack)) {
-                return PASS;
+        if (operationType.usesGas) {
+            GasStack tankGas = getGasInTank();
+            if (tankGas.isEmpty()) {
+                return HOLD;
             }
 
-            tankGas = getGasInTank();
+            if (!GasStack.isSameGasSameComponents(tankGas, operationGas)) {
+                if (!reprepareOperation(itemStack)) {
+                    return PASS;
+                }
+                tankGas = getGasInTank();
+            }
+
+            if (tankGas.getAmount() < operationGas.getAmount()) {
+                return HOLD;
+            }
         }
 
-        if (tankGas.getAmount() < operationGas.getAmount()) {
-            return HOLD;
-        }
-
-        if (!prepareRecipeResultIfNeeded(itemStack)) {
+        if (!prepareOperationResultsIfNeeded(itemStack)) {
             cancelOperation();
             return PASS;
         }
@@ -322,12 +497,17 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         return HOLD;
     }
 
+    private boolean reprepareOperation(ItemStack itemStack) {
+        clearOperation();
+        return prepareOperation(itemStack);
+    }
+
     private ProcessingResult executeInjection(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
         if (level == null) {
             return PASS;
         }
 
-        int color = operationGas.getHint();
+        int color = getOperationCloudColor();
         if (!executeOperation(transported, handler)) {
             cancelOperation();
             return PASS;
@@ -341,13 +521,20 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         return HOLD;
     }
 
+    private int getOperationCloudColor() {
+        if (operationType == OperationType.FAN_PROCESSING) {
+            return GasInjectionChamberUtils.getColor(installedFilter);
+        }
+        return operationGas.getHint();
+    }
+
     private boolean prepareOperation(ItemStack itemStack) {
         if (level == null) {
             return false;
         }
 
         GasStack tankGas = getGasInTank();
-        return !tankGas.isEmpty() && (prepareCanisterOperation(itemStack, tankGas) || prepareRecipeOperation(itemStack, tankGas));
+        return !tankGas.isEmpty() && (prepareCanisterOperation(itemStack, tankGas) || prepareRecipeOperation(itemStack, tankGas) || prepareFanProcessingOperation(itemStack, tankGas));
     }
 
     private boolean prepareCanisterOperation(ItemStack itemStack, GasStack tankGas) {
@@ -361,7 +548,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             return false;
         }
 
-        setOperation(OperationType.CANISTER, itemStack, tankGas, amount, null);
+        setOperation(OperationType.CANISTER, itemStack, 1, tankGas, amount, null, null);
         return true;
     }
 
@@ -376,30 +563,83 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         }
 
         RecipeMatch match = recipeMatch.get();
-        setOperation(OperationType.RECIPE, itemStack, tankGas, match.recipe().getGasIngredient().amount(), match.sequencedAssembly() ? null : match.recipe());
+        long gasPerItem = match.recipe().getGasIngredient().amount();
+        int batchSize = getRecipeBatchSize(itemStack, gasPerItem);
+        if (batchSize <= 0) {
+            return false;
+        }
+
+        setOperation(OperationType.RECIPE, itemStack, batchSize, tankGas, gasPerItem * batchSize, match.sequencedAssembly() ? null : match.recipe(), null);
         return true;
     }
 
-    private void setOperation(OperationType type, ItemStack input, GasStack gas, long requiredAmount, @Nullable GasInjectionRecipe recipe) {
+    private boolean wasProcessedByInstalledFilter(TransportedItemStack transported) {
+        return transported.processedBy != null && transported.processingTime == -1 && getInstalledFilterFanProcessingType().flatMap(GasInjectionChamberUtils::getFanProcessingType).filter(type -> type == transported.processedBy).isPresent();
+    }
+
+    private boolean prepareFanProcessingOperation(ItemStack itemStack, GasStack tankGas) {
+        if (level == null || itemStack.isEmpty() || tankGas.isEmpty()) {
+            return false;
+        }
+
+        Optional<ResourceLocation> typeId = getInstalledFilterFanProcessingType();
+        if (typeId.isEmpty()) {
+            return false;
+        }
+
+        Optional<FanProcessingType> processingType = GasInjectionChamberUtils.getFanProcessingType(typeId.get());
+        if (processingType.isEmpty() || !processingType.get().canProcess(itemStack, level)) {
+            return false;
+        }
+
+        int desiredCount = Math.min(itemStack.getCount(), itemStack.getMaxStackSize());
+        int batchSize = GasInjectionChamberUtils.getMaxFanProcessingBatchSize(tankGas, desiredCount);
+        if (batchSize <= 0) {
+            return false;
+        }
+
+        long gasCost = GasInjectionChamberUtils.getFanProcessingGasCost(tankGas, batchSize);
+        long gasAmount = gasCost == 0 ? 1 : gasCost;
+        setOperation(OperationType.FAN_PROCESSING, itemStack, batchSize, tankGas, gasAmount, null, typeId.get());
+        return true;
+    }
+
+    private int getRecipeBatchSize(ItemStack input, long gasPerItem) {
+        if (gasPerItem <= 0) {
+            return 0;
+        }
+
+        int desiredCount = Math.min(input.getCount(), input.getMaxStackSize());
+        int capacityLimit = (int) (getTank().getCapacity() / gasPerItem);
+        return Math.min(desiredCount, capacityLimit);
+    }
+
+    private void setOperation(OperationType type, ItemStack input, int inputCount, GasStack gas, long requiredAmount, @Nullable GasInjectionRecipe recipe, @Nullable ResourceLocation fanProcessingTypeId) {
         operationType = type;
-        operationInput = input.copyWithCount(1);
-        operationGas = gas.copyWithAmount(requiredAmount);
+        operationInput = input.copyWithCount(inputCount);
+        operationGas = gas.isEmpty() ? GasStack.EMPTY : gas.copyWithAmount(requiredAmount);
+        operationFanProcessingTypeId = fanProcessingTypeId;
         operationRecipe = recipe;
-        operationResult = ItemStack.EMPTY;
+        operationResults.clear();
         operationResultPrepared = false;
         operationExecuted = false;
         setChanged();
     }
 
-    private boolean prepareRecipeResultIfNeeded(ItemStack itemStack) {
-        if (operationType != OperationType.RECIPE || operationResultPrepared) {
-            return true;
-        }
+    private boolean prepareOperationResultsIfNeeded(ItemStack itemStack) {
+        return operationResultPrepared || switch (operationType) {
+            case RECIPE -> prepareRecipeResults(itemStack);
+            case FAN_PROCESSING -> prepareFanProcessingResults();
+            case CANISTER, NONE -> true;
+        };
+    }
 
+    private boolean prepareRecipeResults(ItemStack itemStack) {
         if (level == null) {
             return false;
         }
 
+        int inputCount = operationInput.getCount();
         GasInjectionRecipe recipe = operationRecipe;
         if (recipe == null) {
             Optional<RecipeMatch> recipeMatch = GasInjectionRecipe.findRecipeMatch(level, itemStack, operationGas);
@@ -407,24 +647,56 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
                 return false;
             }
 
-            RecipeMatch match = recipeMatch.get();
-            if (match.recipe().getGasIngredient().amount() != operationGas.getAmount()) {
+            GasInjectionRecipe matchedRecipe = recipeMatch.get().recipe();
+            long expectedGas = matchedRecipe.getGasIngredient().amount() * inputCount;
+            if (expectedGas != operationGas.getAmount()) {
                 return false;
             }
 
-            recipe = match.recipe();
+            recipe = matchedRecipe;
         }
-        operationResult = recipe.rollFirstResult(level);
+
+        for (int i = 0; i < inputCount; i++) {
+            addResultStack(operationResults, recipe.rollFirstResult(level));
+        }
         operationResultPrepared = true;
         operationRecipe = null;
         setChanged();
         return true;
     }
 
+    private boolean prepareFanProcessingResults() {
+        if (level == null || operationFanProcessingTypeId == null || !isFanProcessingOperationStillValid()) {
+            return false;
+        }
+
+        Optional<FanProcessingType> processingType = GasInjectionChamberUtils.getFanProcessingType(operationFanProcessingTypeId);
+        if (processingType.isEmpty()) {
+            return false;
+        }
+
+        List<ItemStack> results = processingType.get().process(operationInput.copy(), level);
+        if (results == null) {
+            return false;
+        }
+
+        for (ItemStack result : results) {
+            addResultStack(operationResults, result);
+        }
+        operationResultPrepared = true;
+        setChanged();
+        return true;
+    }
+
+    private boolean isFanProcessingOperationStillValid() {
+        return operationFanProcessingTypeId != null && getInstalledFilterFanProcessingType().filter(operationFanProcessingTypeId::equals).isPresent();
+    }
+
     private boolean executeOperation(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
         return switch (operationType) {
             case CANISTER -> executeCanisterOperation(transported.stack);
             case RECIPE -> executeRecipeOperation(transported, handler);
+            case FAN_PROCESSING -> executeFanProcessingOperation(transported, handler);
             case NONE -> false;
         };
     }
@@ -459,30 +731,56 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     }
 
     private boolean executeRecipeOperation(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
-        if (!operationResultPrepared) {
+        return operationResultPrepared && drainAndReplace(transported, handler);
+    }
+
+    private boolean executeFanProcessingOperation(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
+        if (!operationResultPrepared || !isFanProcessingOperationStillValid()) {
             return false;
         }
 
-        ItemStack resultStack = operationResult.copy();
+        if (!GasInjectionChamberUtils.consumesFanProcessingGas(operationGas)) {
+            return replaceTransportedStackWithPreparedResults(transported, handler);
+        }
+        return drainAndReplace(transported, handler);
+    }
+
+    private boolean drainAndReplace(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
         GasStack drained = drainOperationGas();
-        if (drained.isEmpty()) {
+        return !drained.isEmpty() && replaceTransportedStackWithPreparedResults(transported, handler);
+    }
+
+    private boolean replaceTransportedStackWithPreparedResults(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
+        int batchSize = operationInput.getCount();
+        if (batchSize <= 0 || transported.stack.getCount() < batchSize || !matchesOperationInput(transported.stack)) {
             return false;
         }
 
-        transported.stack.shrink(1);
-        transported.clearFanProcessingData();
+        transported.stack.shrink(batchSize);
+        FanProcessingType completedFanProcessing = operationType == OperationType.FAN_PROCESSING && operationFanProcessingTypeId != null ? GasInjectionChamberUtils.getFanProcessingType(operationFanProcessingTypeId).orElse(null) : null;
+
         TransportedItemStack held = null;
-        List<TransportedItemStack> results = new ArrayList<>();
-        if (!resultStack.isEmpty()) {
+        List<TransportedItemStack> results = new ArrayList<>(operationResults.size());
+        for (ItemStack resultStack : operationResults) {
             TransportedItemStack result = transported.copy();
-            result.stack = resultStack;
+            result.stack = resultStack.copy();
+            result.clearFanProcessingData();
+            if (completedFanProcessing != null) {
+                result.processedBy = completedFanProcessing;
+                result.processingTime = -1;
+            }
             results.add(result);
         }
         if (!transported.stack.isEmpty()) {
             held = transported.copy();
+            held.clearFanProcessingData();
         }
         handler.handleProcessingOnItem(transported, TransportedResult.convertToAndLeaveHeld(results, held));
         return true;
+    }
+
+    private boolean matchesOperationInput(ItemStack stack) {
+        return ItemStack.isSameItemSameComponents(operationInput, stack) && stack.getCount() >= operationInput.getCount();
     }
 
     private GasStack drainOperationGas() {
@@ -513,22 +811,26 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     private void clearOperation() {
         operationType = OperationType.NONE;
         operationGas = GasStack.EMPTY;
+        operationFanProcessingTypeId = null;
         operationInput = ItemStack.EMPTY;
-        operationResult = ItemStack.EMPTY;
+        operationResults.clear();
         operationResultPrepared = false;
         operationRecipe = null;
         operationExecuted = false;
     }
 
     private enum OperationType {
-        NONE("none"),
-        RECIPE("recipe"),
-        CANISTER("canister");
+        NONE("none", false),
+        RECIPE("recipe", true),
+        CANISTER("canister", true),
+        FAN_PROCESSING("fan_processing", true);
 
         private final String serializedName;
+        private final boolean usesGas;
 
-        OperationType(String serializedName) {
+        OperationType(String serializedName, boolean usesGas) {
             this.serializedName = serializedName;
+            this.usesGas = usesGas;
         }
 
         private static OperationType byName(String name) {
@@ -613,7 +915,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         }
 
         private boolean isOperationGasLocked() {
-            return operationType != OperationType.NONE && processingTicks >= 0 && !operationExecuted;
+            return operationType.usesGas && processingTicks >= 0 && !operationExecuted;
         }
     }
 }

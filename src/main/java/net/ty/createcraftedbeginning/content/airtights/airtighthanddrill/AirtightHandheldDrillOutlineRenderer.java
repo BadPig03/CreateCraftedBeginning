@@ -9,7 +9,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.api.outliner.CCBOutliner;
+import net.ty.createcraftedbeginning.client.outliner.CCBOutliner;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.HandheldDrillOutlineDisplayButton;
 import net.ty.createcraftedbeginning.data.CCBSpecialTextures;
 import net.ty.createcraftedbeginning.registry.CCBItems;

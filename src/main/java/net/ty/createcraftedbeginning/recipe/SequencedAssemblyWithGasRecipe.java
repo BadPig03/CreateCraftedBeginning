@@ -3,14 +3,9 @@ package net.ty.createcraftedbeginning.recipe;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.content.processing.recipe.ProcessingOutput;
-import com.simibubi.create.foundation.utility.CreateLang;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.HolderLookup.Provider;
-import net.minecraft.network.chat.CommonComponents;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
@@ -22,9 +17,6 @@ import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipe;
 import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasRecipeSerializer;
@@ -106,43 +98,6 @@ public class SequencedAssemblyWithGasRecipe implements Recipe<RecipeWrapper> {
         return Optional.empty();
     }
 
-    @SuppressWarnings({"RedundantCast", "DataFlowIssue"})
-    @OnlyIn(Dist.CLIENT)
-    public static void addToTooltip(ItemTooltipEvent event) {
-        ItemStack stack = event.getItemStack();
-        if (!stack.has(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS)) {
-            return;
-        }
-
-        SequencedAssemblyWithGas assemblyData = stack.get(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS);
-        Optional<RecipeHolder<? extends Recipe<?>>> recipeHolder = (Optional<RecipeHolder<?>>) Minecraft.getInstance().level.getRecipeManager().byKey(assemblyData.id());
-        if (recipeHolder.isEmpty()) {
-            return;
-        }
-
-        Recipe<?> recipe = recipeHolder.get().value();
-        if (!(recipe instanceof SequencedAssemblyWithGasRecipe sequencedAssemblyRecipe)) {
-            return;
-        }
-
-        int length = sequencedAssemblyRecipe.sequence.size();
-        int step = getStep(stack);
-        int total = length * sequencedAssemblyRecipe.loops;
-        List<Component> tooltip = event.getToolTip();
-        tooltip.add(CommonComponents.EMPTY);
-        tooltip.add(CreateLang.translateDirect("recipe.sequenced_assembly").withStyle(ChatFormatting.GRAY));
-        tooltip.add(CreateLang.translateDirect("recipe.assembly.progress", step, total).withStyle(ChatFormatting.DARK_GRAY));
-        int remaining = total - step;
-        for (int i = 0; i < length; i++) {
-            if (i >= remaining) {
-                break;
-            }
-
-            Component description = sequencedAssemblyRecipe.sequence.get((i + step) % length).getAsAssemblyRecipe().getDescriptionForAssembly();
-            Component line = i == 0 ? CreateLang.translateDirect("recipe.assembly.next", description).withStyle(ChatFormatting.AQUA) : Component.literal("-> ").append(description).withStyle(ChatFormatting.DARK_AQUA);
-            tooltip.add(line);
-        }
-    }
 
     @SuppressWarnings("DataFlowIssue")
     private static int getStep(ItemStack input) {

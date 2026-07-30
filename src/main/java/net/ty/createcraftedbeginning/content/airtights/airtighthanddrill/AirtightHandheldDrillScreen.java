@@ -26,7 +26,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.Airtight
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableScreen;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
-import net.ty.createcraftedbeginning.data.CCBGUITextures;
+import net.ty.createcraftedbeginning.client.CCBGUITextures;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
 

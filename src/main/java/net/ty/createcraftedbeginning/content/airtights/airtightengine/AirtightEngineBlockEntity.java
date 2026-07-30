@@ -42,7 +42,7 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
 
     private WeakReference<AirtightTankBlockEntity> source;
     private float pistonPhase;
-    private float previousPhase;
+    private float pistonAnimationSpeed;
     private float lastGeneratedSpeed = Float.NaN;
 
     private CCBAdvancementBehaviour advancementBehaviour;
@@ -112,9 +112,15 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
     }
 
     private void tickPiston() {
-        pistonPhase += Mth.abs(getSpeed()) * DELTA_TIME;
+        pistonAnimationSpeed = Mth.abs(getSpeed());
+        // Reversing rebuilds the kinetic network and can briefly report zero speed client-side.
+        if (pistonAnimationSpeed == 0 && !isOverStressed()) {
+            pistonAnimationSpeed = Mth.abs(getGeneratedSpeed());
+        }
+
+        pistonPhase += pistonAnimationSpeed * DELTA_TIME;
         if (pistonPhase > Mth.TWO_PI) {
-            pistonPhase -= Mth.TWO_PI;
+            pistonPhase %= Mth.TWO_PI;
         }
     }
 
@@ -242,15 +248,7 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
         return facesPositive == state.getValue(AirtightEngineBlock.CLOCKWISE);
     }
 
-    public float getPistonPhase() {
-        return pistonPhase;
-    }
-
-    public float getPreviousPhase() {
-        return previousPhase;
-    }
-
-    public void setPreviousPhase(float previousPhase) {
-        this.previousPhase = previousPhase;
+    public float getPistonPhase(float partialTicks) {
+        return pistonPhase + pistonAnimationSpeed * partialTicks * DELTA_TIME;
     }
 }

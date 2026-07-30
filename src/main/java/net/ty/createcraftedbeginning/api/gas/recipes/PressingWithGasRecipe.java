@@ -11,13 +11,11 @@ import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAssemblyRecipeWithGas;
-import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasSubCategory.AssemblyPressing;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -56,14 +54,6 @@ public class PressingWithGasRecipe extends StandardProcessingWithGasRecipe<Singl
     @OnlyIn(Dist.CLIENT)
     public Component getDescriptionForAssembly() {
         return CreateLang.translateDirect("recipe.assembly.pressing");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Supplier<Supplier<SequencedAssemblyWithGasSubCategory>> getJEISubCategory() {
-        return () -> AssemblyPressing::new;
     }
 
     /**

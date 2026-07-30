@@ -8,14 +8,14 @@
     "createcraftedbeginning:airtight_tank",
     "createcraftedbeginning:horizontal_airtight_tank",
     "createcraftedbeginning:creative_airtight_tank",
+    "createcraftedbeginning:airtight_hatch",
+    "createcraftedbeginning:gas_injection_chamber",
     "createcraftedbeginning:air_compressor",
     "createcraftedbeginning:airtight_engine",
     "createcraftedbeginning:residue_outlet",
     "createcraftedbeginning:tesla_turbine",
     "createcraftedbeginning:tesla_turbine_nozzle",
     "createcraftedbeginning:airtight_reactor_kettle",
-    "createcraftedbeginning:airtight_forging_press",
-    "createcraftedbeginning:gas_injection_chamber",
-    "createcraftedbeginning:airtight_hatch"
+    "createcraftedbeginning:airtight_forging_press"
   ]
 }

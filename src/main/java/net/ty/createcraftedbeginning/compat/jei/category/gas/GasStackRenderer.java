@@ -16,8 +16,8 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor.ARGB32;
 import net.minecraft.world.item.TooltipFlag;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.client.CCBGasClientTextures;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import org.joml.Matrix4f;
 
@@ -69,7 +69,7 @@ public class GasStackRenderer implements IIngredientRenderer<GasStack> {
 
         int color = stack.getHint();
         guiGraphics.setColor(ARGB32.red(color) / 255.0f, ARGB32.green(color) / 255.0f, ARGB32.blue(color) / 255.0f, ARGB32.alpha(color) / 255.0f);
-        drawTiledSprite(guiGraphics, Gas.getGasTexture(stack.getGasHolder()));
+        drawTiledSprite(guiGraphics, CCBGasClientTextures.getGasTexture(stack.getGasHolder()));
         guiGraphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 

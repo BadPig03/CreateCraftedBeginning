@@ -12,8 +12,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.ty.createcraftedbeginning.client.CCBGUITextures;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedBreezeChamber;
-import net.ty.createcraftedbeginning.data.CCBGUITextures;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
 
@@ -39,20 +39,21 @@ public class WindChargingCategory extends CCBRecipeCategory<WindChargingRecipe> 
     @Override
     public void draw(WindChargingRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         Font font = Minecraft.getInstance().font;
+        int chamberX = getBackground().getWidth() / 2 + 44;
         CCBGUITextures.JEI_SHADOW.render(graphics, 122, 37);
         CCBGUITextures.JEI_LONG_ARROW.render(graphics, 42, 30);
         CCBGUITextures.JEI_WIND_CHARGING_BACKGROUND.render(graphics, 16, 8);
         if (recipe.isCreativeIceCream()) {
             MutableComponent text = Component.translatable("jade.gas.infinity_mark");
             graphics.drawString(font, text, getBackground().getWidth() / 2 - font.width(text) / 2 - 12, 22, COLOR_NORMAL, false);
-            galeChamber.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
+            galeChamber.draw(graphics, chamberX, 18);
             return;
         }
 
-        if (recipe.isMilkyItem()) {
+        if (recipe.isMilky()) {
             MutableComponent text = CCBLang.translateDirect("gui.clear_ill_state");
             graphics.drawString(font, text, getBackground().getWidth() / 2 - font.width(text) / 2 - 15, 22, COLOR_NORMAL, false);
-            calmChamber.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
+            calmChamber.draw(graphics, chamberX, 18);
             return;
         }
 
@@ -63,10 +64,10 @@ public class WindChargingCategory extends CCBRecipeCategory<WindChargingRecipe> 
         int color = isBadFood ? COLOR_BAD : COLOR_NORMAL;
         graphics.drawString(font, time, textX, 22, color, false);
         if (isBadFood) {
-            illChamber.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
+            illChamber.draw(graphics, chamberX, 18);
         }
         else {
-            galeChamber.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
+            galeChamber.draw(graphics, chamberX, 18);
         }
     }
 
