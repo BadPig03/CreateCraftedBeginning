@@ -40,7 +40,7 @@ public class GasFactoryGaugeRenderer extends SmartBlockEntityRenderer<GasFactory
             return;
         }
 
-        glow = Mth.clamp((float) (1 - 2 * Math.pow(glow - 0.75f, 2)), -1, 1);
+        glow = Mth.clamp(1.0f - 2.0f * Mth.square(glow - 0.75f), -1.0f, 1.0f);
         int color = (int) (200 * glow);
         CachedBuffers.partial(bulb, blockState).rotateCentered(yRot, Direction.UP).rotateCentered(xRot, Direction.EAST).rotateCentered(Mth.PI, Direction.UP).translate(behaviour.slot.xOffset * 0.5, 0, behaviour.slot.yOffset * 0.5).light(LightTexture.FULL_BRIGHT).color(color, color, color, 255).overlay(overlay).renderInto(poseStack, buffer.getBuffer(RenderTypes.additive()));
     }

@@ -15,6 +15,7 @@ import java.util.function.Supplier;
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public enum CCBCompatMods {
+    CREATE_FLUID_LOGISTICS("fluidlogistics"),
     JEI("jei"),
     KUBEJS("kubeJS");
 

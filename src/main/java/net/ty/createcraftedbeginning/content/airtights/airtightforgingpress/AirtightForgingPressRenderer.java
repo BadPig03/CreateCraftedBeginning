@@ -129,7 +129,7 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
         OutputPlacement[] placements = new OutputPlacement[MAX_OUTPUT_SLOTS];
         for (int slot = 0; slot < placements.length; slot++) {
             float angle = 360.0f / placements.length * slot;
-            float radians = angle / 180.0f * Mth.PI;
+            float radians = angle * Mth.DEG_TO_RAD;
             Vec3 offset = new Vec3(Mth.cos(radians) * OUTPUT_RADIUS, 0, -Mth.sin(radians) * OUTPUT_RADIUS);
             placements[slot] = new OutputPlacement(angle, offset);
         }

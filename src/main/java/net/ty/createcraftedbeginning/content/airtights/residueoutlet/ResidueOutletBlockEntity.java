@@ -138,6 +138,14 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
         return hasFluid ? createFluidInsertionPlan(fluidStack, maxAmount) : createItemInsertionPlan(itemStack, maxAmount);
     }
 
+    public int insertResidueFluid(FluidStack fluidStack, FluidAction action) {
+        return fluidTankBehaviour.getPrimaryHandler().fill(fluidStack, action);
+    }
+
+    public ResidueOutletInventory getInventory() {
+        return inventory;
+    }
+
     private @Nullable ResidueInsertionPlan createFluidInsertionPlan(FluidStack fluid, int maxAmount) {
         int plannedAmount = insertResidueFluid(fluid.copyWithAmount(maxAmount), FluidAction.SIMULATE);
         if (plannedAmount <= 0) {
@@ -156,14 +164,6 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
 
         ItemStack plannedItem = item.copyWithCount(1);
         return new ResidueInsertionPlan(plannedUnits, () -> inventory.addPartialItemUnits(plannedUnits, plannedItem));
-    }
-
-    public int insertResidueFluid(FluidStack fluidStack, FluidAction action) {
-        return fluidTankBehaviour.getPrimaryHandler().fill(fluidStack, action);
-    }
-
-    ResidueOutletInventory getInventory() {
-        return inventory;
     }
 
     public record ResidueInsertionPlan(int plannedAmount, IntSupplier insertion) {

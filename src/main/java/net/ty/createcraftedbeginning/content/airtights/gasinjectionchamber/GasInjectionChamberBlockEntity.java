@@ -610,8 +610,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         }
 
         int desiredCount = Math.min(input.getCount(), input.getMaxStackSize());
-        int capacityLimit = (int) (getTank().getCapacity() / gasPerItem);
-        return Math.min(desiredCount, capacityLimit);
+        return Math.clamp(getTank().getCapacity() / gasPerItem, 0, desiredCount);
     }
 
     private void setOperation(OperationType type, ItemStack input, int inputCount, GasStack gas, long requiredAmount, @Nullable GasInjectionRecipe recipe, @Nullable ResourceLocation fanProcessingTypeId) {

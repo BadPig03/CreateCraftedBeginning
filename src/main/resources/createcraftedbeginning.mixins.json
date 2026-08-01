@@ -2,6 +2,7 @@
   "required": true,
   "priority": 1200,
   "package": "net.ty.createcraftedbeginning.mixin",
+  "plugin": "net.ty.createcraftedbeginning.mixin.CCBMixinConfigPlugin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "server.accessor.AbstractPiglinAccessor",
@@ -21,6 +22,7 @@
     "server.create.PackageEntityMixin",
     "server.create.PackagerBlockEntityMixin",
     "server.create.PackageRepackageHelperMixin",
+    "server.create.BoilerDataMixin",
     "server.create.SawBlockEntityMixin",
     "server.create.SmartObserverBlockEntityMixin",
     "server.create.SmartObserverBlockMixin",
@@ -41,6 +43,7 @@
     "client.accessor.ItemPickerMenuAccessor",
     "client.accessor.RedstoneRequesterScreenAccessor",
     "client.accessor.StockKeeperRequestScreenAccessor",
+    "compat.jei.StockKeeperTransferHandlerMixin",
     "client.create.ChainConveyorRendererMixin",
     "client.create.ChainConveyorVisualMixin",
     "client.create.FactoryPanelConnectionHandlerMixin",
@@ -50,7 +53,6 @@
     "client.create.FrogportVisualMixin",
     "client.create.RedstoneRequesterScreenMixin",
     "client.create.StockKeeperRequestScreenMixin",
-    "client.create.StockKeeperTransferHandlerMixin",
     "client.minecraft.AbstractContainerScreenMixin",
     "client.minecraft.CreativeModeTabMixin",
     "client.minecraft.GuiGraphicsMixin"

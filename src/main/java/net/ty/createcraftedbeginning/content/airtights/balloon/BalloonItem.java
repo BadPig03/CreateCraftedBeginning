@@ -6,7 +6,6 @@ import com.simibubi.create.content.logistics.box.PackageStyles.PackageStyle;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
@@ -37,14 +36,6 @@ public class BalloonItem extends PackageItem {
         balloons.add(this);
     }
 
-    private static Component createGasTooltip(GasEntry gas) {
-        return CCBLang.text("  ").add(CCBLang.gasName(gas.getGasType()).style(ChatFormatting.GOLD).add(CCBLang.text(": ").add(GasAmountUtils.precise(gas.getAmount()).style(ChatFormatting.GRAY)))).component();
-    }
-
-    private static Component createCapacityTooltip(long amount, long capacity) {
-        return CCBLang.translate("gui.balloon.capacity").add(GasAmountUtils.precise(amount).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmountUtils.precise(capacity).style(ChatFormatting.DARK_GRAY))).style(ChatFormatting.GRAY).component();
-    }
-
     public boolean isRare() {
         return rare;
     }
@@ -62,19 +53,9 @@ public class BalloonItem extends PackageItem {
             return;
         }
 
-        tooltip.add(CCBLang.translate("gui.balloon.content").style(ChatFormatting.GRAY).component());
         for (GasEntry gas : contents.gases()) {
-            tooltip.add(createGasTooltip(gas));
-            if (!flag.isAdvanced()) {
-                continue;
-            }
-
-            tooltip.add(CCBLang.text(gas.getGasType().getResourceLocation().toString()).style(ChatFormatting.DARK_GRAY).component());
+            tooltip.add(CCBLang.gasName(gas.getGasType()).add(CCBLang.text(" ").add(GasAmountUtils.precise(gas.getAmount()))).style(ChatFormatting.GRAY).component());
         }
-
-        long capacity = BalloonUtils.getCapacity();
-        long displayedAmount = Math.clamp(contents.totalAmount(), 0, Math.max(0, capacity));
-        tooltip.add(createCapacityTooltip(displayedAmount, capacity));
     }
 
     @Override
@@ -85,26 +66,5 @@ public class BalloonItem extends PackageItem {
         }
 
         return super.open(level, player, hand);
-    }
-
-    @Override
-    public boolean isBarVisible(ItemStack stack) {
-        return BalloonUtils.containsGasContents(stack);
-    }
-
-    @Override
-    public int getBarWidth(ItemStack stack) {
-        BalloonGasContents contents = BalloonUtils.getGasContents(stack);
-        long capacity = BalloonUtils.getCapacity();
-        if (contents.isEmpty() || capacity <= 0) {
-            return 0;
-        }
-
-        return Mth.clamp((int) Math.round(13 * contents.totalAmount() / (double) capacity), 0, 13);
-    }
-
-    @Override
-    public int getBarColor(ItemStack stack) {
-        return BalloonUtils.getDisplayColor(BalloonUtils.getGasContents(stack));
     }
 }

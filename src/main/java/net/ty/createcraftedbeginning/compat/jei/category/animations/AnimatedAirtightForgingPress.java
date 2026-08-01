@@ -24,7 +24,8 @@ public class AnimatedAirtightForgingPress extends AnimatedKinetics {
         float ticks = Mth.clamp(cycle, 0, 30);
         float distance;
         if (ticks < 20) {
-            distance = Mth.clamp((float) Math.pow(ticks / 15, 3), 0, 1);
+            float progress = ticks / 15;
+            distance = Mth.clamp(Mth.square(progress) * progress, 0, 1);
         }
         else {
             distance = Mth.clamp((30 - ticks) / 10, 0, 1);

@@ -51,7 +51,7 @@ public enum CreativeFlightUpgrade implements TickingAirtightUpgrade {
         double x = player.getX();
         double y = player.getY();
         double z = player.getZ();
-        double angle = -player.yBodyRot * Math.PI / 180;
+        double angle = Math.toRadians(-player.yBodyRot);
         double yOffset = player.getEyeHeight() * 0.4;
         level.addParticle(
                 CCBParticleTypes.AIRTIGHT_JETPACK.getParticleOptions(),

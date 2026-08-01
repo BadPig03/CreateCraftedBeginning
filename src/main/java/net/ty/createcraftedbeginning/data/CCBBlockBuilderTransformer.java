@@ -63,12 +63,14 @@ import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAi
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankItem;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentCTBehaviour;
+import net.ty.createcraftedbeginning.content.airtights.boilersteamoutlet.BoilerSteamOutletBlock;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankCTBehavior;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankItem;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankMovementBehavior;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeModel;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlock;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceMovement;
+import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlock;
 import net.ty.createcraftedbeginning.content.airtights.smartairtightpipe.SmartAirtightPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlockItem;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock;
@@ -376,13 +378,27 @@ public final class CCBBlockBuilderTransformer {
             ModelFile model = provider.models().getExistingFile(provider.modLoc("block/residue_outlet/block"));
             Block block = context.get();
             provider.getVariantBuilder(block).forAllStatesExcept(state -> {
-                AttachFace face = state.getValue(BlockStateProperties.ATTACH_FACE);
+                AttachFace face = state.getValue(ResidueOutletBlock.FACE);
                 Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
                 int rotationX = face.ordinal() * 90;
                 int rotationY = ((int) facing.toYRot() + (face == AttachFace.CEILING ? 180 : 0)) % 360;
-
                 return ConfiguredModel.builder().modelFile(model).rotationX(rotationX).rotationY(rotationY).build();
             }, BlockStateProperties.WATERLOGGED);
+        }).item().properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).build();
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> boilerSteamOutlet() {
+        return builder -> builder.blockstate((context, provider) -> {
+            ModelFile model = provider.models().getExistingFile(provider.modLoc("block/boiler_steam_outlet/block"));
+            Block block = context.get();
+            provider.getVariantBuilder(block).forAllStatesExcept(state -> {
+                AttachFace face = state.getValue(BoilerSteamOutletBlock.FACE);
+                Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
+                int rotationX = face.ordinal() * 90;
+                int rotationY = ((int) facing.toYRot() + 180 + (face == AttachFace.CEILING ? 180 : 0)) % 360;
+                return ConfiguredModel.builder().modelFile(model).rotationX(rotationX).rotationY(rotationY).build();
+            }, BlockStateProperties.WATERLOGGED, BoilerSteamOutletBlock.POWERED, BoilerSteamOutletBlock.OPEN);
         }).item().properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).build();
     }
 

@@ -36,8 +36,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
-import net.ty.createcraftedbeginning.compat.jei.category.stockkeeper.GasCraftableBigItemStack;
-import net.ty.createcraftedbeginning.compat.jei.utils.StockKeeperTransferUtils;
+import net.ty.createcraftedbeginning.client.stockkeeper.GasCraftableBigItemStack;
+import net.ty.createcraftedbeginning.client.stockkeeper.StockKeeperCraftingUtils;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUtils;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.FrostLevel;
@@ -398,17 +398,17 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
             return;
         }
 
-        StockKeeperTransferUtils.requestCraftable(this, gasCraftable, requestedDifference);
+        StockKeeperCraftingUtils.requestCraftable(this, gasCraftable, requestedDifference);
         ci.cancel();
     }
 
     @Inject(method = "updateCraftableAmounts", at = @At("HEAD"), cancellable = true)
     private void ccb$updateCraftableAmounts(CallbackInfo ci) {
-        if (!StockKeeperTransferUtils.hasGasCraftable(this)) {
+        if (!StockKeeperCraftingUtils.hasGasCraftable(this)) {
             return;
         }
 
-        StockKeeperTransferUtils.updateCraftableAmounts(this);
+        StockKeeperCraftingUtils.updateCraftableAmounts(this);
         canRequestCraftingPackage = true;
         ci.cancel();
     }

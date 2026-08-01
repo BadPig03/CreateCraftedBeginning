@@ -46,7 +46,7 @@ public abstract class BaseChamberState {
 
     private static void applyRemainingTime(BreezeChamberBlockEntity chamber, long newTime) {
         int maxWindCapacity = BreezeChamberBlockEntity.getMaxWindCapacity();
-        int clampedTime = (int) Math.clamp(newTime, -(long) maxWindCapacity, maxWindCapacity);
+        int clampedTime = Math.clamp(newTime, -maxWindCapacity, maxWindCapacity);
         if (clampedTime > 0) {
             chamber.setChamberState(new GaleChamberState(clampedTime, false));
         }

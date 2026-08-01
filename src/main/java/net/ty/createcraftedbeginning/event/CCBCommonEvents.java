@@ -1,7 +1,5 @@
 package net.ty.createcraftedbeginning.event;
 
-import com.simibubi.create.compat.jei.ConversionRecipe;
-import com.simibubi.create.compat.jei.category.MysteriousItemConversionCategory;
 import com.simibubi.create.content.kinetics.deployer.DeployerRecipeSearchEvent;
 import com.simibubi.create.content.trains.schedule.Schedule;
 import com.simibubi.create.foundation.item.ItemHelper;
@@ -13,7 +11,6 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.util.Unit;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -26,6 +23,7 @@ import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.recipes.DeployerApplicationWithGasRecipe;
 import net.ty.createcraftedbeginning.compat.CCBCompatMods;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEIEvents;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralBlockEntity;
@@ -40,6 +38,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.Air
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu.InventoryHandler;
+import net.ty.createcraftedbeginning.content.airtights.boilersteamoutlet.BoilerSteamOutletBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterItem;
@@ -64,7 +63,6 @@ import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
 import net.ty.createcraftedbeginning.recipe.trie.AirtightWithGasRecipeTrieFinder;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
@@ -102,6 +100,7 @@ public class CCBCommonEvents {
         ResidueOutletBlockEntity.registerCapabilities(event);
         CratesBlockEntity.registerCapabilities(event, CCBBlockEntities.STURDY_CRATE.get());
         TeslaTurbineNozzleBlockEntity.registerCapabilities(event);
+        BoilerSteamOutletBlockEntity.registerCapabilities(event);
 
         CreativeGasCanisterItem.registerCapabilities(event);
         GasCanisterItem.registerCapabilities(event);
@@ -151,7 +150,7 @@ public class CCBCommonEvents {
             builder.set(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES, List.of(0L));
         });
         event.modify(CCBItems.GAS_CANISTER_PACK, builder -> builder.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, GasCanisterPackType._0000.getFlags()));
-        event.modify(CCBItems.GAS_VIRTUAL_ITEM, builder -> builder.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE).set(DataComponents.HIDE_TOOLTIP, Unit.INSTANCE));
+        event.modify(CCBItems.GAS_VIRTUAL_ITEM, builder -> builder.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE));
     }
 
     @SubscribeEvent
@@ -160,9 +159,7 @@ public class CCBCommonEvents {
             return;
         }
 
-        if (CCBCompatMods.JEI.isLoaded()) {
-            MysteriousItemConversionCategory.RECIPES.add(ConversionRecipe.create(new ItemStack(CCBBlocks.EMPTY_BREEZE_COOLER_BLOCK), new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK)));
-        }
+        CCBCompatMods.JEI.executeIfInstalled(() -> CCBJEIEvents::registerMysteriousItemConversions);
         Schedule.CONDITION_TYPES.add(3, Pair.of(CreateCraftedBeginning.asResource("gas_threshold"), GasThresholdCondition::new));
     }
 }

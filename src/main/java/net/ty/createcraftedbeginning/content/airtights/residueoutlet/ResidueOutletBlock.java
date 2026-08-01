@@ -123,16 +123,20 @@ public class ResidueOutletBlock extends HorizontalDirectionalBlock implements IB
 
     @Override
     public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean isMoving) {
+        super.onPlace(state, level, pos, oldState, isMoving);
+        if (level.isClientSide || oldState.is(state.getBlock())) {
+            return;
+        }
+
         AirtightTankBlock.updateTankState(level, pos.relative(getFacing(state)));
     }
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-        if (!state.is(newState.getBlock()) && !isMoving) {
+        if (!level.isClientSide && !state.is(newState.getBlock())) {
             if (level.getBlockEntity(pos) instanceof ResidueOutletBlockEntity outlet) {
                 Containers.dropContents(level, pos, outlet.getInventory());
             }
-
             AirtightTankBlock.updateTankState(level, pos.relative(getFacing(state)));
         }
         super.onRemove(state, level, pos, newState, isMoving);
@@ -145,12 +149,11 @@ public class ResidueOutletBlock extends HorizontalDirectionalBlock implements IB
 
     @Override
     public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
-        BlockPos tankPos = pos.relative(getFacing(state));
-        return level.getBlockState(tankPos).getBlock() instanceof AirtightTankBlock;
+        return level.getBlockState(pos.relative(getFacing(state))).getBlock() instanceof AirtightTankBlock;
     }
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos blockPos, CollisionContext collisionContext) {
-        return CCBShapes.CONDENSATE_DRAIN.get(getFacing(state).getOpposite());
+        return CCBShapes.RESIDUE_OUTLET.get(getFacing(state).getOpposite());
     }
 }

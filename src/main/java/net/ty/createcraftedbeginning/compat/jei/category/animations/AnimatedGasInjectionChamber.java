@@ -20,10 +20,10 @@ public class AnimatedGasInjectionChamber extends AnimatedKinetics {
 
     private static float getNozzleSqueeze(float cycle) {
         if (cycle < 20) {
-            return Mth.sin((float) (cycle / 40.0f * Math.PI)) * 15;
+            return Mth.sin(cycle / 40.0f * Mth.PI) * 15;
         }
         if (cycle > 60 && cycle < 80) {
-            return Mth.sin((float) ((cycle - 40) / 40.0f * Math.PI)) * 15;
+            return Mth.sin((cycle - 40) / 40.0f * Mth.PI) * 15;
         }
         if (cycle >= 80) {
             return 0;
@@ -37,10 +37,10 @@ public class AnimatedGasInjectionChamber extends AnimatedKinetics {
         }
 
         if (cycle < 30) {
-            return Mth.sin((float) ((cycle - 20) / 60.0f * Math.PI)) * 7;
+            return Mth.sin((cycle - 20) / 60.0f * Mth.PI) * 7;
         }
         if (cycle > 50) {
-            return Mth.sin((float) (cycle / 60.0f * Math.PI)) * 7;
+            return Mth.sin(cycle / 60.0f * Mth.PI) * 7;
         }
         return 3.5f;
     }

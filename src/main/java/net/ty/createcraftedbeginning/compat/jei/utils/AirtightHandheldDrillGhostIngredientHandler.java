@@ -9,6 +9,7 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillGhostItemSubmitPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillMenu;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillScreen;
 import org.jetbrains.annotations.NotNull;

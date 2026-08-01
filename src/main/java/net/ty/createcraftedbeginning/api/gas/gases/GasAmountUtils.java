@@ -45,7 +45,13 @@ public final class GasAmountUtils {
      * @return the formatted text
      */
     public static String formatCompact(long mb) {
-        return formatCompact(mb, "B");
+        if (mb < MILLIBUCKETS_PER_BUCKET) {
+            return mb + "mB";
+        }
+        if (mb < MILLIBUCKETS_PER_KILOBUCKET) {
+            return formatTenths(mb, MILLIBUCKETS_PER_BUCKET) + 'B';
+        }
+        return formatTenths(mb, MILLIBUCKETS_PER_KILOBUCKET) + "kB";
     }
 
     /**
@@ -61,7 +67,10 @@ public final class GasAmountUtils {
         if (mb >= MILLIBUCKETS_PER_KILOBUCKET / 10) {
             return formatTenths(mb, MILLIBUCKETS_PER_KILOBUCKET) + "kb";
         }
-        return formatCompact(mb, "b");
+        if (mb >= MILLIBUCKETS_PER_BUCKET / 10) {
+            return formatTenths(mb, MILLIBUCKETS_PER_BUCKET) + 'b';
+        }
+        return mb + "mb";
     }
 
     /**
@@ -111,16 +120,6 @@ public final class GasAmountUtils {
      */
     public static MutableComponent formatWholeBuckets(long b) {
         return CCBLang.number(b).space().add(CCBLang.translate("gui.threshold.buckets")).component();
-    }
-
-    private static String formatCompact(long mb, String symbol) {
-        if (mb < MILLIBUCKETS_PER_BUCKET) {
-            return mb + "m" + symbol;
-        }
-        if (mb < MILLIBUCKETS_PER_KILOBUCKET) {
-            return formatTenths(mb, MILLIBUCKETS_PER_BUCKET) + symbol;
-        }
-        return formatTenths(mb, MILLIBUCKETS_PER_KILOBUCKET) + 'k' + symbol;
     }
 
     private static String formatTenths(long amount, long unit) {

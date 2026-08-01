@@ -38,17 +38,17 @@ public class AirtightAssemblyDriverStructureManager {
         long width = AirtightTankBlockEntity.getConfiguredMaxWidth();
         long length = AirtightTankBlockEntity.getConfiguredMaxLength();
         long surfaceArea = 2L * (width * width + 2L * width * length);
-        return (int) Math.clamp(surfaceArea, 0, Integer.MAX_VALUE);
+        return Math.clamp(surfaceArea, 0, Integer.MAX_VALUE);
     }
 
     private static int getMaxAttachedChambers() {
         long width = AirtightTankBlockEntity.getConfiguredMaxWidth();
         long length = AirtightTankBlockEntity.getConfiguredMaxLength();
-        return (int) Math.clamp(width * Math.max(width, length), 0, Integer.MAX_VALUE);
+        return Math.clamp(width * Math.max(width, length), 0, Integer.MAX_VALUE);
     }
 
     private static int getMaxAttachedWindChargingLevel() {
-        return (int) Math.clamp((long) getMaxAttachedChambers() * MAX_LEVEL, 0, Integer.MAX_VALUE);
+        return Math.clamp((long) getMaxAttachedChambers() * MAX_LEVEL, 0, Integer.MAX_VALUE);
     }
 
     private final AirtightAssemblyDriverCore driverCore;

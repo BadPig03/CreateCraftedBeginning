@@ -25,6 +25,8 @@ public class CCBAirtightEngineHandlers {
         AirtightEngineHandlerUtils.register(CCBGases.SPORE_AIR.get().getResourceLocation(), 1);
         AirtightEngineHandlerUtils.register(CCBGases.SCULK_AIR.get().getResourceLocation(), 1);
 
+        AirtightEngineHandlerUtils.register(CCBGases.STEAM.get().getResourceLocation(), 2);
+
         AirtightEngineHandlerUtils.register(CCBGases.CREATIVE_AIR.get().getResourceLocation(), 16);
     }
 }

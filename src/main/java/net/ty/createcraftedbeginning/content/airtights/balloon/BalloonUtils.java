@@ -102,33 +102,6 @@ public final class BalloonUtils {
         return contents.normalized().limitedTo(Math.max(0, getCapacity()), BalloonGasContents.MAX_GAS_TYPES);
     }
 
-    public static int getDisplayColor(BalloonGasContents contents) {
-        if (contents.isEmpty()) {
-            return 0xFFFFFF;
-        }
-
-        long total = contents.totalAmount();
-        if (total <= 0) {
-            return 0xFFFFFF;
-        }
-
-        double red = 0;
-        double green = 0;
-        double blue = 0;
-        for (GasEntry gas : contents.gases()) {
-            int tint = gas.getGasType().getTint();
-            double weight = gas.getAmount() / (double) total;
-            red += (tint >> 16 & 0xFF) * weight;
-            green += (tint >> 8 & 0xFF) * weight;
-            blue += (tint & 0xFF) * weight;
-        }
-
-        int redChannel = Mth.clamp((int) Math.round(red), 0, 255);
-        int greenChannel = Mth.clamp((int) Math.round(green), 0, 255);
-        int blueChannel = Mth.clamp((int) Math.round(blue), 0, 255);
-        return redChannel << 16 | greenChannel << 8 | blueChannel;
-    }
-
     public static void tickInWater(PackageEntity entity) {
         if (!isBalloonPackage(entity) || entity.isPassenger()) {
             return;

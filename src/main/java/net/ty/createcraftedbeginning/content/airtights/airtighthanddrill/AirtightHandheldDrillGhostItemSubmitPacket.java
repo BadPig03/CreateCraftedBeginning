@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.compat.jei.utils;
+package net.ty.createcraftedbeginning.content.airtights.airtighthanddrill;
 
 import net.createmod.catnip.net.base.ServerboundPacketPayload;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -7,7 +7,6 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillMenu;
 import net.ty.createcraftedbeginning.registry.CCBPackets;
 
 import javax.annotation.ParametersAreNonnullByDefault;

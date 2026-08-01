@@ -37,6 +37,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.Air
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankBlock;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock;
+import net.ty.createcraftedbeginning.content.airtights.boilersteamoutlet.BoilerSteamOutletBlock;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankBlock;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterBlock;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterBlock;
@@ -70,6 +71,7 @@ import net.ty.createcraftedbeginning.data.CCBRegistrate;
 import net.ty.createcraftedbeginning.data.CCBSharedProperties;
 import net.ty.createcraftedbeginning.data.CCBSpriteShifts;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.CCBCreativeTabSection;
+import net.ty.createcraftedbeginning.registry.CCBTags.CCBBlockTags;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -115,6 +117,7 @@ public class CCBBlocks {
 
     public static final BlockEntry<AirtightEngineBlock> AIRTIGHT_ENGINE_BLOCK = CCB_REGISTRATE.block("airtight_engine", AirtightEngineBlock::new).transform(CCBBlockBuilderTransformer.airtightEngine()).transform(CCBStress.setCapacity(1024)).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<ResidueOutletBlock> RESIDUE_OUTLET_BLOCK = CCB_REGISTRATE.block("residue_outlet", ResidueOutletBlock::new).transform(CCBBlockBuilderTransformer.residueOutlet()).transform(airtightPropertiesWithoutOcclusion()).register();
+    public static final BlockEntry<BoilerSteamOutletBlock> BOILER_STEAM_OUTLET_BLOCK = CCB_REGISTRATE.block("boiler_steam_outlet", BoilerSteamOutletBlock::new).initialProperties(CCBSharedProperties::copperMetal).transform(pickaxeOnly()).transform(CCBBlockBuilderTransformer.boilerSteamOutlet()).properties(Properties::noOcclusion).tag(CCBBlockTags.AIRTIGHT_COMPONENTS.tag).register();
 
     public static final BlockEntry<TeslaTurbineBlock> TESLA_TURBINE_BLOCK = CCB_REGISTRATE.block("tesla_turbine", TeslaTurbineBlock::new).clientExtension(() -> TeslaTurbineClientExtensions::new).transform(CCBBlockBuilderTransformer.teslaTurbine()).transform(CCBStress.setCapacity(TeslaTurbineUtils.BASE_STRESS_CAPACITY)).transform(airtightPropertiesWithoutOcclusion()).register();
     public static final BlockEntry<TeslaTurbineStructuralBlock> TESLA_TURBINE_STRUCTURAL_BLOCK = CCB_REGISTRATE.block("tesla_turbine_structural", TeslaTurbineStructuralBlock::new).clientExtension(() -> TeslaTurbineStructuralClientExtensions::new).transform(CCBBlockBuilderTransformer.teslaTurbineStructural()).transform(airtightStructural()).register();

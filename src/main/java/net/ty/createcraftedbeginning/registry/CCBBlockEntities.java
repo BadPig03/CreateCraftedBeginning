@@ -29,6 +29,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTank
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentRenderer;
+import net.ty.createcraftedbeginning.content.airtights.boilersteamoutlet.BoilerSteamOutletBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterBlockEntity;
@@ -103,6 +104,7 @@ public class CCBBlockEntities {
 
     public static final BlockEntityEntry<AirtightEngineBlockEntity> AIRTIGHT_ENGINE = CCB_REGISTRATE.blockEntity("airtight_engine", AirtightEngineBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_ENGINE_BLOCK).renderer(() -> AirtightEngineRenderer::new).register();
     public static final BlockEntityEntry<ResidueOutletBlockEntity> RESIDUE_OUTLET = CCB_REGISTRATE.blockEntity("residue_outlet", ResidueOutletBlockEntity::new).validBlock(CCBBlocks.RESIDUE_OUTLET_BLOCK).register();
+    public static final BlockEntityEntry<BoilerSteamOutletBlockEntity> BOILER_STEAM_OUTLET = CCB_REGISTRATE.blockEntity("boiler_steam_outlet", BoilerSteamOutletBlockEntity::new).validBlock(CCBBlocks.BOILER_STEAM_OUTLET_BLOCK).register();
 
     public static final BlockEntityEntry<TeslaTurbineBlockEntity> TESLA_TURBINE = CCB_REGISTRATE.blockEntity("tesla_turbine", TeslaTurbineBlockEntity::new).validBlock(CCBBlocks.TESLA_TURBINE_BLOCK).renderer(() -> TeslaTurbineRenderer::new).register();
     public static final BlockEntityEntry<TeslaTurbineNozzleBlockEntity> TESLA_TURBINE_NOZZLE = CCB_REGISTRATE.blockEntity("tesla_turbine_nozzle", TeslaTurbineNozzleBlockEntity::new).validBlock(CCBBlocks.TESLA_TURBINE_NOZZLE_BLOCK).register();

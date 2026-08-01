@@ -58,12 +58,6 @@ public final class GasRequestUtils {
     }
 
     public static int toLogisticsAmount(long gasAmount) {
-        if (gasAmount <= 0) {
-            return 0;
-        }
-        if (gasAmount >= BigItemStack.INF) {
-            return BigItemStack.INF;
-        }
-        return (int) gasAmount;
+        return Math.clamp(gasAmount, 0, BigItemStack.INF);
     }
 }

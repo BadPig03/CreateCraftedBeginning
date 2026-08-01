@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Con
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 import org.jetbrains.annotations.NotNull;
@@ -33,7 +34,7 @@ public class PhotoStressBearingRenderer extends KineticBlockEntityRenderer<Photo
 
         if (speed != 0) {
             angle += offset;
-            angle = angle / 180.0f * (float) Math.PI;
+            angle *= Mth.DEG_TO_RAD;
         }
         kineticRotationTransform(model, be, Axis.Y, angle, light);
         model.renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));

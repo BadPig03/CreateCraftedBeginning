@@ -32,7 +32,7 @@ public enum CCBOutliner {
         float previousAlpha = previousTicks >= 0 ? 1 : 1 + previousTicks / (float) CCBOutlineEntry.FADE_TICKS;
         float currentAlpha = 1 + entry.ticksTillRemoval / (float) CCBOutlineEntry.FADE_TICKS;
         float alpha = Mth.lerp(partialTicks, previousAlpha, currentAlpha);
-        return (float) Math.pow(alpha, 3);
+        return Mth.square(alpha) * alpha;
     }
 
     private static void renderOutline(CCBOutlineEntry entry, PoseStack poseStack, SuperRenderTypeBuffer buffer, Vec3 camera, float partialTicks) {

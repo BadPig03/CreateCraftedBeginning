@@ -9,6 +9,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class CCBClient extends ConfigBase {
     public final ConfigBool enableChestplateFirstPersonArm = b(true, "enable_chestplate_first_person_arm", Comments.enableAirtightChestplateFirstPersonArm);
+    public final ConfigBool enableAirtightEncasedPipeOutline = b(true, "enable_airtight_encased_pipe_outline", Comments.enableAirtightEncasedPipeOutline);
     public final ConfigBool enableChestplateJetpackParticles = b(true, "enable_chestplate_jetpack_particles", Comments.enableChestplateJetpackParticles);
     public final ConfigBool enableCurrentGasInfo = b(true, "enable_current_gas_info", Comments.enableCurrentGasInfo);
     public final ConfigBool enableEndIncinerationBlowerOutline = b(true, "enable_end_incineration_blower_outline", Comments.enableEndIncinerationBlowerOutline);
@@ -30,6 +31,7 @@ public class CCBClient extends ConfigBase {
 
     private static class Comments {
         static String enableAirtightChestplateFirstPersonArm = "Whether to render the player's arm in first person while wearing an Airtight Chestplate.";
+        static String enableAirtightEncasedPipeOutline = "Whether to display the open and closed sides of an Airtight Encased Pipe while holding a Wrench and wearing Engineer's Goggles.";
         static String enableChestplateJetpackParticles = "Whether to render jetpack particles while flying with an Airtight Chestplate.";
         static String enableCurrentGasInfo = "Whether to display information about the player's currently selected gas supply.";
         static String enableEndIncinerationBlowerOutline = "Whether to display the End Incineration Blower's working range.";

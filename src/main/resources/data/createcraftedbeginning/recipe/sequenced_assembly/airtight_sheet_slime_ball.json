@@ -18,7 +18,7 @@
           "item": "createcraftedbeginning:incomplete_airtight_sheet"
         },
         {
-          "tag": "c:plates/iron"
+          "tag": "c:slimeballs"
         }
       ],
       "results": [
@@ -34,7 +34,7 @@
           "item": "createcraftedbeginning:incomplete_airtight_sheet"
         },
         {
-          "tag": "c:slimeballs"
+          "tag": "c:plates/iron"
         }
       ],
       "results": [

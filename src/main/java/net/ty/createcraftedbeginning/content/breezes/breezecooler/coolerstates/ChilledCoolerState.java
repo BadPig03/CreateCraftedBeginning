@@ -73,7 +73,7 @@ public class ChilledCoolerState extends BaseCoolerState {
             return InteractionResult.SUCCESS;
         }
 
-        remainingTime = (int) Math.clamp(newTime, 0, BreezeCoolerBlockEntity.getMaxCoolantCapacity());
+        remainingTime = Math.clamp(newTime, 0, BreezeCoolerBlockEntity.getMaxCoolantCapacity());
         if (remainingTime == 0) {
             cooler.setCoolerState(new InactiveCoolerState());
         }
@@ -101,7 +101,7 @@ public class ChilledCoolerState extends BaseCoolerState {
             return false;
         }
 
-        remainingTime = (int) Math.min(newTime, BreezeCoolerBlockEntity.getMaxCoolantCapacity());
+        remainingTime = Math.clamp(newTime, 0, BreezeCoolerBlockEntity.getMaxCoolantCapacity());
         cooler.playSound();
         cooler.spawnParticleBurst();
         return true;

@@ -15,6 +15,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehavi
 import net.ty.createcraftedbeginning.api.gas.gases.flowsources.GasFlowSource;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasInventoryIdentifierProvider;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IVentingGasSource;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -467,6 +468,11 @@ public final class GasNetwork {
             }
 
             pending.sourceProvider = currentSource;
+        }
+
+        if (sourceCap instanceof IVentingGasSource) {
+            pendingTransfer = null;
+            return true;
         }
 
         long returned = sourceCap.fill(pending.remainder.copy(), GasAction.EXECUTE);

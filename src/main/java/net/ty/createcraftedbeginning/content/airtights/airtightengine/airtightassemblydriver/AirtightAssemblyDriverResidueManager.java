@@ -81,7 +81,7 @@ public class AirtightAssemblyDriverResidueManager {
         for (ResidueInsertionPlan insertion : plan.insertions()) {
             insertedAmount += insertion.commit();
         }
-        return (int) Math.min(Integer.MAX_VALUE, insertedAmount);
+        return Math.clamp(insertedAmount, 0, Integer.MAX_VALUE);
     }
 
     public void tick(Level level) {

@@ -6,6 +6,7 @@ import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObser
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -77,7 +78,8 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
     }
 
     public float getExtensionDistance(float partialTicks) {
-        return (float) (Math.pow(connectionAnimation.getValue(partialTicks), 2) * distance / 2);
+        float animation = connectionAnimation.getValue(partialTicks);
+        return Mth.square(animation) * distance * 0.5f;
     }
 
     @Nullable

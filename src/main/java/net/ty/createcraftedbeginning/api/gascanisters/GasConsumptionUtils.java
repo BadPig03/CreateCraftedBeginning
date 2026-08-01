@@ -53,7 +53,7 @@ public final class GasConsumptionUtils {
         if (rounded < 0) {
             return -1;
         }
-        return rounded >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) rounded;
+        return Math.clamp(rounded, 0, Integer.MAX_VALUE);
     }
 
     /**

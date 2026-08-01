@@ -21,7 +21,8 @@ public class CCBShapes {
     public static final VoxelShaper AIRTIGHT_PIPE = shape(4, 0, 4, 12, 16, 12).forAxis();
     public static final VoxelShaper AIRTIGHT_PUMP = shape(2, 0, 2, 14, 16, 14).forDirectional(Direction.UP);
     public static final VoxelShaper CHECK_VALVE = shape(4, 0, 4, 12, 3, 12).add(3, 3, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).forAxis();
-    public static final VoxelShaper CONDENSATE_DRAIN = shape(0, 0, 0, 16, 2, 16).add(3, 2, 3, 13, 13, 13).forDirectional(Direction.UP);
+    public static final VoxelShaper RESIDUE_OUTLET = shape(0, 0, 0, 16, 2, 16).add(3, 2, 3, 13, 13, 13).forDirectional(Direction.UP);
+    public static final VoxelShaper BOILER_STEAM_OUTLET = shape(0, 0, 0, 16, 2, 16).add(3, 2, 3, 13, 13, 13).forDirectional(Direction.UP);
     public static final VoxelShaper PORTABLE_GAS_INTERFACE = shape(0, 0, 0, 16, 14, 16).forDirectional(Direction.UP);
     public static final VoxelShaper SMART_AIRTIGHT_PIPE = shape(4, 0, 4, 12, 3, 12).add(3, 3, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).add(4, 4, 1, 12, 12, 3).forAxis();
     public static final VoxelShaper SMART_AIRTIGHT_PIPE_VERTICAL = shape(4, 0, 4, 12, 3, 12).add(3, 3, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).add(4, 4, 1, 12, 12, 3).forDirectional(Direction.NORTH);

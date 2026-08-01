@@ -232,7 +232,8 @@ public final class AirtightHandheldDrillUtils {
             return 1;
         }
 
-        return Mth.clamp(1 / (float) Math.pow(Math.log10(size + 9), 3), 0.01f, 1);
+        double logSize = Math.log10(size + 9);
+        return Mth.clamp(1 / (float) (Mth.square(logSize) * logSize), 0.01f, 1);
     }
 
     public static int @NotNull [] getMiningSizeParams(ItemStack drill) {

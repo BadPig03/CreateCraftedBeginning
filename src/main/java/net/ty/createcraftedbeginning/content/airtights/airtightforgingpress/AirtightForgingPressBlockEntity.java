@@ -579,7 +579,8 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         float ticks = Mth.clamp(operatingTicks + partialTicks * getOperationSpeed(), 0, cycleDuration);
         float distance;
         if (ticks < cycleDuration * 2.0f / 3.0f) {
-            distance = Mth.clamp((float) Math.pow(ticks / cycleDuration * 2.0f, 3), 0, 1);
+            float progress = ticks / cycleDuration * 2.0f;
+            distance = Mth.clamp(Mth.square(progress) * progress, 0, 1);
         }
         else {
             distance = Mth.clamp((cycleDuration - ticks) / cycleDuration * 3.0f, 0, 1);

@@ -18,7 +18,7 @@
           "item": "createcraftedbeginning:incomplete_airtight_sheet"
         },
         {
-          "tag": "c:plates/iron"
+          "item": "create:super_glue"
         }
       ],
       "results": [
@@ -34,7 +34,7 @@
           "item": "createcraftedbeginning:incomplete_airtight_sheet"
         },
         {
-          "item": "create:super_glue"
+          "tag": "c:plates/iron"
         }
       ],
       "results": [
