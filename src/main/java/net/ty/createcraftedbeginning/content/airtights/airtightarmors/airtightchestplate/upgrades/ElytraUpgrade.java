@@ -119,8 +119,8 @@ public enum ElytraUpgrade implements AirtightUpgrade {
         }
 
         Vec3 position = player.position();
-        Vec3 boost = player.getLookAngle().scale(0.85f * multiplier);
-        Vec3 movement = player.getDeltaMovement().scale(0.75f * multiplier);
+        Vec3 boost = player.getLookAngle().scale(0.85 * multiplier);
+        Vec3 movement = player.getDeltaMovement().scale(0.75 * multiplier);
         player.setDeltaMovement(movement.add(boost));
         player.hasImpulse = true;
         if (player.level() instanceof ServerLevel serverLevel) {

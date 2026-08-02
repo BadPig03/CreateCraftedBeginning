@@ -402,7 +402,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             return;
         }
 
-        Vec3 cloudPos = VecHelper.getCenterOf(worldPosition).subtract(0, 1.6875f, 0);
+        Vec3 cloudPos = VecHelper.getCenterOf(worldPosition).subtract(0, 1.6875, 0);
         int count = level.random.nextInt(3, 6);
         for (int i = 0; i < count; i++) {
             Vec3 velocity = VecHelper.offsetRandomly(Vec3.ZERO, level.random, 0.125f);

@@ -30,14 +30,14 @@ public class BreezeCloudParticle extends TextureSheetParticle {
         super(level, x, y, z, 0.0, 0.0, 0.0);
         friction = 0.96f;
         this.sprites = sprites;
-        xd *= 0.1f;
-        yd *= 0.1f;
-        zd *= 0.1f;
+        xd *= 0.1;
+        yd *= 0.1;
+        zd *= 0.1;
         xd += xSpeed;
         yd += ySpeed;
         zd += zSpeed;
 
-        float brightness = 1.0f - (float) (Math.random() * 0.3f);
+        float brightness = 1 - (float) (Math.random() * 0.3);
         rCol = ARGB32.red(color) / 255.0f * brightness;
         gCol = ARGB32.green(color) / 255.0f * brightness;
         bCol = ARGB32.blue(color) / 255.0f * brightness;
@@ -45,15 +45,15 @@ public class BreezeCloudParticle extends TextureSheetParticle {
 
         quadSize *= 1.875f;
         int baseLifetime = (int) (8.0 / (Math.random() * 0.8 + 0.3));
-        lifetime = (int) Math.max((float) baseLifetime * 2.5f, 1.0f);
+        lifetime = (int) Math.max((float) baseLifetime * 2.5f, 1);
         hasPhysics = false;
         setSpriteFromAge(sprites);
     }
 
     @Override
     public float getQuadSize(float scaleFactor) {
-        float progress = ((float) age + scaleFactor) / (float) lifetime * 32.0f;
-        return quadSize * Mth.clamp(progress, 0.0f, 1.0f);
+        float progress = ((float) age + scaleFactor) / (float) lifetime * 32;
+        return quadSize * Mth.clamp(progress, 0, 1);
     }
 
     @Override

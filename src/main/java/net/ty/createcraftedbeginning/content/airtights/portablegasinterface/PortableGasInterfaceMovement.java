@@ -111,7 +111,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
 
     @Override
     public Vec3 getActiveAreaOffset(MovementContext context) {
-        return Vec3.atLowerCornerOf(context.state.getValue(PortableGasInterfaceBlock.FACING).getNormal()).scale(1.85f);
+        return Vec3.atLowerCornerOf(context.state.getValue(PortableGasInterfaceBlock.FACING).getNormal()).scale(1.85);
     }
 
     @Nullable

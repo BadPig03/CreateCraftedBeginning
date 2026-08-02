@@ -72,7 +72,7 @@ public final class GasFilteringRenderer {
 
             Component label = behaviour.getLabel();
             boolean hit = transform.testHit(level, pos, state, localHit);
-            ValueBox box = new ItemValueBox(label, new AABB(Vec3.ZERO, Vec3.ZERO).inflate(0.25f), pos, behaviour.getFilter(), Component.empty());
+            ValueBox box = new ItemValueBox(label, new AABB(Vec3.ZERO, Vec3.ZERO).inflate(0.25), pos, behaviour.getFilter(), Component.empty());
             box.passive(!hit || behaviour.bypassesInput(heldItem));
             Outliner.getInstance().showOutline(Pair.of("filter" + behaviour.netId(), pos), box.transform(transform)).lineWidth(0.015625f).withFaceTexture(hit ? AllSpecialTextures.THIN_CHECKERED : null).highlightFace(hitResult.getDirection());
             if (!hit) {

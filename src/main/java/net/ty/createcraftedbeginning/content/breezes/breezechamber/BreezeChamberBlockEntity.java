@@ -57,7 +57,6 @@ import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
-import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
 import org.jetbrains.annotations.Nullable;
 
@@ -122,7 +121,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     public static int getOverflowThreshold() {
-        return (int) Math.max(1L, (long) getMaxWindCapacity() * 3 / 4);
+        return (int) Math.max(1, (long) getMaxWindCapacity() * 3 / 4);
     }
 
     public static void setClientTicker(Consumer<BreezeChamberBlockEntity> ticker) {
@@ -331,19 +330,6 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     public boolean tryUpdateChargerByItem(ItemStack stack, boolean forceOverflow, boolean simulate) {
-        if (stack.is(CCBItems.CREATIVE_ICE_CREAM)) {
-            if (simulate) {
-                return true;
-            }
-
-            ChargerType chargerType = CreativeChamberState.getNextChargeType(currentState.getChargerType());
-            setChamberState(chargerType == ChargerType.NONE ? new InactiveChamberState() : new CreativeChamberState(chargerType));
-            boolean isBad = chargerType == ChargerType.BAD;
-            spawnParticleBurst(isBad);
-            playSound(isBad);
-            return true;
-        }
-
         InteractionResult result = currentState.onItemInsert(this, stack, forceOverflow, simulate);
         if (result != InteractionResult.SUCCESS) {
             return false;
@@ -558,9 +544,9 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         RandomSource random = level.random;
         int count = bad ? 5 : 20;
         for (int i = 0; i < count; i++) {
-            Vec3 offset = VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25f, 1).normalize();
-            Vec3 particlePos = center.add(offset.scale(0.5 + random.nextDouble() * 0.125f)).add(0, 0.125, 0);
-            Vec3 motion = offset.scale(0.03125f);
+            Vec3 offset = VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25, 1).normalize();
+            Vec3 particlePos = center.add(offset.scale(0.5 + random.nextDouble() * 0.125)).add(0, 0.125, 0);
+            Vec3 motion = offset.scale(0.03125);
             level.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), particlePos.x, particlePos.y, particlePos.z, motion.x, motion.y, motion.z);
         }
     }
@@ -718,8 +704,8 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         if (random.nextInt(possibility * 2) == 0) {
             level.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), particlePos.x, particlePos.y, particlePos.z, 0, 0, 0);
         }
-        double yMotion = random.nextDouble() * 0.0125f;
-        Vec3 galeParticlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25f, 1).normalize().scale(0.5 + random.nextDouble() * 0.125f)).add(0, 0.5, 0);
+        double yMotion = random.nextDouble() * 0.0125;
+        Vec3 galeParticlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25, 1).normalize().scale(0.5 + random.nextDouble() * 0.125)).add(0, 0.5, 0);
         if (!windLevel.isAtLeast(WindLevel.GALE)) {
             return;
         }

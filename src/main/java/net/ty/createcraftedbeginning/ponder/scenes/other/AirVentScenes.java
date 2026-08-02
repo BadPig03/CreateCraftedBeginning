@@ -47,8 +47,8 @@ public class AirVentScenes {
         Selection fanSelection = util.select().position(fanPos);
 
         Vec3 centerVec = util.vector().centerOf(centerPos);
-        Vec3 eastControlVec = util.vector().blockSurface(centerPos, Direction.EAST).subtract(0, 0.4f, 0);
-        Vec3 westControlVec = util.vector().blockSurface(centerPos, Direction.WEST).subtract(0, 0.4f, 0);
+        Vec3 eastControlVec = util.vector().blockSurface(centerPos, Direction.EAST).subtract(0, 0.4, 0);
+        Vec3 westControlVec = util.vector().blockSurface(centerPos, Direction.WEST).subtract(0, 0.4, 0);
 
         float mediumSpeed = SpeedLevel.MEDIUM.getSpeedValue();
 

@@ -90,15 +90,15 @@ public class SmartAirtightPipeBlockEntity extends SmartBlockEntity implements IG
         public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, BlockState state) {
             Axis axis = state.getValue(SmartAirtightPipeBlock.AXIS);
             if (axis != Axis.Y) {
-                return VecHelper.rotateCentered(VecHelper.voxelSpace(8, 14.5f, 8), 90, Axis.Y);
+                return VecHelper.rotateCentered(VecHelper.voxelSpace(8, 14.5, 8), 90, Axis.Y);
             }
 
             DirectionalFacing facing = state.getValue(IDirectionalPipe.DIRECTIONAL_FACING);
             return switch (facing) {
-                case SOUTH -> VecHelper.voxelSpace(8, 8, 1.5f);
-                case WEST -> VecHelper.voxelSpace(14.5f, 8, 8);
-                case EAST -> VecHelper.voxelSpace(1.5f, 8, 8);
-                default -> VecHelper.voxelSpace(8, 8, 14.5f);
+                case SOUTH -> VecHelper.voxelSpace(8, 8, 1.5);
+                case WEST -> VecHelper.voxelSpace(14.5, 8, 8);
+                case EAST -> VecHelper.voxelSpace(1.5, 8, 8);
+                default -> VecHelper.voxelSpace(8, 8, 14.5);
             };
         }
 

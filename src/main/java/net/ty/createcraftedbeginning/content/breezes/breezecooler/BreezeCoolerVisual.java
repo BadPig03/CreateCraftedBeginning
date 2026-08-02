@@ -103,7 +103,7 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
         }
 
         float renderTime = AnimationTickHolder.getRenderTime(level);
-        float headY = Mth.sin((renderTime + (blockEntity.hashCode() % 13) * 16.0f) / 16.0f % Mth.TWO_PI) / (currentFrostLevel.isAtLeast(FrostLevel.CHILLED) ? 64 : 16) - animation * 0.75f;
+        float headY = Mth.sin((renderTime + blockEntity.hashCode() % 13 * 16) / 16 % Mth.TWO_PI) / (currentFrostLevel.isAtLeast(FrostLevel.CHILLED) ? 64 : 16) - animation * 0.75f;
         float horizontalAngle = AngleHelper.rad(blockEntity.headAngle.getValue(partialTicks));
         head.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle).translateBack(Translate.CENTER).setChanged();
         if (goggles != null) {
@@ -111,11 +111,11 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
         }
         if (hat != null) {
             hat.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translateY(0.75f);
-            hat.rotateCentered(horizontalAngle + Mth.PI, Direction.UP).translate(0.5f, 0, 0.5f);
+            hat.rotateCentered(horizontalAngle + Mth.PI, Direction.UP).translate(0.5, 0, 0.5);
             hat.setChanged();
         }
         if (wind != null) {
-            wind.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle + AngleHelper.rad(renderTime * (hasWind ? 24.0f : 0) % 360)).translateBack(Translate.CENTER).setChanged();
+            wind.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle + AngleHelper.rad(renderTime * (hasWind ? 24 : 0) % 360)).translateBack(Translate.CENTER).setChanged();
         }
     }
 

@@ -1,6 +1,6 @@
 package net.ty.createcraftedbeginning.provider;
 
-import com.simibubi.create.api.data.recipe.ProcessingRecipeGen;
+import com.simibubi.create.api.data.recipe.BaseRecipeProvider;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.CachedOutput;
@@ -9,10 +9,10 @@ import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeGen;
+import net.ty.createcraftedbeginning.data.CCBChillingRecipes;
 import net.ty.createcraftedbeginning.data.CCBCoolingRecipes;
 import net.ty.createcraftedbeginning.data.CCBDissipationRecipes;
 import net.ty.createcraftedbeginning.data.CCBEnergizationRecipes;
-import net.ty.createcraftedbeginning.data.CCBChillingRecipes;
 import net.ty.createcraftedbeginning.data.CCBForgingPressRecipes;
 import net.ty.createcraftedbeginning.data.CCBGasInjectionRecipes;
 import net.ty.createcraftedbeginning.data.CCBPressurizationRecipes;
@@ -28,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBRecipeProvider extends RecipeProvider {
-    private static final List<ProcessingRecipeGen<?, ?, ?>> GENERATORS = new ArrayList<>();
+    private static final List<BaseRecipeProvider> GENERATORS = new ArrayList<>();
     private static final List<ProcessingWithGasRecipeGen<?, ?, ?>> GENERATORS_WITH_GAS = new ArrayList<>();
 
     public CCBRecipeProvider(PackOutput output, CompletableFuture<Provider> registries) {

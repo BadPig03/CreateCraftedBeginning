@@ -12,8 +12,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public final class GasAmountUtils {
     public static final long MILLIBUCKETS_PER_BUCKET = FluidType.BUCKET_VOLUME;
-    public static final long MILLIBUCKETS_PER_KILOBUCKET = MILLIBUCKETS_PER_BUCKET * 1000L;
-    public static final long MILLIBUCKETS_PER_MEGABUCKET = MILLIBUCKETS_PER_KILOBUCKET * 1000L;
+    public static final long MILLIBUCKETS_PER_KILOBUCKET = MILLIBUCKETS_PER_BUCKET * 1000;
+    public static final long MILLIBUCKETS_PER_MEGABUCKET = MILLIBUCKETS_PER_KILOBUCKET * 1000;
 
     private GasAmountUtils() {
     }

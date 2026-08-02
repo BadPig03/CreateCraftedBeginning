@@ -70,7 +70,7 @@ public class GasStackRenderer implements IIngredientRenderer<GasStack> {
         int color = stack.getHint();
         guiGraphics.setColor(ARGB32.red(color) / 255.0f, ARGB32.green(color) / 255.0f, ARGB32.blue(color) / 255.0f, ARGB32.alpha(color) / 255.0f);
         drawTiledSprite(guiGraphics, CCBGasClientTextures.getGasTexture(stack.getGasHolder()));
-        guiGraphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
+        guiGraphics.setColor(1, 1, 1, 1);
     }
 
     @Override

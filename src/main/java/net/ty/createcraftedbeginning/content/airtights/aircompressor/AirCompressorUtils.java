@@ -39,8 +39,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public final class AirCompressorUtils {
     public static final int LAZY_TICK_RATE = 5;
 
-    private static final int WORK_SCALE = 100;
-
     private static final String COMPOUND_KEY_STORED_HEAT = "StoredHeat";
     private static final String COMPOUND_KEY_COOLANT_EFFICIENCY = "CoolantEfficiency";
     private static final String COMPOUND_KEY_OVERHEAT_STATE = "OverheatState";
@@ -138,7 +136,7 @@ public final class AirCompressorUtils {
 
     public static WorkState accumulateWork(WorkState workState, CompressionPlan plan, float speed, OverheatState overheatState) {
         long accumulatedWork = workState.recipe() == plan.recipe() ? workState.accumulatedWork() : 0;
-        float scaledWork = Mth.abs(speed) * getPressurizationRateMultiplier() * overheatState.getEfficiencyPercent() * WORK_SCALE / 100.0f;
+        float scaledWork = Mth.abs(speed) * getPressurizationRateMultiplier() * overheatState.getEfficiencyPercent();
         long addedWork = Math.max(0, Mth.floor(scaledWork));
         long updatedWork = addedWork >= Long.MAX_VALUE - accumulatedWork ? Long.MAX_VALUE : accumulatedWork + addedWork;
         return new WorkState(plan.recipe(), updatedWork);
@@ -146,7 +144,7 @@ public final class AirCompressorUtils {
 
     public static WorkState pressurize(WorkState workState, CompressionPlan plan, SmartGasTankBehaviour inputTankBehaviour, SmartGasTankBehaviour outputTankBehaviour) {
         long accumulatedWork = workState.recipe() == plan.recipe() ? workState.accumulatedWork() : 0;
-        long batchesByWork = accumulatedWork / WORK_SCALE / plan.inputPerBatch();
+        long batchesByWork = accumulatedWork / 100 / plan.inputPerBatch();
         long batchesByInput = inputTankBehaviour.getPrimaryHandler().getGasAmount() / plan.inputPerBatch();
         long batchesByOutput = outputTankBehaviour.getPrimaryHandler().getSpace() / plan.outputPerBatch().getAmount();
         long batches = Math.min(batchesByWork, Math.min(batchesByInput, batchesByOutput));
@@ -173,7 +171,7 @@ public final class AirCompressorUtils {
             return new WorkState(plan.recipe(), accumulatedWork);
         }
 
-        long remainingWork = accumulatedWork - totalInput * WORK_SCALE;
+        long remainingWork = accumulatedWork - totalInput * 100;
         return new WorkState(plan.recipe(), remainingWork);
     }
 

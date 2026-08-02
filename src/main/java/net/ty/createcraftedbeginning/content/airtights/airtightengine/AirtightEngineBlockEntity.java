@@ -12,6 +12,8 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.AxisDirection;
+import net.minecraft.core.HolderLookup.Provider;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -38,12 +40,15 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
     public static final int BASE_ROTATION_SPEED = 8;
 
     private static final int LAZY_TICK_RATE = 20;
+    private static final String COMPOUND_KEY_GENERATED_SPEED = "GeneratedSpeed";
     private static final List<BlockPos> COG_NEIGHBOUR_OFFSETS = List.of(new BlockPos(-1, -1, 0), new BlockPos(-1, 0, -1), new BlockPos(-1, 0, 1), new BlockPos(-1, 1, 0), new BlockPos(0, -1, -1), new BlockPos(0, -1, 1), new BlockPos(0, 1, -1), new BlockPos(0, 1, 1), new BlockPos(1, -1, 0), new BlockPos(1, 0, -1), new BlockPos(1, 0, 1), new BlockPos(1, 1, 0));
 
     private WeakReference<AirtightTankBlockEntity> source;
     private float pistonPhase;
     private float pistonAnimationSpeed;
     private float lastGeneratedSpeed = Float.NaN;
+    private float restoredGeneratedSpeed;
+    private boolean restoringKineticNetwork;
 
     private CCBAdvancementBehaviour advancementBehaviour;
 
@@ -113,20 +118,24 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
 
     private void tickPiston() {
         pistonAnimationSpeed = Mth.abs(getSpeed());
-        // Reversing rebuilds the kinetic network and can briefly report zero speed client-side.
         if (pistonAnimationSpeed == 0 && !isOverStressed()) {
             pistonAnimationSpeed = Mth.abs(getGeneratedSpeed());
         }
 
         pistonPhase += pistonAnimationSpeed * DELTA_TIME;
-        if (pistonPhase > Mth.TWO_PI) {
-            pistonPhase %= Mth.TWO_PI;
+        if (pistonPhase <= Mth.TWO_PI) {
+            return;
         }
+
+        pistonPhase %= Mth.TWO_PI;
     }
 
     @Override
     public void initialize() {
+        restoringKineticNetwork = level != null && !level.isClientSide && hasNetwork() && restoredGeneratedSpeed != 0;
         super.initialize();
+        restoringKineticNetwork = false;
+        restoredGeneratedSpeed = 0;
         lastGeneratedSpeed = Float.NaN;
         refreshGeneratedRotationIfNeeded();
     }
@@ -152,7 +161,31 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
     }
 
     @Override
+    public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.write(compoundTag, provider, clientPacket);
+        if (clientPacket) {
+            return;
+        }
+
+        compoundTag.putFloat(COMPOUND_KEY_GENERATED_SPEED, getGeneratedSpeed());
+    }
+
+    @Override
+    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.read(compoundTag, provider, clientPacket);
+        if (clientPacket) {
+            return;
+        }
+
+        float storedSpeed = compoundTag.contains(COMPOUND_KEY_GENERATED_SPEED) ? compoundTag.getFloat(COMPOUND_KEY_GENERATED_SPEED) : 0;
+        restoredGeneratedSpeed = Float.isFinite(storedSpeed) ? storedSpeed : 0;
+    }
+
+    @Override
     public float getGeneratedSpeed() {
+        if (restoringKineticNetwork) {
+            return restoredGeneratedSpeed;
+        }
         return BASE_ROTATION_SPEED * getSpeedModifier() * (getRotationDirection() ? 1 : -1);
     }
 
@@ -181,7 +214,6 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
         if (hasNetwork()) {
             getOrCreateNetwork().remove(this);
         }
-
         RotationPropagator.handleRemoved(level, worldPosition, this);
         removeSource();
         attachKinetics();
@@ -197,7 +229,6 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
             tank = findTank(level);
             source = new WeakReference<>(tank);
         }
-
         return tank;
     }
 

@@ -20,6 +20,6 @@ public record AirtightCannonShotContext(Entity projectile, @Nullable Entity owne
      * @return this instance
      */
     public static AirtightCannonShotContext external(Entity source, Holder<Gas> gasHolder, float effectMultiplier) {
-        return new AirtightCannonShotContext(source, source, gasHolder, effectMultiplier, 1.0f, false);
+        return new AirtightCannonShotContext(source, source, gasHolder, effectMultiplier, 1, false);
     }
 }

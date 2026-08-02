@@ -92,9 +92,11 @@ public class AirtightAssemblyDriverLevelCalculator {
         windChargingLevel = 0;
         residueLevel = 0;
         supplyLevel = 0;
-        if (changed) {
-            driverCore.markForSaveAndClientSync();
+        if (!changed) {
+            return;
         }
+
+        driverCore.markForSaveAndClientSync();
     }
 
     public CompoundTag write(boolean clientPacket) {

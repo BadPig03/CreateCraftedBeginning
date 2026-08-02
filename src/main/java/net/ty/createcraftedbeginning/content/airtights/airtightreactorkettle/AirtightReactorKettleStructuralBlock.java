@@ -184,7 +184,7 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
             return;
         }
 
-        if (!(entity instanceof LivingEntity livingEntity) || !new AABB(blockPos).deflate(0.1f).intersects(livingEntity.getBoundingBox())) {
+        if (!(entity instanceof LivingEntity livingEntity) || !new AABB(blockPos).deflate(0.1).intersects(livingEntity.getBoundingBox())) {
             return;
         }
 

@@ -51,7 +51,7 @@ public class PortableGasInterfaceRenderer extends SafeBlockEntityRenderer<Portab
         Direction facing = state.getValue(PortableGasInterfaceBlock.FACING);
         rotateToFacing(middle, facing);
         rotateToFacing(top, facing);
-        middle.translate(0, progress * 0.5f + 0.375f, 0);
+        middle.translate(0, progress * 0.5 + 0.375, 0);
         top.translate(0, progress, 0);
 
         draw.accept(middle);

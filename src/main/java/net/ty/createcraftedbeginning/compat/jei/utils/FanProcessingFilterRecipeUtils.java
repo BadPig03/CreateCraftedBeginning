@@ -69,7 +69,7 @@ public final class FanProcessingFilterRecipeUtils {
         }
 
         ResourceLocation recipeId = displayRecipeId(SMOKING);
-        SmokingRecipe recipe = new SmokingRecipe("", CookingBookCategory.MISC, Ingredient.of(CCBItems.GAS_INJECTION_CHAMBER_FILTER.get()), result, 0.0F, 100);
+        SmokingRecipe recipe = new SmokingRecipe("", CookingBookCategory.MISC, Ingredient.of(CCBItems.GAS_INJECTION_CHAMBER_FILTER.get()), result, 0, 100);
         registration.addRecipes(FAN_SMOKING, List.of(new RecipeHolder<>(recipeId, recipe)));
     }
 
@@ -80,7 +80,7 @@ public final class FanProcessingFilterRecipeUtils {
         }
 
         ResourceLocation recipeId = displayRecipeId(BLASTING);
-        BlastingRecipe recipe = new BlastingRecipe("", CookingBookCategory.MISC, Ingredient.of(CCBItems.GAS_INJECTION_CHAMBER_FILTER.get()), result, 0.0F, 100);
+        BlastingRecipe recipe = new BlastingRecipe("", CookingBookCategory.MISC, Ingredient.of(CCBItems.GAS_INJECTION_CHAMBER_FILTER.get()), result, 0, 100);
         RecipeHolder<AbstractCookingRecipe> holder = new RecipeHolder<>(recipeId, recipe);
         registration.addRecipes(FAN_BLASTING, List.of(holder));
     }

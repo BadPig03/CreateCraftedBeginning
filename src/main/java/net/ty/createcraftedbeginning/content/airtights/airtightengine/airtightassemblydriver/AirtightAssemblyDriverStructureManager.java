@@ -37,7 +37,7 @@ public class AirtightAssemblyDriverStructureManager {
     private static int getMaxAttachedSurfaceBlocks() {
         long width = AirtightTankBlockEntity.getConfiguredMaxWidth();
         long length = AirtightTankBlockEntity.getConfiguredMaxLength();
-        long surfaceArea = 2L * (width * width + 2L * width * length);
+        long surfaceArea = 2 * (width * width + 2 * width * length);
         return Math.clamp(surfaceArea, 0, Integer.MAX_VALUE);
     }
 
@@ -79,9 +79,11 @@ public class AirtightAssemblyDriverStructureManager {
         }
 
         evaluate(controller);
-        if (evaluationRequired) {
-            evaluationCooldown = INCOMPLETE_EVALUATION_RETRY_DELAY;
+        if (!evaluationRequired) {
+            return;
         }
+
+        evaluationCooldown = INCOMPLETE_EVALUATION_RETRY_DELAY;
     }
 
     public void requestEvaluation() {
@@ -121,9 +123,11 @@ public class AirtightAssemblyDriverStructureManager {
         driverCore.getLevelCalculator().updateWindChargingLevel(attachedWindChargingLevel);
 
         boolean hasChanged = previousEngines != attachedEngines || previousOutlets != attachedOutlets || previousChambers != attachedChambers || previousWindLevel != attachedWindChargingLevel || wasStructureValid != structureValid;
-        if (hasChanged) {
-            driverCore.markForClientSync();
+        if (!hasChanged) {
+            return;
         }
+
+        driverCore.markForClientSync();
     }
 
     private boolean scanMultiblockStructure(AirtightTankBlockEntity controller, Level level, Set<BlockPos> outletPositions) {
@@ -231,9 +235,11 @@ public class AirtightAssemblyDriverStructureManager {
         evaluationCooldown = 0;
         driverCore.getResidueManager().clearOutletsPositions();
         driverCore.getLevelCalculator().updateWindChargingLevel(0);
-        if (hasChanged) {
-            driverCore.markForClientSync();
+        if (!hasChanged) {
+            return;
         }
+
+        driverCore.markForClientSync();
     }
 
     public void invalidateForServerLoad() {

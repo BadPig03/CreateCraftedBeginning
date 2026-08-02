@@ -42,12 +42,12 @@ public class AirtightExtendArmItemRenderer extends CustomRenderedItemModelRender
     protected void render(ItemStack arm, CustomRenderedItemModel model, PartialItemModelRenderer renderer, ItemDisplayContext transformType, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         AirtightExtendArmRenderHandler renderHandler = CreateCraftedBeginningClient.AIRTIGHT_EXTEND_ARM_RENDER_HANDLER;
         boolean firstPerson = transformType == ItemDisplayContext.FIRST_PERSON_LEFT_HAND || transformType == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND;
-        float animation = firstPerson ? renderHandler.getAnimation(AnimationTickHolder.getPartialTicks()) : 0.0f;
+        float animation = firstPerson ? renderHandler.getAnimation(AnimationTickHolder.getPartialTicks()) : 0;
         renderer.renderSolid(model.getOriginalModel(), light);
 
         ms.pushPose();
         ms.translate(0, 0, -0.625 - animation * 1.125);
-        ms.scale(1 - animation * 0.125f, 1 - animation * 0.125f, 1 + animation * 9.0f);
+        ms.scale(1 - animation * 0.125f, 1 - animation * 0.125f, 1 + animation * 9);
         renderer.renderSolid(SPRING.get(), light);
         ms.popPose();
 

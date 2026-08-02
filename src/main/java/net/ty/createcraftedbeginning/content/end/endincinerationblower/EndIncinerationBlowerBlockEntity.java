@@ -161,7 +161,7 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
 
             boolean snowGolem = livingEntity instanceof SnowGolem;
             float configuredDamage = Math.max(0, CCBConfig.server().endDevices.ignitionDamage.getF());
-            float damage = snowGolem ? livingEntity.getHealth() + livingEntity.getAbsorptionAmount() + 1.0F : configuredDamage;
+            float damage = snowGolem ? livingEntity.getHealth() + livingEntity.getAbsorptionAmount() + 1 : configuredDamage;
             if (damage <= 0) {
                 continue;
             }
@@ -355,7 +355,7 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
                 continue;
             }
 
-            Vec3 velocity = direction.normalize().scale(0.025F + effectiveRatio * 0.015F);
+            Vec3 velocity = direction.normalize().scale(0.025 + effectiveRatio * 0.015);
             level.addParticle(CCBParticleTypes.END_INCINERATION.getParticleOptions(), offset.x, offset.y, offset.z, velocity.x, velocity.y, velocity.z);
         }
     }

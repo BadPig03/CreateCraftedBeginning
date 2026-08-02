@@ -55,7 +55,7 @@ public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
     PRESSURIZATION(PressurizationRecipe::new),
     REACTOR_KETTLE(ReactorKettleRecipe::new),
     RESIDUE_GENERATION(ResidueGenerationRecipe::new),
-    WIND_CHARGING(WindChargingRecipe::new),
+    WIND_CHARGING(WindChargingRecipe.Serializer::new),
 
     CUTTING_WITH_GAS(CuttingWithGasRecipe::new),
     DEPLOYING_WITH_GAS(DeployerApplicationWithGasRecipe::new),

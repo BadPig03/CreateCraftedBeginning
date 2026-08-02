@@ -40,10 +40,9 @@ public class AirtightAssemblyDriverTooltipBuilder {
         if (currentLevel == 0) {
             return CCBLang.translateDirect("gui.airtight_assembly_driver.idle");
         }
-        if (currentLevel == MAX_LEVEL) {
+        else if (currentLevel == MAX_LEVEL) {
             return CCBLang.translateDirect("gui.airtight_assembly_driver.max_level");
         }
-
         return CCBLang.translateDirect("gui.airtight_assembly_driver.level", String.valueOf(currentLevel));
     }
 
@@ -72,7 +71,6 @@ public class AirtightAssemblyDriverTooltipBuilder {
         int filledBars = Math.max(0, level - minValue);
         int emptyBars = Math.max(0, maxValue - level);
         int upperPadding = Math.max(0, Math.min(MAX_LEVEL - maxValue, (maxValue / 4 + 1) * 4 - maxValue));
-
         return Component.empty().append(createBars(lowerPadding, ChatFormatting.DARK_GREEN)).append(createBars(minimumMarker, ChatFormatting.GREEN)).append(createBars(filledBars, ChatFormatting.DARK_GREEN)).append(createBars(emptyBars, ChatFormatting.DARK_RED)).append(createBars(upperPadding, ChatFormatting.DARK_GRAY));
     }
 
@@ -91,13 +89,13 @@ public class AirtightAssemblyDriverTooltipBuilder {
         tooltip.add(CommonComponents.EMPTY);
         if (outlets == 0) {
             CCBLang.translate("gui.airtight_assembly_driver.via_no_outlet").style(ChatFormatting.GRAY).forGoggles(tooltip);
+            return;
         }
         else if (outlets == 1) {
             CCBLang.translate("gui.airtight_assembly_driver.via_one_outlet").style(ChatFormatting.GRAY).forGoggles(tooltip);
+            return;
         }
-        else {
-            CCBLang.translate("gui.airtight_assembly_driver.via_outlets", outlets).style(ChatFormatting.GRAY).forGoggles(tooltip);
-        }
+        CCBLang.translate("gui.airtight_assembly_driver.via_outlets", outlets).style(ChatFormatting.GRAY).forGoggles(tooltip);
     }
 
     private static void addStressInfo(int engines, int level, List<Component> tooltip) {

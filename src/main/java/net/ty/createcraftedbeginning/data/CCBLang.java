@@ -70,7 +70,7 @@ public class CCBLang extends Lang {
 
     public static LangBuilder secondsWithGameTicks(int ticks, float tickRate) {
         float totalSeconds = ticks / tickRate;
-        if (totalSeconds < 1.0f) {
+        if (totalSeconds < 1) {
             return builder().translate("gui.ticks", ticks);
         }
 

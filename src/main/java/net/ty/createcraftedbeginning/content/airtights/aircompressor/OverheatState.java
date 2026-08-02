@@ -20,11 +20,11 @@ import java.util.Locale;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public enum OverheatState {
-    NORMAL("normal", 100, 0, ChatFormatting.AQUA, 0, 0, 1.0f, 1.0f),
-    SLIGHT("slight", 90, 5, ChatFormatting.YELLOW, 8, 4, 0.7f, 1.0f),
+    NORMAL("normal", 100, 0, ChatFormatting.AQUA, 0, 0, 1, 1),
+    SLIGHT("slight", 90, 5, ChatFormatting.YELLOW, 8, 4, 0.7f, 1),
     MODERATE("moderate", 60, 10, ChatFormatting.GOLD, 4, 2, 0.4f, 0.8f),
     SEVERE("severe", 20, 15, ChatFormatting.RED, 2, 1, 0.1f, 0.3f),
-    MELTDOWN("meltdown", 0, 15, ChatFormatting.DARK_RED, 0, 0, 1.0f, 1.0f);
+    MELTDOWN("meltdown", 0, 15, ChatFormatting.DARK_RED, 0, 0, 1, 1);
 
     private final String serializedName;
     private final int efficiencyPercent;
@@ -133,7 +133,7 @@ public enum OverheatState {
             level.addParticle(ParticleTypes.SMOKE, particlePos.x, particlePos.y, particlePos.z, 0, random.nextFloat() * 0.0125, 0);
         }
         if (random.nextFloat() >= flameThreshold) {
-            Vec3 particlePos = getParticlePosition(pos, random, 1.0f);
+            Vec3 particlePos = getParticlePosition(pos, random, 1);
             level.addParticle(ParticleTypes.FLAME, particlePos.x, particlePos.y, particlePos.z, 0, random.nextFloat() * 0.025, 0);
         }
     }

@@ -55,7 +55,7 @@ public class GasRepackagerRenderer extends SmartBlockEntityRenderer<GasRepackage
         Direction facing = blockState.getValue(PackagerBlock.FACING).getOpposite();
         if (!VisualizationManager.supportsVisualization(be.getLevel())) {
             SuperByteBuffer hatch = CachedBuffers.partial(getHatchModel(be), blockState);
-            hatch.translate(Vec3.atLowerCornerOf(facing.getNormal()).scale(0.5f)).rotateYCenteredDegrees(AngleHelper.horizontalAngle(facing)).rotateXCenteredDegrees(AngleHelper.verticalAngle(facing)).light(light).renderInto(ms, buffer.getBuffer(RenderType.solid()));
+            hatch.translate(Vec3.atLowerCornerOf(facing.getNormal()).scale(0.5)).rotateYCenteredDegrees(AngleHelper.horizontalAngle(facing)).rotateXCenteredDegrees(AngleHelper.verticalAngle(facing)).light(light).renderInto(ms, buffer.getBuffer(RenderType.solid()));
 
             SuperByteBuffer tray = CachedBuffers.partial(getTrayModel(blockState), blockState);
             tray.translate(Vec3.atLowerCornerOf(facing.getNormal()).scale(trayOffset)).rotateYCenteredDegrees(facing.toYRot()).light(light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
@@ -68,7 +68,7 @@ public class GasRepackagerRenderer extends SmartBlockEntityRenderer<GasRepackage
 
         ms.pushPose();
 
-        TransformStack.of(ms).translate(Vec3.atLowerCornerOf(facing.getNormal()).scale(trayOffset)).translate(0.5f, 0.5f, 0.5f).rotateYDegrees(facing.toYRot()).translate(0, 0.125f, 0).scale(1.5f, 1.5f, 1.5f);
+        TransformStack.of(ms).translate(Vec3.atLowerCornerOf(facing.getNormal()).scale(trayOffset)).translate(0.5, 0.5, 0.5).rotateYDegrees(facing.toYRot()).translate(0, 0.125, 0).scale(1.5f, 1.5f, 1.5f);
         Minecraft.getInstance().getItemRenderer().renderStatic(null, renderedBox, ItemDisplayContext.FIXED, false, ms, buffer, be.getLevel(), light, overlay, 0);
 
         ms.popPose();

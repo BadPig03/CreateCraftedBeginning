@@ -30,7 +30,7 @@ public class PneumaticEngineRenderer extends KineticBlockEntityRenderer<Pneumati
         float speed = be.getSpeed();
         float time = AnimationTickHolder.getRenderTime(be.getLevel());
         float offset = getRotationOffsetForPosition(be, pos, Axis.Y);
-        float angle = time * speed * 3.0f / 10 % 360;
+        float angle = time * speed * 3 / 10 % 360;
 
         if (speed != 0) {
             angle += offset;

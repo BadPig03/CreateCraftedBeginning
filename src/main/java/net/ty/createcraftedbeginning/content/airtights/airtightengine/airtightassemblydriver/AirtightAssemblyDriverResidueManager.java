@@ -110,9 +110,11 @@ public class AirtightAssemblyDriverResidueManager {
         failureCooldown = FAILURE_MAX_COOLDOWN;
         itemDistributionCursor = 0;
         fluidDistributionCursor = 0;
-        if (changed) {
-            driverCore.markForSave();
+        if (!changed) {
+            return;
         }
+
+        driverCore.markForSave();
     }
 
     public void loadEmptyPersistentState() {
@@ -142,9 +144,11 @@ public class AirtightAssemblyDriverResidueManager {
             itemDistributionCursor = Math.floorMod(itemDistributionCursor, outletsPositions.size());
             fluidDistributionCursor = Math.floorMod(fluidDistributionCursor, outletsPositions.size());
         }
-        if (previousItemCursor != itemDistributionCursor || previousFluidCursor != fluidDistributionCursor) {
-            driverCore.markForSave();
+        if (previousItemCursor == itemDistributionCursor && previousFluidCursor == fluidDistributionCursor) {
+            return;
         }
+
+        driverCore.markForSave();
     }
 
     public void applyRemovalPenalty(boolean clear) {

@@ -446,7 +446,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
             return;
         }
 
-        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.0f, 0.25f));
+        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1, 0.25f));
     }
 
     private void sendIt(boolean clearPromises) {

@@ -152,7 +152,7 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
             }
 
             level.setBlockAndUpdate(pos, state.setValue(ROTOR, rotorCount + 1));
-            CCBSoundEvents.ROTOR_ADDED.playOnServer(level, pos, 1.0f, 1.0f);
+            CCBSoundEvents.ROTOR_ADDED.playOnServer(level, pos, 1, 1);
             if (!player.isCreative()) {
                 heldItem.shrink(1);
             }
@@ -164,7 +164,7 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
         }
 
         level.setBlockAndUpdate(pos, state.setValue(ROTOR, rotorCount - 1));
-        CCBSoundEvents.ROTOR_REMOVED.playOnServer(level, pos, 1.0f, 1.0f);
+        CCBSoundEvents.ROTOR_REMOVED.playOnServer(level, pos, 1, 1);
         if (!player.isCreative()) {
             ItemStack rotor = new ItemStack(CCBItems.TESLA_TURBINE_ROTOR.asItem());
             ItemHandlerHelper.giveItemToPlayer(player, rotor);

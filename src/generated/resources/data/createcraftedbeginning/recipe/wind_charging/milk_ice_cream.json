@@ -1,5 +1,6 @@
 {
   "type": "createcraftedbeginning:wind_charging",
+  "action": "clear_ill",
   "ingredients": [
     {
       "item": "createcraftedbeginning:milk_ice_cream"

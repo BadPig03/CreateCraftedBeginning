@@ -1,10 +1,10 @@
 {
   "type": "createcraftedbeginning:wind_charging",
+  "action": "cycle_creative",
   "ingredients": [
     {
       "item": "createcraftedbeginning:creative_ice_cream"
     }
   ],
-  "processing_time": 36060,
   "results": []
 }

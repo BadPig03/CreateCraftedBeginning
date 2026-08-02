@@ -71,7 +71,7 @@ public class AirtightChestplateLayer<T extends LivingEntity, M extends EntityMod
         poseStack.pushPose();
 
         model.body.translateAndRotate(poseStack);
-        poseStack.translate(0.5f, 0.75f, 0);
+        poseStack.translate(0.5, 0.75, 0);
         if (CreativeFlightUpgrade.INSTANCE.isEnabled(chestplate)) {
             backpack.rotateZ(Mth.PI).disableDiffuse().light(light).renderInto(poseStack, vertexConsumer);
         }

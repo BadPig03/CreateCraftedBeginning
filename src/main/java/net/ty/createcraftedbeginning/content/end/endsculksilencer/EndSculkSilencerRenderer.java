@@ -28,7 +28,7 @@ public class EndSculkSilencerRenderer extends KineticBlockEntityRenderer<EndScul
         float angle = be.getAnimation().getValue(partialTicks) * Mth.DEG_TO_RAD;
 
         ms.pushPose();
-        ms.translate(0, 0.5f, 0);
+        ms.translate(0, 0.5, 0);
         core.rotateCentered(angle, Axis.X).rotateCentered(angle, Axis.Y).rotateCentered(Mth.sin(Mth.PI / 4), Axis.Z).light(light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
         ms.popPose();
     }

@@ -1,9 +1,6 @@
 package net.ty.createcraftedbeginning.data;
 
-import com.simibubi.create.AllDisplaySources;
-import com.simibubi.create.AllTags.AllBlockTags;
 import com.simibubi.create.AllTags.AllItemTags;
-import com.simibubi.create.api.behaviour.display.DisplaySource;
 import com.simibubi.create.content.decoration.encasing.CasingBlock;
 import com.simibubi.create.content.decoration.encasing.EncasedCTBehaviour;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBlockItem;
@@ -11,26 +8,23 @@ import com.simibubi.create.content.logistics.packager.PackagerBlock;
 import com.simibubi.create.content.processing.AssemblyOperatorBlockItem;
 import com.simibubi.create.foundation.block.connected.CTSpriteShiftEntry;
 import com.simibubi.create.foundation.data.AssetLookup;
+import com.simibubi.create.foundation.data.CreateRegistrate;
+import com.simibubi.create.foundation.data.ModelGen;
 import com.tterrag.registrate.builders.BlockBuilder;
-import com.tterrag.registrate.util.nullness.NonNullFunction;
 import com.tterrag.registrate.util.nullness.NonNullUnaryOperator;
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Item.Properties;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SlabBlock;
-import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.WallBlock;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
@@ -42,6 +36,12 @@ import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe.DirectionalFacing;
+import net.ty.createcraftedbeginning.client.blockextensions.AirtightForgingPressClientExtensions;
+import net.ty.createcraftedbeginning.client.blockextensions.AirtightForgingPressStructuralClientExtensions;
+import net.ty.createcraftedbeginning.client.blockextensions.AirtightReactorKettleClientExtensions;
+import net.ty.createcraftedbeginning.client.blockextensions.AirtightReactorKettleStructuralClientExtensions;
+import net.ty.createcraftedbeginning.client.blockextensions.TeslaTurbineClientExtensions;
+import net.ty.createcraftedbeginning.client.blockextensions.TeslaTurbineStructuralClientExtensions;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightencasedpipe.AirtightEncasedPipeBlock;
@@ -57,7 +57,6 @@ import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.Air
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralCogBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankCTBehavior;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankItem;
-import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankMovementBehavior;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankCTBehavior;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankItem;
@@ -66,10 +65,8 @@ import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentCTBehavio
 import net.ty.createcraftedbeginning.content.airtights.boilersteamoutlet.BoilerSteamOutletBlock;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankCTBehavior;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankItem;
-import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankMovementBehavior;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeModel;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlock;
-import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceMovement;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlock;
 import net.ty.createcraftedbeginning.content.airtights.smartairtightpipe.SmartAirtightPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlockItem;
@@ -77,18 +74,12 @@ import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbine
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.TeslaTurbineStructuralPosition;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock;
-import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberConductor.BreezeChamber;
-import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberMovementBehaviour;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockItem;
-import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerConductor;
-import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerMovementBehaviour;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.EmptyBreezeCoolerBlock;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlockItem;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
-import net.ty.createcraftedbeginning.registry.CCBTags.CCBBlockTags;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -96,17 +87,10 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Supplier;
 
-import static com.simibubi.create.api.behaviour.interaction.MovingInteractionBehaviour.interactionBehaviour;
-import static com.simibubi.create.api.behaviour.movement.MovementBehaviour.movementBehaviour;
-import static com.simibubi.create.foundation.data.CreateRegistrate.casingConnectivity;
-import static com.simibubi.create.foundation.data.CreateRegistrate.connectedTextures;
-import static com.simibubi.create.foundation.data.ModelGen.customItemModel;
-import static net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageType.mountedGasStorage;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class CCBBlockBuilderTransformer {
-    private CCBBlockBuilderTransformer() {
+public final class CCBBlockModelTransformer {
+    private CCBBlockModelTransformer() {
     }
 
     private static int horizontalRotation(Direction facing) {
@@ -127,7 +111,7 @@ public final class CCBBlockBuilderTransformer {
                 int rotationY = horizontalRotation(facing);
                 return ConfiguredModel.builder().modelFile(model).rotationY(rotationY).build();
             });
-        }).tag(CCBBlockTags.CRATES.tag).item(SturdyCrateBlockItem::new).tag(CCBItemTags.CRATES.tag).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).build();
+        }).item(SturdyCrateBlockItem::new).tag(CCBItemTags.CRATES.tag).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).build();
     }
 
     @Contract(pure = true)
@@ -139,22 +123,37 @@ public final class CCBBlockBuilderTransformer {
                 int rotationY = horizontalRotation(facing);
                 return ConfiguredModel.builder().modelFile(model).rotationY(rotationY).build();
             });
-        }).tag(CCBBlockTags.CRATES.tag).item().tag(CCBItemTags.CRATES.tag).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).build();
+        }).item().tag(CCBItemTags.CRATES.tag).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).build();
     }
 
     @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> pneumaticEngine() {
-        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().transform(customItemModel("pneumatic_engine", "item"));
+        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().transform(ModelGen.customItemModel("pneumatic_engine", "item"));
     }
 
     @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> photoStressBearing() {
-        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().transform(customItemModel("photo-stress_bearing", "item"));
+        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().transform(ModelGen.customItemModel("photo-stress_bearing", "item"));
+    }
+
+    @Contract(pure = true)
+    public static <B extends CasingBlock> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> endCasing() {
+        return casing(() -> CCBSpriteShifts.END_CASING, properties -> properties.rarity(Rarity.UNCOMMON));
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> endAlloyBlock() {
+        return simpleBlock("end_alloy_block", properties -> properties.rarity(Rarity.UNCOMMON));
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> powderedAmethystBlock() {
+        return simpleBlock("powdered_amethyst_block", properties -> properties);
     }
 
     @Contract(pure = true)
     public static <B extends CasingBlock> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> casing(Supplier<CTSpriteShiftEntry> ct, NonNullUnaryOperator<Properties> ip) {
-        return builder -> builder.blockstate((context, provider) -> provider.simpleBlock(context.get())).onRegister(connectedTextures(() -> new EncasedCTBehaviour(ct.get()))).onRegister(casingConnectivity((block, connectivity) -> connectivity.makeCasing(block, ct.get()))).tag(AllBlockTags.CASING.tag).item().properties(ip).tag(AllItemTags.CASING.tag).build();
+        return builder -> builder.blockstate((context, provider) -> provider.simpleBlock(context.get())).onRegister(CreateRegistrate.connectedTextures(() -> new EncasedCTBehaviour(ct.get()))).onRegister(CreateRegistrate.casingConnectivity((block, connectivity) -> connectivity.makeCasing(block, ct.get()))).item().properties(ip).tag(AllItemTags.CASING.tag).build();
     }
 
     @Contract(pure = true)
@@ -164,7 +163,7 @@ public final class CCBBlockBuilderTransformer {
 
     @Contract(pure = true)
     public static <B extends AirVentBlock> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airVent() {
-        return builder -> builder.initialProperties(CCBSharedProperties::softMetal).blockstate((c, p) -> p.simpleBlock(c.getEntry(), p.models().getExistingFile(p.modLoc("block/air_vent/block")))).onRegister(connectedTextures(AirVentCTBehaviour::new)).properties(p -> p.mapColor(MapColor.DEEPSLATE).sound(SoundType.NETHERITE_BLOCK).requiresCorrectToolForDrops().dynamicShape()).item().build();
+        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), p.models().getExistingFile(p.modLoc("block/air_vent/block")))).onRegister(CreateRegistrate.connectedTextures(AirVentCTBehaviour::new)).item().build();
     }
 
     @Contract(pure = true)
@@ -186,7 +185,7 @@ public final class CCBBlockBuilderTransformer {
             for (Direction direction : Iterate.directions) {
                 multipart.part().modelFile(provider.models().getExistingFile(provider.modLoc("block/airtight_encased_pipe/" + direction.getSerializedName()))).addModel().condition(AirtightEncasedPipeBlock.PROPERTY_BY_DIRECTION.get(direction), false).end();
             }
-        }).item(AirtightEncasedPipeBlockItem::new).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(customItemModel("airtight_encased_pipe", "item"));
+        }).item(AirtightEncasedPipeBlockItem::new).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(ModelGen.customItemModel("airtight_encased_pipe", "item"));
     }
 
     @Contract(pure = true)
@@ -259,7 +258,7 @@ public final class CCBBlockBuilderTransformer {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtightTank() {
-        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.standardModel(c, p))).transform(mountedGasStorage(CCBMountedStorage.AIRTIGHT_TANK)).onRegister(connectedTextures(AirtightTankCTBehavior::new)).onRegister(movementBehaviour(new AirtightTankMovementBehavior())).item(AirtightTankItem::new).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.standardModel(c, p))).onRegister(CreateRegistrate.connectedTextures(AirtightTankCTBehavior::new)).item(AirtightTankItem::new).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)
@@ -267,12 +266,12 @@ public final class CCBBlockBuilderTransformer {
         return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
             int rotationY = state.getValue(HorizontalAirtightTankBlock.HORIZONTAL_AXIS) == Axis.X ? 90 : 0;
             return ConfiguredModel.builder().modelFile(AssetLookup.standardModel(context, provider)).rotationY(rotationY).build();
-        })).transform(mountedGasStorage(CCBMountedStorage.HORIZONTAL_AIRTIGHT_TANK)).onRegister(connectedTextures(HorizontalAirtightTankCTBehavior::new)).onRegister(movementBehaviour(new AirtightTankMovementBehavior())).item(HorizontalAirtightTankItem::new).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+        })).onRegister(CreateRegistrate.connectedTextures(HorizontalAirtightTankCTBehavior::new)).item(HorizontalAirtightTankItem::new).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> creativeAirtightTank() {
-        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.standardModel(c, p))).transform(mountedGasStorage(CCBMountedStorage.CREATIVE_AIRTIGHT_TANK)).onRegister(connectedTextures(CreativeAirtightTankCTBehavior::new)).onRegister(movementBehaviour(new CreativeAirtightTankMovementBehavior())).item(CreativeAirtightTankItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.standardModel(c, p))).onRegister(CreateRegistrate.connectedTextures(CreativeAirtightTankCTBehavior::new)).item(CreativeAirtightTankItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)
@@ -295,7 +294,7 @@ public final class CCBBlockBuilderTransformer {
             int rotationY = isVertical ? 0 : (int) facing.toYRot();
 
             return ConfiguredModel.builder().modelFile(model).rotationY(rotationY).build();
-        })).properties(properties -> properties.isRedstoneConductor((state, level, pos) -> false)).item().model(AssetLookup::customItemModel).build();
+        })).item().model(AssetLookup::customItemModel).build();
     }
 
     @Contract(pure = true)
@@ -308,17 +307,17 @@ public final class CCBBlockBuilderTransformer {
             int rotationY = isVertical ? 0 : (int) facing.toYRot();
 
             return ConfiguredModel.builder().modelFile(model).rotationY(rotationY).build();
-        })).properties(properties -> properties.isRedstoneConductor((state, level, pos) -> false)).item().model(AssetLookup::customItemModel).build();
+        })).item().model(AssetLookup::customItemModel).build();
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> gasFactoryGauge() {
-        return builder -> builder.blockstate((c, p) -> p.horizontalFaceBlock(c.get(), AssetLookup.partialBaseModel(c, p))).properties(p -> p.forceSolidOn().noOcclusion()).onRegister(CCBRegistrate.blockModel(() -> GasFactoryGaugeModel::new)).transform(DisplaySource.displaySource(AllDisplaySources.GAUGE_STATUS)).item(FactoryPanelBlockItem::new).model(AssetLookup::customItemModel).build();
+        return builder -> builder.blockstate((c, p) -> p.horizontalFaceBlock(c.get(), AssetLookup.partialBaseModel(c, p))).onRegister(CCBRegistrate.blockModel(() -> GasFactoryGaugeModel::new)).item(FactoryPanelBlockItem::new).model(AssetLookup::customItemModel).build();
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> portableGasInterface() {
-        return builder -> builder.blockstate((c, p) -> p.directionalBlock(c.get(), AssetLookup.partialBaseModel(c, p))).onRegister(movementBehaviour(new PortableGasInterfaceMovement())).item().properties(Properties::fireResistant).tag(AllItemTags.CONTRAPTION_CONTROLLED.tag).transform(customItemModel());
+        return builder -> builder.blockstate((c, p) -> p.directionalBlock(c.get(), AssetLookup.partialBaseModel(c, p))).item().properties(Properties::fireResistant).tag(AllItemTags.CONTRAPTION_CONTROLLED.tag).transform(ModelGen.customItemModel());
     }
 
     @Contract(pure = true)
@@ -341,7 +340,7 @@ public final class CCBBlockBuilderTransformer {
             Direction facing = state.getValue(BreezeCoolerBlock.FACING);
             int rotationY = horizontalRotation(facing);
             return ConfiguredModel.builder().modelFile(model).rotationY(rotationY).build();
-        }, BlockStateProperties.WATERLOGGED)).onRegister(movementBehaviour(new BreezeCoolerMovementBehaviour())).onRegister(interactionBehaviour(new BreezeCoolerConductor.BreezeChamber())).item().model(AssetLookup.customBlockItemModel("breeze_cooler", "block_with_breeze")).build();
+        }, BlockStateProperties.WATERLOGGED)).item().model(AssetLookup.customBlockItemModel("breeze_cooler", "block_with_breeze")).build();
     }
 
     @Contract(pure = true)
@@ -353,7 +352,7 @@ public final class CCBBlockBuilderTransformer {
                 int rotationY = horizontalRotation(facing);
                 return ConfiguredModel.builder().modelFile(model).rotationY(rotationY).build();
             }, BlockStateProperties.WATERLOGGED);
-        }).onRegister(movementBehaviour(new BreezeChamberMovementBehaviour())).onRegister(interactionBehaviour(new BreezeChamber())).item().properties(Properties::fireResistant).model(AssetLookup.customBlockItemModel("breeze_chamber", "item")).build();
+        }).item().properties(Properties::fireResistant).model(AssetLookup.customBlockItemModel("breeze_chamber", "item")).build();
     }
 
     @Contract(pure = true)
@@ -422,7 +421,7 @@ public final class CCBBlockBuilderTransformer {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> teslaTurbine() {
-        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> {
+        return builder -> builder.clientExtension(() -> TeslaTurbineClientExtensions::new).blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> {
             Axis axis = state.getValue(BlockStateProperties.AXIS);
             int rotationX = axis == Axis.Y ? 0 : 90;
             int rotationY = switch (axis) {
@@ -437,17 +436,17 @@ public final class CCBBlockBuilderTransformer {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtightReactorKettle() {
-        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/airtight_reactor_kettle/block"))).build())).item(AirtightReactorKettleBlockItem::new).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+        return builder -> builder.clientExtension(() -> AirtightReactorKettleClientExtensions::new).blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/airtight_reactor_kettle/block"))).build())).item(AirtightReactorKettleBlockItem::new).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtightForgingPress() {
-        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/airtight_forging_press/block"))).build())).item(AirtightForgingPressBlockItem::new).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+        return builder -> builder.clientExtension(() -> AirtightForgingPressClientExtensions::new).blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/airtight_forging_press/block"))).build())).item(AirtightForgingPressBlockItem::new).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> teslaTurbineStructural() {
-        return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(state -> {
+        return b -> b.clientExtension(() -> TeslaTurbineStructuralClientExtensions::new).blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(state -> {
             Axis axis = state.getValue(TeslaTurbineStructuralBlock.AXIS);
             TeslaTurbineStructuralPosition position = state.getValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION);
             String modelPath = String.format("block/tesla_turbine/%s", position.getSerializedName());
@@ -462,43 +461,43 @@ public final class CCBBlockBuilderTransformer {
                 case Z -> rotationX = 90;
             }
             return ConfiguredModel.builder().modelFile(model).rotationX(rotationX).rotationY(rotationY).build();
-        })).properties(BlockBehaviour.Properties::noOcclusion).lang("Tesla Turbine");
+        })).lang("Tesla Turbine");
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtightReactorKettleStructural() {
-        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
+        return builder -> builder.clientExtension(() -> AirtightReactorKettleStructuralClientExtensions::new).blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
             String position = state.getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION).getSerializedName();
             String modelPath = String.format("block/airtight_reactor_kettle/%s", position);
             return ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc(modelPath))).build();
-        })).properties(BlockBehaviour.Properties::noOcclusion);
+        })).lang("Airtight Reactor Kettle");
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtightReactorKettleStructuralCog() {
-        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
+        return builder -> builder.clientExtension(() -> AirtightReactorKettleStructuralClientExtensions::new).blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
             String position = state.getValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION).getSerializedName();
             String modelPath = String.format("block/airtight_reactor_kettle/%s", position);
             return ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc(modelPath))).build();
-        })).properties(BlockBehaviour.Properties::noOcclusion);
+        })).lang("Airtight Reactor Kettle");
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtightForgingPressStructural() {
-        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
+        return builder -> builder.clientExtension(() -> AirtightForgingPressStructuralClientExtensions::new).blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
             String position = state.getValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION).getSerializedName();
             String modelPath = String.format("block/airtight_forging_press/%s", position);
             return ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc(modelPath))).build();
-        })).properties(BlockBehaviour.Properties::noOcclusion);
+        })).lang("Airtight Forging Press");
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtightForgingPressStructuralShaft() {
-        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
+        return builder -> builder.clientExtension(() -> AirtightForgingPressStructuralClientExtensions::new).blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
             String position = state.getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION).getSerializedName();
             String modelPath = String.format("block/airtight_forging_press/%s", position);
             return ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc(modelPath))).build();
-        })).properties(BlockBehaviour.Properties::noOcclusion);
+        })).lang("Airtight Forging Press");
     }
 
     @Contract(pure = true)
@@ -532,12 +531,12 @@ public final class CCBBlockBuilderTransformer {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> obsidianAlikeBlocks(String name) {
-        return builder -> builder.initialProperties(CCBSharedProperties::obsidian).blockstate((c, p) -> p.simpleBlock(c.get(), p.models().cubeAll(c.getName(), p.modLoc("block/obsidians/" + name)))).transform(pickaxeOnly()).item().tag(CCBItemTags.OBSIDIAN_BRICKS.tag).build();
+        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.get(), p.models().cubeAll(c.getName(), p.modLoc("block/obsidians/" + name)))).item().tag(CCBItemTags.OBSIDIAN_BRICKS.tag).build();
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> cryingObsidianAlikeBlocks(String name) {
-        return builder -> builder.initialProperties(CCBSharedProperties::cryingObsidian).blockstate((c, p) -> p.simpleBlock(c.get(), p.models().cubeAll(c.getName(), p.modLoc("block/obsidians/" + name)))).transform(pickaxeOnly()).item().tag(CCBItemTags.CRYING_OBSIDIAN_BRICKS.tag).build();
+        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.get(), p.models().cubeAll(c.getName(), p.modLoc("block/obsidians/" + name)))).item().tag(CCBItemTags.CRYING_OBSIDIAN_BRICKS.tag).build();
     }
 
     @Contract(pure = true)
@@ -547,17 +546,17 @@ public final class CCBBlockBuilderTransformer {
 
     @Contract(pure = true)
     public static <B extends SlabBlock> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> obsidianAlikeSlabs(String sideName, String topName) {
-        return builder -> builder.initialProperties(CCBSharedProperties::obsidian).blockstate((context, provider) -> provider.slabBlock(context.get(), provider.models().slab(context.getName(), provider.modLoc("block/obsidians/" + sideName), provider.modLoc("block/obsidians/" + topName), provider.modLoc("block/obsidians/" + topName)), provider.models().slabTop(context.getName() + "_top", provider.modLoc("block/obsidians/" + sideName), provider.modLoc("block/obsidians/" + topName), provider.modLoc("block/obsidians/" + topName)), provider.models().cubeColumn(context.getName() + "_double", provider.modLoc("block/obsidians/" + sideName), provider.modLoc("block/obsidians/" + topName)))).transform(pickaxeOnly()).tag(BlockTags.SLABS).item().tag(ItemTags.SLABS).build();
+        return builder -> builder.blockstate((context, provider) -> provider.slabBlock(context.get(), provider.models().slab(context.getName(), provider.modLoc("block/obsidians/" + sideName), provider.modLoc("block/obsidians/" + topName), provider.modLoc("block/obsidians/" + topName)), provider.models().slabTop(context.getName() + "_top", provider.modLoc("block/obsidians/" + sideName), provider.modLoc("block/obsidians/" + topName), provider.modLoc("block/obsidians/" + topName)), provider.models().cubeColumn(context.getName() + "_double", provider.modLoc("block/obsidians/" + sideName), provider.modLoc("block/obsidians/" + topName)))).item().tag(ItemTags.SLABS).build();
     }
 
     @Contract(pure = true)
     public static <B extends StairBlock> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> obsidianAlikeStairs(String name) {
-        return builder -> builder.initialProperties(CCBSharedProperties::obsidian).blockstate((c, p) -> p.stairsBlock(c.get(), p.modLoc("block/obsidians/" + name))).tag(BlockTags.STAIRS).item().tag(ItemTags.STAIRS).build();
+        return builder -> builder.blockstate((c, p) -> p.stairsBlock(c.get(), p.modLoc("block/obsidians/" + name))).item().tag(ItemTags.STAIRS).build();
     }
 
     @Contract(pure = true)
     public static <B extends WallBlock> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> obsidianAlikeWall(String name) {
-        return builder -> builder.initialProperties(CCBSharedProperties::obsidian).blockstate((c, p) -> p.wallBlock(c.get(), name + "_wall", p.modLoc("block/obsidians/" + name))).tag(BlockTags.WALLS).item().transform(b -> b.model((c, p) -> p.wallInventory(c.getName(), p.modLoc("block/obsidians/" + name)))).tag(ItemTags.WALLS).build();
+        return builder -> builder.blockstate((c, p) -> p.wallBlock(c.get(), name + "_wall", p.modLoc("block/obsidians/" + name))).item().transform(b -> b.model((c, p) -> p.wallInventory(c.getName(), p.modLoc("block/obsidians/" + name)))).tag(ItemTags.WALLS).build();
     }
 
     @Contract(pure = true)
@@ -580,48 +579,4 @@ public final class CCBBlockBuilderTransformer {
         return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/end_sculk_silencer/structural"))).build())).lang("End Sculk Silencer");
     }
 
-    @Contract(pure = true)
-    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> axeOrPickaxe() {
-        return b -> b.tag(BlockTags.MINEABLE_WITH_AXE).tag(BlockTags.MINEABLE_WITH_PICKAXE);
-    }
-
-    @Contract(pure = true)
-    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> axeOnly() {
-        return b -> b.tag(BlockTags.MINEABLE_WITH_AXE);
-    }
-
-    @Contract(pure = true)
-    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> minableWithShovel() {
-        return b -> b.tag(BlockTags.MINEABLE_WITH_SHOVEL);
-    }
-
-    @Contract(pure = true)
-    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> pickaxeOnly() {
-        return b -> b.tag(BlockTags.MINEABLE_WITH_PICKAXE);
-    }
-
-    @Contract(pure = true)
-    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> breezes() {
-        return builder -> builder.initialProperties(CCBSharedProperties::hardMetal).transform(pickaxeOnly()).properties(p -> p.mapColor(MapColor.COLOR_BLUE).noOcclusion());
-    }
-
-    @Contract(pure = true)
-    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> airtightPropertiesWithoutAirtightComponents() {
-        return builder -> builder.initialProperties(CCBSharedProperties::airtightMetal).transform(pickaxeOnly()).properties(p -> p.mapColor(MapColor.METAL).sound(SoundType.HEAVY_CORE).requiresCorrectToolForDrops());
-    }
-
-    @Contract(pure = true)
-    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> airtightPropertiesWithoutOcclusion() {
-        return builder -> builder.initialProperties(CCBSharedProperties::airtightMetal).transform(pickaxeOnly()).properties(p -> p.mapColor(MapColor.METAL).sound(SoundType.HEAVY_CORE).requiresCorrectToolForDrops().noOcclusion()).tag(CCBBlockTags.AIRTIGHT_COMPONENTS.tag);
-    }
-
-    @Contract(pure = true)
-    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> airtightStructural() {
-        return builder -> builder.initialProperties(CCBSharedProperties::airtightMetal).transform(pickaxeOnly()).properties(p -> p.mapColor(MapColor.METAL).sound(SoundType.EMPTY).requiresCorrectToolForDrops().noOcclusion()).tag(CCBBlockTags.AIRTIGHT_COMPONENTS.tag);
-    }
-
-    @Contract(pure = true)
-    public static <T extends Block, P> @NotNull NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> endProperties() {
-        return builder -> builder.initialProperties(CCBSharedProperties::obsidian).transform(pickaxeOnly()).properties(p -> p.mapColor(MapColor.COLOR_GREEN).noOcclusion()).tag(CCBBlockTags.END_COMPONENTS.tag);
-    }
 }

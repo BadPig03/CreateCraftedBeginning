@@ -105,7 +105,7 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
         int useTime = isUsing ? cannon.getUseDuration(player) - player.getUseItemRemainingTicks() : 0;
         float chargeTime = useTime + (isUsing ? partialTick : 0);
         int efficientUseTime = AirtightCannonUtils.getEfficientUseTime(cannon);
-        float barrelOffset = Mth.clamp(chargeTime / efficientUseTime, 0, 2) / 10.0f;
+        float barrelOffset = Mth.clamp(chargeTime / efficientUseTime, 0, 2) / 10;
 
         poseStack.pushPose();
         poseStack.translate(0, 0, barrelOffset);
@@ -114,7 +114,7 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
 
         boolean leftHanded = player.getMainArm() == HumanoidArm.LEFT;
         float animation = CreateCraftedBeginningClient.AIRTIGHT_CANNON_RENDER_HANDLER.getAnimation(inMainHand ^ leftHanded, partialTick);
-        float pistonOffset = Mth.clamp(animation * 2, 0, 1) / 8.0f;
+        float pistonOffset = Mth.clamp(animation * 2, 0, 1) / 8;
 
         poseStack.pushPose();
         poseStack.translate(pistonOffset, 0, 0);

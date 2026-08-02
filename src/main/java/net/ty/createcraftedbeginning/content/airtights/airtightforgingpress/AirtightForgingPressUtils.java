@@ -155,7 +155,7 @@ public final class AirtightForgingPressUtils {
 
             ItemHandlerHelper.giveItemToPlayer(player, item);
             inventory.setStackInSlot(0, ItemStack.EMPTY);
-            level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1.0f + level.getRandom().nextFloat());
+            level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
             return ItemInteractionResult.SUCCESS;
         }
         if (!inventory.isItemValid(0, stack)) {
@@ -171,7 +171,7 @@ public final class AirtightForgingPressUtils {
 
         player.setItemInHand(hand, inventory.getStackInSlot(0));
         inventory.setStackInSlot(0, remainder);
-        level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1.0f + level.getRandom().nextFloat());
+        level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
         return ItemInteractionResult.SUCCESS;
     }
 
@@ -187,7 +187,7 @@ public final class AirtightForgingPressUtils {
 
         if (stack.isEmpty()) {
             if (returnStoredItems(master, player)) {
-                level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1.0f + level.getRandom().nextFloat());
+                level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
             }
             return ItemInteractionResult.SUCCESS;
         }
@@ -203,7 +203,7 @@ public final class AirtightForgingPressUtils {
         if (ItemStack.matches(stack, remainder)) {
             player.setItemInHand(hand, inputInventory.getStackInSlot(0));
             inputInventory.setStackInSlot(0, remainder);
-            level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1.0f + level.getRandom().nextFloat());
+            level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
             return ItemInteractionResult.SUCCESS;
         }
 
@@ -248,7 +248,7 @@ public final class AirtightForgingPressUtils {
 
             ItemHandlerHelper.giveItemToPlayer(player, stackInSlot);
             inventory.setStackInSlot(0, ItemStack.EMPTY);
-            level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1.0f + level.getRandom().nextFloat());
+            level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
             return ItemInteractionResult.SUCCESS;
         }
         if (stack.is(AllItems.WRENCH)) {
@@ -263,7 +263,7 @@ public final class AirtightForgingPressUtils {
         if (ItemStack.matches(stack, remainder)) {
             player.setItemInHand(hand, processingInventory.getStackInSlot(0));
             processingInventory.setStackInSlot(0, remainder);
-            level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1.0f + level.getRandom().nextFloat());
+            level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
             return ItemInteractionResult.SUCCESS;
         }
 

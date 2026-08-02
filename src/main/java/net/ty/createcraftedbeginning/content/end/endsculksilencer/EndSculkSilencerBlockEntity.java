@@ -32,7 +32,7 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
     public static final int LAZY_TICK_RATE = 20;
 
     private static final String COMPOUND_KEY_SHOW_OUTLINE = "ShowOutline";
-    private static final float MAX_ANIMATION_SPEED = 40.0F;
+    private static final float MAX_ANIMATION_SPEED = 40;
     private static Consumer<EndSculkSilencerBlockEntity> clientTicker = silencer -> {};
 
     private final LerpedFloat animationSpeed;

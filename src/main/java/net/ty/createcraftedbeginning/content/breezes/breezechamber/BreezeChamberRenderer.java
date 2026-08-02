@@ -46,7 +46,7 @@ public class BreezeChamberRenderer extends SmartBlockEntityRenderer<BreezeChambe
 
     public static void renderShared(PoseStack ms, @Nullable PoseStack modelTransform, MultiBufferSource bufferSource, Level level, BlockState blockState, WindLevel windLevel, float animation, float horizontalAngle, boolean drawGoggles, @Nullable PartialModel drawHat, boolean drawWind, float windSpeed, int hashCode, int light, @Nullable Matrix4f matrixWorld) {
         float renderTime = AnimationTickHolder.getRenderTime(level);
-        float headY = Mth.sin((renderTime + (hashCode % 13) * 16.0f) / 16.0f % Mth.TWO_PI) / (windLevel.isAtLeast(WindLevel.GALE) ? 64 : 16) - animation * 0.75f;
+        float headY = Mth.sin((renderTime + hashCode % 13 * 16) / 16 % Mth.TWO_PI) / (windLevel.isAtLeast(WindLevel.GALE) ? 64 : 16) - animation * 0.75f;
 
         ms.pushPose();
 
@@ -55,7 +55,7 @@ public class BreezeChamberRenderer extends SmartBlockEntityRenderer<BreezeChambe
         if (modelTransform != null) {
             breezeBuffer.transform(modelTransform);
         }
-        breezeBuffer.translate(0, headY - 0.125f, 0);
+        breezeBuffer.translate(0, headY - 0.125, 0);
         breezeBuffer.rotateCentered(horizontalAngle, Direction.UP).light(light).renderInto(ms, bufferSource.getBuffer(RenderType.cutoutMipped()));
         if (matrixWorld != null) {
             breezeBuffer.useLevelLight(level, matrixWorld);
@@ -66,7 +66,7 @@ public class BreezeChamberRenderer extends SmartBlockEntityRenderer<BreezeChambe
             if (modelTransform != null) {
                 gogglesBuffer.transform(modelTransform);
             }
-            gogglesBuffer.translate(0, headY + 0.375f, 0);
+            gogglesBuffer.translate(0, headY + 0.375, 0);
             gogglesBuffer.rotateCentered(horizontalAngle, Direction.UP).light(light).renderInto(ms, bufferSource.getBuffer(RenderType.solid()));
             if (matrixWorld != null) {
                 gogglesBuffer.useLevelLight(level, matrixWorld);
@@ -78,14 +78,14 @@ public class BreezeChamberRenderer extends SmartBlockEntityRenderer<BreezeChambe
             if (modelTransform != null) {
                 hatBuffer.transform(modelTransform);
             }
-            hatBuffer.translate(0, headY - 0.125f, 0);
+            hatBuffer.translate(0, headY - 0.125, 0);
             if (breezeModel == CCBPartialModels.BREEZE_CALM) {
                 hatBuffer.translateY(0.5f).center().scale(0.75f).uncenter();
             }
             else {
                 hatBuffer.translateY(0.75f);
             }
-            hatBuffer.rotateCentered(horizontalAngle + Mth.PI, Direction.UP).translate(0.5f, 0, 0.5f).light(light).renderInto(ms, bufferSource.getBuffer(RenderType.cutoutMipped()));
+            hatBuffer.rotateCentered(horizontalAngle + Mth.PI, Direction.UP).translate(0.5, 0, 0.5).light(light).renderInto(ms, bufferSource.getBuffer(RenderType.cutoutMipped()));
             if (matrixWorld != null) {
                 hatBuffer.useLevelLight(level, matrixWorld);
             }
@@ -96,8 +96,8 @@ public class BreezeChamberRenderer extends SmartBlockEntityRenderer<BreezeChambe
             if (modelTransform != null) {
                 windBuffer.transform(modelTransform);
             }
-            windBuffer.translate(0, headY - 0.125f, 0);
-            windBuffer.translate(0.5f, 0.5f, 0.5f).rotateY(horizontalAngle + AngleHelper.rad(renderTime * windSpeed % 360)).translate(-0.5f, -0.5f, -0.5f).light(light).renderInto(ms, bufferSource.getBuffer(RenderType.cutout()));
+            windBuffer.translate(0, headY - 0.125, 0);
+            windBuffer.translate(0.5, 0.5, 0.5).rotateY(horizontalAngle + AngleHelper.rad(renderTime * windSpeed % 360)).translate(-0.5, -0.5, -0.5).light(light).renderInto(ms, bufferSource.getBuffer(RenderType.cutout()));
             if (matrixWorld != null) {
                 windBuffer.useLevelLight(level, matrixWorld);
             }

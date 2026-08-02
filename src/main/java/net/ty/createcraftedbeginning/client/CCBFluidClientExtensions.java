@@ -80,13 +80,13 @@ public final class CCBFluidClientExtensions {
             @Override
             public void modifyFogRender(Camera camera, FogMode mode, float renderDistance, float partialTick, float nearDistance, float farDistance, FogShape shape) {
                 float modifier = fluidType.clientFogDistanceModifier();
-                if (modifier == 1.0f) {
+                if (modifier == 1) {
                     return;
                 }
 
                 RenderSystem.setShaderFogShape(FogShape.CYLINDER);
                 RenderSystem.setShaderFogStart(-8);
-                RenderSystem.setShaderFogEnd(96.0f * modifier);
+                RenderSystem.setShaderFogEnd(96 * modifier);
             }
 
             @Override

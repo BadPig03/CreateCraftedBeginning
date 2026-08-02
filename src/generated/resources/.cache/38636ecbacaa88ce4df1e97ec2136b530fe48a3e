@@ -1,4 +1,4 @@
-// 1.21.1	2026-07-31T19:31:30.4043822	Create Crafted Beginning's Processing Recipes With Gas
+// 1.21.1	2026-08-02T11:13:56.9256886	Create Crafted Beginning's Processing Recipes With Gas
 17f6de5a374f5d298f5588d884e70b087217f4af data/createcraftedbeginning/recipe/dissipation/ethereal.json
 62f12995b52b6664a0fe34176f0f5eeec1628254 data/createcraftedbeginning/recipe/dissipation/natural.json
 0b4489a5ac6c020d0d52369409943bdfdb0950fe data/createcraftedbeginning/recipe/dissipation/pressurized_ethereal.json
@@ -173,7 +173,6 @@ e686af900661b21c1d97bd07ecec250389986cc5 data/createcraftedbeginning/recipe/reac
 0a926f6933ddad45fd136083ba72c9ab4d5eb1d5 data/createcraftedbeginning/recipe/reactor_kettle/nether_wart.json
 b2277c10bc022d8ea74d98e213b58e580aaf1c63 data/createcraftedbeginning/recipe/reactor_kettle/nether_wart_pressurized.json
 b8a0bdeae325d6f8f458ff2b929a7eb4b86a66b5 data/createcraftedbeginning/recipe/reactor_kettle/obsidian.json
-dc4ff500c5646b5055872abb2d9c2db4f53c0ee7 data/createcraftedbeginning/recipe/reactor_kettle/test.json
 1e66f468e10fc10b47b7dedbfea9a74a09fecb16 data/createcraftedbeginning/recipe/reactor_kettle/ultrawarm_air.json
 9a14a26e8f7751e275b5dcfa86b52224493f195a data/createcraftedbeginning/recipe/residue_generation/ethereal.json
 1e74003d10edbdbb4d764a1caaa4af9dbda42e92 data/createcraftedbeginning/recipe/residue_generation/moist.json

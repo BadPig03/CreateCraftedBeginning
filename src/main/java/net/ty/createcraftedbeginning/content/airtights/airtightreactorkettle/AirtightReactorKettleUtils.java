@@ -224,7 +224,7 @@ public final class AirtightReactorKettleUtils {
             extractedAny = true;
         }
         if (extractedAny) {
-            level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1.0f + level.getRandom().nextFloat());
+            level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
         }
     }
 

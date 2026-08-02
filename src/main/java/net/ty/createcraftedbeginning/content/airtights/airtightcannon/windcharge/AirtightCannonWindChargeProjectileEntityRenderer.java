@@ -22,7 +22,7 @@ import java.util.Map;
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class AirtightCannonWindChargeProjectileEntityRenderer extends EntityRenderer<AirtightCannonWindChargeProjectileEntity> {
-    private static final double MIN_CAMERA_DISTANCE_SQUARED = 16.0d;
+    private static final double MIN_CAMERA_DISTANCE_SQUARED = 16.0;
     private final Map<AirtightCannonVisualHandler, AirtightCannonWindChargeModel> models = new IdentityHashMap<>();
 
     public AirtightCannonWindChargeProjectileEntityRenderer(Context context) {
@@ -40,7 +40,7 @@ public class AirtightCannonWindChargeProjectileEntityRenderer extends EntityRend
         float animationTick = windCharge.tickCount + partialTick;
         model.setupAnimation(handler.getAnimationType(), handler.getRotationSpeed(), animationTick);
 
-        VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.breezeWind(handler.getTextureLocation(), animationTick * 0.03f % 1.0f, 0.0f));
+        VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.breezeWind(handler.getTextureLocation(), animationTick * 0.03f % 1, 0));
         model.renderToBuffer(poseStack, vertexConsumer, light, OverlayTexture.NO_OVERLAY);
         super.render(windCharge, entityYaw, partialTick, poseStack, bufferSource, light);
     }

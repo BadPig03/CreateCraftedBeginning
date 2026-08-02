@@ -32,7 +32,7 @@ public class EndIncinerationParticle extends TextureSheetParticle {
     @Override
     public float getQuadSize(float scaleFactor) {
         float progress = (age + scaleFactor) / lifetime;
-        return quadSize * (1.0f - progress * progress);
+        return quadSize * (1 - progress * progress);
     }
 
     @Override

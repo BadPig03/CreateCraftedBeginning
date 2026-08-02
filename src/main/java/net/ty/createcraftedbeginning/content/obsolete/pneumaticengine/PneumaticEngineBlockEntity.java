@@ -61,7 +61,7 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
     @Override
     public float getGeneratedSpeed() {
         int speedDirection = isClockwise ? 1 : -1;
-        return isActive ? speedDirection * 48.0f : 0;
+        return isActive ? speedDirection * 48 : 0;
     }
 
     @Override
@@ -116,7 +116,7 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
         double angle = level.random.nextDouble() * Math.PI * 2;
         double distance = 0.75 + level.random.nextDouble() * 0.75;
         Vec3 targetPosition = centerOf.add(Math.cos(angle) * distance, Math.sin(angle) * distance, level.random.nextDouble() * 0.6 - 0.3);
-        Vec3 motion = targetPosition.subtract(centerOf).normalize().scale(0.075f);
+        Vec3 motion = targetPosition.subtract(centerOf).normalize().scale(0.075);
         level.addParticle(ParticleTypes.CLOUD, centerOf.x, centerOf.y, centerOf.z, motion.x, motion.y, motion.z);
     }
 

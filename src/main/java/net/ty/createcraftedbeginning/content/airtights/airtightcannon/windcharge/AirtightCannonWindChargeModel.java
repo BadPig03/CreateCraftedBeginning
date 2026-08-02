@@ -44,24 +44,24 @@ public class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWin
     public static LayerDefinition createLayerDefinition(CannonModelType modelType) {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
-        PartDefinition bone = root.addOrReplaceChild(NAME_BONE, CubeListBuilder.create(), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition bone = root.addOrReplaceChild(NAME_BONE, CubeListBuilder.create(), PartPose.offset(0, 0, 0));
 
         switch (modelType) {
             case NATURAL -> {
-                bone.addOrReplaceChild(NAME_WIND_OUTER, CubeListBuilder.create().texOffs(15, 20).addBox(-4.0f, -1.0f, -4.0f, 8.0f, 2.0f, 8.0f, new CubeDeformation(0.0f)), PartPose.offsetAndRotation(0.0f, 0.0f, 0.0f, 0.0f, -0.7853982f, 0.0f));
-                bone.addOrReplaceChild(NAME_WIND_INNER, CubeListBuilder.create().texOffs(0, 9).addBox(-3.0f, -2.0f, -3.0f, 6.0f, 4.0f, 6.0f, new CubeDeformation(0.0f)), PartPose.offsetAndRotation(0.0f, 0.0f, 0.0f, 0.0f, -0.7853982f, 0.0f));
+                bone.addOrReplaceChild(NAME_WIND_OUTER, CubeListBuilder.create().texOffs(15, 20).addBox(-4, -1, -4, 8, 2, 8, new CubeDeformation(0)), PartPose.offsetAndRotation(0, 0, 0, 0, -0.7853982f, 0));
+                bone.addOrReplaceChild(NAME_WIND_INNER, CubeListBuilder.create().texOffs(0, 9).addBox(-3, -2, -3, 6, 4, 6, new CubeDeformation(0)), PartPose.offsetAndRotation(0, 0, 0, 0, -0.7853982f, 0));
             }
             case ETHEREAL -> {
-                bone.addOrReplaceChild(NAME_WIND_OUTER, CubeListBuilder.create().texOffs(15, 20).addBox(-4.0f, -1.0f, -4.0f, 8.0f, 2.0f, 8.0f, new CubeDeformation(0.0f)), PartPose.offsetAndRotation(0.0f, 0.0f, 0.0f, -0.7853982f, -0.7853982f, 0.0f));
-                bone.addOrReplaceChild(NAME_WIND_INNER, CubeListBuilder.create().texOffs(0, 9).addBox(-3.0f, -2.0f, -3.0f, 6.0f, 4.0f, 6.0f, new CubeDeformation(0.0f)), PartPose.offsetAndRotation(0.0f, 0.0f, 0.0f, Mth.PI / 4, -0.7853982f, 0.0f));
+                bone.addOrReplaceChild(NAME_WIND_OUTER, CubeListBuilder.create().texOffs(15, 20).addBox(-4, -1, -4, 8, 2, 8, new CubeDeformation(0)), PartPose.offsetAndRotation(0, 0, 0, -0.7853982f, -0.7853982f, 0));
+                bone.addOrReplaceChild(NAME_WIND_INNER, CubeListBuilder.create().texOffs(0, 9).addBox(-3, -2, -3, 6, 4, 6, new CubeDeformation(0)), PartPose.offsetAndRotation(0, 0, 0, Mth.PI / 4, -0.7853982f, 0));
             }
             case CORE_ONLY -> {
-                bone.addOrReplaceChild(NAME_WIND_OUTER, CubeListBuilder.create(), PartPose.offsetAndRotation(0.0f, 0.0f, 0.0f, 0.0f, -0.7853982f, 0.0f));
-                bone.addOrReplaceChild(NAME_WIND_INNER, CubeListBuilder.create(), PartPose.offsetAndRotation(0.0f, 0.0f, 0.0f, 0.0f, -0.7853982f, 0.0f));
+                bone.addOrReplaceChild(NAME_WIND_OUTER, CubeListBuilder.create(), PartPose.offsetAndRotation(0, 0, 0, 0, -0.7853982f, 0));
+                bone.addOrReplaceChild(NAME_WIND_INNER, CubeListBuilder.create(), PartPose.offsetAndRotation(0, 0, 0, 0, -0.7853982f, 0));
             }
         }
 
-        bone.addOrReplaceChild(NAME_CORE, CubeListBuilder.create().texOffs(0, 0).addBox(-2.0f, -2.0f, -2.0f, 4.0f, 4.0f, 4.0f, new CubeDeformation(0.0f)), PartPose.offset(0.0f, 0.0f, 0.0f));
+        bone.addOrReplaceChild(NAME_CORE, CubeListBuilder.create().texOffs(0, 0).addBox(-2, -2, -2, 4, 4, 4, new CubeDeformation(0)), PartPose.offset(0, 0, 0));
         return LayerDefinition.create(mesh, 64, 32);
     }
 

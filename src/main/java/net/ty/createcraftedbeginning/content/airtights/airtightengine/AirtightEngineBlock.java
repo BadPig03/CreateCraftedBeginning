@@ -72,7 +72,6 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
             Direction facing = state.getValue(FACING);
             return facing.getAxis() == axis;
         }
-
         return axis.isVertical();
     }
 
@@ -194,7 +193,7 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
 
     @Override
     public float getParticleInitialRadius() {
-        return 1.0f;
+        return 1;
     }
 
     @Override

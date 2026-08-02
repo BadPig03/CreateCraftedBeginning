@@ -47,7 +47,7 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
     private static final double EXTERNAL_IMPULSE_THRESHOLD_SQR = EXTERNAL_IMPULSE_THRESHOLD * EXTERNAL_IMPULSE_THRESHOLD;
 
     private Holder<Gas> gasHolder = Gas.EMPTY_GAS_HOLDER;
-    private float multiplier = 1.0f;
+    private float multiplier = 1;
     private float knockback = 0.1f;
     private boolean flame;
     private Vec3 initMotion = Vec3.ZERO;

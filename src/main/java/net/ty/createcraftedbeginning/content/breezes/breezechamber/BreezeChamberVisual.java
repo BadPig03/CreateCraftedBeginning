@@ -87,7 +87,7 @@ public class BreezeChamberVisual extends AbstractBlockEntityVisual<BreezeChamber
         }
 
         float renderTime = AnimationTickHolder.getRenderTime(level);
-        float headY = Mth.sin((renderTime + (blockEntity.hashCode() % 13) * 16.0f) / 16.0f % (2 * Mth.PI)) / (renderWindLevel.isAtLeast(WindLevel.GALE) ? 64 : 16) - animation * 0.75f;
+        float headY = Mth.sin((renderTime + blockEntity.hashCode() % 13 * 16) / 16 % (2 * Mth.PI)) / (renderWindLevel.isAtLeast(WindLevel.GALE) ? 64 : 16) - animation * 0.75f;
         float horizontalAngle = AngleHelper.rad(blockEntity.headAngle.getValue(partialTicks));
         head.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle).translateBack(Translate.CENTER).setChanged();
         if (goggles != null) {
@@ -97,7 +97,7 @@ public class BreezeChamberVisual extends AbstractBlockEntityVisual<BreezeChamber
             hat.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translateY(0.75f).rotateCentered(horizontalAngle + Mth.PI, Direction.UP).translate(0.5f, 0, 0.5f).setChanged();
         }
         if (wind != null) {
-            wind.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle + AngleHelper.rad(renderTime * (hasWind ? 24.0f : 0) % 360)).translateBack(Translate.CENTER).setChanged();
+            wind.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle + AngleHelper.rad(renderTime * (hasWind ? 24 : 0) % 360)).translateBack(Translate.CENTER).setChanged();
         }
     }
 

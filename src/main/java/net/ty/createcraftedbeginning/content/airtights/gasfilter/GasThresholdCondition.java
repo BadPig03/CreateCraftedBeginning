@@ -55,7 +55,7 @@ public class GasThresholdCondition extends CargoThresholdCondition {
     @Override
     protected boolean test(Level level, Train train, CompoundTag context) {
         Ops operator = getOperator();
-        long targetAmount = Math.max(0L, (long) getThreshold() * GasAmountUtils.MILLIBUCKETS_PER_BUCKET);
+        long targetAmount = Math.max(0, (long) getThreshold() * GasAmountUtils.MILLIBUCKETS_PER_BUCKET);
         long totalAmount = 0;
         for (Carriage carriage : train.carriages) {
             if (!(carriage.storage instanceof IMountedStorageManagerWithGas withGas)) {

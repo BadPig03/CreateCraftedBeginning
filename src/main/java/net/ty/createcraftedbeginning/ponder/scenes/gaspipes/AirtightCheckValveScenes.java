@@ -98,7 +98,7 @@ public class AirtightCheckValveScenes {
         scene.overlay().showText(60).text("Gas attempting to flow from the opposite direction is blocked").colored(PonderPalette.RED).pointAt(valveVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-		scene.overlay().showControls(util.vector().blockSurface(valvePos, Direction.UP).subtract(0, 0.125f, 0), Pointing.DOWN, 67).rightClick().withItem(wrenchItem.copy());
+		scene.overlay().showControls(util.vector().blockSurface(valvePos, Direction.UP).subtract(0, 0.125, 0), Pointing.DOWN, 67).rightClick().withItem(wrenchItem.copy());
         
 		scene.idle(7);
 		scene.world().modifyBlock(valvePos, s -> s.setValue(AirtightCheckValveBlock.INVERTED, true), false);

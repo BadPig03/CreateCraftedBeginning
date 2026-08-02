@@ -55,6 +55,7 @@ import net.ty.createcraftedbeginning.recipe.ForgingPressRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
+import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -578,12 +579,12 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         float cycleDuration = CYCLE_DURATION;
         float ticks = Mth.clamp(operatingTicks + partialTicks * getOperationSpeed(), 0, cycleDuration);
         float distance;
-        if (ticks < cycleDuration * 2.0f / 3.0f) {
-            float progress = ticks / cycleDuration * 2.0f;
+        if (ticks < cycleDuration * 2 / 3) {
+            float progress = ticks / cycleDuration * 2;
             distance = Mth.clamp(Mth.square(progress) * progress, 0, 1);
         }
         else {
-            distance = Mth.clamp((cycleDuration - ticks) / cycleDuration * 3.0f, 0, 1);
+            distance = Mth.clamp((cycleDuration - ticks) / cycleDuration * 3, 0, 1);
         }
         return PRESS_HEAD_IDLE_OFFSET + distance * PRESS_HEAD_TRAVEL;
     }
@@ -733,7 +734,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
             return;
         }
 
-        Vec3 pos = VecHelper.getCenterOf(getBlockPos()).add(0, -0.625f, 0);
+        Vec3 pos = VecHelper.getCenterOf(getBlockPos()).add(0, -0.625, 0);
         serverLevel.sendParticles(new ItemParticleOption(ParticleTypes.ITEM, stack), pos.x, pos.y, pos.z, 16, 0.15, 0.05, 0.15, 0.08);
     }
 
@@ -743,7 +744,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
             finalSlots = copyStacks(finalSlots);
         }
 
-        private static List<ItemStack> copyStacks(List<ItemStack> stacks) {
+        private static @Unmodifiable List<ItemStack> copyStacks(List<ItemStack> stacks) {
             return stacks.stream().map(ItemStack::copy).toList();
         }
     }

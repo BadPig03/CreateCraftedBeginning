@@ -16,6 +16,7 @@ import net.ty.createcraftedbeginning.client.CCBGUITextures;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedBreezeChamber;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
+import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingAction;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -43,14 +44,14 @@ public class WindChargingCategory extends CCBRecipeCategory<WindChargingRecipe> 
         CCBGUITextures.JEI_SHADOW.render(graphics, 122, 37);
         CCBGUITextures.JEI_LONG_ARROW.render(graphics, 42, 30);
         CCBGUITextures.JEI_WIND_CHARGING_BACKGROUND.render(graphics, 16, 8);
-        if (recipe.isCreativeIceCream()) {
+        if (recipe.getAction() == WindChargingAction.CYCLE_CREATIVE) {
             MutableComponent text = Component.translatable("jade.gas.infinity_mark");
             graphics.drawString(font, text, getBackground().getWidth() / 2 - font.width(text) / 2 - 12, 22, COLOR_NORMAL, false);
             galeChamber.draw(graphics, chamberX, 18);
             return;
         }
 
-        if (recipe.isMilky()) {
+        if (recipe.getAction() == WindChargingAction.CLEAR_ILL) {
             MutableComponent text = CCBLang.translateDirect("gui.clear_ill_state");
             graphics.drawString(font, text, getBackground().getWidth() / 2 - font.width(text) / 2 - 15, 22, COLOR_NORMAL, false);
             calmChamber.draw(graphics, chamberX, 18);

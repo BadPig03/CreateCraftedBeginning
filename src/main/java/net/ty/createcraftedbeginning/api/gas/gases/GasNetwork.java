@@ -326,7 +326,7 @@ public final class GasNetwork {
         }
 
         if (blockFace.equals(start)) {
-            transferSpeed = (int) Math.max(1, connection.getInboundPressure() / 2.0f);
+            transferSpeed = (int) Math.max(1, connection.getInboundPressure() / 2);
         }
         if (frontierMembership.add(blockFace)) {
             frontier.addLast(blockFace);

@@ -51,7 +51,7 @@ public class GasInjectionChamberScenes {
         Vec3 lowerPipeVec = util.vector().centerOf(lowerPipePos);
         Vec3 chamberTargetVec = util.vector().centerOf(chamberTargetPos);
         Vec3 upperPipeVec = util.vector().centerOf(upperPipePos);
-        Vec3 subtractedVec = chamberVec.subtract(0, 1.6875f, 0);
+        Vec3 subtractedVec = chamberVec.subtract(0, 1.6875, 0);
 
         AABB pipeArea = new AABB(upperPipeVec, upperPipeVec);
 

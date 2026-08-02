@@ -149,10 +149,10 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
         level.setBlockAndUpdate(pos, state.setValue(property, !isOpen));
         level.scheduleTick(pos, this, 1, TickPriority.HIGH);
         if (isOpen) {
-            CCBSoundEvents.SHEET_ADDED.playOnServer(level, pos, 1.0f, 1.0f);
+            CCBSoundEvents.SHEET_ADDED.playOnServer(level, pos, 1, 1);
         }
         else {
-            CCBSoundEvents.SHEET_REMOVED.playOnServer(level, pos, 1.0f, 1.0f);
+            CCBSoundEvents.SHEET_REMOVED.playOnServer(level, pos, 1, 1);
         }
         return InteractionResult.SUCCESS;
     }

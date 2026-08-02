@@ -103,9 +103,11 @@ public class AirtightAssemblyDriverFlowMeter {
         gatheredSupply = 0;
         updateGasSupply();
         driverCore.markForSave();
-        if (previousRollingSupply != rollingSupply) {
-            driverCore.markForClientSync();
+        if (previousRollingSupply == rollingSupply) {
+            return;
         }
+
+        driverCore.markForClientSync();
     }
 
     public CompoundTag write(Provider provider, boolean clientPacket) {
@@ -126,10 +128,10 @@ public class AirtightAssemblyDriverFlowMeter {
     public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         if (clientPacket) {
             readClient(compoundTag, provider);
+            return;
         }
-        else {
-            readPersistent(compoundTag, provider);
-        }
+
+        readPersistent(compoundTag, provider);
     }
 
     public void loadEmptyState() {

@@ -24,7 +24,12 @@ public class AirtightCannonRenderHandler extends ShootableGadgetRenderHandler {
 
     @Override
     protected void playSound(InteractionHand hand, Vec3 position) {
-        AirtightCannonWindChargeProjectileEntity.playLaunchSound(Minecraft.getInstance().level, position, nextPitch);
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level == null) {
+            return;
+        }
+
+        AirtightCannonWindChargeProjectileEntity.playLaunchSound(level, position, nextPitch);
     }
 
     @Override
@@ -34,7 +39,7 @@ public class AirtightCannonRenderHandler extends ShootableGadgetRenderHandler {
 
     @Override
     protected void transformTool(PoseStack poseStack, float flip, float equipProgress, float recoil, float partialTick) {
-        poseStack.translate(flip * -0.1f, 0, 0.14f);
+        poseStack.translate(flip * -0.1, 0, 0.14);
         poseStack.scale(0.75f, 0.75f, 0.75f);
         TransformStack.of(poseStack).rotateXDegrees(recoil * 80);
     }
@@ -53,7 +58,7 @@ public class AirtightCannonRenderHandler extends ShootableGadgetRenderHandler {
         }
 
         for (int i = 0; i < 2; i++) {
-            Vec3 particleMotion = VecHelper.offsetRandomly(motion.scale(0.1f), level.random, 0.025f);
+            Vec3 particleMotion = VecHelper.offsetRandomly(motion.scale(0.1), level.random, 0.025f);
             level.addParticle(new ItemParticleOption(ParticleTypes.ITEM, stack), location.x, location.y, location.z, particleMotion.x, particleMotion.y, particleMotion.z);
         }
     }

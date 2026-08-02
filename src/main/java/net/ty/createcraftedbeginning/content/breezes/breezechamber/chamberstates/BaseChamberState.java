@@ -11,6 +11,7 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamber
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity.ChargerType;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
+import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingAction;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingData;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
@@ -82,30 +83,31 @@ public abstract class BaseChamberState {
         return InteractionResult.PASS;
     }
 
-    protected InteractionResult insertWindCharge(BreezeChamberBlockEntity chamber, ItemStack stack, boolean forceOverflow, boolean simulate, boolean milkCuresIllness) {
+    protected InteractionResult insertWindCharge(BreezeChamberBlockEntity chamber, ItemStack stack, boolean forceOverflow, boolean simulate) {
         Level level = chamber.getLevel();
         if (level == null) {
             return InteractionResult.FAIL;
         }
 
         WindChargingData data = WindChargingRecipe.getWindChargingTime(level, stack);
-        if (data.isMilky()) {
-            if (!milkCuresIllness) {
-                return InteractionResult.PASS;
-            }
-
-            if (!simulate) {
-                chamber.setChamberState(new InactiveChamberState());
-                chamber.playSound(false);
-                chamber.spawnParticleBurst(false);
-                if (!level.isClientSide && stack.is(Items.MILK_BUCKET)) {
-                    chamber.getAdvancementBehaviour().awardPlayer(CCBAdvancements.UNIVERSAL_ANTIDOTE);
-                }
-            }
-            return InteractionResult.SUCCESS;
+        if (data.amount() <= 0) {
+            return InteractionResult.FAIL;
+        }
+        if (isCreative && data.action() != WindChargingAction.CYCLE_CREATIVE) {
+            return InteractionResult.PASS;
         }
 
-        int chargingTime = data.time();
+        return switch (data.action()) {
+            case CHARGE -> insertCharge(chamber, stack, data.time(), forceOverflow, simulate);
+            case CLEAR_ILL -> clearIll(chamber, stack, simulate);
+            case CYCLE_CREATIVE -> {
+                cycleCreative(chamber, simulate);
+                yield InteractionResult.SUCCESS;
+            }
+        };
+    }
+
+    private InteractionResult insertCharge(BreezeChamberBlockEntity chamber, ItemStack stack, int chargingTime, boolean forceOverflow, boolean simulate) {
         if (chargingTime == 0) {
             return InteractionResult.FAIL;
         }
@@ -125,5 +127,34 @@ public abstract class BaseChamberState {
         chamber.playSound(bad);
         chamber.spawnParticleBurst(bad);
         return InteractionResult.SUCCESS;
+    }
+
+    private InteractionResult clearIll(BreezeChamberBlockEntity chamber, ItemStack stack, boolean simulate) {
+        if (getChargerType() != ChargerType.BAD) {
+            return InteractionResult.PASS;
+        }
+
+        if (!simulate) {
+            Level level = chamber.getLevel();
+            chamber.setChamberState(new InactiveChamberState());
+            chamber.playSound(false);
+            chamber.spawnParticleBurst(false);
+            if (level != null && !level.isClientSide && stack.is(Items.MILK_BUCKET)) {
+                chamber.getAdvancementBehaviour().awardPlayer(CCBAdvancements.UNIVERSAL_ANTIDOTE);
+            }
+        }
+        return InteractionResult.SUCCESS;
+    }
+
+    private void cycleCreative(BreezeChamberBlockEntity chamber, boolean simulate) {
+        if (simulate) {
+            return;
+        }
+
+        ChargerType chargerType = CreativeChamberState.getNextChargeType(getChargerType());
+        chamber.setChamberState(chargerType == ChargerType.NONE ? new InactiveChamberState() : new CreativeChamberState(chargerType));
+        boolean bad = chargerType == ChargerType.BAD;
+        chamber.spawnParticleBurst(bad);
+        chamber.playSound(bad);
     }
 }

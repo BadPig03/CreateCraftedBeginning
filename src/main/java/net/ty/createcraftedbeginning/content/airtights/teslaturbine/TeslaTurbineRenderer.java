@@ -50,7 +50,7 @@ public class TeslaTurbineRenderer extends KineticBlockEntityRenderer<TeslaTurbin
         float spacing = 14.0f / (rotorCount + 1);
         for (int i = 0; i < rotorCount; i++) {
             SuperByteBuffer rotor = getRotorModel(state, axis);
-            rotor.translate(0, (spacing * (i + 1) - 7.0f) / 16.0f, 0);
+            rotor.translate(0, (spacing * (i + 1) - 7) / 16, 0);
             kineticRotationTransform(rotor, blockEntity, Axis.Y, angle, light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
         }
     }

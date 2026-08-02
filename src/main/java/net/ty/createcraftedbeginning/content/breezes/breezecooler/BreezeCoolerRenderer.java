@@ -46,7 +46,7 @@ public class BreezeCoolerRenderer extends SmartBlockEntityRenderer<BreezeCoolerB
 
     public static void renderShared(PoseStack ms, @Nullable PoseStack modelTransform, MultiBufferSource bufferSource, Level level, BlockState blockState, FrostLevel frostLevel, float animation, float horizontalAngle, boolean drawGoggles, @Nullable PartialModel drawHat, boolean drawWind, float windSpeed, int hashCode, int light, @Nullable Matrix4f matrixWorld) {
         float renderTime = AnimationTickHolder.getRenderTime(level);
-        float headY = Mth.sin((renderTime + (hashCode % 13) * 16.0f) / 16.0f % Mth.TWO_PI) / (frostLevel.isAtLeast(FrostLevel.CHILLED) ? 64 : 16) - animation * 0.75f;
+        float headY = Mth.sin((renderTime + hashCode % 13 * 16) / 16 % Mth.TWO_PI) / (frostLevel.isAtLeast(FrostLevel.CHILLED) ? 64 : 16) - animation * 0.75f;
 
         ms.pushPose();
 
@@ -66,7 +66,7 @@ public class BreezeCoolerRenderer extends SmartBlockEntityRenderer<BreezeCoolerB
             if (modelTransform != null) {
                 gogglesBuffer.transform(modelTransform);
             }
-            gogglesBuffer.translate(0, headY + 0.5f, 0);
+            gogglesBuffer.translate(0, headY + 0.5, 0);
             gogglesBuffer.rotateCentered(horizontalAngle, Direction.UP).light(light).renderInto(ms, bufferSource.getBuffer(RenderType.solid()));
             if (matrixWorld != null) {
                 gogglesBuffer.useLevelLight(level, matrixWorld);
@@ -85,7 +85,7 @@ public class BreezeCoolerRenderer extends SmartBlockEntityRenderer<BreezeCoolerB
             else {
                 hatBuffer.translateY(0.75f);
             }
-            hatBuffer.rotateCentered(horizontalAngle + Mth.PI, Direction.UP).translate(0.5f, 0, 0.5f).light(light).renderInto(ms, bufferSource.getBuffer(RenderType.cutoutMipped()));
+            hatBuffer.rotateCentered(horizontalAngle + Mth.PI, Direction.UP).translate(0.5, 0, 0.5).light(light).renderInto(ms, bufferSource.getBuffer(RenderType.cutoutMipped()));
             if (matrixWorld != null) {
                 hatBuffer.useLevelLight(level, matrixWorld);
             }
@@ -97,7 +97,7 @@ public class BreezeCoolerRenderer extends SmartBlockEntityRenderer<BreezeCoolerB
                 windBuffer.transform(modelTransform);
             }
             windBuffer.translate(0, headY, 0);
-            windBuffer.translate(0.5f, 0.5f, 0.5f).rotateY(horizontalAngle + AngleHelper.rad(renderTime * windSpeed % 360)).translate(-0.5f, -0.5f, -0.5f).light(light).renderInto(ms, bufferSource.getBuffer(RenderType.cutout()));
+            windBuffer.translate(0.5, 0.5, 0.5).rotateY(horizontalAngle + AngleHelper.rad(renderTime * windSpeed % 360)).translate(-0.5, -0.5, -0.5).light(light).renderInto(ms, bufferSource.getBuffer(RenderType.cutout()));
             if (matrixWorld != null) {
                 windBuffer.useLevelLight(level, matrixWorld);
             }

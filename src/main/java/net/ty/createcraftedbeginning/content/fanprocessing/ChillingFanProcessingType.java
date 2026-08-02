@@ -48,7 +48,7 @@ public class ChillingFanProcessingType implements FanProcessingType {
             return;
         }
 
-        level.addParticle(ParticleTypes.SNOWFLAKE, pos.x + (level.random.nextFloat() - 0.5f) * 0.5f, pos.y + 0.5f, pos.z + (level.random.nextFloat() - 0.5f) * 0.5f, 0, 0.125f, 0);
+        level.addParticle(ParticleTypes.SNOWFLAKE, pos.x + (level.random.nextFloat() - 0.5) * 0.5, pos.y + 0.5, pos.z + (level.random.nextFloat() - 0.5) * 0.5, 0, 0.125, 0);
     }
 
     @Override

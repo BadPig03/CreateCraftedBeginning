@@ -23,7 +23,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AirtightHandheldDrillRenderHandler {
     private static final float MAX_ANIMATION = 1.2f;
     private static final float MIN_ANIMATION = 0.001f;
-    private static final float ACCELERATION = (float) Math.pow(MAX_ANIMATION / MIN_ANIMATION, 0.1f);
+    private static final float ACCELERATION = (float) Math.pow(MAX_ANIMATION / MIN_ANIMATION, 0.1);
     private static final float DECELERATION = 1 / ACCELERATION;
 
     protected float handAnimation;
@@ -92,7 +92,7 @@ public class AirtightHandheldDrillRenderHandler {
         ItemDisplayContext displayContext = rightHand ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
 
         ms.pushPose();
-        ms.translate(flip * 0.56f, -0.52f + event.getEquipProgress() * -0.6f, -0.72f);
+        ms.translate(flip * 0.56, -0.52 + event.getEquipProgress() * -0.6, -0.72);
         minecraft.getEntityRenderDispatcher().getItemInHandRenderer().renderItem(player, drill, displayContext, !rightHand, ms, event.getMultiBufferSource(), event.getPackedLight());
         ms.popPose();
 

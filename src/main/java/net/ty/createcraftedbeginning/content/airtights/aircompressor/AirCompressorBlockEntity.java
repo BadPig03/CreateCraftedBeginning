@@ -73,7 +73,7 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
             if (side == inputSide) {
                 return compressor.inputTankBehaviour.getCapability();
             }
-            if (side == inputSide.getOpposite()) {
+            else if (side == inputSide.getOpposite()) {
                 return compressor.outputTankBehaviour.getCapability();
             }
             return null;
@@ -367,7 +367,6 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         if (queriedSide == outputSide) {
             return new MultiFace(worldPosition, Set.of(outputSide));
         }
-
         return null;
     }
 

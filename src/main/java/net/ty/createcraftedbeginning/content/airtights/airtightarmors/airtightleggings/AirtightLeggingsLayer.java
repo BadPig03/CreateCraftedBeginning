@@ -61,7 +61,7 @@ public class AirtightLeggingsLayer<T extends LivingEntity, M extends EntityModel
         SuperByteBuffer shield = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_SHIELD, CCBBlocks.GAS_CANISTER_BLOCK.getDefaultState());
         poseStack.pushPose();
         model.body.translateAndRotate(poseStack);
-        poseStack.translate(0.5f, 0.75f, 0);
+        poseStack.translate(0.5, 0.75, 0);
         shield.rotateZ(Mth.PI).disableDiffuse().light(light).renderInto(poseStack, consumer);
         poseStack.popPose();
     }

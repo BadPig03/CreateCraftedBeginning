@@ -46,7 +46,7 @@ public class PortableGasInterfaceInstance {
 
     public void beginFrame(float progress) {
         applyBaseTransform(middle);
-        middle.translate(0, progress * 0.5f + 0.375f, 0);
+        middle.translate(0, progress * 0.5 + 0.375, 0);
         middle.setChanged();
 
         applyBaseTransform(top);

@@ -1,10 +1,11 @@
 {
   "type": "createcraftedbeginning:wind_charging",
+  "action": "charge",
   "ingredients": [
     {
       "item": "minecraft:cake"
     }
   ],
-  "processing_time": 3104,
+  "processing_time": 2434,
   "results": []
 }

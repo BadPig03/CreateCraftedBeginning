@@ -55,7 +55,7 @@ public class AirtightPipeScenes {
 
         AABB pipeArea = new AABB(leftPipeVec, util.vector().centerOf(rightPipePos));
         AABB pumpArea = new AABB(leftPipeVec, leftPipeVec);
-        AABB connectionArea = new AABB(util.vector().centerOf(middlePipePos), util.vector().centerOf(middlePipePos)).inflate(0.16666667f);
+        AABB connectionArea = new AABB(util.vector().centerOf(middlePipePos), util.vector().centerOf(middlePipePos)).inflate(0.16666667);
 
         Object pipeObject = new Object();
         Object upConnectionObject = new Object();

@@ -12,15 +12,19 @@ import net.ty.createcraftedbeginning.registry.CCBItems;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.concurrent.CompletableFuture;
 
+import static net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingAction.CHARGE;
+import static net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingAction.CLEAR_ILL;
+import static net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingAction.CYCLE_CREATIVE;
+
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBWindChargingRecipes extends WindChargingRecipeGen {
-    GeneratedRecipe CAKE = create("cake", b -> b.require(Items.CAKE).duration(3104));
-    GeneratedRecipe BUILDERS_TEA = create("builders_tea", b -> b.require(AllItems.BUILDERS_TEA).duration(445).output(Items.GLASS_BOTTLE));
-    GeneratedRecipe MILK_BUCKET = create("milk_bucket", b -> b.require(Items.MILK_BUCKET).duration(0));
-    GeneratedRecipe MILK_ICE_CREAM = create("milk_ice_cream", b -> b.require(CCBItems.MILK_ICE_CREAM).duration(0));
-    GeneratedRecipe CREATIVE_ICE_CREAM = create("creative_ice_cream", b -> b.require(CCBItems.CREATIVE_ICE_CREAM).duration(36060));
+    GeneratedRecipe CAKE = create("cake", CHARGE, b -> b.require(Items.CAKE).duration(2434));
+    GeneratedRecipe BUILDERS_TEA = create("builders_tea", CHARGE, b -> b.require(AllItems.BUILDERS_TEA).duration(288).output(Items.GLASS_BOTTLE));
+    GeneratedRecipe MILK_BUCKET = create("milk_bucket", CLEAR_ILL, b -> b.require(Items.MILK_BUCKET));
+    GeneratedRecipe MILK_ICE_CREAM = create("milk_ice_cream", CLEAR_ILL, b -> b.require(CCBItems.MILK_ICE_CREAM));
+    GeneratedRecipe CREATIVE_ICE_CREAM = create("creative_ice_cream", CYCLE_CREATIVE, b -> b.require(CCBItems.CREATIVE_ICE_CREAM));
 
     public CCBWindChargingRecipes(PackOutput output, CompletableFuture<Provider> registries) {
         super(output, registries, CreateCraftedBeginning.MOD_ID);

@@ -53,9 +53,9 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
         }
 
         poseStack.pushPose();
-        poseStack.translate(0.5f, -0.1f - press.getPressHeadDistance(partialTicks), 0.5f);
+        poseStack.translate(0.5, -0.1 - press.getPressHeadDistance(partialTicks), 0.5);
         if (!Minecraft.getInstance().getItemRenderer().getModel(stack, null, null, 0).isGui3d()) {
-            poseStack.translate(0, 0.1875f, 0);
+            poseStack.translate(0, 0.1875, 0);
         }
         TransformStack.of(poseStack).nudge(0);
 
@@ -72,7 +72,7 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
         }
 
         poseStack.pushPose();
-        poseStack.translate(0.5f, -0.0625f, 0.5f);
+        poseStack.translate(0.5, -0.0625, 0.5);
         TransformStack.of(poseStack).nudge(0);
 
         Random random = getRenderRandom(press.getBlockPos().asLong());
@@ -89,7 +89,7 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
         }
 
         poseStack.pushPose();
-        poseStack.translate(0.5f, -0.0625f, 0.5f);
+        poseStack.translate(0.5, -0.0625, 0.5);
 
         long posSeed = press.getBlockPos().asLong();
         for (int slot = 0; slot < slots; slot++) {

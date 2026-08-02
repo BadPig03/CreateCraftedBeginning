@@ -212,9 +212,11 @@ public class AirtightAssemblyDriverCore {
         }
 
         long consumedAmount = handler.fill(drainableGas, GasAction.EXECUTE);
-        if (consumedAmount > 0) {
-            buffer.drain(consumedAmount, GasAction.EXECUTE);
+        if (consumedAmount <= 0) {
+            return;
         }
+
+        buffer.drain(consumedAmount, GasAction.EXECUTE);
     }
 
     private void flushDirtyState(AirtightTankBlockEntity controller) {
@@ -223,10 +225,12 @@ public class AirtightAssemblyDriverCore {
             saveDirty = false;
         }
 
-        if (clientDirty) {
-            controller.sendData();
-            clientDirty = false;
+        if (!clientDirty) {
+            return;
         }
+
+        controller.sendData();
+        clientDirty = false;
     }
 
     public class AirtightEngineGasHandler implements IGasHandler {

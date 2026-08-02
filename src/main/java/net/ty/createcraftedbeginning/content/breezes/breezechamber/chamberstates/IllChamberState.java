@@ -49,6 +49,6 @@ public class IllChamberState extends BaseChamberState {
 
     @Override
     public InteractionResult onItemInsert(BreezeChamberBlockEntity chamber, ItemStack stack, boolean forceOverflow, boolean simulate) {
-        return insertWindCharge(chamber, stack, forceOverflow, simulate, true);
+        return insertWindCharge(chamber, stack, forceOverflow, simulate);
     }
 }

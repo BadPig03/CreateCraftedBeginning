@@ -95,7 +95,7 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
 
     private static void renderItems(AirtightReactorKettleBlockEntity kettle, float fluidLevel, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         poseStack.pushPose();
-        poseStack.translate(0.5f, -0.8f, 0.5f);
+        poseStack.translate(0.5, -0.8, 0.5);
         float blockRotation = (kettle.getBlockPos().hashCode() & 255) * 1.40625f;
         TransformStack.of(poseStack).rotateYDegrees(kettle.getIngredientRotation().getValue(partialTicks) + blockRotation);
 
@@ -120,7 +120,7 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
                 itemOffset -= 0.1f;
             }
             if (fluidLevel > 0) {
-                itemOffset += Mth.sin(AnimationTickHolder.getRenderTime(kettle.getLevel()) / 12.0f + angle) * 0.025f;
+                itemOffset += Mth.sin(AnimationTickHolder.getRenderTime(kettle.getLevel()) / 12 + angle) * 0.025f;
             }
             poseStack.translate(itemPosition.x, itemSurfaceY + itemOffset, itemPosition.z);
             TransformStack.of(poseStack).rotateYDegrees(angle + 35).rotateXDegrees(90);
@@ -175,12 +175,12 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
     }
 
     private static ItemPlacement pickSeparatedItemPlacement(int slot, List<Vec3> occupiedPositions) {
-        RandomSource random = RandomSource.create(31L + slot * 9973L);
+        RandomSource random = RandomSource.create(31 + slot * 9973L);
         Vec3 bestPosition = Vec3.ZERO;
         float bestAngle = 0;
         double bestScore = -Double.MAX_VALUE;
         for (int i = 0; i < 24; i++) {
-            float angle = random.nextFloat() * 360.0f;
+            float angle = random.nextFloat() * 360;
             float radiusRandom = random.nextFloat();
             float radius = Mth.lerp(radiusRandom * radiusRandom, MIN_RADIUS, MAX_RADIUS);
             if (random.nextFloat() < 0.25f) {
@@ -195,9 +195,9 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
                 nearestDistanceSqr = Math.min(nearestDistanceSqr, dx * dx + dz * dz);
             }
 
-            double preferredRadius = MAX_RADIUS * 0.55f;
-            double radiusPenalty = Math.abs(radius - preferredRadius) * 0.04f;
-            double score = nearestDistanceSqr - radiusPenalty + random.nextDouble() * 0.025f;
+            double preferredRadius = MAX_RADIUS * 0.55;
+            double radiusPenalty = Math.abs(radius - preferredRadius) * 0.04;
+            double score = nearestDistanceSqr - radiusPenalty + random.nextDouble() * 0.025;
             if (score <= bestScore) {
                 continue;
             }

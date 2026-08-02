@@ -25,7 +25,7 @@ public class AirtightJetpackParticle extends TextureSheetParticle {
 
     protected AirtightJetpackParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, SpriteSet sprites) {
         super(level, x, y, z);
-        friction = 1.0f;
+        friction = 1;
         this.sprites = sprites;
         xd = xSpeed;
         yd = ySpeed;
@@ -39,9 +39,9 @@ public class AirtightJetpackParticle extends TextureSheetParticle {
     public void tick() {
         super.tick();
         setSpriteFromAge(sprites);
-        xd *= 0.95f;
-        yd *= 0.95f;
-        zd *= 0.95f;
+        xd *= 0.95;
+        yd *= 0.95;
+        zd *= 0.95;
         if (lifetime-- <= 0) {
             remove();
         }

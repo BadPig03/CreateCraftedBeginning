@@ -152,10 +152,10 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
         boolean hadLouver = airVent.hasLouver(direction);
         airVent.toggleLouver(direction);
         if (hadLouver) {
-            CCBSoundEvents.AIR_VENT_OUTLET_REMOVED.playOnServer(level, pos, 1.0f, 1.0f);
+            CCBSoundEvents.AIR_VENT_OUTLET_REMOVED.playOnServer(level, pos, 1, 1);
         }
         else {
-            CCBSoundEvents.AIR_VENT_OUTLET_PLACED.playOnServer(level, pos, 1.0f, 1.0f);
+            CCBSoundEvents.AIR_VENT_OUTLET_PLACED.playOnServer(level, pos, 1, 1);
         }
         return InteractionResult.SUCCESS;
     }
@@ -214,10 +214,10 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
         boolean wasOpen = airVent.isLouverOpen(direction);
         airVent.toggleLouverOpen(direction);
         if (wasOpen) {
-            CCBSoundEvents.AIR_VENT_OUTLET_CLOSED.playOnServer(level, pos, 1.0f, 1.0f);
+            CCBSoundEvents.AIR_VENT_OUTLET_CLOSED.playOnServer(level, pos, 1, 1);
         }
         else {
-            CCBSoundEvents.AIR_VENT_OUTLET_OPENED.playOnServer(level, pos, 1.0f, 1.0f);
+            CCBSoundEvents.AIR_VENT_OUTLET_OPENED.playOnServer(level, pos, 1, 1);
         }
         return ItemInteractionResult.sidedSuccess(false);
     }

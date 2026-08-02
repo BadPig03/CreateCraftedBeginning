@@ -245,7 +245,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         if (hasOpenTop || random.nextInt(4) == 0) {
             level.addParticle(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 0, 0, 0);
         }
-        Vec3 chilledParticlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25f, 1).normalize().scale((hasOpenTop ? 0.25f : 0.5) + random.nextDouble() * 0.125f)).add(0, 0.5, 0);
+        Vec3 chilledParticlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25, 1).normalize().scale((hasOpenTop ? 0.25 : 0.5) + random.nextDouble() * 0.125)).add(0, 0.5, 0);
         if (!getFrostLevelFromBlock().isAtLeast(FrostLevel.CHILLED)) {
             return;
         }
@@ -469,9 +469,9 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         Vec3 center = VecHelper.getCenterOf(worldPosition);
         RandomSource random = level.random;
         for (int i = 0; i < 20; i++) {
-            Vec3 offset = VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25f, 1).normalize();
-            Vec3 particlePos = center.add(offset.scale(0.5 + random.nextDouble() * 0.125f)).add(0, 0.125, 0);
-            Vec3 motion = offset.scale(0.03125f);
+            Vec3 offset = VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25, 1).normalize();
+            Vec3 particlePos = center.add(offset.scale(0.5 + random.nextDouble() * 0.125)).add(0, 0.125, 0);
+            Vec3 motion = offset.scale(0.03125);
 
             level.addParticle(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, motion.x, motion.y, motion.z);
         }

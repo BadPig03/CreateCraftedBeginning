@@ -35,7 +35,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class EtherealAirCannonHandler implements AirtightCannonHandler, AirtightCannonVisualHandler {
-    protected static final float DEFAULT_RADIUS = 1.0f;
+    protected static final float DEFAULT_RADIUS = 1;
     protected static final int DEFAULT_DURATION = 100;
 
     protected static void addLevitation(List<LivingEntity> entities, int duration, int amplifier, float multiplier) {

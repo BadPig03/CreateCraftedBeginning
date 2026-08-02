@@ -163,7 +163,7 @@ public abstract class SequencedAssemblyWithGasSubCategory {
         public void draw(SequencedWithGasRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int index) {
             PoseStack poseStack = graphics.pose();
             poseStack.pushPose();
-            poseStack.translate(0, 51.5f, 0);
+            poseStack.translate(0, 51.5, 0);
             poseStack.scale(0.6f, 0.6f, 0.6f);
             saw.draw(graphics, getWidth() / 2, 30);
             poseStack.popPose();

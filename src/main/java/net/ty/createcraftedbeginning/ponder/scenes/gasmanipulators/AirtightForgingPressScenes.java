@@ -234,7 +234,7 @@ public class AirtightForgingPressScenes {
         Selection chuteSelection = util.select().position(chutePos);
 
         Vec3 rightDownVec = util.vector().centerOf(rightDownPos);
-        Vec3 filterVec = util.vector().blockSurface(filterPos, Direction.NORTH).add(0, -0.0625f, -0.0625);
+        Vec3 filterVec = util.vector().blockSurface(filterPos, Direction.NORTH).add(0, -0.0625, -0.0625);
         Vec3 coreVec = util.vector().centerOf(corePos);
 
         ItemStack diamondAxeItem = new ItemStack(Items.DIAMOND_AXE);
