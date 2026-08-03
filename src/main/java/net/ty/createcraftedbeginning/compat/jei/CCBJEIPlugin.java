@@ -1,8 +1,10 @@
 package net.ty.createcraftedbeginning.compat.jei;
 
+import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.content.kinetics.press.MechanicalPressBlockEntity;
+import com.simibubi.create.content.kinetics.press.PressingRecipe;
 import com.simibubi.create.content.logistics.redstoneRequester.RedstoneRequesterScreen;
 import com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestScreen;
 import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
@@ -212,6 +214,7 @@ public class CCBJEIPlugin implements IModPlugin {
         builder(DissipationRecipe.class).addTypedRecipes(CCBRecipeTypes.DISSIPATION).catalyst(CCBBlocks.BREEZE_CHAMBER_BLOCK::get).catalyst(CCBBlocks.AIRTIGHT_TANK_BLOCK::get).doubleItemIcon(CCBBlocks.BREEZE_CHAMBER_BLOCK, CCBBlocks.AIRTIGHT_TANK_BLOCK).emptyBackground(177, 70).build("dissipation", DissipationCategory::new);
         builder(EnergizationRecipe.class).addTypedRecipes(CCBRecipeTypes.ENERGIZATION).catalyst(CCBBlocks.BREEZE_CHAMBER_BLOCK::get).catalyst(CCBBlocks.AIRTIGHT_TANK_BLOCK::get).doubleItemIcon(CCBBlocks.BREEZE_CHAMBER_BLOCK, CCBBlocks.AIRTIGHT_TANK_BLOCK).emptyBackground(177, 70).build("energization", EnergizationCategory::new);
         builder(ForgingPressRecipe.class).addTypedRecipes(CCBRecipeTypes.FORGING_PRESS).catalyst(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK::get).emptyBackground(177, 103).build("forging_press", ForgingPressCategory::new);
+        builder(ForgingPressRecipe.class).enableWhen(CCBConfig.server().airtights.enableAutomaticPressingRecipes).addAllRecipesIf(holder -> holder.value() instanceof PressingRecipe, ForgingPressRecipe::convertPressingToForgingPressRecipe).catalyst(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK::get).doubleItemIcon(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK, AllBlocks.MECHANICAL_PRESS).emptyBackground(177, 103).build("forging_press_auto_pressing", ForgingPressCategory::new);
         builder(ForgingPressRecipe.class).enableWhen(CCBConfig.server().airtights.enableAutomaticSmithingRecipes).addAllRecipesIf(holder -> holder.value() instanceof SmithingRecipe, ForgingPressRecipe::convertToForgingPressRecipe).catalyst(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK::get).doubleItemIcon(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK, Blocks.SMITHING_TABLE).emptyBackground(177, 103).build("forging_press_auto_smithing", ForgingPressCategory::new);
         builder(ChillingRecipe.class).addTypedRecipes(CCBRecipeTypes.CHILLING).catalystStack(ChillingCategory.getCatalystStack()).doubleItemIcon(AllItems.PROPELLER.get(), CCBBlocks.BREEZE_COOLER_BLOCK).emptyBackground(178, 72).build("chilling", ChillingCategory::new);
         builder(GasInjectionRecipe.class).addTypedRecipes(CCBRecipeTypes.GAS_INJECTION).catalyst(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK::get).doubleItemIcon(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK, CCBItems.GAS_CANISTER).emptyBackground(177, 70).build("gas_injection", GasInjectionCategory::new);

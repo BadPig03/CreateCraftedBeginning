@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.recipe;
 
+import com.simibubi.create.content.kinetics.press.PressingRecipe;
 import com.simibubi.create.content.processing.recipe.ProcessingOutput;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.NonNullList;
@@ -59,6 +60,15 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
             return new RecipeHolder<>(holder.id(), recipe);
         }
 
+        return new RecipeHolder<>(holder.id(), builder.build());
+    }
+
+    public static RecipeHolder<ForgingPressRecipe> convertPressingToForgingPressRecipe(RecipeHolder<?> holder) {
+        Builder<ForgingPressRecipe> builder = new Builder<>(ForgingPressRecipe::new, holder.id());
+        if (holder.value() instanceof PressingRecipe pressingRecipe) {
+            builder.withItemIngredients(pressingRecipe.getIngredients());
+            pressingRecipe.getRollableResults().forEach(builder::output);
+        }
         return new RecipeHolder<>(holder.id(), builder.build());
     }
 

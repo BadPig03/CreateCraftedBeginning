@@ -351,7 +351,12 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IGasTan
             return (T) this;
         }
 
-        BlockEntity blockEntity = level.getBlockEntity(controllerPos);
+        BlockPos controller = controllerPos;
+        if (controller == null || !level.isLoaded(controller)) {
+            return null;
+        }
+
+        BlockEntity blockEntity = level.getBlockEntity(controller);
         if (blockEntity == null || blockEntity.getType() != getType()) {
             return null;
         }

@@ -3,8 +3,12 @@ package net.ty.createcraftedbeginning.content.airtights.airtightforgingpress;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
+import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.AllSoundEvents;
+import com.simibubi.create.content.kinetics.press.PressingRecipe;
+import com.simibubi.create.content.processing.recipe.ProcessingOutput;
 import com.simibubi.create.foundation.item.SmartInventory;
+import com.simibubi.create.foundation.recipe.RecipeApplier;
 import com.simibubi.create.foundation.recipe.RecipeFinder;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -19,6 +23,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.item.crafting.SmithingRecipe;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.level.Level;
@@ -81,7 +86,6 @@ public final class AirtightForgingPressUtils {
                 return recipe;
             }
         }
-
         return findMatchingLinearRecipe(press, level);
     }
 
@@ -103,7 +107,6 @@ public final class AirtightForgingPressUtils {
                 CreateCraftedBeginning.LOGGER.error("Failed to build the airtight forging press recipe trie; falling back to a linear recipe search until recipes are reloaded", e);
             }
         }
-
         return Optional.empty();
     }
 
@@ -284,6 +287,103 @@ public final class AirtightForgingPressUtils {
         }
 
         master.setRecipeFilter(stack);
+    }
+
+    public static Optional<RecipeHolder<PressingRecipe>> getMatchingPressingRecipe(AirtightForgingPressBlockEntity press) {
+        Level level = press.getLevel();
+        if (level == null || !press.getPressHeadInventory().isEmpty() || !press.getAdditionInventory().isEmpty()) {
+            return Optional.empty();
+        }
+
+        ItemStack inputStack = press.getInputInventory().getStackInSlot(0);
+        if (inputStack.isEmpty()) {
+            return Optional.empty();
+        }
+
+        SingleRecipeInput input = new SingleRecipeInput(inputStack);
+        Optional<RecipeHolder<PressingRecipe>> recipe = AllRecipeTypes.PRESSING.find(input, level);
+        return recipe.filter(holder -> canApplyPressingRecipe(press, holder.value(), inputStack));
+    }
+
+    public static boolean applyPressingRecipe(AirtightForgingPressBlockEntity press, PressingRecipe recipe) {
+        Level level = press.getLevel();
+        if (level == null || !press.getPressHeadInventory().isEmpty() || !press.getAdditionInventory().isEmpty()) {
+            return false;
+        }
+
+        IItemHandler inputInventory = press.getInputInventory();
+        ItemStack inputStack = inputInventory.getStackInSlot(0);
+        int batchSize = findLargestPressingBatch(press, recipe, inputStack);
+        if (batchSize <= 0) {
+            return false;
+        }
+
+        ItemStack batchInput = inputStack.copyWithCount(batchSize);
+        List<ItemStack> outputs = RecipeApplier.applyRecipeOn(level, batchInput, recipe, true);
+        Optional<OutputPlan> plannedOutput = press.planOutputs(outputs);
+        if (plannedOutput.isEmpty()) {
+            return false;
+        }
+
+        int[] fluidAmounts = new int[press.getFluidCapability().getTanks()];
+        long[] gasAmounts = new long[press.getGasCapability().getTanks()];
+        ConsumptionPlan consumptionPlan = press.createConsumptionPlan(ItemStack.EMPTY, 0, inputStack.copy(), batchSize, fluidAmounts, gasAmounts);
+        return press.commitCraft(consumptionPlan, plannedOutput.get());
+    }
+
+    private static boolean canApplyPressingRecipe(AirtightForgingPressBlockEntity press, PressingRecipe recipe, ItemStack inputStack) {
+        return findLargestPressingBatch(press, recipe, inputStack) > 0;
+    }
+
+    private static int findLargestPressingBatch(AirtightForgingPressBlockEntity press, PressingRecipe recipe, ItemStack inputStack) {
+        Level level = press.getLevel();
+        if (level == null || inputStack.isEmpty() || !recipe.matches(new SingleRecipeInput(inputStack), level)) {
+            return 0;
+        }
+
+        List<ItemStack> singleCraftOutputs = getPotentialPressingOutputs(recipe, inputStack, 1);
+        if (singleCraftOutputs.isEmpty() || !press.testRecipeFilter(singleCraftOutputs.getFirst())) {
+            return 0;
+        }
+
+        int low = 1;
+        int high = inputStack.getCount();
+        int largestBatch = 0;
+        while (low <= high) {
+            int batchSize = low + high >>> 1;
+            boolean outputsFit = press.acceptOutputs(getPotentialPressingOutputs(recipe, inputStack, batchSize), true);
+            if (!outputsFit) {
+                high = batchSize - 1;
+                continue;
+            }
+
+            largestBatch = batchSize;
+            low = batchSize + 1;
+        }
+        return largestBatch;
+    }
+
+    private static List<ItemStack> getPotentialPressingOutputs(PressingRecipe recipe, ItemStack inputStack, int crafts) {
+        List<ItemStack> outputs = new ArrayList<>();
+        for (ProcessingOutput output : recipe.getRollableResults()) {
+            ItemStack stack = output.getStack();
+            if (stack.isEmpty()) {
+                continue;
+            }
+
+            for (int craft = 0; craft < crafts; craft++) {
+                outputs.add(stack.copy());
+            }
+        }
+        if (inputStack.hasCraftingRemainingItem()) {
+            ItemStack remainder = inputStack.getCraftingRemainingItem();
+            if (!remainder.isEmpty()) {
+                for (int craft = 0; craft < crafts; craft++) {
+                    outputs.add(remainder.copy());
+                }
+            }
+        }
+        return outputs;
     }
 
     public static Optional<RecipeHolder<SmithingRecipe>> getMatchingSmithingRecipe(AirtightForgingPressBlockEntity press) {

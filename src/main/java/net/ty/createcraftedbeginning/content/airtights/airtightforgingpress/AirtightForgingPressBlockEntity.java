@@ -5,6 +5,7 @@ import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
 import com.simibubi.create.api.packager.InventoryIdentifier;
 import com.simibubi.create.api.packager.InventoryIdentifier.Single;
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
+import com.simibubi.create.content.kinetics.press.PressingRecipe;
 import com.simibubi.create.content.logistics.filter.FilterItemStack;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
@@ -94,6 +95,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     private boolean operating;
     private DeferralBehaviour updateChecker;
     private ForgingPressRecipe currentRecipe;
+    private PressingRecipe currentPressingRecipe;
     private SmithingRecipe currentSmithingRecipe;
     private IFluidHandler fluidCapability;
     private IGasHandler gasCapability;
@@ -267,6 +269,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         operating = false;
         operatingTicks = 0;
         currentRecipe = null;
+        currentPressingRecipe = null;
         currentSmithingRecipe = null;
     }
 
@@ -617,27 +620,37 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         Optional<ForgingPressRecipe> recipe = AirtightForgingPressUtils.getMatchingRecipe(this);
         if (recipe.isPresent()) {
             currentRecipe = recipe.get();
+            currentPressingRecipe = null;
             currentSmithingRecipe = null;
             startOperation();
             return true;
         }
 
-        if (!CCBConfig.server().airtights.enableAutomaticSmithingRecipes.get()) {
-            currentRecipe = null;
-            currentSmithingRecipe = null;
-            return true;
+        if (CCBConfig.server().airtights.enableAutomaticPressingRecipes.get()) {
+            Optional<RecipeHolder<PressingRecipe>> pressingRecipe = AirtightForgingPressUtils.getMatchingPressingRecipe(this);
+            if (pressingRecipe.isPresent()) {
+                currentRecipe = null;
+                currentPressingRecipe = pressingRecipe.get().value();
+                currentSmithingRecipe = null;
+                startOperation();
+                return true;
+            }
         }
 
-        Optional<RecipeHolder<SmithingRecipe>> smithingRecipe = AirtightForgingPressUtils.getMatchingSmithingRecipe(this);
-        if (smithingRecipe.isEmpty()) {
-            currentRecipe = null;
-            currentSmithingRecipe = null;
-            return true;
+        if (CCBConfig.server().airtights.enableAutomaticSmithingRecipes.get()) {
+            Optional<RecipeHolder<SmithingRecipe>> smithingRecipe = AirtightForgingPressUtils.getMatchingSmithingRecipe(this);
+            if (smithingRecipe.isPresent()) {
+                currentRecipe = null;
+                currentPressingRecipe = null;
+                currentSmithingRecipe = smithingRecipe.get().value();
+                startOperation();
+                return true;
+            }
         }
 
         currentRecipe = null;
-        currentSmithingRecipe = smithingRecipe.get().value();
-        startOperation();
+        currentPressingRecipe = null;
+        currentSmithingRecipe = null;
         return true;
     }
 
@@ -668,6 +681,10 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
             update(false);
             return;
         }
+        if (currentRecipe == null && currentPressingRecipe != null && !CCBConfig.server().airtights.enableAutomaticPressingRecipes.get()) {
+            update(false);
+            return;
+        }
         if (currentRecipe == null && currentSmithingRecipe != null && !CCBConfig.server().airtights.enableAutomaticSmithingRecipes.get()) {
             update(false);
             return;
@@ -682,7 +699,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         float processingStart = CYCLE_DURATION / 2.0f;
         boolean wasAlreadyProcessing = previousTicks >= processingStart;
         boolean hasNotReachedProcessing = operatingTicks < processingStart;
-        boolean hasNoRecipe = currentRecipe == null && currentSmithingRecipe == null;
+        boolean hasNoRecipe = currentRecipe == null && currentPressingRecipe == null && currentSmithingRecipe == null;
         if (wasAlreadyProcessing || hasNotReachedProcessing || hasNoRecipe) {
             return;
         }
@@ -694,6 +711,9 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
                 particleStack = currentRecipe.getResultItem(level.registryAccess()).copy();
             }
             success = ForgingPressRecipe.apply(this, currentRecipe);
+        }
+        else if (currentPressingRecipe != null) {
+            success = AirtightForgingPressUtils.applyPressingRecipe(this, currentPressingRecipe);
         }
         else {
             SmithingRecipeInput input = AirtightForgingPressUtils.createSmithingInput(this);
@@ -719,6 +739,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         operating = false;
         operatingTicks = 0;
         currentRecipe = null;
+        currentPressingRecipe = null;
         currentSmithingRecipe = null;
         sendData();
         if (!schedule || level == null || level.isClientSide && !isVirtual()) {

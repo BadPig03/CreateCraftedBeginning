@@ -48,6 +48,7 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
     private float pistonAnimationSpeed;
     private float lastGeneratedSpeed = Float.NaN;
     private float restoredGeneratedSpeed;
+    private float persistedGeneratedSpeed;
     private boolean restoringKineticNetwork;
 
     private CCBAdvancementBehaviour advancementBehaviour;
@@ -167,7 +168,7 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
             return;
         }
 
-        compoundTag.putFloat(COMPOUND_KEY_GENERATED_SPEED, getGeneratedSpeed());
+        compoundTag.putFloat(COMPOUND_KEY_GENERATED_SPEED, persistedGeneratedSpeed);
     }
 
     @Override
@@ -179,6 +180,7 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
 
         float storedSpeed = compoundTag.contains(COMPOUND_KEY_GENERATED_SPEED) ? compoundTag.getFloat(COMPOUND_KEY_GENERATED_SPEED) : 0;
         restoredGeneratedSpeed = Float.isFinite(storedSpeed) ? storedSpeed : 0;
+        persistedGeneratedSpeed = restoredGeneratedSpeed;
     }
 
     @Override
@@ -186,7 +188,10 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
         if (restoringKineticNetwork) {
             return restoredGeneratedSpeed;
         }
-        return BASE_ROTATION_SPEED * getSpeedModifier() * (getRotationDirection() ? 1 : -1);
+
+        float generatedSpeed = BASE_ROTATION_SPEED * getSpeedModifier() * (getRotationDirection() ? 1 : -1);
+        persistedGeneratedSpeed = Float.isFinite(generatedSpeed) ? generatedSpeed : 0;
+        return persistedGeneratedSpeed;
     }
 
     @Override
@@ -234,7 +239,12 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
 
     private @Nullable AirtightTankBlockEntity findTank(Level level) {
         Direction facing = AirtightEngineBlock.getFacing(getBlockState());
-        BlockEntity blockEntity = level.getBlockEntity(worldPosition.relative(facing));
+        BlockPos tankPos = worldPosition.relative(facing);
+        if (!level.isLoaded(tankPos)) {
+            return null;
+        }
+
+        BlockEntity blockEntity = level.getBlockEntity(tankPos);
         return blockEntity instanceof AirtightTankBlockEntity tank ? tank : null;
     }
 
