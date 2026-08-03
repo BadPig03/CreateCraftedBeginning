@@ -48,9 +48,11 @@ public final class GasRequestUtils {
         if (alt) {
             return getAltStep();
         }
+
         if (ctrl) {
             return getCtrlStep();
         }
+
         if (shift) {
             return getShiftStep();
         }

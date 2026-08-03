@@ -90,7 +90,6 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
                 return true;
             }
         }
-
         return false;
     }
 
@@ -122,7 +121,6 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
         if (player != null && player.isShiftKeyDown()) {
             return null;
         }
-
         return ProperWaterloggedBlock.withWater(level, state.setValue(FACING, inwardDirection.getOpposite()).setValue(CLOCKWISE, isClockwise(level, inwardDirection, clickedPos)), clickedPos);
     }
 

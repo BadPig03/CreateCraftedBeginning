@@ -161,6 +161,7 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
             AirtightCannonVisualHandlerUtils.of(gasHolder.value()).renderTrailParticles(level, pos);
             return;
         }
+
         if (tickCount <= 1 || tickCount % MOTION_CHECK_INTERVAL != 0 || !hasSignificantExternalImpulse()) {
             return;
         }

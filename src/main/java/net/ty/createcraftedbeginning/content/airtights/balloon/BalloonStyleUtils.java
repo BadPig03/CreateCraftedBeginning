@@ -64,7 +64,6 @@ public final class BalloonStyleUtils {
         if (!(box.getItem() instanceof BalloonItem balloon)) {
             return 1;
         }
-
         return balloon.style.riggingOffset() / 16.0f;
     }
 
@@ -72,7 +71,6 @@ public final class BalloonStyleUtils {
         if (!(box.getItem() instanceof BalloonItem balloon)) {
             return 1;
         }
-
         return 0.6875f + (balloon.style.width() - 12) / 32.0f;
     }
 
@@ -88,7 +86,6 @@ public final class BalloonStyleUtils {
         if (!depositing) {
             return 0.1875f;
         }
-
         return Mth.lerp(getFrogportChainBlend(diff, distance), 0.1875f, 0.625f);
     }
 
@@ -98,7 +95,6 @@ public final class BalloonStyleUtils {
         if (!depositing) {
             return offset;
         }
-
         return offset.subtract(0, 0.75, 0);
     }
 

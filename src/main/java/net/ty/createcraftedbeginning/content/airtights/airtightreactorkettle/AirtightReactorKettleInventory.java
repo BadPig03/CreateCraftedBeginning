@@ -43,6 +43,7 @@ public class AirtightReactorKettleInventory extends SmartInventory {
             if (i != slot && ItemStack.isSameItemSameComponents(stack, storedStack)) {
                 return false;
             }
+
             if (!storedStack.isEmpty() || firstFreeSlot != -1) {
                 continue;
             }
@@ -63,9 +64,11 @@ public class AirtightReactorKettleInventory extends SmartInventory {
     @Override
     public ItemStack extractItem(int slot, int amount, boolean simulate) {
         ItemStack extracted = super.extractItem(slot, amount, simulate);
-        if (!simulate && !extracted.isEmpty()) {
-            blockEntity.notifyContentsChanged();
+        if (simulate || extracted.isEmpty()) {
+            return extracted;
         }
+
+        blockEntity.notifyContentsChanged();
         return extracted;
     }
 }

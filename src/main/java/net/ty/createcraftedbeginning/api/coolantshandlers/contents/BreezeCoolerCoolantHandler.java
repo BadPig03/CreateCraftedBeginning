@@ -24,6 +24,7 @@ public class BreezeCoolerCoolantHandler implements AirtightCoolantHandler {
         if (!blockState.hasProperty(FROST_LEVEL)) {
             return CoolantEfficiency.NONE;
         }
+
         if (blockState.getValue(FROST_LEVEL).isAtLeast(FrostLevel.CHILLED)) {
             return CoolantEfficiency.EXTREME;
         }

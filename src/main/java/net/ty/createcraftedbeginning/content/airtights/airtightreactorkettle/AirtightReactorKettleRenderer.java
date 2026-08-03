@@ -219,9 +219,11 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
         if (count <= 1) {
             return 1;
         }
+
         if (count <= 8) {
             return 2;
         }
+
         if (count <= 32) {
             return 3;
         }

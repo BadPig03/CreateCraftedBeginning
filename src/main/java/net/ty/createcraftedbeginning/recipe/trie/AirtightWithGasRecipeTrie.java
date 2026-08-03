@@ -211,15 +211,16 @@ public class AirtightWithGasRecipeTrie<R extends Recipe<?>> {
                 ingredients.add(createIngredient(ingredient));
             }
 
-            if (recipe instanceof IAirtightWithGasRecipe withGasRecipe) {
-                for (SizedFluidIngredient ingredient : withGasRecipe.getFluidIngredients()) {
-                    ingredients.add(createIngredient(ingredient));
-                }
-                for (SizedGasIngredient ingredient : withGasRecipe.getGasIngredients()) {
-                    ingredients.add(createIngredient(ingredient));
-                }
+            if (!(recipe instanceof IAirtightWithGasRecipe withGasRecipe)) {
+                return new AbstractRecipe<>(recipe, ingredients);
             }
 
+            for (SizedFluidIngredient ingredient : withGasRecipe.getFluidIngredients()) {
+                ingredients.add(createIngredient(ingredient));
+            }
+            for (SizedGasIngredient ingredient : withGasRecipe.getGasIngredients()) {
+                ingredients.add(createIngredient(ingredient));
+            }
             return new AbstractRecipe<>(recipe, ingredients);
         }
 

@@ -181,9 +181,11 @@ public class AirtightExtendArmEvents {
     }
 
     private static void displayWarningOnFirstAttempt(Player player, ChargeAttempt attempt) {
-        if (attempt.firstAttempt()) {
-            displayInsufficientGasWarning(player);
+        if (!attempt.firstAttempt()) {
+            return;
         }
+
+        displayInsufficientGasWarning(player);
     }
 
     private static void displayInsufficientGasWarning(Player player) {

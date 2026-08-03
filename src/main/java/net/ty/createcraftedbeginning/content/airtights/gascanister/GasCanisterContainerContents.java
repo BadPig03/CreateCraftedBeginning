@@ -73,7 +73,6 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
         if (logicalAmount <= 0) {
             return 0;
         }
-
         return (logicalAmount * getEconomizeCostPercent(itemStack) + 99) / 100;
     }
 
@@ -81,7 +80,6 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
         if (physicalDrain <= 0) {
             return 0;
         }
-
         return physicalDrain * 100 / getEconomizeCostPercent(itemStack);
     }
 
@@ -105,7 +103,6 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
         if (resource.isEmpty() || !GasStack.isSameGasSameComponents(resource, getGasInTank(0))) {
             return GasStack.EMPTY;
         }
-
         return drain(0, resource.getAmount(), action);
     }
 
@@ -114,11 +111,12 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
         GasStack storedGas = getGasInTank(0);
         long drained = Math.min(maxDrain, storedGas.getAmount());
         GasStack drainedGas = storedGas.copyWithAmount(drained);
-        if (action.execute() && drained > 0) {
-            gas.shrink(drained);
-            save();
+        if (!action.execute() || drained <= 0) {
+            return drainedGas;
         }
 
+        gas.shrink(drained);
+        save();
         return drainedGas;
     }
 
@@ -148,7 +146,6 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
         if (content.isEmpty()) {
             return List.of(ItemStack.EMPTY);
         }
-
         return List.of(GasVirtualUtils.createVirtualItem(content));
     }
 
@@ -169,7 +166,6 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
             if (!GasStack.isSameGasSameComponents(storedGas, resource)) {
                 return 0;
             }
-
             return Math.min(remainingSpace, resource.getAmount());
         }
 
@@ -180,17 +176,17 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
         if (!GasStack.isSameGasSameComponents(storedGas, resource)) {
             return 0;
         }
-
         return fillExisting(storedGas, resource, tankCapacity);
     }
 
     @Override
     public long getTankCapacity(int tank) {
         long newCapacity = Math.max(0, getEnchantedCapacity(canister));
-        if (newCapacity != capacity) {
-            capacity = newCapacity;
+        if (newCapacity == capacity) {
+            return capacity;
         }
 
+        capacity = newCapacity;
         return capacity;
     }
 
@@ -221,10 +217,11 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
         long remainingSpace = Math.max(0, tankCapacity - storedGas.getAmount());
         long amount = Math.min(remainingSpace, resource.getAmount());
         gas.grow(amount);
-        if (amount > 0) {
-            saveContents();
+        if (amount <= 0) {
+            return amount;
         }
 
+        saveContents();
         return amount;
     }
 

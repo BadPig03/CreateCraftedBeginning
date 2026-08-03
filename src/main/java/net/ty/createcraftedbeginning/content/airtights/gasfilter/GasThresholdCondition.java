@@ -40,7 +40,6 @@ public class GasThresholdCondition extends CargoThresholdCondition {
         if (addition <= 0) {
             return current;
         }
-
         return current > Long.MAX_VALUE - addition ? Long.MAX_VALUE : current + addition;
     }
 

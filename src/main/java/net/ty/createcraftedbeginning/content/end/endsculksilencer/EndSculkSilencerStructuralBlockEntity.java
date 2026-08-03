@@ -31,7 +31,7 @@ public class EndSculkSilencerStructuralBlockEntity extends EndMechanicalStructur
 
     @Override
     public boolean isSpeedRequirementFulfilled() {
-        return EndSculkSilencerBlockEntity.hasRequiredSpeed(getSpeed(), getWorkingRange());
+        return EndSculkSilencerBlockEntity.meetsRequiredSpeed(getSpeed(), getWorkingRange());
     }
 
     @Override

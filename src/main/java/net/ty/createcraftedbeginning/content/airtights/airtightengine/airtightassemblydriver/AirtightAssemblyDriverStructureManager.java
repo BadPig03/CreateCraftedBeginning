@@ -35,20 +35,19 @@ public class AirtightAssemblyDriverStructureManager {
     private static final int INITIAL_EVALUATION_DELAY = 2;
     private static final int INCOMPLETE_EVALUATION_RETRY_DELAY = 20;
     private static int getMaxAttachedSurfaceBlocks() {
-        long width = AirtightTankBlockEntity.getConfiguredMaxWidth();
-        long length = AirtightTankBlockEntity.getConfiguredMaxLength();
-        long surfaceArea = 2 * (width * width + 2 * width * length);
-        return Math.clamp(surfaceArea, 0, Integer.MAX_VALUE);
+        int width = AirtightTankBlockEntity.getConfiguredMaxWidth();
+        int length = AirtightTankBlockEntity.getConfiguredMaxLength();
+        return 2 * (width * width + 2 * width * length);
     }
 
     private static int getMaxAttachedChambers() {
-        long width = AirtightTankBlockEntity.getConfiguredMaxWidth();
-        long length = AirtightTankBlockEntity.getConfiguredMaxLength();
-        return Math.clamp(width * Math.max(width, length), 0, Integer.MAX_VALUE);
+        int width = AirtightTankBlockEntity.getConfiguredMaxWidth();
+        int length = AirtightTankBlockEntity.getConfiguredMaxLength();
+        return width * Math.max(width, length);
     }
 
     private static int getMaxAttachedWindChargingLevel() {
-        return Math.clamp((long) getMaxAttachedChambers() * MAX_LEVEL, 0, Integer.MAX_VALUE);
+        return getMaxAttachedChambers() * MAX_LEVEL;
     }
 
     private final AirtightAssemblyDriverCore driverCore;
@@ -73,6 +72,7 @@ public class AirtightAssemblyDriverStructureManager {
         if (!evaluationRequired) {
             return;
         }
+
         if (evaluationCooldown > 0) {
             evaluationCooldown--;
             return;
@@ -160,6 +160,7 @@ public class AirtightAssemblyDriverStructureManager {
         if (visitedPositions.contains(pos)) {
             return TankScanResult.COMPLETE;
         }
+
         if (!level.isLoaded(pos)) {
             return TankScanResult.INCOMPLETE;
         }
@@ -181,7 +182,6 @@ public class AirtightAssemblyDriverStructureManager {
         if (chamberLevel < 0) {
             return TankScanResult.INCOMPLETE;
         }
-
         return new TankScanResult(isComplete, chamberLevel);
     }
 
@@ -220,6 +220,7 @@ public class AirtightAssemblyDriverStructureManager {
         if (!(attachedState.getBlock() instanceof BreezeChamberBlock)) {
             return 0;
         }
+
         if (!(level.getBlockEntity(attachedPos) instanceof BreezeChamberBlockEntity chamber)) {
             return -1;
         }

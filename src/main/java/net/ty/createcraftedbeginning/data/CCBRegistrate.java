@@ -112,10 +112,11 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
                 TooltipModifier.REGISTRY.register(item, modifier);
             });
         }
-        if (currentCreativeSection != null) {
-            SECTION_LOOKUP.put(entry, currentCreativeSection);
+        if (currentCreativeSection == null) {
+            return entry;
         }
 
+        SECTION_LOOKUP.put(entry, currentCreativeSection);
         return entry;
     }
 

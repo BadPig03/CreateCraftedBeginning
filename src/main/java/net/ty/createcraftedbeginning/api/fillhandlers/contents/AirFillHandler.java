@@ -35,11 +35,10 @@ public class AirFillHandler implements AirtightFillHandler {
         if (dimensionType.ultraWarm()) {
             return CCBGases.ULTRAWARM_AIR.get();
         }
-        else if (dimensionType.natural()) {
+
+        if (dimensionType.natural()) {
             return CCBGases.NATURAL_AIR.get();
         }
-        else {
-            return CCBGases.ETHEREAL_AIR.get();
-        }
+        return CCBGases.ETHEREAL_AIR.get();
     }
 }

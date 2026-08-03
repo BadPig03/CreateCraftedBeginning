@@ -75,7 +75,6 @@ public class FanProcessingFilterRecipeLookupPlugin implements IRecipeManagerPlug
         if (categoryId == null) {
             return null;
         }
-
         return new LookupTarget(categoryId);
     }
 
@@ -84,7 +83,6 @@ public class FanProcessingFilterRecipeLookupPlugin implements IRecipeManagerPlug
         if (runtime == null) {
             return null;
         }
-
         return runtime.getRecipeManager().createRecipeCategoryLookup().get().filter(category -> category.getRecipeType().getUid().equals(categoryId)).findFirst().orElse(null);
     }
 
@@ -99,7 +97,6 @@ public class FanProcessingFilterRecipeLookupPlugin implements IRecipeManagerPlug
         if (category == null) {
             return List.of();
         }
-
         return List.of(category.getRecipeType());
     }
 
@@ -114,7 +111,6 @@ public class FanProcessingFilterRecipeLookupPlugin implements IRecipeManagerPlug
         if (runtime == null) {
             return List.of();
         }
-
         return runtime.getRecipeManager().createRecipeLookup(recipeCategory.getRecipeType()).get().toList();
     }
 

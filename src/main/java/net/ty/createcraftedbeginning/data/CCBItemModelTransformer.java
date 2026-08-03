@@ -24,11 +24,6 @@ public final class CCBItemModelTransformer {
     }
 
     @Contract(pure = true)
-    public static <T extends Item, P> @NotNull NonNullFunction<ItemBuilder<T, P>, ItemBuilder<T, P>> generated() {
-        return builder -> builder;
-    }
-
-    @Contract(pure = true)
     public static <T extends Item, P> @NotNull NonNullFunction<ItemBuilder<T, P>, ItemBuilder<T, P>> existing() {
         return builder -> builder.model(AssetLookup.existingItemModel());
     }

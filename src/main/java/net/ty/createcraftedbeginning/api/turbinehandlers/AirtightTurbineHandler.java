@@ -13,9 +13,9 @@ public interface AirtightTurbineHandler {
     SimpleRegistry<Gas, AirtightTurbineHandler> REGISTRY = SimpleRegistry.create();
 
     /**
-     * Returns the efficiency.
+     * Returns the highest operating level this gas can unlock in a Tesla Turbine.
      *
-     * @return the efficiency
+     * @return the maximum turbine level
      */
-    int getEfficiency();
+    int getMaxLevel();
 }

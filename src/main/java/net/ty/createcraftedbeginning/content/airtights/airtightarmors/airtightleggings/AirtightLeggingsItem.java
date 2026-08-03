@@ -63,9 +63,11 @@ public class AirtightLeggingsItem extends AirtightBaseArmorItem implements MenuP
     @Override
     public ItemAttributeModifiers getDefaultAttributeModifiers(ItemStack leggings) {
         ItemAttributeModifiers modifiers = super.getDefaultAttributeModifiers(leggings);
-        if (SwiftSneakUpgrade.INSTANCE.canApply(leggings)) {
-            modifiers = modifiers.withModifierAdded(Attributes.SNEAKING_SPEED, new AttributeModifier(ID, 0.45, Operation.ADD_VALUE), EquipmentSlotGroup.LEGS);
+        if (!SwiftSneakUpgrade.INSTANCE.canApply(leggings)) {
+            return modifiers;
         }
+
+        modifiers = modifiers.withModifierAdded(Attributes.SNEAKING_SPEED, new AttributeModifier(ID, 0.45, Operation.ADD_VALUE), EquipmentSlotGroup.LEGS);
         return modifiers;
     }
 
@@ -82,10 +84,12 @@ public class AirtightLeggingsItem extends AirtightBaseArmorItem implements MenuP
     public ItemEnchantments getAllEnchantments(ItemStack leggings, RegistryLookup<Enchantment> lookup) {
         ItemEnchantments enchantments = super.getAllEnchantments(leggings, lookup);
         Mutable enchants = new Mutable(enchantments);
-        if (BlastResistanceUpgrade.INSTANCE.canApply(leggings)) {
-            Holder<Enchantment> blastProtection = lookup.getOrThrow(Enchantments.BLAST_PROTECTION);
-            enchants.set(blastProtection, Math.max(4, enchantments.getLevel(blastProtection)));
+        if (!BlastResistanceUpgrade.INSTANCE.canApply(leggings)) {
+            return enchants.toImmutable();
         }
+
+        Holder<Enchantment> blastProtection = lookup.getOrThrow(Enchantments.BLAST_PROTECTION);
+        enchants.set(blastProtection, Math.max(4, enchantments.getLevel(blastProtection)));
         return enchants.toImmutable();
     }
 

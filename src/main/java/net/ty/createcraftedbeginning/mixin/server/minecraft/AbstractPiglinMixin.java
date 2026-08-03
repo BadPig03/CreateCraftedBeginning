@@ -22,6 +22,7 @@ public abstract class AbstractPiglinMixin {
             cir.setReturnValue(false);
             return;
         }
+
         if (!piglin.hasEffect(CCBMobEffects.ZOMBIFICATION)) {
             return;
         }

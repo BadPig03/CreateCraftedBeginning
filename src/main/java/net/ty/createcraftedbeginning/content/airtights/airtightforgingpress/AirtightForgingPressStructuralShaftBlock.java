@@ -89,9 +89,11 @@ public class AirtightForgingPressStructuralShaftBlock extends KineticBlock imple
 
         BlockPos masterPos = AirtightForgingPressUtils.getMaster(pos, state);
         level.destroyBlockProgress(masterPos.hashCode(), masterPos, -1);
-        if (!level.isClientSide && player.isCreative()) {
-            level.destroyBlock(masterPos, false);
+        if (level.isClientSide || !player.isCreative()) {
+            return super.playerWillDestroy(level, pos, state, player);
         }
+
+        level.destroyBlock(masterPos, false);
         return super.playerWillDestroy(level, pos, state, player);
     }
 
@@ -112,9 +114,11 @@ public class AirtightForgingPressStructuralShaftBlock extends KineticBlock imple
 
         BlockPos masterPos = AirtightForgingPressUtils.getMaster(pos, state);
         Block masterBlock = CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK.get();
-        if (!accessor.getBlockTicks().hasScheduledTick(masterPos, masterBlock)) {
-            accessor.scheduleTick(masterPos, masterBlock, 1);
+        if (accessor.getBlockTicks().hasScheduledTick(masterPos, masterBlock)) {
+            return state;
         }
+
+        accessor.scheduleTick(masterPos, masterBlock, 1);
         return state;
     }
 
@@ -123,7 +127,6 @@ public class AirtightForgingPressStructuralShaftBlock extends KineticBlock imple
         if (blockState.getValue(STRUCTURAL_POSITION) != AirtightForgingPressStructuralPosition.TOP_CENTER || hitResult.getDirection() == Direction.DOWN) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-
         return onBlockEntityUseItemOn(level, blockPos, structural -> AirtightForgingPressUtils.getUseItemOnResult(structural, level, player, blockPos, hand, stack));
     }
 
@@ -159,7 +162,6 @@ public class AirtightForgingPressStructuralShaftBlock extends KineticBlock imple
         if (position == AirtightForgingPressStructuralPosition.TOP_CENTER) {
             return axis != Axis.Y;
         }
-
         return axis == position.getAxis();
     }
 

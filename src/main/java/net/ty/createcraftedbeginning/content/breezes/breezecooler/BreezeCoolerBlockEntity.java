@@ -117,7 +117,6 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         if (isCreative && coolantType != CoolantType.NONE) {
             return new CreativeCoolerState(coolantType);
         }
-
         return switch (coolantType) {
             case NORMAL -> remainingTime > 0 ? new ChilledCoolerState(remainingTime, false) : new InactiveCoolerState();
             case NONE -> new InactiveCoolerState();
@@ -166,9 +165,12 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         if (!currentState.tick(this)) {
             return;
         }
-        if (level.isClientSide) {
-            clientTicker.accept(this);
+
+        if (!level.isClientSide) {
+            return;
         }
+
+        clientTicker.accept(this);
     }
 
     @Override
@@ -289,11 +291,13 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
             CCBLang.number(fluid.getAmount()).add(millibuckets).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(tank.getTankCapacity(0)).add(millibuckets).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
         }
 
-        if (isLiquidInvalid()) {
-            tooltip.add(CommonComponents.EMPTY);
-            CCBLang.translate("gui.warning").style(ChatFormatting.GOLD).forGoggles(tooltip);
-            CCBLang.addToGoggles(tooltip, "gui.breeze_cooler.invalid_fluid");
+        if (!isLiquidInvalid()) {
+            return true;
         }
+
+        tooltip.add(CommonComponents.EMPTY);
+        CCBLang.translate("gui.warning").style(ChatFormatting.GOLD).forGoggles(tooltip);
+        CCBLang.addToGoggles(tooltip, "gui.breeze_cooler.invalid_fluid");
         return true;
     }
 
@@ -325,9 +329,11 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
 
         setChanged();
         long phase = level.getGameTime() + worldPosition.asLong();
-        if (Math.floorMod(phase, COOLING_STATE_SYNC_INTERVAL) == 0) {
-            notifyUpdate();
+        if (Math.floorMod(phase, COOLING_STATE_SYNC_INTERVAL) != 0) {
+            return;
         }
+
+        notifyUpdate();
     }
 
     public void playCoolingEffects() {
@@ -452,9 +458,11 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
 
         BlockState state = getBlockState();
         FrostLevel frostLevel = currentState.getFrostLevel();
-        if (state.getValue(FROST_LEVEL) != frostLevel) {
-            level.setBlockAndUpdate(worldPosition, state.setValue(FROST_LEVEL, frostLevel));
+        if (state.getValue(FROST_LEVEL) == frostLevel) {
+            return;
         }
+
+        level.setBlockAndUpdate(worldPosition, state.setValue(FROST_LEVEL, frostLevel));
     }
 
     public void setGoggles(boolean newGoggles) {

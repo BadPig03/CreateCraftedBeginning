@@ -58,7 +58,6 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
         if (colorHelper == null) {
             return IIngredientHelper.super.getColors(ingredient);
         }
-
         return colorHelper.getColors(CCBGasClientTextures.getGasTexture(ingredient.getGasHolder()), ingredient.getHint(), 1);
     }
 
@@ -98,9 +97,11 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
         ToStringHelper helper = MoreObjects.toStringHelper(GasStack.class);
         Holder<Gas> gasHolder = stack.getGasHolder();
         helper.add("Gas", gasHolder.value().isEmpty() ? "none" : stack.getTranslationKey());
-        if (!stack.isEmpty()) {
-            helper.add("Amount", stack.getAmount());
+        if (stack.isEmpty()) {
+            return helper.toString();
         }
+
+        helper.add("Amount", stack.getAmount());
         return helper.toString();
     }
 }

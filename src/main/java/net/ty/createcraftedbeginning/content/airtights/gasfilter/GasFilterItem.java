@@ -67,7 +67,6 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
         if (player == null) {
             return InteractionResult.PASS;
         }
-
         return use(context.getLevel(), player, context.getHand()).getResult();
     }
 
@@ -78,9 +77,11 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
             return InteractionResultHolder.pass(filter);
         }
 
-        if (!level.isClientSide) {
-            player.openMenu(this, buf -> ItemStack.STREAM_CODEC.encode(buf, filter));
+        if (level.isClientSide) {
+            return InteractionResultHolder.success(filter);
         }
+
+        player.openMenu(this, buf -> ItemStack.STREAM_CODEC.encode(buf, filter));
         return InteractionResultHolder.success(filter);
     }
 
@@ -142,7 +143,6 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
         if (!filterItem.is(CCBItems.GAS_FILTER)) {
             return gas -> false;
         }
-
         return getFilterData(filterItem).compile();
     }
 }

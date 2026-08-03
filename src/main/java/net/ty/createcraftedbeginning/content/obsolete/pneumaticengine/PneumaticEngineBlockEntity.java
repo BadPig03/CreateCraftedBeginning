@@ -33,9 +33,11 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
     public void initialize() {
         super.initialize();
 
-        if (!hasSource() || getGeneratedSpeed() > getTheoreticalSpeed()) {
-            updateGeneratedRotation();
+        if (hasSource() && getGeneratedSpeed() <= getTheoreticalSpeed()) {
+            return;
         }
+
+        updateGeneratedRotation();
     }
 
     @Override
@@ -112,6 +114,7 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
         if (level == null || !level.isClientSide || speed == 0) {
             return;
         }
+
         Vec3 centerOf = VecHelper.getCenterOf(worldPosition);
         double angle = level.random.nextDouble() * Math.PI * 2;
         double distance = 0.75 + level.random.nextDouble() * 0.75;
@@ -124,11 +127,13 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
         if (level == null) {
             return;
         }
+
         BlockPos tankPos = worldPosition.below();
         BlockEntity tankBlockEntity = level.getBlockEntity(tankPos);
         if (!(tankBlockEntity instanceof BacktankBlockEntity tank)) {
             return;
         }
+
         tank.setAirLevel(Math.max(tank.getAirLevel() - 1, 0));
         tank.setChanged();
     }

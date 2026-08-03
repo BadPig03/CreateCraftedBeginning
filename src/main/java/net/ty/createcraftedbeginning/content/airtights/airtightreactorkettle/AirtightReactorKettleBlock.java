@@ -44,13 +44,13 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
                     if (x == 0 && y == 0 && z == 0) {
                         continue;
                     }
+
                     if (!level.getBlockState(pos.offset(x, y, z)).canBeReplaced()) {
                         return false;
                     }
                 }
             }
         }
-
         return true;
     }
 
@@ -58,7 +58,6 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
         if (position.isCog()) {
             return CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION, position);
         }
-
         return CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION, position);
     }
 
@@ -108,6 +107,7 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
                         level.setBlockAndUpdate(structurePos, structureState);
                         continue;
                     }
+
                     if (isMatchingStructure(occupiedState, structuralPos)) {
                         continue;
                     }
@@ -130,7 +130,6 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
         if (state == null || !canPlaceStructure(context.getLevel(), context.getClickedPos())) {
             return null;
         }
-
         return state;
     }
 

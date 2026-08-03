@@ -5,6 +5,7 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.api.enginehandlers.AirtightEngineHandler;
 import net.ty.createcraftedbeginning.api.enginehandlers.AirtightEngineHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
@@ -154,9 +155,11 @@ public class AirtightAssemblyDriverCore {
         if (compoundTag.contains(COMPOUND_KEY_STRUCTURE_MANAGER)) {
             structureManager.readClient(compoundTag.getCompound(COMPOUND_KEY_STRUCTURE_MANAGER));
         }
-        if (compoundTag.contains(COMPOUND_KEY_LEVEL_CALCULATOR)) {
-            levelCalculator.read(compoundTag.getCompound(COMPOUND_KEY_LEVEL_CALCULATOR), true);
+        if (!compoundTag.contains(COMPOUND_KEY_LEVEL_CALCULATOR)) {
+            return;
         }
+
+        levelCalculator.read(compoundTag.getCompound(COMPOUND_KEY_LEVEL_CALCULATOR), true);
     }
 
     private void readPersistent(CompoundTag compoundTag, Provider provider) {
@@ -236,7 +239,13 @@ public class AirtightAssemblyDriverCore {
     public class AirtightEngineGasHandler implements IGasHandler {
         @Override
         public boolean isGasValid(int tank, GasStack gasStack) {
-            return !gasStack.isEmpty() && AirtightEngineHandlerUtils.of(gasStack).getEfficiency() > 0;
+            if (gasStack.isEmpty()) {
+                return false;
+            }
+
+            AirtightEngineHandler handler = AirtightEngineHandlerUtils.of(gasStack);
+            double workFactor = handler.getWorkFactor();
+            return Double.isFinite(workFactor) && workFactor > 0 && handler.getMaxLevel() > 0;
         }
 
         @Override

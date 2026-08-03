@@ -86,7 +86,6 @@ public final class AirtightExtendArmUtils {
         if (player.level().isClientSide) {
             return findAffordableFuel(player);
         }
-
         return Optional.ofNullable(ACTIVE_FUELS.get(player));
     }
 

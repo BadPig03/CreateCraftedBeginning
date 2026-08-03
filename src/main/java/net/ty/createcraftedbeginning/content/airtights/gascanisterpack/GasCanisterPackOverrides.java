@@ -34,9 +34,11 @@ public class GasCanisterPackOverrides {
         if (leftDown) {
             flags |= LEFT_DOWN;
         }
-        if (rightDown) {
-            flags |= RIGHT_DOWN;
+        if (!rightDown) {
+            return flags;
         }
+
+        flags |= RIGHT_DOWN;
         return flags;
     }
 

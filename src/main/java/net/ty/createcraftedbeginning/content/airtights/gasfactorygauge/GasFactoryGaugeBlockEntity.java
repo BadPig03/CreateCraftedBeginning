@@ -80,7 +80,6 @@ public class GasFactoryGaugeBlockEntity extends FactoryPanelBlockEntity {
         if (level == null || !level.isLoaded(packagerPos)) {
             return null;
         }
-
         return level.getBlockEntity(packagerPos) instanceof GasPackagerBlockEntity packager ? packager : null;
     }
 

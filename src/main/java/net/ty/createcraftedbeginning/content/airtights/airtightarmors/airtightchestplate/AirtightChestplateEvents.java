@@ -35,6 +35,7 @@ public class AirtightChestplateEvents {
         if (!player.level().isClientSide || event.getHand() != InteractionHand.MAIN_HAND || !player.getMainHandItem().isEmpty() || !ElytraUpgrade.canRequestBoost(player)) {
             return;
         }
+
         if (!ElytraUpgrade.applyClientSpeedBoost(player)) {
             return;
         }

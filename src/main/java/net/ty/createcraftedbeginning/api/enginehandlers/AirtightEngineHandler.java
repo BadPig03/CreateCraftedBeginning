@@ -13,9 +13,18 @@ public interface AirtightEngineHandler {
     SimpleRegistry<Gas, AirtightEngineHandler> REGISTRY = SimpleRegistry.create();
 
     /**
-     * Returns the efficiency.
+     * Returns the amount of effective supply contributed by each unit of gas.
      *
-     * @return the efficiency
+     * @return the gas work factor
      */
-    int getEfficiency();
+    double getWorkFactor();
+
+    /**
+     * Returns the highest airtight engine level this gas can sustain.
+     *
+     * @return the maximum engine level
+     */
+    default int getMaxLevel() {
+        return 8;
+    }
 }

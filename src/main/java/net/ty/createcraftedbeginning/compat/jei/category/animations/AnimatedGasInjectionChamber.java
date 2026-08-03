@@ -22,9 +22,11 @@ public class AnimatedGasInjectionChamber extends AnimatedKinetics {
         if (cycle < 20) {
             return Mth.sin(cycle / 40.0f * Mth.PI) * 15;
         }
+
         if (cycle > 60 && cycle < 80) {
             return Mth.sin((cycle - 40) / 40.0f * Mth.PI) * 15;
         }
+
         if (cycle >= 80) {
             return 0;
         }
@@ -39,6 +41,7 @@ public class AnimatedGasInjectionChamber extends AnimatedKinetics {
         if (cycle < 30) {
             return Mth.sin((cycle - 20) / 60.0f * Mth.PI) * 7;
         }
+
         if (cycle > 50) {
             return Mth.sin(cycle / 60.0f * Mth.PI) * 7;
         }

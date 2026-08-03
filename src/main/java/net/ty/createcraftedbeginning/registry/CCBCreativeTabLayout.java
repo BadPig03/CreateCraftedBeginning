@@ -43,6 +43,7 @@ public final class CCBCreativeTabLayout {
                 unassignedItems.add(stack);
                 continue;
             }
+
             groupedItems.get(section).add(stack);
         }
 

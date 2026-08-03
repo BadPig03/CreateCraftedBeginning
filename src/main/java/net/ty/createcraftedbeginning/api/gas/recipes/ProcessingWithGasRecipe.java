@@ -83,6 +83,7 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
             if (errors.isEmpty()) {
                 return DataResult.success(recipe);
             }
+
             errors.addFirst(recipe.getClass().getSimpleName() + " failed validation:");
             return DataResult.error(() -> Joiner.on('\n').join(errors), recipe);
         });
@@ -139,9 +140,11 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
         if (processingDuration > 0 && !canSpecifyDuration()) {
             errors.add("Recipe specified a duration. Durations have no impact on this type of recipe.");
         }
-        if (temperatureCondition != TemperatureCondition.NONE && !requireTemperatureCondition()) {
-            errors.add("Recipe specified a temperature condition. Temperature conditions have no impact on this type of recipe.");
+        if (temperatureCondition == TemperatureCondition.NONE || requireTemperatureCondition()) {
+            return errors;
         }
+
+        errors.add("Recipe specified a temperature condition. Temperature conditions have no impact on this type of recipe.");
         return errors;
     }
 

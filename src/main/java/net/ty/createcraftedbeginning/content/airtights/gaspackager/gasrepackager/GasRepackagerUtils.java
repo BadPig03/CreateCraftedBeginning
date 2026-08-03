@@ -120,7 +120,6 @@ public final class GasRepackagerUtils {
                 return rollbackExtraction(targetInv, extractedItems);
             }
         }
-
         return ExtractionResult.success();
     }
 
@@ -133,6 +132,7 @@ public final class GasRepackagerUtils {
                 if (slot == extracted.slot()) {
                     continue;
                 }
+
                 remainder = targetInv.insertItem(slot, remainder, false);
             }
             if (!remainder.isEmpty()) {
@@ -242,9 +242,11 @@ public final class GasRepackagerUtils {
             }
         }
 
-        if (!currentGases.isEmpty()) {
-            addOutputBalloon(output, outputTemplate, new BalloonGasContents(List.copyOf(currentGases)), address);
+        if (currentGases.isEmpty()) {
+            return List.copyOf(output);
         }
+
+        addOutputBalloon(output, outputTemplate, new BalloonGasContents(List.copyOf(currentGases)), address);
         return List.copyOf(output);
     }
 
@@ -420,9 +422,11 @@ public final class GasRepackagerUtils {
         }
 
         public BalloonGasContents contents() {
-            if (cachedContents == null) {
-                cachedContents = new BalloonGasContents(gases);
+            if (cachedContents != null) {
+                return cachedContents;
             }
+
+            cachedContents = new BalloonGasContents(gases);
             return cachedContents;
         }
 

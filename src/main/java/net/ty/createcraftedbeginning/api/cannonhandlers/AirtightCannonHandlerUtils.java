@@ -64,19 +64,23 @@ public final class AirtightCannonHandlerUtils {
             CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Cannon Handler for gas '{}': a handler is already registered.", location);
             return;
         }
+
         float consumptionMultiplier = handler.getGasConsumptionMultiplier();
         if (!GasConsumptionUtils.isNonNegativeFinite(consumptionMultiplier)) {
             CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Cannon Handler for gas '{}': consumption multiplier must be finite and non-negative, got {}.", location, consumptionMultiplier);
             return;
         }
+
         if (handler instanceof AirtightCannonVisualHandler visualHandler && !GasConsumptionUtils.isFinite(visualHandler.getRotationSpeed())) {
             CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Cannon Handler for gas '{}': rotation speed must be finite, got {}.", location, visualHandler.getRotationSpeed());
             return;
         }
 
         AirtightCannonHandler.REGISTRY.register(gasType, handler);
-        if (handler instanceof AirtightCannonVisualHandler visualHandler) {
-            AirtightCannonVisualHandlerUtils.register(location, visualHandler);
+        if (!(handler instanceof AirtightCannonVisualHandler visualHandler)) {
+            return;
         }
+
+        AirtightCannonVisualHandlerUtils.register(location, visualHandler);
     }
 }

@@ -68,7 +68,6 @@ public class GasDataProvider {
             if (gas.isEmpty()) {
                 return null;
             }
-
             return new Tuple<>(GasObject.of(gas.getGasType(), gas.getAmount(), gas.getComponentsPatch()), capacity);
         }).filter(Objects::nonNull);
         return result;
@@ -92,6 +91,7 @@ public class GasDataProvider {
                         return;
                     }
                 }
+
                 entries.add(candidate);
             });
         }
@@ -103,9 +103,11 @@ public class GasDataProvider {
 
         List<CompoundTag> views = entries.stream().map(entry -> GasView.writeDefault(entry.getA(), entry.getB(), creative)).toList();
         ViewGroup<CompoundTag> group = new ViewGroup<>(views);
-        if (remaining > 0) {
-            group.getExtraData().putInt("+", remaining);
+        if (remaining <= 0) {
+            return List.of(group);
         }
+
+        group.getExtraData().putInt("+", remaining);
         return List.of(group);
     }
 

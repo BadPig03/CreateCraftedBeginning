@@ -58,6 +58,7 @@ public class CCBAdvancement {
         if (!(player instanceof ServerPlayer serverPlayer)) {
             return true;
         }
+
         if (serverPlayer.getServer() == null) {
             return false;
         }

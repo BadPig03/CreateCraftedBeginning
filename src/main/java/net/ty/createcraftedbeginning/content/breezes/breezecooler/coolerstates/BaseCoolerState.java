@@ -74,6 +74,7 @@ public abstract class BaseCoolerState {
             level.destroyBlock(pos, false);
             return false;
         }
+
         if (isCreative) {
             return true;
         }

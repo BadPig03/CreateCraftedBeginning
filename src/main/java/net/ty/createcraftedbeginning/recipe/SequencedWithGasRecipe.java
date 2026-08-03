@@ -23,6 +23,7 @@ public class SequencedWithGasRecipe<T extends ProcessingWithGasRecipe<?, ?>> {
         if (recipe instanceof ProcessingWithGasRecipe<?, ?> processing && recipe instanceof IAssemblyRecipeWithGas) {
             return new SequencedWithGasRecipe<>(processing);
         }
+
         throw new DecoderException("Unexpected " + recipe.getClass().getSimpleName() + " not supported in Sequenced Assembly with Gas");
     }, SequencedWithGasRecipe::getRecipe);
 

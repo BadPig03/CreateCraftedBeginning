@@ -108,9 +108,11 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
         else {
             container = stack.hasCraftingRemainingItem() ? stack.getCraftingRemainingItem() : ItemStack.EMPTY;
         }
-        if (!simulate && !level.isClientSide) {
-            stack.shrink(1);
+        if (simulate || level.isClientSide) {
+            return InteractionResultHolder.success(container);
         }
+
+        stack.shrink(1);
         return InteractionResultHolder.success(container);
     }
 
@@ -124,9 +126,11 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
         if (state.getValue(WATERLOGGED)) {
             world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
         }
-        if (direction == Direction.UP) {
-            state = state.setValue(ATTACHED, neighbourState.is(CCBBlocks.AIR_COMPRESSOR_BLOCK.get()));
+        if (direction != Direction.UP) {
+            return state;
         }
+
+        state = state.setValue(ATTACHED, neighbourState.is(CCBBlocks.AIR_COMPRESSOR_BLOCK.get()));
         return state;
     }
 

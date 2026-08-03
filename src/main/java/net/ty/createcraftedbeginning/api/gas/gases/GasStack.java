@@ -486,7 +486,6 @@ public final class GasStack implements MutableDataComponentHolder {
         if (isEmpty()) {
             return null;
         }
-
         return components.set(type, component);
     }
 
@@ -499,7 +498,6 @@ public final class GasStack implements MutableDataComponentHolder {
         if (isEmpty()) {
             return null;
         }
-
         return components.remove(type);
     }
 
@@ -578,13 +576,14 @@ public final class GasStack implements MutableDataComponentHolder {
         if (obj == this) {
             return true;
         }
+
         if (!(obj instanceof GasStack other)) {
             return false;
         }
+
         if (isEmpty()) {
             return other.isEmpty();
         }
-
         return !other.isEmpty() && getAmount() == other.getAmount() && is(other.getGasHolder()) && Objects.equals(components, other.components);
     }
 

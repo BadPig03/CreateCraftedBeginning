@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 public enum CCBCompatMods {
     CREATE_FLUID_LOGISTICS("fluidlogistics"),
     JEI("jei"),
-    KUBEJS("kubeJS");
+    SABLE("sable");
 
     private final String id;
 

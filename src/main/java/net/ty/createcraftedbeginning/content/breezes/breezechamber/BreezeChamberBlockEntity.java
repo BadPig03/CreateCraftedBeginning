@@ -132,7 +132,6 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         if (isCreative && chargerType != ChargerType.NONE) {
             return new CreativeChamberState(chargerType);
         }
-
         return switch (chargerType) {
             case NORMAL -> remainingTime > 0 ? new GaleChamberState(remainingTime, false) : new InactiveChamberState();
             case BAD -> remainingTime < 0 ? new IllChamberState(remainingTime, false) : new InactiveChamberState();
@@ -153,6 +152,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         if (time > 0) {
             return ChargerType.NORMAL;
         }
+
         if (time < 0) {
             return ChargerType.BAD;
         }
@@ -274,31 +274,35 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             }
         }
 
-        if (!isActive) {
-            tooltip.add(CommonComponents.EMPTY);
-            IGasHandler handler = tankBehaviour.getPrimaryHandler();
-            GasStack gasStack = handler.getGasInTank(0);
-            long capacity = handler.getTankCapacity(0);
-            if (gasStack.isEmpty()) {
-                CCBLang.translate("gui.gas_container.capacity").style(ChatFormatting.GRAY).forGoggles(tooltip);
-                GasAmountUtils.precise(capacity).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
-            }
-            else {
-                CCBLang.translate("gui.gas_container.capacity").style(ChatFormatting.GRAY).forGoggles(tooltip);
-                CCBLang.gasName(gasStack).style(ChatFormatting.WHITE).forGoggles(tooltip, 1);
-                GasAmountUtils.precise(gasStack.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmountUtils.precise(capacity).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
-            }
-            if (isInputInvalid || isOutputFailed) {
-                tooltip.add(CommonComponents.EMPTY);
-                CCBLang.translate("gui.warning").style(ChatFormatting.GOLD).forGoggles(tooltip);
-            }
-            if (isInputInvalid) {
-                CCBLang.addToGoggles(tooltip, "gui.breeze_chamber.invalid_gas", Component.translatable(tankGasType.getTranslationKey()));
-            }
-            if (isOutputFailed) {
-                CCBLang.addToGoggles(tooltip, "gui.breeze_chamber.output_failed");
-            }
+        if (isActive) {
+            return true;
         }
+
+        tooltip.add(CommonComponents.EMPTY);
+        IGasHandler handler = tankBehaviour.getPrimaryHandler();
+        GasStack gasStack = handler.getGasInTank(0);
+        long capacity = handler.getTankCapacity(0);
+        if (gasStack.isEmpty()) {
+            CCBLang.translate("gui.gas_container.capacity").style(ChatFormatting.GRAY).forGoggles(tooltip);
+            GasAmountUtils.precise(capacity).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
+        }
+        else {
+            CCBLang.translate("gui.gas_container.capacity").style(ChatFormatting.GRAY).forGoggles(tooltip);
+            CCBLang.gasName(gasStack).style(ChatFormatting.WHITE).forGoggles(tooltip, 1);
+            GasAmountUtils.precise(gasStack.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmountUtils.precise(capacity).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+        }
+        if (isInputInvalid || isOutputFailed) {
+            tooltip.add(CommonComponents.EMPTY);
+            CCBLang.translate("gui.warning").style(ChatFormatting.GOLD).forGoggles(tooltip);
+        }
+        if (isInputInvalid) {
+            CCBLang.addToGoggles(tooltip, "gui.breeze_chamber.invalid_gas", Component.translatable(tankGasType.getTranslationKey()));
+        }
+        if (!isOutputFailed) {
+            return true;
+        }
+
+        CCBLang.addToGoggles(tooltip, "gui.breeze_chamber.output_failed");
         return true;
     }
 
@@ -350,7 +354,6 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         if (time <= 0) {
             return 0;
         }
-
         return time < getMaxEffectiveThreshold() ? 1 : 2;
     }
 
@@ -377,9 +380,11 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
 
         setChanged();
         long phase = level.getGameTime() + worldPosition.asLong();
-        if (Math.floorMod(phase, WIND_STATE_SYNC_INTERVAL) == 0) {
-            notifyUpdate();
+        if (Math.floorMod(phase, WIND_STATE_SYNC_INTERVAL) != 0) {
+            return;
         }
+
+        notifyUpdate();
     }
 
     public void tickGasProcessing(ChargerType chargerType) {
@@ -461,9 +466,11 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
 
         boolean outputRolledBack = rollbackOutput(outputHandler, outputRequest, outputRequest.getAmount());
         long restored = drained.isEmpty() ? 0 : sourceHandler.fill(drained, GasAction.EXECUTE);
-        if (!outputRolledBack || !drained.isEmpty() && restored != drained.getAmount()) {
-            CreateCraftedBeginning.LOGGER.error("Failed to fully roll back breeze chamber gas conversion at {}: output rollback={}, restored input={}/{}", worldPosition, outputRolledBack, restored, drained.getAmount());
+        if (outputRolledBack && (drained.isEmpty() || restored == drained.getAmount())) {
+            return;
         }
+
+        CreateCraftedBeginning.LOGGER.error("Failed to fully roll back breeze chamber gas conversion at {}: output rollback={}, restored input={}/{}", worldPosition, outputRolledBack, restored, drained.getAmount());
     }
 
     private boolean rollbackOutput(InternalGasHandler outputHandler, GasStack outputRequest, long amount) {
@@ -473,9 +480,11 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
 
         GasStack rolledBack = outputHandler.forceDrain(outputRequest.copyWithAmount(amount), GasAction.EXECUTE);
         boolean successful = rolledBack.getAmount() == amount && GasStack.isSameGasSameComponents(rolledBack, outputRequest);
-        if (!successful) {
-            CreateCraftedBeginning.LOGGER.error("Failed to roll back {} units of breeze chamber output gas at {}", amount, worldPosition);
+        if (successful) {
+            return successful;
         }
+
+        CreateCraftedBeginning.LOGGER.error("Failed to roll back {} units of breeze chamber output gas at {}", amount, worldPosition);
         return successful;
     }
 
@@ -485,15 +494,18 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         ChargerType chargerType = getChargerTypeForTime(time);
         boolean creative = stack.getOrDefault(CCBDataComponents.BREEZE_CREATIVE, false);
         setChamberState(createState(chargerType, time, creative));
-        if (time != 0) {
-            playSound(time < 0);
+        if (time == 0) {
+            return;
         }
+
+        playSound(time < 0);
     }
 
     public void playSound(boolean bad) {
         if (level == null) {
             return;
         }
+
         if (bad) {
             level.playSound(null, worldPosition, SoundEvents.BREEZE_HURT, SoundSource.BLOCKS, 0.125f + level.random.nextFloat() * 0.125f, 0.75f - level.random.nextFloat() * 0.25f);
             return;
@@ -526,9 +538,11 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
 
         BlockState state = getBlockState();
         WindLevel windLevel = currentState.getWindLevel();
-        if (state.getValue(WIND_LEVEL) != windLevel) {
-            level.setBlockAndUpdate(worldPosition, state.setValue(WIND_LEVEL, windLevel));
+        if (state.getValue(WIND_LEVEL) == windLevel) {
+            return;
         }
+
+        level.setBlockAndUpdate(worldPosition, state.setValue(WIND_LEVEL, windLevel));
     }
 
     public void setGoggles(boolean newGoggles) {
@@ -599,7 +613,6 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         if (level == null || inputStack.isEmpty()) {
             return Optional.empty();
         }
-
         return switch (chargerType) {
             case NORMAL -> BreezeChamberRecipeIndex.findEnergization(level.getRecipeManager(), inputStack);
             case BAD -> BreezeChamberRecipeIndex.findDissipation(level.getRecipeManager(), inputStack);
@@ -627,11 +640,13 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         }
 
         IChamberGasTank tank = source.get();
-        if (tank == null || tank.isRemoved()) {
-            source = new WeakReference<>(null);
-            tank = level.getBlockEntity(worldPosition.below()) instanceof IChamberGasTank tankBe ? tankBe : null;
-            source = new WeakReference<>(tank);
+        if (tank != null && !tank.isRemoved()) {
+            return tank == null ? null : tank.getControllerBE();
         }
+
+        source = new WeakReference<>(null);
+        tank = level.getBlockEntity(worldPosition.below()) instanceof IChamberGasTank tankBe ? tankBe : null;
+        source = new WeakReference<>(tank);
         return tank == null ? null : tank.getControllerBE();
     }
 
@@ -740,6 +755,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
                     return fallback;
                 }
             }
+
             if (!compoundTag.contains(key, Tag.TAG_ANY_NUMERIC)) {
                 return fallback;
             }

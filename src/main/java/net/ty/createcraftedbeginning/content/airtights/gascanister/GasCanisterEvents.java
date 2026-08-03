@@ -67,7 +67,6 @@ public class GasCanisterEvents {
                 return preferred;
             }
         }
-
         return findFirstAvailable(containers);
     }
 
@@ -83,7 +82,6 @@ public class GasCanisterEvents {
                 return createSelection(container, tank, content, capacity);
             }
         }
-
         return OverlaySelection.EMPTY;
     }
 
@@ -99,7 +97,6 @@ public class GasCanisterEvents {
                 return createSelection(container, tank, content, capacity);
             }
         }
-
         return OverlaySelection.EMPTY;
     }
 

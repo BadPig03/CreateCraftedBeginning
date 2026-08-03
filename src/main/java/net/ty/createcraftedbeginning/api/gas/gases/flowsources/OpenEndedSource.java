@@ -73,12 +73,16 @@ public final class OpenEndedSource extends GasFlowSource {
         if (compoundTag.contains(COMPOUND_KEY_EFFECT_PROGRESS, Tag.TAG_LONG)) {
             pipe.effectProgress = Math.clamp(compoundTag.getLong(COMPOUND_KEY_EFFECT_PROGRESS), 0, EFFECT_INTERVAL - 1);
         }
-        if (compoundTag.contains(COMPOUND_KEY_EFFECT_GAS, Tag.TAG_COMPOUND)) {
-            pipe.effectGas = GasStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_EFFECT_GAS));
-            if (!pipe.effectGas.isEmpty()) {
-                pipe.effectGas = pipe.effectGas.copyWithAmount(1);
-            }
+        if (!compoundTag.contains(COMPOUND_KEY_EFFECT_GAS, Tag.TAG_COMPOUND)) {
+            return pipe;
         }
+
+        pipe.effectGas = GasStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_EFFECT_GAS));
+        if (pipe.effectGas.isEmpty()) {
+            return pipe;
+        }
+
+        pipe.effectGas = pipe.effectGas.copyWithAmount(1);
         return pipe;
     }
 
@@ -140,7 +144,6 @@ public final class OpenEndedSource extends GasFlowSource {
             if (resource.isEmpty()) {
                 return GasStack.EMPTY;
             }
-
             return drainWorld(resource.getAmount(), resource, action);
         }
 
@@ -212,9 +215,11 @@ public final class OpenEndedSource extends GasFlowSource {
             }
 
             GasStack drained = worldGas.copyWithAmount(drainedAmount);
-            if (action.execute() && drained.is(CCBGases.SPORE_AIR) && level.getBlockEntity(pos) instanceof IGasTransporter transporter) {
-                transporter.getAdvancementBehaviour().awardPlayer(CCBAdvancements.GASEOUS_VARIATIONS);
+            if (!action.execute() || !drained.is(CCBGases.SPORE_AIR) || !(level.getBlockEntity(pos) instanceof IGasTransporter transporter)) {
+                return drained;
             }
+
+            transporter.getAdvancementBehaviour().awardPlayer(CCBAdvancements.GASEOUS_VARIATIONS);
             return drained;
         }
 
@@ -238,14 +243,17 @@ public final class OpenEndedSource extends GasFlowSource {
             if (lastFeedbackTick == gameTime) {
                 return;
             }
+
             lastFeedbackTick = gameTime;
 
             if (drainageHandler.shouldShowOutline()) {
                 drainageHandler.showOutline(level, pos, direction, drainageHandler.getInflation(), resource.getGasType().getTint());
             }
-            if (gameTime % 20 == 10) {
-                CCBSoundEvents.GAS_DRAINAGE.playOnServer(level, pos, 1, 1);
+            if (gameTime % 20 != 10) {
+                return;
             }
+
+            CCBSoundEvents.GAS_DRAINAGE.playOnServer(level, pos, 1, 1);
         }
 
         private void recordOutput(GasStack resource, long amount, AirtightDrainageHandler drainageHandler) {

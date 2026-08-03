@@ -91,7 +91,6 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         if (absSpeed < mediumSpeed) {
             return 0;
         }
-
         return Mth.clamp(absSpeed / mediumSpeed - 0.5F, 0, getMaxRange());
     }
 
@@ -101,7 +100,7 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
 
     public static AABB calculateArea(BlockPos pos, float speed) {
         Vec3 center = Vec3.atCenterOf(pos);
-        double range = calculateRange(speed);
+        float range = calculateRange(speed);
         return new AABB(center.x - range, center.y - range, center.z - range, center.x + range, center.y + range, center.z + range);
     }
 
@@ -165,6 +164,7 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
             if (damage <= 0) {
                 continue;
             }
+
             if (!livingEntity.hurt(damageSource, damage)) {
                 continue;
             }
@@ -203,6 +203,7 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         if (!(level.getBlockState(structuralPos).getBlock() instanceof EndCasingBlock)) {
             return;
         }
+
         if (!level.setBlockAndUpdate(structuralPos, CCBBlocks.END_INCINERATION_BLOWER_STRUCTURAL_BLOCK.getDefaultState())) {
             return;
         }
@@ -294,9 +295,11 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
     }
 
     private @Nullable EndIncinerationBlowerStructuralBlockEntity getStructuralForUse() {
-        if (structural == null || structural.isRemoved()) {
-            structural = getStructural();
+        if (structural != null && !structural.isRemoved()) {
+            return structural;
         }
+
+        structural = getStructural();
         return structural;
     }
 

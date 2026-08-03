@@ -181,11 +181,11 @@ public final class AirtightReactorKettleUtils {
         if (master == null) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
+
         if (stack.isEmpty()) {
             extractStoredItems(master, level, player, pos);
             return ItemInteractionResult.SUCCESS;
         }
-
         return transferFluidContainer(master, level, player, hand, stack);
     }
 
@@ -199,10 +199,10 @@ public final class AirtightReactorKettleUtils {
         if (FluidHelper.tryEmptyItemIntoBE(level, player, hand, stack, master) || GenericItemEmptying.canItemBeEmptied(level, stack)) {
             return ItemInteractionResult.SUCCESS;
         }
+
         if (FluidHelper.tryFillItemFromBE(level, player, hand, stack, master) || GenericItemFilling.canItemBeFilled(level, stack)) {
             return ItemInteractionResult.SUCCESS;
         }
-
         return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
     }
 
@@ -223,9 +223,11 @@ public final class AirtightReactorKettleUtils {
             inventory.setStackInSlot(slot, ItemStack.EMPTY);
             extractedAny = true;
         }
-        if (extractedAny) {
-            level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
+        if (!extractedAny) {
+            return;
         }
+
+        level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
     }
 
     public static void refreshOtherFilters(AirtightReactorKettleStructuralBlockEntity structural, ItemStack stack) {
@@ -247,6 +249,7 @@ public final class AirtightReactorKettleUtils {
             if (filterPos.equals(structural.getBlockPos())) {
                 continue;
             }
+
             if (!(level.getBlockEntity(filterPos) instanceof AirtightReactorKettleStructuralBlockEntity otherFilter)) {
                 continue;
             }
@@ -438,7 +441,12 @@ public final class AirtightReactorKettleUtils {
             return false;
         }
 
-        long ingredientCount = recipe.getIngredients().stream().filter(ingredient -> !ingredient.isEmpty()).count();
+        int ingredientCount = 0;
+        for (Ingredient ingredient : recipe.getIngredients()) {
+            if (!ingredient.isEmpty() && ++ingredientCount > 1) {
+                break;
+            }
+        }
         return ingredientCount > 1 && !MechanicalPressBlockEntity.canCompress(recipe) && !AllRecipeTypes.shouldIgnoreInAutomation(holder);
     }
 

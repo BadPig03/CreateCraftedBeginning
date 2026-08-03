@@ -11,13 +11,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * KubeJS event used to register Airtight Engine Handlers for gases.
  * <p>
  * This event is exposed through {@code CCBEvents.airtightEngineHandler} and
- * allows scripts to associate a gas with an Airtight Engine efficiency value.
+ * allows scripts to associate a gas with an Airtight Engine work factor and
+ * optional maximum operating level.
  * <p>
  * Example usage in KubeJS:
  *
  * <pre>{@code
  * CCBEvents.airtightEngineHandler(event => {
- *     event.add('kubejs:oxygen', 4)
+ *     event.add('kubejs:oxygen', 1.5, 8)
  * })
  * }</pre>
  * <p>
@@ -26,22 +27,26 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class AirtightEngineHandlerEvent implements KubeEvent {
     /**
-     * Registers an Airtight Engine efficiency value for the gas identified by
-     * the given resource location.
-     * <p>
-     * The provided {@link ResourceLocation} is passed to
-     * {@link AirtightEngineHandlerUtils#register(ResourceLocation, int)}, which
-     * performs validation for gas existence, duplicate handlers, and efficiency
-     * range.
-     * <p>
-     * In KubeJS, the location can usually be provided as a string, for example
-     * {@code "createcraftedbeginning:natural_air"} or {@code "kubejs:oxygen"}.
+     * Registers an Airtight Engine work factor for a gas with the normal
+     * maximum operating level.
      *
      * @param location   the resource location of the gas to register
-     * @param efficiency the airtight engine efficiency value to assign
-     * @see AirtightEngineHandlerUtils#register(ResourceLocation, int)
+     * @param workFactor the effective supply contributed by each unit of gas
+     * @see AirtightEngineHandlerUtils#register(ResourceLocation, double)
      */
-    public void add(ResourceLocation location, int efficiency) {
-        AirtightEngineHandlerUtils.register(location, efficiency);
+    public void add(ResourceLocation location, double workFactor) {
+        AirtightEngineHandlerUtils.register(location, workFactor);
+    }
+
+    /**
+     * Registers an Airtight Engine work factor and maximum level for a gas.
+     *
+     * @param location   the resource location of the gas to register
+     * @param workFactor the effective supply contributed by each unit of gas
+     * @param maxLevel   the highest airtight engine level the gas can sustain
+     * @see AirtightEngineHandlerUtils#register(ResourceLocation, double, int)
+     */
+    public void add(ResourceLocation location, double workFactor, int maxLevel) {
+        AirtightEngineHandlerUtils.register(location, workFactor, maxLevel);
     }
 }

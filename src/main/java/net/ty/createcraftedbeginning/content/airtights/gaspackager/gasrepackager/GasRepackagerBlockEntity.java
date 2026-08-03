@@ -65,6 +65,7 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
                 if (!hasNonStandalonePackage) {
                     continue;
                 }
+
                 output = GasRepackagerUtils.createMixedOrderOutput(orderId, candidates);
             }
             else {
@@ -87,7 +88,6 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
             }
             return true;
         }
-
         return false;
     }
 
@@ -110,7 +110,6 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
             queueRepackaged(output);
             return true;
         }
-
         return false;
     }
 
@@ -160,9 +159,11 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
                 Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), remainder.copy());
             }
         }
-        if (changed) {
-            notifyUpdate();
+        if (!changed) {
+            return;
         }
+
+        notifyUpdate();
     }
 
     private String resolveSimpleOutputAddress(String originalAddress) {

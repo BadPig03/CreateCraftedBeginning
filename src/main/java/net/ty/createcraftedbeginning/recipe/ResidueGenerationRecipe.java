@@ -56,7 +56,6 @@ public class ResidueGenerationRecipe extends StandardProcessingWithGasRecipe<Sin
             if (hasFluidOutput) {
                 return ResidueOutput.fluid(recipe.getFluidResults().getFirst());
             }
-
             return ResidueOutput.item(recipe.getResultItem(level.registryAccess()));
         }
         return ResidueOutput.EMPTY;
@@ -74,9 +73,11 @@ public class ResidueGenerationRecipe extends StandardProcessingWithGasRecipe<Sin
         }
 
         int outputTypes = (results.isEmpty() ? 0 : 1) + (fluidResults.isEmpty() ? 0 : 1);
-        if (outputTypes != 1) {
-            errors.add("Residue generation recipes must output exactly one item or one fluid, never both.");
+        if (outputTypes == 1) {
+            return errors;
         }
+
+        errors.add("Residue generation recipes must output exactly one item or one fluid, never both.");
         return errors;
     }
 

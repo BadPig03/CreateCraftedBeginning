@@ -96,9 +96,11 @@ public class AirtightForgingPressTooltipBuilder {
             stackCount++;
         }
 
-        if (stackCount > maxDisplay) {
-            CCBLang.translate("gui.airtight_forging_press.more", stackCount - maxDisplay).style(ChatFormatting.DARK_GRAY).forGoggles(tooltip, 1);
+        if (stackCount <= maxDisplay) {
+            return;
         }
+
+        CCBLang.translate("gui.airtight_forging_press.more", stackCount - maxDisplay).style(ChatFormatting.DARK_GRAY).forGoggles(tooltip, 1);
     }
 
     private void addFluidStorage(List<Component> tooltip) {

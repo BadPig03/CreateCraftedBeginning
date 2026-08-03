@@ -230,10 +230,12 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
         }
 
         AirtightTankBlockEntity tank = source.get();
-        if (tank == null || tank.isRemoved()) {
-            tank = findTank(level);
-            source = new WeakReference<>(tank);
+        if (tank != null && !tank.isRemoved()) {
+            return tank;
         }
+
+        tank = findTank(level);
+        source = new WeakReference<>(tank);
         return tank;
     }
 

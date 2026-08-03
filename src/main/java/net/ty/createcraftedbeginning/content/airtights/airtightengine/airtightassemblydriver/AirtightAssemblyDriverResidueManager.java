@@ -72,7 +72,6 @@ public class AirtightAssemblyDriverResidueManager {
         if (!(level.getBlockEntity(pos) instanceof ResidueOutletBlockEntity outlet)) {
             return null;
         }
-
         return outlet.createResidueInsertionPlan(output.fluidStack(), output.itemStack(), maxAmount);
     }
 
@@ -291,9 +290,11 @@ public class AirtightAssemblyDriverResidueManager {
         successCount = 0;
         generationCooldown = GENERATION_MAX_COOLDOWN;
         failureCooldown = FAILURE_MAX_COOLDOWN;
-        if (changed) {
-            driverCore.markForSave();
+        if (!changed) {
+            return;
         }
+
+        driverCore.markForSave();
     }
 
     private int getTotalFluidGenerationAmount() {
@@ -306,9 +307,7 @@ public class AirtightAssemblyDriverResidueManager {
         if (currentLevel == 0) {
             return 0;
         }
-
-        long generatedUnits = (long) currentLevel * getItemQuantityMultiplier() * ResidueOutletInventory.ITEM_PROGRESS_UNITS_PER_ITEM / ITEM_GENERATION_DENOMINATOR;
-        return Math.clamp(generatedUnits, 0, Integer.MAX_VALUE);
+        return currentLevel * getItemQuantityMultiplier() * ResidueOutletInventory.ITEM_PROGRESS_UNITS_PER_ITEM / ITEM_GENERATION_DENOMINATOR;
     }
 
     private boolean advanceDistributionCursor(boolean fluidOutput, int lastOutletIndex, int outletCount) {

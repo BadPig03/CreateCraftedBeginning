@@ -33,12 +33,15 @@ public class GasInjectionChamberRenderer extends SmartBlockEntityRenderer<GasInj
         if (ticks < 0) {
             return 0;
         }
+
         if (ticks < NOZZLE_TIME) {
             return Mth.lerp((NOZZLE_TIME - ticks) / NOZZLE_TIME, -0.75f, 0);
         }
+
         if (ticks < PROCESSING_TIME - NOZZLE_TIME) {
             return -0.75f;
         }
+
         if (ticks < PROCESSING_TIME) {
             return Mth.lerp((PROCESSING_TIME - ticks) / NOZZLE_TIME, 0, -0.75f);
         }
@@ -54,12 +57,15 @@ public class GasInjectionChamberRenderer extends SmartBlockEntityRenderer<GasInj
         if (ticks < NOZZLE_TIME) {
             return 0;
         }
+
         if (ticks <= squeezeEnd) {
             return Mth.lerp((squeezeEnd - ticks) / squeezeTime, -0.2f, 0);
         }
+
         if (ticks <= releaseStart) {
             return -0.2f;
         }
+
         if (ticks <= releaseEnd) {
             return Mth.lerp((releaseEnd - ticks) / squeezeTime, 0, -0.2f);
         }

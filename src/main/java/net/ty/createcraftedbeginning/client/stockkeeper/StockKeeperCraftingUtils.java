@@ -236,9 +236,11 @@ public final class StockKeeperCraftingUtils {
 
         int delta = GasRequestUtils.toLogisticsAmount((long) requirement.count * sets);
         existing.count -= delta;
-        if (existing.count <= 0) {
-            orders.remove(existing);
+        if (existing.count > 0) {
+            return;
         }
+
+        orders.remove(existing);
     }
 
     private static void updateGasCraftable(Iterator<CraftableBigItemStack> iterator, GasCraftableBigItemStack gasCraftable, InventorySummary orderedItems, InventorySummary usedItems) {

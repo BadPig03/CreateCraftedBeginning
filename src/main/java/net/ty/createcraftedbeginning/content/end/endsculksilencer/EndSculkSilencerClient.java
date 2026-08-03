@@ -1,13 +1,18 @@
 package net.ty.createcraftedbeginning.content.end.endsculksilencer;
 
+import com.simibubi.create.AllSpecialTextures;
 import com.simibubi.create.content.equipment.goggles.GogglesItem;
 import net.createmod.catnip.outliner.Outliner;
 import net.createmod.ponder.api.PonderPalette;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.ty.createcraftedbeginning.compat.sable.SableSubLevelCompat;
+import net.ty.createcraftedbeginning.compat.sable.SableSubLevelCompat.Projection;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -16,8 +21,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class EndSculkSilencerClient {
-    private static final double OUTLINE_DISTANCE_SQR = 9216;
-
     private EndSculkSilencerClient() {
     }
 
@@ -31,15 +34,18 @@ public final class EndSculkSilencerClient {
             return;
         }
 
-        if (player.distanceToSqr(silencer.getBlockPos().getX() + 0.5, silencer.getBlockPos().getY() + 0.5, silencer.getBlockPos().getZ() + 0.5) > OUTLINE_DISTANCE_SQR) {
-            return;
-        }
-
         short range = silencer.getActiveWorkingRange();
-        if (range <= 0 || silencer.getLevel() == null) {
+        Level silencerLevel = silencer.getLevel();
+        if (range <= 0 || silencerLevel == null) {
             return;
         }
 
-        Outliner.getInstance().chaseAABB(silencer, EndSculkSilencerBlockEntity.calculateArea(silencer.getLevel(), silencer.getBlockPos(), range)).colored(PonderPalette.INPUT.getColor()).lineWidth(0.0625F);
+        Projection projection = SableSubLevelCompat.resolve(silencerLevel, silencer.getBlockPos());
+        Vec3 projectedCenter = projection.worldPosition();
+        if (player.distanceToSqr(projectedCenter.x, projectedCenter.y, projectedCenter.z) > 9216) {
+            return;
+        }
+
+        Outliner.getInstance().chaseAABB(silencer, EndSculkSilencerBlockEntity.calculateArea(player.level(), projection.blockPos(), range)).colored(PonderPalette.INPUT.getColor()).withFaceTexture(AllSpecialTextures.CHECKERED).lineWidth(0.0625f);
     }
 }

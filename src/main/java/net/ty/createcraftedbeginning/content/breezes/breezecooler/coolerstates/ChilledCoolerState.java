@@ -35,9 +35,12 @@ public class ChilledCoolerState extends BaseCoolerState {
             cooler.setCoolerState(new InactiveCoolerState());
             return true;
         }
-        if (!level.isClientSide) {
-            cooler.syncCoolingProgress();
+
+        if (level.isClientSide) {
+            return true;
         }
+
+        cooler.syncCoolingProgress();
         return true;
     }
 
@@ -77,10 +80,12 @@ public class ChilledCoolerState extends BaseCoolerState {
         if (remainingTime == 0) {
             cooler.setCoolerState(new InactiveCoolerState());
         }
-        if (time > 0) {
-            cooler.playSound();
-            cooler.spawnParticleBurst();
+        if (time <= 0) {
+            return InteractionResult.SUCCESS;
         }
+
+        cooler.playSound();
+        cooler.spawnParticleBurst();
         return InteractionResult.SUCCESS;
     }
 

@@ -82,9 +82,11 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
         if (pipeAxis != direction.getAxis()) {
             return AttachmentTypes.NONE;
         }
+
         if (adjacentBlock instanceof IAxisPipe axisPipe && axisPipe.getAxis(adjacentState) == pipeAxis) {
             return AttachmentTypes.NONE;
         }
+
         if (adjacentBlock instanceof IAirtightPipeDrain) {
             return AttachmentTypes.DRAIN;
         }

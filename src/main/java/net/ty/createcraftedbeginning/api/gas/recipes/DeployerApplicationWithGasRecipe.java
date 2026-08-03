@@ -38,7 +38,6 @@ public class DeployerApplicationWithGasRecipe extends ItemApplicationWithGasReci
         if (stacks.length == 0) {
             return Component.literal("Invalid");
         }
-
         return CreateLang.translateDirect("recipe.assembly.deploying_item", Component.translatable(stacks[0].getDescriptionId()).getString());
     }
 

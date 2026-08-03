@@ -29,9 +29,11 @@ public class AirtightReactorKettleBlockItem extends BlockItem {
         Direction face = context.getClickedFace();
         BlockPos adjacentPos = context.getClickedPos().relative(face);
         result = super.place(BlockPlaceContext.at(context, adjacentPos, face));
-        if (result == InteractionResult.FAIL && context.getLevel().isClientSide()) {
-            CCBClientBridge.showAirtightReactorKettlePlacementBounds(context);
+        if (result != InteractionResult.FAIL || !context.getLevel().isClientSide()) {
+            return result;
         }
+
+        CCBClientBridge.showAirtightReactorKettlePlacementBounds(context);
         return result;
     }
 

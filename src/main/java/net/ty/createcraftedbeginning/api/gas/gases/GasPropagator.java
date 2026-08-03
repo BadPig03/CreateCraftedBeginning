@@ -114,6 +114,7 @@ public final class GasPropagator {
                 if (newDistance > pumpRange && !targetBehaviour.hasAnyPressure()) {
                     continue;
                 }
+
                 if (!targetBehaviour.canHaveFlowToward(targetState, direction.getOpposite())) {
                     continue;
                 }

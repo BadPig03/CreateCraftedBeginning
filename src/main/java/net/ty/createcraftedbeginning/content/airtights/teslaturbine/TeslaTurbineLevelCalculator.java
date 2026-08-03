@@ -109,7 +109,7 @@ public class TeslaTurbineLevelCalculator {
 
     private int getGasTypeLevel() {
         GasStack gas = core.getFlowMeter().getGasType();
-        return gas.isEmpty() ? 0 : AirtightTurbineHandlerUtils.of(gas).getEfficiency();
+        return gas.isEmpty() ? 0 : AirtightTurbineHandlerUtils.of(gas).getMaxLevel();
     }
 
     private int getRotorLevel() {

@@ -112,7 +112,6 @@ public enum EffectsProtectionUpgrade implements AirtightUpgrade {
         if (player.level().isClientSide) {
             return GlobalAirtightUpgradesConsumptionManager.canConsumeGas(player, this, EquipmentSlot.HEAD, consumption, handler -> handler.canCureEffect(effect));
         }
-
         return GlobalAirtightUpgradesConsumptionManager.tryConsumeGas(player, this, EquipmentSlot.HEAD, consumption, handler -> handler.canCureEffect(effect));
     }
 }

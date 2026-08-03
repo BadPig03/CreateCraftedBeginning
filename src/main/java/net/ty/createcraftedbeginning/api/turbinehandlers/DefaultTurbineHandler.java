@@ -16,7 +16,7 @@ public final class DefaultTurbineHandler implements AirtightTurbineHandler {
      * {@inheritDoc}
      */
     @Override
-    public int getEfficiency() {
+    public int getMaxLevel() {
         return 0;
     }
 }

@@ -47,6 +47,7 @@ public class VirtualGasItemRecipeLookupPlugin implements IRecipeManagerPlugin {
         if (role == RecipeIngredientRole.INPUT) {
             return matchesInput;
         }
+
         if (role == RecipeIngredientRole.OUTPUT) {
             return matchesOutput;
         }
@@ -68,7 +69,6 @@ public class VirtualGasItemRecipeLookupPlugin implements IRecipeManagerPlugin {
         if (gas.isEmpty()) {
             return null;
         }
-
         return new GasFocus(gas.copyWithAmount(FluidType.BUCKET_VOLUME), focus.getRole());
     }
 
@@ -106,7 +106,6 @@ public class VirtualGasItemRecipeLookupPlugin implements IRecipeManagerPlugin {
         if (runtime == null) {
             return List.of();
         }
-
         return runtime.getRecipeManager().createRecipeLookup(recipeCategory.getRecipeType()).get().filter(recipe -> recipeMatches(recipe, gasFocus)).toList();
     }
 

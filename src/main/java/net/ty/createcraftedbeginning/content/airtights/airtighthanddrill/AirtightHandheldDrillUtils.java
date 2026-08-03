@@ -75,9 +75,11 @@ public final class AirtightHandheldDrillUtils {
 
     private static ItemStack createDrillUsedTool(ItemStack drill, ServerLevel level) {
         ItemStack tool = new ItemStack(Items.NETHERITE_PICKAXE);
-        if (SilkTouchUpgrade.INSTANCE.canApply(drill)) {
-            tool.enchant(level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.SILK_TOUCH), 1);
+        if (!SilkTouchUpgrade.INSTANCE.canApply(drill)) {
+            return tool;
         }
+
+        tool.enchant(level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.SILK_TOUCH), 1);
         return tool;
     }
 
@@ -167,9 +169,11 @@ public final class AirtightHandheldDrillUtils {
 
         speed *= calculateMiningSizeMultiplier(context);
         speed *= calculateMiningHardnessMultiplier(context);
-        if (player.getOffhandItem().is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
-            speed *= 2;
+        if (!player.getOffhandItem().is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
+            return speed;
         }
+
+        speed *= 2;
         return speed;
     }
 
@@ -198,10 +202,11 @@ public final class AirtightHandheldDrillUtils {
         if (magnet) {
             consumption *= CCBConfig.server().equipments.magnetMultiplier.getF();
         }
-        if (conversion) {
-            consumption *= CCBConfig.server().equipments.experienceConversionMultiplier.getF();
+        if (!conversion) {
+            return consumption;
         }
 
+        consumption *= CCBConfig.server().equipments.experienceConversionMultiplier.getF();
         return consumption;
     }
 
@@ -222,7 +227,6 @@ public final class AirtightHandheldDrillUtils {
         if (totalHardness <= 0) {
             return 1;
         }
-
         return baseHardness / totalHardness * breakSpeedPos.size();
     }
 
@@ -354,6 +358,7 @@ public final class AirtightHandheldDrillUtils {
             if (entity.is(player)) {
                 continue;
             }
+
             if (entity.isInvulnerableTo(damageSource) || entity.isInvulnerable()) {
                 continue;
             }
@@ -362,9 +367,11 @@ public final class AirtightHandheldDrillUtils {
             if (toEntity.length() > range) {
                 continue;
             }
+
             if (viewVector.dot(toEntity.normalize()) < 0.5) {
                 continue;
             }
+
             if (!hasClearAttackLine(player, entity, level)) {
                 continue;
             }

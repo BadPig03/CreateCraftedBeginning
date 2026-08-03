@@ -117,9 +117,11 @@ public final class AirCompressorUtils {
         if (plan == null || overStressed) {
             return false;
         }
+
         if (Mth.abs(speed) < SpeedLevel.MEDIUM.getSpeedValue()) {
             return false;
         }
+
         if (overheatState == OverheatState.MELTDOWN) {
             return false;
         }
@@ -306,6 +308,7 @@ public final class AirCompressorUtils {
         if (savedState == OverheatState.NORMAL) {
             return 0;
         }
+
         if (savedState == OverheatState.MELTDOWN) {
             return getMaxStoredHeat();
         }

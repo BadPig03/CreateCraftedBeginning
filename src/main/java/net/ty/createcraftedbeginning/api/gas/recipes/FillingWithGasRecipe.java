@@ -64,7 +64,6 @@ public class FillingWithGasRecipe extends StandardProcessingWithGasRecipe<Single
         if (stacks.length == 0) {
             return Component.literal("Invalid");
         }
-
         return CreateLang.translateDirect("recipe.assembly.spout_filling_fluid", stacks[0].getHoverName().getString());
     }
 

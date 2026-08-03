@@ -16,6 +16,7 @@ public class CCBPressurizationRecipes extends PressurizationRecipeGen {
     GeneratedRecipe PRESSURIZED_NATURAL = create("pressurized_natural", builder -> builder.require(CCBGases.NATURAL_AIR.get(), 10).output(CCBGases.PRESSURIZED_NATURAL_AIR.get(), 1));
     GeneratedRecipe PRESSURIZED_ULTRAWARM = create("pressurized_ultrawarm", builder -> builder.require(CCBGases.ULTRAWARM_AIR.get(), 10).output(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get(), 1));
     GeneratedRecipe PRESSURIZED_ETHEREAL = create("pressurized_ethereal", builder -> builder.require(CCBGases.ETHEREAL_AIR.get(), 10).output(CCBGases.PRESSURIZED_ETHEREAL_AIR.get(), 1));
+    GeneratedRecipe PRESSURIZED_STEAM = create("pressurized_steam", builder -> builder.require(CCBGases.STEAM.get(), 10).output(CCBGases.PRESSURIZED_STEAM.get(), 1));
 
     GeneratedRecipe PRESSURIZED_ENERGIZED_NATURAL = create("pressurized_energized_natural", builder -> builder.require(CCBGases.ENERGIZED_NATURAL_AIR.get(), 10).output(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get(), 1));
     GeneratedRecipe PRESSURIZED_ENERGIZED_ULTRAWARM = create("pressurized_energized_ultrawarm", builder -> builder.require(CCBGases.ENERGIZED_ULTRAWARM_AIR.get(), 10).output(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get(), 1));

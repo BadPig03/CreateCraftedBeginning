@@ -31,7 +31,6 @@ public class CrateMountedStorageType<B extends CratesBlockEntity, S extends Crat
         if (!blockEntityClass.isInstance(be)) {
             return null;
         }
-
         return factory.apply(blockEntityClass.cast(be));
     }
 }

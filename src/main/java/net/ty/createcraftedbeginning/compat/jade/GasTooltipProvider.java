@@ -59,6 +59,7 @@ public enum GasTooltipProvider implements IServerDataProvider<BlockAccessor>, IC
             tooltip.append(isCreative ? IThemeHelper.get().info(Component.translatable("jade.gas.infinity_mark")) : IThemeHelper.get().seconds(remainingTicks, tickRate).withStyle(ChatFormatting.RED));
             return;
         }
+
         if (windLevel != WindLevel.GALE) {
             return;
         }
@@ -88,6 +89,7 @@ public enum GasTooltipProvider implements IServerDataProvider<BlockAccessor>, IC
         if (!data.contains(GasConstants.STORAGE_KEY) || !data.contains(GasConstants.STORAGE_UID_KEY)) {
             return;
         }
+
         if (!JadePlugin.GAS_BLOCK_TOOLTIP.toString().equals(data.getString(GasConstants.STORAGE_UID_KEY))) {
             return;
         }

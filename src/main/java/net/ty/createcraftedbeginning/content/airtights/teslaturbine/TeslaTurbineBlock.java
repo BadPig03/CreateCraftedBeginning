@@ -136,9 +136,11 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
 
     @Override
     public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos) {
-        if (state.getValue(WATERLOGGED)) {
-            level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
+        if (!state.getValue(WATERLOGGED)) {
+            return state;
         }
+
+        level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         return state;
     }
 
@@ -165,10 +167,12 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
 
         level.setBlockAndUpdate(pos, state.setValue(ROTOR, rotorCount - 1));
         CCBSoundEvents.ROTOR_REMOVED.playOnServer(level, pos, 1, 1);
-        if (!player.isCreative()) {
-            ItemStack rotor = new ItemStack(CCBItems.TESLA_TURBINE_ROTOR.asItem());
-            ItemHandlerHelper.giveItemToPlayer(player, rotor);
+        if (player.isCreative()) {
+            return ItemInteractionResult.SUCCESS;
         }
+
+        ItemStack rotor = new ItemStack(CCBItems.TESLA_TURBINE_ROTOR.asItem());
+        ItemHandlerHelper.giveItemToPlayer(player, rotor);
         return ItemInteractionResult.SUCCESS;
     }
 
@@ -203,6 +207,7 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
                         level.destroyBlock(pos, false);
                         return;
                     }
+
                     continue;
                 }
 
@@ -248,10 +253,12 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
         List<StackRequirement> requirements = new ArrayList<>();
         requirements.add(new StackRequirement(new ItemStack(asItem()), ItemUseType.CONSUME));
         int rotorCount = state.getValue(ROTOR);
-        if (rotorCount > 0) {
-            ItemStack rotors = new ItemStack(CCBItems.TESLA_TURBINE_ROTOR.asItem(), rotorCount);
-            requirements.add(new StackRequirement(rotors, ItemUseType.CONSUME));
+        if (rotorCount <= 0) {
+            return new ItemRequirement(requirements);
         }
+
+        ItemStack rotors = new ItemStack(CCBItems.TESLA_TURBINE_ROTOR.asItem(), rotorCount);
+        requirements.add(new StackRequirement(rotors, ItemUseType.CONSUME));
         return new ItemRequirement(requirements);
     }
 }

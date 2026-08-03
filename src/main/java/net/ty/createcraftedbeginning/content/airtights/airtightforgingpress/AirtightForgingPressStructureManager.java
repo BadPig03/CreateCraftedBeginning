@@ -35,7 +35,6 @@ public class AirtightForgingPressStructureManager {
         if (!(level.getBlockEntity(shaftPos) instanceof AirtightForgingPressStructuralShaftBlockEntity shaft)) {
             return 0;
         }
-
         return shaft.getSpeed();
     }
 
@@ -118,9 +117,11 @@ public class AirtightForgingPressStructureManager {
         if (compoundTag.contains(COMPOUND_KEY_OVERSTRESSED)) {
             overstressed = compoundTag.getBoolean(COMPOUND_KEY_OVERSTRESSED);
         }
-        if (compoundTag.contains(COMPOUND_KEY_PREVIOUS_OVERSTRESSED)) {
-            previousOverstressed = compoundTag.getBoolean(COMPOUND_KEY_PREVIOUS_OVERSTRESSED);
+        if (!compoundTag.contains(COMPOUND_KEY_PREVIOUS_OVERSTRESSED)) {
+            return;
         }
+
+        previousOverstressed = compoundTag.getBoolean(COMPOUND_KEY_PREVIOUS_OVERSTRESSED);
     }
 
     public float getSpeed() {

@@ -59,7 +59,6 @@ public enum GasCanisterOverlay implements Layer {
         if (isCreative) {
             return CCBLang.translateDirect("gui.gas_container.infinity").withStyle(ChatFormatting.GOLD);
         }
-
         return GasAmountUtils.precise(amount).color(Color.mixColors(GasCanisterUtils.COLOR_RED, GasCanisterUtils.COLOR_WHITE, Mth.clamp(2.0f * amount / capacity, 0, 1))).add(CCBLang.text(" / ").style(ChatFormatting.WHITE)).add(GasAmountUtils.precise(capacity).style(ChatFormatting.GRAY)).component();
     }
 

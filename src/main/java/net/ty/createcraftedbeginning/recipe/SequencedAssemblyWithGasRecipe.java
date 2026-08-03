@@ -94,7 +94,6 @@ public class SequencedAssemblyWithGasRecipe implements Recipe<RecipeWrapper> {
             recipe.enforceNextResult(() -> assembly.advance(holder.id(), item));
             return Optional.of(new RecipeHolder<>(holder.id(), recipeClass.cast(recipe)));
         }
-
         return Optional.empty();
     }
 
@@ -104,7 +103,6 @@ public class SequencedAssemblyWithGasRecipe implements Recipe<RecipeWrapper> {
         if (!input.has(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS)) {
             return 0;
         }
-
         return input.get(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS).step();
     }
 
@@ -135,7 +133,6 @@ public class SequencedAssemblyWithGasRecipe implements Recipe<RecipeWrapper> {
                 return result.getStack().copy();
             }
         }
-
         return ItemStack.EMPTY;
     }
 
@@ -144,6 +141,7 @@ public class SequencedAssemblyWithGasRecipe implements Recipe<RecipeWrapper> {
         if (ingredient.test(input)) {
             return true;
         }
+
         if (getTransitionalItem().getItem() != input.getItem() || !input.has(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS)) {
             return false;
         }

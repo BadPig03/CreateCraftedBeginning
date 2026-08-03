@@ -63,7 +63,6 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
         if (isInvalidTank(tank) || resource.isEmpty() || !GasStack.isSameGasSameComponents(resource, getGasInTank(tank))) {
             return GasStack.EMPTY;
         }
-
         return drain(tank, resource.getAmount(), action);
     }
 
@@ -77,16 +76,19 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
         if (gas.isEmpty()) {
             return GasStack.EMPTY;
         }
+
         if (creatives.get(tank)) {
             return gas.copyWithAmount(maxDrain);
         }
 
         long drained = Math.min(maxDrain, gas.getAmount());
         GasStack drainedGas = gas.copyWithAmount(drained);
-        if (action.execute() && drained > 0) {
-            gases.get(tank).shrink(drained);
-            save();
+        if (!action.execute() || drained <= 0) {
+            return drainedGas;
         }
+
+        gases.get(tank).shrink(drained);
+        save();
         return drainedGas;
     }
 
@@ -107,7 +109,6 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
         if (isEmpty()) {
             return EMPTY_PACK;
         }
-
         return NON_EMPTY_PACK;
     }
 
@@ -153,7 +154,6 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
             if (gas.isEmpty()) {
                 return Math.min(capacity, resource.getAmount());
             }
-
             return GasStack.isSameGasSameComponents(gas, resource) ? Math.min(capacity - gas.getAmount(), resource.getAmount()) : 0;
         }
 
@@ -171,9 +171,11 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
         long space = capacity - gas.getAmount();
         long filled = Math.min(space, resource.getAmount());
         gases.get(tank).grow(filled);
-        if (filled > 0) {
-            save();
+        if (filled <= 0) {
+            return filled;
         }
+
+        save();
         return filled;
     }
 
@@ -182,7 +184,6 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
         if (isInvalidTank(tank)) {
             return 0;
         }
-
         return capacities.get(tank);
     }
 
@@ -212,7 +213,6 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
         if (isInvalidTank(tank)) {
             return new CompoundTag();
         }
-
         return compoundTags.get(tank);
     }
 

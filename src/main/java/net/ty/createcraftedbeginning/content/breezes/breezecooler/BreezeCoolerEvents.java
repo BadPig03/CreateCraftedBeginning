@@ -29,6 +29,7 @@ public class BreezeCoolerEvents {
         if (!(blockEntity instanceof BreezeCoolerBlockEntity cooler) || level.isClientSide) {
             return;
         }
+
         if (!cooler.getCurrentState().onSnowballImpact(cooler)) {
             return;
         }

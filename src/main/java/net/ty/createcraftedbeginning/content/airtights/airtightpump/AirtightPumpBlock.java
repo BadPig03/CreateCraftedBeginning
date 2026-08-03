@@ -134,7 +134,6 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
         if (isSneaking || connectedDirection == null || connectedDirection.getAxis() == targetDirection.getAxis()) {
             return state;
         }
-
         return state.setValue(FACING, connectedDirection);
     }
 
@@ -151,6 +150,7 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
         if (!isPump(state) || !isPump(oldState) || state.getValue(FACING) != oldState.getValue(FACING).getOpposite()) {
             return;
         }
+
         if (!(level.getBlockEntity(pos) instanceof AirtightPumpBlockEntity pump)) {
             return;
         }
@@ -179,9 +179,11 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
 
     @Override
     public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos) {
-        if (state.getValue(WATERLOGGED)) {
-            level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
+        if (!state.getValue(WATERLOGGED)) {
+            return state;
         }
+
+        level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         return state;
     }
 

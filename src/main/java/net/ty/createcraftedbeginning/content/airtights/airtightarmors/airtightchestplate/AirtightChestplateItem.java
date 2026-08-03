@@ -57,9 +57,11 @@ public class AirtightChestplateItem extends AirtightChestplateArmorItem implemen
     @Override
     public ItemAttributeModifiers getDefaultAttributeModifiers(ItemStack chestplate) {
         ItemAttributeModifiers modifiers = super.getDefaultAttributeModifiers(chestplate);
-        if (HasteUpgrade.INSTANCE.canApply(chestplate)) {
-            modifiers = modifiers.withModifierAdded(Attributes.ATTACK_SPEED, new AttributeModifier(ID, 0.2, Operation.ADD_MULTIPLIED_TOTAL), EquipmentSlotGroup.CHEST).withModifierAdded(Attributes.BLOCK_BREAK_SPEED, new AttributeModifier(ID, 0.4, Operation.ADD_MULTIPLIED_TOTAL), EquipmentSlotGroup.CHEST).withModifierAdded(Attributes.SUBMERGED_MINING_SPEED, new AttributeModifier(ID, 4, Operation.ADD_MULTIPLIED_TOTAL), EquipmentSlotGroup.CHEST);
+        if (!HasteUpgrade.INSTANCE.canApply(chestplate)) {
+            return modifiers;
         }
+
+        modifiers = modifiers.withModifierAdded(Attributes.ATTACK_SPEED, new AttributeModifier(ID, 0.2, Operation.ADD_MULTIPLIED_TOTAL), EquipmentSlotGroup.CHEST).withModifierAdded(Attributes.BLOCK_BREAK_SPEED, new AttributeModifier(ID, 0.4, Operation.ADD_MULTIPLIED_TOTAL), EquipmentSlotGroup.CHEST).withModifierAdded(Attributes.SUBMERGED_MINING_SPEED, new AttributeModifier(ID, 4, Operation.ADD_MULTIPLIED_TOTAL), EquipmentSlotGroup.CHEST);
         return modifiers;
     }
 

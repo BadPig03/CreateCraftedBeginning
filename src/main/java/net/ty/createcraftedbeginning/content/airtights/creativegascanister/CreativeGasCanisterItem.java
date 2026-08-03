@@ -91,9 +91,11 @@ public class CreativeGasCanisterItem extends Item implements IGasFilter {
         if (!(other.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents sourceContents)) {
             return false;
         }
+
         if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents targetContents)) {
             return false;
         }
+
         if (action == ClickAction.PRIMARY) {
             return false;
         }
@@ -147,7 +149,6 @@ public class CreativeGasCanisterItem extends Item implements IGasFilter {
         if (filterGas.isEmpty()) {
             return gas -> false;
         }
-
         return gas -> !gas.isEmpty() && GasStack.isSameGasSameComponents(filterGas, gas);
     }
 

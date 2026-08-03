@@ -84,9 +84,11 @@ public class BreezeCoolerBlockItem extends BlockItem {
         }
 
         spawnCaptureEffects(level, VecHelper.getCenterOf(spawnerBlockEntity.getBlockPos()));
-        if (!level.isClientSide) {
-            giveCoolerItemTo(player, context.getItemInHand(), context.getHand());
+        if (level.isClientSide) {
+            return InteractionResult.sidedSuccess(level.isClientSide);
         }
+
+        giveCoolerItemTo(player, context.getItemInHand(), context.getHand());
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
@@ -103,9 +105,11 @@ public class BreezeCoolerBlockItem extends BlockItem {
         }
 
         spawnCaptureEffects(level, VecHelper.getCenterOf(spawnerBlockEntity.getBlockPos()));
-        if (!level.isClientSide) {
-            giveCoolerItemTo(player, context.getItemInHand(), context.getHand());
+        if (level.isClientSide) {
+            return InteractionResult.sidedSuccess(level.isClientSide);
         }
+
+        giveCoolerItemTo(player, context.getItemInHand(), context.getHand());
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
@@ -117,10 +121,12 @@ public class BreezeCoolerBlockItem extends BlockItem {
 
         Level level = player.level();
         spawnCaptureEffects(level, entity.position());
-        if (!level.isClientSide) {
-            giveCoolerItemTo(player, heldItem, hand);
-            entity.discard();
+        if (level.isClientSide) {
+            return InteractionResult.sidedSuccess(level.isClientSide);
         }
+
+        giveCoolerItemTo(player, heldItem, hand);
+        entity.discard();
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
@@ -136,11 +142,11 @@ public class BreezeCoolerBlockItem extends BlockItem {
             InteractionResult result = tryCaptureFromTrialSpawner(spawnerBlockEntity, context);
             return result == InteractionResult.FAIL ? super.useOn(context) : result;
         }
+
         if (blockEntity instanceof SpawnerBlockEntity spawnerBlockEntity) {
             InteractionResult result = tryCaptureFromSpawner(spawnerBlockEntity, context);
             return result == InteractionResult.FAIL ? super.useOn(context) : result;
         }
-
         return super.useOn(context);
     }
 }

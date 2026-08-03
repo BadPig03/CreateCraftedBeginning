@@ -64,7 +64,6 @@ public final class GasCanisterUtils {
         if (canisterContents.getMachineFillingStrategy() == MachineFillingStrategy.DENY) {
             return 0;
         }
-
         return canisterContents.fill(0, resource.copyWithAmount(maxAmount), GasAction.SIMULATE);
     }
 

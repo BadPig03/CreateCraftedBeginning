@@ -22,6 +22,7 @@ public abstract class HoglinMixin {
             cir.setReturnValue(false);
             return;
         }
+
         if (!hoglin.hasEffect(CCBMobEffects.ZOMBIFICATION)) {
             return;
         }

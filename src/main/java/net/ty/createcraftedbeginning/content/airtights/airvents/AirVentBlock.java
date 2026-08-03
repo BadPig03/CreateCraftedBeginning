@@ -166,7 +166,6 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
         if (isInsideAirVent(player)) {
             return InteractionResult.FAIL;
         }
-
         return IWrenchable.super.onSneakWrenched(state, context);
     }
 

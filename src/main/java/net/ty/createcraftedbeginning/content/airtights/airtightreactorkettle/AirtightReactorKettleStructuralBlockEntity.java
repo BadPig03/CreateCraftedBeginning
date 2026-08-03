@@ -56,7 +56,6 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
         if (level == null || !(level.getBlockEntity(masterPos) instanceof AirtightReactorKettleBlockEntity masterBlockEntity)) {
             return null;
         }
-
         return masterBlockEntity;
     }
 
@@ -65,7 +64,6 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
         if (master == null || !canStore(getBlockState())) {
             return null;
         }
-
         return master.getItemCapability();
     }
 
@@ -74,7 +72,6 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
         if (master == null || !canStore(getBlockState())) {
             return null;
         }
-
         return master.getFluidCapability();
     }
 
@@ -83,7 +80,6 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
         if (master == null || !canStore(getBlockState())) {
             return null;
         }
-
         return master.getGasCapability();
     }
 

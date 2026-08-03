@@ -208,6 +208,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         if (connection.prepareForRemoval()) {
             return;
         }
+
         if (retiredConnections == null) {
             retiredConnections = new ArrayList<>();
         }
@@ -408,9 +409,11 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         for (GasPipeConnection connection : interfaces.values()) {
             connection.read(compoundTag, provider, blockEntity.getBlockPos(), clientPacket);
         }
-        if (clientPacket) {
-            clientModelRefreshPending = true;
+        if (!clientPacket) {
+            return;
         }
+
+        clientModelRefreshPending = true;
     }
 
     /**
@@ -431,9 +434,11 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
             sendUpdate |= connection.flipFlowsIfPressureReversed();
             connection.manageSource(level, pos, blockEntity);
         }
-        if (sendUpdate) {
-            blockEntity.notifyUpdate();
+        if (!sendUpdate) {
+            return;
         }
+
+        blockEntity.notifyUpdate();
     }
 
     private boolean updateFlows(Level level, BlockPos pos, Collection<GasPipeConnection> connections) {
@@ -478,9 +483,11 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
             Predicate<GasStack> extractionPredicate = extracted -> allowsInbound && canPullGasFrom(extracted, state, side);
             sendUpdate |= connection.manageFlows(level, pos, internalGas, extractionPredicate);
         }
-        if (sendUpdate) {
-            blockEntity.notifyUpdate();
+        if (!sendUpdate) {
+            return false;
         }
+
+        blockEntity.notifyUpdate();
         return false;
     }
 

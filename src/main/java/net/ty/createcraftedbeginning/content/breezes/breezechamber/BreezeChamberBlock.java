@@ -117,9 +117,11 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
                 container = stack.hasCraftingRemainingItem() ? stack.getCraftingRemainingItem() : ItemStack.EMPTY;
             }
         }
-        if (!simulate && !level.isClientSide) {
-            stack.shrink(1);
+        if (simulate || level.isClientSide) {
+            return InteractionResultHolder.success(container);
         }
+
+        stack.shrink(1);
         return InteractionResultHolder.success(container);
     }
 
@@ -130,9 +132,11 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
 
     @Override
     public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor world, BlockPos pos, BlockPos neighbourPos) {
-        if (state.getValue(WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
+        if (!state.getValue(WATERLOGGED)) {
+            return state;
         }
+
+        world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
         return state;
     }
 

@@ -75,9 +75,11 @@ public class AirtightForgingPressStructuralBlock extends Block implements IBE<Ai
 
         BlockPos masterPos = AirtightForgingPressUtils.getMaster(pos, state);
         level.destroyBlockProgress(masterPos.hashCode(), masterPos, -1);
-        if (!level.isClientSide && player.isCreative()) {
-            level.destroyBlock(masterPos, false);
+        if (level.isClientSide || !player.isCreative()) {
+            return super.playerWillDestroy(level, pos, state, player);
         }
+
+        level.destroyBlock(masterPos, false);
         return super.playerWillDestroy(level, pos, state, player);
     }
 
@@ -113,9 +115,11 @@ public class AirtightForgingPressStructuralBlock extends Block implements IBE<Ai
 
         BlockPos masterPos = AirtightForgingPressUtils.getMaster(pos, state);
         Block masterBlock = CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK.get();
-        if (!accessor.getBlockTicks().hasScheduledTick(masterPos, masterBlock)) {
-            accessor.scheduleTick(masterPos, masterBlock, 1);
+        if (accessor.getBlockTicks().hasScheduledTick(masterPos, masterBlock)) {
+            return state;
         }
+
+        accessor.scheduleTick(masterPos, masterBlock, 1);
         return state;
     }
 
@@ -134,7 +138,6 @@ public class AirtightForgingPressStructuralBlock extends Block implements IBE<Ai
         if (!blockState.getValue(STRUCTURAL_POSITION).isLowerStore() || hitResult.getDirection() == Direction.DOWN) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-
         return onBlockEntityUseItemOn(level, blockPos, structural -> AirtightForgingPressUtils.getUseItemOnResult(structural, level, player, blockPos, hand, stack));
     }
 

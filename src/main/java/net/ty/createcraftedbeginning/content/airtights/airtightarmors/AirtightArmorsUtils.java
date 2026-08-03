@@ -33,15 +33,19 @@ public final class AirtightArmorsUtils {
         if (item.is(CCBItems.AIRTIGHT_HELMET)) {
             return AirtightHelmetUpgradeRegistry.getDefaultUpgradeList();
         }
+
         if (item.is(CCBItems.AIRTIGHT_CHESTPLATE)) {
             return AirtightChestplateUpgradeRegistry.getDefaultUpgradeList();
         }
+
         if (item.is(CCBItems.AIRTIGHT_LEGGINGS)) {
             return AirtightLeggingsUpgradeRegistry.getDefaultUpgradeList();
         }
+
         if (item.is(CCBItems.AIRTIGHT_BOOTS)) {
             return AirtightBootsUpgradeRegistry.getDefaultUpgradeList();
         }
+
         if (item.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
             return AirtightHandheldDrillUpgradeRegistry.getDefaultUpgradeList();
         }
@@ -52,15 +56,19 @@ public final class AirtightArmorsUtils {
         if (item.is(CCBItems.AIRTIGHT_HELMET)) {
             return AirtightHelmetUpgradeRegistry.getAll();
         }
+
         if (item.is(CCBItems.AIRTIGHT_CHESTPLATE)) {
             return AirtightChestplateUpgradeRegistry.getAll();
         }
+
         if (item.is(CCBItems.AIRTIGHT_LEGGINGS)) {
             return AirtightLeggingsUpgradeRegistry.getAll();
         }
+
         if (item.is(CCBItems.AIRTIGHT_BOOTS)) {
             return AirtightBootsUpgradeRegistry.getAll();
         }
+
         if (item.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
             return AirtightHandheldDrillUpgradeRegistry.getAll();
         }

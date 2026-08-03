@@ -115,6 +115,7 @@ public final class AirtightArmorsHandlerUtils {
             CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Armors Handler for gas '{}': a handler is already registered.", location);
             return;
         }
+
         if (!validateHandler(location, handler)) {
             return;
         }

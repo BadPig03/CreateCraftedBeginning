@@ -76,6 +76,7 @@ public abstract class ChainConveyorVisualMixin extends SingleAxisRotatingVisual<
             if (key == BuiltInRegistries.ITEM.getDefaultKey()) {
                 return;
             }
+
             physicsData.modelKey = key;
         }
 

@@ -30,6 +30,7 @@ public final class AirtightForgingPressStructuralClientExtensions implements ICl
         if (!(target instanceof BlockHitResult result)) {
             return false;
         }
+
         BlockPos targetPos = result.getBlockPos();
         BlockState targetState = level.getBlockState(targetPos);
         return targetState.getBlock() instanceof IAirtightForgingPressStructural structural && !structural.stillValid(level, targetPos, state);
@@ -47,6 +48,7 @@ public final class AirtightForgingPressStructuralClientExtensions implements ICl
         if (currentState.getBlock() instanceof IAirtightForgingPressStructural structural && !structural.stillValid(level, pos, blockState)) {
             return null;
         }
+
         BlockPos masterPos = AirtightForgingPressUtils.getMaster(pos, blockState);
         HashSet<BlockPos> positions = new HashSet<>();
         for (int i = -1; i <= 1; i++) {

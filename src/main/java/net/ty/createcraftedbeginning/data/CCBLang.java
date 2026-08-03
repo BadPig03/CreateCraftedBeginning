@@ -73,7 +73,6 @@ public class CCBLang extends Lang {
         if (totalSeconds < 1) {
             return builder().translate("gui.ticks", ticks);
         }
-
         return formatSeconds(Mth.floor(totalSeconds));
     }
 
@@ -87,7 +86,6 @@ public class CCBLang extends Lang {
         if (seconds == 0) {
             return builder().translate("gui.minutes", minutes);
         }
-
         return builder().translate("gui.minutes_seconds", minutes, seconds);
     }
 

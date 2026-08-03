@@ -65,9 +65,11 @@ public class TeslaTurbineStructureManager {
     }
 
     public void tick() {
-        if (evaluate()) {
-            core.markForClientSync();
+        if (!evaluate()) {
+            return;
         }
+
+        core.markForClientSync();
     }
 
     public boolean evaluate() {
@@ -129,9 +131,11 @@ public class TeslaTurbineStructureManager {
         clearDerivedState();
         previousClockwiseNozzles = -1;
         previousCounterClockwiseNozzles = -1;
-        if (changed) {
-            core.markForClientSync();
+        if (!changed) {
+            return;
         }
+
+        core.markForClientSync();
     }
 
     public void invalidateForServerLoad() {

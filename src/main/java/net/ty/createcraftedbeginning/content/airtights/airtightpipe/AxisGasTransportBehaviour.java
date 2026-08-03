@@ -55,6 +55,7 @@ public abstract class AxisGasTransportBehaviour extends GasTransportBehaviour {
         if (otherBlock instanceof IAxisPipe axisPipe && axisPipe.getAxis(otherState) == pipeAxis) {
             return AttachmentTypes.NONE;
         }
+
         if (otherBlock instanceof IAirtightPipeDrain) {
             return AttachmentTypes.DRAIN;
         }

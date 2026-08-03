@@ -222,6 +222,7 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         if (level == null || level.isClientSide && !isVirtual()) {
             return;
         }
+
         if (Mth.abs(speed) < SpeedLevel.MEDIUM.getSpeedValue()) {
             return;
         }
@@ -279,14 +280,17 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
             CCBLang.addToGoggles(tooltip, "gui.network_overstressed");
             return true;
         }
-        if (!isSpeedRequirementFulfilled() && getSpeed() != 0) {
-            if (added) {
-                tooltip.add(CommonComponents.EMPTY);
-            }
-            CCBLang.translate("gui.speed_requirement").style(ChatFormatting.GOLD).forGoggles(tooltip);
-            CCBLang.addToGoggles(tooltip, "gui.not_fast_enough", Component.translatable(CCBBlocks.AIR_COMPRESSOR_BLOCK.get().getDescriptionId()));
-            added = true;
+
+        if (isSpeedRequirementFulfilled() || getSpeed() == 0) {
+            return added;
         }
+
+        if (added) {
+            tooltip.add(CommonComponents.EMPTY);
+        }
+        CCBLang.translate("gui.speed_requirement").style(ChatFormatting.GOLD).forGoggles(tooltip);
+        CCBLang.addToGoggles(tooltip, "gui.not_fast_enough", Component.translatable(CCBBlocks.AIR_COMPRESSOR_BLOCK.get().getDescriptionId()));
+        added = true;
         return added;
     }
 

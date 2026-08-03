@@ -42,7 +42,6 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
         if (storedGas.isEmpty()) {
             return GasStack.EMPTY;
         }
-
         return storedGas.copyWithAmount(maxDrain);
     }
 
@@ -51,7 +50,6 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
         if (tank != 0) {
             return GasStack.EMPTY;
         }
-
         return gas.copyWithAmount(capacity);
     }
 

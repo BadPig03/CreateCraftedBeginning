@@ -162,13 +162,11 @@ public final class GlobalAirtightUpgradesConsumptionManager {
         if (!GasConsumptionUtils.isNonNegativeFinite(consumption)) {
             return Optional.empty();
         }
-
         return CanisterContainerConsumers.findAffordableFuel(player, gas -> {
             AirtightArmorsHandler handler = AirtightArmorsHandlerUtils.of(gas);
             if (!handlerPredicate.test(handler)) {
                 return -1;
             }
-
             return getRawGasConsumption(player, upgrade, slot, consumption, handler);
         });
     }

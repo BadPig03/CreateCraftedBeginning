@@ -95,7 +95,6 @@ public final class TeslaTurbineUtils {
                     case Y, Z -> u > 0 ? Direction.EAST : Direction.WEST;
                 };
             }
-
             return switch (axis) {
                 case Y -> v > 0 ? Direction.SOUTH : Direction.NORTH;
                 case X, Z -> v > 0 ? Direction.UP : Direction.DOWN;

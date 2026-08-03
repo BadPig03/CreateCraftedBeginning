@@ -272,9 +272,11 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             }
         }
         operationExecuted = tag.getBoolean(COMPOUND_KEY_OPERATION_EXECUTED);
-        if (!isLoadedOperationValid()) {
-            clearOperation();
+        if (isLoadedOperationValid()) {
+            return;
         }
+
+        clearOperation();
     }
 
     private void readCloud(CompoundTag tag, boolean clientPacket) {
@@ -290,6 +292,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         if (operationType == OperationType.NONE || operationInput.isEmpty()) {
             return false;
         }
+
         if (operationType != OperationType.FAN_PROCESSING) {
             return !operationType.usesGas || !operationGas.isEmpty();
         }
@@ -352,6 +355,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         if (processingTicks < 0) {
             return -1;
         }
+
         if (previousProcessingTicks < 0) {
             return processingTicks;
         }
@@ -479,6 +483,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
                 if (!reprepareOperation(itemStack)) {
                     return PASS;
                 }
+
                 tankGas = getGasInTank();
             }
 
@@ -722,10 +727,12 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             return false;
         }
 
-        if (filled < drained.getAmount()) {
-            getTank().fill(drained.copyWithAmount(drained.getAmount() - filled), GasAction.EXECUTE);
-            operationGas = operationGas.copyWithAmount(filled);
+        if (filled >= drained.getAmount()) {
+            return true;
         }
+
+        getTank().fill(drained.copyWithAmount(drained.getAmount() - filled), GasAction.EXECUTE);
+        operationGas = operationGas.copyWithAmount(filled);
         return true;
     }
 
@@ -861,7 +868,6 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             if (isOperationGasLocked()) {
                 return GasStack.EMPTY;
             }
-
             return delegate.drain(resource, action);
         }
 
@@ -870,7 +876,6 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             if (isOperationGasLocked()) {
                 return GasStack.EMPTY;
             }
-
             return delegate.drain(maxDrain, action);
         }
 

@@ -117,7 +117,6 @@ public class GasCanisterItem extends Item implements IGasFilter {
         if (content.isEmpty()) {
             return gas -> false;
         }
-
         return gas -> !gas.isEmpty() && GasStack.isSameGasSameComponents(content, gas);
     }
 

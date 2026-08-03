@@ -1,5 +1,6 @@
 {
   "values": [
-    "createcraftedbeginning:portable_gas_interface"
+    "createcraftedbeginning:portable_gas_interface",
+    "createcraftedbeginning:end_sculk_silencer"
   ]
 }

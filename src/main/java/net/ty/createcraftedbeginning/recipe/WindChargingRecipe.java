@@ -128,6 +128,7 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
         if (instance.getEffect().value().isInstantenous()) {
             return 1;
         }
+
         if (instance.isInfiniteDuration()) {
             return 2;
         }
@@ -140,7 +141,6 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
         if (effectScore >= 0) {
             return 1 + effectScore;
         }
-
         return -2 * Math.min(1, -effectScore) * (1 - effectScore);
     }
 

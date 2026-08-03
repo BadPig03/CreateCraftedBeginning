@@ -64,7 +64,6 @@ public final class GasVirtualUtils {
         if (container == null || container.isEmpty()) {
             return List.of();
         }
-
         return container.getVirtualItems().stream().map(item -> item.copyWithCount(1)).toList();
     }
 }

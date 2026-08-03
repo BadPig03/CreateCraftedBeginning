@@ -66,6 +66,7 @@ public class CCBConfig {
             int speed = AirtightAssemblyDriverCore.MAX_LEVEL * AirtightEngineBlockEntity.BASE_ROTATION_SPEED;
             return new GeneratedRpm(speed, true);
         }
+
         if (block == CCBBlocks.TESLA_TURBINE_BLOCK.get()) {
             int speed = TeslaTurbineUtils.MAX_LEVEL * TeslaTurbineUtils.BASE_ROTATION_SPEED;
             return new GeneratedRpm(speed, true);

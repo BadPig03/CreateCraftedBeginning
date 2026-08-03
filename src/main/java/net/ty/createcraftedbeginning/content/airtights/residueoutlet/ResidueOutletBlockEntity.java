@@ -79,9 +79,11 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
         if (!item.isEmpty()) {
             addItemTooltip(tooltip, item);
         }
-        if (!fluid.isEmpty()) {
-            addFluidTooltip(tooltip, fluid);
+        if (fluid.isEmpty()) {
+            return true;
         }
+
+        addFluidTooltip(tooltip, fluid);
         return true;
     }
 
@@ -134,7 +136,6 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
         if (maxAmount <= 0 || hasFluid == hasItem) {
             return null;
         }
-
         return hasFluid ? createFluidInsertionPlan(fluidStack, maxAmount) : createItemInsertionPlan(itemStack, maxAmount);
     }
 

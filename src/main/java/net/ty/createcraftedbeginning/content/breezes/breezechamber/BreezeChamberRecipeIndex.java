@@ -153,9 +153,11 @@ public final class BreezeChamberRecipeIndex {
                 byGas.computeIfAbsent(gas, ignored -> new ArrayList<>()).add(conversion);
             }
 
-            if (indexedGases.isEmpty() || !conversion.input().ingredient().isSimple()) {
-                fallback.add(conversion);
+            if (!indexedGases.isEmpty() && conversion.input().ingredient().isSimple()) {
+                return;
             }
+
+            fallback.add(conversion);
         }
 
         private void freeze() {

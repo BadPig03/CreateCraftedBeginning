@@ -40,13 +40,17 @@ public class AirtightHandheldDrillRenderHandler {
                 accelerate = false;
             }
         }
-        if (decelerate) {
-            handAnimation *= DECELERATION;
-            if (handAnimation < MIN_ANIMATION) {
-                handAnimation = 0;
-                decelerate = false;
-            }
+        if (!decelerate) {
+            return;
         }
+
+        handAnimation *= DECELERATION;
+        if (handAnimation >= MIN_ANIMATION) {
+            return;
+        }
+
+        handAnimation = 0;
+        decelerate = false;
     }
 
     public void start() {

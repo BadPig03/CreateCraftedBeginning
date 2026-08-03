@@ -53,9 +53,11 @@ public final class AirVentVoxelShapes {
         if (upOpen) {
             shape = Shapes.join(shape, UP_FACE, BooleanOp.ONLY_FIRST);
         }
-        if (downOpen) {
-            shape = Shapes.join(shape, DOWN_FACE, BooleanOp.ONLY_FIRST);
+        if (!downOpen) {
+            return shape;
         }
+
+        shape = Shapes.join(shape, DOWN_FACE, BooleanOp.ONLY_FIRST);
         return shape;
     }
 
@@ -63,7 +65,6 @@ public final class AirVentVoxelShapes {
         if (mask < 0 || mask >= SHAPES.length) {
             return SHELL;
         }
-
         return SHAPES[mask];
     }
 }

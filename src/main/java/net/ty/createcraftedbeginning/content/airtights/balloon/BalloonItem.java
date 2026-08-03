@@ -64,7 +64,6 @@ public class BalloonItem extends PackageItem {
         if (BalloonUtils.isBalloon(stack)) {
             return InteractionResultHolder.fail(stack);
         }
-
         return super.open(level, player, hand);
     }
 }

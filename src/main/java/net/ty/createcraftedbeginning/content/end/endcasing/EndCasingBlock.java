@@ -53,7 +53,6 @@ public class EndCasingBlock extends CasingBlock {
         if (!helper.matchesItem(stack)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-
         return helper.getOffset(player, level, state, pos, hitResult).placeInWorld(level, (BlockItem) stack.getItem(), player, hand, hitResult);
     }
 }

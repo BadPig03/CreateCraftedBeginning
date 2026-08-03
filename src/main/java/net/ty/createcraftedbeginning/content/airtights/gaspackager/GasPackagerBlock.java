@@ -83,9 +83,11 @@ public class GasPackagerBlock extends PackagerBlock {
 
         stack.shrink(1);
         AllSoundEvents.DEPOT_PLOP.playOnServer(level, pos);
-        if (stack.isEmpty()) {
-            player.setItemInHand(hand, ItemStack.EMPTY);
+        if (!stack.isEmpty()) {
+            return;
         }
+
+        player.setItemInHand(hand, ItemStack.EMPTY);
     }
 
     @Override
@@ -115,7 +117,6 @@ public class GasPackagerBlock extends PackagerBlock {
             CCBLang.translate("gui.warnings.no_gas_portable_interface").sendStatus(player);
             return null;
         }
-
         return state.setValue(POWERED, level.hasNeighborSignal(clickedPos)).setValue(FACING, preferred);
     }
 

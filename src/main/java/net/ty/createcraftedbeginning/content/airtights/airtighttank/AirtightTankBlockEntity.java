@@ -121,7 +121,6 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IGasTan
         if (!compoundTag.contains(key)) {
             return 1;
         }
-
         return Mth.clamp(compoundTag.getInt(key), 1, maxValue);
     }
 
@@ -184,9 +183,11 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IGasTan
         }
 
         compoundTag.putBoolean(COMPOUND_KEY_UPDATE_CONNECTIVITY, updateConnectivity);
-        if (lastKnownPos != null) {
-            compoundTag.put(COMPOUND_KEY_LAST_KNOWN_POS, NbtUtils.writeBlockPos(lastKnownPos));
+        if (lastKnownPos == null) {
+            return;
         }
+
+        compoundTag.put(COMPOUND_KEY_LAST_KNOWN_POS, NbtUtils.writeBlockPos(lastKnownPos));
     }
 
     @Override
@@ -243,9 +244,11 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IGasTan
         }
 
         syncCooldown--;
-        if (syncCooldown == 0 && queuedSync) {
-            sendData();
+        if (syncCooldown != 0 || !queuedSync) {
+            return;
         }
+
+        sendData();
     }
 
     private void readServerData(CompoundTag compoundTag) {
@@ -360,7 +363,6 @@ public class AirtightTankBlockEntity extends SmartBlockEntity implements IGasTan
         if (blockEntity == null || blockEntity.getType() != getType()) {
             return null;
         }
-
         return blockEntity instanceof AirtightTankBlockEntity tank ? (T) tank : null;
     }
 

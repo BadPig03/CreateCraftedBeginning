@@ -32,27 +32,33 @@ public abstract class TrainCargoManagerMixin extends MountedStorageManager {
         @Override
         public long fill(GasStack resource, GasAction action) {
             long filled = super.fill(resource, action);
-            if (action.execute() && filled > 0) {
-                changeDetected();
+            if (!action.execute() || filled <= 0) {
+                return filled;
             }
+
+            changeDetected();
             return filled;
         }
 
         @Override
         public GasStack drain(GasStack resource, GasAction action) {
             GasStack drained = super.drain(resource, action);
-            if (action.execute() && !drained.isEmpty()) {
-                changeDetected();
+            if (!action.execute() || drained.isEmpty()) {
+                return drained;
             }
+
+            changeDetected();
             return drained;
         }
 
         @Override
         public GasStack drain(long maxDrain, GasAction action) {
             GasStack drained = super.drain(maxDrain, action);
-            if (action.execute() && !drained.isEmpty()) {
-                changeDetected();
+            if (!action.execute() || drained.isEmpty()) {
+                return drained;
             }
+
+            changeDetected();
             return drained;
         }
     }

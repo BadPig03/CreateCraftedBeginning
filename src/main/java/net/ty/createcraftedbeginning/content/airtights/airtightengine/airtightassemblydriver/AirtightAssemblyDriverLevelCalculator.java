@@ -102,10 +102,12 @@ public class AirtightAssemblyDriverLevelCalculator {
     public CompoundTag write(boolean clientPacket) {
         CompoundTag tag = new CompoundTag();
         tag.putInt(COMPOUND_KEY_RESIDUE_LEVEL, residueLevel);
-        if (clientPacket) {
-            tag.putInt(COMPOUND_KEY_SUPPLY_LEVEL, supplyLevel);
-            tag.putInt(COMPOUND_KEY_WIND_CHARGING_LEVEL, windChargingLevel);
+        if (!clientPacket) {
+            return tag;
         }
+
+        tag.putInt(COMPOUND_KEY_SUPPLY_LEVEL, supplyLevel);
+        tag.putInt(COMPOUND_KEY_WIND_CHARGING_LEVEL, windChargingLevel);
         return tag;
     }
 

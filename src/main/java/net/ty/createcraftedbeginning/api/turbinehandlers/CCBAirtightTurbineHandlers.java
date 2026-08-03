@@ -13,6 +13,7 @@ public class CCBAirtightTurbineHandlers {
      */
     public static void register() {
         AirtightTurbineHandlerUtils.register(CCBGases.STEAM.get().getResourceLocation(), 4);
+        AirtightTurbineHandlerUtils.register(CCBGases.PRESSURIZED_STEAM.get().getResourceLocation(), 8);
 
         AirtightTurbineHandlerUtils.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), 1);
         AirtightTurbineHandlerUtils.register(CCBGases.ENERGIZED_NATURAL_AIR.get().getResourceLocation(), 2);

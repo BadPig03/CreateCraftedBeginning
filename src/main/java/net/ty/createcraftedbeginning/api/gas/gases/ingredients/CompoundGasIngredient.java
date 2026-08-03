@@ -41,6 +41,7 @@ public final class CompoundGasIngredient extends GasIngredient {
         if (children.length == 0) {
             return empty();
         }
+
         if (children.length == 1) {
             return children[0];
         }
@@ -57,6 +58,7 @@ public final class CompoundGasIngredient extends GasIngredient {
         if (children.isEmpty()) {
             return empty();
         }
+
         if (children.size() == 1) {
             return children.getFirst();
         }

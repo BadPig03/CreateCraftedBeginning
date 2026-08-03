@@ -106,7 +106,6 @@ public interface AirtightUpgrade {
 
             return status;
         }
-
         return new AirtightUpgradeStatus(id, startsEnabled(), startsInstalled());
     }
 }

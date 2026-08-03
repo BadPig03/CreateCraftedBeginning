@@ -4,7 +4,9 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.api.enginehandlers.AirtightEngineHandler;
 import net.ty.createcraftedbeginning.api.enginehandlers.AirtightEngineHandlerUtils;
+import net.ty.createcraftedbeginning.api.enginehandlers.DefaultEngineHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 
@@ -44,12 +46,28 @@ public class AirtightAssemblyDriverFlowMeter {
         return (float) AirtightAssemblyDriverCore.MAX_LEVEL * SUPPLY_PER_LEVEL;
     }
 
-    private static long getMaxInput(int efficiency) {
-        return (AirtightAssemblyDriverCore.MAX_LEVEL * SUPPLY_PER_LEVEL * SAMPLE_RATE + efficiency - 1L) / efficiency;
+    private static AirtightEngineHandler getHandler(GasStack gasStack) {
+        return gasStack.isEmpty() ? DefaultEngineHandler.INSTANCE : AirtightEngineHandlerUtils.of(gasStack);
     }
 
-    private static int getEfficiency(GasStack gasStack) {
-        return gasStack.isEmpty() ? 0 : AirtightEngineHandlerUtils.of(gasStack).getEfficiency();
+    private static double getWorkFactor(AirtightEngineHandler handler) {
+        double workFactor = handler.getWorkFactor();
+        return Double.isFinite(workFactor) && workFactor > 0 ? workFactor : 0;
+    }
+
+    private static int getMaxLevel(AirtightEngineHandler handler) {
+        return Math.clamp(handler.getMaxLevel(), 0, AirtightAssemblyDriverCore.MAX_LEVEL);
+    }
+
+    private static long getMaxInput(AirtightEngineHandler handler) {
+        double workFactor = getWorkFactor(handler);
+        int maxLevel = getMaxLevel(handler);
+        if (workFactor <= 0 || maxLevel <= 0) {
+            return 0;
+        }
+
+        double requiredInput = (double) maxLevel * SUPPLY_PER_LEVEL * SAMPLE_RATE / workFactor;
+        return Math.max(1, (long) Math.ceil(requiredInput));
     }
 
     private static GasStack readNormalizedGas(CompoundTag compoundTag, Provider provider) {
@@ -192,14 +210,14 @@ public class AirtightAssemblyDriverFlowMeter {
     private void readPersistent(CompoundTag compoundTag, Provider provider) {
         clearRuntimeState();
         gasType = readNormalizedGas(compoundTag, provider);
-        int efficiency = getEfficiency(gasType);
-        if (gasType.isEmpty() || efficiency <= 0) {
+        AirtightEngineHandler handler = getHandler(gasType);
+        if (gasType.isEmpty() || getWorkFactor(handler) <= 0 || getMaxLevel(handler) <= 0) {
             gasType = GasStack.EMPTY;
             driverCore.getLevelCalculator().loadSupplyLevel(0);
             return;
         }
 
-        long maxInput = getMaxInput(efficiency);
+        long maxInput = getMaxInput(handler);
         currentIndex = Math.floorMod(compoundTag.getInt(COMPOUND_KEY_CURRENT_INDEX), SAMPLES_COUNT);
         ticksUntilNextSample = compoundTag.contains(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE) ? Math.clamp(compoundTag.getInt(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE), 1, SAMPLE_RATE) : SAMPLE_RATE;
         long storedSupply = compoundTag.getLong(COMPOUND_KEY_GATHERED_SUPPLY);
@@ -237,8 +255,10 @@ public class AirtightAssemblyDriverFlowMeter {
 
     private void updateDerivedSupply(boolean notifyChanges) {
         gasSupply = (float) rollingSupply / SAMPLE_WINDOW_TICKS;
-        int efficiency = getEfficiency(gasType);
-        int supplyLevel = efficiency <= 0 ? 0 : (int) Math.min(AirtightAssemblyDriverCore.MAX_LEVEL, rollingSupply * efficiency / ((long) SAMPLE_WINDOW_TICKS * SUPPLY_PER_LEVEL));
+        AirtightEngineHandler handler = getHandler(gasType);
+        double workFactor = getWorkFactor(handler);
+        int maxLevel = getMaxLevel(handler);
+        int supplyLevel = workFactor <= 0 || maxLevel <= 0 ? 0 : (int) Math.min(maxLevel, Math.floor(rollingSupply * workFactor / (SAMPLE_WINDOW_TICKS * (double) SUPPLY_PER_LEVEL)));
         if (notifyChanges) {
             driverCore.getLevelCalculator().updateSupplyLevel(supplyLevel);
             return;
@@ -252,12 +272,11 @@ public class AirtightAssemblyDriverFlowMeter {
     }
 
     private long getRemainingInput(GasStack gas) {
-        int efficiency = getEfficiency(gas);
-        if (efficiency <= 0) {
+        AirtightEngineHandler handler = getHandler(gas);
+        if (getWorkFactor(handler) <= 0 || getMaxLevel(handler) <= 0) {
             return 0;
         }
-
-        return Math.max(0, getMaxInput(efficiency) - gatheredSupply);
+        return Math.max(0, getMaxInput(handler) - gatheredSupply);
     }
 
     private void clearRuntimeState() {

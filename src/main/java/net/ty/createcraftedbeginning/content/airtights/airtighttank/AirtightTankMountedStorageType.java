@@ -23,7 +23,6 @@ public class AirtightTankMountedStorageType extends MountedGasStorageType<Airtig
         if (!(be instanceof AirtightTankBlockEntity tank) || !tank.isController()) {
             return null;
         }
-
         return AirtightTankMountedStorage.fromTank(tank);
     }
 }

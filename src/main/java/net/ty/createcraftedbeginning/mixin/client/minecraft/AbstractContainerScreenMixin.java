@@ -29,6 +29,7 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
         if (!(menu instanceof RedstoneRequesterMenu requesterMenu)) {
             return;
         }
+
         if (!GasRequestClientUtils.onSlotClicked((AbstractContainerScreen<?>) (Object) this, requesterMenu, slot, mouseButton, clickType)) {
             return;
         }

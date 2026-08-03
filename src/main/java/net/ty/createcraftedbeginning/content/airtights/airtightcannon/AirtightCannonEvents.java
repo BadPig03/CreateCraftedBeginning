@@ -30,9 +30,11 @@ public class AirtightCannonEvents {
         if (!(directEntity instanceof AirtightCannonWindChargeProjectileEntity projectile)) {
             return;
         }
+
         if (!(projectile.getOwner() instanceof Player player)) {
             return;
         }
+
         if (entity.getType().getCategory() != MobCategory.MONSTER) {
             return;
         }

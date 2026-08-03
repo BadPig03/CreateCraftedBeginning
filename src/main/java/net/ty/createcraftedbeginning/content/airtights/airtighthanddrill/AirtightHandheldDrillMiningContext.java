@@ -61,6 +61,7 @@ public record AirtightHandheldDrillMiningContext(Level level, BlockPos basePos, 
             if (isProtected || isUnbreakable) {
                 continue;
             }
+
             destructionPos.add(pos);
             if (!isLiquid && !isInstantDestruction) {
                 breakSpeedPos.add(pos);

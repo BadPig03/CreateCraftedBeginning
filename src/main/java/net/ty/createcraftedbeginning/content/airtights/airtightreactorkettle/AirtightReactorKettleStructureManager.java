@@ -56,7 +56,6 @@ public class AirtightReactorKettleStructureManager {
         if (!(level.getBlockEntity(corePos.above()) instanceof AirtightReactorKettleStructuralCogBlockEntity cog)) {
             return 0;
         }
-
         return cog.getSpeed();
     }
 
@@ -143,9 +142,11 @@ public class AirtightReactorKettleStructureManager {
         if (tag.contains(COMPOUND_KEY_OVERSTRESSED)) {
             overstressed = tag.getBoolean(COMPOUND_KEY_OVERSTRESSED);
         }
-        if (tag.contains(COMPOUND_KEY_PREVIOUS_OVERSTRESSED)) {
-            previousOverstressed = tag.getBoolean(COMPOUND_KEY_PREVIOUS_OVERSTRESSED);
+        if (!tag.contains(COMPOUND_KEY_PREVIOUS_OVERSTRESSED)) {
+            return;
         }
+
+        previousOverstressed = tag.getBoolean(COMPOUND_KEY_PREVIOUS_OVERSTRESSED);
     }
 
     public float getTemperature() {

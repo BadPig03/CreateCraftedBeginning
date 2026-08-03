@@ -16,7 +16,15 @@ public final class DefaultEngineHandler implements AirtightEngineHandler {
      * {@inheritDoc}
      */
     @Override
-    public int getEfficiency() {
+    public double getWorkFactor() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getMaxLevel() {
         return 0;
     }
 }

@@ -17,7 +17,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class EndIncinerationBlowerClient {
-    private static final double OUTLINE_DISTANCE_SQR = 4096;
+    private static final int OUTLINE_DISTANCE_SQR = 4096;
 
     private EndIncinerationBlowerClient() {
     }
@@ -31,6 +31,7 @@ public final class EndIncinerationBlowerClient {
         if (player == null || !blower.isShowingOutline() || !GogglesItem.isWearingGoggles(player) || !CCBConfig.client().enableEndIncinerationBlowerOutline.get()) {
             return;
         }
+
         if (player.distanceToSqr(blower.getBlockPos().getX() + 0.5, blower.getBlockPos().getY() + 0.5, blower.getBlockPos().getZ() + 0.5) > OUTLINE_DISTANCE_SQR) {
             return;
         }

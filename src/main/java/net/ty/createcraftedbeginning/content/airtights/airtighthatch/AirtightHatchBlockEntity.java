@@ -95,6 +95,7 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         if (drained.isEmpty()) {
             return GasStack.EMPTY;
         }
+
         if (!GasStack.isSameGasSameComponents(drained, request)) {
             source.fill(drained, GasAction.EXECUTE);
             return GasStack.EMPTY;
@@ -126,6 +127,7 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         if (drained.isEmpty()) {
             return;
         }
+
         if (isVoidTarget) {
             return;
         }
@@ -337,7 +339,6 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         if (target == null || target instanceof AirtightHatchBlockEntity) {
             return null;
         }
-
         return level.getCapability(GasHandler.BLOCK, targetPos, facing.getOpposite());
     }
 

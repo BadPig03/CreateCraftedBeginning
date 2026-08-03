@@ -70,7 +70,6 @@ public class AirVentBlockEntity extends SmartBlockEntity {
         if (!hasLouver(direction)) {
             return VentState.EMPTY;
         }
-
         return isLouverOpen(direction) ? VentState.OPENED : VentState.CLOSED;
     }
 

@@ -176,9 +176,11 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
         }
 
         private void keepAliveIfTransferred(boolean transferred, GasAction action) {
-            if (transferred && action.execute()) {
-                keepAlive();
+            if (!transferred || !action.execute()) {
+                return;
             }
+
+            keepAlive();
         }
 
         public void keepAlive() {

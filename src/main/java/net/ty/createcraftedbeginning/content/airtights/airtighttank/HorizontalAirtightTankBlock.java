@@ -48,9 +48,11 @@ public class HorizontalAirtightTankBlock extends AirtightTankBlock {
         }
 
         Axis axis = context.getClickedFace().getAxis();
-        if (!axis.isHorizontal()) {
-            axis = context.getHorizontalDirection().getAxis();
+        if (axis.isHorizontal()) {
+            return defaultBlockState().setValue(HORIZONTAL_AXIS, axis).setValue(TOP, true).setValue(BOTTOM, true);
         }
+
+        axis = context.getHorizontalDirection().getAxis();
         return defaultBlockState().setValue(HORIZONTAL_AXIS, axis).setValue(TOP, true).setValue(BOTTOM, true);
     }
 }

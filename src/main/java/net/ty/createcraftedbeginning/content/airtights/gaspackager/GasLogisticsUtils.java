@@ -47,7 +47,6 @@ public final class GasLogisticsUtils {
 
             return BigItemStack.INF;
         }
-
         return (int) total;
     }
 
@@ -91,7 +90,6 @@ public final class GasLogisticsUtils {
         if (!(link.blockEntity instanceof PackagerLinkBlockEntity linkEntity) || !(linkEntity.getPackager() instanceof GasPackagerBlockEntity packager)) {
             return null;
         }
-
         return packager.getGasInventoryIdentifier();
     }
 

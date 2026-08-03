@@ -43,9 +43,11 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
             return;
         }
 
-        if (CanisterContainerSuppliers.isValidCreativeGasCanister(canister)) {
-            CREATIVE_CANISTER.render(graphics, x, y);
+        if (!CanisterContainerSuppliers.isValidCreativeGasCanister(canister)) {
+            return;
         }
+
+        CREATIVE_CANISTER.render(graphics, x, y);
     }
 
     @Override

@@ -22,7 +22,7 @@ import java.util.Map;
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class AirtightCannonWindChargeProjectileEntityRenderer extends EntityRenderer<AirtightCannonWindChargeProjectileEntity> {
-    private static final double MIN_CAMERA_DISTANCE_SQUARED = 16.0;
+    private static final int MIN_CAMERA_DISTANCE_SQUARED = 16;
     private final Map<AirtightCannonVisualHandler, AirtightCannonWindChargeModel> models = new IdentityHashMap<>();
 
     public AirtightCannonWindChargeProjectileEntityRenderer(Context context) {

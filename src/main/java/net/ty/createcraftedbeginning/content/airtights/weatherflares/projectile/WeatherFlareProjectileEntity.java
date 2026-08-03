@@ -120,10 +120,12 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
             explode();
             return;
         }
+
         if (++lifeTime > MAX_LIFE_TIME) {
             destroy();
             return;
         }
+
         if (getDeltaMovement().lengthSqr() >= MIN_DELTA_MOVEMENT_LENGTH_SQR) {
             return;
         }
@@ -184,9 +186,11 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
                 startY = storedStartY;
             }
         }
-        if (tag.contains(COMPOUND_KEY_COPIED, Tag.TAG_BYTE)) {
-            copied = tag.getBoolean(COMPOUND_KEY_COPIED);
+        if (!tag.contains(COMPOUND_KEY_COPIED, Tag.TAG_BYTE)) {
+            return;
         }
+
+        copied = tag.getBoolean(COMPOUND_KEY_COPIED);
     }
 
     @Override
@@ -253,9 +257,11 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
 
         boolean isWeatherCycleDisabled = !level.getGameRules().getRule(GameRules.RULE_WEATHER_CYCLE).get();
         boolean isStormAnchored = level.isThundering() && isWeatherCycleDisabled && (itemStack.is(CCBItems.ANCHOR_FLARE) || itemStack.is(CCBItems.THUNDERSTORM_FLARE));
-        if (isStormAnchored) {
-            CCBAdvancements.I_AM_THE_STORM_THAT_IS_APPROACHING.awardTo(player);
+        if (!isStormAnchored) {
+            return;
         }
+
+        CCBAdvancements.I_AM_THE_STORM_THAT_IS_APPROACHING.awardTo(player);
     }
 
     private void destroy() {

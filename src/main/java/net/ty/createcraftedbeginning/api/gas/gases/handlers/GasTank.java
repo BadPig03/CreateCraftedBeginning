@@ -101,10 +101,12 @@ public class GasTank implements IGasHandler, IGasTank {
     public GasStack drain(long maxDrain, GasAction action) {
         long drained = Math.min(maxDrain, gas.getAmount());
         GasStack stack = gas.copyWithAmount(drained);
-        if (action.execute() && drained > 0) {
-            gas.shrink(drained);
-            onContentsChanged();
+        if (!action.execute() || drained <= 0) {
+            return stack;
         }
+
+        gas.shrink(drained);
+        onContentsChanged();
         return stack;
     }
 
@@ -148,9 +150,11 @@ public class GasTank implements IGasHandler, IGasTank {
         long remainingSpace = getSpace();
         long amountToTransfer = Math.min(remainingSpace, resource.getAmount());
         gas.grow(amountToTransfer);
-        if (amountToTransfer > 0) {
-            onContentsChanged();
+        if (amountToTransfer <= 0) {
+            return amountToTransfer;
         }
+
+        onContentsChanged();
         return amountToTransfer;
     }
 
@@ -166,6 +170,7 @@ public class GasTank implements IGasHandler, IGasTank {
         if (gas.isEmpty()) {
             return Math.min(capacity, resource.getAmount());
         }
+
         if (!GasStack.isSameGasSameComponents(gas, resource)) {
             return 0;
         }

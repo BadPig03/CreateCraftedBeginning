@@ -406,7 +406,6 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         if (!insertOutputs(simulatedOutput, outputItems)) {
             return Optional.empty();
         }
-
         return Optional.of(new OutputPlan(copyInventory(outputInventory), copyInventory(simulatedOutput)));
     }
 
@@ -415,6 +414,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         if (plannedOutput.isEmpty()) {
             return false;
         }
+
         if (simulate) {
             return true;
         }
@@ -455,12 +455,15 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
             if (!consumeItem(processingInventory, consumptionPlan.expectedProcessingStack(), consumptionPlan.processingAmount())) {
                 return false;
             }
+
             if (!consumeItem(inputInventory, consumptionPlan.expectedInputStack(), consumptionPlan.inputAmount())) {
                 return false;
             }
+
             if (!consumeFluid(consumptionPlan)) {
                 return false;
             }
+
             if (!consumeGas(consumptionPlan)) {
                 return false;
             }
@@ -602,7 +605,6 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         if (absSpeed < minSpeed) {
             return 0;
         }
-
         return Mth.clamp(absSpeed / minSpeed, 1, 16);
     }
 
@@ -681,10 +683,12 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
             update(false);
             return;
         }
+
         if (currentRecipe == null && currentPressingRecipe != null && !CCBConfig.server().airtights.enableAutomaticPressingRecipes.get()) {
             update(false);
             return;
         }
+
         if (currentRecipe == null && currentSmithingRecipe != null && !CCBConfig.server().airtights.enableAutomaticSmithingRecipes.get()) {
             update(false);
             return;

@@ -139,9 +139,11 @@ public final class SizedGasIngredient {
      * @return the gases
      */
     public GasStack[] getGases() {
-        if (cachedStacks == null) {
-            cachedStacks = Stream.of(ingredient.getStacks()).map(stack -> stack.copyWithAmount(amount)).toArray(GasStack[]::new);
+        if (cachedStacks != null) {
+            return cachedStacks;
         }
+
+        cachedStacks = Stream.of(ingredient.getStacks()).map(stack -> stack.copyWithAmount(amount)).toArray(GasStack[]::new);
         return cachedStacks;
     }
 

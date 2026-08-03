@@ -114,9 +114,11 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
             hat.rotateCentered(horizontalAngle + Mth.PI, Direction.UP).translate(0.5, 0, 0.5);
             hat.setChanged();
         }
-        if (wind != null) {
-            wind.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle + AngleHelper.rad(renderTime * (hasWind ? 24 : 0) % 360)).translateBack(Translate.CENTER).setChanged();
+        if (wind == null) {
+            return;
         }
+
+        wind.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle + AngleHelper.rad(renderTime * (hasWind ? 24 : 0) % 360)).translateBack(Translate.CENTER).setChanged();
     }
 
     @Override
@@ -151,8 +153,10 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
         if (hat != null) {
             hat.delete();
         }
-        if (wind != null) {
-            wind.delete();
+        if (wind == null) {
+            return;
         }
+
+        wind.delete();
     }
 }

@@ -30,6 +30,7 @@ public final class AirtightReactorKettleStructuralClientExtensions implements IC
         if (!(target instanceof BlockHitResult result)) {
             return false;
         }
+
         BlockPos targetPos = result.getBlockPos();
         return level.getBlockState(targetPos).getBlock() instanceof IAirtightReactorKettleStructural structural && !structural.stillValid(level, targetPos, state);
     }
@@ -45,6 +46,7 @@ public final class AirtightReactorKettleStructuralClientExtensions implements IC
         if (level.getBlockState(pos).getBlock() instanceof IAirtightReactorKettleStructural structural && !structural.stillValid(level, pos, blockState)) {
             return null;
         }
+
         BlockPos masterPos = AirtightReactorKettleUtils.getMaster(pos, blockState);
         HashSet<BlockPos> positions = new HashSet<>();
         for (int x = -1; x <= 1; x++) {

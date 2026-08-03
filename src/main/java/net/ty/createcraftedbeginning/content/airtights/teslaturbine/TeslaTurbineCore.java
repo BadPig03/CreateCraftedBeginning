@@ -101,10 +101,12 @@ public class TeslaTurbineCore {
     public CompoundTag write(Provider provider, boolean clientPacket) {
         CompoundTag tag = new CompoundTag();
         tag.put(COMPOUND_KEY_FLOW_METER, flowMeter.write(provider, clientPacket));
-        if (clientPacket) {
-            tag.put(COMPOUND_KEY_LEVEL_CALCULATOR, levelCalculator.write(true));
-            tag.put(COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.writeClient());
+        if (!clientPacket) {
+            return tag;
         }
+
+        tag.put(COMPOUND_KEY_LEVEL_CALCULATOR, levelCalculator.write(true));
+        tag.put(COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.writeClient());
         return tag;
     }
 
@@ -150,10 +152,12 @@ public class TeslaTurbineCore {
             turbine.setChanged();
             saveDirty = false;
         }
-        if (clientDirty) {
-            turbine.sendData();
-            clientDirty = false;
+        if (!clientDirty) {
+            return;
         }
+
+        turbine.sendData();
+        clientDirty = false;
     }
 
     private class TeslaTurbineGasHandler implements IGasHandler {
@@ -165,7 +169,7 @@ public class TeslaTurbineCore {
 
         @Override
         public boolean isGasValid(int tank, GasStack stack) {
-            return !stack.isEmpty() && AirtightTurbineHandlerUtils.of(stack).getEfficiency() > 0;
+            return !stack.isEmpty() && AirtightTurbineHandlerUtils.of(stack).getMaxLevel() > 0;
         }
 
         @Override

@@ -46,9 +46,11 @@ public class GasView {
         view.max = GasAmountUtils.formatLosslessCompact(capacity);
         view.ratio = (float) gas.amount() / capacity;
         view.creative = compoundTag.getBoolean(GasConstants.STORAGE_CREATIVE_KEY);
-        if (gas.isEmpty()) {
-            view.overrideText = view.creative ? Component.translatable("jade.gas.empty_creative") : Component.translatable("jade.gas.empty", Component.literal(view.max).withStyle(ChatFormatting.GRAY));
+        if (!gas.isEmpty()) {
+            return view;
         }
+
+        view.overrideText = view.creative ? Component.translatable("jade.gas.empty_creative") : Component.translatable("jade.gas.empty", Component.literal(view.max).withStyle(ChatFormatting.GRAY));
         return view;
     }
 
@@ -58,9 +60,11 @@ public class GasView {
             data.put(GasConstants.STORAGE_GAS_KEY, GasObject.CODEC.encodeStart(NbtOps.INSTANCE, gasObject).result().orElseThrow());
             data.putLong(GasConstants.STORAGE_CAPACITY_KEY, capacity);
         }
-        if (creative) {
-            data.putBoolean(GasConstants.STORAGE_CREATIVE_KEY, true);
+        if (!creative) {
+            return data;
         }
+
+        data.putBoolean(GasConstants.STORAGE_CREATIVE_KEY, true);
         return data;
     }
 }

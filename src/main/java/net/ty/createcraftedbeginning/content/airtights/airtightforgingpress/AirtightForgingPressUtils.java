@@ -161,6 +161,7 @@ public final class AirtightForgingPressUtils {
             level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
             return ItemInteractionResult.SUCCESS;
         }
+
         if (!inventory.isItemValid(0, stack)) {
             return ItemInteractionResult.CONSUME;
         }
@@ -194,9 +195,11 @@ public final class AirtightForgingPressUtils {
             }
             return ItemInteractionResult.SUCCESS;
         }
+
         if (stack.is(AllItems.WRENCH)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
+
         if (stack.is(AllBlocks.MECHANICAL_ARM.asItem())) {
             return ItemInteractionResult.CONSUME;
         }
@@ -254,9 +257,11 @@ public final class AirtightForgingPressUtils {
             level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
             return ItemInteractionResult.SUCCESS;
         }
+
         if (stack.is(AllItems.WRENCH)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
+
         if (stack.is(AllBlocks.MECHANICAL_ARM.asItem())) {
             return ItemInteractionResult.CONSUME;
         }
@@ -375,13 +380,17 @@ public final class AirtightForgingPressUtils {
                 outputs.add(stack.copy());
             }
         }
-        if (inputStack.hasCraftingRemainingItem()) {
-            ItemStack remainder = inputStack.getCraftingRemainingItem();
-            if (!remainder.isEmpty()) {
-                for (int craft = 0; craft < crafts; craft++) {
-                    outputs.add(remainder.copy());
-                }
-            }
+        if (!inputStack.hasCraftingRemainingItem()) {
+            return outputs;
+        }
+
+        ItemStack remainder = inputStack.getCraftingRemainingItem();
+        if (remainder.isEmpty()) {
+            return outputs;
+        }
+
+        for (int craft = 0; craft < crafts; craft++) {
+            outputs.add(remainder.copy());
         }
         return outputs;
     }
@@ -396,7 +405,6 @@ public final class AirtightForgingPressUtils {
         if (input.template().isEmpty() || input.base().isEmpty() || input.addition().isEmpty()) {
             return Optional.empty();
         }
-
         return level.getRecipeManager().getRecipeFor(RecipeType.SMITHING, input, level).filter(holder -> canApplySmithingRecipe(press, holder.value(), input));
     }
 

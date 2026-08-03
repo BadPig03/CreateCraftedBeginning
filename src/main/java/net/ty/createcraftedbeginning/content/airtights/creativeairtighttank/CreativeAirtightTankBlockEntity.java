@@ -134,9 +134,11 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
             updateCapability = false;
             refreshCapability();
         }
-        if (updateConnectivity) {
-            updateConnectivity();
+        if (!updateConnectivity) {
+            return;
         }
+
+        updateConnectivity();
     }
 
     @Override
@@ -155,9 +157,11 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
         }
 
         compoundTag.putBoolean(COMPOUND_KEY_UPDATE_CONNECTIVITY, updateConnectivity);
-        if (lastKnownPos != null) {
-            compoundTag.put(COMPOUND_KEY_LAST_KNOWN_POS, NbtUtils.writeBlockPos(lastKnownPos));
+        if (lastKnownPos == null) {
+            return;
         }
+
+        compoundTag.put(COMPOUND_KEY_LAST_KNOWN_POS, NbtUtils.writeBlockPos(lastKnownPos));
     }
 
     @Override
@@ -211,9 +215,11 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
         }
 
         syncCooldown--;
-        if (syncCooldown == 0 && queuedSync) {
-            sendData();
+        if (syncCooldown != 0 || !queuedSync) {
+            return;
         }
+
+        sendData();
     }
 
     private void readServerData(CompoundTag tag) {
@@ -230,9 +236,11 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
         }
 
         tankInventory.setCapacity(getCapacityPerTank());
-        if (tag.contains(COMPOUND_KEY_TANK_CONTENT)) {
-            tankInventory.read(provider, tag.getCompound(COMPOUND_KEY_TANK_CONTENT));
+        if (!tag.contains(COMPOUND_KEY_TANK_CONTENT)) {
+            return;
         }
+
+        tankInventory.read(provider, tag.getCompound(COMPOUND_KEY_TANK_CONTENT));
     }
 
     private void updateClientState() {
@@ -290,7 +298,6 @@ public class CreativeAirtightTankBlockEntity extends SmartBlockEntity implements
         if (!isController()) {
             return super.createRenderBoundingBox();
         }
-
         return super.createRenderBoundingBox().expandTowards(width - 1, height - 1, width - 1);
     }
 

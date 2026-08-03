@@ -62,9 +62,11 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
         }
 
         boolean filterMatches = filter.test(recipe.getResultItem(level.registryAccess()));
-        if (recipe.getRollableResults().isEmpty() && !recipe.getFluidResults().isEmpty()) {
-            filterMatches = filter.test(recipe.getFluidResults().getFirst());
+        if (!recipe.getRollableResults().isEmpty() || recipe.getFluidResults().isEmpty()) {
+            return filterMatches && apply(kettle, recipe, true);
         }
+
+        filterMatches = filter.test(recipe.getFluidResults().getFirst());
         return filterMatches && apply(kettle, recipe, true);
     }
 
@@ -276,7 +278,6 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
                 return false;
             }
         }
-
         return true;
     }
 
@@ -300,7 +301,6 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
                 return false;
             }
         }
-
         return true;
     }
 
@@ -374,7 +374,6 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
                 return false;
             }
         }
-
         return true;
     }
 
@@ -458,6 +457,7 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
             if (stored.isEmpty()) {
                 return false;
             }
+
             FluidStack drained = fluids.drain(stored.copyWithAmount(amount), FluidAction.EXECUTE);
             if (drained.getAmount() != amount) {
                 return false;
@@ -477,6 +477,7 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
             if (stored.isEmpty()) {
                 return false;
             }
+
             GasStack drained = gases.drain(stored.copyWithAmount(amount), GasAction.EXECUTE);
             if (drained.getAmount() != amount) {
                 return false;

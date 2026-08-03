@@ -57,6 +57,7 @@ public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirt
         if (!state.hasBlockEntity() || state.is(newState.getBlock())) {
             return;
         }
+
         if (!(level.getBlockEntity(pos) instanceof CreativeAirtightTankBlockEntity tank)) {
             return;
         }

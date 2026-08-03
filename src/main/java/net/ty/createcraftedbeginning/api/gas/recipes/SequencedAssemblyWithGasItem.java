@@ -55,7 +55,6 @@ public class SequencedAssemblyWithGasItem extends Item {
         if (!stack.has(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS)) {
             return 0;
         }
-
         return stack.get(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS).progress();
     }
 }

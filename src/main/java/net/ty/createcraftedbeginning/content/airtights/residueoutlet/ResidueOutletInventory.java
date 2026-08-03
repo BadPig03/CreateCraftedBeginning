@@ -102,9 +102,11 @@ public class ResidueOutletInventory extends ItemHandlerContainer implements IIte
     public CompoundTag serializeNBT(Provider provider) {
         CompoundTag tag = ((InternalStackHandler) inv).serializeNBT(provider);
         tag.putInt(COMPOUND_KEY_PARTIAL_ITEM_UNITS, partialItemUnits);
-        if (!partialItem.isEmpty()) {
-            tag.put(COMPOUND_KEY_PARTIAL_ITEM, partialItem.saveOptional(provider));
+        if (partialItem.isEmpty()) {
+            return tag;
         }
+
+        tag.put(COMPOUND_KEY_PARTIAL_ITEM, partialItem.saveOptional(provider));
         return tag;
     }
 

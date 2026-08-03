@@ -32,12 +32,15 @@ public class CoolingRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
             if (usesFluid && (itemStack != null || fluidStack == null)) {
                 continue;
             }
+
             if (!usesFluid && (itemStack == null || fluidStack != null)) {
                 continue;
             }
+
             if (usesFluid && !recipe.getFluidIngredient().ingredient().test(fluidStack)) {
                 continue;
             }
+
             if (!usesFluid && !recipe.getIngredient().test(itemStack)) {
                 continue;
             }
@@ -45,7 +48,6 @@ public class CoolingRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
             int amount = usesFluid ? recipe.fluidIngredients.getFirst().amount() : 1;
             return new CoolingData(recipe.processingDuration, amount);
         }
-
         return new CoolingData(0, 0);
     }
 

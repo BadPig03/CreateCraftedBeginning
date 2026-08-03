@@ -76,7 +76,6 @@ public final class BalloonGasContents {
         if (tag instanceof CompoundTag compoundTag && compoundTag.isEmpty()) {
             return EMPTY;
         }
-
         return CODEC.parse(provider.createSerializationContext(NbtOps.INSTANCE), tag).resultOrPartial(error -> CreateCraftedBeginning.LOGGER.error("Tried to parse invalid balloon gas contents: '{}'", error)).orElse(EMPTY);
     }
 
@@ -129,6 +128,7 @@ public final class BalloonGasContents {
         if (current <= 0) {
             return Math.max(0, addition);
         }
+
         if (addition <= 0) {
             return current;
         }

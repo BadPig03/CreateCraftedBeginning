@@ -70,7 +70,6 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
 
             return drained;
         }
-
         return GasStack.EMPTY;
     }
 

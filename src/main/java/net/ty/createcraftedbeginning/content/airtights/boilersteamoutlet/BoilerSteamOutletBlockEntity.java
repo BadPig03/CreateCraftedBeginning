@@ -82,6 +82,7 @@ public class BoilerSteamOutletBlockEntity extends SmartBlockEntity implements IH
         if (!Double.isFinite(capacity) || capacity <= 0) {
             return 1;
         }
+
         if (capacity >= Long.MAX_VALUE) {
             return Long.MAX_VALUE;
         }

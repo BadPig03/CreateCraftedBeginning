@@ -99,9 +99,11 @@ public final class CCBClientBridgeImpl implements Service {
 
     @Override
     public void openGasFactoryGaugeScreen(GasFactoryGaugeBehaviour behaviour, Player player) {
-        if (player instanceof LocalPlayer) {
-            ScreenOpener.open(new GasFactoryGaugeScreen(behaviour));
+        if (!(player instanceof LocalPlayer)) {
+            return;
         }
+
+        ScreenOpener.open(new GasFactoryGaugeScreen(behaviour));
     }
 
     @Override

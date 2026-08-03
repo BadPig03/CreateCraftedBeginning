@@ -123,6 +123,7 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
                 if (isCompatibleHorizontalTank(state, axis)) {
                     continue;
                 }
+
                 if (state.getBlock() == getBlock() || !state.canBeReplaced()) {
                     return INVALID_PLACEMENT;
                 }

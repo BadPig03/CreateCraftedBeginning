@@ -81,9 +81,11 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
         if (availableAxes.isEmpty() || availableAxes.contains(preferredAxis)) {
             return preferredAxis;
         }
+
         if (availableAxes.contains(Axis.X)) {
             return Axis.X;
         }
+
         if (availableAxes.contains(Axis.Z)) {
             return Axis.Z;
         }
@@ -132,9 +134,11 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
 
     @Override
     public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos) {
-        if (state.getValue(WATERLOGGED)) {
-            level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
+        if (!state.getValue(WATERLOGGED)) {
+            return state;
         }
+
+        level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         return state;
     }
 

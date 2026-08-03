@@ -159,7 +159,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
 
             return false;
         }
-
         return true;
     }
 
@@ -171,7 +170,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
 
             return false;
         }
-
         return true;
     }
 
@@ -344,12 +342,15 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         if (hasItemOutputs && (targetInventory == null || !canAcceptItemOutputs(outputItems))) {
             return false;
         }
+
         if (hasFluidOutputs && (targetFluidTank == null || !canAcceptFluidOutputs(targetFluidTank, outputFluids))) {
             return false;
         }
+
         if (hasGasOutputs && !canAcceptGasOutputs(targetGasTank, outputGases)) {
             return false;
         }
+
         if (simulate) {
             return true;
         }
@@ -361,13 +362,14 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
             if (hasItemOutputs && !insertItemOutputs(targetInventory, outputItems)) {
                 return false;
             }
+
             if (hasFluidOutputs && !insertFluidOutputs(targetFluidTank, outputFluids)) {
                 return false;
             }
+
             if (hasGasOutputs && !insertGasOutputs(targetGasTank, outputGases)) {
                 return false;
             }
-
             return true;
         } finally {
             outputInventory.forbidInsertion();
@@ -392,7 +394,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
                 return false;
             }
         }
-
         return true;
     }
 
@@ -415,7 +416,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
 
             return false;
         }
-
         return true;
     }
 
@@ -438,7 +438,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
 
             return false;
         }
-
         return true;
     }
 
@@ -456,7 +455,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
                 return false;
             }
         }
-
         return true;
     }
 
@@ -498,7 +496,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         if (level == null || !(level.getBlockEntity(filterPos) instanceof AirtightReactorKettleStructuralBlockEntity structural)) {
             return null;
         }
-
         return structural.getFilteringBehaviour();
     }
 
@@ -511,7 +508,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         if (absSpeed == 0) {
             return 0;
         }
-
         return absSpeed / 32 * Math.max(0, CCBConfig.server().airtights.reactorKettleMixerDamageMultiplier.getF());
     }
 
@@ -519,6 +515,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         if (!operating) {
             return 0;
         }
+
         if (operatingTicks == PROCESSING_STARTED) {
             return 0.72f;
         }
@@ -577,7 +574,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         if (currentRecipe == null) {
             return hasNoGas;
         }
-
         return hasNoGas && currentRecipe.getGasIngredients().isEmpty() && currentRecipe.getGasResults().isEmpty();
     }
 
@@ -627,7 +623,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         if (level instanceof PonderLevel) {
             return SpeedLevel.FAST.getSpeedValue();
         }
-
         return speed;
     }
 
@@ -684,14 +679,17 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
             update(false);
             return;
         }
+
         if (!clientSide && currentRecipe == null && currentCraftingRecipe != null && !CCBConfig.server().airtights.enableAutomaticMixingRecipes.get()) {
             update(false);
             return;
         }
+
         if (operatingTicks != PROCESSING_STARTED) {
             operatingTicks++;
             return;
         }
+
         if (clientSide) {
             return;
         }
@@ -702,9 +700,11 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         }
 
         processingTicks--;
-        if (processingTicks == 0) {
-            finishProcessing();
+        if (processingTicks != 0) {
+            return;
         }
+
+        finishProcessing();
     }
 
     private boolean handleFilterChange(boolean clientSide) {
@@ -713,9 +713,11 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         }
 
         filterChanged = false;
-        if (!clientSide) {
-            update(true);
+        if (clientSide) {
+            return true;
         }
+
+        update(true);
         return true;
     }
 
@@ -751,6 +753,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         if (level == null || level.isClientSide && !isVirtual()) {
             return;
         }
+
         if (!applyCurrentRecipe()) {
             update(false);
             return;
@@ -777,7 +780,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         if (currentRecipe != null) {
             return ReactorKettleRecipe.match(this, currentRecipe);
         }
-
         return currentCraftingRecipe != null && CCBConfig.server().airtights.enableAutomaticMixingRecipes.get() && AirtightReactorKettleUtils.matchCraftingRecipe(this, currentCraftingRecipe);
     }
 
@@ -802,12 +804,12 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         }
 
         boolean processing = operatingTicks > 15 && operatingTicks <= PROCESSING_STARTED;
-        double ingredientSpeed = 0;
-        double mixerSpeed = 0;
+        float ingredientSpeed = 0;
+        float mixerSpeed = 0;
         if (moving) {
             mixerSpeed = processing ? speed * 2 : speed / 2;
             if (processing) {
-                ingredientSpeed = speed * 0.5;
+                ingredientSpeed = speed * 0.5f;
             }
         }
 

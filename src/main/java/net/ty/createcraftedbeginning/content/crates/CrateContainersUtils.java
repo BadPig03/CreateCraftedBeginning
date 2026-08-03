@@ -50,7 +50,6 @@ public final class CrateContainersUtils {
         if (limit <= 0) {
             return 0;
         }
-
         return Mth.clamp(Mth.floor((double) count / limit * 14) + 1, 0, 15);
     }
 
@@ -62,8 +61,8 @@ public final class CrateContainersUtils {
         CrateItemStackHandler handler = crate.getHandler();
         ItemStack originalContent = handler.getStoredItem(0);
         int originalCount = handler.getCountInSlot(0);
-        long available = (long) handler.getSlotLimit(0) - originalCount;
-        long addedCount = 0;
+        int available = handler.getSlotLimit(0) - originalCount;
+        int addedCount = 0;
         ItemStack expectedContent = originalContent;
         for (ItemStack stack : items) {
             if (stack.isEmpty()) {
@@ -77,10 +76,12 @@ public final class CrateContainersUtils {
                 return false;
             }
 
-            addedCount += stack.getCount();
-            if (addedCount > available) {
+            int stackCount = stack.getCount();
+            if (stackCount > available - addedCount) {
                 return false;
             }
+
+            addedCount += stackCount;
         }
 
         if (simulate) {
@@ -88,7 +89,7 @@ public final class CrateContainersUtils {
         }
 
         ItemStack validatedContent = expectedContent;
-        int expectedCount = originalCount + (int) addedCount;
+        int expectedCount = originalCount + addedCount;
         return handler.runInBatch(() -> {
             for (ItemStack stack : items) {
                 if (stack.isEmpty()) {

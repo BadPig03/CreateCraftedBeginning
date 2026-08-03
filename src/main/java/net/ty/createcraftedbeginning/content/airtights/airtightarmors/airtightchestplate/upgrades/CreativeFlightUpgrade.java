@@ -42,6 +42,7 @@ public enum CreativeFlightUpgrade implements TickingAirtightUpgrade {
                 || player.isSpectator()) {
             return;
         }
+
         if (!player.getAbilities().flying
                 || !INSTANCE.canApply(player)
                 || player.getEffect(CCBMobEffects.JETPACK_FLIGHT) == null) {

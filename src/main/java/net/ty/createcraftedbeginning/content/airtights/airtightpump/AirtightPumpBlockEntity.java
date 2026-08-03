@@ -293,9 +293,11 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasT
         }
 
         updatePipeNetwork(isFront(side));
-        if (transportBehaviour != null) {
-            transportBehaviour.wipePressure();
+        if (transportBehaviour == null) {
+            return;
         }
+
+        transportBehaviour.wipePressure();
     }
 
     private boolean isSideAccessible(Direction direction) {
@@ -373,6 +375,7 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasT
                 if (face == current.entryFace || current.pos.equals(startPos) && face == entryFace) {
                     continue;
                 }
+
                 if (!currentPipe.canHaveFlowToward(currentState, face) || !canFlowThrough(currentPipe, currentState, current.entryFace, face, pull)) {
                     continue;
                 }
@@ -527,10 +530,12 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasT
             PressureNode[] nodes = nodesByPos.computeIfAbsent(pos, ignored -> new PressureNode[DIRECTION_COUNT]);
             int index = entryFace.ordinal();
             PressureNode node = nodes[index];
-            if (node == null) {
-                node = new PressureNode(pos, entryFace, distance);
-                nodes[index] = node;
+            if (node != null) {
+                return node;
             }
+
+            node = new PressureNode(pos, entryFace, distance);
+            nodes[index] = node;
             return node;
         }
 

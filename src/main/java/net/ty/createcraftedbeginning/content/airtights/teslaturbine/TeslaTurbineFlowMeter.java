@@ -52,6 +52,7 @@ public class TeslaTurbineFlowMeter {
         if (amount <= 0) {
             return current;
         }
+
         if (Long.MAX_VALUE - current < amount) {
             return Long.MAX_VALUE;
         }
@@ -112,7 +113,6 @@ public class TeslaTurbineFlowMeter {
         if (!tag.contains(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE)) {
             return TeslaTurbineUtils.FLOW_SAMPLE_RATE;
         }
-
         return Mth.clamp(tag.getInt(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE), 1, TeslaTurbineUtils.FLOW_SAMPLE_RATE);
     }
 
@@ -179,9 +179,11 @@ public class TeslaTurbineFlowMeter {
         if (persistentStateChanged) {
             core.markForSave();
         }
-        if (Float.compare(previousNetFlow, netFlow) != 0 || Float.compare(previousAbsoluteFlow, absoluteFlow) != 0) {
-            core.markForClientSync();
+        if (Float.compare(previousNetFlow, netFlow) == 0 && Float.compare(previousAbsoluteFlow, absoluteFlow) == 0) {
+            return;
         }
+
+        core.markForClientSync();
     }
 
     public boolean isClockwiseFlow() {
@@ -249,9 +251,11 @@ public class TeslaTurbineFlowMeter {
         TeslaTurbineLevelCalculator calculator = core.getLevelCalculator();
         calculator.loadSupplyLevel(0);
         calculator.loadTypeLevel();
-        if (changed) {
-            core.markForSaveAndClientSync();
+        if (!changed) {
+            return;
         }
+
+        core.markForSaveAndClientSync();
     }
 
     private void readClient(CompoundTag compoundTag, Provider provider) {
@@ -342,9 +346,11 @@ public class TeslaTurbineFlowMeter {
     private void clearRuntimeState(boolean resetGasType) {
         clearFlowSamples();
         hasMixedGases = false;
-        if (resetGasType) {
-            gasType = GasStack.EMPTY;
+        if (!resetGasType) {
+            return;
         }
+
+        gasType = GasStack.EMPTY;
     }
 
     private void clearFlowSamples() {

@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.registry;
 
+import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
 import com.tterrag.registrate.util.entry.BlockEntry;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.util.ColorRGBA;
@@ -51,6 +52,7 @@ import net.ty.createcraftedbeginning.content.end.endcasing.EndCasingBlock;
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerBlock;
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerStructuralBlock;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerBlock;
+import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerMovementBehaviour;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerStructuralBlock;
 import net.ty.createcraftedbeginning.content.obsolete.phohostressbearing.PhotoStressBearingBlock;
 import net.ty.createcraftedbeginning.content.obsolete.pneumaticengine.PneumaticEngineBlock;
@@ -60,7 +62,6 @@ import net.ty.createcraftedbeginning.data.CCBRegistrate;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.CCBCreativeTabSection;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -128,7 +129,7 @@ public class CCBBlocks {
     public static final BlockEntry<EndCasingBlock> END_CASING_BLOCK = CCB_REGISTRATE.block("end_casing", EndCasingBlock::new).transform(CCBBlockModelTransformer.endCasing()).transform(CCBBlockPropertiesTransformer.endCasing()).register();
     public static final BlockEntry<EndIncinerationBlowerBlock> END_INCINERATION_BLOWER_BLOCK = CCB_REGISTRATE.block("end_incineration_blower", EndIncinerationBlowerBlock::new).transform(CCBBlockModelTransformer.endIncinerationBlower()).transform(CCBBlockPropertiesTransformer.endComponentWithImpact(4)).register();
     public static final BlockEntry<EndIncinerationBlowerStructuralBlock> END_INCINERATION_BLOWER_STRUCTURAL_BLOCK = CCB_REGISTRATE.block("end_incineration_blower_structural", EndIncinerationBlowerStructuralBlock::new).transform(CCBBlockModelTransformer.endIncinerationBlowerStructural()).transform(CCBBlockPropertiesTransformer.endComponentWithImpact(0)).register();
-    public static final BlockEntry<EndSculkSilencerBlock> END_SCULK_SILENCER_BLOCK = CCB_REGISTRATE.block("end_sculk_silencer", EndSculkSilencerBlock::new).transform(CCBBlockModelTransformer.endSculkSilencer()).transform(CCBBlockPropertiesTransformer.endComponentWithImpact(4)).register();
+    public static final BlockEntry<EndSculkSilencerBlock> END_SCULK_SILENCER_BLOCK = CCB_REGISTRATE.block("end_sculk_silencer", EndSculkSilencerBlock::new).transform(CCBBlockModelTransformer.endSculkSilencer()).transform(CCBBlockPropertiesTransformer.endComponentWithImpact(4)).onRegister(MovementBehaviour.movementBehaviour(new EndSculkSilencerMovementBehaviour())).register();
     public static final BlockEntry<EndSculkSilencerStructuralBlock> END_SCULK_SILENCER_STRUCTURAL_BLOCK = CCB_REGISTRATE.block("end_sculk_silencer_structural", EndSculkSilencerStructuralBlock::new).transform(CCBBlockModelTransformer.endSculkSilencerStructural()).transform(CCBBlockPropertiesTransformer.endComponentWithImpact(0)).register();
 
     static {

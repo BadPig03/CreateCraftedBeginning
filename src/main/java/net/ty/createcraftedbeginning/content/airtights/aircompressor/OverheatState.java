@@ -132,9 +132,11 @@ public enum OverheatState {
             Vec3 particlePos = getParticlePosition(pos, random, 0.5f);
             level.addParticle(ParticleTypes.SMOKE, particlePos.x, particlePos.y, particlePos.z, 0, random.nextFloat() * 0.0125, 0);
         }
-        if (random.nextFloat() >= flameThreshold) {
-            Vec3 particlePos = getParticlePosition(pos, random, 1);
-            level.addParticle(ParticleTypes.FLAME, particlePos.x, particlePos.y, particlePos.z, 0, random.nextFloat() * 0.025, 0);
+        if (random.nextFloat() < flameThreshold) {
+            return;
         }
+
+        Vec3 particlePos = getParticlePosition(pos, random, 1);
+        level.addParticle(ParticleTypes.FLAME, particlePos.x, particlePos.y, particlePos.z, 0, random.nextFloat() * 0.025, 0);
     }
 }

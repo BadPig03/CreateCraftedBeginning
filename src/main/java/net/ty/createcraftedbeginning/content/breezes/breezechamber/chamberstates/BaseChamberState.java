@@ -40,9 +40,11 @@ public abstract class BaseChamberState {
         if (stack.is(Items.ENCHANTED_GOLDEN_APPLE)) {
             advancementBehaviour.awardPlayer(CCBAdvancements.LUXURY_TREAT);
         }
-        if (chargingTime < 0) {
-            advancementBehaviour.awardPlayer(CCBAdvancements.BAD_APPLE);
+        if (chargingTime >= 0) {
+            return;
         }
+
+        advancementBehaviour.awardPlayer(CCBAdvancements.BAD_APPLE);
     }
 
     private static void applyRemainingTime(BreezeChamberBlockEntity chamber, long newTime) {
@@ -93,10 +95,10 @@ public abstract class BaseChamberState {
         if (data.amount() <= 0) {
             return InteractionResult.FAIL;
         }
+
         if (isCreative && data.action() != WindChargingAction.CYCLE_CREATIVE) {
             return InteractionResult.PASS;
         }
-
         return switch (data.action()) {
             case CHARGE -> insertCharge(chamber, stack, data.time(), forceOverflow, simulate);
             case CLEAR_ILL -> clearIll(chamber, stack, simulate);
@@ -134,15 +136,19 @@ public abstract class BaseChamberState {
             return InteractionResult.PASS;
         }
 
-        if (!simulate) {
-            Level level = chamber.getLevel();
-            chamber.setChamberState(new InactiveChamberState());
-            chamber.playSound(false);
-            chamber.spawnParticleBurst(false);
-            if (level != null && !level.isClientSide && stack.is(Items.MILK_BUCKET)) {
-                chamber.getAdvancementBehaviour().awardPlayer(CCBAdvancements.UNIVERSAL_ANTIDOTE);
-            }
+        if (simulate) {
+            return InteractionResult.SUCCESS;
         }
+
+        Level level = chamber.getLevel();
+        chamber.setChamberState(new InactiveChamberState());
+        chamber.playSound(false);
+        chamber.spawnParticleBurst(false);
+        if (level == null || level.isClientSide || !stack.is(Items.MILK_BUCKET)) {
+            return InteractionResult.SUCCESS;
+        }
+
+        chamber.getAdvancementBehaviour().awardPlayer(CCBAdvancements.UNIVERSAL_ANTIDOTE);
         return InteractionResult.SUCCESS;
     }
 

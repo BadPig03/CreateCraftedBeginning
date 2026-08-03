@@ -66,7 +66,6 @@ public class CreativeGasCanisterBlock extends Block implements IBE<CreativeGasCa
         if (state == null) {
             return null;
         }
-
         return ProperWaterloggedBlock.withWater(context.getLevel(), state, context.getClickedPos());
     }
 
@@ -91,7 +90,6 @@ public class CreativeGasCanisterBlock extends Block implements IBE<CreativeGasCa
         if (!(asItem() instanceof CreativeGasCanisterBlockItem) || !(level.getBlockEntity(pos) instanceof CreativeGasCanisterBlockEntity canister)) {
             return ItemStack.EMPTY;
         }
-
         return canister.getCanister().copy();
     }
 
@@ -102,9 +100,11 @@ public class CreativeGasCanisterBlock extends Block implements IBE<CreativeGasCa
 
     @Override
     public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor world, BlockPos pos, BlockPos neighbourPos) {
-        if (state.getValue(WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
+        if (!state.getValue(WATERLOGGED)) {
+            return state;
         }
+
+        world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
         return state;
     }
 
@@ -120,7 +120,6 @@ public class CreativeGasCanisterBlock extends Block implements IBE<CreativeGasCa
         if (!(blockEntity instanceof CreativeGasCanisterBlockEntity canister)) {
             return drops;
         }
-
         return List.of(canister.getCanister().copy());
     }
 
@@ -132,9 +131,11 @@ public class CreativeGasCanisterBlock extends Block implements IBE<CreativeGasCa
     @Override
     public ItemRequirement getRequiredItems(BlockState state, @Nullable BlockEntity blockEntity) {
         Item item = asItem();
-        if (item instanceof CreativeGasCanisterBlockItem placeable) {
-            item = placeable.getActualItem();
+        if (!(item instanceof CreativeGasCanisterBlockItem placeable)) {
+            return new ItemRequirement(ItemUseType.CONSUME, item);
         }
+
+        item = placeable.getActualItem();
         return new ItemRequirement(ItemUseType.CONSUME, item);
     }
 

@@ -32,9 +32,11 @@ public class BreezeCoolerInteractionPoint extends DepositOnlyArmInteractionPoint
             return remainder;
         }
 
-        if (!simulate) {
-            Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), remainder);
+        if (simulate) {
+            return input;
         }
+
+        Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), remainder);
         return input;
     }
 

@@ -128,7 +128,6 @@ public final class GasNetwork {
         if (genericPreview.isEmpty() || !GasStack.isSameGasSameComponents(genericPreview, request)) {
             return GasStack.EMPTY;
         }
-
         return sourceCap.drain(request.getAmount(), GasAction.EXECUTE);
     }
 
@@ -328,9 +327,11 @@ public final class GasNetwork {
         if (blockFace.equals(start)) {
             transferSpeed = (int) Math.max(1, connection.getInboundPressure() / 2);
         }
-        if (frontierMembership.add(blockFace)) {
-            frontier.addLast(blockFace);
+        if (!frontierMembership.add(blockFace)) {
+            return;
         }
+
+        frontier.addLast(blockFace);
     }
 
     private boolean processFrontierEntry(BlockFace blockFace) {
@@ -590,11 +591,11 @@ public final class GasNetwork {
         if (connection.getSource() == null && !connection.determineSource(level, location.getPos())) {
             return null;
         }
+
         GasFlowSource source = connection.getSource();
         if (source == null || !source.isEndpoint()) {
             return null;
         }
-
         return source;
     }
 
@@ -617,9 +618,11 @@ public final class GasNetwork {
         }
 
         GasTransportBehaviour behaviour = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
-        if (behaviour != null) {
-            cache.put(pos, new WeakReference<>(behaviour));
+        if (behaviour == null) {
+            return behaviour;
         }
+
+        cache.put(pos, new WeakReference<>(behaviour));
         return behaviour;
     }
 

@@ -11,7 +11,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Provides lookup and registration helpers for gas-specific airtight turbine behavior.
- * Registered handlers determine the efficiency contributed by each supported gas.
+ * Registered handlers determine the maximum Tesla Turbine operating level unlocked
+ * by each supported gas. This value is a gas grade, not a linear energy multiplier.
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -52,10 +53,10 @@ public final class AirtightTurbineHandlerUtils {
     /**
      * Registers a custom airtight turbine handler for the supplied target.
      *
-     * @param location   the resource location identifying the target value
-     * @param efficiency the efficiency value to use
+     * @param location the resource location identifying the target gas
+     * @param maxLevel the maximum Tesla Turbine operating level unlocked by the gas
      */
-    public static void register(ResourceLocation location, int efficiency) {
+    public static void register(ResourceLocation location, int maxLevel) {
         Gas gasType = Gas.getGasTypeByName(location);
         if (gasType.isEmpty()) {
             CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Turbine Handler: gas '{}' does not exist.", location);
@@ -68,11 +69,11 @@ public final class AirtightTurbineHandlerUtils {
             return;
         }
 
-        if (efficiency < 0 || efficiency > TeslaTurbineUtils.MAX_LEVEL) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Turbine Handler for gas '{}': efficiency is out of range! Valid range is [0, {}].", location, TeslaTurbineUtils.MAX_LEVEL);
+        if (maxLevel < 0 || maxLevel > TeslaTurbineUtils.MAX_LEVEL) {
+            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Turbine Handler for gas '{}': maximum level is out of range! Valid range is [0, {}].", location, TeslaTurbineUtils.MAX_LEVEL);
             return;
         }
 
-        AirtightTurbineHandler.REGISTRY.register(gasType, () -> efficiency);
+        AirtightTurbineHandler.REGISTRY.register(gasType, () -> maxLevel);
     }
 }

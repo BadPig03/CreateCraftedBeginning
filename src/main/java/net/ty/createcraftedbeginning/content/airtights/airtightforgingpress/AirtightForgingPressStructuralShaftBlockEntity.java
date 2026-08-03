@@ -48,7 +48,6 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
         if (level == null || !(level.getBlockEntity(masterPos) instanceof AirtightForgingPressBlockEntity master)) {
             return null;
         }
-
         return master;
     }
 
@@ -57,7 +56,6 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
         if (master == null || !isUpperStore(getBlockState())) {
             return null;
         }
-
         return master.getAdditionInventory();
     }
 
@@ -66,7 +64,6 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
         if (master == null || !isUpperStore(getBlockState())) {
             return null;
         }
-
         return master.getFluidCapability();
     }
 
@@ -75,7 +72,6 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
         if (master == null || !isUpperStore(getBlockState())) {
             return null;
         }
-
         return master.getGasCapability();
     }
 

@@ -170,7 +170,6 @@ public abstract class AirtightUpgradableMenu extends MenuBase<ItemStack> {
         if (index < 0) {
             return new AirtightUpgradeStatus(upgrade.getID(), upgrade.startsEnabled(), upgrade.startsInstalled());
         }
-
         return currentStatusList.get(index);
     }
 

@@ -29,6 +29,7 @@ public class IllChamberState extends BaseChamberState {
             chamber.setChamberState(new InactiveChamberState());
             return;
         }
+
         if (level.isClientSide) {
             return;
         }

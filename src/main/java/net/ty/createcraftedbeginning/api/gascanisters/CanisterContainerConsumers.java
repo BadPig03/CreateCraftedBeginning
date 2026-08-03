@@ -121,7 +121,6 @@ public final class CanisterContainerConsumers {
                 return Optional.of(new AffordableFuel(content, amount));
             }
         }
-
         return Optional.empty();
     }
 
@@ -159,6 +158,7 @@ public final class CanisterContainerConsumers {
         if (gasType.isEmpty() || amount <= 0) {
             return true;
         }
+
         if (simulate) {
             return canCoverCost(containers, gasType, amount, player);
         }
@@ -221,6 +221,7 @@ public final class CanisterContainerConsumers {
             if (contents.isEmpty(slot) || !contents.getGasInTank(slot).is(gasType)) {
                 continue;
             }
+
             if (contents.getCreatives(slot)) {
                 remaining = 0;
                 break;
@@ -243,9 +244,11 @@ public final class CanisterContainerConsumers {
             drains.add(Pair.of(slot, drained));
         }
 
-        if (!drains.isEmpty()) {
-            drainPlan.put(contents, drains);
+        if (drains.isEmpty()) {
+            return remaining;
         }
+
+        drainPlan.put(contents, drains);
         return remaining;
     }
 
@@ -256,6 +259,7 @@ public final class CanisterContainerConsumers {
                 contents.drain(drain.getFirst(), drain.getSecond(), GasAction.EXECUTE);
                 return;
             }
+
             if (!(container instanceof GasCanisterPackContainerContents contents)) {
                 return;
             }
@@ -315,6 +319,7 @@ public final class CanisterContainerConsumers {
                     if (contents.isEmpty(slot) || !contents.getGasInTank(slot).is(gasType)) {
                         continue;
                     }
+
                     if (contents.getCreatives(slot)) {
                         return true;
                     }
@@ -335,7 +340,6 @@ public final class CanisterContainerConsumers {
                 return true;
             }
         }
-
         return false;
     }
 

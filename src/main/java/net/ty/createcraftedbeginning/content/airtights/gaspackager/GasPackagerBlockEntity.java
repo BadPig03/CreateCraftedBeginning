@@ -97,6 +97,7 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
             gases.set(i, existing.copyWithAmount(existing.getAmount() + added.getAmount()));
             return;
         }
+
         gases.add(added.copy());
     }
 
@@ -229,6 +230,7 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
             deductions.set(i, new GasDeduction(existing.token(), mergedAmount));
             return;
         }
+
         deductions.add(new GasDeduction(token.copyWithCount(1), amount));
     }
 
@@ -412,6 +414,7 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         if (ownIdentifier != null && ownIdentifier.equals(identifier)) {
             return true;
         }
+
         if (identifier == null || gasInventory == null || !gasInventory.hasInventory()) {
             return super.isTargetingSameInventory(inventory);
         }
@@ -461,7 +464,6 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         if (identifier == null) {
             return null;
         }
-
         return new IdentifiedInventory(identifier, EMPTY_GAS_INVENTORY_HANDLER);
     }
 
@@ -555,6 +557,7 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
             if (!AllBlocks.STOCK_LINK.has(adjacentState) || PackagerLinkBlock.getConnectedDirection(adjacentState) != direction) {
                 continue;
             }
+
             if (!(level.getBlockEntity(linkPos) instanceof PackagerLinkBlockEntity link)) {
                 continue;
             }
@@ -606,6 +609,7 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         if (!(panelState.getBlock() instanceof FactoryPanelBlock) || FactoryPanelBlock.connectedDirection(panelState) != direction) {
             return;
         }
+
         if (level == null || !(level.getBlockEntity(panelPos) instanceof FactoryPanelBlockEntity panel) || !panel.restocker) {
             return;
         }
@@ -621,6 +625,7 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         if (!(linkState.getBlock() instanceof PackagerLinkBlock) || PackagerLinkBlock.getConnectedDirection(linkState) != direction) {
             return;
         }
+
         if (level == null || !(level.getBlockEntity(linkPos) instanceof PackagerLinkBlockEntity link)) {
             return;
         }

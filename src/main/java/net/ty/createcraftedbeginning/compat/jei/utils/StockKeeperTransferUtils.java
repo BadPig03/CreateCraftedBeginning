@@ -83,7 +83,6 @@ public final class StockKeeperTransferUtils {
                 if (virtualGas.isEmpty()) {
                     return null;
                 }
-
                 return new OutputTarget(virtualGas.copyWithCount(1), outputAmount, outputAmount);
             }
         }

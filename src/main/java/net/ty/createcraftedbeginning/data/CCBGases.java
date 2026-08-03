@@ -39,6 +39,7 @@ public class CCBGases {
     public static final GasHolder<Gas, Gas> SCULK_AIR = GAS_REGISTER.register("sculk_air", builder().tint(0x111B21).tag(CCBGasTags.SCULK.tag));
 
     public static final GasHolder<Gas, Gas> STEAM = GAS_REGISTER.register("steam", builder().tint(0xE7EEF2));
+    public static final GasHolder<Gas, Gas> PRESSURIZED_STEAM = GAS_REGISTER.register("pressurized_steam", builder().tint(0xADB3B6).tag(CCBGasTags.PRESSURIZED.tag));
 
     public static final GasHolder<Gas, Gas> CREATIVE_AIR = GAS_REGISTER.register("creative_air", builder().tint(0x000000).tag(CCBGasTags.CREATIVE.tag));
 

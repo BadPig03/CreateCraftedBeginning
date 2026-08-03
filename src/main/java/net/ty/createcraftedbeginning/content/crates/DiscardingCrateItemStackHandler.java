@@ -46,6 +46,7 @@ public class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
         if (stack.isEmpty()) {
             return ItemStack.EMPTY;
         }
+
         if (!passesItemValidator(stack)) {
             return stack;
         }
@@ -71,12 +72,16 @@ public class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
             hasTrackedDiscard = count > 0 && trackedItemPredicate.test(content) || trackedItemPredicate.test(stack) && nextCount < incoming;
         }
 
-        if (!simulate) {
-            setStoredItems(STORAGE_SLOT, nextContent, nextCount);
-            if (hasTrackedDiscard) {
-                trackedDiscardListener.run();
-            }
+        if (simulate) {
+            return ItemStack.EMPTY;
         }
+
+        setStoredItems(STORAGE_SLOT, nextContent, nextCount);
+        if (!hasTrackedDiscard) {
+            return ItemStack.EMPTY;
+        }
+
+        trackedDiscardListener.run();
         return ItemStack.EMPTY;
     }
 
@@ -121,6 +126,7 @@ public class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
             insertItem(DISCARD_SLOT, stack, false);
             return;
         }
+
         super.setStackInSlot(STORAGE_SLOT, stack);
     }
 
@@ -140,9 +146,11 @@ public class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
             if (stack.isEmpty() || newCount <= 0) {
                 return;
             }
+
             insertItem(DISCARD_SLOT, stack.copyWithCount(newCount), false);
             return;
         }
+
         super.setStoredItems(STORAGE_SLOT, stack, newCount);
     }
 

@@ -48,6 +48,7 @@ public final class GasAmountUtils {
         if (mb < MILLIBUCKETS_PER_BUCKET) {
             return mb + "mB";
         }
+
         if (mb < MILLIBUCKETS_PER_KILOBUCKET) {
             return formatTenths(mb, MILLIBUCKETS_PER_BUCKET) + 'B';
         }
@@ -64,9 +65,11 @@ public final class GasAmountUtils {
         if (mb >= MILLIBUCKETS_PER_MEGABUCKET / 10) {
             return formatTenths(mb, MILLIBUCKETS_PER_MEGABUCKET) + "mb";
         }
+
         if (mb >= MILLIBUCKETS_PER_KILOBUCKET / 10) {
             return formatTenths(mb, MILLIBUCKETS_PER_KILOBUCKET) + "kb";
         }
+
         if (mb >= MILLIBUCKETS_PER_BUCKET / 10) {
             return formatTenths(mb, MILLIBUCKETS_PER_BUCKET) + 'b';
         }
@@ -83,9 +86,11 @@ public final class GasAmountUtils {
         if (mb >= MILLIBUCKETS_PER_MEGABUCKET && mb % (MILLIBUCKETS_PER_MEGABUCKET / 10) == 0) {
             return formatTenths(mb, MILLIBUCKETS_PER_MEGABUCKET) + "mB";
         }
+
         if (mb >= MILLIBUCKETS_PER_KILOBUCKET && mb % (MILLIBUCKETS_PER_KILOBUCKET / 10) == 0) {
             return formatTenths(mb, MILLIBUCKETS_PER_KILOBUCKET) + "kB";
         }
+
         if (mb >= MILLIBUCKETS_PER_BUCKET && mb % (MILLIBUCKETS_PER_BUCKET / 10) == 0) {
             return formatTenths(mb, MILLIBUCKETS_PER_BUCKET) + 'B';
         }

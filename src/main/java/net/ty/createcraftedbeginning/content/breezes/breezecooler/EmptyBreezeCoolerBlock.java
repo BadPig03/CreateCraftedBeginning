@@ -42,9 +42,11 @@ public class EmptyBreezeCoolerBlock extends HorizontalDirectionalBlock implement
 
     @Override
     public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor world, BlockPos pos, BlockPos neighbourPos) {
-        if (state.getValue(WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
+        if (!state.getValue(WATERLOGGED)) {
+            return state;
         }
+
+        world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
         return state;
     }
 

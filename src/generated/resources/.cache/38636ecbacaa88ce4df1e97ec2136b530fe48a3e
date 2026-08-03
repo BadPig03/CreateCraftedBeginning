@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-02T12:48:24.9772768	Create Crafted Beginning's Processing Recipes With Gas
+// 1.21.1	2026-08-03T11:34:21.0077455	Create Crafted Beginning's Processing Recipes With Gas
 17f6de5a374f5d298f5588d884e70b087217f4af data/createcraftedbeginning/recipe/dissipation/ethereal.json
 62f12995b52b6664a0fe34176f0f5eeec1628254 data/createcraftedbeginning/recipe/dissipation/natural.json
 0b4489a5ac6c020d0d52369409943bdfdb0950fe data/createcraftedbeginning/recipe/dissipation/pressurized_ethereal.json
@@ -146,6 +146,7 @@ f8f7bccc9293bacf5e598f448a7e4c8bd032c85f data/createcraftedbeginning/recipe/pres
 ba726cfb8c22a2e33aa2d8183fae8ecee80cadb3 data/createcraftedbeginning/recipe/pressurization/pressurized_energized_ultrawarm.json
 596a3dfde4538a9a45c584bea0320187a55aebfe data/createcraftedbeginning/recipe/pressurization/pressurized_ethereal.json
 6a1705971c9a4062019d81b8181348c6ff6d8c9d data/createcraftedbeginning/recipe/pressurization/pressurized_natural.json
+f7fd0bc6ee147c212f4307dbd1dd15a020bcc3d9 data/createcraftedbeginning/recipe/pressurization/pressurized_steam.json
 fde7b543e3a6fbdb14c789cb781ea15a1ccc4f41 data/createcraftedbeginning/recipe/pressurization/pressurized_ultrawarm.json
 fb327c4fbc40c5edf6c3c9348257d700e9de256d data/createcraftedbeginning/recipe/reactor_kettle/andesite_alloy.json
 775777491a36a78d9220a6654dbbe40576663eb9 data/createcraftedbeginning/recipe/reactor_kettle/andesite_alloy_from_zinc.json

@@ -93,9 +93,11 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
 
         BlockPos masterPos = AirtightReactorKettleUtils.getMaster(pos, state);
         level.destroyBlockProgress(masterPos.hashCode(), masterPos, -1);
-        if (!level.isClientSide && player.isCreative()) {
-            level.destroyBlock(masterPos, false);
+        if (level.isClientSide || !player.isCreative()) {
+            return super.playerWillDestroy(level, pos, state, player);
         }
+
+        level.destroyBlock(masterPos, false);
         return super.playerWillDestroy(level, pos, state, player);
     }
 
@@ -114,13 +116,16 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
             }
             return state;
         }
+
         if (!(accessor instanceof Level level) || level.isClientSide) {
             return state;
         }
 
-        if (!level.getBlockTicks().hasScheduledTick(pos, this)) {
-            level.scheduleTick(pos, this, 1);
+        if (level.getBlockTicks().hasScheduledTick(pos, this)) {
+            return state;
         }
+
+        level.scheduleTick(pos, this, 1);
         return state;
     }
 
@@ -132,10 +137,10 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
         if (!(level.getBlockEntity(masterPos) instanceof AirtightReactorKettleBlockEntity master) || master.getWindowsOpenState()) {
             return shape;
         }
+
         if (!position.isWindow(-1)) {
             return shape;
         }
-
         return CCBShapes.AIRTIGHT_REACTOR_KETTLE_TOP_MID_CLOSED.get(position.getDirection());
     }
 

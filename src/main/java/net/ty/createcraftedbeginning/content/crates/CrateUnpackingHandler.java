@@ -41,6 +41,7 @@ public final class CrateUnpackingHandler<B extends CratesBlockEntity> implements
         if (!blockEntityClass.isInstance(blockEntity)) {
             return false;
         }
+
         if (!discarding) {
             return CrateContainersUtils.defaultUnpack(level, pos, items, simulate);
         }

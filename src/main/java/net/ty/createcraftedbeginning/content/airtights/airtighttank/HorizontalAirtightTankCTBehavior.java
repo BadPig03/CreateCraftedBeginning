@@ -31,6 +31,7 @@ public class HorizontalAirtightTankCTBehavior extends Base {
         if (directionAxis == Axis.Y) {
             return CCBSpriteShifts.AIRTIGHT_TANK;
         }
+
         if (directionAxis == axis) {
             return CCBSpriteShifts.AIRTIGHT_TANK_TOP;
         }
@@ -54,6 +55,7 @@ public class HorizontalAirtightTankCTBehavior extends Base {
         if (facingAxis.isVertical() && alongX) {
             return super.getUpDirection(level, pos, state, face).getClockWise();
         }
+
         if (facingAxis == axis || facingAxis.isVertical()) {
             return super.getUpDirection(level, pos, state, face);
         }
@@ -71,6 +73,7 @@ public class HorizontalAirtightTankCTBehavior extends Base {
         if (facingAxis.isVertical() && axis == Axis.X) {
             return super.getRightDirection(level, pos, state, face).getClockWise();
         }
+
         if (facingAxis == axis || facingAxis.isVertical()) {
             return super.getRightDirection(level, pos, state, face);
         }

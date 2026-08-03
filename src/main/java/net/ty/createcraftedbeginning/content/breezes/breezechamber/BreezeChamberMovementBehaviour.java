@@ -40,9 +40,11 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
     }
 
     private static LerpedFloat getHeadAngle(MovementContext context) {
-        if (!(context.temporaryData instanceof LerpedFloat)) {
-            context.temporaryData = LerpedFloat.angular().startWithValue(getTargetAngle(context));
+        if (context.temporaryData instanceof LerpedFloat) {
+            return (LerpedFloat) context.temporaryData;
         }
+
+        context.temporaryData = LerpedFloat.angular().startWithValue(getTargetAngle(context));
         return (LerpedFloat) context.temporaryData;
     }
 
@@ -64,9 +66,11 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
 
     private static boolean shouldRenderHat(MovementContext context) {
         CompoundTag data = context.data;
-        if (!data.contains(COMPOUND_KEY_CONDUCTOR)) {
-            data.putBoolean(COMPOUND_KEY_CONDUCTOR, determineIfConducting(context));
+        if (data.contains(COMPOUND_KEY_CONDUCTOR)) {
+            return data.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
         }
+
+        data.putBoolean(COMPOUND_KEY_CONDUCTOR, determineIfConducting(context));
         return data.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
     }
 
@@ -81,9 +85,9 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
             if (!carriageContraption.inControl(context.localPos, direction)) {
                 continue;
             }
+
             return true;
         }
-
         return false;
     }
 

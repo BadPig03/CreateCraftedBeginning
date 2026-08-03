@@ -105,11 +105,11 @@ public enum ElytraUpgrade implements AirtightUpgrade {
         if (!Float.isFinite(multiplier) || multiplier <= 0) {
             return false;
         }
+
         if (!CanisterContainerConsumers.interactContainer(player, selectedFuel.gasType(), selectedFuel.amount(), () -> true, false)) {
             GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", selectedFuel.gasContent().getHoverName());
             return false;
         }
-
         return applySpeedBoost(player, multiplier);
     }
 
@@ -123,10 +123,12 @@ public enum ElytraUpgrade implements AirtightUpgrade {
         Vec3 movement = player.getDeltaMovement().scale(0.75 * multiplier);
         player.setDeltaMovement(movement.add(boost));
         player.hasImpulse = true;
-        if (player.level() instanceof ServerLevel serverLevel) {
-            serverLevel.sendParticles(ParticleTypes.GUST_EMITTER_SMALL, position.x, position.y, position.z, 1, 0, 0, 0, 0);
-            CCBSoundEvents.AIRTIGHT_JETPACK_LAUNCH.playOnServer(serverLevel, BlockPos.containing(position));
+        if (!(player.level() instanceof ServerLevel serverLevel)) {
+            return true;
         }
+
+        serverLevel.sendParticles(ParticleTypes.GUST_EMITTER_SMALL, position.x, position.y, position.z, 1, 0, 0, 0, 0);
+        CCBSoundEvents.AIRTIGHT_JETPACK_LAUNCH.playOnServer(serverLevel, BlockPos.containing(position));
         return true;
     }
 

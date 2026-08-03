@@ -29,6 +29,7 @@ public class GaleChamberState extends BaseChamberState {
             chamber.setChamberState(new InactiveChamberState());
             return;
         }
+
         if (level.isClientSide) {
             return;
         }

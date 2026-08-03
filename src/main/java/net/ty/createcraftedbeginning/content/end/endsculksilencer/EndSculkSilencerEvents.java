@@ -3,11 +3,14 @@ package net.ty.createcraftedbeginning.content.end.endsculksilencer;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.Position;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.GameEventTags;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -20,6 +23,7 @@ import net.neoforged.neoforge.event.level.LevelEvent.Unload;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent.Post;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.compat.sable.SableSubLevelCompat;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -47,8 +51,12 @@ public final class EndSculkSilencerEvents {
             return;
         }
 
-        BlockPos sourcePos = BlockPos.containing(event.getEventPosition());
-        String dimension = event.getLevel().dimension().location().toString();
+        ResourceLocation dimension = event.getLevel().dimension().location();
+        if (!GlobalEndSculkSilencerManager.hasCoverage(dimension)) {
+            return;
+        }
+
+        BlockPos sourcePos = SableSubLevelCompat.resolve(event.getLevel(), event.getEventPosition()).blockPos();
         if (!GlobalEndSculkSilencerManager.checkWithinRange(sourcePos, dimension)) {
             return;
         }
@@ -81,8 +89,22 @@ public final class EndSculkSilencerEvents {
         GlobalEndSculkSilencerManager.removeDimension(serverLevel);
     }
 
-    private static boolean isSilenceableGameEvent(Holder<GameEvent> gameEvent) {
+    public static boolean isSilenceableGameEvent(Holder<GameEvent> gameEvent) {
         return gameEvent.is(GameEventTags.VIBRATIONS) || gameEvent.is(GameEventTags.WARDEN_CAN_LISTEN) || gameEvent.is(GameEventTags.SHRIEKER_CAN_LISTEN) || gameEvent.is(GameEventTags.ALLAY_CAN_LISTEN);
+    }
+
+    public static boolean hasSilencerCoverage(Level level) {
+        return GlobalEndSculkSilencerManager.hasCoverage(level.dimension().location());
+    }
+
+    public static boolean isWithinSilencedArea(Level level, Position position) {
+        ResourceLocation dimension = level.dimension().location();
+        if (!GlobalEndSculkSilencerManager.hasCoverage(dimension)) {
+            return false;
+        }
+
+        BlockPos projectedPos = SableSubLevelCompat.resolve(level, position).blockPos();
+        return GlobalEndSculkSilencerManager.checkWithinRange(projectedPos, dimension);
     }
 
     private static void syncPlayer(Player player) {
@@ -94,7 +116,7 @@ public final class EndSculkSilencerEvents {
     }
 
     private static void awardWardenProtection(VanillaGameEvent event, BlockPos sourcePos) {
-        if (!(event.getCause() instanceof Player player) || !(event.getLevel() instanceof ServerLevel serverLevel)) {
+        if (!(event.getCause() instanceof Player player) || !(event.getLevel() instanceof ServerLevel serverLevel) || CCBAdvancements.STEVES_REDEMPTION.isAlreadyAwardedTo(player)) {
             return;
         }
 

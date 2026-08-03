@@ -78,9 +78,11 @@ public final class AirtightCannonUtils {
         if (owner == null) {
             return false;
         }
+
         if (target == owner || owner.isAlliedTo(target) || target.isAlliedTo(owner)) {
             return true;
         }
+
         if (!(target instanceof TamableAnimal animal)) {
             return false;
         }
@@ -119,7 +121,6 @@ public final class AirtightCannonUtils {
         if (!CanisterContainerSuppliers.isAnyContainerAvailable(player) || gasContent.isEmpty() || timeCharged < MIN_USE_TIME) {
             return OptionalDouble.empty();
         }
-
         return OptionalDouble.of(Mth.clamp((double) timeCharged / getEfficientUseTime(cannon), 0, 2));
     }
 
@@ -132,13 +133,12 @@ public final class AirtightCannonUtils {
         if (!cannon.is(CCBItems.AIRTIGHT_CANNON)) {
             return 0;
         }
-
         return cannon.getTagEnchantments().entrySet().stream().filter(entry -> entry.getKey().is(enchantment)).findFirst().map(Entry::getValue).orElse(0);
     }
 
     public static double getRawGasConsumption(ItemStack cannon, float chargedRatio) {
         int multiShotMultiplier = 2 * getEnchantmentLevel(cannon, Enchantments.MULTISHOT) + 1;
-        double ratio = chargedRatio >= 1 ? Mth.square(chargedRatio) : Mth.sqrt(chargedRatio);
+        float ratio = chargedRatio >= 1 ? Mth.square(chargedRatio) : Mth.sqrt(chargedRatio);
         int gasConsumption = CCBConfig.server().equipments.perShotConsumption.get();
         return gasConsumption * (double) multiShotMultiplier * ratio;
     }

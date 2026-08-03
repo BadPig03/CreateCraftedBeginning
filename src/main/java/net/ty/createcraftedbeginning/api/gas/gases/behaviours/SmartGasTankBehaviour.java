@@ -141,6 +141,7 @@ public class SmartGasTankBehaviour extends BlockEntityBehaviour {
             mutationDirty = true;
             return;
         }
+
         syncCooldown = 0;
         queuedSync = false;
         updateGases();
@@ -166,6 +167,7 @@ public class SmartGasTankBehaviour extends BlockEntityBehaviour {
         if (mutationDepth != 0) {
             return false;
         }
+
         boolean changed = mutationDirty;
         mutationDirty = false;
         return changed;
@@ -212,6 +214,7 @@ public class SmartGasTankBehaviour extends BlockEntityBehaviour {
             mutationDirty = true;
             return;
         }
+
         if (syncCooldown > 0) {
             queuedSync = true;
             return;
@@ -401,6 +404,7 @@ public class SmartGasTankBehaviour extends BlockEntityBehaviour {
             if (!hasResource) {
                 return AtomicFillResult.SUCCESS;
             }
+
             if (!insertionAllowed) {
                 return AtomicFillResult.REJECTED;
             }

@@ -41,10 +41,12 @@ public class PhotoStressBearingBlockEntity extends GeneratingKineticBlockEntity 
     @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        if (!clientPacket) {
-            compoundTag.putInt("SkyLight", skyLight);
-            compoundTag.putBoolean("Clockwise", isClockwise);
+        if (clientPacket) {
+            return;
         }
+
+        compoundTag.putInt("SkyLight", skyLight);
+        compoundTag.putBoolean("Clockwise", isClockwise);
     }
 
     @Override
@@ -53,12 +55,15 @@ public class PhotoStressBearingBlockEntity extends GeneratingKineticBlockEntity 
         if (clientPacket) {
             return;
         }
+
         if (compoundTag.contains("SkyLight")) {
             skyLight = compoundTag.getInt("SkyLight");
         }
-        if (compoundTag.contains("Clockwise")) {
-            isClockwise = compoundTag.getBoolean("Clockwise");
+        if (!compoundTag.contains("Clockwise")) {
+            return;
         }
+
+        isClockwise = compoundTag.getBoolean("Clockwise");
     }
 
     @Override
@@ -66,6 +71,7 @@ public class PhotoStressBearingBlockEntity extends GeneratingKineticBlockEntity 
         if (!isInOverworld() || level == null) {
             return 0;
         }
+
         int speedFactor = level.isRaining() || level.isThundering() ? 1 : 2;
         int speedDirection = isClockwise ? 1 : -1;
         return (skyLight + 1) * speedFactor * speedDirection;
@@ -120,6 +126,7 @@ public class PhotoStressBearingBlockEntity extends GeneratingKineticBlockEntity 
         if (level == null || level instanceof PonderLevel) {
             return;
         }
+
         light = level.getBrightness(LightLayer.SKY, worldPosition.above());
         skyLight = light;
     }
@@ -128,6 +135,7 @@ public class PhotoStressBearingBlockEntity extends GeneratingKineticBlockEntity 
         if (level == null || !level.isClientSide || speed == 0) {
             return;
         }
+
         Vec3 centerOf = VecHelper.getCenterOf(worldPosition);
         Vec3 v = VecHelper.offsetRandomly(centerOf, level.random, 0.95f);
         Vec3 m = centerOf.subtract(v);

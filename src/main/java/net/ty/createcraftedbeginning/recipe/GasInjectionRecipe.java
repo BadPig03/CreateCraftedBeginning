@@ -76,7 +76,6 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
                 }
             }
         }
-
         return findLinear(level, gasStack, input);
     }
 

@@ -88,6 +88,7 @@ public class GasConnectivityHandler {
                 if (next.getX() <= minX || next.getY() <= minY || next.getZ() <= minZ) {
                     continue;
                 }
+
                 if (visited.contains(next)) {
                     continue;
                 }
@@ -291,7 +292,6 @@ public class GasConnectivityHandler {
         if (axis == Axis.Z) {
             return controllerPos.getX() < origin.getX() || controllerPos.getX() + controllerWidth > origin.getX() + width;
         }
-
         return controllerPos.getZ() < origin.getZ() || controllerPos.getZ() + controllerWidth > origin.getZ() + width;
     }
 
@@ -376,9 +376,11 @@ public class GasConnectivityHandler {
         if (be instanceof IGasTankMultiBlockEntityContainer.Inventory inv && inv.hasInventory() && be.getLevel() != null) {
             be.getLevel().invalidateCapabilities(be.getBlockPos());
         }
-        if (be.hasTank() && be.getLevel() != null) {
-            be.getLevel().invalidateCapabilities(be.getBlockPos());
+        if (!be.hasTank() || be.getLevel() == null) {
+            return;
         }
+
+        be.getLevel().invalidateCapabilities(be.getBlockPos());
     }
 
     /**

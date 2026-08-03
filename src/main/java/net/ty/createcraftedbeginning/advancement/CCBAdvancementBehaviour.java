@@ -65,7 +65,6 @@ public class CCBAdvancementBehaviour extends BlockEntityBehaviour {
         if (playerId == null) {
             return null;
         }
-
         return getWorld().getPlayerByUUID(playerId);
     }
 

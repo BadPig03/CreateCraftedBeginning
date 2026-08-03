@@ -57,7 +57,6 @@ public abstract class GasIngredient implements Predicate<GasStack> {
             if (size == -1) {
                 return DISPATCH_CODEC.decode(buf);
             }
-
             return CompoundGasIngredient.of(Stream.generate(() -> GasStack.STREAM_CODEC.decode(buf)).limit(size).map(GasIngredient::single));
         }
     };
@@ -82,9 +81,11 @@ public abstract class GasIngredient implements Predicate<GasStack> {
             if (ingredient instanceof SingleGasIngredient gas) {
                 return Either.left(gas);
             }
+
             if (ingredient instanceof TagGasIngredient tag) {
                 return Either.right(tag);
             }
+
             throw new IllegalStateException("Basic gas ingredient should be either a gas or a tag!");
         });
     }
@@ -94,7 +95,6 @@ public abstract class GasIngredient implements Predicate<GasStack> {
             if (ingredient instanceof SingleGasIngredient || ingredient instanceof TagGasIngredient) {
                 return Either.right(ingredient);
             }
-
             return Either.left(ingredient);
         }).validate(ingredient -> {
             if (ingredient.isEmpty()) {
@@ -110,10 +110,10 @@ public abstract class GasIngredient implements Predicate<GasStack> {
             if (ingredient instanceof CompoundGasIngredient compound) {
                 return Either.left(compound.children());
             }
+
             if (ingredient.isEmpty()) {
                 return Either.left(List.of());
             }
-
             return Either.right(ingredient);
         });
     }
@@ -226,9 +226,11 @@ public abstract class GasIngredient implements Predicate<GasStack> {
      * @return the stacks
      */
     public final GasStack[] getStacks() {
-        if (stacks == null) {
-            stacks = generateStacks().collect(Collectors.toCollection(GasStackLinkedSet::createTypeAndComponentsSet)).toArray(GasStack[]::new);
+        if (stacks != null) {
+            return stacks;
         }
+
+        stacks = generateStacks().collect(Collectors.toCollection(GasStackLinkedSet::createTypeAndComponentsSet)).toArray(GasStack[]::new);
         return stacks;
     }
 

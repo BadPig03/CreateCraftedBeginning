@@ -84,9 +84,11 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
 
         BlockPos masterPos = AirtightReactorKettleUtils.getMaster(pos, state);
         level.destroyBlockProgress(masterPos.hashCode(), masterPos, -1);
-        if (!level.isClientSide && player.isCreative()) {
-            level.destroyBlock(masterPos, false);
+        if (level.isClientSide || !player.isCreative()) {
+            return super.playerWillDestroy(level, pos, state, player);
         }
+
+        level.destroyBlock(masterPos, false);
         return super.playerWillDestroy(level, pos, state, player);
     }
 
@@ -120,13 +122,16 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
             }
             return state;
         }
+
         if (!(accessor instanceof Level level) || level.isClientSide) {
             return state;
         }
 
-        if (!level.getBlockTicks().hasScheduledTick(pos, this)) {
-            level.scheduleTick(pos, this, 1);
+        if (level.getBlockTicks().hasScheduledTick(pos, this)) {
+            return state;
         }
+
+        level.scheduleTick(pos, this, 1);
         return state;
     }
 
@@ -145,7 +150,6 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
         if (!state.getValue(STRUCTURAL_POSITION).canStore() || hit.getDirection() == Direction.DOWN) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-
         return onBlockEntityUseItemOn(level, pos, structural -> AirtightReactorKettleUtils.getUseItemOnResult(structural, level, player, pos, hand, stack));
     }
 
@@ -157,10 +161,10 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
         if (!(level.getBlockEntity(masterPos) instanceof AirtightReactorKettleBlockEntity master) || master.getWindowsOpenState()) {
             return shape;
         }
+
         if (!position.isWindow(0)) {
             return shape;
         }
-
         return CCBShapes.AIRTIGHT_REACTOR_KETTLE_MID_MID_CLOSED.get(position.getDirection());
     }
 

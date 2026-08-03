@@ -224,7 +224,6 @@ public final class CanisterContainerSuppliers {
                 return Pair.of(gasContent, Pair.of(container.getTankCapacity(tank), creative));
             }
         }
-
         return Pair.of(GasStack.EMPTY, Pair.of(0L, false));
     }
 

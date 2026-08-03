@@ -65,10 +65,11 @@ public class PortableGasInterfaceBlock extends WrenchableDirectionalBlock implem
 
         Direction facing = context.getNearestLookingDirection();
         Player player = context.getPlayer();
-        if (player == null || !player.isShiftKeyDown()) {
-            facing = facing.getOpposite();
+        if (player != null && player.isShiftKeyDown()) {
+            return state.setValue(FACING, facing);
         }
 
+        facing = facing.getOpposite();
         return state.setValue(FACING, facing);
     }
 

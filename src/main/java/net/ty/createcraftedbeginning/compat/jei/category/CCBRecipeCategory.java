@@ -84,7 +84,6 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
         if (level == null) {
             return ItemStack.EMPTY;
         }
-
         return recipe.getResultItem(level.registryAccess());
     }
 

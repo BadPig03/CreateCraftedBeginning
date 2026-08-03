@@ -339,6 +339,7 @@ public class CreativeSmartGasTankBehaviour extends BlockEntityBehaviour {
             if (!hasResource) {
                 return AtomicFillResult.SUCCESS;
             }
+
             if (!insertionAllowed) {
                 return AtomicFillResult.REJECTED;
             }

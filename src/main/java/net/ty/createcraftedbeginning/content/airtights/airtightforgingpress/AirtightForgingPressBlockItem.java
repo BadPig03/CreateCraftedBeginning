@@ -27,9 +27,11 @@ public class AirtightForgingPressBlockItem extends BlockItem {
 
         Direction direction = context.getClickedFace();
         result = super.place(BlockPlaceContext.at(context, context.getClickedPos().relative(direction), direction));
-        if (result == InteractionResult.FAIL && context.getLevel().isClientSide()) {
-            CCBClientBridge.showAirtightForgingPressPlacementBounds(context);
+        if (result != InteractionResult.FAIL || !context.getLevel().isClientSide()) {
+            return result;
         }
+
+        CCBClientBridge.showAirtightForgingPressPlacementBounds(context);
         return result;
     }
 

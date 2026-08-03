@@ -80,7 +80,6 @@ public final class AdjacentPipeSource extends GasFlowSource {
         if (!predicate.test(outwardGas)) {
             return GasStack.EMPTY;
         }
-
         return outwardGas;
     }
 }

@@ -23,7 +23,6 @@ public class CreativeAirtightTankMountedStorageType extends MountedGasStorageTyp
         if (!(be instanceof CreativeAirtightTankBlockEntity tank)) {
             return null;
         }
-
         return CreativeAirtightTankMountedStorage.fromTank(tank);
     }
 }

@@ -55,7 +55,6 @@ public class GasFactoryGaugeBlock extends FactoryPanelBlock {
         if (level.isClientSide) {
             return InteractionResult.SUCCESS;
         }
-
         return onBlockEntityUse(level, pos, be -> {
             FactoryPanelBehaviour behaviour = be.panels.get(slot);
             if (behaviour == null || !behaviour.isActive()) {
@@ -147,6 +146,7 @@ public class GasFactoryGaugeBlock extends FactoryPanelBlock {
             if (blockEntity.activePanels() < 2 || !blockEntity.removePanel(destroyedSlot)) {
                 return InteractionResult.FAIL;
             }
+
             if (!player.isCreative()) {
                 popResource(level, pos, CCBBlocks.GAS_FACTORY_GAUGE_BLOCK.asStack());
             }

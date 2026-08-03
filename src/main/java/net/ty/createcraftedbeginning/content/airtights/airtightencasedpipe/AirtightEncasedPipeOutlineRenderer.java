@@ -39,9 +39,11 @@ public final class AirtightEncasedPipeOutlineRenderer {
         if (player == null || level == null || player.isSpectator()) {
             return;
         }
+
         if (!CCBConfig.client().enableAirtightEncasedPipeOutline.get() || !isHoldingWrench(player) || !GogglesItem.isWearingGoggles(player)) {
             return;
         }
+
         if (!(minecraft.hitResult instanceof BlockHitResult hitResult)) {
             return;
         }

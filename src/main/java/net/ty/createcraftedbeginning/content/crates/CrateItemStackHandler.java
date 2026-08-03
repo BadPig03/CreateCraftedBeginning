@@ -46,10 +46,12 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
     public CompoundTag serializeNBT(Provider provider) {
         ensureValidState();
         CompoundTag tag = new CompoundTag();
-        if (!content.isEmpty()) {
-            tag.put(COMPOUND_KEY_CONTENT, content.saveOptional(provider));
-            tag.putInt(COMPOUND_KEY_COUNT, count);
+        if (content.isEmpty()) {
+            return tag;
         }
+
+        tag.put(COMPOUND_KEY_CONTENT, content.saveOptional(provider));
+        tag.putInt(COMPOUND_KEY_COUNT, count);
         return tag;
     }
 
@@ -86,6 +88,7 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
         if (stack.isEmpty()) {
             return ItemStack.EMPTY;
         }
+
         if (!isItemValid(slot, stack)) {
             return stack;
         }
@@ -125,9 +128,11 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
         int toExtract = Math.min(Math.min(amount, count), content.getMaxStackSize());
         ItemStack result = content.copyWithCount(toExtract);
 
-        if (!simulate) {
-            applyStoredItems(content, count - toExtract, true);
+        if (simulate) {
+            return result;
         }
+
+        applyStoredItems(content, count - toExtract, true);
         return result;
     }
 

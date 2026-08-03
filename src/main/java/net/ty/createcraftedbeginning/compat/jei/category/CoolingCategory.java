@@ -33,7 +33,6 @@ public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
         if (!recipe.isFluidIngredients() && recipe.isCreativeIceCream()) {
             return Component.translatable("jade.gas.infinity_mark");
         }
-
         return CCBLang.secondsWithGameTicks(recipe.getProcessingDuration(), 20).component();
     }
 

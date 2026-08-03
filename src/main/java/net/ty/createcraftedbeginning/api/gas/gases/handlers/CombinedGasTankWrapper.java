@@ -188,7 +188,6 @@ public class CombinedGasTankWrapper implements IGasHandler {
                 }
             }
         }
-
         return filled;
     }
 

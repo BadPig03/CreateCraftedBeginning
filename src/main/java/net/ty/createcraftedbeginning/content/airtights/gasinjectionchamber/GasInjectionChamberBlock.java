@@ -42,9 +42,11 @@ public class GasInjectionChamberBlock extends HorizontalDirectionalBlock impleme
         if (chamber.hasInstalledFilter()) {
             return ItemInteractionResult.FAIL;
         }
+
         if (level.isClientSide) {
             return ItemInteractionResult.SUCCESS;
         }
+
         if (!chamber.installFilter(stack)) {
             return ItemInteractionResult.FAIL;
         }
@@ -58,6 +60,7 @@ public class GasInjectionChamberBlock extends HorizontalDirectionalBlock impleme
         if (chamber.isFilterLocked()) {
             return ItemInteractionResult.FAIL;
         }
+
         if (level.isClientSide) {
             return ItemInteractionResult.SUCCESS;
         }

@@ -66,9 +66,11 @@ public class AirtightBootsItem extends AirtightBaseArmorItem implements MenuProv
         if (JumpStrengthUpgrade.INSTANCE.canApply(boots)) {
             modifiers = modifiers.withModifierAdded(Attributes.JUMP_STRENGTH, new AttributeModifier(ID, 1, Operation.ADD_MULTIPLIED_TOTAL), EquipmentSlotGroup.FEET).withModifierAdded(Attributes.SAFE_FALL_DISTANCE, new AttributeModifier(ID, 1, Operation.ADD_MULTIPLIED_TOTAL), EquipmentSlotGroup.FEET);
         }
-        if (StepHeightUpgrade.INSTANCE.canApply(boots)) {
-            modifiers = modifiers.withModifierAdded(Attributes.STEP_HEIGHT, new AttributeModifier(ID, 1.4, Operation.ADD_VALUE), EquipmentSlotGroup.FEET);
+        if (!StepHeightUpgrade.INSTANCE.canApply(boots)) {
+            return modifiers;
         }
+
+        modifiers = modifiers.withModifierAdded(Attributes.STEP_HEIGHT, new AttributeModifier(ID, 1.4, Operation.ADD_VALUE), EquipmentSlotGroup.FEET);
         return modifiers;
     }
 

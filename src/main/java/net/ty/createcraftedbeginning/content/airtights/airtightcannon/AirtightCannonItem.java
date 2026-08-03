@@ -67,7 +67,6 @@ public class AirtightCannonItem extends Item implements CustomArmPoseItem {
         if (!CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
             return InteractionResult.FAIL;
         }
-
         return use(context.getLevel(), player, context.getHand()).getResult();
     }
 
@@ -82,15 +81,17 @@ public class AirtightCannonItem extends Item implements CustomArmPoseItem {
         if (!CanisterContainerSuppliers.isAnyContainerAvailable(player) || CanisterContainerSuppliers.getFirstAvailableGasContent(player).isEmpty()) {
             return InteractionResultHolder.fail(cannon);
         }
+
         if (ShootableGadgetItemMethods.shouldSwap(player, cannon, hand, stack -> stack.is(CCBItems.AIRTIGHT_CANNON))) {
             return InteractionResultHolder.fail(cannon);
         }
 
         player.startUsingItem(hand);
-        if (level.isClientSide) {
-            CCBClientBridge.dontAnimateAirtightCannon(hand);
+        if (!level.isClientSide) {
+            return InteractionResultHolder.success(cannon);
         }
 
+        CCBClientBridge.dontAnimateAirtightCannon(hand);
         return InteractionResultHolder.success(cannon);
     }
 

@@ -39,6 +39,7 @@ public final class GasFilterUtils {
         if (filterStack.isEmpty()) {
             return ALLOW_ALL;
         }
+
         if (!(filterStack.getItem() instanceof IGasFilter filter)) {
             return DENY_ALL;
         }

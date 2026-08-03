@@ -123,9 +123,11 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
 
         BlockPos masterPos = getMaster(pos, state);
         level.destroyBlockProgress(masterPos.hashCode(), masterPos, -1);
-        if (!level.isClientSide && player.isCreative()) {
-            level.destroyBlock(masterPos, false);
+        if (level.isClientSide || !player.isCreative()) {
+            return super.playerWillDestroy(level, pos, state, player);
         }
+
+        level.destroyBlock(masterPos, false);
         return super.playerWillDestroy(level, pos, state, player);
     }
 
@@ -152,9 +154,11 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         }
 
         BlockPos masterPos = getMaster(pos, state);
-        if (!accessor.getBlockTicks().hasScheduledTick(masterPos, CCBBlocks.TESLA_TURBINE_BLOCK.get())) {
-            accessor.scheduleTick(masterPos, CCBBlocks.TESLA_TURBINE_BLOCK.get(), 1);
+        if (accessor.getBlockTicks().hasScheduledTick(masterPos, CCBBlocks.TESLA_TURBINE_BLOCK.get())) {
+            return state;
         }
+
+        accessor.scheduleTick(masterPos, CCBBlocks.TESLA_TURBINE_BLOCK.get(), 1);
         return state;
     }
 

@@ -40,7 +40,8 @@ public class AirtightAssemblyDriverTooltipBuilder {
         if (currentLevel == 0) {
             return CCBLang.translateDirect("gui.airtight_assembly_driver.idle");
         }
-        else if (currentLevel == MAX_LEVEL) {
+
+        if (currentLevel == MAX_LEVEL) {
             return CCBLang.translateDirect("gui.airtight_assembly_driver.max_level");
         }
         return CCBLang.translateDirect("gui.airtight_assembly_driver.level", String.valueOf(currentLevel));
@@ -95,6 +96,7 @@ public class AirtightAssemblyDriverTooltipBuilder {
             CCBLang.translate("gui.airtight_assembly_driver.via_one_outlet").style(ChatFormatting.GRAY).forGoggles(tooltip);
             return;
         }
+
         CCBLang.translate("gui.airtight_assembly_driver.via_outlets", outlets).style(ChatFormatting.GRAY).forGoggles(tooltip);
     }
 

@@ -33,11 +33,13 @@ public final class TeslaTurbineStructuralClientExtensions implements IClientBloc
         if (!(target instanceof BlockHitResult result)) {
             return IClientBlockExtensions.super.addHitEffects(state, level, target, manager);
         }
+
         BlockPos targetPos = result.getBlockPos();
         TeslaTurbineStructuralBlock block = CCBBlocks.TESLA_TURBINE_STRUCTURAL_BLOCK.get();
         if (!block.stillValid(level, targetPos, state, false)) {
             return true;
         }
+
         manager.crack(TeslaTurbineStructuralBlock.getMaster(targetPos, state), result.getDirection());
         return true;
     }
@@ -54,6 +56,7 @@ public final class TeslaTurbineStructuralClientExtensions implements IClientBloc
         if (!block.stillValid(level, pos, blockState, false)) {
             return null;
         }
+
         BlockPos masterPos = TeslaTurbineStructuralBlock.getMaster(pos, blockState);
         Axis axis = blockState.getValue(BlockStateProperties.AXIS);
         Set<BlockPos> positions = new HashSet<>();

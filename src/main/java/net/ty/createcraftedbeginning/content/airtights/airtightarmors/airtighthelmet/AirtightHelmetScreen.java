@@ -30,7 +30,6 @@ public class AirtightHelmetScreen extends AirtightUpgradableScreen<AirtightHelme
         if (!status.isInstalled()) {
             return canInstall ? State.YELLOW : State.OFF;
         }
-
         return status.isEnabled() ? State.GREEN : State.RED;
     }
 

@@ -110,6 +110,7 @@ public class BreezeChamberRenderer extends SmartBlockEntityRenderer<BreezeChambe
         if (windLevel.isAtLeast(WindLevel.GALE)) {
             return blockBelow ? CCBPartialModels.BREEZE_GALE_ACTIVE : CCBPartialModels.BREEZE_GALE;
         }
+
         if (windLevel == WindLevel.CALM) {
             return CCBPartialModels.BREEZE_CALM;
         }

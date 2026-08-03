@@ -34,7 +34,8 @@
 	"server.minecraft.BuiltInRegistriesMixin",
     "server.minecraft.EntityMixin",
     "server.minecraft.HoglinMixin",
-    "server.minecraft.PlayerMixin"
+    "server.minecraft.PlayerMixin",
+    "server.minecraft.VibrationSystemListenerMixin"
   ],
   "client": [
     "client.accessor.CreativeModeInventoryScreenAccessor",

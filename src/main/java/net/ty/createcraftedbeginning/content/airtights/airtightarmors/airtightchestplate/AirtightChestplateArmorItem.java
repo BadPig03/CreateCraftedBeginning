@@ -93,9 +93,11 @@ public class AirtightChestplateArmorItem extends ArmorItem implements CustomRend
             renderTrim(trimAtlas, poseStack, bufferSource, light, trim, innerModel, true);
         }
 
-        if (stack.hasFoil()) {
-            renderGlint(poseStack, bufferSource, light, outerModel);
-            renderGlint(poseStack, bufferSource, light, innerModel);
+        if (!stack.hasFoil()) {
+            return;
         }
+
+        renderGlint(poseStack, bufferSource, light, outerModel);
+        renderGlint(poseStack, bufferSource, light, innerModel);
     }
 }

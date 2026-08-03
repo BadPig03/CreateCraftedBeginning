@@ -42,7 +42,6 @@ public class AirtightForgingPressBlock extends Block implements IBE<AirtightForg
         if (position.isShaft()) {
             return CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT_BLOCK.getDefaultState().setValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION, position);
         }
-
         return CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_BLOCK.getDefaultState().setValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION, position);
     }
 

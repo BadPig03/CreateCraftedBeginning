@@ -51,14 +51,16 @@ public class CreativeAirtightTankItem extends BlockItem {
         }
 
         CustomData data = itemStack.get(DataComponents.BLOCK_ENTITY_DATA);
-        if (data != null) {
-            CompoundTag tag = data.copyTag();
-            tag.remove(COMPOUND_KEY_WIDTH);
-            tag.remove(COMPOUND_KEY_HEIGHT);
-            tag.remove(COMPOUND_KEY_CONTROLLER_POS);
-            tag.remove(COMPOUND_KEY_LAST_KNOWN_POS);
-            itemStack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(tag));
+        if (data == null) {
+            return super.updateCustomBlockEntityTag(blockPos, level, player, itemStack, blockState);
         }
+
+        CompoundTag tag = data.copyTag();
+        tag.remove(COMPOUND_KEY_WIDTH);
+        tag.remove(COMPOUND_KEY_HEIGHT);
+        tag.remove(COMPOUND_KEY_CONTROLLER_POS);
+        tag.remove(COMPOUND_KEY_LAST_KNOWN_POS);
+        itemStack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(tag));
         return super.updateCustomBlockEntityTag(blockPos, level, player, itemStack, blockState);
     }
 
@@ -120,6 +122,7 @@ public class CreativeAirtightTankItem extends BlockItem {
                 if (state.getBlock() == getBlock()) {
                     continue;
                 }
+
                 if (!state.canBeReplaced()) {
                     return INVALID_PLACEMENT;
                 }

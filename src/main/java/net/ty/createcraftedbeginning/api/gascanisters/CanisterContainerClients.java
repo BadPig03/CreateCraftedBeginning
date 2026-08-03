@@ -112,7 +112,6 @@ public final class CanisterContainerClients {
         if (content.isEmpty()) {
             return DisplayedGasState.EMPTY;
         }
-
         return new DisplayedGasState(content, fallback.getSecond().getFirst(), fallback.getSecond().getSecond());
     }
 
@@ -132,6 +131,7 @@ public final class CanisterContainerClients {
         if (amount == 0 || capacity == 0) {
             return 0;
         }
+
         float ratio = Mth.clamp((float) amount / capacity, 0, 1);
         return Color.mixColors(GasCanisterUtils.COLOR_CYAN, GasCanisterUtils.COLOR_WHITE, ratio);
     }
@@ -152,6 +152,7 @@ public final class CanisterContainerClients {
         if (amount == 0 || capacity == 0) {
             return 0;
         }
+
         float ratio = Mth.clamp((float) amount / capacity, 0, 1);
         return Math.round(BAR_WIDTH * ratio);
     }

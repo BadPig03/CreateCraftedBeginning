@@ -27,6 +27,7 @@ public final class GasConsumptionUtils {
         if (!isNonNegativeFinite(rawAmount)) {
             return -1;
         }
+
         if (rawAmount == 0) {
             return 0;
         }
@@ -96,7 +97,6 @@ public final class GasConsumptionUtils {
         if (!Double.isFinite(value)) {
             return Double.toString(value);
         }
-
         return BigDecimal.valueOf(value).setScale(DISPLAY_SCALE, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
     }
 

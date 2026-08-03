@@ -5,16 +5,20 @@ import net.minecraft.resources.ResourceLocation;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverCore;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Provides lookup and registration helpers for gas-specific airtight engine behavior.
- * Registered handlers determine the efficiency contributed by each supported gas.
+ * Registered handlers determine the work factor and maximum engine level contributed
+ * by each supported gas.
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class AirtightEngineHandlerUtils {
+    public static final double MAX_WORK_FACTOR = 32;
+
     private AirtightEngineHandlerUtils() {
     }
 
@@ -49,12 +53,23 @@ public final class AirtightEngineHandlerUtils {
     }
 
     /**
+     * Registers a custom airtight engine handler that can reach the normal maximum level.
+     *
+     * @param location   the resource location identifying the target gas
+     * @param workFactor the effective supply contributed by each unit of gas
+     */
+    public static void register(ResourceLocation location, double workFactor) {
+        register(location, workFactor, AirtightAssemblyDriverCore.MAX_LEVEL);
+    }
+
+    /**
      * Registers a custom airtight engine handler for the supplied target.
      *
-     * @param location   the resource location identifying the target value
-     * @param efficiency the efficiency value to use
+     * @param location   the resource location identifying the target gas
+     * @param workFactor the effective supply contributed by each unit of gas
+     * @param maxLevel   the highest airtight engine level the gas can sustain
      */
-    public static void register(ResourceLocation location, int efficiency) {
+    public static void register(ResourceLocation location, double workFactor, int maxLevel) {
         Gas gasType = Gas.getGasTypeByName(location);
         if (gasType.isEmpty()) {
             CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Engine Handler: gas '{}' does not exist.", location);
@@ -67,11 +82,26 @@ public final class AirtightEngineHandlerUtils {
             return;
         }
 
-        if (efficiency < 0 || efficiency > 16) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Engine Handler for gas '{}': efficiency is out of range! Valid range is [0, 16].", location);
+        if (!Double.isFinite(workFactor) || workFactor < 0 || workFactor > MAX_WORK_FACTOR) {
+            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Engine Handler for gas '{}': work factor is out of range! Valid range is [0, {}].", location, MAX_WORK_FACTOR);
             return;
         }
 
-        AirtightEngineHandler.REGISTRY.register(gasType, () -> efficiency);
+        if (maxLevel < 0 || maxLevel > AirtightAssemblyDriverCore.MAX_LEVEL) {
+            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Engine Handler for gas '{}': maximum level is out of range! Valid range is [0, {}].", location, AirtightAssemblyDriverCore.MAX_LEVEL);
+            return;
+        }
+
+        AirtightEngineHandler.REGISTRY.register(gasType, new AirtightEngineHandler() {
+            @Override
+            public double getWorkFactor() {
+                return workFactor;
+            }
+
+            @Override
+            public int getMaxLevel() {
+                return maxLevel;
+            }
+        });
     }
 }

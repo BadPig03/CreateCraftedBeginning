@@ -64,10 +64,10 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
         if (stationaryState.getBlock() != state.getBlock() || stationaryState.getValue(PortableGasInterfaceBlock.FACING) != facing.getOpposite()) {
             return null;
         }
+
         if (stationary.isPowered()) {
             return null;
         }
-
         return stationary;
     }
 
@@ -79,7 +79,6 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
         if (rotated.distanceTo(nearest) > 0.5f) {
             return Optional.empty();
         }
-
         return Optional.of(facing);
     }
 
@@ -135,6 +134,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
         if (context.contraption instanceof CarriageContraption && context.motion.length() > 0.25f) {
             return;
         }
+
         if (findInterface(context, pos)) {
             return;
         }

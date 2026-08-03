@@ -66,7 +66,6 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
         if (state == null) {
             return null;
         }
-
         return ProperWaterloggedBlock.withWater(context.getLevel(), state, context.getClickedPos());
     }
 
@@ -95,7 +94,6 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
         if (!(level.getBlockEntity(pos) instanceof GasCanisterBlockEntity canister)) {
             return ItemStack.EMPTY;
         }
-
         return canister.getCanister().copy();
     }
 
@@ -106,9 +104,11 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
 
     @Override
     public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor world, BlockPos pos, BlockPos neighbourPos) {
-        if (state.getValue(WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
+        if (!state.getValue(WATERLOGGED)) {
+            return state;
         }
+
+        world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
         return state;
     }
 
@@ -124,7 +124,6 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
         if (!(blockEntity instanceof GasCanisterBlockEntity canister)) {
             return drops;
         }
-
         return List.of(canister.getCanister().copy());
     }
 
@@ -136,9 +135,11 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
     @Override
     public ItemRequirement getRequiredItems(BlockState state, @Nullable BlockEntity blockEntity) {
         Item item = asItem();
-        if (item instanceof GasCanisterBlockItem placeable) {
-            item = placeable.getActualItem();
+        if (!(item instanceof GasCanisterBlockItem placeable)) {
+            return new ItemRequirement(ItemUseType.CONSUME, item);
         }
+
+        item = placeable.getActualItem();
         return new ItemRequirement(ItemUseType.CONSUME, item);
     }
 

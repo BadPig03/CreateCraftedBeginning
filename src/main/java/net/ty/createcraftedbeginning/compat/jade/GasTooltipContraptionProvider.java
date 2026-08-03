@@ -32,6 +32,7 @@ public enum GasTooltipContraptionProvider implements IServerDataProvider<EntityA
         if (!(entityAccessor.getEntity() instanceof AbstractContraptionEntity contraption)) {
             return;
         }
+
         if (!(contraption.getContraption().getStorage() instanceof IMountedStorageManagerWithGas gasStorage)) {
             return;
         }
@@ -45,6 +46,7 @@ public enum GasTooltipContraptionProvider implements IServerDataProvider<EntityA
         if (!data.contains(GasConstants.STORAGE_KEY) || !data.contains(GasConstants.STORAGE_UID_KEY)) {
             return;
         }
+
         if (!JadePlugin.GAS_CONTRAPTION_TOOLTIP.toString().equals(data.getString(GasConstants.STORAGE_UID_KEY))) {
             return;
         }

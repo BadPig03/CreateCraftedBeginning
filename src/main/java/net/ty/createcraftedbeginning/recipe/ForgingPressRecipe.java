@@ -55,20 +55,22 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
             ForgingPressRecipe recipe = builder.require(accessor.getBase()).require(accessor.getTemplate()).require(accessor.getAddition()).build().setSmithingRecipe(smithingRecipe);
             return new RecipeHolder<>(holder.id(), recipe);
         }
+
         if (source instanceof SmithingTrimRecipe smithingRecipe && source instanceof SmithingTrimRecipeAccessor accessor) {
             ForgingPressRecipe recipe = builder.require(accessor.getBase()).require(accessor.getTemplate()).require(accessor.getAddition()).build().setSmithingRecipe(smithingRecipe);
             return new RecipeHolder<>(holder.id(), recipe);
         }
-
         return new RecipeHolder<>(holder.id(), builder.build());
     }
 
     public static RecipeHolder<ForgingPressRecipe> convertPressingToForgingPressRecipe(RecipeHolder<?> holder) {
         Builder<ForgingPressRecipe> builder = new Builder<>(ForgingPressRecipe::new, holder.id());
-        if (holder.value() instanceof PressingRecipe pressingRecipe) {
-            builder.withItemIngredients(pressingRecipe.getIngredients());
-            pressingRecipe.getRollableResults().forEach(builder::output);
+        if (!(holder.value() instanceof PressingRecipe pressingRecipe)) {
+            return new RecipeHolder<>(holder.id(), builder.build());
         }
+
+        builder.withItemIngredients(pressingRecipe.getIngredients());
+        pressingRecipe.getRollableResults().forEach(builder::output);
         return new RecipeHolder<>(holder.id(), builder.build());
     }
 
@@ -112,6 +114,7 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
         if (craftPlan == null) {
             return false;
         }
+
         if (simulate) {
             return true;
         }
@@ -197,7 +200,6 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
         if (extracted.isEmpty() || !ingredient.test(extracted)) {
             return 0;
         }
-
         return extracted.getCount();
     }
 
@@ -238,6 +240,7 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
             if (required <= 0 || required > Integer.MAX_VALUE) {
                 return false;
             }
+
             if (!consumeFluid(ingredient, fluids, amounts, (int) required)) {
                 return false;
             }
@@ -273,6 +276,7 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
             if (amountPerCraft <= 0 || amountPerCraft > Long.MAX_VALUE / crafts) {
                 return false;
             }
+
             if (!consumeGas(ingredient, gases, amounts, amountPerCraft * crafts)) {
                 return false;
             }
@@ -355,9 +359,11 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
         if (!usesBaseItem && !usesAdditionItem && !usesFluid && !usesGas) {
             errors.add("Forging Press recipes must define at least one consumable base item, addition item, fluid, or gas input.");
         }
-        if (getRollableResults().isEmpty()) {
-            errors.add("Forging Press recipes must define at least one item output.");
+        if (!getRollableResults().isEmpty()) {
+            return;
         }
+
+        errors.add("Forging Press recipes must define at least one item output.");
     }
 
     @Override
@@ -365,9 +371,11 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
         if (!matchesItemInputs(input)) {
             return false;
         }
+
         if (getFluidIngredients().isEmpty() && getGasIngredients().isEmpty()) {
             return true;
         }
+
         if (!(input instanceof ForgingPressRecipeInput forgingInput)) {
             return false;
         }
@@ -387,8 +395,10 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
                 if (!stack.isEmpty()) {
                     return false;
                 }
+
                 continue;
             }
+
             if (stack.isEmpty() || !ingredient.test(stack)) {
                 return false;
             }

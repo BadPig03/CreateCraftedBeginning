@@ -117,6 +117,7 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
                 tooltip.add(step.getAsAssemblyRecipe().getDescriptionForAssembly().plainCopy().withStyle(ChatFormatting.DARK_GREEN));
                 return tooltip;
             }
+
             relativeX -= subCategory.getWidth() + STEP_MARGIN;
         }
 

@@ -168,7 +168,6 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
             int displayed = Math.max(1, (amount + multiplier / 2) / multiplier);
             return new ValueSettings(row, Mth.clamp(displayed, 1, BOARD_MAX_VALUE));
         }
-
         return new ValueSettings(ROW_MULTIPLIERS.length - 1, BOARD_MAX_VALUE);
     }
 
@@ -193,6 +192,7 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
         if (count == 0) {
             return CCBLang.text(storedText).color(0xF1EFE8).component();
         }
+
         int color = satisfied ? 0xD7FFA8 : promisedSatisfied ? 0xFFCD75 : 0xFFBFA8;
         return CCBLang.text(storedText).color(color).add(CCBLang.text(promised == 0 ? "" : "⏶")).add(CCBLang.text("/").style(ChatFormatting.WHITE)).add(CCBLang.text(GasRequestUtils.format(count, false)).color(0xF1EFE8)).component();
     }

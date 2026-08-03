@@ -94,10 +94,12 @@ public final class AirtightDrillHandlerUtils {
             CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Drill Handler for gas '{}': a handler is already registered.", location);
             return;
         }
+
         if (!GasConsumptionUtils.isNonNegative(handler.getDamageAddition())) {
             CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Drill Handler for gas '{}': damage addition must be non-negative, got {}.", location, handler.getDamageAddition());
             return;
         }
+
         if (!GasConsumptionUtils.isNonNegativeFinite(handler.getConsumptionMultiplier())) {
             CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Drill Handler for gas '{}': consumption multiplier must be finite and non-negative, got {}.", location, handler.getConsumptionMultiplier());
             return;

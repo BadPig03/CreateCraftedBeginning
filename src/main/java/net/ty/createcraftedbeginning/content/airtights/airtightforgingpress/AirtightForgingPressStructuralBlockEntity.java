@@ -50,7 +50,6 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
         if (level == null || !(level.getBlockEntity(masterPos) instanceof AirtightForgingPressBlockEntity master)) {
             return null;
         }
-
         return master;
     }
 
@@ -59,7 +58,6 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
         if (master == null || !isLowerStore(getBlockState())) {
             return null;
         }
-
         return master.getInputOutputCapability();
     }
 
