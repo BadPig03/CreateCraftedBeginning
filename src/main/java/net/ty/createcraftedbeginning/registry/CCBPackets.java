@@ -24,7 +24,6 @@ import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOv
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackMenuSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterGhostItemSubmitPacket;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreenPacket;
-import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerOutlinePacket;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerResetPacket;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerUpdatePacket;
 
@@ -54,7 +53,6 @@ public enum CCBPackets implements PacketTypeProvider {
     GAS_AREA_OUTLINE(GasAreaOutlinePacket.class, GasAreaOutlinePacket.STREAM_CODEC),
     CANISTER_CONTAINER_CLIENT(CanisterContainerClientPacket.class, CanisterContainerClientPacket.STREAM_CODEC),
 
-    END_INCINERATION_BLOWER_OUTLINE(EndIncinerationBlowerOutlinePacket.class, EndIncinerationBlowerOutlinePacket.STREAM_CODEC),
     END_SCULK_SILENCER_RESET(EndSculkSilencerResetPacket.class, EndSculkSilencerResetPacket.STREAM_CODEC),
     END_SCULK_SILENCER_UPDATE(EndSculkSilencerUpdatePacket.class, EndSculkSilencerUpdatePacket.STREAM_CODEC),
 

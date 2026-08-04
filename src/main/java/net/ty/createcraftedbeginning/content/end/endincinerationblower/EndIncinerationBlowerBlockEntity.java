@@ -30,6 +30,8 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.ty.createcraftedbeginning.compat.sable.SableSubLevelCompat;
+import net.ty.createcraftedbeginning.compat.sable.SableSubLevelCompat.EntityArea;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndCasingBlock;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalBlockEntity;
@@ -42,6 +44,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -55,25 +58,30 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
     private static final String COMPOUND_KEY_OWNER = "Owner";
     private static final String FAKE_PLAYER_NAME = "[CCB_EIB]";
     private static final String FAKE_PLAYER_UUID_PREFIX = "createcraftedbeginning:end_incineration_blower:";
+    private static final int ITEM_ENTITY_CACHE_INTERVAL = 5;
     private static final int TRANSPORTED_HANDLER_CACHE_INTERVAL = 20;
     private static final int PROCESSING_PARTICLE_INTERVAL_TICKS = 10;
     private static final int MAX_PROCESSING_PARTICLE_TARGETS = 8;
     private static Consumer<EndIncinerationBlowerBlockEntity> clientTicker = blower -> {};
 
-    private final List<BlockPos> transportedHandlerPositions;
+    private final List<ItemEntity> affectedItems;
+    private final List<TransportedItemStackHandlerBehaviour> transportedHandlers;
 
     private GameProfile fakePlayerProfile;
     private UUID owner;
     private boolean showOutline;
     private int particleCounter;
     private int cachedBlockRadius;
+    private long nextItemEntityScanTime;
     private long nextTransportedHandlerScanTime;
 
     public EndIncinerationBlowerBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
         showOutline = true;
-        transportedHandlerPositions = new ArrayList<>();
+        affectedItems = new ArrayList<>();
+        transportedHandlers = new ArrayList<>();
         cachedBlockRadius = -1;
+        nextItemEntityScanTime = Long.MIN_VALUE;
         nextTransportedHandlerScanTime = Long.MIN_VALUE;
     }
 
@@ -91,7 +99,7 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         if (absSpeed < mediumSpeed) {
             return 0;
         }
-        return Mth.clamp(absSpeed / mediumSpeed - 0.5F, 0, getMaxRange());
+        return Mth.clamp(absSpeed / mediumSpeed - 0.5f, 0, getMaxRange());
     }
 
     public static int calculateBlockRadius(float speed) {
@@ -104,10 +112,16 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         return new AABB(center.x - range, center.y - range, center.z - range, center.x + range, center.y + range, center.z + range);
     }
 
-    private static boolean applyFanProcessing(ServerLevel level, FanProcessingType processingType, AABB area, List<BlockPos> transportedHandlerPositions) {
+    private static boolean applyFanProcessing(ServerLevel level, FanProcessingType processingType, EntityArea entityArea, List<ItemEntity> affectedItems, List<TransportedItemStackHandlerBehaviour> transportedHandlers) {
         AtomicBoolean applied = new AtomicBoolean(false);
-        for (ItemEntity itemEntity : level.getEntitiesOfClass(ItemEntity.class, area)) {
-            if (!FanProcessing.canProcess(itemEntity, processingType)) {
+        for (Iterator<ItemEntity> iterator = affectedItems.iterator(); iterator.hasNext(); ) {
+            ItemEntity itemEntity = iterator.next();
+            if (!itemEntity.isAlive() || itemEntity.isRemoved()) {
+                iterator.remove();
+                continue;
+            }
+
+            if (!entityArea.intersects(itemEntity) || !FanProcessing.canProcess(itemEntity, processingType)) {
                 continue;
             }
 
@@ -116,9 +130,10 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
             }
         }
 
-        for (BlockPos blockPos : transportedHandlerPositions) {
-            TransportedItemStackHandlerBehaviour behaviour = BlockEntityBehaviour.get(level, blockPos, TransportedItemStackHandlerBehaviour.TYPE);
-            if (behaviour == null) {
+        for (Iterator<TransportedItemStackHandlerBehaviour> iterator = transportedHandlers.iterator(); iterator.hasNext(); ) {
+            TransportedItemStackHandlerBehaviour behaviour = iterator.next();
+            if (behaviour.blockEntity.isRemoved() || behaviour.blockEntity.getLevel() != level) {
+                iterator.remove();
                 continue;
             }
 
@@ -134,10 +149,10 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         return applied.get();
     }
 
-    private static void spawnFanProcessingParticles(Level level, FanProcessingType processingType, AABB area) {
+    private static void spawnFanProcessingParticles(Level level, FanProcessingType processingType, AABB area, EntityArea entityArea) {
         int spawned = 0;
         for (ItemEntity itemEntity : level.getEntitiesOfClass(ItemEntity.class, area)) {
-            if (!FanProcessing.canProcess(itemEntity, processingType)) {
+            if (!entityArea.intersects(itemEntity) || !FanProcessing.canProcess(itemEntity, processingType)) {
                 continue;
             }
 
@@ -150,28 +165,29 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         }
     }
 
-    private static boolean applyIgnition(ServerLevel level, AABB area, FakePlayer fakePlayer, EndIncinerationBlowerBlockEntity be) {
+    private static boolean applyIgnition(ServerLevel level, AABB area, EntityArea entityArea, FakePlayer fakePlayer, EndIncinerationBlowerBlockEntity be) {
         boolean applied = false;
-        DamageSource damageSource = CCBDamageTypes.source(DamageTypes.ON_FIRE, level, fakePlayer);
+        boolean affectsPlayers = CCBConfig.server().endDevices.ignitionAffectsPlayers.get();
+        float configuredDamage = Math.max(0, CCBConfig.server().endDevices.ignitionDamage.getF());
+        DamageSource damageSource = CCBDamageTypes.source(DamageTypes.IN_FIRE, level, fakePlayer);
         for (LivingEntity livingEntity : level.getEntitiesOfClass(LivingEntity.class, area)) {
-            if (!livingEntity.isAlive() || livingEntity.fireImmune() || livingEntity instanceof Player && !CCBConfig.server().endDevices.ignitionAffectsPlayers.get()) {
+            if (!entityArea.intersects(livingEntity) || !livingEntity.isAlive() || livingEntity.fireImmune() || livingEntity instanceof Player && !affectsPlayers) {
                 continue;
             }
 
             boolean snowGolem = livingEntity instanceof SnowGolem;
-            float configuredDamage = Math.max(0, CCBConfig.server().endDevices.ignitionDamage.getF());
             float damage = snowGolem ? livingEntity.getHealth() + livingEntity.getAbsorptionAmount() + 1 : configuredDamage;
             if (damage <= 0) {
                 continue;
             }
 
+            int previousFireTicks = livingEntity.getRemainingFireTicks();
+            livingEntity.igniteForSeconds(2);
             if (!livingEntity.hurt(damageSource, damage)) {
+                livingEntity.setRemainingFireTicks(previousFireTicks);
                 continue;
             }
 
-            if (livingEntity.isAlive()) {
-                livingEntity.igniteForSeconds(2);
-            }
             applied = true;
             if (!snowGolem || livingEntity.isAlive()) {
                 continue;
@@ -303,14 +319,30 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         return structural;
     }
 
-    private List<BlockPos> getTransportedHandlerPositions(Level level, float speed) {
+    private List<ItemEntity> getAffectedItems(ServerLevel level, AABB area, EntityArea entityArea) {
+        long gameTime = level.getGameTime();
+        if (gameTime < nextItemEntityScanTime) {
+            return affectedItems;
+        }
+
+        affectedItems.clear();
+        for (ItemEntity itemEntity : level.getEntitiesOfClass(ItemEntity.class, area)) {
+            if (entityArea.intersects(itemEntity)) {
+                affectedItems.add(itemEntity);
+            }
+        }
+        nextItemEntityScanTime = gameTime + ITEM_ENTITY_CACHE_INTERVAL;
+        return affectedItems;
+    }
+
+    private List<TransportedItemStackHandlerBehaviour> getTransportedHandlers(Level level, float speed) {
         int blockRadius = calculateBlockRadius(speed);
         long gameTime = level.getGameTime();
         if (cachedBlockRadius == blockRadius && gameTime < nextTransportedHandlerScanTime) {
-            return transportedHandlerPositions;
+            return transportedHandlers;
         }
 
-        transportedHandlerPositions.clear();
+        transportedHandlers.clear();
         BlockPos min = worldPosition.offset(-blockRadius, -blockRadius, -blockRadius);
         BlockPos max = worldPosition.offset(blockRadius, blockRadius, blockRadius);
         for (BlockPos blockPos : BlockPos.betweenClosed(min, max)) {
@@ -319,12 +351,12 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
                 continue;
             }
 
-            transportedHandlerPositions.add(blockPos.immutable());
+            transportedHandlers.add(behaviour);
         }
 
         cachedBlockRadius = blockRadius;
         nextTransportedHandlerScanTime = gameTime + TRANSPORTED_HANDLER_CACHE_INTERVAL;
-        return transportedHandlerPositions;
+        return transportedHandlers;
     }
 
     private boolean shouldApplyIgnition(ServerLevel level) {
@@ -344,15 +376,16 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
 
         float effectiveRatio = Mth.clamp(absSpeed / mediumSpeed, 1, Math.max(1, getMaxRange() + 0.5f));
         int spawnInterval = Math.max(1, Mth.floor(40 / effectiveRatio));
-        particleCounter = (particleCounter + 1) % 40;
-        if (particleCounter % spawnInterval != 0) {
+        particleCounter++;
+        if (particleCounter < spawnInterval) {
             return;
         }
+        particleCounter = 0;
 
         int particleCount = Math.max(1, Mth.floor(effectiveRatio));
         Vec3 center = VecHelper.getCenterOf(worldPosition);
         for (int i = 0; i < particleCount; i++) {
-            Vec3 offset = VecHelper.offsetRandomly(center, level.random, calculateRange(absSpeed) * 0.9F);
+            Vec3 offset = VecHelper.offsetRandomly(center, level.random, calculateRange(absSpeed) * 0.9f);
             Vec3 direction = center.subtract(offset);
             if (direction.lengthSqr() < 1.0E-6) {
                 continue;
@@ -372,8 +405,8 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
 
         AABB area = calculateArea(worldPosition, absSpeed);
         switch (structural.getBlowerWorkingMode().get()) {
-            case SMOKING -> spawnFanProcessingParticles(level, AllFanProcessingTypes.SMOKING, area);
-            case BLASTING -> spawnFanProcessingParticles(level, AllFanProcessingTypes.BLASTING, area);
+            case SMOKING -> spawnFanProcessingParticles(level, AllFanProcessingTypes.SMOKING, area, SableSubLevelCompat.createEntityArea(level, worldPosition, area));
+            case BLASTING -> spawnFanProcessingParticles(level, AllFanProcessingTypes.BLASTING, area, SableSubLevelCompat.createEntityArea(level, worldPosition, area));
             case IGNITION -> {
             }
         }
@@ -388,9 +421,15 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
 
         AABB area = calculateArea(worldPosition, absSpeed);
         boolean result = switch (structural.getBlowerWorkingMode().get()) {
-            case SMOKING -> applyFanProcessing(level, AllFanProcessingTypes.SMOKING, area, getTransportedHandlerPositions(level, absSpeed));
-            case BLASTING -> applyFanProcessing(level, AllFanProcessingTypes.BLASTING, area, getTransportedHandlerPositions(level, absSpeed));
-            case IGNITION -> shouldApplyIgnition(level) && applyIgnition(level, area, getFakePlayer(level), this);
+            case SMOKING -> {
+                EntityArea entityArea = SableSubLevelCompat.createEntityArea(level, worldPosition, area);
+                yield applyFanProcessing(level, AllFanProcessingTypes.SMOKING, entityArea, getAffectedItems(level, area, entityArea), getTransportedHandlers(level, absSpeed));
+            }
+            case BLASTING -> {
+                EntityArea entityArea = SableSubLevelCompat.createEntityArea(level, worldPosition, area);
+                yield applyFanProcessing(level, AllFanProcessingTypes.BLASTING, entityArea, getAffectedItems(level, area, entityArea), getTransportedHandlers(level, absSpeed));
+            }
+            case IGNITION -> shouldApplyIgnition(level) && applyIgnition(level, area, SableSubLevelCompat.createEntityArea(level, worldPosition, area), getFakePlayer(level), this);
         };
         if (!result) {
             return;

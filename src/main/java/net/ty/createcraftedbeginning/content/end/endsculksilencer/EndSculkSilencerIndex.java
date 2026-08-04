@@ -13,7 +13,7 @@ import java.util.Map;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class EndSculkSilencerIndex {
+public final class EndSculkSilencerIndex {
     private final Map<ResourceLocation, Map<BlockPos, EndSculkSilencerInstance>> instancesByDimension = new HashMap<>();
     private final Map<ResourceLocation, Long2IntOpenHashMap> coveredChunksByDimension = new HashMap<>();
 
@@ -101,7 +101,7 @@ final class EndSculkSilencerIndex {
     }
 
     private void index(EndSculkSilencerInstance instance) {
-        Long2IntOpenHashMap coveredChunks = coveredChunksByDimension.computeIfAbsent(instance.dimension(), ignored -> new Long2IntOpenHashMap());
+        Long2IntOpenHashMap coveredChunks = coveredChunksByDimension.computeIfAbsent(instance.dimension(), $ -> new Long2IntOpenHashMap());
         instance.forEachCoveredChunk(chunkKey -> coveredChunks.addTo(chunkKey, 1));
     }
 
