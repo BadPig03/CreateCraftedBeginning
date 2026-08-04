@@ -40,8 +40,9 @@ public abstract class FactoryPanelConfigurationPacketMixin {
 
         for (Entry<FactoryPanelPosition, Integer> entry : inputAmounts.entrySet()) {
             FactoryPanelBehaviour source = FactoryPanelBehaviour.at(blockEntity.getLevel(), entry.getKey());
-            boolean gasInput = source != null && GasVirtualUtils.isVirtualItem(source.getFilter());
-            entry.setValue(Mth.clamp(entry.getValue(), 0, gasInput ? GasFactoryGaugeBehaviour.MAX_TARGET_AMOUNT : 64));
+            if (source != null && GasVirtualUtils.isVirtualItem(source.getFilter())) {
+                entry.setValue(Mth.clamp(entry.getValue(), 0, GasFactoryGaugeBehaviour.MAX_TARGET_AMOUNT));
+            }
         }
     }
 
