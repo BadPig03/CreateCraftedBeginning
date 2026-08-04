@@ -30,6 +30,7 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
     private static final String COMPOUND_KEY_INVENTORY = "Inventory";
 
     private final CrateItemStackHandler handler;
+    private boolean clientSyncPending;
 
     protected CratesBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, IntSupplier maxCountSupplier) {
         this(type, pos, state, maxCountSupplier, null);
@@ -66,6 +67,15 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
     }
 
     protected void onTrackedItemDiscarded() {
+    }
+
+    @Override
+    public void sendData() {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+
+        clientSyncPending = true;
     }
 
     @Override
@@ -106,6 +116,17 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (!clientSyncPending || level == null || level.isClientSide) {
+            return;
+        }
+
+        clientSyncPending = false;
+        super.sendData();
     }
 
     @Override

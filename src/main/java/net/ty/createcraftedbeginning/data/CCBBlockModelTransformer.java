@@ -111,7 +111,7 @@ public final class CCBBlockModelTransformer {
                 int rotationY = horizontalRotation(facing);
                 return ConfiguredModel.builder().modelFile(model).rotationY(rotationY).build();
             });
-        }).item(SturdyCrateBlockItem::new).tag(CCBItemTags.CRATES.tag).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).build();
+        }).item(SturdyCrateBlockItem::new).properties(Properties::fireResistant).tag(CCBItemTags.CRATES.tag).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).build();
     }
 
     @Contract(pure = true)

@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.crates;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import net.neoforged.neoforge.items.IItemHandler;
@@ -44,7 +45,6 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
 
     @Override
     public CompoundTag serializeNBT(Provider provider) {
-        ensureValidState();
         CompoundTag tag = new CompoundTag();
         if (content.isEmpty()) {
             return tag;
@@ -77,19 +77,17 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
     @Override
     public ItemStack getStackInSlot(int slot) {
         validateSlotIndex(slot);
-        ensureValidState();
         return content.isEmpty() ? ItemStack.EMPTY : content.copyWithCount(count);
     }
 
     @Override
     public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
         validateSlotIndex(slot);
-        ensureValidState();
         if (stack.isEmpty()) {
             return ItemStack.EMPTY;
         }
 
-        if (!isItemValid(slot, stack)) {
+        if (!isCompatibleItem(stack)) {
             return stack;
         }
 
@@ -120,7 +118,6 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
     @Override
     public ItemStack extractItem(int slot, int amount, boolean simulate) {
         validateSlotIndex(slot);
-        ensureValidState();
         if (amount <= 0 || content.isEmpty()) {
             return ItemStack.EMPTY;
         }
@@ -139,31 +136,33 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
     @Override
     public int getSlotLimit(int slot) {
         validateSlotIndex(slot);
-        ensureValidState();
-        return getMaxCount();
+        // A reduced server capacity must not make an existing over-capacity stack invalid.
+        return Math.max(getMaxCount(), count);
     }
 
     @Override
     public boolean isItemValid(int slot, ItemStack stack) {
         validateSlotIndex(slot);
-        ensureValidState();
-        return passesItemValidator(stack) && (content.isEmpty() || ItemStack.isSameItemSameComponents(content, stack));
+        return isCompatibleItem(stack);
     }
 
     public ItemStack getStoredItem(int slot) {
         validateSlotIndex(slot);
-        ensureValidState();
         return content.isEmpty() ? ItemStack.EMPTY : content.copy();
+    }
+
+    public boolean isStoredItem(int slot, Item item) {
+        validateSlotIndex(slot);
+        return !content.isEmpty() && content.is(item);
     }
 
     @Override
     public void setStackInSlot(int slot, ItemStack stack) {
-        setStoredItems(slot, stack, stack.getCount());
+        setStoredItems(slot, stack, Math.min(stack.getCount(), getMaxCount()));
     }
 
     public int getCountInSlot(int slot) {
         validateSlotIndex(slot);
-        ensureValidState();
         return count;
     }
 
@@ -178,6 +177,10 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
 
     protected final boolean passesItemValidator(ItemStack stack) {
         return !stack.isEmpty() && itemValidator.test(stack);
+    }
+
+    private boolean isCompatibleItem(ItemStack stack) {
+        return passesItemValidator(stack) && (content.isEmpty() || ItemStack.isSameItemSameComponents(content, stack));
     }
 
     protected final int getMaxCount() {
@@ -213,15 +216,23 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
         }
     }
 
-    protected final void ensureValidState() {
-        applyStoredItems(content, count, true);
-    }
-
     private void applyStoredItems(ItemStack stack, int newCount, boolean notify) {
-        CrateInventoryState normalized = CrateInventoryState.normalize(stack, newCount, getMaxCount());
-        boolean changed = count != normalized.count() || !ItemStack.matches(content, normalized.content());
-        content = normalized.content();
-        count = normalized.count();
+        ItemStack normalizedContent;
+        int normalizedCount;
+        if (stack.isEmpty() || newCount <= 0) {
+            normalizedContent = ItemStack.EMPTY;
+            normalizedCount = 0;
+        }
+        else {
+            // Keep existing inventory even when the configured capacity is reduced.
+            // Reuse the internal stack when only the logical count changes.
+            normalizedContent = stack == content ? content : stack.copyWithCount(1);
+            normalizedCount = newCount;
+        }
+
+        boolean changed = count != normalizedCount || !ItemStack.matches(content, normalizedContent);
+        content = normalizedContent;
+        count = normalizedCount;
         if (!notify || !changed) {
             return;
         }

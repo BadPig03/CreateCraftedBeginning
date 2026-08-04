@@ -6,8 +6,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateContents;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -16,10 +14,6 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public final class CrateContainersUtils {
     private CrateContainersUtils() {
-    }
-
-    public static void dropContents(Level level, Vec3 pos, SturdyCrateContents contents) {
-        dropContents(level, pos.x, pos.y, pos.z, contents.content(), contents.count());
     }
 
     public static void dropContents(Level level, double x, double y, double z, CrateItemStackHandler handler) {
@@ -40,9 +34,8 @@ public final class CrateContainersUtils {
     }
 
     public static int calculateRedstoneSignal(CrateItemStackHandler handler) {
-        ItemStack content = handler.getStackInSlot(0);
         int count = handler.getCountInSlot(0);
-        if (content.isEmpty() || count <= 0) {
+        if (count <= 0) {
             return 0;
         }
 

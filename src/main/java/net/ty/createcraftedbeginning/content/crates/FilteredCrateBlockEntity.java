@@ -41,7 +41,11 @@ public abstract class FilteredCrateBlockEntity extends CratesBlockEntity {
 
     @Override
     protected boolean canStoreItem(ItemStack stack) {
-        ItemStack filterItem = getFilterItem();
+        if (filteringBehaviour == null) {
+            return true;
+        }
+
+        ItemStack filterItem = filteringBehaviour.getFilter();
         return filterItem.isEmpty() || FilterItem.testDirect(filterItem, stack, false);
     }
 

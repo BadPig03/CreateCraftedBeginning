@@ -42,7 +42,6 @@ public class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
     @Override
     public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
         validateSlotIndex(slot);
-        ensureValidState();
         if (stack.isEmpty()) {
             return ItemStack.EMPTY;
         }
@@ -106,7 +105,6 @@ public class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
     @Override
     public boolean isItemValid(int slot, ItemStack stack) {
         validateSlotIndex(slot);
-        ensureValidState();
         return passesItemValidator(stack);
     }
 

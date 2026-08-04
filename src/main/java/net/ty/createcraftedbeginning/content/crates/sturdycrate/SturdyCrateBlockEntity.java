@@ -27,8 +27,7 @@ public class SturdyCrateBlockEntity extends FilteredCrateBlockEntity {
     }
 
     public boolean isInventoryEmpty() {
-        CrateItemStackHandler handler = getHandler();
-        return handler.getStoredItem(0).isEmpty() || handler.getCountInSlot(0) == 0;
+        return getHandler().getCountInSlot(0) == 0;
     }
 
     public boolean hasStoredData() {
@@ -54,7 +53,6 @@ public class SturdyCrateBlockEntity extends FilteredCrateBlockEntity {
 
         setStoredItems(contents.content(), contents.count());
         setFilterItem(contents.filterItem());
-        notifyUpdate();
     }
 
     @Override
@@ -72,7 +70,7 @@ public class SturdyCrateBlockEntity extends FilteredCrateBlockEntity {
     @Override
     protected void onInventoryChanged() {
         CrateItemStackHandler handler = getHandler();
-        if (advancementBehaviour != null && handler.getStoredItem(0).is(Items.LAVA_BUCKET) && handler.getCountInSlot(0) >= 10000) {
+        if (advancementBehaviour != null && handler.isStoredItem(0, Items.LAVA_BUCKET) && handler.getCountInSlot(0) >= 10000) {
             advancementBehaviour.awardPlayer(CCBAdvancements.PORTABLE_LAVA_SEA);
         }
         super.onInventoryChanged();
