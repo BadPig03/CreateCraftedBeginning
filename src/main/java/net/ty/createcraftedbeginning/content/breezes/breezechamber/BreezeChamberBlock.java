@@ -61,7 +61,6 @@ import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTank
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.IChamberGasTank;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.data.CCBShapes;
-import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.Contract;
@@ -69,7 +68,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Collections;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
@@ -99,15 +97,19 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     }
 
     public static InteractionResultHolder<ItemStack> tryInsert(Level level, BlockPos pos, ItemStack stack, boolean doNotConsume, boolean forceOverflow, boolean simulate) {
-        if (!(level.getBlockEntity(pos) instanceof BreezeChamberBlockEntity chamber) || !chamber.tryUpdateChargerByItem(stack, forceOverflow, simulate)) {
+        if (!(level.getBlockEntity(pos) instanceof BreezeChamberBlockEntity chamber)) {
             return InteractionResultHolder.fail(ItemStack.EMPTY);
         }
 
+        InteractionResultHolder<ItemStack> updateResult = chamber.tryUpdateChargerByItem(stack, forceOverflow, simulate);
+        if (updateResult.getResult() != InteractionResult.SUCCESS) {
+            return InteractionResultHolder.fail(ItemStack.EMPTY);
+        }
         if (doNotConsume) {
             return InteractionResultHolder.success(ItemStack.EMPTY);
         }
 
-        ItemStack container = WindChargingRecipe.getRecipeResult(level, stack);
+        ItemStack container = updateResult.getObject();
         if (container.isEmpty()) {
             FoodProperties food = stack.getItem().getFoodProperties(stack, null);
             if (food != null) {
@@ -210,13 +212,20 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
 
     @Override
     public List<ItemStack> getDrops(BlockState state, LootParams.@NotNull Builder params) {
+        List<ItemStack> drops = super.getDrops(state, params);
         if (!(params.getParameter(LootContextParams.BLOCK_ENTITY) instanceof BreezeChamberBlockEntity chamber) || chamber.getWindRemainingTime() == 0) {
-            return super.getDrops(state, params);
+            return drops;
         }
 
-        ItemStack chamberItem = new ItemStack(this);
-        chamber.saveToItem(chamberItem);
-        return Collections.singletonList(chamberItem);
+        for (ItemStack drop : drops) {
+            if (!drop.is(asItem())) {
+                continue;
+            }
+
+            chamber.saveToItem(drop);
+            break;
+        }
+        return drops;
     }
 
     @Override

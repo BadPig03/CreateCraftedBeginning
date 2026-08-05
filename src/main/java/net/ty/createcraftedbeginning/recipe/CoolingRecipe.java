@@ -15,6 +15,7 @@ import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Arrays;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
@@ -64,7 +65,12 @@ public class CoolingRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
     }
 
     public boolean isCreativeIceCream() {
-        return getIngredient().getItems()[0].getItem() instanceof CreativeIceCreamItem;
+        if (ingredients.isEmpty()) {
+            return false;
+        }
+
+        ItemStack[] items = getIngredient().getItems();
+        return items.length > 0 && Arrays.stream(items).allMatch(stack -> stack.getItem() instanceof CreativeIceCreamItem);
     }
 
     @Override

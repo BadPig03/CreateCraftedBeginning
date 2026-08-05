@@ -10,7 +10,6 @@ import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock.WindLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity.ChargerType;
-import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingAction;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingData;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
@@ -81,17 +80,11 @@ public abstract class BaseChamberState {
 
     public abstract ChargerType getChargerType();
 
-    public InteractionResult onItemInsert(BreezeChamberBlockEntity chamber, ItemStack stack, boolean forceOverflow, boolean simulate) {
-        return InteractionResult.PASS;
+    public InteractionResult onItemInsert(BreezeChamberBlockEntity chamber, ItemStack stack, WindChargingData data, boolean forceOverflow, boolean simulate) {
+        return insertWindCharge(chamber, stack, data, forceOverflow, simulate);
     }
 
-    protected InteractionResult insertWindCharge(BreezeChamberBlockEntity chamber, ItemStack stack, boolean forceOverflow, boolean simulate) {
-        Level level = chamber.getLevel();
-        if (level == null) {
-            return InteractionResult.FAIL;
-        }
-
-        WindChargingData data = WindChargingRecipe.getWindChargingTime(level, stack);
+    protected InteractionResult insertWindCharge(BreezeChamberBlockEntity chamber, ItemStack stack, WindChargingData data, boolean forceOverflow, boolean simulate) {
         if (data.amount() <= 0) {
             return InteractionResult.FAIL;
         }

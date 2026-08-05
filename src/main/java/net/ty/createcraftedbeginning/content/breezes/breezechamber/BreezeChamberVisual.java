@@ -7,6 +7,7 @@ import dev.engine_room.flywheel.api.visualization.VisualizationContext;
 import dev.engine_room.flywheel.lib.instance.InstanceTypes;
 import dev.engine_room.flywheel.lib.instance.TransformedInstance;
 import dev.engine_room.flywheel.lib.model.Models;
+import dev.engine_room.flywheel.lib.model.baked.PartialModel;
 import dev.engine_room.flywheel.lib.transform.Translate;
 import dev.engine_room.flywheel.lib.visual.AbstractBlockEntityVisual;
 import dev.engine_room.flywheel.lib.visual.SimpleDynamicVisual;
@@ -29,10 +30,11 @@ import java.util.function.Consumer;
 @MethodsReturnNonnullByDefault
 public class BreezeChamberVisual extends AbstractBlockEntityVisual<BreezeChamberBlockEntity> implements SimpleDynamicVisual, SimpleTickableVisual {
     private final TransformedInstance head;
-    private final boolean isCalm;
     private WindLevel windLevel;
     @Nullable
     private TransformedInstance goggles;
+    @Nullable
+    private PartialModel gogglesModel;
     @Nullable
     private TransformedInstance hat;
     @Nullable
@@ -44,7 +46,6 @@ public class BreezeChamberVisual extends AbstractBlockEntityVisual<BreezeChamber
         super(ctx, blockEntity, partialTick);
         windLevel = WindLevel.CALM;
         controllerActive = blockEntity.isControllerActive();
-        isCalm = !blockEntity.getWindLevel().isAtLeast(WindLevel.GALE);
         head = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(BreezeChamberRenderer.getBreezeModel(windLevel, controllerActive))).createInstance();
         animate(partialTick);
     }
@@ -59,13 +60,20 @@ public class BreezeChamberVisual extends AbstractBlockEntityVisual<BreezeChamber
             windLevel = renderWindLevel;
         }
 
+        PartialModel desiredGogglesModel = renderWindLevel.isAtLeast(WindLevel.GALE) ? CCBPartialModels.BREEZE_CHAMBER_GOGGLES : CCBPartialModels.BREEZE_CHAMBER_GOGGLES_SMALL;
         boolean hasGoggles = blockEntity.hasGoggles();
         if (hasGoggles && goggles == null) {
-            goggles = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(isCalm ? CCBPartialModels.BREEZE_CHAMBER_GOGGLES_SMALL : CCBPartialModels.BREEZE_CHAMBER_GOGGLES)).createInstance();
+            goggles = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredGogglesModel)).createInstance();
+            gogglesModel = desiredGogglesModel;
+        }
+        else if (hasGoggles && gogglesModel != desiredGogglesModel) {
+            instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredGogglesModel)).stealInstance(goggles);
+            gogglesModel = desiredGogglesModel;
         }
         else if (!hasGoggles && goggles != null) {
             goggles.delete();
             goggles = null;
+            gogglesModel = null;
         }
 
         boolean hatPresent = blockEntity.hasTrainHat();

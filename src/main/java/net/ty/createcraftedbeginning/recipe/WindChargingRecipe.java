@@ -35,7 +35,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
-    private static final WindChargingData EMPTY = new WindChargingData(WindChargingAction.CHARGE, 0, 0);
+    private static final WindChargingData EMPTY = new WindChargingData(WindChargingAction.CHARGE, 0, 0, ItemStack.EMPTY);
 
     private final ProcessingRecipeParams recipeParams;
     private final WindChargingAction action;
@@ -54,25 +54,23 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
         List<RecipeHolder<WindChargingRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.WIND_CHARGING.getType());
         for (RecipeHolder<WindChargingRecipe> holder : recipes) {
             WindChargingRecipe recipe = holder.value();
-            if (recipe.getIngredient().test(itemStack)) {
-                return recipe;
+            if (!recipe.getIngredient().test(itemStack)) {
+                continue;
             }
+
+            return recipe;
         }
         return null;
     }
 
-    public static WindChargingData getWindChargingTime(Level level, ItemStack itemStack) {
+    public static WindChargingData getWindChargingData(Level level, ItemStack itemStack) {
         WindChargingRecipe recipe = findRecipe(level, itemStack);
         if (recipe != null) {
             int chargingTime = recipe.action == WindChargingAction.CHARGE ? recipe.processingDuration : 0;
-            return new WindChargingData(recipe.action, chargingTime, 1);
+            ItemStack recipeResult = recipe.getResultItem(level.registryAccess()).copy();
+            return new WindChargingData(recipe.action, chargingTime, 1, recipeResult);
         }
         return getAutomaticWindChargingTime(itemStack);
-    }
-
-    public static ItemStack getRecipeResult(Level level, ItemStack itemStack) {
-        WindChargingRecipe recipe = findRecipe(level, itemStack);
-        return recipe == null ? ItemStack.EMPTY : recipe.getResultItem(level.registryAccess()).copy();
     }
 
     public static WindChargingData getAutomaticWindChargingTime(ItemStack stack) {
@@ -96,7 +94,7 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
         }
 
         int chargingTime = multiplier < 0 ? -magnitude : magnitude;
-        return new WindChargingData(WindChargingAction.CHARGE, chargingTime, 1);
+        return new WindChargingData(WindChargingAction.CHARGE, chargingTime, 1, ItemStack.EMPTY);
     }
 
     private static double getEffectScore(List<PossibleEffect> effects) {
@@ -162,7 +160,7 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
 
     @Override
     public boolean matches(SingleRecipeInput input, Level level) {
-        return true;
+        return !input.isEmpty() && getIngredient().test(input.getItem(0));
     }
 
     @Override
@@ -231,5 +229,5 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
         }
     }
 
-    public record WindChargingData(WindChargingAction action, int time, int amount) {}
+    public record WindChargingData(WindChargingAction action, int time, int amount, ItemStack recipeResult) {}
 }

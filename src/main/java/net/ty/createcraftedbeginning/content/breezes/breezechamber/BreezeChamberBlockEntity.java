@@ -24,6 +24,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -54,6 +55,8 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates.IllChamberState;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates.InactiveChamberState;
 import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
+import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingData;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
@@ -88,6 +91,8 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
 
     private boolean goggles;
     private boolean trainHat;
+    private boolean controllerActiveInitialized;
+    private boolean lastControllerActive;
     private int lastWindLevel = -1;
     private CCBAdvancementBehaviour advancementBehaviour;
     private SmartGasTankBehaviour tankBehaviour;
@@ -159,6 +164,25 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         return ChargerType.NONE;
     }
 
+    private static boolean isControllerActive(IChamberGasTank tank) {
+        if (!(tank instanceof AirtightTankBlockEntity controller)) {
+            return false;
+        }
+
+        AirtightAssemblyDriverCore driverCore = controller.getCore();
+        return driverCore.getStructureManager().isActive();
+    }
+
+    private static int getProcessingAmount(int time) {
+        if (time == 0) {
+            return 0;
+        }
+
+        int maxAmount = CCBConfig.server().airtights.maxProcessingRate.get();
+        float ratio = Mth.clamp((float) Mth.abs(time) / getMaxEffectiveThreshold(), 0, 1);
+        return Mth.clamp((int) (maxAmount * ratio), 1, maxAmount);
+    }
+
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.LUXURY_TREAT, CCBAdvancements.BAD_APPLE, CCBAdvancements.UNIVERSAL_ANTIDOTE);
@@ -178,6 +202,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         currentState.tick(this);
         if (!level.isClientSide) {
             updateAirtightAssemblyDriver();
+            updateGasCapabilityState();
             return;
         }
 
@@ -241,6 +266,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
 
         syncWindLevelBlockState();
         updateAirtightAssemblyDriver();
+        updateGasCapabilityState();
     }
 
     @Override
@@ -321,32 +347,44 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
 
     public boolean isControllerActive() {
         IChamberGasTank tank = getTank();
-        if (!(tank instanceof AirtightTankBlockEntity controller)) {
-            return false;
+        return tank != null && isControllerActive(tank);
+    }
+
+    private void updateGasCapabilityState() {
+        if (level == null || level.isClientSide) {
+            return;
         }
 
-        AirtightAssemblyDriverCore driverCore = controller.getCore();
-        return driverCore.getStructureManager().isActive();
+        boolean controllerActive = isControllerActive();
+        if (!controllerActiveInitialized) {
+            controllerActiveInitialized = true;
+            lastControllerActive = controllerActive;
+            return;
+        }
+        if (controllerActive == lastControllerActive) {
+            return;
+        }
+
+        lastControllerActive = controllerActive;
+        level.invalidateCapabilities(worldPosition);
     }
 
     public boolean isCreative() {
         return currentState.isCreative();
     }
 
-    public boolean tryUpdateChargerByItem(ItemStack stack, boolean forceOverflow, boolean simulate) {
-        InteractionResult result = currentState.onItemInsert(this, stack, forceOverflow, simulate);
+    public InteractionResultHolder<ItemStack> tryUpdateChargerByItem(ItemStack stack, boolean forceOverflow, boolean simulate) {
+        if (level == null) {
+            return InteractionResultHolder.fail(ItemStack.EMPTY);
+        }
+
+        WindChargingData data = WindChargingRecipe.getWindChargingData(level, stack);
+        InteractionResult result = currentState.onItemInsert(this, stack, data, forceOverflow, simulate);
         if (result != InteractionResult.SUCCESS) {
-            return false;
+            return InteractionResultHolder.fail(ItemStack.EMPTY);
         }
 
-        if (simulate) {
-            return true;
-        }
-
-        setChanged();
-        updateAirtightAssemblyDriver();
-        notifyUpdate();
-        return true;
+        return InteractionResultHolder.success(data.recipeResult().copy());
     }
 
     public int getWindRemainingLevel() {
@@ -388,7 +426,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     public void tickGasProcessing(ChargerType chargerType) {
-        if (level == null || level.isClientSide || chargerType == ChargerType.NONE || isControllerActive()) {
+        if (level == null || level.isClientSide || chargerType == ChargerType.NONE) {
             return;
         }
 
@@ -397,19 +435,15 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             return;
         }
 
-        processGas(chargerType);
+        IChamberGasTank tank = getTank();
+        if (tank == null || isControllerActive(tank)) {
+            return;
+        }
+
+        processGas(chargerType, tank);
     }
 
-    private void processGas(ChargerType chargerType) {
-        if (level == null || level.isClientSide || chargerType == ChargerType.NONE) {
-            return;
-        }
-
-        IChamberGasTank tank = getTank();
-        if (tank == null || isControllerActive()) {
-            return;
-        }
-
+    private void processGas(ChargerType chargerType, IChamberGasTank tank) {
         GasTank inventory = tank.getTankInventory();
         GasTank output = tankBehaviour.getPrimaryHandler();
         if (inventory.isEmpty() || output.getSpace() <= 0) {
@@ -430,7 +464,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
 
         long inputAmount = conversion.input().amount();
         long outputAmount = outputPerBatch.getAmount();
-        long processingBudget = getProcessingAmount();
+        long processingBudget = getProcessingAmount(getWindRemainingTime());
         long batches = Math.min(inputStack.getAmount() / inputAmount, processingBudget / inputAmount);
         batches = Math.min(batches, output.getSpace() / outputAmount);
         if (batches <= 0) {
@@ -481,11 +515,11 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         GasStack rolledBack = outputHandler.forceDrain(outputRequest.copyWithAmount(amount), GasAction.EXECUTE);
         boolean successful = rolledBack.getAmount() == amount && GasStack.isSameGasSameComponents(rolledBack, outputRequest);
         if (successful) {
-            return successful;
+            return true;
         }
 
         CreateCraftedBeginning.LOGGER.error("Failed to roll back {} units of breeze chamber output gas at {}", amount, worldPosition);
-        return successful;
+        return false;
     }
 
     public void loadFromItem(ItemStack stack) {
@@ -641,7 +675,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
 
         IChamberGasTank tank = source.get();
         if (tank != null && !tank.isRemoved()) {
-            return tank == null ? null : tank.getControllerBE();
+            return tank.getControllerBE();
         }
 
         source = new WeakReference<>(null);
@@ -681,22 +715,6 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             case CALM -> ChargerType.NONE;
         };
         return chargerType != ChargerType.NONE && getConversion(chargerType, inputStack).isEmpty();
-    }
-
-    private int getProcessingAmount() {
-        int time = getWindRemainingTime();
-        if (time == 0) {
-            return 0;
-        }
-
-        IChamberGasTank tank = getTank();
-        if (tank == null || isControllerActive()) {
-            return 0;
-        }
-
-        int maxAmount = CCBConfig.server().airtights.maxProcessingRate.get();
-        float ratio = Mth.clamp((float) Mth.abs(time) / getMaxEffectiveThreshold(), 0, 1);
-        return Mth.clamp((int) (maxAmount * ratio), 1, maxAmount);
     }
 
     public void spawnParticles() {

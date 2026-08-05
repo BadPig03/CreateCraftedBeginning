@@ -64,6 +64,10 @@ public abstract class BaseCoolerState {
             return true;
         }
 
+        if (isCreative) {
+            return true;
+        }
+
         BlockPos pos = cooler.getBlockPos();
         if (fluid.getFluidType().getTemperature() >= BreezeCoolerBlockEntity.getDangerousFluidTemperature()) {
             ItemStack emptyCooler = new ItemStack(CCBBlocks.EMPTY_BREEZE_COOLER_BLOCK.get());
@@ -75,10 +79,6 @@ public abstract class BaseCoolerState {
             return false;
         }
 
-        if (isCreative) {
-            return true;
-        }
-
         CoolingData data = cooler.getFluidCoolingData(fluid);
         int time = data.time();
         int amount = data.amount();
@@ -86,14 +86,17 @@ public abstract class BaseCoolerState {
             return true;
         }
 
+        int maxCapacity = BreezeCoolerBlockEntity.getMaxCoolantCapacity();
+        int creditedTime = Math.min(time, maxCapacity);
+        int availableCapacity = Math.max(0, maxCapacity - remainingTime);
         int batchesByFluid = fluid.getAmount() / amount;
-        int batchesByCapacity = (BreezeCoolerBlockEntity.getMaxCoolantCapacity() - remainingTime) / time;
+        int batchesByCapacity = availableCapacity / creditedTime;
         int batches = Math.min(batchesByFluid, batchesByCapacity);
         if (batches <= 0) {
             return true;
         }
 
-        remainingTime += batches * time;
+        remainingTime += batches * creditedTime;
         tank.drain(batches * amount, FluidAction.EXECUTE);
         if (getFrostLevel() == FrostLevel.RIMING) {
             cooler.setCoolerState(new ChilledCoolerState(remainingTime, false));

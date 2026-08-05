@@ -78,7 +78,7 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
             gogglesModel = null;
         }
 
-        PartialModel desiredHatModel = blockEntity.isStockKeeper() ? CCBPartialModels.BREEZE_LOGISTICS_HAT : blockEntity.hasTrainHat() ? CCBPartialModels.BREEZE_TRAIN_HAT : null;
+        PartialModel desiredHatModel = blockEntity.hasTrainHat() ? CCBPartialModels.BREEZE_TRAIN_HAT : blockEntity.isStockKeeper() ? CCBPartialModels.BREEZE_LOGISTICS_HAT : null;
         if (desiredHatModel != null && hat == null) {
             hat = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredHatModel)).createInstance();
             hatModel = desiredHatModel;
@@ -110,7 +110,13 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
             goggles.setIdentityTransform().translate(getVisualPosition()).translateY(headY + 0.5f).translate(Translate.CENTER).rotateY(horizontalAngle).translateBack(Translate.CENTER).setChanged();
         }
         if (hat != null) {
-            hat.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translateY(0.75f);
+            hat.setIdentityTransform().translate(getVisualPosition()).translateY(headY);
+            if (currentFrostLevel.isAtLeast(FrostLevel.CHILLED)) {
+                hat.translateY(0.75f);
+            }
+            else {
+                hat.translateY(0.5f).translate(Translate.CENTER).scale(0.75f).translateBack(Translate.CENTER);
+            }
             hat.rotateCentered(horizontalAngle + Mth.PI, Direction.UP).translate(0.5, 0, 0.5);
             hat.setChanged();
         }
