@@ -94,7 +94,7 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
             return;
         }
 
-        filteringBehaviour = new FilteringBehaviour(this, new AirtightReactorKettleValueBox()).withCallback(stack -> AirtightReactorKettleUtils.refreshOtherFilters(this, stack)).onlyActiveWhen(() -> AirtightReactorKettleUtils.canModifyFilter(this)).forRecipes();
+        filteringBehaviour = new FilteringBehaviour(this, new AirtightReactorKettleValueBox()).withCallback(stack -> AirtightReactorKettleUtils.updateRecipeFilter(this, stack)).onlyActiveWhen(() -> AirtightReactorKettleUtils.canModifyFilter(this)).forRecipes();
         behaviours.add(filteringBehaviour);
     }
 

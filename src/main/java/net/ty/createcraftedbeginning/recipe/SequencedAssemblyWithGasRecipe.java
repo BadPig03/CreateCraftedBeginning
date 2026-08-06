@@ -97,7 +97,6 @@ public class SequencedAssemblyWithGasRecipe implements Recipe<RecipeWrapper> {
         return Optional.empty();
     }
 
-
     @SuppressWarnings("DataFlowIssue")
     private static int getStep(ItemStack input) {
         if (!input.has(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS)) {

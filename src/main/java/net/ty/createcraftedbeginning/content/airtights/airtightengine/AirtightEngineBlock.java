@@ -168,6 +168,7 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
 
     @Override
     public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean isMoving) {
+        super.onPlace(state, level, pos, oldState, isMoving);
         AirtightTankBlock.updateTankState(level, pos.relative(getFacing(state)));
     }
 

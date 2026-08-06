@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airvents;
 
-import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
-import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
+import com.simibubi.create.foundation.blockEntity.SyncedBlockEntity;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -12,11 +11,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock.VentState;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirVentBlockEntity extends SmartBlockEntity {
+public class AirVentBlockEntity extends SyncedBlockEntity {
     private static final String COMPOUND_KEY_LOUVER_MASK = "LouverMask";
     private static final String COMPOUND_KEY_OPENED_MASK = "OpenedMask";
     private static final int VALID_DIRECTION_MASK = (1 << Direction.values().length) - 1;
@@ -33,12 +31,8 @@ public class AirVentBlockEntity extends SmartBlockEntity {
     }
 
     @Override
-    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-    }
-
-    @Override
-    public void initialize() {
-        super.initialize();
+    public void onLoad() {
+        super.onLoad();
         if (level == null || level.isClientSide) {
             return;
         }
@@ -53,17 +47,17 @@ public class AirVentBlockEntity extends SmartBlockEntity {
     }
 
     @Override
-    protected void write(CompoundTag tag, Provider provider, boolean clientPacket) {
-        super.write(tag, provider, clientPacket);
-        tag.putInt(COMPOUND_KEY_LOUVER_MASK, louverMask);
-        tag.putInt(COMPOUND_KEY_OPENED_MASK, openedMask);
+    protected void loadAdditional(CompoundTag tag, Provider provider) {
+        super.loadAdditional(tag, provider);
+        louverMask = tag.getInt(COMPOUND_KEY_LOUVER_MASK) & VALID_DIRECTION_MASK;
+        openedMask = tag.getInt(COMPOUND_KEY_OPENED_MASK) & louverMask;
     }
 
     @Override
-    protected void read(CompoundTag tag, Provider provider, boolean clientPacket) {
-        super.read(tag, provider, clientPacket);
-        louverMask = tag.getInt(COMPOUND_KEY_LOUVER_MASK) & VALID_DIRECTION_MASK;
-        openedMask = tag.getInt(COMPOUND_KEY_OPENED_MASK) & louverMask;
+    protected void saveAdditional(CompoundTag tag, Provider provider) {
+        super.saveAdditional(tag, provider);
+        tag.putInt(COMPOUND_KEY_LOUVER_MASK, louverMask);
+        tag.putInt(COMPOUND_KEY_OPENED_MASK, openedMask);
     }
 
     public VentState getLouverState(Direction direction) {
@@ -83,6 +77,10 @@ public class AirVentBlockEntity extends SmartBlockEntity {
     }
 
     public int getVisibleLouverMask() {
+        if (louverMask == 0) {
+            return 0;
+        }
+
         return louverMask & ~AirVentBlock.getConnectionMask(getBlockState()) & VALID_DIRECTION_MASK;
     }
 

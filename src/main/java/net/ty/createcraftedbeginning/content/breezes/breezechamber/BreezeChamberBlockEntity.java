@@ -361,6 +361,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             lastControllerActive = controllerActive;
             return;
         }
+
         if (controllerActive == lastControllerActive) {
             return;
         }

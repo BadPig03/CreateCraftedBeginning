@@ -17,12 +17,17 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
+import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackContainerContents.CanisterData;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackOverrides.GasCanisterPackType;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
+import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -69,9 +74,14 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
         for (int slot = 0; slot < MAX_COUNT; slot++) {
             ItemStack canister = ItemStack.parseOptional(player.level().registryAccess(), packContents.getCompoundTag(slot).getCompound(COMPOUND_KEY_CANISTER));
             if (canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents) {
-                canisterContents.drain(0, canisterContents.getGasInTank(0), GasAction.EXECUTE);
-                canisterContents.setCapacity(0, GasCanisterContainerContents.getEnchantedCapacity(canister));
-                canisterContents.fill(0, packContents.getGasInTank(slot), GasAction.EXECUTE);
+                GasStack storedGas = packContents.getGasInTank(slot);
+                if (canisterContents instanceof CreativeGasCanisterContainerContents creativeContents) {
+                    creativeContents.setGasInTank(0, storedGas);
+                }
+                else {
+                    canisterContents.drain(0, canisterContents.getGasInTank(0), GasAction.EXECUTE);
+                    canisterContents.fill(0, storedGas, GasAction.EXECUTE);
+                }
             }
             packInventory.setStackInSlot(slot, canister);
         }
@@ -92,10 +102,16 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
             return;
         }
 
+        List<CanisterData> canisters = new ArrayList<>(MAX_COUNT);
         for (int slot = 0; slot < MAX_COUNT; slot++) {
-            saveCanister(packContents, slot);
+            canisters.add(readCanister(slot));
         }
-        pack.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, getPackType());
+        packContents.replaceCanisters(canisters);
+
+        int packType = getPackType();
+        if (pack.getOrDefault(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, -1) != packType) {
+            pack.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, packType);
+        }
     }
 
     @Override
@@ -103,22 +119,18 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
         return ItemStack.isSameItem(playerInventory.getSelected(), contentHolder);
     }
 
-    private void saveCanister(GasCanisterPackContainerContents packContents, int slot) {
+    private CanisterData readCanister(int slot) {
         ItemStack canister = packInventory.getStackInSlot(slot);
+        GasStack gas = GasStack.EMPTY;
+        long capacity = 0;
         if (canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents) {
-            packContents.setCapacity(slot, canisterContents.getTankCapacity(0));
-            packContents.drain(slot, packContents.getGasInTank(slot), GasAction.EXECUTE);
-            packContents.fill(slot, canisterContents.getGasInTank(0), GasAction.EXECUTE);
-        }
-        else {
-            packContents.drain(slot, packContents.getGasInTank(slot), GasAction.EXECUTE);
-            packContents.setCapacity(slot, 0);
+            gas = canisterContents.getGasInTank(0);
+            capacity = canisterContents.getTankCapacity(0);
         }
 
         CompoundTag tag = new CompoundTag();
         tag.put(COMPOUND_KEY_CANISTER, canister.saveOptional(player.level().registryAccess()));
-        packContents.setCompoundTag(slot, tag);
-        packContents.setCreatives(slot, CanisterContainerSuppliers.isValidCreativeGasCanister(canister));
+        return new CanisterData(gas, capacity, tag, CanisterContainerSuppliers.isValidCreativeGasCanister(canister));
     }
 
     @Override

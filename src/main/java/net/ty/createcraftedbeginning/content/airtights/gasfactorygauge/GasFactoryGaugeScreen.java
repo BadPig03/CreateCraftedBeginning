@@ -29,11 +29,11 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.client.GasFactoryGaugeClientUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.client.CCBGUITextures;
+import net.ty.createcraftedbeginning.client.GasFactoryGaugeClientUtils;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonStyleUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUtils;
-import net.ty.createcraftedbeginning.client.CCBGUITextures;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -379,7 +379,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
 
         int x = guiLeft;
         int itemX = x + 68;
-        int itemY = guiTop + windowHeight - 24;
+        int itemY = guiTop + windowHeight - 8;
         if (mouseX >= itemX && mouseX < itemX + 16 && mouseY >= itemY && mouseY < itemY + 16) {
             sendIt(true);
             playButtonSound();
@@ -390,6 +390,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         if (mouseX >= itemX && mouseX < itemX + 16 && mouseY >= itemY && mouseY < itemY + 16) {
             sendRedstoneReset = true;
             sendIt(false);
+            sendRedstoneReset = false;
             playButtonSound();
             return true;
         }

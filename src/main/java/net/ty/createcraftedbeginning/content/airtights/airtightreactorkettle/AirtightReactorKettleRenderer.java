@@ -24,6 +24,7 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Vec3i;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
@@ -31,6 +32,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -43,6 +45,7 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
     private static final float MAX_RADIUS = 1.1f;
     private static final int MAX_RENDERED_COPIES = 4;
     private static final int MAX_RENDERED_ITEM_SLOTS = 64;
+    private static final double FULL_ITEM_DETAIL_DISTANCE_SQR = 256;
     private static final ItemPlacement[] ITEM_PLACEMENTS = createItemPlacements();
 
     public AirtightReactorKettleRenderer(Context context) {
@@ -101,8 +104,10 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
 
         float itemSurfaceY = fluidLevel <= 0 ? 0.05f : fluidLevel - 0.13f;
         IItemHandlerModifiable inventory = kettle.getItemCapability();
-        ItemRenderer renderer = Minecraft.getInstance().getItemRenderer();
-        ClientLevel level = Minecraft.getInstance().level;
+        Minecraft minecraft = Minecraft.getInstance();
+        ItemRenderer renderer = minecraft.getItemRenderer();
+        ClientLevel level = minecraft.level;
+        boolean renderSingleCopy = isBeyondFullItemDetailDistance(kettle, minecraft.cameraEntity);
         for (int slot = 0; slot < inventory.getSlots(); slot++) {
             ItemStack stack = inventory.getStackInSlot(slot);
             if (stack.isEmpty()) {
@@ -125,7 +130,7 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
             poseStack.translate(itemPosition.x, itemSurfaceY + itemOffset, itemPosition.z);
             TransformStack.of(poseStack).rotateYDegrees(angle + 35).rotateXDegrees(90);
 
-            int copies = getRenderedCopyCount(stack.getCount());
+            int copies = renderSingleCopy ? 1 : getRenderedCopyCount(stack.getCount());
             for (int i = 0; i < copies; i++) {
                 poseStack.pushPose();
 
@@ -140,6 +145,10 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
         }
 
         poseStack.popPose();
+    }
+
+    private static boolean isBeyondFullItemDetailDistance(AirtightReactorKettleBlockEntity kettle, @Nullable Entity camera) {
+        return camera != null && kettle.getLevel() == camera.level() && camera.position().distanceToSqr(VecHelper.getCenterOf(kettle.getBlockPos())) > FULL_ITEM_DETAIL_DISTANCE_SQR;
     }
 
     private static void renderMixerModels(AirtightReactorKettleBlockEntity kettle, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light) {

@@ -70,6 +70,7 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
             ItemStack recipeResult = recipe.getResultItem(level.registryAccess()).copy();
             return new WindChargingData(recipe.action, chargingTime, 1, recipeResult);
         }
+
         return getAutomaticWindChargingTime(itemStack);
     }
 

@@ -20,6 +20,7 @@ public class AirtightAssemblyDriverFlowMeter {
     private static final int SAMPLES_COUNT = 10;
     private static final int SAMPLE_WINDOW_TICKS = SAMPLE_RATE * SAMPLES_COUNT;
     private static final int SUPPLY_PER_LEVEL = 16;
+    private static final float MIN_DISPLAYED_GAS_SUPPLY = 0.005f;
 
     private static final String COMPOUND_KEY_GAS = "Gas";
     private static final String COMPOUND_KEY_GAS_SUPPLY = "GasSupply";
@@ -106,6 +107,9 @@ public class AirtightAssemblyDriverFlowMeter {
         if (level.isClientSide) {
             return;
         }
+        if (gasType.isEmpty() && rollingSupply == 0 && gatheredSupply == 0) {
+            return;
+        }
 
         ticksUntilNextSample--;
         if (ticksUntilNextSample > 0) {
@@ -113,7 +117,7 @@ public class AirtightAssemblyDriverFlowMeter {
         }
 
         ticksUntilNextSample = SAMPLE_RATE;
-        long previousRollingSupply = rollingSupply;
+        boolean hadDisplayableSupply = hasDisplayableGasSupply();
         rollingSupply -= suppliedPerSample[currentIndex];
         suppliedPerSample[currentIndex] = gatheredSupply;
         rollingSupply += gatheredSupply;
@@ -121,11 +125,9 @@ public class AirtightAssemblyDriverFlowMeter {
         gatheredSupply = 0;
         updateGasSupply();
         driverCore.markForSave();
-        if (previousRollingSupply == rollingSupply) {
-            return;
+        if (hadDisplayableSupply != hasDisplayableGasSupply()) {
+            driverCore.markForClientSync();
         }
-
-        driverCore.markForClientSync();
     }
 
     public CompoundTag write(Provider provider, boolean clientPacket) {
@@ -157,8 +159,8 @@ public class AirtightAssemblyDriverFlowMeter {
         driverCore.getLevelCalculator().loadSupplyLevel(0);
     }
 
-    public float getGasSupply() {
-        return gasSupply;
+    public boolean hasDisplayableGasSupply() {
+        return gasSupply >= MIN_DISPLAYED_GAS_SUPPLY;
     }
 
     public GasStack getGasType() {

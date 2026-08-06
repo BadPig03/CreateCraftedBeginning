@@ -90,6 +90,8 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     private final SmartInventory pressHeadInventory;
     private final SmartInventory processingInventory;
 
+    private boolean observedAutomaticPressingEnabled = CCBConfig.server().airtights.enableAutomaticPressingRecipes.get();
+    private boolean observedAutomaticSmithingEnabled = CCBConfig.server().airtights.enableAutomaticSmithingRecipes.get();
     private boolean contentsChanged;
     private boolean filterChanged;
     private boolean operating;
@@ -103,7 +105,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     private SmartFluidTankBehaviour fluidTank;
     private SmartGasTankBehaviour gasTank;
     private ItemStack recipeFilter = ItemStack.EMPTY;
-    private long observedRecipeCacheEpoch = AirtightForgingPressUtils.getRecipeCacheEpoch();
+    private long observedRecipeCacheVersion = AirtightForgingPressUtils.getRecipeCacheVersion();
 
     public AirtightForgingPressBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -215,12 +217,16 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         }
 
         core.lazyTick();
-        long recipeCacheEpoch = AirtightForgingPressUtils.getRecipeCacheEpoch();
-        if (observedRecipeCacheEpoch == recipeCacheEpoch) {
+        long recipeCacheVersion = AirtightForgingPressUtils.getRecipeCacheVersion();
+        boolean currentAutomaticPressingEnabled = CCBConfig.server().airtights.enableAutomaticPressingRecipes.get();
+        boolean currentAutomaticSmithingEnabled = CCBConfig.server().airtights.enableAutomaticSmithingRecipes.get();
+        if (observedRecipeCacheVersion == recipeCacheVersion && observedAutomaticPressingEnabled == currentAutomaticPressingEnabled && observedAutomaticSmithingEnabled == currentAutomaticSmithingEnabled) {
             return;
         }
 
-        observedRecipeCacheEpoch = recipeCacheEpoch;
+        observedRecipeCacheVersion = recipeCacheVersion;
+        observedAutomaticPressingEnabled = currentAutomaticPressingEnabled;
+        observedAutomaticSmithingEnabled = currentAutomaticSmithingEnabled;
         update(true);
     }
 
@@ -609,7 +615,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     }
 
     private boolean updateForgingPress() {
-        observedRecipeCacheEpoch = AirtightForgingPressUtils.getRecipeCacheEpoch();
+        observedRecipeCacheVersion = AirtightForgingPressUtils.getRecipeCacheVersion();
         if (level == null) {
             return false;
         }

@@ -104,7 +104,12 @@ public class GasCanisterItem extends Item implements IGasFilter {
 
     @Override
     public boolean test(ItemStack filterItem, GasStack filterGasStack) {
-        return compile(filterItem).test(filterGasStack);
+        if (filterGasStack.isEmpty() || !(filterItem.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents contents)) {
+            return false;
+        }
+
+        GasStack content = contents.getGasInTank(0);
+        return !content.isEmpty() && GasStack.isSameGasSameComponents(content, filterGasStack);
     }
 
     @Override

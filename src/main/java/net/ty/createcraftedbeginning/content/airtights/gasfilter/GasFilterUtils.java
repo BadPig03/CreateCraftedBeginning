@@ -55,7 +55,7 @@ public final class GasFilterUtils {
     public record GasFilterData(boolean blacklist, List<GasStack> gases) {
         public static final int MAX_ENTRIES = 18;
         public static final GasFilterData EMPTY = new GasFilterData(false, List.of());
-        public static final Codec<GasFilterData> CODEC = RecordCodecBuilder.create(instance -> instance.group(Codec.BOOL.fieldOf("blacklist").forGetter(GasFilterData::blacklist), GasStack.CODEC.listOf().fieldOf("gases").forGetter(data -> data.gases)).apply(instance, GasFilterData::new));
+        public static final Codec<GasFilterData> CODEC = RecordCodecBuilder.create(instance -> instance.group(Codec.BOOL.fieldOf("blacklist").forGetter(GasFilterData::blacklist), GasStack.CODEC.listOf(0, MAX_ENTRIES).fieldOf("gases").forGetter(data -> data.gases)).apply(instance, GasFilterData::new));
         public static final StreamCodec<RegistryFriendlyByteBuf, GasFilterData> STREAM_CODEC = new StreamCodec<>() {
             @Override
             public GasFilterData decode(RegistryFriendlyByteBuf buffer) {

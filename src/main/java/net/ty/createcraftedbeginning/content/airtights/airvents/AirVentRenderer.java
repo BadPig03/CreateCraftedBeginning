@@ -2,7 +2,7 @@ package net.ty.createcraftedbeginning.content.airtights.airvents;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.simibubi.create.foundation.blockEntity.renderer.SmartBlockEntityRenderer;
+import com.simibubi.create.foundation.blockEntity.renderer.SafeBlockEntityRenderer;
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.render.CachedBuffers;
@@ -18,9 +18,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirVentRenderer extends SmartBlockEntityRenderer<AirVentBlockEntity> {
-    public AirVentRenderer(Context context) {
-        super(context);
+public class AirVentRenderer extends SafeBlockEntityRenderer<AirVentBlockEntity> {
+    public AirVentRenderer(Context ignored) {
     }
 
     @Override

@@ -105,6 +105,7 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
         if (updateResult.getResult() != InteractionResult.SUCCESS) {
             return InteractionResultHolder.fail(ItemStack.EMPTY);
         }
+
         if (doNotConsume) {
             return InteractionResultHolder.success(ItemStack.EMPTY);
         }

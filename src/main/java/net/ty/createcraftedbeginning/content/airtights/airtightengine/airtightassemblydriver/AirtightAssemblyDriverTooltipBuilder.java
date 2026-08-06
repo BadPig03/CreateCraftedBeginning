@@ -8,23 +8,19 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.platform.CCBClientBridge;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverLevelCalculator.LevelKey;
 import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.platform.CCBClientBridge;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Map;
 
-import static net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverCore.MAX_LEVEL;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightAssemblyDriverTooltipBuilder {
-    private static final float MIN_GAS_SUPPLY_THRESHOLD = 0.005f;
-
     private final AirtightAssemblyDriverCore driverCore;
 
     public AirtightAssemblyDriverTooltipBuilder(AirtightAssemblyDriverCore driverCore) {
@@ -41,7 +37,7 @@ public class AirtightAssemblyDriverTooltipBuilder {
             return CCBLang.translateDirect("gui.airtight_assembly_driver.idle");
         }
 
-        if (currentLevel == MAX_LEVEL) {
+        if (currentLevel == AirtightAssemblyDriverCore.MAX_LEVEL) {
             return CCBLang.translateDirect("gui.airtight_assembly_driver.max_level");
         }
         return CCBLang.translateDirect("gui.airtight_assembly_driver.level", String.valueOf(currentLevel));
@@ -49,7 +45,7 @@ public class AirtightAssemblyDriverTooltipBuilder {
 
     private static void addProgressBars(Map<LevelKey, Integer> levels, List<Component> tooltip) {
         int minValue = levels.getOrDefault(LevelKey.MIN_VALUE, 0);
-        int maxValue = levels.getOrDefault(LevelKey.MAX_VALUE, MAX_LEVEL);
+        int maxValue = levels.getOrDefault(LevelKey.MAX_VALUE, AirtightAssemblyDriverCore.MAX_LEVEL);
         List<MutableComponent> labels = List.of(createLabel("supply"), createLabel("wind_charging"), createLabel("residue"));
         List<MutableComponent> bars = List.of(createProgressBar(levels.getOrDefault(LevelKey.SUPPLY, 0), minValue, maxValue), createProgressBar(levels.getOrDefault(LevelKey.WIND_CHARGING, 0), minValue, maxValue), createProgressBar(levels.getOrDefault(LevelKey.RESIDUE, 0), minValue, maxValue));
         if (CCBClientBridge.addAlignedTooltipBars(tooltip, 1, labels, bars)) {
@@ -71,7 +67,7 @@ public class AirtightAssemblyDriverTooltipBuilder {
         int minimumMarker = minValue > 0 ? 1 : 0;
         int filledBars = Math.max(0, level - minValue);
         int emptyBars = Math.max(0, maxValue - level);
-        int upperPadding = Math.max(0, Math.min(MAX_LEVEL - maxValue, (maxValue / 4 + 1) * 4 - maxValue));
+        int upperPadding = Math.max(0, Math.min(AirtightAssemblyDriverCore.MAX_LEVEL - maxValue, (maxValue / 4 + 1) * 4 - maxValue));
         return Component.empty().append(createBars(lowerPadding, ChatFormatting.DARK_GREEN)).append(createBars(minimumMarker, ChatFormatting.GREEN)).append(createBars(filledBars, ChatFormatting.DARK_GREEN)).append(createBars(emptyBars, ChatFormatting.DARK_RED)).append(createBars(upperPadding, ChatFormatting.DARK_GRAY));
     }
 
@@ -81,7 +77,7 @@ public class AirtightAssemblyDriverTooltipBuilder {
 
     private static void addGasInfo(AirtightAssemblyDriverFlowMeter flowMeter, List<Component> tooltip) {
         tooltip.add(CommonComponents.EMPTY);
-        GasStack gas = flowMeter.getGasSupply() < MIN_GAS_SUPPLY_THRESHOLD ? GasStack.EMPTY : flowMeter.getGasType();
+        GasStack gas = flowMeter.hasDisplayableGasSupply() ? flowMeter.getGasType() : GasStack.EMPTY;
         CCBLang.translate("gui.airtight_assembly_driver.gas_type").style(ChatFormatting.GRAY).forGoggles(tooltip);
         CCBLang.gasName(gas).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
     }

@@ -24,17 +24,14 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public class GasCanisterContainerContents implements IGasCanisterContainer {
     public static final List<GasStack> DEFAULT_CONTENT = List.of(GasStack.EMPTY);
-    public static final List<Long> DEFAULT_CAPACITY = List.of(getDefaultCapacity());
     public static final int ECONOMIZE_MAX_LEVEL = 3;
     protected final ItemStack canister;
 
     protected GasStack gas;
-    protected long capacity;
 
     public GasCanisterContainerContents(ItemStack canister) {
         this.canister = canister;
-        gas = canister.getOrDefault(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, DEFAULT_CONTENT).getFirst();
-        capacity = canister.getOrDefault(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES, DEFAULT_CAPACITY).getFirst();
+        gas = canister.getOrDefault(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, DEFAULT_CONTENT).getFirst().copy();
     }
 
     public static long getDefaultCapacity() {
@@ -83,6 +80,10 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
         return physicalDrain * 100 / getEconomizeCostPercent(itemStack);
     }
 
+    protected static boolean isInvalidTank(int tank) {
+        return tank != 0;
+    }
+
     @Override
     public boolean isEmpty() {
         return getGasInTank(0).isEmpty();
@@ -95,20 +96,24 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
 
     @Override
     public boolean isGasValid(int tank, GasStack stack) {
-        return true;
+        return !isInvalidTank(tank);
     }
 
     @Override
     public GasStack drain(int tank, GasStack resource, GasAction action) {
-        if (resource.isEmpty() || !GasStack.isSameGasSameComponents(resource, getGasInTank(0))) {
+        if (isInvalidTank(tank) || resource.isEmpty() || !GasStack.isSameGasSameComponents(resource, getGasInTank(tank))) {
             return GasStack.EMPTY;
         }
-        return drain(0, resource.getAmount(), action);
+        return drain(tank, resource.getAmount(), action);
     }
 
     @Override
     public GasStack drain(int tank, long maxDrain, GasAction action) {
-        GasStack storedGas = getGasInTank(0);
+        if (isInvalidTank(tank)) {
+            return GasStack.EMPTY;
+        }
+
+        GasStack storedGas = getGasInTank(tank);
         long drained = Math.min(maxDrain, storedGas.getAmount());
         GasStack drainedGas = storedGas.copyWithAmount(drained);
         if (!action.execute() || drained <= 0) {
@@ -116,13 +121,13 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
         }
 
         gas.shrink(drained);
-        save();
+        saveContents();
         return drainedGas;
     }
 
     @Override
     public GasStack getGasInTank(int tank) {
-        return gas;
+        return isInvalidTank(tank) ? GasStack.EMPTY : gas.copy();
     }
 
     @Override
@@ -151,12 +156,12 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
 
     @Override
     public long fill(int tank, GasStack resource, GasAction action) {
-        if (resource.isEmpty()) {
+        if (isInvalidTank(tank) || resource.isEmpty()) {
             return 0;
         }
 
-        GasStack storedGas = getGasInTank(0);
-        long tankCapacity = getTankCapacity(0);
+        GasStack storedGas = getGasInTank(tank);
+        long tankCapacity = getTankCapacity(tank);
         if (action.simulate()) {
             if (storedGas.isEmpty()) {
                 return Math.min(tankCapacity, resource.getAmount());
@@ -181,25 +186,16 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
 
     @Override
     public long getTankCapacity(int tank) {
-        long newCapacity = Math.max(0, getEnchantedCapacity(canister));
-        if (newCapacity == capacity) {
-            return capacity;
-        }
-
-        capacity = newCapacity;
-        return capacity;
+        return isInvalidTank(tank) ? 0 : Math.max(0, getEnchantedCapacity(canister));
     }
 
     @Override
     public void save() {
         saveContents();
-        saveCapacities();
     }
 
     @Override
     public void setCapacity(int tank, long capacity) {
-        this.capacity = Math.max(0, capacity);
-        saveCapacities();
     }
 
     private long fillEmpty(GasStack resource, long tankCapacity) {
@@ -226,10 +222,6 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
     }
 
     public void saveContents() {
-        canister.set(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, List.of(gas));
-    }
-
-    public void saveCapacities() {
-        canister.set(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES, List.of(capacity));
+        canister.set(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, List.of(gas.copy()));
     }
 }

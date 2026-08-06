@@ -121,20 +121,21 @@ public class TeslaTurbineFlowMeter {
             return 0;
         }
 
-        long amount = resource.getAmount();
-        if (!action.execute()) {
-            return amount;
-        }
-
         if (hasMixedGases) {
             return 0;
         }
 
+        long amount = resource.getAmount();
         GasStack normalizedGas = resource.copyWithAmount(1);
-        if (!gasType.isEmpty() && !GasStack.isSameGasSameComponents(gasType, normalizedGas)) {
+        boolean mixesWithStoredGas = !gasType.isEmpty() && !GasStack.isSameGasSameComponents(gasType, normalizedGas);
+        if (!action.execute()) {
+            return amount;
+        }
+
+        if (mixesWithStoredGas) {
             hasMixedGases = true;
             core.markForSave();
-            return 0;
+            return amount;
         }
 
         if (gasType.isEmpty()) {
@@ -147,7 +148,6 @@ public class TeslaTurbineFlowMeter {
         else {
             gatheredCounterClockwise = saturatedAdd(gatheredCounterClockwise, amount);
         }
-        core.markForSave();
         return amount;
     }
 

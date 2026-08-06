@@ -145,10 +145,7 @@ public class CCBCommonEvents {
             builder.set(CCBDataComponents.DRILL_MINING_DIRECTION, Direction.NORTH);
             builder.set(CCBDataComponents.DRILL_MINING_RELATIVE_POSITION, new BlockPos(0, 0, 0));
         });
-        event.modify(CCBItems.GAS_CANISTER, builder -> {
-            builder.set(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, List.of(GasStack.EMPTY));
-            builder.set(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES, List.of(0L));
-        });
+        event.modify(CCBItems.GAS_CANISTER, builder -> builder.set(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, List.of(GasStack.EMPTY)));
         event.modify(CCBItems.GAS_CANISTER_PACK, builder -> builder.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, GasCanisterPackType._0000.getFlags()));
         event.modify(CCBItems.GAS_VIRTUAL_ITEM, builder -> builder.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE));
     }

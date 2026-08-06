@@ -10,7 +10,6 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTankMultiBlockEntityContainer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Contract;
@@ -18,10 +17,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
@@ -39,12 +38,12 @@ public class GasConnectivityHandler {
      */
     public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> void formMulti(T be, Level level) {
         SearchCache<T> cache = new SearchCache<>();
-        List<T> frontier = new ArrayList<>();
-        frontier.add(be);
+        Deque<T> frontier = new ArrayDeque<>();
+        frontier.addLast(be);
         formMulti(be.getType(), level, cache, frontier);
     }
 
-    private static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> void formMulti(BlockEntityType<?> type, BlockGetter level, SearchCache<T> cache, List<T> frontier) {
+    private static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> void formMulti(BlockEntityType<?> type, BlockGetter level, SearchCache<T> cache, Deque<T> frontier) {
         PriorityQueue<Pair<Integer, T>> creationQueue = makeCreationQueue();
         Set<BlockPos> visited = new HashSet<>();
         Axis mainAxis = frontier.getFirst().getMainConnectionAxis();
@@ -98,7 +97,7 @@ public class GasConnectivityHandler {
                     continue;
                 }
 
-                frontier.add(nextPart);
+                frontier.addLast(nextPart);
             }
         }
 
@@ -187,11 +186,9 @@ public class GasConnectivityHandler {
         int height = 0;
         BlockEntityType<?> type = be.getType();
         BlockPos origin = be.getBlockPos();
-        IGasTank tank = null;
         GasStack gas = GasStack.EMPTY;
         if (be.hasTank()) {
-            tank = be.getTank(0);
-            gas = tank.getGasStack();
+            gas = be.getGas(0);
         }
 
         Axis axis = be.getMainConnectionAxis();
@@ -247,14 +244,7 @@ public class GasConnectivityHandler {
                     }
 
                     extraData = be.modifyExtraData(extraData);
-                    if (part.hasTank()) {
-                        IGasTank partTank = part.getTank(0);
-                        GasStack partGas = partTank.getGasStack();
-                        if (!partGas.isEmpty() && be.hasTank() && tank != null) {
-                            tank.fill(partGas, GasAction.EXECUTE);
-                        }
-                        partTank.drain(partTank.getCapacity(), GasAction.EXECUTE);
-                    }
+                    be.mergeTankStateFrom(part);
 
                     splitMultiAndInvalidate(part, cache);
                     part.setController(origin);
@@ -268,7 +258,6 @@ public class GasConnectivityHandler {
         }
 
         be.setExtraData(extraData);
-        be.notifyMultiUpdated();
         return amount;
     }
 
@@ -330,14 +319,8 @@ public class GasConnectivityHandler {
         BlockPos origin = be.getBlockPos();
         Axis axis = be.getMainConnectionAxis();
         GasStack toDistribute = GasStack.EMPTY;
-        long maxCapacity = 0;
         if (be.hasTank()) {
-            toDistribute = be.getGas(0);
-            maxCapacity = be.getTankSize(0);
-            if (!toDistribute.isEmpty() && !be.isRemoved()) {
-                toDistribute.shrink(maxCapacity);
-            }
-            be.setTankSize(0, 1);
+            toDistribute = be.prepareTankStateForSplit(0, be.isRemoved());
         }
 
         for (int yOffset = 0; yOffset < height; yOffset++) {
@@ -358,12 +341,7 @@ public class GasConnectivityHandler {
                     part.setExtraData(controller == null ? null : controller.getExtraData());
                     part.removeController(true);
                     if (!toDistribute.isEmpty() && part != be) {
-                        GasStack copy = toDistribute.copy();
-                        IGasTank tank = part.getTank(0);
-                        long split = Math.min(maxCapacity, toDistribute.getAmount());
-                        copy.setAmount(split);
-                        toDistribute.shrink(split);
-                        tank.fill(copy, GasAction.EXECUTE);
+                        part.applySplitTankState(0, toDistribute);
                     }
 
                     if (cache != null) {

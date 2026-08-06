@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.portablegasinterface;
 
+import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.content.contraptions.actors.psi.PortableStorageInterfaceBlockEntity;
 import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
@@ -10,6 +11,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
@@ -45,7 +47,7 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
 
     @Override
     public void startTransferringTo(Contraption contraption, float distance) {
-        if (!(contraption.getStorage() instanceof IMountedStorageManagerWithGas withGas)) {
+        if (connectedEntity == contraption.entity || !(contraption.getStorage() instanceof IMountedStorageManagerWithGas withGas)) {
             return;
         }
 
@@ -70,6 +72,20 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
     public void invalidate() {
         super.invalidate();
         invalidateCapabilities();
+    }
+
+    public void onFacingChanged() {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+
+        if (connectedEntity != null || keepAlive > 0) {
+            keepAlive = 0;
+            stopTransferring();
+            transferTimer = ANIMATION - 1;
+            sendData();
+        }
+        level.getEntitiesOfClass(AbstractContraptionEntity.class, new AABB(worldPosition).inflate(3)).forEach(AbstractContraptionEntity::refreshPSIs);
     }
 
     public boolean isConnected() {
@@ -129,7 +145,7 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
 
         @Override
         public GasStack drain(GasStack resource, GasAction action) {
-            if (!canTransfer()) {
+            if (!canAccessStorage()) {
                 return GasStack.EMPTY;
             }
 
@@ -140,7 +156,7 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
 
         @Override
         public GasStack drain(long maxDrain, GasAction action) {
-            if (!canTransfer()) {
+            if (!canAccessStorage()) {
                 return GasStack.EMPTY;
             }
 
@@ -161,7 +177,7 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
 
         @Override
         public long fill(GasStack resource, GasAction action) {
-            if (!isConnected()) {
+            if (!canAccessStorage()) {
                 return 0;
             }
 
@@ -175,15 +191,15 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
             return wrapped.getTankCapacity(tank);
         }
 
+        private boolean canAccessStorage() {
+            return capability == this && canTransfer();
+        }
+
         private void keepAliveIfTransferred(boolean transferred, GasAction action) {
             if (!transferred || !action.execute()) {
                 return;
             }
 
-            keepAlive();
-        }
-
-        public void keepAlive() {
             onContentTransferred();
         }
     }

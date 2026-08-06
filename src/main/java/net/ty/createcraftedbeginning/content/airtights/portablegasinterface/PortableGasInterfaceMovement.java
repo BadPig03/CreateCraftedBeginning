@@ -169,6 +169,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
 
         Optional<Direction> facing = getValidFacing(context);
         if (facing.isEmpty()) {
+            reset(context);
             return false;
         }
 
@@ -220,6 +221,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
 
         Optional<Direction> facing = getValidFacing(context);
         if (facing.isEmpty()) {
+            reset(context);
             return;
         }
 

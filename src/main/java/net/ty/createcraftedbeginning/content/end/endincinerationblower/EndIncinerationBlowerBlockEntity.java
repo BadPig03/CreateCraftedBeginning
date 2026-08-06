@@ -380,6 +380,7 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         if (particleCounter < spawnInterval) {
             return;
         }
+
         particleCounter = 0;
 
         int particleCount = Math.max(1, Mth.floor(effectiveRatio));

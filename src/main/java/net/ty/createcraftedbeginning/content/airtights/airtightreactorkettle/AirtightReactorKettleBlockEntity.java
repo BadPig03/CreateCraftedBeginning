@@ -75,7 +75,6 @@ import java.util.Optional;
 @SuppressWarnings("unused")
 public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, IGasInventoryIdentifierProvider {
     private static final int LAZY_TICK_RATE = 4;
-    private static final int RECIPE_FALLBACK_CHECK_RATE = 40;
     private static final int MAX_ITEM_SLOT = 27;
     private static final int OPERATING_FINISHED = 40;
     private static final int PROCESSING_STARTED = 20;
@@ -99,6 +98,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     private final LerpedFloat windowDistance;
     private final SmartInventory outputInventory;
 
+    private boolean observedAutomaticMixingEnabled = CCBConfig.server().airtights.enableAutomaticMixingRecipes.get();
     private boolean contentsChanged;
     private boolean filterChanged;
     private boolean operating;
@@ -106,7 +106,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     private DeferralBehaviour updateChecker;
     private IFluidHandler fluidCapability;
     private IGasHandler gasCapability;
-    private int fallbackRecipeCheckTicks;
+    private long observedRecipeCacheVersion = AirtightReactorKettleUtils.getRecipeCacheVersion();
     private int operatingTicks;
     private int processingTicks = -1;
     private CraftingRecipe currentCraftingRecipe;
@@ -201,7 +201,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         }
 
         contentsChanged = false;
-        fallbackRecipeCheckTicks = 0;
         updateChecker.scheduleUpdate();
     }
 
@@ -213,12 +212,14 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         }
 
         core.lazyTick();
-        fallbackRecipeCheckTicks += LAZY_TICK_RATE;
-        if (fallbackRecipeCheckTicks < RECIPE_FALLBACK_CHECK_RATE) {
+        long recipeCacheVersion = AirtightReactorKettleUtils.getRecipeCacheVersion();
+        boolean currentAutomaticMixingEnabled = CCBConfig.server().airtights.enableAutomaticMixingRecipes.get();
+        if (observedRecipeCacheVersion == recipeCacheVersion && observedAutomaticMixingEnabled == currentAutomaticMixingEnabled) {
             return;
         }
 
-        fallbackRecipeCheckTicks = 0;
+        observedRecipeCacheVersion = recipeCacheVersion;
+        observedAutomaticMixingEnabled = currentAutomaticMixingEnabled;
         updateChecker.scheduleUpdate();
     }
 
@@ -578,6 +579,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     }
 
     private boolean updateReactorKettle() {
+        observedRecipeCacheVersion = AirtightReactorKettleUtils.getRecipeCacheVersion();
         if (level == null) {
             return false;
         }

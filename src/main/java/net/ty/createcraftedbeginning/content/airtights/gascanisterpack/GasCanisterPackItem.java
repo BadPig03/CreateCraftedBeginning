@@ -44,7 +44,6 @@ public class GasCanisterPackItem extends Item implements MenuProvider, IGasFilte
         event.registerItem(GasHandler.ITEM, (itemStack, context) -> new GasCanisterPackContainerContents(itemStack), CCBItems.GAS_CANISTER_PACK);
     }
 
-
     @Override
     public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
         return oldStack.getItem() != newStack.getItem();
@@ -120,7 +119,17 @@ public class GasCanisterPackItem extends Item implements MenuProvider, IGasFilte
 
     @Override
     public boolean test(ItemStack filterItem, GasStack filterGasStack) {
-        return compile(filterItem).test(filterGasStack);
+        if (filterGasStack.isEmpty() || !(filterItem.getCapability(GasHandler.ITEM) instanceof GasCanisterPackContainerContents packContents)) {
+            return false;
+        }
+
+        for (int tank = 0; tank < packContents.getTanks(); tank++) {
+            GasStack gas = packContents.getGasInTank(tank);
+            if (!gas.isEmpty() && GasStack.isSameGasSameComponents(gas, filterGasStack)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

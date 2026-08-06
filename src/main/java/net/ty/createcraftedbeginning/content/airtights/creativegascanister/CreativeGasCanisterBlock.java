@@ -43,6 +43,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
@@ -116,11 +117,29 @@ public class CreativeGasCanisterBlock extends Block implements IBE<CreativeGasCa
     @Override
     public List<ItemStack> getDrops(BlockState state, Builder builder) {
         List<ItemStack> drops = super.getDrops(state, builder);
+        if (drops.isEmpty()) {
+            return drops;
+        }
+
         BlockEntity blockEntity = builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
         if (!(blockEntity instanceof CreativeGasCanisterBlockEntity canister)) {
             return drops;
         }
-        return List.of(canister.getCanister().copy());
+
+        ItemStack storedCanister = canister.getCanister();
+        List<ItemStack> result = new ArrayList<>(drops);
+        for (int i = 0; i < result.size(); i++) {
+            ItemStack drop = result.get(i);
+            if (!drop.is(storedCanister.getItem())) {
+                continue;
+            }
+
+            ItemStack copiedCanister = storedCanister.copy();
+            copiedCanister.setCount(drop.getCount());
+            result.set(i, copiedCanister);
+            break;
+        }
+        return result;
     }
 
     @Override

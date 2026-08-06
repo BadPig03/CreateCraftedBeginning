@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-03T22:29:23.0597299	Registrate Provider for createcraftedbeginning [Registries, Data Maps, Recipes, Advancements, Loot Tables, Tags (enchantments), Tags (blocks), Tags (items), Tags (fluids), Tags (entity_types), generic_server_provider, Blockstates, Item models, Lang (en_us/en_ud), generic_client_provider]
+// 1.21.1	2026-08-06T16:26:20.7505869	Registrate Provider for createcraftedbeginning [Registries, Data Maps, Recipes, Advancements, Loot Tables, Tags (enchantments), Tags (blocks), Tags (items), Tags (fluids), Tags (entity_types), generic_server_provider, Blockstates, Item models, Lang (en_us/en_ud), generic_client_provider]
 89cbcebfdf0a539cf4a9c69419bd236fa050d53a assets/createcraftedbeginning/blockstates/airtight_check_valve.json
 d3d0810d6708e3662fe5192674cf577476cca23f assets/createcraftedbeginning/blockstates/airtight_encased_pipe.json
 cb5e887d5bfa4f2fa210775d0ff7bc61f5d2b2e6 assets/createcraftedbeginning/blockstates/airtight_engine.json
@@ -542,7 +542,7 @@ e9c7525a8e764a7eeb0b15a86dab867fd88f6231 data/createcraftedbeginning/loot_table/
 4262762f4c0c27f574c18582c50203f7dfbaf17a data/createcraftedbeginning/loot_table/blocks/end_incineration_blower_structural.json
 ca233df91c9dfb02456330a607e4dffa0bf2f25b data/createcraftedbeginning/loot_table/blocks/end_sculk_silencer.json
 55d5eec06a6849319268e991d0f3e15f65795bd2 data/createcraftedbeginning/loot_table/blocks/end_sculk_silencer_structural.json
-462f40e9a1674c520a46a6529f05700c5b79f46c data/createcraftedbeginning/loot_table/blocks/gas_canister.json
+76043f193fdada98ed93e7ece7ff80c30e488c9d data/createcraftedbeginning/loot_table/blocks/gas_canister.json
 e6cfaddf644ba5f64a74c62ad992a1220b2d5ded data/createcraftedbeginning/loot_table/blocks/gas_factory_gauge.json
 db28de7f570f9b97b1ddfa7e7c4416640cfb05ad data/createcraftedbeginning/loot_table/blocks/gas_injection_chamber.json
 35b9f9ffd5af4fcba0a9bdd5090a0c0440eb21f8 data/createcraftedbeginning/loot_table/blocks/gas_packager.json

@@ -6,24 +6,20 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
-import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CreativeGasCanisterContainerContents extends GasCanisterContainerContents {
-    public static final List<GasStack> DEFAULT_CONTENT = List.of(GasStack.EMPTY);
+    private static final long CAPACITY = Integer.MAX_VALUE * GasAmountUtils.MILLIBUCKETS_PER_BUCKET;
 
     public CreativeGasCanisterContainerContents(ItemStack canister) {
         super(canister);
-        gas = canister.getOrDefault(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, DEFAULT_CONTENT).getFirst();
-        capacity = getDefaultCapacity();
     }
 
     public static long getDefaultCapacity() {
-        return Integer.MAX_VALUE * GasAmountUtils.MILLIBUCKETS_PER_BUCKET;
+        return CAPACITY;
     }
 
     @Override
@@ -38,7 +34,11 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
 
     @Override
     public GasStack drain(int tank, long maxDrain, GasAction action) {
-        GasStack storedGas = getGasInTank(0);
+        if (isInvalidTank(tank)) {
+            return GasStack.EMPTY;
+        }
+
+        GasStack storedGas = getGasInTank(tank);
         if (storedGas.isEmpty()) {
             return GasStack.EMPTY;
         }
@@ -50,7 +50,7 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
         if (tank != 0) {
             return GasStack.EMPTY;
         }
-        return gas.copyWithAmount(capacity);
+        return gas.copyWithAmount(CAPACITY);
     }
 
     @Override
@@ -60,11 +60,7 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
 
     @Override
     public long getTankCapacity(int tank) {
-        return capacity;
-    }
-
-    @Override
-    public void setCapacity(int tank, long capacity) {
+        return isInvalidTank(tank) ? 0 : CAPACITY;
     }
 
     public void setGasInTank(int tank, GasStack resource) {
@@ -72,7 +68,7 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
             return;
         }
 
-        gas = resource.copyWithAmount(capacity);
+        gas = resource.copyWithAmount(CAPACITY);
         save();
     }
 }

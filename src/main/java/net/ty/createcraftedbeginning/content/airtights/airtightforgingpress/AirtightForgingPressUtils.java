@@ -52,11 +52,13 @@ import java.util.concurrent.atomic.AtomicLong;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class AirtightForgingPressUtils {
-    private static final Object FORGING_RECIPE_CACHE_KEY = new Object();
+    private static final Object FORGING_PRESS_RECIPE_CACHE_KEY = new Object();
+    private static final Object AUTOMATIC_PRESSING_RECIPE_CACHE_KEY = new Object();
+    private static final Object AUTOMATIC_SMITHING_RECIPE_CACHE_KEY = new Object();
     private static final int SMITHING_BASE_SLOT = 1;
     private static final int SMITHING_ADDITION_SLOT = 2;
     private static final AtomicBoolean RECIPE_TRIE_FAILURE_LOGGED = new AtomicBoolean();
-    private static final AtomicLong RECIPE_CACHE_EPOCH = new AtomicLong();
+    private static final AtomicLong RECIPE_CACHE_VERSION = new AtomicLong();
     private static volatile boolean recipeTrieDisabled;
 
     private AirtightForgingPressUtils() {
@@ -94,7 +96,7 @@ public final class AirtightForgingPressUtils {
             IItemHandler availableItems = press.getRecipeInputCapability();
             IFluidHandler availableFluids = press.getFluidCapability();
             IGasHandler availableGases = press.getGasCapability();
-            AirtightWithGasRecipeTrie<?> trie = AirtightWithGasRecipeTrieFinder.get(FORGING_RECIPE_CACHE_KEY, level, holder -> holder.value() instanceof ForgingPressRecipe);
+            AirtightWithGasRecipeTrie<?> trie = AirtightWithGasRecipeTrieFinder.get(FORGING_PRESS_RECIPE_CACHE_KEY, level, holder -> holder.value() instanceof ForgingPressRecipe);
             Set<AbstractVariant> availableVariants = AirtightWithGasRecipeTrie.getVariants(availableItems, availableFluids, availableGases);
             for (Recipe<?> candidate : trie.lookup(availableVariants)) {
                 if (candidate instanceof ForgingPressRecipe recipe && ForgingPressRecipe.match(press, recipe)) {
@@ -111,7 +113,7 @@ public final class AirtightForgingPressUtils {
     }
 
     private static Optional<ForgingPressRecipe> findMatchingLinearRecipe(AirtightForgingPressBlockEntity press, Level level) {
-        for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(FORGING_RECIPE_CACHE_KEY, level, recipe -> recipe.value() instanceof ForgingPressRecipe)) {
+        for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(FORGING_PRESS_RECIPE_CACHE_KEY, level, recipe -> recipe.value() instanceof ForgingPressRecipe)) {
             if (holder.value() instanceof ForgingPressRecipe recipe && ForgingPressRecipe.match(press, recipe)) {
                 return Optional.of(recipe);
             }
@@ -119,14 +121,14 @@ public final class AirtightForgingPressUtils {
         return Optional.empty();
     }
 
+    public static long getRecipeCacheVersion() {
+        return RECIPE_CACHE_VERSION.get();
+    }
+
     public static void invalidateRecipeCaches() {
         recipeTrieDisabled = false;
         RECIPE_TRIE_FAILURE_LOGGED.set(false);
-        RECIPE_CACHE_EPOCH.incrementAndGet();
-    }
-
-    public static long getRecipeCacheEpoch() {
-        return RECIPE_CACHE_EPOCH.get();
+        RECIPE_CACHE_VERSION.incrementAndGet();
     }
 
     public static void insertItemEntity(AirtightForgingPressStructuralBlockEntity structural, ItemEntity itemEntity) {
@@ -305,9 +307,14 @@ public final class AirtightForgingPressUtils {
             return Optional.empty();
         }
 
-        SingleRecipeInput input = new SingleRecipeInput(inputStack);
-        Optional<RecipeHolder<PressingRecipe>> recipe = AllRecipeTypes.PRESSING.find(input, level);
-        return recipe.filter(holder -> canApplyPressingRecipe(press, holder.value(), inputStack));
+        for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(AUTOMATIC_PRESSING_RECIPE_CACHE_KEY, level, AirtightForgingPressUtils::isAllowedAutomaticPressingRecipe)) {
+            if (!(holder.value() instanceof PressingRecipe pressingRecipe) || !canApplyPressingRecipe(press, pressingRecipe, inputStack)) {
+                continue;
+            }
+
+            return Optional.of(new RecipeHolder<>(holder.id(), pressingRecipe));
+        }
+        return Optional.empty();
     }
 
     public static boolean applyPressingRecipe(AirtightForgingPressBlockEntity press, PressingRecipe recipe) {
@@ -405,7 +412,22 @@ public final class AirtightForgingPressUtils {
         if (input.template().isEmpty() || input.base().isEmpty() || input.addition().isEmpty()) {
             return Optional.empty();
         }
-        return level.getRecipeManager().getRecipeFor(RecipeType.SMITHING, input, level).filter(holder -> canApplySmithingRecipe(press, holder.value(), input));
+        for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(AUTOMATIC_SMITHING_RECIPE_CACHE_KEY, level, AirtightForgingPressUtils::isAllowedAutomaticSmithingRecipe)) {
+            if (!(holder.value() instanceof SmithingRecipe smithingRecipe) || !canApplySmithingRecipe(press, smithingRecipe, input)) {
+                continue;
+            }
+
+            return Optional.of(new RecipeHolder<>(holder.id(), smithingRecipe));
+        }
+        return Optional.empty();
+    }
+
+    private static boolean isAllowedAutomaticPressingRecipe(RecipeHolder<? extends Recipe<?>> holder) {
+        return holder.value() instanceof PressingRecipe && !AllRecipeTypes.shouldIgnoreInAutomation(holder);
+    }
+
+    private static boolean isAllowedAutomaticSmithingRecipe(RecipeHolder<? extends Recipe<?>> holder) {
+        return holder.value().getType() == RecipeType.SMITHING && holder.value() instanceof SmithingRecipe && !AllRecipeTypes.shouldIgnoreInAutomation(holder);
     }
 
     public static boolean applySmithingRecipe(AirtightForgingPressBlockEntity press, SmithingRecipe recipe) {

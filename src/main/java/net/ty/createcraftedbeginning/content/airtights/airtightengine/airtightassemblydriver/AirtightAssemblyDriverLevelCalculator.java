@@ -71,6 +71,10 @@ public class AirtightAssemblyDriverLevelCalculator {
         return residueLevel;
     }
 
+    public int getSupplyLevel() {
+        return supplyLevel;
+    }
+
     public Map<LevelKey, Integer> getLevels() {
         int minLevel = getMinimumLevel();
         int maxLevel = getMaximumLevel();

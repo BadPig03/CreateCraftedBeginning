@@ -5,10 +5,12 @@ import com.simibubi.create.foundation.block.WrenchableDirectionalBlock;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -48,6 +50,19 @@ public class PortableGasInterfaceBlock extends WrenchableDirectionalBlock implem
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return CCBShapes.PORTABLE_GAS_INTERFACE.get(state.getValue(FACING));
+    }
+
+    @Override
+    public InteractionResult onWrenched(BlockState state, UseOnContext context) {
+        Level level = context.getLevel();
+        BlockPos pos = context.getClickedPos();
+        Direction previousFacing = state.getValue(FACING);
+        InteractionResult result = super.onWrenched(state, context);
+        BlockState updatedState = level.getBlockState(pos);
+        if (!level.isClientSide && updatedState.getBlock() == this && updatedState.getValue(FACING) != previousFacing) {
+            withBlockEntityDo(level, pos, PortableGasInterfaceBlockEntity::onFacingChanged);
+        }
+        return result;
     }
 
     @Override
