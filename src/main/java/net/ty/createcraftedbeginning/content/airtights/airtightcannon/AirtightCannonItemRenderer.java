@@ -32,11 +32,17 @@ import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.lang.ref.WeakReference;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(value = Dist.CLIENT, modid = CreateCraftedBeginning.MOD_ID)
 public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer {
+    private static long cachedGameTime = Long.MIN_VALUE;
+    private static WeakReference<LocalPlayer> cachedPlayer = new WeakReference<>(null);
+    private static WeakReference<ClientLevel> cachedLevel = new WeakReference<>(null);
+    private static ItemStack cachedDecoratorIcon = ItemStack.EMPTY;
+
     public static final IItemDecorator DECORATOR = (guiGraphics, font, stack, xOffset, yOffset) -> {
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
@@ -49,29 +55,47 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
             return false;
         }
 
-        ItemStack flareItem = WeatherFlareSupplierUtils.getFirstFlare(player);
-        if (!flareItem.isEmpty()) {
-            renderItem(guiGraphics, xOffset, yOffset, flareItem);
-            return false;
+        ItemStack icon = getDecoratorIcon(player, level);
+        if (!icon.isEmpty()) {
+            renderItem(guiGraphics, xOffset, yOffset, icon);
         }
-
-        if (!CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
-            return false;
-        }
-
-        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
-        if (gasContent.isEmpty()) {
-            return false;
-        }
-
-        AirtightCannonVisualHandler visualHandler = AirtightCannonVisualHandlerUtils.of(gasContent.getGasType());
-        renderItem(guiGraphics, xOffset, yOffset, visualHandler.getRenderIcon(level));
         return false;
     };
 
     @SubscribeEvent
     public static void register(RegisterClientExtensionsEvent event) {
         event.registerItem(SimpleCustomRenderer.create(CCBItems.AIRTIGHT_CANNON.asItem(), new AirtightCannonItemRenderer()), CCBItems.AIRTIGHT_CANNON.asItem());
+    }
+
+    private static ItemStack getDecoratorIcon(LocalPlayer player, ClientLevel level) {
+        long gameTime = level.getGameTime();
+        if (cachedGameTime == gameTime && cachedPlayer.get() == player && cachedLevel.get() == level) {
+            return cachedDecoratorIcon;
+        }
+
+        cachedGameTime = gameTime;
+        if (cachedPlayer.get() != player) {
+            cachedPlayer = new WeakReference<>(player);
+        }
+        if (cachedLevel.get() != level) {
+            cachedLevel = new WeakReference<>(level);
+        }
+
+        ItemStack flareItem = WeatherFlareSupplierUtils.getFirstFlare(player);
+        if (!flareItem.isEmpty()) {
+            cachedDecoratorIcon = flareItem;
+            return cachedDecoratorIcon;
+        }
+
+        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
+        if (gasContent.isEmpty()) {
+            cachedDecoratorIcon = ItemStack.EMPTY;
+            return cachedDecoratorIcon;
+        }
+
+        AirtightCannonVisualHandler visualHandler = AirtightCannonVisualHandlerUtils.of(gasContent.getGasType());
+        cachedDecoratorIcon = visualHandler.getRenderIcon(level);
+        return cachedDecoratorIcon;
     }
 
     private static void renderItem(GuiGraphics guiGraphics, int xOffset, int yOffset, ItemStack icon) {

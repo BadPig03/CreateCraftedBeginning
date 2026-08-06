@@ -20,8 +20,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
 public class AirtightHatchEvents {
     @SubscribeEvent(priority = EventPriority.HIGH)
-    public static void routeCanisterInteractionToHatch(RightClickBlock event) {
-        if (event.getEntity().isShiftKeyDown() || event.getUseItem() != TriState.DEFAULT) {
+    public static void onRightClickBlock(RightClickBlock event) {
+        if (event.getEntity().isShiftKeyDown() || event.getUseItem() != TriState.DEFAULT || event.getUseBlock() != TriState.DEFAULT) {
             return;
         }
 

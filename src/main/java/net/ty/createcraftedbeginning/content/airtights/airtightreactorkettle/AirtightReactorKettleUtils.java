@@ -52,13 +52,15 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class AirtightReactorKettleUtils {
     private static final Object CRAFTING_RECIPE_CACHE_KEY = new Object();
-    private static final Object REACTOR_RECIPE_CACHE_KEY = new Object();
+    private static final Object REACTOR_KETTLE_RECIPE_CACHE_KEY = new Object();
     private static final AtomicBoolean RECIPE_TRIE_FAILURE_LOGGED = new AtomicBoolean();
+    private static final AtomicLong RECIPE_CACHE_VERSION = new AtomicLong();
 
     private AirtightReactorKettleUtils() {
     }
@@ -81,15 +83,23 @@ public final class AirtightReactorKettleUtils {
             return Optional.empty();
         }
 
+        Optional<ReactorKettleRecipe> recipe = findMatchingTrieRecipe(kettle, level);
+        if (recipe.isPresent()) {
+            return recipe;
+        }
+        return findMatchingLinearRecipe(kettle, level);
+    }
+
+    private static Optional<ReactorKettleRecipe> findMatchingTrieRecipe(AirtightReactorKettleBlockEntity kettle, Level level) {
         try {
-            IItemHandler items = kettle.getItemCapability();
-            IFluidHandler fluids = kettle.getFluidCapability();
-            IGasHandler gases = kettle.getGasCapability();
-            AirtightWithGasRecipeTrie<?> trie = AirtightWithGasRecipeTrieFinder.get(REACTOR_RECIPE_CACHE_KEY, level, holder -> holder.value() instanceof ReactorKettleRecipe);
-            Set<AbstractVariant> variants = AirtightWithGasRecipeTrie.getVariants(items, fluids, gases);
-            for (Recipe<?> candidate : trie.lookup(variants)) {
-                if (candidate instanceof ReactorKettleRecipe kettleRecipe && ReactorKettleRecipe.match(kettle, kettleRecipe)) {
-                    return Optional.of(kettleRecipe);
+            IItemHandler availableItems = kettle.getItemCapability();
+            IFluidHandler availableFluids = kettle.getFluidCapability();
+            IGasHandler availableGases = kettle.getGasCapability();
+            AirtightWithGasRecipeTrie<?> trie = AirtightWithGasRecipeTrieFinder.get(REACTOR_KETTLE_RECIPE_CACHE_KEY, level, holder -> holder.value() instanceof ReactorKettleRecipe);
+            Set<AbstractVariant> availableVariants = AirtightWithGasRecipeTrie.getVariants(availableItems, availableFluids, availableGases);
+            for (Recipe<?> candidate : trie.lookup(availableVariants)) {
+                if (candidate instanceof ReactorKettleRecipe recipe && ReactorKettleRecipe.match(kettle, recipe)) {
+                    return Optional.of(recipe);
                 }
             }
         } catch (ExecutionException | UncheckedExecutionException e) {
@@ -97,17 +107,25 @@ public final class AirtightReactorKettleUtils {
                 CreateCraftedBeginning.LOGGER.error("Failed to build the reactor kettle recipe trie; falling back to a linear recipe search", e);
             }
         }
+        return Optional.empty();
+    }
 
-        for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(REACTOR_RECIPE_CACHE_KEY, level, recipe -> recipe.value() instanceof ReactorKettleRecipe)) {
-            if (holder.value() instanceof ReactorKettleRecipe kettleRecipe && ReactorKettleRecipe.match(kettle, kettleRecipe)) {
-                return Optional.of(kettleRecipe);
+    private static Optional<ReactorKettleRecipe> findMatchingLinearRecipe(AirtightReactorKettleBlockEntity kettle, Level level) {
+        for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(REACTOR_KETTLE_RECIPE_CACHE_KEY, level, recipe -> recipe.value() instanceof ReactorKettleRecipe)) {
+            if (holder.value() instanceof ReactorKettleRecipe recipe && ReactorKettleRecipe.match(kettle, recipe)) {
+                return Optional.of(recipe);
             }
         }
         return Optional.empty();
     }
 
+    public static long getRecipeCacheVersion() {
+        return RECIPE_CACHE_VERSION.get();
+    }
+
     public static void invalidateRecipeCaches() {
         RECIPE_TRIE_FAILURE_LOGGED.set(false);
+        RECIPE_CACHE_VERSION.incrementAndGet();
     }
 
     public static float getTotalFluidUnits(SmartFluidTankBehaviour inputTank, SmartFluidTankBehaviour outputTank, float partialTicks) {
@@ -142,8 +160,8 @@ public final class AirtightReactorKettleUtils {
         return totalUnits;
     }
 
-    public static void insertItemEntity(AirtightReactorKettleStructuralBlockEntity structure, ItemEntity itemEntity) {
-        AirtightReactorKettleBlockEntity master = structure.getMasterBlockEntity();
+    public static void insertItemEntity(AirtightReactorKettleStructuralBlockEntity structural, ItemEntity itemEntity) {
+        AirtightReactorKettleBlockEntity master = structural.getMasterBlockEntity();
         if (master == null) {
             return;
         }
@@ -157,8 +175,8 @@ public final class AirtightReactorKettleUtils {
         itemEntity.setItem(remainder);
     }
 
-    public static void hurtInsideLivingEntities(AirtightReactorKettleStructuralBlockEntity structure, LivingEntity livingEntity) {
-        AirtightReactorKettleBlockEntity master = structure.getMasterBlockEntity();
+    public static void hurtInsideLivingEntities(AirtightReactorKettleStructuralBlockEntity structural, LivingEntity livingEntity) {
+        AirtightReactorKettleBlockEntity master = structural.getMasterBlockEntity();
         if (master == null) {
             return;
         }
@@ -230,7 +248,7 @@ public final class AirtightReactorKettleUtils {
         level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
     }
 
-    public static void refreshOtherFilters(AirtightReactorKettleStructuralBlockEntity structural, ItemStack stack) {
+    public static void updateRecipeFilter(AirtightReactorKettleStructuralBlockEntity structural, ItemStack stack) {
         AirtightReactorKettleBlockEntity master = structural.getMasterBlockEntity();
         if (master == null || master.isFilterChanged()) {
             return;
@@ -269,7 +287,7 @@ public final class AirtightReactorKettleUtils {
             return Optional.empty();
         }
 
-        for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(CRAFTING_RECIPE_CACHE_KEY, level, AirtightReactorKettleUtils::isAllowedRecipe)) {
+        for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(CRAFTING_RECIPE_CACHE_KEY, level, AirtightReactorKettleUtils::isAllowedAutomaticMixingRecipe)) {
             if (!(holder.value() instanceof CraftingRecipe craftingRecipe) || !canResultPassTest(kettle, craftingRecipe) || !canApplyCraftingRecipe(kettle, craftingRecipe)) {
                 continue;
             }
@@ -435,7 +453,11 @@ public final class AirtightReactorKettleUtils {
         return outputs;
     }
 
-    private static boolean isAllowedRecipe(RecipeHolder<? extends Recipe<?>> holder) {
+    private static boolean isAllowedAutomaticMixingRecipe(RecipeHolder<? extends Recipe<?>> holder) {
+        if (AllRecipeTypes.shouldIgnoreInAutomation(holder)) {
+            return false;
+        }
+
         Recipe<?> recipe = holder.value();
         if (!(recipe instanceof ShapelessRecipe)) {
             return false;
@@ -447,7 +469,7 @@ public final class AirtightReactorKettleUtils {
                 break;
             }
         }
-        return ingredientCount > 1 && !MechanicalPressBlockEntity.canCompress(recipe) && !AllRecipeTypes.shouldIgnoreInAutomation(holder);
+        return ingredientCount > 1 && !MechanicalPressBlockEntity.canCompress(recipe);
     }
 
     private static boolean canResultPassTest(AirtightReactorKettleBlockEntity kettle, CraftingRecipe recipe) {

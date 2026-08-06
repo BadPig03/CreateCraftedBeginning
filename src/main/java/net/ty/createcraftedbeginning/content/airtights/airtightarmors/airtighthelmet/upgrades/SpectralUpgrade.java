@@ -124,4 +124,13 @@ public enum SpectralUpgrade implements TickingAirtightUpgrade {
     public boolean shouldApplyEffect(Player player, ItemStack item) {
         return player.tickCount % SCAN_INTERVAL == 0;
     }
+
+    @Override
+    public void tick(Player player, ItemStack item) {
+        if (!shouldApplyEffect(player, item) || !isActive(player, item)) {
+            return;
+        }
+
+        applyEffect(player);
+    }
 }

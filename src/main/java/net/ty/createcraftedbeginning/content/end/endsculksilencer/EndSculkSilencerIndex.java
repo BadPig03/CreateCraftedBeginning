@@ -19,12 +19,16 @@ public final class EndSculkSilencerIndex {
 
     private static void decrementCoverage(Long2IntOpenHashMap coveredChunks, long chunkKey) {
         int count = coveredChunks.get(chunkKey);
-        if (count > 1) {
-            coveredChunks.put(chunkKey, count - 1);
+        if (count <= 0) {
+            return;
         }
-        else if (count == 1) {
+
+        if (count == 1) {
             coveredChunks.remove(chunkKey);
+            return;
         }
+
+        coveredChunks.put(chunkKey, count - 1);
     }
 
     public synchronized boolean hasCoverage(ResourceLocation dimension) {

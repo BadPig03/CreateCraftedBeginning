@@ -27,7 +27,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.platform.CCBClientBridge;
 import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandler;
 import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
@@ -36,6 +35,7 @@ import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers
 import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
 import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlareSupplierUtils;
 import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.platform.CCBClientBridge;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Nullable;
 
@@ -64,9 +64,6 @@ public class AirtightCannonItem extends Item implements CustomArmPoseItem {
             return InteractionResult.FAIL;
         }
 
-        if (!CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
-            return InteractionResult.FAIL;
-        }
         return use(context.getLevel(), player, context.getHand()).getResult();
     }
 
@@ -78,7 +75,7 @@ public class AirtightCannonItem extends Item implements CustomArmPoseItem {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack cannon = player.getItemInHand(hand);
-        if (!CanisterContainerSuppliers.isAnyContainerAvailable(player) || CanisterContainerSuppliers.getFirstAvailableGasContent(player).isEmpty()) {
+        if (CanisterContainerSuppliers.getFirstAvailableGasContent(player).isEmpty()) {
             return InteractionResultHolder.fail(cannon);
         }
 
@@ -131,7 +128,7 @@ public class AirtightCannonItem extends Item implements CustomArmPoseItem {
             return;
         }
 
-        OptionalDouble ratioResult = AirtightCannonUtils.getChargedRatio(cannon, player, MAX_CHARGE_TIME - timeCharged);
+        OptionalDouble ratioResult = AirtightCannonUtils.getChargedRatio(cannon, MAX_CHARGE_TIME - timeCharged);
         if (ratioResult.isEmpty()) {
             return;
         }

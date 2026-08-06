@@ -13,9 +13,10 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandler;
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandlerUtils;
+import net.ty.createcraftedbeginning.api.cannonhandlers.visual.CannonModelType;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.IdentityHashMap;
+import java.util.EnumMap;
 import java.util.Map;
 
 @ParametersAreNonnullByDefault
@@ -23,7 +24,7 @@ import java.util.Map;
 @OnlyIn(Dist.CLIENT)
 public class AirtightCannonWindChargeProjectileEntityRenderer extends EntityRenderer<AirtightCannonWindChargeProjectileEntity> {
     private static final int MIN_CAMERA_DISTANCE_SQUARED = 16;
-    private final Map<AirtightCannonVisualHandler, AirtightCannonWindChargeModel> models = new IdentityHashMap<>();
+    private final Map<CannonModelType, AirtightCannonWindChargeModel> models = new EnumMap<>(CannonModelType.class);
 
     public AirtightCannonWindChargeProjectileEntityRenderer(Context context) {
         super(context);
@@ -36,7 +37,8 @@ public class AirtightCannonWindChargeProjectileEntityRenderer extends EntityRend
         }
 
         AirtightCannonVisualHandler handler = AirtightCannonVisualHandlerUtils.of(windCharge.getGasHolder().value());
-        AirtightCannonWindChargeModel model = models.computeIfAbsent(handler, visualHandler -> new AirtightCannonWindChargeModel(AirtightCannonWindChargeModel.createLayerDefinition(visualHandler.getModelType()).bakeRoot()));
+        CannonModelType modelType = handler.getModelType();
+        AirtightCannonWindChargeModel model = models.computeIfAbsent(modelType, type -> new AirtightCannonWindChargeModel(AirtightCannonWindChargeModel.createLayerDefinition(type).bakeRoot()));
         float animationTick = windCharge.tickCount + partialTick;
         model.setupAnimation(handler.getAnimationType(), handler.getRotationSpeed(), animationTick);
 

@@ -77,6 +77,13 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
         return availableAxes;
     }
 
+    private static void markConnectionsDirty(Level level, BlockPos pos) {
+        GasTransportBehaviour transport = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
+        if (transport != null) {
+            transport.markConnectionsDirty();
+        }
+    }
+
     private static Axis getPlacementAxis(Set<Axis> availableAxes, Axis preferredAxis) {
         if (availableAxes.isEmpty() || availableAxes.contains(preferredAxis)) {
             return preferredAxis;
@@ -150,6 +157,7 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
             return;
         }
 
+        markConnectionsDirty(level, pos);
         level.scheduleTick(pos, this, 1, TickPriority.HIGH);
     }
 
@@ -159,13 +167,14 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
             return;
         }
 
+        markConnectionsDirty(level, pos);
         level.scheduleTick(pos, this, 1, TickPriority.HIGH);
     }
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock()) && !level.isClientSide) {
-            GasPropagator.propagatePipe(level, pos, state);
+            GasPropagator.propagatePipe(level, pos);
         }
         super.onRemove(state, level, pos, newState, isMoving);
     }
@@ -187,6 +196,6 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
 
     @Override
     public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        GasPropagator.propagateChangedPipe(level, pos, state);
+        GasPropagator.propagateChangedPipe(level, pos);
     }
 }

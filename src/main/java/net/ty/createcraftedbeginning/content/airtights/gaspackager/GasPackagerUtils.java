@@ -81,12 +81,15 @@ public final class GasPackagerUtils {
         long remaining = maxAmount;
         int tankCount = Math.max(0, handler.getTanks());
         for (int tank = 0; tank < tankCount; tank++) {
-            if (remaining <= 0 || drainedGases.size() >= BalloonGasContents.MAX_GAS_TYPES) {
+            if (remaining <= 0) {
                 break;
             }
 
             GasStack gas = handler.getGasInTank(tank);
             if (gas.isEmpty()) {
+                continue;
+            }
+            if (!containsMatchingGas(drainedGases, gas) && drainedGases.size() >= BalloonGasContents.MAX_GAS_TYPES) {
                 continue;
             }
 
@@ -103,76 +106,40 @@ public final class GasPackagerUtils {
                 continue;
             }
 
-            drainedGases.add(drained.copy());
+            addDrainedGas(drainedGases, drained);
             remaining -= drained.getAmount();
         }
         return new BalloonGasContents(drainedGases);
     }
 
+    private static boolean containsMatchingGas(List<GasStack> gases, GasStack target) {
+        return gases.stream().anyMatch(gas -> GasStack.isSameGasSameComponents(gas, target));
+    }
+
+    private static void addDrainedGas(List<GasStack> gases, GasStack added) {
+        for (int i = 0; i < gases.size(); i++) {
+            GasStack existing = gases.get(i);
+            if (!GasStack.isSameGasSameComponents(existing, added)) {
+                continue;
+            }
+
+            gases.set(i, existing.copyWithAmount(existing.getAmount() + added.getAmount()));
+            return;
+        }
+
+        gases.add(added.copy());
+    }
+
     public static boolean canInsertAll(IGasHandler handler, BalloonGasContents contents) {
         List<GasStack> gases = contents.copyGasStacks();
+        if (gases.isEmpty()) {
+            return true;
+        }
         if (gases.size() > 1) {
             return handler.tryFillAtomically(gases, GasAction.SIMULATE).isSuccess();
         }
 
-        List<SimulatedTank> tanks = new ArrayList<>(handler.getTanks());
-        for (int tank = 0; tank < handler.getTanks(); tank++) {
-            tanks.add(new SimulatedTank(handler.getGasInTank(tank).copy(), Math.max(0, handler.getTankCapacity(tank))));
-        }
-
-        for (GasStack gas : gases) {
-            if (handler.fill(gas.copy(), GasAction.SIMULATE) < gas.getAmount()) {
-                return false;
-            }
-
-            long remaining = gas.getAmount();
-            for (int tank = 0; tank < tanks.size() && remaining > 0; tank++) {
-                SimulatedTank tankState = tanks.get(tank);
-                if (tankState.gas().isEmpty() || !GasStack.isSameGasSameComponents(tankState.gas(), gas) || !handler.isGasValid(tank, gas)) {
-                    continue;
-                }
-
-                remaining -= tankState.fill(gas, remaining);
-            }
-
-            for (int tank = 0; tank < tanks.size() && remaining > 0; tank++) {
-                SimulatedTank tankState = tanks.get(tank);
-                if (!tankState.gas().isEmpty() || !handler.isGasValid(tank, gas)) {
-                    continue;
-                }
-
-                remaining -= tankState.fill(gas, remaining);
-            }
-
-            if (remaining > 0) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static final class SimulatedTank {
-        private final long capacity;
-        private GasStack gas;
-
-        private SimulatedTank(GasStack gas, long capacity) {
-            this.gas = gas.isEmpty() ? GasStack.EMPTY : gas.copy();
-            this.capacity = capacity;
-        }
-
-        private GasStack gas() {
-            return gas;
-        }
-
-        private long fill(GasStack resource, long requested) {
-            long current = gas.getAmount();
-            long accepted = Math.clamp(capacity - current, 0, requested);
-            if (accepted <= 0) {
-                return 0;
-            }
-
-            gas = resource.copyWithAmount(current + accepted);
-            return accepted;
-        }
+        GasStack gas = gases.getFirst();
+        return handler.fill(gas.copy(), GasAction.SIMULATE) >= gas.getAmount();
     }
 }

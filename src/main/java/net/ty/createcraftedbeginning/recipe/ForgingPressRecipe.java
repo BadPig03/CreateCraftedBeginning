@@ -60,6 +60,7 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
             ForgingPressRecipe recipe = builder.require(accessor.getBase()).require(accessor.getTemplate()).require(accessor.getAddition()).build().setSmithingRecipe(smithingRecipe);
             return new RecipeHolder<>(holder.id(), recipe);
         }
+
         return new RecipeHolder<>(holder.id(), builder.build());
     }
 

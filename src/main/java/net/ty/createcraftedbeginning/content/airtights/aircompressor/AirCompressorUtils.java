@@ -179,7 +179,8 @@ public final class AirCompressorUtils {
 
     public static int updateStoredHeat(int storedHeat, float speed, boolean operating, CoolantEfficiency coolantEfficiency, Level level) {
         int netHeat = getHeatAdded(speed, operating) - coolantEfficiency.getHeatReduced(level);
-        return clampStoredHeat(storedHeat + netHeat);
+        long updatedHeat = (long) storedHeat + netHeat;
+        return (int) Math.max(0L, Math.min(updatedHeat, getMaxStoredHeat()));
     }
 
     public static int readStoredHeat(ItemStack compressor) {

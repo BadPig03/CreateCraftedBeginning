@@ -44,7 +44,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Collections;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
@@ -139,13 +138,20 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
 
     @Override
     public List<ItemStack> getDrops(BlockState state, LootParams.@NotNull Builder params) {
+        List<ItemStack> drops = super.getDrops(state, params);
         if (!(params.getParameter(LootContextParams.BLOCK_ENTITY) instanceof AirCompressorBlockEntity compressor) || compressor.getStoredHeat() == 0) {
-            return super.getDrops(state, params);
+            return drops;
         }
 
-        ItemStack item = new ItemStack(this);
-        compressor.saveToItem(item);
-        return Collections.singletonList(item);
+        for (ItemStack drop : drops) {
+            if (!drop.is(asItem())) {
+                continue;
+            }
+
+            compressor.saveToItem(drop);
+            break;
+        }
+        return drops;
     }
 
     @Override
@@ -206,7 +212,7 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
     }
 
     private void dropStoredState(Level level, BlockPos pos) {
-        if (!(level.getBlockEntity(pos) instanceof AirCompressorBlockEntity compressor) || compressor.getOverheatState() == OverheatState.NORMAL) {
+        if (!(level.getBlockEntity(pos) instanceof AirCompressorBlockEntity compressor) || compressor.getStoredHeat() == 0) {
             return;
         }
 

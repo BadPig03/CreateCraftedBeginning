@@ -14,7 +14,6 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.ingredients.GasStackLinkedSet;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterUtils.GasFilterData;
@@ -24,7 +23,6 @@ import org.jetbrains.annotations.Contract;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -56,7 +54,6 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
     protected void initAndReadInventory(ItemStack filter) {
         GasFilterData data = GasFilterItem.getFilterData(filter);
         filterInventory = GasFilterItem.createFilterInventory(data);
-        normalizeFilterInventory();
         blacklist = data.blacklist();
     }
 
@@ -208,19 +205,6 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
 
     protected boolean mayPlace(ItemStack stack) {
         return CanisterContainerSuppliers.isValidCanisterContainer(stack);
-    }
-
-    private void normalizeFilterInventory() {
-        Set<GasStack> seen = GasStackLinkedSet.createTypeAndComponentsSet();
-        for (int i = 0; i < filterInventory.getSlots(); i++) {
-            GasStack gas = GasVirtualUtils.getGasType(filterInventory.getStackInSlot(i));
-            if (gas.isEmpty() || !seen.add(gas)) {
-                filterInventory.setStackInSlot(i, ItemStack.EMPTY);
-                continue;
-            }
-
-            filterInventory.setStackInSlot(i, GasVirtualUtils.createVirtualItem(gas));
-        }
     }
 
     private int findFirstEmptySlot() {

@@ -97,7 +97,7 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
             return ItemInteractionResult.FAIL;
         }
 
-        CCBSoundEvents.CANISTER_REMOVED.playOnServer(player.level(), player.blockPosition(), 1, 1);
+        CCBSoundEvents.CANISTER_REMOVED.playOnServer(player.level(), pos, 1, 1);
         return ItemInteractionResult.SUCCESS;
     }
 
@@ -220,11 +220,6 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
 
         Direction facing = state.getValue(FACING);
         BlockPos targetPos = pos.relative(facing);
-        if (level.getBlockEntity(targetPos) == null) {
-            GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_face");
-            return ItemInteractionResult.FAIL;
-        }
-
         IGasHandler target = level.getCapability(GasHandler.BLOCK, targetPos, facing.getOpposite());
         if (target == null || !hasValidAttachment(level, pos, state)) {
             GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_face");
@@ -235,7 +230,7 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
             return ItemInteractionResult.FAIL;
         }
 
-        CCBSoundEvents.CANISTER_ADDED.playOnServer(player.level(), player.blockPosition(), 1, 1);
+        CCBSoundEvents.CANISTER_ADDED.playOnServer(player.level(), pos, 1, 1);
         return ItemInteractionResult.SUCCESS;
     }
 

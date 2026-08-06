@@ -18,7 +18,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
@@ -199,6 +198,16 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         GasAmountUtils.precise(gas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmountUtils.precise(capacity).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
     }
 
+    private static long getEffectiveCapacity(long configuredCapacity, long currentCapacity, long gasAmount) {
+        long normalizedCapacity = Math.max(0, configuredCapacity);
+        long normalizedGasAmount = Math.max(0, gasAmount);
+        if (normalizedGasAmount <= normalizedCapacity) {
+            return normalizedCapacity;
+        }
+
+        return Math.max(Math.max(0, currentCapacity), normalizedGasAmount);
+    }
+
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         tankBehaviour = SmartGasTankBehaviour.single(this, 0).forbidExtraction().forbidInsertion();
@@ -259,6 +268,7 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         }
 
         tag.put(COMPOUND_KEY_CANISTER, canister.saveOptional(provider));
+        tag.putLong(COMPOUND_KEY_CAPACITY, getHatchCapacity());
     }
 
     @Override
@@ -273,6 +283,9 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         }
 
         canister = tag.contains(COMPOUND_KEY_CANISTER) ? ItemStack.parseOptional(provider, tag.getCompound(COMPOUND_KEY_CANISTER)) : ItemStack.EMPTY;
+        if (!canister.isEmpty() && tag.contains(COMPOUND_KEY_CAPACITY)) {
+            tankBehaviour.getPrimaryHandler().setCapacity(Math.max(0, tag.getLong(COMPOUND_KEY_CAPACITY)));
+        }
         updateCapacity(false);
     }
 
@@ -335,10 +348,6 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
 
         Direction facing = state.getValue(AirtightHatchBlock.FACING);
         BlockPos targetPos = pos.relative(facing);
-        BlockEntity target = level.getBlockEntity(targetPos);
-        if (target == null || target instanceof AirtightHatchBlockEntity) {
-            return null;
-        }
         return level.getCapability(GasHandler.BLOCK, targetPos, facing.getOpposite());
     }
 
@@ -348,7 +357,6 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
             return ItemStack.EMPTY;
         }
 
-        stack.set(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES, List.of(Math.max(0, getHatchCapacity())));
         stack.set(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, List.of(getHatchGasContent()));
         return stack;
     }
@@ -395,8 +403,8 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         }
 
         CanisterType type = CanisterContainerSuppliers.isValidCreativeGasCanister(newCanister) ? CanisterType.CREATIVE : CanisterType.NORMAL;
-        long capacity = Math.max(0, contents.getTankCapacity(0));
         GasStack gas = contents.getGasInTank(0).copy();
+        long capacity = getEffectiveCapacity(contents.getTankCapacity(0), 0, gas.getAmount());
 
         ItemStack oldCanister = canister;
         long oldCapacity = getHatchCapacity();
@@ -483,12 +491,13 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
             return;
         }
 
-        long capacity = Math.max(0, canisterContents.getTankCapacity(0));
-        if (getHatchCapacity() == capacity) {
+        SmartGasTank tank = tankBehaviour.getPrimaryHandler();
+        long capacity = getEffectiveCapacity(canisterContents.getTankCapacity(0), tank.getCapacity(), tank.getGasAmount());
+        if (tank.getCapacity() == capacity) {
             return;
         }
 
-        tankBehaviour.getPrimaryHandler().setCapacity(capacity);
+        tank.setCapacity(capacity);
         if (!syncImmediately || level == null || level.isClientSide) {
             return;
         }

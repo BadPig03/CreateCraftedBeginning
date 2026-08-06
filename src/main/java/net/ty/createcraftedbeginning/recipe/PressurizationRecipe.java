@@ -76,12 +76,12 @@ public class PressurizationRecipe extends StandardProcessingWithGasRecipe<Single
 
     @Override
     protected int getMaxInputCount() {
-        return 1;
+        return 0;
     }
 
     @Override
     protected int getMaxOutputCount() {
-        return 1;
+        return 0;
     }
 
     @Override
@@ -92,5 +92,19 @@ public class PressurizationRecipe extends StandardProcessingWithGasRecipe<Single
     @Override
     protected int getMaxGasOutputCount() {
         return 1;
+    }
+
+    @Override
+    protected void validateSpecial(List<String> errors) {
+        if (gasIngredients.size() != 1) {
+            errors.add("Pressurization recipes must have exactly one gas input.");
+        }
+
+        if (gasResults.size() != 1) {
+            errors.add("Pressurization recipes must have exactly one gas output.");
+        }
+        else if (gasResults.getFirst().isEmpty()) {
+            errors.add("Pressurization recipe gas output must not be empty.");
+        }
     }
 }

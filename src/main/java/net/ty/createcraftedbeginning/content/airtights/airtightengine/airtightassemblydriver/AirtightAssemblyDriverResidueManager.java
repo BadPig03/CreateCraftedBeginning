@@ -181,7 +181,7 @@ public class AirtightAssemblyDriverResidueManager {
         }
 
         AirtightAssemblyDriverFlowMeter flowMeter = driverCore.getFlowMeter();
-        if (flowMeter.getGasSupply() == 0 || flowMeter.getGasType().isEmpty()) {
+        if (driverCore.getLevelCalculator().getSupplyLevel() <= 0 || flowMeter.getGasType().isEmpty()) {
             handleGenerationFailure();
             return;
         }

@@ -161,7 +161,7 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock()) && !level.isClientSide) {
-            GasPropagator.propagatePipe(level, pos, state);
+            GasPropagator.propagatePipe(level, pos);
         }
         super.onRemove(state, level, pos, newState, isMoving);
     }
@@ -210,7 +210,7 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
 
     @Override
     public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        GasPropagator.propagateChangedPipe(level, pos, state);
+        GasPropagator.propagateChangedPipe(level, pos);
     }
 
     @Override

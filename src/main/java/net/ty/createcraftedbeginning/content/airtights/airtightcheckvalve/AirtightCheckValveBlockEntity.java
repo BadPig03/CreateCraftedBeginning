@@ -9,7 +9,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTransporter;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AxisGasTransportBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
@@ -57,11 +56,6 @@ public class AirtightCheckValveBlockEntity extends SmartBlockEntity implements I
         @Override
         public boolean allowsOutboundFlow(BlockState state, Direction direction) {
             return canHaveFlowToward(state, direction) && AirtightCheckValveBlock.isOutputSide(state, direction);
-        }
-
-        @Override
-        public boolean canPullGasFrom(GasStack gas, BlockState state, Direction direction) {
-            return AirtightCheckValveBlock.isInputSide(state, direction);
         }
     }
 }

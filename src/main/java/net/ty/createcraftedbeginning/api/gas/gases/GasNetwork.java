@@ -28,11 +28,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
@@ -74,7 +74,7 @@ public final class GasNetwork {
         frontier = new ArrayDeque<>();
         frontierMembership = new HashSet<>();
         visited = new HashSet<>();
-        targets = new LinkedHashMap<>();
+        targets = new TreeMap<>(GasNetwork::compareBlockFaces);
         cache = new HashMap<>();
         queued = new ArrayDeque<>();
         reset();
@@ -517,9 +517,7 @@ public final class GasNetwork {
         Set<IGasHandler> handlers = Collections.newSetFromMap(new IdentityHashMap<>());
         BlockFace sourceFace = start.getOpposite();
         InventoryIdentifier sourceIdentifier = getInventoryIdentifier(sourceFace);
-        List<Entry<BlockFace, GasFlowSource>> targetEntries = new ArrayList<>(targets.entrySet());
-        targetEntries.sort((first, second) -> compareBlockFaces(first.getKey(), second.getKey()));
-        for (Entry<BlockFace, GasFlowSource> entry : targetEntries) {
+        for (Entry<BlockFace, GasFlowSource> entry : targets.entrySet()) {
             ICapabilityProvider<IGasHandler> provider = entry.getValue().getGasHandlerProvider();
             if (provider == null) {
                 continue;
@@ -619,7 +617,7 @@ public final class GasNetwork {
 
         GasTransportBehaviour behaviour = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
         if (behaviour == null) {
-            return behaviour;
+            return null;
         }
 
         cache.put(pos, new WeakReference<>(behaviour));

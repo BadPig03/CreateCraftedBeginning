@@ -27,12 +27,10 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
-    private final Direction lastDirection;
     private TeslaTurbineBlockEntity turbine;
 
     public TeslaTurbineNozzleBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
-        lastDirection = state.getValue(TeslaTurbineNozzleBlock.FACING);
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
@@ -101,25 +99,24 @@ public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements I
     }
 
     @Override
-    public void tick() {
-        super.tick();
+    public void invalidate() {
+        super.invalidate();
+        invalidateCapabilities();
+    }
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
         if (level == null || level.isClientSide) {
             return;
         }
 
-        if (turbine == null || turbine.isRemoved()) {
-            turbine = getTurbine();
-        }
-        if (turbine != null && lastDirection == getBlockState().getValue(TeslaTurbineNozzleBlock.FACING)) {
+        BlockState state = getBlockState();
+        if (!(state.getBlock() instanceof TeslaTurbineNozzleBlock nozzle)) {
             return;
         }
-
-        level.destroyBlock(worldPosition, true);
-    }
-
-    @Override
-    public void invalidate() {
-        super.invalidate();
-        invalidateCapabilities();
+        if (!level.getBlockTicks().hasScheduledTick(worldPosition, nozzle)) {
+            level.scheduleTick(worldPosition, nozzle, 1);
+        }
     }
 }

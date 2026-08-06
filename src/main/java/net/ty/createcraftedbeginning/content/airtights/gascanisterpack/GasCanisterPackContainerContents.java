@@ -2,8 +2,8 @@ package net.ty.createcraftedbeginning.content.airtights.gascanisterpack;
 
 import net.createmod.catnip.data.Pair;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Unmodifiable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.IntStream;
 
@@ -33,14 +34,65 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
 
     public GasCanisterPackContainerContents(ItemStack pack) {
         this.pack = pack;
-        gases = new ArrayList<>(pack.getOrDefault(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, new ArrayList<>(List.of(GasStack.EMPTY, GasStack.EMPTY, GasStack.EMPTY, GasStack.EMPTY))));
-        capacities = new ArrayList<>(pack.getOrDefault(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES, new ArrayList<>(List.of(0L, 0L, 0L, 0L))));
-        compoundTags = new ArrayList<>(pack.getOrDefault(CCBDataComponents.CANISTER_PACK_CONTAINER_COMPOUNDS, new ArrayList<>(List.of(new CompoundTag(), new CompoundTag(), new CompoundTag(), new CompoundTag()))));
-        creatives = new ArrayList<>(pack.getOrDefault(CCBDataComponents.CANISTER_PACK_CONTAINER_CREATIVES, new ArrayList<>(List.of(false, false, false, false))));
+        capacities = normalizeCapacities(pack.getOrDefault(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES, List.of()));
+        gases = normalizeGases(pack.getOrDefault(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, List.of()), capacities);
+        compoundTags = normalizeCompounds(pack.getOrDefault(CCBDataComponents.CANISTER_PACK_CONTAINER_COMPOUNDS, List.of()));
+        creatives = normalizeCreatives(pack.getOrDefault(CCBDataComponents.CANISTER_PACK_CONTAINER_CREATIVES, List.of()));
     }
 
     private static boolean isInvalidTank(int tank) {
         return tank < 0 || tank >= MAX_COUNT;
+    }
+
+    private static GasStack normalizeGas(GasStack gas, long capacity) {
+        if (gas.isEmpty() || capacity <= 0) {
+            return GasStack.EMPTY;
+        }
+        return gas.copyWithAmount(Math.min(capacity, gas.getAmount()));
+    }
+
+    private static List<GasStack> normalizeGases(List<GasStack> storedGases, List<Long> capacities) {
+        List<GasStack> normalized = new ArrayList<>(MAX_COUNT);
+        for (int tank = 0; tank < MAX_COUNT; tank++) {
+            GasStack gas = tank < storedGases.size() ? storedGases.get(tank) : GasStack.EMPTY;
+            normalized.add(normalizeGas(gas, capacities.get(tank)));
+        }
+        return normalized;
+    }
+
+    private static List<Long> normalizeCapacities(List<Long> storedCapacities) {
+        List<Long> normalized = new ArrayList<>(MAX_COUNT);
+        for (int tank = 0; tank < MAX_COUNT; tank++) {
+            long capacity = tank < storedCapacities.size() ? storedCapacities.get(tank) : 0L;
+            normalized.add(Math.max(0, capacity));
+        }
+        return normalized;
+    }
+
+    private static List<CompoundTag> normalizeCompounds(List<CompoundTag> storedCompounds) {
+        List<CompoundTag> normalized = new ArrayList<>(MAX_COUNT);
+        for (int tank = 0; tank < MAX_COUNT; tank++) {
+            CompoundTag compoundTag = tank < storedCompounds.size() ? storedCompounds.get(tank) : null;
+            normalized.add(compoundTag == null ? new CompoundTag() : compoundTag.copy());
+        }
+        return normalized;
+    }
+
+    private static List<Boolean> normalizeCreatives(List<Boolean> storedCreatives) {
+        List<Boolean> normalized = new ArrayList<>(MAX_COUNT);
+        for (int tank = 0; tank < MAX_COUNT; tank++) {
+            Boolean creative = tank < storedCreatives.size() ? storedCreatives.get(tank) : false;
+            normalized.add(creative);
+        }
+        return normalized;
+    }
+
+    private static List<GasStack> copyGases(List<GasStack> gases) {
+        return gases.stream().map(GasStack::copy).toList();
+    }
+
+    private static List<CompoundTag> copyCompounds(List<CompoundTag> compoundTags) {
+        return compoundTags.stream().map(CompoundTag::copy).toList();
     }
 
     @Override
@@ -87,7 +139,7 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
             return drainedGas;
         }
 
-        gases.get(tank).shrink(drained);
+        gases.set(tank, gas.copyWithAmount(gas.getAmount() - drained));
         save();
         return drainedGas;
     }
@@ -97,11 +149,7 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
         if (isInvalidTank(tank)) {
             return GasStack.EMPTY;
         }
-
-        GasStack gas = gases.get(tank);
-        long capacity = capacities.get(tank);
-        gas.setAmount(Mth.clamp(gas.getAmount(), 0, capacity));
-        return gas;
+        return normalizeGas(gases.get(tank), capacities.get(tank));
     }
 
     @Override
@@ -144,7 +192,7 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
 
     @Override
     public long fill(int tank, GasStack resource, GasAction action) {
-        if (resource.isEmpty() || isInvalidTank(tank)) {
+        if (resource.isEmpty() || isInvalidTank(tank) || creatives.get(tank)) {
             return 0;
         }
 
@@ -170,11 +218,11 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
 
         long space = capacity - gas.getAmount();
         long filled = Math.min(space, resource.getAmount());
-        gases.get(tank).grow(filled);
         if (filled <= 0) {
             return filled;
         }
 
+        gases.set(tank, gas.copyWithAmount(gas.getAmount() + filled));
         save();
         return filled;
     }
@@ -197,8 +245,26 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
 
     @Override
     public void setCapacity(int tank, long capacity) {
-        capacities.set(tank, capacity);
-        saveCapacities();
+        if (isInvalidTank(tank)) {
+            return;
+        }
+
+        long storedCapacity = Math.max(0, capacity);
+        GasStack storedGas = normalizeGas(gases.get(tank), storedCapacity);
+        boolean capacityChanged = capacities.get(tank) != storedCapacity;
+        boolean gasChanged = !gases.get(tank).equals(storedGas);
+        if (!capacityChanged && !gasChanged) {
+            return;
+        }
+
+        capacities.set(tank, storedCapacity);
+        gases.set(tank, storedGas);
+        if (gasChanged) {
+            saveContents();
+        }
+        if (capacityChanged) {
+            saveCapacities();
+        }
     }
 
     public boolean isEmpty(int tank) {
@@ -213,15 +279,15 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
         if (isInvalidTank(tank)) {
             return new CompoundTag();
         }
-        return compoundTags.get(tank);
+        return compoundTags.get(tank).copy();
     }
 
     public void setCompoundTag(int tank, CompoundTag compoundTag) {
-        if (isInvalidTank(tank)) {
+        if (isInvalidTank(tank) || compoundTags.get(tank).equals(compoundTag)) {
             return;
         }
 
-        compoundTags.set(tank, compoundTag);
+        compoundTags.set(tank, compoundTag.copy());
         saveCompounds();
     }
 
@@ -230,7 +296,7 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
     }
 
     public void setCreatives(int tank, boolean creative) {
-        if (isInvalidTank(tank)) {
+        if (isInvalidTank(tank) || creatives.get(tank) == creative) {
             return;
         }
 
@@ -238,20 +304,50 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
         saveCreatives();
     }
 
+    public void replaceCanister(int tank, GasStack gas, long capacity, CompoundTag compoundTag, boolean creative) {
+        if (isInvalidTank(tank)) {
+            return;
+        }
+
+        setCanister(tank, new CanisterData(gas, capacity, compoundTag, creative));
+        save();
+    }
+
+    public void replaceCanisters(List<CanisterData> canisters) {
+        for (int tank = 0; tank < MAX_COUNT; tank++) {
+            CanisterData canister = tank < canisters.size() && canisters.get(tank) != null ? canisters.get(tank) : CanisterData.EMPTY;
+            setCanister(tank, canister);
+        }
+        save();
+    }
+
+    private void setCanister(int tank, CanisterData canister) {
+        capacities.set(tank, canister.capacity());
+        gases.set(tank, canister.gas().copy());
+        compoundTags.set(tank, canister.compoundTag().copy());
+        creatives.set(tank, canister.creative());
+    }
+
     public void saveContents() {
-        pack.set(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, gases);
+        setComponentIfChanged(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, copyGases(gases));
     }
 
     public void saveCapacities() {
-        pack.set(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES, capacities);
+        setComponentIfChanged(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES, List.copyOf(capacities));
     }
 
     public void saveCompounds() {
-        pack.set(CCBDataComponents.CANISTER_PACK_CONTAINER_COMPOUNDS, compoundTags);
+        setComponentIfChanged(CCBDataComponents.CANISTER_PACK_CONTAINER_COMPOUNDS, copyCompounds(compoundTags));
     }
 
     public void saveCreatives() {
-        pack.set(CCBDataComponents.CANISTER_PACK_CONTAINER_CREATIVES, creatives);
+        setComponentIfChanged(CCBDataComponents.CANISTER_PACK_CONTAINER_CREATIVES, List.copyOf(creatives));
+    }
+
+    private <T> void setComponentIfChanged(DataComponentType<T> component, T value) {
+        if (!Objects.equals(pack.get(component), value)) {
+            pack.set(component, value);
+        }
     }
 
     public Pair<GasStack, Pair<Long, Boolean>> getFirstNonEmptyPair() {
@@ -264,5 +360,15 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
             return Pair.of(gas, Pair.of(getTankCapacity(tank), getCreatives(tank)));
         }
         return Pair.of(GasStack.EMPTY, Pair.of(0L, false));
+    }
+
+    public record CanisterData(GasStack gas, long capacity, CompoundTag compoundTag, boolean creative) {
+        private static final CanisterData EMPTY = new CanisterData(GasStack.EMPTY, 0, new CompoundTag(), false);
+
+        public CanisterData {
+            capacity = Math.max(0, capacity);
+            gas = normalizeGas(gas, capacity);
+            compoundTag = compoundTag.copy();
+        }
     }
 }

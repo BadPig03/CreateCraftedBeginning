@@ -230,25 +230,37 @@ public abstract class AirtightUpgradableMenu extends MenuBase<ItemStack> {
             return ItemStack.EMPTY;
         }
 
-        ItemStack stack = slot.getItem();
+        ItemStack slotStack = slot.getItem();
+        ItemStack originalStack = slotStack.copy();
         if (slotIndex >= PLAYER_INVENTORY_SLOTS) {
-            if (!moveItemStackTo(stack, 0, PLAYER_INVENTORY_SLOTS, true)) {
-                slot.setChanged();
+            if (!moveItemStackTo(slotStack, 0, PLAYER_INVENTORY_SLOTS, true)) {
+                return ItemStack.EMPTY;
             }
+        }
+        else {
+            if (!menuInventory.getStackInSlot(UPGRADE_SLOT_INDEX).isEmpty() || !isValidUpgrade(slotStack)) {
+                return ItemStack.EMPTY;
+            }
+
+            int upgradeSlot = PLAYER_INVENTORY_SLOTS + UPGRADE_SLOT_INDEX;
+            if (!moveItemStackTo(slotStack, upgradeSlot, upgradeSlot + 1, false)) {
+                return ItemStack.EMPTY;
+            }
+        }
+
+        if (slotStack.isEmpty()) {
+            slot.set(ItemStack.EMPTY);
+        }
+        else {
+            slot.setChanged();
+        }
+
+        if (slotStack.getCount() == originalStack.getCount()) {
             return ItemStack.EMPTY;
         }
 
-        if (!menuInventory.getStackInSlot(UPGRADE_SLOT_INDEX).isEmpty() || !isValidUpgrade(stack)) {
-            return ItemStack.EMPTY;
-        }
-
-        int upgradeSlot = PLAYER_INVENTORY_SLOTS + UPGRADE_SLOT_INDEX;
-        if (!moveItemStackTo(stack, upgradeSlot, upgradeSlot + 1, false)) {
-            return ItemStack.EMPTY;
-        }
-
-        slot.setChanged();
-        return stack;
+        slot.onTake(player, slotStack);
+        return originalStack;
     }
 
     @Override

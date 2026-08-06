@@ -54,6 +54,7 @@ public final class CrateUnpackingHandler<B extends CratesBlockEntity> implements
                     return false;
                 }
             }
+
             return true;
         });
     }

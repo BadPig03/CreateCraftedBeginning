@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.api.gas.gases;
 
 import com.simibubi.create.foundation.ICapabilityProvider;
-import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -13,7 +12,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.GasPropagator.AdjacentTarget;
 import net.ty.createcraftedbeginning.api.gas.gases.flowsources.AdjacentPipeSource;
 import net.ty.createcraftedbeginning.api.gas.gases.flowsources.BlockedSource;
 import net.ty.createcraftedbeginning.api.gas.gases.flowsources.ExternalHandlerSource;
@@ -36,6 +35,7 @@ public final class GasPipeConnection {
     private final Direction side;
     private float inboundPressure;
     private float outwardPressure;
+    private boolean pressureContributed;
 
     @Nullable
     private GasFlowSource source;
@@ -150,6 +150,7 @@ public final class GasPipeConnection {
      */
     public void setPumpPressure(boolean inbound, float amount) {
         amount = amount > 0 && Float.isFinite(amount) ? amount : 0;
+        pressureContributed = amount > 0;
         inboundPressure = inbound ? amount : 0;
         outwardPressure = inbound ? 0 : amount;
     }
@@ -183,18 +184,18 @@ public final class GasPipeConnection {
         }
 
         BlockFace location = new BlockFace(pos, side);
-        if (GasPropagator.isOpenEnded(level, pos, side)) {
+        AdjacentTarget target = GasPropagator.resolveAdjacentTarget(level, pos, side);
+        if (target.isOpenEnded()) {
             source = previousSource instanceof OpenEndedSource ? previousSource : new OpenEndedSource(location);
             return true;
         }
 
-        if (GasCapabilities.hasGasCapability(level, location.getConnectedPos(), side.getOpposite())) {
+        if (target.hasGasCapability()) {
             source = new ExternalHandlerSource(location);
             return true;
         }
 
-        GasTransportBehaviour behaviour = BlockEntityBehaviour.get(level, relativePos, GasTransportBehaviour.TYPE);
-        source = behaviour == null ? new BlockedSource(location) : new AdjacentPipeSource(location);
+        source = target.behaviour() == null ? new BlockedSource(location) : new AdjacentPipeSource(location);
         return true;
     }
 
@@ -322,6 +323,16 @@ public final class GasPipeConnection {
     }
 
     /**
+     * Checks whether this connection received any pressure contribution since
+     * the last pressure wipe, even if opposing contributions cancelled out.
+     *
+     * @return {@code true} if pressure was contributed; otherwise {@code false}
+     */
+    public boolean hasPressureContribution() {
+        return pressureContributed;
+    }
+
+    /**
      * Advances the visual flow progress for one game tick.
      *
      * @param level the level in which the operation is performed
@@ -433,6 +444,7 @@ public final class GasPipeConnection {
     private void readPersistentData(CompoundTag connectionData, Provider provider, BlockPos blockPos) {
         inboundPressure = 0;
         outwardPressure = 0;
+        pressureContributed = false;
         flow = null;
         retireNetwork();
         source = null;
@@ -447,13 +459,14 @@ public final class GasPipeConnection {
     }
 
     /**
-     * Prepares this object for for removal.
+     * Prepares this object for removal.
      *
      * @return {@code true} if the condition is satisfied; otherwise {@code false}
      */
     public boolean prepareForRemoval() {
         inboundPressure = 0;
         outwardPressure = 0;
+        pressureContributed = false;
         flow = null;
         retireNetwork();
         if (network != null) {
@@ -471,6 +484,7 @@ public final class GasPipeConnection {
     public void wipePressure() {
         inboundPressure = 0;
         outwardPressure = 0;
+        pressureContributed = false;
         if (source != null) {
             previousSource = source;
         }
@@ -512,6 +526,7 @@ public final class GasPipeConnection {
             return;
         }
 
+        pressureContributed = true;
         if (inbound) {
             inboundPressure += newAmount;
         }

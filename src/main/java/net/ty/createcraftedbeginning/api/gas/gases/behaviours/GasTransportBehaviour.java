@@ -11,7 +11,6 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities;
@@ -21,7 +20,6 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.collisions.GasCollisionEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes;
-import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AxisGasPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBBlockTags;
 import org.jetbrains.annotations.Nullable;
@@ -39,11 +37,14 @@ import java.util.function.Predicate;
 public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     public static final BehaviourType<GasTransportBehaviour> TYPE = new BehaviourType<>();
 
+    private static final int CONNECTION_REFRESH_INTERVAL = 20;
+
     private EnumMap<Direction, GasPipeConnection> interfaces;
     @Nullable
     private List<GasPipeConnection> retiredConnections;
     private UpdatePhase phase;
-    private boolean clientModelRefreshPending;
+    private boolean connectionsDirty;
+    private int connectionRefreshTicks;
 
     /**
      * Creates a new {@code GasTransportBehaviour} instance.
@@ -53,7 +54,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     public GasTransportBehaviour(SmartBlockEntity be) {
         super(be);
         phase = UpdatePhase.WAIT_FOR_PUMPS;
-        clientModelRefreshPending = true;
+        connectionsDirty = true;
     }
 
     /**
@@ -66,14 +67,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
      * @return {@code true} if this value is valid airtight components; otherwise {@code false}
      */
     public static boolean isValidAirtightComponents(@Nullable Level level, BlockPos pos, BlockState state, Direction direction) {
-        if (level == null) {
-            return false;
-        }
-
-        boolean openEnded = state.getDestroySpeed(level, pos) != -1 && (state.canBeReplaced() || CCBBlockTags.GAS_SOURCES.matches(state));
-        boolean hasGasCapability = GasCapabilities.hasGasCapability(level, pos, direction.getOpposite());
-        boolean isAirtight = state.getBlock() instanceof IAirtightComponent component && component.isAirtight(pos, state, direction);
-        return openEnded || hasGasCapability || isAirtight;
+        return level != null && (state.getBlock() instanceof IAirtightComponent component && component.isAirtight(pos, state, direction) || state.getDestroySpeed(level, pos) != -1 && (state.canBeReplaced() || CCBBlockTags.GAS_SOURCES.matches(state)) || GasCapabilities.hasGasCapability(level, pos, direction.getOpposite()));
     }
 
     /**
@@ -89,7 +83,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
      * Checks whether a connection may exist while the block entity is being
      * deserialized and has not received its level yet.
      * <p>
-     * This method must only inspect the block state. Neighbor and capability
+     * This method must only inspect the block state. Neighbour and capability
      * checks are deferred until {@link #initialize()} or the next tick.
      */
     public abstract boolean canHaveFlowTowardWithoutLevel(BlockState state, Direction direction);
@@ -130,26 +124,6 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         return connection.provideOutboundFlow();
     }
 
-    private void refreshClientModelIfNeeded(@Nullable Level level) {
-        if (!clientModelRefreshPending || level == null) {
-            return;
-        }
-
-        clientModelRefreshPending = false;
-        if (!level.isClientSide || blockEntity.isVirtual()) {
-            return;
-        }
-
-        BlockState state = blockEntity.getBlockState();
-        Block block = state.getBlock();
-        if (!(block instanceof AxisGasPipeBlock) && !(block instanceof AirtightPumpBlock)) {
-            return;
-        }
-
-        blockEntity.requestModelDataUpdate();
-        level.sendBlockUpdated(getPos(), state, state, Block.UPDATE_CLIENTS);
-    }
-
     private void createConnectionData() {
         if (interfaces != null) {
             return;
@@ -172,6 +146,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         Level level = getWorld();
         if (interfaces == null) {
             createConnectionData();
+            return;
         }
         if (level == null) {
             return;
@@ -231,6 +206,34 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     protected final void refreshConnections() {
         refreshConnectionData();
         recoverRetiredConnections();
+        connectionsDirty = false;
+        connectionRefreshTicks = CONNECTION_REFRESH_INTERVAL;
+    }
+
+    private void refreshConnectionsIfNeeded() {
+        if (!connectionsDirty && --connectionRefreshTicks > 0) {
+            recoverRetiredConnections();
+            return;
+        }
+
+        refreshConnections();
+    }
+
+    /**
+     * Marks the cached connection topology for refresh on the next behaviour tick.
+     */
+    public void markConnectionsDirty() {
+        connectionsDirty = true;
+    }
+
+    /**
+     * Called once per behaviour tick after cached connections have been refreshed when needed.
+     *
+     * @param level       the level in which the operation is performed
+     * @param pos         the target block position
+     * @param connections the currently cached connections
+     */
+    protected void beforeFlowUpdate(Level level, BlockPos pos, Collection<GasPipeConnection> connections) {
     }
 
     /**
@@ -241,7 +244,12 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
      */
     @Nullable
     public GasPipeConnection getConnection(Direction side) {
-        createConnectionData();
+        if (connectionsDirty) {
+            refreshConnections();
+        }
+        else {
+            createConnectionData();
+        }
         return interfaces.get(side);
     }
 
@@ -251,9 +259,37 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
      * @return {@code true} if at least one connection has pressure; otherwise {@code false}
      */
     public boolean hasAnyPressure() {
-        createConnectionData();
+        if (connectionsDirty) {
+            refreshConnections();
+        }
+        else {
+            createConnectionData();
+        }
         for (GasPipeConnection pipeConnection : interfaces.values()) {
             if (!pipeConnection.hasPressure()) {
+                continue;
+            }
+
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Checks whether at least one connection received a pressure contribution
+     * since the last pressure wipe, including fully cancelled pressure.
+     *
+     * @return {@code true} if at least one connection received pressure; otherwise {@code false}
+     */
+    public boolean hasAnyPressureContribution() {
+        if (connectionsDirty) {
+            refreshConnections();
+        }
+        else {
+            createConnectionData();
+        }
+        for (GasPipeConnection pipeConnection : interfaces.values()) {
+            if (!pipeConnection.hasPressureContribution()) {
                 continue;
             }
 
@@ -296,7 +332,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
      * Clears the pressure stored by this connection.
      */
     public void wipePressure() {
-        refreshConnectionData();
+        refreshConnectionsIfNeeded();
         phase = UpdatePhase.WAIT_FOR_PUMPS;
         for (GasPipeConnection connection : interfaces.values()) {
             connection.wipePressure();
@@ -355,7 +391,6 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     public void initialize() {
         super.initialize();
         refreshConnections();
-        clientModelRefreshPending = true;
     }
 
     /**
@@ -371,8 +406,9 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         super.tick();
         BlockPos pos = getPos();
         boolean isClientSide = level.isClientSide && !blockEntity.isVirtual();
-        refreshConnections();
+        refreshConnectionsIfNeeded();
         Collection<GasPipeConnection> connections = interfaces.values();
+        beforeFlowUpdate(level, pos, connections);
         if (phase == UpdatePhase.WAIT_FOR_PUMPS) {
             phase = UpdatePhase.FLIP_FLOWS;
             return;
@@ -402,18 +438,13 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     @Override
     public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        refreshConnectionData();
+        refreshConnections();
         if (!clientPacket) {
             phase = UpdatePhase.WAIT_FOR_PUMPS;
         }
         for (GasPipeConnection connection : interfaces.values()) {
             connection.read(compoundTag, provider, blockEntity.getBlockPos(), clientPacket);
         }
-        if (!clientPacket) {
-            return;
-        }
-
-        clientModelRefreshPending = true;
     }
 
     /**

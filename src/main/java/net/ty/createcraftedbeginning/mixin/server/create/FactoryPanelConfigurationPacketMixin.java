@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.mixin.server.create;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBehaviour;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBlockEntity;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelConfigurationPacket;
@@ -46,6 +47,16 @@ public abstract class FactoryPanelConfigurationPacketMixin {
 
             entry.setValue(Mth.clamp(entry.getValue(), 0, GasFactoryGaugeBehaviour.MAX_TARGET_AMOUNT));
         }
+    }
+
+    @ModifyExpressionValue(method = "applySettings", at = @At(value = "FIELD", target = "Lcom/simibubi/create/content/logistics/factoryBoard/FactoryPanelConfigurationPacket;outputAmount:I"))
+    private int ccb$applySettings(int outputAmount, ServerPlayer player, FactoryPanelBlockEntity blockEntity) {
+        FactoryPanelBehaviour behaviour = blockEntity.panels.get(position.slot());
+        if (!(behaviour instanceof GasFactoryGaugeBehaviour)) {
+            return outputAmount;
+        }
+
+        return Mth.clamp(outputAmount, 1, GasFactoryGaugeBehaviour.MAX_TARGET_AMOUNT);
     }
 
     @Inject(method = "applySettings", at = @At("TAIL"))

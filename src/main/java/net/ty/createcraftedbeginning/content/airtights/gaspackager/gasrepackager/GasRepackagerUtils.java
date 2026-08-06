@@ -12,6 +12,7 @@ import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonGasContent
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonStyleUtils;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonUtils;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -37,8 +38,7 @@ public final class GasRepackagerUtils {
         return sorted.stream().map(candidate -> PackageItem.getOrderContext(candidate.box())).filter(context -> context != null && !context.isEmpty()).findFirst().orElse(null);
     }
 
-    private static boolean isAlreadyCanonical(GasGroupCandidates group) {
-        List<BigItemStack> canonical = createBalloons(group.outputTemplate(), group.contents(), group.address());
+    private static boolean isAlreadyCanonical(GasGroupCandidates group, List<BigItemStack> canonical) {
         if (canonical.size() != group.candidates().size()) {
             return false;
         }
@@ -46,7 +46,8 @@ public final class GasRepackagerUtils {
         for (int i = 0; i < canonical.size(); i++) {
             Candidate candidate = group.candidates().get(i);
             ItemStack expected = canonical.get(i).stack;
-            if (!candidate.box().is(group.outputTemplate().getItem()) || candidate.totalAmount() != BalloonUtils.getGasContents(expected).totalAmount()) {
+            BalloonGasContents expectedContents = BalloonUtils.getGasContents(expected);
+            if (!candidate.box().is(group.outputTemplate().getItem()) || !candidate.contents().equals(expectedContents)) {
                 return false;
             }
         }
@@ -57,7 +58,7 @@ public final class GasRepackagerUtils {
         return !actual.isEmpty() && !expected.isEmpty() && ItemStack.isSameItemSameComponents(actual.copyWithCount(1), expected.copyWithCount(1));
     }
 
-    private static List<GasGroupCandidates> groupCandidates(List<Candidate> candidates) {
+    private static @Unmodifiable List<GasGroupCandidates> groupCandidates(List<Candidate> candidates) {
         List<GasGroupCandidates> groups = new ArrayList<>();
         candidates.forEach(candidate -> addToGroup(groups, candidate, PackageItem.getAddress(candidate.box())));
         return List.copyOf(groups);
@@ -190,14 +191,14 @@ public final class GasRepackagerUtils {
         return false;
     }
 
-    public static boolean isRepackUseful(GasGroupCandidates group) {
+    public static boolean isRepackUseful(GasGroupCandidates group, List<BigItemStack> output) {
         int inputCount = group.candidates().size();
         if (inputCount < 2) {
             return false;
         }
 
-        int outputCount = createBalloons(group.outputTemplate(), group.contents(), group.address()).size();
-        return outputCount > 0 && outputCount <= inputCount && (outputCount < inputCount || !isAlreadyCanonical(group));
+        int outputCount = output.size();
+        return outputCount > 0 && outputCount <= inputCount && (outputCount < inputCount || !isAlreadyCanonical(group, output));
     }
 
     public static boolean isStandaloneFinalOrderPackage(ItemStack box) {
@@ -320,8 +321,8 @@ public final class GasRepackagerUtils {
             }
 
             ItemStack box = extracted.copyWithCount(1);
-            boolean gasBalloon = BalloonUtils.containsGasContents(box);
-            BalloonGasContents contents = gasBalloon ? BalloonUtils.getGasContents(box) : BalloonGasContents.EMPTY;
+            BalloonGasContents contents = BalloonUtils.getGasContents(box);
+            boolean gasBalloon = !contents.isEmpty();
             Candidate candidate = new Candidate(slot, box, contents);
             if (PackageItem.isPackage(box) && PackageItem.hasOrderData(box)) {
                 orderedPackagesByOrder.computeIfAbsent(PackageItem.getOrderId(box), ignored -> new ArrayList<>()).add(candidate);
@@ -372,9 +373,6 @@ public final class GasRepackagerUtils {
             return !contents.isEmpty();
         }
 
-        private long totalAmount() {
-            return contents.totalAmount();
-        }
     }
 
     public static final class GasGroupCandidates {
@@ -385,7 +383,6 @@ public final class GasRepackagerUtils {
         private final ItemStack outputTemplate;
         private final boolean rare;
 
-        private long totalAmount;
         @Nullable
         private BalloonGasContents cachedContents;
 
@@ -401,12 +398,6 @@ public final class GasRepackagerUtils {
             BalloonGasContents contents = candidate.contents();
             contents.gases().stream().map(GasEntry::toStack).forEach(gases::add);
             cachedContents = null;
-            long added = contents.totalAmount();
-            if (added <= 0) {
-                return;
-            }
-
-            totalAmount = totalAmount > Long.MAX_VALUE - added ? Long.MAX_VALUE : totalAmount + added;
         }
 
         private boolean accepts(Candidate candidate, String address) {

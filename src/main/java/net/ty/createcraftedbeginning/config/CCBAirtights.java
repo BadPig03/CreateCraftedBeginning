@@ -9,9 +9,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBAirtights extends ConfigBase {
-    public static final int MAX_AIRTIGHT_ENGINE_BASE_ROTATION_SPEED = 256;
-    public static final int MAX_TESLA_TURBINE_ROTATION_SPEED_PER_LEVEL = 256;
-
     public final ConfigGroup airCompressor = group(0, "air_compressor", "Air Compressor");
     public final ConfigBool explodesOnMeltdown = b(true, "explodes_on_meltdown", Comments.explodesOnMeltdown);
     public final ConfigFloat coolantConsumptionChance = f(0.5f, 0, 1, "coolant_consumption_chance", Comments.coolantConsumptionChance);

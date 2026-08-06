@@ -59,18 +59,24 @@ public final class CanisterContainerSuppliers {
     public static List<IGasCanisterContainer> getCanisterContainersInInventory(Player player) {
         List<IGasCanisterContainer> containers = new ArrayList<>();
         ItemStack offhand = player.getOffhandItem();
-        if (isValidCanisterContainer(offhand)) {
-            containers.add(offhand.getCapability(GasHandler.ITEM));
+        if (!offhand.isEmpty()) {
+            IGasCanisterContainer container = offhand.getCapability(GasHandler.ITEM);
+            if (container != null) {
+                containers.add(container);
+            }
         }
 
         Inventory inventory = player.getInventory();
         for (int i = 0; i < inventory.getContainerSize(); i++) {
             ItemStack stack = inventory.getItem(i);
-            if (!isValidCanisterContainer(stack) || offhand == stack) {
+            if (stack.isEmpty() || offhand == stack) {
                 continue;
             }
 
-            containers.add(stack.getCapability(GasHandler.ITEM));
+            IGasCanisterContainer container = stack.getCapability(GasHandler.ITEM);
+            if (container != null) {
+                containers.add(container);
+            }
         }
         return containers;
     }
@@ -168,10 +174,10 @@ public final class CanisterContainerSuppliers {
     }
 
     /**
-     * Returns the first available available gas content.
+     * Returns the first available gas content.
      *
      * @param player the player performing the operation
-     * @return the first available available gas content
+     * @return the first available gas content
      */
     public static GasStack getFirstAvailableGasContent(Player player) {
         for (IGasCanisterContainer container : getAllSuppliers(player)) {

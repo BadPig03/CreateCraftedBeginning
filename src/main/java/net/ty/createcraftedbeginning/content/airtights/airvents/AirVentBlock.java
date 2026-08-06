@@ -85,13 +85,10 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
     }
 
     private static VoxelShape getPassableShape(BlockState state, BlockGetter level, BlockPos pos) {
-        int mask = 0;
-        for (Direction direction : Iterate.directions) {
-            if (!getVentState(level, pos, state, direction).canPassThrough()) {
-                continue;
-            }
-
-            mask |= 1 << direction.get3DDataValue();
+        int mask = getConnectionMask(state);
+        AirVentBlockEntity airVent = getAirVentBlockEntity(level, pos);
+        if (airVent != null) {
+            mask |= airVent.getOpenedLouverMask();
         }
         return AirVentVoxelShapes.getShape(mask);
     }

@@ -7,7 +7,6 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item.TooltipContext;
@@ -62,7 +61,7 @@ public interface AirtightDrillHandler {
     }
 
     /**
-     * Updates state by performing extra behaviour.
+     * Updates state by performing extra behavior.
      *
      * @param entity      the entity associated with the operation
      * @param player      the player performing the operation
@@ -70,12 +69,6 @@ public interface AirtightDrillHandler {
      */
     default void extraBehaviour(LivingEntity entity, Player player, ServerLevel serverLevel) {
         Vec3 position = entity.position();
-        RandomSource random = serverLevel.random;
-        for (int i = 0; i < random.nextInt(5, 15); i++) {
-            double offsetX = (random.nextDouble() - 0.5) * 0.8;
-            double offsetY = random.nextDouble() * 0.5;
-            double offsetZ = (random.nextDouble() - 0.5) * 0.8;
-            serverLevel.sendParticles(ParticleTypes.CRIT, position.x, position.y + entity.getBbHeight() / 2, position.z, 1, offsetX, offsetY, offsetZ, 0);
-        }
+        serverLevel.sendParticles(ParticleTypes.CRIT, position.x, position.y + entity.getBbHeight() / 2, position.z, serverLevel.random.nextInt(5, 15), 0.4, 0.25, 0.4, 0);
     }
 }

@@ -77,6 +77,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     private static final String COMPOUND_KEY_OPERATION_RESULTS = "OperationResults";
     private static final String COMPOUND_KEY_OPERATION_RESULT_PREPARED = "OperationResultPrepared";
     private static final String COMPOUND_KEY_OPERATION_EXECUTED = "OperationExecuted";
+    private static final String COMPOUND_KEY_FILTER_LOCKED = "FilterLocked";
     private static final String COMPOUND_KEY_CLOUD = "Cloud";
     private static final String COMPOUND_KEY_CLOUD_COLOR = "CloudColor";
     private static final String COMPOUND_KEY_INSTALLED_FILTER = "InstalledFilter";
@@ -88,6 +89,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     private int previousProcessingTicks = -1;
     private boolean sendCloud;
     private boolean operationExecuted;
+    private boolean clientFilterLocked;
     private OperationType operationType = OperationType.NONE;
     private GasStack operationGas = GasStack.EMPTY;
     private @Nullable ResourceLocation operationFanProcessingTypeId;
@@ -174,7 +176,12 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             compoundTag.put(COMPOUND_KEY_INSTALLED_FILTER, installedFilter.saveOptional(provider));
         }
 
-        writeOperation(compoundTag, provider);
+        if (clientPacket) {
+            compoundTag.putBoolean(COMPOUND_KEY_FILTER_LOCKED, operationType == OperationType.FAN_PROCESSING);
+        }
+        else {
+            writeOperation(compoundTag, provider);
+        }
         writeCloud(compoundTag, clientPacket);
     }
 
@@ -197,7 +204,12 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             installedFilter = ItemStack.EMPTY;
         }
 
-        readOperation(compoundTag, provider);
+        if (clientPacket) {
+            clientFilterLocked = compoundTag.getBoolean(COMPOUND_KEY_FILTER_LOCKED);
+        }
+        else {
+            readOperation(compoundTag, provider);
+        }
         readCloud(compoundTag, clientPacket);
     }
 
@@ -375,7 +387,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     }
 
     public boolean isFilterLocked() {
-        return operationType == OperationType.FAN_PROCESSING;
+        return level != null && level.isClientSide ? clientFilterLocked : operationType == OperationType.FAN_PROCESSING;
     }
 
     public boolean installFilter(ItemStack stack) {
@@ -513,15 +525,29 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         }
 
         int color = getOperationCloudColor();
-        if (!executeOperation(transported, handler)) {
-            cancelOperation();
+        boolean executed;
+        tankBehaviour.beginMutation();
+        try {
+            executed = executeOperation(transported, handler);
+        } finally {
+            tankBehaviour.endMutation();
+        }
+
+        if (executed) {
+            operationExecuted = true;
+            cloudColor = color;
+            sendCloud = true;
+        }
+        else {
+            processingTicks = -1;
+            clearOperation();
+        }
+
+        tankBehaviour.sendDataImmediately();
+        if (!executed) {
             return PASS;
         }
 
-        operationExecuted = true;
-        cloudColor = color;
-        sendCloud = true;
-        notifyUpdate();
         CCBSoundEvents.INJECTING.playOnServer(level, worldPosition, 0.75f, 0.9f + 0.2f * level.random.nextFloat());
         return HOLD;
     }
@@ -548,7 +574,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             return false;
         }
 
-        long amount = GasCanisterUtils.getInjectableAmount(canister, tankGas, getMaxCapacity());
+        long amount = GasCanisterUtils.getInjectableAmount(canister, tankGas, getTank().getCapacity());
         if (amount <= 0) {
             return false;
         }
@@ -823,6 +849,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         operationResultPrepared = false;
         operationRecipe = null;
         operationExecuted = false;
+        clientFilterLocked = false;
     }
 
     private enum OperationType {

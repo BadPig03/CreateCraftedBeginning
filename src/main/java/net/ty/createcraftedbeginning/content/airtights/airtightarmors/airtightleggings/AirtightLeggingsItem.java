@@ -83,11 +83,11 @@ public class AirtightLeggingsItem extends AirtightBaseArmorItem implements MenuP
     @Override
     public ItemEnchantments getAllEnchantments(ItemStack leggings, RegistryLookup<Enchantment> lookup) {
         ItemEnchantments enchantments = super.getAllEnchantments(leggings, lookup);
-        Mutable enchants = new Mutable(enchantments);
         if (!BlastResistanceUpgrade.INSTANCE.canApply(leggings)) {
-            return enchants.toImmutable();
+            return enchantments;
         }
 
+        Mutable enchants = new Mutable(enchantments);
         Holder<Enchantment> blastProtection = lookup.getOrThrow(Enchantments.BLAST_PROTECTION);
         enchants.set(blastProtection, Math.max(4, enchantments.getLevel(blastProtection)));
         return enchants.toImmutable();

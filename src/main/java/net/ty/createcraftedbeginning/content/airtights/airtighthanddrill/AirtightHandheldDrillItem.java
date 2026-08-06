@@ -84,14 +84,14 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
             return;
         }
 
-        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
-        if (gasContent.isEmpty()) {
-            player.stopUsingItem();
+        int usedTicks = USE_DURATION - remainingUseDuration;
+        if (usedTicks <= 4 || usedTicks % 4 != 0) {
             return;
         }
 
-        int usedTicks = USE_DURATION - remainingUseDuration;
-        if (usedTicks <= 4 || usedTicks % 4 != 0) {
+        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
+        if (gasContent.isEmpty()) {
+            player.stopUsingItem();
             return;
         }
 

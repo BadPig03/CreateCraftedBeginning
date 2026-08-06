@@ -5,34 +5,26 @@ import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.stream.Stream;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class FrameCuboidTemplate extends BaseTemplate {
     @Override
-    public Set<BlockPos> getBaseArea(int @NotNull [] params) {
+    protected Stream<BlockPos> getBaseAreaStream(int @NotNull [] params) {
         int sizeX = params[0];
         int sizeY = params[1];
         int sizeZ = params[2];
         BlockPos endPos = new BlockPos(sizeX - 1, sizeY - 1, sizeZ - 1);
-        Set<BlockPos> frameCuboid = new HashSet<>();
-        for (BlockPos pos : BlockPos.betweenClosed(BlockPos.ZERO, endPos)) {
+        return BlockPos.betweenClosedStream(BlockPos.ZERO, endPos).filter(pos -> {
             int x = pos.getX();
             int y = pos.getY();
             int z = pos.getZ();
-
             boolean isOnXBound = x == 0 || x == sizeX - 1;
             boolean isOnYBound = y == 0 || y == sizeY - 1;
             boolean isOnZBound = z == 0 || z == sizeZ - 1;
-            if (isOnXBound && isOnYBound || isOnXBound && isOnZBound || isOnYBound && isOnZBound) {
-                continue;
-            }
-
-            frameCuboid.add(new BlockPos(x, y, z));
-        }
-        return frameCuboid;
+            return !(isOnXBound && isOnYBound || isOnXBound && isOnZBound || isOnYBound && isOnZBound);
+        });
     }
 
     @Override

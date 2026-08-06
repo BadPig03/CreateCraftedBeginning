@@ -11,14 +11,20 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public abstract class BaseTemplate {
-    public abstract Set<BlockPos> getBaseArea(int[] params);
+    public Set<BlockPos> getBaseArea(int[] params) {
+        return getBaseAreaStream(params).map(BlockPos::new).collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    protected abstract Stream<BlockPos> getBaseAreaStream(int[] params);
 
     public int[] getDefaultRelativePosition() {
         return new int[]{0, 0, 0};
@@ -36,7 +42,11 @@ public abstract class BaseTemplate {
     }
 
     public Set<BlockPos> getTargetPositions(ItemStack drill, BlockPos basePos, Level level, BlockState baseState) {
-        return getFinalOffset(drill).stream().map(basePos::offset).collect(Collectors.toSet());
+        int[] params = AirtightHandheldDrillUtils.getMiningSizeParams(drill);
+        int[] relativePosition = AirtightHandheldDrillUtils.getRelativePositionParams(drill);
+        Direction direction = AirtightHandheldDrillUtils.getMiningDirection(drill);
+        BlockPos relativeOffset = getRelativeOffset(direction, relativePosition);
+        return getBaseAreaStream(params).map(pos -> applyOffset(pos, direction, relativeOffset)).map(basePos::offset).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     public boolean usesSpatialParameters() {
@@ -52,11 +62,16 @@ public abstract class BaseTemplate {
     }
 
     public Set<BlockPos> getOffset(int[] params, Direction direction, int[] relativeParams) {
-        return getRotatedArea(params, direction).stream().map(pos -> offset(pos, direction, relativeParams)).collect(Collectors.toSet());
+        BlockPos relativeOffset = getRelativeOffset(direction, relativeParams);
+        return getBaseAreaStream(params).map(pos -> applyOffset(pos, direction, relativeOffset)).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    protected Set<BlockPos> getRotatedArea(int[] params, Direction direction) {
-        return getBaseArea(params).stream().map(pos -> rotate(pos, direction)).collect(Collectors.toSet());
+    private BlockPos applyOffset(BlockPos pos, Direction direction, BlockPos relativeOffset) {
+        return rotate(pos, direction).offset(relativeOffset);
+    }
+
+    private BlockPos getRelativeOffset(Direction direction, int @NotNull [] relativeParams) {
+        return rotate(new BlockPos(-relativeParams[0], -relativeParams[1], -relativeParams[2]), direction);
     }
 
     @Contract("_, _ -> new")
@@ -93,13 +108,5 @@ public abstract class BaseTemplate {
                 break;
         }
         return new BlockPos(newX, newY, newZ);
-    }
-
-    @Contract("_, _, _ -> new")
-    protected BlockPos offset(BlockPos pos, Direction direction, int @NotNull [] relativeParams) {
-        int x = pos.getX();
-        int y = pos.getY();
-        int z = pos.getZ();
-        return new BlockPos(x, y, z).offset(rotate(new BlockPos(-relativeParams[0], -relativeParams[1], -relativeParams[2]), direction));
     }
 }

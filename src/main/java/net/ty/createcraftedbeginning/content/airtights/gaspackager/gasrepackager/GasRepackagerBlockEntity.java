@@ -93,13 +93,13 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
 
     private boolean tryRepackageSimpleGasGroup(IItemHandler targetInv, ScanResult scan) {
         for (GasGroupCandidates group : scan.simpleGroups()) {
-            if (!GasRepackagerUtils.isRepackUseful(group)) {
+            if (group.candidates().size() < 2) {
                 continue;
             }
 
             String address = resolveSimpleOutputAddress(group.address());
             List<BigItemStack> output = GasRepackagerUtils.createBalloons(group.outputTemplate(), group.contents(), address);
-            if (output.isEmpty()) {
+            if (!GasRepackagerUtils.isRepackUseful(group, output)) {
                 continue;
             }
 

@@ -59,12 +59,8 @@ public class AirtightExtendArmEvents {
         AirtightExtendArmUtils.refreshArmModifiers(player);
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onBreakBlocks(BreakEvent event) {
-        if (event.isCanceled()) {
-            return;
-        }
-
         Player player = event.getPlayer();
         if (player.level().isClientSide || !AirtightExtendArmUtils.requiresExtendedBlockRange(player, event.getPos())) {
             return;
@@ -78,12 +74,8 @@ public class AirtightExtendArmEvents {
         displayInsufficientGasWarning(player);
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onRightClickBlock(RightClickBlock event) {
-        if (event.isCanceled()) {
-            return;
-        }
-
         Player player = event.getEntity();
         if (player.level().isClientSide) {
             return;
@@ -104,12 +96,8 @@ public class AirtightExtendArmEvents {
         displayWarningOnFirstAttempt(player, attempt);
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onAttackEntity(AttackEntityEvent event) {
-        if (event.isCanceled()) {
-            return;
-        }
-
         Player player = event.getEntity();
         Entity target = event.getTarget();
         if (player.level().isClientSide || !AirtightExtendArmUtils.requiresPoweredAttack(player, target)) {
@@ -124,10 +112,10 @@ public class AirtightExtendArmEvents {
         displayInsufficientGasWarning(player);
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onEntityInteractSpecific(EntityInteractSpecific event) {
         Player player = event.getEntity();
-        if (event.isCanceled() || player.level().isClientSide) {
+        if (player.level().isClientSide) {
             return;
         }
 
@@ -146,10 +134,10 @@ public class AirtightExtendArmEvents {
         displayWarningOnFirstAttempt(player, attempt);
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onEntityInteract(EntityInteract event) {
         Player player = event.getEntity();
-        if (event.isCanceled() || player.level().isClientSide) {
+        if (player.level().isClientSide) {
             return;
         }
 

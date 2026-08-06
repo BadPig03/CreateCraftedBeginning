@@ -13,6 +13,8 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
@@ -50,6 +52,43 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
 
     public static boolean isOutputSide(BlockState state, Direction direction) {
         return state.getValue(AXIS) == direction.getAxis() && !isInputSide(state, direction);
+    }
+
+    private static Direction getOutputDirection(BlockState state) {
+        AxisDirection axisDirection = state.getValue(INVERTED) ? AxisDirection.POSITIVE : AxisDirection.NEGATIVE;
+        return Direction.fromAxisAndDirection(state.getValue(AXIS), axisDirection);
+    }
+
+    private static BlockState setOutputDirection(BlockState state, Direction output) {
+        return state.setValue(AXIS, output.getAxis()).setValue(INVERTED, output.getAxisDirection() == AxisDirection.POSITIVE);
+    }
+
+    private static BlockState setDirectionalFacing(BlockState state, Direction direction) {
+        return state.setValue(DIRECTIONAL_FACING, DirectionalFacing.getFacingDirection(direction));
+    }
+
+    @Override
+    protected BlockState rotate(BlockState state, Rotation rotation) {
+        Direction output = rotation.rotate(getOutputDirection(state));
+        BlockState rotatedState = setOutputDirection(super.rotate(state, rotation), output);
+        DirectionalFacing facing = state.getValue(DIRECTIONAL_FACING);
+        if (facing == DirectionalFacing.NULL) {
+            return rotatedState;
+        }
+
+        return setDirectionalFacing(rotatedState, rotation.rotate(DirectionalFacing.getDirection(facing)));
+    }
+
+    @Override
+    protected BlockState mirror(BlockState state, Mirror mirror) {
+        Direction output = mirror.mirror(getOutputDirection(state));
+        BlockState mirroredState = setOutputDirection(super.mirror(state, mirror), output);
+        DirectionalFacing facing = state.getValue(DIRECTIONAL_FACING);
+        if (facing == DirectionalFacing.NULL) {
+            return mirroredState;
+        }
+
+        return setDirectionalFacing(mirroredState, mirror.mirror(DirectionalFacing.getDirection(facing)));
     }
 
     @Override

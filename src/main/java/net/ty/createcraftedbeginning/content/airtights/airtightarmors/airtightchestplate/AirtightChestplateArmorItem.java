@@ -30,13 +30,12 @@ import net.ty.createcraftedbeginning.registry.CCBArmorMaterials;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Locale;
-import java.util.Map;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightChestplateArmorItem extends ArmorItem implements CustomRenderedArmorItem {
-    protected final ResourceLocation textureLoc = CreateCraftedBeginning.asResource("airtight");
+    private static final ResourceLocation INNER_TEXTURE = CreateCraftedBeginning.asResource("textures/models/armor/airtight_layer_2.png");
+    private static final ResourceLocation OUTER_TEXTURE = CreateCraftedBeginning.asResource("textures/models/armor/airtight_layer_1.png");
 
     public AirtightChestplateArmorItem(Type type, Properties properties) {
         super(CCBArmorMaterials.AIRTIGHT, type, properties.stacksTo(1));
@@ -60,10 +59,6 @@ public class AirtightChestplateArmorItem extends ArmorItem implements CustomRend
         model.renderToBuffer(poseStack, consumer, light, OverlayTexture.NO_OVERLAY);
     }
 
-    public String getArmorTextureLocation(int layer) {
-        return String.format(Locale.ROOT, "%s:textures/models/armor/%s_layer_%d.png", textureLoc.getNamespace(), textureLoc.getPath(), layer);
-    }
-
     @OnlyIn(Dist.CLIENT)
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
@@ -73,18 +68,17 @@ public class AirtightChestplateArmorItem extends ArmorItem implements CustomRend
         }
 
         HumanoidArmorLayerAtlasAccessor accessor = (HumanoidArmorLayerAtlasAccessor) layer;
-        Map<String, ResourceLocation> locationCache = HumanoidArmorLayerAtlasAccessor.getArmorLocationCache();
         HumanoidModel<?> parentModel = layer.getParentModel();
 
         HumanoidModel<?> innerModel = accessor.getInnerModel();
         parentModel.copyPropertiesTo((HumanoidModel) innerModel);
         accessor.ccb$setPartVisibility(innerModel, slot);
-        renderModel(poseStack, bufferSource, light, innerModel, locationCache.computeIfAbsent(getArmorTextureLocation(2), ResourceLocation::parse));
+        renderModel(poseStack, bufferSource, light, innerModel, INNER_TEXTURE);
 
         HumanoidModel<?> outerModel = accessor.getOuterModel();
         parentModel.copyPropertiesTo((HumanoidModel) outerModel);
         accessor.ccb$setPartVisibility(outerModel, slot);
-        renderModel(poseStack, bufferSource, light, outerModel, locationCache.computeIfAbsent(getArmorTextureLocation(1), ResourceLocation::parse));
+        renderModel(poseStack, bufferSource, light, outerModel, OUTER_TEXTURE);
 
         ArmorTrim trim = stack.get(DataComponents.TRIM);
         if (trim != null) {

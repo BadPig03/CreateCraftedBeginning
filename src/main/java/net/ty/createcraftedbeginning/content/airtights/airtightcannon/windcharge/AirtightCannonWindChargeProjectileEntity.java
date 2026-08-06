@@ -187,19 +187,37 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
 
     @Override
     public void writeSpawnData(RegistryFriendlyByteBuf buffer) {
-        CompoundTag tag = new CompoundTag();
-        addAdditionalSaveData(tag);
-        buffer.writeNbt(tag);
+        Gas.HOLDER_STREAM_CODEC.encode(buffer, gasHolder);
+        buffer.writeFloat(multiplier);
+        buffer.writeFloat(knockback);
+        buffer.writeBoolean(flame);
+        buffer.writeDouble(initMotion.x());
+        buffer.writeDouble(initMotion.y());
+        buffer.writeDouble(initMotion.z());
     }
 
     @Override
     public void readSpawnData(RegistryFriendlyByteBuf buffer) {
-        CompoundTag tag = buffer.readNbt();
-        if (tag == null) {
-            return;
+        gasHolder = Gas.HOLDER_STREAM_CODEC.decode(buffer);
+
+        float storedMultiplier = buffer.readFloat();
+        if (Float.isFinite(storedMultiplier) && storedMultiplier > 0) {
+            multiplier = storedMultiplier;
         }
 
-        readAdditionalSaveData(tag);
+        float storedKnockback = buffer.readFloat();
+        if (Float.isFinite(storedKnockback) && storedKnockback >= 0) {
+            knockback = storedKnockback;
+        }
+
+        flame = buffer.readBoolean();
+
+        double x = buffer.readDouble();
+        double y = buffer.readDouble();
+        double z = buffer.readDouble();
+        if (Double.isFinite(x) && Double.isFinite(y) && Double.isFinite(z)) {
+            initMotion = new Vec3(x, y, z);
+        }
     }
 
     private boolean hasSignificantExternalImpulse() {

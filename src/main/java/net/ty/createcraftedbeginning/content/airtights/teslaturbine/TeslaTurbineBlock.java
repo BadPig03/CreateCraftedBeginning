@@ -8,7 +8,6 @@ import com.simibubi.create.content.schematics.requirement.ItemRequirement.ItemUs
 import com.simibubi.create.content.schematics.requirement.ItemRequirement.StackRequirement;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
-import com.simibubi.create.foundation.block.render.MultiPosDestructionHandler;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -54,9 +53,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -213,6 +210,10 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
 
                 level.setBlockAndUpdate(partPos, partState);
             }
+        }
+
+        if (level.getBlockEntity(pos) instanceof TeslaTurbineBlockEntity turbine) {
+            turbine.getCore().getStructureManager().tick();
         }
     }
 

@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.airtightencasedpipe;
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
+import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -56,6 +57,13 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
         return state.getValue(PROPERTY_BY_DIRECTION.get(direction));
     }
 
+    private static void markConnectionsDirty(Level level, BlockPos pos) {
+        GasTransportBehaviour transport = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
+        if (transport != null) {
+            transport.markConnectionsDirty();
+        }
+    }
+
     static boolean hasPlacementConnection(Level level, BlockPos pos, Direction direction) {
         BlockPos otherPos = pos.relative(direction);
         BlockState otherState = level.getBlockState(otherPos);
@@ -101,6 +109,7 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
             return;
         }
 
+        markConnectionsDirty(level, pos);
         level.scheduleTick(pos, this, 1, TickPriority.HIGH);
     }
 
@@ -110,13 +119,14 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
             return;
         }
 
+        markConnectionsDirty(level, blockPos);
         level.scheduleTick(blockPos, this, 1, TickPriority.HIGH);
     }
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock()) && !level.isClientSide) {
-            GasPropagator.propagatePipe(level, pos, state);
+            GasPropagator.propagatePipe(level, pos);
         }
         super.onRemove(state, level, pos, newState, isMoving);
     }
@@ -133,7 +143,7 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
 
     @Override
     public void tick(BlockState blockState, ServerLevel level, BlockPos blockPos, RandomSource random) {
-        GasPropagator.propagateChangedPipe(level, blockPos, blockState);
+        GasPropagator.propagateChangedPipe(level, blockPos);
     }
 
     @Override
@@ -147,6 +157,7 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
         Property<Boolean> property = PROPERTY_BY_DIRECTION.get(context.getClickedFace());
         boolean isOpen = state.getValue(property);
         level.setBlockAndUpdate(pos, state.setValue(property, !isOpen));
+        markConnectionsDirty(level, pos);
         level.scheduleTick(pos, this, 1, TickPriority.HIGH);
         if (isOpen) {
             CCBSoundEvents.SHEET_ADDED.playOnServer(level, pos, 1, 1);

@@ -2,7 +2,6 @@ package net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightl
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.simibubi.create.foundation.mixin.accessor.EntityRenderDispatcherAccessor;
 import net.createmod.catnip.render.CachedBuffers;
 import net.createmod.catnip.render.SuperByteBuffer;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -44,9 +43,6 @@ public class AirtightLeggingsLayer<T extends LivingEntity, M extends EntityModel
 
     public static void registerOnAll(EntityRenderDispatcher dispatcher) {
         for (EntityRenderer<? extends Player> renderer : dispatcher.getSkinMap().values()) {
-            registerOn(renderer);
-        }
-        for (EntityRenderer<?> renderer : ((EntityRenderDispatcherAccessor) dispatcher).create$getRenderers().values()) {
             registerOn(renderer);
         }
     }

@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.api.gascanisters;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.createmod.catnip.theme.Color;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -14,7 +13,6 @@ import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
-import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlayPacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
 import net.ty.createcraftedbeginning.platform.CCBClientBridge;
 
@@ -26,8 +24,40 @@ public final class CanisterContainerClients {
     public static final String COMPOUND_KEY_STORED_GAS_TYPE = "CreateCraftedBeginningStoredGasType";
 
     private static final int BAR_WIDTH = 13;
+    private static volatile DisplayedGasState syncedDisplayedGasState = DisplayedGasState.UNSYNCED;
 
     private CanisterContainerClients() {
+    }
+
+    /**
+     * Updates the gas state shared by client overlays and item decorations.
+     *
+     * @param content  the displayed gas content
+     * @param capacity the displayed container capacity
+     * @param packType the displayed pack type
+     * @param creative whether the displayed container is creative
+     */
+    @OnlyIn(Dist.CLIENT)
+    public static void updateDisplayedGasState(GasStack content, long capacity, int packType, boolean creative) {
+        syncedDisplayedGasState = DisplayedGasState.synced(content, capacity, packType, creative);
+    }
+
+    /**
+     * Clears the latest client-side gas state.
+     */
+    @OnlyIn(Dist.CLIENT)
+    public static void clearDisplayedGasState() {
+        syncedDisplayedGasState = DisplayedGasState.UNSYNCED;
+    }
+
+    /**
+     * Returns the latest state received from the server.
+     *
+     * @return the synchronized state, or an unsynchronized empty state
+     */
+    @OnlyIn(Dist.CLIENT)
+    public static DisplayedGasState getSyncedDisplayedGasState() {
+        return syncedDisplayedGasState;
     }
 
     /**
@@ -100,11 +130,9 @@ public final class CanisterContainerClients {
             return DisplayedGasState.EMPTY;
         }
 
-        CompoundTag data = player.getPersistentData();
-        if (data.contains(GasCanisterOverlayPacket.COMPOUND_KEY_OVERLAY)) {
-            CompoundTag overlay = data.getCompound(GasCanisterOverlayPacket.COMPOUND_KEY_OVERLAY);
-            GasStack content = GasStack.parseOptional(player.level().registryAccess(), overlay.getCompound(GasCanisterOverlayPacket.COMPOUND_KEY_CONTENT));
-            return new DisplayedGasState(content, overlay.getLong(GasCanisterOverlayPacket.COMPOUND_KEY_CAPACITY), overlay.getBoolean(GasCanisterOverlayPacket.COMPOUND_KEY_CREATIVE));
+        DisplayedGasState syncedState = syncedDisplayedGasState;
+        if (syncedState.synced()) {
+            return syncedState;
         }
 
         var fallback = CanisterContainerSuppliers.getFirstCanisterSupplierPair(player);
@@ -112,7 +140,7 @@ public final class CanisterContainerClients {
         if (content.isEmpty()) {
             return DisplayedGasState.EMPTY;
         }
-        return new DisplayedGasState(content, fallback.getSecond().getFirst(), fallback.getSecond().getSecond());
+        return DisplayedGasState.fallback(content, fallback.getSecond().getFirst(), fallback.getSecond().getSecond());
     }
 
     /**
@@ -168,7 +196,20 @@ public final class CanisterContainerClients {
         return Gas.getGasTypeByName(gasId);
     }
 
-    private record DisplayedGasState(GasStack content, long capacity, boolean creative) {
-        private static final DisplayedGasState EMPTY = new DisplayedGasState(GasStack.EMPTY, -1, false);
+    public record DisplayedGasState(GasStack content, long capacity, int packType, boolean creative, boolean synced) {
+        private static final DisplayedGasState EMPTY = new DisplayedGasState(GasStack.EMPTY, -1, -1, false, false);
+        private static final DisplayedGasState UNSYNCED = new DisplayedGasState(GasStack.EMPTY, -1, -1, false, false);
+
+        public DisplayedGasState {
+            content = content.copy();
+        }
+
+        private static DisplayedGasState synced(GasStack content, long capacity, int packType, boolean creative) {
+            return new DisplayedGasState(content, capacity, packType, creative, true);
+        }
+
+        private static DisplayedGasState fallback(GasStack content, long capacity, boolean creative) {
+            return new DisplayedGasState(content, capacity, -1, creative, false);
+        }
     }
 }

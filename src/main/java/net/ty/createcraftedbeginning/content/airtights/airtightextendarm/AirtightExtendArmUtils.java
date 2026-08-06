@@ -112,8 +112,8 @@ public final class AirtightExtendArmUtils {
             return false;
         }
 
-        double armBonus = getModifierAmount(instance, BLOCK_RANGE_MODIFIER_ID);
-        return !(armBonus <= 0) && !player.canInteractWithBlock(pos, -armBonus);
+        double rangeAdjustment = getAdjustmentWithoutModifier(instance, BLOCK_RANGE_MODIFIER_ID);
+        return rangeAdjustment < 0 && !player.canInteractWithBlock(pos, rangeAdjustment);
     }
 
     public static boolean requiresExtendedEntityRange(Player player, Entity target) {
@@ -122,13 +122,13 @@ public final class AirtightExtendArmUtils {
             return false;
         }
 
-        double armBonus = getModifierAmount(instance, ENTITY_RANGE_MODIFIER_ID);
-        return !(armBonus <= 0) && !player.canInteractWithEntity(target, -armBonus);
+        double rangeAdjustment = getAdjustmentWithoutModifier(instance, ENTITY_RANGE_MODIFIER_ID);
+        return rangeAdjustment < 0 && !player.canInteractWithEntity(target, rangeAdjustment);
     }
 
     public static boolean requiresPoweredAttack(Player player, Entity target) {
         AttributeInstance knockback = player.getAttributes().getInstance(Attributes.ATTACK_KNOCKBACK);
-        return requiresExtendedEntityRange(player, target) || getModifierAmount(knockback, KNOCKBACK_MODIFIER_ID) > 0;
+        return requiresExtendedEntityRange(player, target) || getModifierAmount(knockback) > 0;
     }
 
     public static boolean tryConsumeAndRefresh(Player player) {
@@ -136,13 +136,12 @@ public final class AirtightExtendArmUtils {
             return false;
         }
 
-        Optional<AffordableFuel> fuel = findAffordableFuel(player);
-        if (fuel.isEmpty()) {
+        AffordableFuel selectedFuel = ACTIVE_FUELS.get(player);
+        if (selectedFuel == null) {
             refreshArmModifiers(player);
             return false;
         }
 
-        AffordableFuel selectedFuel = fuel.get();
         boolean consumed = CanisterContainerConsumers.interactContainer(player, selectedFuel.gasType(), selectedFuel.amount(), () -> true, false);
         refreshArmModifiers(player);
         return consumed;
@@ -172,13 +171,26 @@ public final class AirtightExtendArmUtils {
         return instance != null && instance.getModifier(id) != null;
     }
 
-    private static double getModifierAmount(@Nullable AttributeInstance instance, ResourceLocation id) {
+    private static double getModifierAmount(@Nullable AttributeInstance instance) {
         if (instance == null) {
             return 0;
         }
 
-        AttributeModifier modifier = instance.getModifier(id);
+        AttributeModifier modifier = instance.getModifier(KNOCKBACK_MODIFIER_ID);
         return modifier == null || modifier.operation() != Operation.ADD_VALUE ? 0 : modifier.amount();
+    }
+
+    private static double getAdjustmentWithoutModifier(AttributeInstance instance, ResourceLocation id) {
+        AttributeModifier modifier = instance.getModifier(id);
+        if (modifier == null || modifier.amount() <= 0) {
+            return 0;
+        }
+
+        double currentValue = instance.getValue();
+        AttributeInstance copy = new AttributeInstance(instance.getAttribute(), ignored -> {});
+        copy.replaceFrom(instance);
+        copy.removeModifier(id);
+        return copy.getValue() - currentValue;
     }
 
     private static void removeModifier(@Nullable AttributeInstance instance, ResourceLocation id) {

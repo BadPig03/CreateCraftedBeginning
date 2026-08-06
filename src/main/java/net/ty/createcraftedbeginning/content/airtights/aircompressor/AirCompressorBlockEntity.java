@@ -53,10 +53,10 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     private SmartGasTankBehaviour outputTankBehaviour;
     private CCBAdvancementBehaviour advancementBehaviour;
 
+    private boolean queuedPressurization;
     private boolean queuedSync;
     private CoolantEfficiency coolantEfficiency = CoolantEfficiency.NONE;
     private int ponderCounter;
-    private int saveCooldown;
     private int storedHeat;
     private int syncCooldown;
     private OverheatState overheatState = OverheatState.NORMAL;
@@ -111,19 +111,6 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         markDirty(previousStoredHeat, true);
     }
 
-    private void doPressurization() {
-        if (level == null) {
-            return;
-        }
-
-        CompressionPlan plan = AirCompressorUtils.createCompressionPlan(level, inputTankBehaviour.getPrimaryHandler().getGasStack());
-        if (plan == null || !AirCompressorUtils.canOperate(plan, overStressed, getSpeed(), overheatState, inputTankBehaviour, outputTankBehaviour)) {
-            return;
-        }
-
-        workState = AirCompressorUtils.pressurize(workState, plan, inputTankBehaviour, outputTankBehaviour);
-    }
-
     public void setCoolantEfficiency(CoolantEfficiency newEfficiency) {
         if (coolantEfficiency == newEfficiency) {
             return;
@@ -150,10 +137,6 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         return overheatState.getAnalogOutputSignal();
     }
 
-    public OverheatState getOverheatState() {
-        return overheatState;
-    }
-
     private void setOverheatState(OverheatState newState) {
         if (overheatState == newState) {
             return;
@@ -170,7 +153,7 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
             return;
         }
 
-        doPressurization();
+        queuedPressurization = true;
     }
 
     @Override
@@ -203,7 +186,6 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     public void tick() {
         super.tick();
         tickSyncCooldown();
-        tickSaveCooldown();
         if (level == null) {
             return;
         }
@@ -290,8 +272,7 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         }
         CCBLang.translate("gui.speed_requirement").style(ChatFormatting.GOLD).forGoggles(tooltip);
         CCBLang.addToGoggles(tooltip, "gui.not_fast_enough", Component.translatable(CCBBlocks.AIR_COMPRESSOR_BLOCK.get().getDescriptionId()));
-        added = true;
-        return added;
+        return true;
     }
 
     @Override
@@ -322,6 +303,8 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     }
 
     private void tickServer(Level level) {
+        boolean shouldPressurize = queuedPressurization;
+        queuedPressurization = false;
         if (overheatState == OverheatState.MELTDOWN) {
             AirCompressorUtils.updateOperatingBlockState(level, worldPosition, getBlockState(), false);
             overheatState.tick(this);
@@ -330,6 +313,11 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
 
         CompressionPlan plan = AirCompressorUtils.createCompressionPlan(level, inputTankBehaviour.getPrimaryHandler().getGasStack());
         boolean operating = plan != null && AirCompressorUtils.canOperate(plan, overStressed, getSpeed(), overheatState, inputTankBehaviour, outputTankBehaviour);
+        if (shouldPressurize && operating) {
+            workState = AirCompressorUtils.pressurize(workState, plan, inputTankBehaviour, outputTankBehaviour);
+            operating = AirCompressorUtils.canOperate(plan, overStressed, getSpeed(), overheatState, inputTankBehaviour, outputTankBehaviour);
+        }
+
         AirCompressorUtils.updateOperatingBlockState(level, worldPosition, getBlockState(), operating);
         if (operating) {
             workState = AirCompressorUtils.accumulateWork(workState, plan, getSpeed(), overheatState);
@@ -387,25 +375,16 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         sendData();
     }
 
-    private void tickSaveCooldown() {
-        if (level == null || level.isClientSide || saveCooldown <= 0) {
-            return;
-        }
-
-        saveCooldown--;
-    }
-
     private void markDirty(int previousStoredHeat, boolean force) {
         if (level == null || level.isClientSide) {
             return;
         }
 
-        if (!force && (previousStoredHeat == storedHeat || saveCooldown > 0)) {
+        if (!force && previousStoredHeat == storedHeat) {
             return;
         }
 
         setChanged();
-        saveCooldown = 20;
     }
 
     public void updateCoolant(BlockPos coolantPos) {

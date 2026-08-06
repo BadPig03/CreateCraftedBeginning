@@ -39,22 +39,20 @@ public final class GasPropagator {
     /**
      * Propagates the pipe update through connected components.
      *
-     * @param level     the level in which the operation is performed
-     * @param pipePos   the position of the connected gas pipe
-     * @param pipeState the block state of the connected gas pipe
+     * @param level   the level in which the operation is performed
+     * @param pipePos the position of the connected gas pipe
      */
-    public static void propagatePipe(Level level, BlockPos pipePos, BlockState pipeState) {
-        propagatePipeInternal(level, pipePos, pipeState);
+    public static void propagatePipe(Level level, BlockPos pipePos) {
+        propagatePipeInternal(level, pipePos);
     }
 
     /**
      * Propagates the changed pipe update through connected components.
      *
-     * @param level     the level in which the operation is performed
-     * @param pipePos   the position of the connected gas pipe
-     * @param pipeState the block state of the connected gas pipe
+     * @param level   the level in which the operation is performed
+     * @param pipePos the position of the connected gas pipe
      */
-    public static void propagateChangedPipe(Level level, BlockPos pipePos, BlockState pipeState) {
+    public static void propagateChangedPipe(Level level, BlockPos pipePos) {
         long gameTime = level.getGameTime();
         PropagationBatch batch = CHANGED_PIPE_BATCHES.get(level);
         if (batch.gameTime != gameTime) {
@@ -65,10 +63,10 @@ public final class GasPropagator {
             return;
         }
 
-        batch.processed.addAll(propagatePipeInternal(level, pipePos, pipeState));
+        batch.processed.addAll(propagatePipeInternal(level, pipePos));
     }
 
-    private static Set<BlockPos> propagatePipeInternal(Level level, BlockPos pipePos, BlockState pipeState) {
+    private static Set<BlockPos> propagatePipeInternal(Level level, BlockPos pipePos) {
         Deque<Pair<Integer, BlockPos>> frontier = new ArrayDeque<>();
         Set<BlockPos> visited = new HashSet<>();
         Set<Pair<AirtightPumpBlockEntity, Direction>> discoveredPumps = new HashSet<>();
@@ -84,10 +82,9 @@ public final class GasPropagator {
             }
 
             behaviour.wipePressure();
-            BlockState currentState = currentPos.equals(pipePos) ? pipeState : level.getBlockState(currentPos);
             int distance = pair.getFirst();
             for (Direction direction : Iterate.directions) {
-                if (!behaviour.canHaveFlowToward(currentState, direction)) {
+                if (behaviour.getConnection(direction) == null) {
                     continue;
                 }
 
@@ -111,11 +108,11 @@ public final class GasPropagator {
                 }
 
                 int newDistance = distance + 1;
-                if (newDistance > pumpRange && !targetBehaviour.hasAnyPressure()) {
+                if (newDistance > pumpRange && !targetBehaviour.hasAnyPressureContribution()) {
                     continue;
                 }
 
-                if (!targetBehaviour.canHaveFlowToward(targetState, direction.getOpposite())) {
+                if (targetBehaviour.getConnection(direction.getOpposite()) == null) {
                     continue;
                 }
 
@@ -141,6 +138,19 @@ public final class GasPropagator {
     @Nullable
     public static GasTransportBehaviour getBehaviour(BlockGetter level, BlockPos pos) {
         return BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
+    }
+
+    /**
+     * Resolves the block adjacent to {@code pos} on {@code side} once and caches
+     * the expensive connection checks used by propagation and source discovery.
+     *
+     * @param level the level in which the operation is performed
+     * @param pos   the source block position
+     * @param side  the side from the source toward the adjacent target
+     * @return the resolved adjacent target
+     */
+    public static AdjacentTarget resolveAdjacentTarget(Level level, BlockPos pos, Direction side) {
+        return new AdjacentTarget(level, pos, side);
     }
 
     /**
@@ -187,7 +197,7 @@ public final class GasPropagator {
      *
      * @param level       the level in which the operation is performed
      * @param pos         the target block position
-     * @param neighborPos the position of the neighboring block
+     * @param neighborPos the position of the neighbouring block
      * @return the changed neighbour side
      */
     public static @Nullable Direction getChangedNeighbourSide(Level level, BlockPos pos, BlockPos neighborPos) {
@@ -210,28 +220,6 @@ public final class GasPropagator {
         return null;
     }
 
-    /**
-     * Checks whether this value is open ended.
-     *
-     * @param level the level in which the operation is performed
-     * @param pos   the target block position
-     * @param side  the side from which the target is accessed
-     * @return {@code true} if this value is open ended; otherwise {@code false}
-     */
-    public static boolean isOpenEnded(Level level, BlockPos pos, Direction side) {
-        BlockPos targetPos = pos.relative(side);
-        BlockState targetState = level.getBlockState(targetPos);
-        Direction oppositeDir = side.getOpposite();
-        GasTransportBehaviour behaviour = getBehaviour(level, targetPos);
-        boolean canFlowToward = behaviour != null && behaviour.canHaveFlowToward(targetState, oppositeDir);
-        boolean isPump = targetState.getBlock() instanceof AirtightPumpBlock && targetState.getValue(AirtightPumpBlock.FACING).getAxis() == side.getAxis();
-        boolean hasGasCapability = GasCapabilities.hasGasCapability(level, targetPos, oppositeDir);
-        boolean isGasSource = CCBBlockTags.GAS_SOURCES.matches(targetState);
-        boolean isFaceSolid = BlockHelper.hasBlockSolidSide(targetState, level, targetPos, oppositeDir) && !AllBlockTags.FAN_TRANSPARENT.matches(targetState);
-        boolean canBeReplaced = targetState.canBeReplaced() && targetState.getDestroySpeed(level, targetPos) != -1;
-        return !canFlowToward && !isPump && !hasGasCapability && (isGasSource || !isFaceSolid && canBeReplaced);
-    }
-
     private static void resetNetworkInDirection(Level level, BlockPos pos, GasTransportBehaviour behaviour, Direction direction, Deque<BlockPos> frontier, Set<BlockPos> visited) {
         BlockPos targetPos = pos.relative(direction);
         if (!level.isLoaded(targetPos) || visited.contains(targetPos)) {
@@ -251,6 +239,75 @@ public final class GasPropagator {
         connection.resetNetwork();
         frontier.add(targetPos);
         visited.add(targetPos);
+    }
+
+    public static final class AdjacentTarget {
+        private static final byte UNKNOWN = -1;
+        private static final byte FALSE = 0;
+        private static final byte TRUE = 1;
+
+        private final Level level;
+        private final Direction side;
+        private final BlockPos pos;
+        private final BlockState state;
+        private final Direction connectedFace;
+        @Nullable
+        private GasTransportBehaviour behaviour;
+        private boolean behaviourResolved;
+        private byte canFlowToward = UNKNOWN;
+        private byte gasCapability = UNKNOWN;
+
+        private AdjacentTarget(Level level, BlockPos sourcePos, Direction side) {
+            this.level = level;
+            this.side = side;
+            pos = sourcePos.relative(side);
+            state = level.getBlockState(pos);
+            connectedFace = side.getOpposite();
+        }
+
+        public BlockPos pos() {
+            return pos;
+        }
+
+        public BlockState state() {
+            return state;
+        }
+
+        public Direction connectedFace() {
+            return connectedFace;
+        }
+
+        @Nullable
+        public GasTransportBehaviour behaviour() {
+            if (!behaviourResolved) {
+                behaviour = getBehaviour(level, pos);
+                behaviourResolved = true;
+            }
+            return behaviour;
+        }
+
+        public boolean canFlowToward() {
+            if (canFlowToward == UNKNOWN) {
+                GasTransportBehaviour targetBehaviour = behaviour();
+                canFlowToward = targetBehaviour != null && targetBehaviour.canHaveFlowToward(state, connectedFace) ? TRUE : FALSE;
+            }
+            return canFlowToward == TRUE;
+        }
+
+        public boolean isAlignedPump() {
+            return state.getBlock() instanceof AirtightPumpBlock && state.getValue(AirtightPumpBlock.FACING).getAxis() == side.getAxis();
+        }
+
+        public boolean hasGasCapability() {
+            if (gasCapability == UNKNOWN) {
+                gasCapability = GasCapabilities.hasGasCapability(level, pos, connectedFace) ? TRUE : FALSE;
+            }
+            return gasCapability == TRUE;
+        }
+
+        public boolean isOpenEnded() {
+            return !isAlignedPump() && !canFlowToward() && !hasGasCapability() && (CCBBlockTags.GAS_SOURCES.matches(state) || state.canBeReplaced() && state.getDestroySpeed(level, pos) != -1 && (!BlockHelper.hasBlockSolidSide(state, level, pos, connectedFace) || AllBlockTags.FAN_TRANSPARENT.matches(state)));
+        }
     }
 
     private static final class PropagationBatch {

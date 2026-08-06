@@ -136,7 +136,12 @@ public class CreativeGasCanisterItem extends Item implements IGasFilter {
 
     @Override
     public boolean test(ItemStack filterItem, GasStack filterGasStack) {
-        return compile(filterItem).test(filterGasStack);
+        if (filterGasStack.isEmpty() || !(filterItem.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents)) {
+            return false;
+        }
+
+        GasStack filterGas = contents.getGasInTank(0);
+        return !filterGas.isEmpty() && GasStack.isSameGasSameComponents(filterGas, filterGasStack);
     }
 
     @Override

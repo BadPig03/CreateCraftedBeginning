@@ -17,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -87,6 +88,11 @@ public class ChainMiningTemplate extends BaseTemplate {
     @Override
     public Set<BlockPos> getBaseArea(int @NotNull [] params) {
         return Set.of(BlockPos.ZERO);
+    }
+
+    @Override
+    protected Stream<BlockPos> getBaseAreaStream(int @NotNull [] params) {
+        return Stream.of(BlockPos.ZERO);
     }
 
     @Override

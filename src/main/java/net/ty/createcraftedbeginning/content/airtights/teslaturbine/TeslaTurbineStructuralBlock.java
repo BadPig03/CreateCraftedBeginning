@@ -2,7 +2,6 @@ package net.ty.createcraftedbeginning.content.airtights.teslaturbine;
 
 import com.simibubi.create.api.equipment.goggles.IProxyHoveringInformation;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
-import com.simibubi.create.foundation.block.render.MultiPosDestructionHandler;
 import net.createmod.catnip.lang.Lang;
 import net.createmod.catnip.placement.IPlacementHelper;
 import net.createmod.catnip.placement.PlacementHelpers;
@@ -47,14 +46,11 @@ import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaT
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
-
-import static net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineUtils.calculateStructurePos;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -139,6 +135,9 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
 
     @Override
     public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor accessor, BlockPos pos, BlockPos neighborPos) {
+        if (state.getValue(WATERLOGGED)) {
+            accessor.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(accessor));
+        }
         if (!stillValid(accessor, pos, state, false)) {
             if (!(accessor instanceof Level level) || level.isClientSide) {
                 return state;
@@ -146,9 +145,6 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
 
             if (!level.getBlockTicks().hasScheduledTick(pos, this)) {
                 level.scheduleTick(pos, this, 1);
-            }
-            if (state.getValue(WATERLOGGED)) {
-                level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
             }
             return state;
         }

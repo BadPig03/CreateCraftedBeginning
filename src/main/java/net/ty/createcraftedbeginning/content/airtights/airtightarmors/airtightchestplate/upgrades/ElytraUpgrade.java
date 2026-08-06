@@ -18,6 +18,7 @@ import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandler;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlerUtils;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerConsumers;
 import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerConsumers.AffordableFuel;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePowerMode;
@@ -39,15 +40,6 @@ public enum ElytraUpgrade implements AirtightUpgrade {
 
     private static final ResourceLocation ID = CreateCraftedBeginning.asResource("elytra");
     private static final Couple<Integer> OFFSET = Couple.create(36, 31);
-
-    public static boolean canRequestBoost(Player player) {
-        if (!player.isFallFlying()) {
-            return false;
-        }
-
-        ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
-        return isBoostReady(player, chestplate) && findBoostFuel(player, chestplate).isPresent();
-    }
 
     private static boolean isBoostReady(Player player, ItemStack chestplate) {
         return chestplate.is(CCBItems.AIRTIGHT_CHESTPLATE) && INSTANCE.isEnabled(chestplate) && !player.getCooldowns().isOnCooldown(chestplate.getItem());
@@ -206,6 +198,6 @@ public enum ElytraUpgrade implements AirtightUpgrade {
     }
 
     public boolean canFly(Player player, ItemStack item) {
-        return item.is(CCBItems.AIRTIGHT_CHESTPLATE) && isEnabled(item) && CanisterContainerConsumers.findAffordableFuel(player, gasType -> 0).isPresent();
+        return item.is(CCBItems.AIRTIGHT_CHESTPLATE) && isEnabled(item) && !CanisterContainerSuppliers.getFirstAvailableGasContent(player).isEmpty();
     }
 }

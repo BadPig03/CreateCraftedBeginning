@@ -3,11 +3,11 @@ package net.ty.createcraftedbeginning.content.airtights.gascanister;
 import net.createmod.catnip.net.base.ClientboundPacketPayload;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
 import net.ty.createcraftedbeginning.registry.CCBPackets;
 import org.jetbrains.annotations.Contract;
 
@@ -16,22 +16,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public record GasCanisterOverlayPacket(GasStack content, long capacity, int packType, boolean creative) implements ClientboundPacketPayload {
-    public static final String COMPOUND_KEY_OVERLAY = "CreateCraftedBeginningGasCanisterOverlay";
-    public static final String COMPOUND_KEY_CONTENT = "Content";
-    public static final String COMPOUND_KEY_CAPACITY = "Capacity";
-    public static final String COMPOUND_KEY_PACK_TYPE = "PackType";
-    public static final String COMPOUND_KEY_CREATIVE = "Creative";
-
     public static final StreamCodec<RegistryFriendlyByteBuf, GasCanisterOverlayPacket> STREAM_CODEC = StreamCodec.composite(GasStack.OPTIONAL_STREAM_CODEC, GasCanisterOverlayPacket::content, ByteBufCodecs.VAR_LONG, GasCanisterOverlayPacket::capacity, ByteBufCodecs.VAR_INT, GasCanisterOverlayPacket::packType, ByteBufCodecs.BOOL, GasCanisterOverlayPacket::creative, GasCanisterOverlayPacket::new);
 
     @Override
     public void handle(LocalPlayer player) {
-        CompoundTag overlay = new CompoundTag();
-        overlay.put(COMPOUND_KEY_CONTENT, content.saveOptional(player.level().registryAccess()));
-        overlay.putLong(COMPOUND_KEY_CAPACITY, capacity);
-        overlay.putInt(COMPOUND_KEY_PACK_TYPE, packType);
-        overlay.putBoolean(COMPOUND_KEY_CREATIVE, creative);
-        player.getPersistentData().put(COMPOUND_KEY_OVERLAY, overlay);
+        CanisterContainerClients.updateDisplayedGasState(content, capacity, packType, creative);
     }
 
     @Contract(pure = true)

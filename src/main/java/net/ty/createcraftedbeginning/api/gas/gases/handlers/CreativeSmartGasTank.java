@@ -7,6 +7,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.List;
 import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
@@ -58,6 +59,14 @@ public class CreativeSmartGasTank extends SmartGasTank {
     @Override
     public long getGasAmount() {
         return getGasStack().isEmpty() ? 0 : getTankCapacity(0);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AtomicFillResult tryFillAtomically(List<GasStack> resources, GasAction action) {
+        return AtomicFillResult.SUCCESS;
     }
 
     /**

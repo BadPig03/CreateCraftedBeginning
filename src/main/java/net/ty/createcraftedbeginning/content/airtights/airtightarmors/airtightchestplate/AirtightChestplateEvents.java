@@ -32,7 +32,7 @@ public class AirtightChestplateEvents {
     @SubscribeEvent
     public static void onRightClickEmpty(RightClickEmpty event) {
         Player player = event.getEntity();
-        if (!player.level().isClientSide || event.getHand() != InteractionHand.MAIN_HAND || !player.getMainHandItem().isEmpty() || !ElytraUpgrade.canRequestBoost(player)) {
+        if (!player.level().isClientSide || event.getHand() != InteractionHand.MAIN_HAND || !player.getMainHandItem().isEmpty()) {
             return;
         }
 

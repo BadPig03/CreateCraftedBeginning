@@ -34,11 +34,7 @@ public class AirtightHandheldDrillEvents {
             return;
         }
 
-        BlockPos pos = AirtightHandheldDrillUtils.getHitResult(player);
-        if (pos == null) {
-            return;
-        }
-
+        BlockPos pos = event.getPos();
         float newSpeed = AirtightHandheldDrillUtils.calculateFinalBreakSpeed(1, player, drill, pos);
         if (newSpeed >= 0) {
             return;

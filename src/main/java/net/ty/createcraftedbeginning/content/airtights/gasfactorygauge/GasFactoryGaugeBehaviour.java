@@ -41,8 +41,8 @@ import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasLogisticsU
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUtils;
 import net.ty.createcraftedbeginning.data.CCBLang;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.platform.CCBClientBridge;
+import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -243,8 +243,8 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
 
         BigItemStack orderedGas = new BigItemStack(gasToken, orderAmount);
         PackageOrderWithCrafts order = PackageOrderWithCrafts.simple(List.of(orderedGas));
-        sendGasEffect(true);
         boolean accepted = LogisticsManager.broadcastPackageRequest(network, RequestType.RESTOCK, order, excludedInventory, recipeAddress);
+        sendGasEffect(accepted);
         if (!accepted) {
             return;
         }

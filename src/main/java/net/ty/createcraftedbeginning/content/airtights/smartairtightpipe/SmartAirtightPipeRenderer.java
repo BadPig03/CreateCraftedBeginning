@@ -4,7 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxRenderer;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform;
 import com.simibubi.create.foundation.blockEntity.renderer.SmartBlockEntityRenderer;
-import net.createmod.catnip.math.VecHelper;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -36,7 +35,7 @@ public class SmartAirtightPipeRenderer extends SmartBlockEntityRenderer<SmartAir
         }
 
         float maxDistance = behaviour.getRenderDistance();
-        return camera.position().distanceToSqr(VecHelper.getCenterOf(pos)) > maxDistance * maxDistance;
+        return camera.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) > maxDistance * maxDistance;
     }
 
     @Override
@@ -52,16 +51,16 @@ public class SmartAirtightPipeRenderer extends SmartBlockEntityRenderer<SmartAir
 
         BlockPos pos = be.getBlockPos();
         GasFilteringBehaviour behaviour = be.getFilter();
-        if (isBeyondRenderDistance(be, level, pos, behaviour)) {
-            return;
-        }
-
         if (!behaviour.isActive()) {
             return;
         }
 
         ItemStack filter = behaviour.getFilter();
         if (filter.isEmpty()) {
+            return;
+        }
+
+        if (isBeyondRenderDistance(be, level, pos, behaviour)) {
             return;
         }
 

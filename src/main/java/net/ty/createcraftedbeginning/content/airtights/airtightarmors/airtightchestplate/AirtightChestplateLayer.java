@@ -2,7 +2,6 @@ package net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightc
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.simibubi.create.foundation.mixin.accessor.EntityRenderDispatcherAccessor;
 import net.createmod.catnip.render.CachedBuffers;
 import net.createmod.catnip.render.SuperByteBuffer;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -49,9 +48,6 @@ public class AirtightChestplateLayer<T extends LivingEntity, M extends EntityMod
         for (EntityRenderer<? extends Player> renderer : dispatcher.getSkinMap().values()) {
             registerOn(renderer);
         }
-        for (EntityRenderer<?> renderer : ((EntityRenderDispatcherAccessor) dispatcher).create$getRenderers().values()) {
-            registerOn(renderer);
-        }
     }
 
     @Override
@@ -65,17 +61,23 @@ public class AirtightChestplateLayer<T extends LivingEntity, M extends EntityMod
             return;
         }
 
-        SuperByteBuffer backpack = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_JETPACK, CCBBlocks.GAS_CANISTER_BLOCK.getDefaultState());
-        SuperByteBuffer elytra = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_ELYTRA, CCBBlocks.GAS_CANISTER_BLOCK.getDefaultState());
+        boolean renderJetpack = CreativeFlightUpgrade.INSTANCE.isEnabled(chestplate);
+        boolean renderElytra = ElytraUpgrade.INSTANCE.isEnabled(chestplate);
+        if (!renderJetpack && !renderElytra) {
+            return;
+        }
+
         VertexConsumer vertexConsumer = bufferSource.getBuffer(Sheets.cutoutBlockSheet());
         poseStack.pushPose();
 
         model.body.translateAndRotate(poseStack);
         poseStack.translate(0.5, 0.75, 0);
-        if (CreativeFlightUpgrade.INSTANCE.isEnabled(chestplate)) {
+        if (renderJetpack) {
+            SuperByteBuffer backpack = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_JETPACK, CCBBlocks.GAS_CANISTER_BLOCK.getDefaultState());
             backpack.rotateZ(Mth.PI).disableDiffuse().light(light).renderInto(poseStack, vertexConsumer);
         }
-        if (ElytraUpgrade.INSTANCE.isEnabled(chestplate)) {
+        if (renderElytra) {
+            SuperByteBuffer elytra = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_ELYTRA, CCBBlocks.GAS_CANISTER_BLOCK.getDefaultState());
             elytra.rotateZ(Mth.PI).disableDiffuse().light(light).renderInto(poseStack, vertexConsumer);
         }
 

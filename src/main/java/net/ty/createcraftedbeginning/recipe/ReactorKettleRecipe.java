@@ -8,7 +8,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.FluidStack;
@@ -33,6 +32,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -47,7 +47,6 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
     public ReactorKettleRecipe(ProcessingWithGasRecipeParams params) {
         super(CCBRecipeTypes.REACTOR_KETTLE, params);
     }
-
 
     public static boolean match(AirtightReactorKettleBlockEntity kettle, ReactorKettleRecipe recipe) {
         FilteringBehaviour filter = kettle.getFilteringBehaviour();
@@ -138,61 +137,135 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
     }
 
     private static boolean planFluidInputConsumption(List<SizedFluidIngredient> ingredients, IFluidHandler fluids, int[] amounts) {
-        for (SizedFluidIngredient ingredient : ingredients) {
-            int required = ingredient.amount();
-            boolean fulfilled = false;
-            for (int tank = 0; tank < fluids.getTanks(); tank++) {
-                FluidStack stack = fluids.getFluidInTank(tank);
-                if (!ingredient.test(stack)) {
-                    continue;
-                }
+        if (ingredients.isEmpty()) {
+            return true;
+        }
 
-                int available = stack.getAmount() - amounts[tank];
-                if (available <= 0) {
-                    continue;
-                }
+        int tankCount = fluids.getTanks();
+        long[] tankAmounts = new long[tankCount];
+        long[] plannedAmounts = new long[tankCount];
+        for (int tank = 0; tank < tankCount; tank++) {
+            tankAmounts[tank] = fluids.getFluidInTank(tank).getAmount();
+            plannedAmounts[tank] = amounts[tank];
+        }
 
-                int drained = Math.min(required, available);
-                amounts[tank] += drained;
-                required -= drained;
-                if (required == 0) {
-                    fulfilled = true;
-                    break;
-                }
+        long[] requiredAmounts = new long[ingredients.size()];
+        boolean[][] matches = new boolean[tankCount][ingredients.size()];
+        for (int ingredientIndex = 0; ingredientIndex < ingredients.size(); ingredientIndex++) {
+            SizedFluidIngredient ingredient = ingredients.get(ingredientIndex);
+            requiredAmounts[ingredientIndex] = ingredient.amount();
+            for (int tank = 0; tank < tankCount; tank++) {
+                matches[tank][ingredientIndex] = ingredient.test(fluids.getFluidInTank(tank));
             }
-            if (!fulfilled) {
-                return false;
-            }
+        }
+
+        if (!planTankInputConsumption(tankAmounts, requiredAmounts, matches, plannedAmounts)) {
+            return false;
+        }
+
+        for (int tank = 0; tank < tankCount; tank++) {
+            amounts[tank] = (int) plannedAmounts[tank];
         }
         return true;
     }
 
     private static boolean planGasInputConsumption(List<SizedGasIngredient> ingredients, IGasHandler gases, long[] amounts) {
-        for (SizedGasIngredient ingredient : ingredients) {
-            long required = ingredient.amount();
-            boolean fulfilled = false;
-            for (int tank = 0; tank < gases.getTanks(); tank++) {
-                GasStack stack = gases.getGasInTank(tank);
-                if (!ingredient.test(stack)) {
-                    continue;
-                }
+        if (ingredients.isEmpty()) {
+            return true;
+        }
 
-                long available = stack.getAmount() - amounts[tank];
-                if (available <= 0) {
-                    continue;
-                }
-
-                long drained = Math.min(required, available);
-                amounts[tank] += drained;
-                required -= drained;
-                if (required == 0) {
-                    fulfilled = true;
-                    break;
-                }
+        int tankCount = gases.getTanks();
+        long[] tankAmounts = new long[tankCount];
+        long[] requiredAmounts = new long[ingredients.size()];
+        boolean[][] matches = new boolean[tankCount][ingredients.size()];
+        for (int tank = 0; tank < tankCount; tank++) {
+            tankAmounts[tank] = gases.getGasInTank(tank).getAmount();
+        }
+        for (int ingredientIndex = 0; ingredientIndex < ingredients.size(); ingredientIndex++) {
+            SizedGasIngredient ingredient = ingredients.get(ingredientIndex);
+            requiredAmounts[ingredientIndex] = ingredient.amount();
+            for (int tank = 0; tank < tankCount; tank++) {
+                matches[tank][ingredientIndex] = ingredient.test(gases.getGasInTank(tank));
             }
-            if (!fulfilled) {
+        }
+
+        return planTankInputConsumption(tankAmounts, requiredAmounts, matches, amounts);
+    }
+
+    // Solve the small tank-to-ingredient allocation as a flow network so broad ingredients cannot starve restrictive ones.
+    private static boolean planTankInputConsumption(long[] tankAmounts, long[] requiredAmounts, boolean[][] matches, long[] plannedAmounts) {
+        int tankCount = tankAmounts.length;
+        int ingredientCount = requiredAmounts.length;
+        int source = 0;
+        int tankOffset = 1;
+        int ingredientOffset = tankOffset + tankCount;
+        int sink = ingredientOffset + ingredientCount;
+        long[][] residualCapacity = new long[sink + 1][sink + 1];
+        long[] availableAmounts = new long[tankCount];
+        long totalRequired = 0;
+
+        for (int tank = 0; tank < tankCount; tank++) {
+            long available = tankAmounts[tank] - plannedAmounts[tank];
+            if (available <= 0) {
+                continue;
+            }
+
+            availableAmounts[tank] = available;
+            residualCapacity[source][tankOffset + tank] = available;
+        }
+
+        for (int ingredient = 0; ingredient < ingredientCount; ingredient++) {
+            long required = requiredAmounts[ingredient];
+            if (required < 0 || Long.MAX_VALUE - totalRequired < required) {
                 return false;
             }
+
+            totalRequired += required;
+            residualCapacity[ingredientOffset + ingredient][sink] = required;
+            for (int tank = 0; tank < tankCount; tank++) {
+                if (matches[tank][ingredient] && availableAmounts[tank] > 0) {
+                    residualCapacity[tankOffset + tank][ingredientOffset + ingredient] = Math.min(availableAmounts[tank], required);
+                }
+            }
+        }
+
+        long totalFlow = 0;
+        int[] parent = new int[residualCapacity.length];
+        while (totalFlow < totalRequired) {
+            Arrays.fill(parent, -1);
+            parent[source] = source;
+            ArrayDeque<Integer> pending = new ArrayDeque<>();
+            pending.add(source);
+            while (!pending.isEmpty() && parent[sink] == -1) {
+                int current = pending.removeFirst();
+                for (int next = 0; next < residualCapacity.length; next++) {
+                    if (parent[next] != -1 || residualCapacity[current][next] <= 0) {
+                        continue;
+                    }
+
+                    parent[next] = current;
+                    pending.addLast(next);
+                }
+            }
+
+            if (parent[sink] == -1) {
+                return false;
+            }
+
+            long pathFlow = totalRequired - totalFlow;
+            for (int node = sink; node != source; node = parent[node]) {
+                pathFlow = Math.min(pathFlow, residualCapacity[parent[node]][node]);
+            }
+            for (int node = sink; node != source; node = parent[node]) {
+                int previous = parent[node];
+                residualCapacity[previous][node] -= pathFlow;
+                residualCapacity[node][previous] += pathFlow;
+            }
+            totalFlow += pathFlow;
+        }
+
+        for (int tank = 0; tank < tankCount; tank++) {
+            plannedAmounts[tank] += availableAmounts[tank] - residualCapacity[source][tankOffset + tank];
         }
         return true;
     }

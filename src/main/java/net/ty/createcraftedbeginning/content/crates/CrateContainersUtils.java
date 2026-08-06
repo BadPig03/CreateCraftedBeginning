@@ -104,6 +104,7 @@ public final class CrateContainersUtils {
                 handler.setStoredItems(0, originalContent, originalCount);
                 return false;
             }
+
             return true;
         });
     }

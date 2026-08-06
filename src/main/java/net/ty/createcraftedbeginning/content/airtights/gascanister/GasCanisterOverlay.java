@@ -11,7 +11,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.LayeredDraw.Layer;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -21,6 +20,8 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
+import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients.DisplayedGasState;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
@@ -74,14 +75,9 @@ public enum GasCanisterOverlay implements Layer {
             return;
         }
 
-        CompoundTag overlayData = player.getPersistentData();
-        if (!overlayData.contains(GasCanisterOverlayPacket.COMPOUND_KEY_OVERLAY)) {
-            return;
-        }
-
-        CompoundTag data = overlayData.getCompound(GasCanisterOverlayPacket.COMPOUND_KEY_OVERLAY);
-        long capacity = data.getLong(GasCanisterOverlayPacket.COMPOUND_KEY_CAPACITY);
-        if (capacity < 0) {
+        DisplayedGasState state = CanisterContainerClients.getSyncedDisplayedGasState();
+        long capacity = state.capacity();
+        if (!state.synced() || capacity < 0) {
             return;
         }
 
@@ -92,15 +88,15 @@ public enum GasCanisterOverlay implements Layer {
 
         int xOffset = CCBConfig.client().gasInfoXOffset.get();
         int yOffset = CCBConfig.client().gasInfoYOffset.get();
-        renderCanister(guiGraphics, data.getInt(GasCanisterOverlayPacket.COMPOUND_KEY_PACK_TYPE), xOffset, yOffset);
+        renderCanister(guiGraphics, state.packType(), xOffset, yOffset);
 
-        GasStack content = GasStack.parseOptional(player.level().registryAccess(), data.getCompound(GasCanisterOverlayPacket.COMPOUND_KEY_CONTENT));
+        GasStack content = state.content();
         long amount = content.getAmount();
 
         Font font = mc.font;
         guiGraphics.drawString(font, CCBLang.gasName(content).style(ChatFormatting.GOLD).component(), 17 + xOffset, yOffset + (content.isEmpty() ? font.lineHeight / 2 : 0), 0);
 
-        MutableComponent amountText = getAmountText(data.getBoolean(GasCanisterOverlayPacket.COMPOUND_KEY_CREATIVE), amount, capacity);
+        MutableComponent amountText = getAmountText(state.creative(), amount, capacity);
         guiGraphics.drawString(font, amountText, 17 + xOffset, font.lineHeight + yOffset, 0);
 
         poseStack.popPose();

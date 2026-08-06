@@ -26,7 +26,7 @@ public abstract class PackageEntityMixin extends LivingEntity {
         super(entityType, level);
     }
 
-    @Inject(method = "onInsideBlock", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "onInsideBlock", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/logistics/box/PackageEntity;destroy(Lnet/minecraft/world/damagesource/DamageSource;)V"), cancellable = true)
     private void ccb$onInsideBlock(BlockState state, CallbackInfo ci) {
         PackageEntity entity = (PackageEntity) (Object) this;
         if (!BalloonUtils.isBalloonPackage(entity) || !BalloonUtils.isInWater(state)) {

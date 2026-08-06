@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.api.gas.gases.behaviours;
 
-import com.google.common.base.Predicates;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BehaviourType;
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
@@ -14,6 +13,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterUtils;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Predicate;
@@ -44,6 +44,10 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
         behaviourType = type;
     }
 
+    private static boolean matchesFilter(GasStack stack, @Nullable GasFilteringBehaviour gasFilter, @Nullable Predicate<GasStack> itemFilter) {
+        return gasFilter != null ? gasFilter.test(stack) : itemFilter == null || itemFilter.test(stack);
+    }
+
     /**
      * Computes and returns the extract any result.
      *
@@ -55,10 +59,11 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
             return GasStack.EMPTY;
         }
 
-        Predicate<GasStack> filter = getFilterTest(Predicates.alwaysTrue());
+        GasFilteringBehaviour gasFilter = blockEntity.getBehaviour(GasFilteringBehaviour.TYPE);
+        Predicate<GasStack> itemFilter = gasFilter == null ? getItemFilterTest() : null;
         for (int i = 0; i < gasHandler.getTanks(); i++) {
             GasStack gasInTank = gasHandler.getGasInTank(i);
-            if (gasInTank.isEmpty() || !filter.test(gasInTank)) {
+            if (gasInTank.isEmpty() || !matchesFilter(gasInTank, gasFilter, itemFilter)) {
                 continue;
             }
 
@@ -79,16 +84,18 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
             return test.and(gasFilter::test);
         }
 
+        Predicate<GasStack> itemFilter = getItemFilterTest();
+        return itemFilter == null ? test : test.and(itemFilter);
+    }
+
+    private @Nullable Predicate<GasStack> getItemFilterTest() {
         FilteringBehaviour itemFilter = blockEntity.getBehaviour(FilteringBehaviour.TYPE);
         if (itemFilter == null) {
-            return test;
+            return null;
         }
 
         ItemStack filterStack = itemFilter.getFilter();
-        if (filterStack.isEmpty()) {
-            return test;
-        }
-        return test.and(getCompiledFilter(filterStack));
+        return filterStack.isEmpty() ? null : getCompiledFilter(filterStack);
     }
 
     private Predicate<GasStack> getCompiledFilter(ItemStack filterStack) {

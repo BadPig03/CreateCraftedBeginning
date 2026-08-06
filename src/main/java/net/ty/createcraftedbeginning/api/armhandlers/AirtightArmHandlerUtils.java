@@ -5,6 +5,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -60,7 +61,27 @@ public final class AirtightArmHandlerUtils {
      * @param knockback   the knockback value to use
      */
     public static void register(ResourceLocation location, float consumption, float blockRange, float entityRange, float knockback) {
-        register(location, new AirtightArmStats(consumption, blockRange, entityRange, knockback));
+        register(location, new AirtightArmHandler() {
+            @Override
+            public float getGasConsumptionMultiplier() {
+                return consumption;
+            }
+
+            @Override
+            public float getIncreasedBlockInteractionRange() {
+                return blockRange;
+            }
+
+            @Override
+            public float getIncreasedEntityInteractionRange() {
+                return entityRange;
+            }
+
+            @Override
+            public float getIncreasedKnockback() {
+                return knockback;
+            }
+        });
     }
 
     /**
@@ -82,11 +103,31 @@ public final class AirtightArmHandlerUtils {
             return;
         }
 
-        try {
-            AirtightArmStats stats = handler instanceof AirtightArmStats existing ? existing : new AirtightArmStats(handler.getGasConsumptionMultiplier(), handler.getIncreasedBlockInteractionRange(), handler.getIncreasedEntityInteractionRange(), handler.getIncreasedKnockback());
-            AirtightArmHandler.REGISTRY.register(gasType, stats);
-        } catch (IllegalArgumentException exception) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Arm Handler for gas '{}': {}", location, exception.getMessage());
+        float consumptionMultiplier = handler.getGasConsumptionMultiplier();
+        if (!GasConsumptionUtils.isNonNegativeFinite(consumptionMultiplier)) {
+            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Arm Handler for gas '{}': consumption multiplier must be finite and non-negative, got {}.", location, consumptionMultiplier);
+            return;
         }
+
+        float blockRange = handler.getIncreasedBlockInteractionRange();
+        if (!GasConsumptionUtils.isNonNegativeFinite(blockRange)) {
+            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Arm Handler for gas '{}': block interaction range bonus must be finite and non-negative, got {}.", location, blockRange);
+            return;
+        }
+
+        float entityRange = handler.getIncreasedEntityInteractionRange();
+        if (!GasConsumptionUtils.isNonNegativeFinite(entityRange)) {
+            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Arm Handler for gas '{}': entity interaction range bonus must be finite and non-negative, got {}.", location, entityRange);
+            return;
+        }
+
+        float knockback = handler.getIncreasedKnockback();
+        if (!GasConsumptionUtils.isNonNegativeFinite(knockback)) {
+            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Arm Handler for gas '{}': attack knockback bonus must be finite and non-negative, got {}.", location, knockback);
+            return;
+        }
+
+        AirtightArmStats stats = handler instanceof AirtightArmStats existing ? existing : new AirtightArmStats(consumptionMultiplier, blockRange, entityRange, knockback);
+        AirtightArmHandler.REGISTRY.register(gasType, stats);
     }
 }
