@@ -37,7 +37,6 @@ public enum CCBParticleTypes {
         ParticleEntry.REGISTER.register(modEventBus);
     }
 
-
     public ParticleType<?> get() {
         return entry.object.get();
     }

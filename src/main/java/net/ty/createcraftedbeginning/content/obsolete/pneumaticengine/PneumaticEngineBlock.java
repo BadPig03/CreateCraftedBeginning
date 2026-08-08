@@ -69,6 +69,7 @@ public class PneumaticEngineBlock extends KineticBlock implements IBE<PneumaticE
             engine.toggleDirection();
             return InteractionResult.SUCCESS;
         }
+
         return InteractionResult.FAIL;
     }
 

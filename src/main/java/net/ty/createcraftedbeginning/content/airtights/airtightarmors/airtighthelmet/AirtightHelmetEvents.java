@@ -41,7 +41,6 @@ public class AirtightHelmetEvents {
         event.setCanBreathe(true);
     }
 
-
     @SubscribeEvent
     public static void onPlayerTick(Post event) {
         Player player = event.getEntity();

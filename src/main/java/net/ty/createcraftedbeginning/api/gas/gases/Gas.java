@@ -94,7 +94,6 @@ public class Gas {
         return reference.isPresent() ? reference.get() : EMPTY_GAS_HOLDER;
     }
 
-
     /**
      * Resolves a registered gas from its resource location, falling back to the empty gas.
      *

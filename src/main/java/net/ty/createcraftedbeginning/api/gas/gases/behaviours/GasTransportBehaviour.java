@@ -148,6 +148,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
             createConnectionData();
             return;
         }
+
         if (level == null) {
             return;
         }

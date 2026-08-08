@@ -394,6 +394,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
             playButtonSound();
             return true;
         }
+
         return super.mouseClicked(mouseX, mouseY, button);
     }
 

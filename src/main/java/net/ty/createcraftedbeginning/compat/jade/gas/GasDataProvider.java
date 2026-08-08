@@ -180,6 +180,7 @@ public class GasDataProvider {
             Component max = Component.literal(view.max).withStyle(ChatFormatting.GRAY);
             return Component.translatable("jade.gas.detailed", name, current, max);
         }
+
         return Component.translatable("jade.gas", name, current);
     }
 

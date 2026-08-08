@@ -77,10 +77,12 @@ public class AirtightHandheldDrillOutlineRenderer {
             return;
         }
 
-        if (!keepCachedCluster(outliner, TOTAL_SECOND_KEY, totalPos)) {
-            outliner.showCluster(TOTAL_SECOND_KEY, totalPos).colored(COLOR_WHITE).disableLineNormals().disableCull().lineWidth(0.015625f).withFaceTexture(CCBSpecialTextures.LOW_TRANSLUCENT_HIGHLIGHTED);
-            CACHED_POSITIONS.put(TOTAL_SECOND_KEY, totalPos);
+        if (keepCachedCluster(outliner, TOTAL_SECOND_KEY, totalPos)) {
+            return;
         }
+
+        outliner.showCluster(TOTAL_SECOND_KEY, totalPos).colored(COLOR_WHITE).disableLineNormals().disableCull().lineWidth(0.015625f).withFaceTexture(CCBSpecialTextures.LOW_TRANSLUCENT_HIGHLIGHTED);
+        CACHED_POSITIONS.put(TOTAL_SECOND_KEY, totalPos);
     }
 
     private static boolean showHighlightedCluster(CCBOutliner outliner, String key, Set<BlockPos> positions, int color) {

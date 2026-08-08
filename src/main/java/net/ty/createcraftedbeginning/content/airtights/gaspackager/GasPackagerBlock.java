@@ -117,6 +117,7 @@ public class GasPackagerBlock extends PackagerBlock {
             CCBLang.translate("gui.warnings.no_gas_portable_interface").sendStatus(player);
             return null;
         }
+
         return state.setValue(POWERED, level.hasNeighborSignal(clickedPos)).setValue(FACING, preferred);
     }
 

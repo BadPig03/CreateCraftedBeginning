@@ -51,12 +51,15 @@ public class TeslaTurbineStructureManager {
                 if (!(structuralState.getBlock() instanceof TeslaTurbineStructuralBlock)) {
                     return false;
                 }
+
                 if (structuralState.getValue(TeslaTurbineStructuralBlock.AXIS) != axis) {
                     return false;
                 }
+
                 if (structuralState.getValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION) != TeslaTurbineStructuralPosition.fromOffset(u, v)) {
                     return false;
                 }
+
                 if (!TeslaTurbineStructuralBlock.getMaster(structuralPos, structuralState).equals(turbinePos)) {
                     return false;
                 }

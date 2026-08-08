@@ -9,7 +9,6 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -21,7 +20,6 @@ public class GasCanisterPackOverrides {
     private static final int RIGHT_UP = 2;
     private static final int LEFT_DOWN = 4;
     private static final int RIGHT_DOWN = 8;
-
 
     public static int calculateFlags(boolean leftUp, boolean rightUp, boolean leftDown, boolean rightDown) {
         int flags = 0;

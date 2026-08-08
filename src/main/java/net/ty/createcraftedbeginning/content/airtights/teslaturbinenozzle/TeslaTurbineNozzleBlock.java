@@ -155,9 +155,11 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
     @Override
     public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean moving) {
         super.onPlace(state, level, pos, oldState, moving);
-        if (!state.is(oldState.getBlock()) || state.getValue(FACING) != oldState.getValue(FACING)) {
-            scheduleValidation(level, pos);
+        if (state.is(oldState.getBlock()) && state.getValue(FACING) == oldState.getValue(FACING)) {
+            return;
         }
+
+        scheduleValidation(level, pos);
     }
 
     @Override
@@ -177,9 +179,11 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
     @Override
     public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         Direction inwardDirection = state.getValue(FACING).getOpposite();
-        if (isInvalidPlacement(level, inwardDirection, pos)) {
-            level.destroyBlock(pos, true);
+        if (!isInvalidPlacement(level, inwardDirection, pos)) {
+            return;
         }
+
+        level.destroyBlock(pos, true);
     }
 
     @Override

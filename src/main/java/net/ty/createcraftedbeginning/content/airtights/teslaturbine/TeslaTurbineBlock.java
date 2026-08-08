@@ -212,9 +212,11 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
             }
         }
 
-        if (level.getBlockEntity(pos) instanceof TeslaTurbineBlockEntity turbine) {
-            turbine.getCore().getStructureManager().tick();
+        if (!(level.getBlockEntity(pos) instanceof TeslaTurbineBlockEntity turbine)) {
+            return;
         }
+
+        turbine.getCore().getStructureManager().tick();
     }
 
     @Override

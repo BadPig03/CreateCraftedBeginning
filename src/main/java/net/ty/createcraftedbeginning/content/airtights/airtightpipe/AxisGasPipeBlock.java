@@ -79,9 +79,11 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
 
     private static void markConnectionsDirty(Level level, BlockPos pos) {
         GasTransportBehaviour transport = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
-        if (transport != null) {
-            transport.markConnectionsDirty();
+        if (transport == null) {
+            return;
         }
+
+        transport.markConnectionsDirty();
     }
 
     private static Axis getPlacementAxis(Set<Axis> availableAxes, Axis preferredAxis) {

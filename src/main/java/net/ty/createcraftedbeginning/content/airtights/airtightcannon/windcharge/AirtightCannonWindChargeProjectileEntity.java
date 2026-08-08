@@ -215,9 +215,11 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         double x = buffer.readDouble();
         double y = buffer.readDouble();
         double z = buffer.readDouble();
-        if (Double.isFinite(x) && Double.isFinite(y) && Double.isFinite(z)) {
-            initMotion = new Vec3(x, y, z);
+        if (!Double.isFinite(x) || !Double.isFinite(y) || !Double.isFinite(z)) {
+            return;
         }
+
+        initMotion = new Vec3(x, y, z);
     }
 
     private boolean hasSignificantExternalImpulse() {

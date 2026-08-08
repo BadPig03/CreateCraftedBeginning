@@ -63,7 +63,6 @@ public class AirtightCannonItem extends Item implements CustomArmPoseItem {
         if (player == null) {
             return InteractionResult.FAIL;
         }
-
         return use(context.getLevel(), player, context.getHand()).getResult();
     }
 

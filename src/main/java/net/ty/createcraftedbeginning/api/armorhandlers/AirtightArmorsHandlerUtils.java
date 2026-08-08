@@ -137,6 +137,7 @@ public final class AirtightArmorsHandlerUtils {
             CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Armors Handler for gas '{}': elytra multiplier must be finite and non-negative, got {}.", location, elytraMultiplier);
             return false;
         }
+
         return true;
     }
 

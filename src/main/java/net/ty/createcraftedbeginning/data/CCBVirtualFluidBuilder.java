@@ -32,7 +32,6 @@ public class CCBVirtualFluidBuilder<T extends BaseFlowingFluid, P> extends Fluid
         return fluidType;
     }
 
-
     @Override
     public NonNullSupplier<T> asSupplier() {
         return this::getEntry;

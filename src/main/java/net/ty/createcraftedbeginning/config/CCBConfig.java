@@ -71,6 +71,7 @@ public class CCBConfig {
             int speed = TeslaTurbineUtils.MAX_LEVEL * TeslaTurbineUtils.BASE_ROTATION_SPEED;
             return new GeneratedRpm(speed, true);
         }
+
         return null;
     }
 

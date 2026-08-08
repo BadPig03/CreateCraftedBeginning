@@ -55,7 +55,6 @@ public abstract class FactoryPanelConfigurationPacketMixin {
         if (!(behaviour instanceof GasFactoryGaugeBehaviour)) {
             return outputAmount;
         }
-
         return Mth.clamp(outputAmount, 1, GasFactoryGaugeBehaviour.MAX_TARGET_AMOUNT);
     }
 

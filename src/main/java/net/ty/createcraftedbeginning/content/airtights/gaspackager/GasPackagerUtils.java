@@ -89,6 +89,7 @@ public final class GasPackagerUtils {
             if (gas.isEmpty()) {
                 continue;
             }
+
             if (!containsMatchingGas(drainedGases, gas) && drainedGases.size() >= BalloonGasContents.MAX_GAS_TYPES) {
                 continue;
             }
@@ -135,6 +136,7 @@ public final class GasPackagerUtils {
         if (gases.isEmpty()) {
             return true;
         }
+
         if (gases.size() > 1) {
             return handler.tryFillAtomically(gases, GasAction.SIMULATE).isSuccess();
         }

@@ -88,7 +88,8 @@ public class AirtightAssemblyDriverTooltipBuilder {
             CCBLang.translate("gui.airtight_assembly_driver.via_no_outlet").style(ChatFormatting.GRAY).forGoggles(tooltip);
             return;
         }
-        else if (outlets == 1) {
+
+        if (outlets == 1) {
             CCBLang.translate("gui.airtight_assembly_driver.via_one_outlet").style(ChatFormatting.GRAY).forGoggles(tooltip);
             return;
         }

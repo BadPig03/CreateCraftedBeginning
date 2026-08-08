@@ -27,7 +27,8 @@ public class AirFillHandler implements AirtightFillHandler {
         if (biome.is(Tags.Biomes.IS_MUSHROOM)) {
             return CCBGases.SPORE_AIR.get();
         }
-        else if (biome.is(Biomes.DEEP_DARK)) {
+
+        if (biome.is(Biomes.DEEP_DARK)) {
             return CCBGases.SCULK_AIR.get();
         }
 

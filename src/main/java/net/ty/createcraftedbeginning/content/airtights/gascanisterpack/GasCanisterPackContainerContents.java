@@ -262,9 +262,11 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
         if (gasChanged) {
             saveContents();
         }
-        if (capacityChanged) {
-            saveCapacities();
+        if (!capacityChanged) {
+            return;
         }
+
+        saveCapacities();
     }
 
     public boolean isEmpty(int tank) {
@@ -345,9 +347,11 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
     }
 
     private <T> void setComponentIfChanged(DataComponentType<T> component, T value) {
-        if (!Objects.equals(pack.get(component), value)) {
-            pack.set(component, value);
+        if (Objects.equals(pack.get(component), value)) {
+            return;
         }
+
+        pack.set(component, value);
     }
 
     public Pair<GasStack, Pair<Long, Boolean>> getFirstNonEmptyPair() {

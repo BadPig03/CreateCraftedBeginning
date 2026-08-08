@@ -102,6 +102,7 @@ public enum ElytraUpgrade implements AirtightUpgrade {
             GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", selectedFuel.gasContent().getHoverName());
             return false;
         }
+
         return applySpeedBoost(player, multiplier);
     }
 

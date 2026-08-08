@@ -80,7 +80,6 @@ public class AirVentBlockEntity extends SyncedBlockEntity {
         if (louverMask == 0) {
             return 0;
         }
-
         return louverMask & ~AirVentBlock.getConnectionMask(getBlockState()) & VALID_DIRECTION_MASK;
     }
 

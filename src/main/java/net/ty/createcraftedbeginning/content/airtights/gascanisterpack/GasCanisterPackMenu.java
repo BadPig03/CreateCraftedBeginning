@@ -109,9 +109,11 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
         packContents.replaceCanisters(canisters);
 
         int packType = getPackType();
-        if (pack.getOrDefault(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, -1) != packType) {
-            pack.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, packType);
+        if (pack.getOrDefault(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, -1) == packType) {
+            return;
         }
+
+        pack.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, packType);
     }
 
     @Override
