@@ -20,6 +20,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.mixin.client.accessor.RedstoneRequesterScreenAccessor;
@@ -35,6 +36,35 @@ import java.util.List;
 @OnlyIn(Dist.CLIENT)
 public final class GasRequestClientUtils {
     private GasRequestClientUtils() {
+    }
+
+    public static int getScrollStep() {
+        return CCBConfig.client().gasRequestScrollStep.get();
+    }
+
+    public static int getAltStep() {
+        return CCBConfig.client().gasRequestAltScrollStep.get();
+    }
+
+    public static int getCtrlStep() {
+        return CCBConfig.client().gasRequestCtrlScrollStep.get();
+    }
+
+    public static int getShiftStep() {
+        return CCBConfig.client().gasRequestShiftScrollStep.get();
+    }
+
+    public static int getStep(boolean alt, boolean ctrl, boolean shift) {
+        if (alt) {
+            return getAltStep();
+        }
+        if (ctrl) {
+            return getCtrlStep();
+        }
+        if (shift) {
+            return getShiftStep();
+        }
+        return getScrollStep();
     }
 
     public static boolean onSlotClicked(AbstractContainerScreen<?> screen, RedstoneRequesterMenu requesterMenu, @Nullable Slot slot, int mouseButton, ClickType clickType) {
@@ -70,7 +100,7 @@ public final class GasRequestClientUtils {
         }
 
         if (rightQuickCraft) {
-            submitVirtualItem(screenAccessor, requesterMenu, virtualItems.getFirst(), slotIndex, GasRequestUtils.getScrollStep());
+            submitVirtualItem(screenAccessor, requesterMenu, virtualItems.getFirst(), slotIndex, getScrollStep());
             return true;
         }
 
@@ -105,7 +135,7 @@ public final class GasRequestClientUtils {
                 continue;
             }
 
-            submitVirtualItem(screenAccessor, requesterMenu, virtualItems.get(gasIndex), slot, GasRequestUtils.getScrollStep());
+            submitVirtualItem(screenAccessor, requesterMenu, virtualItems.get(gasIndex), slot, getScrollStep());
             gasIndex++;
         }
     }
@@ -142,10 +172,10 @@ public final class GasRequestClientUtils {
         }
 
         long multiplier = orderHovered ? 1 : 10;
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.scroll", GasRequestUtils.getScrollStep() * multiplier);
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.shift_to_scroll", GasRequestUtils.getShiftStep() * multiplier);
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.alt_to_scroll", GasRequestUtils.getAltStep() * multiplier);
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.ctrl_to_scroll", GasRequestUtils.getCtrlStep() * multiplier);
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.scroll", getScrollStep() * multiplier);
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.shift_to_scroll", getShiftStep() * multiplier);
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.alt_to_scroll", getAltStep() * multiplier);
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.ctrl_to_scroll", getCtrlStep() * multiplier);
         tooltips.addAll(getExtraTooltips(virtualItem));
         return tooltips;
     }

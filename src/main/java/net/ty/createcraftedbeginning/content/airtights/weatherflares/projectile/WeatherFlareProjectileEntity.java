@@ -27,7 +27,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
-import net.ty.createcraftedbeginning.content.airtights.weatherflares.IWeatherFlare;
+import net.ty.createcraftedbeginning.api.weatherflares.IWeatherFlare;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBEntityTypes;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -56,7 +56,7 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
     private double startY;
     private boolean copied;
 
-    public WeatherFlareProjectileEntity(EntityType<? extends AbstractHurtingProjectile> entityType, Level level) {
+    public WeatherFlareProjectileEntity(EntityType<WeatherFlareProjectileEntity> entityType, Level level) {
         super(entityType, level);
         accelerationPower = 0;
         itemStack = getDefaultItem();
@@ -74,10 +74,8 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
         return new ItemStack(CCBItems.SUNNY_FLARE.asItem());
     }
 
-    @SuppressWarnings("unchecked")
-    public static EntityType.Builder<?> build(EntityType.Builder<?> builder) {
-        EntityType.Builder<WeatherFlareProjectileEntity> typedBuilder = (EntityType.Builder<WeatherFlareProjectileEntity>) builder;
-        return typedBuilder.sized(DEFAULT_SIZE, DEFAULT_SIZE).eyeHeight(0);
+    public static void build(EntityType.Builder<WeatherFlareProjectileEntity> builder) {
+        builder.sized(DEFAULT_SIZE, DEFAULT_SIZE).eyeHeight(0);
     }
 
     public void setCopied(boolean copied) {

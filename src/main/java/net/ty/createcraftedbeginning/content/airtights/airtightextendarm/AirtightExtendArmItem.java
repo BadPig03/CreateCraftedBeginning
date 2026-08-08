@@ -13,8 +13,8 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.armhandlers.AirtightArmHandler;
 import net.ty.createcraftedbeginning.api.armhandlers.AirtightArmHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
 import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
 import net.ty.createcraftedbeginning.data.CCBLang;
 
 import javax.annotation.ParametersAreNonnullByDefault;

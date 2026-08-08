@@ -22,6 +22,9 @@ import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.airtights.transaction.MachineResourceSnapshots;
+import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
+import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction.Participant;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
@@ -29,7 +32,6 @@ import org.jetbrains.annotations.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.IntSupplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -133,10 +135,11 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
     public @Nullable ResidueInsertionPlan createResidueInsertionPlan(FluidStack fluidStack, ItemStack itemStack, int maxAmount) {
         boolean hasFluid = !fluidStack.isEmpty();
         boolean hasItem = !itemStack.isEmpty();
-        if (maxAmount <= 0 || hasFluid == hasItem) {
+        if (level == null || maxAmount <= 0 || hasFluid == hasItem) {
             return null;
         }
-        return hasFluid ? createFluidInsertionPlan(fluidStack, maxAmount) : createItemInsertionPlan(itemStack, maxAmount);
+        Provider provider = level.registryAccess();
+        return hasFluid ? createFluidInsertionPlan(fluidStack, maxAmount, provider) : createItemInsertionPlan(itemStack, maxAmount, provider);
     }
 
     public int insertResidueFluid(FluidStack fluidStack, FluidAction action) {
@@ -147,36 +150,46 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
         return inventory;
     }
 
-    private @Nullable ResidueInsertionPlan createFluidInsertionPlan(FluidStack fluid, int maxAmount) {
+    private @Nullable ResidueInsertionPlan createFluidInsertionPlan(FluidStack fluid, int maxAmount, Provider provider) {
         int plannedAmount = insertResidueFluid(fluid.copyWithAmount(maxAmount), FluidAction.SIMULATE);
         if (plannedAmount <= 0) {
             return null;
         }
 
         FluidStack plannedFluid = fluid.copyWithAmount(plannedAmount);
-        return new ResidueInsertionPlan(plannedAmount, () -> insertResidueFluid(plannedFluid, FluidAction.EXECUTE));
+        return new ResidueInsertionPlan(plannedAmount, ResourceTransaction.participant(() -> insertResidueFluid(plannedFluid, FluidAction.SIMULATE) == plannedAmount, () -> MachineResourceSnapshots.snapshotFluidTanks(provider, fluidTankBehaviour), () -> insertResidueFluid(plannedFluid, FluidAction.EXECUTE) == plannedAmount, snapshot -> {
+            MachineResourceSnapshots.restoreFluidTanks(provider, snapshot, fluidTankBehaviour);
+            notifyUpdate();
+        }));
     }
 
-    private @Nullable ResidueInsertionPlan createItemInsertionPlan(ItemStack item, int maxUnits) {
+    private @Nullable ResidueInsertionPlan createItemInsertionPlan(ItemStack item, int maxUnits, Provider provider) {
         int plannedUnits = Math.min(maxUnits, inventory.getItemInsertionCapacityUnits(item));
         if (plannedUnits <= 0) {
             return null;
         }
 
         ItemStack plannedItem = item.copyWithCount(1);
-        return new ResidueInsertionPlan(plannedUnits, () -> inventory.addPartialItemUnits(plannedUnits, plannedItem));
+        return new ResidueInsertionPlan(plannedUnits, ResourceTransaction.participant(() -> inventory.getItemInsertionCapacityUnits(plannedItem) >= plannedUnits, () -> inventory.serializeNBT(provider).copy(), () -> inventory.addPartialItemUnits(plannedUnits, plannedItem) == plannedUnits, snapshot -> {
+            inventory.deserializeNBT(provider, snapshot.copy());
+            notifyUpdate();
+        }));
     }
 
-    public record ResidueInsertionPlan(int plannedAmount, IntSupplier insertion) {
+    public record ResidueInsertionPlan(int plannedAmount, Participant<?> participant) {
         public ResidueInsertionPlan {
             if (plannedAmount <= 0) {
                 throw new IllegalArgumentException("A residue insertion plan must contain a positive amount.");
             }
-            Objects.requireNonNull(insertion, "insertion");
+            Objects.requireNonNull(participant, "participant");
         }
 
-        public int commit() {
-            return Math.clamp(insertion.getAsInt(), 0, plannedAmount);
+        private static <S> void addParticipant(ResourceTransaction transaction, Participant<S> participant) {
+            transaction.add(participant);
+        }
+
+        public void addTo(ResourceTransaction transaction) {
+            addParticipant(transaction, participant);
         }
     }
 }

@@ -1,7 +1,10 @@
 package net.ty.createcraftedbeginning.client;
 
+import com.simibubi.create.AllSpecialTextures;
+import com.simibubi.create.content.equipment.goggles.GogglesItem;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBehaviour;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelPosition;
+import com.simibubi.create.infrastructure.config.AllConfigs;
 import net.createmod.catnip.data.Pair;
 import net.createmod.catnip.gui.ScreenOpener;
 import net.createmod.catnip.outliner.Outliner;
@@ -24,8 +27,10 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
+import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlock;
+import net.ty.createcraftedbeginning.content.airtights.gas.network.GasAreaOutlinePacket;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeScreen;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlock;
@@ -95,6 +100,32 @@ public final class CCBClientBridgeImpl implements Service {
         BlockPos pos = context.getClickedPos();
         Outliner.getInstance().showAABB(Pair.of("tesla_turbine", pos), new AABB(pos).inflate(1).deflate(contract.x, contract.y, contract.z)).colored(COLOR_RED);
         CCBLang.translate("gui.warnings.clear_blocks_for_placement").color(COLOR_RED).sendStatus(localPlayer);
+    }
+
+    @Override
+    public void showGasAreaOutline(Player player, BlockPos pos, Direction direction, float inflation, int color) {
+        if (!GogglesItem.isWearingGoggles(player) || !CCBConfig.client().enableGasAreaOutline.get()) {
+            return;
+        }
+
+        AABB area = new AABB(pos.relative(direction)).inflate(inflation);
+        Object outlineSlot = Pair.of(GasAreaOutlinePacket.class, Pair.of(pos, direction));
+        Outliner.getInstance().chaseAABB(outlineSlot, area).colored(color).withFaceTextures(AllSpecialTextures.CHECKERED, AllSpecialTextures.HIGHLIGHT_CHECKERED).lineWidth(0.0625f);
+    }
+
+    @Override
+    public boolean isOverstressedTooltipEnabled() {
+        return AllConfigs.client().enableOverstressedTooltip.get();
+    }
+
+    @Override
+    public int getMaxItemStackDisplay() {
+        return CCBConfig.client().maxItemStackDisplay.get();
+    }
+
+    @Override
+    public float getFilterItemRenderDistance() {
+        return AllConfigs.client().filterItemRenderDistance.getF();
     }
 
     @Override

@@ -7,9 +7,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsUtils;
-import net.ty.createcraftedbeginning.data.CCBIcons;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,7 +31,7 @@ public interface AirtightUpgrade {
 
     boolean isRightIndicator();
 
-    CCBIcons getIcon();
+    AirtightUpgradeIcon getIcon();
 
     Component getDescription();
 

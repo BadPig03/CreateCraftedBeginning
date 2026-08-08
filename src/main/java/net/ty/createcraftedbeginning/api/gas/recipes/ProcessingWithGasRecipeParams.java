@@ -17,7 +17,6 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
-import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.TemperatureCondition;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -55,7 +54,7 @@ public class ProcessingWithGasRecipeParams {
     @SuppressWarnings({"removal", "UnstableApiUsage"})
     @Contract("_ -> new")
     protected static <P extends ProcessingWithGasRecipeParams> @NotNull MapCodec<P> codec(Supplier<P> factory) {
-        return RecordCodecBuilder.mapCodec(instance -> instance.group(Codec.either(Codec.either(CreateCodecs.SIZED_FLUID_INGREDIENT, SizedGasIngredient.SIZED_GAS_INGREDIENT), Ingredient.CODEC).listOf().fieldOf("ingredients").forGetter(ProcessingWithGasRecipeParams::ingredients), Codec.either(Codec.either(FluidStack.CODEC, GasStack.CODEC), ProcessingOutput.CODEC).listOf().fieldOf("results").forGetter(ProcessingWithGasRecipeParams::results), Codec.INT.optionalFieldOf("processing_time", 0).forGetter(ProcessingWithGasRecipeParams::processingDuration), TemperatureCondition.CODEC.optionalFieldOf("temperature", TemperatureCondition.NONE).forGetter(ProcessingWithGasRecipeParams::temperatureCondition)).apply(instance, (ingredients, results, duration, temperature) -> {
+        return RecordCodecBuilder.mapCodec(instance -> instance.group(Codec.either(Codec.either(CreateCodecs.SIZED_FLUID_INGREDIENT, SizedGasIngredient.CODEC), Ingredient.CODEC).listOf().fieldOf("ingredients").forGetter(ProcessingWithGasRecipeParams::ingredients), Codec.either(Codec.either(FluidStack.CODEC, GasStack.CODEC), ProcessingOutput.CODEC).listOf().fieldOf("results").forGetter(ProcessingWithGasRecipeParams::results), Codec.INT.optionalFieldOf("processing_time", 0).forGetter(ProcessingWithGasRecipeParams::processingDuration), TemperatureCondition.CODEC.optionalFieldOf("temperature", TemperatureCondition.NONE).forGetter(ProcessingWithGasRecipeParams::temperatureCondition)).apply(instance, (ingredients, results, duration, temperature) -> {
             P params = factory.get();
             ingredients.forEach(ingredient -> ingredient.ifRight(params.ingredients::add).ifLeft(fluidOrGas -> fluidOrGas.ifLeft(params.fluidIngredients::add).ifRight(params.gasIngredients::add)));
             results.forEach(result -> result.ifRight(params.results::add).ifLeft(fluidOrGas -> fluidOrGas.ifLeft(params.fluidResults::add).ifRight(params.gasResults::add)));

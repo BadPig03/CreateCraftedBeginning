@@ -14,18 +14,14 @@ import java.util.function.Function;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class ItemApplicationWithGasRecipeParams extends ProcessingWithGasRecipeParams {
-    public static MapCodec<ItemApplicationWithGasRecipeParams> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(codec(ItemApplicationWithGasRecipeParams::new).forGetter(Function.identity()), Codec.BOOL.optionalFieldOf("keep_held_item", false).forGetter(ItemApplicationWithGasRecipeParams::keepHeldItem)).apply(instance, (params, keepHeldItem) -> {
+    public static MapCodec<ItemApplicationWithGasRecipeParams> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(codec(ItemApplicationWithGasRecipeParams::new).forGetter(Function.identity()), Codec.BOOL.optionalFieldOf("keep_held_item", false).forGetter(t -> t.keepHeldItem)).apply(instance, (params, keepHeldItem) -> {
         params.keepHeldItem = keepHeldItem;
         return params;
     }));
 
     public static StreamCodec<RegistryFriendlyByteBuf, ItemApplicationWithGasRecipeParams> STREAM_CODEC = streamCodec(ItemApplicationWithGasRecipeParams::new);
 
-    protected boolean keepHeldItem;
-
-    protected final boolean keepHeldItem() {
-        return keepHeldItem;
-    }
+    public boolean keepHeldItem;
 
     @Override
     protected void encode(RegistryFriendlyByteBuf buffer) {

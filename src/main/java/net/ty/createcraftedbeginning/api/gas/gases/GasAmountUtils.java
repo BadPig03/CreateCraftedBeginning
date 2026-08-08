@@ -1,10 +1,11 @@
 package net.ty.createcraftedbeginning.api.gas.gases;
 
 import net.createmod.catnip.lang.LangBuilder;
+import net.createmod.catnip.lang.LangNumberFormat;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.MutableComponent;
 import net.neoforged.neoforge.fluids.FluidType;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -25,7 +26,7 @@ public final class GasAmountUtils {
      * @return the resulting lang builder
      */
     public static LangBuilder precise(long mb) {
-        return CCBLang.number(mb).add(CCBLang.translate("gui.unit.milli_buckets"));
+        return new LangBuilder(CCBAPI.MOD_ID).text(LangNumberFormat.format(mb)).add(new LangBuilder(CCBAPI.MOD_ID).translate("gui.unit.milli_buckets"));
     }
 
     /**
@@ -124,7 +125,7 @@ public final class GasAmountUtils {
      * @return the formatted text
      */
     public static MutableComponent formatWholeBuckets(long b) {
-        return CCBLang.number(b).space().add(CCBLang.translate("gui.threshold.buckets")).component();
+        return new LangBuilder(CCBAPI.MOD_ID).text(LangNumberFormat.format(b)).space().add(new LangBuilder(CCBAPI.MOD_ID).translate("gui.threshold.buckets")).component();
     }
 
     private static String formatTenths(long amount, long unit) {

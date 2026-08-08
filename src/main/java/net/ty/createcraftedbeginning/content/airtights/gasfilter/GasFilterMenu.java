@@ -14,8 +14,8 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterUtils.GasFilterData;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.Contract;
@@ -31,6 +31,10 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
 
     protected ItemStackHandler filterInventory;
     protected boolean blacklist;
+
+    public GasFilterMenu(int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
+        this(CCBMenuTypes.GAS_FILTER_MENU.get(), id, inv, extraData);
+    }
 
     public GasFilterMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
         super(type, id, inv, extraData);

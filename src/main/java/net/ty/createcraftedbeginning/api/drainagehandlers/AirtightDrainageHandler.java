@@ -1,14 +1,11 @@
 package net.ty.createcraftedbeginning.api.drainagehandlers;
 
 import com.simibubi.create.api.registry.SimpleRegistry;
-import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.packets.GasAreaOutlinePacket;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -53,10 +50,6 @@ public interface AirtightDrainageHandler {
      * @param color     the color value to use
      */
     default void showOutline(Level level, BlockPos pos, Direction direction, float inflation, int color) {
-        if (!(level instanceof ServerLevel serverLevel)) {
-            return;
-        }
-
-        CatnipServices.NETWORK.sendToClientsAround(serverLevel, pos, 64, new GasAreaOutlinePacket(pos, direction, inflation, color));
+        AirtightDrainageHandlerUtils.showOutline(level, pos, direction, inflation, color);
     }
 }

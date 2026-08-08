@@ -16,6 +16,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrade
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
+import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -26,6 +27,10 @@ public class AirtightHandheldDrillMenu extends AirtightUpgradableMenu {
     public static final int UPGRADE_SLOT_INDEX = 0;
     public static final int FILTER_SLOT_INDEX = 1;
     public static final int MAX_SLOTS = 2;
+
+    public AirtightHandheldDrillMenu(int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
+        this(CCBMenuTypes.AIRTIGHT_HANDHELD_DRILL_MENU.get(), id, inv, extraData);
+    }
 
     public AirtightHandheldDrillMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
         super(type, id, inv, extraData);

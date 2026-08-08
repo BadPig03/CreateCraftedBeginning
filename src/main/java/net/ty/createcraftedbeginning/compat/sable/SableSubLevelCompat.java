@@ -10,13 +10,17 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge;
+import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge.EntityArea;
+import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge.Projection;
+import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge.Service;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class SableSubLevelCompat {
+public final class SableSubLevelCompat implements Service {
     private static final double SAT_EPSILON = 1.0E-7;
     private static final Vec3 X_AXIS = new Vec3(1, 0, 0);
     private static final Vec3 Y_AXIS = new Vec3(0, 1, 0);
@@ -25,75 +29,8 @@ public final class SableSubLevelCompat {
     private SableSubLevelCompat() {
     }
 
-    public static Projection resolve(Level level, Position position) {
-        boolean inSubLevel = SableCompanion.INSTANCE.getContaining(level, position) != null;
-        Vec3 projectedPosition = SableCompanion.INSTANCE.projectOutOfSubLevel(level, position);
-        return new Projection(projectedPosition, inSubLevel);
-    }
-
-    public static Projection resolve(Level level, BlockPos blockPos) {
-        return resolve(level, Vec3.atCenterOf(blockPos));
-    }
-
-    public static EntityArea createEntityArea(Level level, BlockPos origin, AABB localBounds) {
-        SubLevelAccess subLevel = SableCompanion.INSTANCE.getContaining(level, origin);
-        return new EntityArea(createOrientedBox(localBounds, subLevel));
-    }
-
-    public static boolean intersects(OrientedBox first, OrientedBox second, double[] rotation, double[] absoluteRotation, double[] translatedCenter) {
-        for (int firstAxis = 0; firstAxis < 3; firstAxis++) {
-            for (int secondAxis = 0; secondAxis < 3; secondAxis++) {
-                int index = firstAxis * 3 + secondAxis;
-                double dot = first.axis(firstAxis).dot(second.axis(secondAxis));
-                rotation[index] = dot;
-                absoluteRotation[index] = Math.abs(dot) + SAT_EPSILON;
-            }
-        }
-
-        Vec3 centerDelta = second.center.subtract(first.center);
-        for (int firstAxis = 0; firstAxis < 3; firstAxis++) {
-            translatedCenter[firstAxis] = centerDelta.dot(first.axis(firstAxis));
-        }
-
-        for (int firstAxis = 0; firstAxis < 3; firstAxis++) {
-            double secondRadius = 0;
-            for (int secondAxis = 0; secondAxis < 3; secondAxis++) {
-                secondRadius += second.extent(secondAxis) * absoluteRotation[firstAxis * 3 + secondAxis];
-            }
-            if (Math.abs(translatedCenter[firstAxis]) > first.extent(firstAxis) + secondRadius) {
-                return false;
-            }
-        }
-
-        for (int secondAxis = 0; secondAxis < 3; secondAxis++) {
-            double firstRadius = 0;
-            double projectedCenter = 0;
-            for (int firstAxis = 0; firstAxis < 3; firstAxis++) {
-                int index = firstAxis * 3 + secondAxis;
-                firstRadius += first.extent(firstAxis) * absoluteRotation[index];
-                projectedCenter += translatedCenter[firstAxis] * rotation[index];
-            }
-            if (Math.abs(projectedCenter) > firstRadius + second.extent(secondAxis)) {
-                return false;
-            }
-        }
-
-        for (int firstAxis = 0; firstAxis < 3; firstAxis++) {
-            int firstNext = (firstAxis + 1) % 3;
-            int firstLast = (firstAxis + 2) % 3;
-            for (int secondAxis = 0; secondAxis < 3; secondAxis++) {
-                int secondNext = (secondAxis + 1) % 3;
-                int secondLast = (secondAxis + 2) % 3;
-                double firstRadius = first.extent(firstNext) * absoluteRotation[firstLast * 3 + secondAxis] + first.extent(firstLast) * absoluteRotation[firstNext * 3 + secondAxis];
-                double secondRadius = second.extent(secondNext) * absoluteRotation[firstAxis * 3 + secondLast] + second.extent(secondLast) * absoluteRotation[firstAxis * 3 + secondNext];
-                double projectedCenter = Math.abs(translatedCenter[firstLast] * rotation[firstNext * 3 + secondAxis] - translatedCenter[firstNext] * rotation[firstLast * 3 + secondAxis]);
-                if (projectedCenter > firstRadius + secondRadius) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
+    public static void install() {
+        CCBSubLevelBridge.install(new SableSubLevelCompat());
     }
 
     private static OrientedBox createOrientedBox(AABB bounds, @Nullable SubLevelAccess subLevel) {
@@ -120,33 +57,97 @@ public final class SableSubLevelCompat {
         return length > SAT_EPSILON ? vector.scale(1.0 / length) : fallback;
     }
 
-    public record Projection(Vec3 worldPosition, boolean inSubLevel) {
-        public BlockPos blockPos() {
-            return BlockPos.containing(worldPosition);
-        }
+    @Override
+    public Projection resolve(Level level, Position position) {
+        boolean inSubLevel = SableCompanion.INSTANCE.getContaining(level, position) != null;
+        Vec3 projectedPosition = SableCompanion.INSTANCE.projectOutOfSubLevel(level, position);
+        return new Projection(projectedPosition, inSubLevel);
     }
 
-    public static final class EntityArea {
+    @Override
+    public EntityArea createEntityArea(Level level, BlockPos origin, AABB localBounds) {
+        SubLevelAccess subLevel = SableCompanion.INSTANCE.getContaining(level, origin);
+        return new SableEntityArea(createOrientedBox(localBounds, subLevel));
+    }
+
+    private static final class SableEntityArea implements EntityArea {
         private final OrientedBox bounds;
         private final double[] rotation;
         private final double[] absoluteRotation;
         private final double[] translatedCenter;
 
-        private EntityArea(OrientedBox bounds) {
+        private SableEntityArea(OrientedBox bounds) {
             this.bounds = bounds;
             rotation = new double[9];
             absoluteRotation = new double[9];
             translatedCenter = new double[3];
         }
 
+        private static boolean intersects(OrientedBox first, OrientedBox second, double[] rotation, double[] absoluteRotation, double[] translatedCenter) {
+            for (int firstAxis = 0; firstAxis < 3; firstAxis++) {
+                for (int secondAxis = 0; secondAxis < 3; secondAxis++) {
+                    int index = firstAxis * 3 + secondAxis;
+                    double dot = first.axis(firstAxis).dot(second.axis(secondAxis));
+                    rotation[index] = dot;
+                    absoluteRotation[index] = Math.abs(dot) + SAT_EPSILON;
+                }
+            }
+
+            Vec3 centerDelta = second.center.subtract(first.center);
+            for (int firstAxis = 0; firstAxis < 3; firstAxis++) {
+                translatedCenter[firstAxis] = centerDelta.dot(first.axis(firstAxis));
+            }
+
+            for (int firstAxis = 0; firstAxis < 3; firstAxis++) {
+                double secondRadius = 0;
+                for (int secondAxis = 0; secondAxis < 3; secondAxis++) {
+                    secondRadius += second.extent(secondAxis) * absoluteRotation[firstAxis * 3 + secondAxis];
+                }
+                if (Math.abs(translatedCenter[firstAxis]) > first.extent(firstAxis) + secondRadius) {
+                    return false;
+                }
+            }
+
+            for (int secondAxis = 0; secondAxis < 3; secondAxis++) {
+                double firstRadius = 0;
+                double projectedCenter = 0;
+                for (int firstAxis = 0; firstAxis < 3; firstAxis++) {
+                    int index = firstAxis * 3 + secondAxis;
+                    firstRadius += first.extent(firstAxis) * absoluteRotation[index];
+                    projectedCenter += translatedCenter[firstAxis] * rotation[index];
+                }
+                if (Math.abs(projectedCenter) > firstRadius + second.extent(secondAxis)) {
+                    return false;
+                }
+            }
+
+            for (int firstAxis = 0; firstAxis < 3; firstAxis++) {
+                int firstNext = (firstAxis + 1) % 3;
+                int firstLast = (firstAxis + 2) % 3;
+                for (int secondAxis = 0; secondAxis < 3; secondAxis++) {
+                    int secondNext = (secondAxis + 1) % 3;
+                    int secondLast = (secondAxis + 2) % 3;
+                    double firstRadius = first.extent(firstNext) * absoluteRotation[firstLast * 3 + secondAxis] + first.extent(firstLast) * absoluteRotation[firstNext * 3 + secondAxis];
+                    double secondRadius = second.extent(secondNext) * absoluteRotation[firstAxis * 3 + secondLast] + second.extent(secondLast) * absoluteRotation[firstAxis * 3 + secondNext];
+                    double projectedCenter = Math.abs(translatedCenter[firstLast] * rotation[firstNext * 3 + secondAxis] - translatedCenter[firstNext] * rotation[firstLast * 3 + secondAxis]);
+                    if (projectedCenter > firstRadius + secondRadius) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        @Override
         public boolean intersects(Entity entity) {
             SubLevelAccess entitySubLevel = SableCompanion.INSTANCE.getContaining(entity);
             OrientedBox entityBounds = createOrientedBox(entity.getBoundingBox(), entitySubLevel);
-            return SableSubLevelCompat.intersects(bounds, entityBounds, rotation, absoluteRotation, translatedCenter);
+            return intersects(bounds, entityBounds, rotation, absoluteRotation, translatedCenter);
         }
     }
 
-    public record OrientedBox(Vec3 center, Vec3 axisX, Vec3 axisY, Vec3 axisZ, double extentX, double extentY, double extentZ) {
+    private record OrientedBox(Vec3 center, Vec3 axisX, Vec3 axisY, Vec3 axisZ, double extentX, double extentY, double extentZ) {
         private Vec3 axis(int index) {
             return switch (index) {
                 case 0 -> axisX;

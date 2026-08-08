@@ -17,11 +17,11 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
-import net.ty.createcraftedbeginning.api.gas.recipes.DeployerApplicationWithGasRecipe;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedGasInjectionChamber;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.SequencedWithGasRecipe;
+import net.ty.createcraftedbeginning.recipe.gas.DeployerApplicationWithGasRecipe;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
@@ -129,7 +129,7 @@ public abstract class SequencedAssemblyWithGasSubCategory {
 
         public AssemblyInjecting() {
             super(25);
-            chamber = new AnimatedGasInjectionChamber();
+            chamber = new AnimatedGasInjectionChamber(false);
         }
 
         @Override

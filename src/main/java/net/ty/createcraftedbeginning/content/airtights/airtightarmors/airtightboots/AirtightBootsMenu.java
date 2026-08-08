@@ -11,6 +11,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightbo
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
+import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -18,6 +19,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightBootsMenu extends AirtightUpgradableMenu {
+    public AirtightBootsMenu(int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
+        this(CCBMenuTypes.AIRTIGHT_BOOTS_MENU.get(), id, inv, extraData);
+    }
+
     public AirtightBootsMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
         super(type, id, inv, extraData);
     }

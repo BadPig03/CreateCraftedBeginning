@@ -8,8 +8,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.coolantshandlers.AirtightCoolantHandlerUtils;
-import net.ty.createcraftedbeginning.content.airtights.aircompressor.CoolantEfficiency;
+import net.ty.createcraftedbeginning.api.coolantshandlers.CoolantEfficiency;
+import net.ty.createcraftedbeginning.compat.kubejs.CCBKubeJSHandlerUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -18,7 +18,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * <p>
  * This event is exposed through {@code CCBEvents.airtightCoolantHandler} and
  * allows scripts to associate blocks, tags, or block predicates with custom
- * coolant behavior.
+ * coolant behaviour.
  * <p>
  * A coolant handler receives the level, block position, and block state, then
  * returns both a coolant efficiency value and the {@link ResourceLocation} of the
@@ -62,10 +62,10 @@ public class AirtightCoolantHandlerEvent implements KubeEvent {
      * @param block      the block to register the coolant handler for
      * @param efficiency the efficiency handler to execute
      * @param melt       the melt handler to execute
-     * @see AirtightCoolantHandlerUtils#register(Block, EfficiencyCoolantHandler, MeltCoolantHandler)
+     * @see CCBKubeJSHandlerUtils#registerCoolant(Block, EfficiencyCoolantHandler, MeltCoolantHandler)
      */
     public void add(Block block, EfficiencyCoolantHandler efficiency, MeltCoolantHandler melt) {
-        AirtightCoolantHandlerUtils.register(block, efficiency, melt);
+        CCBKubeJSHandlerUtils.registerCoolant(block, efficiency, melt);
     }
 
     /**
@@ -82,10 +82,10 @@ public class AirtightCoolantHandlerEvent implements KubeEvent {
      * @param predicate  the block state predicate used to select matching blocks
      * @param efficiency the efficiency handler to execute
      * @param melt       the melt handler to execute
-     * @see AirtightCoolantHandlerUtils#register(BlockStatePredicate, EfficiencyCoolantHandler, MeltCoolantHandler)
+     * @see CCBKubeJSHandlerUtils#registerCoolant(BlockStatePredicate, EfficiencyCoolantHandler, MeltCoolantHandler)
      */
     public void addAdvanced(BlockStatePredicate predicate, EfficiencyCoolantHandler efficiency, MeltCoolantHandler melt) {
-        AirtightCoolantHandlerUtils.register(predicate, efficiency, melt);
+        CCBKubeJSHandlerUtils.registerCoolant(predicate, efficiency, melt);
     }
 
     /**
@@ -110,7 +110,7 @@ public class AirtightCoolantHandlerEvent implements KubeEvent {
     }
 
     /**
-     * Functional interface used by KubeJS scripts to define coolant melt behavior.
+     * Functional interface used by KubeJS scripts to define coolant melt behaviour.
      * <p>
      * The handler is called with the level, target block position, and block state,
      * then returns the resource location of the block that should replace the

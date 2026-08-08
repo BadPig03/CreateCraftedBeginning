@@ -2,15 +2,14 @@ package net.ty.createcraftedbeginning.api.turbinehandlers;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Provides lookup and registration helpers for gas-specific airtight turbine behavior.
+ * Provides lookup and registration helpers for gas-specific airtight turbine behaviour.
  * Registered handlers determine the maximum Tesla Turbine operating level unlocked
  * by each supported gas. This value is a gas grade, not a linear energy multiplier.
  */
@@ -59,18 +58,18 @@ public final class AirtightTurbineHandlerUtils {
     public static void register(ResourceLocation location, int maxLevel) {
         Gas gasType = Gas.getGasTypeByName(location);
         if (gasType.isEmpty()) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Turbine Handler: gas '{}' does not exist.", location);
+            CCBAPI.LOGGER.error("Failed to register Airtight Turbine Handler: gas '{}' does not exist.", location);
             return;
         }
 
         AirtightTurbineHandler turbineHandler = AirtightTurbineHandler.REGISTRY.get(gasType);
         if (turbineHandler != null) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Turbine Handler for gas '{}': a handler is already registered.", location);
+            CCBAPI.LOGGER.error("Failed to register Airtight Turbine Handler for gas '{}': a handler is already registered.", location);
             return;
         }
 
-        if (maxLevel < 0 || maxLevel > TeslaTurbineUtils.MAX_LEVEL) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Turbine Handler for gas '{}': maximum level is out of range! Valid range is [0, {}].", location, TeslaTurbineUtils.MAX_LEVEL);
+        if (maxLevel < 0 || maxLevel > AirtightTurbineHandler.MAX_LEVEL) {
+            CCBAPI.LOGGER.error("Failed to register Airtight Turbine Handler for gas '{}': maximum level is out of range! Valid range is [0, {}].", location, AirtightTurbineHandler.MAX_LEVEL);
             return;
         }
 

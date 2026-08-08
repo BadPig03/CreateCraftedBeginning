@@ -25,13 +25,12 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.fluids.crafting.FluidIngredient;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.GasIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipe.Factory;
-import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.TemperatureCondition;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -247,7 +246,7 @@ public abstract class ProcessingWithGasRecipeBuilder<P extends ProcessingWithGas
         List<String> errors = recipe.validate();
         if (!errors.isEmpty()) {
             errors.add(recipe.getClass().getSimpleName() + " with id " + id + " failed validation:");
-            CreateCraftedBeginning.LOGGER.warn(Joiner.on('\n').join(errors));
+            CCBAPI.LOGGER.warn(Joiner.on('\n').join(errors));
         }
 
         consumer.accept(id, recipe, null, recipeConditions.toArray(new ICondition[0]));

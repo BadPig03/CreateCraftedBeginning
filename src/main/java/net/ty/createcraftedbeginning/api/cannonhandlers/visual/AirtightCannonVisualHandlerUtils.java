@@ -2,7 +2,7 @@ package net.ty.createcraftedbeginning.api.cannonhandlers.visual;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.cannonhandlers.DefaultCannonHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
@@ -49,12 +49,12 @@ public final class AirtightCannonVisualHandlerUtils {
     public static void register(ResourceLocation location, AirtightCannonVisualHandler handler) {
         Gas gasType = Gas.getGasTypeByName(location);
         if (gasType.isEmpty()) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Cannon Visual Handler: gas '{}' does not exist.", location);
+            CCBAPI.LOGGER.error("Failed to register Airtight Cannon Visual Handler: gas '{}' does not exist.", location);
             return;
         }
 
         if (AirtightCannonVisualHandler.REGISTRY.get(gasType) != null) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Cannon Visual Handler for gas '{}': a handler is already registered.", location);
+            CCBAPI.LOGGER.error("Failed to register Airtight Cannon Visual Handler for gas '{}': a handler is already registered.", location);
             return;
         }
 

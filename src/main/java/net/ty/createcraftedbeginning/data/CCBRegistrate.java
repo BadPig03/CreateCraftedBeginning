@@ -1,40 +1,27 @@
 package net.ty.createcraftedbeginning.data;
 
-import com.simibubi.create.CreateClient;
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorageType;
 import com.simibubi.create.api.registry.CreateRegistries;
 import com.simibubi.create.api.registry.registrate.SimpleBuilder;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.tterrag.registrate.AbstractRegistrate;
-import com.tterrag.registrate.builders.BlockEntityBuilder.BlockEntityFactory;
 import com.tterrag.registrate.builders.Builder;
 import com.tterrag.registrate.builders.FluidBuilder;
 import com.tterrag.registrate.builders.FluidBuilder.FluidTypeFactory;
 import com.tterrag.registrate.util.entry.RegistryEntry;
-import com.tterrag.registrate.util.nullness.NonNullConsumer;
 import com.tterrag.registrate.util.nullness.NonNullFunction;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
-import net.createmod.catnip.platform.CatnipServices;
-import net.createmod.catnip.registry.RegisteredObjectsHelper;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType.EntityFactory;
-import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.fluids.BaseFlowingFluid.Flowing;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageType;
+import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorageType;
 import net.ty.createcraftedbeginning.content.fluids.amethystsuspension.AmethystSuspensionVirtualFluid;
 import net.ty.createcraftedbeginning.content.fluids.slush.SlushVirtualFluid;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.CCBCreativeTabSection;
@@ -76,16 +63,6 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
         return SECTION_LOOKUP.get(entry) != section;
     }
 
-    @Contract(pure = true)
-    public static <T extends Block> @NotNull NonNullConsumer<? super T> blockModel(Supplier<NonNullFunction<BakedModel, ? extends BakedModel>> func) {
-        return entry -> CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> registerBlockModel(entry, func));
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    private static void registerBlockModel(Block entry, Supplier<NonNullFunction<BakedModel, ? extends BakedModel>> modelFactory) {
-        CreateClient.MODEL_SWAPPER.getCustomBlockModels().register(RegisteredObjectsHelper.getKeyOrThrow(entry), modelFactory.get());
-    }
-
     public CCBRegistrate setTooltipModifierFactory(@Nullable Function<Item, TooltipModifier> factory) {
         currentTooltipModifierFactory = factory;
         return self();
@@ -118,26 +95,6 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
 
         SECTION_LOOKUP.put(entry, currentCreativeSection);
         return entry;
-    }
-
-    @Override
-    public <T extends Entity> @NotNull CCBEntityBuilder<T, CCBRegistrate> entity(String name, EntityFactory<T> factory, MobCategory classification) {
-        return entity(self(), name, factory, classification);
-    }
-
-    @Override
-    public <T extends Entity, P> @NotNull CCBEntityBuilder<T, P> entity(P parent, String name, EntityFactory<T> factory, MobCategory classification) {
-        return (CCBEntityBuilder<T, P>) entry(name, callback -> CCBEntityBuilder.create(this, parent, name, callback, factory, classification));
-    }
-
-    @Override
-    public <T extends BlockEntity> @NotNull CCBBlockEntityBuilder<T, CCBRegistrate> blockEntity(String name, BlockEntityFactory<T> factory) {
-        return blockEntity(self(), name, factory);
-    }
-
-    @Override
-    public <T extends BlockEntity, P> @NotNull CCBBlockEntityBuilder<T, P> blockEntity(P parent, String name, BlockEntityFactory<T> factory) {
-        return (CCBBlockEntityBuilder<T, P>) entry(name, callback -> CCBBlockEntityBuilder.create(this, parent, name, callback, factory));
     }
 
     public <T extends MountedItemStorageType<?>> SimpleBuilder<MountedItemStorageType<?>, T, CCBRegistrate> mountedItemStorage(String name, Supplier<T> supplier) {

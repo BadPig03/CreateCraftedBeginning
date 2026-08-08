@@ -52,7 +52,7 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
     private boolean flame;
     private Vec3 initMotion = Vec3.ZERO;
 
-    public AirtightCannonWindChargeProjectileEntity(EntityType<? extends AbstractWindCharge> entityType, Level level) {
+    public AirtightCannonWindChargeProjectileEntity(EntityType<AirtightCannonWindChargeProjectileEntity> entityType, Level level) {
         super(entityType, level);
     }
 
@@ -66,10 +66,8 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         CCBSoundEvents.WIND_CHARGE_LAUNCH.playAt(level, location, 1, pitch, true);
     }
 
-    @SuppressWarnings("unchecked")
-    public static Builder<?> build(Builder<?> builder) {
-        Builder<AirtightCannonWindChargeProjectileEntity> typedBuilder = (Builder<AirtightCannonWindChargeProjectileEntity>) builder;
-        return typedBuilder.sized(DEFAULT_SIZE, DEFAULT_SIZE).eyeHeight(0);
+    public static void build(Builder<AirtightCannonWindChargeProjectileEntity> builder) {
+        builder.sized(DEFAULT_SIZE, DEFAULT_SIZE).eyeHeight(0);
     }
 
     public Holder<Gas> getGasHolder() {

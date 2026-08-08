@@ -6,8 +6,10 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.common.Tags;
+import net.neoforged.neoforge.common.Tags.Fluids;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.recipe.generators.GasInjectionRecipeGen;
+import net.ty.createcraftedbeginning.registry.CCBFluids;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -152,6 +154,9 @@ public class CCBGasInjectionRecipes extends GasInjectionRecipeGen {
     GeneratedRecipe RAIN_FLARE = create("rain_flare", builder -> builder.require(CCBItems.UNFILLED_WEATHER_FLARE).require(CCBGases.MOIST_AIR.get(), 500).output(CCBItems.RAIN_FLARE));
     GeneratedRecipe THUNDERSTORM_FLARE = create("thunderstorm_flare", builder -> builder.require(CCBItems.UNFILLED_WEATHER_FLARE).require(CCBGases.ETHEREAL_AIR.get(), 500).output(CCBItems.THUNDERSTORM_FLARE));
     GeneratedRecipe THUNDERSTORM_FLARE_PRESSURIZED = create("thunderstorm_flare_pressurized", builder -> builder.require(CCBItems.UNFILLED_WEATHER_FLARE).require(CCBGases.PRESSURIZED_ETHEREAL_AIR.get(), 25).output(CCBItems.THUNDERSTORM_FLARE));
+
+    GeneratedRecipe LAVA_TO_BRIMSTONE = create("lava_to_brimstone", builder -> builder.require(Fluids.LAVA, 1000).require(CCBGases.ENERGIZED_ULTRAWARM_AIR.get(), 500).output(CCBFluids.BRIMSTONE.get(), 100));
+    GeneratedRecipe LAVA_TO_BRIMSTONE_PRESSURIZED = create("lava_to_brimstone_pressurized", builder -> builder.require(Fluids.LAVA, 1000).require(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get(), 25).output(CCBFluids.BRIMSTONE.get(), 100));
 
     public CCBGasInjectionRecipes(PackOutput output, CompletableFuture<Provider> registries) {
         super(output, registries, CreateCraftedBeginning.MOD_ID);

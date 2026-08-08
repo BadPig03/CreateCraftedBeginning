@@ -6,8 +6,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.api.drainagehandlers.AirtightDrainageHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.compat.kubejs.CCBKubeJSHandlerUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -36,8 +36,7 @@ public class AirtightDrainageHandlerEvent implements KubeEvent {
      * resource location.
      * <p>
      * The provided {@link ResourceLocation} is passed to
-     * {@link AirtightDrainageHandlerUtils#register(ResourceLocation, float, boolean, DrainageHandler)},
-     * which registers the custom drainage behavior for the target gas.
+     * the KubeJS compatibility adapter, which registers the custom drainage behaviour for the target gas.
      * <p>
      * In KubeJS, the location can usually be provided as a string, for example
      * {@code "createcraftedbeginning:natural_air"} or {@code "kubejs:oxygen"}.
@@ -46,10 +45,10 @@ public class AirtightDrainageHandlerEvent implements KubeEvent {
      * @param inflation     the inflation value to assign to the drainage handler
      * @param shouldOutline whether the drainage outline should be shown
      * @param handler       the drainage handler to execute
-     * @see AirtightDrainageHandlerUtils#register(ResourceLocation, float, boolean, DrainageHandler)
+     * @see CCBKubeJSHandlerUtils#registerDrainage(ResourceLocation, float, boolean, DrainageHandler)
      */
     public void add(ResourceLocation location, float inflation, boolean shouldOutline, DrainageHandler handler) {
-        AirtightDrainageHandlerUtils.register(location, inflation, shouldOutline, handler);
+        CCBKubeJSHandlerUtils.registerDrainage(location, inflation, shouldOutline, handler);
     }
 
     /**

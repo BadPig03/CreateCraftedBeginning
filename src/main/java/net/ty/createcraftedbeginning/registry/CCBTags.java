@@ -19,8 +19,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
 import net.ty.createcraftedbeginning.api.gas.gases.GasTags;
-import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -54,7 +54,7 @@ public class CCBTags {
     }
 
     public static TagKey<Gas> commonGasTag(String path) {
-        return commonTag(CCBGasRegistries.GAS_REGISTRY, path);
+        return commonTag(GasRegistries.GAS_REGISTRY, path);
     }
 
     public static void register() {
@@ -283,7 +283,7 @@ public class CCBTags {
 
         CCBGasTags(NameSpace namespace, @Nullable String path, boolean optional, boolean always) {
             ResourceLocation id = ResourceLocation.fromNamespaceAndPath(namespace.id, path == null ? Lang.asId(name()) : path);
-            tag = optional ? optionalTag(CCBGasRegistries.GAS_REGISTRY, id) : GasTags.create(id);
+            tag = optional ? optionalTag(GasRegistries.GAS_REGISTRY, id) : GasTags.create(id);
             alwaysDataGen = always;
         }
 

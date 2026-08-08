@@ -6,7 +6,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent.LoggingOut;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 

@@ -1,0 +1,198 @@
+package net.ty.createcraftedbeginning.client;
+
+import com.simibubi.create.AllPartialModels;
+import dev.engine_room.flywheel.lib.model.baked.PartialModel;
+import net.createmod.catnip.data.Iterate;
+import net.createmod.catnip.lang.Lang;
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.Direction;
+import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes.ComponentPartials;
+import net.ty.createcraftedbeginning.registry.CCBItems;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+@SuppressWarnings("unused")
+public class CCBPartialModels {
+    public static final PartialModel BREEZE_TRAIN_HAT = entity("train_hat");
+    public static final PartialModel BREEZE_LOGISTICS_HAT = entity("logistics_hat");
+
+    public static final PartialModel PNEUMATIC_ENGINE_COGS = block("pneumatic_engine/block_cogs");
+    public static final PartialModel PHOTO_STRESS_BEARING_SHAFT = block("photo-stress_bearing/block_shaft");
+
+    public static final PartialModel AIRTIGHT_PUMP_COGS = block("airtight_pump/block_cogs");
+    public static final PartialModel AIRTIGHT_ENGINE_COGS = block("airtight_engine/block_cogs");
+    public static final PartialModel AIRTIGHT_ENGINE_PISTON = block("airtight_engine/block_piston");
+
+    public static final PartialModel BREEZE_ILL = block("breeze_chamber/breeze/ill");
+    public static final PartialModel BREEZE_CALM = block("breeze_chamber/breeze/calm");
+    public static final PartialModel BREEZE_GALE = block("breeze_chamber/breeze/gale");
+    public static final PartialModel BREEZE_GALE_ACTIVE = block("breeze_chamber/breeze/gale_active");
+    public static final PartialModel BREEZE_CHAMBER_WIND = block("breeze_chamber/breeze/wind");
+    public static final PartialModel BREEZE_CHAMBER_GOGGLES = block("breeze_chamber/breeze/goggles");
+    public static final PartialModel BREEZE_CHAMBER_GOGGLES_SMALL = block("breeze_chamber/breeze/goggles_small");
+
+    public static final PartialModel BREEZE_COOLER_BLOCK = block("breeze_cooler/block");
+    public static final PartialModel BREEZE_RIMING = block("breeze_cooler/breeze/riming");
+    public static final PartialModel BREEZE_CHILLED = block("breeze_cooler/breeze/chilled");
+    public static final PartialModel BREEZE_CHILLED_ACTIVE = block("breeze_cooler/breeze/chilled_active");
+    public static final PartialModel BREEZE_COOLER_WIND = block("breeze_cooler/breeze/wind");
+    public static final PartialModel BREEZE_COOLER_GOGGLES = block("breeze_cooler/breeze/goggles");
+    public static final PartialModel BREEZE_COOLER_GOGGLES_SMALL = block("breeze_cooler/breeze/goggles_small");
+
+    public static final PartialModel GAS_INJECTION_CHAMBER_NOZZLE = block("gas_injection_chamber/nozzle");
+    public static final PartialModel GAS_INJECTION_CHAMBER_NOZZLE_TOP = block("gas_injection_chamber/nozzle_top");
+    public static final PartialModel GAS_INJECTION_CHAMBER_NOZZLE_BOTTOM = block("gas_injection_chamber/nozzle_bottom");
+    public static final PartialModel GAS_INJECTION_CHAMBER_FILTER = block("gas_injection_chamber/filter");
+    public static final PartialModel GAS_INJECTION_CHAMBER_FILTER_INNER = block("gas_injection_chamber/filter_inner");
+
+    public static final PartialModel PORTABLE_GAS_INTERFACE_MIDDLE = block("portable_gas_interface/block_middle");
+    public static final PartialModel PORTABLE_GAS_INTERFACE_MIDDLE_POWERED = block("portable_gas_interface/block_middle_powered");
+    public static final PartialModel PORTABLE_GAS_INTERFACE_TOP = block("portable_gas_interface/block_top");
+
+    public static final PartialModel TESLA_TURBINE_ROTOR = block("tesla_turbine/rotor");
+
+    public static final PartialModel AIRTIGHT_CANNON_BARREL = item("airtight_cannon/barrel");
+    public static final PartialModel AIRTIGHT_CANNON_PISTON_LEFT = item("airtight_cannon/piston_left");
+    public static final PartialModel AIRTIGHT_CANNON_PISTON_RIGHT = item("airtight_cannon/piston_right");
+    public static final PartialModel AIRTIGHT_HANDHELD_DRILL_FRONT = item("airtight_handheld_drill/front");
+    public static final PartialModel AIRTIGHT_JETPACK = item("airtight_jetpack");
+    public static final PartialModel AIRTIGHT_ELYTRA = item("airtight_elytra");
+    public static final PartialModel AIRTIGHT_SHIELD = item("airtight_shield");
+
+    public static final PartialModel AIRTIGHT_EXTEND_ARM_COGS = item("airtight_extend_arm/cogs");
+    public static final PartialModel AIRTIGHT_EXTEND_ARM_SPRING = item("airtight_extend_arm/spring");
+    public static final PartialModel AIRTIGHT_EXTEND_ARM_SPRING_CAP = item("airtight_extend_arm/spring_cap");
+    public static final PartialModel AIRTIGHT_EXTEND_ARM_POINTING = item("airtight_extend_arm/pointing");
+    public static final PartialModel AIRTIGHT_EXTEND_ARM_PUNCHING = item("airtight_extend_arm/punching");
+    public static final PartialModel AIRTIGHT_EXTEND_ARM_HOLDING = item("airtight_extend_arm/holding");
+
+    public static final PartialModel AIRTIGHT_REACTOR_KETTLE_MIXER = block("airtight_reactor_kettle/mixer");
+    public static final PartialModel AIRTIGHT_REACTOR_KETTLE_COGS = block("airtight_reactor_kettle/cogs");
+    public static final PartialModel AIRTIGHT_REACTOR_KETTLE_LEFT_WINDOW = block("airtight_reactor_kettle/left_window");
+    public static final PartialModel AIRTIGHT_REACTOR_KETTLE_RIGHT_WINDOW = block("airtight_reactor_kettle/right_window");
+    public static final PartialModel AIRTIGHT_REACTOR_KETTLE_WINDOW_OPENED = block("airtight_reactor_kettle/windows_opened");
+    public static final PartialModel AIRTIGHT_REACTOR_KETTLE_WINDOW_CLOSED = block("airtight_reactor_kettle/windows_closed");
+
+    public static final PartialModel AIRTIGHT_FORGING_PRESS_PRESS_HEAD = block("airtight_forging_press/press_head");
+
+    public static final PartialModel AIR_VENT_CLOSED = block("air_vent/closed");
+    public static final PartialModel AIR_VENT_OPENED = block("air_vent/opened");
+
+    public static final PartialModel END_INCINERATION_BLOWER_CORE = block("end_incineration_blower/core");
+    public static final PartialModel END_SCULK_SILENCER_CORE = block("end_sculk_silencer/core");
+
+    public static final PartialModel SHAFT_HALF_UP = block("shaft_half_up");
+    public static final PartialModel SHAFT_HALF_DOWN = block("shaft_half_down");
+
+    public static final PartialModel BALLOON_10X8 = balloon("balloon_10x8");
+    public static final PartialModel BALLOON_10X12 = balloon("balloon_10x12");
+    public static final PartialModel BALLOON_12X10 = balloon("balloon_12x10");
+    public static final PartialModel BALLOON_12X12 = balloon("balloon_12x12");
+    public static final PartialModel BALLOON_RARE_REVERTED = balloon("balloon_rare_reverted");
+    public static final PartialModel BALLOON_RARE_SMILE = balloon("balloon_rare_smile");
+    public static final PartialModel BALLOON_RARE_CRY = balloon("balloon_rare_cry");
+    public static final PartialModel BALLOON_RARE_EYE = balloon("balloon_rare_eye");
+    public static final PartialModel BALLOON_RARE_ISAAC = balloon("balloon_rare_isaac");
+    public static final PartialModel BALLOON_RARE_GHAST = balloon("balloon_rare_ghast");
+    public static final PartialModel BALLOON_RARE_TROLLFACE = balloon("balloon_rare_trollface");
+    public static final PartialModel BALLOON_RARE_TENNA = balloon("balloon_rare_tenna");
+    public static final PartialModel BALLOON_RARE_PVZ = balloon("balloon_rare_pvz");
+    public static final PartialModel BALLOON_RARE_QUESTION_MARKS = balloon("balloon_rare_question_marks");
+    public static final PartialModel BALLOON_RARE_POWERFUL = balloon("balloon_rare_powerful");
+    public static final PartialModel BALLOON_RARE_CHEESE = balloon("balloon_rare_cheese");
+    public static final PartialModel BALLOON_RIGGING_10X8 = balloonRigging("balloon_rigging_10x8");
+    public static final PartialModel BALLOON_RIGGING_10X12 = balloonRigging("balloon_rigging_10x12");
+    public static final PartialModel BALLOON_RIGGING_12X10 = balloonRigging("balloon_rigging_12x10");
+    public static final PartialModel BALLOON_RIGGING_12X12 = balloonRigging("balloon_rigging_12x12");
+    public static final PartialModel BALLOON_RIGGING_RARE = balloonRigging("balloon_rigging_rare");
+
+    public static final PartialModel GAS_PACKAGER_TRAY_REGULAR = block("gas_packager/tray");
+    public static final PartialModel GAS_PACKAGER_TRAY_DEFRAG = block("gas_repackager/tray");
+    public static final PartialModel GAS_PACKAGER_HATCH_OPEN = block("gas_packager/hatch_open");
+    public static final PartialModel GAS_PACKAGER_HATCH_CLOSED = block("gas_packager/hatch_closed");
+
+    public static final PartialModel GAS_FACTORY_GAUGE_PANEL = block("gas_factory_gauge/panel");
+    public static final PartialModel GAS_FACTORY_GAUGE_PANEL_WITH_BULB = block("gas_factory_gauge/panel_with_bulb");
+    public static final PartialModel GAS_FACTORY_GAUGE_PANEL_RESTOCKER = block("gas_factory_gauge/panel_restocker");
+    public static final PartialModel GAS_FACTORY_GAUGE_PANEL_RESTOCKER_WITH_BULB = block("gas_factory_gauge/panel_restocker_with_bulb");
+    public static final PartialModel GAS_FACTORY_GAUGE_BULB_LIGHT = block("gas_factory_gauge/bulb_light");
+    public static final PartialModel GAS_FACTORY_GAUGE_BULB_RED = block("gas_factory_gauge/bulb_red");
+
+    public static final Map<ComponentPartials, Map<Direction, PartialModel>> AIRTIGHT_PIPE_ATTACHMENTS = new EnumMap<>(ComponentPartials.class);
+
+    static {
+        for (ComponentPartials type : ComponentPartials.values()) {
+            Map<Direction, PartialModel> map = new HashMap<>();
+            for (Direction direction : Iterate.directions) {
+                map.put(direction, block("airtight_pipe/" + Lang.asId(type.name()) + '/' + Lang.asId(direction.getSerializedName())));
+            }
+            AIRTIGHT_PIPE_ATTACHMENTS.put(type, map);
+        }
+    }
+
+    private static PartialModel item(String path) {
+        return PartialModel.of(CreateCraftedBeginning.asResource("item/" + path));
+    }
+
+    private static PartialModel balloon(String path) {
+        return PartialModel.of(CreateCraftedBeginning.asResource("item/balloon/" + path));
+    }
+
+    private static PartialModel balloonRigging(String path) {
+        return PartialModel.of(CreateCraftedBeginning.asResource("item/balloon/" + path));
+    }
+
+    private static PartialModel block(String path) {
+        return PartialModel.of(CreateCraftedBeginning.asResource("block/" + path));
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static PartialModel entity(String path) {
+        return PartialModel.of(CreateCraftedBeginning.asResource("entity/" + path));
+    }
+
+    public static void register() {
+    }
+
+    public static void registerBalloons() {
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_10X8.getId(), BALLOON_10X8);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_10X12.getId(), BALLOON_10X12);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_12X10.getId(), BALLOON_12X10);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_12X12.getId(), BALLOON_12X12);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_REVERTED.getId(), BALLOON_RARE_REVERTED);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_SMILE.getId(), BALLOON_RARE_SMILE);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_CRY.getId(), BALLOON_RARE_CRY);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_EYE.getId(), BALLOON_RARE_EYE);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_ISAAC.getId(), BALLOON_RARE_ISAAC);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_GHAST.getId(), BALLOON_RARE_GHAST);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_TROLLFACE.getId(), BALLOON_RARE_TROLLFACE);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_TENNA.getId(), BALLOON_RARE_TENNA);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_PVZ.getId(), BALLOON_RARE_PVZ);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_QUESTION_MARKS.getId(), BALLOON_RARE_QUESTION_MARKS);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_POWERFUL.getId(), BALLOON_RARE_POWERFUL);
+        AllPartialModels.PACKAGES.put(CCBItems.BALLOON_RARE_CHEESE.getId(), BALLOON_RARE_CHEESE);
+
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_10X8.getId(), BALLOON_RIGGING_10X8);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_10X12.getId(), BALLOON_RIGGING_10X12);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_12X10.getId(), BALLOON_RIGGING_12X10);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_12X12.getId(), BALLOON_RIGGING_12X12);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_REVERTED.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_SMILE.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_CRY.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_EYE.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_ISAAC.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_GHAST.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_TROLLFACE.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_TENNA.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_PVZ.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_QUESTION_MARKS.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_POWERFUL.getId(), BALLOON_RIGGING_RARE);
+        AllPartialModels.PACKAGE_RIGGING.put(CCBItems.BALLOON_RARE_CHEESE.getId(), BALLOON_RIGGING_RARE);
+    }
+}

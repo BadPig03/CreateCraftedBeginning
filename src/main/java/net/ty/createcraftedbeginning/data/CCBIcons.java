@@ -15,6 +15,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeIcon;
 import org.jetbrains.annotations.Contract;
 import org.joml.Matrix4f;
 
@@ -79,6 +80,40 @@ public class CCBIcons extends AllIcons {
         super(x, y);
         iconX = x * 16;
         iconY = y * 16;
+    }
+
+    public static CCBIcons get(AirtightUpgradeIcon icon) {
+        return switch (icon) {
+            case MAGNET -> I_MAGNET;
+            case EXPERIENCE_CONVERSION -> I_EXPERIENCE_CONVERSION;
+            case ATTACK_MODE -> I_ATTACK_MODE;
+            case FILTER -> I_FILTER;
+            case OUTLINE_DISPLAY -> I_OUTLINE_DISPLAY;
+            case SILK_TOUCH -> I_SILK_TOUCH;
+            case LIQUID_REPLACEMENT -> I_LIQUID_REPLACEMENT;
+            case CONTAINER_PROTECTION -> I_CONTAINER_PROTECTION;
+            case EFFECTS_PROTECTION -> I_EFFECTS_PROTECTION;
+            case RESISTANCE -> I_RESISTANCE;
+            case GOGGLES -> I_GOGGLES;
+            case VISION -> I_VISION;
+            case WATER_BREATHING -> I_WATER_BREATHING;
+            case SPECTRAL -> I_SPECTRAL;
+            case ELYTRA -> I_ELYTRA;
+            case HASTE -> I_HASTE;
+            case INVISIBILITY -> I_INVISIBILITY;
+            case REGENERATION -> I_REGENERATION;
+            case CREATIVE_FLIGHT -> I_CREATIVE_FLIGHT;
+            case ENVIRONMENTAL_DAMAGE_PROTECTION -> I_ENVIRONMENTAL_DAMAGE_PROTECTION;
+            case STEP_HEIGHT -> I_STEP_HEIGHT;
+            case JUMP_STRENGTH -> I_JUMP_STRENGTH;
+            case FALL_PROTECTION -> I_FALL_PROTECTION;
+            case MOVEMENT_EFFICIENCY -> I_MOVEMENT_EFFICIENCY;
+            case CRAMMING_PROTECTION -> I_CRAMMING_PROTECTION;
+            case QUICK_SWIMMING -> I_QUICK_SWIMMING;
+            case BLAST_RESISTANCE -> I_BLAST_RESISTANCE;
+            case SWIFT_SNEAK -> I_SWIFT_SNEAK;
+            case PROJECTILE_DEFLECTION -> I_PROJECTILE_DEFLECTION;
+        };
     }
 
     @Contract(" -> new")

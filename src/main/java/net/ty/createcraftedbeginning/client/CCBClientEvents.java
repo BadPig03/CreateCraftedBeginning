@@ -48,7 +48,6 @@ import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.PositionedSec
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabs;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 

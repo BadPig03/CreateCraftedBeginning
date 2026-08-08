@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle;
 import com.simibubi.create.api.stress.BlockStressValues;
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
 import com.simibubi.create.content.kinetics.base.IRotate.StressImpact;
-import com.simibubi.create.infrastructure.config.AllConfigs;
 import net.createmod.catnip.lang.LangBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -17,8 +16,9 @@ import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.api.gas.recipes.TemperatureCondition;
 import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.platform.CCBClientBridge;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -47,7 +47,7 @@ public class AirtightReactorKettleTooltipBuilder {
 
     public boolean addToTooltip(List<Component> tooltip) {
         AirtightReactorKettleStructureManager structureManager = core.getStructureManager();
-        if (structureManager.getOverstressed() && AllConfigs.client().enableOverstressedTooltip.get()) {
+        if (structureManager.getOverstressed() && CCBClientBridge.isOverstressedTooltipEnabled()) {
             CCBLang.translate("gui.overstressed").style(ChatFormatting.GOLD).forGoggles(tooltip);
             CCBLang.addToGoggles(tooltip, "gui.network_overstressed");
             return true;
@@ -87,7 +87,7 @@ public class AirtightReactorKettleTooltipBuilder {
         int startIndex = tooltip.size();
         CCBLang.translate("gui.airtight_reactor_kettle.contents").style(ChatFormatting.GRAY).forGoggles(tooltip);
 
-        int maxDisplay = CCBConfig.client().maxItemStackDisplay.get();
+        int maxDisplay = CCBClientBridge.getMaxItemStackDisplay();
         int itemCount = addItemInfo(tooltip, maxDisplay);
         if (itemCount > maxDisplay) {
             CCBLang.translate("gui.airtight_reactor_kettle.more", itemCount - maxDisplay).style(ChatFormatting.DARK_GRAY).forGoggles(tooltip, 1);

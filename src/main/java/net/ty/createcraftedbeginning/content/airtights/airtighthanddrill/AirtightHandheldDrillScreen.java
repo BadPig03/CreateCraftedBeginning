@@ -20,13 +20,13 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.ty.createcraftedbeginning.client.CCBGUITextures;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.templates.AirtightHandheldDrillMiningTemplates;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.AirtightHandheldDrillUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableScreen;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
-import net.ty.createcraftedbeginning.client.CCBGUITextures;
 import net.ty.createcraftedbeginning.data.CCBIcons;
 import net.ty.createcraftedbeginning.data.CCBLang;
 
@@ -158,7 +158,7 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
 
     private void addUpgradeButton(AirtightUpgrade upgrade) {
         Couple<Integer> offset = upgrade.getOffset();
-        IconButton button = new IconButton(leftPos + offset.getFirst(), topPos + offset.getSecond(), upgrade.getIcon()).withCallback(() -> onUpgradeButtonPressed(upgrade));
+        IconButton button = new IconButton(leftPos + offset.getFirst(), topPos + offset.getSecond(), CCBIcons.get(upgrade.getIcon())).withCallback(() -> onUpgradeButtonPressed(upgrade));
         upgradeButtons.put(upgrade, button);
 
         if (upgrade.isRightIndicator()) {

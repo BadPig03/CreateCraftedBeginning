@@ -5,6 +5,9 @@ import dev.latvian.mods.kubejs.plugin.KubeJSPlugin;
 import dev.latvian.mods.kubejs.registry.BuilderTypeRegistry;
 import dev.latvian.mods.kubejs.script.ScriptType;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.neoforge.common.NeoForge;
+import net.ty.createcraftedbeginning.api.events.RegisterAirtightHandlersEvent;
 import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightArmHandlerEvent;
 import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightArmorsHandlerEvent;
 import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightCannonHandlerEvent;
@@ -23,8 +26,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBKubeJSPlugin implements KubeJSPlugin {
-    @Override
-    public void afterInit() {
+    private static void registerAirtightHandlers(RegisterAirtightHandlersEvent event) {
         CCBEvents.AIRTIGHT_ARM_HANDLER.post(ScriptType.STARTUP, new AirtightArmHandlerEvent());
         CCBEvents.AIRTIGHT_ARMORS_HANDLER.post(ScriptType.STARTUP, new AirtightArmorsHandlerEvent());
         CCBEvents.AIRTIGHT_CANNON_HANDLER.post(ScriptType.STARTUP, new AirtightCannonHandlerEvent());
@@ -35,6 +37,11 @@ public class CCBKubeJSPlugin implements KubeJSPlugin {
         CCBEvents.AIRTIGHT_FILL_HANDLER.post(ScriptType.STARTUP, new AirtightFillHandlerEvent());
         CCBEvents.AIRTIGHT_THERMOREGULATOR_HANDLER.post(ScriptType.STARTUP, new AirtightThermoregulatorHandlerEvent());
         CCBEvents.AIRTIGHT_TURBINE_HANDLER.post(ScriptType.STARTUP, new AirtightTurbineHandlerEvent());
+    }
+
+    @Override
+    public void afterInit() {
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, CCBKubeJSPlugin::registerAirtightHandlers);
     }
 
     @Override

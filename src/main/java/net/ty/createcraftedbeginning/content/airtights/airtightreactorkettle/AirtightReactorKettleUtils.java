@@ -37,12 +37,12 @@ import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlockEntity.CraftPlan;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
 import net.ty.createcraftedbeginning.recipe.trie.AbstractVariant;
 import net.ty.createcraftedbeginning.recipe.trie.AirtightWithGasRecipeTrie;
 import net.ty.createcraftedbeginning.recipe.trie.AirtightWithGasRecipeTrieFinder;
 import net.ty.createcraftedbeginning.registry.CCBDamageSources;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -325,8 +325,10 @@ public final class AirtightReactorKettleUtils {
             return false;
         }
 
-        executePlannedCraftingConsumption(inputInventory, extractedItemsFromSlot);
-        return kettle.acceptOutputs(outputs, new ArrayList<>(), new ArrayList<>(), false);
+        int[] itemAmounts = new int[kettle.getItemCapability().getSlots()];
+        System.arraycopy(extractedItemsFromSlot, 0, itemAmounts, 0, extractedItemsFromSlot.length);
+        CraftPlan craftPlan = kettle.createCraftPlan(itemAmounts, new int[kettle.getFluidCapability().getTanks()], new long[kettle.getGasCapability().getTanks()], outputs, List.of(), List.of());
+        return kettle.commitCraft(craftPlan);
     }
 
     private static boolean canApplyCraftingRecipe(AirtightReactorKettleBlockEntity kettle, CraftingRecipe recipe) {
@@ -421,17 +423,6 @@ public final class AirtightReactorKettleUtils {
             stacks.set(slot, craftingStacks.get(slot).copyWithCount(1));
         }
         return CraftingInput.of(3, 3, stacks);
-    }
-
-    private static void executePlannedCraftingConsumption(IItemHandler inputInventory, int @NotNull [] extractedItemsFromSlot) {
-        for (int slot = 0; slot < extractedItemsFromSlot.length; slot++) {
-            int amount = extractedItemsFromSlot[slot];
-            if (amount <= 0) {
-                continue;
-            }
-
-            inputInventory.extractItem(slot, amount, false);
-        }
     }
 
     private static List<ItemStack> getCraftingOutputs(CraftingRecipe recipe, CraftingInput input, Level level) {

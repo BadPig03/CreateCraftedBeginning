@@ -1,6 +1,5 @@
 {
   "required": true,
-  "priority": 1200,
   "package": "net.ty.createcraftedbeginning.mixin",
   "plugin": "net.ty.createcraftedbeginning.mixin.CCBMixinConfigPlugin",
   "compatibilityLevel": "JAVA_21",
@@ -10,6 +9,7 @@
     "server.accessor.SmithingTransformRecipeAccessor",
     "server.accessor.SmithingTrimRecipeAccessor",
     "server.accessor.ZombieAccessor",
+    "server.create.BasinBlockEntityMixin",
     "server.create.BeltMovementHandlerMixin",
     "server.create.FactoryPanelBehaviourMixin",
     "server.create.FactoryPanelConfigurationPacketMixin",

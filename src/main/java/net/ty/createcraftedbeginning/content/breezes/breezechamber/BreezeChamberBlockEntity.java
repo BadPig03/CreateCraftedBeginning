@@ -30,23 +30,22 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour.InternalGasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverCore;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.IChamberGasTank;
+import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasInventoryIdentifierProvider;
+import net.ty.createcraftedbeginning.content.airtights.transaction.MachineResourceSnapshots;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock.WindLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberRecipeIndex.GasConversion;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates.BaseChamberState;
@@ -54,6 +53,7 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates.GaleChamberState;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates.IllChamberState;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates.InactiveChamberState;
+import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
 import net.ty.createcraftedbeginning.data.CCBLang;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingData;
@@ -474,53 +474,12 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
 
         GasStack inputRequest = inputStack.copyWithAmount(batches * inputAmount);
         GasStack outputRequest = outputPerBatch.copyWithAmount(batches * outputAmount);
-        executeGasConversionTransaction(tank.getCapability(), tankBehaviour.getInternalGasHandler(), inputRequest, outputRequest);
+        executeGasConversionTransaction(inventory, inputRequest, outputRequest);
     }
 
-    private void executeGasConversionTransaction(IGasHandler sourceHandler, InternalGasHandler outputHandler, GasStack inputRequest, GasStack outputRequest) {
-        GasStack simulatedDrain = sourceHandler.drain(inputRequest, GasAction.SIMULATE);
-        if (!GasStack.matches(simulatedDrain, inputRequest)) {
-            return;
-        }
-
-        long simulatedFill = outputHandler.forceFill(outputRequest, GasAction.SIMULATE);
-        if (simulatedFill != outputRequest.getAmount()) {
-            return;
-        }
-
-        long filled = outputHandler.forceFill(outputRequest, GasAction.EXECUTE);
-        if (filled != outputRequest.getAmount()) {
-            rollbackOutput(outputHandler, outputRequest, filled);
-            return;
-        }
-
-        GasStack drained = sourceHandler.drain(inputRequest, GasAction.EXECUTE);
-        if (GasStack.matches(drained, inputRequest)) {
-            return;
-        }
-
-        boolean outputRolledBack = rollbackOutput(outputHandler, outputRequest, outputRequest.getAmount());
-        long restored = drained.isEmpty() ? 0 : sourceHandler.fill(drained, GasAction.EXECUTE);
-        if (outputRolledBack && (drained.isEmpty() || restored == drained.getAmount())) {
-            return;
-        }
-
-        CreateCraftedBeginning.LOGGER.error("Failed to fully roll back breeze chamber gas conversion at {}: output rollback={}, restored input={}/{}", worldPosition, outputRolledBack, restored, drained.getAmount());
-    }
-
-    private boolean rollbackOutput(InternalGasHandler outputHandler, GasStack outputRequest, long amount) {
-        if (amount <= 0) {
-            return true;
-        }
-
-        GasStack rolledBack = outputHandler.forceDrain(outputRequest.copyWithAmount(amount), GasAction.EXECUTE);
-        boolean successful = rolledBack.getAmount() == amount && GasStack.isSameGasSameComponents(rolledBack, outputRequest);
-        if (successful) {
-            return true;
-        }
-
-        CreateCraftedBeginning.LOGGER.error("Failed to roll back {} units of breeze chamber output gas at {}", amount, worldPosition);
-        return false;
+    private void executeGasConversionTransaction(GasTank sourceTank, GasStack inputRequest, GasStack outputRequest) {
+        ResourceTransaction transaction = new ResourceTransaction().add(ResourceTransaction.participant(() -> GasStack.matches(sourceTank.drain(inputRequest, GasAction.SIMULATE), inputRequest), () -> MachineResourceSnapshots.copyGas(sourceTank), () -> GasStack.matches(sourceTank.drain(inputRequest, GasAction.EXECUTE), inputRequest), snapshot -> MachineResourceSnapshots.restoreGas(sourceTank, snapshot))).add(ResourceTransaction.participant(() -> tankBehaviour.getInternalGasHandler().forceFill(outputRequest, GasAction.SIMULATE) == outputRequest.getAmount(), () -> MachineResourceSnapshots.snapshotGasContents(tankBehaviour), () -> tankBehaviour.getInternalGasHandler().forceFill(outputRequest, GasAction.EXECUTE) == outputRequest.getAmount(), snapshot -> MachineResourceSnapshots.restoreGasContents(snapshot, tankBehaviour)));
+        transaction.commit();
     }
 
     public void loadFromItem(ItemStack stack) {

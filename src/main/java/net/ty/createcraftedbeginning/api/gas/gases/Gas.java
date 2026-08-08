@@ -16,9 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.FastColor.ARGB32;
 import net.neoforged.neoforge.registries.DeferredHolder;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.data.CCBGasRegistries;
-import net.ty.createcraftedbeginning.registry.CCBRegistries;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -30,12 +28,12 @@ import java.util.Set;
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class Gas {
-    public static final Codec<Holder<Gas>> HOLDER_CODEC = CCBGasRegistries.GAS_REGISTRY.holderByNameCodec();
-    public static final StreamCodec<RegistryFriendlyByteBuf, Holder<Gas>> HOLDER_STREAM_CODEC = ByteBufCodecs.holderRegistry(CCBRegistries.GAS_REGISTRY_KEY);
-    public static final StreamCodec<RegistryFriendlyByteBuf, Gas> GAS_STREAM_CODEC = ByteBufCodecs.registry(CCBRegistries.GAS_REGISTRY_KEY);
-    public static final Holder<Gas> EMPTY_GAS_HOLDER = DeferredHolder.create(CCBGasRegistries.EMPTY_GAS_KEY);
+    public static final Codec<Holder<Gas>> HOLDER_CODEC = GasRegistries.GAS_REGISTRY.holderByNameCodec();
+    public static final StreamCodec<RegistryFriendlyByteBuf, Holder<Gas>> HOLDER_STREAM_CODEC = ByteBufCodecs.holderRegistry(GasRegistries.GAS_REGISTRY_KEY);
+    public static final StreamCodec<RegistryFriendlyByteBuf, Gas> GAS_STREAM_CODEC = ByteBufCodecs.registry(GasRegistries.GAS_REGISTRY_KEY);
+    public static final Holder<Gas> EMPTY_GAS_HOLDER = DeferredHolder.create(GasRegistries.EMPTY_GAS_KEY);
 
-    private final Reference<Gas> builtInRegistryHolder = CCBGasRegistries.GAS_REGISTRY.createIntrusiveHolder(this);
+    private final Reference<Gas> builtInRegistryHolder = GasRegistries.GAS_REGISTRY.createIntrusiveHolder(this);
     private final ResourceLocation texture;
     private final int tint;
     private final int alpha;
@@ -64,7 +62,7 @@ public class Gas {
      * @return an optional containing the parsed value, or an empty optional when parsing fails
      */
     public static Optional<Holder<Gas>> parseHolder(Provider lookupProvider, Tag tag) {
-        return HOLDER_CODEC.parse(lookupProvider.createSerializationContext(NbtOps.INSTANCE), tag).resultOrPartial(error -> CreateCraftedBeginning.LOGGER.error("Tried to load invalid gas: '{}'", error));
+        return HOLDER_CODEC.parse(lookupProvider.createSerializationContext(NbtOps.INSTANCE), tag).resultOrPartial(error -> CCBAPI.LOGGER.error("Tried to load invalid gas: '{}'", error));
     }
 
     /**
@@ -79,7 +77,7 @@ public class Gas {
             return EMPTY_GAS_HOLDER;
         }
 
-        Optional<RegistryLookup<Gas>> lookup = lookupProvider.lookup(CCBRegistries.GAS_REGISTRY_KEY);
+        Optional<RegistryLookup<Gas>> lookup = lookupProvider.lookup(GasRegistries.GAS_REGISTRY_KEY);
         if (lookup.isEmpty()) {
             return EMPTY_GAS_HOLDER;
         }
@@ -89,7 +87,7 @@ public class Gas {
             return EMPTY_GAS_HOLDER;
         }
 
-        ResourceKey<Gas> key = ResourceKey.create(CCBRegistries.GAS_REGISTRY_KEY, location);
+        ResourceKey<Gas> key = ResourceKey.create(GasRegistries.GAS_REGISTRY_KEY, location);
         Optional<Reference<Gas>> reference = lookup.get().get(key);
         return reference.isPresent() ? reference.get() : EMPTY_GAS_HOLDER;
     }
@@ -101,7 +99,7 @@ public class Gas {
      * @return the registered gas, or the empty gas when the identifier is unknown
      */
     public static Gas getGasTypeByName(ResourceLocation location) {
-        return CCBGasRegistries.GAS_REGISTRY.getOptional(location).orElse(EMPTY_GAS_HOLDER.value());
+        return GasRegistries.GAS_REGISTRY.getOptional(location).orElse(EMPTY_GAS_HOLDER.value());
     }
 
     /**
@@ -120,7 +118,7 @@ public class Gas {
      * @return {@code true} if this value is empty; otherwise {@code false}
      */
     public boolean isEmpty() {
-        return getHolder().is(CCBGasRegistries.EMPTY_GAS_KEY);
+        return getHolder().is(GasRegistries.EMPTY_GAS_KEY);
     }
 
     /**
@@ -151,9 +149,9 @@ public class Gas {
             return translationKey;
         }
 
-        ResourceLocation id = CCBGasRegistries.GAS_REGISTRY.getKeyOrNull(this);
+        ResourceLocation id = GasRegistries.GAS_REGISTRY.getKeyOrNull(this);
         if (id == null) {
-            translationKey = "gas." + CreateCraftedBeginning.MOD_ID + ".unknown";
+            translationKey = "gas." + CCBAPI.MOD_ID + ".unknown";
         }
         else {
             translationKey = "gas." + id.getNamespace() + '.' + id.getPath();
@@ -203,6 +201,6 @@ public class Gas {
      */
     @Override
     public String toString() {
-        return CCBGasRegistries.GAS_REGISTRY.wrapAsHolder(this).getRegisteredName();
+        return GasRegistries.GAS_REGISTRY.wrapAsHolder(this).getRegisteredName();
     }
 }

@@ -12,23 +12,21 @@ import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
 import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlockEntity.CraftPlan;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleInventory;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterUtils;
 import net.ty.createcraftedbeginning.recipe.trie.IAirtightWithGasRecipe;
 import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -122,7 +120,15 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
         List<ItemStack> outputItems = createRecipeOutputItems(recipe, level, availableItems, itemAmounts, !simulate);
         List<FluidStack> outputFluids = createRecipeOutputFluids(recipe);
         List<GasStack> outputGases = createRecipeOutputGases(recipe);
-        return canAcceptOutputsAfterInputsAreConsumed(kettle, availableItems, availableFluids, availableGases, outputItems, outputFluids, outputGases, itemAmounts, fluidAmounts, gasAmounts) && (simulate || executePlannedConsumption(availableItems, availableFluids, availableGases, itemAmounts, fluidAmounts, gasAmounts) && kettle.acceptOutputs(outputItems, outputFluids, outputGases, false));
+        if (!canAcceptOutputsAfterInputsAreConsumed(kettle, availableItems, availableFluids, availableGases, outputItems, outputFluids, outputGases, itemAmounts, fluidAmounts, gasAmounts)) {
+            return false;
+        }
+        if (simulate) {
+            return true;
+        }
+
+        CraftPlan craftPlan = kettle.createCraftPlan(itemAmounts, fluidAmounts, gasAmounts, outputItems, outputFluids, outputGases);
+        return kettle.commitCraft(craftPlan);
     }
 
     private static boolean planInputConsumption(ReactorKettleRecipe recipe, IItemHandler availableItems, IFluidHandler availableFluids, IGasHandler availableGases, int[] itemAmounts, int[] fluidAmounts, long[] gasAmounts) {
@@ -498,65 +504,6 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
         }
 
         return remaining <= 0;
-    }
-
-    private static boolean executePlannedConsumption(IItemHandler availableItems, IFluidHandler availableFluids, IGasHandler availableGases, int @NotNull [] itemAmounts, int[] fluidAmounts, long[] gasAmounts) {
-        return consumeItems(availableItems, itemAmounts) && consumeFluids(availableFluids, fluidAmounts) && consumeGases(availableGases, gasAmounts);
-    }
-
-    private static boolean consumeItems(IItemHandler items, int[] amounts) {
-        for (int slot = 0; slot < amounts.length; slot++) {
-            int amount = amounts[slot];
-            if (amount <= 0) {
-                continue;
-            }
-
-            ItemStack extracted = items.extractItem(slot, amount, false);
-            if (extracted.getCount() != amount) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static boolean consumeFluids(IFluidHandler fluids, int[] amounts) {
-        for (int tank = 0; tank < amounts.length; tank++) {
-            int amount = amounts[tank];
-            if (amount <= 0) {
-                continue;
-            }
-
-            FluidStack stored = fluids.getFluidInTank(tank);
-            if (stored.isEmpty()) {
-                return false;
-            }
-
-            FluidStack drained = fluids.drain(stored.copyWithAmount(amount), FluidAction.EXECUTE);
-            if (drained.getAmount() != amount) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static boolean consumeGases(IGasHandler gases, long[] amounts) {
-        for (int tank = 0; tank < amounts.length; tank++) {
-            long amount = amounts[tank];
-            if (amount <= 0) {
-                continue;
-            }
-
-            GasStack stored = gases.getGasInTank(tank);
-            if (stored.isEmpty()) {
-                return false;
-            }
-
-            GasStack drained = gases.drain(stored.copyWithAmount(amount), GasAction.EXECUTE);
-            if (drained.getAmount() != amount) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private static boolean planItemInputConsumption(List<ItemRequirement> requirements, int requirementIndex, IItemHandler availableItems, int[] itemAmounts) {

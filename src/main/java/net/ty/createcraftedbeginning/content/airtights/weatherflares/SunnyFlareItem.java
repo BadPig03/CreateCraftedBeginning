@@ -4,6 +4,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
+import net.ty.createcraftedbeginning.api.weatherflares.IWeatherFlare;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 

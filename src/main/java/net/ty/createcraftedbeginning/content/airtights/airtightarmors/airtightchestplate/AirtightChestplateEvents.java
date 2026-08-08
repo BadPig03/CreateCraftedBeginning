@@ -1,8 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate;
 
-import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -13,11 +11,9 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingEvent.LivingVisibilityEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickEmpty;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.AirtightChestplateUpgradeRegistry;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.CreativeFlightUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.ElytraUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.InvisibilityUpgrade;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
@@ -29,20 +25,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
 public class AirtightChestplateEvents {
-    @SubscribeEvent
-    public static void onRightClickEmpty(RightClickEmpty event) {
-        Player player = event.getEntity();
-        if (!player.level().isClientSide || event.getHand() != InteractionHand.MAIN_HAND || !player.getMainHandItem().isEmpty()) {
-            return;
-        }
-
-        if (!ElytraUpgrade.applyClientSpeedBoost(player)) {
-            return;
-        }
-
-        CatnipServices.NETWORK.sendToServer(AirtightChestplateElytraBoostPacket.INSTANCE);
-    }
-
     @SubscribeEvent
     public static void onPlayerVisibility(LivingVisibilityEvent event) {
         LivingEntity entity = event.getEntity();
@@ -77,7 +59,6 @@ public class AirtightChestplateEvents {
 
         Level level = player.level();
         if (level.isClientSide) {
-            CreativeFlightUpgrade.spawnParticles(player, level);
             return;
         }
 

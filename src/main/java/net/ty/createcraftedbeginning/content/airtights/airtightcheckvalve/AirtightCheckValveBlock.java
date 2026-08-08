@@ -23,9 +23,9 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.TickPriority;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAirtightComponent;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AxisGasPipeBlock;
+import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IAirtightComponent;
+import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IDirectionalPipe;
 import net.ty.createcraftedbeginning.data.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 

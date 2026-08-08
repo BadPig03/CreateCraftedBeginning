@@ -2,7 +2,7 @@ package net.ty.createcraftedbeginning.api.drillhandlers;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
@@ -10,8 +10,8 @@ import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Provides lookup and registration helpers for gas-specific airtight drill behavior.
- * Handlers define damage, gas consumption, tooltip content, and optional extra behavior.
+ * Provides lookup and registration helpers for gas-specific airtight drill behaviour.
+ * Handlers define damage, gas consumption, tooltip content, and optional extra behaviour.
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -85,23 +85,23 @@ public final class AirtightDrillHandlerUtils {
     public static void register(ResourceLocation location, AirtightDrillHandler handler) {
         Gas gasType = Gas.getGasTypeByName(location);
         if (gasType.isEmpty()) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Drill Handler: gas '{}' does not exist.", location);
+            CCBAPI.LOGGER.error("Failed to register Airtight Drill Handler: gas '{}' does not exist.", location);
             return;
         }
 
         AirtightDrillHandler drillHandler = AirtightDrillHandler.REGISTRY.get(gasType);
         if (drillHandler != null) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Drill Handler for gas '{}': a handler is already registered.", location);
+            CCBAPI.LOGGER.error("Failed to register Airtight Drill Handler for gas '{}': a handler is already registered.", location);
             return;
         }
 
         if (!GasConsumptionUtils.isNonNegative(handler.getDamageAddition())) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Drill Handler for gas '{}': damage addition must be non-negative, got {}.", location, handler.getDamageAddition());
+            CCBAPI.LOGGER.error("Failed to register Airtight Drill Handler for gas '{}': damage addition must be non-negative, got {}.", location, handler.getDamageAddition());
             return;
         }
 
         if (!GasConsumptionUtils.isNonNegativeFinite(handler.getConsumptionMultiplier())) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Drill Handler for gas '{}': consumption multiplier must be finite and non-negative, got {}.", location, handler.getConsumptionMultiplier());
+            CCBAPI.LOGGER.error("Failed to register Airtight Drill Handler for gas '{}': consumption multiplier must be finite and non-negative, got {}.", location, handler.getConsumptionMultiplier());
             return;
         }
 

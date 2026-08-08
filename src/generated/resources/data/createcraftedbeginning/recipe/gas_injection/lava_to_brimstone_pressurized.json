@@ -1,0 +1,21 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "ingredients": [
+    {
+      "type": "neoforge:tag",
+      "amount": 1000,
+      "tag": "c:lava"
+    },
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 25,
+      "gas": "createcraftedbeginning:pressurized_energized_ultrawarm_air"
+    }
+  ],
+  "results": [
+    {
+      "amount": 100,
+      "id": "createcraftedbeginning:brimstone"
+    }
+  ]
+}

@@ -8,7 +8,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasBuilder;
 import net.ty.createcraftedbeginning.api.gas.gases.GasHolder;
-import net.ty.createcraftedbeginning.registry.CCBRegistries;
+import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -21,7 +21,7 @@ public class CCBGasDeferredRegister extends DeferredRegister<Gas> {
     private final Function<ResourceKey<Gas>, GasHolder<Gas, Gas>> holderCreator = GasHolder::new;
 
     public CCBGasDeferredRegister(String modId) {
-        super(CCBRegistries.GAS_REGISTRY_KEY, modId);
+        super(GasRegistries.GAS_REGISTRY_KEY, modId);
     }
 
     public GasHolder<Gas, Gas> register(String name, GasBuilder builder) {

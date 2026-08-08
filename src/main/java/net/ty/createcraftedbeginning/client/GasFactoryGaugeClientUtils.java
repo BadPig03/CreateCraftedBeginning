@@ -8,6 +8,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
+import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -28,7 +29,7 @@ public final class GasFactoryGaugeClientUtils {
         boolean controlDown = Screen.hasControlDown();
         boolean shiftDown = Screen.hasShiftDown();
         int currentAmount = entry.count;
-        int step = isVirtualItem ? GasRequestUtils.getStep(Screen.hasAltDown(), controlDown, shiftDown) : shiftDown ? 10 : 1;
+        int step = isVirtualItem ? GasRequestClientUtils.getStep(Screen.hasAltDown(), controlDown, shiftDown) : shiftDown ? 10 : 1;
         if (!controlDown && scrollY > 0 && currentAmount == 1 && step > 1) {
             step--;
         }

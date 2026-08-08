@@ -34,14 +34,6 @@ import net.minecraft.world.level.storage.loot.predicates.ExplosionCondition;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe.DirectionalFacing;
-import net.ty.createcraftedbeginning.client.blockextensions.AirtightForgingPressClientExtensions;
-import net.ty.createcraftedbeginning.client.blockextensions.AirtightForgingPressStructuralClientExtensions;
-import net.ty.createcraftedbeginning.client.blockextensions.AirtightReactorKettleClientExtensions;
-import net.ty.createcraftedbeginning.client.blockextensions.AirtightReactorKettleStructuralClientExtensions;
-import net.ty.createcraftedbeginning.client.blockextensions.TeslaTurbineClientExtensions;
-import net.ty.createcraftedbeginning.client.blockextensions.TeslaTurbineStructuralClientExtensions;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightencasedpipe.AirtightEncasedPipeBlock;
@@ -50,7 +42,6 @@ import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.Airt
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralShaftBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock;
-import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentModel;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlockItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralBlock;
@@ -65,7 +56,8 @@ import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentCTBehavio
 import net.ty.createcraftedbeginning.content.airtights.boilersteamoutlet.BoilerSteamOutletBlock;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankCTBehavior;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankItem;
-import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeModel;
+import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IDirectionalPipe;
+import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IDirectionalPipe.DirectionalFacing;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlock;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlock;
 import net.ty.createcraftedbeginning.content.airtights.smartairtightpipe.SmartAirtightPipeBlock;
@@ -174,7 +166,7 @@ public final class CCBBlockModelTransformer {
             int rotationY = axis == Axis.X ? 90 : 0;
 
             return ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/airtight_pipe/pipe"))).uvLock(false).rotationX(rotationX).rotationY(rotationY).build();
-        }, BlockStateProperties.WATERLOGGED)).onRegister(CCBRegistrate.blockModel(() -> AirtightPipeAttachmentModel::withAO)).item().properties(Properties::fireResistant).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+        }, BlockStateProperties.WATERLOGGED)).item().properties(Properties::fireResistant).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)
@@ -206,7 +198,7 @@ public final class CCBBlockModelTransformer {
 
             int rotationY = axis == Axis.X ? 90 : 180;
             return ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc(modelPath))).uvLock(false).rotationX(90).rotationY(rotationY).build();
-        }, BlockStateProperties.WATERLOGGED)).onRegister(CCBRegistrate.blockModel(() -> AirtightPipeAttachmentModel::withAO)).item().properties(Properties::fireResistant).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+        }, BlockStateProperties.WATERLOGGED)).item().properties(Properties::fireResistant).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)
@@ -226,7 +218,7 @@ public final class CCBBlockModelTransformer {
 
             int rotationY = axis == Axis.X ? 90 : 180;
             return ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc(modelPath))).uvLock(false).rotationX(90).rotationY(rotationY).build();
-        }, BlockStateProperties.WATERLOGGED)).onRegister(CCBRegistrate.blockModel(() -> AirtightPipeAttachmentModel::withAO)).item().properties(Properties::fireResistant).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+        }, BlockStateProperties.WATERLOGGED)).item().properties(Properties::fireResistant).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)
@@ -241,7 +233,7 @@ public final class CCBBlockModelTransformer {
             int rotationY = direction.getAxis().isVertical() ? 0 : ((int) direction.toYRot() + 180) % 360;
 
             return ConfiguredModel.builder().modelFile(AssetLookup.partialBaseModel(context, provider)).rotationX(rotationX).rotationY(rotationY).build();
-        }, BlockStateProperties.WATERLOGGED)).onRegister(CCBRegistrate.blockModel(() -> AirtightPipeAttachmentModel::withAO)).item().properties(Properties::fireResistant).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+        }, BlockStateProperties.WATERLOGGED)).item().properties(Properties::fireResistant).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)
@@ -312,7 +304,7 @@ public final class CCBBlockModelTransformer {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> gasFactoryGauge() {
-        return builder -> builder.blockstate((c, p) -> p.horizontalFaceBlock(c.get(), AssetLookup.partialBaseModel(c, p))).onRegister(CCBRegistrate.blockModel(() -> GasFactoryGaugeModel::new)).item(FactoryPanelBlockItem::new).model(AssetLookup::customItemModel).build();
+        return builder -> builder.blockstate((c, p) -> p.horizontalFaceBlock(c.get(), AssetLookup.partialBaseModel(c, p))).item(FactoryPanelBlockItem::new).model(AssetLookup::customItemModel).build();
     }
 
     @Contract(pure = true)
@@ -421,7 +413,7 @@ public final class CCBBlockModelTransformer {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> teslaTurbine() {
-        return builder -> builder.clientExtension(() -> TeslaTurbineClientExtensions::new).blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> {
+        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> {
             Axis axis = state.getValue(BlockStateProperties.AXIS);
             int rotationX = axis == Axis.Y ? 0 : 90;
             int rotationY = switch (axis) {
@@ -436,17 +428,17 @@ public final class CCBBlockModelTransformer {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtightReactorKettle() {
-        return builder -> builder.clientExtension(() -> AirtightReactorKettleClientExtensions::new).blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/airtight_reactor_kettle/block"))).build())).item(AirtightReactorKettleBlockItem::new).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/airtight_reactor_kettle/block"))).build())).item(AirtightReactorKettleBlockItem::new).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtightForgingPress() {
-        return builder -> builder.clientExtension(() -> AirtightForgingPressClientExtensions::new).blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/airtight_forging_press/block"))).build())).item(AirtightForgingPressBlockItem::new).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/airtight_forging_press/block"))).build())).item(AirtightForgingPressBlockItem::new).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> teslaTurbineStructural() {
-        return b -> b.clientExtension(() -> TeslaTurbineStructuralClientExtensions::new).blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(state -> {
+        return b -> b.blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(state -> {
             Axis axis = state.getValue(TeslaTurbineStructuralBlock.AXIS);
             TeslaTurbineStructuralPosition position = state.getValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION);
             String modelPath = String.format("block/tesla_turbine/%s", position.getSerializedName());
@@ -466,7 +458,7 @@ public final class CCBBlockModelTransformer {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtightReactorKettleStructural() {
-        return builder -> builder.clientExtension(() -> AirtightReactorKettleStructuralClientExtensions::new).blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
+        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
             String position = state.getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION).getSerializedName();
             String modelPath = String.format("block/airtight_reactor_kettle/%s", position);
             return ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc(modelPath))).build();
@@ -475,7 +467,7 @@ public final class CCBBlockModelTransformer {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtightReactorKettleStructuralCog() {
-        return builder -> builder.clientExtension(() -> AirtightReactorKettleStructuralClientExtensions::new).blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
+        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
             String position = state.getValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION).getSerializedName();
             String modelPath = String.format("block/airtight_reactor_kettle/%s", position);
             return ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc(modelPath))).build();
@@ -484,7 +476,7 @@ public final class CCBBlockModelTransformer {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtightForgingPressStructural() {
-        return builder -> builder.clientExtension(() -> AirtightForgingPressStructuralClientExtensions::new).blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
+        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
             String position = state.getValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION).getSerializedName();
             String modelPath = String.format("block/airtight_forging_press/%s", position);
             return ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc(modelPath))).build();
@@ -493,7 +485,7 @@ public final class CCBBlockModelTransformer {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtightForgingPressStructuralShaft() {
-        return builder -> builder.clientExtension(() -> AirtightForgingPressStructuralClientExtensions::new).blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
+        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
             String position = state.getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION).getSerializedName();
             String modelPath = String.format("block/airtight_forging_press/%s", position);
             return ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc(modelPath))).build();

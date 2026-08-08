@@ -5,6 +5,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameRules.BooleanValue;
+import net.ty.createcraftedbeginning.api.weatherflares.IWeatherFlare;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 

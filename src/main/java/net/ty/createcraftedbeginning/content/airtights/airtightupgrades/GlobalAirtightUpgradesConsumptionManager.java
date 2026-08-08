@@ -11,10 +11,10 @@ import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandler;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerConsumers;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerConsumers.AffordableFuel;
 import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsUtils;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers.AffordableFuel;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;

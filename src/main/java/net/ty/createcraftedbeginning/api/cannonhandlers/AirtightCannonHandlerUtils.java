@@ -2,7 +2,7 @@ package net.ty.createcraftedbeginning.api.cannonhandlers;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandler;
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
@@ -12,8 +12,8 @@ import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Provides lookup and registration helpers for gas-specific airtight cannon behavior.
- * Handlers define explosion behavior, gas consumption, and contextual tooltip content.
+ * Provides lookup and registration helpers for gas-specific airtight cannon behaviour.
+ * Handlers define explosion behaviour, gas consumption, and contextual tooltip content.
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -55,24 +55,24 @@ public final class AirtightCannonHandlerUtils {
     public static void register(ResourceLocation location, AirtightCannonHandler handler) {
         Gas gasType = Gas.getGasTypeByName(location);
         if (gasType.isEmpty()) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Cannon Handler: gas '{}' does not exist.", location);
+            CCBAPI.LOGGER.error("Failed to register Airtight Cannon Handler: gas '{}' does not exist.", location);
             return;
         }
 
         AirtightCannonHandler cannonHandler = AirtightCannonHandler.REGISTRY.get(gasType);
         if (cannonHandler != null) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Cannon Handler for gas '{}': a handler is already registered.", location);
+            CCBAPI.LOGGER.error("Failed to register Airtight Cannon Handler for gas '{}': a handler is already registered.", location);
             return;
         }
 
         float consumptionMultiplier = handler.getGasConsumptionMultiplier();
         if (!GasConsumptionUtils.isNonNegativeFinite(consumptionMultiplier)) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Cannon Handler for gas '{}': consumption multiplier must be finite and non-negative, got {}.", location, consumptionMultiplier);
+            CCBAPI.LOGGER.error("Failed to register Airtight Cannon Handler for gas '{}': consumption multiplier must be finite and non-negative, got {}.", location, consumptionMultiplier);
             return;
         }
 
         if (handler instanceof AirtightCannonVisualHandler visualHandler && !GasConsumptionUtils.isFinite(visualHandler.getRotationSpeed())) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Cannon Handler for gas '{}': rotation speed must be finite, got {}.", location, visualHandler.getRotationSpeed());
+            CCBAPI.LOGGER.error("Failed to register Airtight Cannon Handler for gas '{}': rotation speed must be finite, got {}.", location, visualHandler.getRotationSpeed());
             return;
         }
 

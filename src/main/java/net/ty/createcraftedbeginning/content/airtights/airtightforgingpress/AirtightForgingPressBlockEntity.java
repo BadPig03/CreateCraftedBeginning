@@ -48,10 +48,13 @@ import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasInventoryIdentifierProvider;
+import net.ty.createcraftedbeginning.content.airtights.transaction.MachineResourceSnapshots;
+import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
+import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction.Participant;
 import net.ty.createcraftedbeginning.recipe.ForgingPressRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
@@ -59,7 +62,6 @@ import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
 import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -171,12 +173,8 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         return extracted.getCount() == amount && ItemStack.isSameItemSameComponents(extracted, expectedStack);
     }
 
-    private static List<ItemStack> copyInventory(IItemHandler inventory) {
-        List<ItemStack> stacks = new ArrayList<>(inventory.getSlots());
-        for (int slot = 0; slot < inventory.getSlots(); slot++) {
-            stacks.add(inventory.getStackInSlot(slot).copy());
-        }
-        return stacks;
+    private static Participant<ItemStack> itemConsumptionParticipant(IItemHandlerModifiable inventory, ItemStack expectedStack, int amount) {
+        return ResourceTransaction.participant(() -> canConsumeItem(inventory, expectedStack, amount), () -> inventory.getStackInSlot(0).copy(), () -> consumeItem(inventory, expectedStack, amount), snapshot -> inventory.setStackInSlot(0, snapshot.copy()));
     }
 
     @Override
@@ -412,7 +410,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         if (!insertOutputs(simulatedOutput, outputItems)) {
             return Optional.empty();
         }
-        return Optional.of(new OutputPlan(copyInventory(outputInventory), copyInventory(simulatedOutput)));
+        return Optional.of(new OutputPlan(MachineResourceSnapshots.copyItems(outputInventory), MachineResourceSnapshots.copyItems(simulatedOutput)));
     }
 
     public boolean acceptOutputs(List<ItemStack> outputItems, boolean simulate) {
@@ -451,41 +449,11 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     }
 
     public synchronized boolean commitCraft(ConsumptionPlan consumptionPlan, OutputPlan outputPlan) {
-        if (!canCommit(consumptionPlan, outputPlan)) {
-            return false;
-        }
-
-        TransactionSnapshot snapshot = createTransactionSnapshot();
-        boolean committed = false;
-        try {
-            if (!consumeItem(processingInventory, consumptionPlan.expectedProcessingStack(), consumptionPlan.processingAmount())) {
-                return false;
-            }
-
-            if (!consumeItem(inputInventory, consumptionPlan.expectedInputStack(), consumptionPlan.inputAmount())) {
-                return false;
-            }
-
-            if (!consumeFluid(consumptionPlan)) {
-                return false;
-            }
-
-            if (!consumeGas(consumptionPlan)) {
-                return false;
-            }
-
+        ResourceTransaction transaction = new ResourceTransaction().require(() -> ItemStack.matches(pressHeadInventory.getStackInSlot(0), consumptionPlan.expectedPressHeadStack())).add(itemConsumptionParticipant(processingInventory, consumptionPlan.expectedProcessingStack(), consumptionPlan.processingAmount())).add(itemConsumptionParticipant(inputInventory, consumptionPlan.expectedInputStack(), consumptionPlan.inputAmount())).add(ResourceTransaction.participant(() -> canConsumeFluid(consumptionPlan), () -> fluidTank.getPrimaryHandler().getFluid().copy(), () -> consumeFluid(consumptionPlan), snapshot -> fluidTank.getPrimaryHandler().setFluid(snapshot.copy()))).add(ResourceTransaction.participant(() -> canConsumeGas(consumptionPlan), () -> gasTank.getPrimaryHandler().getGasStack().copy(), () -> consumeGas(consumptionPlan), snapshot -> gasTank.getPrimaryHandler().setGasStack(snapshot.copy()))).add(ResourceTransaction.participant(() -> outputPlanMatchesCurrent(outputPlan), () -> MachineResourceSnapshots.copyItems(outputInventory), () -> {
             applyOutputPlan(outputPlan);
-            committed = true;
             return true;
-        } finally {
-            if (!committed) {
-                restoreTransactionSnapshot(snapshot);
-            }
-        }
-    }
-
-    private boolean canCommit(ConsumptionPlan plan, OutputPlan outputPlan) {
-        return outputPlanMatchesCurrent(outputPlan) && ItemStack.matches(pressHeadInventory.getStackInSlot(0), plan.expectedPressHeadStack()) && canConsumeItem(processingInventory, plan.expectedProcessingStack(), plan.processingAmount()) && canConsumeItem(inputInventory, plan.expectedInputStack(), plan.inputAmount()) && canConsumeFluid(plan) && canConsumeGas(plan);
+        }, snapshot -> MachineResourceSnapshots.restoreItems(outputInventory, snapshot)));
+        return transaction.commit();
     }
 
     private boolean canConsumeFluid(ConsumptionPlan plan) {
@@ -558,20 +526,6 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         for (int slot = 0; slot < outputInventory.getSlots(); slot++) {
             outputInventory.setStackInSlot(slot, finalSlots.get(slot).copy());
         }
-    }
-
-    private TransactionSnapshot createTransactionSnapshot() {
-        return new TransactionSnapshot(processingInventory.getStackInSlot(0).copy(), inputInventory.getStackInSlot(0).copy(), copyInventory(outputInventory), fluidTank.getPrimaryHandler().getFluid().copy(), gasTank.getPrimaryHandler().getGasStack().copy());
-    }
-
-    private void restoreTransactionSnapshot(TransactionSnapshot snapshot) {
-        processingInventory.setStackInSlot(0, snapshot.processingStack().copy());
-        inputInventory.setStackInSlot(0, snapshot.inputStack().copy());
-        for (int slot = 0; slot < outputInventory.getSlots(); slot++) {
-            outputInventory.setStackInSlot(slot, snapshot.outputSlots().get(slot).copy());
-        }
-        fluidTank.getPrimaryHandler().setFluid(snapshot.fluid().copy());
-        gasTank.getPrimaryHandler().setGasStack(snapshot.gas().copy());
     }
 
     private SmartInventory createOutputSimulation() {
@@ -792,8 +746,6 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
             }
         }
     }
-
-    private record TransactionSnapshot(ItemStack processingStack, ItemStack inputStack, List<ItemStack> outputSlots, FluidStack fluid, GasStack gas) {}
 
     private record ForgingPressPortHandler(IItemHandlerModifiable input, IItemHandlerModifiable output) implements IItemHandler {
         @Override

@@ -12,11 +12,10 @@ import net.minecraft.world.phys.Vec2;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.compat.jade.internal.JadeClientInternalBridge;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
-import snownee.jade.api.config.IWailaConfig.IConfigOverlay;
 import snownee.jade.api.ui.Element;
-import snownee.jade.overlay.OverlayRenderer;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.BiConsumer;
@@ -25,6 +24,7 @@ import java.util.function.BiConsumer;
 @MethodsReturnNonnullByDefault
 public class GasStackElement extends Element {
     private static final ResourceLocation BACKGROUND = CreateCraftedBeginning.asResource("gas/full");
+
     private final GasObject gas;
 
     public GasStackElement(GasObject gas) {
@@ -32,10 +32,7 @@ public class GasStackElement extends Element {
     }
 
     private static void getGasSpriteAndColor(GasObject gas, BiConsumer<@Nullable TextureAtlasSprite, Integer> consumer) {
-        int tint = gas.gasType().getTint();
-        if (OverlayRenderer.alpha != 1) {
-            tint = IConfigOverlay.applyAlpha(tint, OverlayRenderer.alpha);
-        }
+        int tint = JadeClientInternalBridge.applyOverlayAlpha(gas.gasType().getTint());
         consumer.accept(Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(BACKGROUND), tint);
     }
 
@@ -52,7 +49,7 @@ public class GasStackElement extends Element {
             maxY = swapY;
         }
 
-        color = IConfigOverlay.applyAlpha(color, OverlayRenderer.alpha);
+        color = JadeClientInternalBridge.applyOverlayAlpha(color);
         VertexConsumer buffer = graphics.bufferSource().getBuffer(RenderType.gui());
         buffer.addVertex(matrix, minX, maxY, 0).setColor(color);
         buffer.addVertex(matrix, maxX, maxY, 0).setColor(color);
@@ -61,17 +58,8 @@ public class GasStackElement extends Element {
         graphics.flush();
     }
 
-    private static void drawGas(GuiGraphics graphics, float x, float y, GasObject gas, float width, float height, long capacity) {
-        long amount = GasObject.bucketVolume();
-        float scaledAmount = (float) amount * height / capacity;
-        if (amount > 0 && scaledAmount < 1) {
-            scaledAmount = 1;
-        }
-        if (scaledAmount > height) {
-            scaledAmount = height;
-        }
-
-        float gasHeight = scaledAmount;
+    private static void drawGas(GuiGraphics graphics, float x, float y, GasObject gas, float width, float height) {
+        float gasHeight = Math.max(1, height);
         getGasSpriteAndColor(gas, (sprite, color) -> {
             float maxY = y + height;
             fill(graphics, x, maxY - gasHeight, x + width, maxY, color);
@@ -90,7 +78,7 @@ public class GasStackElement extends Element {
             return;
         }
 
-        drawGas(guiGraphics, x, y, gas, size.x, size.y, GasObject.bucketVolume());
+        drawGas(guiGraphics, x, y, gas, size.x, size.y);
     }
 
     @Override

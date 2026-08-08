@@ -22,11 +22,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorage;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageType;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageWrapper;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IMountedStorageManagerWithGas;
-import net.ty.createcraftedbeginning.api.gas.gases.packets.MountedStorageSyncWithGasPacket;
+import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IMountedStorageManagerWithGas;
+import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorage;
+import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorageType;
+import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorageWrapper;
+import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedStorageSyncWithGasPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -54,28 +54,14 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
     private MountedGasStorageWrapper ccb$gases;
     @Unique
     private ImmutableMap<BlockPos, SyncedMountedStorage> ccb$syncedGases;
+    @Shadow
+    private int syncCooldown;
 
     @Override
     @Unique
     public MountedGasStorageWrapper ccb$getGases() {
         assertInitialized();
         return ccb$gases;
-    }
-
-    @Override
-    @Unique
-    public void ccb$setGases(MountedGasStorageWrapper gases) {
-        ccb$gases = gases;
-    }
-
-    @Unique
-    private void ccb$addStorage(MountedGasStorage storage, BlockPos pos) {
-        ccb$gasesBuilder.put(pos, storage);
-        if (!(storage instanceof SyncedMountedStorage synced)) {
-            return;
-        }
-
-        ccb$syncedGasesBuilder.put(pos, synced);
     }
 
     @Override
@@ -101,8 +87,21 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
         syncedStorages.forEach((storage, pos) -> storage.afterSync(contraption, pos));
     }
 
-    @Shadow
-    private int syncCooldown;
+    @Override
+    @Unique
+    public void ccb$setGases(MountedGasStorageWrapper gases) {
+        ccb$gases = gases;
+    }
+
+    @Unique
+    private void ccb$addStorage(MountedGasStorage storage, BlockPos pos) {
+        ccb$gasesBuilder.put(pos, storage);
+        if (!(storage instanceof SyncedMountedStorage synced)) {
+            return;
+        }
+
+        ccb$syncedGasesBuilder.put(pos, synced);
+    }
 
     @Shadow
     protected abstract void assertInitialized();

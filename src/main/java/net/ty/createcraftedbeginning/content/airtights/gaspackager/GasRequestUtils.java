@@ -4,7 +4,6 @@ import com.simibubi.create.content.logistics.BigItemStack;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
-import net.ty.createcraftedbeginning.config.CCBConfig;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -12,22 +11,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public final class GasRequestUtils {
     private GasRequestUtils() {
-    }
-
-    public static int getScrollStep() {
-        return CCBConfig.client().gasRequestScrollStep.get();
-    }
-
-    public static int getAltStep() {
-        return CCBConfig.client().gasRequestAltScrollStep.get();
-    }
-
-    public static int getCtrlStep() {
-        return CCBConfig.client().gasRequestCtrlScrollStep.get();
-    }
-
-    public static int getShiftStep() {
-        return CCBConfig.client().gasRequestShiftScrollStep.get();
     }
 
     public static String format(int amount, boolean keeper) {
@@ -42,21 +25,6 @@ public final class GasRequestUtils {
             return Component.translatable("jade.gas.infinity_mark").getString();
         }
         return GasAmountUtils.formatPrecise(amount);
-    }
-
-    public static int getStep(boolean alt, boolean ctrl, boolean shift) {
-        if (alt) {
-            return getAltStep();
-        }
-
-        if (ctrl) {
-            return getCtrlStep();
-        }
-
-        if (shift) {
-            return getShiftStep();
-        }
-        return getScrollStep();
     }
 
     public static int toLogisticsAmount(long gasAmount) {
