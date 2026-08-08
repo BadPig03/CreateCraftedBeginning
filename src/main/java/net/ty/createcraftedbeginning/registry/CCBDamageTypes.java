@@ -10,7 +10,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -22,7 +22,7 @@ public class CCBDamageTypes {
     public static final ResourceKey<DamageType> REACTOR_KETTLE_MIXER = key("reactor_kettle_mixer");
 
     private static ResourceKey<DamageType> key(String name) {
-        return ResourceKey.create(Registries.DAMAGE_TYPE, CreateCraftedBeginning.asResource(name));
+        return ResourceKey.create(Registries.DAMAGE_TYPE, CCBAPI.asResource(name));
     }
 
     public static void bootstrap(BootstrapContext<DamageType> ctx) {

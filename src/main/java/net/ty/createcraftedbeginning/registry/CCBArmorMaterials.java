@@ -11,7 +11,7 @@ import net.minecraft.world.item.ArmorMaterial.Layer;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -24,8 +24,8 @@ import java.util.stream.Collectors;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBArmorMaterials {
-    private static final DeferredRegister<ArmorMaterial> MATERIALS = DeferredRegister.create(Registries.ARMOR_MATERIAL, CreateCraftedBeginning.MOD_ID);
-    private static final ResourceLocation AIRTIGHT_LOCATION = CreateCraftedBeginning.asResource("airtight");
+    private static final DeferredRegister<ArmorMaterial> MATERIALS = DeferredRegister.create(Registries.ARMOR_MATERIAL, CCBAPI.MOD_ID);
+    private static final ResourceLocation AIRTIGHT_LOCATION = CCBAPI.asResource("airtight");
 
     public static final Holder<ArmorMaterial> AIRTIGHT = register(new int[]{4, 9, 7, 4, 11}, CCBSoundEvents.AIRTIGHT_ARMOR_EQUIP.getMainEventHolder(), Ingredient::of, List.of(new Layer(AIRTIGHT_LOCATION)));
 

@@ -26,9 +26,9 @@ import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.Airtight
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableScreen;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
-import net.ty.createcraftedbeginning.client.CCBGUITextures;
-import net.ty.createcraftedbeginning.data.CCBIcons;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
+import net.ty.createcraftedbeginning.foundation.gui.CCBIcons;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -158,7 +158,7 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
 
     private void addUpgradeButton(AirtightUpgrade upgrade) {
         Couple<Integer> offset = upgrade.getOffset();
-        IconButton button = new IconButton(leftPos + offset.getFirst(), topPos + offset.getSecond(), upgrade.getIcon()).withCallback(() -> onUpgradeButtonPressed(upgrade));
+        IconButton button = new IconButton(leftPos + offset.getFirst(), topPos + offset.getSecond(), CCBIcons.get(upgrade.getIcon())).withCallback(() -> onUpgradeButtonPressed(upgrade));
         upgradeButtons.put(upgrade, button);
 
         if (upgrade.isRightIndicator()) {

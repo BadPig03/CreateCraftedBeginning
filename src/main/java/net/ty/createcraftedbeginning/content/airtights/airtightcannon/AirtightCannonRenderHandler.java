@@ -20,6 +20,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightCannonRenderHandler extends ShootableGadgetRenderHandler {
+    public static final AirtightCannonRenderHandler INSTANCE = new AirtightCannonRenderHandler();
+
     private float nextPitch;
 
     @Override

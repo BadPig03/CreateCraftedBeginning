@@ -1,14 +1,17 @@
 package net.ty.createcraftedbeginning.mixin.server.accessor;
 
 import net.minecraft.world.entity.monster.hoglin.Hoglin;
+import net.ty.createcraftedbeginning.platform.access.HoglinAccess;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(Hoglin.class)
-public interface HoglinAccessor {
+public interface HoglinAccessor extends HoglinAccess {
+    @Override
     @Accessor("timeInOverworld")
     int getTimeInOverworld();
 
+    @Override
     @Accessor("timeInOverworld")
     void setTimeInOverworld(int time);
 }

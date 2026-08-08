@@ -9,7 +9,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;

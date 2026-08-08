@@ -17,7 +17,7 @@ import net.minecraft.world.item.crafting.CookingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.SmokingRecipe;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberUtils;
 import net.ty.createcraftedbeginning.recipe.ChillingRecipe;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -32,13 +32,13 @@ public final class FanProcessingFilterRecipeUtils {
     private static final ResourceLocation SMOKING = Create.asResource("smoking");
     private static final ResourceLocation BLASTING = Create.asResource("blasting");
     private static final ResourceLocation HAUNTING = Create.asResource("haunting");
-    private static final ResourceLocation CHILLING = CreateCraftedBeginning.asResource("chilling");
+    private static final ResourceLocation CHILLING = CCBAPI.asResource("chilling");
 
     private static final RecipeType<RecipeHolder<SplashingRecipe>> FAN_WASHING = RecipeType.createRecipeHolderType(Create.asResource("fan_washing"));
     private static final RecipeType<RecipeHolder<SmokingRecipe>> FAN_SMOKING = RecipeType.createRecipeHolderType(Create.asResource("fan_smoking"));
     private static final RecipeType<RecipeHolder<AbstractCookingRecipe>> FAN_BLASTING = RecipeType.createRecipeHolderType(Create.asResource("fan_blasting"));
     private static final RecipeType<RecipeHolder<HauntingRecipe>> FAN_HAUNTING = RecipeType.createRecipeHolderType(Create.asResource("fan_haunting"));
-    private static final RecipeType<RecipeHolder<ChillingRecipe>> FAN_CHILLING = RecipeType.createRecipeHolderType(CreateCraftedBeginning.asResource("chilling"));
+    private static final RecipeType<RecipeHolder<ChillingRecipe>> FAN_CHILLING = RecipeType.createRecipeHolderType(CCBAPI.asResource("chilling"));
 
     private FanProcessingFilterRecipeUtils() {
     }
@@ -90,6 +90,6 @@ public final class FanProcessingFilterRecipeUtils {
     }
 
     private static ResourceLocation displayRecipeId(ResourceLocation fanProcessingTypeId) {
-        return CreateCraftedBeginning.asResource("jei/filter/" + fanProcessingTypeId.getNamespace() + '/' + fanProcessingTypeId.getPath());
+        return CCBAPI.asResource("jei/filter/" + fanProcessingTypeId.getNamespace() + '/' + fanProcessingTypeId.getPath());
     }
 }

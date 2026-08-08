@@ -1,0 +1,25 @@
+package net.ty.createcraftedbeginning.datagen.recipe.generator;
+
+import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.HolderLookup.Provider;
+import net.minecraft.data.PackOutput;
+import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipeGen;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
+import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.concurrent.CompletableFuture;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public abstract class ReactorKettleRecipeGen extends StandardProcessingWithGasRecipeGen<ReactorKettleRecipe> {
+    public ReactorKettleRecipeGen(PackOutput output, CompletableFuture<Provider> registries, String defaultNamespace) {
+        super(output, registries, defaultNamespace);
+    }
+
+    @Override
+    protected IRecipeTypeInfo getRecipeType() {
+        return CCBRecipeTypes.REACTOR_KETTLE;
+    }
+}

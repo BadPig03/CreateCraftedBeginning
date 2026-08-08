@@ -11,7 +11,7 @@ import dev.engine_room.flywheel.lib.transform.Translate;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.util.Mth;
-import net.ty.createcraftedbeginning.registry.CCBPartialModels;
+import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 

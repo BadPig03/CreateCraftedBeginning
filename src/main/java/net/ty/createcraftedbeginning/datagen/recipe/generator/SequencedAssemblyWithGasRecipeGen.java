@@ -1,0 +1,25 @@
+package net.ty.createcraftedbeginning.datagen.recipe.generator;
+
+import com.simibubi.create.api.data.recipe.BaseRecipeProvider;
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.HolderLookup.Provider;
+import net.minecraft.data.PackOutput;
+import net.ty.createcraftedbeginning.recipe.gas.SequencedAssemblyWithGasRecipeBuilder;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.UnaryOperator;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public abstract class SequencedAssemblyWithGasRecipeGen extends BaseRecipeProvider {
+    public SequencedAssemblyWithGasRecipeGen(PackOutput output, CompletableFuture<Provider> registries, String defaultNamespace) {
+        super(output, registries, defaultNamespace);
+    }
+
+    protected GeneratedRecipe create(String name, UnaryOperator<SequencedAssemblyWithGasRecipeBuilder> transform) {
+        GeneratedRecipe recipe = consumer -> transform.apply(new SequencedAssemblyWithGasRecipeBuilder(asResource(name))).build(consumer);
+        all.add(recipe);
+        return recipe;
+    }
+}

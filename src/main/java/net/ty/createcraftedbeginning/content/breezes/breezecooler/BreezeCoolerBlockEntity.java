@@ -43,7 +43,7 @@ import net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates.B
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates.ChilledCoolerState;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates.CreativeCoolerState;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates.InactiveCoolerState;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe.CoolingData;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;

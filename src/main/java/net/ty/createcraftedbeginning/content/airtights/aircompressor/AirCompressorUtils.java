@@ -19,15 +19,18 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.coolantshandlers.AirtightCoolantHandler;
 import net.ty.createcraftedbeginning.api.coolantshandlers.AirtightCoolantHandlerUtils;
+import net.ty.createcraftedbeginning.api.coolantshandlers.CoolantEfficiency;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
+import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.smartairtightpipe.SmartAirtightPipeBlock;
+import net.ty.createcraftedbeginning.content.airtights.transaction.MachineResourceSnapshots;
+import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
 import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.Nullable;
@@ -157,19 +160,15 @@ public final class AirCompressorUtils {
         long totalInput = batches * plan.inputPerBatch();
         long totalOutput = batches * plan.outputPerBatch().getAmount();
         GasStack outputStack = plan.outputPerBatch().copyWithAmount(totalOutput);
-        GasStack simulatedDrain = inputTankBehaviour.getInternalGasHandler().forceDrain(totalInput, GasAction.SIMULATE);
-        long simulatedFill = outputTankBehaviour.getInternalGasHandler().forceFill(outputStack, GasAction.SIMULATE);
-        if (simulatedDrain.getAmount() != totalInput || simulatedFill != totalOutput) {
-            return new WorkState(plan.recipe(), accumulatedWork);
-        }
-
-        GasStack drained = inputTankBehaviour.getInternalGasHandler().forceDrain(totalInput, GasAction.EXECUTE);
-        if (drained.getAmount() != totalInput) {
-            return new WorkState(plan.recipe(), accumulatedWork);
-        }
-
-        long filled = outputTankBehaviour.getInternalGasHandler().forceFill(outputStack, GasAction.EXECUTE);
-        if (filled != totalOutput) {
+        ResourceTransaction transaction = new ResourceTransaction().add(ResourceTransaction.participant(() -> {
+            GasStack simulatedDrain = inputTankBehaviour.getInternalGasHandler().forceDrain(totalInput, GasAction.SIMULATE);
+            long simulatedFill = outputTankBehaviour.getInternalGasHandler().forceFill(outputStack, GasAction.SIMULATE);
+            return simulatedDrain.getAmount() == totalInput && plan.recipe().getGasIngredient().ingredient().test(simulatedDrain) && simulatedFill == totalOutput;
+        }, () -> MachineResourceSnapshots.snapshotGasContents(inputTankBehaviour, outputTankBehaviour), () -> {
+            GasStack drained = inputTankBehaviour.getInternalGasHandler().forceDrain(totalInput, GasAction.EXECUTE);
+            return drained.getAmount() == totalInput && plan.recipe().getGasIngredient().ingredient().test(drained) && outputTankBehaviour.getInternalGasHandler().forceFill(outputStack, GasAction.EXECUTE) == totalOutput;
+        }, snapshot -> MachineResourceSnapshots.restoreGasContents(snapshot, inputTankBehaviour, outputTankBehaviour)));
+        if (!transaction.commit()) {
             return new WorkState(plan.recipe(), accumulatedWork);
         }
 
@@ -180,7 +179,7 @@ public final class AirCompressorUtils {
     public static int updateStoredHeat(int storedHeat, float speed, boolean operating, CoolantEfficiency coolantEfficiency, Level level) {
         int netHeat = getHeatAdded(speed, operating) - coolantEfficiency.getHeatReduced(level);
         long updatedHeat = (long) storedHeat + netHeat;
-        return (int) Math.max(0L, Math.min(updatedHeat, getMaxStoredHeat()));
+        return (int) Math.max(0, Math.min(updatedHeat, getMaxStoredHeat()));
     }
 
     public static int readStoredHeat(ItemStack compressor) {

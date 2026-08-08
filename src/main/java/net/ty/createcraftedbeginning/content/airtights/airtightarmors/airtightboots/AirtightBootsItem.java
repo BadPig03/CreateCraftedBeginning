@@ -4,8 +4,6 @@ import com.simibubi.create.foundation.item.TooltipHelper;
 import net.createmod.catnip.lang.FontHelper.Palette;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -26,13 +24,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.level.Level;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandler;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
 import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsUtils;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightBaseArmorItem;
@@ -40,7 +35,9 @@ import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightbo
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.upgrades.MovementEfficiencyUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.upgrades.StepHeightUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.platform.CCBClientBridge;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.Nullable;
@@ -51,7 +48,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightBootsItem extends AirtightBaseArmorItem implements MenuProvider {
-    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("airtight_boots");
+    private static final ResourceLocation ID = CCBAPI.asResource("airtight_boots");
 
     public AirtightBootsItem(Properties properties) {
         super(Type.BOOTS, properties);
@@ -100,9 +97,8 @@ public class AirtightBootsItem extends AirtightBaseArmorItem implements MenuProv
     }
 
     @Override
-    @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack boots, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
-        LocalPlayer player = Minecraft.getInstance().player;
+        Player player = CCBClientBridge.getClientPlayer();
         if (player == null) {
             return;
         }

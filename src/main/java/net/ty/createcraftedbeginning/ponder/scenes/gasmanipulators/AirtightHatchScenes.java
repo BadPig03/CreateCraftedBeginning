@@ -15,7 +15,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock.CanisterType;
-import net.ty.createcraftedbeginning.data.CCBIcons;
+import net.ty.createcraftedbeginning.foundation.gui.CCBIcons;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;

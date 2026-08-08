@@ -8,7 +8,7 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.concurrent.CompletableFuture;
@@ -30,7 +30,7 @@ public abstract class ProcessingWithGasRecipeGen<P extends ProcessingWithGasReci
     }
 
     protected GeneratedRecipe create(Supplier<ItemLike> singleIngredient, UnaryOperator<B> transform) {
-        return create(CreateCraftedBeginning.MOD_ID, singleIngredient, transform);
+        return create(CCBAPI.MOD_ID, singleIngredient, transform);
     }
 
     protected GeneratedRecipe create(String namespace, Supplier<ItemLike> singleIngredient, UnaryOperator<B> transform) {

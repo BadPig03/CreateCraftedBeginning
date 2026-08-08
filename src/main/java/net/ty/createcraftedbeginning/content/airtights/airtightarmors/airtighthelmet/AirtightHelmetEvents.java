@@ -10,7 +10,7 @@ import net.neoforged.neoforge.event.entity.living.LivingBreatheEvent;
 import net.neoforged.neoforge.event.entity.living.MobEffectEvent.Applicable;
 import net.neoforged.neoforge.event.entity.living.MobEffectEvent.Applicable.Result;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.upgrades.AirtightHelmetUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.upgrades.EffectsProtectionUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.upgrades.WaterBreathingUpgrade;
@@ -20,7 +20,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
+@EventBusSubscriber(modid = CCBAPI.MOD_ID)
 public class AirtightHelmetEvents {
     @SubscribeEvent
     public static void onMobEffectApplicable(Applicable event) {

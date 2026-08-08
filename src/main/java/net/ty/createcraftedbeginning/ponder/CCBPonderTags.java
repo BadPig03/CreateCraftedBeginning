@@ -5,7 +5,7 @@ import com.tterrag.registrate.util.entry.RegistryEntry;
 import net.createmod.ponder.api.registration.PonderTagRegistrationHelper;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
@@ -14,12 +14,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBPonderTags {
-    public static final ResourceLocation CRATES_TAG_ID = ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, "crates");
-    public static final ResourceLocation GAS_PIPES_TAG_ID = ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, "gas_pipes");
-    public static final ResourceLocation GAS_CONTAINERS_TAG_ID = ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, "gas_containers");
+    public static final ResourceLocation CRATES_TAG_ID = ResourceLocation.fromNamespaceAndPath(CCBAPI.MOD_ID, "crates");
+    public static final ResourceLocation GAS_PIPES_TAG_ID = ResourceLocation.fromNamespaceAndPath(CCBAPI.MOD_ID, "gas_pipes");
+    public static final ResourceLocation GAS_CONTAINERS_TAG_ID = ResourceLocation.fromNamespaceAndPath(CCBAPI.MOD_ID, "gas_containers");
 
-    public static final ResourceLocation GAS_MANIPULATORS_TAG_ID = ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, "gas_manipulators");
-    public static final ResourceLocation BREEZES_TAG_ID = ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, "breezes");
+    public static final ResourceLocation GAS_MANIPULATORS_TAG_ID = ResourceLocation.fromNamespaceAndPath(CCBAPI.MOD_ID, "gas_manipulators");
+    public static final ResourceLocation BREEZES_TAG_ID = ResourceLocation.fromNamespaceAndPath(CCBAPI.MOD_ID, "breezes");
 
     public static void register(PonderTagRegistrationHelper<ResourceLocation> helper) {
         helper.registerTag(CRATES_TAG_ID).addToIndex().item(CCBBlocks.ANDESITE_CRATE_BLOCK.get()).register();

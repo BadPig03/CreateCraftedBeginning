@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.airtights.airtightforgingpress;
 import com.simibubi.create.api.stress.BlockStressValues;
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
 import com.simibubi.create.content.kinetics.base.IRotate.StressImpact;
-import com.simibubi.create.infrastructure.config.AllConfigs;
 import net.createmod.catnip.lang.LangBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -17,8 +16,8 @@ import net.neoforged.neoforge.items.IItemHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.platform.CCBClientBridge;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -43,7 +42,7 @@ public class AirtightForgingPressTooltipBuilder {
 
     public boolean addToTooltip(List<Component> tooltip) {
         AirtightForgingPressStructureManager structureManager = core.getStructureManager();
-        if (structureManager.getOverstressed() && AllConfigs.client().enableOverstressedTooltip.get()) {
+        if (structureManager.getOverstressed() && CCBClientBridge.isOverstressedTooltipEnabled()) {
             CCBLang.translate("gui.overstressed").style(ChatFormatting.GOLD).forGoggles(tooltip);
             CCBLang.addToGoggles(tooltip, "gui.network_overstressed");
             return true;
@@ -81,7 +80,7 @@ public class AirtightForgingPressTooltipBuilder {
     }
 
     private void addItemStorage(List<Component> tooltip) {
-        int maxDisplay = CCBConfig.client().maxItemStackDisplay.get();
+        int maxDisplay = CCBClientBridge.getMaxItemStackDisplay();
         int stackCount = 0;
         IItemHandler items = press.getInputOutputCapability();
         for (int slot = 0; slot < items.getSlots(); slot++) {

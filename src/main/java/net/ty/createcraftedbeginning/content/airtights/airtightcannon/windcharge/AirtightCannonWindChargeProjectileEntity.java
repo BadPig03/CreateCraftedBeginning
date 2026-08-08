@@ -20,7 +20,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandler;
 import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlerUtils;
 import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonShotContext;
@@ -52,7 +52,7 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
     private boolean flame;
     private Vec3 initMotion = Vec3.ZERO;
 
-    public AirtightCannonWindChargeProjectileEntity(EntityType<? extends AbstractWindCharge> entityType, Level level) {
+    public AirtightCannonWindChargeProjectileEntity(EntityType<AirtightCannonWindChargeProjectileEntity> entityType, Level level) {
         super(entityType, level);
     }
 
@@ -66,10 +66,8 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         CCBSoundEvents.WIND_CHARGE_LAUNCH.playAt(level, location, 1, pitch, true);
     }
 
-    @SuppressWarnings("unchecked")
-    public static Builder<?> build(Builder<?> builder) {
-        Builder<AirtightCannonWindChargeProjectileEntity> typedBuilder = (Builder<AirtightCannonWindChargeProjectileEntity>) builder;
-        return typedBuilder.sized(DEFAULT_SIZE, DEFAULT_SIZE).eyeHeight(0);
+    public static void build(Builder<AirtightCannonWindChargeProjectileEntity> builder) {
+        builder.sized(DEFAULT_SIZE, DEFAULT_SIZE).eyeHeight(0);
     }
 
     public Holder<Gas> getGasHolder() {
@@ -95,7 +93,7 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         tag.putFloat(COMPOUND_KEY_MULTIPLIER, multiplier);
         tag.putFloat(COMPOUND_KEY_KNOCKBACK, knockback);
         tag.putBoolean(COMPOUND_KEY_FLAME, flame);
-        Gas.HOLDER_CODEC.encodeStart(NbtOps.INSTANCE, gasHolder).resultOrPartial(err -> CreateCraftedBeginning.LOGGER.error("Failed to encode gas holder: {}", err)).ifPresent(gasTag -> tag.put(COMPOUND_KEY_GAS_HOLDER, gasTag));
+        Gas.HOLDER_CODEC.encodeStart(NbtOps.INSTANCE, gasHolder).resultOrPartial(err -> CCBAPI.LOGGER.error("Failed to encode gas holder: {}", err)).ifPresent(gasTag -> tag.put(COMPOUND_KEY_GAS_HOLDER, gasTag));
     }
 
     @Override
@@ -276,7 +274,7 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
             return;
         }
 
-        Gas.HOLDER_CODEC.decode(NbtOps.INSTANCE, gasTag).resultOrPartial(err -> CreateCraftedBeginning.LOGGER.error("Failed to decode gas holder: {}", err)).map(Pair::getFirst).ifPresent(holder -> gasHolder = holder);
+        Gas.HOLDER_CODEC.decode(NbtOps.INSTANCE, gasTag).resultOrPartial(err -> CCBAPI.LOGGER.error("Failed to decode gas holder: {}", err)).map(Pair::getFirst).ifPresent(holder -> gasHolder = holder);
     }
 
     private void explodeDirectly(Vec3 pos) {

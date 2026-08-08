@@ -6,9 +6,8 @@ import net.minecraft.core.HolderSet;
 import net.minecraft.tags.TagKey;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.data.CCBGasRegistries;
-import net.ty.createcraftedbeginning.registry.CCBRegistries;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.stream.Stream;
@@ -16,7 +15,7 @@ import java.util.stream.Stream;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class TagGasIngredient extends GasIngredient {
-    public static final MapCodec<TagGasIngredient> CODEC = TagKey.codec(CCBRegistries.GAS_REGISTRY_KEY).xmap(TagGasIngredient::new, TagGasIngredient::tag).fieldOf("tag");
+    public static final MapCodec<TagGasIngredient> CODEC = TagKey.codec(GasRegistries.GAS_REGISTRY_KEY).xmap(TagGasIngredient::new, TagGasIngredient::tag).fieldOf("tag");
 
     private final TagKey<Gas> tag;
 
@@ -31,7 +30,7 @@ public class TagGasIngredient extends GasIngredient {
 
     @Override
     protected Stream<GasStack> generateStacks() {
-        return CCBGasRegistries.GAS_REGISTRY.getTag(tag).stream().flatMap(HolderSet::stream).map(gas -> new GasStack(gas, FluidType.BUCKET_VOLUME));
+        return GasRegistries.GAS_REGISTRY.getTag(tag).stream().flatMap(HolderSet::stream).map(gas -> new GasStack(gas, FluidType.BUCKET_VOLUME));
     }
 
     /**
@@ -47,7 +46,7 @@ public class TagGasIngredient extends GasIngredient {
      */
     @Override
     public GasIngredientType<?> getType() {
-        return CCBGasRegistries.TAG_GAS_INGREDIENT_TYPE.get();
+        return GasRegistries.TAG_GAS_INGREDIENT_TYPE.get();
     }
 
     /**
@@ -71,7 +70,7 @@ public class TagGasIngredient extends GasIngredient {
      */
     @Override
     public boolean equals(Object obj) {
-        return this == obj || obj instanceof TagGasIngredient other && other.tag() == tag;
+        return this == obj || obj instanceof TagGasIngredient other && tag.equals(other.tag());
     }
 
     /**

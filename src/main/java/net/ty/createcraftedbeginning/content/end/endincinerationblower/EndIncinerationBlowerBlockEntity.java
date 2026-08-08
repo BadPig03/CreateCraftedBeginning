@@ -30,11 +30,11 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.compat.sable.SableSubLevelCompat;
-import net.ty.createcraftedbeginning.compat.sable.SableSubLevelCompat.EntityArea;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndCasingBlock;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalBlockEntity;
+import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge;
+import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge.EntityArea;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBDamageTypes;
@@ -235,17 +235,6 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         }
 
         if (level.isClientSide) {
-            boolean showParticles = CCBConfig.client().enableEndIncinerationBlowerParticles.get();
-            if (showParticles) {
-                spawnParticles();
-            }
-            if (level instanceof PonderLevel) {
-                return;
-            }
-
-            if (showParticles && shouldSpawnProcessingParticles(level)) {
-                spawnPrimaryEffectParticles();
-            }
             clientTicker.accept(this);
             return;
         }
@@ -363,6 +352,23 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         return Math.floorMod(level.getGameTime(), 20) == Math.floorMod(worldPosition.hashCode(), 20);
     }
 
+    void tickClientParticles() {
+        if (level == null || !level.isClientSide) {
+            return;
+        }
+
+        spawnParticles();
+        if (level instanceof PonderLevel) {
+            return;
+        }
+
+        if (!shouldSpawnProcessingParticles(level)) {
+            return;
+        }
+
+        spawnPrimaryEffectParticles();
+    }
+
     private boolean shouldSpawnProcessingParticles(Level level) {
         return Math.floorMod(level.getGameTime(), PROCESSING_PARTICLE_INTERVAL_TICKS) == Math.floorMod(worldPosition.hashCode(), PROCESSING_PARTICLE_INTERVAL_TICKS);
     }
@@ -406,8 +412,8 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
 
         AABB area = calculateArea(worldPosition, absSpeed);
         switch (structural.getBlowerWorkingMode().get()) {
-            case SMOKING -> spawnFanProcessingParticles(level, AllFanProcessingTypes.SMOKING, area, SableSubLevelCompat.createEntityArea(level, worldPosition, area));
-            case BLASTING -> spawnFanProcessingParticles(level, AllFanProcessingTypes.BLASTING, area, SableSubLevelCompat.createEntityArea(level, worldPosition, area));
+            case SMOKING -> spawnFanProcessingParticles(level, AllFanProcessingTypes.SMOKING, area, CCBSubLevelBridge.createEntityArea(level, worldPosition, area));
+            case BLASTING -> spawnFanProcessingParticles(level, AllFanProcessingTypes.BLASTING, area, CCBSubLevelBridge.createEntityArea(level, worldPosition, area));
             case IGNITION -> {
             }
         }
@@ -423,14 +429,14 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         AABB area = calculateArea(worldPosition, absSpeed);
         boolean result = switch (structural.getBlowerWorkingMode().get()) {
             case SMOKING -> {
-                EntityArea entityArea = SableSubLevelCompat.createEntityArea(level, worldPosition, area);
+                EntityArea entityArea = CCBSubLevelBridge.createEntityArea(level, worldPosition, area);
                 yield applyFanProcessing(level, AllFanProcessingTypes.SMOKING, entityArea, getAffectedItems(level, area, entityArea), getTransportedHandlers(level, absSpeed));
             }
             case BLASTING -> {
-                EntityArea entityArea = SableSubLevelCompat.createEntityArea(level, worldPosition, area);
+                EntityArea entityArea = CCBSubLevelBridge.createEntityArea(level, worldPosition, area);
                 yield applyFanProcessing(level, AllFanProcessingTypes.BLASTING, entityArea, getAffectedItems(level, area, entityArea), getTransportedHandlers(level, absSpeed));
             }
-            case IGNITION -> shouldApplyIgnition(level) && applyIgnition(level, area, SableSubLevelCompat.createEntityArea(level, worldPosition, area), getFakePlayer(level), this);
+            case IGNITION -> shouldApplyIgnition(level) && applyIgnition(level, area, CCBSubLevelBridge.createEntityArea(level, worldPosition, area), getFakePlayer(level), this);
         };
         if (!result) {
             return;

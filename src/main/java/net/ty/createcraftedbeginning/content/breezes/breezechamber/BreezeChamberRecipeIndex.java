@@ -3,13 +3,13 @@ package net.ty.createcraftedbeginning.content.breezes.breezechamber;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
 import net.ty.createcraftedbeginning.recipe.DissipationRecipe;
 import net.ty.createcraftedbeginning.recipe.EnergizationRecipe;
-import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -86,7 +86,7 @@ public final class BreezeChamberRecipeIndex {
                 try {
                     addRecipe(energization, holder.id().toString(), recipe.getGasIngredient(), recipe.getGasResult());
                 } catch (RuntimeException exception) {
-                    CreateCraftedBeginning.LOGGER.error("Failed to index breeze chamber energization recipe {}", holder.id(), exception);
+                    CCBAPI.LOGGER.error("Failed to index breeze chamber energization recipe {}", holder.id(), exception);
                 }
             }
 
@@ -99,7 +99,7 @@ public final class BreezeChamberRecipeIndex {
                 try {
                     addRecipe(dissipation, holder.id().toString(), recipe.getGasIngredient(), recipe.getGasResult());
                 } catch (RuntimeException exception) {
-                    CreateCraftedBeginning.LOGGER.error("Failed to index breeze chamber dissipation recipe {}", holder.id(), exception);
+                    CCBAPI.LOGGER.error("Failed to index breeze chamber dissipation recipe {}", holder.id(), exception);
                 }
             }
 
@@ -110,7 +110,7 @@ public final class BreezeChamberRecipeIndex {
 
         private static void addRecipe(ConversionLookup lookup, String recipeId, SizedGasIngredient input, GasStack output) {
             if (output.isEmpty()) {
-                CreateCraftedBeginning.LOGGER.warn("Ignoring breeze chamber recipe {} because its gas output is empty", recipeId);
+                CCBAPI.LOGGER.warn("Ignoring breeze chamber recipe {} because its gas output is empty", recipeId);
                 return;
             }
 
@@ -125,13 +125,6 @@ public final class BreezeChamberRecipeIndex {
             return dissipation.find(input);
         }
 
-        private Optional<GasConversion> findEnergization(Gas input) {
-            return energization.find(input);
-        }
-
-        private Optional<GasConversion> findDissipation(Gas input) {
-            return dissipation.find(input);
-        }
     }
 
     private static final class ConversionLookup {
@@ -172,28 +165,6 @@ public final class BreezeChamberRecipeIndex {
             }
 
             List<GasConversion> candidates = byGas.get(input.getGasType());
-            if (candidates != null) {
-                for (GasConversion conversion : candidates) {
-                    if (conversion.matches(input)) {
-                        return Optional.of(conversion);
-                    }
-                }
-            }
-
-            for (GasConversion conversion : fallback) {
-                if (conversion.matches(input)) {
-                    return Optional.of(conversion);
-                }
-            }
-            return Optional.empty();
-        }
-
-        private Optional<GasConversion> find(Gas input) {
-            if (input.isEmpty()) {
-                return Optional.empty();
-            }
-
-            List<GasConversion> candidates = byGas.get(input);
             if (candidates != null) {
                 for (GasConversion conversion : candidates) {
                     if (conversion.matches(input)) {

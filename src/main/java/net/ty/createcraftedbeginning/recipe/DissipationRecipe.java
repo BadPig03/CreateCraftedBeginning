@@ -7,7 +7,6 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
 import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
-import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 

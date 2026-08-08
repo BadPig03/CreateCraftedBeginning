@@ -17,16 +17,15 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
+import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@EventBusSubscriber(value = Dist.CLIENT, modid = CreateCraftedBeginning.MOD_ID)
+@EventBusSubscriber(value = Dist.CLIENT, modid = CCBAPI.MOD_ID)
 public class AirtightExtendArmItemRenderer extends CustomRenderedItemModelRenderer {
     private static final PartialModel COGS = CCBPartialModels.AIRTIGHT_EXTEND_ARM_COGS;
     private static final PartialModel SPRING = CCBPartialModels.AIRTIGHT_EXTEND_ARM_SPRING;
@@ -40,7 +39,7 @@ public class AirtightExtendArmItemRenderer extends CustomRenderedItemModelRender
 
     @Override
     protected void render(ItemStack arm, CustomRenderedItemModel model, PartialItemModelRenderer renderer, ItemDisplayContext transformType, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        AirtightExtendArmRenderHandler renderHandler = CreateCraftedBeginningClient.AIRTIGHT_EXTEND_ARM_RENDER_HANDLER;
+        AirtightExtendArmRenderHandler renderHandler = AirtightExtendArmRenderHandler.INSTANCE;
         boolean firstPerson = transformType == ItemDisplayContext.FIRST_PERSON_LEFT_HAND || transformType == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND;
         float animation = firstPerson ? renderHandler.getAnimation(AnimationTickHolder.getPartialTicks()) : 0;
         renderer.renderSolid(model.getOriginalModel(), light);

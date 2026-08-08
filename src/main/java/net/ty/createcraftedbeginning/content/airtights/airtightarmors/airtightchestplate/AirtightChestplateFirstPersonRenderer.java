@@ -18,7 +18,7 @@ import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderArmEvent;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
@@ -28,7 +28,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(Dist.CLIENT)
 public class AirtightChestplateFirstPersonRenderer {
-    private static final ResourceLocation CHESTPLATE_ARM_LOCATION = CreateCraftedBeginning.asResource("textures/models/armor/airtight_chestplate_arm.png");
+    private static final ResourceLocation CHESTPLATE_ARM_LOCATION = CCBAPI.asResource("textures/models/armor/airtight_chestplate_arm.png");
 
     private static boolean rendererActive;
 

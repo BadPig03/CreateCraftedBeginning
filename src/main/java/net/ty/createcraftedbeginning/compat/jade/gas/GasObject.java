@@ -5,9 +5,9 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.component.DataComponentPatch;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.data.CCBGasRegistries;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
 import org.jetbrains.annotations.Contract;
-import snownee.jade.util.CommonProxy;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Objects;
@@ -15,11 +15,7 @@ import java.util.Objects;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public record GasObject(Gas gasType, long amount, DataComponentPatch components) {
-    public static final Codec<GasObject> CODEC = RecordCodecBuilder.create(instance -> instance.group(CCBGasRegistries.GAS_REGISTRY.byNameCodec().fieldOf("type").forGetter(GasObject::gasType), Codec.LONG.fieldOf("amount").forGetter(GasObject::amount), DataComponentPatch.CODEC.optionalFieldOf("components", DataComponentPatch.EMPTY).forGetter(GasObject::components)).apply(instance, GasObject::of));
-
-    public static long bucketVolume() {
-        return CommonProxy.bucketVolume();
-    }
+    public static final Codec<GasObject> CODEC = RecordCodecBuilder.create(instance -> instance.group(GasRegistries.GAS_REGISTRY.byNameCodec().fieldOf("type").forGetter(GasObject::gasType), Codec.LONG.fieldOf("amount").forGetter(GasObject::amount), DataComponentPatch.CODEC.optionalFieldOf("components", DataComponentPatch.EMPTY).forGetter(GasObject::components)).apply(instance, GasObject::of));
 
     @Contract(" -> new")
     public static GasObject empty() {
@@ -37,11 +33,7 @@ public record GasObject(Gas gasType, long amount, DataComponentPatch components)
 
     @Contract("_ -> new")
     public static GasObject of(Gas gasType) {
-        return of(gasType, blockVolume());
-    }
-
-    public static long blockVolume() {
-        return CommonProxy.blockVolume();
+        return of(gasType, GasAmountUtils.MILLIBUCKETS_PER_BUCKET);
     }
 
     public static boolean isSameGasSameComponents(GasObject first, GasObject second) {

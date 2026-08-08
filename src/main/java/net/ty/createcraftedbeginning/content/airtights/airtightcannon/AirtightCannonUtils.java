@@ -33,12 +33,12 @@ import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlerUti
 import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonShotContext;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerConsumers;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerConsumers.AffordableFuel;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.windcharge.AirtightCannonWindChargeProjectileEntity;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers.AffordableFuel;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.weatherflares.projectile.WeatherFlareProjectileEntity;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Nullable;

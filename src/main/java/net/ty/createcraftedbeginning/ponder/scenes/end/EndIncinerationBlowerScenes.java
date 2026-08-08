@@ -23,7 +23,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerBlockEntity;
-import net.ty.createcraftedbeginning.data.CCBIcons;
+import net.ty.createcraftedbeginning.foundation.gui.CCBIcons;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;

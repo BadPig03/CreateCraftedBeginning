@@ -11,12 +11,12 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePowerMode;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.TickingAirtightUpgrade;
-import net.ty.createcraftedbeginning.data.CCBIcons;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.foundation.gui.AirtightUpgradeIcon;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -28,7 +28,7 @@ import java.util.List;
 public enum RegenerationUpgrade implements TickingAirtightUpgrade {
     INSTANCE;
 
-    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("regeneration");
+    private static final ResourceLocation ID = CCBAPI.asResource("regeneration");
     private static final Couple<Integer> OFFSET = Couple.create(132, 31);
 
     private static final int EFFECT_DURATION = 30;
@@ -65,8 +65,8 @@ public enum RegenerationUpgrade implements TickingAirtightUpgrade {
     }
 
     @Override
-    public CCBIcons getIcon() {
-        return CCBIcons.I_REGENERATION;
+    public AirtightUpgradeIcon getIcon() {
+        return AirtightUpgradeIcon.REGENERATION;
     }
 
     @Override

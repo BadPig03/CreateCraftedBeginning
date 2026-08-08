@@ -9,7 +9,7 @@ import net.minecraft.core.registries.Registries;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.particles.ColoredBreezeCloudParticleType;
 import org.jetbrains.annotations.ApiStatus.Internal;
 
@@ -50,7 +50,7 @@ public enum CCBParticleTypes {
     }
 
     private static class ParticleEntry<T extends ParticleType<?>> {
-        private static final DeferredRegister<ParticleType<?>> REGISTER = DeferredRegister.create(Registries.PARTICLE_TYPE, CreateCraftedBeginning.MOD_ID);
+        private static final DeferredRegister<ParticleType<?>> REGISTER = DeferredRegister.create(Registries.PARTICLE_TYPE, CCBAPI.MOD_ID);
 
         private final String name;
         private final DeferredHolder<ParticleType<?>, T> object;

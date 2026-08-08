@@ -15,8 +15,8 @@ import net.ty.createcraftedbeginning.advancement.CCBAdvancement;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancement.Builder;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
-import net.ty.createcraftedbeginning.data.CCBGases;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
+import net.ty.createcraftedbeginning.registry.gas.CCBGases;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -34,7 +34,6 @@ import static net.ty.createcraftedbeginning.advancement.CCBAdvancement.TaskType.
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBAdvancements implements DataProvider {
-    public static final List<CCBAdvancement> ENTRIES = new ArrayList<>();
     public static final CCBAdvancement ROOT = create("root", b -> b.icon(CCBBlocks.BREEZE_COOLER_BLOCK).title("Welcome to Create: Crafted Beginning").description("A brand new experience").awardedForFree().special(HIDDEN_TASK));
 
     public static final CCBAdvancement END_FIELD = create("end_field", b -> b.icon(CCBItems.END_ALLOY).title("End Field").description("Obtain a brand-new ductile alloy").whenIconCollected().after(ROOT));
@@ -66,10 +65,6 @@ public class CCBAdvancements implements DataProvider {
     public static final CCBAdvancement GAS_FILTRATION = create("gas_filtration", b -> b.icon(CCBBlocks.SMART_AIRTIGHT_PIPE_BLOCK).title("Gas Filtration").description("Obtain a Smart Airtight Pipe").whenIconCollected().after(YOU_SHALL_NOT_PASS));
     public static final CCBAdvancement LIVING_FREEZER = create("living_freezer", b -> b.icon(CCBBlocks.BREEZE_COOLER_BLOCK).title("Living Freezer").description("Obtain a Breeze Cooler").whenIconCollected().after(GAS_FILTRATION));
     public static final CCBAdvancement FROZEN_AMBROSIA = create("frozen_ambrosia", b -> b.icon(CCBItems.ICE_CREAM).title("Frozen Ambrosia").description("Feed a serving of Ice Cream to a Breeze Cooler").after(LIVING_FREEZER));
-    public static final CCBAdvancement FEELING_THE_PRESSURE = create("feeling_the_pressure", b -> b.icon(CCBBlocks.AIR_COMPRESSOR_BLOCK).title("Feeling the Pressure").description("Place and power an Air Compressor").after(GAS_FILTRATION));
-    public static final CCBAdvancement A_CLOSE_CALL = create("a_close_call", b -> b.icon(CCBBlocks.AIR_COMPRESSOR_BLOCK).title("A Close Call").description("Cool an Air Compressor right before it melts down\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(FEELING_THE_PRESSURE));
-    public static final CCBAdvancement BIG_PRESSURE_COOKER = create("big_pressure_cooker", b -> b.icon(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK).title("Big Pressure Cooker").description("Assemble an Airtight Reactor Kettle").whenIconCollected().after(FEELING_THE_PRESSURE));
-    public static final CCBAdvancement PRESS_IT_ALL = create("press_it_all", b -> b.icon(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK).title("Press It All").description("Assemble an Airtight Forging Press").whenIconCollected().after(BIG_PRESSURE_COOKER));
     public static final CCBAdvancement RETROFITTED = create("retrofitted", b -> b.icon(CCBBlocks.BREEZE_CHAMBER_BLOCK).title("Retrofitted!").description("Obtain a Breeze Chamber").whenIconCollected().after(FROZEN_AMBROSIA));
     public static final CCBAdvancement EMERGING_POWER = create("emerging_power", b -> b.icon(CCBBlocks.AIRTIGHT_ENGINE_BLOCK).title("Emerging Power").description("Generate power with an Airtight Engine").after(RETROFITTED));
     public static final CCBAdvancement DEBRIS_CRAFT = create("debris_craft", b -> b.icon(CCBItems.TESLA_TURBINE_ROTOR).title("Debris Craft").description("Assemble a Tesla Turbine Rotor").whenIconCollected().after(EMERGING_POWER));
@@ -77,6 +72,10 @@ public class CCBAdvancements implements DataProvider {
     public static final CCBAdvancement TESLA_TURBINE_EASY_AS_PIE = create("tesla_turbine_easy_as_pie", b -> b.icon(CCBBlocks.TESLA_TURBINE_BLOCK).title("Tesla Turbine? Easy as Pie!").description("Fill more than one type of gas into a Tesla Turbine and make it explode\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(DEBRIS_CRAFT));
     public static final CCBAdvancement BAD_APPLE = create("bad_apple", b -> b.icon(Items.PUFFERFISH).title("Bad Apple").description("Feed improper food to a Breeze Chamber\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(RETROFITTED));
     public static final CCBAdvancement UNIVERSAL_ANTIDOTE = create("universal_antidote", b -> b.icon(Items.MILK_BUCKET).title("Universal Antidote").description("Use Milk to clear the Ill state of a Breeze Chamber - is this even scientific?\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(BAD_APPLE));
+    public static final CCBAdvancement FEELING_THE_PRESSURE = create("feeling_the_pressure", b -> b.icon(CCBBlocks.AIR_COMPRESSOR_BLOCK).title("Feeling the Pressure").description("Place and power an Air Compressor").after(GAS_FILTRATION));
+    public static final CCBAdvancement A_CLOSE_CALL = create("a_close_call", b -> b.icon(CCBBlocks.AIR_COMPRESSOR_BLOCK).title("A Close Call").description("Cool an Air Compressor right before it melts down\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(FEELING_THE_PRESSURE));
+    public static final CCBAdvancement BIG_PRESSURE_COOKER = create("big_pressure_cooker", b -> b.icon(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK).title("Big Pressure Cooker").description("Assemble an Airtight Reactor Kettle").whenIconCollected().after(FEELING_THE_PRESSURE));
+    public static final CCBAdvancement PRESS_IT_ALL = create("press_it_all", b -> b.icon(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK).title("Press It All").description("Assemble an Airtight Forging Press").whenIconCollected().after(BIG_PRESSURE_COOKER));
     public static final CCBAdvancement BETTER_THAN_A_BACKTANK = create("better_than_a_backtank", b -> b.icon(CCBItems.GAS_CANISTER).title("Better than a Backtank").description("Obtain a Gas Canister").whenIconCollected().after(PLYWOOD));
     public static final CCBAdvancement NEW_ENERGY_BATTERY_PACK = create("new_energy_battery_pack", b -> b.icon(CCBItems.GAS_CANISTER_PACK).title("New Energy Battery Pack").description("Assemble a Gas Canister Pack").whenIconCollected().after(BETTER_THAN_A_BACKTANK));
     public static final CCBAdvancement UPDRAFT = create("updraft", b -> b.icon(CCBItems.BREEZE_CORE).title("Updraft").description("Assemble a Breeze Core").whenIconCollected().after(NEW_ENERGY_BATTERY_PACK));
@@ -88,7 +87,7 @@ public class CCBAdvancements implements DataProvider {
     public static final CCBAdvancement ALL_HANDS_ACQUIRED = create("all_hands_acquired", b -> b.icon(CCBItems.AIRTIGHT_EXTEND_ARM).title("All Hands Acquired").description("Assembly an Airtight Extend Arm").whenIconCollected().after(UPDRAFT));
     public static final CCBAdvancement THREE_WAY_HANDSHAKE = create("three_way_handshake", b -> b.icon(CCBItems.AIRTIGHT_EXTEND_ARM).title("Three-way Handshake").description("Hold two Airtight Extend Arms at the same time\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(ALL_HANDS_ACQUIRED));
     public static final CCBAdvancement SEALED_TO_PERFECTION = create("sealed_to_perfection", b -> b.icon(CCBItems.AIRTIGHT_HELMET).title("Sealed to Perfection").description("Wear a full set of Airtight Armor").after(UPDRAFT));
-    public static final CCBAdvancement PHANTOM_DIVER = create("phantom_diver", b-> b.icon(CCBItems.AIRTIGHT_BOOTS).title("Phantom Divers").description("Enable every upgrade on a full set of Airtight Armor\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(SEALED_TO_PERFECTION));
+    public static final CCBAdvancement PHANTOM_DIVER = create("phantom_diver", b -> b.icon(CCBItems.AIRTIGHT_BOOTS).title("Phantom Divers").description("Enable every upgrade on a full set of Airtight Armor\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(SEALED_TO_PERFECTION));
 
     public static final CCBAdvancement ITEM_TANK = create("item_tank", b -> b.icon(CCBBlocks.ANDESITE_CRATE_BLOCK).title("Item Tank").description("Obtain an Andesite Crate").whenIconCollected().after(ROOT));
     public static final CCBAdvancement CAPACITY_UPGRADE = create("capacity_upgrade", b -> b.icon(CCBBlocks.BRASS_CRATE_BLOCK).title("Capacity Upgrade").description("Obtain a Brass Crate").whenIconCollected().after(ITEM_TANK));
@@ -112,7 +111,7 @@ public class CCBAdvancements implements DataProvider {
     }
 
     public static void provideLang(BiConsumer<String, String> consumer) {
-        ENTRIES.forEach(advancement -> advancement.provideLang(consumer));
+        CCBAdvancement.all().forEach(advancement -> advancement.provideLang(consumer));
     }
 
     public static void register() {
@@ -123,7 +122,7 @@ public class CCBAdvancements implements DataProvider {
         return registries.thenCompose(provider -> {
             PathProvider pathProvider = output.createPathProvider(Target.DATA_PACK, "advancement");
             List<CompletableFuture<?>> futures = new ArrayList<>();
-            ENTRIES.forEach(advancement -> advancement.save(holder -> futures.add(DataProvider.saveStable(cache, provider, Advancement.CODEC, holder.value(), pathProvider.json(holder.id()))), provider));
+            CCBAdvancement.all().forEach(advancement -> advancement.save(holder -> futures.add(DataProvider.saveStable(cache, provider, Advancement.CODEC, holder.value(), pathProvider.json(holder.id()))), provider));
             return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
         });
     }

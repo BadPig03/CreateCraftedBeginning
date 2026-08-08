@@ -15,11 +15,11 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.compat.sable.SableSubLevelCompat;
-import net.ty.createcraftedbeginning.compat.sable.SableSubLevelCompat.Projection;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndCasingBlock;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalBlockEntity;
+import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge;
+import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge.Projection;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Nullable;
@@ -135,7 +135,7 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
             return;
         }
 
-        Projection projection = SableSubLevelCompat.resolve(serverLevel, worldPosition);
+        Projection projection = CCBSubLevelBridge.resolve(serverLevel, worldPosition);
         inSableSubLevel = projection.inSubLevel();
         refreshSilencerState(serverLevel, projection.blockPos());
     }
@@ -193,7 +193,7 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
             return;
         }
 
-        Projection projection = SableSubLevelCompat.resolve(serverLevel, worldPosition);
+        Projection projection = CCBSubLevelBridge.resolve(serverLevel, worldPosition);
         inSableSubLevel = projection.inSubLevel();
         refreshSilencerState(serverLevel, projection.blockPos());
     }

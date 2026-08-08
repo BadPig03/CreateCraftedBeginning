@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.content.obsolete.phohostressbearing;
 
-import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform.Sided;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.math.Pointing;

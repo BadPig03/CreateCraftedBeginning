@@ -41,11 +41,11 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasManipulationBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonGasContents;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonUtils;
+import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasManipulationBehaviour;
+import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
@@ -57,6 +57,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+@SuppressWarnings("FieldCanBeLocal")
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clearable {

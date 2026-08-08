@@ -11,8 +11,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.CCBCreativeTabSection;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -69,7 +69,7 @@ public final class CCBCreativeTabBanners {
     }
 
     private static BannerLayout banner(String spritePath, String titleKey, int secondaryColor, int background) {
-        return new BannerLayout(CreateCraftedBeginning.asResource(spritePath), CCBLang.translateDirect(titleKey), 0xFFDDDDDD, secondaryColor, background);
+        return new BannerLayout(CCBAPI.asResource(spritePath), CCBLang.translateDirect(titleKey), 0xFFDDDDDD, secondaryColor, background);
     }
 
     public record BannerLayout(ResourceLocation sprite, Component text, int color, int secondaryColor, int background) {}

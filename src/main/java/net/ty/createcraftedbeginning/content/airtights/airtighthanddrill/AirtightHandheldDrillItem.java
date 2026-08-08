@@ -29,11 +29,11 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.drillhandlers.AirtightDrillHandler;
 import net.ty.createcraftedbeginning.api.drillhandlers.AirtightDrillHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.HandheldDrillAttackModeButton;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.Nullable;
 

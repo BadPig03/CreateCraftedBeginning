@@ -12,7 +12,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
 import net.ty.createcraftedbeginning.registry.CCBPackets;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -36,13 +35,13 @@ public class AirtightCannonPacket extends ShootGadgetPacket {
     @Override
     @OnlyIn(Dist.CLIENT)
     protected void handleAdditional() {
-        CreateCraftedBeginningClient.AIRTIGHT_CANNON_RENDER_HANDLER.beforeShoot(pitch, location, motion, item);
+        AirtightCannonRenderHandler.INSTANCE.beforeShoot(pitch, location, motion, item);
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
     protected ShootableGadgetRenderHandler getHandler() {
-        return CreateCraftedBeginningClient.AIRTIGHT_CANNON_RENDER_HANDLER;
+        return AirtightCannonRenderHandler.INSTANCE;
     }
 
     @Override

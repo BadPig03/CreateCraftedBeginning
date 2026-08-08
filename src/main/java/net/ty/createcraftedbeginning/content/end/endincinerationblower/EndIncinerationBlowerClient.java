@@ -27,6 +27,10 @@ public final class EndIncinerationBlowerClient {
     }
 
     private static void tick(EndIncinerationBlowerBlockEntity blower) {
+        if (CCBConfig.client().enableEndIncinerationBlowerParticles.get()) {
+            blower.tickClientParticles();
+        }
+
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null || !blower.isShowingOutline() || !GogglesItem.isWearingGoggles(player) || !CCBConfig.client().enableEndIncinerationBlowerOutline.get()) {
             return;

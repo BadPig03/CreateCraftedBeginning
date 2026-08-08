@@ -13,7 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.client.model.generators.ItemModelBuilder;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Map;
@@ -30,7 +30,7 @@ public class AirtightArmorsTrimsModelGenerator extends TrimmableArmorModelGenera
             ResourceLocation modelLocation = ModelLocationUtils.getModelLocation(item).withSuffix('_' + trimId + "_trim");
             ItemModelBuilder itemModel = provider.withExistingParent(modelLocation.getPath(), "item/generated").texture("layer0", TextureMapping.getItemTexture(item));
             Map<String, String> textures = (Map<String, String>) TEXTURES_HANDLE.get(itemModel);
-            ResourceLocation trimTexture = CreateCraftedBeginning.asResource("trims/items/airtight_" + item.getType().getName() + "_trim_" + trimId);
+            ResourceLocation trimTexture = CCBAPI.asResource("trims/items/airtight_" + item.getType().getName() + "_trim_" + trimId);
             textures.put("layer1", trimTexture.toString());
             builder.override().predicate(ItemModelGenerators.TRIM_TYPE_PREDICATE_ID, data.itemModelIndex()).model(itemModel).end();
         }

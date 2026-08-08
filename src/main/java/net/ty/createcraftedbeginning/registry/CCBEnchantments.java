@@ -7,7 +7,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantment.Builder;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
 
@@ -29,6 +29,6 @@ public class CCBEnchantments {
 
     @SuppressWarnings("SameParameterValue")
     private static ResourceKey<Enchantment> key(String name) {
-        return ResourceKey.create(Registries.ENCHANTMENT, CreateCraftedBeginning.asResource(name));
+        return ResourceKey.create(Registries.ENCHANTMENT, CCBAPI.asResource(name));
     }
 }

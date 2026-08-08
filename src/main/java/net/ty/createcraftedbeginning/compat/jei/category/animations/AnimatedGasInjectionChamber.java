@@ -8,8 +8,9 @@ import net.createmod.catnip.animation.AnimationTickHolder;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -17,6 +18,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class AnimatedGasInjectionChamber extends AnimatedKinetics {
     private static final int SCALE = 20;
+
+    private final boolean isBasin;
+
+    public AnimatedGasInjectionChamber(boolean isBasin) {
+        this.isBasin = isBasin;
+    }
 
     private static float getNozzleSqueeze(float cycle) {
         if (cycle < 20) {
@@ -69,7 +76,8 @@ public class AnimatedGasInjectionChamber extends AnimatedKinetics {
 
         poseStack.popPose();
 
-        blockElement(AllBlocks.DEPOT.getDefaultState()).atLocal(0, 2, 0).scale(SCALE).render(graphics);
+        BlockState state = isBasin ? AllBlocks.BASIN.getDefaultState() : AllBlocks.DEPOT.getDefaultState();
+        blockElement(state).atLocal(0, 2, 0).scale(SCALE).render(graphics);
 
         poseStack.popPose();
     }

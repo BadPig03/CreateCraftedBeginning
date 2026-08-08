@@ -1,5 +1,7 @@
 package net.ty.createcraftedbeginning.registry;
 
+import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrateProvider;
+
 import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
 import com.tterrag.registrate.util.entry.BlockEntry;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -10,7 +12,6 @@ import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightencasedpipe.AirtightEncasedPipeBlock;
@@ -56,9 +57,9 @@ import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilenc
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerStructuralBlock;
 import net.ty.createcraftedbeginning.content.obsolete.phohostressbearing.PhotoStressBearingBlock;
 import net.ty.createcraftedbeginning.content.obsolete.pneumaticengine.PneumaticEngineBlock;
-import net.ty.createcraftedbeginning.data.CCBBlockModelTransformer;
-import net.ty.createcraftedbeginning.data.CCBBlockPropertiesTransformer;
-import net.ty.createcraftedbeginning.data.CCBRegistrate;
+import net.ty.createcraftedbeginning.registry.registrate.CCBBlockModelTransformer;
+import net.ty.createcraftedbeginning.registry.registrate.CCBBlockPropertiesTransformer;
+import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrate;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.CCBCreativeTabSection;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -67,7 +68,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBBlocks {
-    private static final CCBRegistrate CCB_REGISTRATE = CreateCraftedBeginning.registrate();
+    private static final CCBRegistrate CCB_REGISTRATE = CCBRegistrateProvider.get();
 
     static {
         CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.AIRTIGHTS);

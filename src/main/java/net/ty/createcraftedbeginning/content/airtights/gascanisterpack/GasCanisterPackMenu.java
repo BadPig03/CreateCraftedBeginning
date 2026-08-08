@@ -18,12 +18,13 @@ import net.neoforged.neoforge.items.SlotItemHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackContainerContents.CanisterData;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackOverrides.GasCanisterPackType;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
+import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -49,6 +50,10 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
     private static final int IV_SLOT_X = 149;
 
     protected PackItemHandler packInventory;
+
+    public GasCanisterPackMenu(int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
+        this(CCBMenuTypes.GAS_CANISTER_PACK_MENU.get(), id, inv, extraData);
+    }
 
     public GasCanisterPackMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
         super(type, id, inv, extraData);

@@ -5,8 +5,8 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Holder;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.stream.Stream;
@@ -49,7 +49,7 @@ public class SingleGasIngredient extends GasIngredient {
      */
     @Override
     public GasIngredientType<?> getType() {
-        return CCBGasRegistries.SINGLE_GAS_INGREDIENT_TYPE.get();
+        return GasRegistries.SINGLE_GAS_INGREDIENT_TYPE.get();
     }
 
     /**
@@ -73,7 +73,7 @@ public class SingleGasIngredient extends GasIngredient {
      */
     @Override
     public boolean equals(Object obj) {
-        return this == obj || obj instanceof SingleGasIngredient other && other.gas().value() == gas;
+        return this == obj || obj instanceof SingleGasIngredient other && gas.equals(other.gas().value());
     }
 
     /**

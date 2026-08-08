@@ -31,11 +31,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity.ConsumptionPlan;
-import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity.OutputPlan;
 import net.ty.createcraftedbeginning.recipe.ForgingPressRecipe;
+import net.ty.createcraftedbeginning.recipe.ForgingPressRecipeContext.ConsumptionPlan;
+import net.ty.createcraftedbeginning.recipe.ForgingPressRecipeContext.OutputPlan;
 import net.ty.createcraftedbeginning.recipe.trie.AbstractVariant;
 import net.ty.createcraftedbeginning.recipe.trie.AirtightWithGasRecipeTrie;
 import net.ty.createcraftedbeginning.recipe.trie.AirtightWithGasRecipeTrieFinder;
@@ -106,7 +106,7 @@ public final class AirtightForgingPressUtils {
         } catch (ExecutionException | UncheckedExecutionException e) {
             recipeTrieDisabled = true;
             if (RECIPE_TRIE_FAILURE_LOGGED.compareAndSet(false, true)) {
-                CreateCraftedBeginning.LOGGER.error("Failed to build the airtight forging press recipe trie; falling back to a linear recipe search until recipes are reloaded", e);
+                CCBAPI.LOGGER.error("Failed to build the airtight forging press recipe trie; falling back to a linear recipe search until recipes are reloaded", e);
             }
         }
         return Optional.empty();

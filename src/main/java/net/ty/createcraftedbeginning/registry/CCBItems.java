@@ -1,13 +1,14 @@
 package net.ty.createcraftedbeginning.registry;
 
+import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrateProvider;
+
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyItem;
 import com.tterrag.registrate.util.entry.ItemEntry;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Tiers;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasItem;
+import net.ty.createcraftedbeginning.recipe.gas.SequencedAssemblyWithGasItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.AirtightBootsItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.AirtightHelmetItem;
@@ -35,10 +36,10 @@ import net.ty.createcraftedbeginning.content.icecreams.AmethystIceCreamItem;
 import net.ty.createcraftedbeginning.content.icecreams.CreativeIceCreamItem;
 import net.ty.createcraftedbeginning.content.icecreams.HoneyIceCreamItem;
 import net.ty.createcraftedbeginning.content.icecreams.MilkIceCreamItem;
-import net.ty.createcraftedbeginning.data.CCBGases;
-import net.ty.createcraftedbeginning.data.CCBItemModelTransformer;
-import net.ty.createcraftedbeginning.data.CCBItemPropertiesTransformer;
-import net.ty.createcraftedbeginning.data.CCBRegistrate;
+import net.ty.createcraftedbeginning.registry.gas.CCBGases;
+import net.ty.createcraftedbeginning.registry.registrate.CCBItemModelTransformer;
+import net.ty.createcraftedbeginning.registry.registrate.CCBItemPropertiesTransformer;
+import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrate;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.CCBCreativeTabSection;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
 
@@ -48,7 +49,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBItems {
-    private static final CCBRegistrate CCB_REGISTRATE = CreateCraftedBeginning.registrate();
+    private static final CCBRegistrate CCB_REGISTRATE = CCBRegistrateProvider.get();
 
     static {
         CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.AIRTIGHTS);

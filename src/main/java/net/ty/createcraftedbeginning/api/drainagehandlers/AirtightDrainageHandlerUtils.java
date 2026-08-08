@@ -4,13 +4,14 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightDrainageHandlerEvent.DrainageHandler;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Objects;
 
 /**
  * Provides lookup and registration helpers for gas-specific airtight drainage effects.
@@ -20,6 +21,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public final class AirtightDrainageHandlerUtils {
     private static final AirtightDrainageHandler DEFAULT_HANDLER = new DefaultDrainageHandler();
+    private static volatile OutlineSender outlineSender = (level, pos, direction, inflation, color) -> {};
 
     private AirtightDrainageHandlerUtils() {
     }
@@ -57,61 +59,46 @@ public final class AirtightDrainageHandlerUtils {
     /**
      * Registers a custom airtight drainage handler for the supplied target.
      *
-     * @param location    the resource location identifying the target value
-     * @param inflation   the inflation value to use
-     * @param showOutline whether show outline is enabled
-     * @param handler     the handler to register or invoke
-     */
-    public static void register(ResourceLocation location, float inflation, boolean showOutline, DrainageHandler handler) {
-        register(location, new AirtightDrainageHandler() {
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public float getInflation() {
-                return inflation;
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public boolean shouldShowOutline() {
-                return showOutline;
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public void apply(Level level, BlockPos pos, Direction direction, Gas gasType) {
-                if (showOutline) {
-                    showOutline(level, pos, direction, inflation, gasType.getTint());
-                }
-                handler.apply(level, pos, direction, gasType);
-            }
-        });
-    }
-
-    /**
-     * Registers a custom airtight drainage handler for the supplied target.
-     *
      * @param location the resource location identifying the target value
      * @param handler  the handler to register or invoke
      */
     public static void register(ResourceLocation location, AirtightDrainageHandler handler) {
         Gas gasType = Gas.getGasTypeByName(location);
         if (gasType.isEmpty()) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Drainage Handler: gas '{}' does not exist.", location);
+            CCBAPI.LOGGER.error("Failed to register Airtight Drainage Handler: gas '{}' does not exist.", location);
             return;
         }
 
         AirtightDrainageHandler drainageHandler = AirtightDrainageHandler.REGISTRY.get(gasType);
         if (drainageHandler != null) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Drainage Handler for gas '{}': a handler is already registered.", location);
+            CCBAPI.LOGGER.error("Failed to register Airtight Drainage Handler for gas '{}': a handler is already registered.", location);
             return;
         }
 
         AirtightDrainageHandler.REGISTRY.register(gasType, handler);
     }
+
+    /**
+     * Installs the server-to-client outline transport used by the default drainage visuals.
+     * This is a bootstrap hook; normal integrations should call {@link AirtightDrainageHandler#showOutline}.
+     *
+     * @param sender the sender implementation
+     */
+    public static void registerOutlineSender(OutlineSender sender) {
+        outlineSender = Objects.requireNonNull(sender);
+    }
+
+    static void showOutline(Level level, BlockPos pos, Direction direction, float inflation, int color) {
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        outlineSender.send(serverLevel, pos, direction, inflation, color);
+    }
+
+    @FunctionalInterface
+    public interface OutlineSender {
+        void send(ServerLevel level, BlockPos pos, Direction direction, float inflation, int color);
+    }
+
 }

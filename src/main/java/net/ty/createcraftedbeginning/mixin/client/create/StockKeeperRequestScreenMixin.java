@@ -36,15 +36,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.client.stockkeeper.GasCraftableBigItemStack;
 import net.ty.createcraftedbeginning.client.stockkeeper.StockKeeperCraftingUtils;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
+import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUtils;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.FrostLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerRenderer;
-import net.ty.createcraftedbeginning.data.CCBLang;
-import net.ty.createcraftedbeginning.registry.CCBPartialModels;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -311,7 +312,7 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
             return;
         }
 
-        int step = GasRequestUtils.getStep(hasAltDown(), hasControlDown(), hasShiftDown()) * (orderClicked ? 1 : 10);
+        int step = GasRequestClientUtils.getStep(hasAltDown(), hasControlDown(), hasShiftDown()) * (orderClicked ? 1 : 10);
         int transfer = Mth.ceil(Math.abs(scrollY) * step);
         if (transfer <= 0) {
             cir.setReturnValue(true);
@@ -340,7 +341,7 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
         }
 
         boolean remove = orderClicked || button == 1;
-        int step = GasRequestUtils.getStep(hasAltDown(), hasControlDown(), hasShiftDown()) * (orderClicked ? 1 : 10);
+        int step = GasRequestClientUtils.getStep(hasAltDown(), hasControlDown(), hasShiftDown()) * (orderClicked ? 1 : 10);
         ccb$changeDirectGasOrder(entry, orderClicked, remove, step);
         cir.setReturnValue(true);
     }
@@ -384,10 +385,10 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
         List<Component> tooltip = new ArrayList<>();
         int available = blockEntity.getLastClientsideStockSnapshotAsSummary().getCountOf(entry.stack);
         tooltip.add(CCBLang.translate("gui.gas_virtual_item.send_item", CCBLang.itemName(entry.stack).add(CCBLang.text(" x" + GasRequestUtils.formatPrecise(available)))).color(ScrollInput.HEADER_RGB).component());
-        tooltip.add(CCBLang.translate("gui.gas_virtual_item.scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getScrollStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-        tooltip.add(CCBLang.translate("gui.gas_virtual_item.shift_to_scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getShiftStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-        tooltip.add(CCBLang.translate("gui.gas_virtual_item.alt_to_scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getAltStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-        tooltip.add(CCBLang.translate("gui.gas_virtual_item.ctrl_to_scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getCtrlStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltip.add(CCBLang.translate("gui.gas_virtual_item.scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getScrollStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltip.add(CCBLang.translate("gui.gas_virtual_item.shift_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getShiftStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltip.add(CCBLang.translate("gui.gas_virtual_item.alt_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getAltStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltip.add(CCBLang.translate("gui.gas_virtual_item.ctrl_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getCtrlStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
         graphics.renderComponentTooltip(font, tooltip, mouseX, mouseY);
         ci.cancel();
     }

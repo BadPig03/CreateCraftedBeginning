@@ -13,10 +13,10 @@ import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeDataComponents;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe.SequencedAssemblyWithGas;
-import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -43,7 +43,7 @@ public final class CCBClientRecipeUtils {
     @SuppressWarnings({"RedundantCast", "DataFlowIssue"})
     public static void addSequencedAssemblyTooltip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
-        if (!stack.has(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS)) {
+        if (!stack.has(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS)) {
             return;
         }
 
@@ -52,7 +52,7 @@ public final class CCBClientRecipeUtils {
             return;
         }
 
-        SequencedAssemblyWithGas assemblyData = stack.get(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS);
+        SequencedAssemblyWithGas assemblyData = stack.get(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS);
         Optional<RecipeHolder<? extends Recipe<?>>> recipeHolder = (Optional<RecipeHolder<?>>) level.getRecipeManager().byKey(assemblyData.id());
         if (recipeHolder.isEmpty() || !(recipeHolder.get().value() instanceof SequencedAssemblyWithGasRecipe recipe)) {
             return;

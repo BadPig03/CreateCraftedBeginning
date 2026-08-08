@@ -18,7 +18,7 @@ import net.minecraft.util.FastColor.ARGB32;
 import net.minecraft.world.item.TooltipFlag;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.client.CCBGasClientTextures;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import org.joml.Matrix4f;
 
 import javax.annotation.ParametersAreNonnullByDefault;

@@ -12,6 +12,8 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.effect.MobEffectCategory;
@@ -25,8 +27,7 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
-import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -35,6 +36,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
+    private static final TagKey<Item> WIND_CHARGING_EXCLUDED = ItemTags.create(CCBAPI.asResource("wind_charging_excluded"));
     private static final WindChargingData EMPTY = new WindChargingData(WindChargingAction.CHARGE, 0, 0, ItemStack.EMPTY);
 
     private final ProcessingRecipeParams recipeParams;
@@ -77,7 +79,7 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
     public static WindChargingData getAutomaticWindChargingTime(ItemStack stack) {
         Item item = stack.getItem();
         FoodProperties properties = item.getFoodProperties(stack, null);
-        if (properties == null || CCBItemTags.WIND_CHARGING_EXCLUDED.matches(stack)) {
+        if (properties == null || stack.is(WIND_CHARGING_EXCLUDED)) {
             return EMPTY;
         }
 

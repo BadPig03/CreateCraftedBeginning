@@ -17,13 +17,13 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients.DisplayedGasState;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients.DisplayedGasState;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
@@ -35,7 +35,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public enum GasCanisterOverlay implements Layer {
     INSTANCE;
 
-    public static final ResourceLocation RESOURCE = CreateCraftedBeginning.asResource("gas_canister_overlay");
+    public static final ResourceLocation RESOURCE = CCBAPI.asResource("gas_canister_overlay");
     private static final ItemStack CANISTER = new ItemStack(CCBItems.GAS_CANISTER.asItem());
     private static final ItemStack CREATIVE_CANISTER = new ItemStack(CCBItems.CREATIVE_GAS_CANISTER.asItem());
     private static final ItemStack PACK = new ItemStack(CCBItems.GAS_CANISTER_PACK.asItem());

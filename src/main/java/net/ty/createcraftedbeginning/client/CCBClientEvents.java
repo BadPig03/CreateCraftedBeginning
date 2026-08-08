@@ -28,33 +28,35 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent.Stage;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.client.CCBCreativeTabBanners.BannerLayout;
-import net.ty.createcraftedbeginning.client.outliner.CCBOutliner;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateFirstPersonRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateLayer;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.AirtightLeggingsLayer;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonItemRenderer;
+import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonRenderHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtightencasedpipe.AirtightEncasedPipeOutlineRenderer;
+import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.AirtightExtendArmRenderHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillOutlineRenderer;
+import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillRenderHandler;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlay;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberRecipeIndex;
+import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.foundation.client.outliner.CCBOutliner;
 import net.ty.createcraftedbeginning.mixin.client.accessor.CreativeModeInventoryScreenAccessor;
-import net.ty.createcraftedbeginning.mixin.client.accessor.ItemPickerMenuAccessor;
+import net.ty.createcraftedbeginning.platform.access.ItemPickerMenuAccess;
 import net.ty.createcraftedbeginning.ponder.CCBPonderPlugin;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.PositionedSection;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabs;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = CCBAPI.MOD_ID, value = Dist.CLIENT)
 public class CCBClientEvents {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
@@ -127,7 +129,7 @@ public class CCBClientEvents {
 
     @SubscribeEvent
     public static void onRenderForeground(Foreground event) {
-        if (!(event.getContainerScreen() instanceof CreativeModeInventoryScreen screen) || !(screen instanceof CreativeModeInventoryScreenAccessor accessor) || !(screen.getMenu() instanceof ItemPickerMenuAccessor menuAccessor)) {
+        if (!(event.getContainerScreen() instanceof CreativeModeInventoryScreen screen) || !(screen instanceof CreativeModeInventoryScreenAccessor screenAccessor) || !(screen.getMenu() instanceof ItemPickerMenuAccess menuAccessor)) {
             return;
         }
 
@@ -136,7 +138,7 @@ public class CCBClientEvents {
             return;
         }
 
-        float scrollOffset = accessor.ccb$getScrollOffs();
+        float scrollOffset = screenAccessor.ccb$getScrollOffs();
         int firstVisibleRow = menuAccessor.ccb$getRowIndexForScroll(scrollOffset);
         for (PositionedSection section : CCBCreativeTabLayout.positionedSections()) {
             int visibleRow = section.bannerRow() - firstVisibleRow;
@@ -159,9 +161,9 @@ public class CCBClientEvents {
         AirtightHandheldDrillOutlineRenderer.tick();
         AirtightChestplateFirstPersonRenderer.tick();
 
-        CreateCraftedBeginningClient.AIRTIGHT_CANNON_RENDER_HANDLER.tick();
-        CreateCraftedBeginningClient.AIRTIGHT_EXTEND_ARM_RENDER_HANDLER.tick();
-        CreateCraftedBeginningClient.AIRTIGHT_HAND_DRILL_RENDER_HANDLER.tick();
+        AirtightCannonRenderHandler.INSTANCE.tick();
+        AirtightExtendArmRenderHandler.INSTANCE.tick();
+        AirtightHandheldDrillRenderHandler.INSTANCE.tick();
 
         CCBOutliner.INSTANCE.tickOutlines();
     }

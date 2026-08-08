@@ -7,7 +7,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Tuple;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import org.jetbrains.annotations.Contract;
@@ -33,7 +33,7 @@ import java.util.stream.Stream;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasDataProvider {
-    private static final ResourceLocation ICON = CreateCraftedBeginning.asResource("icon");
+    private static final ResourceLocation ICON = CCBAPI.asResource("icon");
 
     @Contract(pure = true)
     public static GasCollectingResult fromGasHandlerStream(IGasHandler gasHandler) {
@@ -125,7 +125,7 @@ public class GasDataProvider {
         try {
             groups = ViewGroup.readList(data, GasConstants.STORAGE_KEY, Function.identity());
         } catch (Exception exception) {
-            CreateCraftedBeginning.LOGGER.error("Failed to read gas storage data", exception);
+            CCBAPI.LOGGER.error("Failed to read gas storage data", exception);
             return;
         }
 

@@ -3,7 +3,7 @@ package net.ty.createcraftedbeginning.api.gas.gases;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -13,7 +13,7 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasBuilder {
-    private static final ResourceLocation DEFAULT_TEXTURE = CreateCraftedBeginning.asResource("gas/icon");
+    private static final ResourceLocation DEFAULT_TEXTURE = CCBAPI.asResource("gas/icon");
 
     private ResourceLocation texture;
     private int tint = 0xFFFFFF;

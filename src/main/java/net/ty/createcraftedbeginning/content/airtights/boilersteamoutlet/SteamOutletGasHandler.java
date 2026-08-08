@@ -4,7 +4,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IVentingGasSource;
+import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IVentingGasSource;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -15,7 +15,7 @@ public class SteamOutletGasHandler implements IGasHandler, IVentingGasSource {
     private final BoilerSteamOutletBlockEntity be;
     private final IGasHandler delegate;
 
-    SteamOutletGasHandler(BoilerSteamOutletBlockEntity be, IGasHandler delegate) {
+    public SteamOutletGasHandler(BoilerSteamOutletBlockEntity be, IGasHandler delegate) {
         this.be = be;
         this.delegate = delegate;
     }

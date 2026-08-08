@@ -9,9 +9,9 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.client.CCBGUITextures;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightEngine;
+import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
 import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe;
 
 import javax.annotation.ParametersAreNonnullByDefault;

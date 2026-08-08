@@ -5,7 +5,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock;
@@ -21,9 +21,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @WailaPlugin
 public class JadePlugin implements IWailaPlugin {
-    public static final ResourceLocation GAS = CreateCraftedBeginning.asResource("gas");
-    public static final ResourceLocation GAS_BLOCK_TOOLTIP = CreateCraftedBeginning.asResource("gas_block_tooltip");
-    public static final ResourceLocation GAS_CONTRAPTION_TOOLTIP = CreateCraftedBeginning.asResource("gas_contraption_tooltip");
+    public static final ResourceLocation GAS = CCBAPI.asResource("gas");
+    public static final ResourceLocation GAS_BLOCK_TOOLTIP = CCBAPI.asResource("gas_block_tooltip");
+    public static final ResourceLocation GAS_CONTRAPTION_TOOLTIP = CCBAPI.asResource("gas_contraption_tooltip");
 
     @Override
     public void register(IWailaCommonRegistration registration) {

@@ -8,8 +8,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.Direction;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock;
+import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 

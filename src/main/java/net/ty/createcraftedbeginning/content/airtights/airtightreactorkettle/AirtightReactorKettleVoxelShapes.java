@@ -4,7 +4,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.ty.createcraftedbeginning.data.CCBShapes;
+import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.EnumMap;

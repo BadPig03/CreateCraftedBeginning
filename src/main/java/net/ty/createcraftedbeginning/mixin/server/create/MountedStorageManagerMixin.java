@@ -1,5 +1,7 @@
 package net.ty.createcraftedbeginning.mixin.server.create;
 
+import net.ty.createcraftedbeginning.api.CCBAPI;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.mojang.datafixers.util.Pair;
@@ -21,12 +23,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorage;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageType;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageWrapper;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IMountedStorageManagerWithGas;
-import net.ty.createcraftedbeginning.api.gas.gases.packets.MountedStorageSyncWithGasPacket;
+import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IMountedStorageManagerWithGas;
+import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorage;
+import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorageType;
+import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorageWrapper;
+import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedStorageSyncWithGasPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -54,28 +55,14 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
     private MountedGasStorageWrapper ccb$gases;
     @Unique
     private ImmutableMap<BlockPos, SyncedMountedStorage> ccb$syncedGases;
+    @Shadow
+    private int syncCooldown;
 
     @Override
     @Unique
     public MountedGasStorageWrapper ccb$getGases() {
         assertInitialized();
         return ccb$gases;
-    }
-
-    @Override
-    @Unique
-    public void ccb$setGases(MountedGasStorageWrapper gases) {
-        ccb$gases = gases;
-    }
-
-    @Unique
-    private void ccb$addStorage(MountedGasStorage storage, BlockPos pos) {
-        ccb$gasesBuilder.put(pos, storage);
-        if (!(storage instanceof SyncedMountedStorage synced)) {
-            return;
-        }
-
-        ccb$syncedGasesBuilder.put(pos, synced);
     }
 
     @Override
@@ -94,15 +81,28 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
                 syncedStorages.put((SyncedMountedStorage) storage, pos);
             });
         } catch (Throwable t) {
-            CreateCraftedBeginning.LOGGER.error("An error occurred while syncing gas storage in MountedStorageManager", t);
+            CCBAPI.LOGGER.error("An error occurred while syncing gas storage in MountedStorageManager", t);
         }
 
         Contraption contraption = entity.getContraption();
         syncedStorages.forEach((storage, pos) -> storage.afterSync(contraption, pos));
     }
 
-    @Shadow
-    private int syncCooldown;
+    @Override
+    @Unique
+    public void ccb$setGases(MountedGasStorageWrapper gases) {
+        ccb$gases = gases;
+    }
+
+    @Unique
+    private void ccb$addStorage(MountedGasStorage storage, BlockPos pos) {
+        ccb$gasesBuilder.put(pos, storage);
+        if (!(storage instanceof SyncedMountedStorage synced)) {
+            return;
+        }
+
+        ccb$syncedGasesBuilder.put(pos, synced);
+    }
 
     @Shadow
     protected abstract void assertInitialized();
@@ -191,7 +191,7 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
         if (ccb$getGases().storages != null) {
             ccb$getGases().storages.forEach((pos, storage) -> {
                 if (!clientPacket || storage instanceof SyncedMountedStorage) {
-                    MountedGasStorage.CODEC.encodeStart(NbtOps.INSTANCE, storage).resultOrPartial(err -> CreateCraftedBeginning.LOGGER.error("Failed to serialize mounted gas storage: {}", err)).ifPresent(encoded -> {
+                    MountedGasStorage.CODEC.encodeStart(NbtOps.INSTANCE, storage).resultOrPartial(err -> CCBAPI.LOGGER.error("Failed to serialize mounted gas storage: {}", err)).ifPresent(encoded -> {
                         CompoundTag tag = new CompoundTag();
                         tag.put("pos", NbtUtils.writeBlockPos(pos));
                         tag.put("storage", encoded);
@@ -226,11 +226,11 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
                 NBTHelper.iterateCompoundList(nbt.getList("gases", Tag.TAG_COMPOUND), tag -> {
                     BlockPos pos = NBTHelper.readBlockPos(tag, "pos");
                     CompoundTag data = tag.getCompound("storage");
-                    MountedGasStorage.CODEC.decode(NbtOps.INSTANCE, data).resultOrPartial(err -> CreateCraftedBeginning.LOGGER.error("Failed to deserialize mounted gas storage: {}", err)).map(Pair::getFirst).ifPresent(storage -> ccb$addStorage(storage, pos));
+                    MountedGasStorage.CODEC.decode(NbtOps.INSTANCE, data).resultOrPartial(err -> CCBAPI.LOGGER.error("Failed to deserialize mounted gas storage: {}", err)).map(Pair::getFirst).ifPresent(storage -> ccb$addStorage(storage, pos));
                 });
             }
         } catch (Throwable t) {
-            CreateCraftedBeginning.LOGGER.error("Error deserializing mounted gas storage", t);
+            CCBAPI.LOGGER.error("Error deserializing mounted gas storage", t);
         }
     }
 

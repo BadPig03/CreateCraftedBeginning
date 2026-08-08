@@ -10,6 +10,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @FunctionalInterface
 public interface AirtightEngineHandler {
+    int MAX_LEVEL = 8;
+
     SimpleRegistry<Gas, AirtightEngineHandler> REGISTRY = SimpleRegistry.create();
 
     /**

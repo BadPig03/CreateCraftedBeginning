@@ -18,10 +18,9 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
+import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Map;
@@ -29,7 +28,7 @@ import java.util.WeakHashMap;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = CCBAPI.MOD_ID, value = Dist.CLIENT)
 public class AirtightHandheldDrillItemRenderer extends CustomRenderedItemModelRenderer {
     private final Map<ItemStack, Float> rotationAngles = new WeakHashMap<>();
 
@@ -50,7 +49,7 @@ public class AirtightHandheldDrillItemRenderer extends CustomRenderedItemModelRe
         float angle = rotationAngles.getOrDefault(drill, 0.0f);
         boolean isHeld = player.getMainHandItem() == drill || player.getOffhandItem() == drill;
         if (isHeld) {
-            float speed = CreateCraftedBeginningClient.AIRTIGHT_HAND_DRILL_RENDER_HANDLER.getAnimation(AnimationTickHolder.getPartialTicks());
+            float speed = AirtightHandheldDrillRenderHandler.INSTANCE.getAnimation(AnimationTickHolder.getPartialTicks());
             angle = (angle + speed) % 360;
             rotationAngles.put(drill, angle);
         }

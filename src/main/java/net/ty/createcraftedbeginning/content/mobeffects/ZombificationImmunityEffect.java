@@ -11,7 +11,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.MobEffectEvent.Expired;
 import net.neoforged.neoforge.event.entity.living.MobEffectEvent.Remove;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.registry.CCBMobEffects;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,7 +19,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
+@EventBusSubscriber(modid = CCBAPI.MOD_ID)
 public class ZombificationImmunityEffect extends MobEffect {
     public ZombificationImmunityEffect(MobEffectCategory category, int color) {
         super(category, color);

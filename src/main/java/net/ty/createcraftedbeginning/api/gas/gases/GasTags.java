@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.api.gas.gases;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
-import net.ty.createcraftedbeginning.registry.CCBRegistries;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -15,7 +14,7 @@ public final class GasTags {
     }
 
     private static TagKey<Gas> create(String name) {
-        return TagKey.create(CCBRegistries.GAS_REGISTRY_KEY, ResourceLocation.withDefaultNamespace(name));
+        return TagKey.create(GasRegistries.GAS_REGISTRY_KEY, ResourceLocation.withDefaultNamespace(name));
     }
 
     /**
@@ -25,7 +24,7 @@ public final class GasTags {
      * @return the created value
      */
     public static TagKey<Gas> create(ResourceLocation name) {
-        return TagKey.create(CCBRegistries.GAS_REGISTRY_KEY, name);
+        return TagKey.create(GasRegistries.GAS_REGISTRY_KEY, name);
     }
 
     /**

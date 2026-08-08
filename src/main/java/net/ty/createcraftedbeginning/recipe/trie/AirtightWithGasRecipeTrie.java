@@ -19,7 +19,7 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.neoforged.neoforge.items.IItemHandler;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
@@ -263,7 +263,7 @@ public class AirtightWithGasRecipeTrie<R extends Recipe<?>> {
         public AirtightWithGasRecipeTrie<R> build() {
             variantToId.trim();
             variantToIngredients.trim();
-            CreateCraftedBeginning.LOGGER.info("AirtightWithGasRecipeTrie of depth {} with {} nodes built with {} variants, {} ingredients, and {} recipes", trie.getMaxDepth(), trie.getNodeCount(), variantToId.size(), ingredientToId.size(), trie.getValueCount());
+            CCBAPI.LOGGER.info("AirtightWithGasRecipeTrie of depth {} with {} nodes built with {} variants, {} ingredients, and {} recipes", trie.getMaxDepth(), trie.getNodeCount(), variantToId.size(), ingredientToId.size(), trie.getValueCount());
             return new AirtightWithGasRecipeTrie<>(trie, variantToId, variantToIngredients, universalIngredientId);
         }
     }

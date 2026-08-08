@@ -8,7 +8,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock.CanisterType;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
@@ -17,7 +17,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
+@EventBusSubscriber(modid = CCBAPI.MOD_ID)
 public class AirtightHatchEvents {
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onRightClickBlock(RightClickBlock event) {

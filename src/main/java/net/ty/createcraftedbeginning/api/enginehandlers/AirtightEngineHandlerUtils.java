@@ -2,15 +2,14 @@ package net.ty.createcraftedbeginning.api.enginehandlers;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverCore;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Provides lookup and registration helpers for gas-specific airtight engine behavior.
+ * Provides lookup and registration helpers for gas-specific airtight engine behaviour.
  * Registered handlers determine the work factor and maximum engine level contributed
  * by each supported gas.
  */
@@ -59,7 +58,7 @@ public final class AirtightEngineHandlerUtils {
      * @param workFactor the effective supply contributed by each unit of gas
      */
     public static void register(ResourceLocation location, double workFactor) {
-        register(location, workFactor, AirtightAssemblyDriverCore.MAX_LEVEL);
+        register(location, workFactor, AirtightEngineHandler.MAX_LEVEL);
     }
 
     /**
@@ -72,23 +71,23 @@ public final class AirtightEngineHandlerUtils {
     public static void register(ResourceLocation location, double workFactor, int maxLevel) {
         Gas gasType = Gas.getGasTypeByName(location);
         if (gasType.isEmpty()) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Engine Handler: gas '{}' does not exist.", location);
+            CCBAPI.LOGGER.error("Failed to register Airtight Engine Handler: gas '{}' does not exist.", location);
             return;
         }
 
         AirtightEngineHandler engineHandler = AirtightEngineHandler.REGISTRY.get(gasType);
         if (engineHandler != null) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Engine Handler for gas '{}': a handler is already registered.", location);
+            CCBAPI.LOGGER.error("Failed to register Airtight Engine Handler for gas '{}': a handler is already registered.", location);
             return;
         }
 
         if (!Double.isFinite(workFactor) || workFactor < 0 || workFactor > MAX_WORK_FACTOR) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Engine Handler for gas '{}': work factor is out of range! Valid range is [0, {}].", location, MAX_WORK_FACTOR);
+            CCBAPI.LOGGER.error("Failed to register Airtight Engine Handler for gas '{}': work factor is out of range! Valid range is [0, {}].", location, MAX_WORK_FACTOR);
             return;
         }
 
-        if (maxLevel < 0 || maxLevel > AirtightAssemblyDriverCore.MAX_LEVEL) {
-            CreateCraftedBeginning.LOGGER.error("Failed to register Airtight Engine Handler for gas '{}': maximum level is out of range! Valid range is [0, {}].", location, AirtightAssemblyDriverCore.MAX_LEVEL);
+        if (maxLevel < 0 || maxLevel > AirtightEngineHandler.MAX_LEVEL) {
+            CCBAPI.LOGGER.error("Failed to register Airtight Engine Handler for gas '{}': maximum level is out of range! Valid range is [0, {}].", location, AirtightEngineHandler.MAX_LEVEL);
             return;
         }
 

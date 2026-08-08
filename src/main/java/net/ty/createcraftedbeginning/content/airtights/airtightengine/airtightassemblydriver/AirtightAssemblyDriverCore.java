@@ -21,7 +21,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightAssemblyDriverCore {
-    public static final int MAX_LEVEL = 8;
+    public static final int MAX_LEVEL = AirtightEngineHandler.MAX_LEVEL;
 
     private static final String COMPOUND_KEY_FLOW_METER = "FlowMeter";
     private static final String COMPOUND_KEY_STRUCTURE_MANAGER = "StructureManager";

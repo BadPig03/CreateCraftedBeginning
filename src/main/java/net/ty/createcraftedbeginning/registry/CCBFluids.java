@@ -1,5 +1,9 @@
 package net.ty.createcraftedbeginning.registry;
 
+import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrateProvider;
+
+import net.ty.createcraftedbeginning.api.CCBAPI;
+
 import com.simibubi.create.AllFluids;
 import com.simibubi.create.content.decoration.palettes.AllPaletteStoneTypes;
 import com.tterrag.registrate.util.entry.FluidEntry;
@@ -18,13 +22,12 @@ import net.neoforged.neoforge.fluids.FluidInteractionRegistry.InteractionInforma
 import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries.Keys;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.content.fluids.amethystsuspension.AmethystSuspensionBucketItem;
 import net.ty.createcraftedbeginning.content.fluids.amethystsuspension.AmethystSuspensionVirtualFluid;
 import net.ty.createcraftedbeginning.content.fluids.brimstone.BrimstoneFluidBlock;
 import net.ty.createcraftedbeginning.content.fluids.brimstone.BrimstoneFluidType;
 import net.ty.createcraftedbeginning.content.fluids.slush.SlushVirtualFluid;
-import net.ty.createcraftedbeginning.data.CCBRegistrate;
+import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrate;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.CCBCreativeTabSection;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -33,8 +36,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBFluids {
-    private static final CCBRegistrate CCB_REGISTRATE = CreateCraftedBeginning.registrate();
-    private static final DeferredRegister<FluidType> FLUID_TYPES = DeferredRegister.create(Keys.FLUID_TYPES, CreateCraftedBeginning.MOD_ID);
+    private static final CCBRegistrate CCB_REGISTRATE = CCBRegistrateProvider.get();
+    private static final DeferredRegister<FluidType> FLUID_TYPES = DeferredRegister.create(Keys.FLUID_TYPES, CCBAPI.MOD_ID);
 
     static {
         CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.PHOTO_STRESSES);

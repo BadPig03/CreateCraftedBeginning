@@ -11,7 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.common.ModConfigSpec.Builder;
 import net.neoforged.neoforge.common.ModConfigSpec.ConfigValue;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,14 +43,14 @@ public class CCBStress extends ConfigBase {
     private static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> registerDefault(Object2DoubleMap<ResourceLocation> defaults, double value) {
         return builder -> {
             assertFromCreateCraftedBeginning(builder);
-            ResourceLocation id = CreateCraftedBeginning.asResource(builder.getName());
+            ResourceLocation id = CCBAPI.asResource(builder.getName());
             defaults.put(id, value);
             return builder;
         };
     }
 
     private static void assertFromCreateCraftedBeginning(BlockBuilder<?, ?> builder) {
-        if (builder.getOwner().getModid().equals(CreateCraftedBeginning.MOD_ID)) {
+        if (builder.getOwner().getModid().equals(CCBAPI.MOD_ID)) {
             return;
         }
 

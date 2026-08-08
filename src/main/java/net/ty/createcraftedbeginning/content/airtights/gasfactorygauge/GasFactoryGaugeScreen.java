@@ -30,12 +30,13 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
-import net.ty.createcraftedbeginning.client.CCBGUITextures;
-import net.ty.createcraftedbeginning.client.GasFactoryGaugeClientUtils;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonStyleUtils;
+import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.client.GasFactoryGaugeClientUtils;
+import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUtils;
-import net.ty.createcraftedbeginning.data.CCBIcons;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
+import net.ty.createcraftedbeginning.foundation.gui.CCBIcons;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -68,17 +69,17 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
     }
 
     private static void addGasScrollTooltips(List<Component> tooltips) {
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getScrollStep()));
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.shift_to_scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getShiftStep()));
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.alt_to_scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getAltStep()));
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.ctrl_to_scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getCtrlStep()));
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getScrollStep()));
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.shift_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getShiftStep()));
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.alt_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getAltStep()));
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.ctrl_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getCtrlStep()));
     }
 
     private static void addItemScrollTooltips(List<Component> tooltips) {
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.scroll", GasRequestUtils.getScrollStep());
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.shift_to_scroll", GasRequestUtils.getShiftStep());
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.alt_to_scroll", GasRequestUtils.getAltStep());
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.ctrl_to_scroll", GasRequestUtils.getCtrlStep());
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.scroll", GasRequestClientUtils.getScrollStep());
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.shift_to_scroll", GasRequestClientUtils.getShiftStep());
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.alt_to_scroll", GasRequestClientUtils.getAltStep());
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.ctrl_to_scroll", GasRequestClientUtils.getCtrlStep());
     }
 
     private static void addScrollTooltip(List<Component> tooltips, String key, Object amount) {

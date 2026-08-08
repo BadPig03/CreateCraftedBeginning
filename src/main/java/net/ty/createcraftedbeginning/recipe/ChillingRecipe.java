@@ -5,7 +5,6 @@ import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 

@@ -1,15 +1,8 @@
 package net.ty.createcraftedbeginning;
 
-import com.mojang.logging.LogUtils;
-import com.simibubi.create.foundation.item.ItemDescription.Modifier;
-import com.simibubi.create.foundation.item.KineticStats;
-import com.simibubi.create.foundation.item.TooltipModifier;
-import net.createmod.catnip.lang.FontHelper.Palette;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.CreativeModeTab;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -21,29 +14,23 @@ import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.registries.NewRegistryEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import net.ty.createcraftedbeginning.advancement.CCBTriggers;
-import net.ty.createcraftedbeginning.api.armhandlers.CCBAirtightArmHandlers;
-import net.ty.createcraftedbeginning.api.armorhandlers.CCBAirtightArmorsHandlers;
-import net.ty.createcraftedbeginning.api.cannonhandlers.CCBAirtightCannonHandlers;
-import net.ty.createcraftedbeginning.api.coolantshandlers.CCBAirtightCoolantHandlers;
-import net.ty.createcraftedbeginning.api.drainagehandlers.CCBAirtightDrainageHandlers;
-import net.ty.createcraftedbeginning.api.drillhandlers.CCBAirtightDrillHandlers;
-import net.ty.createcraftedbeginning.api.enginehandlers.CCBAirtightEngineHandlers;
-import net.ty.createcraftedbeginning.api.fillhandlers.CCBAirtightFillHandlers;
+import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.api.events.RegisterAirtightHandlersEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasBuilder;
-import net.ty.createcraftedbeginning.api.thermoregulatorhandlers.CCBAirtightThermoregulatorHandlers;
-import net.ty.createcraftedbeginning.api.turbinehandlers.CCBAirtightTurbineHandlers;
+import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
+import net.ty.createcraftedbeginning.compat.CCBCompatBootstrap;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.upgrades.AirtightBootsUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.AirtightChestplateUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.upgrades.AirtightHelmetUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.AirtightLeggingsUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.AirtightHandheldDrillUpgradeRegistry;
+import net.ty.createcraftedbeginning.content.airtights.handlers.CCBBuiltInAirtightHandlers;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndCasingBlock;
-import net.ty.createcraftedbeginning.data.CCBDataGen;
-import net.ty.createcraftedbeginning.data.CCBGasRegistries;
-import net.ty.createcraftedbeginning.data.CCBGases;
-import net.ty.createcraftedbeginning.data.CCBRegistrate;
+import net.ty.createcraftedbeginning.datagen.CCBDataGen;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeDataComponents;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBArmInteractionPointTypes;
 import net.ty.createcraftedbeginning.registry.CCBArmorMaterials;
@@ -59,13 +46,14 @@ import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import net.ty.createcraftedbeginning.registry.CCBMobEffects;
 import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
 import net.ty.createcraftedbeginning.registry.CCBPackets;
-import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
-import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
-import net.ty.createcraftedbeginning.registry.CCBRegistries;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
+import net.ty.createcraftedbeginning.registry.CCBStressProviders;
 import net.ty.createcraftedbeginning.registry.CCBTags;
 import net.ty.createcraftedbeginning.registry.CCBUnpackingHandlers;
+import net.ty.createcraftedbeginning.registry.gas.CCBGases;
+import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrate;
+import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrateProvider;
 import org.jetbrains.annotations.Contract;
 import org.slf4j.Logger;
 
@@ -75,14 +63,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @Mod(CreateCraftedBeginning.MOD_ID)
 public class CreateCraftedBeginning {
-    public static final String MOD_ID = "createcraftedbeginning";
-    public static final String NAME = "Create Crafted Beginning";
-    public static final Logger LOGGER = LogUtils.getLogger();
+    public static final String MOD_ID = CCBAPI.MOD_ID;
+    public static final Logger LOGGER = CCBAPI.LOGGER;
 
-    @SuppressWarnings("DataFlowIssue")
-    private static final CCBRegistrate CCB_REGISTRATE = CCBRegistrate.create(MOD_ID).defaultCreativeTab((ResourceKey<CreativeModeTab>) null).setTooltipModifierFactory(item -> new Modifier(item, Palette.STANDARD_CREATE).andThen(TooltipModifier.mapNull(KineticStats.create(item))));
+    private static final CCBRegistrate CCB_REGISTRATE = CCBRegistrateProvider.get();
 
     public CreateCraftedBeginning(IEventBus modEventBus, ModContainer modContainer) {
+        CCBCompatBootstrap.initialize();
         CCB_REGISTRATE.registerEventListeners(modEventBus);
 
         CCBSoundEvents.prepare();
@@ -96,15 +83,16 @@ public class CreateCraftedBeginning {
         CCBItems.register();
         CCBFanProcessingTypes.register(modEventBus);
         CCBFluids.register(modEventBus);
-        CCBMenuTypes.register();
+        CCBMenuTypes.register(modEventBus);
         CCBMobEffects.register(modEventBus);
         CCBMountedStorage.register();
         CCBPackets.register();
-        CCBPartialModels.register();
         CCBParticleTypes.register(modEventBus);
         CCBRecipeTypes.register(modEventBus);
+        CCBRecipeDataComponents.register(modEventBus);
         CCBTags.register();
         CCBConfig.register(modContainer);
+        CCBStressProviders.register(CCBConfig.server().stressValues);
 
         NeoForge.EVENT_BUS.register(this);
         addRegistrationListeners(modEventBus);
@@ -134,27 +122,19 @@ public class CreateCraftedBeginning {
         AirtightBootsUpgradeRegistry.registerUpgrades();
         AirtightHandheldDrillUpgradeRegistry.registerUpgrades();
         event.enqueueWork(() -> {
-            CCBAirtightArmHandlers.register();
-            CCBAirtightArmorsHandlers.register();
-            CCBAirtightCannonHandlers.register();
-            CCBAirtightCoolantHandlers.register();
-            CCBAirtightDrainageHandlers.register();
-            CCBAirtightDrillHandlers.register();
-            CCBAirtightEngineHandlers.register();
-            CCBAirtightFillHandlers.register();
-            CCBAirtightThermoregulatorHandlers.register();
-            CCBAirtightTurbineHandlers.register();
+            CCBBuiltInAirtightHandlers.register();
+            NeoForge.EVENT_BUS.post(new RegisterAirtightHandlersEvent());
             CCBUnpackingHandlers.register();
         });
     }
 
     @Contract("_ -> new")
     public static ResourceLocation asResource(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+        return CCBAPI.asResource(path);
     }
 
     public static CCBRegistrate registrate() {
-        return CCB_REGISTRATE;
+        return CCBRegistrateProvider.get();
     }
 
     private static void addRegistrationListeners(IEventBus modEventBus) {
@@ -162,16 +142,16 @@ public class CreateCraftedBeginning {
         modEventBus.addListener(CreateCraftedBeginning::registerRegistries);
 
         CCBGases.GAS_REGISTER.register(modEventBus);
-        CCBGasRegistries.GAS_INGREDIENT_TYPES.register(modEventBus);
+        GasRegistries.GAS_INGREDIENT_TYPES.register(modEventBus);
     }
 
     private static void registerEventListener(RegisterEvent event) {
-        event.register(CCBRegistries.GAS_REGISTRY_KEY, CCBGasRegistries.EMPTY_GAS_KEY.location(), () -> new Gas(GasBuilder.builder()));
+        event.register(GasRegistries.GAS_REGISTRY_KEY, GasRegistries.EMPTY_GAS_KEY.location(), () -> new Gas(GasBuilder.builder()));
     }
 
     private static void registerRegistries(NewRegistryEvent event) {
-        event.register(CCBGasRegistries.GAS_REGISTRY);
-        event.register(CCBGasRegistries.GAS_INGREDIENT_TYPES_REGISTRY);
+        event.register(GasRegistries.GAS_REGISTRY);
+        event.register(GasRegistries.GAS_INGREDIENT_TYPES_REGISTRY);
     }
 
     @SubscribeEvent

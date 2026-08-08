@@ -15,6 +15,7 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.FrostLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity.CoolantType;
+import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe.CoolingData;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -96,8 +97,20 @@ public abstract class BaseCoolerState {
             return true;
         }
 
+        int consumedAmount = batches * amount;
+        FluidStack request = fluid.copyWithAmount(consumedAmount);
+        ResourceTransaction transaction = new ResourceTransaction().add(ResourceTransaction.participant(() -> {
+            FluidStack simulated = tank.drain(request, FluidAction.SIMULATE);
+            return simulated.getAmount() == consumedAmount && FluidStack.isSameFluidSameComponents(simulated, request);
+        }, () -> tank.getFluid().copy(), () -> {
+            FluidStack drained = tank.drain(request, FluidAction.EXECUTE);
+            return drained.getAmount() == consumedAmount && FluidStack.isSameFluidSameComponents(drained, request);
+        }, snapshot -> tank.setFluid(snapshot.copy())));
+        if (!transaction.commit()) {
+            return true;
+        }
+
         remainingTime += batches * creditedTime;
-        tank.drain(batches * amount, FluidAction.EXECUTE);
         if (getFrostLevel() == FrostLevel.RIMING) {
             cooler.setCoolerState(new ChilledCoolerState(remainingTime, false));
         }

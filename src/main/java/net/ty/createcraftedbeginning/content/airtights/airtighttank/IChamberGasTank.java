@@ -16,12 +16,14 @@ public interface IChamberGasTank extends IMultiBlockEntityContainer {
 
     IGasHandler getCapability();
 
-    int getWidth();
-
     @Override
     <T extends BlockEntity & IMultiBlockEntityContainer> @Nullable T getControllerBE();
 
+    @Override
     boolean isController();
+
+    @Override
+    int getWidth();
 
     boolean isRemoved();
 }

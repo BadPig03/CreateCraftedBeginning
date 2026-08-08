@@ -10,9 +10,9 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.gas.gases.GasConnectivityHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasConnectivityHandler;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
@@ -34,6 +34,19 @@ public class AirtightAssemblyDriverStructureManager {
 
     private static final int INITIAL_EVALUATION_DELAY = 2;
     private static final int INCOMPLETE_EVALUATION_RETRY_DELAY = 20;
+    private final AirtightAssemblyDriverCore driverCore;
+    private boolean structureValid;
+    private boolean evaluationRequired = true;
+    private int evaluationCooldown;
+    private int attachedChambers;
+    private int attachedWindChargingLevel;
+    private int attachedEngines;
+    private int attachedOutlets;
+
+    public AirtightAssemblyDriverStructureManager(AirtightAssemblyDriverCore driverCore) {
+        this.driverCore = driverCore;
+    }
+
     private static int getMaxAttachedSurfaceBlocks() {
         int width = AirtightTankBlockEntity.getConfiguredMaxWidth();
         int length = AirtightTankBlockEntity.getConfiguredMaxLength();
@@ -48,20 +61,6 @@ public class AirtightAssemblyDriverStructureManager {
 
     private static int getMaxAttachedWindChargingLevel() {
         return getMaxAttachedChambers() * MAX_LEVEL;
-    }
-
-    private final AirtightAssemblyDriverCore driverCore;
-
-    private boolean structureValid;
-    private boolean evaluationRequired = true;
-    private int evaluationCooldown;
-    private int attachedChambers;
-    private int attachedWindChargingLevel;
-    private int attachedEngines;
-    private int attachedOutlets;
-
-    public AirtightAssemblyDriverStructureManager(AirtightAssemblyDriverCore driverCore) {
-        this.driverCore = driverCore;
     }
 
     private static int readBoundedInt(CompoundTag compoundTag, String key, int max) {

@@ -12,10 +12,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonGasContents.GasEntry;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -42,7 +42,7 @@ public class BalloonItem extends PackageItem {
 
     @Override
     public String getDescriptionId() {
-        return "item." + CreateCraftedBeginning.MOD_ID + (rare ? ".rare_balloon" : ".balloon");
+        return "item." + CCBAPI.MOD_ID + (rare ? ".rare_balloon" : ".balloon");
     }
 
     @Override

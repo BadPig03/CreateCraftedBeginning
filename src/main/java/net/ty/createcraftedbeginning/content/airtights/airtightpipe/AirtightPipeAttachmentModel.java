@@ -21,11 +21,11 @@ import net.neoforged.neoforge.client.model.data.ModelData;
 import net.neoforged.neoforge.client.model.data.ModelData.Builder;
 import net.neoforged.neoforge.client.model.data.ModelProperty;
 import net.neoforged.neoforge.common.util.TriState;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes;
-import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes.ComponentPartials;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
-import net.ty.createcraftedbeginning.registry.CCBPartialModels;
+import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.foundation.client.AirtightPipeAttachmentPartial;
+import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -54,7 +54,7 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
     private static void addQuads(List<BakedQuad> quads, @Nullable BlockState state, @Nullable Direction side, RandomSource rand, ModelData data, PipeModelData pipeData, @Nullable RenderType renderType) {
         for (Direction direction : Iterate.directions) {
             AttachmentTypes type = pipeData.getAttachment(direction);
-            for (ComponentPartials partial : type.partials) {
+            for (AirtightPipeAttachmentPartial partial : getPartials(type)) {
                 BakedModel model = CCBPartialModels.AIRTIGHT_PIPE_ATTACHMENTS.get(partial).get(direction).get();
                 quads.addAll(model.getQuads(state, side, rand, data, renderType));
             }
@@ -91,6 +91,14 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
             return AttachmentTypes.DRAIN;
         }
         return AttachmentTypes.RIM;
+    }
+
+    private static AirtightPipeAttachmentPartial[] getPartials(AttachmentTypes type) {
+        return switch (type) {
+            case NONE -> new AirtightPipeAttachmentPartial[0];
+            case RIM -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.RIM};
+            case DRAIN -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.DRAIN};
+        };
     }
 
     @Override
@@ -146,7 +154,7 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
 
         for (Direction direction : Iterate.directions) {
             AttachmentTypes type = pipeData.getAttachment(direction);
-            for (ComponentPartials partial : type.partials) {
+            for (AirtightPipeAttachmentPartial partial : getPartials(type)) {
                 BakedModel model = CCBPartialModels.AIRTIGHT_PIPE_ATTACHMENTS.get(partial).get(direction).get();
                 renderTypes.add(model.getRenderTypes(state, rand, data));
             }

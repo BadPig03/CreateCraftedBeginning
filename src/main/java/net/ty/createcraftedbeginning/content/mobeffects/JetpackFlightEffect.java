@@ -6,14 +6,14 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.neoforged.neoforge.common.NeoForgeMod;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class JetpackFlightEffect extends MobEffect {
-    private static final ResourceLocation MODIFIER_ID = CreateCraftedBeginning.asResource("jetpack_flight_effect");
+    private static final ResourceLocation MODIFIER_ID = CCBAPI.asResource("jetpack_flight_effect");
 
     public JetpackFlightEffect(MobEffectCategory category, int color) {
         super(category, color);

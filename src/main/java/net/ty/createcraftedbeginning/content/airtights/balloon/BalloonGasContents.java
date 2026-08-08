@@ -12,7 +12,7 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import org.jetbrains.annotations.Unmodifiable;
@@ -76,7 +76,7 @@ public final class BalloonGasContents {
         if (tag instanceof CompoundTag compoundTag && compoundTag.isEmpty()) {
             return EMPTY;
         }
-        return CODEC.parse(provider.createSerializationContext(NbtOps.INSTANCE), tag).resultOrPartial(error -> CreateCraftedBeginning.LOGGER.error("Tried to parse invalid balloon gas contents: '{}'", error)).orElse(EMPTY);
+        return CODEC.parse(provider.createSerializationContext(NbtOps.INSTANCE), tag).resultOrPartial(error -> CCBAPI.LOGGER.error("Tried to parse invalid balloon gas contents: '{}'", error)).orElse(EMPTY);
     }
 
     private static NormalizedContents normalize(List<GasStack> input) {

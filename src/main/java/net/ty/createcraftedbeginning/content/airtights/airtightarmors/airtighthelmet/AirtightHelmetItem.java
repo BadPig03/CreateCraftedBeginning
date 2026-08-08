@@ -5,8 +5,6 @@ import com.simibubi.create.foundation.item.TooltipHelper;
 import net.createmod.catnip.lang.FontHelper.Palette;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -21,18 +19,17 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandler;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
 import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsUtils;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightBaseArmorItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.upgrades.GogglesUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.platform.CCBClientBridge;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.Nullable;
@@ -104,9 +101,8 @@ public class AirtightHelmetItem extends AirtightBaseArmorItem implements MenuPro
     }
 
     @Override
-    @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack helmet, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
-        LocalPlayer player = Minecraft.getInstance().player;
+        Player player = CCBClientBridge.getClientPlayer();
         if (player == null) {
             return;
         }

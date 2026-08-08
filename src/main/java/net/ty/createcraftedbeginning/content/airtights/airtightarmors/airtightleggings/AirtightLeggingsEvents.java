@@ -14,7 +14,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.AirtightLeggingsUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.CrammingProtectionUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.ProjectileDeflectionUpgrade;
@@ -24,7 +24,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
+@EventBusSubscriber(modid = CCBAPI.MOD_ID)
 public class AirtightLeggingsEvents {
     @SubscribeEvent
     public static void onProjectileImpact(ProjectileImpactEvent event) {

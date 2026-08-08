@@ -9,10 +9,8 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClientPacket;
-import net.ty.createcraftedbeginning.api.gas.gases.packets.GasAreaOutlinePacket;
-import net.ty.createcraftedbeginning.api.gas.gases.packets.MountedStorageSyncWithGasPacket;
+import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.api.drainagehandlers.AirtightDrainageHandlerUtils;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateElytraBoostPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillGhostItemSubmitPacket;
@@ -20,7 +18,10 @@ import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.Airtigh
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeMenuSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeSyncPacket;
+import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedStorageSyncWithGasPacket;
+import net.ty.createcraftedbeginning.content.airtights.gas.network.GasAreaOutlinePacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlayPacket;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClientPacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackMenuSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterGhostItemSubmitPacket;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreenPacket;
@@ -62,13 +63,14 @@ public enum CCBPackets implements PacketTypeProvider {
 
     <T extends BasePacketPayload> CCBPackets(Class<T> clazz, StreamCodec<? super RegistryFriendlyByteBuf, T> codec) {
         String name = name().toLowerCase(Locale.ROOT);
-        type = new PacketType<>(new Type<>(CreateCraftedBeginning.asResource(name)), clazz, codec);
+        type = new PacketType<>(new Type<>(CCBAPI.asResource(name)), clazz, codec);
     }
 
     public static void register() {
-        CatnipPacketRegistry packetRegistry = new CatnipPacketRegistry(CreateCraftedBeginning.MOD_ID, 4);
+        CatnipPacketRegistry packetRegistry = new CatnipPacketRegistry(CCBAPI.MOD_ID, 4);
         Arrays.stream(values()).map(packet -> packet.type).forEach(packetRegistry::registerPacket);
         packetRegistry.registerAllPackets();
+        AirtightDrainageHandlerUtils.registerOutlineSender(GasAreaOutlinePacket::send);
     }
 
     @Override

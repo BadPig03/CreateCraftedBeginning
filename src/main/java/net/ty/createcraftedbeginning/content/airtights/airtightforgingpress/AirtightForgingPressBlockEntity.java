@@ -48,24 +48,26 @@ import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasInventoryIdentifierProvider;
+import net.ty.createcraftedbeginning.content.airtights.transaction.MachineResourceSnapshots;
+import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
+import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction.Participant;
 import net.ty.createcraftedbeginning.recipe.ForgingPressRecipe;
+import net.ty.createcraftedbeginning.recipe.ForgingPressRecipeContext;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
-import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, IGasInventoryIdentifierProvider {
+public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, IGasInventoryIdentifierProvider, ForgingPressRecipeContext {
     private static final int MAX_INPUT_SLOT = 1;
     private static final int MAX_OUTPUT_SLOT = 8;
     private static final int LAZY_TICK_RATE = 4;
@@ -171,12 +173,8 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         return extracted.getCount() == amount && ItemStack.isSameItemSameComponents(extracted, expectedStack);
     }
 
-    private static List<ItemStack> copyInventory(IItemHandler inventory) {
-        List<ItemStack> stacks = new ArrayList<>(inventory.getSlots());
-        for (int slot = 0; slot < inventory.getSlots(); slot++) {
-            stacks.add(inventory.getStackInSlot(slot).copy());
-        }
-        return stacks;
+    private static Participant<ItemStack> itemConsumptionParticipant(IItemHandlerModifiable inventory, ItemStack expectedStack, int amount) {
+        return ResourceTransaction.participant(() -> canConsumeItem(inventory, expectedStack, amount), () -> inventory.getStackInSlot(0).copy(), () -> consumeItem(inventory, expectedStack, amount), snapshot -> inventory.setStackInSlot(0, snapshot.copy()));
     }
 
     @Override
@@ -336,16 +334,89 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         contentsChanged = true;
     }
 
+    @Override
     public SmartInventory getPressHeadInventory() {
         return pressHeadInventory;
     }
 
+    @Override
     public SmartInventory getAdditionInventory() {
         return processingInventory;
     }
 
+    @Override
     public SmartInventory getInputInventory() {
         return inputInventory;
+    }
+
+    @Override
+    public IFluidHandler getFluidCapability() {
+        return fluidCapability;
+    }
+
+    @Override
+    public IGasHandler getGasCapability() {
+        return gasCapability;
+    }
+
+    @Override
+    public boolean testRecipeFilter(ItemStack stack) {
+        return recipeFilter.isEmpty() || level != null && FilterItemStack.of(recipeFilter).test(level, stack);
+    }
+
+    @Override
+    public Optional<OutputPlan> planOutputs(List<ItemStack> outputItems) {
+        SmartInventory simulatedOutput = createOutputSimulation();
+        if (!insertOutputs(simulatedOutput, outputItems)) {
+            return Optional.empty();
+        }
+        return Optional.of(new OutputPlan(MachineResourceSnapshots.copyItems(outputInventory), MachineResourceSnapshots.copyItems(simulatedOutput)));
+    }
+
+    @Override
+    public boolean acceptOutputs(List<ItemStack> outputItems, boolean simulate) {
+        Optional<OutputPlan> plannedOutput = planOutputs(outputItems);
+        if (plannedOutput.isEmpty()) {
+            return false;
+        }
+
+        if (simulate) {
+            return true;
+        }
+
+        OutputPlan outputPlan = plannedOutput.get();
+        if (!outputPlanMatchesCurrent(outputPlan)) {
+            return false;
+        }
+
+        applyOutputPlan(outputPlan);
+        return true;
+    }
+
+    @Override
+    public ConsumptionPlan createConsumptionPlan(ItemStack expectedProcessingStack, int processingAmount, ItemStack expectedInputStack, int inputAmount, int[] fluidAmounts, long[] gasAmounts) {
+        if (fluidAmounts.length != fluidCapability.getTanks() || gasAmounts.length != gasCapability.getTanks()) {
+            throw new IllegalArgumentException("Consumption plan tank count does not match the forging press");
+        }
+        if (fluidAmounts.length != 1 || gasAmounts.length != 1) {
+            throw new IllegalStateException("The airtight forging press currently requires exactly one fluid tank and one gas tank");
+        }
+
+        ItemStack expectedPressHead = pressHeadInventory.getStackInSlot(0).copy();
+        FluidStack expectedFluid = fluidTank.getPrimaryHandler().getFluid().copy();
+        int fluidAmount = fluidAmounts[0];
+        GasStack expectedGas = gasTank.getPrimaryHandler().getGasStack().copy();
+        long gasAmount = gasAmounts[0];
+        return new ConsumptionPlan(expectedPressHead, expectedProcessingStack, processingAmount, expectedInputStack, inputAmount, expectedFluid, fluidAmount, expectedGas, gasAmount);
+    }
+
+    @Override
+    public synchronized boolean commitCraft(ConsumptionPlan consumptionPlan, OutputPlan outputPlan) {
+        ResourceTransaction transaction = new ResourceTransaction().require(() -> ItemStack.matches(pressHeadInventory.getStackInSlot(0), consumptionPlan.expectedPressHeadStack())).add(itemConsumptionParticipant(processingInventory, consumptionPlan.expectedProcessingStack(), consumptionPlan.processingAmount())).add(itemConsumptionParticipant(inputInventory, consumptionPlan.expectedInputStack(), consumptionPlan.inputAmount())).add(ResourceTransaction.participant(() -> canConsumeFluid(consumptionPlan), () -> fluidTank.getPrimaryHandler().getFluid().copy(), () -> consumeFluid(consumptionPlan), snapshot -> fluidTank.getPrimaryHandler().setFluid(snapshot.copy()))).add(ResourceTransaction.participant(() -> canConsumeGas(consumptionPlan), () -> gasTank.getPrimaryHandler().getGasStack().copy(), () -> consumeGas(consumptionPlan), snapshot -> gasTank.getPrimaryHandler().setGasStack(snapshot.copy()))).add(ResourceTransaction.participant(() -> outputPlanMatchesCurrent(outputPlan), () -> MachineResourceSnapshots.copyItems(outputInventory), () -> {
+            applyOutputPlan(outputPlan);
+            return true;
+        }, snapshot -> MachineResourceSnapshots.restoreItems(outputInventory, snapshot)));
+        return transaction.commit();
     }
 
     public SmartInventory getOutputInventory() {
@@ -358,14 +429,6 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
 
     public IItemHandlerModifiable getRecipeInputCapability() {
         return recipeInputCapability;
-    }
-
-    public IFluidHandler getFluidCapability() {
-        return fluidCapability;
-    }
-
-    public IGasHandler getGasCapability() {
-        return gasCapability;
     }
 
     public ItemStack getRecipeFilter() {
@@ -386,10 +449,6 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         sendData();
     }
 
-    public boolean testRecipeFilter(ItemStack stack) {
-        return recipeFilter.isEmpty() || level != null && FilterItemStack.of(recipeFilter).test(level, stack);
-    }
-
     private void syncRecipeFilterReplicas() {
         if (level == null) {
             return;
@@ -405,87 +464,6 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
                 structural.syncFilterFromMaster(recipeFilter);
             }
         }
-    }
-
-    public Optional<OutputPlan> planOutputs(List<ItemStack> outputItems) {
-        SmartInventory simulatedOutput = createOutputSimulation();
-        if (!insertOutputs(simulatedOutput, outputItems)) {
-            return Optional.empty();
-        }
-        return Optional.of(new OutputPlan(copyInventory(outputInventory), copyInventory(simulatedOutput)));
-    }
-
-    public boolean acceptOutputs(List<ItemStack> outputItems, boolean simulate) {
-        Optional<OutputPlan> plannedOutput = planOutputs(outputItems);
-        if (plannedOutput.isEmpty()) {
-            return false;
-        }
-
-        if (simulate) {
-            return true;
-        }
-
-        OutputPlan outputPlan = plannedOutput.get();
-        if (!outputPlanMatchesCurrent(outputPlan)) {
-            return false;
-        }
-
-        applyOutputPlan(outputPlan);
-        return true;
-    }
-
-    public ConsumptionPlan createConsumptionPlan(ItemStack expectedProcessingStack, int processingAmount, ItemStack expectedInputStack, int inputAmount, int[] fluidAmounts, long[] gasAmounts) {
-        if (fluidAmounts.length != fluidCapability.getTanks() || gasAmounts.length != gasCapability.getTanks()) {
-            throw new IllegalArgumentException("Consumption plan tank count does not match the forging press");
-        }
-        if (fluidAmounts.length != 1 || gasAmounts.length != 1) {
-            throw new IllegalStateException("The airtight forging press currently requires exactly one fluid tank and one gas tank");
-        }
-
-        ItemStack expectedPressHead = pressHeadInventory.getStackInSlot(0).copy();
-        FluidStack expectedFluid = fluidTank.getPrimaryHandler().getFluid().copy();
-        int fluidAmount = fluidAmounts[0];
-        GasStack expectedGas = gasTank.getPrimaryHandler().getGasStack().copy();
-        long gasAmount = gasAmounts[0];
-        return new ConsumptionPlan(expectedPressHead, expectedProcessingStack, processingAmount, expectedInputStack, inputAmount, expectedFluid, fluidAmount, expectedGas, gasAmount);
-    }
-
-    public synchronized boolean commitCraft(ConsumptionPlan consumptionPlan, OutputPlan outputPlan) {
-        if (!canCommit(consumptionPlan, outputPlan)) {
-            return false;
-        }
-
-        TransactionSnapshot snapshot = createTransactionSnapshot();
-        boolean committed = false;
-        try {
-            if (!consumeItem(processingInventory, consumptionPlan.expectedProcessingStack(), consumptionPlan.processingAmount())) {
-                return false;
-            }
-
-            if (!consumeItem(inputInventory, consumptionPlan.expectedInputStack(), consumptionPlan.inputAmount())) {
-                return false;
-            }
-
-            if (!consumeFluid(consumptionPlan)) {
-                return false;
-            }
-
-            if (!consumeGas(consumptionPlan)) {
-                return false;
-            }
-
-            applyOutputPlan(outputPlan);
-            committed = true;
-            return true;
-        } finally {
-            if (!committed) {
-                restoreTransactionSnapshot(snapshot);
-            }
-        }
-    }
-
-    private boolean canCommit(ConsumptionPlan plan, OutputPlan outputPlan) {
-        return outputPlanMatchesCurrent(outputPlan) && ItemStack.matches(pressHeadInventory.getStackInSlot(0), plan.expectedPressHeadStack()) && canConsumeItem(processingInventory, plan.expectedProcessingStack(), plan.processingAmount()) && canConsumeItem(inputInventory, plan.expectedInputStack(), plan.inputAmount()) && canConsumeFluid(plan) && canConsumeGas(plan);
     }
 
     private boolean canConsumeFluid(ConsumptionPlan plan) {
@@ -558,20 +536,6 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         for (int slot = 0; slot < outputInventory.getSlots(); slot++) {
             outputInventory.setStackInSlot(slot, finalSlots.get(slot).copy());
         }
-    }
-
-    private TransactionSnapshot createTransactionSnapshot() {
-        return new TransactionSnapshot(processingInventory.getStackInSlot(0).copy(), inputInventory.getStackInSlot(0).copy(), copyInventory(outputInventory), fluidTank.getPrimaryHandler().getFluid().copy(), gasTank.getPrimaryHandler().getGasStack().copy());
-    }
-
-    private void restoreTransactionSnapshot(TransactionSnapshot snapshot) {
-        processingInventory.setStackInSlot(0, snapshot.processingStack().copy());
-        inputInventory.setStackInSlot(0, snapshot.inputStack().copy());
-        for (int slot = 0; slot < outputInventory.getSlots(); slot++) {
-            outputInventory.setStackInSlot(slot, snapshot.outputSlots().get(slot).copy());
-        }
-        fluidTank.getPrimaryHandler().setFluid(snapshot.fluid().copy());
-        gasTank.getPrimaryHandler().setGasStack(snapshot.gas().copy());
     }
 
     private SmartInventory createOutputSimulation() {
@@ -768,32 +732,6 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         Vec3 pos = VecHelper.getCenterOf(getBlockPos()).add(0, -0.625, 0);
         serverLevel.sendParticles(new ItemParticleOption(ParticleTypes.ITEM, stack), pos.x, pos.y, pos.z, 16, 0.15, 0.05, 0.15, 0.08);
     }
-
-    public record OutputPlan(List<ItemStack> expectedSlots, List<ItemStack> finalSlots) {
-        public OutputPlan {
-            expectedSlots = copyStacks(expectedSlots);
-            finalSlots = copyStacks(finalSlots);
-        }
-
-        private static @Unmodifiable List<ItemStack> copyStacks(List<ItemStack> stacks) {
-            return stacks.stream().map(ItemStack::copy).toList();
-        }
-    }
-
-    public record ConsumptionPlan(ItemStack expectedPressHeadStack, ItemStack expectedProcessingStack, int processingAmount, ItemStack expectedInputStack, int inputAmount, FluidStack expectedFluid, int fluidAmount, GasStack expectedGas, long gasAmount) {
-        public ConsumptionPlan {
-            expectedPressHeadStack = expectedPressHeadStack.copy();
-            expectedProcessingStack = expectedProcessingStack.copy();
-            expectedInputStack = expectedInputStack.copy();
-            expectedFluid = expectedFluid.copy();
-            expectedGas = expectedGas.copy();
-            if (processingAmount < 0 || inputAmount < 0 || fluidAmount < 0 || gasAmount < 0) {
-                throw new IllegalArgumentException("Consumption amounts must not be negative");
-            }
-        }
-    }
-
-    private record TransactionSnapshot(ItemStack processingStack, ItemStack inputStack, List<ItemStack> outputSlots, FluidStack fluid, GasStack gas) {}
 
     private record ForgingPressPortHandler(IItemHandlerModifiable input, IItemHandlerModifiable output) implements IItemHandler {
         @Override

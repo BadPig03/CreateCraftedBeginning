@@ -16,12 +16,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.MountedGasStorageWrapper;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IMountedStorageManagerWithGas;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IMountedStorageManagerWithGas;
+import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorageWrapper;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -126,7 +126,7 @@ public class GasThresholdCondition extends CargoThresholdCondition {
 
     @Override
     public ResourceLocation getId() {
-        return CreateCraftedBeginning.asResource("gas_threshold");
+        return CCBAPI.asResource("gas_threshold");
     }
 
     @Override

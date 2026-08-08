@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-03T11:34:21.0077455	Create Crafted Beginning's Processing Recipes With Gas
+// 1.21.1	2026-08-08T23:51:44.8613691	Create Crafted Beginning's Processing Recipes With Gas
 17f6de5a374f5d298f5588d884e70b087217f4af data/createcraftedbeginning/recipe/dissipation/ethereal.json
 62f12995b52b6664a0fe34176f0f5eeec1628254 data/createcraftedbeginning/recipe/dissipation/natural.json
 0b4489a5ac6c020d0d52369409943bdfdb0950fe data/createcraftedbeginning/recipe/dissipation/pressurized_ethereal.json
@@ -81,6 +81,8 @@ d4d39488733a771b7b092e5bc4413b368fb5c993 data/createcraftedbeginning/recipe/gas_
 aec690f29e5a5efdb8bb735ecb32928369973567 data/createcraftedbeginning/recipe/gas_injection/jungle_leaves_pressurized.json
 e70dc9a27ea021ff2631ec767004a84beb3f1c40 data/createcraftedbeginning/recipe/gas_injection/large_fern.json
 880a83cae981b447359328104a45a2083a858664 data/createcraftedbeginning/recipe/gas_injection/large_fern_pressurized.json
+35c61e5aff870b9eade9ace159a740e67425c8fc data/createcraftedbeginning/recipe/gas_injection/lava_to_brimstone.json
+a2b7df2dc37ba3e976b93ea7f086842a1659072c data/createcraftedbeginning/recipe/gas_injection/lava_to_brimstone_pressurized.json
 26936c43325672d57881e974a453a515c7b8e8e1 data/createcraftedbeginning/recipe/gas_injection/mangrove_leaves.json
 936a62e2b5fe04a89e33a5cf9673c4a7590a45d3 data/createcraftedbeginning/recipe/gas_injection/mangrove_leaves_pressurized.json
 2b1ad42bb192bade3592034e5f48ac2ada55910b data/createcraftedbeginning/recipe/gas_injection/moss_block.json

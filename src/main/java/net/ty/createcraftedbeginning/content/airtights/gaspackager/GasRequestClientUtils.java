@@ -18,12 +18,13 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.items.ItemStackHandler;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
-import net.ty.createcraftedbeginning.data.CCBLang;
-import net.ty.createcraftedbeginning.mixin.client.accessor.RedstoneRequesterScreenAccessor;
-import net.ty.createcraftedbeginning.mixin.client.accessor.StockKeeperRequestScreenAccessor;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.platform.access.RedstoneRequesterScreenAccess;
+import net.ty.createcraftedbeginning.platform.access.StockKeeperRequestScreenAccess;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -37,8 +38,39 @@ public final class GasRequestClientUtils {
     private GasRequestClientUtils() {
     }
 
+    public static int getScrollStep() {
+        return CCBConfig.client().gasRequestScrollStep.get();
+    }
+
+    public static int getAltStep() {
+        return CCBConfig.client().gasRequestAltScrollStep.get();
+    }
+
+    public static int getCtrlStep() {
+        return CCBConfig.client().gasRequestCtrlScrollStep.get();
+    }
+
+    public static int getShiftStep() {
+        return CCBConfig.client().gasRequestShiftScrollStep.get();
+    }
+
+    public static int getStep(boolean alt, boolean ctrl, boolean shift) {
+        if (alt) {
+            return getAltStep();
+        }
+
+        if (ctrl) {
+            return getCtrlStep();
+        }
+
+        if (shift) {
+            return getShiftStep();
+        }
+        return getScrollStep();
+    }
+
     public static boolean onSlotClicked(AbstractContainerScreen<?> screen, RedstoneRequesterMenu requesterMenu, @Nullable Slot slot, int mouseButton, ClickType clickType) {
-        if (!(screen instanceof RedstoneRequesterScreenAccessor screenAccessor) || !(slot instanceof SorterProofSlot requestSlot)) {
+        if (!(screen instanceof RedstoneRequesterScreenAccess screenAccessor) || !(slot instanceof SorterProofSlot requestSlot)) {
             return false;
         }
 
@@ -70,7 +102,7 @@ public final class GasRequestClientUtils {
         }
 
         if (rightQuickCraft) {
-            submitVirtualItem(screenAccessor, requesterMenu, virtualItems.getFirst(), slotIndex, GasRequestUtils.getScrollStep());
+            submitVirtualItem(screenAccessor, requesterMenu, virtualItems.getFirst(), slotIndex, getScrollStep());
             return true;
         }
 
@@ -78,7 +110,7 @@ public final class GasRequestClientUtils {
         return true;
     }
 
-    private static boolean handleVirtualSlot(RedstoneRequesterScreenAccessor screenAccessor, RedstoneRequesterMenu requesterMenu, ItemStack carried, int slotIndex, ClickType clickType) {
+    private static boolean handleVirtualSlot(RedstoneRequesterScreenAccess screenAccessor, RedstoneRequesterMenu requesterMenu, ItemStack carried, int slotIndex, ClickType clickType) {
         if (clickType == ClickType.CLONE || clickType == ClickType.THROW) {
             return true;
         }
@@ -98,19 +130,19 @@ public final class GasRequestClientUtils {
         return true;
     }
 
-    private static void fillRequesterSlots(RedstoneRequesterScreenAccessor screenAccessor, RedstoneRequesterMenu requesterMenu, ItemStackHandler inventory, List<ItemStack> virtualItems, int firstSlot) {
+    private static void fillRequesterSlots(RedstoneRequesterScreenAccess screenAccessor, RedstoneRequesterMenu requesterMenu, ItemStackHandler inventory, List<ItemStack> virtualItems, int firstSlot) {
         int gasIndex = 0;
         for (int slot = firstSlot; slot < inventory.getSlots() && gasIndex < virtualItems.size(); slot++) {
             if (!inventory.getStackInSlot(slot).isEmpty()) {
                 continue;
             }
 
-            submitVirtualItem(screenAccessor, requesterMenu, virtualItems.get(gasIndex), slot, GasRequestUtils.getScrollStep());
+            submitVirtualItem(screenAccessor, requesterMenu, virtualItems.get(gasIndex), slot, getScrollStep());
             gasIndex++;
         }
     }
 
-    public static void submitVirtualItem(RedstoneRequesterScreenAccessor screenAccessor, RedstoneRequesterMenu requesterMenu, ItemStack stack, int slotIndex, int amount) {
+    public static void submitVirtualItem(RedstoneRequesterScreenAccess screenAccessor, RedstoneRequesterMenu requesterMenu, ItemStack stack, int slotIndex, int amount) {
         List<Integer> amounts = screenAccessor.ccb$getAmounts();
         if (slotIndex < 0 || slotIndex >= amounts.size()) {
             return;
@@ -125,7 +157,7 @@ public final class GasRequestClientUtils {
         CatnipServices.NETWORK.sendToServer(new GhostItemSubmitPacket(submitted, slotIndex));
     }
 
-    public static List<Component> getTooltipLines(StockKeeperRequestScreenAccessor accessor, BigItemStack entry, boolean orderHovered) {
+    public static List<Component> getTooltipLines(StockKeeperRequestScreenAccess accessor, BigItemStack entry, boolean orderHovered) {
         List<Component> tooltips = new ArrayList<>();
         ItemStack virtualItem = entry.stack;
         tooltips.add(CCBLang.itemName(virtualItem).component());
@@ -142,10 +174,10 @@ public final class GasRequestClientUtils {
         }
 
         long multiplier = orderHovered ? 1 : 10;
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.scroll", GasRequestUtils.getScrollStep() * multiplier);
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.shift_to_scroll", GasRequestUtils.getShiftStep() * multiplier);
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.alt_to_scroll", GasRequestUtils.getAltStep() * multiplier);
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.ctrl_to_scroll", GasRequestUtils.getCtrlStep() * multiplier);
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.scroll", getScrollStep() * multiplier);
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.shift_to_scroll", getShiftStep() * multiplier);
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.alt_to_scroll", getAltStep() * multiplier);
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.ctrl_to_scroll", getCtrlStep() * multiplier);
         tooltips.addAll(getExtraTooltips(virtualItem));
         return tooltips;
     }
@@ -160,7 +192,7 @@ public final class GasRequestClientUtils {
             String gasId = GasVirtualUtils.getGasType(virtualItem).getGasType().getResourceLocation().toString();
             tooltips.add(CCBLang.text(gasId).style(ChatFormatting.DARK_GRAY).component());
         }
-        tooltips.add(CCBLang.text(CreateCraftedBeginning.NAME).style(ChatFormatting.BLUE).style(ChatFormatting.ITALIC).component());
+        tooltips.add(CCBLang.text(CCBAPI.NAME).style(ChatFormatting.BLUE).style(ChatFormatting.ITALIC).component());
         return tooltips;
     }
 
@@ -168,7 +200,7 @@ public final class GasRequestClientUtils {
         tooltips.add(CCBLang.translate(key, GasAmountUtils.formatPrecise(amount)).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
     }
 
-    private static void resetRequesterSlot(RedstoneRequesterScreenAccessor screenAccessor, RedstoneRequesterMenu requesterMenu, int slotIndex, boolean clear) {
+    private static void resetRequesterSlot(RedstoneRequesterScreenAccess screenAccessor, RedstoneRequesterMenu requesterMenu, int slotIndex, boolean clear) {
         screenAccessor.ccb$getAmounts().set(slotIndex, 1);
         if (!clear) {
             return;

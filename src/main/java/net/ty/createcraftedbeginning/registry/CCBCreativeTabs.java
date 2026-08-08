@@ -23,11 +23,12 @@ import net.minecraft.world.level.block.Block;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
-import net.ty.createcraftedbeginning.data.CCBLang;
-import net.ty.createcraftedbeginning.data.CCBRegistrate;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.CCBCreativeTabSection;
+import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrate;
+import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrateProvider;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Contract;
 
@@ -46,7 +47,7 @@ import java.util.function.Predicate;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBCreativeTabs {
-    private static final DeferredRegister<CreativeModeTab> REGISTER = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CreateCraftedBeginning.MOD_ID);
+    private static final DeferredRegister<CreativeModeTab> REGISTER = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CCBAPI.MOD_ID);
 
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CREATIVE_TAB = REGISTER.register("base", () -> builder().title(CCBLang.translateDirect("item_groups.base_creative_tab")).withTabsBefore(AllCreativeModeTabs.BASE_CREATIVE_TAB.getKey()).icon(() -> new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK)).displayItems(new RegistrateDisplayItemsGenerator()).build());
 
@@ -120,7 +121,7 @@ public class CCBCreativeTabs {
 
         private static List<Item> collectItems(Predicate<Item> exclusionPredicate, CCBCreativeTabSection section) {
             List<Item> items = new ReferenceArrayList<>();
-            for (RegistryEntry<Item, Item> entry : CreateCraftedBeginning.registrate().getAll(Registries.ITEM)) {
+            for (RegistryEntry<Item, Item> entry : CCBRegistrateProvider.get().getAll(Registries.ITEM)) {
                 if (CCBRegistrate.isOutOfCreativeSection(entry, section)) {
                     continue;
                 }
@@ -137,7 +138,7 @@ public class CCBCreativeTabs {
 
         private static List<Item> collectBlocks(Predicate<Item> exclusionPredicate, CCBCreativeTabSection section) {
             List<Item> items = new ReferenceArrayList<>();
-            Collection<RegistryEntry<Block, Block>> registryEntries = CreateCraftedBeginning.registrate().getAll(Registries.BLOCK);
+            Collection<RegistryEntry<Block, Block>> registryEntries = CCBRegistrateProvider.get().getAll(Registries.BLOCK);
             for (RegistryEntry<Block, Block> entry : registryEntries) {
                 if (CCBRegistrate.isOutOfCreativeSection(entry, section)) {
                     continue;

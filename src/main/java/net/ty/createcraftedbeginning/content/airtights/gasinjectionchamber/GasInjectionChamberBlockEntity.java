@@ -9,9 +9,11 @@ import com.simibubi.create.content.kinetics.belt.behaviour.TransportedItemStackH
 import com.simibubi.create.content.kinetics.belt.behaviour.TransportedItemStackHandlerBehaviour.TransportedResult;
 import com.simibubi.create.content.kinetics.belt.transport.TransportedItemStack;
 import com.simibubi.create.content.kinetics.fan.processing.FanProcessingType;
+import com.simibubi.create.content.processing.basin.BasinBlockEntity;
 import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
+import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -32,20 +34,29 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
+import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTank;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer.MachineFillingStrategy;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
+import net.ty.createcraftedbeginning.content.airtights.transaction.MachineResourceSnapshots;
+import net.ty.createcraftedbeginning.content.airtights.transaction.MachineResourceSnapshots.FluidTankSnapshot;
+import net.ty.createcraftedbeginning.content.airtights.transaction.MachineResourceSnapshots.GasTankSnapshot;
 import net.ty.createcraftedbeginning.content.particles.ColoredBreezeCloudParticleType.ColoredBreezeCloudParticleOptions;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
+import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction.Participant;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe.RecipeMatch;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -68,6 +79,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     public static final int NOZZLE_PART_TIME = 15;
     public static final int NOZZLE_IDLE_TIME = 5;
     public static final int PROCESSING_TIME = 60;
+    private static final int INJECTION_EXECUTION_TICK = PROCESSING_TIME - NOZZLE_TIME - NOZZLE_PART_TIME - NOZZLE_IDLE_TIME;
 
     private static final String COMPOUND_KEY_PROCESSING_TICKS = "ProcessingTicks";
     private static final String COMPOUND_KEY_OPERATION_TYPE = "OperationType";
@@ -75,6 +87,8 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     private static final String COMPOUND_KEY_OPERATION_FAN_PROCESSING_TYPE = "OperationFanProcessingType";
     private static final String COMPOUND_KEY_OPERATION_INPUT = "OperationInput";
     private static final String COMPOUND_KEY_OPERATION_RESULTS = "OperationResults";
+    private static final String COMPOUND_KEY_OPERATION_FLUID_INPUTS = "OperationFluidInputs";
+    private static final String COMPOUND_KEY_OPERATION_FLUID_RESULT = "OperationFluidResult";
     private static final String COMPOUND_KEY_OPERATION_RESULT_PREPARED = "OperationResultPrepared";
     private static final String COMPOUND_KEY_OPERATION_EXECUTED = "OperationExecuted";
     private static final String COMPOUND_KEY_FILTER_LOCKED = "FilterLocked";
@@ -83,15 +97,17 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     private static final String COMPOUND_KEY_INSTALLED_FILTER = "InstalledFilter";
 
     private final List<ItemStack> operationResults = new ArrayList<>();
-
+    private final List<FluidStack> operationFluidInputs = new ArrayList<>();
     private int cloudColor = 0xFFFFFFFF;
     private int processingTicks = -1;
     private int previousProcessingTicks = -1;
     private boolean sendCloud;
     private boolean operationExecuted;
     private boolean clientFilterLocked;
+    private boolean basinCheckScheduled = true;
     private OperationType operationType = OperationType.NONE;
     private GasStack operationGas = GasStack.EMPTY;
+    private FluidStack operationFluidResult = FluidStack.EMPTY;
     private @Nullable ResourceLocation operationFanProcessingTypeId;
     private ItemStack operationInput = ItemStack.EMPTY;
     private ItemStack installedFilter = ItemStack.EMPTY;
@@ -142,9 +158,68 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         }
     }
 
+    private static @Nullable List<FluidStack> createFluidDrainPlan(SizedFluidIngredient ingredient, IFluidHandler fluids) {
+        int remaining = ingredient.amount();
+        if (remaining <= 0) {
+            return null;
+        }
+
+        List<FluidStack> plan = new ArrayList<>();
+        for (int tank = 0; tank < fluids.getTanks() && remaining > 0; tank++) {
+            FluidStack stack = fluids.getFluidInTank(tank);
+            if (stack.isEmpty() || !ingredient.test(stack)) {
+                continue;
+            }
+
+            int amount = Math.min(remaining, stack.getAmount());
+            if (amount <= 0) {
+                continue;
+            }
+
+            FluidStack request = stack.copyWithAmount(amount);
+            boolean merged = false;
+            for (FluidStack planned : plan) {
+                if (!FluidStack.isSameFluidSameComponents(planned, request)) {
+                    continue;
+                }
+
+                planned.setAmount(planned.getAmount() + amount);
+                merged = true;
+                break;
+            }
+            if (!merged) {
+                plan.add(request);
+            }
+            remaining -= amount;
+        }
+        return remaining == 0 ? plan : null;
+    }
+
+    private static boolean canDrainFluids(IFluidHandler fluids, List<FluidStack> plan) {
+        for (FluidStack request : plan) {
+            FluidStack drained = fluids.drain(request, FluidAction.SIMULATE);
+            if (drained.getAmount() != request.getAmount() || !FluidStack.isSameFluidSameComponents(drained, request)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static BasinFluidSnapshot snapshotBasinFluids(BasinBlockEntity basin, SmartFluidTankBehaviour outputTank, BasinTransactionAccess transactionAccess, Provider provider) {
+        List<FluidStack> spoutputBuffer = transactionAccess.ccb$getTransactionFluidOverflow().stream().map(FluidStack::copy).toList();
+        return new BasinFluidSnapshot(MachineResourceSnapshots.snapshotFluidTanks(provider, basin.inputTank, outputTank), spoutputBuffer);
+    }
+
+    private static void restoreBasinFluids(BasinBlockEntity basin, SmartFluidTankBehaviour outputTank, BasinTransactionAccess transactionAccess, Provider provider, BasinFluidSnapshot snapshot) {
+        MachineResourceSnapshots.restoreFluidTanks(provider, snapshot.tanks(), basin.inputTank, outputTank);
+        List<FluidStack> spoutputBuffer = transactionAccess.ccb$getTransactionFluidOverflow();
+        spoutputBuffer.clear();
+        snapshot.spoutputBuffer().stream().map(FluidStack::copy).forEach(spoutputBuffer::add);
+    }
+
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        tankBehaviour = SmartGasTankBehaviour.single(this, getMaxCapacity());
+        tankBehaviour = SmartGasTankBehaviour.single(this, getMaxCapacity()).whenGasUpdates(this::scheduleBasinCheck);
         exposedGasHandler = new OperationLockingGasHandler(tankBehaviour.getCapability());
         BeltProcessingBehaviour beltProcessing = new BeltProcessingBehaviour(this).whenItemEnters(this::onItemEntered).whileItemHeld(this::onItemHeld);
         behaviours.add(tankBehaviour);
@@ -155,11 +230,23 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     public void tick() {
         super.tick();
         previousProcessingTicks = processingTicks;
+        if (level == null) {
+            return;
+        }
+
+        if (!level.isClientSide && processingTicks < 0 && operationType == OperationType.NONE && basinCheckScheduled) {
+            basinCheckScheduled = false;
+            tryStartBasinOperation();
+        }
+
         if (processingTicks < 0) {
             return;
         }
 
         processingTicks--;
+        if (!level.isClientSide && operationType == OperationType.BASIN_RECIPE && !operationExecuted && processingTicks <= INJECTION_EXECUTION_TICK) {
+            executeBasinInjection();
+        }
         if (processingTicks >= 0) {
             return;
         }
@@ -243,6 +330,16 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             tag.putString(COMPOUND_KEY_OPERATION_FAN_PROCESSING_TYPE, operationFanProcessingTypeId.toString());
         }
         tag.put(COMPOUND_KEY_OPERATION_INPUT, operationInput.saveOptional(provider));
+        if (!operationFluidInputs.isEmpty()) {
+            ListTag fluidInputs = new ListTag();
+            for (FluidStack fluidInput : operationFluidInputs) {
+                fluidInputs.add(fluidInput.saveOptional(provider));
+            }
+            tag.put(COMPOUND_KEY_OPERATION_FLUID_INPUTS, fluidInputs);
+        }
+        if (!operationFluidResult.isEmpty()) {
+            tag.put(COMPOUND_KEY_OPERATION_FLUID_RESULT, operationFluidResult.saveOptional(provider));
+        }
         tag.putBoolean(COMPOUND_KEY_OPERATION_RESULT_PREPARED, operationResultPrepared);
         if (operationResultPrepared) {
             ListTag results = new ListTag();
@@ -270,6 +367,17 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         operationGas = tag.contains(COMPOUND_KEY_OPERATION_GAS) ? GasStack.parseOptional(provider, tag.getCompound(COMPOUND_KEY_OPERATION_GAS)) : GasStack.EMPTY;
         operationFanProcessingTypeId = tag.contains(COMPOUND_KEY_OPERATION_FAN_PROCESSING_TYPE) ? ResourceLocation.tryParse(tag.getString(COMPOUND_KEY_OPERATION_FAN_PROCESSING_TYPE)) : null;
         operationInput = tag.contains(COMPOUND_KEY_OPERATION_INPUT) ? ItemStack.parseOptional(provider, tag.getCompound(COMPOUND_KEY_OPERATION_INPUT)) : ItemStack.EMPTY;
+        operationFluidInputs.clear();
+        if (tag.contains(COMPOUND_KEY_OPERATION_FLUID_INPUTS, Tag.TAG_LIST)) {
+            ListTag fluidInputs = tag.getList(COMPOUND_KEY_OPERATION_FLUID_INPUTS, Tag.TAG_COMPOUND);
+            for (int i = 0; i < fluidInputs.size(); i++) {
+                FluidStack fluidInput = FluidStack.parseOptional(provider, fluidInputs.getCompound(i));
+                if (!fluidInput.isEmpty()) {
+                    operationFluidInputs.add(fluidInput);
+                }
+            }
+        }
+        operationFluidResult = tag.contains(COMPOUND_KEY_OPERATION_FLUID_RESULT) ? FluidStack.parseOptional(provider, tag.getCompound(COMPOUND_KEY_OPERATION_FLUID_RESULT)) : FluidStack.EMPTY;
         operationResultPrepared = tag.getBoolean(COMPOUND_KEY_OPERATION_RESULT_PREPARED);
         operationResults.clear();
         if (operationResultPrepared && tag.contains(COMPOUND_KEY_OPERATION_RESULTS, Tag.TAG_LIST)) {
@@ -301,7 +409,15 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     }
 
     private boolean isLoadedOperationValid() {
-        if (operationType == OperationType.NONE || operationInput.isEmpty()) {
+        if (operationType == OperationType.NONE) {
+            return false;
+        }
+
+        if (operationType == OperationType.BASIN_RECIPE) {
+            return !operationGas.isEmpty() && !operationFluidInputs.isEmpty() && !operationFluidResult.isEmpty();
+        }
+
+        if (operationInput.isEmpty()) {
             return false;
         }
 
@@ -413,6 +529,25 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         return removed;
     }
 
+    public void scheduleBasinCheck() {
+        if (level != null && level.isClientSide) {
+            return;
+        }
+
+        basinCheckScheduled = true;
+    }
+
+    private Optional<BasinBlockEntity> getBasin() {
+        if (level == null) {
+            return Optional.empty();
+        }
+
+        if (level.getBlockEntity(worldPosition.below(2)) instanceof BasinBlockEntity basin) {
+            return Optional.of(basin);
+        }
+        return Optional.empty();
+    }
+
     private void spawnCloud(int color) {
         if (level == null || !level.isClientSide || isVirtual()) {
             return;
@@ -457,6 +592,10 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             return HOLD;
         }
 
+        if (operationType == OperationType.BASIN_RECIPE) {
+            return HOLD;
+        }
+
         if (operationType == OperationType.NONE && wasProcessedByInstalledFilter(transported)) {
             return PASS;
         }
@@ -474,7 +613,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             return startProcessing(transported.stack);
         }
 
-        if (processingTicks > PROCESSING_TIME - NOZZLE_TIME - NOZZLE_PART_TIME - NOZZLE_IDLE_TIME) {
+        if (processingTicks > INJECTION_EXECUTION_TICK) {
             return HOLD;
         }
         return executeInjection(transported, handler);
@@ -552,6 +691,91 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         return HOLD;
     }
 
+    private void executeBasinInjection() {
+        if (level == null) {
+            return;
+        }
+
+        int color = getOperationCloudColor();
+        boolean executed;
+        tankBehaviour.beginMutation();
+        try {
+            executed = executeBasinRecipeOperation();
+        } finally {
+            tankBehaviour.endMutation();
+        }
+
+        if (executed) {
+            operationExecuted = true;
+            cloudColor = color;
+            sendCloud = true;
+        }
+        else {
+            processingTicks = -1;
+            clearOperation();
+            basinCheckScheduled = true;
+        }
+
+        tankBehaviour.sendDataImmediately();
+        if (!executed) {
+            return;
+        }
+
+        CCBSoundEvents.INJECTING.playOnServer(level, worldPosition, 0.75f, 0.9f + 0.2f * level.random.nextFloat());
+    }
+
+    private boolean executeBasinRecipeOperation() {
+        if (level == null) {
+            return false;
+        }
+
+        Optional<BasinBlockEntity> basinOptional = getBasin();
+        if (basinOptional.isEmpty()) {
+            return false;
+        }
+
+        BasinBlockEntity basin = basinOptional.get();
+        if (basin.inputTank == null) {
+            return false;
+        }
+
+        IFluidHandler fluids = basin.inputTank.getCapability();
+        FluidStack result = operationFluidResult.copy();
+        if (result.isEmpty() || basin.getFilter() == null || !basin.getFilter().test(result)) {
+            return false;
+        }
+
+        BasinTransactionAccess transactionAccess = (BasinTransactionAccess) basin;
+        SmartFluidTankBehaviour outputTank = transactionAccess.ccb$getTransactionOutputTank();
+        if (outputTank == null) {
+            return false;
+        }
+
+        Provider provider = level.registryAccess();
+        ResourceTransaction transaction = new ResourceTransaction().add(operationGasParticipant(provider)).add(ResourceTransaction.participant(() -> canDrainFluids(fluids, operationFluidInputs) && basin.acceptOutputs(List.of(), List.of(result), true), () -> snapshotBasinFluids(basin, outputTank, transactionAccess, provider), () -> consumeBasinFluids(fluids) && basin.acceptOutputs(List.of(), List.of(result), false), snapshot -> restoreBasinFluids(basin, outputTank, transactionAccess, provider, snapshot)));
+        if (!transaction.commit()) {
+            return false;
+        }
+
+        basin.notifyChangeOfContents();
+        basin.notifyUpdate();
+        return true;
+    }
+
+    private Participant<GasTankSnapshot> operationGasParticipant(Provider provider) {
+        return ResourceTransaction.participant(() -> !operationGas.isEmpty() && GasStack.matches(getTank().drain(operationGas, GasAction.SIMULATE), operationGas), () -> MachineResourceSnapshots.snapshotGasTanks(provider, tankBehaviour), () -> !operationGas.isEmpty() && GasStack.matches(getTank().drain(operationGas, GasAction.EXECUTE), operationGas), snapshot -> MachineResourceSnapshots.restoreGasTanks(provider, snapshot, tankBehaviour));
+    }
+
+    private boolean consumeBasinFluids(IFluidHandler fluids) {
+        for (FluidStack request : operationFluidInputs) {
+            FluidStack drained = fluids.drain(request, FluidAction.EXECUTE);
+            if (drained.getAmount() != request.getAmount() || !FluidStack.isSameFluidSameComponents(drained, request)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private int getOperationCloudColor() {
         if (operationType == OperationType.FAN_PROCESSING) {
             return GasInjectionChamberUtils.getColor(installedFilter);
@@ -566,6 +790,67 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
 
         GasStack tankGas = getGasInTank();
         return !tankGas.isEmpty() && (prepareCanisterOperation(itemStack, tankGas) || prepareRecipeOperation(itemStack, tankGas) || prepareFanProcessingOperation(itemStack, tankGas));
+    }
+
+    private void tryStartBasinOperation() {
+        Optional<BasinBlockEntity> basin = getBasin();
+        if (basin.isEmpty() || !prepareBasinOperation(basin.get())) {
+            return;
+        }
+
+        processingTicks = PROCESSING_TIME + NOZZLE_IDLE_TIME;
+        notifyUpdate();
+    }
+
+    private boolean prepareBasinOperation(BasinBlockEntity basin) {
+        if (level == null || basin.inputTank == null) {
+            return false;
+        }
+
+        GasStack tankGas = getGasInTank();
+        if (tankGas.isEmpty()) {
+            return false;
+        }
+
+        IFluidHandler fluids = basin.inputTank.getCapability();
+        Optional<RecipeMatch> recipeMatch = GasInjectionRecipe.findFluidRecipeMatch(level, fluids, tankGas);
+        if (recipeMatch.isEmpty()) {
+            return false;
+        }
+
+        GasInjectionRecipe recipe = recipeMatch.get().recipe();
+        long requiredGas = recipe.getGasIngredient().amount();
+        if (requiredGas <= 0 || tankGas.getAmount() < requiredGas) {
+            return false;
+        }
+
+        List<FluidStack> fluidDrainPlan = createFluidDrainPlan(recipe.getFluidIngredient(), fluids);
+        if (fluidDrainPlan == null || !canDrainFluids(fluids, fluidDrainPlan)) {
+            return false;
+        }
+
+        FluidStack result = recipe.getFluidResult().copy();
+        if (result.isEmpty() || basin.getFilter() == null || !basin.getFilter().test(result) || !basin.acceptOutputs(List.of(), List.of(result), true)) {
+            return false;
+        }
+
+        setBasinOperation(tankGas, requiredGas, fluidDrainPlan, result);
+        return true;
+    }
+
+    private void setBasinOperation(GasStack gas, long requiredAmount, List<FluidStack> fluidInputs, FluidStack result) {
+        operationType = OperationType.BASIN_RECIPE;
+        operationInput = ItemStack.EMPTY;
+        operationGas = gas.copyWithAmount(requiredAmount);
+        operationFluidInputs.clear();
+        fluidInputs.forEach(fluidInput -> operationFluidInputs.add(fluidInput.copy()));
+        operationFluidResult = result.copy();
+        operationFanProcessingTypeId = null;
+        operationRecipe = null;
+        operationResults.clear();
+        operationResultPrepared = true;
+        operationExecuted = false;
+        setChanged();
     }
 
     private boolean prepareCanisterOperation(ItemStack itemStack, GasStack tankGas) {
@@ -600,7 +885,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             return false;
         }
 
-        setOperation(OperationType.RECIPE, itemStack, batchSize, tankGas, gasPerItem * batchSize, match.sequencedAssembly() ? null : match.recipe(), null);
+        setOperation(OperationType.ITEM_RECIPE, itemStack, batchSize, tankGas, gasPerItem * batchSize, match.sequencedAssembly() ? null : match.recipe(), null);
         return true;
     }
 
@@ -648,6 +933,8 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         operationType = type;
         operationInput = input.copyWithCount(inputCount);
         operationGas = gas.isEmpty() ? GasStack.EMPTY : gas.copyWithAmount(requiredAmount);
+        operationFluidInputs.clear();
+        operationFluidResult = FluidStack.EMPTY;
         operationFanProcessingTypeId = fanProcessingTypeId;
         operationRecipe = recipe;
         operationResults.clear();
@@ -658,9 +945,9 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
 
     private boolean prepareOperationResultsIfNeeded(ItemStack itemStack) {
         return operationResultPrepared || switch (operationType) {
-            case RECIPE -> prepareRecipeResults(itemStack);
+            case ITEM_RECIPE -> prepareRecipeResults(itemStack);
             case FAN_PROCESSING -> prepareFanProcessingResults();
-            case CANISTER, NONE -> true;
+            case BASIN_RECIPE, CANISTER, NONE -> true;
         };
     }
 
@@ -724,42 +1011,26 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
 
     private boolean executeOperation(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
         return switch (operationType) {
-            case CANISTER -> executeCanisterOperation(transported.stack);
-            case RECIPE -> executeRecipeOperation(transported, handler);
+            case CANISTER -> executeCanisterOperation(transported);
+            case ITEM_RECIPE -> executeRecipeOperation(transported, handler);
             case FAN_PROCESSING -> executeFanProcessingOperation(transported, handler);
-            case NONE -> false;
+            case BASIN_RECIPE, NONE -> false;
         };
     }
 
-    private boolean executeCanisterOperation(ItemStack itemStack) {
-        IGasCanisterContainer canisterContents = itemStack.getCapability(GasHandler.ITEM);
+    private boolean executeCanisterOperation(TransportedItemStack transported) {
+        if (level == null || operationGas.isEmpty()) {
+            return false;
+        }
+
+        IGasCanisterContainer canisterContents = transported.stack.getCapability(GasHandler.ITEM);
         if (canisterContents == null || canisterContents.getMachineFillingStrategy() == MachineFillingStrategy.DENY) {
             return false;
         }
 
-        long accepted = canisterContents.fill(0, operationGas, GasAction.SIMULATE);
-        if (accepted != operationGas.getAmount()) {
-            return false;
-        }
-
-        GasStack drained = drainOperationGas();
-        if (drained.isEmpty()) {
-            return false;
-        }
-
-        long filled = canisterContents.fill(0, drained, GasAction.EXECUTE);
-        if (filled <= 0) {
-            getTank().fill(drained, GasAction.EXECUTE);
-            return false;
-        }
-
-        if (filled >= drained.getAmount()) {
-            return true;
-        }
-
-        getTank().fill(drained.copyWithAmount(drained.getAmount() - filled), GasAction.EXECUTE);
-        operationGas = operationGas.copyWithAmount(filled);
-        return true;
+        Provider provider = level.registryAccess();
+        ResourceTransaction transaction = new ResourceTransaction().add(operationGasParticipant(provider)).add(ResourceTransaction.participant(() -> canisterContents.fill(0, operationGas, GasAction.SIMULATE) == operationGas.getAmount(), () -> transported.stack.copy(), () -> canisterContents.fill(0, operationGas, GasAction.EXECUTE) == operationGas.getAmount(), snapshot -> transported.stack = snapshot.copy()));
+        return transaction.commit();
     }
 
     private boolean executeRecipeOperation(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
@@ -778,16 +1049,26 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     }
 
     private boolean drainAndReplace(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
-        GasStack drained = drainOperationGas();
-        return !drained.isEmpty() && replaceTransportedStackWithPreparedResults(transported, handler);
-    }
-
-    private boolean replaceTransportedStackWithPreparedResults(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
-        int batchSize = operationInput.getCount();
-        if (batchSize <= 0 || transported.stack.getCount() < batchSize || !matchesOperationInput(transported.stack)) {
+        if (level == null || !canReplaceTransportedStackWithPreparedResults(transported)) {
             return false;
         }
 
+        Provider provider = level.registryAccess();
+        ResourceTransaction transaction = new ResourceTransaction().add(operationGasParticipant(provider)).add(ResourceTransaction.participant(() -> canReplaceTransportedStackWithPreparedResults(transported), () -> transported.stack.copy(), () -> replaceTransportedStackWithPreparedResults(transported, handler), snapshot -> transported.stack = snapshot.copy()));
+        return transaction.commit();
+    }
+
+    private boolean canReplaceTransportedStackWithPreparedResults(TransportedItemStack transported) {
+        int batchSize = operationInput.getCount();
+        return batchSize > 0 && transported.stack.getCount() >= batchSize && matchesOperationInput(transported.stack);
+    }
+
+    private boolean replaceTransportedStackWithPreparedResults(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
+        if (!canReplaceTransportedStackWithPreparedResults(transported)) {
+            return false;
+        }
+
+        int batchSize = operationInput.getCount();
         transported.stack.shrink(batchSize);
         FanProcessingType completedFanProcessing = operationType == OperationType.FAN_PROCESSING && operationFanProcessingTypeId != null ? GasInjectionChamberUtils.getFanProcessingType(operationFanProcessingTypeId).orElse(null) : null;
 
@@ -815,17 +1096,6 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         return ItemStack.isSameItemSameComponents(operationInput, stack) && stack.getCount() >= operationInput.getCount();
     }
 
-    private GasStack drainOperationGas() {
-        IGasTank tank = getTank();
-        GasStack simulated = tank.drain(operationGas, GasAction.SIMULATE);
-        if (!GasStack.matches(simulated, operationGas)) {
-            return GasStack.EMPTY;
-        }
-
-        GasStack drained = tank.drain(operationGas, GasAction.EXECUTE);
-        return GasStack.matches(drained, operationGas) ? drained : GasStack.EMPTY;
-    }
-
     private IGasTank getTank() {
         return tankBehaviour.getPrimaryHandler();
     }
@@ -843,6 +1113,8 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     private void clearOperation() {
         operationType = OperationType.NONE;
         operationGas = GasStack.EMPTY;
+        operationFluidInputs.clear();
+        operationFluidResult = FluidStack.EMPTY;
         operationFanProcessingTypeId = null;
         operationInput = ItemStack.EMPTY;
         operationResults.clear();
@@ -854,7 +1126,8 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
 
     private enum OperationType {
         NONE("none", false),
-        RECIPE("recipe", true),
+        ITEM_RECIPE("recipe", true),
+        BASIN_RECIPE("basin_recipe", true),
         CANISTER("canister", true),
         FAN_PROCESSING("fan_processing", true);
 
@@ -877,6 +1150,8 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             return NONE;
         }
     }
+
+    private record BasinFluidSnapshot(FluidTankSnapshot tanks, List<FluidStack> spoutputBuffer) {}
 
     private class OperationLockingGasHandler implements IGasHandler {
         private final IGasHandler delegate;

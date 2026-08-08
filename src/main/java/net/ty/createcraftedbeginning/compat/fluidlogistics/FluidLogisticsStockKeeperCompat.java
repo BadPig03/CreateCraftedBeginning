@@ -3,7 +3,7 @@ package net.ty.createcraftedbeginning.compat.fluidlogistics;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.compat.CCBCompatMods;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,7 +38,7 @@ public final class FluidLogisticsStockKeeperCompat {
             }
             return stack.copyWithCount(1);
         } catch (IllegalAccessException | InvocationTargetException exception) {
-            CreateCraftedBeginning.LOGGER.warn("Failed to create a CreateFluidLogistic stock-keeper fluid key", exception);
+            CCBAPI.LOGGER.warn("Failed to create a CreateFluidLogistic stock-keeper fluid key", exception);
             return ItemStack.EMPTY;
         }
     }
@@ -54,7 +54,7 @@ public final class FluidLogisticsStockKeeperCompat {
                 return Math.max(1, number.intValue());
             }
         } catch (IllegalAccessException | InvocationTargetException exception) {
-            CreateCraftedBeginning.LOGGER.warn("Failed to query CreateFluidLogistic fluid package capacity", exception);
+            CCBAPI.LOGGER.warn("Failed to query CreateFluidLogistic fluid package capacity", exception);
         }
         return Math.max(1, fallback);
     }
@@ -67,7 +67,7 @@ public final class FluidLogisticsStockKeeperCompat {
         try {
             return Class.forName(PACKAGE_RESOURCE_TYPES, false, FluidLogisticsStockKeeperCompat.class.getClassLoader());
         } catch (ClassNotFoundException | LinkageError exception) {
-            CreateCraftedBeginning.LOGGER.warn("CreateFluidLogistic is installed, but its package-resource API is unavailable; mixed gas/fluid stock-keeper transfer will not include fluids", exception);
+            CCBAPI.LOGGER.warn("CreateFluidLogistic is installed, but its package-resource API is unavailable; mixed gas/fluid stock-keeper transfer will not include fluids", exception);
             return null;
         }
     }
@@ -80,7 +80,7 @@ public final class FluidLogisticsStockKeeperCompat {
         try {
             return RESOURCE_TYPES_CLASS.getMethod(name, parameterTypes);
         } catch (NoSuchMethodException | SecurityException exception) {
-            CreateCraftedBeginning.LOGGER.warn("CreateFluidLogistic package-resource API method '{}' is unavailable", name, exception);
+            CCBAPI.LOGGER.warn("CreateFluidLogistic package-resource API method '{}' is unavailable", name, exception);
             return null;
         }
     }

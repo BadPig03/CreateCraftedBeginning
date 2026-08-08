@@ -12,7 +12,7 @@ import net.minecraft.util.FastColor.ARGB32;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
@@ -36,7 +36,7 @@ public final class GasInjectionChamberUtils {
         COLORS.put(Create.asResource("smoking"), ARGB32.average(0xFF000000, 0xFF555555));
         COLORS.put(Create.asResource("blasting"), ARGB32.average(0xFFFF4400, 0xFFFF8855));
         COLORS.put(Create.asResource("haunting"), ARGB32.average(0xFF000000, 0xFF126568));
-        COLORS.put(CreateCraftedBeginning.asResource("chilling"), 0xFFEBF6FF);
+        COLORS.put(CCBAPI.asResource("chilling"), 0xFFEBF6FF);
         COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_white"), 0xFF000000 | DyeColor.WHITE.getFireworkColor());
         COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_light_gray"), 0xFF000000 | DyeColor.LIGHT_GRAY.getFireworkColor());
         COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_gray"), 0xFF000000 | DyeColor.GRAY.getFireworkColor());

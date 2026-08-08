@@ -2,8 +2,8 @@ package net.ty.createcraftedbeginning.api.gas.gases.ingredients;
 
 import com.mojang.serialization.MapCodec;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.stream.Stream;
@@ -35,7 +35,7 @@ public class EmptyGasIngredient extends GasIngredient {
      */
     @Override
     public GasIngredientType<?> getType() {
-        return CCBGasRegistries.EMPTY_GAS_INGREDIENT_TYPE.get();
+        return GasRegistries.EMPTY_GAS_INGREDIENT_TYPE.get();
     }
 
     /**

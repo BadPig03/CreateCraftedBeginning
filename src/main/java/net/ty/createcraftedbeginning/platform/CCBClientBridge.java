@@ -1,12 +1,13 @@
 package net.ty.createcraftedbeginning.platform;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeBehaviour;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -51,12 +52,28 @@ public final class CCBClientBridge {
         service.showTeslaTurbinePlacementBounds(context);
     }
 
-    public static void openGasFactoryGaugeScreen(GasFactoryGaugeBehaviour behaviour, Player player) {
-        service.openGasFactoryGaugeScreen(behaviour, player);
+    public static void showGasAreaOutline(Player player, BlockPos pos, Direction direction, float inflation, int color) {
+        service.showGasAreaOutline(player, pos, direction, inflation, color);
+    }
+
+    public static boolean isOverstressedTooltipEnabled() {
+        return service.isOverstressedTooltipEnabled();
+    }
+
+    public static int getMaxItemStackDisplay() {
+        return service.getMaxItemStackDisplay();
+    }
+
+    public static float getFilterItemRenderDistance() {
+        return service.getFilterItemRenderDistance();
+    }
+
+    public static void openGasFactoryGaugeScreen(ScreenTarget target, Player player) {
+        service.openGasFactoryGaugeScreen(target, player);
     }
 
     @Nullable
-    public static GasFactoryGaugeBehaviour createGasFactoryGaugeBehaviour(RegistryFriendlyByteBuf extraData) {
+    public static ScreenTarget createGasFactoryGaugeBehaviour(RegistryFriendlyByteBuf extraData) {
         return service.createGasFactoryGaugeBehaviour(extraData);
     }
 
@@ -81,11 +98,28 @@ public final class CCBClientBridge {
         default void showTeslaTurbinePlacementBounds(BlockPlaceContext context) {
         }
 
-        default void openGasFactoryGaugeScreen(GasFactoryGaugeBehaviour behaviour, Player player) {
+        default void showGasAreaOutline(Player player, BlockPos pos, Direction direction, float inflation, int color) {
         }
 
-        default @Nullable GasFactoryGaugeBehaviour createGasFactoryGaugeBehaviour(RegistryFriendlyByteBuf extraData) {
+        default boolean isOverstressedTooltipEnabled() {
+            return false;
+        }
+
+        default int getMaxItemStackDisplay() {
+            return 4;
+        }
+
+        default float getFilterItemRenderDistance() {
+            return 0;
+        }
+
+        default void openGasFactoryGaugeScreen(ScreenTarget target, Player player) {
+        }
+
+        default @Nullable ScreenTarget createGasFactoryGaugeBehaviour(RegistryFriendlyByteBuf extraData) {
             return null;
         }
     }
+
+    public interface ScreenTarget {}
 }

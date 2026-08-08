@@ -11,7 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
-import net.ty.createcraftedbeginning.mixin.client.accessor.StockKeeperRequestScreenAccessor;
+import net.ty.createcraftedbeginning.platform.access.StockKeeperRequestScreenAccess;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -35,7 +35,7 @@ public abstract class GuiGraphicsMixin {
             return;
         }
 
-        if (!(Minecraft.getInstance().screen instanceof StockKeeperRequestScreen requestScreen) || !(requestScreen instanceof StockKeeperRequestScreenAccessor accessor)) {
+        if (!(Minecraft.getInstance().screen instanceof StockKeeperRequestScreen requestScreen) || !(requestScreen instanceof StockKeeperRequestScreenAccess accessor)) {
             return;
         }
 

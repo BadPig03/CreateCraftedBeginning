@@ -1,0 +1,43 @@
+package net.ty.createcraftedbeginning.foundation.block;
+
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public class CCBSharedProperties {
+    public static Block stone() {
+        return Blocks.ANDESITE;
+    }
+
+    public static Block cardboard() {
+        return Blocks.MUSHROOM_STEM;
+    }
+
+    public static Block softMetal() {
+        return Blocks.GOLD_BLOCK;
+    }
+
+    public static Block hardMetal() {
+        return Blocks.IRON_BLOCK;
+    }
+
+    public static Block obsidian() {
+        return Blocks.OBSIDIAN;
+    }
+
+    public static Block cryingObsidian() {
+        return Blocks.CRYING_OBSIDIAN;
+    }
+
+    public static Block airtightMetal() {
+        return Blocks.HEAVY_CORE;
+    }
+
+    public static Block copperMetal() {
+        return Blocks.COPPER_BLOCK;
+    }
+}

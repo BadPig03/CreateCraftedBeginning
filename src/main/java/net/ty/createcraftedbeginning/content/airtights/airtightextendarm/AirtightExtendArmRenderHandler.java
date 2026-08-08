@@ -25,9 +25,9 @@ import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.ClientHooks;
 import net.neoforged.neoforge.client.event.RenderHandEvent;
-import net.ty.createcraftedbeginning.mixin.client.accessor.ItemInHandRendererAccessor;
+import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.platform.access.ItemInHandRendererAccess;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -35,6 +35,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class AirtightExtendArmRenderHandler {
+    public static final AirtightExtendArmRenderHandler INSTANCE = new AirtightExtendArmRenderHandler();
+
     private float handAnimation;
     private float lastHandAnimation;
     private PartialModel pose = CCBPartialModels.AIRTIGHT_EXTEND_ARM_PUNCHING;
@@ -84,7 +86,7 @@ public class AirtightExtendArmRenderHandler {
     protected void updatePose() {
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
-        if (player == null || !(minecraft.getEntityRenderDispatcher().getItemInHandRenderer() instanceof ItemInHandRendererAccessor accessor)) {
+        if (player == null || !(minecraft.getEntityRenderDispatcher().getItemInHandRenderer() instanceof ItemInHandRendererAccess accessor)) {
             return;
         }
 
@@ -108,7 +110,7 @@ public class AirtightExtendArmRenderHandler {
 
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
-        if (player == null || !(minecraft.getEntityRenderDispatcher().getItemInHandRenderer() instanceof ItemInHandRendererAccessor accessor)) {
+        if (player == null || !(minecraft.getEntityRenderDispatcher().getItemInHandRenderer() instanceof ItemInHandRendererAccess accessor)) {
             return;
         }
 

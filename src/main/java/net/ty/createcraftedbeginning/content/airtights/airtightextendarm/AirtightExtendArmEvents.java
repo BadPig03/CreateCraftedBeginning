@@ -15,11 +15,11 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.EntityInte
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock;
 import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gascanisters.events.GasTypeChangedEvent;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
@@ -29,7 +29,7 @@ import java.util.WeakHashMap;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
+@EventBusSubscriber(modid = CCBAPI.MOD_ID)
 public class AirtightExtendArmEvents {
     private static final Map<Player, InteractionCharge> LAST_INTERACTION_CHARGES = new WeakHashMap<>();
 

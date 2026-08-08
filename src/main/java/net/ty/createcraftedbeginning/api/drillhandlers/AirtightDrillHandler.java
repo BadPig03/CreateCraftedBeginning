@@ -13,9 +13,9 @@ import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.phys.Vec3;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
-import net.ty.createcraftedbeginning.data.CCBLang;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -51,17 +51,17 @@ public interface AirtightDrillHandler {
      */
     default void appendHoverText(ItemStack drill, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         float consumptionMultiplier = getConsumptionMultiplier();
-        MutableComponent advancedGasConsumption = flag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptionUtils.format(consumptionMultiplier) + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptionUtils.formatPercent(consumptionMultiplier)).add(advancedGasConsumption.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        MutableComponent advancedGasConsumption = flag.isAdvanced() ? Component.literal(" [x" + GasConsumptionUtils.format(consumptionMultiplier) + ']') : Component.empty();
+        tooltip.add(Component.translatable(CCBAPI.MOD_ID + ".gui.gas_tools.gas_consumption", GasConsumptionUtils.formatPercent(consumptionMultiplier)).append(advancedGasConsumption.withStyle(ChatFormatting.GRAY)).withStyle(ChatFormatting.DARK_GREEN));
 
         int additionDamage = getDamageAddition();
         int damage = BASE_DAMAGE_AMOUNT + additionDamage;
-        MutableComponent advancedAttackDamage = flag.isAdvanced() ? CCBLang.text(" [" + (additionDamage != 0 ? "" : "+") + BASE_DAMAGE_AMOUNT + (additionDamage != 0 ? " + " + additionDamage : "") + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.airtight_handheld_drill.attack_damage", damage).add(advancedAttackDamage.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        MutableComponent advancedAttackDamage = flag.isAdvanced() ? Component.literal(" [" + (additionDamage != 0 ? "" : "+") + BASE_DAMAGE_AMOUNT + (additionDamage != 0 ? " + " + additionDamage : "") + ']') : Component.empty();
+        tooltip.add(Component.translatable(CCBAPI.MOD_ID + ".gui.airtight_handheld_drill.attack_damage", damage).append(advancedAttackDamage.withStyle(ChatFormatting.GRAY)).withStyle(ChatFormatting.DARK_GREEN));
     }
 
     /**
-     * Updates state by performing extra behavior.
+     * Updates state by performing extra behaviour.
      *
      * @param entity      the entity associated with the operation
      * @param player      the player performing the operation

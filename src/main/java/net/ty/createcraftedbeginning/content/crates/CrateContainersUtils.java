@@ -6,6 +6,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -81,31 +82,30 @@ public final class CrateContainersUtils {
             return true;
         }
 
-        ItemStack validatedContent = expectedContent;
+        ItemStack validatedContent = expectedContent.copy();
         int expectedCount = originalCount + addedCount;
-        return handler.runInBatch(() -> {
+        return handler.runInBatch(() -> new ResourceTransaction().add(ResourceTransaction.participant(() -> matchesCrateState(handler, originalContent, originalCount), () -> new CrateSnapshot(handler.getStoredItem(0).copy(), handler.getCountInSlot(0)), () -> {
             for (ItemStack stack : items) {
                 if (stack.isEmpty()) {
                     continue;
                 }
 
-                ItemStack remainder = handler.insertItem(0, stack, false);
-                if (remainder.isEmpty()) {
-                    continue;
+                if (!handler.insertItem(0, stack, false).isEmpty()) {
+                    return false;
                 }
-
-                handler.setStoredItems(0, originalContent, originalCount);
-                return false;
             }
-
-            ItemStack storedContent = handler.getStoredItem(0);
-            boolean hasExpectedState = handler.getCountInSlot(0) == expectedCount && (expectedCount == 0 || ItemStack.isSameItemSameComponents(storedContent, validatedContent));
-            if (!hasExpectedState) {
-                handler.setStoredItems(0, originalContent, originalCount);
-                return false;
-            }
-
-            return true;
-        });
+            return matchesCrateState(handler, validatedContent, expectedCount);
+        }, snapshot -> handler.setStoredItems(0, snapshot.content().copy(), snapshot.count()))).commit());
     }
+
+    private static boolean matchesCrateState(CrateItemStackHandler handler, ItemStack expectedContent, int expectedCount) {
+        if (handler.getCountInSlot(0) != expectedCount) {
+            return false;
+        }
+
+        ItemStack storedContent = handler.getStoredItem(0);
+        return expectedCount == 0 || ItemStack.isSameItemSameComponents(storedContent, expectedContent);
+    }
+
+    private record CrateSnapshot(ItemStack content, int count) {}
 }

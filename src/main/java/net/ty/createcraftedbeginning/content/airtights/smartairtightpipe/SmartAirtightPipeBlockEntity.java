@@ -18,12 +18,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasFilteringBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IDirectionalPipe.DirectionalFacing;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTransporter;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AxisGasPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AxisGasTransportBehaviour;
+import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasFilteringBehaviour;
+import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IDirectionalPipe;
+import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IDirectionalPipe.DirectionalFacing;
+import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasTransporter;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;

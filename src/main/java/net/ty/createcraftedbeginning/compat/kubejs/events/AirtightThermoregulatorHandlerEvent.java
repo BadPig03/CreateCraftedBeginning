@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.thermoregulatorhandlers.AirtightThermoregulatorHandlerUtils;
+import net.ty.createcraftedbeginning.compat.kubejs.CCBKubeJSHandlerUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -16,7 +16,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * <p>
  * This event is exposed through {@code CCBEvents.airtightThermoregulatorHandler}
  * and allows scripts to associate blocks, tags, or block predicates with custom
- * thermoregulator behavior.
+ * thermoregulator behaviour.
  * <p>
  * A thermoregulator handler receives the level, block position, and block state,
  * then returns the thermoregulator value used by that block.
@@ -50,10 +50,10 @@ public class AirtightThermoregulatorHandlerEvent implements KubeEvent {
      *
      * @param block   the block to register the thermoregulator handler for
      * @param handler the thermoregulator handler to execute
-     * @see AirtightThermoregulatorHandlerUtils#register(Block, ThermoregulatorHandler)
+     * @see CCBKubeJSHandlerUtils#registerThermoregulator(Block, ThermoregulatorHandler)
      */
     public void add(Block block, ThermoregulatorHandler handler) {
-        AirtightThermoregulatorHandlerUtils.register(block, handler);
+        CCBKubeJSHandlerUtils.registerThermoregulator(block, handler);
     }
 
     /**
@@ -68,15 +68,15 @@ public class AirtightThermoregulatorHandlerEvent implements KubeEvent {
      *
      * @param predicate the block state predicate used to select matching blocks
      * @param handler   the thermoregulator handler to execute
-     * @see AirtightThermoregulatorHandlerUtils#register(BlockStatePredicate, ThermoregulatorHandler)
+     * @see CCBKubeJSHandlerUtils#registerThermoregulator(BlockStatePredicate, ThermoregulatorHandler)
      */
     public void addAdvanced(BlockStatePredicate predicate, ThermoregulatorHandler handler) {
-        AirtightThermoregulatorHandlerUtils.register(predicate, handler);
+        CCBKubeJSHandlerUtils.registerThermoregulator(predicate, handler);
     }
 
     /**
      * Functional interface used by KubeJS scripts to define custom thermoregulator
-     * behavior.
+     * behaviour.
      * <p>
      * The handler is called with the level, target block position, and block state,
      * then returns the thermoregulator value that should be used by that block.

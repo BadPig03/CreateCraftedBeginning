@@ -37,9 +37,9 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.TickPriority;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities;
-import net.ty.createcraftedbeginning.api.gas.gases.GasPropagator;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.data.CCBShapes;
+import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPropagator;
+import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;

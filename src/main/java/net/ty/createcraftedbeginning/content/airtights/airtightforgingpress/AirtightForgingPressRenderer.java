@@ -17,7 +17,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Con
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.registry.CCBPartialModels;
+import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Random;

@@ -22,13 +22,11 @@ import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredien
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
 import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
-import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity.ConsumptionPlan;
-import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity.OutputPlan;
-import net.ty.createcraftedbeginning.mixin.server.accessor.SmithingTransformRecipeAccessor;
-import net.ty.createcraftedbeginning.mixin.server.accessor.SmithingTrimRecipeAccessor;
+import net.ty.createcraftedbeginning.platform.access.SmithingTransformRecipeAccess;
+import net.ty.createcraftedbeginning.platform.access.SmithingTrimRecipeAccess;
+import net.ty.createcraftedbeginning.recipe.ForgingPressRecipeContext.ConsumptionPlan;
+import net.ty.createcraftedbeginning.recipe.ForgingPressRecipeContext.OutputPlan;
 import net.ty.createcraftedbeginning.recipe.trie.IAirtightWithGasRecipe;
-import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -51,12 +49,12 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
     public static RecipeHolder<ForgingPressRecipe> convertToForgingPressRecipe(RecipeHolder<?> holder) {
         Builder<ForgingPressRecipe> builder = new Builder<>(ForgingPressRecipe::new, holder.id());
         Recipe<?> source = holder.value();
-        if (source instanceof SmithingTransformRecipe smithingRecipe && source instanceof SmithingTransformRecipeAccessor accessor) {
+        if (source instanceof SmithingTransformRecipe smithingRecipe && source instanceof SmithingTransformRecipeAccess accessor) {
             ForgingPressRecipe recipe = builder.require(accessor.getBase()).require(accessor.getTemplate()).require(accessor.getAddition()).build().setSmithingRecipe(smithingRecipe);
             return new RecipeHolder<>(holder.id(), recipe);
         }
 
-        if (source instanceof SmithingTrimRecipe smithingRecipe && source instanceof SmithingTrimRecipeAccessor accessor) {
+        if (source instanceof SmithingTrimRecipe smithingRecipe && source instanceof SmithingTrimRecipeAccess accessor) {
             ForgingPressRecipe recipe = builder.require(accessor.getBase()).require(accessor.getTemplate()).require(accessor.getAddition()).build().setSmithingRecipe(smithingRecipe);
             return new RecipeHolder<>(holder.id(), recipe);
         }
@@ -75,15 +73,15 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
         return new RecipeHolder<>(holder.id(), builder.build());
     }
 
-    public static boolean match(AirtightForgingPressBlockEntity press, ForgingPressRecipe recipe) {
+    public static boolean match(ForgingPressRecipeContext press, ForgingPressRecipe recipe) {
         return apply(press, recipe, true);
     }
 
-    public static boolean apply(AirtightForgingPressBlockEntity press, ForgingPressRecipe recipe) {
+    public static boolean apply(ForgingPressRecipeContext press, ForgingPressRecipe recipe) {
         return apply(press, recipe, false);
     }
 
-    private static boolean apply(AirtightForgingPressBlockEntity press, ForgingPressRecipe recipe, boolean simulate) {
+    private static boolean apply(ForgingPressRecipeContext press, ForgingPressRecipe recipe, boolean simulate) {
         Level level = press.getLevel();
         if (level == null) {
             return false;
@@ -132,7 +130,7 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
         return press.commitCraft(consumptionPlan, outputPlan.get());
     }
 
-    private static @Nullable CraftPlan findLargestCraftPlan(AirtightForgingPressBlockEntity press, ForgingPressRecipe recipe, Level level, ItemStack input, IFluidHandler fluids, IGasHandler gases, int maxCrafts) {
+    private static @Nullable CraftPlan findLargestCraftPlan(ForgingPressRecipeContext press, ForgingPressRecipe recipe, Level level, ItemStack input, IFluidHandler fluids, IGasHandler gases, int maxCrafts) {
         List<ItemStack> singleCraftOutputs = createRecipeOutputItems(recipe, level, input, false, 1);
         if (singleCraftOutputs.isEmpty() || !outputsPassFilter(press, singleCraftOutputs)) {
             return null;
@@ -307,7 +305,7 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
         return false;
     }
 
-    private static boolean outputsPassFilter(AirtightForgingPressBlockEntity press, List<ItemStack> outputs) {
+    private static boolean outputsPassFilter(ForgingPressRecipeContext press, List<ItemStack> outputs) {
         return !outputs.isEmpty() && press.testRecipeFilter(outputs.getFirst());
     }
 

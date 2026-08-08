@@ -40,8 +40,9 @@ import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasLogisticsUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUtils;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.platform.CCBClientBridge;
+import net.ty.createcraftedbeginning.platform.CCBClientBridge.ScreenTarget;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -49,7 +50,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
+public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour implements ScreenTarget {
     private static final int BOARD_MAX_VALUE = 100;
     private static final int[] ROW_MULTIPLIERS = {1, 10, 100, 1000, 10000};
 

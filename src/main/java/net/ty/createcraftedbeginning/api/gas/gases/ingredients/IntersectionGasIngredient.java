@@ -3,8 +3,8 @@ package net.ty.createcraftedbeginning.api.gas.gases.ingredients;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -69,7 +69,7 @@ public class IntersectionGasIngredient extends GasIngredient {
      */
     @Override
     public GasIngredientType<?> getType() {
-        return CCBGasRegistries.INTERSECTION_GAS_INGREDIENT_TYPE.get();
+        return GasRegistries.INTERSECTION_GAS_INGREDIENT_TYPE.get();
     }
 
     /**
@@ -93,7 +93,7 @@ public class IntersectionGasIngredient extends GasIngredient {
      */
     @Override
     public boolean equals(Object obj) {
-        return this == obj || obj instanceof IntersectionGasIngredient other && other.children() == children;
+        return this == obj || obj instanceof IntersectionGasIngredient other && children.equals(other.children());
     }
 
     /**

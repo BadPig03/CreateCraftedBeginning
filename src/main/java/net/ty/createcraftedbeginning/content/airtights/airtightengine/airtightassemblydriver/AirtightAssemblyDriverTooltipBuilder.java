@@ -10,7 +10,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverLevelCalculator.LevelKey;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.platform.CCBClientBridge;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 

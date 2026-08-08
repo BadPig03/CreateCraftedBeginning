@@ -8,7 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.fillhandlers.AirtightFillHandlerUtils;
+import net.ty.createcraftedbeginning.compat.kubejs.CCBKubeJSHandlerUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -17,7 +17,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * <p>
  * This event is exposed through {@code CCBEvents.airtightFillHandler} and allows
  * scripts to associate blocks, tags, or block predicates with custom gas fill
- * behavior.
+ * behaviour.
  * <p>
  * A fill handler receives the level, block position, and block state, then returns
  * the {@link ResourceLocation} of the gas that should be produced by that block.
@@ -51,16 +51,16 @@ public class AirtightFillHandlerEvent implements KubeEvent {
      * source.
      * <p>
      * The returned gas location is resolved by
-     * {@link AirtightFillHandlerUtils#register(Block, FillHandler)}. If the
+     * the KubeJS compatibility adapter. If the
      * location does not point to a registered gas, the handler falls back to the
      * empty gas.
      *
      * @param block   the block to register the fill handler for
      * @param handler the fill handler to execute
-     * @see AirtightFillHandlerUtils#register(Block, FillHandler)
+     * @see CCBKubeJSHandlerUtils#registerFill(Block, FillHandler)
      */
     public void add(Block block, FillHandler handler) {
-        AirtightFillHandlerUtils.register(block, handler);
+        CCBKubeJSHandlerUtils.registerFill(block, handler);
     }
 
     /**
@@ -75,14 +75,14 @@ public class AirtightFillHandlerEvent implements KubeEvent {
      *
      * @param predicate the block state predicate used to select matching blocks
      * @param handler   the fill handler to execute
-     * @see AirtightFillHandlerUtils#register(BlockStatePredicate, FillHandler)
+     * @see CCBKubeJSHandlerUtils#registerFill(BlockStatePredicate, FillHandler)
      */
     public void addAdvanced(BlockStatePredicate predicate, FillHandler handler) {
-        AirtightFillHandlerUtils.register(predicate, handler);
+        CCBKubeJSHandlerUtils.registerFill(predicate, handler);
     }
 
     /**
-     * Functional interface used by KubeJS scripts to define custom fill behavior.
+     * Functional interface used by KubeJS scripts to define custom fill behaviour.
      * <p>
      * The handler is called with the level, target block position, and block state,
      * then returns the resource location of the gas that should be filled from that

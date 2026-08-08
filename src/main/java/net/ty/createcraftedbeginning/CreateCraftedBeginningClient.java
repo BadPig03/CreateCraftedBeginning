@@ -1,15 +1,13 @@
 package net.ty.createcraftedbeginning;
 
-import com.simibubi.create.compat.Mods;
-import com.simibubi.create.compat.ftb.FTBIntegration;
-import com.simibubi.create.compat.pojav.PojavChecker;
-import com.simibubi.create.compat.sodium.SodiumCompat;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.client.CCBClientBridgeImpl;
+import net.ty.createcraftedbeginning.client.CCBClientRegistrations;
 import net.ty.createcraftedbeginning.client.CCBFluidClientExtensions;
 import net.ty.createcraftedbeginning.client.CCBParticleProviders;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonRenderHandler;
@@ -25,30 +23,28 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@Mod(value = CreateCraftedBeginning.MOD_ID, dist = Dist.CLIENT)
+@Mod(value = CCBAPI.MOD_ID, dist = Dist.CLIENT)
 public class CreateCraftedBeginningClient {
-    public static final AirtightCannonRenderHandler AIRTIGHT_CANNON_RENDER_HANDLER = new AirtightCannonRenderHandler();
-    public static final AirtightExtendArmRenderHandler AIRTIGHT_EXTEND_ARM_RENDER_HANDLER = new AirtightExtendArmRenderHandler();
-    public static final AirtightHandheldDrillRenderHandler AIRTIGHT_HAND_DRILL_RENDER_HANDLER = new AirtightHandheldDrillRenderHandler();
 
     public CreateCraftedBeginningClient(IEventBus modEventBus) {
         CCBClientBridge.install(new CCBClientBridgeImpl());
+        CCBClientRegistrations.initialize();
 
         IEventBus eventBus = NeoForge.EVENT_BUS;
         modEventBus.addListener(CCBFluidClientExtensions::register);
         modEventBus.addListener(CCBParticleProviders::register);
+        modEventBus.addListener(CCBClientRegistrations::registerBlockExtensions);
+        modEventBus.addListener(CCBClientRegistrations::registerMenuScreens);
+        modEventBus.addListener(CCBClientRegistrations::registerRenderers);
+        modEventBus.addListener(CCBClientRegistrations::registerVisualizers);
 
         BreezeChamberClientAnimation.initialize();
         BreezeCoolerClientAnimation.initialize();
         EndIncinerationBlowerClient.initialize();
         EndSculkSilencerClient.initialize();
 
-        AIRTIGHT_CANNON_RENDER_HANDLER.registerListeners(eventBus);
-        AIRTIGHT_EXTEND_ARM_RENDER_HANDLER.registerListeners(eventBus);
-        AIRTIGHT_HAND_DRILL_RENDER_HANDLER.registerListeners(eventBus);
-
-        Mods.FTBLIBRARY.executeIfInstalled(() -> () -> FTBIntegration.init(modEventBus, eventBus));
-        Mods.SODIUM.executeIfInstalled(() -> () -> SodiumCompat.init(modEventBus, eventBus));
-        PojavChecker.init();
+        AirtightCannonRenderHandler.INSTANCE.registerListeners(eventBus);
+        AirtightExtendArmRenderHandler.INSTANCE.registerListeners(eventBus);
+        AirtightHandheldDrillRenderHandler.INSTANCE.registerListeners(eventBus);
     }
 }

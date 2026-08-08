@@ -21,6 +21,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class AirtightHandheldDrillRenderHandler {
+    public static final AirtightHandheldDrillRenderHandler INSTANCE = new AirtightHandheldDrillRenderHandler();
+
     private static final float MAX_ANIMATION = 1.2f;
     private static final float MIN_ANIMATION = 0.001f;
     private static final float ACCELERATION = (float) Math.pow(MAX_ANIMATION / MIN_ANIMATION, 0.1);

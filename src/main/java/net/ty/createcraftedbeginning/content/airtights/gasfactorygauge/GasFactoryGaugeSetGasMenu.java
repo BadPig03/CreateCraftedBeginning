@@ -15,9 +15,10 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
-import net.ty.createcraftedbeginning.data.CCBLang;
-import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.platform.CCBClientBridge;
+import net.ty.createcraftedbeginning.platform.CCBClientBridge.ScreenTarget;
+import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,6 +28,10 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasFactoryGaugeSetGasMenu extends GhostItemMenu<GasFactoryGaugeBehaviour> {
+    public GasFactoryGaugeSetGasMenu(int id, Inventory inventory, RegistryFriendlyByteBuf extraData) {
+        this(CCBMenuTypes.GAS_FACTORY_GAUGE_SET_GAS_MENU.get(), id, inventory, extraData);
+    }
+
     public GasFactoryGaugeSetGasMenu(MenuType<?> type, int id, Inventory inventory, GasFactoryGaugeBehaviour contentHolder) {
         super(type, id, inventory, contentHolder);
     }
@@ -53,7 +58,8 @@ public class GasFactoryGaugeSetGasMenu extends GhostItemMenu<GasFactoryGaugeBeha
     @Override
     @OnlyIn(Dist.CLIENT)
     protected @Nullable GasFactoryGaugeBehaviour createOnClient(RegistryFriendlyByteBuf extraData) {
-        return CCBClientBridge.createGasFactoryGaugeBehaviour(extraData);
+        ScreenTarget target = CCBClientBridge.createGasFactoryGaugeBehaviour(extraData);
+        return target instanceof GasFactoryGaugeBehaviour behaviour ? behaviour : null;
     }
 
     @Override

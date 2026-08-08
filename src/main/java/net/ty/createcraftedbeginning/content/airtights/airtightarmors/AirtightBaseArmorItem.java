@@ -7,7 +7,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial.Layer;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.registry.CCBArmorMaterials;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,8 +16,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightBaseArmorItem extends ArmorItem {
-    private static final ResourceLocation OUTER_TEXTURE = CreateCraftedBeginning.asResource("textures/models/armor/airtight_layer_1.png");
-    private static final ResourceLocation INNER_TEXTURE = CreateCraftedBeginning.asResource("textures/models/armor/airtight_layer_2.png");
+    private static final ResourceLocation OUTER_TEXTURE = CCBAPI.asResource("textures/models/armor/airtight_layer_1.png");
+    private static final ResourceLocation INNER_TEXTURE = CCBAPI.asResource("textures/models/armor/airtight_layer_2.png");
 
     public AirtightBaseArmorItem(Type type, Properties properties) {
         super(CCBArmorMaterials.AIRTIGHT, type, properties.stacksTo(1));

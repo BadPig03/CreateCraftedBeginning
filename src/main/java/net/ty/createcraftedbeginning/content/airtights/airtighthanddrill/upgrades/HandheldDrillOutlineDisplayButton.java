@@ -8,10 +8,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
-import net.ty.createcraftedbeginning.data.CCBIcons;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.foundation.gui.AirtightUpgradeIcon;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -22,7 +22,7 @@ import java.util.List;
 public enum HandheldDrillOutlineDisplayButton implements AirtightUpgrade {
     INSTANCE;
 
-    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("handheld_drill_outline_display");
+    private static final ResourceLocation ID = CCBAPI.asResource("handheld_drill_outline_display");
     private static final Couple<Integer> OFFSET = Couple.create(76, 114);
 
     @Override
@@ -46,8 +46,8 @@ public enum HandheldDrillOutlineDisplayButton implements AirtightUpgrade {
     }
 
     @Override
-    public CCBIcons getIcon() {
-        return CCBIcons.I_OUTLINE_DISPLAY;
+    public AirtightUpgradeIcon getIcon() {
+        return AirtightUpgradeIcon.OUTLINE_DISPLAY;
     }
 
     @Override

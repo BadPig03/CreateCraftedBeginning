@@ -8,11 +8,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
-import net.ty.createcraftedbeginning.data.CCBIcons;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.foundation.gui.AirtightUpgradeIcon;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -24,7 +24,7 @@ import java.util.List;
 public enum SilkTouchUpgrade implements AirtightUpgrade {
     INSTANCE;
 
-    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("silk_touch");
+    private static final ResourceLocation ID = CCBAPI.asResource("silk_touch");
     private static final Couple<Integer> OFFSET = Couple.create(123, 78);
 
     @Override
@@ -49,8 +49,8 @@ public enum SilkTouchUpgrade implements AirtightUpgrade {
     }
 
     @Override
-    public CCBIcons getIcon() {
-        return CCBIcons.I_SILK_TOUCH;
+    public AirtightUpgradeIcon getIcon() {
+        return AirtightUpgradeIcon.SILK_TOUCH;
     }
 
     @Override

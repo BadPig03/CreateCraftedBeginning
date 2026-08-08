@@ -27,7 +27,7 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.level.ItemLike;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import org.jetbrains.annotations.Contract;
 
@@ -261,7 +261,7 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
         }
 
         public CCBRecipeCategory<T> build(String name, Factory<T> factory) {
-            return build(CreateCraftedBeginning.asResource(name), factory);
+            return build(CCBAPI.asResource(name), factory);
         }
 
         public CCBRecipeCategory<T> build(ResourceLocation id, Factory<T> factory) {

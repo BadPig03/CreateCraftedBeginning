@@ -9,8 +9,8 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -19,7 +19,7 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public final class CCBTooltipBarAlignment {
-    private static final ResourceLocation PIXEL_SPACING_FONT = CreateCraftedBeginning.asResource("pixel_spacing");
+    private static final ResourceLocation PIXEL_SPACING_FONT = CCBAPI.asResource("pixel_spacing");
     private static final String ONE_PIXEL_SPACE = "\uE000";
     private static final String BASE_LEADER = "....... ";
 

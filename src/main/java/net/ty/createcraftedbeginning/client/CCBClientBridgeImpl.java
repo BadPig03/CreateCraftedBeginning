@@ -1,7 +1,10 @@
 package net.ty.createcraftedbeginning.client;
 
+import com.simibubi.create.AllSpecialTextures;
+import com.simibubi.create.content.equipment.goggles.GogglesItem;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBehaviour;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelPosition;
+import com.simibubi.create.infrastructure.config.AllConfigs;
 import net.createmod.catnip.data.Pair;
 import net.createmod.catnip.gui.ScreenOpener;
 import net.createmod.catnip.outliner.Outliner;
@@ -23,13 +26,16 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
+import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonRenderHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlock;
+import net.ty.createcraftedbeginning.content.airtights.gas.network.GasAreaOutlinePacket;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeScreen;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlock;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.platform.CCBClientBridge.ScreenTarget;
 import net.ty.createcraftedbeginning.platform.CCBClientBridge.Service;
 import org.jetbrains.annotations.Nullable;
 
@@ -55,7 +61,7 @@ public final class CCBClientBridgeImpl implements Service {
 
     @Override
     public void dontAnimateAirtightCannon(InteractionHand hand) {
-        CreateCraftedBeginningClient.AIRTIGHT_CANNON_RENDER_HANDLER.dontAnimateItem(hand);
+        AirtightCannonRenderHandler.INSTANCE.dontAnimateItem(hand);
     }
 
     @Override
@@ -98,8 +104,34 @@ public final class CCBClientBridgeImpl implements Service {
     }
 
     @Override
-    public void openGasFactoryGaugeScreen(GasFactoryGaugeBehaviour behaviour, Player player) {
-        if (!(player instanceof LocalPlayer)) {
+    public void showGasAreaOutline(Player player, BlockPos pos, Direction direction, float inflation, int color) {
+        if (!GogglesItem.isWearingGoggles(player) || !CCBConfig.client().enableGasAreaOutline.get()) {
+            return;
+        }
+
+        AABB area = new AABB(pos.relative(direction)).inflate(inflation);
+        Object outlineSlot = Pair.of(GasAreaOutlinePacket.class, Pair.of(pos, direction));
+        Outliner.getInstance().chaseAABB(outlineSlot, area).colored(color).withFaceTextures(AllSpecialTextures.CHECKERED, AllSpecialTextures.HIGHLIGHT_CHECKERED).lineWidth(0.0625f);
+    }
+
+    @Override
+    public boolean isOverstressedTooltipEnabled() {
+        return AllConfigs.client().enableOverstressedTooltip.get();
+    }
+
+    @Override
+    public int getMaxItemStackDisplay() {
+        return CCBConfig.client().maxItemStackDisplay.get();
+    }
+
+    @Override
+    public float getFilterItemRenderDistance() {
+        return AllConfigs.client().filterItemRenderDistance.getF();
+    }
+
+    @Override
+    public void openGasFactoryGaugeScreen(ScreenTarget target, Player player) {
+        if (!(player instanceof LocalPlayer) || !(target instanceof GasFactoryGaugeBehaviour behaviour)) {
             return;
         }
 
@@ -107,7 +139,7 @@ public final class CCBClientBridgeImpl implements Service {
     }
 
     @Override
-    public @Nullable GasFactoryGaugeBehaviour createGasFactoryGaugeBehaviour(RegistryFriendlyByteBuf extraData) {
+    public @Nullable ScreenTarget createGasFactoryGaugeBehaviour(RegistryFriendlyByteBuf extraData) {
         ClientLevel level = Minecraft.getInstance().level;
         if (level == null) {
             return null;

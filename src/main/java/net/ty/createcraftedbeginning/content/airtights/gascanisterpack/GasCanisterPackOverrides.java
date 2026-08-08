@@ -8,7 +8,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -60,7 +60,7 @@ public class GasCanisterPackOverrides {
 
         public static final Codec<GasCanisterPackType> CODEC = StringRepresentable.fromValues(GasCanisterPackType::values);
         public static final StreamCodec<ByteBuf, GasCanisterPackType> STREAM_CODEC = CatnipStreamCodecBuilders.ofEnum(GasCanisterPackType.class);
-        public static final ResourceLocation TYPE = CreateCraftedBeginning.asResource("gas_canister_pack_type");
+        public static final ResourceLocation TYPE = CCBAPI.asResource("gas_canister_pack_type");
 
         public static GasCanisterPackType getTypeFromFlags(int flags) {
             return values()[flags & 0b1111];

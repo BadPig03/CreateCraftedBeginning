@@ -13,9 +13,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTransporter;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasTransporter;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;

@@ -24,8 +24,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.armortrim.ArmorTrim;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.mixin.client.accessor.HumanoidArmorLayerAtlasAccessor;
+import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.platform.access.HumanoidArmorLayerAccess;
 import net.ty.createcraftedbeginning.registry.CCBArmorMaterials;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
@@ -34,8 +34,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightChestplateArmorItem extends ArmorItem implements CustomRenderedArmorItem {
-    private static final ResourceLocation INNER_TEXTURE = CreateCraftedBeginning.asResource("textures/models/armor/airtight_layer_2.png");
-    private static final ResourceLocation OUTER_TEXTURE = CreateCraftedBeginning.asResource("textures/models/armor/airtight_layer_1.png");
+    private static final ResourceLocation INNER_TEXTURE = CCBAPI.asResource("textures/models/armor/airtight_layer_2.png");
+    private static final ResourceLocation OUTER_TEXTURE = CCBAPI.asResource("textures/models/armor/airtight_layer_1.png");
 
     public AirtightChestplateArmorItem(Type type, Properties properties) {
         super(CCBArmorMaterials.AIRTIGHT, type, properties.stacksTo(1));
@@ -67,7 +67,7 @@ public class AirtightChestplateArmorItem extends ArmorItem implements CustomRend
             return;
         }
 
-        HumanoidArmorLayerAtlasAccessor accessor = (HumanoidArmorLayerAtlasAccessor) layer;
+        HumanoidArmorLayerAccess accessor = (HumanoidArmorLayerAccess) layer;
         HumanoidModel<?> parentModel = layer.getParentModel();
 
         HumanoidModel<?> innerModel = accessor.getInnerModel();

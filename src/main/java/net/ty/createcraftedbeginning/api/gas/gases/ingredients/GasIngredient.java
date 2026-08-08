@@ -13,9 +13,8 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.tags.TagKey;
 import net.neoforged.neoforge.common.util.NeoForgeExtraCodecs;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.data.CCBGasRegistries;
-import net.ty.createcraftedbeginning.registry.CCBRegistries;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,10 +27,9 @@ import java.util.stream.Stream;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public abstract class GasIngredient implements Predicate<GasStack> {
     public static final StreamCodec<RegistryFriendlyByteBuf, GasIngredient> STREAM_CODEC = new StreamCodec<>() {
-        private static final StreamCodec<RegistryFriendlyByteBuf, GasIngredient> DISPATCH_CODEC = ByteBufCodecs.registry(CCBRegistries.GAS_INGREDIENT_TYPES).dispatch(GasIngredient::getType, GasIngredientType::streamCodec);
+        private static final StreamCodec<RegistryFriendlyByteBuf, GasIngredient> DISPATCH_CODEC = ByteBufCodecs.registry(GasRegistries.GAS_INGREDIENT_TYPES_KEY).dispatch(GasIngredient::getType, GasIngredientType::streamCodec);
         private static final StreamCodec<RegistryFriendlyByteBuf, List<GasStack>> GAS_LIST_CODEC = GasStack.STREAM_CODEC.apply(ByteBufCodecs.collection(NonNullList::createWithCapacity));
 
         /**
@@ -91,7 +89,7 @@ public abstract class GasIngredient implements Predicate<GasStack> {
     }
 
     private static MapCodec<GasIngredient> makeMapCodec() {
-        return NeoForgeExtraCodecs.<GasIngredientType<?>, GasIngredient, GasIngredient>dispatchMapOrElse(CCBGasRegistries.GAS_INGREDIENT_TYPES_REGISTRY.byNameCodec(), GasIngredient::getType, GasIngredientType::codec, SINGLE_OR_TAG_CODEC).xmap(either -> either.map(value -> value, value -> value), ingredient -> {
+        return NeoForgeExtraCodecs.<GasIngredientType<?>, GasIngredient, GasIngredient>dispatchMapOrElse(GasRegistries.GAS_INGREDIENT_TYPES_REGISTRY.byNameCodec(), GasIngredient::getType, GasIngredientType::codec, SINGLE_OR_TAG_CODEC).xmap(either -> either.map(value -> value, value -> value), ingredient -> {
             if (ingredient instanceof SingleGasIngredient || ingredient instanceof TagGasIngredient) {
                 return Either.right(ingredient);
             }
@@ -241,15 +239,6 @@ public abstract class GasIngredient implements Predicate<GasStack> {
      */
     public final boolean isEmpty() {
         return this == empty();
-    }
-
-    /**
-     * Checks whether this value contains no gases.
-     *
-     * @return {@code true} if this value contains no gases; otherwise {@code false}
-     */
-    public final boolean hasNoGases() {
-        return getStacks().length == 0;
     }
 
     /**

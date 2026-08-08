@@ -10,16 +10,16 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerClients;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerConsumers.AffordableFuel;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
 import net.ty.createcraftedbeginning.api.gascanisters.events.GasTypeChangedEvent;
 import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.AirtightExtendArmUtils;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterContainerContents;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers.AffordableFuel;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackContainerContents;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 
@@ -30,7 +30,7 @@ import java.util.WeakHashMap;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
+@EventBusSubscriber(modid = CCBAPI.MOD_ID)
 public class GasCanisterEvents {
     private static final Map<Player, OverlayState> LAST_OVERLAY_STATES = new WeakHashMap<>();
 

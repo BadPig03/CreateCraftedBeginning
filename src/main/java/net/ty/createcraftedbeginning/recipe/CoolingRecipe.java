@@ -10,8 +10,6 @@ import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
-import net.ty.createcraftedbeginning.content.icecreams.CreativeIceCreamItem;
-import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -70,7 +68,7 @@ public class CoolingRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
         }
 
         ItemStack[] items = getIngredient().getItems();
-        return items.length > 0 && Arrays.stream(items).allMatch(stack -> stack.getItem() instanceof CreativeIceCreamItem);
+        return items.length > 0 && Arrays.stream(items).allMatch(stack -> stack.getItem() instanceof CreativeCoolingSource);
     }
 
     @Override

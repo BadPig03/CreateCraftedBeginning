@@ -8,9 +8,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.api.gas.recipes.CuttingWithGasRecipe;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
-import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
+import net.ty.createcraftedbeginning.recipe.gas.CuttingWithGasRecipe;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -34,6 +34,7 @@ public abstract class SawBlockEntityMixin {
     private FilteringBehaviour filtering;
     @Shadow
     private int recipeIndex;
+
     @Shadow
     protected abstract List<RecipeHolder<? extends Recipe<?>>> getRecipes();
 

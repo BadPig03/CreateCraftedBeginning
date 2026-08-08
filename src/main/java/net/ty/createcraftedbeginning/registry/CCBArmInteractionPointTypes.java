@@ -6,7 +6,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressInteractionPoint.ForgingPressType;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleInteractionPoint.ReactorKettleType;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerInteractionPoint.GasPackagerType;
@@ -20,7 +20,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBArmInteractionPointTypes {
-    private static final DeferredRegister<ArmInteractionPointType> TYPES = DeferredRegister.create(CreateBuiltInRegistries.ARM_INTERACTION_POINT_TYPE, CreateCraftedBeginning.MOD_ID);
+    private static final DeferredRegister<ArmInteractionPointType> TYPES = DeferredRegister.create(CreateBuiltInRegistries.ARM_INTERACTION_POINT_TYPE, CCBAPI.MOD_ID);
 
     public static DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> BREEZE_COOLER = register("breeze_cooler", new BreezeCoolerType());
     public static DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> BREEZE_CHAMBER = register("breeze_chamber", new BreezeChamberType());

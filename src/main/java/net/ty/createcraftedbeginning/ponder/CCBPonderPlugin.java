@@ -5,7 +5,7 @@ import net.createmod.ponder.api.registration.PonderSceneRegistrationHelper;
 import net.createmod.ponder.api.registration.PonderTagRegistrationHelper;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -14,7 +14,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class CCBPonderPlugin implements PonderPlugin {
     @Override
     public String getModId() {
-        return CreateCraftedBeginning.MOD_ID;
+        return CCBAPI.MOD_ID;
     }
 
     @Override

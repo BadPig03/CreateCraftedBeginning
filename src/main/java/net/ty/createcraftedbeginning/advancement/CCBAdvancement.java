@@ -17,12 +17,13 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.registry.CCBAdvancements;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -32,7 +33,8 @@ import java.util.function.UnaryOperator;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBAdvancement {
-    private static final ResourceLocation BACKGROUND = CreateCraftedBeginning.asResource("textures/gui/advancements.png");
+    private static final List<CCBAdvancement> ENTRIES = new ArrayList<>();
+    private static final ResourceLocation BACKGROUND = CCBAPI.asResource("textures/gui/advancements.png");
     private final Advancement.Builder advancementBuilder = Advancement.Builder.advancement();
     private final Builder builder = new Builder();
     private final String id;
@@ -51,7 +53,12 @@ public class CCBAdvancement {
             advancementBuilder.addCriterion("0", builtinTrigger.createCriterion(SimpleCCBTrigger.instance()));
         }
 
-        CCBAdvancements.ENTRIES.add(this);
+        ENTRIES.add(this);
+    }
+
+    @Contract(pure = true)
+    public static @Unmodifiable List<CCBAdvancement> all() {
+        return List.copyOf(ENTRIES);
     }
 
     public boolean isAlreadyAwardedTo(Player player) {
@@ -63,7 +70,7 @@ public class CCBAdvancement {
             return false;
         }
 
-        AdvancementHolder holder = serverPlayer.getServer().getAdvancements().get(CreateCraftedBeginning.asResource(id));
+        AdvancementHolder holder = serverPlayer.getServer().getAdvancements().get(CCBAPI.asResource(id));
         return holder == null || serverPlayer.getAdvancements().getOrStartProgress(holder).isDone();
     }
 
@@ -84,12 +91,12 @@ public class CCBAdvancement {
         }
 
         advancementBuilder.display(builder.icon, Component.translatable(titleKey()), Component.translatable(descriptionKey()).withStyle(style -> style.withColor(0xDBA213)), "root".equals(id) ? BACKGROUND : null, builder.type.advancementType, builder.type.toast, builder.type.announce, builder.type.hide);
-        dataGenResult = advancementBuilder.save(consumer, CreateCraftedBeginning.asResource(id).toString());
+        dataGenResult = advancementBuilder.save(consumer, CCBAPI.asResource(id).toString());
     }
 
     @Contract(pure = true)
     private String titleKey() {
-        return "advancement." + CreateCraftedBeginning.MOD_ID + '.' + id;
+        return "advancement." + CCBAPI.MOD_ID + '.' + id;
     }
 
     @Contract(pure = true)

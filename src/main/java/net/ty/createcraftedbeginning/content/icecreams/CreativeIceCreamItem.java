@@ -12,12 +12,13 @@ import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.recipe.CreativeCoolingSource;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CreativeIceCreamItem extends Item {
+public class CreativeIceCreamItem extends Item implements CreativeCoolingSource {
     public CreativeIceCreamItem(Properties properties) {
         super(properties);
     }

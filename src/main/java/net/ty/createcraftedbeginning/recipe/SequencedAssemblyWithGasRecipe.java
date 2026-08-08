@@ -19,9 +19,7 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipe;
-import net.ty.createcraftedbeginning.api.gas.recipes.SequencedAssemblyWithGasRecipeSerializer;
-import net.ty.createcraftedbeginning.registry.CCBDataComponents;
-import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
+import net.ty.createcraftedbeginning.recipe.gas.SequencedAssemblyWithGasRecipeSerializer;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -99,10 +97,10 @@ public class SequencedAssemblyWithGasRecipe implements Recipe<RecipeWrapper> {
 
     @SuppressWarnings("DataFlowIssue")
     private static int getStep(ItemStack input) {
-        if (!input.has(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS)) {
+        if (!input.has(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS)) {
             return 0;
         }
-        return input.get(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS).step();
+        return input.get(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS).step();
     }
 
     private ItemStack advance(ResourceLocation id, ItemStack input) {
@@ -115,7 +113,7 @@ public class SequencedAssemblyWithGasRecipe implements Recipe<RecipeWrapper> {
         ItemStack advancedItem = getTransitionalItem().copyWithCount(1);
         float progress = (step + 1.0f) / (sequence.size() * loops);
         SequencedAssemblyWithGas assemblyData = new SequencedAssemblyWithGas(id, nextStep, progress);
-        advancedItem.set(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS, assemblyData);
+        advancedItem.set(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS, assemblyData);
         return advancedItem;
     }
 
@@ -141,11 +139,11 @@ public class SequencedAssemblyWithGasRecipe implements Recipe<RecipeWrapper> {
             return true;
         }
 
-        if (getTransitionalItem().getItem() != input.getItem() || !input.has(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS)) {
+        if (getTransitionalItem().getItem() != input.getItem() || !input.has(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS)) {
             return false;
         }
 
-        SequencedAssemblyWithGas assemblyData = input.get(CCBDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS);
+        SequencedAssemblyWithGas assemblyData = input.get(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS);
         return assemblyData.id().equals(id);
     }
 

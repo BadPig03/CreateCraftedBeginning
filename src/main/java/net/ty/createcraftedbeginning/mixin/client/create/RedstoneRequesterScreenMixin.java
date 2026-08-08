@@ -19,7 +19,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUtils;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
@@ -99,10 +99,10 @@ public abstract class RedstoneRequesterScreenMixin extends AbstractSimiContainer
 
         List<Component> tooltips = new ArrayList<>();
         tooltips.add(CCBLang.translate("gui.gas_virtual_item.send_item", CCBLang.itemName(stack).add(CCBLang.text(" x" + GasRequestUtils.formatPrecise(amounts.get(slotIndex))))).color(ScrollInput.HEADER_RGB).component());
-        tooltips.add(CCBLang.translate("gui.gas_virtual_item.scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getScrollStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-        tooltips.add(CCBLang.translate("gui.gas_virtual_item.shift_to_scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getShiftStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-        tooltips.add(CCBLang.translate("gui.gas_virtual_item.alt_to_scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getAltStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-        tooltips.add(CCBLang.translate("gui.gas_virtual_item.ctrl_to_scroll", GasAmountUtils.formatPrecise(GasRequestUtils.getCtrlStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltips.add(CCBLang.translate("gui.gas_virtual_item.scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getScrollStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltips.add(CCBLang.translate("gui.gas_virtual_item.shift_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getShiftStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltips.add(CCBLang.translate("gui.gas_virtual_item.alt_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getAltStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltips.add(CCBLang.translate("gui.gas_virtual_item.ctrl_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getCtrlStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
         cir.setReturnValue(tooltips);
     }
 
@@ -152,7 +152,7 @@ public abstract class RedstoneRequesterScreenMixin extends AbstractSimiContainer
         }
 
         int current = amounts.get(slot);
-        int step = GasRequestUtils.getStep(hasAltDown(), hasControlDown(), hasShiftDown());
+        int step = GasRequestClientUtils.getStep(hasAltDown(), hasControlDown(), hasShiftDown());
         if (!hasControlDown() && scrollY > 0 && current == 1 && step > 1) {
             step--;
         }

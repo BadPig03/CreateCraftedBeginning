@@ -19,9 +19,8 @@ import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
 import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.recipes.DeployerApplicationWithGasRecipe;
 import net.ty.createcraftedbeginning.compat.CCBCompatMods;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIEvents;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlockEntity;
@@ -57,22 +56,23 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamber
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberRecipeIndex;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity;
 import net.ty.createcraftedbeginning.content.crates.CratesBlockEntity;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
 import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
+import net.ty.createcraftedbeginning.recipe.gas.DeployerApplicationWithGasRecipe;
 import net.ty.createcraftedbeginning.recipe.trie.AirtightWithGasRecipeTrieFinder;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
+@EventBusSubscriber(modid = CCBAPI.MOD_ID)
 public class CCBCommonEvents {
     @SubscribeEvent
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
@@ -157,6 +157,6 @@ public class CCBCommonEvents {
         }
 
         CCBCompatMods.JEI.executeIfInstalled(() -> CCBJEIEvents::registerMysteriousItemConversions);
-        Schedule.CONDITION_TYPES.add(3, Pair.of(CreateCraftedBeginning.asResource("gas_threshold"), GasThresholdCondition::new));
+        Schedule.CONDITION_TYPES.add(3, Pair.of(CCBAPI.asResource("gas_threshold"), GasThresholdCondition::new));
     }
 }

@@ -36,8 +36,9 @@ import net.minecraft.world.item.crafting.ShapelessRecipe;
 import net.minecraft.world.item.crafting.SmithingRecipe;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.fluids.FluidType;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.client.CCBClientRecipeUtils;
 import net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory;
@@ -64,7 +65,7 @@ import net.ty.createcraftedbeginning.compat.jei.utils.StockKeeperRequestGasGuiHa
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillScreen;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreen;
-import net.ty.createcraftedbeginning.data.CCBGasRegistries;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
 import net.ty.createcraftedbeginning.recipe.ChillingRecipe;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 import net.ty.createcraftedbeginning.recipe.DissipationRecipe;
@@ -79,7 +80,6 @@ import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingData;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -121,7 +121,7 @@ public class CCBJEIPlugin implements IModPlugin {
 
     private static void registerGasStackIngredients(IModIngredientRegistration registry) {
         GAS_STACK_HELPER.setColorHelper(registry.getColorHelper());
-        List<GasStack> gasStacks = CCBGasRegistries.GAS_REGISTRY.holders().filter(Objects::nonNull).filter(holder -> !holder.value().isEmpty()).map(holder -> new GasStack(holder, FluidType.BUCKET_VOLUME)).toList();
+        List<GasStack> gasStacks = GasRegistries.GAS_REGISTRY.holders().filter(Objects::nonNull).filter(holder -> !holder.value().isEmpty()).map(holder -> new GasStack(holder, FluidType.BUCKET_VOLUME)).toList();
         registry.register(GAS_STACK, gasStacks, GAS_STACK_HELPER, new GasStackRenderer(), Gas.HOLDER_CODEC.xmap(holder -> new GasStack(holder, FluidType.BUCKET_VOLUME), GasStack::getGasHolder));
     }
 
@@ -144,7 +144,7 @@ public class CCBJEIPlugin implements IModPlugin {
             }
 
             ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
-            ResourceLocation recipeId = CreateCraftedBeginning.asResource("jei/wind_charging/" + itemId.getNamespace() + '/' + itemId.getPath());
+            ResourceLocation recipeId = CCBAPI.asResource("jei/wind_charging/" + itemId.getNamespace() + '/' + itemId.getPath());
             WindChargingRecipe recipe = new StandardProcessingRecipe.Builder<>(WindChargingRecipe::new, recipeId).withItemIngredients(Ingredient.of(item)).duration(data.time()).build();
             recipes.add(new RecipeHolder<>(recipeId, recipe));
         }
@@ -152,7 +152,7 @@ public class CCBJEIPlugin implements IModPlugin {
 
     @Override
     public ResourceLocation getPluginUid() {
-        return CreateCraftedBeginning.asResource("jei_plugin");
+        return CCBAPI.asResource("jei_plugin");
     }
 
     @Override

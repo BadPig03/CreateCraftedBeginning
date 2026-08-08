@@ -6,8 +6,8 @@ import net.minecraft.advancements.critereon.SimpleCriterionTrigger.SimpleInstanc
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.PlayerAdvancements;
 import net.minecraft.server.level.ServerPlayer;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
 import net.ty.createcraftedbeginning.advancement.CriterionTriggerBase.Instance;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -27,7 +27,7 @@ public abstract class CriterionTriggerBase<T extends Instance> implements Criter
     private final ResourceLocation id;
 
     public CriterionTriggerBase(String id) {
-        this.id = CreateCraftedBeginning.asResource(id);
+        this.id = CCBAPI.asResource(id);
     }
 
     @Override

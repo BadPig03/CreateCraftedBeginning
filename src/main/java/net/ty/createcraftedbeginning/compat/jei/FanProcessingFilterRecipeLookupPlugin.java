@@ -10,7 +10,7 @@ import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,7 +31,7 @@ public class FanProcessingFilterRecipeLookupPlugin implements IRecipeManagerPlug
         PROCESSING_TYPES.put(Create.asResource("smoking"), Create.asResource("fan_smoking"));
         PROCESSING_TYPES.put(Create.asResource("blasting"), Create.asResource("fan_blasting"));
         PROCESSING_TYPES.put(Create.asResource("haunting"), Create.asResource("fan_haunting"));
-        PROCESSING_TYPES.put(CreateCraftedBeginning.asResource("chilling"), CreateCraftedBeginning.asResource("chilling"));
+        PROCESSING_TYPES.put(CCBAPI.asResource("chilling"), CCBAPI.asResource("chilling"));
         PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_white"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));
         PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_light_gray"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));
         PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_gray"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));

@@ -9,18 +9,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AirtightPipeAttachmentTypes {
     public enum AttachmentTypes {
         NONE,
-        RIM(ComponentPartials.RIM),
-        DRAIN(ComponentPartials.DRAIN);
-
-        public final ComponentPartials[] partials;
-
-        AttachmentTypes(ComponentPartials... partials) {
-            this.partials = partials;
-        }
-
-        public enum ComponentPartials {
-            RIM,
-            DRAIN
-        }
+        RIM,
+        DRAIN
     }
 }

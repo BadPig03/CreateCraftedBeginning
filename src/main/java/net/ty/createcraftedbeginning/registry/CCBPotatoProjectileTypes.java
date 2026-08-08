@@ -9,7 +9,7 @@ import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffects;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -29,6 +29,6 @@ public class CCBPotatoProjectileTypes {
     }
 
     private static void register(BootstrapContext<PotatoCannonProjectileType> context, String name, PotatoCannonProjectileType type) {
-        context.register(ResourceKey.create(CreateRegistries.POTATO_PROJECTILE_TYPE, ResourceLocation.fromNamespaceAndPath(CreateCraftedBeginning.MOD_ID, name)), type);
+        context.register(ResourceKey.create(CreateRegistries.POTATO_PROJECTILE_TYPE, ResourceLocation.fromNamespaceAndPath(CCBAPI.MOD_ID, name)), type);
     }
 }

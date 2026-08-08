@@ -9,6 +9,7 @@ import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlockEntity.ResidueInsertionPlan;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletInventory;
+import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
 import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe;
 import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe.ResidueOutput;
 import org.jetbrains.annotations.Nullable;
@@ -75,12 +76,12 @@ public class AirtightAssemblyDriverResidueManager {
         return outlet.createResidueInsertionPlan(output.fluidStack(), output.itemStack(), maxAmount);
     }
 
-    private static int commitGenerationPlan(GenerationPlan plan) {
-        long insertedAmount = 0;
+    private static boolean commitGenerationPlan(GenerationPlan plan) {
+        ResourceTransaction transaction = new ResourceTransaction();
         for (ResidueInsertionPlan insertion : plan.insertions()) {
-            insertedAmount += insertion.commit();
+            insertion.addTo(transaction);
         }
-        return Math.clamp(insertedAmount, 0, Integer.MAX_VALUE);
+        return transaction.commit();
     }
 
     public void tick(Level level) {
@@ -201,7 +202,7 @@ public class AirtightAssemblyDriverResidueManager {
             return;
         }
 
-        if (generatedAmount > 0 && commitGenerationPlan(plan) != generatedAmount) {
+        if (generatedAmount > 0 && !commitGenerationPlan(plan)) {
             handleGenerationFailure();
             return;
         }

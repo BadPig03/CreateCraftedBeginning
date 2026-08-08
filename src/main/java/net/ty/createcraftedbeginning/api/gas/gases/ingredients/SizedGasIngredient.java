@@ -12,9 +12,8 @@ import net.minecraft.tags.TagKey;
 import net.neoforged.neoforge.common.util.NeoForgeExtraCodecs;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.data.CCBGasRegistries;
-import net.ty.createcraftedbeginning.registry.CCBRegistries;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,15 +24,14 @@ import java.util.stream.Stream;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public final class SizedGasIngredient {
-    public static final Codec<SizedGasIngredient> FLAT_CODEC = RecordCodecBuilder.create(instance -> instance.group(GasIngredient.MAP_CODEC_NONEMPTY.forGetter(SizedGasIngredient::ingredient), NeoForgeExtraCodecs.optionalFieldAlwaysWrite(Codec.LONG, "amount", (long) FluidType.BUCKET_VOLUME).forGetter(SizedGasIngredient::amount)).apply(instance, SizedGasIngredient::new));
-    public static final Codec<SizedGasIngredient> NESTED_CODEC = RecordCodecBuilder.create(instance -> instance.group(GasIngredient.CODEC_NON_EMPTY.fieldOf("ingredient").forGetter(SizedGasIngredient::ingredient), NeoForgeExtraCodecs.optionalFieldAlwaysWrite(Codec.LONG, "amount", (long) FluidType.BUCKET_VOLUME).forGetter(SizedGasIngredient::amount)).apply(instance, SizedGasIngredient::new));
     public static final StreamCodec<RegistryFriendlyByteBuf, SizedGasIngredient> STREAM_CODEC = StreamCodec.composite(GasIngredient.STREAM_CODEC, SizedGasIngredient::ingredient, ByteBufCodecs.VAR_LONG, SizedGasIngredient::amount, SizedGasIngredient::new);
-    public static final Codec<SizedGasIngredient> FLAT_SIZED_GAS_INGREDIENT_WITH_TYPE = RecordCodecBuilder.create(instance -> instance.group(CCBGasRegistries.GAS_INGREDIENT_TYPES_REGISTRY.byNameCodec().fieldOf("type").forGetter(value -> value.ingredient().getType()), GasIngredient.MAP_CODEC_NONEMPTY.forGetter(SizedGasIngredient::ingredient), NeoForgeExtraCodecs.optionalFieldAlwaysWrite(Codec.LONG, "amount", (long) FluidType.BUCKET_VOLUME).forGetter(SizedGasIngredient::amount)).apply(instance, (type, ingredient, amount) -> new SizedGasIngredient(ingredient, amount)));
-    private static final Codec<SizedGasIngredient> GAS_STACK = RecordCodecBuilder.create(instance -> instance.group(validatedType("gas_stack"), GasStack.GAS_NON_EMPTY_CODEC.fieldOf("gas").forGetter(value -> null), DataComponentPatch.CODEC.optionalFieldOf("components", DataComponentPatch.EMPTY).forGetter(value -> null), Codec.LONG.fieldOf("amount").forGetter(value -> null)).apply(instance, (type, gas, components, amount) -> new SizedGasIngredient(DataComponentGasIngredient.of(false, components.split().added(), gas), amount)));
-    private static final Codec<SizedGasIngredient> GAS_TAG = RecordCodecBuilder.create(instance -> instance.group(validatedType("gas_tag"), TagKey.codec(CCBRegistries.GAS_REGISTRY_KEY).fieldOf("gas_tag").forGetter(value -> null), Codec.LONG.fieldOf("amount").forGetter(value -> null)).apply(instance, (type, tag, amount) -> new SizedGasIngredient(TagGasIngredient.tag(tag), amount)));
-    public static final Codec<SizedGasIngredient> SIZED_GAS_INGREDIENT = Codec.withAlternative(FLAT_SIZED_GAS_INGREDIENT_WITH_TYPE, Codec.withAlternative(GAS_STACK, GAS_TAG));
+    public static final Codec<SizedGasIngredient> TYPED_CODEC = RecordCodecBuilder.create(instance -> instance.group(GasRegistries.GAS_INGREDIENT_TYPES_REGISTRY.byNameCodec().fieldOf("type").forGetter(value -> value.ingredient().getType()), GasIngredient.MAP_CODEC_NONEMPTY.forGetter(SizedGasIngredient::ingredient), NeoForgeExtraCodecs.optionalFieldAlwaysWrite(Codec.LONG, "amount", (long) FluidType.BUCKET_VOLUME).forGetter(SizedGasIngredient::amount)).apply(instance, (type, ingredient, amount) -> new SizedGasIngredient(ingredient, amount)));
+
+    private static final Codec<SizedGasIngredient> GAS_STACK_CODEC = RecordCodecBuilder.create(instance -> instance.group(validatedType("gas_stack"), GasStack.GAS_NON_EMPTY_CODEC.fieldOf("gas").forGetter(value -> null), DataComponentPatch.CODEC.optionalFieldOf("components", DataComponentPatch.EMPTY).forGetter(value -> null), Codec.LONG.fieldOf("amount").forGetter(value -> null)).apply(instance, (type, gas, components, amount) -> new SizedGasIngredient(DataComponentGasIngredient.of(false, components.split().added(), gas), amount)));
+    private static final Codec<SizedGasIngredient> GAS_TAG_CODEC = RecordCodecBuilder.create(instance -> instance.group(validatedType("gas_tag"), TagKey.codec(GasRegistries.GAS_REGISTRY_KEY).fieldOf("gas_tag").forGetter(value -> null), Codec.LONG.fieldOf("amount").forGetter(value -> null)).apply(instance, (type, tag, amount) -> new SizedGasIngredient(TagGasIngredient.tag(tag), amount)));
+
+    public static final Codec<SizedGasIngredient> CODEC = Codec.withAlternative(TYPED_CODEC, Codec.withAlternative(GAS_STACK_CODEC, GAS_TAG_CODEC));
 
     private final GasIngredient ingredient;
     private final long amount;
@@ -169,7 +167,7 @@ public final class SizedGasIngredient {
      */
     @Override
     public boolean equals(Object obj) {
-        return this == obj || obj instanceof SizedGasIngredient other && other.amount() == amount && other.ingredient() == ingredient;
+        return this == obj || obj instanceof SizedGasIngredient other && other.amount() == amount && ingredient.equals(other.ingredient());
     }
 
     /**

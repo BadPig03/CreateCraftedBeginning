@@ -9,10 +9,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
-import net.ty.createcraftedbeginning.data.CCBIcons;
-import net.ty.createcraftedbeginning.data.CCBLang;
+import net.ty.createcraftedbeginning.foundation.gui.AirtightUpgradeIcon;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -23,7 +23,7 @@ import java.util.List;
 public enum JumpStrengthUpgrade implements AirtightUpgrade {
     INSTANCE;
 
-    private static final ResourceLocation ID = CreateCraftedBeginning.asResource("jump_strength");
+    private static final ResourceLocation ID = CCBAPI.asResource("jump_strength");
     private static final Couple<Integer> OFFSET = Couple.create(36, 55);
 
     @Override
@@ -47,8 +47,8 @@ public enum JumpStrengthUpgrade implements AirtightUpgrade {
     }
 
     @Override
-    public CCBIcons getIcon() {
-        return CCBIcons.I_JUMP_STRENGTH;
+    public AirtightUpgradeIcon getIcon() {
+        return AirtightUpgradeIcon.JUMP_STRENGTH;
     }
 
     @Override

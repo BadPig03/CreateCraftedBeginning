@@ -21,22 +21,21 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.IItemDecorator;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.CreateCraftedBeginningClient;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandler;
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlareSupplierUtils;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import net.ty.createcraftedbeginning.registry.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.ref.WeakReference;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@EventBusSubscriber(value = Dist.CLIENT, modid = CreateCraftedBeginning.MOD_ID)
+@EventBusSubscriber(value = Dist.CLIENT, modid = CCBAPI.MOD_ID)
 public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer {
     private static long cachedGameTime = Long.MIN_VALUE;
     private static WeakReference<LocalPlayer> cachedPlayer = new WeakReference<>(null);
@@ -137,7 +136,7 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
         poseStack.popPose();
 
         boolean leftHanded = player.getMainArm() == HumanoidArm.LEFT;
-        float animation = CreateCraftedBeginningClient.AIRTIGHT_CANNON_RENDER_HANDLER.getAnimation(inMainHand ^ leftHanded, partialTick);
+        float animation = AirtightCannonRenderHandler.INSTANCE.getAnimation(inMainHand ^ leftHanded, partialTick);
         float pistonOffset = Mth.clamp(animation * 2, 0, 1) / 8;
 
         poseStack.pushPose();

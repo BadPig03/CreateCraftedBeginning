@@ -22,7 +22,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightForgingPress;
-import net.ty.createcraftedbeginning.client.CCBGUITextures;
+import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
 import net.ty.createcraftedbeginning.recipe.ForgingPressRecipe;
 
 import javax.annotation.ParametersAreNonnullByDefault;

@@ -11,9 +11,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.api.gas.recipes.PressingWithGasRecipe;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
-import net.ty.createcraftedbeginning.registry.CCBRecipeTypes;
+import net.ty.createcraftedbeginning.recipe.gas.PressingWithGasRecipe;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -30,18 +30,18 @@ import java.util.Optional;
 @Mixin(value = MechanicalPressBlockEntity.class, remap = false)
 public abstract class MechanicalPressBlockEntityMixin {
     @Shadow
-    protected abstract void onItemPressed(ItemStack result);
-
-    @Shadow
-    protected abstract boolean canProcessInBulk();
-
-    @Shadow
     private PressingBehaviour pressingBehaviour;
 
     @Unique
     private static Optional<RecipeHolder<PressingWithGasRecipe>> ccb$getRecipeWithGas(ItemStack item, Level level) {
         return SequencedAssemblyWithGasRecipe.getRecipe(level, item, CCBRecipeTypes.PRESSING_WITH_GAS.getType(), PressingWithGasRecipe.class);
     }
+
+    @Shadow
+    protected abstract void onItemPressed(ItemStack result);
+
+    @Shadow
+    protected abstract boolean canProcessInBulk();
 
     @Unique
     private void ccb$processRecipeInWorld(Level level, ItemEntity itemEntity, RecipeHolder<PressingWithGasRecipe> recipe) {
@@ -89,7 +89,7 @@ public abstract class MechanicalPressBlockEntityMixin {
         if (recipeWithGas.isEmpty()) {
             return;
         }
-        
+
         if (simulate) {
             cir.setReturnValue(true);
             return;

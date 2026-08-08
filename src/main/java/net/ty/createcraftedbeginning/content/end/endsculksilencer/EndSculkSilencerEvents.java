@@ -22,15 +22,15 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerRespawnEvent
 import net.neoforged.neoforge.event.level.LevelEvent.Unload;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent.Post;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.compat.sable.SableSubLevelCompat;
+import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID)
+@EventBusSubscriber(modid = CCBAPI.MOD_ID)
 public final class EndSculkSilencerEvents {
     private EndSculkSilencerEvents() {
     }
@@ -56,7 +56,7 @@ public final class EndSculkSilencerEvents {
             return;
         }
 
-        BlockPos sourcePos = SableSubLevelCompat.resolve(event.getLevel(), event.getEventPosition()).blockPos();
+        BlockPos sourcePos = CCBSubLevelBridge.resolve(event.getLevel(), event.getEventPosition()).blockPos();
         if (!GlobalEndSculkSilencerManager.checkWithinRange(sourcePos, dimension)) {
             return;
         }
@@ -103,7 +103,7 @@ public final class EndSculkSilencerEvents {
             return false;
         }
 
-        BlockPos projectedPos = SableSubLevelCompat.resolve(level, position).blockPos();
+        BlockPos projectedPos = CCBSubLevelBridge.resolve(level, position).blockPos();
         return GlobalEndSculkSilencerManager.checkWithinRange(projectedPos, dimension);
     }
 

@@ -13,10 +13,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.client.CCBGasClientTextures;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
-import net.ty.createcraftedbeginning.data.CCBGasRegistries;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -68,7 +68,7 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
         if (key != null) {
             return key.location();
         }
-        return CCBGasRegistries.GAS_REGISTRY.getKey(holder.value());
+        return GasRegistries.GAS_REGISTRY.getKey(holder.value());
     }
 
     @Override

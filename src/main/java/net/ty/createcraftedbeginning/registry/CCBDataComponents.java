@@ -14,14 +14,13 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.templates.AirtightHandheldDrillMiningTemplates;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonGasContents;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterUtils.GasFilterData;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateContents;
-import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe.SequencedAssemblyWithGas;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -31,7 +30,7 @@ import java.util.function.UnaryOperator;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBDataComponents {
-    public static final DeferredRegister<DataComponentType<?>> COMPONENTS = DeferredRegister.create(BuiltInRegistries.DATA_COMPONENT_TYPE, CreateCraftedBeginning.MOD_ID);
+    public static final DeferredRegister<DataComponentType<?>> COMPONENTS = DeferredRegister.create(BuiltInRegistries.DATA_COMPONENT_TYPE, CCBAPI.MOD_ID);
 
     public static final DataComponentType<SturdyCrateContents> STURDY_CRATE_CONTENTS = register("sturdy_crate_contents", builder -> builder.persistent(SturdyCrateContents.CODEC).networkSynchronized(SturdyCrateContents.STREAM_CODEC));
 
@@ -63,8 +62,6 @@ public class CCBDataComponents {
     public static final DataComponentType<Integer> GAS_VIRTUAL_ITEM_COLOR = register("gas_virtual_item_color", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
     public static final DataComponentType<GasStack> GAS_VIRTUAL_ITEM_TYPE = register("gas_virtual_item_type", builder -> builder.persistent(GasStack.OPTIONAL_CODEC).networkSynchronized(GasStack.OPTIONAL_STREAM_CODEC));
     public static final DataComponentType<GasFilterData> GAS_FILTER_DATA = register("gas_filter_data", builder -> builder.persistent(GasFilterData.CODEC).networkSynchronized(GasFilterData.STREAM_CODEC));
-
-    public static final DataComponentType<SequencedAssemblyWithGas> SEQUENCED_ASSEMBLY_WITH_GAS = register("sequenced_assembly_with_gas", builder -> builder.persistent(SequencedAssemblyWithGas.CODEC).networkSynchronized(SequencedAssemblyWithGas.STREAM_CODEC));
 
     private static <T> @NotNull DataComponentType<T> register(String name, UnaryOperator<Builder<T>> builder) {
         DataComponentType<T> type = builder.apply(DataComponentType.builder()).build();

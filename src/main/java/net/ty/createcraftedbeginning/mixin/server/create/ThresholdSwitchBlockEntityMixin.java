@@ -12,10 +12,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.gas.gases.behaviours.GasManipulationBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralShaftBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasManipulationBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -35,12 +35,12 @@ public abstract class ThresholdSwitchBlockEntityMixin extends SmartBlockEntity {
     @Unique
     private GasManipulationBehaviour ccb$observedGasTank;
 
-    @Shadow
-    protected abstract BlockPos getTargetPos();
-
     private ThresholdSwitchBlockEntityMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
+
+    @Shadow
+    protected abstract BlockPos getTargetPos();
 
     @Inject(method = "addBehaviours", at = @At("TAIL"))
     private void ccb$addGasBehaviour(List<BlockEntityBehaviour> behaviours, CallbackInfo ci) {

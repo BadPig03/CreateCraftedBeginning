@@ -9,8 +9,8 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.neoforged.neoforge.common.crafting.CompoundIngredient;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IAssemblyRecipeWithGas;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipe;
+import net.ty.createcraftedbeginning.recipe.gas.IAssemblyRecipeWithGas;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 

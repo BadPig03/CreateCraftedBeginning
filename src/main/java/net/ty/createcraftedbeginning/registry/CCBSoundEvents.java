@@ -21,7 +21,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import net.neoforged.neoforge.registries.RegisterEvent.RegisterHelper;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -63,7 +63,7 @@ public class CCBSoundEvents {
 
     @Contract("_ -> new")
     private static SoundEntryBuilder create(String name) {
-        return create(CreateCraftedBeginning.asResource(name));
+        return create(CCBAPI.asResource(name));
     }
 
     @Contract("_ -> new")
@@ -240,7 +240,7 @@ public class CCBSoundEvents {
         }
 
         public SoundEntryBuilder addVariant(String name) {
-            return addVariant(CreateCraftedBeginning.asResource(name));
+            return addVariant(CCBAPI.asResource(name));
         }
 
         public SoundEntryBuilder addVariant(ResourceLocation id) {

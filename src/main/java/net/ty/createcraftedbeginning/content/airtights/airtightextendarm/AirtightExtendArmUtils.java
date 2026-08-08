@@ -10,12 +10,12 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.armhandlers.AirtightArmHandler;
 import net.ty.createcraftedbeginning.api.armhandlers.AirtightArmHandlerUtils;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerConsumers;
-import net.ty.createcraftedbeginning.api.gascanisters.CanisterContainerConsumers.AffordableFuel;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers.AffordableFuel;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,9 +27,9 @@ import java.util.WeakHashMap;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class AirtightExtendArmUtils {
-    private static final ResourceLocation BLOCK_RANGE_MODIFIER_ID = CreateCraftedBeginning.asResource("airtight_extend_arm_block_range");
-    private static final ResourceLocation ENTITY_RANGE_MODIFIER_ID = CreateCraftedBeginning.asResource("airtight_extend_arm_entity_range");
-    private static final ResourceLocation KNOCKBACK_MODIFIER_ID = CreateCraftedBeginning.asResource("airtight_extend_arm_knockback");
+    private static final ResourceLocation BLOCK_RANGE_MODIFIER_ID = CCBAPI.asResource("airtight_extend_arm_block_range");
+    private static final ResourceLocation ENTITY_RANGE_MODIFIER_ID = CCBAPI.asResource("airtight_extend_arm_entity_range");
+    private static final ResourceLocation KNOCKBACK_MODIFIER_ID = CCBAPI.asResource("airtight_extend_arm_knockback");
     private static final int POWER_REFRESH_INTERVAL = 5;
     private static final Map<Player, AffordableFuel> ACTIVE_FUELS = new WeakHashMap<>();
 

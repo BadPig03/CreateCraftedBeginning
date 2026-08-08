@@ -38,7 +38,7 @@ import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbine
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.TeslaTurbineStructuralPosition;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineUtils;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineUtils.NozzlePort;
-import net.ty.createcraftedbeginning.data.CCBShapes;
+import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 

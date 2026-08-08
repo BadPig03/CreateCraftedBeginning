@@ -13,8 +13,8 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent.LoggingOut;
 import net.neoforged.neoforge.client.event.ClientTickEvent.Post;
 import net.neoforged.neoforge.client.event.sound.PlaySoundEvent;
-import net.ty.createcraftedbeginning.CreateCraftedBeginning;
-import net.ty.createcraftedbeginning.compat.sable.SableSubLevelCompat;
+import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.IdentityHashMap;
@@ -24,7 +24,7 @@ import java.util.Map.Entry;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@EventBusSubscriber(modid = CreateCraftedBeginning.MOD_ID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = CCBAPI.MOD_ID, value = Dist.CLIENT)
 public final class EndSculkSilencerClientEvents {
     private static final int INACTIVE_SOUND_GRACE_TICKS = 3;
     private static final Map<SoundInstance, Integer> TRACKED_LOOPING_SOUNDS = new IdentityHashMap<>();
@@ -135,6 +135,6 @@ public final class EndSculkSilencerClientEvents {
     }
 
     private static boolean isWithinRange(ClientLevel level, Vec3 position, ResourceLocation dimension) {
-        return ClientEndSculkSilencerCache.INSTANCE.checkWithinRange(SableSubLevelCompat.resolve(level, position).blockPos(), dimension);
+        return ClientEndSculkSilencerCache.INSTANCE.checkWithinRange(CCBSubLevelBridge.resolve(level, position).blockPos(), dimension);
     }
 }
