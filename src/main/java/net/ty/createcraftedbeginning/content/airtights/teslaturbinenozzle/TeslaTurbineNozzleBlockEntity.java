@@ -115,8 +115,11 @@ public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements I
         if (!(state.getBlock() instanceof TeslaTurbineNozzleBlock nozzle)) {
             return;
         }
-        if (!level.getBlockTicks().hasScheduledTick(worldPosition, nozzle)) {
-            level.scheduleTick(worldPosition, nozzle, 1);
+
+        if (level.getBlockTicks().hasScheduledTick(worldPosition, nozzle)) {
+            return;
         }
+
+        level.scheduleTick(worldPosition, nozzle, 1);
     }
 }

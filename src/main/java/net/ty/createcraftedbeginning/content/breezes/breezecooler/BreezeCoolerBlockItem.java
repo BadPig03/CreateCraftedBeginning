@@ -85,11 +85,11 @@ public class BreezeCoolerBlockItem extends BlockItem {
 
         spawnCaptureEffects(level, VecHelper.getCenterOf(spawnerBlockEntity.getBlockPos()));
         if (level.isClientSide) {
-            return InteractionResult.sidedSuccess(level.isClientSide);
+            return InteractionResult.sidedSuccess(true);
         }
 
         giveCoolerItemTo(player, context.getItemInHand(), context.getHand());
-        return InteractionResult.sidedSuccess(level.isClientSide);
+        return InteractionResult.sidedSuccess(false);
     }
 
     private static InteractionResult tryCaptureFromSpawner(SpawnerBlockEntity spawnerBlockEntity, UseOnContext context) {
@@ -106,11 +106,11 @@ public class BreezeCoolerBlockItem extends BlockItem {
 
         spawnCaptureEffects(level, VecHelper.getCenterOf(spawnerBlockEntity.getBlockPos()));
         if (level.isClientSide) {
-            return InteractionResult.sidedSuccess(level.isClientSide);
+            return InteractionResult.sidedSuccess(true);
         }
 
         giveCoolerItemTo(player, context.getItemInHand(), context.getHand());
-        return InteractionResult.sidedSuccess(level.isClientSide);
+        return InteractionResult.sidedSuccess(false);
     }
 
     @Override
@@ -122,12 +122,12 @@ public class BreezeCoolerBlockItem extends BlockItem {
         Level level = player.level();
         spawnCaptureEffects(level, entity.position());
         if (level.isClientSide) {
-            return InteractionResult.sidedSuccess(level.isClientSide);
+            return InteractionResult.sidedSuccess(true);
         }
 
         giveCoolerItemTo(player, heldItem, hand);
         entity.discard();
-        return InteractionResult.sidedSuccess(level.isClientSide);
+        return InteractionResult.sidedSuccess(false);
     }
 
     @Override
@@ -147,6 +147,7 @@ public class BreezeCoolerBlockItem extends BlockItem {
             InteractionResult result = tryCaptureFromSpawner(spawnerBlockEntity, context);
             return result == InteractionResult.FAIL ? super.useOn(context) : result;
         }
+
         return super.useOn(context);
     }
 }

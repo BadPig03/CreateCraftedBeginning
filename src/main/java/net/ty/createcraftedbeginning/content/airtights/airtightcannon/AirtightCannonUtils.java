@@ -120,7 +120,6 @@ public final class AirtightCannonUtils {
         if (timeCharged < MIN_USE_TIME) {
             return OptionalDouble.empty();
         }
-
         return OptionalDouble.of(Mth.clamp((double) timeCharged / getEfficientUseTime(cannon), 0, 2));
     }
 

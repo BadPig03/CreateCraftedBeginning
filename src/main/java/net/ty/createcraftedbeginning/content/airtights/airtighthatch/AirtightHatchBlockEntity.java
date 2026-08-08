@@ -204,7 +204,6 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         if (normalizedGasAmount <= normalizedCapacity) {
             return normalizedCapacity;
         }
-
         return Math.max(Math.max(0, currentCapacity), normalizedGasAmount);
     }
 

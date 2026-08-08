@@ -75,7 +75,6 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
         if (facing == DirectionalFacing.NULL) {
             return rotatedState;
         }
-
         return setDirectionalFacing(rotatedState, rotation.rotate(DirectionalFacing.getDirection(facing)));
     }
 
@@ -87,7 +86,6 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
         if (facing == DirectionalFacing.NULL) {
             return mirroredState;
         }
-
         return setDirectionalFacing(mirroredState, mirror.mirror(DirectionalFacing.getDirection(facing)));
     }
 

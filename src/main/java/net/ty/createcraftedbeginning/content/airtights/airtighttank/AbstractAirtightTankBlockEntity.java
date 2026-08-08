@@ -89,9 +89,11 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
     public void initialize() {
         super.initialize();
         sendData();
-        if (level != null && level.isClientSide) {
-            invalidateRenderBoundingBox();
+        if (level == null || !level.isClientSide) {
+            return;
         }
+
+        invalidateRenderBoundingBox();
     }
 
     @Override
@@ -114,9 +116,11 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
         if (updateConnectivity) {
             updateConnectivity();
         }
-        if (isController()) {
-            tickController();
+        if (!isController()) {
+            return;
         }
+
+        tickController();
     }
 
     @Override
@@ -134,9 +138,11 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
         }
 
         syncCooldown--;
-        if (syncCooldown == 0 && queuedSync) {
-            sendData();
+        if (syncCooldown != 0 || !queuedSync) {
+            return;
         }
+
+        sendData();
     }
 
     @Override

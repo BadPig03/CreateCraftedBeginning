@@ -204,6 +204,7 @@ public final class AirtightReactorKettleUtils {
             extractStoredItems(master, level, player, pos);
             return ItemInteractionResult.SUCCESS;
         }
+
         return transferFluidContainer(master, level, player, hand, stack);
     }
 

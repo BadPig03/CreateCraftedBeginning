@@ -73,7 +73,8 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
             if (side == inputSide) {
                 return compressor.inputTankBehaviour.getCapability();
             }
-            else if (side == inputSide.getOpposite()) {
+
+            if (side == inputSide.getOpposite()) {
                 return compressor.outputTankBehaviour.getCapability();
             }
             return null;

@@ -107,6 +107,7 @@ public class AirtightAssemblyDriverFlowMeter {
         if (level.isClientSide) {
             return;
         }
+
         if (gasType.isEmpty() && rollingSupply == 0 && gatheredSupply == 0) {
             return;
         }
@@ -125,9 +126,11 @@ public class AirtightAssemblyDriverFlowMeter {
         gatheredSupply = 0;
         updateGasSupply();
         driverCore.markForSave();
-        if (hadDisplayableSupply != hasDisplayableGasSupply()) {
-            driverCore.markForClientSync();
+        if (hadDisplayableSupply == hasDisplayableGasSupply()) {
+            return;
         }
+
+        driverCore.markForClientSync();
     }
 
     public CompoundTag write(Provider provider, boolean clientPacket) {

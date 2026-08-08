@@ -59,9 +59,11 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
 
     private static void markConnectionsDirty(Level level, BlockPos pos) {
         GasTransportBehaviour transport = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
-        if (transport != null) {
-            transport.markConnectionsDirty();
+        if (transport == null) {
+            return;
         }
+
+        transport.markConnectionsDirty();
     }
 
     static boolean hasPlacementConnection(Level level, BlockPos pos, Direction direction) {

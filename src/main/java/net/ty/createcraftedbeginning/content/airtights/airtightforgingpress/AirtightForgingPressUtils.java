@@ -412,6 +412,7 @@ public final class AirtightForgingPressUtils {
         if (input.template().isEmpty() || input.base().isEmpty() || input.addition().isEmpty()) {
             return Optional.empty();
         }
+
         for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(AUTOMATIC_SMITHING_RECIPE_CACHE_KEY, level, AirtightForgingPressUtils::isAllowedAutomaticSmithingRecipe)) {
             if (!(holder.value() instanceof SmithingRecipe smithingRecipe) || !canApplySmithingRecipe(press, smithingRecipe, input)) {
                 continue;
