@@ -216,7 +216,7 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
             return;
         }
 
-        turbine.getCore().getStructureManager().tick();
+        turbine.refreshStructure();
     }
 
     @Override

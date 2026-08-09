@@ -9,7 +9,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.crates.CrateItemStackHandler;
 import net.ty.createcraftedbeginning.content.crates.CratesBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
@@ -30,20 +29,15 @@ public class CardboardCrateBlockEntity extends CratesBlockEntity {
     }
 
     public void awardPackageDisposal() {
-        if (advancementBehaviour == null) {
-            return;
+        if (advancementBehaviour != null) {
+            advancementBehaviour.awardPlayer(CCBAdvancements.CUT_FROM_THE_SAME_CARDBOARD);
         }
-
-        advancementBehaviour.awardPlayer(CCBAdvancements.CUT_FROM_THE_SAME_CARDBOARD);
     }
 
     public void awardStoredPackageDisposal() {
-        CrateItemStackHandler handler = getHandler();
-        if (handler.getCountInSlot(0) <= 0 || !isPackage(handler.getStoredItem(0))) {
-            return;
+        if (getStoredCount() > 0 && isPackage(getStoredItem())) {
+            awardPackageDisposal();
         }
-
-        awardPackageDisposal();
     }
 
     @Override

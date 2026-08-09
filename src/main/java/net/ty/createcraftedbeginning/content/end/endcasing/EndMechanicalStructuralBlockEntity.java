@@ -43,6 +43,15 @@ public abstract class EndMechanicalStructuralBlockEntity<T extends EndMechanical
         return masterClass.isInstance(blockEntity) ? masterClass.cast(blockEntity) : null;
     }
 
+    protected @Nullable T getMasterForUse() {
+        if (master != null && !master.isRemoved()) {
+            return master;
+        }
+
+        master = getMaster();
+        return master;
+    }
+
     public void verifyMaster() {
         if (level == null || level.isClientSide) {
             return;

@@ -4,7 +4,6 @@ import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
-import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
@@ -16,7 +15,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -27,10 +25,8 @@ import java.util.function.Predicate;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class CratesBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ThresholdSwitchObservable {
-    private static final String COMPOUND_KEY_INVENTORY = "Inventory";
-
-    private final CrateItemStackHandler handler;
-    private boolean clientSyncPending;
+    private final CrateBlockEntityStorage storage;
+    private final CrateDisplay display;
 
     protected CratesBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, IntSupplier maxCountSupplier) {
         this(type, pos, state, maxCountSupplier, null);
@@ -38,12 +34,8 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
 
     protected CratesBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, IntSupplier maxCountSupplier, @Nullable Predicate<ItemStack> trackedDiscardPredicate) {
         super(type, pos, state);
-        if (trackedDiscardPredicate == null) {
-            handler = new CrateItemStackHandler(maxCountSupplier, this::canStoreItem, this::onInventoryChanged);
-            return;
-        }
-
-        handler = new DiscardingCrateItemStackHandler(maxCountSupplier, this::canStoreItem, this::onInventoryChanged, trackedDiscardPredicate, this::onTrackedItemDiscarded);
+        storage = new CrateBlockEntityStorage(maxCountSupplier, this::canStoreItem, this::onInventoryChanged, trackedDiscardPredicate, this::onTrackedItemDiscarded);
+        display = new CrateDisplay(storage);
     }
 
     public static <T extends CratesBlockEntity> void registerCapabilities(RegisterCapabilitiesEvent event, BlockEntityType<T> type) {
@@ -51,11 +43,19 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
     }
 
     public final CrateItemStackHandler getHandler() {
-        return handler;
+        return storage.handler();
+    }
+
+    public final ItemStack getStoredItem() {
+        return storage.storedItem();
+    }
+
+    public final int getStoredCount() {
+        return storage.storedCount();
     }
 
     public final void setStoredItems(ItemStack content, int count) {
-        handler.setStoredItems(0, content, count);
+        storage.setStoredItems(content, count);
     }
 
     protected boolean canStoreItem(ItemStack stack) {
@@ -71,16 +71,16 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
 
     @Override
     public void sendData() {
-        if (level == null || level.isClientSide) {
+        if (storage == null || level == null || level.isClientSide) {
             return;
         }
 
-        clientSyncPending = true;
+        storage.requestClientSync();
     }
 
     @Override
     public int getMaxValue() {
-        return handler.getSlotLimit(0);
+        return display.maxValue();
     }
 
     @Override
@@ -90,27 +90,17 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
 
     @Override
     public int getCurrentValue() {
-        return handler.getCountInSlot(0);
+        return display.currentValue();
     }
 
     @Override
     public MutableComponent format(int value) {
-        return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.items")).component();
+        return display.format(value);
     }
 
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        CCBLang.translate("gui.crates.header").forGoggles(tooltip);
-        ItemStack content = handler.getStoredItem(0);
-        int count = handler.getCountInSlot(0);
-        int maxCount = handler.getSlotLimit(0);
-        if (content.isEmpty() || count == 0) {
-            CCBLang.translate("gui.crates.capacity").style(ChatFormatting.GRAY).add(CCBLang.number(maxCount).style(ChatFormatting.GOLD)).forGoggles(tooltip, 1);
-            return true;
-        }
-
-        CCBLang.itemName(content).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-        CCBLang.number(count).style(ChatFormatting.GOLD).add(CCBLang.text(" / ").style(ChatFormatting.GRAY)).add(CCBLang.number(maxCount).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+        display.addToGoggleTooltip(tooltip);
         return true;
     }
 
@@ -121,28 +111,23 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
     @Override
     public void tick() {
         super.tick();
-        if (!clientSyncPending || level == null || level.isClientSide) {
+        if (level == null || level.isClientSide || !storage.consumeClientSyncRequest()) {
             return;
         }
 
-        clientSyncPending = false;
         super.sendData();
     }
 
     @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        compoundTag.put(COMPOUND_KEY_INVENTORY, handler.serializeNBT(provider));
+        storage.write(compoundTag, provider);
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        if (!compoundTag.contains(COMPOUND_KEY_INVENTORY)) {
-            return;
-        }
-
-        handler.deserializeNBT(provider, compoundTag.getCompound(COMPOUND_KEY_INVENTORY));
+        storage.read(compoundTag, provider);
     }
 
     @Override

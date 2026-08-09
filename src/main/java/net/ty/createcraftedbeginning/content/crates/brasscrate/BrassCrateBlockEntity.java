@@ -8,7 +8,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.crates.CrateItemStackHandler;
 import net.ty.createcraftedbeginning.content.crates.FilteredCrateBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
@@ -33,8 +32,7 @@ public class BrassCrateBlockEntity extends FilteredCrateBlockEntity {
 
     @Override
     protected void onInventoryChanged() {
-        CrateItemStackHandler handler = getHandler();
-        if (advancementBehaviour != null && handler.getStoredItem(0).is(Items.GOLD_INGOT) && handler.getCountInSlot(0) >= handler.getSlotLimit(0)) {
+        if (advancementBehaviour != null && getStoredItem().is(Items.GOLD_INGOT) && getStoredCount() >= getMaxValue()) {
             advancementBehaviour.awardPlayer(CCBAdvancements.A_HOUSE_OF_GOLD_IN_THE_CRATE);
         }
         super.onInventoryChanged();

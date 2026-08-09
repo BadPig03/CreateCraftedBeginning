@@ -75,7 +75,7 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
         if (state == null) {
             return null;
         }
-        return ProperWaterloggedBlock.withWater(context.getLevel(), AirCompressorUtils.getStateForBasicPlacement(context, state), context.getClickedPos());
+        return ProperWaterloggedBlock.withWater(context.getLevel(), AirCompressorPlacement.getStateForPlacement(context, state), context.getClickedPos());
     }
 
     @Override
@@ -171,7 +171,7 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
         }
 
         BlockPos coolantPos = pos.below();
-        CoolantEfficiency efficiency = AirCompressorUtils.tickCoolant(level, coolantPos, state.getValue(ACTIVE), random);
+        CoolantEfficiency efficiency = AirCompressorThermal.tickCoolant(level, coolantPos, state.getValue(ACTIVE), random);
         compressor.setCoolantEfficiency(efficiency);
     }
 

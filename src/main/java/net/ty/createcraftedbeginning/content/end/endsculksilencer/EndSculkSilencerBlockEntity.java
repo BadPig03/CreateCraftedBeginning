@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.end.endsculksilencer;
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.createmod.catnip.animation.LerpedFloat;
-import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
@@ -16,13 +15,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.end.endcasing.EndCasingBlock;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalBlockEntity;
-import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge;
-import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge.Projection;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -34,22 +29,18 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
     public static final int LAZY_TICK_RATE = 20;
 
     private static final String COMPOUND_KEY_SHOW_OUTLINE = "ShowOutline";
-    private static final float MAX_ANIMATION_SPEED = 40;
     private static Consumer<EndSculkSilencerBlockEntity> clientTicker = silencer -> {};
 
-    private final LerpedFloat animationSpeed;
-    private final LerpedFloat animation;
-
+    private final EndSculkSilencerAnimationState animationState;
+    private final EndSculkSilencerController controller;
     private boolean showOutline;
-    private boolean inSableSubLevel;
 
     public EndSculkSilencerBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
         setLazyTickRate(LAZY_TICK_RATE);
-        animationSpeed = LerpedFloat.linear().startWithValue(0);
-        animation = LerpedFloat.angular().startWithValue(0);
+        animationState = new EndSculkSilencerAnimationState();
+        controller = new EndSculkSilencerController(this);
         showOutline = true;
-        inSableSubLevel = false;
     }
 
     public static void setClientTicker(Consumer<EndSculkSilencerBlockEntity> ticker) {
@@ -62,13 +53,7 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
     }
 
     public static float calculateAnimationTargetSpeed(float kineticSpeed) {
-        float absSpeed = Mth.abs(kineticSpeed);
-        if (absSpeed == 0) {
-            return 0;
-        }
-
-        float rawTargetSpeed = Math.signum(kineticSpeed) * 2 * Mth.ceil(Math.log10(absSpeed) + Math.sqrt(absSpeed));
-        return Mth.clamp(rawTargetSpeed, -MAX_ANIMATION_SPEED, MAX_ANIMATION_SPEED);
+        return EndSculkSilencerAnimationState.calculateTargetSpeed(kineticSpeed);
     }
 
     public static AABB calculateArea(Level level, BlockPos pos, short range) {
@@ -91,7 +76,7 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
     @Override
     public void onLoad() {
         super.onLoad();
-        refreshSilencerState();
+        controller.refresh();
     }
 
     @Override
@@ -101,21 +86,11 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
 
     @Override
     public void updateStructural() {
-        if (level == null || level.isClientSide) {
+        if (!convertCasingToStructural(CCBBlocks.END_SCULK_SILENCER_STRUCTURAL_BLOCK.getDefaultState())) {
             return;
         }
 
-        BlockPos structuralPos = worldPosition.below();
-        if (!(level.getBlockState(structuralPos).getBlock() instanceof EndCasingBlock)) {
-            return;
-        }
-
-        if (!level.setBlockAndUpdate(structuralPos, CCBBlocks.END_SCULK_SILENCER_STRUCTURAL_BLOCK.getDefaultState())) {
-            return;
-        }
-
-        structural = getStructural();
-        refreshSilencerState();
+        controller.refresh();
     }
 
     @Override
@@ -126,24 +101,20 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
         }
 
         if (level.isClientSide) {
-            updateAnimation();
+            animationState.tick(isSpeedRequirementFulfilled(), getSpeed());
             clientTicker.accept(this);
             return;
         }
 
-        if (!(level instanceof ServerLevel serverLevel) || !inSableSubLevel) {
-            return;
+        if (level instanceof ServerLevel serverLevel) {
+            controller.tickServer(serverLevel);
         }
-
-        Projection projection = CCBSubLevelBridge.resolve(serverLevel, worldPosition);
-        inSableSubLevel = projection.inSubLevel();
-        refreshSilencerState(serverLevel, projection.blockPos());
     }
 
     @Override
     public void onSpeedChanged(float previousSpeed) {
         super.onSpeedChanged(previousSpeed);
-        refreshSilencerState();
+        controller.refresh();
     }
 
     @Override
@@ -175,27 +146,21 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
             return;
         }
 
-        refreshSilencerState();
+        controller.refresh();
     }
 
     @Override
     public void invalidate() {
-        removeSilencerState();
+        controller.remove();
         super.invalidate();
     }
 
     public LerpedFloat getAnimation() {
-        return animation;
+        return animationState.getAnimation();
     }
 
     public void refreshSilencerState() {
-        if (!(level instanceof ServerLevel serverLevel)) {
-            return;
-        }
-
-        Projection projection = CCBSubLevelBridge.resolve(serverLevel, worldPosition);
-        inSableSubLevel = projection.inSubLevel();
-        refreshSilencerState(serverLevel, projection.blockPos());
+        controller.refresh();
     }
 
     public void toggleShowOutline() {
@@ -216,38 +181,5 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
 
         short range = structural.getWorkingRange();
         return meetsRequiredSpeed(getSpeed(), range) ? range : 0;
-    }
-
-    private void refreshSilencerState(ServerLevel serverLevel, BlockPos effectCenter) {
-        GlobalEndSculkSilencerManager.update(serverLevel, worldPosition, effectCenter, getActiveWorkingRange());
-    }
-
-    private void removeSilencerState() {
-        if (!(level instanceof ServerLevel serverLevel)) {
-            return;
-        }
-
-        GlobalEndSculkSilencerManager.remove(serverLevel, worldPosition);
-    }
-
-    private void updateAnimation() {
-        if (isSpeedRequirementFulfilled()) {
-            animationSpeed.chase(calculateAnimationTargetSpeed(getSpeed()), 0.1, Chaser.EXP);
-        }
-        else {
-            animationSpeed.chase(0, 0.2, Chaser.EXP);
-        }
-
-        animationSpeed.tickChaser();
-        animation.setValue(animation.getValue() + animationSpeed.getValue());
-    }
-
-    private @Nullable EndSculkSilencerStructuralBlockEntity getStructuralForUse() {
-        if (structural != null && !structural.isRemoved()) {
-            return structural;
-        }
-
-        structural = getStructural();
-        return structural;
     }
 }

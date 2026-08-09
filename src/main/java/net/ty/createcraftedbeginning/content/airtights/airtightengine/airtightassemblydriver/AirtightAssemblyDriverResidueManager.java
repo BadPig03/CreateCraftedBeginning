@@ -6,13 +6,10 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlockEntity.ResidueInsertionPlan;
-import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletInventory;
-import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
+import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverResiduePlanner.GenerationPlan;
+import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletInsertionTarget;
 import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe;
 import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe.ResidueOutput;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -67,21 +64,6 @@ public class AirtightAssemblyDriverResidueManager {
 
     private static int readBoundedInt(CompoundTag compoundTag, String key, int fallback, int max) {
         return compoundTag.contains(key) ? Mth.clamp(compoundTag.getInt(key), 0, max) : fallback;
-    }
-
-    private static @Nullable ResidueInsertionPlan createOutletInsertionPlan(BlockPos pos, Level level, ResidueOutput output, int maxAmount) {
-        if (!(level.getBlockEntity(pos) instanceof ResidueOutletBlockEntity outlet)) {
-            return null;
-        }
-        return outlet.createResidueInsertionPlan(output.fluidStack(), output.itemStack(), maxAmount);
-    }
-
-    private static boolean commitGenerationPlan(GenerationPlan plan) {
-        ResourceTransaction transaction = new ResourceTransaction();
-        for (ResidueInsertionPlan insertion : plan.insertions()) {
-            insertion.addTo(transaction);
-        }
-        return transaction.commit();
     }
 
     public void tick(Level level) {
@@ -196,40 +178,20 @@ public class AirtightAssemblyDriverResidueManager {
         int generatedAmount = output.hasFluid() ? getTotalFluidGenerationAmount() : getTotalItemGenerationUnits();
         int requiredCapacity = Math.max(1, generatedAmount);
         boolean roundRobin = output.hasFluid() ? useFluidResidueRoundRobin() : useItemResidueRoundRobin();
-        GenerationPlan plan = createGenerationPlan(level, output, requiredCapacity, roundRobin);
+        int distributionCursor = output.hasFluid() ? fluidDistributionCursor : itemDistributionCursor;
+        int startIndex = roundRobin ? Math.floorMod(distributionCursor, outletCount) : 0;
+        GenerationPlan plan = AirtightAssemblyDriverResiduePlanner.create(level, outletsPositions, output, requiredCapacity, startIndex);
         if (plan == null) {
             handleGenerationFailure();
             return;
         }
 
-        if (generatedAmount > 0 && !commitGenerationPlan(plan)) {
+        if (generatedAmount > 0 && !AirtightAssemblyDriverResiduePlanner.commit(plan)) {
             handleGenerationFailure();
             return;
         }
 
         handleGenerationSuccess(roundRobin && generatedAmount > 0, output.hasFluid(), plan.lastOutletIndex(), outletCount);
-    }
-
-    private @Nullable GenerationPlan createGenerationPlan(Level level, ResidueOutput output, int requiredAmount, boolean roundRobin) {
-        int outletCount = outletsPositions.size();
-        int distributionCursor = output.hasFluid() ? fluidDistributionCursor : itemDistributionCursor;
-        int startIndex = roundRobin ? Math.floorMod(distributionCursor, outletCount) : 0;
-        int remainingAmount = requiredAmount;
-        int lastOutletIndex = -1;
-        List<ResidueInsertionPlan> insertions = new ArrayList<>();
-        for (int offset = 0; offset < outletCount && remainingAmount > 0; offset++) {
-            int outletIndex = (startIndex + offset) % outletCount;
-            ResidueInsertionPlan insertion = createOutletInsertionPlan(outletsPositions.get(outletIndex), level, output, remainingAmount);
-            if (insertion == null) {
-                continue;
-            }
-
-            insertions.add(insertion);
-            remainingAmount -= insertion.plannedAmount();
-            lastOutletIndex = outletIndex;
-        }
-
-        return remainingAmount == 0 ? new GenerationPlan(List.copyOf(insertions), lastOutletIndex) : null;
     }
 
     private void handleGenerationSuccess(boolean shouldAdvanceCursor, boolean fluidOutput, int lastOutletIndex, int outletCount) {
@@ -308,7 +270,7 @@ public class AirtightAssemblyDriverResidueManager {
         if (currentLevel == 0) {
             return 0;
         }
-        return currentLevel * getItemQuantityMultiplier() * ResidueOutletInventory.ITEM_PROGRESS_UNITS_PER_ITEM / ITEM_GENERATION_DENOMINATOR;
+        return currentLevel * getItemQuantityMultiplier() * ResidueOutletInsertionTarget.ITEM_PROGRESS_UNITS_PER_ITEM / ITEM_GENERATION_DENOMINATOR;
     }
 
     private boolean advanceDistributionCursor(boolean fluidOutput, int lastOutletIndex, int outletCount) {
@@ -334,5 +296,4 @@ public class AirtightAssemblyDriverResidueManager {
         return true;
     }
 
-    private record GenerationPlan(List<ResidueInsertionPlan> insertions, int lastOutletIndex) {}
 }

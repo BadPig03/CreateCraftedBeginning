@@ -51,9 +51,7 @@ public class EndSculkSilencerStructuralBlockEntity extends EndMechanicalStructur
             return;
         }
 
-        if (master == null || master.isRemoved()) {
-            master = getMaster();
-        }
+        EndSculkSilencerBlockEntity master = getMasterForUse();
         if (master == null) {
             return;
         }

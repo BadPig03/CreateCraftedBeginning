@@ -16,7 +16,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class ResidueOutletInventory extends ItemHandlerContainer implements IItemHandlerModifiable, INBTSerializable<CompoundTag> {
-    public static final int ITEM_PROGRESS_UNITS_PER_ITEM = 65536;
+    public static final int ITEM_PROGRESS_UNITS_PER_ITEM = ResidueOutletInsertionTarget.ITEM_PROGRESS_UNITS_PER_ITEM;
 
     private static final int MAX_SIZE = 1;
     private static final String COMPOUND_KEY_PARTIAL_ITEM_UNITS = "PartialItemUnits";

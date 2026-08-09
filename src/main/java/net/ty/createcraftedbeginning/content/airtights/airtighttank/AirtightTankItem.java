@@ -102,13 +102,13 @@ public class AirtightTankItem extends BlockItem {
             return;
         }
 
-        int width = controller.width;
+        int width = controller.getWidth();
         if (width == 1) {
             return;
         }
 
         BlockPos controllerPos = controller.getBlockPos();
-        BlockPos startPos = face == Direction.DOWN ? controllerPos.below() : controllerPos.above(controller.height);
+        BlockPos startPos = face == Direction.DOWN ? controllerPos.below() : controllerPos.above(controller.getHeight());
         if (startPos.getY() != pos.getY()) {
             return;
         }

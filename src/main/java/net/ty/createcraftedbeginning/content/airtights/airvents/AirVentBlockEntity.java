@@ -15,19 +15,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirVentBlockEntity extends SyncedBlockEntity {
-    private static final String COMPOUND_KEY_LOUVER_MASK = "LouverMask";
-    private static final String COMPOUND_KEY_OPENED_MASK = "OpenedMask";
-    private static final int VALID_DIRECTION_MASK = (1 << Direction.values().length) - 1;
-
-    private int louverMask;
-    private int openedMask;
+    private final AirVentLouverState louvers = new AirVentLouverState();
 
     public AirVentBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
-    }
-
-    private static int directionMask(Direction direction) {
-        return 1 << direction.get3DDataValue();
     }
 
     @Override
@@ -49,84 +40,50 @@ public class AirVentBlockEntity extends SyncedBlockEntity {
     @Override
     protected void loadAdditional(CompoundTag tag, Provider provider) {
         super.loadAdditional(tag, provider);
-        louverMask = tag.getInt(COMPOUND_KEY_LOUVER_MASK) & VALID_DIRECTION_MASK;
-        openedMask = tag.getInt(COMPOUND_KEY_OPENED_MASK) & louverMask;
+        louvers.load(tag);
     }
 
     @Override
     protected void saveAdditional(CompoundTag tag, Provider provider) {
         super.saveAdditional(tag, provider);
-        tag.putInt(COMPOUND_KEY_LOUVER_MASK, louverMask);
-        tag.putInt(COMPOUND_KEY_OPENED_MASK, openedMask);
+        louvers.save(tag);
     }
 
     public VentState getLouverState(Direction direction) {
-        if (!hasLouver(direction)) {
-            return VentState.EMPTY;
-        }
-        return isLouverOpen(direction) ? VentState.OPENED : VentState.CLOSED;
+        return louvers.getLouverState(direction);
     }
 
     public boolean hasLouver(Direction direction) {
-        return (louverMask & directionMask(direction)) != 0;
+        return louvers.hasLouver(direction);
     }
 
     public boolean isLouverOpen(Direction direction) {
-        int mask = directionMask(direction);
-        return (louverMask & mask) != 0 && (openedMask & mask) != 0;
+        return louvers.isLouverOpen(direction);
     }
 
     public int getVisibleLouverMask() {
-        if (louverMask == 0) {
-            return 0;
-        }
-        return louverMask & ~AirVentBlock.getConnectionMask(getBlockState()) & VALID_DIRECTION_MASK;
+        return louvers.getVisibleLouverMask(AirVentBlock.getConnectionMask(getBlockState()));
     }
 
     public int getOpenedLouverMask() {
-        return openedMask;
+        return louvers.getOpenedLouverMask();
     }
 
     public void toggleLouver(Direction direction) {
-        setLouverState(direction, hasLouver(direction) ? VentState.EMPTY : VentState.CLOSED);
+        if (louvers.toggleLouver(direction)) {
+            notifyUpdate();
+        }
     }
 
     public void toggleLouverOpen(Direction direction) {
-        if (!hasLouver(direction)) {
-            return;
+        if (louvers.toggleLouverOpen(direction)) {
+            notifyUpdate();
         }
-
-        setLouverState(direction, isLouverOpen(direction) ? VentState.CLOSED : VentState.OPENED);
     }
 
     public void setLouverState(Direction direction, VentState state) {
-        int mask = directionMask(direction);
-        int nextLouverMask = louverMask;
-        int nextOpenedMask = openedMask;
-        switch (state) {
-            case EMPTY -> {
-                nextLouverMask &= ~mask;
-                nextOpenedMask &= ~mask;
-            }
-            case CLOSED -> {
-                nextLouverMask |= mask;
-                nextOpenedMask &= ~mask;
-            }
-            case OPENED -> {
-                nextLouverMask |= mask;
-                nextOpenedMask |= mask;
-            }
-            case CONNECTED -> {
-                return;
-            }
+        if (louvers.setLouverState(direction, state)) {
+            notifyUpdate();
         }
-
-        if (nextLouverMask == louverMask && nextOpenedMask == openedMask) {
-            return;
-        }
-
-        louverMask = nextLouverMask;
-        openedMask = nextOpenedMask;
-        notifyUpdate();
     }
 }

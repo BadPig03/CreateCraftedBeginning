@@ -4,8 +4,6 @@ import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
 import com.simibubi.create.api.packager.InventoryIdentifier;
 import com.simibubi.create.api.packager.InventoryIdentifier.Single;
-import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
-import com.simibubi.create.content.kinetics.press.PressingRecipe;
 import com.simibubi.create.content.logistics.filter.FilterItemStack;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
@@ -13,52 +11,31 @@ import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTank
 import com.simibubi.create.foundation.blockEntity.behaviour.simple.DeferralBehaviour;
 import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.foundation.item.SmartInventory;
-import net.createmod.catnip.math.VecHelper;
-import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup.Provider;
-import net.minecraft.core.particles.ItemParticleOption;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SmithingTemplateItem;
-import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraft.world.item.crafting.SmithingRecipe;
-import net.minecraft.world.item.crafting.SmithingRecipeInput;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasInventoryIdentifierProvider;
-import net.ty.createcraftedbeginning.content.airtights.transaction.MachineResourceSnapshots;
-import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
-import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction.Participant;
-import net.ty.createcraftedbeginning.recipe.ForgingPressRecipe;
 import net.ty.createcraftedbeginning.recipe.ForgingPressRecipeContext;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -71,20 +48,11 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     private static final int MAX_INPUT_SLOT = 1;
     private static final int MAX_OUTPUT_SLOT = 8;
     private static final int LAZY_TICK_RATE = 4;
-    private static final int CYCLE_DURATION = 30;
-    private static final float PRESS_HEAD_IDLE_OFFSET = -0.625f;
-    private static final float PRESS_HEAD_TRAVEL = 0.8125f;
-
-    private static final String COMPOUND_KEY_CORE = "Core";
-    private static final String COMPOUND_KEY_FILTER = "Filter";
-    private static final String COMPOUND_KEY_INPUT_ITEMS = "InputItems";
-    private static final String COMPOUND_KEY_OPERATING = "Operating";
-    private static final String COMPOUND_KEY_OPERATING_TICKS = "OperatingTicks";
-    private static final String COMPOUND_KEY_OUTPUT_ITEMS = "OutputItems";
-    private static final String COMPOUND_KEY_PRESS_HEAD_ITEMS = "PressHeadItems";
-    private static final String COMPOUND_KEY_PROCESSING_ITEMS = "ProcessingItems";
 
     private final AirtightForgingPressCore core;
+    private final AirtightForgingPressController controller;
+    private final AirtightForgingPressCrafting crafting;
+    private final AirtightForgingPressSerialization serialization;
     private final IItemHandler inputOutputCapability;
     private final IItemHandlerModifiable recipeInputCapability;
     private final SmartInventory inputInventory;
@@ -92,36 +60,28 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     private final SmartInventory pressHeadInventory;
     private final SmartInventory processingInventory;
 
-    private boolean observedAutomaticPressingEnabled = CCBConfig.server().airtights.enableAutomaticPressingRecipes.get();
-    private boolean observedAutomaticSmithingEnabled = CCBConfig.server().airtights.enableAutomaticSmithingRecipes.get();
-    private boolean contentsChanged;
-    private boolean filterChanged;
-    private boolean operating;
     private DeferralBehaviour updateChecker;
-    private ForgingPressRecipe currentRecipe;
-    private PressingRecipe currentPressingRecipe;
-    private SmithingRecipe currentSmithingRecipe;
     private IFluidHandler fluidCapability;
     private IGasHandler gasCapability;
-    private float operatingTicks;
     private SmartFluidTankBehaviour fluidTank;
     private SmartGasTankBehaviour gasTank;
     private ItemStack recipeFilter = ItemStack.EMPTY;
-    private long observedRecipeCacheVersion = AirtightForgingPressUtils.getRecipeCacheVersion();
 
     public AirtightForgingPressBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
         setLazyTickRate(LAZY_TICK_RATE);
         core = new AirtightForgingPressCore(this);
 
-        pressHeadInventory = new SmartInventory(MAX_INPUT_SLOT, this, 1, false, (slot, stack) -> stack.is(CCBItemTags.PRESS_HEAD_TOOLS.tag) || stack.getItem() instanceof SmithingTemplateItem).whenContentsChanged($ -> contentsChanged = true);
-        processingInventory = new AirtightForgingPressInventory(MAX_INPUT_SLOT, this).whenContentsChanged(ignored -> contentsChanged = true);
-        inputInventory = new AirtightForgingPressInventory(MAX_INPUT_SLOT, this).whenContentsChanged(ignored -> contentsChanged = true);
-        outputInventory = new AirtightForgingPressInventory(MAX_OUTPUT_SLOT, this).forbidInsertion().whenContentsChanged(ignored -> contentsChanged = true);
-        inputOutputCapability = new ForgingPressPortHandler(inputInventory, outputInventory);
+        pressHeadInventory = new SmartInventory(MAX_INPUT_SLOT, this, 1, false, (slot, stack) -> stack.is(CCBItemTags.PRESS_HEAD_TOOLS.tag) || stack.getItem() instanceof SmithingTemplateItem).whenContentsChanged(ignored -> notifyContentsChanged());
+        processingInventory = new AirtightForgingPressInventory(MAX_INPUT_SLOT, this).whenContentsChanged(ignored -> notifyContentsChanged());
+        inputInventory = new AirtightForgingPressInventory(MAX_INPUT_SLOT, this).whenContentsChanged(ignored -> notifyContentsChanged());
+        outputInventory = new AirtightForgingPressInventory(MAX_OUTPUT_SLOT, this).forbidInsertion().whenContentsChanged(ignored -> notifyContentsChanged());
+        inputOutputCapability = new AirtightForgingPressPortHandler(inputInventory, outputInventory);
         recipeInputCapability = new CombinedInvWrapper(pressHeadInventory, processingInventory, inputInventory);
 
-        contentsChanged = true;
+        controller = new AirtightForgingPressController(this);
+        crafting = new AirtightForgingPressCrafting(this);
+        serialization = new AirtightForgingPressSerialization(this, controller);
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
@@ -136,54 +96,13 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         return Math.max(1, CCBConfig.server().airtights.forgingPressGasCapacity.get()) * GasAmountUtils.MILLIBUCKETS_PER_BUCKET;
     }
 
-    private static boolean insertOutputs(SmartInventory inventory, List<ItemStack> outputItems) {
-        for (ItemStack stack : outputItems) {
-            if (stack.isEmpty()) {
-                continue;
-            }
-
-            ItemStack remainder = ItemHandlerHelper.insertItemStacked(inventory, stack.copy(), false);
-            if (!remainder.isEmpty()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static boolean canConsumeItem(IItemHandler inventory, ItemStack expectedStack, int amount) {
-        if (amount <= 0) {
-            return true;
-        }
-
-        ItemStack current = inventory.getStackInSlot(0);
-        if (current.isEmpty() || expectedStack.isEmpty() || current.getCount() < amount || !ItemStack.isSameItemSameComponents(current, expectedStack)) {
-            return false;
-        }
-
-        ItemStack simulated = inventory.extractItem(0, amount, true);
-        return simulated.getCount() == amount && ItemStack.isSameItemSameComponents(simulated, expectedStack);
-    }
-
-    private static boolean consumeItem(IItemHandler inventory, ItemStack expectedStack, int amount) {
-        if (amount <= 0) {
-            return true;
-        }
-
-        ItemStack extracted = inventory.extractItem(0, amount, false);
-        return extracted.getCount() == amount && ItemStack.isSameItemSameComponents(extracted, expectedStack);
-    }
-
-    private static Participant<ItemStack> itemConsumptionParticipant(IItemHandlerModifiable inventory, ItemStack expectedStack, int amount) {
-        return ResourceTransaction.participant(() -> canConsumeItem(inventory, expectedStack, amount), () -> inventory.getStackInSlot(0).copy(), () -> consumeItem(inventory, expectedStack, amount), snapshot -> inventory.setStackInSlot(0, snapshot.copy()));
-    }
-
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        fluidTank = new SmartFluidTankBehaviour(SmartFluidTankBehaviour.INPUT, this, 1, getFluidCapacity(), false).whenFluidUpdates(() -> contentsChanged = true);
+        fluidTank = new SmartFluidTankBehaviour(SmartFluidTankBehaviour.INPUT, this, 1, getFluidCapacity(), false).whenFluidUpdates(this::notifyContentsChanged);
         fluidCapability = fluidTank.getCapability();
         behaviours.add(fluidTank);
 
-        gasTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.INPUT, this, 1, getGasCapacity(), false).whenGasUpdates(() -> contentsChanged = true);
+        gasTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.INPUT, this, 1, getGasCapacity(), false).whenGasUpdates(this::notifyContentsChanged);
         gasCapability = gasTank.getCapability();
         behaviours.add(gasTank);
 
@@ -194,87 +113,26 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     @Override
     public void tick() {
         super.tick();
-        if (level == null) {
-            return;
-        }
-
-        tickOperation();
-        if (!contentsChanged) {
-            return;
-        }
-
-        contentsChanged = false;
-        updateChecker.scheduleUpdate();
+        controller.tick();
     }
 
     @Override
     public void lazyTick() {
         super.lazyTick();
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
         core.lazyTick();
-        long recipeCacheVersion = AirtightForgingPressUtils.getRecipeCacheVersion();
-        boolean currentAutomaticPressingEnabled = CCBConfig.server().airtights.enableAutomaticPressingRecipes.get();
-        boolean currentAutomaticSmithingEnabled = CCBConfig.server().airtights.enableAutomaticSmithingRecipes.get();
-        if (observedRecipeCacheVersion == recipeCacheVersion && observedAutomaticPressingEnabled == currentAutomaticPressingEnabled && observedAutomaticSmithingEnabled == currentAutomaticSmithingEnabled) {
-            return;
-        }
-
-        observedRecipeCacheVersion = recipeCacheVersion;
-        observedAutomaticPressingEnabled = currentAutomaticPressingEnabled;
-        observedAutomaticSmithingEnabled = currentAutomaticSmithingEnabled;
-        update(true);
+        controller.lazyTick();
     }
 
     @Override
     public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        compoundTag.put(COMPOUND_KEY_CORE, core.write());
-        compoundTag.put(COMPOUND_KEY_PRESS_HEAD_ITEMS, pressHeadInventory.serializeNBT(provider));
-        compoundTag.put(COMPOUND_KEY_PROCESSING_ITEMS, processingInventory.serializeNBT(provider));
-        compoundTag.put(COMPOUND_KEY_FILTER, recipeFilter.saveOptional(provider));
-        compoundTag.put(COMPOUND_KEY_INPUT_ITEMS, inputInventory.serializeNBT(provider));
-        compoundTag.put(COMPOUND_KEY_OUTPUT_ITEMS, outputInventory.serializeNBT(provider));
-        compoundTag.putFloat(COMPOUND_KEY_OPERATING_TICKS, operatingTicks);
-        compoundTag.putBoolean(COMPOUND_KEY_OPERATING, operating);
+        serialization.write(compoundTag, provider);
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        if (compoundTag.contains(COMPOUND_KEY_CORE)) {
-            core.read(compoundTag.getCompound(COMPOUND_KEY_CORE));
-        }
-        if (compoundTag.contains(COMPOUND_KEY_PRESS_HEAD_ITEMS)) {
-            pressHeadInventory.deserializeNBT(provider, compoundTag.getCompound(COMPOUND_KEY_PRESS_HEAD_ITEMS));
-        }
-        if (compoundTag.contains(COMPOUND_KEY_PROCESSING_ITEMS)) {
-            processingInventory.deserializeNBT(provider, compoundTag.getCompound(COMPOUND_KEY_PROCESSING_ITEMS));
-        }
-        recipeFilter = compoundTag.contains(COMPOUND_KEY_FILTER) ? ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_FILTER)) : ItemStack.EMPTY;
-        if (compoundTag.contains(COMPOUND_KEY_INPUT_ITEMS)) {
-            inputInventory.deserializeNBT(provider, compoundTag.getCompound(COMPOUND_KEY_INPUT_ITEMS));
-        }
-        if (compoundTag.contains(COMPOUND_KEY_OUTPUT_ITEMS)) {
-            outputInventory.deserializeNBT(provider, compoundTag.getCompound(COMPOUND_KEY_OUTPUT_ITEMS));
-        }
-        if (compoundTag.contains(COMPOUND_KEY_OPERATING_TICKS)) {
-            operatingTicks = compoundTag.getFloat(COMPOUND_KEY_OPERATING_TICKS);
-        }
-        if (compoundTag.contains(COMPOUND_KEY_OPERATING)) {
-            operating = compoundTag.getBoolean(COMPOUND_KEY_OPERATING);
-        }
-        if (clientPacket) {
-            return;
-        }
-
-        operating = false;
-        operatingTicks = 0;
-        currentRecipe = null;
-        currentPressingRecipe = null;
-        currentSmithingRecipe = null;
+        serialization.read(compoundTag, provider, clientPacket);
     }
 
     @Override
@@ -318,8 +176,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     }
 
     public void startProcessInPonderLevel() {
-        update(false);
-        updateForgingPress();
+        controller.startProcessInPonderLevel();
     }
 
     public boolean isEmpty() {
@@ -331,7 +188,9 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     }
 
     public void notifyContentsChanged() {
-        contentsChanged = true;
+        if (controller != null) {
+            controller.notifyContentsChanged();
+        }
     }
 
     @Override
@@ -366,57 +225,22 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
 
     @Override
     public Optional<OutputPlan> planOutputs(List<ItemStack> outputItems) {
-        SmartInventory simulatedOutput = createOutputSimulation();
-        if (!insertOutputs(simulatedOutput, outputItems)) {
-            return Optional.empty();
-        }
-        return Optional.of(new OutputPlan(MachineResourceSnapshots.copyItems(outputInventory), MachineResourceSnapshots.copyItems(simulatedOutput)));
+        return crafting.planOutputs(outputItems);
     }
 
     @Override
     public boolean acceptOutputs(List<ItemStack> outputItems, boolean simulate) {
-        Optional<OutputPlan> plannedOutput = planOutputs(outputItems);
-        if (plannedOutput.isEmpty()) {
-            return false;
-        }
-
-        if (simulate) {
-            return true;
-        }
-
-        OutputPlan outputPlan = plannedOutput.get();
-        if (!outputPlanMatchesCurrent(outputPlan)) {
-            return false;
-        }
-
-        applyOutputPlan(outputPlan);
-        return true;
+        return crafting.acceptOutputs(outputItems, simulate);
     }
 
     @Override
     public ConsumptionPlan createConsumptionPlan(ItemStack expectedProcessingStack, int processingAmount, ItemStack expectedInputStack, int inputAmount, int[] fluidAmounts, long[] gasAmounts) {
-        if (fluidAmounts.length != fluidCapability.getTanks() || gasAmounts.length != gasCapability.getTanks()) {
-            throw new IllegalArgumentException("Consumption plan tank count does not match the forging press");
-        }
-        if (fluidAmounts.length != 1 || gasAmounts.length != 1) {
-            throw new IllegalStateException("The airtight forging press currently requires exactly one fluid tank and one gas tank");
-        }
-
-        ItemStack expectedPressHead = pressHeadInventory.getStackInSlot(0).copy();
-        FluidStack expectedFluid = fluidTank.getPrimaryHandler().getFluid().copy();
-        int fluidAmount = fluidAmounts[0];
-        GasStack expectedGas = gasTank.getPrimaryHandler().getGasStack().copy();
-        long gasAmount = gasAmounts[0];
-        return new ConsumptionPlan(expectedPressHead, expectedProcessingStack, processingAmount, expectedInputStack, inputAmount, expectedFluid, fluidAmount, expectedGas, gasAmount);
+        return crafting.createConsumptionPlan(expectedProcessingStack, processingAmount, expectedInputStack, inputAmount, fluidAmounts, gasAmounts);
     }
 
     @Override
     public synchronized boolean commitCraft(ConsumptionPlan consumptionPlan, OutputPlan outputPlan) {
-        ResourceTransaction transaction = new ResourceTransaction().require(() -> ItemStack.matches(pressHeadInventory.getStackInSlot(0), consumptionPlan.expectedPressHeadStack())).add(itemConsumptionParticipant(processingInventory, consumptionPlan.expectedProcessingStack(), consumptionPlan.processingAmount())).add(itemConsumptionParticipant(inputInventory, consumptionPlan.expectedInputStack(), consumptionPlan.inputAmount())).add(ResourceTransaction.participant(() -> canConsumeFluid(consumptionPlan), () -> fluidTank.getPrimaryHandler().getFluid().copy(), () -> consumeFluid(consumptionPlan), snapshot -> fluidTank.getPrimaryHandler().setFluid(snapshot.copy()))).add(ResourceTransaction.participant(() -> canConsumeGas(consumptionPlan), () -> gasTank.getPrimaryHandler().getGasStack().copy(), () -> consumeGas(consumptionPlan), snapshot -> gasTank.getPrimaryHandler().setGasStack(snapshot.copy()))).add(ResourceTransaction.participant(() -> outputPlanMatchesCurrent(outputPlan), () -> MachineResourceSnapshots.copyItems(outputInventory), () -> {
-            applyOutputPlan(outputPlan);
-            return true;
-        }, snapshot -> MachineResourceSnapshots.restoreItems(outputInventory, snapshot)));
-        return transaction.commit();
+        return crafting.commitCraft(consumptionPlan, outputPlan);
     }
 
     public SmartInventory getOutputInventory() {
@@ -442,11 +266,34 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         }
 
         recipeFilter = normalized;
-        filterChanged = true;
-        contentsChanged = true;
+        controller.notifyFilterChanged();
         syncRecipeFilterReplicas();
         setChanged();
         sendData();
+    }
+
+    public float getPressHeadDistance(float partialTicks) {
+        return controller.getPressHeadDistance(partialTicks);
+    }
+
+    AirtightForgingPressCore getCore() {
+        return core;
+    }
+
+    SmartFluidTankBehaviour getFluidTankBehaviour() {
+        return fluidTank;
+    }
+
+    SmartGasTankBehaviour getGasTankBehaviour() {
+        return gasTank;
+    }
+
+    void loadRecipeFilter(ItemStack stack) {
+        recipeFilter = stack.isEmpty() ? ItemStack.EMPTY : stack.copy();
+    }
+
+    private boolean updateForgingPress() {
+        return controller.updateForgingPress();
     }
 
     private void syncRecipeFilterReplicas() {
@@ -463,325 +310,6 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
             if (level.getBlockEntity(filterPos) instanceof AirtightForgingPressStructuralBlockEntity structural) {
                 structural.syncFilterFromMaster(recipeFilter);
             }
-        }
-    }
-
-    private boolean canConsumeFluid(ConsumptionPlan plan) {
-        if (plan.fluidAmount() <= 0) {
-            return true;
-        }
-
-        FluidStack current = fluidTank.getPrimaryHandler().getFluid();
-        FluidStack expected = plan.expectedFluid();
-        if (current.isEmpty() || expected.isEmpty() || current.getAmount() < plan.fluidAmount() || !FluidStack.isSameFluidSameComponents(current, expected)) {
-            return false;
-        }
-
-        FluidStack simulated = fluidTank.getPrimaryHandler().drain(expected.copyWithAmount(plan.fluidAmount()), FluidAction.SIMULATE);
-        return simulated.getAmount() == plan.fluidAmount();
-    }
-
-    private boolean consumeFluid(ConsumptionPlan plan) {
-        if (plan.fluidAmount() <= 0) {
-            return true;
-        }
-
-        FluidStack expected = plan.expectedFluid();
-        FluidStack drained = fluidTank.getPrimaryHandler().drain(expected.copyWithAmount(plan.fluidAmount()), FluidAction.EXECUTE);
-        return drained.getAmount() == plan.fluidAmount() && FluidStack.isSameFluidSameComponents(drained, expected);
-    }
-
-    private boolean canConsumeGas(ConsumptionPlan plan) {
-        if (plan.gasAmount() <= 0) {
-            return true;
-        }
-
-        GasStack current = gasTank.getPrimaryHandler().getGasStack();
-        GasStack expected = plan.expectedGas();
-        if (current.isEmpty() || expected.isEmpty() || current.getAmount() < plan.gasAmount() || !GasStack.isSameGasSameComponents(current, expected)) {
-            return false;
-        }
-
-        GasStack simulated = gasTank.getPrimaryHandler().drain(expected.copyWithAmount(plan.gasAmount()), GasAction.SIMULATE);
-        return simulated.getAmount() == plan.gasAmount();
-    }
-
-    private boolean consumeGas(ConsumptionPlan plan) {
-        if (plan.gasAmount() <= 0) {
-            return true;
-        }
-
-        GasStack expected = plan.expectedGas();
-        GasStack drained = gasTank.getPrimaryHandler().drain(expected.copyWithAmount(plan.gasAmount()), GasAction.EXECUTE);
-        return drained.getAmount() == plan.gasAmount() && GasStack.isSameGasSameComponents(drained, expected);
-    }
-
-    private boolean outputPlanMatchesCurrent(OutputPlan outputPlan) {
-        int slots = outputInventory.getSlots();
-        List<ItemStack> expectedSlots = outputPlan.expectedSlots();
-        if (expectedSlots.size() != slots || outputPlan.finalSlots().size() != slots) {
-            return false;
-        }
-
-        for (int slot = 0; slot < slots; slot++) {
-            if (!ItemStack.matches(outputInventory.getStackInSlot(slot), expectedSlots.get(slot))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private void applyOutputPlan(OutputPlan outputPlan) {
-        List<ItemStack> finalSlots = outputPlan.finalSlots();
-        for (int slot = 0; slot < outputInventory.getSlots(); slot++) {
-            outputInventory.setStackInSlot(slot, finalSlots.get(slot).copy());
-        }
-    }
-
-    private SmartInventory createOutputSimulation() {
-        SmartInventory simulatedOutput = new SmartInventory(outputInventory.getSlots(), this);
-        simulatedOutput.allowInsertion();
-        for (int slot = 0; slot < outputInventory.getSlots(); slot++) {
-            simulatedOutput.setStackInSlot(slot, outputInventory.getStackInSlot(slot).copy());
-        }
-        return simulatedOutput;
-    }
-
-    public float getPressHeadDistance(float partialTicks) {
-        if (!operating) {
-            return PRESS_HEAD_IDLE_OFFSET;
-        }
-
-        float cycleDuration = CYCLE_DURATION;
-        float ticks = Mth.clamp(operatingTicks + partialTicks * getOperationSpeed(), 0, cycleDuration);
-        float distance;
-        if (ticks < cycleDuration * 2 / 3) {
-            float progress = ticks / cycleDuration * 2;
-            distance = Mth.clamp(Mth.square(progress) * progress, 0, 1);
-        }
-        else {
-            distance = Mth.clamp((cycleDuration - ticks) / cycleDuration * 3, 0, 1);
-        }
-        return PRESS_HEAD_IDLE_OFFSET + distance * PRESS_HEAD_TRAVEL;
-    }
-
-    private float getOperationSpeed() {
-        if (level instanceof PonderLevel) {
-            return 1;
-        }
-
-        float absSpeed = Mth.abs(core.getStructureManager().getSpeed());
-        float minSpeed = SpeedLevel.FAST.getSpeedValue();
-        if (absSpeed < minSpeed) {
-            return 0;
-        }
-        return Mth.clamp(absSpeed / minSpeed, 1, 16);
-    }
-
-    private boolean updateForgingPress() {
-        observedRecipeCacheVersion = AirtightForgingPressUtils.getRecipeCacheVersion();
-        if (level == null) {
-            return false;
-        }
-
-        boolean inactiveClient = level.isClientSide && !isVirtual();
-        if (inactiveClient || operating || getOperationSpeed() <= 0) {
-            return true;
-        }
-
-        Optional<ForgingPressRecipe> recipe = AirtightForgingPressUtils.getMatchingRecipe(this);
-        if (recipe.isPresent()) {
-            currentRecipe = recipe.get();
-            currentPressingRecipe = null;
-            currentSmithingRecipe = null;
-            startOperation();
-            return true;
-        }
-
-        if (CCBConfig.server().airtights.enableAutomaticPressingRecipes.get()) {
-            Optional<RecipeHolder<PressingRecipe>> pressingRecipe = AirtightForgingPressUtils.getMatchingPressingRecipe(this);
-            if (pressingRecipe.isPresent()) {
-                currentRecipe = null;
-                currentPressingRecipe = pressingRecipe.get().value();
-                currentSmithingRecipe = null;
-                startOperation();
-                return true;
-            }
-        }
-
-        if (CCBConfig.server().airtights.enableAutomaticSmithingRecipes.get()) {
-            Optional<RecipeHolder<SmithingRecipe>> smithingRecipe = AirtightForgingPressUtils.getMatchingSmithingRecipe(this);
-            if (smithingRecipe.isPresent()) {
-                currentRecipe = null;
-                currentPressingRecipe = null;
-                currentSmithingRecipe = smithingRecipe.get().value();
-                startOperation();
-                return true;
-            }
-        }
-
-        currentRecipe = null;
-        currentPressingRecipe = null;
-        currentSmithingRecipe = null;
-        return true;
-    }
-
-    private void startOperation() {
-        operating = true;
-        operatingTicks = 0;
-        sendData();
-    }
-
-    private void tickOperation() {
-        if (filterChanged) {
-            filterChanged = false;
-            update(true);
-            return;
-        }
-
-        if (!operating) {
-            return;
-        }
-
-        if (operatingTicks >= CYCLE_DURATION) {
-            update(true);
-            return;
-        }
-
-        float operationSpeed = getOperationSpeed();
-        if (operationSpeed <= 0) {
-            update(false);
-            return;
-        }
-
-        if (currentRecipe == null && currentPressingRecipe != null && !CCBConfig.server().airtights.enableAutomaticPressingRecipes.get()) {
-            update(false);
-            return;
-        }
-
-        if (currentRecipe == null && currentSmithingRecipe != null && !CCBConfig.server().airtights.enableAutomaticSmithingRecipes.get()) {
-            update(false);
-            return;
-        }
-
-        float previousTicks = operatingTicks;
-        operatingTicks = Mth.clamp(operatingTicks + operationSpeed, 0, CYCLE_DURATION);
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
-        float processingStart = CYCLE_DURATION / 2.0f;
-        boolean wasAlreadyProcessing = previousTicks >= processingStart;
-        boolean hasNotReachedProcessing = operatingTicks < processingStart;
-        boolean hasNoRecipe = currentRecipe == null && currentPressingRecipe == null && currentSmithingRecipe == null;
-        if (wasAlreadyProcessing || hasNotReachedProcessing || hasNoRecipe) {
-            return;
-        }
-
-        ItemStack particleStack = inputInventory.getStackInSlot(0).copy();
-        boolean success;
-        if (currentRecipe != null) {
-            if (particleStack.isEmpty()) {
-                particleStack = currentRecipe.getResultItem(level.registryAccess()).copy();
-            }
-            success = ForgingPressRecipe.apply(this, currentRecipe);
-        }
-        else if (currentPressingRecipe != null) {
-            success = AirtightForgingPressUtils.applyPressingRecipe(this, currentPressingRecipe);
-        }
-        else {
-            SmithingRecipeInput input = AirtightForgingPressUtils.createSmithingInput(this);
-            ItemStack result = currentSmithingRecipe.assemble(input, level.registryAccess());
-            if (!result.isEmpty()) {
-                particleStack = result.copy();
-            }
-            success = AirtightForgingPressUtils.applySmithingRecipe(this, currentSmithingRecipe);
-        }
-        if (!success) {
-            return;
-        }
-
-        fluidTank.sendDataImmediately();
-        gasTank.sendDataImmediately();
-        CCBSoundEvents.FORGING_PRESS_PRESSED.playOnServer(level, getBlockPos());
-        spawnParticles(particleStack);
-        contentsChanged = true;
-        sendData();
-    }
-
-    private void update(boolean schedule) {
-        operating = false;
-        operatingTicks = 0;
-        currentRecipe = null;
-        currentPressingRecipe = null;
-        currentSmithingRecipe = null;
-        sendData();
-        if (!schedule || level == null || level.isClientSide && !isVirtual()) {
-            return;
-        }
-
-        updateChecker.scheduleUpdate();
-    }
-
-    private void spawnParticles(ItemStack stack) {
-        Level level = getLevel();
-        if (!(level instanceof ServerLevel serverLevel) || isVirtual() || stack.isEmpty()) {
-            return;
-        }
-
-        Vec3 pos = VecHelper.getCenterOf(getBlockPos()).add(0, -0.625, 0);
-        serverLevel.sendParticles(new ItemParticleOption(ParticleTypes.ITEM, stack), pos.x, pos.y, pos.z, 16, 0.15, 0.05, 0.15, 0.08);
-    }
-
-    private record ForgingPressPortHandler(IItemHandlerModifiable input, IItemHandlerModifiable output) implements IItemHandler {
-        @Override
-        public int getSlots() {
-            return input.getSlots() + output.getSlots();
-        }
-
-        @Override
-        public ItemStack getStackInSlot(int slot) {
-            return getHandler(slot).getStackInSlot(getLocalSlot(slot));
-        }
-
-        @Override
-        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-            getHandler(slot);
-            if (slot >= input.getSlots()) {
-                return stack;
-            }
-            return input.insertItem(slot, stack, simulate);
-        }
-
-        @Override
-        public ItemStack extractItem(int slot, int amount, boolean simulate) {
-            getHandler(slot);
-            if (slot < input.getSlots()) {
-                return ItemStack.EMPTY;
-            }
-            return output.extractItem(slot - input.getSlots(), amount, simulate);
-        }
-
-        @Override
-        public int getSlotLimit(int slot) {
-            return getHandler(slot).getSlotLimit(getLocalSlot(slot));
-        }
-
-        @Override
-        public boolean isItemValid(int slot, ItemStack stack) {
-            getHandler(slot);
-            return slot < input.getSlots() && input.isItemValid(slot, stack);
-        }
-
-        private IItemHandlerModifiable getHandler(int slot) {
-            if (slot < 0 || slot >= getSlots()) {
-                throw new IndexOutOfBoundsException("Slot " + slot + " not in valid range [0," + getSlots() + ')');
-            }
-            return slot < input.getSlots() ? input : output;
-        }
-
-        private int getLocalSlot(int slot) {
-            return slot < input.getSlots() ? slot : slot - input.getSlots();
         }
     }
 }
