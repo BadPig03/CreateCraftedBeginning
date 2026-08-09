@@ -35,13 +35,20 @@ public class AirtightChestplateLayer<T extends LivingEntity, M extends EntityMod
         super(renderer);
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     public static void registerOn(EntityRenderer<?> renderer) {
-        if (!(renderer instanceof LivingEntityRenderer<?, ?> livingRenderer) || !(livingRenderer.getModel() instanceof HumanoidModel)) {
+        if (!(renderer instanceof LivingEntityRenderer<?, ?> livingRenderer)) {
             return;
         }
 
-        livingRenderer.addLayer((AirtightChestplateLayer) new AirtightChestplateLayer<>(livingRenderer));
+        registerOnLiving(livingRenderer);
+    }
+
+    private static <T extends LivingEntity, M extends EntityModel<T>> void registerOnLiving(LivingEntityRenderer<T, M> renderer) {
+        if (!(renderer.getModel() instanceof HumanoidModel<?>)) {
+            return;
+        }
+
+        renderer.addLayer(new AirtightChestplateLayer<>(renderer));
     }
 
     public static void registerOnAll(EntityRenderDispatcher dispatcher) {

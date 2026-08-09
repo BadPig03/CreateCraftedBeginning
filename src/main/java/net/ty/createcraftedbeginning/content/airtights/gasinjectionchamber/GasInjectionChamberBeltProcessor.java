@@ -48,9 +48,11 @@ final class GasInjectionChamberBeltProcessor {
         if (handler.blockEntity.isVirtual()) {
             return PASS;
         }
+
         if (operation.isRunning()) {
             return HOLD;
         }
+
         if (planner.wasProcessedByInstalledFilter(transported)) {
             return PASS;
         }
@@ -63,25 +65,32 @@ final class GasInjectionChamberBeltProcessor {
         if (handler.blockEntity.isVirtual() || chamber.getLevel() == null) {
             return PASS;
         }
+
         if (operation.isRunning() && operation.type == NONE) {
             return HOLD;
         }
+
         if (operation.executed || operation.type == BASIN_RECIPE) {
             return HOLD;
         }
+
         if (operation.type == NONE && planner.wasProcessedByInstalledFilter(transported)) {
             return PASS;
         }
+
         if (operation.type == NONE && !planner.prepareOperation(transported.stack)) {
             return PASS;
         }
+
         if (!matchesOperationInput(transported.stack)) {
             chamber.cancelOperationState();
             return PASS;
         }
+
         if (!operation.isRunning()) {
             return startProcessing(transported.stack);
         }
+
         if (operation.getProcessingTicks() > GasInjectionChamberBlockEntity.INJECTION_EXECUTION_TICK) {
             return HOLD;
         }
@@ -105,11 +114,13 @@ final class GasInjectionChamberBeltProcessor {
             if (tankGas.isEmpty()) {
                 return HOLD;
             }
+
             if (!GasStack.isSameGasSameComponents(tankGas, operation.gas)) {
                 chamber.clearOperationState();
                 if (!planner.prepareOperation(itemStack)) {
                     return PASS;
                 }
+
                 tankGas = chamber.getGasInTank();
             }
             if (tankGas.getAmount() < operation.gas.getAmount()) {
@@ -187,6 +198,7 @@ final class GasInjectionChamberBeltProcessor {
         if (!operation.resultPrepared || !planner.isFanProcessingOperationStillValid(operation.fanProcessingTypeId)) {
             return false;
         }
+
         if (!GasInjectionChamberUtils.consumesFanProcessingGas(operation.gas)) {
             return replaceTransportedStackWithPreparedResults(transported, handler);
         }

@@ -63,6 +63,7 @@ final class GasInjectionChamberDisplay {
         if (processingTicks < 0) {
             return -1;
         }
+
         int previousProcessingTicks = operation.getPreviousProcessingTicks();
         return previousProcessingTicks < 0 ? processingTicks : Mth.lerp(partialTicks, previousProcessingTicks, processingTicks);
     }

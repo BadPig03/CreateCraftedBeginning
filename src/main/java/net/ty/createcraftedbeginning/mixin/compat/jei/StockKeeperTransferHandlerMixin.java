@@ -70,7 +70,7 @@ public abstract class StockKeeperTransferHandlerMixin {
 
         GasCraftableBigItemStack entry = existing;
         if (entry == null) {
-            entry = new GasCraftableBigItemStack(outputTarget.displayStack(), recipe, outputTarget.outputPerCraft(), outputTarget.transferLimit(), requirements);
+            entry = new GasCraftableBigItemStack(outputTarget.displayStack(), recipe, outputTarget.outputPerCraft(), requirements);
         }
         if (!StockKeeperCraftingUtils.canFitNewOrderTypes(screen.itemsToOrder, entry.getRequirements())) {
             cir.setReturnValue(StockKeeperTransferUtils.throwError("gui.stock_keeper.slots_full"));

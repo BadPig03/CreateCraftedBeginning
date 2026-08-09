@@ -108,14 +108,13 @@ public class CCBJEIPlugin implements IModPlugin {
         connection.getRecipeManager().getRecipes().forEach(consumer);
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public static void consumeTypedRecipes(Consumer<RecipeHolder<?>> consumer, RecipeType<?> type) {
+    public static <I extends RecipeInput, R extends Recipe<I>> void consumeTypedRecipes(Consumer<? super RecipeHolder<R>> consumer, RecipeType<R> type) {
         ClientPacketListener connection = Minecraft.getInstance().getConnection();
         if (connection == null) {
             return;
         }
 
-        List<? extends RecipeHolder<?>> recipes = connection.getRecipeManager().getAllRecipesFor((RecipeType) type);
+        List<RecipeHolder<R>> recipes = connection.getRecipeManager().getAllRecipesFor(type);
         recipes.forEach(consumer);
     }
 
@@ -207,7 +206,6 @@ public class CCBJEIPlugin implements IModPlugin {
         runtime = null;
     }
 
-    @SuppressWarnings("unused")
     private void loadCategories() {
         allCategories.clear();
         builder(CoolingRecipe.class).addTypedRecipes(CCBRecipeTypes.COOLING).catalyst(CCBBlocks.BREEZE_COOLER_BLOCK::get).itemIcon(CCBBlocks.BREEZE_COOLER_BLOCK).emptyBackground(177, 50).build("cooling", CoolingCategory::new);

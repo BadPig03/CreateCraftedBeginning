@@ -24,7 +24,7 @@ public final class CCBBuiltInRegistries {
             return;
         }
 
-        MOUNTED_GAS_STORAGE_TYPE = register(CCBRegistries.MOUNTED_GAS_STORAGE_TYPE, () -> {});
+        MOUNTED_GAS_STORAGE_TYPE = register(CCBRegistries.MOUNTED_GAS_STORAGE_TYPE);
     }
 
     public static @NotNull Registry<MountedGasStorageType<?>> mountedGasStorageType() {
@@ -35,10 +35,9 @@ public final class CCBBuiltInRegistries {
         return registry;
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes", "SameParameterValue"})
-    private static <T> @NotNull Registry<T> register(ResourceKey<Registry<T>> key, Runnable onBakeCallback) {
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static <T> @NotNull Registry<T> register(ResourceKey<Registry<T>> key) {
         RegistryBuilder<T> builder = new RegistryBuilder<>(key).sync(true);
-        builder.onBake(registry -> onBakeCallback.run());
         Registry<T> registry = builder.create();
         ((WritableRegistry) BuiltInRegistries.REGISTRY).register(key, registry, RegistrationInfo.BUILT_IN);
         return registry;

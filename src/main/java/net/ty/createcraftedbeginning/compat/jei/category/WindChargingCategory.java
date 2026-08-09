@@ -40,20 +40,20 @@ public class WindChargingCategory extends CCBRecipeCategory<WindChargingRecipe> 
     @Override
     public void draw(WindChargingRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         Font font = Minecraft.getInstance().font;
-        int chamberX = getBackground().getWidth() / 2 + 44;
+        int chamberX = background.getWidth() / 2 + 44;
         CCBGUITextures.JEI_SHADOW.render(graphics, 122, 37);
         CCBGUITextures.JEI_LONG_ARROW.render(graphics, 42, 30);
         CCBGUITextures.JEI_WIND_CHARGING_BACKGROUND.render(graphics, 16, 8);
         if (recipe.getAction() == WindChargingAction.CYCLE_CREATIVE) {
             MutableComponent text = Component.translatable("jade.gas.infinity_mark");
-            graphics.drawString(font, text, getBackground().getWidth() / 2 - font.width(text) / 2 - 12, 22, COLOR_NORMAL, false);
+            graphics.drawString(font, text, background.getWidth() / 2 - font.width(text) / 2 - 12, 22, COLOR_NORMAL, false);
             galeChamber.draw(graphics, chamberX, 18);
             return;
         }
 
         if (recipe.getAction() == WindChargingAction.CLEAR_ILL) {
             MutableComponent text = CCBLang.translateDirect("gui.clear_ill_state");
-            graphics.drawString(font, text, getBackground().getWidth() / 2 - font.width(text) / 2 - 15, 22, COLOR_NORMAL, false);
+            graphics.drawString(font, text, background.getWidth() / 2 - font.width(text) / 2 - 15, 22, COLOR_NORMAL, false);
             calmChamber.draw(graphics, chamberX, 18);
             return;
         }
@@ -61,7 +61,7 @@ public class WindChargingCategory extends CCBRecipeCategory<WindChargingRecipe> 
         boolean isBadFood = recipe.isBadFood();
         MutableComponent time = isBadFood ? CCBLang.text("-").component() : Component.empty();
         time.append(CCBLang.secondsWithGameTicks(Math.abs(recipe.getProcessingDuration()), 20).component());
-        int textX = getBackground().getWidth() / 2 - font.width(time) / 2 - 12;
+        int textX = background.getWidth() / 2 - font.width(time) / 2 - 12;
         int color = isBadFood ? COLOR_BAD : COLOR_NORMAL;
         graphics.drawString(font, time, textX, 22, color, false);
         if (isBadFood) {

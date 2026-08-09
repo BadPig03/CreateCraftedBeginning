@@ -136,9 +136,11 @@ final class AirtightPumpPressureController {
 
         queueNetworkUpdate(isFront(side));
         GasTransportBehaviour transportBehaviour = getTransportBehaviour();
-        if (transportBehaviour != null) {
-            transportBehaviour.wipePressure();
+        if (transportBehaviour == null) {
+            return;
         }
+
+        transportBehaviour.wipePressure();
     }
 
     void markPressureUpdate() {

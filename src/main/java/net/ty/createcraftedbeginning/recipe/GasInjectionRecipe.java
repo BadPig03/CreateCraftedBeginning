@@ -3,14 +3,12 @@ package net.ty.createcraftedbeginning.recipe;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.simibubi.create.foundation.recipe.RecipeFinder;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
-import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -297,20 +295,6 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
     public Component getDescriptionForAssembly() {
         String gasName = gasIngredients.getFirst().getFirstGas().getHoverName().getString();
         return CCBLang.translateDirect("recipe.assembly.gas_injection_injecting_gas", gasName);
-    }
-
-    @Override
-    public void addAssemblyGasIngredients(List<SizedGasIngredient> list) {
-        list.add(getGasIngredient());
-    }
-
-    @Override
-    public void addAssemblyIngredients(List<Ingredient> list) {
-    }
-
-    @Override
-    public void addRequiredMachines(Set<ItemLike> list) {
-        list.add(BuiltInRegistries.BLOCK.get(CCBAPI.asResource("gas_injection_chamber")));
     }
 
     public record RecipeMatch(GasInjectionRecipe recipe, boolean sequencedAssembly) {}

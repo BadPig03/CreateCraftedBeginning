@@ -14,7 +14,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public class GasCanisterPackOverrides {
     private static final int LEFT_UP = 1;
     private static final int RIGHT_UP = 2;
@@ -73,22 +72,6 @@ public class GasCanisterPackOverrides {
 
         public int getFlags() {
             return ordinal();
-        }
-
-        public boolean hasLeftUp() {
-            return (getFlags() & LEFT_UP) != 0;
-        }
-
-        public boolean hasRightUp() {
-            return (getFlags() & RIGHT_UP) != 0;
-        }
-
-        public boolean hasLeftDown() {
-            return (getFlags() & LEFT_DOWN) != 0;
-        }
-
-        public boolean hasRightDown() {
-            return (getFlags() & RIGHT_DOWN) != 0;
         }
     }
 }

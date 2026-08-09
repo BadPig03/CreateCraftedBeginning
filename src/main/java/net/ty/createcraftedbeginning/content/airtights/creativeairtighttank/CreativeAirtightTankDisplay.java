@@ -53,6 +53,7 @@ final class CreativeAirtightTankDisplay {
         if (controller == null) {
             return 0;
         }
+
         GasStack gas = controller.getCapability().getGasInTank(0);
         return gas.isEmpty() ? 0 : GasAmountUtils.toWholeBucketsClamped(CreativeAirtightTankBlockEntity.getCapacityPerTank());
     }

@@ -182,6 +182,7 @@ final class GasInjectionChamberOperationPlanner {
             if (expectedGas != operation.gas.getAmount()) {
                 return false;
             }
+
             recipe = matchedRecipe;
         }
 
@@ -209,6 +210,7 @@ final class GasInjectionChamberOperationPlanner {
         if (results == null) {
             return false;
         }
+
         for (ItemStack result : results) {
             addResultStack(operation.results, result);
         }

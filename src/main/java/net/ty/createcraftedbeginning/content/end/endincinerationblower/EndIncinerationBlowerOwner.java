@@ -36,9 +36,11 @@ final class EndIncinerationBlowerOwner {
     }
 
     void write(CompoundTag compoundTag) {
-        if (owner != null) {
-            compoundTag.putUUID(COMPOUND_KEY_OWNER, owner);
+        if (owner == null) {
+            return;
         }
+
+        compoundTag.putUUID(COMPOUND_KEY_OWNER, owner);
     }
 
     void read(CompoundTag compoundTag) {

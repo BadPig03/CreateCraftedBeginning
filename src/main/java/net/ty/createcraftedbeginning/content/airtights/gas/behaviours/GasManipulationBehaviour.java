@@ -20,7 +20,6 @@ import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasHandler, GasManipulationBehaviour> {
     public static final BehaviourType<GasManipulationBehaviour> OBSERVE = new BehaviourType<>();
 
@@ -65,16 +64,6 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
             return drained;
         }
         return GasStack.EMPTY;
-    }
-
-    protected Predicate<GasStack> getFilterTest(Predicate<GasStack> test) {
-        GasFilteringBehaviour gasFilter = blockEntity.getBehaviour(GasFilteringBehaviour.TYPE);
-        if (gasFilter != null) {
-            return test.and(gasFilter::test);
-        }
-
-        Predicate<GasStack> itemFilter = getItemFilterTest();
-        return itemFilter == null ? test : test.and(itemFilter);
     }
 
     private @Nullable Predicate<GasStack> getItemFilterTest() {

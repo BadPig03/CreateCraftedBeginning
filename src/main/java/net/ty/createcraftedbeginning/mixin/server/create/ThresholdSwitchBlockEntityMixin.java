@@ -58,6 +58,10 @@ public abstract class ThresholdSwitchBlockEntityMixin extends SmartBlockEntity {
     private void ccb$getDisplayItemForScreen(CallbackInfoReturnable<ItemStack> cir) {
         ThresholdSwitchBlockEntity switchBlockEntity = (ThresholdSwitchBlockEntity) (Object) this;
         Level level = switchBlockEntity.getLevel();
+        if (level == null) {
+            return;
+        }
+
         BlockPos pos = getTargetPos();
         BlockEntity blockEntity = level.getBlockEntity(pos);
         BlockState state = level.getBlockState(pos);

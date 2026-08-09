@@ -21,7 +21,6 @@ import java.util.Map;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightArmorsTrimsModelGenerator extends TrimmableArmorModelGenerator {
-    @SuppressWarnings("unchecked")
     public static <T extends ArmorItem> void generate(DataGenContext<Item, T> context, RegistrateItemModelProvider provider) {
         T item = context.get();
         ItemModelBuilder builder = provider.generated(context);
@@ -29,7 +28,7 @@ public class AirtightArmorsTrimsModelGenerator extends TrimmableArmorModelGenera
             String trimId = data.name(item.getMaterial());
             ResourceLocation modelLocation = ModelLocationUtils.getModelLocation(item).withSuffix('_' + trimId + "_trim");
             ItemModelBuilder itemModel = provider.withExistingParent(modelLocation.getPath(), "item/generated").texture("layer0", TextureMapping.getItemTexture(item));
-            Map<String, String> textures = (Map<String, String>) TEXTURES_HANDLE.get(itemModel);
+            @SuppressWarnings("unchecked") Map<String, String> textures = (Map<String, String>) TEXTURES_HANDLE.get(itemModel);
             ResourceLocation trimTexture = CCBAPI.asResource("trims/items/airtight_" + item.getType().getName() + "_trim_" + trimId);
             textures.put("layer1", trimTexture.toString());
             builder.override().predicate(ItemModelGenerators.TRIM_TYPE_PREDICATE_ID, data.itemModelIndex()).model(itemModel).end();

@@ -86,9 +86,11 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
     }
 
     public void updateTankState() {
-        if (level != null && !level.isClientSide && isController()) {
-            driverCore.requestStructureEvaluation();
+        if (level == null || level.isClientSide || !isController()) {
+            return;
         }
+
+        driverCore.requestStructureEvaluation();
     }
 
     @Override
@@ -135,11 +137,14 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
         if (level == null) {
             return;
         }
+
         BlockState state = getBlockState();
-        if (state.getBlock() instanceof AirtightTankBlock) {
-            state = state.setValue(AirtightTankBlock.TOP, true).setValue(AirtightTankBlock.BOTTOM, true);
-            level.setBlock(worldPosition, state, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE | Block.UPDATE_KNOWN_SHAPE);
+        if (!(state.getBlock() instanceof AirtightTankBlock)) {
+            return;
         }
+
+        state = state.setValue(AirtightTankBlock.TOP, true).setValue(AirtightTankBlock.BOTTOM, true);
+        level.setBlock(worldPosition, state, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE | Block.UPDATE_KNOWN_SHAPE);
     }
 
     @Override

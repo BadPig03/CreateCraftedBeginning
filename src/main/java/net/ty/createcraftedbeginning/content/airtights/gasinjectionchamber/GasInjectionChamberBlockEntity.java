@@ -203,6 +203,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         if (level != null && level.isClientSide) {
             return;
         }
+
         basinCheckScheduled = true;
     }
 
@@ -210,6 +211,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         if (!basinCheckScheduled) {
             return false;
         }
+
         basinCheckScheduled = false;
         return true;
     }

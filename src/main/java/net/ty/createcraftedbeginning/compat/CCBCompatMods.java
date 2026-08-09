@@ -8,12 +8,10 @@ import net.neoforged.fml.ModList;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public enum CCBCompatMods {
     CREATE_FLUID_LOGISTICS("fluidlogistics"),
     JEI("jei"),
@@ -40,13 +38,6 @@ public enum CCBCompatMods {
 
     public Item getItem(ResourceLocation id) {
         return BuiltInRegistries.ITEM.get(id);
-    }
-
-    public <T> Optional<T> runIfInstalled(Supplier<Supplier<T>> toRun) {
-        if (!isLoaded()) {
-            return Optional.empty();
-        }
-        return Optional.of(toRun.get().get());
     }
 
     public boolean isLoaded() {

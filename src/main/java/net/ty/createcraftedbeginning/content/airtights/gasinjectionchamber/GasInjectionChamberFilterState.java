@@ -34,6 +34,7 @@ final class GasInjectionChamberFilterState {
         if (hasInstalledFilter() || !GasInjectionChamberUtils.isFilter(stack)) {
             return false;
         }
+
         installedFilter = stack.copyWithCount(1);
         return true;
     }
@@ -53,15 +54,19 @@ final class GasInjectionChamberFilterState {
     }
 
     void writeInstalledFilter(CompoundTag tag, Provider provider) {
-        if (!installedFilter.isEmpty()) {
-            tag.put(COMPOUND_KEY_INSTALLED_FILTER, installedFilter.saveOptional(provider));
+        if (installedFilter.isEmpty()) {
+            return;
         }
+
+        tag.put(COMPOUND_KEY_INSTALLED_FILTER, installedFilter.saveOptional(provider));
     }
 
     void readInstalledFilter(CompoundTag tag, Provider provider) {
         installedFilter = tag.contains(COMPOUND_KEY_INSTALLED_FILTER) ? ItemStack.parseOptional(provider, tag.getCompound(COMPOUND_KEY_INSTALLED_FILTER)) : ItemStack.EMPTY;
-        if (!GasInjectionChamberUtils.isFilter(installedFilter)) {
-            installedFilter = ItemStack.EMPTY;
+        if (GasInjectionChamberUtils.isFilter(installedFilter)) {
+            return;
         }
+
+        installedFilter = ItemStack.EMPTY;
     }
 }

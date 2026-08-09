@@ -223,9 +223,11 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour implements S
         if (result.effect() != Effect.NONE) {
             sendGasEffect(result.effect() == Effect.SUCCESS);
         }
-        if (result.promisedGas() != null) {
-            restockerPromises.add(new RequestPromise(result.promisedGas()));
+        if (result.promisedGas() == null) {
+            return;
         }
+
+        restockerPromises.add(new RequestPromise(result.promisedGas()));
     }
 
     private void notifyLinkedRedstoneOutputs() {

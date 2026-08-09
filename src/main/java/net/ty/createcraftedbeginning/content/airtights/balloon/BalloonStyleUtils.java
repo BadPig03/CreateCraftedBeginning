@@ -15,7 +15,6 @@ import java.util.Random;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public final class BalloonStyleUtils {
     public static final List<PackageItem> REGULAR_BALLOONS = new ArrayList<>();
     public static final List<PackageItem> RARE_BALLOONS = new ArrayList<>();

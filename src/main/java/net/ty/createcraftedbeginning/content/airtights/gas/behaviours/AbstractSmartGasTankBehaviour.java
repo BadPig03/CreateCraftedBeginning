@@ -21,8 +21,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
-abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour {
+public abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour {
     protected static final String COMPOUND_KEY_TANK_CONTENT = "TankContent";
 
     private static final int SYNC_RATE = 8;
@@ -123,7 +122,7 @@ abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour {
                 return;
             }
 
-            tanks[index.intValue()].read(tankTag, provider, clientPacket);
+            tanks[index.intValue()].read(tankTag, provider);
             index.increment();
         });
     }
@@ -169,7 +168,7 @@ abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour {
             return tag;
         }
 
-        public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        public void read(CompoundTag compoundTag, Provider provider) {
             if (!compoundTag.contains(COMPOUND_KEY_TANK_CONTENT)) {
                 return;
             }
@@ -181,9 +180,11 @@ abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour {
     protected class InternalGasHandlerBase extends CombinedGasTankWrapper {
         protected InternalGasHandlerBase(IGasHandler[] handlers, boolean enforceVariety) {
             super(handlers);
-            if (enforceVariety) {
-                enforceVariety();
+            if (!enforceVariety) {
+                return;
             }
+
+            enforceVariety();
         }
 
         @Override
@@ -217,6 +218,7 @@ abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour {
             return fillAllowed(resource, action);
         }
 
+        @SuppressWarnings("unused")
         public GasStack forceDrain(GasStack resource, GasAction action) {
             return drainAllowed(resource, action);
         }

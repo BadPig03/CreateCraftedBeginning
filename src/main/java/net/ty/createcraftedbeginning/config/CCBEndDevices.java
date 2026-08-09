@@ -7,13 +7,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public class CCBEndDevices extends ConfigBase {
+    @SuppressWarnings("unused")
     public final ConfigGroup endIncinerationBlower = group(0, "end_incineration_blower", "End Incineration Blower");
     public final ConfigBool ignitionAffectsPlayers = b(true, "ignition_affects_players", Comments.ignitionAffectsPlayers);
     public final ConfigFloat ignitionDamage = f(2, 0, "ignition_damage", Comments.ignitionDamage);
     public final ConfigFloat maxRange = f(3.5f, 0.5f, 7, "max_range", Comments.maxRange);
 
+    @SuppressWarnings("unused")
     public final ConfigGroup endSculkSilencer = group(0, "end_sculk_silencer", "End Sculk Silencer");
     public final ConfigFloat speedRequirementMultiplier = f(1, 0, "speed_requirement_multiplier", Comments.speedRequirementMultiplier);
 
@@ -23,8 +24,6 @@ public class CCBEndDevices extends ConfigBase {
     }
 
     private static class Comments {
-        static String gameTicks = "[in game ticks]";
-        static String seconds = "[in seconds]";
         static String maxRange = "The maximum radius of the End Incineration Blower's cubic area of effect. Higher values can significantly increase scanning overhead.";
         static String ignitionDamage = "The damage dealt to living entities other than Snow Golems by each ignition pulse from the End Incineration Blower.";
         static String ignitionAffectsPlayers = "Whether the End Incineration Blower ignition mode can damage players.";

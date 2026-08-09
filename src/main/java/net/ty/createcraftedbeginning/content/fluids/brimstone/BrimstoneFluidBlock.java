@@ -10,7 +10,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FlowingFluid;
-import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.registry.CCBDamageSources;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -24,25 +23,17 @@ public class BrimstoneFluidBlock extends LiquidBlock {
 
     @Override
     protected void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
-        float damage = Math.max(0, CCBConfig.server().fluids.contactDamage.getF());
-        int burnDuration = Math.max(0, CCBConfig.server().fluids.burnDuration.get());
         switch (entity) {
             case LivingEntity living -> {
                 if (living.fireImmune() || living.hasEffect(MobEffects.FIRE_RESISTANCE)) {
-                    if (damage > 0) {
-                        living.hurt(CCBDamageSources.brimstone(level), damage);
-                    }
+                    living.hurt(CCBDamageSources.brimstone(level), 10);
                 }
                 else {
-                    if (burnDuration > 0) {
-                        living.igniteForSeconds(burnDuration);
-                    }
-                    if (damage > 0) {
-                        living.hurt(CCBDamageSources.brimstoneFire(level), damage);
-                    }
+                    living.igniteForSeconds(15);
+                    living.hurt(CCBDamageSources.brimstoneFire(level), 10);
                 }
             }
-            case ItemEntity item when !item.fireImmune() && burnDuration > 0 -> item.igniteForSeconds(burnDuration);
+            case ItemEntity item when !item.fireImmune() -> item.igniteForSeconds(15);
             default -> {
             }
         }

@@ -44,9 +44,9 @@ public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
         CCBGUITextures.JEI_COOLING_BACKGROUND.render(graphics, 16, 8);
 
         MutableComponent time = getProcessingTime(recipe);
-        int textX = getBackground().getWidth() / 2 - font.width(time) / 2 - 12;
+        int textX = background.getWidth() / 2 - font.width(time) / 2 - 12;
         graphics.drawString(font, time, textX, 22, COLOR, false);
-        cooler.draw(graphics, getBackground().getWidth() / 2 + 44, 18);
+        cooler.draw(graphics, background.getWidth() / 2 + 44, 18);
     }
 
     @Override

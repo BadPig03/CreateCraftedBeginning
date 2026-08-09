@@ -22,7 +22,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public class CCBIcons extends AllIcons {
     public static final ResourceLocation CCB_ICON_ATLAS = CCBAPI.asResource("textures/gui/icons.png");
     public static final int CCB_ICON_ATLAS_SIZE = 256;
@@ -34,7 +33,6 @@ public class CCBIcons extends AllIcons {
     public static final CCBIcons I_INPUT_ONLY = next();
     public static final CCBIcons I_OUTPUT_ONLY = next();
     public static final CCBIcons I_STAY_HALF = next();
-    public static final CCBIcons I_EMPTY = next();
     public static final CCBIcons I_FILTER = newRow();
     public static final CCBIcons I_FINISHED = next();
     public static final CCBIcons I_OUTLINE_DISPLAY = next();

@@ -20,9 +20,11 @@ final class CreativeAirtightTankSerialization {
 
     void write(CompoundTag tag, Provider provider, boolean clientPacket) {
         AirtightTankSerializationSupport.writeMultiblock(owner, tag, clientPacket);
-        if (owner.isController()) {
-            tag.put(AirtightTankSerializationSupport.TANK_CONTENT, owner.getTankInventory().write(provider, new CompoundTag()));
+        if (!owner.isController()) {
+            return;
         }
+
+        tag.put(AirtightTankSerializationSupport.TANK_CONTENT, owner.getTankInventory().write(provider, new CompoundTag()));
     }
 
     void writeSafe(CompoundTag tag) {
@@ -37,8 +39,10 @@ final class CreativeAirtightTankSerialization {
                 owner.getTankInventory().read(provider, tag.getCompound(AirtightTankSerializationSupport.TANK_CONTENT));
             }
         }
-        if (clientStructureChanged) {
-            owner.updateClientStructureState();
+        if (!clientStructureChanged) {
+            return;
         }
+
+        owner.updateClientStructureState();
     }
 }

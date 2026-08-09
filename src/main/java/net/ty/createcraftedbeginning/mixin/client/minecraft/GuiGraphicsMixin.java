@@ -13,7 +13,6 @@ import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
 import net.ty.createcraftedbeginning.platform.access.StockKeeperRequestScreenAccess;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -25,16 +24,9 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 @Mixin(GuiGraphics.class)
 public abstract class GuiGraphicsMixin {
-    @Unique
-    private static boolean ccb$renderingGasTooltip;
-
-    @SuppressWarnings({"DataFlowIssue", "UnusedAssignment"})
+    @SuppressWarnings("DataFlowIssue")
     @Inject(method = "renderTooltip(Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;II)V", at = @At("HEAD"), cancellable = true)
     private void ccb$renderTooltip(Font font, ItemStack stack, int mouseX, int mouseY, CallbackInfo ci) {
-        if (ccb$renderingGasTooltip) {
-            return;
-        }
-
         if (!(Minecraft.getInstance().screen instanceof StockKeeperRequestScreen requestScreen) || !(requestScreen instanceof StockKeeperRequestScreenAccess accessor)) {
             return;
         }
@@ -71,13 +63,7 @@ public abstract class GuiGraphicsMixin {
         }
 
         List<Component> tooltip = GasRequestClientUtils.getTooltipLines(accessor, entry, orderHovered);
-        ccb$renderingGasTooltip = true;
-        try {
-            ((GuiGraphics) (Object) this).renderComponentTooltip(font, tooltip, mouseX, mouseY);
-        } finally {
-            ccb$renderingGasTooltip = false;
-        }
-
+        ((GuiGraphics) (Object) this).renderComponentTooltip(font, tooltip, mouseX, mouseY, stack);
         ci.cancel();
     }
 }

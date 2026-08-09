@@ -3,10 +3,9 @@ package net.ty.createcraftedbeginning.content.airtights.gas.mounted;
 import com.mojang.serialization.Codec;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.RegistryOps;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -20,9 +19,7 @@ import java.util.Objects;
 @MethodsReturnNonnullByDefault
 public abstract class MountedGasStorage implements IGasHandler {
     public static final Codec<MountedGasStorage> CODEC = MountedGasStorageType.CODEC.dispatch(storage -> storage.type, type -> type.codec);
-
-    @SuppressWarnings("deprecation")
-    public static final StreamCodec<RegistryFriendlyByteBuf, MountedGasStorage> STREAM_CODEC = StreamCodec.of((buffer, storage) -> buffer.writeWithCodec(RegistryOps.create(NbtOps.INSTANCE, buffer.registryAccess()), CODEC, storage), buffer -> buffer.readWithCodecTrusted(RegistryOps.create(NbtOps.INSTANCE, buffer.registryAccess()), CODEC));
+    public static final StreamCodec<RegistryFriendlyByteBuf, MountedGasStorage> STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
 
     public final MountedGasStorageType<? extends MountedGasStorage> type;
 

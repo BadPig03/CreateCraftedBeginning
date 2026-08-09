@@ -59,10 +59,12 @@ final class GasInjectionChamberOperationState {
     }
 
     void synchronizeProcessingTicks(int synchronizedTicks, boolean clientPacket) {
-        if (!clientPacket || processingTicks < 0 || synchronizedTicks < 0) {
-            processingTicks = synchronizedTicks;
-            previousProcessingTicks = synchronizedTicks;
+        if (clientPacket && processingTicks >= 0 && synchronizedTicks >= 0) {
+            return;
         }
+
+        processingTicks = synchronizedTicks;
+        previousProcessingTicks = synchronizedTicks;
     }
 
     void capturePreviousProcessingTicks() {
@@ -193,12 +195,15 @@ final class GasInjectionChamberOperationState {
         if (type == OperationType.NONE) {
             return false;
         }
+
         if (type == OperationType.BASIN_RECIPE) {
             return !gas.isEmpty() && !fluidInputs.isEmpty() && !fluidResult.isEmpty();
         }
+
         if (input.isEmpty()) {
             return false;
         }
+
         if (type != OperationType.FAN_PROCESSING) {
             return !type.usesGas || !gas.isEmpty();
         }

@@ -22,6 +22,7 @@ public record AirtightHandheldDrillGhostItemSubmitPacket(ItemStack item) impleme
         if (!(player.containerMenu instanceof AirtightHandheldDrillMenu menu) || !menu.stillValid(player)) {
             return;
         }
+
         if (!item.isEmpty() && !AirtightHandheldDrillUtils.isValidFilter(item)) {
             return;
         }

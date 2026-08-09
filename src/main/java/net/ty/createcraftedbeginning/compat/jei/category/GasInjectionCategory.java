@@ -37,11 +37,11 @@ public class GasInjectionCategory extends CCBRecipeCategory<GasInjectionRecipe> 
         CCBGUITextures.JEI_DOWN_ARROW.render(graphics, 126, 29);
 
         if (recipe.isFluidInjection()) {
-            basinChamber.draw(graphics, getBackground().getWidth() / 2 - 13, 22);
+            basinChamber.draw(graphics, background.getWidth() / 2 - 13, 22);
             return;
         }
 
-        depotChamber.draw(graphics, getBackground().getWidth() / 2 - 13, 22);
+        depotChamber.draw(graphics, background.getWidth() / 2 - 13, 22);
     }
 
     @Override

@@ -59,7 +59,6 @@ final class GasPackagerPendingGas {
             if (!handler.tryFillAtomically(gases, GasAction.EXECUTE).isSuccess()) {
                 return new InsertionResult(copyOrEmpty(previouslyUnwrapped), false);
             }
-
             return new InsertionResult(ItemStack.EMPTY, true);
         }
 
@@ -91,9 +90,11 @@ final class GasPackagerPendingGas {
     }
 
     void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        if (!clientPacket) {
-            compoundTag.put(COMPOUND_KEY_PENDING_GASES, pendingGases.saveOptional(provider));
+        if (clientPacket) {
+            return;
         }
+
+        compoundTag.put(COMPOUND_KEY_PENDING_GASES, pendingGases.saveOptional(provider));
     }
 
     void clear() {

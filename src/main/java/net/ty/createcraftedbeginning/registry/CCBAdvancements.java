@@ -32,7 +32,6 @@ import static net.ty.createcraftedbeginning.advancement.CCBAdvancement.TaskType.
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public class CCBAdvancements implements DataProvider {
     public static final CCBAdvancement ROOT = create("root", b -> b.icon(CCBBlocks.BREEZE_COOLER_BLOCK).title("Welcome to Create: Crafted Beginning").description("A brand new experience").awardedForFree().special(HIDDEN_TASK));
 
@@ -43,10 +42,12 @@ public class CCBAdvancements implements DataProvider {
     public static final CCBAdvancement STEVES_REDEMPTION = create("steves_redemption", b -> b.icon(CCBBlocks.END_SCULK_SILENCER_BLOCK).title("Steve's Redemption").description("Attach an End Sculk Silencer to an End Casing, escaping the grasp of the Warden").after(THE_INTEGRATED_INDUSTRY_AGE));
 
     public static final CCBAdvancement SHINY_DUST = create("shiny_dust", b -> b.icon(CCBItems.POWDERED_AMETHYST).title("Shiny Dust").description("Obtain a Powdered Amethyst").whenIconCollected().after(ROOT));
+    @SuppressWarnings("unused")
     public static final CCBAdvancement SILICON_DIOXIDE = create("silicon_dioxide", b -> b.icon(CCBItems.AMETHYST_CRYSTAL_SHEET).title("Silicon Dioxide").description("Obtain an Amethyst Crystal Sheet").whenIconCollected().after(SHINY_DUST));
     public static final CCBAdvancement DRYING_OUT = create("drying_out", b -> b.icon(CCBFluids.AMETHYST_SUSPENSION.getBucket().orElseThrow()).title("Drying Out").description("Place a bucket of Amethyst Suspension in the Nether\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(SHINY_DUST));
     public static final CCBAdvancement PRE_CRUSHING = create("pre_crushing", b -> b.icon(CCBItems.OBSIDIAN_CHUNK).title("Pre-Crushing").description("Obtain an Obsidian Chunk or a Crying Obsidian Chunk by pressing").whenItemCollected(CCBItemTags.CHUNKS.tag).after(SHINY_DUST));
     public static final CCBAdvancement STONE_COLD_TEARS = create("stone_cold_tears", b -> b.icon(CCBItems.POWDERED_CRYING_OBSIDIAN).title("Stone-Cold Tears").description("Obtain a Powdered Crying Obsidian").whenIconCollected().after(PRE_CRUSHING));
+    @SuppressWarnings("unused")
     public static final CCBAdvancement ROCK_SOLID_WISDOM = create("rock_solid_wisdom", b -> b.icon(CCBBlocks.CRYING_OBSIDIAN_BRICKS_M).title("Rock-Solid Wisdom").description("Obtain all types of Crying Obsidian Bricks with texts\n§7(Hidden Advancement)").special(HIDDEN_GOAL).whenItemsCollected(new ArrayList<>(List.of(CCBBlocks.CRYING_OBSIDIAN_BRICKS_A, CCBBlocks.CRYING_OBSIDIAN_BRICKS_B, CCBBlocks.CRYING_OBSIDIAN_BRICKS_C, CCBBlocks.CRYING_OBSIDIAN_BRICKS_D, CCBBlocks.CRYING_OBSIDIAN_BRICKS_E, CCBBlocks.CRYING_OBSIDIAN_BRICKS_F, CCBBlocks.CRYING_OBSIDIAN_BRICKS_G, CCBBlocks.CRYING_OBSIDIAN_BRICKS_H, CCBBlocks.CRYING_OBSIDIAN_BRICKS_I, CCBBlocks.CRYING_OBSIDIAN_BRICKS_J, CCBBlocks.CRYING_OBSIDIAN_BRICKS_K, CCBBlocks.CRYING_OBSIDIAN_BRICKS_L, CCBBlocks.CRYING_OBSIDIAN_BRICKS_M, CCBBlocks.CRYING_OBSIDIAN_BRICKS_N, CCBBlocks.CRYING_OBSIDIAN_BRICKS_O, CCBBlocks.CRYING_OBSIDIAN_BRICKS_P, CCBBlocks.CRYING_OBSIDIAN_BRICKS_Q, CCBBlocks.CRYING_OBSIDIAN_BRICKS_R, CCBBlocks.CRYING_OBSIDIAN_BRICKS_S, CCBBlocks.CRYING_OBSIDIAN_BRICKS_T, CCBBlocks.CRYING_OBSIDIAN_BRICKS_U, CCBBlocks.CRYING_OBSIDIAN_BRICKS_V, CCBBlocks.CRYING_OBSIDIAN_BRICKS_W, CCBBlocks.CRYING_OBSIDIAN_BRICKS_X, CCBBlocks.CRYING_OBSIDIAN_BRICKS_Y, CCBBlocks.CRYING_OBSIDIAN_BRICKS_Z))).after(STONE_COLD_TEARS));
     public static final CCBAdvancement PLYWOOD = create("plywood", b -> b.icon(CCBItems.AIRTIGHT_SHEET).title("Plywood").description("Assemble an Airtight Sheet").whenIconCollected().after(STONE_COLD_TEARS));
     public static final CCBAdvancement GASEOUS_VARIATIONS = create("gaseous_variations", b -> b.icon(p -> GasVirtualUtils.createVirtualItem(new GasStack(CCBGases.SPORE_AIR, 1))).title("Gaseous Variations").description("Attempt to extract Spore Air in Mushroom Fields\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(PLYWOOD));
@@ -75,6 +76,7 @@ public class CCBAdvancements implements DataProvider {
     public static final CCBAdvancement FEELING_THE_PRESSURE = create("feeling_the_pressure", b -> b.icon(CCBBlocks.AIR_COMPRESSOR_BLOCK).title("Feeling the Pressure").description("Place and power an Air Compressor").after(GAS_FILTRATION));
     public static final CCBAdvancement A_CLOSE_CALL = create("a_close_call", b -> b.icon(CCBBlocks.AIR_COMPRESSOR_BLOCK).title("A Close Call").description("Cool an Air Compressor right before it melts down\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(FEELING_THE_PRESSURE));
     public static final CCBAdvancement BIG_PRESSURE_COOKER = create("big_pressure_cooker", b -> b.icon(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK).title("Big Pressure Cooker").description("Assemble an Airtight Reactor Kettle").whenIconCollected().after(FEELING_THE_PRESSURE));
+    @SuppressWarnings("unused")
     public static final CCBAdvancement PRESS_IT_ALL = create("press_it_all", b -> b.icon(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK).title("Press It All").description("Assemble an Airtight Forging Press").whenIconCollected().after(BIG_PRESSURE_COOKER));
     public static final CCBAdvancement BETTER_THAN_A_BACKTANK = create("better_than_a_backtank", b -> b.icon(CCBItems.GAS_CANISTER).title("Better than a Backtank").description("Obtain a Gas Canister").whenIconCollected().after(PLYWOOD));
     public static final CCBAdvancement NEW_ENERGY_BATTERY_PACK = create("new_energy_battery_pack", b -> b.icon(CCBItems.GAS_CANISTER_PACK).title("New Energy Battery Pack").description("Assemble a Gas Canister Pack").whenIconCollected().after(BETTER_THAN_A_BACKTANK));

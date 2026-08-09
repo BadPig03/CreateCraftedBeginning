@@ -87,9 +87,11 @@ final class AirtightAssemblyDriverController {
 
         activeState = active;
         activeStateInitialized = true;
-        if (!active) {
-            driverCore.getFlowMeter().reset(true);
+        if (active) {
+            return;
         }
+
+        driverCore.getFlowMeter().reset(true);
     }
 
     private void consumeBufferedGas(GasTank buffer) {
@@ -110,9 +112,11 @@ final class AirtightAssemblyDriverController {
         }
 
         long consumedAmount = handler.fill(drainableGas, GasAction.EXECUTE);
-        if (consumedAmount > 0) {
-            buffer.drain(consumedAmount, GasAction.EXECUTE);
+        if (consumedAmount <= 0) {
+            return;
         }
+
+        buffer.drain(consumedAmount, GasAction.EXECUTE);
     }
 
     private void flushDirtyState(AirtightTankBlockEntity controller) {

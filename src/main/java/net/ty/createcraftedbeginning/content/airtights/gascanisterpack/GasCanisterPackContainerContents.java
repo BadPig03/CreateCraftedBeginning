@@ -22,7 +22,6 @@ import java.util.stream.IntStream;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public class GasCanisterPackContainerContents implements IGasCanisterContainer {
     public static final int MAX_COUNT = 4;
 
@@ -273,10 +272,6 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
         return getGasInTank(tank).isEmpty();
     }
 
-    public boolean isFull(int tank) {
-        return getGasInTank(tank).getAmount() >= getTankCapacity(tank);
-    }
-
     public CompoundTag getCompoundTag(int tank) {
         if (isInvalidTank(tank)) {
             return new CompoundTag();
@@ -284,35 +279,8 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
         return compoundTags.get(tank).copy();
     }
 
-    public void setCompoundTag(int tank, CompoundTag compoundTag) {
-        if (isInvalidTank(tank) || compoundTags.get(tank).equals(compoundTag)) {
-            return;
-        }
-
-        compoundTags.set(tank, compoundTag.copy());
-        saveCompounds();
-    }
-
     public boolean getCreatives(int tank) {
         return !isInvalidTank(tank) && creatives.get(tank);
-    }
-
-    public void setCreatives(int tank, boolean creative) {
-        if (isInvalidTank(tank) || creatives.get(tank) == creative) {
-            return;
-        }
-
-        creatives.set(tank, creative);
-        saveCreatives();
-    }
-
-    public void replaceCanister(int tank, GasStack gas, long capacity, CompoundTag compoundTag, boolean creative) {
-        if (isInvalidTank(tank)) {
-            return;
-        }
-
-        setCanister(tank, new CanisterData(gas, capacity, compoundTag, creative));
-        save();
     }
 
     public void replaceCanisters(List<CanisterData> canisters) {

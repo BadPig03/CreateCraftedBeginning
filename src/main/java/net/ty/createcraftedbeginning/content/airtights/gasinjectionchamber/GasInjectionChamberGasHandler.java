@@ -61,11 +61,13 @@ final class GasInjectionChamberGasHandler implements IGasHandler {
         if (!locked.getAsBoolean()) {
             return delegate.tryFillAtomically(resources, action);
         }
+
         GasStack lockedGas = operationGas.get();
         for (GasStack resource : resources) {
             if (resource == null || resource.isEmpty() || GasStack.isSameGasSameComponents(resource, lockedGas)) {
                 continue;
             }
+
             return AtomicFillResult.REJECTED;
         }
         return delegate.tryFillAtomically(resources, action);

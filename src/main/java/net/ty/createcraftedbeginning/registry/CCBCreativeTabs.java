@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.registry;
 import com.simibubi.create.AllCreativeModeTabs;
 import com.tterrag.registrate.util.entry.ItemProviderEntry;
 import com.tterrag.registrate.util.entry.RegistryEntry;
-import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
@@ -83,15 +82,8 @@ public class CCBCreativeTabs {
             return orderings;
         }
 
-        @SuppressWarnings("RedundantOperationOnEmptyContainer")
         private static Function<Item, ItemStack> makeStackFunc() {
-            Map<Item, Function<Item, ItemStack>> factories = new Reference2ReferenceOpenHashMap<>();
-            Map<ItemProviderEntry<?, ?>, Function<Item, ItemStack>> simpleFactories = Map.of();
-            simpleFactories.forEach((entry, factory) -> factories.put(entry.asItem(), factory));
-            return item -> {
-                Function<Item, ItemStack> factory = factories.get(item);
-                return factory != null ? factory.apply(item) : new ItemStack(item);
-            };
+            return ItemStack::new;
         }
 
         private static void applyOrderings(List<Item> items, List<ItemOrdering> orderings) {

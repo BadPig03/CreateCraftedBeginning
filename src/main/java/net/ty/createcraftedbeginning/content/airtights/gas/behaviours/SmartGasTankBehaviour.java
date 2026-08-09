@@ -15,7 +15,6 @@ import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public class SmartGasTankBehaviour extends AbstractSmartGasTankBehaviour {
     public static final BehaviourType<SmartGasTankBehaviour> TYPE = new BehaviourType<>();
     public static final BehaviourType<SmartGasTankBehaviour> INPUT = new BehaviourType<>("GasInput");

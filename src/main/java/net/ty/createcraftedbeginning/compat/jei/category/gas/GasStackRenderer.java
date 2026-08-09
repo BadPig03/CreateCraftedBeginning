@@ -28,7 +28,6 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public class GasStackRenderer implements IIngredientRenderer<GasStack> {
     private static final int TEXTURE_SIZE = 16;
 

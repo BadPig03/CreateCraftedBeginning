@@ -36,6 +36,7 @@ final class BreezeChamberGasProcessor {
         if (!(tank instanceof AirtightTankBlockEntity controller)) {
             return false;
         }
+
         AirtightAssemblyDriverCore driverCore = controller.getCore();
         return driverCore.isActive();
     }
@@ -44,6 +45,7 @@ final class BreezeChamberGasProcessor {
         if (time == 0) {
             return 0;
         }
+
         int maxAmount = CCBConfig.server().airtights.maxProcessingRate.get();
         float ratio = Mth.clamp((float) Mth.abs(time) / BreezeChamberBlockEntity.getMaxEffectiveThreshold(), 0, 1);
         return Mth.clamp((int) (maxAmount * ratio), 1, maxAmount);
@@ -76,6 +78,7 @@ final class BreezeChamberGasProcessor {
         if (inputStack.isEmpty() || output.isEmpty()) {
             return false;
         }
+
         ChargerType type = chargerTypeFor(chamber.getWindLevel());
         return getConversion(type, inputStack).map(conversion -> !GasStack.isSameGasSameComponents(output.getGasStack(), conversion.output())).orElse(false);
     }
@@ -85,6 +88,7 @@ final class BreezeChamberGasProcessor {
         if (inputStack.isEmpty()) {
             return false;
         }
+
         ChargerType type = chargerTypeFor(chamber.getWindLevel());
         return type != ChargerType.NONE && getConversion(type, inputStack).isEmpty();
     }
@@ -93,14 +97,17 @@ final class BreezeChamberGasProcessor {
         if (chamber.getLevel() == null || chamber.getLevel().isClientSide || chargerType == ChargerType.NONE) {
             return;
         }
+
         long phase = chamber.getLevel().getGameTime() + chamber.getBlockPos().asLong();
         if (Math.floorMod(phase, GAS_PROCESSING_INTERVAL) != 0) {
             return;
         }
+
         IChamberGasTank tank = getTank();
         if (tank == null || isControllerActive(tank)) {
             return;
         }
+
         processGas(chargerType, tank);
     }
 
@@ -110,16 +117,19 @@ final class BreezeChamberGasProcessor {
         if (inventory.isEmpty() || output.getSpace() <= 0) {
             return;
         }
+
         GasStack inputStack = inventory.getGasStack();
         Optional<GasConversion> conversionResult = getConversion(chargerType, inputStack);
         if (conversionResult.isEmpty()) {
             return;
         }
+
         GasConversion conversion = conversionResult.get();
         GasStack outputPerBatch = conversion.output();
         if (!output.isEmpty() && !GasStack.isSameGasSameComponents(output.getGasStack(), outputPerBatch)) {
             return;
         }
+
         long inputAmount = conversion.input().amount();
         long outputAmount = outputPerBatch.getAmount();
         long processingBudget = getProcessingAmount(chamber.getWindRemainingTime());
@@ -128,6 +138,7 @@ final class BreezeChamberGasProcessor {
         if (batches <= 0) {
             return;
         }
+
         GasStack inputRequest = inputStack.copyWithAmount(batches * inputAmount);
         GasStack outputRequest = outputPerBatch.copyWithAmount(batches * outputAmount);
         executeGasConversionTransaction(inventory, inputRequest, outputRequest);
@@ -148,6 +159,7 @@ final class BreezeChamberGasProcessor {
         if (tank == null) {
             return GasStack.EMPTY;
         }
+
         GasTank inventory = tank.getTankInventory();
         return inventory.isEmpty() ? GasStack.EMPTY : inventory.getGasStack();
     }
@@ -167,10 +179,12 @@ final class BreezeChamberGasProcessor {
         if (chamber.getLevel() == null) {
             return null;
         }
+
         IChamberGasTank tank = chamber.source.get();
         if (tank != null && !tank.isRemoved()) {
             return tank.getControllerBE();
         }
+
         chamber.source = new WeakReference<>(null);
         tank = chamber.getLevel().getBlockEntity(chamber.getBlockPos().below()) instanceof IChamberGasTank tankBe ? tankBe : null;
         chamber.source = new WeakReference<>(tank);

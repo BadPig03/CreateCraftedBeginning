@@ -5,6 +5,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.recipe.CCBRecipeDataComponents;
+import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe.SequencedAssemblyWithGas;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -30,11 +31,8 @@ public class SequencedAssemblyWithGasItem extends Item {
         return Color.mixColors(0xFFFFC074, 0xFF46FFE0, getProgress(stack));
     }
 
-    @SuppressWarnings("DataFlowIssue")
     public float getProgress(ItemStack stack) {
-        if (!stack.has(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS)) {
-            return 0;
-        }
-        return stack.get(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS).progress();
+        SequencedAssemblyWithGas data = stack.get(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS);
+        return data == null ? 0 : data.progress();
     }
 }

@@ -40,7 +40,6 @@ final class GasPackagerRequestProcessor {
         if (balloon.isEmpty()) {
             return null;
         }
-
         return new Result(balloon, committed.deductions());
     }
 

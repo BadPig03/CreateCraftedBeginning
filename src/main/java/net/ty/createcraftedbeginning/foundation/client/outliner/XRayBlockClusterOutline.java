@@ -28,7 +28,6 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
-@SuppressWarnings("unused")
 public class XRayBlockClusterOutline extends CCBOutline {
     protected final Vector3f pos0Temp = new Vector3f();
     protected final Vector3f pos1Temp = new Vector3f();
@@ -102,11 +101,11 @@ public class XRayBlockClusterOutline extends CCBOutline {
         params.loadColor(colorTemp);
         Vector4f color = colorTemp;
         int lightmap = params.lightmap;
-        renderFaces(poseStack, buffer, camera, partialTicks, color, lightmap);
-        renderEdges(poseStack, buffer, camera, partialTicks, color, lightmap, params.disableLineNormals);
+        renderFaces(poseStack, buffer, camera, color, lightmap);
+        renderEdges(poseStack, buffer, camera, color, lightmap, params.disableLineNormals);
     }
 
-    protected void renderFaces(PoseStack poseStack, SuperRenderTypeBuffer buffer, Vec3 camera, float partialTicks, Vector4f color, int lightmap) {
+    protected void renderFaces(PoseStack poseStack, SuperRenderTypeBuffer buffer, Vec3 camera, Vector4f color, int lightmap) {
         BindableTexture faceTexture = params.faceTexture;
         if (faceTexture == null || cluster.isEmpty()) {
             return;
@@ -127,7 +126,7 @@ public class XRayBlockClusterOutline extends CCBOutline {
         poseStack.popPose();
     }
 
-    protected void renderEdges(PoseStack poseStack, SuperRenderTypeBuffer buffer, Vec3 camera, float partialTicks, Vector4f color, int lightmap, boolean disableNormals) {
+    protected void renderEdges(PoseStack poseStack, SuperRenderTypeBuffer buffer, Vec3 camera, Vector4f color, int lightmap, boolean disableNormals) {
         float lineWidth = params.getLineWidth();
         if (lineWidth == 0 || cluster.isEmpty()) {
             return;

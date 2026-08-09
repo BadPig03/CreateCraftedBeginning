@@ -188,9 +188,11 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     }
 
     public void notifyContentsChanged() {
-        if (controller != null) {
-            controller.notifyContentsChanged();
+        if (controller == null) {
+            return;
         }
+
+        controller.notifyContentsChanged();
     }
 
     @Override

@@ -62,9 +62,11 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
     @Override
     public void tick() {
         super.tick();
-        if (multiblockController.tick()) {
-            tickController();
+        if (!multiblockController.tick()) {
+            return;
         }
+
+        tickController();
     }
 
     @Override

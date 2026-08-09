@@ -18,7 +18,6 @@ import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public enum CCBParticleTypes {
     AIRTIGHT_JETPACK(() -> new SimpleParticleType(false)),
     BREEZE_CLOUD(() -> new SimpleParticleType(false)),
@@ -45,18 +44,12 @@ public enum CCBParticleTypes {
         return (ParticleOptions) entry.object.get();
     }
 
-    public String parameter() {
-        return entry.name;
-    }
-
     private static class ParticleEntry<T extends ParticleType<?>> {
         private static final DeferredRegister<ParticleType<?>> REGISTER = DeferredRegister.create(Registries.PARTICLE_TYPE, CCBAPI.MOD_ID);
 
-        private final String name;
         private final DeferredHolder<ParticleType<?>, T> object;
 
         public ParticleEntry(String name, Supplier<T> typeSupplier) {
-            this.name = name;
             object = REGISTER.register(name, typeSupplier);
         }
     }

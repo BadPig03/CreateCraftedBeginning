@@ -40,7 +40,6 @@ public class CCBMountedStorage {
         return CCB_REGISTRATE.mountedItemStorage(name, supplier).register();
     }
 
-    @SuppressWarnings("SameParameterValue")
     private static <T extends MountedGasStorageType<?>> @NotNull RegistryEntry<MountedGasStorageType<?>, T> simpleGas(String name, Supplier<T> supplier) {
         return CCB_REGISTRATE.mountedGasStorage(name, supplier).register();
     }

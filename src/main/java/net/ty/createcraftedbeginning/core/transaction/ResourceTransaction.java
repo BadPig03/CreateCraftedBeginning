@@ -102,7 +102,7 @@ public final class ResourceTransaction {
             if (participant.validate()) {
                 continue;
             }
-            
+
             return false;
         }
 

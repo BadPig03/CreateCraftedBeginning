@@ -78,9 +78,11 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
                 Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), remainder.copy());
             }
         }
-        if (changed) {
-            notifyUpdate();
+        if (!changed) {
+            return;
         }
+
+        notifyUpdate();
     }
 
     void enqueuePassThroughBoxes(List<BigItemStack> boxes) {

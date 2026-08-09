@@ -23,4 +23,14 @@ public class HollowCuboidTemplate extends BaseTemplate {
             return x == 0 || x == sizeX - 1 || y == 0 || y == sizeY - 1 || z == 0 || z == sizeZ - 1;
         });
     }
+
+    @Override
+    public int getMinValue(int index) {
+        return 1;
+    }
+
+    @Override
+    public int getMaxValue(int index) {
+        return 8;
+    }
 }

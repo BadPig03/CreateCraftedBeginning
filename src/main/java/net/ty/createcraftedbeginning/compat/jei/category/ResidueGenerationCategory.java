@@ -31,7 +31,7 @@ public class ResidueGenerationCategory extends CCBRecipeCategory<ResidueGenerati
     protected void draw(ResidueGenerationRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         CCBGUITextures.JEI_SHADOW.render(graphics, 61, 54);
         CCBGUITextures.JEI_LONG_ARROW.render(graphics, 52, 77);
-        engine.draw(graphics, getBackground().getWidth() / 2 - 13, 39);
+        engine.draw(graphics, background.getWidth() / 2 - 13, 39);
     }
 
     @Override

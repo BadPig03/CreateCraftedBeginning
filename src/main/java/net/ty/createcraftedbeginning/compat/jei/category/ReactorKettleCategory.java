@@ -80,11 +80,11 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
         graphics.drawString(Minecraft.getInstance().font, CCBLang.translateDirect(condition.getTranslationKey()), 9, 86, color, false);
 
         if (recipe.getGasIngredients().isEmpty() && recipe.getGasResults().isEmpty()) {
-            reactorKettleOpened.draw(graphics, getBackground().getWidth() / 2 + 6, 58);
+            reactorKettleOpened.draw(graphics, background.getWidth() / 2 + 6, 58);
             return;
         }
 
-        reactorKettleClosed.draw(graphics, getBackground().getWidth() / 2 + 6, 58);
+        reactorKettleClosed.draw(graphics, background.getWidth() / 2 + 6, 58);
     }
 
     @Override

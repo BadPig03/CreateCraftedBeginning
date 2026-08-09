@@ -13,17 +13,14 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public class GasCraftableBigItemStack extends CraftableBigItemStack {
     private final int outputPerCraft;
-    private final int transferLimit;
     private final List<BigItemStack> requirements;
 
-    public GasCraftableBigItemStack(ItemStack displayStack, Recipe<?> recipe, int outputPerCraft, int transferLimit, List<BigItemStack> requirements) {
+    public GasCraftableBigItemStack(ItemStack displayStack, Recipe<?> recipe, int outputPerCraft, List<BigItemStack> requirements) {
         super(displayStack.copyWithCount(1), recipe);
         count = 0;
         this.outputPerCraft = Math.max(1, outputPerCraft);
-        this.transferLimit = Math.max(this.outputPerCraft, transferLimit);
         this.requirements = requirements.stream().map(requirement -> new BigItemStack(requirement.stack.copyWithCount(1), requirement.count)).toList();
     }
 
@@ -39,10 +36,6 @@ public class GasCraftableBigItemStack extends CraftableBigItemStack {
 
     public int getOutputPerCraft() {
         return outputPerCraft;
-    }
-
-    public int getTransferLimit() {
-        return transferLimit;
     }
 
     public List<BigItemStack> getRequirements() {

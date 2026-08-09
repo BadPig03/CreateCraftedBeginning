@@ -85,6 +85,10 @@ public abstract class MechanicalPressBlockEntityMixin {
         MechanicalPressBlockEntity press = (MechanicalPressBlockEntity) (Object) this;
         ItemStack item = itemEntity.getItem();
         Level level = press.getLevel();
+        if (level == null) {
+            return;
+        }
+
         Optional<RecipeHolder<PressingWithGasRecipe>> recipeWithGas = ccb$getRecipeWithGas(item, level);
         if (recipeWithGas.isEmpty()) {
             return;
@@ -104,6 +108,10 @@ public abstract class MechanicalPressBlockEntityMixin {
     private void ccb$tryProcessOnBelt(TransportedItemStack input, List<ItemStack> outputList, boolean simulate, CallbackInfoReturnable<Boolean> cir) {
         MechanicalPressBlockEntity press = (MechanicalPressBlockEntity) (Object) this;
         Level level = press.getLevel();
+        if (level == null) {
+            return;
+        }
+
         Optional<RecipeHolder<PressingWithGasRecipe>> recipeWithGas = ccb$getRecipeWithGas(input.stack, level);
         if (recipeWithGas.isEmpty()) {
             return;

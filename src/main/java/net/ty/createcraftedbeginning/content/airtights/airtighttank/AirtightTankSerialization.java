@@ -47,9 +47,11 @@ final class AirtightTankSerialization {
         if (tag.contains(CORE)) {
             owner.getCore().read(tag.getCompound(CORE), provider, clientPacket);
         }
-        if (clientStructureChanged) {
-            updateClientState();
+        if (!clientStructureChanged) {
+            return;
         }
+
+        updateClientState();
     }
 
     private void updateClientState() {

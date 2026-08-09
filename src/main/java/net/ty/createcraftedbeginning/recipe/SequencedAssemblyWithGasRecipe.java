@@ -95,12 +95,9 @@ public class SequencedAssemblyWithGasRecipe implements Recipe<RecipeWrapper> {
         return Optional.empty();
     }
 
-    @SuppressWarnings("DataFlowIssue")
     private static int getStep(ItemStack input) {
-        if (!input.has(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS)) {
-            return 0;
-        }
-        return input.get(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS).step();
+        SequencedAssemblyWithGas data = input.get(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS);
+        return data == null ? 0 : data.step();
     }
 
     private ItemStack advance(ResourceLocation id, ItemStack input) {
@@ -133,18 +130,17 @@ public class SequencedAssemblyWithGasRecipe implements Recipe<RecipeWrapper> {
         return ItemStack.EMPTY;
     }
 
-    @SuppressWarnings("DataFlowIssue")
     private boolean appliesTo(ResourceLocation id, ItemStack input) {
         if (ingredient.test(input)) {
             return true;
         }
 
-        if (getTransitionalItem().getItem() != input.getItem() || !input.has(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS)) {
+        if (getTransitionalItem().getItem() != input.getItem()) {
             return false;
         }
 
         SequencedAssemblyWithGas assemblyData = input.get(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS);
-        return assemblyData.id().equals(id);
+        return assemblyData != null && assemblyData.id().equals(id);
     }
 
     public ItemStack getTransitionalItem() {

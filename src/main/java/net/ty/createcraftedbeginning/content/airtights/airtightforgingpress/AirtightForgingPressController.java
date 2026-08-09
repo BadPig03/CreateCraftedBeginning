@@ -59,6 +59,7 @@ final class AirtightForgingPressController {
         if (!contentsChanged) {
             return;
         }
+
         contentsChanged = false;
         press.scheduleUpdate();
     }
@@ -171,9 +172,11 @@ final class AirtightForgingPressController {
     void loadOperationState(boolean operating, float operatingTicks, boolean clientPacket) {
         this.operating = operating;
         this.operatingTicks = operatingTicks;
-        if (!clientPacket) {
-            resetTransientOperation();
+        if (clientPacket) {
+            return;
         }
+
+        resetTransientOperation();
     }
 
     private void tickOperation() {
@@ -182,9 +185,11 @@ final class AirtightForgingPressController {
             update(true);
             return;
         }
+
         if (!operating) {
             return;
         }
+
         if (operatingTicks >= CYCLE_DURATION) {
             update(true);
             return;
@@ -195,10 +200,12 @@ final class AirtightForgingPressController {
             update(false);
             return;
         }
+
         if (currentRecipe == null && currentPressingRecipe != null && !CCBConfig.server().airtights.enableAutomaticPressingRecipes.get()) {
             update(false);
             return;
         }
+
         if (currentRecipe == null && currentSmithingRecipe != null && !CCBConfig.server().airtights.enableAutomaticSmithingRecipes.get()) {
             update(false);
             return;
@@ -277,6 +284,7 @@ final class AirtightForgingPressController {
         if (!schedule || level == null || level.isClientSide && !press.isVirtual()) {
             return;
         }
+
         press.scheduleUpdate();
     }
 

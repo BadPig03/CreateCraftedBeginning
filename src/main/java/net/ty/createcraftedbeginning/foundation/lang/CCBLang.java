@@ -10,7 +10,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
@@ -24,12 +23,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public class CCBLang extends Lang {
-    public static LangBuilder blockName(BlockState state) {
-        return builder().add(state.getBlock().getName());
-    }
-
     @Contract(value = " -> new", pure = true)
     public static LangBuilder builder() {
         return new LangBuilder(CCBAPI.MOD_ID);

@@ -18,27 +18,11 @@ import java.util.stream.Stream;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public abstract class BaseTemplate {
-    public Set<BlockPos> getBaseArea(int[] params) {
-        return getBaseAreaStream(params).map(BlockPos::new).collect(Collectors.toCollection(LinkedHashSet::new));
-    }
-
     protected abstract Stream<BlockPos> getBaseAreaStream(int[] params);
 
     public int[] getDefaultRelativePosition() {
         return new int[]{0, 0, 0};
-    }
-
-    public Set<BlockPos> getFinalOffset(ItemStack drill) {
-        int[] params = AirtightHandheldDrillUtils.getMiningSizeParams(drill);
-        int[] relativePosition = AirtightHandheldDrillUtils.getRelativePositionParams(drill);
-        Direction direction = AirtightHandheldDrillUtils.getMiningDirection(drill);
-        return getOffset(params, direction, relativePosition);
-    }
-
-    public Set<BlockPos> getTargetPositions(ItemStack drill, BlockPos basePos, Level level) {
-        return getTargetPositions(drill, basePos, level, level.getBlockState(basePos));
     }
 
     public Set<BlockPos> getTargetPositions(ItemStack drill, BlockPos basePos, Level level, BlockState baseState) {
@@ -53,13 +37,9 @@ public abstract class BaseTemplate {
         return true;
     }
 
-    public int getMinValue(int index) {
-        return 1;
-    }
+    public abstract int getMinValue(int index);
 
-    public int getMaxValue(int index) {
-        return 8;
-    }
+    public abstract int getMaxValue(int index);
 
     public Set<BlockPos> getOffset(int[] params, Direction direction, int[] relativeParams) {
         BlockPos relativeOffset = getRelativeOffset(direction, relativeParams);

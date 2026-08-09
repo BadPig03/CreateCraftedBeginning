@@ -39,6 +39,7 @@ final class BreezeCoolerDisplay {
         if (cooler.getLevel() == null || cooler.isStockKeeper()) {
             return false;
         }
+
         FrostLevel frostLevel = cooler.getFrostLevel();
         CCBLang.translate("gui.breeze_cooler").forGoggles(tooltip);
         CCBLang.translate("gui.breeze_cooler.current_state").style(ChatFormatting.GRAY).forGoggles(tooltip);
@@ -69,6 +70,7 @@ final class BreezeCoolerDisplay {
         if (!isLiquidInvalid()) {
             return true;
         }
+
         tooltip.add(CommonComponents.EMPTY);
         CCBLang.translate("gui.warning").style(ChatFormatting.GOLD).forGoggles(tooltip);
         CCBLang.addToGoggles(tooltip, "gui.breeze_cooler.invalid_fluid");
@@ -80,6 +82,7 @@ final class BreezeCoolerDisplay {
         if (fluid.isEmpty() || cooler.getLevel() == null) {
             return false;
         }
+
         CoolingData data = cooler.getFluidCoolingData(fluid);
         return data.time() <= 0 || data.amount() <= 0;
     }
@@ -88,10 +91,12 @@ final class BreezeCoolerDisplay {
         if (cooler.getLevel() == null) {
             return;
         }
+
         RandomSource random = cooler.getLevel().getRandom();
         if (random.nextInt(2) != 0) {
             return;
         }
+
         Vec3 center = VecHelper.getCenterOf(cooler.getBlockPos());
         Vec3 particlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125f).multiply(1, 0, 1));
         boolean openTop = cooler.getLevel().getBlockState(cooler.getBlockPos().above()).getCollisionShape(cooler.getLevel(), cooler.getBlockPos().above()).isEmpty();
@@ -99,15 +104,19 @@ final class BreezeCoolerDisplay {
             cooler.getLevel().addParticle(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 0, 0, 0);
         }
         Vec3 chilledParticlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25, 1).normalize().scale((openTop ? 0.25 : 0.5) + random.nextDouble() * 0.125)).add(0, 0.5, 0);
-        if (cooler.getFrostLevelFromBlock().isAtLeast(FrostLevel.CHILLED)) {
-            cooler.getLevel().addParticle(ParticleTypes.SNOWFLAKE, chilledParticlePos.x, chilledParticlePos.y, chilledParticlePos.z, 0, openTop ? 0.0625 : random.nextDouble() * 0.0125, 0);
+        if (!cooler.getFrostLevelFromBlock().isAtLeast(FrostLevel.CHILLED)) {
+            return;
         }
+
+        cooler.getLevel().addParticle(ParticleTypes.SNOWFLAKE, chilledParticlePos.x, chilledParticlePos.y, chilledParticlePos.z, 0, openTop ? 0.0625 : random.nextDouble() * 0.0125, 0);
     }
 
     void playSound() {
-        if (cooler.getLevel() != null) {
-            cooler.getLevel().playSound(null, cooler.getBlockPos(), SoundEvents.BREEZE_SHOOT, SoundSource.BLOCKS, 0.125f + cooler.getLevel().random.nextFloat() * 0.125f, 0.75f - cooler.getLevel().random.nextFloat() * 0.25f);
+        if (cooler.getLevel() == null) {
+            return;
         }
+
+        cooler.getLevel().playSound(null, cooler.getBlockPos(), SoundEvents.BREEZE_SHOOT, SoundSource.BLOCKS, 0.125f + cooler.getLevel().random.nextFloat() * 0.125f, 0.75f - cooler.getLevel().random.nextFloat() * 0.25f);
     }
 
     void spawnParticleBurst() {
@@ -115,6 +124,7 @@ final class BreezeCoolerDisplay {
         if (level == null) {
             return;
         }
+
         Vec3 center = VecHelper.getCenterOf(cooler.getBlockPos());
         RandomSource random = level.random;
         for (int i = 0; i < 20; i++) {

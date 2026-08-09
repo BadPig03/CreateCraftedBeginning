@@ -29,8 +29,10 @@ final class AirtightTankStorageController {
 
     void drainOverflow() {
         long overflow = owner.getTankInventory().getGasAmount() - owner.getTankInventory().getCapacity();
-        if (overflow > 0) {
-            owner.getTankInventory().drain(overflow, GasAction.EXECUTE);
+        if (overflow <= 0) {
+            return;
         }
+
+        owner.getTankInventory().drain(overflow, GasAction.EXECUTE);
     }
 }

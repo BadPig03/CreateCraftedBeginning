@@ -36,12 +36,14 @@ final class BreezeChamberController {
         if (level == null) {
             return;
         }
+
         chamber.getChamberStateInternal().tick(chamber);
         if (!level.isClientSide) {
             updateAirtightAssemblyDriver();
             updateGasCapabilityState();
             return;
         }
+
         chamber.runClientTicker();
     }
 
@@ -50,10 +52,12 @@ final class BreezeChamberController {
         if (level == null || level.isClientSide) {
             return;
         }
+
         BlockState state = chamber.getBlockState();
         if (!(state.getBlock() instanceof BreezeChamberBlock block) || block.canSurvive(state, level, chamber.getBlockPos())) {
             return;
         }
+
         level.destroyBlock(chamber.getBlockPos(), true);
     }
 
@@ -62,6 +66,7 @@ final class BreezeChamberController {
         if (level == null || level.isClientSide) {
             return;
         }
+
         syncWindLevelBlockState();
         updateAirtightAssemblyDriver();
         updateGasCapabilityState();
@@ -73,6 +78,7 @@ final class BreezeChamberController {
         if (level == null || level.isClientSide && !chamber.isVirtual()) {
             return;
         }
+
         syncWindLevelBlockState();
         updateAirtightAssemblyDriver();
         chamber.notifyUpdate();
@@ -83,6 +89,7 @@ final class BreezeChamberController {
         if (level == null) {
             return InteractionResultHolder.fail(ItemStack.EMPTY);
         }
+
         WindChargingData data = WindChargingRecipe.getWindChargingData(level, stack);
         InteractionResult result = chamber.getChamberStateInternal().onItemInsert(chamber, stack, data, forceOverflow, simulate);
         return result == InteractionResult.SUCCESS ? InteractionResultHolder.success(data.recipeResult().copy()) : InteractionResultHolder.fail(ItemStack.EMPTY);
@@ -93,11 +100,14 @@ final class BreezeChamberController {
         if (level == null || level.isClientSide) {
             return;
         }
+
         chamber.setChanged();
         long phase = level.getGameTime() + chamber.getBlockPos().asLong();
-        if (Math.floorMod(phase, WIND_STATE_SYNC_INTERVAL) == 0) {
-            chamber.notifyUpdate();
+        if (Math.floorMod(phase, WIND_STATE_SYNC_INTERVAL) != 0) {
+            return;
         }
+
+        chamber.notifyUpdate();
     }
 
     void loadFromItem(ItemStack stack) {
@@ -105,15 +115,18 @@ final class BreezeChamberController {
         int time = Mth.clamp(stack.getOrDefault(CCBDataComponents.BREEZE_TIME, 0), -maxWindCapacity, maxWindCapacity);
         boolean creative = stack.getOrDefault(CCBDataComponents.BREEZE_CREATIVE, false);
         chamber.setChamberState(BreezeChamberSerialization.stateForItem(time, creative));
-        if (time != 0) {
-            chamber.playSound(time < 0);
+        if (time == 0) {
+            return;
         }
+
+        chamber.playSound(time < 0);
     }
 
     void switchToGaleState() {
         if (!(chamber.getLevel() instanceof PonderLevel)) {
             return;
         }
+
         chamber.setChamberState(new CreativeChamberState(ChargerType.NORMAL));
         chamber.spawnParticleBurst(false);
     }
@@ -122,6 +135,7 @@ final class BreezeChamberController {
         if (!(chamber.getLevel() instanceof PonderLevel)) {
             return;
         }
+
         chamber.setChamberState(new CreativeChamberState(ChargerType.BAD));
         chamber.spawnParticleBurst(true);
     }
@@ -131,11 +145,14 @@ final class BreezeChamberController {
         if (level == null) {
             return;
         }
+
         BlockState state = chamber.getBlockState();
         WindLevel windLevel = chamber.getChamberStateInternal().getWindLevel();
-        if (state.getValue(BreezeChamberBlock.WIND_LEVEL) != windLevel) {
-            level.setBlockAndUpdate(chamber.getBlockPos(), state.setValue(BreezeChamberBlock.WIND_LEVEL, windLevel));
+        if (state.getValue(BreezeChamberBlock.WIND_LEVEL) == windLevel) {
+            return;
         }
+
+        level.setBlockAndUpdate(chamber.getBlockPos(), state.setValue(BreezeChamberBlock.WIND_LEVEL, windLevel));
     }
 
     private void updateGasCapabilityState() {
@@ -143,15 +160,18 @@ final class BreezeChamberController {
         if (level == null || level.isClientSide) {
             return;
         }
+
         boolean controllerActive = chamber.getGasProcessorInternal().isControllerActive();
         if (!controllerActiveInitialized) {
             controllerActiveInitialized = true;
             lastControllerActive = controllerActive;
             return;
         }
+
         if (controllerActive == lastControllerActive) {
             return;
         }
+
         lastControllerActive = controllerActive;
         level.invalidateCapabilities(chamber.getBlockPos());
     }
@@ -161,10 +181,12 @@ final class BreezeChamberController {
         if (level == null || level.isClientSide) {
             return;
         }
+
         int newLevel = chamber.getWindRemainingLevel();
         if (newLevel == lastWindLevel) {
             return;
         }
+
         lastWindLevel = newLevel;
         AirtightTankBlock.updateTankState(level, chamber.getBlockPos().below());
     }

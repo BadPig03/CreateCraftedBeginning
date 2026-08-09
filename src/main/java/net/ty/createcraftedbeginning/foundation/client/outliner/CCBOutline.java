@@ -3,8 +3,6 @@ package net.ty.createcraftedbeginning.foundation.client.outliner;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.PoseStack.Pose;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import dev.engine_room.flywheel.lib.transform.TransformStack;
-import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.render.BindableTexture;
 import net.createmod.catnip.render.SuperRenderTypeBuffer;
 import net.createmod.catnip.theme.Color;
@@ -12,14 +10,12 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.Direction;
-import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
-import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
@@ -28,11 +24,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
-@SuppressWarnings("unused")
 public abstract class CCBOutline {
     protected final CCBOutlineParams params;
     protected final Vector4f colorTemp = new Vector4f();
-    protected final Vector3f diffPosTemp = new Vector3f();
     protected final Vector3f minPosTemp = new Vector3f();
     protected final Vector3f maxPosTemp = new Vector3f();
     protected final Vector4f posTransformTemp = new Vector4f();
@@ -57,22 +51,6 @@ public abstract class CCBOutline {
     public abstract void render(PoseStack poseStack, SuperRenderTypeBuffer buffer, Vec3 camera, float partialTicks);
 
     public void tick() {
-    }
-
-    public void bufferCuboidLine(PoseStack poseStack, VertexConsumer consumer, Vec3 camera, Vector3d start, Vector3d end, float width, Vector4f color, int lightmap, boolean disableNormals) {
-        Vector3f diff = diffPosTemp;
-        diff.set((float) (end.x - start.x), (float) (end.y - start.y), (float) (end.z - start.z));
-        float length = Mth.sqrt(diff.x() * diff.x() + diff.y() * diff.y() + diff.z() * diff.z());
-        float hAngle = AngleHelper.deg(Mth.atan2(diff.x(), diff.z()));
-        float hDistance = Mth.sqrt(diff.x() * diff.x() + diff.z() * diff.z());
-        float vAngle = AngleHelper.deg(Mth.atan2(hDistance, diff.y())) - 90;
-
-        poseStack.pushPose();
-
-        TransformStack.of(poseStack).translate(start.x - camera.x, start.y - camera.y, start.z - camera.z).rotateYDegrees(hAngle).rotateXDegrees(vAngle);
-        bufferCuboidLine(poseStack.last(), consumer, new Vector3f(), Direction.SOUTH, length, width, color, lightmap, disableNormals);
-
-        poseStack.popPose();
     }
 
     public void bufferCuboidLine(Pose pose, VertexConsumer consumer, Vector3f origin, Direction direction, float length, float width, Vector4f color, int lightmap, boolean disableNormals) {
@@ -230,7 +208,6 @@ public abstract class CCBOutline {
         protected float alpha;
         protected int lightmap;
         protected Color rgb;
-        @Nullable Direction highlightedFace;
         private float lineWidth;
 
         public CCBOutlineParams() {
@@ -252,11 +229,6 @@ public abstract class CCBOutline {
             return this;
         }
 
-        public CCBOutlineParams lightmap(int light) {
-            lightmap = light;
-            return this;
-        }
-
         public CCBOutlineParams lineWidth(float width) {
             lineWidth = width;
             return this;
@@ -264,21 +236,6 @@ public abstract class CCBOutline {
 
         public CCBOutlineParams withFaceTexture(@Nullable BindableTexture texture) {
             faceTexture = texture;
-            return this;
-        }
-
-        public CCBOutlineParams clearTextures() {
-            return withFaceTextures(null, null);
-        }
-
-        public CCBOutlineParams withFaceTextures(@Nullable BindableTexture texture, @Nullable BindableTexture highlightTexture) {
-            faceTexture = texture;
-            highlightedFaceTexture = highlightTexture;
-            return this;
-        }
-
-        public CCBOutlineParams highlightFace(@Nullable Direction face) {
-            highlightedFace = face;
             return this;
         }
 
@@ -294,11 +251,6 @@ public abstract class CCBOutline {
 
         public float getLineWidth() {
             return fadeLineWidth ? alpha * lineWidth : lineWidth;
-        }
-
-        @Nullable
-        public Direction getHighlightedFace() {
-            return highlightedFace;
         }
 
         public void loadColor(Vector4f target) {

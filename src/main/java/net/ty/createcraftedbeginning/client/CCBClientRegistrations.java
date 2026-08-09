@@ -66,7 +66,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public final class CCBClientRegistrations {
     private CCBClientRegistrations() {
     }
@@ -136,7 +135,7 @@ public final class CCBClientRegistrations {
         event.registerEntityRenderer(CCBEntityTypes.WEATHER_FLARE_PROJECTILE.get(), WeatherFlareProjectileRenderer::new);
     }
 
-    public static void registerVisualizers(FMLClientSetupEvent event) {
+    public static void registerVisualizers(FMLClientSetupEvent ignoredEvent) {
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIRTIGHT_PUMP.get()).factory(SingleAxisRotatingVisual.ofZ(CCBPartialModels.AIRTIGHT_PUMP_COGS)).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.PORTABLE_GAS_INTERFACE.get()).factory(PortableGasInterfaceVisual::new).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.BREEZE_COOLER.get()).factory(BreezeCoolerVisual::new).skipVanillaRender(blockEntity -> true).apply();

@@ -209,7 +209,7 @@ public final class MachineResourceSnapshots {
                 throw new IllegalArgumentException("Gas snapshot tank count does not match target");
             }
             for (int tank = 0; tank < behaviour.getTanks().length; tank++) {
-                behaviour.getTanks()[tank].read(tankSnapshots.get(tank).copy(), provider, false);
+                behaviour.getTanks()[tank].read(tankSnapshots.get(tank).copy(), provider);
             }
         }
     }

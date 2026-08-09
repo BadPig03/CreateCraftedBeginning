@@ -266,6 +266,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
             if (!compoundTag.contains(key, Tag.TAG_STRING)) {
                 return fallback;
             }
+
             try {
                 return valueOf(compoundTag.getString(key));
             } catch (IllegalArgumentException ignored) {

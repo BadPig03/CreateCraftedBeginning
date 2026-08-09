@@ -15,7 +15,6 @@ import java.util.Map;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public class CCBPartialModels {
     public static final PartialModel BREEZE_TRAIN_HAT = entity("train_hat");
     public static final PartialModel BREEZE_LOGISTICS_HAT = entity("logistics_hat");
@@ -150,7 +149,6 @@ public class CCBPartialModels {
         return PartialModel.of(CCBAPI.asResource("block/" + path));
     }
 
-    @SuppressWarnings("SameParameterValue")
     private static PartialModel entity(String path) {
         return PartialModel.of(CCBAPI.asResource("entity/" + path));
     }

@@ -29,6 +29,7 @@ public record AirtightHandheldDrillParametersPacket(AirtightHandheldDrillMiningT
             if (size[index] < template.getTemplate().getMinValue(index) || size[index] > template.getTemplate().getMaxValue(index)) {
                 return false;
             }
+
             if (relative[index] < 0 || relative[index] >= size[index]) {
                 return false;
             }

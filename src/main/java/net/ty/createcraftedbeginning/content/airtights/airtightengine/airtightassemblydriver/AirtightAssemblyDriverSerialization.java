@@ -50,9 +50,11 @@ final class AirtightAssemblyDriverSerialization {
         if (tag.contains(COMPOUND_KEY_STRUCTURE_MANAGER)) {
             driverCore.getStructureManager().readClient(tag.getCompound(COMPOUND_KEY_STRUCTURE_MANAGER));
         }
-        if (tag.contains(COMPOUND_KEY_LEVEL_CALCULATOR)) {
-            driverCore.getLevelCalculator().read(tag.getCompound(COMPOUND_KEY_LEVEL_CALCULATOR), true);
+        if (!tag.contains(COMPOUND_KEY_LEVEL_CALCULATOR)) {
+            return;
         }
+
+        driverCore.getLevelCalculator().read(tag.getCompound(COMPOUND_KEY_LEVEL_CALCULATOR), true);
     }
 
     private void readPersistent(CompoundTag tag, Provider provider) {

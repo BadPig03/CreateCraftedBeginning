@@ -95,6 +95,7 @@ final class AirCompressorState {
             setStoredHeat(inferStoredHeat(OverheatState.fromItem(stack)));
             return;
         }
+
         setStoredHeat(stack.getOrDefault(CCBDataComponents.COMPRESSOR_STORED_HEAT, 0));
     }
 

@@ -296,6 +296,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             if (!compoundTag.contains(key, Tag.TAG_ANY_NUMERIC)) {
                 return fallback;
             }
+
             int ordinal = compoundTag.getInt(key);
             return ordinal >= 0 && ordinal < values().length ? values()[ordinal] : fallback;
         }

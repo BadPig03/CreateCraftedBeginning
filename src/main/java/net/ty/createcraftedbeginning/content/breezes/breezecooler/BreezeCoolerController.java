@@ -35,9 +35,12 @@ final class BreezeCoolerController {
         if (level == null || !cooler.getCurrentState().tick(cooler)) {
             return;
         }
-        if (level.isClientSide) {
-            cooler.runClientTicker();
+
+        if (!level.isClientSide) {
+            return;
         }
+
+        cooler.runClientTicker();
     }
 
     void lazyTick() {
@@ -49,6 +52,7 @@ final class BreezeCoolerController {
         if (level == null || level.isClientSide) {
             return;
         }
+
         syncFrostLevelBlockState();
     }
 
@@ -58,6 +62,7 @@ final class BreezeCoolerController {
         if (level == null || level.isClientSide && !cooler.isVirtual()) {
             return;
         }
+
         syncFrostLevelBlockState();
         cooler.notifyUpdate();
     }
@@ -67,19 +72,23 @@ final class BreezeCoolerController {
             if (simulate) {
                 return true;
             }
+
             CoolantType type = CreativeCoolerState.getNextCoolantType(cooler.getCurrentState().getCoolantType());
             cooler.setCoolerState(type == CoolantType.NONE ? new InactiveCoolerState() : new CreativeCoolerState(type));
             cooler.spawnParticleBurst();
             cooler.playSound();
             return true;
         }
+
         InteractionResult result = cooler.getCurrentState().onItemInsert(cooler, stack, forceOverflow, simulate);
         if (result != InteractionResult.SUCCESS) {
             return false;
         }
+
         if (simulate) {
             return true;
         }
+
         if (cooler.getLevel() != null && !cooler.getLevel().isClientSide && stack.is(CCBItemTags.ICE_CREAMS.tag)) {
             cooler.getAdvancementBehaviour().awardPlayer(CCBAdvancements.FROZEN_AMBROSIA);
         }
@@ -96,11 +105,14 @@ final class BreezeCoolerController {
         if (level == null || level.isClientSide) {
             return;
         }
+
         cooler.setChanged();
         long phase = level.getGameTime() + cooler.getBlockPos().asLong();
-        if (Math.floorMod(phase, COOLING_STATE_SYNC_INTERVAL) == 0) {
-            cooler.notifyUpdate();
+        if (Math.floorMod(phase, COOLING_STATE_SYNC_INTERVAL) != 0) {
+            return;
         }
+
+        cooler.notifyUpdate();
     }
 
     void playCoolingEffects() {
@@ -108,10 +120,12 @@ final class BreezeCoolerController {
         if (level == null) {
             return;
         }
+
         long gameTime = level.getGameTime();
         if (lastCoolingEffectTime != Long.MIN_VALUE && gameTime - lastCoolingEffectTime < COOLING_EFFECT_INTERVAL) {
             return;
         }
+
         lastCoolingEffectTime = gameTime;
         cooler.playSound();
         cooler.spawnParticleBurst();
@@ -121,6 +135,7 @@ final class BreezeCoolerController {
         if (!(cooler.getLevel() instanceof PonderLevel)) {
             return;
         }
+
         cooler.setCoolerState(new CreativeCoolerState(CoolantType.NORMAL));
         cooler.spawnParticleBurst();
     }
@@ -134,10 +149,13 @@ final class BreezeCoolerController {
         if (level == null) {
             return;
         }
+
         BlockState state = cooler.getBlockState();
         FrostLevel frostLevel = cooler.getCurrentState().getFrostLevel();
-        if (state.getValue(BreezeCoolerBlock.FROST_LEVEL) != frostLevel) {
-            level.setBlockAndUpdate(cooler.getBlockPos(), state.setValue(BreezeCoolerBlock.FROST_LEVEL, frostLevel));
+        if (state.getValue(BreezeCoolerBlock.FROST_LEVEL) == frostLevel) {
+            return;
         }
+
+        level.setBlockAndUpdate(cooler.getBlockPos(), state.setValue(BreezeCoolerBlock.FROST_LEVEL, frostLevel));
     }
 }

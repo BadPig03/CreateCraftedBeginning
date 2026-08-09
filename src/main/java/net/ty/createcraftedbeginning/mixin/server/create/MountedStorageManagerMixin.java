@@ -44,7 +44,6 @@ import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("LoggingSimilarMessage")
 @Mixin(value = MountedStorageManager.class, remap = false)
 public abstract class MountedStorageManagerMixin implements IMountedStorageManagerWithGas {
     @Unique

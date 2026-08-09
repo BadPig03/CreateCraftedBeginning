@@ -15,12 +15,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
-@SuppressWarnings("unused")
 public enum CCBOutliner {
     INSTANCE;
 
@@ -68,16 +66,6 @@ public enum CCBOutliner {
         outlines.remove(slot);
     }
 
-    public Optional<CCBOutlineParams> edit(Object slot) {
-        CCBOutlineEntry entry = outlines.get(slot);
-        if (entry == null) {
-            return Optional.empty();
-        }
-
-        entry.ticksTillRemoval = 1;
-        return Optional.of(entry.getOutline().getParams());
-    }
-
     public Map<Object, CCBOutlineEntry> getOutlines() {
         return outlinesView;
     }
@@ -115,10 +103,6 @@ public enum CCBOutliner {
 
         public CCBOutline getOutline() {
             return outline;
-        }
-
-        public int getTicksTillRemoval() {
-            return ticksTillRemoval;
         }
 
         public boolean isAlive() {

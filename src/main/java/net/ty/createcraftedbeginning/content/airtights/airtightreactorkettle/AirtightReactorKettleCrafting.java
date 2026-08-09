@@ -36,6 +36,7 @@ final class AirtightReactorKettleCrafting {
             if (stack.isEmpty() || target.fill(stack.copy(), FluidAction.EXECUTE) == stack.getAmount()) {
                 continue;
             }
+
             return false;
         }
         return true;
@@ -46,6 +47,7 @@ final class AirtightReactorKettleCrafting {
             if (stack.isEmpty() || target.fill(stack.copy(), GasAction.EXECUTE) == stack.getAmount()) {
                 continue;
             }
+
             return false;
         }
         return true;
@@ -57,6 +59,7 @@ final class AirtightReactorKettleCrafting {
             if (amount <= 0) {
                 continue;
             }
+
             ItemStack expected = expectedItems.get(slot);
             ItemStack extracted = items.extractItem(slot, amount, false);
             if (extracted.getCount() != amount || expected.isEmpty() || !ItemStack.isSameItemSameComponents(extracted, expected)) {
@@ -72,10 +75,12 @@ final class AirtightReactorKettleCrafting {
             if (amount <= 0) {
                 continue;
             }
+
             FluidStack expected = expectedFluids.get(tank);
             if (expected.isEmpty()) {
                 return false;
             }
+
             FluidStack drained = fluids.drain(expected.copyWithAmount(amount), FluidAction.EXECUTE);
             if (drained.getAmount() != amount || !FluidStack.isSameFluidSameComponents(drained, expected)) {
                 return false;
@@ -90,10 +95,12 @@ final class AirtightReactorKettleCrafting {
             if (amount <= 0) {
                 continue;
             }
+
             GasStack expected = expectedGases.get(tank);
             if (expected.isEmpty()) {
                 return false;
             }
+
             GasStack drained = gases.drain(expected.copyWithAmount(amount), GasAction.EXECUTE);
             if (drained.getAmount() != amount || !GasStack.isSameGasSameComponents(drained, expected)) {
                 return false;
@@ -107,6 +114,7 @@ final class AirtightReactorKettleCrafting {
             if (stack.isEmpty()) {
                 continue;
             }
+
             ItemStack remainder = ItemHandlerHelper.insertItemStacked(target, stack.copy(), false);
             if (!remainder.isEmpty()) {
                 return false;
@@ -173,6 +181,7 @@ final class AirtightReactorKettleCrafting {
         if (hasGasOutputs && !canAcceptGasOutputs(targetGasTank, outputGases)) {
             return false;
         }
+
         if (simulate) {
             return true;
         }
@@ -239,6 +248,7 @@ final class AirtightReactorKettleCrafting {
             if (stack.isEmpty()) {
                 continue;
             }
+
             ItemStack remainder = ItemHandlerHelper.insertItemStacked(simulation, stack.copy(), false);
             if (!remainder.isEmpty()) {
                 return false;
@@ -255,6 +265,7 @@ final class AirtightReactorKettleCrafting {
             if (existing.isEmpty() || simulation.fill(existing.copy(), FluidAction.EXECUTE) == existing.getAmount()) {
                 continue;
             }
+
             return false;
         }
 
@@ -262,6 +273,7 @@ final class AirtightReactorKettleCrafting {
             if (stack.isEmpty() || simulation.fill(stack.copy(), FluidAction.EXECUTE) == stack.getAmount()) {
                 continue;
             }
+
             return false;
         }
         return true;
@@ -275,6 +287,7 @@ final class AirtightReactorKettleCrafting {
             if (existing.isEmpty() || simulation.fill(existing.copy(), GasAction.EXECUTE) == existing.getAmount()) {
                 continue;
             }
+
             return false;
         }
 
@@ -282,6 +295,7 @@ final class AirtightReactorKettleCrafting {
             if (stack.isEmpty() || simulation.fill(stack.copy(), GasAction.EXECUTE) == stack.getAmount()) {
                 continue;
             }
+
             return false;
         }
         return true;

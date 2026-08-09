@@ -37,6 +37,7 @@ final class AirtightReactorKettleRecipeFilter {
         if (GasFilterUtils.isFilter(filterItem) && !recipe.getGasResults().isEmpty()) {
             return GasFilterUtils.matches(filterItem, recipe.getGasResults().getFirst());
         }
+
         if (!recipe.getRollableResults().isEmpty() || recipe.getFluidResults().isEmpty()) {
             return filter.test(recipe.getResultItem(level.registryAccess()));
         }

@@ -31,14 +31,20 @@ public class AirtightLeggingsLayer<T extends LivingEntity, M extends EntityModel
         super(renderer);
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     public static void registerOn(EntityRenderer<?> renderer) {
-        if (!(renderer instanceof LivingEntityRenderer<?, ?> livingRenderer) || !(livingRenderer.getModel() instanceof HumanoidModel)) {
+        if (!(renderer instanceof LivingEntityRenderer<?, ?> livingRenderer)) {
             return;
         }
 
-        AirtightLeggingsLayer<?, ?> layer = new AirtightLeggingsLayer<>(livingRenderer);
-        livingRenderer.addLayer((AirtightLeggingsLayer) layer);
+        registerOnLiving(livingRenderer);
+    }
+
+    private static <T extends LivingEntity, M extends EntityModel<T>> void registerOnLiving(LivingEntityRenderer<T, M> renderer) {
+        if (!(renderer.getModel() instanceof HumanoidModel<?>)) {
+            return;
+        }
+
+        renderer.addLayer(new AirtightLeggingsLayer<>(renderer));
     }
 
     public static void registerOnAll(EntityRenderDispatcher dispatcher) {

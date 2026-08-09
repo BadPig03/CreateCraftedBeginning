@@ -53,6 +53,7 @@ final class BreezeChamberSerialization {
         if (time > 0) {
             return ChargerType.NORMAL;
         }
+
         if (time < 0) {
             return ChargerType.BAD;
         }
@@ -76,9 +77,11 @@ final class BreezeChamberSerialization {
         if (tag.contains(GOGGLES, Tag.TAG_BYTE)) {
             chamber.setGogglesFromSerialization(tag.getBoolean(GOGGLES));
         }
-        if (tag.contains(TRAIN_HAT, Tag.TAG_BYTE)) {
-            chamber.setTrainHatFromSerialization(tag.getBoolean(TRAIN_HAT));
+        if (!tag.contains(TRAIN_HAT, Tag.TAG_BYTE)) {
+            return;
         }
+
+        chamber.setTrainHatFromSerialization(tag.getBoolean(TRAIN_HAT));
     }
 
     void saveToItem(BreezeChamberBlockEntity chamber, ItemStack stack) {

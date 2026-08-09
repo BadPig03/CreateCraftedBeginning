@@ -12,7 +12,6 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public final class CCBFluidClientExtensionRegistry {
     private static final List<Registration> REGISTRATIONS = new ArrayList<>();
 
@@ -32,9 +31,7 @@ public final class CCBFluidClientExtensionRegistry {
         return List.copyOf(REGISTRATIONS);
     }
 
-    public sealed interface Registration permits SimpleRegistration, TintedRegistration {
-        FluidType fluidType();
-    }
+    public sealed interface Registration permits SimpleRegistration, TintedRegistration {}
 
     public record SimpleRegistration(FluidType fluidType, ResourceLocation stillTexture, ResourceLocation flowingTexture) implements Registration {}
 

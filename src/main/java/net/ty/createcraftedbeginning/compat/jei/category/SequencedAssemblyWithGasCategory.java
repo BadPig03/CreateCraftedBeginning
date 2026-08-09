@@ -106,7 +106,7 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
         }
 
         int width = getSequenceWidth(recipe);
-        xOffset = width / 2 + getBackground().getWidth() / -2;
+        xOffset = width / 2 + background.getWidth() / -2;
         double relativeX = mouseX + xOffset;
         List<SequencedWithGasRecipe<?>> sequence = recipe.getSequence();
         for (int i = 0; i < sequence.size(); i++) {
@@ -148,7 +148,7 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
         }
         poseStack.popPose();
         int width = getSequenceWidth(recipe);
-        poseStack.translate((float) width / -2 + (float) getBackground().getWidth() / 2, 0, 0);
+        poseStack.translate( background.getWidth() / 2.0f - width / 2.0f, 0, 0);
         poseStack.pushPose();
         List<SequencedWithGasRecipe<?>> sequence = recipe.getSequence();
         for (int i = 0; i < sequence.size(); i++) {
@@ -178,7 +178,7 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
         });
 
         int width = getSequenceWidth(recipe);
-        int x = width / -2 + getBackground().getWidth() / 2;
+        int x = width / -2 + background.getWidth() / 2;
         for (SequencedWithGasRecipe<?> step : recipe.getSequence()) {
             SequencedAssemblyWithGasSubCategory subCategory = getSubCategory(step);
             subCategory.setRecipe(builder, step, focuses, x);

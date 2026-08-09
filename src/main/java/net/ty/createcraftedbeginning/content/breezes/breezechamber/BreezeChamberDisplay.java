@@ -39,6 +39,7 @@ final class BreezeChamberDisplay {
         if (chamber.getLevel() == null) {
             return false;
         }
+
         WindLevel windLevel = chamber.getWindLevel();
         CCBLang.translate("gui.breeze_chamber").forGoggles(tooltip);
         CCBLang.translate("gui.breeze_chamber.current_state").style(ChatFormatting.GRAY).forGoggles(tooltip);
@@ -97,6 +98,7 @@ final class BreezeChamberDisplay {
         if (chamber.getLevel() == null) {
             return;
         }
+
         if (bad) {
             chamber.getLevel().playSound(null, chamber.getBlockPos(), SoundEvents.BREEZE_HURT, SoundSource.BLOCKS, 0.125f + chamber.getLevel().random.nextFloat() * 0.125f, 0.75f - chamber.getLevel().random.nextFloat() * 0.25f);
         }
@@ -110,6 +112,7 @@ final class BreezeChamberDisplay {
         if (level == null) {
             return;
         }
+
         Vec3 center = VecHelper.getCenterOf(chamber.getBlockPos());
         RandomSource random = level.random;
         int count = bad ? 5 : 20;
@@ -140,11 +143,13 @@ final class BreezeChamberDisplay {
         if (chamber.getLevel() == null) {
             return;
         }
+
         RandomSource random = chamber.getLevel().getRandom();
         int possibility = windLevel == WindLevel.ILL ? 4 : 2;
         if (random.nextInt(possibility) != 0) {
             return;
         }
+
         Vec3 center = VecHelper.getCenterOf(chamber.getBlockPos());
         Vec3 particlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125f).multiply(1, 0, 1));
         if (random.nextInt(possibility * 2) == 0) {
@@ -152,9 +157,11 @@ final class BreezeChamberDisplay {
         }
         double yMotion = random.nextDouble() * 0.0125;
         Vec3 galeParticlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25, 1).normalize().scale(0.5 + random.nextDouble() * 0.125)).add(0, 0.5, 0);
-        if (windLevel.isAtLeast(WindLevel.GALE)) {
-            chamber.getLevel().addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), galeParticlePos.x, galeParticlePos.y, galeParticlePos.z, 0, yMotion, 0);
+        if (!windLevel.isAtLeast(WindLevel.GALE)) {
+            return;
         }
+
+        chamber.getLevel().addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), galeParticlePos.x, galeParticlePos.y, galeParticlePos.z, 0, yMotion, 0);
     }
 
     boolean hasGoggles() {

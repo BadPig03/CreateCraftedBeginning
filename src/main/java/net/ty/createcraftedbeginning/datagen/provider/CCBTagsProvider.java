@@ -2,7 +2,7 @@ package net.ty.createcraftedbeginning.datagen.provider;
 
 import com.tterrag.registrate.providers.RegistrateTagsProvider;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.core.Holder.Reference;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagBuilder;
 import net.minecraft.tags.TagKey;
@@ -18,9 +18,9 @@ public class CCBTagsProvider<T> {
     private final Function<T, ResourceKey<T>> keyExtractor;
 
     @Contract(pure = true)
-    public CCBTagsProvider(RegistrateTagsProvider<T> provider, Function<T, Reference<T>> refExtractor) {
+    public CCBTagsProvider(RegistrateTagsProvider<T> provider, Registry<T> registry) {
         this.provider = provider;
-        keyExtractor = refExtractor.andThen(Reference::key);
+        keyExtractor = entry -> registry.getResourceKey(entry).orElseThrow();
     }
 
     public CCBTagAppender<T> tag(TagKey<T> tag) {

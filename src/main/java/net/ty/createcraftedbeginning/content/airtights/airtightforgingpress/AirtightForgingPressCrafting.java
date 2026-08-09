@@ -36,6 +36,7 @@ final class AirtightForgingPressCrafting {
             if (stack.isEmpty()) {
                 continue;
             }
+
             ItemStack remainder = ItemHandlerHelper.insertItemStacked(inventory, stack.copy(), false);
             if (!remainder.isEmpty()) {
                 return false;
@@ -48,10 +49,12 @@ final class AirtightForgingPressCrafting {
         if (amount <= 0) {
             return true;
         }
+
         ItemStack current = inventory.getStackInSlot(0);
         if (current.isEmpty() || expectedStack.isEmpty() || current.getCount() < amount || !ItemStack.isSameItemSameComponents(current, expectedStack)) {
             return false;
         }
+
         ItemStack simulated = inventory.extractItem(0, amount, true);
         return simulated.getCount() == amount && ItemStack.isSameItemSameComponents(simulated, expectedStack);
     }
@@ -60,6 +63,7 @@ final class AirtightForgingPressCrafting {
         if (amount <= 0) {
             return true;
         }
+
         ItemStack extracted = inventory.extractItem(0, amount, false);
         return extracted.getCount() == amount && ItemStack.isSameItemSameComponents(extracted, expectedStack);
     }
@@ -81,6 +85,7 @@ final class AirtightForgingPressCrafting {
         if (plannedOutput.isEmpty()) {
             return false;
         }
+
         if (simulate) {
             return true;
         }
@@ -89,6 +94,7 @@ final class AirtightForgingPressCrafting {
         if (!outputPlanMatchesCurrent(outputPlan)) {
             return false;
         }
+
         applyOutputPlan(outputPlan);
         return true;
     }
@@ -121,11 +127,13 @@ final class AirtightForgingPressCrafting {
         if (plan.fluidAmount() <= 0) {
             return true;
         }
+
         FluidStack current = press.getFluidTankBehaviour().getPrimaryHandler().getFluid();
         FluidStack expected = plan.expectedFluid();
         if (current.isEmpty() || expected.isEmpty() || current.getAmount() < plan.fluidAmount() || !FluidStack.isSameFluidSameComponents(current, expected)) {
             return false;
         }
+
         FluidStack simulated = press.getFluidTankBehaviour().getPrimaryHandler().drain(expected.copyWithAmount(plan.fluidAmount()), FluidAction.SIMULATE);
         return simulated.getAmount() == plan.fluidAmount();
     }
@@ -134,6 +142,7 @@ final class AirtightForgingPressCrafting {
         if (plan.fluidAmount() <= 0) {
             return true;
         }
+
         FluidStack expected = plan.expectedFluid();
         FluidStack drained = press.getFluidTankBehaviour().getPrimaryHandler().drain(expected.copyWithAmount(plan.fluidAmount()), FluidAction.EXECUTE);
         return drained.getAmount() == plan.fluidAmount() && FluidStack.isSameFluidSameComponents(drained, expected);
@@ -143,11 +152,13 @@ final class AirtightForgingPressCrafting {
         if (plan.gasAmount() <= 0) {
             return true;
         }
+
         GasStack current = press.getGasTankBehaviour().getPrimaryHandler().getGasStack();
         GasStack expected = plan.expectedGas();
         if (current.isEmpty() || expected.isEmpty() || current.getAmount() < plan.gasAmount() || !GasStack.isSameGasSameComponents(current, expected)) {
             return false;
         }
+
         GasStack simulated = press.getGasTankBehaviour().getPrimaryHandler().drain(expected.copyWithAmount(plan.gasAmount()), GasAction.SIMULATE);
         return simulated.getAmount() == plan.gasAmount();
     }
@@ -156,6 +167,7 @@ final class AirtightForgingPressCrafting {
         if (plan.gasAmount() <= 0) {
             return true;
         }
+
         GasStack expected = plan.expectedGas();
         GasStack drained = press.getGasTankBehaviour().getPrimaryHandler().drain(expected.copyWithAmount(plan.gasAmount()), GasAction.EXECUTE);
         return drained.getAmount() == plan.gasAmount() && GasStack.isSameGasSameComponents(drained, expected);
@@ -168,6 +180,7 @@ final class AirtightForgingPressCrafting {
         if (expectedSlots.size() != slots || outputPlan.finalSlots().size() != slots) {
             return false;
         }
+
         for (int slot = 0; slot < slots; slot++) {
             if (!ItemStack.matches(outputInventory.getStackInSlot(slot), expectedSlots.get(slot))) {
                 return false;

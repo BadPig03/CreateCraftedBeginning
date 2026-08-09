@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.datagen.tag;
 import com.tterrag.registrate.providers.ProviderType;
 import com.tterrag.registrate.providers.RegistrateTagsProvider;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.EntityType;
@@ -25,7 +26,6 @@ import java.util.Arrays;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("deprecation")
 public class CCBRegistrateTags {
     private static final CCBRegistrate CCB_REGISTRATE = CCBRegistrateProvider.get();
 
@@ -37,13 +37,13 @@ public class CCBRegistrateTags {
     }
 
     private static void genBlockTags(RegistrateTagsProvider<Block> provIn) {
-        CCBTagsProvider<Block> provider = new CCBTagsProvider<>(provIn, Block::builtInRegistryHolder);
+        CCBTagsProvider<Block> provider = new CCBTagsProvider<>(provIn, BuiltInRegistries.BLOCK);
         provider.tag(CCBBlockTags.GAS_SOURCES.tag).addTag(BlockTags.LEAVES);
         Arrays.stream(CCBBlockTags.values()).filter(tag -> tag.alwaysDataGen).map(tag -> tag.tag).forEach(provider::getOrCreateRawBuilder);
     }
 
     private static void genItemTags(RegistrateTagsProvider<Item> provIn) {
-        CCBTagsProvider<Item> provider = new CCBTagsProvider<>(provIn, Item::builtInRegistryHolder);
+        CCBTagsProvider<Item> provider = new CCBTagsProvider<>(provIn, BuiltInRegistries.ITEM);
         provider.tag(CCBItemTags.END_CASING_RAW_MATERIALS.tag).add(Blocks.CRYING_OBSIDIAN.asItem());
         provider.tag(CCBItemTags.PRESS_HEAD_TOOLS.tag).add(Items.HEAVY_CORE).add(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE);
         provider.tag(CCBItemTags.WIND_CHARGING_EXCLUDED.tag).add(Items.OMINOUS_BOTTLE).add(CCBItems.MILK_ICE_CREAM.get());
@@ -52,12 +52,12 @@ public class CCBRegistrateTags {
     }
 
     private static void genFluidTags(RegistrateTagsProvider<Fluid> provIn) {
-        CCBTagsProvider<Fluid> provider = new CCBTagsProvider<>(provIn, Fluid::builtInRegistryHolder);
+        CCBTagsProvider<Fluid> provider = new CCBTagsProvider<>(provIn, BuiltInRegistries.FLUID);
         Arrays.stream(CCBFluidTags.values()).filter(tag -> tag.alwaysDataGen).map(tag -> tag.tag).forEach(provider::getOrCreateRawBuilder);
     }
 
     private static void genEntityTags(RegistrateTagsProvider<EntityType<?>> provIn) {
-        CCBTagsProvider<EntityType<?>> provider = new CCBTagsProvider<>(provIn, EntityType::builtInRegistryHolder);
+        CCBTagsProvider<EntityType<?>> provider = new CCBTagsProvider<>(provIn, BuiltInRegistries.ENTITY_TYPE);
         provider.tag(CCBEntityFlags.BREEZE_CHAMBER_CAPTURABLE.tag).add(EntityType.BREEZE);
         Arrays.stream(CCBEntityFlags.values()).filter(tag -> tag.alwaysDataGen).map(tag -> tag.tag).forEach(provider::getOrCreateRawBuilder);
     }

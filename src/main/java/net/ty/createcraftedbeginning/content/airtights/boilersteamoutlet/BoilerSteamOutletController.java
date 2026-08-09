@@ -36,9 +36,11 @@ final class BoilerSteamOutletController {
         }
 
         outlet.setChanged();
-        if (sampleResult == TickResult.AVERAGE_CHANGED) {
-            outlet.sendData();
+        if (sampleResult != TickResult.AVERAGE_CHANGED) {
+            return;
         }
+
+        outlet.sendData();
     }
 
     void lazyTickServer() {
@@ -60,9 +62,11 @@ final class BoilerSteamOutletController {
     }
 
     void recordExtraction(GasStack drained, GasAction action) {
-        if (extractionMeter.recordExtraction(drained, action)) {
-            outlet.setChanged();
+        if (!extractionMeter.recordExtraction(drained, action)) {
+            return;
         }
+
+        outlet.setChanged();
     }
 
     void write(CompoundTag tag, boolean clientPacket) {

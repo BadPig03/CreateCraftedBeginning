@@ -29,15 +29,19 @@ public class CardboardCrateBlockEntity extends CratesBlockEntity {
     }
 
     public void awardPackageDisposal() {
-        if (advancementBehaviour != null) {
-            advancementBehaviour.awardPlayer(CCBAdvancements.CUT_FROM_THE_SAME_CARDBOARD);
+        if (advancementBehaviour == null) {
+            return;
         }
+
+        advancementBehaviour.awardPlayer(CCBAdvancements.CUT_FROM_THE_SAME_CARDBOARD);
     }
 
     public void awardStoredPackageDisposal() {
-        if (getStoredCount() > 0 && isPackage(getStoredItem())) {
-            awardPackageDisposal();
+        if (getStoredCount() <= 0 || !isPackage(getStoredItem())) {
+            return;
         }
+
+        awardPackageDisposal();
     }
 
     @Override

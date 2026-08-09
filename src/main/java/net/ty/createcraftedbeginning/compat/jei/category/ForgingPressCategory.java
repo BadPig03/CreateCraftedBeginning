@@ -111,8 +111,8 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
             CCBGUITextures.JEI_DOWN_ARROW.render(graphics, 73, 10);
         }
         CCBGUITextures.JEI_SHADOW.render(graphics, 66, 66);
-        CCBGUITextures.JEI_LONG_ARROW.render(graphics, getBackground().getWidth() / 2 - 35, 86);
-        forgingPress.draw(graphics, getBackground().getWidth() / 2 - 8, 58);
+        CCBGUITextures.JEI_LONG_ARROW.render(graphics, background.getWidth() / 2 - 35, 86);
+        forgingPress.draw(graphics, background.getWidth() / 2 - 8, 58);
     }
 
     @Override

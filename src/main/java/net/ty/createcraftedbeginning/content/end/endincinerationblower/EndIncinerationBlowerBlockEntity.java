@@ -81,9 +81,11 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
             return;
         }
 
-        if (level instanceof ServerLevel serverLevel) {
-            effectProcessor.tick(serverLevel);
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return;
         }
+
+        effectProcessor.tick(serverLevel);
     }
 
     @Override
@@ -112,9 +114,11 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
     }
 
     public void setOwner(UUID owner) {
-        if (ownerState.setOwner(owner)) {
-            setChanged();
+        if (!ownerState.setOwner(owner)) {
+            return;
         }
+
+        setChanged();
     }
 
     @Nullable EndIncinerationBlowerStructuralBlockEntity getStructuralForEffect() {

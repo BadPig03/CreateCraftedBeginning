@@ -25,9 +25,11 @@ public abstract class FilteredCrateBlockEntity extends CratesBlockEntity {
     }
 
     public final void setFilterItem(ItemStack filterItem) {
-        if (filterController != null) {
-            filterController.setFilterItem(filterItem);
+        if (filterController == null) {
+            return;
         }
+
+        filterController.setFilterItem(filterItem);
     }
 
     @Override

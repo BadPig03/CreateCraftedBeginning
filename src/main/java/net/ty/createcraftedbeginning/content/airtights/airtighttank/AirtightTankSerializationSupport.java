@@ -52,6 +52,7 @@ public final class AirtightTankSerializationSupport {
         if (!tank.isController()) {
             return;
         }
+
         tag.putInt(WIDTH, tank.getWidth());
         tag.putInt(HEIGHT, tank.getHeight());
     }

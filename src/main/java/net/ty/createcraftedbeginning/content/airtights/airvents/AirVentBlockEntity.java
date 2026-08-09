@@ -70,20 +70,26 @@ public class AirVentBlockEntity extends SyncedBlockEntity {
     }
 
     public void toggleLouver(Direction direction) {
-        if (louvers.toggleLouver(direction)) {
-            notifyUpdate();
+        if (!louvers.toggleLouver(direction)) {
+            return;
         }
+
+        notifyUpdate();
     }
 
     public void toggleLouverOpen(Direction direction) {
-        if (louvers.toggleLouverOpen(direction)) {
-            notifyUpdate();
+        if (!louvers.toggleLouverOpen(direction)) {
+            return;
         }
+
+        notifyUpdate();
     }
 
     public void setLouverState(Direction direction, VentState state) {
-        if (louvers.setLouverState(direction, state)) {
-            notifyUpdate();
+        if (!louvers.setLouverState(direction, state)) {
+            return;
         }
+
+        notifyUpdate();
     }
 }

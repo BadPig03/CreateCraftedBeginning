@@ -15,13 +15,11 @@ import com.simibubi.create.content.logistics.stockTicker.StockTickerBlockEntity;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlockEntity;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
 import com.simibubi.create.foundation.gui.menu.AbstractSimiContainerScreen;
-import com.simibubi.create.foundation.gui.widget.ScrollInput;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.render.CachedBuffers;
-import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.LightTexture;
@@ -35,8 +33,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.client.stockkeeper.GasCraftableBigItemStack;
 import net.ty.createcraftedbeginning.client.stockkeeper.StockKeeperCraftingUtils;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
@@ -45,7 +41,7 @@ import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUti
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.FrostLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerRenderer;
-import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -57,7 +53,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
@@ -344,53 +339,6 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
         int step = GasRequestClientUtils.getStep(hasAltDown(), hasControlDown(), hasShiftDown()) * (orderClicked ? 1 : 10);
         ccb$changeDirectGasOrder(entry, orderClicked, remove, step);
         cir.setReturnValue(true);
-    }
-
-    @Inject(method = "renderTooltip", at = @At("HEAD"), cancellable = true)
-    private void ccb$renderTooltip(GuiGraphics graphics, int mouseX, int mouseY, CallbackInfo ci) {
-        Couple<Integer> hoveredSlot = getHoveredSlot(mouseX, mouseY);
-        if (hoveredSlot.getFirst() == -1 && hoveredSlot.getSecond() == -1 || hoveredSlot.getFirst() == -2) {
-            return;
-        }
-
-        boolean orderClicked = hoveredSlot.getFirst() == -1;
-        BigItemStack entry;
-        if (orderClicked) {
-            int index = hoveredSlot.getSecond();
-            if (index < 0 || index >= itemsToOrder.size()) {
-                return;
-            }
-
-            entry = itemsToOrder.get(index);
-        }
-        else {
-            int row = hoveredSlot.getFirst();
-            int column = hoveredSlot.getSecond();
-            if (row < 0 || row >= displayedItems.size()) {
-                return;
-            }
-
-            List<BigItemStack> rowItems = displayedItems.get(row);
-            if (column < 0 || column >= rowItems.size()) {
-                return;
-            }
-
-            entry = rowItems.get(column);
-        }
-
-        if (!GasVirtualUtils.isVirtualItem(entry.stack)) {
-            return;
-        }
-
-        List<Component> tooltip = new ArrayList<>();
-        int available = blockEntity.getLastClientsideStockSnapshotAsSummary().getCountOf(entry.stack);
-        tooltip.add(CCBLang.translate("gui.gas_virtual_item.send_item", CCBLang.itemName(entry.stack).add(CCBLang.text(" x" + GasRequestUtils.formatPrecise(available)))).color(ScrollInput.HEADER_RGB).component());
-        tooltip.add(CCBLang.translate("gui.gas_virtual_item.scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getScrollStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-        tooltip.add(CCBLang.translate("gui.gas_virtual_item.shift_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getShiftStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-        tooltip.add(CCBLang.translate("gui.gas_virtual_item.alt_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getAltStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-        tooltip.add(CCBLang.translate("gui.gas_virtual_item.ctrl_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getCtrlStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-        graphics.renderComponentTooltip(font, tooltip, mouseX, mouseY);
-        ci.cancel();
     }
 
     @Inject(method = "requestCraftable", at = @At("HEAD"), cancellable = true)

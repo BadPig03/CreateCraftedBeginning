@@ -31,9 +31,11 @@ final class AirtightTankMultiblockController {
 
     void initialize() {
         sendData();
-        if (owner.getLevel() != null && owner.getLevel().isClientSide) {
-            owner.invalidateRenderBounds();
+        if (owner.getLevel() == null || !owner.getLevel().isClientSide) {
+            return;
         }
+
+        owner.invalidateRenderBounds();
     }
 
     boolean tick() {
@@ -73,6 +75,7 @@ final class AirtightTankMultiblockController {
         if (owner.getLevel() == null || owner.getLevel().isClientSide || !owner.isController()) {
             return;
         }
+
         GasConnectivityHandler.formMulti(owner, owner.getLevel());
     }
 
@@ -149,9 +152,11 @@ final class AirtightTankMultiblockController {
         }
 
         syncCooldown--;
-        if (syncCooldown == 0 && queuedSync) {
-            sendData();
+        if (syncCooldown != 0 || !queuedSync) {
+            return;
         }
+
+        sendData();
     }
 
     @Nullable BlockPos getLastKnownPos() {

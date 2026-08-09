@@ -1,12 +1,9 @@
 package net.ty.createcraftedbeginning.recipe.gas;
 
-import com.simibubi.create.AllBlocks;
 import com.simibubi.create.foundation.utility.CreateLang;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
-import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -17,8 +14,6 @@ import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRe
 import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.List;
-import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -55,20 +50,6 @@ public class FillingWithGasRecipe extends StandardProcessingWithGasRecipe<Single
             return Component.literal("Invalid");
         }
         return CreateLang.translateDirect("recipe.assembly.spout_filling_fluid", stacks[0].getHoverName().getString());
-    }
-
-    @Override
-    public void addAssemblyFluidIngredients(List<SizedFluidIngredient> list) {
-        list.add(getRequiredFluid());
-    }
-
-    @Override
-    public void addAssemblyIngredients(List<Ingredient> list) {
-    }
-
-    @Override
-    public void addRequiredMachines(Set<ItemLike> list) {
-        list.add(AllBlocks.SPOUT.get());
     }
 
     public SizedFluidIngredient getRequiredFluid() {

@@ -40,6 +40,7 @@ final class AirtightEncasedPipeTooltip {
             if (state.getValue(AirtightEncasedPipeBlock.PROPERTY_BY_DIRECTION.get(direction))) {
                 continue;
             }
+
             if (AirtightEncasedPipeBlock.hasPlacementConnection(level, pos, direction)) {
                 invalidDirections.add(direction);
             }

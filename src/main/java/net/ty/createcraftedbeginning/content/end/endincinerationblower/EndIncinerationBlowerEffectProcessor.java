@@ -88,9 +88,11 @@ final class EndIncinerationBlowerEffectProcessor {
             case BLASTING -> applyFanProcessing(level, AllFanProcessingTypes.BLASTING, area);
             case IGNITION -> shouldApplyIgnition(level) && applyIgnition(level, area);
         };
-        if (applied) {
-            blockEntity.awardPrimaryEffectAdvancement();
+        if (!applied) {
+            return;
         }
+
+        blockEntity.awardPrimaryEffectAdvancement();
     }
 
     private boolean applyFanProcessing(ServerLevel level, FanProcessingType processingType, AABB area) {

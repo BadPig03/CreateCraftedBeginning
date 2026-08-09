@@ -15,4 +15,14 @@ public class CuboidTemplate extends BaseTemplate {
         BlockPos endPos = new BlockPos(params[0] - 1, params[1] - 1, params[2] - 1);
         return BlockPos.betweenClosedStream(BlockPos.ZERO, endPos);
     }
+
+    @Override
+    public int getMinValue(int index) {
+        return 1;
+    }
+
+    @Override
+    public int getMaxValue(int index) {
+        return 8;
+    }
 }

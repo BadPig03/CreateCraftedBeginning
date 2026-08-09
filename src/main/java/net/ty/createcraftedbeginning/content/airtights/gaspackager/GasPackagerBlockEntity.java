@@ -95,6 +95,7 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
             controller.attemptToPackageAnyGas();
             return;
         }
+
         controller.attemptToSend(queuedRequests);
     }
 
@@ -184,9 +185,11 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
     }
 
     void emitGasPackageReceivedEvent(ItemStack box) {
-        if (computerBehaviour != null) {
-            computerBehaviour.prepareComputerEvent(new PackageEvent(box, "package_received"));
+        if (computerBehaviour == null) {
+            return;
         }
+
+        computerBehaviour.prepareComputerEvent(new PackageEvent(box, "package_received"));
     }
 
     void enqueueCreatedGasBalloon(ItemStack balloon) {
@@ -208,9 +211,11 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
     }
 
     void enqueueReturnedGasBalloon(ItemStack balloon) {
-        if (!balloon.isEmpty()) {
-            queuedExitingPackages.addFirst(new BigItemStack(balloon, 1));
+        if (balloon.isEmpty()) {
+            return;
         }
+
+        queuedExitingPackages.addFirst(new BigItemStack(balloon, 1));
     }
 
     ItemStack pendingUnwrappedPackage() {

@@ -47,6 +47,7 @@ final class AirtightTankGasStorage {
         if (!owner.isController() || owner.getLevel() == null || owner.getLevel().isClientSide) {
             return;
         }
+
         owner.notifyUpdate();
     }
 

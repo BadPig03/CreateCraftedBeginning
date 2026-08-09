@@ -51,6 +51,7 @@ final class AirtightReactorKettleController {
         if (!contentsChanged) {
             return;
         }
+
         contentsChanged = false;
         kettle.scheduleUpdate();
     }
@@ -158,6 +159,7 @@ final class AirtightReactorKettleController {
         if (!operating) {
             return 0;
         }
+
         if (operatingTicks == PROCESSING_STARTED) {
             return 0.72f;
         }
@@ -175,9 +177,11 @@ final class AirtightReactorKettleController {
         this.operatingTicks = operatingTicks;
         this.processingTicks = processingTicks;
         this.windowsOpenState = windowsOpenState;
-        if (!clientPacket) {
-            resetTransientOperation();
+        if (clientPacket) {
+            return;
         }
+
+        resetTransientOperation();
     }
 
     private void tickOperation() {
@@ -203,10 +207,12 @@ final class AirtightReactorKettleController {
             }
             return;
         }
+
         if (!clientSide && !hasRequiredSpeed()) {
             update(false);
             return;
         }
+
         if (!clientSide && currentRecipe == null && currentCraftingRecipe != null && !CCBConfig.server().airtights.enableAutomaticMixingRecipes.get()) {
             update(false);
             return;
@@ -216,18 +222,22 @@ final class AirtightReactorKettleController {
             operatingTicks++;
             return;
         }
+
         if (clientSide) {
             return;
         }
+
         if (processingTicks < 0) {
             startProcessing();
             return;
         }
 
         processingTicks--;
-        if (processingTicks == 0) {
-            finishProcessing();
+        if (processingTicks != 0) {
+            return;
         }
+
+        finishProcessing();
     }
 
     private boolean handleFilterChange(boolean clientSide) {
@@ -239,6 +249,7 @@ final class AirtightReactorKettleController {
         if (clientSide) {
             return true;
         }
+
         update(true);
         return true;
     }
@@ -253,6 +264,7 @@ final class AirtightReactorKettleController {
         if (shouldOpen == windowsOpenState) {
             return;
         }
+
         windowsOpenState = shouldOpen;
         kettle.sendData();
     }
@@ -340,6 +352,7 @@ final class AirtightReactorKettleController {
         if (!schedule || level == null || level.isClientSide && !kettle.isVirtual()) {
             return;
         }
+
         kettle.scheduleUpdate();
     }
 

@@ -24,11 +24,13 @@ final class BreezeCoolerRecipeCache {
         if (cooler.getLevel() == null || fluidStack.isEmpty()) {
             return CoolingData.EMPTY;
         }
+
         long gameTime = cooler.getLevel().getGameTime();
         boolean sameFluid = !cachedFluid.isEmpty() && FluidStack.isSameFluidSameComponents(cachedFluid, fluidStack);
         if (sameFluid && gameTime < expiry) {
             return cachedData;
         }
+
         cachedFluid = fluidStack.copyWithAmount(1);
         cachedData = CoolingRecipe.getCoolingTime(cooler.getLevel(), null, fluidStack);
         expiry = gameTime + CACHE_INTERVAL;

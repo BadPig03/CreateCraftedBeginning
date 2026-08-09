@@ -10,7 +10,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasConnectivityHandler;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
@@ -38,8 +37,7 @@ final class AirtightAssemblyDriverStructureScanner {
             return;
         }
 
-        AirtightTankBlockEntity tank = GasConnectivityHandler.partAt(controller.getType(), level, pos);
-        if (tank == null || !tank.getController().equals(controllerPos)) {
+        if (!(level.getBlockEntity(pos) instanceof AirtightTankBlockEntity tank) || tank.getType() != controller.getType() || tank.isRemoved() || !tank.getController().equals(controllerPos)) {
             accumulator.complete = false;
             return;
         }

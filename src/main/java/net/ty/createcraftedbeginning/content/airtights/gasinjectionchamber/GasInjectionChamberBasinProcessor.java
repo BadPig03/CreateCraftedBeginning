@@ -56,6 +56,7 @@ final class GasInjectionChamberBasinProcessor {
                 if (!FluidStack.isSameFluidSameComponents(planned, request)) {
                     continue;
                 }
+
                 planned.setAmount(planned.getAmount() + amount);
                 merged = true;
                 break;
@@ -142,6 +143,7 @@ final class GasInjectionChamberBasinProcessor {
         if (chamber.getLevel() == null) {
             return Optional.empty();
         }
+
         if (chamber.getLevel().getBlockEntity(chamber.getBlockPos().below(2)) instanceof BasinBlockEntity basin) {
             return Optional.of(basin);
         }

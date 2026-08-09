@@ -69,9 +69,11 @@ public class AirtightAssemblyDriverStructureManager {
         }
 
         evaluate(controller);
-        if (evaluationRequired) {
-            evaluationCooldown = INCOMPLETE_EVALUATION_RETRY_DELAY;
+        if (!evaluationRequired) {
+            return;
         }
+
+        evaluationCooldown = INCOMPLETE_EVALUATION_RETRY_DELAY;
     }
 
     public void requestEvaluation() {
@@ -103,9 +105,11 @@ public class AirtightAssemblyDriverStructureManager {
 
         driverCore.getResidueManager().updateOutletsPositions(result.complete() ? result.outletPositions() : Set.of());
         driverCore.getLevelCalculator().updateWindChargingLevel(attachedWindChargingLevel);
-        if (!previous.matches(this)) {
-            driverCore.markForClientSync();
+        if (previous.matches(this)) {
+            return;
         }
+
+        driverCore.markForClientSync();
     }
 
     public void reset() {
@@ -115,9 +119,11 @@ public class AirtightAssemblyDriverStructureManager {
         evaluationCooldown = 0;
         driverCore.getResidueManager().clearOutletsPositions();
         driverCore.getLevelCalculator().updateWindChargingLevel(0);
-        if (changed) {
-            driverCore.markForClientSync();
+        if (!changed) {
+            return;
         }
+
+        driverCore.markForClientSync();
     }
 
     public void invalidateForServerLoad() {

@@ -16,6 +16,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.fluids.BaseFlowingFluid.Flowing;
@@ -61,6 +62,11 @@ public class CCBRegistrate extends AbstractRegistrate<CCBRegistrate> {
 
     public static boolean isOutOfCreativeSection(RegistryEntry<?, ?> entry, CCBCreativeTabSection section) {
         return SECTION_LOOKUP.get(entry) != section;
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    public CCBRegistrate disableDefaultCreativeTab() {
+        return defaultCreativeTab((ResourceKey<CreativeModeTab>) null);
     }
 
     public CCBRegistrate setTooltipModifierFactory(@Nullable Function<Item, TooltipModifier> factory) {

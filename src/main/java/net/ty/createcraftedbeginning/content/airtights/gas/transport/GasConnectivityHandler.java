@@ -31,21 +31,21 @@ import java.util.Set;
 @MethodsReturnNonnullByDefault
 public class GasConnectivityHandler {
     public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> void formMulti(T be, Level level) {
-        SearchCache<T> cache = new SearchCache<>();
-        Deque<T> frontier = new ArrayDeque<>();
+        SearchCache cache = new SearchCache();
+        Deque<IGasTankMultiBlockEntityContainer> frontier = new ArrayDeque<>();
         frontier.addLast(be);
         formMulti(be.getType(), level, cache, frontier);
     }
 
-    private static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> void formMulti(BlockEntityType<?> type, BlockGetter level, SearchCache<T> cache, Deque<T> frontier) {
-        PriorityQueue<Pair<Integer, T>> creationQueue = makeCreationQueue();
+    private static void formMulti(BlockEntityType<?> type, BlockGetter level, SearchCache cache, Deque<IGasTankMultiBlockEntityContainer> frontier) {
+        PriorityQueue<Pair<Integer, IGasTankMultiBlockEntityContainer>> creationQueue = makeCreationQueue();
         Set<BlockPos> visited = new HashSet<>();
         Axis mainAxis = frontier.getFirst().getMainConnectionAxis();
         int minX = mainAxis == Axis.X ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         int minY = mainAxis == Axis.Y ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         int minZ = mainAxis == Axis.Z ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-        for (T be : frontier) {
-            BlockPos pos = be.getBlockPos();
+        for (IGasTankMultiBlockEntityContainer be : frontier) {
+            BlockPos pos = blockEntity(be).getBlockPos();
             minX = Math.min(pos.getX(), minX);
             minY = Math.min(pos.getY(), minY);
             minZ = Math.min(pos.getZ(), minZ);
@@ -63,8 +63,8 @@ public class GasConnectivityHandler {
         }
 
         while (!frontier.isEmpty()) {
-            T part = frontier.removeFirst();
-            BlockPos partPos = part.getBlockPos();
+            IGasTankMultiBlockEntityContainer part = frontier.removeFirst();
+            BlockPos partPos = blockEntity(part).getBlockPos();
             if (visited.contains(partPos)) {
                 continue;
             }
@@ -86,8 +86,8 @@ public class GasConnectivityHandler {
                     continue;
                 }
 
-                T nextPart = partAt(type, level, next);
-                if (nextPart == null || nextPart.isRemoved()) {
+                IGasTankMultiBlockEntityContainer nextPart = tankAt(type, level, next);
+                if (nextPart == null) {
                     continue;
                 }
 
@@ -97,30 +97,24 @@ public class GasConnectivityHandler {
 
         visited.clear();
         while (!creationQueue.isEmpty()) {
-            Pair<Integer, T> next = creationQueue.poll();
-            T toCreate = next.getValue();
-            if (visited.contains(toCreate.getBlockPos())) {
+            Pair<Integer, IGasTankMultiBlockEntityContainer> next = creationQueue.poll();
+            IGasTankMultiBlockEntityContainer toCreate = next.getValue();
+            if (visited.contains(blockEntity(toCreate).getBlockPos())) {
                 continue;
             }
 
-            visited.add(toCreate.getBlockPos());
+            visited.add(blockEntity(toCreate).getBlockPos());
             tryToFormNewMulti(toCreate, cache, false);
         }
     }
 
-    public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> boolean isConnected(BlockGetter level, BlockPos pos, BlockPos other) {
-        T one = checked(level.getBlockEntity(pos));
-        T two = checked(level.getBlockEntity(other));
-        return one != null && two != null && one.getController().equals(two.getController());
+    public static boolean isConnected(BlockGetter level, BlockPos pos, BlockPos other) {
+        BlockEntity first = level.getBlockEntity(pos);
+        BlockEntity second = level.getBlockEntity(other);
+        return first instanceof IGasTankMultiBlockEntityContainer one && second instanceof IGasTankMultiBlockEntityContainer two && one.getController().equals(two.getController());
     }
 
-    @Nullable
-    @SuppressWarnings("unchecked")
-    private static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> T checked(@Nullable BlockEntity be) {
-        return be instanceof IGasTankMultiBlockEntityContainer ? (T) be : null;
-    }
-
-    private static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> int tryToFormNewMulti(T be, SearchCache<T> cache, boolean simulate) {
+    private static int tryToFormNewMulti(IGasTankMultiBlockEntityContainer be, SearchCache cache, boolean simulate) {
         if (!be.isController()) {
             return 0;
         }
@@ -160,16 +154,16 @@ public class GasConnectivityHandler {
         return bestAmount;
     }
 
-    private static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> int tryToFormNewMultiOfWidth(T be, int width, SearchCache<T> cache, boolean simulate) {
-        Level level = be.getLevel();
+    private static int tryToFormNewMultiOfWidth(IGasTankMultiBlockEntityContainer be, int width, SearchCache cache, boolean simulate) {
+        Level level = blockEntity(be).getLevel();
         if (level == null) {
             return 0;
         }
 
         int amount = 0;
         int height = 0;
-        BlockEntityType<?> type = be.getType();
-        BlockPos origin = be.getBlockPos();
+        BlockEntityType<?> type = blockEntity(be).getType();
+        BlockPos origin = blockEntity(be).getBlockPos();
         GasStack gas = GasStack.EMPTY;
         if (be.hasTank()) {
             gas = be.getGas(0);
@@ -182,12 +176,12 @@ public class GasConnectivityHandler {
             for (int xOffset = 0; xOffset < width; xOffset++) {
                 for (int zOffset = 0; zOffset < width; zOffset++) {
                     BlockPos pos = getPartPos(origin, axis, lengthOffset, xOffset, zOffset);
-                    Optional<@NotNull T> cachedPart = cache.getOrCache(type, level, pos);
+                    Optional<@NotNull IGasTankMultiBlockEntityContainer> cachedPart = cache.getOrCache(type, level, pos);
                     if (cachedPart.isEmpty()) {
                         break Search;
                     }
 
-                    T controller = cachedPart.get();
+                    IGasTankMultiBlockEntityContainer controller = cachedPart.get();
                     int otherWidth = controller.getWidth();
                     if (otherWidth > width || otherWidth == width && controller.getHeight() == maxLength) {
                         break Search;
@@ -196,7 +190,7 @@ public class GasConnectivityHandler {
                         break Search;
                     }
 
-                    BlockPos controllerPos = controller.getBlockPos();
+                    BlockPos controllerPos = blockEntity(controller).getBlockPos();
                     if (!controllerPos.equals(origin) && isOutsideFormationBounds(axis, origin, controllerPos, otherWidth, width)) {
                         break Search;
                     }
@@ -222,7 +216,7 @@ public class GasConnectivityHandler {
             for (int xOffset = 0; xOffset < width; xOffset++) {
                 for (int zOffset = 0; zOffset < width; zOffset++) {
                     BlockPos pos = getPartPos(origin, axis, lengthOffset, xOffset, zOffset);
-                    T part = partAt(type, level, pos);
+                    IGasTankMultiBlockEntityContainer part = tankAt(type, level, pos);
                     if (part == null || part == be) {
                         continue;
                     }
@@ -269,7 +263,7 @@ public class GasConnectivityHandler {
     }
 
     @Contract(value = " -> new", pure = true)
-    private static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> @NotNull PriorityQueue<Pair<Integer, T>> makeCreationQueue() {
+    private static PriorityQueue<Pair<Integer, IGasTankMultiBlockEntityContainer>> makeCreationQueue() {
         return new PriorityQueue<>((one, two) -> two.getKey() - one.getKey());
     }
 
@@ -277,13 +271,13 @@ public class GasConnectivityHandler {
         splitMultiAndInvalidate(be, null);
     }
 
-    private static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> void splitMultiAndInvalidate(T be, @Nullable SearchCache<T> cache) {
-        Level level = be.getLevel();
+    private static void splitMultiAndInvalidate(IGasTankMultiBlockEntityContainer be, @Nullable SearchCache cache) {
+        Level level = blockEntity(be).getLevel();
         if (level == null) {
             return;
         }
 
-        be = be.getControllerBE();
+        be = tankAt(blockEntity(be).getType(), level, be.getController());
         if (be == null) {
             return;
         }
@@ -294,11 +288,11 @@ public class GasConnectivityHandler {
             return;
         }
 
-        BlockPos origin = be.getBlockPos();
+        BlockPos origin = blockEntity(be).getBlockPos();
         Axis axis = be.getMainConnectionAxis();
         GasStack toDistribute = GasStack.EMPTY;
         if (be.hasTank()) {
-            toDistribute = be.prepareTankStateForSplit(0, be.isRemoved());
+            toDistribute = be.prepareTankStateForSplit(0, blockEntity(be).isRemoved());
         }
 
         for (int yOffset = 0; yOffset < height; yOffset++) {
@@ -310,12 +304,12 @@ public class GasConnectivityHandler {
                         case Z -> origin.offset(xOffset, zOffset, yOffset);
                     };
 
-                    T part = partAt(be.getType(), level, pos);
+                    IGasTankMultiBlockEntityContainer part = tankAt(blockEntity(be).getType(), level, pos);
                     if (part == null || !part.getController().equals(origin)) {
                         continue;
                     }
 
-                    T controller = part.getControllerBE();
+                    IGasTankMultiBlockEntityContainer controller = tankAt(blockEntity(part).getType(), level, part.getController());
                     part.setExtraData(controller == null ? null : controller.getExtraData());
                     part.removeController(true);
                     if (!toDistribute.isEmpty() && part != be) {
@@ -329,40 +323,56 @@ public class GasConnectivityHandler {
             }
         }
 
-        if (be instanceof IGasTankMultiBlockEntityContainer.Inventory inv && inv.hasInventory() && be.getLevel() != null) {
-            be.getLevel().invalidateCapabilities(be.getBlockPos());
+        if (be instanceof IGasTankMultiBlockEntityContainer.Inventory inv && inv.hasInventory()) {
+            level.invalidateCapabilities(blockEntity(be).getBlockPos());
         }
-        if (!be.hasTank() || be.getLevel() == null) {
+        if (!be.hasTank()) {
             return;
         }
 
-        be.getLevel().invalidateCapabilities(be.getBlockPos());
+        level.invalidateCapabilities(blockEntity(be).getBlockPos());
     }
 
-    public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> @Nullable T partAt(BlockEntityType<?> type, BlockGetter level, BlockPos pos) {
-        BlockEntity be = level.getBlockEntity(pos);
-        return be != null && be.getType() == type && !be.isRemoved() ? checked(be) : null;
+    public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> @Nullable T partAt(BlockEntityType<T> type, BlockGetter level, BlockPos pos) {
+        T blockEntity = type.getBlockEntity(level, pos);
+        return blockEntity != null && !blockEntity.isRemoved() ? blockEntity : null;
     }
 
-    private static class SearchCache<T extends BlockEntity & IGasTankMultiBlockEntityContainer> {
-        protected Map<BlockPos, Optional<@NotNull T>> controllerMap;
+    private static @Nullable IGasTankMultiBlockEntityContainer tankAt(BlockEntityType<?> type, BlockGetter level, BlockPos pos) {
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+        if (blockEntity == null || blockEntity.getType() != type || blockEntity.isRemoved() || !(blockEntity instanceof IGasTankMultiBlockEntityContainer tank)) {
+            return null;
+        }
+        return tank;
+    }
+
+    private static BlockEntity blockEntity(IGasTankMultiBlockEntityContainer tank) {
+        if (tank instanceof BlockEntity blockEntity) {
+            return blockEntity;
+        }
+
+        throw new IllegalStateException("Gas multiblock container is not a block entity");
+    }
+
+    private static class SearchCache {
+        protected Map<BlockPos, Optional<@NotNull IGasTankMultiBlockEntityContainer>> controllerMap;
 
         public SearchCache() {
             controllerMap = new HashMap<>();
         }
 
-        protected Optional<@NotNull T> getOrCache(BlockEntityType<?> type, BlockGetter level, BlockPos pos) {
+        protected Optional<@NotNull IGasTankMultiBlockEntityContainer> getOrCache(BlockEntityType<?> type, BlockGetter level, BlockPos pos) {
             if (hasVisited(pos)) {
                 return controllerMap.get(pos);
             }
 
-            T partAt = partAt(type, level, pos);
+            IGasTankMultiBlockEntityContainer partAt = tankAt(type, level, pos);
             if (partAt == null) {
                 putEmpty(pos);
                 return Optional.empty();
             }
 
-            T controller = partAt(type, level, partAt.getController());
+            IGasTankMultiBlockEntityContainer controller = tankAt(type, level, partAt.getController());
             if (controller == null) {
                 putEmpty(pos);
                 return Optional.empty();
@@ -372,7 +382,7 @@ public class GasConnectivityHandler {
             return Optional.of(controller);
         }
 
-        protected void put(BlockPos pos, T target) {
+        protected void put(BlockPos pos, IGasTankMultiBlockEntityContainer target) {
             controllerMap.put(pos, Optional.of(target));
         }
 

@@ -100,11 +100,14 @@ public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEn
         if (level == null) {
             return;
         }
+
         BlockState state = getBlockState();
-        if (state.getBlock() instanceof CreativeAirtightTankBlock) {
-            state = state.setValue(CreativeAirtightTankBlock.TOP, true).setValue(CreativeAirtightTankBlock.BOTTOM, true);
-            level.setBlock(worldPosition, state, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE | Block.UPDATE_KNOWN_SHAPE);
+        if (!(state.getBlock() instanceof CreativeAirtightTankBlock)) {
+            return;
         }
+
+        state = state.setValue(CreativeAirtightTankBlock.TOP, true).setValue(CreativeAirtightTankBlock.BOTTOM, true);
+        level.setBlock(worldPosition, state, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE | Block.UPDATE_KNOWN_SHAPE);
     }
 
     @Override

@@ -18,9 +18,11 @@ final class AirtightEngineAnimationState {
         }
 
         pistonPhase += pistonAnimationSpeed * AirtightEngineBlockEntity.DELTA_TIME;
-        if (pistonPhase > Mth.TWO_PI) {
-            pistonPhase %= Mth.TWO_PI;
+        if (pistonPhase <= Mth.TWO_PI) {
+            return;
         }
+
+        pistonPhase %= Mth.TWO_PI;
     }
 
     float getPistonPhase(float partialTicks) {

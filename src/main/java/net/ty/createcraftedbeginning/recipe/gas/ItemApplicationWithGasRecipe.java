@@ -18,7 +18,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public class ItemApplicationWithGasRecipe extends ProcessingWithGasRecipe<RecipeWrapper, ItemApplicationWithGasRecipeParams> {
     private final boolean keepHeldItem;
 
@@ -83,6 +82,7 @@ public class ItemApplicationWithGasRecipe extends ProcessingWithGasRecipe<Recipe
             return this;
         }
 
+        @SuppressWarnings("unused")
         public Builder<R> toolNotConsumed() {
             params.keepHeldItem = true;
             return this;

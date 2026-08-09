@@ -53,8 +53,10 @@ final class BreezeCoolerSerialization {
         if (tag.contains(GOGGLES, Tag.TAG_BYTE)) {
             cooler.setGogglesFromSerialization(tag.getBoolean(GOGGLES));
         }
-        if (tag.contains(TRAIN_HAT, Tag.TAG_BYTE)) {
-            cooler.setTrainHatFromSerialization(tag.getBoolean(TRAIN_HAT));
+        if (!tag.contains(TRAIN_HAT, Tag.TAG_BYTE)) {
+            return;
         }
+
+        cooler.setTrainHatFromSerialization(tag.getBoolean(TRAIN_HAT));
     }
 }

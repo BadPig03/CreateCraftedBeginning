@@ -32,7 +32,7 @@ public class EnergizationCategory extends CCBRecipeCategory<EnergizationRecipe> 
     public void draw(EnergizationRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         CCBGUITextures.JEI_SHADOW.render(graphics, 61, 41);
         CCBGUITextures.JEI_LONG_ARROW.render(graphics, 52, 54);
-        chamber.draw(graphics, getBackground().getWidth() / 2 - 17, 24);
+        chamber.draw(graphics, background.getWidth() / 2 - 17, 24);
     }
 
     @Override

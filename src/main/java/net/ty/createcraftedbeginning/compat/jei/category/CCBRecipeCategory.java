@@ -7,6 +7,7 @@ import com.simibubi.create.content.processing.recipe.ProcessingOutput;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
 import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
+import mezz.jei.api.gui.builder.ITooltipBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
@@ -33,7 +34,6 @@ import org.jetbrains.annotations.Contract;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -45,7 +45,6 @@ import static mezz.jei.api.recipe.RecipeType.createRecipeHolderType;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeCategory<RecipeHolder<T>> {
     protected static final IDrawable BASIC_SLOT = asDrawable(AllGuiTextures.JEI_SLOT);
     protected static final IDrawable CHANCE_SLOT = asDrawable(AllGuiTextures.JEI_CHANCE_SLOT);
@@ -117,10 +116,14 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
         return title;
     }
 
-    @SuppressWarnings("removal")
     @Override
-    public IDrawable getBackground() {
-        return background;
+    public int getWidth() {
+        return background.getWidth();
+    }
+
+    @Override
+    public int getHeight() {
+        return background.getHeight();
     }
 
     @Override
@@ -135,6 +138,7 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
 
     @Override
     public void draw(RecipeHolder<T> holder, IRecipeSlotsView recipeSlotsView, GuiGraphics gui, double mouseX, double mouseY) {
+        background.draw(gui, 0, 0);
         draw(holder.value(), recipeSlotsView, gui, mouseX, mouseY);
     }
 
@@ -143,10 +147,9 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
         onDisplayedIngredientsUpdate(holder.value(), recipeSlots, focuses);
     }
 
-    @SuppressWarnings("removal")
     @Override
-    public List<Component> getTooltipStrings(RecipeHolder<T> holder, IRecipeSlotsView recipeSlotsView, double mouseX, double mouseY) {
-        return getTooltipStrings(holder.value(), recipeSlotsView, mouseX, mouseY);
+    public void getTooltip(ITooltipBuilder tooltip, RecipeHolder<T> holder, IRecipeSlotsView recipeSlotsView, double mouseX, double mouseY) {
+        tooltip.addAll(getTooltipStrings(holder.value(), recipeSlotsView, mouseX, mouseY));
     }
 
     protected void onDisplayedIngredientsUpdate(T recipe, List<IRecipeSlotDrawable> recipeSlots, IFocusGroup focuses) {
@@ -187,11 +190,6 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
             this.recipeClass = recipeClass;
         }
 
-        public Builder<T> enableWhen(Supplier<Boolean> predicate) {
-            config = predicate;
-            return this;
-        }
-
         public Builder<T> enableWhen(ConfigBool configValue) {
             config = configValue::get;
             return this;
@@ -200,10 +198,6 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
         public Builder<T> addRecipeListConsumer(Consumer<List<RecipeHolder<T>>> consumer) {
             recipeListConsumers.add(consumer);
             return this;
-        }
-
-        public Builder<T> addRecipes(Supplier<Collection<? extends RecipeHolder<T>>> collection) {
-            return addRecipeListConsumer(recipes -> recipes.addAll(collection.get()));
         }
 
         public Builder<T> addAllRecipesIf(Predicate<RecipeHolder<?>> predicate, Function<RecipeHolder<?>, RecipeHolder<T>> converter) {
@@ -220,14 +214,13 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
             return addTypedRecipes(recipeTypeEntry::getType);
         }
 
-        @SuppressWarnings("unchecked")
         public <I extends RecipeInput, R extends Recipe<I>> Builder<T> addTypedRecipes(Supplier<net.minecraft.world.item.crafting.RecipeType<R>> recipeType) {
             return addRecipeListConsumer(recipes -> CCBJEIPlugin.consumeTypedRecipes(recipe -> {
                 if (!recipeClass.isInstance(recipe.value())) {
                     return;
                 }
 
-                recipes.add((RecipeHolder<T>) recipe);
+                recipes.add(new RecipeHolder<>(recipe.id(), recipeClass.cast(recipe.value())));
             }, recipeType.get()));
         }
 

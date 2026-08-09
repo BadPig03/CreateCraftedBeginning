@@ -86,11 +86,6 @@ public class ChainMiningTemplate extends BaseTemplate {
     }
 
     @Override
-    public Set<BlockPos> getBaseArea(int @NotNull [] params) {
-        return Set.of(BlockPos.ZERO);
-    }
-
-    @Override
     protected Stream<BlockPos> getBaseAreaStream(int @NotNull [] params) {
         return Stream.of(BlockPos.ZERO);
     }
@@ -104,5 +99,15 @@ public class ChainMiningTemplate extends BaseTemplate {
     @Override
     public boolean usesSpatialParameters() {
         return false;
+    }
+
+    @Override
+    public int getMinValue(int index) {
+        return 1;
+    }
+
+    @Override
+    public int getMaxValue(int index) {
+        return 8;
     }
 }

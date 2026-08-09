@@ -32,7 +32,7 @@ public class PressurizationCategory extends CCBRecipeCategory<PressurizationReci
     public void draw(PressurizationRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         CCBGUITextures.JEI_SHADOW.render(graphics, 61, 41);
         CCBGUITextures.JEI_LONG_ARROW.render(graphics, 52, 54);
-        compressor.draw(graphics, getBackground().getWidth() / 2 - 17, 24);
+        compressor.draw(graphics, background.getWidth() / 2 - 17, 24);
     }
 
     @Override

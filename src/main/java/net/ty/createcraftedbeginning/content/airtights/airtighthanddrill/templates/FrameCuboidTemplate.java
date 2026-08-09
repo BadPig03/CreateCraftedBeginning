@@ -36,4 +36,9 @@ public class FrameCuboidTemplate extends BaseTemplate {
     public int getMinValue(int index) {
         return 3;
     }
+
+    @Override
+    public int getMaxValue(int index) {
+        return 8;
+    }
 }

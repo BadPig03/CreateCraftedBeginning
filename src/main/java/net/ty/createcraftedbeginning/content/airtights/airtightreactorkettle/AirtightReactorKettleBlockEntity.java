@@ -125,6 +125,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         if (level == null) {
             return;
         }
+
         if (level.isClientSide) {
             animationState.tickClient();
         }
@@ -303,15 +304,19 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     }
 
     public void notifyContentsChanged() {
-        if (controller != null) {
-            controller.notifyContentsChanged();
+        if (controller == null) {
+            return;
         }
+
+        controller.notifyContentsChanged();
     }
 
     public void notifyFiltersChanged() {
-        if (controller != null) {
-            controller.notifyFiltersChanged();
+        if (controller == null) {
+            return;
         }
+
+        controller.notifyFiltersChanged();
     }
 
     public void scheduleUpdate() {

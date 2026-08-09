@@ -24,6 +24,7 @@ final class GasInjectionChamberVisualState {
         if (!sendCloud || !clientPacket) {
             return;
         }
+
         tag.putBoolean(COMPOUND_KEY_CLOUD, true);
         tag.putInt(COMPOUND_KEY_CLOUD_COLOR, cloudColor);
         sendCloud = false;

@@ -106,9 +106,11 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
             return;
         }
 
-        if (level instanceof ServerLevel serverLevel) {
-            controller.tickServer(serverLevel);
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return;
         }
+
+        controller.tickServer(serverLevel);
     }
 
     @Override
