@@ -39,16 +39,29 @@ public class CCBKubeJSPlugin implements KubeJSPlugin {
         CCBEvents.AIRTIGHT_TURBINE_HANDLER.post(ScriptType.STARTUP, new AirtightTurbineHandlerEvent());
     }
 
+    /**
+     * Registers the KubeJS bridge that forwards CCB handler-registration events to startup scripts.
+     */
     @Override
     public void afterInit() {
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, CCBKubeJSPlugin::registerAirtightHandlers);
     }
 
+    /**
+     * Registers the KubeJS builder used for CCB gas registry entries.
+     *
+     * @param registry the KubeJS builder type registry
+     */
     @Override
     public void registerBuilderTypes(BuilderTypeRegistry registry) {
         registry.addDefault(CCBRegistries.GAS_REGISTRY_KEY, GasKubeJSBuilder.class, GasKubeJSBuilder::new);
     }
 
+    /**
+     * Registers the CCB KubeJS event group.
+     *
+     * @param registry the KubeJS event group registry
+     */
     @Override
     public void registerEvents(EventGroupRegistry registry) {
         registry.register(CCBEvents.GROUP);

@@ -8,17 +8,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class SporeAirDrillHandler implements AirtightDrillHandler {
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int getDamageAddition() {
         return 0;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getConsumptionMultiplier() {
         return 1;

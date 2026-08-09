@@ -39,11 +39,6 @@ public final class CanisterContainerSuppliers {
     private CanisterContainerSuppliers() {
     }
 
-    /**
-     * Adds the supplied canister container supplier.
-     *
-     * @param supplier the supplier used to obtain the value
-     */
     public static void addCanisterContainerSuppliers(Function<Player, List<IGasCanisterContainer>> supplier) {
         CANISTER_CONTAINER_SUPPLIERS.add(supplier);
         synchronized (SUPPLIER_CACHE) {
@@ -51,12 +46,6 @@ public final class CanisterContainerSuppliers {
         }
     }
 
-    /**
-     * Returns the canister containers in inventory.
-     *
-     * @param player the player performing the operation
-     * @return the canister containers in inventory
-     */
     public static List<IGasCanisterContainer> getCanisterContainersInInventory(Player player) {
         List<IGasCanisterContainer> containers = new ArrayList<>();
         ItemStack offhand = player.getOffhandItem();
@@ -82,44 +71,18 @@ public final class CanisterContainerSuppliers {
         return containers;
     }
 
-    /**
-     * Checks whether the supplied item stack exposes a supported gas container.
-     *
-     * @param itemStack the item stack to inspect or process
-     * @return {@code true} if the supplied item stack exposes a supported gas container; otherwise {@code
-     * false}
-     */
     public static boolean isValidCanisterContainer(ItemStack itemStack) {
         return !itemStack.isEmpty() && itemStack.getCapability(GasHandler.ITEM) != null;
     }
 
-    /**
-     * Checks whether the supplied item stack is a supported gas canister.
-     *
-     * @param itemStack the item stack to inspect or process
-     * @return {@code true} if the supplied item stack is a supported gas canister; otherwise {@code false}
-     */
     public static boolean isValidGasCanister(ItemStack itemStack) {
         return isValidCanisterContainer(itemStack) && (itemStack.is(CCBItems.GAS_CANISTER) || itemStack.getItem() instanceof GasCanisterItem);
     }
 
-    /**
-     * Checks whether the supplied item stack is a supported creative gas canister.
-     *
-     * @param itemStack the item stack to inspect or process
-     * @return {@code true} if the supplied item stack is a supported creative gas canister; otherwise {@code
-     * false}
-     */
     public static boolean isValidCreativeGasCanister(ItemStack itemStack) {
         return isValidCanisterContainer(itemStack) && (itemStack.is(CCBItems.CREATIVE_GAS_CANISTER) || itemStack.getItem() instanceof CreativeGasCanisterItem);
     }
 
-    /**
-     * Returns all suppliers.
-     *
-     * @param player the player performing the operation
-     * @return all suppliers
-     */
     public static @Unmodifiable List<IGasCanisterContainer> getAllSuppliers(Player player) {
         Level level = player.level();
         long gameTime = level.getGameTime();
@@ -174,12 +137,6 @@ public final class CanisterContainerSuppliers {
         return result;
     }
 
-    /**
-     * Returns the first available gas content.
-     *
-     * @param player the player performing the operation
-     * @return the first available gas content
-     */
     public static GasStack getFirstAvailableGasContent(Player player) {
         for (IGasCanisterContainer container : getAllSuppliers(player)) {
             for (int tank = 0; tank < container.getTanks(); tank++) {
@@ -194,22 +151,10 @@ public final class CanisterContainerSuppliers {
         return GasStack.EMPTY;
     }
 
-    /**
-     * Checks whether this value is any container available.
-     *
-     * @param player the player performing the operation
-     * @return {@code true} if this value is any container available; otherwise {@code false}
-     */
     public static boolean isAnyContainerAvailable(Player player) {
         return !getAllSuppliers(player).isEmpty();
     }
 
-    /**
-     * Returns the first available canister supplier pair.
-     *
-     * @param player the player performing the operation
-     * @return the first available canister supplier pair
-     */
     public static Pair<GasStack, Pair<Long, Boolean>> getFirstCanisterSupplierPair(Player player) {
         for (IGasCanisterContainer container : getAllSuppliers(player)) {
             if (container instanceof GasCanisterPackContainerContents pack) {

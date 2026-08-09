@@ -39,16 +39,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRecipeInput> implements IAssemblyRecipeWithGas, IAirtightWithGasRecipe {
     private static final Object RECIPE_CACHE_KEY = new Object();
-    private static final AtomicBoolean RECIPE_TRIE_FAILURE_LOGGED = new AtomicBoolean();
-
-    private static volatile boolean recipeTrieDisabled;
 
     public GasInjectionRecipe(ProcessingWithGasRecipeParams params) {
         super(CCBRecipeTypes.GAS_INJECTION, params);
@@ -69,11 +65,11 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
             return Optional.of(new RecipeMatch(assemblyRecipe.get().value(), true));
         }
 
-        if (!recipeTrieDisabled) {
+        if (!AirtightWithGasRecipeTrieFinder.hasFailed(RECIPE_CACHE_KEY, level)) {
             try {
                 return findItemInTrie(level, itemStack, gasStack, input);
             } catch (ExecutionException | UncheckedExecutionException exception) {
-                disableRecipeTrie(exception);
+                disableRecipeTrie(level, exception);
             }
         }
         return findItemLinear(level, gasStack, input);
@@ -84,11 +80,11 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
             return Optional.empty();
         }
 
-        if (!recipeTrieDisabled) {
+        if (!AirtightWithGasRecipeTrieFinder.hasFailed(RECIPE_CACHE_KEY, level)) {
             try {
                 return findFluidInTrie(level, fluids, gasStack);
             } catch (ExecutionException | UncheckedExecutionException exception) {
-                disableRecipeTrie(exception);
+                disableRecipeTrie(level, exception);
             }
         }
         return findFluidLinear(level, fluids, gasStack);
@@ -159,9 +155,8 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
         return Optional.empty();
     }
 
-    private static void disableRecipeTrie(Exception exception) {
-        recipeTrieDisabled = true;
-        if (!RECIPE_TRIE_FAILURE_LOGGED.compareAndSet(false, true)) {
+    private static void disableRecipeTrie(Level level, Exception exception) {
+        if (!AirtightWithGasRecipeTrieFinder.recordFailure(RECIPE_CACHE_KEY, level)) {
             return;
         }
 
@@ -169,8 +164,7 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
     }
 
     public static void invalidateRecipeCaches() {
-        recipeTrieDisabled = false;
-        RECIPE_TRIE_FAILURE_LOGGED.set(false);
+        AirtightWithGasRecipeTrieFinder.invalidateFailures(RECIPE_CACHE_KEY);
     }
 
     public static Optional<ItemStack> getResultItem(Level level, ItemStack itemStack, GasStack gasStack) {

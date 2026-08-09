@@ -4,8 +4,6 @@ import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
-import net.createmod.catnip.lang.LangBuilder;
-import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
@@ -20,12 +18,9 @@ import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
-import net.neoforged.neoforge.items.IItemHandler;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.airtights.transaction.MachineResourceSnapshots;
 import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
 import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction.Participant;
-import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,58 +30,37 @@ import java.util.Objects;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
+public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ResidueOutletInsertionTarget {
     private static final int LAZY_TICK_RATE = 20;
-    private static final String COMPOUND_KEY_INVENTORY = "Inventory";
 
-    private final IItemHandler itemCapability;
     private final ResidueOutletInventory inventory;
+    private final ResidueOutletInsertionPlanner insertionPlanner;
+    private final ResidueOutletSerialization serialization;
+    private final ResidueOutletTooltip tooltip;
 
     private SmartFluidTankBehaviour fluidTankBehaviour;
 
     public ResidueOutletBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
         inventory = new ResidueOutletInventory(this);
-        itemCapability = inventory.getExtractionCapability();
+        insertionPlanner = new ResidueOutletInsertionPlanner(this, inventory);
+        serialization = new ResidueOutletSerialization(inventory);
+        tooltip = new ResidueOutletTooltip(this, inventory);
         setLazyTickRate(LAZY_TICK_RATE);
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.RESIDUE_OUTLET.get(), (outlet, context) -> outlet.fluidTankBehaviour.getCapability());
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.RESIDUE_OUTLET.get(), (outlet, context) -> outlet.itemCapability);
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.RESIDUE_OUTLET.get(), (outlet, context) -> outlet.inventory.getExtractionCapability());
     }
 
     public static int getMaxCapacity() {
         return CCBConfig.server().airtights.residueOutletCapacity.get() * FluidType.BUCKET_VOLUME;
     }
 
-    private static void addItemTooltip(List<Component> tooltip, ItemStack item) {
-        CCBLang.text("").add(Component.translatable(item.getDescriptionId()).withStyle(ChatFormatting.GRAY)).add(CCBLang.text(" x" + item.getCount()).style(ChatFormatting.GREEN)).forGoggles(tooltip, 1);
-    }
-
-    private static void addFluidTooltip(List<Component> tooltip, FluidStack fluid) {
-        LangBuilder unit = CCBLang.translate("gui.unit.milli_buckets");
-        CCBLang.fluidName(fluid).add(CCBLang.text(" ")).style(ChatFormatting.GRAY).add(CCBLang.number(fluid.getAmount()).add(unit).style(ChatFormatting.BLUE)).forGoggles(tooltip, 1);
-    }
-
     @Override
-    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        ItemStack item = inventory.getStackInSlot(0);
-        FluidStack fluid = fluidTankBehaviour.getPrimaryHandler().getFluidInTank(0);
-        if (item.isEmpty() && fluid.isEmpty()) {
-            return false;
-        }
-
-        CCBLang.translate("gui.residue_outlet.header").forGoggles(tooltip);
-        if (!item.isEmpty()) {
-            addItemTooltip(tooltip, item);
-        }
-        if (fluid.isEmpty()) {
-            return true;
-        }
-
-        addFluidTooltip(tooltip, fluid);
-        return true;
+    public boolean addToGoggleTooltip(List<Component> tooltipLines, boolean isPlayerSneaking) {
+        return tooltip.addToGoggleTooltip(tooltipLines);
     }
 
     @Override
@@ -113,17 +87,13 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
     @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        compoundTag.put(COMPOUND_KEY_INVENTORY, inventory.serializeNBT(provider));
+        serialization.write(compoundTag, provider);
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        if (!compoundTag.contains(COMPOUND_KEY_INVENTORY)) {
-            return;
-        }
-
-        inventory.deserializeNBT(provider, compoundTag.getCompound(COMPOUND_KEY_INVENTORY));
+        serialization.read(compoundTag, provider);
     }
 
     @Override
@@ -132,15 +102,9 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
         invalidateCapabilities();
     }
 
+    @Override
     public @Nullable ResidueInsertionPlan createResidueInsertionPlan(FluidStack fluidStack, ItemStack itemStack, int maxAmount) {
-        boolean hasFluid = !fluidStack.isEmpty();
-        boolean hasItem = !itemStack.isEmpty();
-        if (level == null || maxAmount <= 0 || hasFluid == hasItem) {
-            return null;
-        }
-
-        Provider provider = level.registryAccess();
-        return hasFluid ? createFluidInsertionPlan(fluidStack, maxAmount, provider) : createItemInsertionPlan(itemStack, maxAmount, provider);
+        return insertionPlanner.create(fluidStack, itemStack, maxAmount);
     }
 
     public int insertResidueFluid(FluidStack fluidStack, FluidAction action) {
@@ -151,33 +115,15 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
         return inventory;
     }
 
-    private @Nullable ResidueInsertionPlan createFluidInsertionPlan(FluidStack fluid, int maxAmount, Provider provider) {
-        int plannedAmount = insertResidueFluid(fluid.copyWithAmount(maxAmount), FluidAction.SIMULATE);
-        if (plannedAmount <= 0) {
-            return null;
-        }
-
-        FluidStack plannedFluid = fluid.copyWithAmount(plannedAmount);
-        return new ResidueInsertionPlan(plannedAmount, ResourceTransaction.participant(() -> insertResidueFluid(plannedFluid, FluidAction.SIMULATE) == plannedAmount, () -> MachineResourceSnapshots.snapshotFluidTanks(provider, fluidTankBehaviour), () -> insertResidueFluid(plannedFluid, FluidAction.EXECUTE) == plannedAmount, snapshot -> {
-            MachineResourceSnapshots.restoreFluidTanks(provider, snapshot, fluidTankBehaviour);
-            notifyUpdate();
-        }));
+    SmartFluidTankBehaviour getFluidTankBehaviour() {
+        return fluidTankBehaviour;
     }
 
-    private @Nullable ResidueInsertionPlan createItemInsertionPlan(ItemStack item, int maxUnits, Provider provider) {
-        int plannedUnits = Math.min(maxUnits, inventory.getItemInsertionCapacityUnits(item));
-        if (plannedUnits <= 0) {
-            return null;
-        }
-
-        ItemStack plannedItem = item.copyWithCount(1);
-        return new ResidueInsertionPlan(plannedUnits, ResourceTransaction.participant(() -> inventory.getItemInsertionCapacityUnits(plannedItem) >= plannedUnits, () -> inventory.serializeNBT(provider).copy(), () -> inventory.addPartialItemUnits(plannedUnits, plannedItem) == plannedUnits, snapshot -> {
-            inventory.deserializeNBT(provider, snapshot.copy());
-            notifyUpdate();
-        }));
+    FluidStack getStoredFluid() {
+        return fluidTankBehaviour.getPrimaryHandler().getFluidInTank(0);
     }
 
-    public record ResidueInsertionPlan(int plannedAmount, Participant<?> participant) {
+    public record ResidueInsertionPlan(int plannedAmount, Participant<?> participant) implements net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueInsertionPlan {
         public ResidueInsertionPlan {
             if (plannedAmount <= 0) {
                 throw new IllegalArgumentException("A residue insertion plan must contain a positive amount.");
@@ -189,6 +135,7 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
             transaction.add(participant);
         }
 
+        @Override
         public void addTo(ResourceTransaction transaction) {
             addParticipant(transaction, participant);
         }

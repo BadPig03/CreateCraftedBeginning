@@ -11,13 +11,5 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @FunctionalInterface
 public interface IAirtightComponent {
-    /**
-     * Checks whether this value is airtight.
-     *
-     * @param currentPos        the current pos to use
-     * @param currentState      the current state to use
-     * @param oppositeDirection the opposite direction to use
-     * @return {@code true} if this value is airtight; otherwise {@code false}
-     */
     boolean isAirtight(BlockPos currentPos, BlockState currentState, Direction oppositeDirection);
 }

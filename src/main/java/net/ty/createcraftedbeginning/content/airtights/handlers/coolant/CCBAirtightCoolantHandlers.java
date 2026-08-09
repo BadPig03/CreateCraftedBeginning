@@ -15,9 +15,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBAirtightCoolantHandlers {
-    /**
-     * Registers the built-in airtight coolant handlers.
-     */
     public static void register() {
         AirtightCoolantHandlerUtils.register(Blocks.ICE, new IceCoolantHandler());
         AirtightCoolantHandlerUtils.register(Blocks.FROSTED_ICE, new IceCoolantHandler());

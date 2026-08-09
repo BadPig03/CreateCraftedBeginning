@@ -29,53 +29,27 @@ public final class CanisterContainerClients {
     private CanisterContainerClients() {
     }
 
-    /**
-     * Updates the gas state shared by client overlays and item decorations.
-     *
-     * @param content  the displayed gas content
-     * @param capacity the displayed container capacity
-     * @param packType the displayed pack type
-     * @param creative whether the displayed container is creative
-     */
     @OnlyIn(Dist.CLIENT)
     public static void updateDisplayedGasState(GasStack content, long capacity, int packType, boolean creative) {
         syncedDisplayedGasState = DisplayedGasState.synced(content, capacity, packType, creative);
     }
 
-    /**
-     * Clears the latest client-side gas state.
-     */
     @OnlyIn(Dist.CLIENT)
     public static void clearDisplayedGasState() {
         syncedDisplayedGasState = DisplayedGasState.UNSYNCED;
     }
 
-    /**
-     * Returns the latest state received from the server.
-     *
-     * @return the synchronized state, or an unsynchronized empty state
-     */
     @OnlyIn(Dist.CLIENT)
     public static DisplayedGasState getSyncedDisplayedGasState() {
         return syncedDisplayedGasState;
     }
 
-    /**
-     * Checks whether this value is bar visible.
-     *
-     * @return {@code true} if this value is bar visible; otherwise {@code false}
-     */
     @OnlyIn(Dist.CLIENT)
     public static boolean isBarVisible() {
         DisplayedGasState state = getDisplayedGasState();
         return !state.content().isEmpty() && (state.creative() || state.capacity() > 0);
     }
 
-    /**
-     * Returns the bar color.
-     *
-     * @return the bar color
-     */
     @OnlyIn(Dist.CLIENT)
     public static int getBarColor() {
         float ratio = getDisplayedGasRatio();
@@ -85,22 +59,12 @@ public final class CanisterContainerClients {
         return Color.mixColors(GasCanisterUtils.COLOR_CYAN, GasCanisterUtils.COLOR_WHITE, ratio);
     }
 
-    /**
-     * Returns the bar width.
-     *
-     * @return the bar width
-     */
     @OnlyIn(Dist.CLIENT)
     public static int getBarWidth() {
         float ratio = getDisplayedGasRatio();
         return ratio == 0 ? 0 : Math.round(BAR_WIDTH * ratio);
     }
 
-    /**
-     * Returns the displayed gas content.
-     *
-     * @return the displayed gas content
-     */
     @OnlyIn(Dist.CLIENT)
     public static GasStack getDisplayedGasContent() {
         return getDisplayedGasState().content().copy();
@@ -143,12 +107,6 @@ public final class CanisterContainerClients {
         return DisplayedGasState.fallback(content, fallback.getSecond().getFirst(), fallback.getSecond().getSecond());
     }
 
-    /**
-     * Returns the bar color.
-     *
-     * @param canister the canister to use
-     * @return the bar color
-     */
     public static int getBarColor(ItemStack canister) {
         if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
             return 0;
@@ -164,12 +122,6 @@ public final class CanisterContainerClients {
         return Color.mixColors(GasCanisterUtils.COLOR_CYAN, GasCanisterUtils.COLOR_WHITE, ratio);
     }
 
-    /**
-     * Returns the bar width.
-     *
-     * @param canister the canister to use
-     * @return the bar width
-     */
     public static int getBarWidth(ItemStack canister) {
         if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
             return 0;
@@ -185,12 +137,6 @@ public final class CanisterContainerClients {
         return Math.round(BAR_WIDTH * ratio);
     }
 
-    /**
-     * Returns the stored gas type.
-     *
-     * @param player the player performing the operation
-     * @return the stored gas type
-     */
     public static Gas getStoredGasType(Player player) {
         ResourceLocation gasId = NBTHelper.readResourceLocation(player.getPersistentData(), COMPOUND_KEY_STORED_GAS_TYPE);
         return Gas.getGasTypeByName(gasId);

@@ -29,12 +29,6 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
     private ItemStack compiledFilterStack = ItemStack.EMPTY;
     private Predicate<GasStack> compiledFilter = GasFilterUtils.compile(ItemStack.EMPTY);
 
-    /**
-     * Creates a new {@code GasManipulationBehaviour} instance.
-     *
-     * @param be     the block entity that participates in the operation
-     * @param target the target to use
-     */
     public GasManipulationBehaviour(SmartBlockEntity be, InterfaceProvider target) {
         this(OBSERVE, be, target);
     }
@@ -48,11 +42,6 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
         return gasFilter != null ? gasFilter.test(stack) : itemFilter == null || itemFilter.test(stack);
     }
 
-    /**
-     * Computes and returns the extract any result.
-     *
-     * @return the resulting gas stack
-     */
     public GasStack extractAny() {
         IGasHandler gasHandler = getInventory();
         if (gasHandler == null) {
@@ -113,9 +102,6 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
         return GasHandler.BLOCK;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public BehaviourType<?> getType() {
         return behaviourType;

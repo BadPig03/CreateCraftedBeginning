@@ -13,11 +13,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class MountedGasStorageWrapper extends CombinedGasTankWrapper {
     public final ImmutableMap<BlockPos, MountedGasStorage> storages;
 
-    /**
-     * Creates a new {@code MountedGasStorageWrapper} instance.
-     *
-     * @param storages the storages to use
-     */
     public MountedGasStorageWrapper(ImmutableMap<BlockPos, MountedGasStorage> storages) {
         super(storages.values().toArray(IGasHandler[]::new));
         this.storages = storages;

@@ -55,17 +55,11 @@ public class SequencedAssemblyWithGasRecipeSerializer implements RecipeSerialize
         return recipe;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public MapCodec<SequencedAssemblyWithGasRecipe> codec() {
         return CODEC;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public StreamCodec<RegistryFriendlyByteBuf, SequencedAssemblyWithGasRecipe> streamCodec() {
         return STREAM_CODEC;

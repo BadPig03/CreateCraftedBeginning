@@ -30,13 +30,5 @@ public abstract class MountedGasStorage implements IGasHandler {
         this.type = Objects.requireNonNull(type);
     }
 
-    /**
-     * Restores the contents of this mounted storage to its target.
-     *
-     * @param level the level in which the operation is performed
-     * @param state the block state to inspect or process
-     * @param pos   the target block position
-     * @param be    the block entity that participates in the operation
-     */
     public abstract void unmount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity be);
 }

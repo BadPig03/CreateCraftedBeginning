@@ -20,27 +20,16 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public final class ExternalHandlerSource extends GasFlowSource {
     @Nullable ICapabilityProvider<IGasHandler> gasHandlerCache;
 
-    /**
-     * Creates a new {@code ExternalHandlerSource} instance.
-     *
-     * @param location the resource location identifying the target value
-     */
     public ExternalHandlerSource(BlockFace location) {
         super(location);
         gasHandlerCache = null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isEndpoint() {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void manageSource(Level level, BlockEntity networkBE) {
         if (gasHandlerCache != null) {
@@ -59,9 +48,6 @@ public final class ExternalHandlerSource extends GasFlowSource {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     @Nullable
     public ICapabilityProvider<IGasHandler> getGasHandlerProvider() {

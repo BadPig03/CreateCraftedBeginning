@@ -7,7 +7,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.crates.CrateItemStackHandler;
 import net.ty.createcraftedbeginning.content.crates.FilteredCrateMountedItemStorage;
 import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
 
@@ -27,7 +26,6 @@ public class BrassCrateMountedStorage extends FilteredCrateMountedItemStorage<Br
     }
 
     public static BrassCrateMountedStorage fromBlockEntity(BrassCrateBlockEntity crate) {
-        CrateItemStackHandler handler = crate.getHandler();
-        return new BrassCrateMountedStorage(handler.getStoredItem(0), handler.getCountInSlot(0), crate.getFilterItem());
+        return new BrassCrateMountedStorage(crate.getStoredItem(), crate.getStoredCount(), crate.getFilterItem());
     }
 }

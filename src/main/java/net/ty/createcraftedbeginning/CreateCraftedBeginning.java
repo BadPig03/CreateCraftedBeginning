@@ -71,21 +71,17 @@ public class CreateCraftedBeginning {
     public CreateCraftedBeginning(IEventBus modEventBus, ModContainer modContainer) {
         CCBCompatBootstrap.initialize();
         CCB_REGISTRATE.registerEventListeners(modEventBus);
+        bootstrapRegistrateEntries();
 
         CCBSoundEvents.prepare();
         CCBArmInteractionPointTypes.register(modEventBus);
         CCBArmorMaterials.register(modEventBus);
-        CCBBlockEntities.register();
-        CCBBlocks.register();
         CCBCreativeTabs.register(modEventBus);
         CCBDataComponents.register(modEventBus);
-        CCBEntityTypes.register();
-        CCBItems.register();
         CCBFanProcessingTypes.register(modEventBus);
         CCBFluids.register(modEventBus);
         CCBMenuTypes.register(modEventBus);
         CCBMobEffects.register(modEventBus);
-        CCBMountedStorage.register();
         CCBPackets.register();
         CCBParticleTypes.register(modEventBus);
         CCBRecipeTypes.register(modEventBus);
@@ -101,6 +97,14 @@ public class CreateCraftedBeginning {
         modEventBus.addListener(EventPriority.HIGHEST, CCBDataGen::gatherDataHighPriority);
         modEventBus.addListener(EventPriority.LOWEST, CCBDataGen::gatherData);
         modEventBus.addListener(CCBSoundEvents::register);
+    }
+
+    private static void bootstrapRegistrateEntries() {
+        CCBMountedStorage.register();
+        CCBBlocks.register();
+        CCBItems.register();
+        CCBBlockEntities.register();
+        CCBEntityTypes.register();
     }
 
     public static void onRegister(RegisterEvent event) {

@@ -44,17 +44,11 @@ public class UltrawarmAirCannonHandler implements AirtightCannonHandler, Airtigh
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ItemStack getRenderIcon(Level level) {
         return new ItemStack(CCBItems.ULTRAWARM_WIND_CHARGE.asItem());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void renderTrailParticles(Level level, Vec3 pos) {
         RandomSource random = level.getRandom();
@@ -69,41 +63,26 @@ public class UltrawarmAirCannonHandler implements AirtightCannonHandler, Airtigh
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ResourceLocation getTextureLocation() {
         return CCBAPI.asResource("textures/entity/projectiles/ultrawarm_wind_charge.png");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CannonModelType getModelType() {
         return CannonModelType.CORE_ONLY;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CannonAnimationType getAnimationType() {
         return CannonAnimationType.CORE_Y;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getRotationSpeed() {
         return 16;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public final void explode(Level level, Vec3 pos, AirtightCannonShotContext context) {
         float radius = DEFAULT_RADIUS * context.effectMultiplier();
@@ -113,17 +92,11 @@ public class UltrawarmAirCannonHandler implements AirtightCannonHandler, Airtigh
         applyAdditionalEffects(level, entities, explosionDamageSource, context);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getGasConsumptionMultiplier() {
         return 0.9f;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(CCBLang.translate("gui.airtight_cannon.ultrawarm_air").style(ChatFormatting.DARK_GREEN).component());

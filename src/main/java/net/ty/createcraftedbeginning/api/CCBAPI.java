@@ -24,6 +24,12 @@ public final class CCBAPI {
     private CCBAPI() {
     }
 
+    /**
+     * Creates a resource location in the Create Crafted Beginning namespace.
+     *
+     * @param path the path component of the resource location
+     * @return a new resource location using {@link #MOD_ID} as its namespace
+     */
     @Contract("_ -> new")
     public static ResourceLocation asResource(String path) {
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);

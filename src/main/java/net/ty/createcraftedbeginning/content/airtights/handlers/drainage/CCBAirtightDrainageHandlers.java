@@ -25,9 +25,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBAirtightDrainageHandlers {
-    /**
-     * Registers the built-in airtight drainage handlers.
-     */
     public static void register() {
         AirtightDrainageHandlerUtils.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), new NaturalAirEffectHandler());
         AirtightDrainageHandlerUtils.register(CCBGases.ENERGIZED_NATURAL_AIR.get().getResourceLocation(), new EnergizedNaturalAirEffectHandler());

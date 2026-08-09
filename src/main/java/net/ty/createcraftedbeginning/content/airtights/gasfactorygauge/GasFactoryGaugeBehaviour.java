@@ -2,17 +2,12 @@ package net.ty.createcraftedbeginning.content.airtights.gasfactorygauge;
 
 import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.Create;
-import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBehaviour;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBlock.PanelSlot;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelConnection;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelEffectPacket;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelSupportBehaviour;
-import com.simibubi.create.content.logistics.packager.IdentifiedInventory;
-import com.simibubi.create.content.logistics.packagerLink.LogisticallyLinkedBehaviour.RequestType;
-import com.simibubi.create.content.logistics.packagerLink.LogisticsManager;
 import com.simibubi.create.content.logistics.packagerLink.RequestPromise;
-import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement.ItemUseType;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueSettingsBoard;
@@ -35,9 +30,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
-import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonUtils;
+import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeRestockController.Effect;
+import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeRestockController.Result;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
-import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasLogisticsUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUtils;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
@@ -224,33 +219,13 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour implements S
             return;
         }
 
-        IdentifiedInventory excludedInventory = packager.getIdentifiedGasInventory();
-        if (excludedInventory == null) {
-            return;
+        Result result = GasFactoryGaugeRestockController.request(network, gasToken, packager, count, getPromised(), getLevelInStorage(), recipeAddress);
+        if (result.effect() != Effect.NONE) {
+            sendGasEffect(result.effect() == Effect.SUCCESS);
         }
-
-        int available = GasLogisticsUtils.getUniqueStockOf(network, gasToken, excludedInventory);
-        if (available <= 0) {
-            sendGasEffect(false);
-            return;
+        if (result.promisedGas() != null) {
+            restockerPromises.add(new RequestPromise(result.promisedGas()));
         }
-
-        int missing = Math.max(0, count - getPromised() - getLevelInStorage());
-        int cycleLimit = GasRequestUtils.toLogisticsAmount(Math.max(1, BalloonUtils.getCapacity()) * 9);
-        int orderAmount = Math.min(Math.min(missing, available), cycleLimit);
-        if (orderAmount <= 0) {
-            return;
-        }
-
-        BigItemStack orderedGas = new BigItemStack(gasToken, orderAmount);
-        PackageOrderWithCrafts order = PackageOrderWithCrafts.simple(List.of(orderedGas));
-        boolean accepted = LogisticsManager.broadcastPackageRequest(network, RequestType.RESTOCK, order, excludedInventory, recipeAddress);
-        sendGasEffect(accepted);
-        if (!accepted) {
-            return;
-        }
-
-        restockerPromises.add(new RequestPromise(orderedGas));
     }
 
     private void notifyLinkedRedstoneOutputs() {

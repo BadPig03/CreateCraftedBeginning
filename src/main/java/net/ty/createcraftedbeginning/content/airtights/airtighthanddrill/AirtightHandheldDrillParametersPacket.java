@@ -21,10 +21,26 @@ public record AirtightHandheldDrillParametersPacket(AirtightHandheldDrillMiningT
 
     public static final StreamCodec<ByteBuf, AirtightHandheldDrillParametersPacket> STREAM_CODEC = StreamCodec.composite(AirtightHandheldDrillMiningTemplates.STREAM_CODEC, AirtightHandheldDrillParametersPacket::template, BlockPos.STREAM_CODEC, AirtightHandheldDrillParametersPacket::sizeParams, Direction.STREAM_CODEC, AirtightHandheldDrillParametersPacket::direction, BlockPos.STREAM_CODEC, AirtightHandheldDrillParametersPacket::relativeParams, AirtightHandheldDrillParametersPacket::new);
 
+    private boolean hasValidParameters() {
+        int[] size = {sizeParams.getX(), sizeParams.getY(), sizeParams.getZ()};
+        int[] relative = {relativeParams.getX(), relativeParams.getY(), relativeParams.getZ()};
+
+        for (int index = 0; index < size.length; index++) {
+            if (size[index] < template.getTemplate().getMinValue(index) || size[index] > template.getTemplate().getMaxValue(index)) {
+                return false;
+            }
+            if (relative[index] < 0 || relative[index] >= size[index]) {
+                return false;
+            }
+        }
+
+        return AirtightHandheldDrillUtils.isRelativePositionValid(template, size, direction, relative);
+    }
+
     @Override
     public void handle(ServerPlayer player) {
         ItemStack drill = player.getMainHandItem();
-        if (!drill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
+        if (!drill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL) || !hasValidParameters()) {
             return;
         }
 

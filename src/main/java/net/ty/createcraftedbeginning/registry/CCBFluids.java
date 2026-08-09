@@ -55,10 +55,10 @@ public class CCBFluids {
 
     public static void registerFluidInteractions() {
         FluidType brimstone = BRIMSTONE.get().getFluidType();
-        FluidInteractionRegistry.addInteraction(NeoForgeMod.WATER_TYPE.value(), new InteractionInformation(brimstone, fluidState -> Blocks.NETHERRACK.defaultBlockState()));
-        FluidInteractionRegistry.addInteraction(NeoForgeMod.LAVA_TYPE.value(), new InteractionInformation(brimstone, fluidState -> Blocks.MAGMA_BLOCK.defaultBlockState()));
-        FluidInteractionRegistry.addInteraction(AllFluids.HONEY.getType(), new InteractionInformation(brimstone, fluidState -> AllPaletteStoneTypes.OCHRUM.getBaseBlock().get().defaultBlockState()));
-        FluidInteractionRegistry.addInteraction(AllFluids.CHOCOLATE.getType(), new InteractionInformation(brimstone, fluidState -> AllPaletteStoneTypes.CRIMSITE.getBaseBlock().get().defaultBlockState()));
+        FluidInteractionRegistry.addInteraction(brimstone, new InteractionInformation(NeoForgeMod.WATER_TYPE.value(), fluidState -> Blocks.NETHERRACK.defaultBlockState()));
+        FluidInteractionRegistry.addInteraction(brimstone, new InteractionInformation(NeoForgeMod.LAVA_TYPE.value(), fluidState -> Blocks.MAGMA_BLOCK.defaultBlockState()));
+        FluidInteractionRegistry.addInteraction(brimstone, new InteractionInformation(AllFluids.HONEY.getType(), fluidState -> AllPaletteStoneTypes.OCHRUM.getBaseBlock().get().defaultBlockState()));
+        FluidInteractionRegistry.addInteraction(brimstone, new InteractionInformation(AllFluids.CHOCOLATE.getType(), fluidState -> AllPaletteStoneTypes.CRIMSITE.getBaseBlock().get().defaultBlockState()));
     }
 
     public static void register(IEventBus eventBus) {

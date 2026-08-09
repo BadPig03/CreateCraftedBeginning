@@ -9,9 +9,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBAirtightTurbineHandlers {
-    /**
-     * Registers the built-in airtight turbine handlers.
-     */
     public static void register() {
         AirtightTurbineHandlerUtils.register(CCBGases.STEAM.get().getResourceLocation(), 4);
         AirtightTurbineHandlerUtils.register(CCBGases.PRESSURIZED_STEAM.get().getResourceLocation(), 8);

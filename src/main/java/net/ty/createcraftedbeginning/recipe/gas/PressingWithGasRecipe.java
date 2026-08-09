@@ -21,18 +21,10 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class PressingWithGasRecipe extends StandardProcessingWithGasRecipe<SingleRecipeInput> implements IAssemblyRecipeWithGas {
-    /**
-     * Creates a new {@code PressingWithGasRecipe} instance.
-     *
-     * @param params the parameters used to configure the operation
-     */
     public PressingWithGasRecipe(ProcessingWithGasRecipeParams params) {
         super(CCBRecipeTypes.PRESSING_WITH_GAS, params);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean matches(SingleRecipeInput input, Level level) {
         return !input.isEmpty() && ingredients.getFirst().test(input.getItem(0));
@@ -48,25 +40,16 @@ public class PressingWithGasRecipe extends StandardProcessingWithGasRecipe<Singl
         return 2;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     @OnlyIn(Dist.CLIENT)
     public Component getDescriptionForAssembly() {
         return CreateLang.translateDirect("recipe.assembly.pressing");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void addAssemblyIngredients(List<Ingredient> list) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void addRequiredMachines(Set<ItemLike> list) {
         list.add(AllBlocks.MECHANICAL_PRESS.get());

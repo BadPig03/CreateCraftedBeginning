@@ -37,22 +37,10 @@ public final class GasPropagator {
     private GasPropagator() {
     }
 
-    /**
-     * Propagates the pipe update through connected components.
-     *
-     * @param level   the level in which the operation is performed
-     * @param pipePos the position of the connected gas pipe
-     */
     public static void propagatePipe(Level level, BlockPos pipePos) {
         propagatePipeInternal(level, pipePos);
     }
 
-    /**
-     * Propagates the changed pipe update through connected components.
-     *
-     * @param level   the level in which the operation is performed
-     * @param pipePos the position of the connected gas pipe
-     */
     public static void propagateChangedPipe(Level level, BlockPos pipePos) {
         long gameTime = level.getGameTime();
         PropagationBatch batch = CHANGED_PIPE_BATCHES.get(level);
@@ -129,47 +117,19 @@ public final class GasPropagator {
         return visited;
     }
 
-    /**
-     * Returns the behaviour.
-     *
-     * @param level the level in which the operation is performed
-     * @param pos   the target block position
-     * @return the behaviour
-     */
     @Nullable
     public static GasTransportBehaviour getBehaviour(BlockGetter level, BlockPos pos) {
         return BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
     }
 
-    /**
-     * Resolves the block adjacent to {@code pos} on {@code side} once and caches
-     * the expensive connection checks used by propagation and source discovery.
-     *
-     * @param level the level in which the operation is performed
-     * @param pos   the source block position
-     * @param side  the side from the source toward the adjacent target
-     * @return the resolved adjacent target
-     */
     public static AdjacentTarget resolveAdjacentTarget(Level level, BlockPos pos, Direction side) {
         return new AdjacentTarget(level, pos, side);
     }
 
-    /**
-     * Returns the airtight pump max range.
-     *
-     * @return the airtight pump max range
-     */
     public static int getAirtightPumpMaxRange() {
         return CCBConfig.server().airtights.maxPumpRange.get();
     }
 
-    /**
-     * Resets the affected networks.
-     *
-     * @param level the level in which the operation is performed
-     * @param start the starting position or value
-     * @param side  the side from which the target is accessed
-     */
     public static void resetAffectedNetworks(Level level, BlockPos start, Direction side) {
         Deque<BlockPos> frontier = new ArrayDeque<>();
         Set<BlockPos> visited = new HashSet<>();
@@ -193,14 +153,6 @@ public final class GasPropagator {
         }
     }
 
-    /**
-     * Returns the changed neighbour side.
-     *
-     * @param level       the level in which the operation is performed
-     * @param pos         the target block position
-     * @param neighborPos the position of the neighbouring block
-     * @return the changed neighbour side
-     */
     public static @Nullable Direction getChangedNeighbourSide(Level level, BlockPos pos, BlockPos neighborPos) {
         if (level.isClientSide) {
             return null;

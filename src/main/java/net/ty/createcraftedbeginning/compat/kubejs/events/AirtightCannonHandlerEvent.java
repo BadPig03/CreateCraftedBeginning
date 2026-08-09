@@ -69,37 +69,58 @@ import java.util.List;
 public class AirtightCannonHandlerEvent implements KubeEvent {
     private static AirtightCannonHandler createHandler(IconCannonHandler icon, ParticlesCannonHandler particles, ExplodeCannonHandler explode, ResourceLocation texture, float speed, float consumption, TextCannonHandler text) {
         return new DefaultCannonHandler() {
+            /**
+             * {@inheritDoc}
+             */
             @Override
             public ItemStack getRenderIcon(Level level) {
                 Item item = BuiltInRegistries.ITEM.getOptional(icon.apply(level)).orElse(Items.BARRIER);
                 return new ItemStack(item);
             }
 
+            /**
+             * {@inheritDoc}
+             */
             @Override
             public void renderTrailParticles(Level level, Vec3 pos) {
                 particles.apply(level, pos);
             }
 
+            /**
+             * {@inheritDoc}
+             */
             @Override
             public ResourceLocation getTextureLocation() {
                 return texture;
             }
 
+            /**
+             * {@inheritDoc}
+             */
             @Override
             public float getRotationSpeed() {
                 return 24 * speed;
             }
 
+            /**
+             * {@inheritDoc}
+             */
             @Override
             public void explode(Level level, Vec3 pos, AirtightCannonShotContext context) {
                 explode.apply(level, pos, context);
             }
 
+            /**
+             * {@inheritDoc}
+             */
             @Override
             public float getGasConsumptionMultiplier() {
                 return consumption;
             }
 
+            /**
+             * {@inheritDoc}
+             */
             @Override
             public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
                 text.apply(cannon, context, tooltip, flag);

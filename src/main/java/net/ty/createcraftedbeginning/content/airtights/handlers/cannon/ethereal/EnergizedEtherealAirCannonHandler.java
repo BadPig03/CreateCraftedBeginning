@@ -27,17 +27,11 @@ import java.util.List;
 public class EnergizedEtherealAirCannonHandler extends EtherealAirCannonHandler {
     private static final int ENERGIZED_BONUS_DAMAGE = 6;
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ItemStack getRenderIcon(Level level) {
         return new ItemStack(CCBItems.ENERGIZED_ETHEREAL_WIND_CHARGE.asItem());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void renderTrailParticles(Level level, Vec3 pos) {
         level.addParticle(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 0, 0, 0);
@@ -54,25 +48,16 @@ public class EnergizedEtherealAirCannonHandler extends EtherealAirCannonHandler 
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ResourceLocation getTextureLocation() {
         return CCBAPI.asResource("textures/entity/projectiles/energized_ethereal_wind_charge.png");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getGasConsumptionMultiplier() {
         return 0.64f;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(CCBLang.translate("gui.airtight_cannon.energized_ethereal_air").style(ChatFormatting.DARK_GREEN).component());

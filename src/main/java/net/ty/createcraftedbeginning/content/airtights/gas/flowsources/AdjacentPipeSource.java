@@ -17,26 +17,15 @@ import java.util.function.Predicate;
 public final class AdjacentPipeSource extends GasFlowSource {
     private WeakReference<GasTransportBehaviour> cached;
 
-    /**
-     * Creates a new {@code AdjacentPipeSource} instance.
-     *
-     * @param location the resource location identifying the target value
-     */
     public AdjacentPipeSource(BlockFace location) {
         super(location);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isEndpoint() {
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void manageSource(Level level, BlockEntity networkBE) {
         GasTransportBehaviour behaviour;
@@ -62,9 +51,6 @@ public final class AdjacentPipeSource extends GasFlowSource {
         cached = new WeakReference<>(behaviour);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public GasStack provideGas(Predicate<GasStack> predicate) {
         if (cached == null || cached.get() == null) {

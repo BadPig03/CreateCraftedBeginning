@@ -8,7 +8,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.crates.CrateItemStackHandler;
 import net.ty.createcraftedbeginning.content.crates.CrateMountedItemStorage;
 import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
 
@@ -35,8 +34,7 @@ public class CardboardCrateMountedStorage extends CrateMountedItemStorage<Cardbo
     }
 
     public static CardboardCrateMountedStorage fromBlockEntity(CardboardCrateBlockEntity crate) {
-        CrateItemStackHandler handler = crate.getHandler();
-        return new CardboardCrateMountedStorage(handler.getStoredItem(0), handler.getCountInSlot(0));
+        return new CardboardCrateMountedStorage(crate.getStoredItem(), crate.getStoredCount());
     }
 
     public boolean hasDiscardedPackage() {

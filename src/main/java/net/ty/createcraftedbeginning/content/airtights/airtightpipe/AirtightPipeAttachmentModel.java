@@ -65,15 +65,10 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
         BlockState adjacentState = level.getBlockState(pos.relative(direction));
         Block adjacentBlock = adjacentState.getBlock();
 
-        // The pump only renders a drain connector when it faces a compatible drain block.
-        // Its transport behaviour may not exist yet while a chunk is rebuilt after login.
         if (state.getBlock() instanceof AirtightPumpBlock) {
             return adjacentBlock instanceof IAirtightPipeDrain ? AttachmentTypes.DRAIN : AttachmentTypes.NONE;
         }
 
-        // The other users of this model are axis-based pipes: normal pipe, smart pipe
-        // and check valve. Reproduce AxisGasTransportBehaviour's render-only decision
-        // without requiring the block entity to have finished creating its behaviours.
         if (!state.hasProperty(BlockStateProperties.AXIS)) {
             return AttachmentTypes.NONE;
         }

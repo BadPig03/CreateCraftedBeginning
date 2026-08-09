@@ -19,12 +19,7 @@ public class HorizontalAirtightTankBlockEntity extends AirtightTankBlockEntity {
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.HORIZONTAL_AIRTIGHT_TANK.get(), (be, context) -> {
-            if (be.gasCapability == null) {
-                be.refreshCapability();
-            }
-            return be.gasCapability;
-        });
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.HORIZONTAL_AIRTIGHT_TANK.get(), (be, context) -> be.getCapability());
     }
 
     @Override

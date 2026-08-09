@@ -52,6 +52,33 @@ public abstract class EndMechanicalBlockEntity<T extends EndMechanicalStructural
         return structuralClass.isInstance(blockEntity) ? structuralClass.cast(blockEntity) : null;
     }
 
+    protected @Nullable T getStructuralForUse() {
+        if (structural != null && !structural.isRemoved()) {
+            return structural;
+        }
+
+        structural = getStructural();
+        return structural;
+    }
+
+    protected boolean convertCasingToStructural(BlockState structuralState) {
+        if (level == null || level.isClientSide) {
+            return false;
+        }
+
+        BlockPos structuralPos = worldPosition.below();
+        if (!(level.getBlockState(structuralPos).getBlock() instanceof EndCasingBlock)) {
+            return false;
+        }
+
+        if (!level.setBlockAndUpdate(structuralPos, structuralState)) {
+            return false;
+        }
+
+        structural = getStructural();
+        return true;
+    }
+
     public void verifyStructural() {
         if (level == null || level.isClientSide) {
             return;

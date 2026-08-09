@@ -38,17 +38,11 @@ public class MoistAirCannonHandler implements AirtightCannonHandler, AirtightCan
     private static final float DEFAULT_RADIUS = 1.2f;
     private static final int WATER_SENSITIVE_BONUS_DAMAGE = 5;
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ItemStack getRenderIcon(Level level) {
         return new ItemStack(CCBItems.MOIST_WIND_CHARGE.asItem());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void renderTrailParticles(Level level, Vec3 pos) {
         level.addParticle(ParticleTypes.DOLPHIN, pos.x, pos.y, pos.z, 0, 0, 0);
@@ -61,41 +55,26 @@ public class MoistAirCannonHandler implements AirtightCannonHandler, AirtightCan
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ResourceLocation getTextureLocation() {
         return CCBAPI.asResource("textures/entity/projectiles/moist_wind_charge.png");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CannonModelType getModelType() {
         return CannonModelType.CORE_ONLY;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CannonAnimationType getAnimationType() {
         return CannonAnimationType.CORE_Y;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getRotationSpeed() {
         return 16;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void explode(Level level, Vec3 pos, AirtightCannonShotContext context) {
         float radius = DEFAULT_RADIUS * context.effectMultiplier();
@@ -117,17 +96,11 @@ public class MoistAirCannonHandler implements AirtightCannonHandler, AirtightCan
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getGasConsumptionMultiplier() {
         return 1;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(CCBLang.translate("gui.airtight_cannon.moist_air").style(ChatFormatting.DARK_GREEN).component());

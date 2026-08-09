@@ -28,17 +28,11 @@ import java.util.List;
 public class EnergizedNaturalAirCannonHandler extends NaturalAirCannonHandler {
     private static final int ENERGIZED_BONUS_DAMAGE = 4;
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ItemStack getRenderIcon(Level level) {
         return new ItemStack(CCBItems.ENERGIZED_NATURAL_WIND_CHARGE.asItem());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void renderTrailParticles(Level level, Vec3 pos) {
         super.renderTrailParticles(level, pos);
@@ -48,25 +42,16 @@ public class EnergizedNaturalAirCannonHandler extends NaturalAirCannonHandler {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ResourceLocation getTextureLocation() {
         return CCBAPI.asResource("textures/entity/projectiles/energized_natural_wind_charge.png");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getGasConsumptionMultiplier() {
         return 0.8f;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(CCBLang.translate("gui.airtight_cannon.energized_natural_air").style(ChatFormatting.DARK_GREEN).component());

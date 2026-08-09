@@ -17,50 +17,20 @@ import java.util.Set;
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public interface IAssemblyRecipeWithGas {
-    /**
-     * Returns the description for assembly.
-     *
-     * @return the description for assembly
-     */
     @OnlyIn(Dist.CLIENT)
     Component getDescriptionForAssembly();
 
-    /**
-     * Checks whether assembly is supported.
-     *
-     * @return {@code true} if assembly is supported; otherwise {@code false}
-     */
     default boolean supportsAssembly() {
         return true;
     }
 
-    /**
-     * Adds the supplied assembly fluid ingredient.
-     *
-     * @param list the list to inspect or populate
-     */
     default void addAssemblyFluidIngredients(List<SizedFluidIngredient> list) {
     }
 
-    /**
-     * Adds the supplied assembly gas ingredient.
-     *
-     * @param list the list to inspect or populate
-     */
     default void addAssemblyGasIngredients(List<SizedGasIngredient> list) {
     }
 
-    /**
-     * Adds the supplied assembly ingredient.
-     *
-     * @param list the list to inspect or populate
-     */
     void addAssemblyIngredients(List<Ingredient> list);
 
-    /**
-     * Adds the supplied required machine.
-     *
-     * @param list the list to inspect or populate
-     */
     void addRequiredMachines(Set<ItemLike> list);
 }

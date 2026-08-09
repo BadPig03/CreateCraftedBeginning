@@ -45,11 +45,6 @@ public final class OpenEndedSource extends GasFlowSource {
     private long lastFeedbackTick = Long.MIN_VALUE;
     private GasStack effectGas;
 
-    /**
-     * Creates a new {@code OpenEndedSource} instance.
-     *
-     * @param face the face to render or highlight
-     */
     public OpenEndedSource(BlockFace face) {
         super(face);
         gasHandler = new OpenEndGasHandler();
@@ -60,14 +55,6 @@ public final class OpenEndedSource extends GasFlowSource {
         effectGas = GasStack.EMPTY;
     }
 
-    /**
-     * Reads this object's state from the supplied serialized data.
-     *
-     * @param compoundTag the NBT compound to read from or write to
-     * @param provider    the provider used to resolve the requested value
-     * @param location    the resource location identifying the target value
-     * @return this instance
-     */
     public static OpenEndedSource read(CompoundTag compoundTag, Provider provider, BlockFace location) {
         OpenEndedSource pipe = new OpenEndedSource(location);
         if (compoundTag.contains(COMPOUND_KEY_EFFECT_PROGRESS, Tag.TAG_LONG)) {
@@ -86,12 +73,6 @@ public final class OpenEndedSource extends GasFlowSource {
         return pipe;
     }
 
-    /**
-     * Writes this object's state to the supplied serialized data.
-     *
-     * @param provider the provider used to resolve the requested value
-     * @return the resulting compound tag
-     */
     public CompoundTag write(Provider provider) {
         CompoundTag compound = new CompoundTag();
         if (effectProgress <= 0 || effectGas.isEmpty()) {
@@ -103,42 +84,27 @@ public final class OpenEndedSource extends GasFlowSource {
         return compound;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isEndpoint() {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void manageSource(Level level, BlockEntity blockEntity) {
         this.level = level;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ICapabilityProvider<IGasHandler> getGasHandlerProvider() {
         return gasHandlerProvider;
     }
 
     private class OpenEndGasHandler implements IGasHandler {
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public boolean isGasValid(int tank, GasStack stack) {
             return tank == 0 && !stack.isEmpty();
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public GasStack drain(GasStack resource, GasAction action) {
             if (resource.isEmpty()) {
@@ -147,33 +113,21 @@ public final class OpenEndedSource extends GasFlowSource {
             return drainWorld(resource.getAmount(), resource, action);
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public GasStack drain(long maxDrain, GasAction action) {
             return drainWorld(maxDrain, null, action);
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public GasStack getGasInTank(int tank) {
             return tank == 0 ? getWorldGas() : GasStack.EMPTY;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public int getTanks() {
             return 1;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public long fill(GasStack resource, GasAction action) {
             if (level == null || !level.isLoaded(outputPos) || resource.isEmpty()) {
@@ -191,9 +145,6 @@ public final class OpenEndedSource extends GasFlowSource {
             return accepted;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public long getTankCapacity(int tank) {
             return tank == 0 ? EFFECT_INTERVAL : 0;

@@ -46,76 +46,28 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     private boolean connectionsDirty;
     private int connectionRefreshTicks;
 
-    /**
-     * Creates a new {@code GasTransportBehaviour} instance.
-     *
-     * @param be the block entity that participates in the operation
-     */
     public GasTransportBehaviour(SmartBlockEntity be) {
         super(be);
         phase = UpdatePhase.WAIT_FOR_PUMPS;
         connectionsDirty = true;
     }
 
-    /**
-     * Checks whether this value is valid airtight components.
-     *
-     * @param level     the level in which the operation is performed
-     * @param pos       the target block position
-     * @param state     the block state to inspect or process
-     * @param direction the direction associated with the operation
-     * @return {@code true} if this value is valid airtight components; otherwise {@code false}
-     */
     public static boolean isValidAirtightComponents(@Nullable Level level, BlockPos pos, BlockState state, Direction direction) {
         return level != null && (state.getBlock() instanceof IAirtightComponent component && component.isAirtight(pos, state, direction) || state.getDestroySpeed(level, pos) != -1 && (state.canBeReplaced() || CCBBlockTags.GAS_SOURCES.matches(state)) || GasCapabilities.hasGasCapability(level, pos, direction.getOpposite()));
     }
 
-    /**
-     * Checks whether the requested operation can have flow toward.
-     *
-     * @param state     the block state to inspect or process
-     * @param direction the direction associated with the operation
-     * @return {@code true} if the requested operation can have flow toward; otherwise {@code false}
-     */
     public abstract boolean canHaveFlowToward(BlockState state, Direction direction);
 
-    /**
-     * Checks whether a connection may exist while the block entity is being
-     * deserialized and has not received its level yet.
-     * <p>
-     * This method must only inspect the block state. Neighbour and capability
-     * checks are deferred until {@link #initialize()} or the next tick.
-     */
     public abstract boolean canHaveFlowTowardWithoutLevel(BlockState state, Direction direction);
 
-    /**
-     * Checks whether inbound flow is allowed.
-     *
-     * @param state     the block state to inspect or process
-     * @param direction the direction associated with the operation
-     * @return {@code true} if inbound flow is allowed; otherwise {@code false}
-     */
     public boolean allowsInboundFlow(BlockState state, Direction direction) {
         return canHaveFlowToward(state, direction);
     }
 
-    /**
-     * Checks whether outbound flow is allowed.
-     *
-     * @param state     the block state to inspect or process
-     * @param direction the direction associated with the operation
-     * @return {@code true} if outbound flow is allowed; otherwise {@code false}
-     */
     public boolean allowsOutboundFlow(BlockState state, Direction direction) {
         return canHaveFlowToward(state, direction);
     }
 
-    /**
-     * Returns the provided outward gas.
-     *
-     * @param side the side from which the target is accessed
-     * @return the provided outward gas
-     */
     public GasStack getProvidedOutwardGas(Direction side) {
         GasPipeConnection connection = getConnection(side);
         if (connection == null || !allowsOutboundFlow(blockEntity.getBlockState(), side)) {
@@ -220,29 +172,13 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         refreshConnections();
     }
 
-    /**
-     * Marks the cached connection topology for refresh on the next behaviour tick.
-     */
     public void markConnectionsDirty() {
         connectionsDirty = true;
     }
 
-    /**
-     * Called once per behaviour tick after cached connections have been refreshed when needed.
-     *
-     * @param level       the level in which the operation is performed
-     * @param pos         the target block position
-     * @param connections the currently cached connections
-     */
     protected void beforeFlowUpdate(Level level, BlockPos pos, Collection<GasPipeConnection> connections) {
     }
 
-    /**
-     * Returns the connection.
-     *
-     * @param side the side from which the target is accessed
-     * @return the connection
-     */
     @Nullable
     public GasPipeConnection getConnection(Direction side) {
         if (connectionsDirty) {
@@ -254,11 +190,6 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         return interfaces.get(side);
     }
 
-    /**
-     * Checks whether at least one connection has pressure.
-     *
-     * @return {@code true} if at least one connection has pressure; otherwise {@code false}
-     */
     public boolean hasAnyPressure() {
         if (connectionsDirty) {
             refreshConnections();
@@ -276,12 +207,6 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         return false;
     }
 
-    /**
-     * Checks whether at least one connection received a pressure contribution
-     * since the last pressure wipe, including fully cancelled pressure.
-     *
-     * @return {@code true} if at least one connection received pressure; otherwise {@code false}
-     */
     public boolean hasAnyPressureContribution() {
         if (connectionsDirty) {
             refreshConnections();
@@ -299,25 +224,12 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         return false;
     }
 
-    /**
-     * Returns the flow.
-     *
-     * @param side the side from which the target is accessed
-     * @return the flow
-     */
     @Nullable
     public AirFlow getFlow(Direction side) {
         GasPipeConnection connection = getConnection(side);
         return connection == null ? null : connection.getFlow();
     }
 
-    /**
-     * Adds the supplied pressure.
-     *
-     * @param side     the side from which the target is accessed
-     * @param inbound  whether inbound is enabled
-     * @param pressure the pressure value to use
-     */
     public void addPressure(Direction side, boolean inbound, float pressure) {
         GasPipeConnection connection = getConnection(side);
         BlockState state = blockEntity.getBlockState();
@@ -329,9 +241,6 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         connection.addPressure(inbound, pressure);
     }
 
-    /**
-     * Clears the pressure stored by this connection.
-     */
     public void wipePressure() {
         refreshConnectionsIfNeeded();
         phase = UpdatePhase.WAIT_FOR_PUMPS;
@@ -340,26 +249,10 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         }
     }
 
-    /**
-     * Checks whether this value is incorrect axis.
-     *
-     * @param state     the block state to inspect or process
-     * @param direction the direction associated with the operation
-     * @return {@code true} if this value is incorrect axis; otherwise {@code false}
-     */
     public boolean isIncorrectAxis(BlockState state, Direction direction) {
         return state.getValue(BlockStateProperties.AXIS) != direction.getAxis();
     }
 
-    /**
-     * Returns the rendered rim attachment.
-     *
-     * @param level     the level in which the operation is performed
-     * @param pos       the target block position
-     * @param state     the block state to inspect or process
-     * @param direction the direction associated with the operation
-     * @return the rendered rim attachment
-     */
     public AttachmentTypes getRenderedRimAttachment(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction direction) {
         if (!canHaveFlowToward(state, direction)) {
             return AttachmentTypes.NONE;
@@ -377,26 +270,17 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         return AttachmentTypes.RIM;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public BehaviourType<?> getType() {
         return TYPE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void initialize() {
         super.initialize();
         refreshConnections();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void tick() {
         Level level = getWorld();
@@ -433,9 +317,6 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
@@ -448,9 +329,6 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
@@ -523,14 +401,6 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         return false;
     }
 
-    /**
-     * Checks whether the requested operation can pull gas from.
-     *
-     * @param gas       the gas to inspect or process
-     * @param state     the block state to inspect or process
-     * @param direction the direction associated with the operation
-     * @return {@code true} if the requested operation can pull gas from; otherwise {@code false}
-     */
     public boolean canPullGasFrom(GasStack gas, BlockState state, Direction direction) {
         return true;
     }

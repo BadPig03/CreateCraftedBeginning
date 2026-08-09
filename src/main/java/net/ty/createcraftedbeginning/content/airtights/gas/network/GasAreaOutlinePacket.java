@@ -26,18 +26,12 @@ public record GasAreaOutlinePacket(BlockPos pos, Direction direction, float infl
         CatnipServices.NETWORK.sendToClientsAround(level, pos, 64, new GasAreaOutlinePacket(pos, direction, inflation, color));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     @OnlyIn(Dist.CLIENT)
     public void handle(LocalPlayer player) {
         CCBClientBridge.showGasAreaOutline(player, pos, direction, inflation, color);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public PacketTypeProvider getTypeProvider() {
         return CCBPackets.GAS_AREA_OUTLINE;

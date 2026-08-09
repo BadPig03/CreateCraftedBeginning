@@ -14,9 +14,6 @@ import net.ty.createcraftedbeginning.content.airtights.handlers.turbine.CCBAirti
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-/**
- * Registers Create Crafted Beginning's built-in implementations of the public handler APIs.
- */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class CCBBuiltInAirtightHandlers {

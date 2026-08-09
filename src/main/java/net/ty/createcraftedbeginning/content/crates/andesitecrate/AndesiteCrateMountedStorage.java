@@ -7,7 +7,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.crates.CrateItemStackHandler;
 import net.ty.createcraftedbeginning.content.crates.CrateMountedItemStorage;
 import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
 
@@ -27,7 +26,6 @@ public class AndesiteCrateMountedStorage extends CrateMountedItemStorage<Andesit
     }
 
     public static AndesiteCrateMountedStorage fromBlockEntity(AndesiteCrateBlockEntity crate) {
-        CrateItemStackHandler handler = crate.getHandler();
-        return new AndesiteCrateMountedStorage(handler.getStoredItem(0), handler.getCountInSlot(0));
+        return new AndesiteCrateMountedStorage(crate.getStoredItem(), crate.getStoredCount());
     }
 }

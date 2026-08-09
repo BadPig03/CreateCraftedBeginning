@@ -12,9 +12,6 @@ public class CCBAirtightEngineHandlers {
     private static final int FULL_LEVEL = 8;
     private static final int SPECIAL_AIR_MAX_LEVEL = 4;
 
-    /**
-     * Registers the built-in airtight engine handlers.
-     */
     public static void register() {
         AirtightEngineHandlerUtils.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), 1, FULL_LEVEL);
         AirtightEngineHandlerUtils.register(CCBGases.PRESSURIZED_NATURAL_AIR.get().getResourceLocation(), 10, FULL_LEVEL);

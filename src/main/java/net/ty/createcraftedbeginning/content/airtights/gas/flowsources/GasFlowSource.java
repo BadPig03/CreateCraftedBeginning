@@ -18,36 +18,14 @@ import java.util.function.Predicate;
 public abstract class GasFlowSource {
     protected BlockFace location;
 
-    /**
-     * Creates a new {@code GasFlowSource} instance.
-     *
-     * @param location the resource location identifying the target value
-     */
     public GasFlowSource(BlockFace location) {
         this.location = location;
     }
 
-    /**
-     * Checks whether this value is endpoint.
-     *
-     * @return {@code true} if this value is endpoint; otherwise {@code false}
-     */
     public abstract boolean isEndpoint();
 
-    /**
-     * Updates and manages the source.
-     *
-     * @param level     the level in which the operation is performed
-     * @param networkBE the block entity participating in the gas network
-     */
     public abstract void manageSource(Level level, BlockEntity networkBE);
 
-    /**
-     * Provides the gas.
-     *
-     * @param predicate the predicate used to select matching values
-     * @return the resulting gas stack
-     */
     public GasStack provideGas(Predicate<GasStack> predicate) {
         ICapabilityProvider<IGasHandler> provider = getGasHandlerProvider();
         if (provider == null) {
@@ -75,11 +53,6 @@ public abstract class GasFlowSource {
         return GasStack.EMPTY;
     }
 
-    /**
-     * Returns the gas handler provider.
-     *
-     * @return the gas handler provider
-     */
     @Nullable
     public ICapabilityProvider<IGasHandler> getGasHandlerProvider() {
         return null;

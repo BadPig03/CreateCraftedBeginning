@@ -22,9 +22,6 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class PressurizedEnergizedUltrawarmAirCannonHandler extends EnergizedUltrawarmAirCannonHandler {
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ItemStack getRenderIcon(Level level) {
         ItemStack icon = super.getRenderIcon(level);
@@ -33,17 +30,11 @@ public class PressurizedEnergizedUltrawarmAirCannonHandler extends EnergizedUltr
         return icon;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getGasConsumptionMultiplier() {
         return 0.3f;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(CCBLang.translate("gui.airtight_cannon.energized_ultrawarm_air").style(ChatFormatting.DARK_GREEN).component());

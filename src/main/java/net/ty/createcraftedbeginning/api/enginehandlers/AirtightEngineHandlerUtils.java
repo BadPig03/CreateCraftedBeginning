@@ -92,11 +92,17 @@ public final class AirtightEngineHandlerUtils {
         }
 
         AirtightEngineHandler.REGISTRY.register(gasType, new AirtightEngineHandler() {
+            /**
+             * {@inheritDoc}
+             */
             @Override
             public double getWorkFactor() {
                 return workFactor;
             }
 
+            /**
+             * {@inheritDoc}
+             */
             @Override
             public int getMaxLevel() {
                 return maxLevel;

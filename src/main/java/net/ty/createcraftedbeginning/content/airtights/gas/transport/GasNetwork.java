@@ -61,13 +61,6 @@ public final class GasNetwork {
     private boolean active;
     private GasStack gas;
 
-    /**
-     * Creates a new {@code GasNetwork} instance.
-     *
-     * @param level          the level in which the operation is performed
-     * @param location       the resource location identifying the target value
-     * @param sourceSupplier the supplier used to obtain the source
-     */
     public GasNetwork(Level level, BlockFace location, Supplier<@Nullable ICapabilityProvider<IGasHandler>> sourceSupplier) {
         this.level = level;
         this.sourceSupplier = sourceSupplier;
@@ -223,9 +216,6 @@ public final class GasNetwork {
         return plan;
     }
 
-    /**
-     * Resets this object to its initial state.
-     */
     public void reset() {
         recoverPendingTransferInternal();
         clearTraversalState();
@@ -234,28 +224,15 @@ public final class GasNetwork {
         active = true;
     }
 
-    /**
-     * Stops this network and clears its active state.
-     */
     public void stop() {
         clearTraversalState();
         active = false;
     }
 
-    /**
-     * Checks whether this value is active.
-     *
-     * @return {@code true} if this value is active; otherwise {@code false}
-     */
     public boolean isActive() {
         return active;
     }
 
-    /**
-     * Recovers the pending transfer.
-     *
-     * @return {@code true} if the condition is satisfied; otherwise {@code false}
-     */
     public boolean recoverPendingTransfer() {
         return recoverPendingTransferInternal();
     }
@@ -272,9 +249,6 @@ public final class GasNetwork {
         pauseBeforePropagation = 0;
     }
 
-    /**
-     * Updates this object for one game tick.
-     */
     public void tick() {
         if (!recoverPendingTransferInternal() || !active) {
             return;

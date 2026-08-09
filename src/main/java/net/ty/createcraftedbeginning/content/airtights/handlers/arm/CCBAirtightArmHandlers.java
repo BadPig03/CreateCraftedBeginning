@@ -9,9 +9,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBAirtightArmHandlers {
-    /**
-     * Registers the built-in airtight arm handlers.
-     */
     public static void register() {
         AirtightArmHandlerUtils.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), 1, 2, 2, 0.5f);
         AirtightArmHandlerUtils.register(CCBGases.ENERGIZED_NATURAL_AIR.get().getResourceLocation(), 0.8f, 4, 4, 1);

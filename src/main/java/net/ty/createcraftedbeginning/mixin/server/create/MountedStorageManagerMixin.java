@@ -1,14 +1,12 @@
 package net.ty.createcraftedbeginning.mixin.server.create;
 
-import net.ty.createcraftedbeginning.api.CCBAPI;
-
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import com.mojang.datafixers.util.Pair;
 import com.simibubi.create.api.contraption.storage.SyncedMountedStorage;
 import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.content.contraptions.MountedStorageManager;
+import com.simibubi.create.content.contraptions.MountedStorageSyncPacket;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -23,6 +21,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IMountedStorageManagerWithGas;
 import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorage;
 import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorageType;
@@ -38,6 +37,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -55,6 +55,8 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
     private MountedGasStorageWrapper ccb$gases;
     @Unique
     private ImmutableMap<BlockPos, SyncedMountedStorage> ccb$syncedGases;
+    @Unique
+    private ImmutableMap<BlockPos, MountedGasStorage> ccb$gasesBeforeCreateSync;
     @Shadow
     private int syncCooldown;
 
@@ -68,20 +70,18 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
     @Override
     @Unique
     public void ccb$handleSyncWithGas(MountedStorageSyncWithGasPacket packet, AbstractContraptionEntity entity) {
-        MountedGasStorageWrapper gases = ccb$getGases();
+        Map<BlockPos, MountedGasStorage> gases = new HashMap<>(ccb$getGases().storages);
         Map<SyncedMountedStorage, BlockPos> syncedStorages = new IdentityHashMap<>();
         try {
-            if (ccb$gasesBuilder != null) {
-                ccb$gasesBuilder.putAll(gases.storages);
-            }
             packet.gases().forEach((pos, storage) -> {
-                if (ccb$gasesBuilder != null) {
-                    ccb$gasesBuilder.put(pos, storage);
-                }
-                syncedStorages.put((SyncedMountedStorage) storage, pos);
+                SyncedMountedStorage synced = (SyncedMountedStorage) storage;
+                gases.put(pos, storage);
+                syncedStorages.put(synced, pos);
             });
+            ccb$replaceGases(gases);
         } catch (Throwable t) {
             CCBAPI.LOGGER.error("An error occurred while syncing gas storage in MountedStorageManager", t);
+            return;
         }
 
         Contraption contraption = entity.getContraption();
@@ -102,6 +102,20 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
         }
 
         ccb$syncedGasesBuilder.put(pos, synced);
+    }
+
+    @Unique
+    private void ccb$replaceGases(Map<BlockPos, MountedGasStorage> storages) {
+        ImmutableMap<BlockPos, MountedGasStorage> gases = ImmutableMap.copyOf(storages);
+        Map<BlockPos, SyncedMountedStorage> syncedGases = new HashMap<>();
+        gases.forEach((pos, storage) -> {
+            if (storage instanceof SyncedMountedStorage synced) {
+                syncedGases.put(pos, synced);
+            }
+        });
+
+        ccb$gases = new MountedGasStorageWrapper(gases);
+        ccb$syncedGases = ImmutableMap.copyOf(syncedGases);
     }
 
     @Shadow
@@ -128,6 +142,21 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
         ccb$gases = null;
         ccb$gasesBuilder = new HashMap<>();
         ccb$syncedGasesBuilder = new HashMap<>();
+    }
+
+    @Inject(method = "handleSync", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/MountedStorageManager;reset()V", shift = Shift.BEFORE))
+    private void ccb$captureGasesBeforeCreateSync(MountedStorageSyncPacket packet, AbstractContraptionEntity entity, CallbackInfo ci) {
+        ccb$gasesBeforeCreateSync = ccb$getGases().storages;
+    }
+
+    @Inject(method = "handleSync", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/MountedStorageManager;reset()V", shift = Shift.AFTER))
+    private void ccb$restoreGasesAfterCreateReset(MountedStorageSyncPacket packet, AbstractContraptionEntity entity, CallbackInfo ci) {
+        if (ccb$gasesBeforeCreateSync == null) {
+            return;
+        }
+
+        ccb$gasesBeforeCreateSync.forEach((pos, storage) -> ccb$addStorage(storage, pos));
+        ccb$gasesBeforeCreateSync = null;
     }
 
     @Inject(method = "addBlock", at = @At("TAIL"))
@@ -207,9 +236,14 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
             return;
         }
 
-        Set<BlockPos> positions = Sets.union(ccb$getGases().storages.keySet(), ccb$getGases().storages.keySet());
-        ListTag list = new ListTag();
-        for (BlockPos pos : positions) {
+        ListTag list = compoundTag.getList("interactable_positions", Tag.TAG_COMPOUND);
+        Set<BlockPos> positions = new HashSet<>();
+        NBTHelper.iterateCompoundList(list, tag -> positions.add(new BlockPos(tag.getInt("X"), tag.getInt("Y"), tag.getInt("Z"))));
+        for (BlockPos pos : ccb$getGases().storages.keySet()) {
+            if (!positions.add(pos)) {
+                continue;
+            }
+
             CompoundTag tag = new CompoundTag();
             tag.putInt("X", pos.getX());
             tag.putInt("Y", pos.getY());

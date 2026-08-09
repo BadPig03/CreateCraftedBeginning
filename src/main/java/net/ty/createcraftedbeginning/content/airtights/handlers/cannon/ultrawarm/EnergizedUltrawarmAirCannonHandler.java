@@ -27,17 +27,11 @@ import java.util.List;
 public class EnergizedUltrawarmAirCannonHandler extends UltrawarmAirCannonHandler {
     private static final int ENERGIZED_BONUS_DAMAGE = 3;
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ItemStack getRenderIcon(Level level) {
         return new ItemStack(CCBItems.ENERGIZED_ULTRAWARM_WIND_CHARGE.asItem());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void renderTrailParticles(Level level, Vec3 pos) {
         RandomSource random = level.getRandom();
@@ -53,25 +47,16 @@ public class EnergizedUltrawarmAirCannonHandler extends UltrawarmAirCannonHandle
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ResourceLocation getTextureLocation() {
         return CCBAPI.asResource("textures/entity/projectiles/energized_ultrawarm_wind_charge.png");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getGasConsumptionMultiplier() {
         return 0.72f;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(CCBLang.translate("gui.airtight_cannon.energized_ultrawarm_air").style(ChatFormatting.DARK_GREEN).component());

@@ -16,9 +16,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBAirtightThermoregulatorHandlers {
-    /**
-     * Registers the built-in airtight thermoregulator handlers.
-     */
     public static void register() {
         AirtightThermoregulatorHandlerUtils.register(AllBlocks.BLAZE_BURNER.get(), new BlazeBurnerThermoregulatorHandler());
         AirtightThermoregulatorHandlerUtils.register(CCBBlocks.BREEZE_COOLER_BLOCK.get(), new BreezeCoolerThermoregulatorHandler());

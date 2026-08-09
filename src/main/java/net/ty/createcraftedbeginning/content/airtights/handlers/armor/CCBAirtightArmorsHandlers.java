@@ -25,9 +25,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBAirtightArmorsHandlers {
-    /**
-     * Registers the built-in airtight armors handlers.
-     */
     public static void register() {
         AirtightArmorsHandlerUtils.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), new NaturalAirArmorsHandler());
         AirtightArmorsHandlerUtils.register(CCBGases.ENERGIZED_NATURAL_AIR.get().getResourceLocation(), new EnergizedNaturalAirArmorsHandler());

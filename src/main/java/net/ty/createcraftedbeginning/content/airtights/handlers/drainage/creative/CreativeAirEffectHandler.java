@@ -12,17 +12,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CreativeAirEffectHandler implements AirtightDrainageHandler {
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getInflation() {
         return 2;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void apply(Level level, BlockPos pos, Direction direction, Gas gasType) {
         applyEffects(level, pos, direction, getInflation(), gasType.getTint());

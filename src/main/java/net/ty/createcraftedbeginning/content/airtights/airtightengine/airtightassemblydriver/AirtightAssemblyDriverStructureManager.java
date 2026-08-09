@@ -1,24 +1,13 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver;
 
-import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.Direction.Axis;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverStructureScanner.ScanResult;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasConnectivityHandler;
-import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlock;
-import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock;
-import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.HashSet;
 import java.util.Set;
 
 import static net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverCore.MAX_LEVEL;
@@ -34,6 +23,8 @@ public class AirtightAssemblyDriverStructureManager {
 
     private static final int INITIAL_EVALUATION_DELAY = 2;
     private static final int INCOMPLETE_EVALUATION_RETRY_DELAY = 20;
+    private static final AirtightAssemblyDriverStructureScanner scanner = new AirtightAssemblyDriverStructureScanner();
+
     private final AirtightAssemblyDriverCore driverCore;
     private boolean structureValid;
     private boolean evaluationRequired = true;
@@ -63,8 +54,8 @@ public class AirtightAssemblyDriverStructureManager {
         return getMaxAttachedChambers() * MAX_LEVEL;
     }
 
-    private static int readBoundedInt(CompoundTag compoundTag, String key, int max) {
-        return compoundTag.contains(key) ? Mth.clamp(compoundTag.getInt(key), 0, max) : 0;
+    private static int readBoundedInt(CompoundTag tag, String key, int max) {
+        return tag.contains(key) ? Mth.clamp(tag.getInt(key), 0, max) : 0;
     }
 
     public void tick(AirtightTankBlockEntity controller) {
@@ -78,11 +69,9 @@ public class AirtightAssemblyDriverStructureManager {
         }
 
         evaluate(controller);
-        if (!evaluationRequired) {
-            return;
+        if (evaluationRequired) {
+            evaluationCooldown = INCOMPLETE_EVALUATION_RETRY_DELAY;
         }
-
-        evaluationCooldown = INCOMPLETE_EVALUATION_RETRY_DELAY;
     }
 
     public void requestEvaluation() {
@@ -96,150 +85,39 @@ public class AirtightAssemblyDriverStructureManager {
             return;
         }
 
-        int previousEngines = attachedEngines;
-        int previousOutlets = attachedOutlets;
-        int previousChambers = attachedChambers;
-        int previousWindLevel = attachedWindChargingLevel;
-        boolean wasStructureValid = structureValid;
-
-        clearDerivedState();
-        structureValid = true;
+        DerivedState previous = captureDerivedState();
         evaluationRequired = false;
         evaluationCooldown = 0;
 
-        Set<BlockPos> outletPositions = new HashSet<>();
-        boolean isScanComplete = scanMultiblockStructure(controller, level, outletPositions);
-        if (!isScanComplete) {
+        ScanResult result = scanner.scan(controller, level);
+        if (result.complete()) {
+            applyScanResult(result);
+            if (previous.attachedOutlets() > attachedOutlets) {
+                driverCore.getResidueManager().applyRemovalPenalty(false);
+            }
+        }
+        else {
             clearDerivedState();
-            outletPositions.clear();
             evaluationRequired = true;
         }
-        else if (previousOutlets > attachedOutlets) {
-            driverCore.getResidueManager().applyRemovalPenalty(false);
-        }
 
-        driverCore.getResidueManager().updateOutletsPositions(outletPositions);
+        driverCore.getResidueManager().updateOutletsPositions(result.complete() ? result.outletPositions() : Set.of());
         driverCore.getLevelCalculator().updateWindChargingLevel(attachedWindChargingLevel);
-
-        boolean hasChanged = previousEngines != attachedEngines || previousOutlets != attachedOutlets || previousChambers != attachedChambers || previousWindLevel != attachedWindChargingLevel || wasStructureValid != structureValid;
-        if (!hasChanged) {
-            return;
+        if (!previous.matches(this)) {
+            driverCore.markForClientSync();
         }
-
-        driverCore.markForClientSync();
-    }
-
-    private boolean scanMultiblockStructure(AirtightTankBlockEntity controller, Level level, Set<BlockPos> outletPositions) {
-        Set<BlockPos> visitedPositions = new HashSet<>();
-        BlockPos controllerPos = controller.getBlockPos();
-        Block controllerBlock = controller.getBlockState().getBlock();
-        Axis axis = controller.getMainConnectionAxis();
-        int width = controller.getWidth();
-        int length = controller.getHeight();
-        int chamberLevels = 0;
-        boolean isScanComplete = true;
-        for (int lengthOffset = 0; lengthOffset < length; lengthOffset++) {
-            for (int uOffset = 0; uOffset < width; uOffset++) {
-                for (int vOffset = 0; vOffset < width; vOffset++) {
-                    BlockPos pos = AirtightTankBlockEntity.offsetInMulti(controllerPos, axis, lengthOffset, uOffset, vOffset);
-                    TankScanResult result = scanTankPosition(controller, level, controllerBlock, controllerPos, pos, visitedPositions, outletPositions);
-                    if (!result.complete()) {
-                        isScanComplete = false;
-                    }
-                    chamberLevels += result.chamberLevel();
-                }
-            }
-        }
-
-        attachedWindChargingLevel = Math.max(0, chamberLevels);
-        return isScanComplete;
-    }
-
-    private TankScanResult scanTankPosition(AirtightTankBlockEntity controller, Level level, Block controllerBlock, BlockPos controllerPos, BlockPos pos, Set<BlockPos> visitedPositions, Set<BlockPos> outletPositions) {
-        if (visitedPositions.contains(pos)) {
-            return TankScanResult.COMPLETE;
-        }
-
-        if (!level.isLoaded(pos)) {
-            return TankScanResult.INCOMPLETE;
-        }
-
-        BlockState state = level.getBlockState(pos);
-        if (state.getBlock() != controllerBlock) {
-            structureValid = false;
-            return TankScanResult.COMPLETE;
-        }
-
-        AirtightTankBlockEntity tank = GasConnectivityHandler.partAt(controller.getType(), level, pos);
-        if (tank == null || !tank.getController().equals(controllerPos)) {
-            return TankScanResult.INCOMPLETE;
-        }
-
-        visitedPositions.add(pos);
-        boolean isComplete = scanAttachedBlocks(pos, level, outletPositions);
-        int chamberLevel = scanChamberBlocks(pos, level);
-        if (chamberLevel < 0) {
-            return TankScanResult.INCOMPLETE;
-        }
-        return new TankScanResult(isComplete, chamberLevel);
-    }
-
-    private boolean scanAttachedBlocks(BlockPos pos, Level level, Set<BlockPos> outletPositions) {
-        boolean scanComplete = true;
-        for (Direction direction : Iterate.directions) {
-            BlockPos attachedPos = pos.relative(direction);
-            if (!level.isLoaded(attachedPos)) {
-                scanComplete = false;
-                continue;
-            }
-
-            BlockState attachedState = level.getBlockState(attachedPos);
-            Block attachedBlock = attachedState.getBlock();
-            boolean isEngine = attachedBlock instanceof AirtightEngineBlock && AirtightEngineBlock.getFacing(attachedState).getOpposite() == direction;
-            if (isEngine) {
-                attachedEngines++;
-            }
-
-            boolean isOutlet = attachedBlock instanceof ResidueOutletBlock && ResidueOutletBlock.getFacing(attachedState).getOpposite() == direction;
-            if (isOutlet) {
-                attachedOutlets++;
-                outletPositions.add(attachedPos);
-            }
-        }
-        return scanComplete;
-    }
-
-    private int scanChamberBlocks(BlockPos pos, Level level) {
-        BlockPos attachedPos = pos.above();
-        if (!level.isLoaded(attachedPos)) {
-            return -1;
-        }
-
-        BlockState attachedState = level.getBlockState(attachedPos);
-        if (!(attachedState.getBlock() instanceof BreezeChamberBlock)) {
-            return 0;
-        }
-
-        if (!(level.getBlockEntity(attachedPos) instanceof BreezeChamberBlockEntity chamber)) {
-            return -1;
-        }
-
-        attachedChambers++;
-        return chamber.getWindRemainingLevel();
     }
 
     public void reset() {
-        boolean hasChanged = attachedEngines != 0 || attachedOutlets != 0 || attachedChambers != 0 || attachedWindChargingLevel != 0 || structureValid;
+        boolean changed = hasDerivedState();
         clearDerivedState();
         evaluationRequired = true;
         evaluationCooldown = 0;
         driverCore.getResidueManager().clearOutletsPositions();
         driverCore.getLevelCalculator().updateWindChargingLevel(0);
-        if (!hasChanged) {
-            return;
+        if (changed) {
+            driverCore.markForClientSync();
         }
-
-        driverCore.markForClientSync();
     }
 
     public void invalidateForServerLoad() {
@@ -280,15 +158,27 @@ public class AirtightAssemblyDriverStructureManager {
         return tag;
     }
 
-    public void readClient(CompoundTag compoundTag) {
+    public void readClient(CompoundTag tag) {
         int maxAttachedSurfaceBlocks = getMaxAttachedSurfaceBlocks();
-        attachedEngines = readBoundedInt(compoundTag, COMPOUND_KEY_ATTACHED_ENGINES, maxAttachedSurfaceBlocks);
-        attachedOutlets = readBoundedInt(compoundTag, COMPOUND_KEY_ATTACHED_OUTLETS, maxAttachedSurfaceBlocks);
-        attachedChambers = readBoundedInt(compoundTag, COMPOUND_KEY_ATTACHED_CHAMBERS, getMaxAttachedChambers());
-        attachedWindChargingLevel = readBoundedInt(compoundTag, COMPOUND_KEY_ATTACHED_WIND_CHARGING_LEVEL, getMaxAttachedWindChargingLevel());
-        structureValid = compoundTag.getBoolean(COMPOUND_KEY_STRUCTURE_VALID);
+        attachedEngines = readBoundedInt(tag, COMPOUND_KEY_ATTACHED_ENGINES, maxAttachedSurfaceBlocks);
+        attachedOutlets = readBoundedInt(tag, COMPOUND_KEY_ATTACHED_OUTLETS, maxAttachedSurfaceBlocks);
+        attachedChambers = readBoundedInt(tag, COMPOUND_KEY_ATTACHED_CHAMBERS, getMaxAttachedChambers());
+        attachedWindChargingLevel = readBoundedInt(tag, COMPOUND_KEY_ATTACHED_WIND_CHARGING_LEVEL, getMaxAttachedWindChargingLevel());
+        structureValid = tag.getBoolean(COMPOUND_KEY_STRUCTURE_VALID);
         evaluationRequired = false;
         evaluationCooldown = 0;
+    }
+
+    private void applyScanResult(ScanResult result) {
+        attachedEngines = result.attachedEngines();
+        attachedOutlets = result.attachedOutlets();
+        attachedChambers = result.attachedChambers();
+        attachedWindChargingLevel = result.attachedWindChargingLevel();
+        structureValid = result.structureValid();
+    }
+
+    private boolean hasDerivedState() {
+        return attachedEngines != 0 || attachedOutlets != 0 || attachedChambers != 0 || attachedWindChargingLevel != 0 || structureValid;
     }
 
     private void clearDerivedState() {
@@ -299,8 +189,13 @@ public class AirtightAssemblyDriverStructureManager {
         structureValid = false;
     }
 
-    private record TankScanResult(boolean complete, int chamberLevel) {
-        private static final TankScanResult COMPLETE = new TankScanResult(true, 0);
-        private static final TankScanResult INCOMPLETE = new TankScanResult(false, 0);
+    private DerivedState captureDerivedState() {
+        return new DerivedState(attachedEngines, attachedOutlets, attachedChambers, attachedWindChargingLevel, structureValid);
+    }
+
+    private record DerivedState(int attachedEngines, int attachedOutlets, int attachedChambers, int attachedWindChargingLevel, boolean structureValid) {
+        boolean matches(AirtightAssemblyDriverStructureManager manager) {
+            return attachedEngines == manager.attachedEngines && attachedOutlets == manager.attachedOutlets && attachedChambers == manager.attachedChambers && attachedWindChargingLevel == manager.attachedWindChargingLevel && structureValid == manager.structureValid;
+        }
     }
 }

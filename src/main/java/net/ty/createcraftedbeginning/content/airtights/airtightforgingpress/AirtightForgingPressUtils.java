@@ -46,7 +46,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 @ParametersAreNonnullByDefault
@@ -57,9 +56,7 @@ public final class AirtightForgingPressUtils {
     private static final Object AUTOMATIC_SMITHING_RECIPE_CACHE_KEY = new Object();
     private static final int SMITHING_BASE_SLOT = 1;
     private static final int SMITHING_ADDITION_SLOT = 2;
-    private static final AtomicBoolean RECIPE_TRIE_FAILURE_LOGGED = new AtomicBoolean();
     private static final AtomicLong RECIPE_CACHE_VERSION = new AtomicLong();
-    private static volatile boolean recipeTrieDisabled;
 
     private AirtightForgingPressUtils() {
     }
@@ -82,7 +79,7 @@ public final class AirtightForgingPressUtils {
             return Optional.empty();
         }
 
-        if (!recipeTrieDisabled) {
+        if (!AirtightWithGasRecipeTrieFinder.hasFailed(FORGING_PRESS_RECIPE_CACHE_KEY, level)) {
             Optional<ForgingPressRecipe> recipe = findMatchingTrieRecipe(press, level);
             if (recipe.isPresent()) {
                 return recipe;
@@ -104,8 +101,7 @@ public final class AirtightForgingPressUtils {
                 }
             }
         } catch (ExecutionException | UncheckedExecutionException e) {
-            recipeTrieDisabled = true;
-            if (RECIPE_TRIE_FAILURE_LOGGED.compareAndSet(false, true)) {
+            if (AirtightWithGasRecipeTrieFinder.recordFailure(FORGING_PRESS_RECIPE_CACHE_KEY, level)) {
                 CCBAPI.LOGGER.error("Failed to build the airtight forging press recipe trie; falling back to a linear recipe search until recipes are reloaded", e);
             }
         }
@@ -126,8 +122,7 @@ public final class AirtightForgingPressUtils {
     }
 
     public static void invalidateRecipeCaches() {
-        recipeTrieDisabled = false;
-        RECIPE_TRIE_FAILURE_LOGGED.set(false);
+        AirtightWithGasRecipeTrieFinder.invalidateFailures(FORGING_PRESS_RECIPE_CACHE_KEY);
         RECIPE_CACHE_VERSION.incrementAndGet();
     }
 

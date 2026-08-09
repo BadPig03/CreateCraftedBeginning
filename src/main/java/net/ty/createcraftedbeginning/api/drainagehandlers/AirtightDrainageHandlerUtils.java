@@ -98,6 +98,15 @@ public final class AirtightDrainageHandlerUtils {
 
     @FunctionalInterface
     public interface OutlineSender {
+        /**
+         * Sends an outline update for a drainage interaction.
+         *
+         * @param level     the server level containing the outlined position
+         * @param pos       the outlined block position
+         * @param direction the direction associated with the drainage interaction
+         * @param inflation the amount by which the outline should be inflated
+         * @param color     the outline color
+         */
         void send(ServerLevel level, BlockPos pos, Direction direction, float inflation, int color);
     }
 

@@ -36,57 +36,36 @@ public class NaturalAirCannonHandler implements AirtightCannonHandler, AirtightC
     protected static final float DEFAULT_RADIUS = 1.2f;
     protected static final int DEFAULT_DURATION = 200;
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ItemStack getRenderIcon(Level level) {
         return new ItemStack(CCBItems.NATURAL_WIND_CHARGE.asItem());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void renderTrailParticles(Level level, Vec3 pos) {
         level.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), pos.x, pos.y, pos.z, 0, 0, 0);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ResourceLocation getTextureLocation() {
         return CCBAPI.asResource("textures/entity/projectiles/natural_wind_charge.png");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CannonModelType getModelType() {
         return CannonModelType.NATURAL;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CannonAnimationType getAnimationType() {
         return CannonAnimationType.NATURAL_Y;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getRotationSpeed() {
         return 16;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public final void explode(Level level, Vec3 pos, AirtightCannonShotContext context) {
         float radius = DEFAULT_RADIUS * context.effectMultiplier();
@@ -101,17 +80,11 @@ public class NaturalAirCannonHandler implements AirtightCannonHandler, AirtightC
         applyAdditionalEffects(level, entities, explosionDamageSource, context);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getGasConsumptionMultiplier() {
         return 1;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(CCBLang.translate("gui.airtight_cannon.natural_air").style(ChatFormatting.DARK_GREEN).component());

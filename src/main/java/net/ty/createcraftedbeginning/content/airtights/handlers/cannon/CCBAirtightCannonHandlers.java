@@ -25,9 +25,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBAirtightCannonHandlers {
-    /**
-     * Registers the built-in airtight cannon handlers.
-     */
     public static void register() {
         AirtightCannonHandlerUtils.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), new NaturalAirCannonHandler());
         AirtightCannonHandlerUtils.register(CCBGases.ENERGIZED_NATURAL_AIR.get().getResourceLocation(), new EnergizedNaturalAirCannonHandler());

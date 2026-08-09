@@ -7,16 +7,12 @@ import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObser
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IMountedStorageManagerWithGas;
@@ -29,11 +25,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlockEntity implements ThresholdSwitchObservable {
+    private final PortableGasInterfaceDisplay display;
     protected IGasHandler capability;
 
     public PortableGasInterfaceBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
         capability = createEmptyHandler();
+        display = new PortableGasInterfaceDisplay(this);
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
@@ -94,8 +92,7 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
     }
 
     public float getExtensionDistance(float partialTicks) {
-        float animation = connectionAnimation.getValue(partialTicks);
-        return Mth.square(animation) * distance * 0.5f;
+        return display.getExtensionDistance(partialTicks);
     }
 
     @Nullable
@@ -113,7 +110,7 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
 
     @Override
     public int getMaxValue() {
-        return GasAmountUtils.toWholeBucketsClamped(capability.getTankCapacity(0));
+        return display.getMaxValue();
     }
 
     @Override
@@ -123,84 +120,33 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
 
     @Override
     public int getCurrentValue() {
-        return GasAmountUtils.toWholeBucketsClamped(capability.getGasInTank(0).getAmount());
+        return display.getCurrentValue();
     }
 
     @Override
     public MutableComponent format(int value) {
-        return GasAmountUtils.formatWholeBuckets(value);
+        return display.format(value);
     }
 
-    public class InterfaceGasHandler implements IGasHandler {
-        private final IGasHandler wrapped;
+    IGasHandler getGasCapability() {
+        return capability;
+    }
 
+    float getConnectionAnimationValue(float partialTicks) {
+        return connectionAnimation.getValue(partialTicks);
+    }
+
+    boolean canAccessGasStorage(IGasHandler handler) {
+        return capability == handler && canTransfer();
+    }
+
+    void onGasContentTransferred() {
+        onContentTransferred();
+    }
+
+    public class InterfaceGasHandler extends PortableGasInterfaceGasHandler {
         public InterfaceGasHandler(IGasHandler wrapped) {
-            this.wrapped = wrapped;
-        }
-
-        @Override
-        public boolean isGasValid(int tank, GasStack stack) {
-            return wrapped.isGasValid(tank, stack);
-        }
-
-        @Override
-        public GasStack drain(GasStack resource, GasAction action) {
-            if (!canAccessStorage()) {
-                return GasStack.EMPTY;
-            }
-
-            GasStack drained = wrapped.drain(resource, action);
-            keepAliveIfTransferred(!drained.isEmpty(), action);
-            return drained;
-        }
-
-        @Override
-        public GasStack drain(long maxDrain, GasAction action) {
-            if (!canAccessStorage()) {
-                return GasStack.EMPTY;
-            }
-
-            GasStack drained = wrapped.drain(maxDrain, action);
-            keepAliveIfTransferred(!drained.isEmpty(), action);
-            return drained;
-        }
-
-        @Override
-        public GasStack getGasInTank(int tank) {
-            return wrapped.getGasInTank(tank);
-        }
-
-        @Override
-        public int getTanks() {
-            return wrapped.getTanks();
-        }
-
-        @Override
-        public long fill(GasStack resource, GasAction action) {
-            if (!canAccessStorage()) {
-                return 0;
-            }
-
-            long filled = wrapped.fill(resource, action);
-            keepAliveIfTransferred(filled > 0, action);
-            return filled;
-        }
-
-        @Override
-        public long getTankCapacity(int tank) {
-            return wrapped.getTankCapacity(tank);
-        }
-
-        private boolean canAccessStorage() {
-            return capability == this && canTransfer();
-        }
-
-        private void keepAliveIfTransferred(boolean transferred, GasAction action) {
-            if (!transferred || !action.execute()) {
-                return;
-            }
-
-            onContentTransferred();
+            super(PortableGasInterfaceBlockEntity.this, wrapped);
         }
     }
 }

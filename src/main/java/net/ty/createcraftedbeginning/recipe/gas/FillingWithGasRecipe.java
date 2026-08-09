@@ -23,18 +23,10 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class FillingWithGasRecipe extends StandardProcessingWithGasRecipe<SingleRecipeInput> implements IAssemblyRecipeWithGas {
-    /**
-     * Creates a new {@code FillingWithGasRecipe} instance.
-     *
-     * @param params the parameters used to configure the operation
-     */
     public FillingWithGasRecipe(ProcessingWithGasRecipeParams params) {
         super(CCBRecipeTypes.FILLING_WITH_GAS, params);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean matches(SingleRecipeInput input, Level level) {
         return ingredients.getFirst().test(input.getItem(0));
@@ -55,9 +47,6 @@ public class FillingWithGasRecipe extends StandardProcessingWithGasRecipe<Single
         return 1;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     @OnlyIn(Dist.CLIENT)
     public Component getDescriptionForAssembly() {
@@ -68,34 +57,20 @@ public class FillingWithGasRecipe extends StandardProcessingWithGasRecipe<Single
         return CreateLang.translateDirect("recipe.assembly.spout_filling_fluid", stacks[0].getHoverName().getString());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void addAssemblyFluidIngredients(List<SizedFluidIngredient> list) {
         list.add(getRequiredFluid());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void addAssemblyIngredients(List<Ingredient> list) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void addRequiredMachines(Set<ItemLike> list) {
         list.add(AllBlocks.SPOUT.get());
     }
 
-    /**
-     * Returns the required fluid.
-     *
-     * @return the required fluid
-     */
     public SizedFluidIngredient getRequiredFluid() {
         if (fluidIngredients.isEmpty()) {
             throw new IllegalStateException("Filling Recipe has no fluid ingredient!");

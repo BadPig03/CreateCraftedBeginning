@@ -30,13 +30,6 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasConnectivityHandler {
-    /**
-     * Forms or rebuilds the multiblock structure around the supplied block entity.
-     *
-     * @param <T>   the value type constrained by {@code extends BlockEntity & IGasTankMultiBlockEntityContainer}
-     * @param be    the block entity that participates in the operation
-     * @param level the level in which the operation is performed
-     */
     public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> void formMulti(T be, Level level) {
         SearchCache<T> cache = new SearchCache<>();
         Deque<T> frontier = new ArrayDeque<>();
@@ -115,16 +108,6 @@ public class GasConnectivityHandler {
         }
     }
 
-    /**
-     * Checks whether the supplied positions belong to the same connected structure.
-     *
-     * @param <T>   the value type constrained by {@code extends BlockEntity & IGasTankMultiBlockEntityContainer}
-     * @param level the level in which the operation is performed
-     * @param pos   the target block position
-     * @param other the object to compare with this instance
-     * @return {@code true} if the supplied positions belong to the same connected structure; otherwise {@code
-     * false}
-     */
     public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> boolean isConnected(BlockGetter level, BlockPos pos, BlockPos other) {
         T one = checked(level.getBlockEntity(pos));
         T two = checked(level.getBlockEntity(other));
@@ -290,12 +273,6 @@ public class GasConnectivityHandler {
         return new PriorityQueue<>((one, two) -> two.getKey() - one.getKey());
     }
 
-    /**
-     * Splits the multiblock structure containing the supplied block entity.
-     *
-     * @param <T> the value type constrained by {@code extends BlockEntity & IGasTankMultiBlockEntityContainer}
-     * @param be  the block entity that participates in the operation
-     */
     public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> void splitMulti(T be) {
         splitMultiAndInvalidate(be, null);
     }
@@ -362,15 +339,6 @@ public class GasConnectivityHandler {
         be.getLevel().invalidateCapabilities(be.getBlockPos());
     }
 
-    /**
-     * Returns the compatible multiblock part at the supplied position.
-     *
-     * @param <T>   the value type constrained by {@code extends BlockEntity & IGasTankMultiBlockEntityContainer}
-     * @param type  the type to use
-     * @param level the level in which the operation is performed
-     * @param pos   the target block position
-     * @return the resulting value
-     */
     public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> @Nullable T partAt(BlockEntityType<?> type, BlockGetter level, BlockPos pos) {
         BlockEntity be = level.getBlockEntity(pos);
         return be != null && be.getType() == type && !be.isRemoved() ? checked(be) : null;
@@ -379,9 +347,6 @@ public class GasConnectivityHandler {
     private static class SearchCache<T extends BlockEntity & IGasTankMultiBlockEntityContainer> {
         protected Map<BlockPos, Optional<@NotNull T>> controllerMap;
 
-        /**
-         * Creates a new {@code SearchCache} instance.
-         */
         public SearchCache() {
             controllerMap = new HashMap<>();
         }

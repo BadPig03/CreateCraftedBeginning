@@ -136,7 +136,6 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
     @Override
     public int getSlotLimit(int slot) {
         validateSlotIndex(slot);
-        // A reduced server capacity must not make an existing over-capacity stack invalid.
         return Math.max(getMaxCount(), count);
     }
 
@@ -224,8 +223,6 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
             normalizedCount = 0;
         }
         else {
-            // Keep existing inventory even when the configured capacity is reduced.
-            // Reuse the internal stack when only the logical count changes.
             normalizedContent = stack == content ? content : stack.copyWithCount(1);
             normalizedCount = newCount;
         }

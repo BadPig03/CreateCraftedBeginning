@@ -50,33 +50,13 @@ public class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
             return stack;
         }
 
-        int maxCount = getMaxCount();
-        int incoming = stack.getCount();
-        ItemStack nextContent = content;
-        int nextCount;
-        boolean hasTrackedDiscard;
-        if (content.isEmpty()) {
-            nextContent = stack;
-            nextCount = Math.min(incoming, maxCount);
-            hasTrackedDiscard = trackedItemPredicate.test(stack) && nextCount < incoming;
-        }
-        else if (ItemStack.isSameItemSameComponents(content, stack)) {
-            int accepted = Math.clamp(maxCount - count, 0, incoming);
-            nextCount = count + accepted;
-            hasTrackedDiscard = trackedItemPredicate.test(stack) && accepted < incoming;
-        }
-        else {
-            nextContent = stack;
-            nextCount = Math.min(incoming, maxCount);
-            hasTrackedDiscard = count > 0 && trackedItemPredicate.test(content) || trackedItemPredicate.test(stack) && nextCount < incoming;
-        }
-
+        DiscardingCrateInsertionPlan plan = DiscardingCrateInsertionPlan.plan(content, count, stack, getMaxCount(), trackedItemPredicate);
         if (simulate) {
             return ItemStack.EMPTY;
         }
 
-        setStoredItems(STORAGE_SLOT, nextContent, nextCount);
-        if (!hasTrackedDiscard) {
+        setStoredItems(STORAGE_SLOT, plan.content(), plan.count());
+        if (!plan.trackedDiscard()) {
             return ItemStack.EMPTY;
         }
 

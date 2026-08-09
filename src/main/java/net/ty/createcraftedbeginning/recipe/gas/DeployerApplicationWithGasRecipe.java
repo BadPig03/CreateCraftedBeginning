@@ -19,18 +19,10 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class DeployerApplicationWithGasRecipe extends ItemApplicationWithGasRecipe implements IAssemblyRecipeWithGas {
-    /**
-     * Creates a new {@code DeployerApplicationWithGasRecipe} instance.
-     *
-     * @param params the parameters used to configure the operation
-     */
     public DeployerApplicationWithGasRecipe(ItemApplicationWithGasRecipeParams params) {
         super(CCBRecipeTypes.DEPLOYING_WITH_GAS, params);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     @OnlyIn(Dist.CLIENT)
     public Component getDescriptionForAssembly() {
@@ -41,17 +33,11 @@ public class DeployerApplicationWithGasRecipe extends ItemApplicationWithGasReci
         return CreateLang.translateDirect("recipe.assembly.deploying_item", Component.translatable(stacks[0].getDescriptionId()).getString());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void addAssemblyIngredients(List<Ingredient> list) {
         list.add(getRequiredHeldItem());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void addRequiredMachines(Set<ItemLike> list) {
         list.add(AllBlocks.DEPLOYER.get());

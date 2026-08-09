@@ -39,16 +39,6 @@ public final class CanisterContainerConsumers {
     private CanisterContainerConsumers() {
     }
 
-    /**
-     * Handles interaction with the container.
-     *
-     * @param player          the player performing the operation
-     * @param gasType         the gas type to inspect or process
-     * @param amount          the amount to use
-     * @param executeSupplier the supplier used to obtain to execute
-     * @param simulate        whether the operation should be simulated
-     * @return {@code true} if the condition is satisfied; otherwise {@code false}
-     */
     public static boolean interactContainer(Player player, Gas gasType, long amount, Supplier<Boolean> executeSupplier, boolean simulate) {
         if (player.isCreative() || gasType.isEmpty() || amount <= 0) {
             return true;
@@ -94,13 +84,6 @@ public final class CanisterContainerConsumers {
         return true;
     }
 
-    /**
-     * Finds the affordable fuel.
-     *
-     * @param player          the player performing the operation
-     * @param rawCostFunction the raw cost function to use
-     * @return an optional containing the matching value, or an empty optional when none is found
-     */
     public static Optional<AffordableFuel> findAffordableFuel(Player player, ToDoubleFunction<Gas> rawCostFunction) {
         Set<Gas> checkedGases = Collections.newSetFromMap(new IdentityHashMap<>());
         for (IGasCanisterContainer container : CanisterContainerSuppliers.getAllSuppliers(player)) {
@@ -126,12 +109,6 @@ public final class CanisterContainerConsumers {
         return Optional.empty();
     }
 
-    /**
-     * Applies the client container sync.
-     *
-     * @param player     the player performing the operation
-     * @param gasContent the gas content to use
-     */
     public static void applyClientContainerSync(Player player, GasStack gasContent) {
         if (!player.level().isClientSide || player.isCreative() || gasContent.isEmpty() || gasContent.getAmount() <= 0) {
             return;
@@ -145,17 +122,6 @@ public final class CanisterContainerConsumers {
         drainContainer(containers, gasContent.getGasType(), gasContent.getAmount(), false, player);
     }
 
-    /**
-     * Attempts to satisfy a logical gas cost from the ordered canister containers.
-     * Execution first builds a complete drain plan so an insufficient balance never causes a partial drain.
-     *
-     * @param containers the ordered canister containers to consume from
-     * @param gasType    the gas type required by the action
-     * @param amount     the logical gas amount required by the action
-     * @param simulate   whether to test coverage without consuming gas
-     * @param player     the player used for registry access and menu synchronization
-     * @return {@code true} if the complete logical cost can be covered; otherwise {@code false}
-     */
     private static boolean drainContainer(List<IGasCanisterContainer> containers, Gas gasType, long amount, boolean simulate, Player player) {
         if (gasType.isEmpty() || amount <= 0) {
             return true;
@@ -295,16 +261,6 @@ public final class CanisterContainerConsumers {
         CatnipServices.NETWORK.sendToClient(serverPlayer, new GasCanisterPackMenuSyncPacket(slot, amount));
     }
 
-    /**
-     * Checks whether the ordered canister containers can cover the requested logical gas cost.
-     * This simulation path avoids allocating a drain plan and never mutates container contents.
-     *
-     * @param containers the ordered canister containers to inspect
-     * @param gasType    the gas type required by the action
-     * @param amount     the logical gas amount required by the action
-     * @param player     the player used to decode canisters stored inside packs
-     * @return {@code true} if the complete logical cost can be covered; otherwise {@code false}
-     */
     private static boolean canCoverCost(List<IGasCanisterContainer> containers, Gas gasType, long amount, Player player) {
         long remaining = amount;
         for (IGasCanisterContainer container : containers) {
@@ -363,12 +319,6 @@ public final class CanisterContainerConsumers {
     }
 
     public record AffordableFuel(GasStack gasContent, long amount) {
-        /**
-         * Creates a new {@code AffordableFuel} instance.
-         *
-         * @param gasContent the gas content to use
-         * @param amount     the amount to use
-         */
         public AffordableFuel {
             gasContent = gasContent.copy();
             if (gasContent.isEmpty()) {
@@ -379,11 +329,6 @@ public final class CanisterContainerConsumers {
             }
         }
 
-        /**
-         * Sets the gas type stored by this builder.
-         *
-         * @return the resulting gas
-         */
         public Gas gasType() {
             return gasContent.getGasType();
         }

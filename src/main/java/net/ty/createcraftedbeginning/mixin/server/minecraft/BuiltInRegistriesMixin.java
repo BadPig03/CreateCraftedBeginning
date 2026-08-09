@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 @Mixin(BuiltInRegistries.class)
 public abstract class BuiltInRegistriesMixin {
     static {
-        CCBBuiltInRegistries.init();
+        CCBBuiltInRegistries.bootstrap();
     }
 
     @WrapOperation(method = "validate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/Registry;forEach(Ljava/util/function/Consumer;)V"))

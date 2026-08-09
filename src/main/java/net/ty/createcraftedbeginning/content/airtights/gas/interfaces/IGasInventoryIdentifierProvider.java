@@ -11,11 +11,5 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public interface IGasInventoryIdentifierProvider {
-    /**
-     * Returns the gas inventory identifier.
-     *
-     * @param direction the direction associated with the operation
-     * @return the gas inventory identifier
-     */
     @Nullable InventoryIdentifier getGasInventoryIdentifier(Direction direction);
 }

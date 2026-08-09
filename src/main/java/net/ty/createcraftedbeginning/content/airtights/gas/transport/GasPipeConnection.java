@@ -47,49 +47,24 @@ public final class GasPipeConnection {
     @Nullable
     private GasFlowSource previousSource;
 
-    /**
-     * Creates a new {@code GasPipeConnection} instance.
-     *
-     * @param side the side from which the target is accessed
-     */
     public GasPipeConnection(Direction side) {
         this.side = side;
     }
 
-    /**
-     * Returns the side.
-     *
-     * @return the side
-     */
     public Direction getSide() {
         return side;
     }
 
-    /**
-     * Returns the flow.
-     *
-     * @return the flow
-     */
     @Nullable
     public AirFlow getFlow() {
         return flow;
     }
 
-    /**
-     * Returns the source.
-     *
-     * @return the source
-     */
     @Nullable
     public GasFlowSource getSource() {
         return source;
     }
 
-    /**
-     * Returns the provided gas.
-     *
-     * @return the provided gas
-     */
     public GasStack getProvidedGas() {
         if (!hasPressure() || flow == null || !flow.inbound) {
             return GasStack.EMPTY;
@@ -97,11 +72,6 @@ public final class GasPipeConnection {
         return flow.gas;
     }
 
-    /**
-     * Computes and returns the flip flows if pressure reversed result.
-     *
-     * @return {@code true} if the condition is satisfied; otherwise {@code false}
-     */
     public boolean flipFlowsIfPressureReversed() {
         if (flow == null) {
             return false;
@@ -116,39 +86,18 @@ public final class GasPipeConnection {
         return true;
     }
 
-    /**
-     * Compares inbound and outward pressure for this connection.
-     *
-     * @return the compare pressure value
-     */
     public float comparePressure() {
         return outwardPressure - inboundPressure;
     }
 
-    /**
-     * Returns the outward pressure.
-     *
-     * @return the outward pressure
-     */
     public float getOutwardPressure() {
         return outwardPressure;
     }
 
-    /**
-     * Returns the inbound pressure.
-     *
-     * @return the inbound pressure
-     */
     public float getInboundPressure() {
         return inboundPressure;
     }
 
-    /**
-     * Sets the pump pressure.
-     *
-     * @param inbound whether inbound is enabled
-     * @param amount  the amount to use
-     */
     public void setPumpPressure(boolean inbound, float amount) {
         amount = amount > 0 && Float.isFinite(amount) ? amount : 0;
         pressureContributed = amount > 0;
@@ -156,13 +105,6 @@ public final class GasPipeConnection {
         outwardPressure = inbound ? 0 : amount;
     }
 
-    /**
-     * Updates and manages the source.
-     *
-     * @param level       the level in which the operation is performed
-     * @param pos         the target block position
-     * @param blockEntity the block entity associated with the operation
-     */
     public void manageSource(Level level, BlockPos pos, BlockEntity blockEntity) {
         if (source == null && !determineSource(level, pos)) {
             return;
@@ -171,13 +113,6 @@ public final class GasPipeConnection {
         source.manageSource(level, blockEntity);
     }
 
-    /**
-     * Determines and stores the flow source for this connection.
-     *
-     * @param level the level in which the operation is performed
-     * @param pos   the target block position
-     * @return {@code true} if the condition is satisfied; otherwise {@code false}
-     */
     public boolean determineSource(Level level, BlockPos pos) {
         BlockPos relativePos = pos.relative(side);
         if (level.getChunk(relativePos.getX() >> 4, relativePos.getZ() >> 4, ChunkStatus.FULL, false) == null) {
@@ -200,15 +135,6 @@ public final class GasPipeConnection {
         return true;
     }
 
-    /**
-     * Updates and manages the flows.
-     *
-     * @param level               the level in which the operation is performed
-     * @param pos                 the target block position
-     * @param internalGas         the internal gas handler used by the connection
-     * @param extractionPredicate the predicate used to test the extraction
-     * @return {@code true} if the condition is satisfied; otherwise {@code false}
-     */
     public boolean manageFlows(Level level, BlockPos pos, GasStack internalGas, Predicate<GasStack> extractionPredicate) {
         recoverRetiredNetwork();
         if (source == null && !determineSource(level, pos)) {
@@ -314,31 +240,14 @@ public final class GasPipeConnection {
         network = null;
     }
 
-    /**
-     * Checks whether this connection has non-zero pressure.
-     *
-     * @return {@code true} if this connection has non-zero pressure; otherwise {@code false}
-     */
     public boolean hasPressure() {
         return Float.compare(inboundPressure, outwardPressure) != 0;
     }
 
-    /**
-     * Checks whether this connection received any pressure contribution since
-     * the last pressure wipe, even if opposing contributions cancelled out.
-     *
-     * @return {@code true} if pressure was contributed; otherwise {@code false}
-     */
     public boolean hasPressureContribution() {
         return pressureContributed;
     }
 
-    /**
-     * Advances the visual flow progress for one game tick.
-     *
-     * @param level the level in which the operation is performed
-     * @param pos   the target block position
-     */
     public void tickFlowProgress(Level level, BlockPos pos) {
         if (flow == null || flow.gas.isEmpty() || !level.isClientSide || source != null) {
             return;
@@ -347,13 +256,6 @@ public final class GasPipeConnection {
         determineSource(level, pos);
     }
 
-    /**
-     * Writes this object's state to the supplied serialized data.
-     *
-     * @param compoundTag  the NBT compound to read from or write to
-     * @param provider     the provider used to resolve the requested value
-     * @param clientPacket the client synchronization packet
-     */
     public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         CompoundTag connectionData = new CompoundTag();
         if (clientPacket) {
@@ -400,14 +302,6 @@ public final class GasPipeConnection {
         connectionData.put(COMPOUND_KEY_OPEN_END, openEndData);
     }
 
-    /**
-     * Reads this object's state from the supplied serialized data.
-     *
-     * @param compoundTag  the NBT compound to read from or write to
-     * @param provider     the provider used to resolve the requested value
-     * @param blockPos     the target block position
-     * @param clientPacket the client synchronization packet
-     */
     public void read(CompoundTag compoundTag, Provider provider, BlockPos blockPos, boolean clientPacket) {
         CompoundTag connectionData = compoundTag.contains(side.getName(), Tag.TAG_COMPOUND) ? compoundTag.getCompound(side.getName()) : new CompoundTag();
         if (clientPacket) {
@@ -459,11 +353,6 @@ public final class GasPipeConnection {
         previousSource = openEndedSource;
     }
 
-    /**
-     * Prepares this object for removal.
-     *
-     * @return {@code true} if the condition is satisfied; otherwise {@code false}
-     */
     public boolean prepareForRemoval() {
         inboundPressure = 0;
         outwardPressure = 0;
@@ -479,9 +368,6 @@ public final class GasPipeConnection {
         return true;
     }
 
-    /**
-     * Clears the pressure stored by this connection.
-     */
     public void wipePressure() {
         inboundPressure = 0;
         outwardPressure = 0;
@@ -493,9 +379,6 @@ public final class GasPipeConnection {
         resetNetwork();
     }
 
-    /**
-     * Resets the network.
-     */
     public void resetNetwork() {
         if (network == null) {
             return;
@@ -504,11 +387,6 @@ public final class GasPipeConnection {
         network.reset();
     }
 
-    /**
-     * Provides the outbound flow.
-     *
-     * @return the resulting gas stack
-     */
     public GasStack provideOutboundFlow() {
         if (!hasPressure() || flow == null || flow.inbound) {
             return GasStack.EMPTY;
@@ -516,12 +394,6 @@ public final class GasPipeConnection {
         return flow.gas;
     }
 
-    /**
-     * Adds the supplied pressure.
-     *
-     * @param inbound   whether inbound is enabled
-     * @param newAmount the replacement gas amount
-     */
     public void addPressure(boolean inbound, float newAmount) {
         if (newAmount <= 0 || !Float.isFinite(newAmount)) {
             return;
@@ -549,12 +421,6 @@ public final class GasPipeConnection {
         public boolean inbound;
         public GasStack gas;
 
-        /**
-         * Creates a new {@code AirFlow} instance.
-         *
-         * @param inbound whether inbound is enabled
-         * @param gas     the gas to inspect or process
-         */
         public AirFlow(boolean inbound, GasStack gas) {
             this.inbound = inbound;
             this.gas = gas;

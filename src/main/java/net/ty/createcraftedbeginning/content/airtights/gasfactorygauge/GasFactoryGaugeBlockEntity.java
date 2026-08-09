@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.gasfactorygauge;
 
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBehaviour;
-import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBlock;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBlock.PanelSlot;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBlockEntity;
 import com.simibubi.create.foundation.advancement.AdvancementBehaviour;
@@ -9,11 +8,11 @@ import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeAttachment.Detection;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Nullable;
@@ -26,8 +25,11 @@ import java.util.UUID;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasFactoryGaugeBlockEntity extends FactoryPanelBlockEntity {
+    private final GasFactoryGaugeAttachment attachment;
+
     public GasFactoryGaugeBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
+        attachment = new GasFactoryGaugeAttachment(this);
     }
 
     @Override
@@ -51,13 +53,12 @@ public class GasFactoryGaugeBlockEntity extends FactoryPanelBlockEntity {
             return;
         }
 
-        Direction direction = FactoryPanelBlock.connectedDirection(getBlockState()).getOpposite();
-        BlockPos attachedPos = worldPosition.relative(direction);
-        if (!level.isLoaded(attachedPos)) {
+        Detection detection = attachment.detectAttachedPackager();
+        if (detection == Detection.UNAVAILABLE) {
             return;
         }
 
-        boolean isPackagerAttached = level.getBlockEntity(attachedPos) instanceof GasPackagerBlockEntity;
+        boolean isPackagerAttached = detection == Detection.ATTACHED;
         if (restocker == isPackagerAttached) {
             return;
         }
@@ -70,17 +71,7 @@ public class GasFactoryGaugeBlockEntity extends FactoryPanelBlockEntity {
     @Override
     @Nullable
     public GasPackagerBlockEntity getRestockedPackager() {
-        BlockState state = getBlockState();
-        if (!restocker || !(state.getBlock() instanceof GasFactoryGaugeBlock)) {
-            return null;
-        }
-
-        Direction direction = FactoryPanelBlock.connectedDirection(state).getOpposite();
-        BlockPos packagerPos = worldPosition.relative(direction);
-        if (level == null || !level.isLoaded(packagerPos)) {
-            return null;
-        }
-        return level.getBlockEntity(packagerPos) instanceof GasPackagerBlockEntity packager ? packager : null;
+        return restocker ? attachment.findAttachedPackager() : null;
     }
 
     @Override

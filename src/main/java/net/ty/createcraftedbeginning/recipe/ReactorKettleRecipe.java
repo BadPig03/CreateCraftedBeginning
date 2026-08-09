@@ -168,7 +168,6 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
         return planTankInputConsumption(tankAmounts, requiredAmounts, matches, amounts);
     }
 
-    // Solve the small tank-to-ingredient allocation as a flow network so broad ingredients cannot starve restrictive ones.
     private static boolean planTankInputConsumption(long[] tankAmounts, long[] requiredAmounts, boolean[][] matches, long[] plannedAmounts) {
         int tankCount = tankAmounts.length;
         int ingredientCount = requiredAmounts.length;

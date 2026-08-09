@@ -32,73 +32,46 @@ import java.util.List;
 public class SculkAirCannonHandler implements AirtightCannonHandler, AirtightCannonVisualHandler {
     private static final float DEFAULT_RADIUS = 1.2f;
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ItemStack getRenderIcon(Level level) {
         return new ItemStack(CCBItems.SCULK_WIND_CHARGE.asItem());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void renderTrailParticles(Level level, Vec3 pos) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ResourceLocation getTextureLocation() {
         return CCBAPI.asResource("textures/entity/projectiles/sculk_wind_charge.png");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CannonModelType getModelType() {
         return CannonModelType.CORE_ONLY;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CannonAnimationType getAnimationType() {
         return CannonAnimationType.CORE_Y;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getRotationSpeed() {
         return 16;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void explode(Level level, Vec3 pos, AirtightCannonShotContext context) {
         float radius = DEFAULT_RADIUS * context.effectMultiplier();
         level.explode(context.projectile(), CCBDamageTypes.source(DamageTypes.SONIC_BOOM, level, context.projectile()), AirtightCannonUtils.createDamageCalculator(context.knockbackMultiplier()), pos.x(), pos.y(), pos.z(), radius, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getGasConsumptionMultiplier() {
         return 1;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(CCBLang.translate("gui.airtight_cannon.sculk_air").style(ChatFormatting.DARK_GREEN).component());

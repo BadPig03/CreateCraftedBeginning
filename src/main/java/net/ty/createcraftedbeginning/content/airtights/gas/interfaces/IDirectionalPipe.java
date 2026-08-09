@@ -24,12 +24,6 @@ public interface IDirectionalPipe {
 
         public static final Codec<DirectionalFacing> CODEC = StringRepresentable.fromEnum(DirectionalFacing::values);
 
-        /**
-         * Returns the y angle.
-         *
-         * @param facing the facing direction
-         * @return the y angle
-         */
         @Contract(pure = true)
         public static int getYAngle(DirectionalFacing facing) {
             return switch (facing) {
@@ -40,12 +34,6 @@ public interface IDirectionalPipe {
             };
         }
 
-        /**
-         * Returns the facing direction.
-         *
-         * @param direction the direction associated with the operation
-         * @return the facing direction
-         */
         @Contract(pure = true)
         public static DirectionalFacing getFacingDirection(Direction direction) {
             return switch (direction) {
@@ -57,12 +45,6 @@ public interface IDirectionalPipe {
             };
         }
 
-        /**
-         * Returns the direction.
-         *
-         * @param facing the facing direction
-         * @return the direction
-         */
         @Contract(pure = true)
         public static Direction getDirection(DirectionalFacing facing) {
             return switch (facing) {
@@ -73,9 +55,6 @@ public interface IDirectionalPipe {
             };
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public String getSerializedName() {
             return Lang.asId(name());

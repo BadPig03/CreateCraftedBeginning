@@ -7,13 +7,13 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
@@ -27,7 +27,6 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
     private final TeslaTurbineCore core;
 
     private CCBAdvancementBehaviour advancementBehaviour;
-    private float lastGeneratedSpeed = Float.NaN;
 
     public TeslaTurbineBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -45,17 +44,7 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
     @Override
     public void tick() {
         super.tick();
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
         core.tick();
-        if (isOverStressed()) {
-            lastGeneratedSpeed = Float.NaN;
-            return;
-        }
-
-        refreshGeneratedRotationIfNeeded();
     }
 
     @Override
@@ -72,8 +61,7 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
     @Override
     public void initialize() {
         super.initialize();
-        lastGeneratedSpeed = Float.NaN;
-        refreshGeneratedRotationIfNeeded();
+        core.initialize();
     }
 
     @Override
@@ -86,20 +74,7 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
     @Override
     public void onSpeedChanged(float previousSpeed) {
         super.onSpeedChanged(previousSpeed);
-        if (level == null || level.isClientSide || getSpeed() == 0 || getGeneratedSpeed() == 0) {
-            return;
-        }
-
-        if (!core.getStructureManager().isActive()) {
-            return;
-        }
-
-        advancementBehaviour.awardPlayer(CCBAdvancements.GENIUS_ENGINEER);
-        if (core.getLevelCalculator().getCurrentLevel() != TeslaTurbineUtils.MAX_LEVEL) {
-            return;
-        }
-
-        advancementBehaviour.awardPlayer(CCBAdvancements.MIRACLE_OF_ENGINEERING);
+        core.onSpeedChanged();
     }
 
     @Override
@@ -113,20 +88,16 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
         super.read(compoundTag, provider, clientPacket);
         CompoundTag coreTag = compoundTag.contains(COMPOUND_KEY_CORE) ? compoundTag.getCompound(COMPOUND_KEY_CORE) : new CompoundTag();
         core.read(coreTag, provider, clientPacket);
-        lastGeneratedSpeed = Float.NaN;
     }
 
     @Override
     public float getGeneratedSpeed() {
-        int direction = core.getFlowMeter().isClockwiseFlow() ? -1 : 1;
-        int modifier = getBlockState().getValue(TeslaTurbineBlock.AXIS) == Axis.Z ? -1 : 1;
-        return TeslaTurbineUtils.BASE_ROTATION_SPEED * core.getLevelCalculator().getCurrentLevel() * direction * modifier;
+        return core.getGeneratedSpeed();
     }
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         super.addBehaviours(behaviours);
-
         advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.MIRACLE_OF_ENGINEERING, CCBAdvancements.GENIUS_ENGINEER, CCBAdvancements.TESLA_TURBINE_EASY_AS_PIE);
         behaviours.add(advancementBehaviour);
     }
@@ -139,17 +110,11 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
         return advancementBehaviour;
     }
 
-    private void refreshGeneratedRotationIfNeeded() {
-        if (level == null || level.isClientSide) {
-            return;
-        }
+    public IGasHandler createGasHandler(boolean clockwise) {
+        return core.createGasHandler(clockwise);
+    }
 
-        float generatedSpeed = getGeneratedSpeed();
-        if (Float.compare(generatedSpeed, lastGeneratedSpeed) == 0) {
-            return;
-        }
-
-        lastGeneratedSpeed = generatedSpeed;
-        updateGeneratedRotation();
+    void refreshStructure() {
+        core.getStructureManager().tick();
     }
 }

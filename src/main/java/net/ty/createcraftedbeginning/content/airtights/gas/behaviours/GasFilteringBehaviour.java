@@ -50,12 +50,6 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
     private Predicate<GasStack> compiledFilter;
     private Consumer<ItemStack> callback;
 
-    /**
-     * Creates a new {@code GasFilteringBehaviour} instance.
-     *
-     * @param be   the block entity that participates in the operation
-     * @param slot the zero-based slot index
-     */
     public GasFilteringBehaviour(SmartBlockEntity be, ValueBoxTransform slot) {
         super(be);
         filter = FilterItemStack.empty();
@@ -64,23 +58,11 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
         callback = $ -> {};
     }
 
-    /**
-     * Configures the callback for this builder.
-     *
-     * @param filterCallback the filter callback to use
-     * @return this builder for chaining
-     */
     public GasFilteringBehaviour withCallback(Consumer<ItemStack> filterCallback) {
         callback = filterCallback;
         return this;
     }
 
-    /**
-     * Checks whether the supplied value matches this condition.
-     *
-     * @param stack the stack to inspect or process
-     * @return {@code true} if the supplied value matches this condition; otherwise {@code false}
-     */
     public boolean test(GasStack stack) {
         return compiledFilter.test(stack);
     }
@@ -89,17 +71,11 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
         compiledFilter = GasFilterUtils.compile(filter.item());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public BehaviourType<?> getType() {
         return TYPE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
@@ -108,107 +84,66 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
         rebuildCompiledFilter();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
         compoundTag.put(COMPOUND_KEY_FILTER, getFilter().saveOptional(provider));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isSafeNBT() {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ItemRequirement getRequiredItems() {
         return filter.isFilterItem() ? new ItemRequirement(ItemUseType.CONSUME, filter.item()) : ItemRequirement.NONE;
     }
 
-    /**
-     * Returns the filter.
-     *
-     * @return the filter
-     */
     public ItemStack getFilter() {
         return filter.item();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean testHit(Vec3 hit) {
         Vec3 localHit = hit.subtract(Vec3.atLowerCornerOf(blockEntity.getBlockPos()));
         return slotPositioning.testHit(getWorld(), getPos(), blockEntity.getBlockState(), localHit);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isActive() {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ValueBoxTransform getSlotPositioning() {
         return slotPositioning;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public @Nullable ValueSettingsBoard createBoard(Player player, BlockHitResult hitResult) {
         return null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setValueSettings(Player player, ValueSettings settings, boolean ctrlDown) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public @Nullable ValueSettings getValueSettings() {
         return null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean acceptsValueSettings() {
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getClipboardKey() {
         return COMPOUND_KEY_FILTERING;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean writeToClipboard(Provider provider, CompoundTag compoundTag, Direction side) {
         ValueSettingsBehaviour.super.writeToClipboard(provider, compoundTag, side);
@@ -216,9 +151,6 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean readFromClipboard(Provider registries, CompoundTag compoundTag, Player player, Direction side, boolean simulate) {
         if (!mayInteract(player)) {
@@ -238,9 +170,6 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
         return setFilter(side, filterItem);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void onShortInteract(Player player, InteractionHand hand, Direction side, BlockHitResult hitResult) {
         Level level = getWorld();
@@ -257,41 +186,19 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
         level.playSound(null, getPos(), SoundEvents.ITEM_FRAME_ADD_ITEM, SoundSource.BLOCKS, 0.25f, 0.1f);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int netId() {
         return 2;
     }
 
-    /**
-     * Returns the filter.
-     *
-     * @param ignored the ignored to use
-     * @return the filter
-     */
     public ItemStack getFilter(Direction ignored) {
         return getFilter();
     }
 
-    /**
-     * Sets the filter.
-     *
-     * @param ignored the ignored to use
-     * @param stack   the stack to inspect or process
-     * @return {@code true} if the condition is satisfied; otherwise {@code false}
-     */
     public boolean setFilter(Direction ignored, ItemStack stack) {
         return setFilter(stack);
     }
 
-    /**
-     * Sets the filter.
-     *
-     * @param stack the stack to inspect or process
-     * @return {@code true} if the condition is satisfied; otherwise {@code false}
-     */
     public boolean setFilter(ItemStack stack) {
         ItemStack filterItem = GasFilterUtils.normalizeStack(stack);
         if (!filterItem.isEmpty() && !predicate.test(filterItem)) {
@@ -310,30 +217,15 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
         return true;
     }
 
-    /**
-     * Returns the label.
-     *
-     * @return the label
-     */
     public MutableComponent getLabel() {
         return CCBLang.translateDirect("gui.gas_filter");
     }
 
-    /**
-     * Returns the tip.
-     *
-     * @return the tip
-     */
     public MutableComponent getTip() {
         String translationKey = filter.isEmpty() ? "gui.filter.click_to_set" : "gui.filter.click_to_replace";
         return CCBLang.translateDirect(translationKey);
     }
 
-    /**
-     * Returns the render distance.
-     *
-     * @return the render distance
-     */
     public float getRenderDistance() {
         return CCBClientBridge.getFilterItemRenderDistance();
     }

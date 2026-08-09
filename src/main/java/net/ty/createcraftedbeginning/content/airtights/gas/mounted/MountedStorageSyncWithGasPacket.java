@@ -26,17 +26,11 @@ import java.util.Map;
 public record MountedStorageSyncWithGasPacket(int contraptionId, Map<BlockPos, MountedItemStorage> items, Map<BlockPos, MountedFluidStorage> fluids, Map<BlockPos, MountedGasStorage> gases) implements ClientboundPacketPayload {
     public static final StreamCodec<RegistryFriendlyByteBuf, MountedStorageSyncWithGasPacket> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.INT, MountedStorageSyncWithGasPacket::contraptionId, ByteBufCodecs.map(HashMap::new, BlockPos.STREAM_CODEC, MountedItemStorage.STREAM_CODEC), MountedStorageSyncWithGasPacket::items, ByteBufCodecs.map(HashMap::new, BlockPos.STREAM_CODEC, MountedFluidStorage.STREAM_CODEC), MountedStorageSyncWithGasPacket::fluids, ByteBufCodecs.map(HashMap::new, BlockPos.STREAM_CODEC, MountedGasStorage.STREAM_CODEC), MountedStorageSyncWithGasPacket::gases, MountedStorageSyncWithGasPacket::new);
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public PacketTypeProvider getTypeProvider() {
         return CCBPackets.MOUNTED_STORAGE_SYNC_WITH_GAS;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     @OnlyIn(Dist.CLIENT)
     public void handle(LocalPlayer player) {

@@ -35,56 +35,35 @@ public class CreativeAirCannonHandler implements AirtightCannonHandler, Airtight
     private static final float DEFAULT_RADIUS = 1.2f;
     private static final float LETHAL_BONUS_DAMAGE = Integer.MAX_VALUE;
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ItemStack getRenderIcon(Level level) {
         return new ItemStack(CCBItems.CREATIVE_WIND_CHARGE.asItem());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void renderTrailParticles(Level level, Vec3 pos) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ResourceLocation getTextureLocation() {
         return CCBAPI.asResource("textures/entity/projectiles/creative_wind_charge.png");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CannonModelType getModelType() {
         return CannonModelType.CORE_ONLY;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CannonAnimationType getAnimationType() {
         return CannonAnimationType.CORE_Y;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getRotationSpeed() {
         return 24;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void explode(Level level, Vec3 pos, AirtightCannonShotContext context) {
         float radius = DEFAULT_RADIUS * context.effectMultiplier();
@@ -94,17 +73,11 @@ public class CreativeAirCannonHandler implements AirtightCannonHandler, Airtight
         AirtightCannonUtils.applyBonusDamage(entities, explosionDamageSource, LETHAL_BONUS_DAMAGE);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getGasConsumptionMultiplier() {
         return 0;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(CCBLang.translate("gui.airtight_cannon.creative_air").style(ChatFormatting.DARK_GREEN).component());

@@ -51,7 +51,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 @ParametersAreNonnullByDefault
@@ -59,7 +58,6 @@ import java.util.concurrent.atomic.AtomicLong;
 public final class AirtightReactorKettleUtils {
     private static final Object CRAFTING_RECIPE_CACHE_KEY = new Object();
     private static final Object REACTOR_KETTLE_RECIPE_CACHE_KEY = new Object();
-    private static final AtomicBoolean RECIPE_TRIE_FAILURE_LOGGED = new AtomicBoolean();
     private static final AtomicLong RECIPE_CACHE_VERSION = new AtomicLong();
 
     private AirtightReactorKettleUtils() {
@@ -103,7 +101,7 @@ public final class AirtightReactorKettleUtils {
                 }
             }
         } catch (ExecutionException | UncheckedExecutionException e) {
-            if (RECIPE_TRIE_FAILURE_LOGGED.compareAndSet(false, true)) {
+            if (AirtightWithGasRecipeTrieFinder.recordFailure(REACTOR_KETTLE_RECIPE_CACHE_KEY, level)) {
                 CCBAPI.LOGGER.error("Failed to build the reactor kettle recipe trie; falling back to a linear recipe search", e);
             }
         }
@@ -124,7 +122,7 @@ public final class AirtightReactorKettleUtils {
     }
 
     public static void invalidateRecipeCaches() {
-        RECIPE_TRIE_FAILURE_LOGGED.set(false);
+        AirtightWithGasRecipeTrieFinder.invalidateFailures(REACTOR_KETTLE_RECIPE_CACHE_KEY);
         RECIPE_CACHE_VERSION.incrementAndGet();
     }
 

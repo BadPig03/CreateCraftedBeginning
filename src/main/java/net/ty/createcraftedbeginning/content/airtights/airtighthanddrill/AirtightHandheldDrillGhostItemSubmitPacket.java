@@ -19,11 +19,15 @@ public record AirtightHandheldDrillGhostItemSubmitPacket(ItemStack item) impleme
 
     @Override
     public void handle(ServerPlayer player) {
-        if (!(player.containerMenu instanceof AirtightHandheldDrillMenu menu)) {
+        if (!(player.containerMenu instanceof AirtightHandheldDrillMenu menu) || !menu.stillValid(player)) {
+            return;
+        }
+        if (!item.isEmpty() && !AirtightHandheldDrillUtils.isValidFilter(item)) {
             return;
         }
 
-        menu.getMenuInventory().setStackInSlot(AirtightHandheldDrillMenu.FILTER_SLOT_INDEX, item);
+        ItemStack filter = item.isEmpty() ? ItemStack.EMPTY : item.copyWithCount(1);
+        menu.getMenuInventory().setStackInSlot(AirtightHandheldDrillMenu.FILTER_SLOT_INDEX, filter);
         menu.getSlot(PLAYER_INVENTORY_SLOTS + AirtightHandheldDrillMenu.FILTER_SLOT_INDEX).setChanged();
     }
 

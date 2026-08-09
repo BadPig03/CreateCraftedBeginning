@@ -25,9 +25,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBAirtightDrillHandlers {
-    /**
-     * Registers the built-in airtight drill handlers.
-     */
     public static void register() {
         AirtightDrillHandlerUtils.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), new NaturalAirDrillHandler());
         AirtightDrillHandlerUtils.register(CCBGases.ENERGIZED_NATURAL_AIR.get().getResourceLocation(), new EnergizedNaturalAirDrillHandler());

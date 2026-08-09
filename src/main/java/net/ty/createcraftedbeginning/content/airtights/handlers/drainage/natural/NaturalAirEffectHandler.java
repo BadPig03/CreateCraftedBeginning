@@ -21,17 +21,11 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class NaturalAirEffectHandler implements AirtightDrainageHandler {
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getInflation() {
         return 1;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void apply(Level level, BlockPos pos, Direction direction, Gas gasType) {
         applyEffects(level, pos, direction, gasType.getTint(), 1);

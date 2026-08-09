@@ -62,21 +62,33 @@ public final class AirtightArmHandlerUtils {
      */
     public static void register(ResourceLocation location, float consumption, float blockRange, float entityRange, float knockback) {
         register(location, new AirtightArmHandler() {
+            /**
+             * {@inheritDoc}
+             */
             @Override
             public float getGasConsumptionMultiplier() {
                 return consumption;
             }
 
+            /**
+             * {@inheritDoc}
+             */
             @Override
             public float getIncreasedBlockInteractionRange() {
                 return blockRange;
             }
 
+            /**
+             * {@inheritDoc}
+             */
             @Override
             public float getIncreasedEntityInteractionRange() {
                 return entityRange;
             }
 
+            /**
+             * {@inheritDoc}
+             */
             @Override
             public float getIncreasedKnockback() {
                 return knockback;

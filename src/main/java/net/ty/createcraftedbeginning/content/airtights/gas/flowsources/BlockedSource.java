@@ -10,26 +10,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class BlockedSource extends GasFlowSource {
-    /**
-     * Creates a new {@code BlockedSource} instance.
-     *
-     * @param location the resource location identifying the target value
-     */
     public BlockedSource(BlockFace location) {
         super(location);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isEndpoint() {
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void manageSource(Level level, BlockEntity networkBE) {
     }
