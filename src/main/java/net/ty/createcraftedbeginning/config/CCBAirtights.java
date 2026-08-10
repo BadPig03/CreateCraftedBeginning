@@ -7,7 +7,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-//
 public class CCBAirtights extends ConfigBase {
     @SuppressWarnings("unused")
     public final ConfigGroup airCompressor = group(0, "air_compressor", "Air Compressor");

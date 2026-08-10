@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.registry;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.RegistrationInfo;
 import net.minecraft.core.Registry;
 import net.minecraft.core.WritableRegistry;
@@ -11,6 +12,10 @@ import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public final class CCBBuiltInRegistries {
     @Nullable
     public static Registry<MountedGasStorageType<?>> MOUNTED_GAS_STORAGE_TYPE;
@@ -27,7 +32,7 @@ public final class CCBBuiltInRegistries {
         MOUNTED_GAS_STORAGE_TYPE = register(CCBRegistries.MOUNTED_GAS_STORAGE_TYPE);
     }
 
-    public static @NotNull Registry<MountedGasStorageType<?>> mountedGasStorageType() {
+    public static Registry<MountedGasStorageType<?>> mountedGasStorageType() {
         Registry<MountedGasStorageType<?>> registry = MOUNTED_GAS_STORAGE_TYPE;
         if (registry == null) {
             throw new IllegalStateException("CCB built-in registries have not been bootstrapped yet");
@@ -35,7 +40,7 @@ public final class CCBBuiltInRegistries {
         return registry;
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked", "rawtypes", "SameParameterValue"})
     private static <T> @NotNull Registry<T> register(ResourceKey<Registry<T>> key) {
         RegistryBuilder<T> builder = new RegistryBuilder<>(key).sync(true);
         Registry<T> registry = builder.create();

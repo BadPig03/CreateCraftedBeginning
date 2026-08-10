@@ -33,7 +33,6 @@ import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     public static final BehaviourType<GasTransportBehaviour> TYPE = new BehaviourType<>();
 
@@ -190,6 +189,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         return interfaces.get(side);
     }
 
+    @SuppressWarnings("unused")
     public boolean hasAnyPressure() {
         if (connectionsDirty) {
             refreshConnections();

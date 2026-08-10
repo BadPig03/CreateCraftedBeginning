@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-08T23:51:44.8613691	Create Crafted Beginning's Processing Recipes With Gas
+// 1.21.1	2026-08-10T16:22:49.0065807	Create Crafted Beginning's Processing Recipes With Gas
 17f6de5a374f5d298f5588d884e70b087217f4af data/createcraftedbeginning/recipe/dissipation/ethereal.json
 62f12995b52b6664a0fe34176f0f5eeec1628254 data/createcraftedbeginning/recipe/dissipation/natural.json
 0b4489a5ac6c020d0d52369409943bdfdb0950fe data/createcraftedbeginning/recipe/dissipation/pressurized_ethereal.json
@@ -171,7 +171,9 @@ b8a0bdeae325d6f8f458ff2b929a7eb4b86a66b5 data/createcraftedbeginning/recipe/reac
 341bcda55f4291a4e8e4181cc7d758f9762b2cea data/createcraftedbeginning/recipe/residue_generation/natural.json
 22a4a77b44444fb1ba3bfb43b61922c72740ad7c data/createcraftedbeginning/recipe/residue_generation/pressurized_ethereal.json
 4cf552ba3d9d28fcd27e07a9ad1d87093dc8d1e7 data/createcraftedbeginning/recipe/residue_generation/pressurized_natural.json
+6e5fe991f92294f74c3e6530e1dd0c6f170b8d88 data/createcraftedbeginning/recipe/residue_generation/pressurized_steam.json
 b2fdd2578422d56e627b33a4aa5c4f886ed2d581 data/createcraftedbeginning/recipe/residue_generation/pressurized_ultrawarm.json
 3184ecaff678946e0ba03be8f8121bc1ff827a75 data/createcraftedbeginning/recipe/residue_generation/sculk.json
 0cedf47bf901196d8a269c72453c7b985c3878aa data/createcraftedbeginning/recipe/residue_generation/spore.json
+f6d0f8acda5dc0cf4d0fc794250a6787e1d95b21 data/createcraftedbeginning/recipe/residue_generation/steam.json
 b659198694e9f0fd3836d672df918e9aaa9d0459 data/createcraftedbeginning/recipe/residue_generation/ultrawarm.json

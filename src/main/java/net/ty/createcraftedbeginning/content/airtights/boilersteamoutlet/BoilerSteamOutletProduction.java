@@ -5,6 +5,7 @@ import com.simibubi.create.api.stress.BlockStressValues;
 import com.simibubi.create.content.fluids.tank.FluidTankBlockEntity;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -21,10 +22,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 final class BoilerSteamOutletProduction {
     static final int STRESS_PER_STEAM_MB = 1024;
     private static final int STEAM_ENGINE_BASE_SPEED = 16;
+    private static final int TICKS_PER_SECOND = 20;
+
+    private static final String COMPOUND_KEY_PRODUCTION_RATE = "ProductionRate";
 
     private final BoilerSteamOutletBlockEntity outlet;
 
     private double productionRemainder;
+    private double currentProductionRate;
     private long accountingTick = Long.MIN_VALUE;
     private long productionThisTick;
 
@@ -49,32 +54,52 @@ final class BoilerSteamOutletProduction {
         return fullLoadStress / STRESS_PER_STEAM_MB;
     }
 
-    void ensureCurrentTick() {
+    boolean ensureCurrentTick() {
         Level level = outlet.getLevel();
         if (level == null || level.isClientSide) {
-            return;
+            return false;
         }
 
         long gameTime = level.getGameTime();
         if (accountingTick == gameTime) {
-            return;
+            return false;
         }
 
         accountingTick = gameTime;
         double idealProduction = getMaximumProductionRate();
+        boolean productionRateChanged = Double.compare(currentProductionRate, idealProduction) != 0;
+        currentProductionRate = idealProduction;
         if (!Double.isFinite(idealProduction) || idealProduction <= 0) {
             productionThisTick = 0;
             setAvailableSteam(0);
-            return;
+            return productionRateChanged;
         }
 
         double availableProduction = productionRemainder + idealProduction;
         productionThisTick = availableProduction >= Long.MAX_VALUE ? Long.MAX_VALUE : Mth.lfloor(availableProduction);
         productionRemainder = availableProduction >= Long.MAX_VALUE ? 0 : availableProduction - productionThisTick;
         setAvailableSteam(productionThisTick);
+        return productionRateChanged;
     }
 
-    void resetTickAccounting() {
+    double getProductionRatePerSecond() {
+        return currentProductionRate * TICKS_PER_SECOND;
+    }
+
+    void write(CompoundTag tag, boolean clientPacket) {
+        if (!clientPacket) {
+            return;
+        }
+
+        tag.putDouble(COMPOUND_KEY_PRODUCTION_RATE, currentProductionRate);
+    }
+
+    void read(CompoundTag tag, boolean clientPacket) {
+        currentProductionRate = clientPacket ? Math.max(0, tag.getDouble(COMPOUND_KEY_PRODUCTION_RATE)) : 0;
+        resetTickAccounting();
+    }
+
+    private void resetTickAccounting() {
         accountingTick = Long.MIN_VALUE;
         productionThisTick = 0;
         setAvailableSteam(0);

@@ -14,6 +14,7 @@ final class BoilerSteamOutletExtractionMeter {
     private static final int SAMPLE_RATE = 5;
     private static final int SAMPLE_COUNT = 10;
     private static final int SAMPLE_WINDOW_TICKS = SAMPLE_RATE * SAMPLE_COUNT;
+    private static final int TICKS_PER_SECOND = 20;
 
     private static final String COMPOUND_KEY_CURRENT_INDEX = "CurrentIndex";
     private static final String COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE = "TicksUntilNextSample";
@@ -50,6 +51,10 @@ final class BoilerSteamOutletExtractionMeter {
         double previousAverage = averageExtractionRate;
         recordSample();
         return Double.compare(previousAverage, averageExtractionRate) == 0 ? TickResult.RECORDED : TickResult.AVERAGE_CHANGED;
+    }
+
+    double getAverageExtractionRatePerSecond() {
+        return averageExtractionRate * TICKS_PER_SECOND;
     }
 
     boolean recordExtraction(GasStack drained, GasAction action) {

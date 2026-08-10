@@ -38,6 +38,7 @@ import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
 import net.ty.createcraftedbeginning.foundation.gui.CCBIcons;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -379,18 +380,34 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         }
 
         int x = guiLeft;
+        int y = guiTop;
+        if (!restocker) {
+            for (int i = 0; i < connections.size(); i++) {
+                int inputX = x + 68 + i % 3 * 20;
+                int inputY = y + 28 + i / 3 * 20;
+                if (mouseX < inputX || mouseX >= inputX + 16 || mouseY < inputY || mouseY >= inputY + 16) {
+                    continue;
+                }
+
+                sendIt(connections.get(i).from, false);
+                playButtonSound();
+                return true;
+            }
+        }
+
         int itemX = x + 68;
-        int itemY = guiTop + windowHeight - 8;
+        int itemY = y + windowHeight - 8;
         if (mouseX >= itemX && mouseX < itemX + 16 && mouseY >= itemY && mouseY < itemY + 16) {
-            sendIt(true);
+            sendIt(null, true);
             playButtonSound();
             return true;
         }
 
         itemX = x + 9;
+        itemY = y + windowHeight - 24;
         if (mouseX >= itemX && mouseX < itemX + 16 && mouseY >= itemY && mouseY < itemY + 16) {
             sendRedstoneReset = true;
-            sendIt(false);
+            sendIt(null, false);
             sendRedstoneReset = false;
             playButtonSound();
             return true;
@@ -439,7 +456,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
 
     @Override
     public void removed() {
-        sendIt(false);
+        sendIt(null, false);
         super.removed();
     }
 
@@ -451,8 +468,8 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1, 0.25f));
     }
 
-    private void sendIt(boolean clearPromises) {
-        FactoryPanelConfigurationPacket packet = new FactoryPanelConfigurationPacket(behaviour.getPanelPosition(), addressBox.getValue(), collectInputAmounts(), List.of(), outputConfig.count, promiseExpiration.getState(), null, clearPromises, sendReset, sendRedstoneReset);
+    private void sendIt(@Nullable FactoryPanelPosition removeConnection, boolean clearPromises) {
+        FactoryPanelConfigurationPacket packet = new FactoryPanelConfigurationPacket(behaviour.getPanelPosition(), addressBox.getValue(), collectInputAmounts(), List.of(), outputConfig.count, promiseExpiration.getState(), removeConnection, clearPromises, sendReset, sendRedstoneReset);
         CatnipServices.NETWORK.sendToServer(packet);
     }
 

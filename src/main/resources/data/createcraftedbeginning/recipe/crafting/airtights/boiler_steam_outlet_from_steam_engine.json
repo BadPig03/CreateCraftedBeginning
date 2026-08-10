@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "create:steam_engine"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:boiler_steam_outlet"
+  }
+}

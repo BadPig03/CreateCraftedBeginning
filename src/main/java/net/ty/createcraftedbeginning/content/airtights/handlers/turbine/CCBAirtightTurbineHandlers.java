@@ -10,9 +10,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class CCBAirtightTurbineHandlers {
     public static void register() {
-        AirtightTurbineHandlerUtils.register(CCBGases.STEAM.get().getResourceLocation(), 4);
-        AirtightTurbineHandlerUtils.register(CCBGases.PRESSURIZED_STEAM.get().getResourceLocation(), 8);
-
         AirtightTurbineHandlerUtils.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), 1);
         AirtightTurbineHandlerUtils.register(CCBGases.ENERGIZED_NATURAL_AIR.get().getResourceLocation(), 2);
         AirtightTurbineHandlerUtils.register(CCBGases.PRESSURIZED_NATURAL_AIR.get().getResourceLocation(), 4);
@@ -31,6 +28,9 @@ public class CCBAirtightTurbineHandlers {
         AirtightTurbineHandlerUtils.register(CCBGases.MOIST_AIR.get().getResourceLocation(), 1);
         AirtightTurbineHandlerUtils.register(CCBGases.SPORE_AIR.get().getResourceLocation(), 1);
         AirtightTurbineHandlerUtils.register(CCBGases.SCULK_AIR.get().getResourceLocation(), 1);
+
+        AirtightTurbineHandlerUtils.register(CCBGases.STEAM.get().getResourceLocation(), 4);
+        AirtightTurbineHandlerUtils.register(CCBGases.PRESSURIZED_STEAM.get().getResourceLocation(), 12);
 
         AirtightTurbineHandlerUtils.register(CCBGases.CREATIVE_AIR.get().getResourceLocation(), 16);
     }

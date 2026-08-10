@@ -390,7 +390,7 @@ public final class CCBBlockModelTransformer {
                 int rotationX = face.ordinal() * 90;
                 int rotationY = ((int) facing.toYRot() + 180 + (face == AttachFace.CEILING ? 180 : 0)) % 360;
                 return ConfiguredModel.builder().modelFile(model).rotationX(rotationX).rotationY(rotationY).build();
-            }, BlockStateProperties.WATERLOGGED, BoilerSteamOutletBlock.POWERED, BoilerSteamOutletBlock.OPEN);
+            }, BlockStateProperties.WATERLOGGED, BoilerSteamOutletBlock.POWERED);
         }).item().properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).build();
     }
 
@@ -406,7 +406,6 @@ public final class CCBBlockModelTransformer {
                     default -> 0;
                 };
                 int rotationY = horizontalRotation(facing);
-
                 return ConfiguredModel.builder().modelFile(model).rotationX(rotationX).rotationY(rotationY).build();
             }, BlockStateProperties.WATERLOGGED, TeslaTurbineNozzleBlock.CLOCKWISE);
         }).item().tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).build();

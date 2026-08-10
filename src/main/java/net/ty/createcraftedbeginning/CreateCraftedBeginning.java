@@ -5,12 +5,10 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.registries.NewRegistryEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import net.ty.createcraftedbeginning.advancement.CCBTriggers;
@@ -90,7 +88,6 @@ public class CreateCraftedBeginning {
         CCBConfig.register(modContainer);
         CCBStressProviders.register(CCBConfig.server().stressValues);
 
-        NeoForge.EVENT_BUS.register(this);
         addRegistrationListeners(modEventBus);
         modEventBus.addListener(CreateCraftedBeginning::init);
         modEventBus.addListener(CreateCraftedBeginning::onRegister);
@@ -158,7 +155,4 @@ public class CreateCraftedBeginning {
         event.register(GasRegistries.GAS_INGREDIENT_TYPES_REGISTRY);
     }
 
-    @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event) {
-    }
 }

@@ -8,10 +8,6 @@ import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -29,7 +25,6 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
-import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
@@ -40,13 +35,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class BoilerSteamOutletBlock extends FaceAttachedHorizontalDirectionalBlock implements IBE<BoilerSteamOutletBlockEntity>, SimpleWaterloggedBlock, IWrenchable {
-    public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
     public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     public BoilerSteamOutletBlock(Properties properties) {
         super(properties);
-        registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(OPEN, true).setValue(POWERED, false));
+        registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(POWERED, false));
     }
 
     public static Direction getFacing(BlockState state) {
@@ -58,16 +52,16 @@ public class BoilerSteamOutletBlock extends FaceAttachedHorizontalDirectionalBlo
     }
 
     public static boolean isActive(BlockState state) {
-        return state.getBlock() instanceof BoilerSteamOutletBlock && state.getValue(OPEN) && !state.getValue(POWERED);
+        return state.getBlock() instanceof BoilerSteamOutletBlock && !state.getValue(POWERED);
     }
 
-    static void refreshBoiler(BlockState state, Level level, BlockPos pos) {
+    public static void refreshBoiler(BlockState state, Level level, BlockPos pos) {
         FluidTankBlock.updateBoilerState(state, level, getAttachedTankPos(state, pos));
     }
 
     @Override
     protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
-        builder.add(FACE, FACING, WATERLOGGED, OPEN, POWERED);
+        builder.add(FACE, FACING, WATERLOGGED, POWERED);
         super.createBlockStateDefinition(builder);
     }
 
@@ -148,19 +142,6 @@ public class BoilerSteamOutletBlock extends FaceAttachedHorizontalDirectionalBlo
             refreshBoiler(state, level, pos);
         }
         super.onRemove(state, level, pos, newState, isMoving);
-    }
-
-    @Override
-    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
-        if (level.isClientSide) {
-            return InteractionResult.SUCCESS;
-        }
-
-        BlockState updatedState = state.setValue(OPEN, !state.getValue(OPEN));
-        level.setBlock(pos, updatedState, UPDATE_ALL);
-        level.playSound(null, pos, SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, 0.3f, 0.5f);
-        refreshBoiler(updatedState, level, pos);
-        return InteractionResult.SUCCESS;
     }
 
     @Override

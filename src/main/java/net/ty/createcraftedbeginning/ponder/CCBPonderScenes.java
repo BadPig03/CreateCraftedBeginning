@@ -23,6 +23,7 @@ import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.AirtightEngin
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.AirtightForgingPressScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.AirtightHatchScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.AirtightReactorKettleScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.BoilerSteamOutletScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.GasInjectionChamberScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.GasPackagerScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.PortableGasInterfaceScenes;
@@ -67,6 +68,7 @@ public class CCBPonderScenes {
 
         entryHelper.forComponents(CCBBlocks.AIR_COMPRESSOR_BLOCK).addStoryBoard("air_compressor_story_board", AirCompressorScenes::gasProcessing, CCBPonderTags.GAS_MANIPULATORS_TAG_ID, AllCreatePonderTags.KINETIC_APPLIANCES).addStoryBoard("air_compressor_story_board", AirCompressorScenes::overheatManagement, CCBPonderTags.GAS_MANIPULATORS_TAG_ID, AllCreatePonderTags.KINETIC_APPLIANCES);
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_ENGINE_BLOCK).addStoryBoard("airtight_engine_setting_up_story_board", AirtightEngineScenes::settingUp, CCBPonderTags.GAS_MANIPULATORS_TAG_ID, AllCreatePonderTags.KINETIC_SOURCES).addStoryBoard("airtight_engine_generating_story_board", AirtightEngineScenes::generating, CCBPonderTags.GAS_MANIPULATORS_TAG_ID, AllCreatePonderTags.KINETIC_SOURCES);
+        entryHelper.forComponents(CCBBlocks.BOILER_STEAM_OUTLET_BLOCK).addStoryBoard("boiler_steam_outlet_story_board", BoilerSteamOutletScenes::scene, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
         entryHelper.forComponents(CCBBlocks.RESIDUE_OUTLET_BLOCK).addStoryBoard("residue_outlet_story_board", ResidueOutletScenes::scene, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);
         entryHelper.forComponents(CCBBlocks.TESLA_TURBINE_BLOCK).addStoryBoard("tesla_turbine_setting_up_story_board", TeslaTurbineScenes::settingUp, CCBPonderTags.GAS_MANIPULATORS_TAG_ID, AllCreatePonderTags.KINETIC_SOURCES).addStoryBoard("tesla_turbine_generating_story_board", TeslaTurbineScenes::generating, CCBPonderTags.GAS_MANIPULATORS_TAG_ID, AllCreatePonderTags.KINETIC_SOURCES);
         entryHelper.forComponents(CCBBlocks.TESLA_TURBINE_NOZZLE_BLOCK).addStoryBoard("tesla_turbine_setting_up_story_board", TeslaTurbineScenes::settingUp, CCBPonderTags.GAS_MANIPULATORS_TAG_ID);

@@ -27,11 +27,18 @@ public abstract class AirtightArmorMenu extends AirtightUpgradableMenu {
     protected AirtightArmorMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData, UpgradeRegistryAccess upgradeRegistry) {
         super(type, id, inv, extraData);
         this.upgradeRegistry = upgradeRegistry;
+        updateStatus(contentHolder);
     }
 
     protected AirtightArmorMenu(MenuType<?> type, int id, Inventory inv, ItemStack contentHolder, InteractionHand sourceHand, UpgradeRegistryAccess upgradeRegistry) {
         super(type, id, inv, contentHolder, sourceHand);
         this.upgradeRegistry = upgradeRegistry;
+        updateStatus(contentHolder);
+    }
+
+    @Override
+    protected void initAndReadInventory(ItemStack stack) {
+        menuInventory = getInventoryHandler(stack, getMaxSlots());
     }
 
     protected static UpgradeRegistryAccess upgradeRegistry(Function<ResourceLocation, AirtightUpgrade> byId, Function<ItemStack, AirtightUpgrade> byStack, Supplier<List<AirtightUpgradeStatus>> defaultStatuses, Supplier<List<AirtightUpgrade>> upgrades) {

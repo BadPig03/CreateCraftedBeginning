@@ -29,14 +29,14 @@ final class BoilerSteamOutletController {
             return;
         }
 
-        production.ensureCurrentTick();
+        boolean productionRateChanged = production.ensureCurrentTick();
         TickResult sampleResult = extractionMeter.tick();
-        if (sampleResult == TickResult.NONE) {
+        if (!productionRateChanged && sampleResult == TickResult.NONE) {
             return;
         }
 
         outlet.setChanged();
-        if (sampleResult != TickResult.AVERAGE_CHANGED) {
+        if (!productionRateChanged && sampleResult != TickResult.AVERAGE_CHANGED) {
             return;
         }
 
@@ -58,7 +58,20 @@ final class BoilerSteamOutletController {
     }
 
     void ensureCurrentTick() {
-        production.ensureCurrentTick();
+        if (!production.ensureCurrentTick()) {
+            return;
+        }
+
+        outlet.setChanged();
+        outlet.sendData();
+    }
+
+    double getSteamGenerationRate() {
+        return production.getProductionRatePerSecond();
+    }
+
+    double getSteamOutputRate() {
+        return extractionMeter.getAverageExtractionRatePerSecond();
     }
 
     void recordExtraction(GasStack drained, GasAction action) {
@@ -70,11 +83,12 @@ final class BoilerSteamOutletController {
     }
 
     void write(CompoundTag tag, boolean clientPacket) {
+        production.write(tag, clientPacket);
         extractionMeter.write(tag, clientPacket);
     }
 
     void read(CompoundTag tag, boolean clientPacket) {
+        production.read(tag, clientPacket);
         extractionMeter.read(tag, clientPacket);
-        production.resetTickAccounting();
     }
 }

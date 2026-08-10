@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.recipe;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.FluidStack;
@@ -8,8 +9,12 @@ import net.neoforged.neoforge.items.IItemHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public interface ReactorKettleRecipeContext {
     Level getLevel();
 

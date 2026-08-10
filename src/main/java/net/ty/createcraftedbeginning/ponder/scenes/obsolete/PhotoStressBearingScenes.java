@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.ponder.scenes.disabled;
+package net.ty.createcraftedbeginning.ponder.scenes.obsolete;
 
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
@@ -125,6 +125,7 @@ public class PhotoStressBearingScenes {
         scene.markAsFinished();
     }
 
+    @SuppressWarnings("unused")
     public static void other_dimension(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
         scene.title("photo-stress_bearing_other_dimension", "Photo-Stress Bearings in other dimensions");

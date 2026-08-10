@@ -7,6 +7,7 @@ import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.ScrollOp
 import com.simibubi.create.foundation.utility.CreateLang;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.ponder.api.level.PonderLevel;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.core.particles.DustColorTransitionOptions;
@@ -16,10 +17,13 @@ import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import java.util.List;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PhotoStressBearingBlockEntity extends GeneratingKineticBlockEntity {
     private final DustColorTransitionOptions particleColor = new DustColorTransitionOptions(Vec3.fromRGB24(16761855).toVector3f(), Vec3.fromRGB24(10185983).toVector3f(), 1);
     protected ScrollOptionBehaviour<RotationDirection> movementDirection;
@@ -78,7 +82,7 @@ public class PhotoStressBearingBlockEntity extends GeneratingKineticBlockEntity 
     }
 
     @Override
-    public void addBehaviours(@NotNull List<BlockEntityBehaviour> behaviours) {
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         movementDirection = new ScrollOptionBehaviour<>(RotationDirection.class, CreateLang.translateDirect("contraptions.windmill.rotation_direction"), this, new PhotoStressBearingValueBox());
         movementDirection.withCallback(this::onDirectionChanged);
         behaviours.add(movementDirection);
@@ -115,20 +119,18 @@ public class PhotoStressBearingBlockEntity extends GeneratingKineticBlockEntity 
         lightTimer++;
     }
 
-    private int getPonderSkyLight(@NotNull Level level) {
+    private int getPonderSkyLight(Level level) {
         CompoundTag compound = new CompoundTag();
         saveAdditional(compound, level.registryAccess());
         return compound.contains("SkyLight") ? compound.getInt("SkyLight") : 15;
     }
 
     private void updateSkyLight() {
-        int light;
         if (level == null || level instanceof PonderLevel) {
             return;
         }
 
-        light = level.getBrightness(LightLayer.SKY, worldPosition.above());
-        skyLight = light;
+        skyLight = level.getBrightness(LightLayer.SKY, worldPosition.above());
     }
 
     private void spawnParticle() {

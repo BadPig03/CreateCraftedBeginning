@@ -53,11 +53,9 @@ public abstract class ThresholdSwitchBlockEntityMixin extends SmartBlockEntity {
         ccb$observedGasTank.findNewCapability();
     }
 
-    @SuppressWarnings("DataFlowIssue")
     @Inject(method = "getDisplayItemForScreen", at = @At("HEAD"), cancellable = true)
     private void ccb$getDisplayItemForScreen(CallbackInfoReturnable<ItemStack> cir) {
-        ThresholdSwitchBlockEntity switchBlockEntity = (ThresholdSwitchBlockEntity) (Object) this;
-        Level level = switchBlockEntity.getLevel();
+        Level level = getLevel();
         if (level == null) {
             return;
         }

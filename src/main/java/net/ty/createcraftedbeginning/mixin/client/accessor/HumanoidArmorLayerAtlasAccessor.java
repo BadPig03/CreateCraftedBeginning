@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.mixin.client.accessor;
 
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.texture.TextureAtlas;
@@ -10,8 +11,11 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Map;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @Mixin(HumanoidArmorLayer.class)
 public interface HumanoidArmorLayerAtlasAccessor extends HumanoidArmorLayerAccess {
     @Accessor("ARMOR_LOCATION_CACHE")

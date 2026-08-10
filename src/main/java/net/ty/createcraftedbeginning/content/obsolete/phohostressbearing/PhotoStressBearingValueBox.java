@@ -4,14 +4,18 @@ import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform.Si
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.math.Pointing;
 import net.createmod.catnip.math.VecHelper;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PhotoStressBearingValueBox extends Sided {
     @Override
     public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, BlockState state) {
@@ -43,7 +47,7 @@ public class PhotoStressBearingValueBox extends Sided {
     }
 
     @Override
-    protected boolean isSideActive(BlockState state, @NotNull Direction side) {
+    protected boolean isSideActive(BlockState state, Direction side) {
         return side.getAxis() != Axis.Y;
     }
 }

@@ -1,0 +1,11 @@
+{
+  "type": "createcraftedbeginning:residue_generation",
+  "ingredients": [
+    {
+      "type": "createcraftedbeginning:single",
+      "amount": 1,
+      "gas": "createcraftedbeginning:steam"
+    }
+  ],
+  "results": []
+}

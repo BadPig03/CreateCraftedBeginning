@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.boilersteamoutlet;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
+import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
@@ -41,7 +42,12 @@ public class BoilerSteamOutletBlockEntity extends SmartBlockEntity implements IH
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.BOILER_STEAM_OUTLET.get(), (be, direction) -> be.exposedGasHandler);
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.BOILER_STEAM_OUTLET.get(), (be, direction) -> {
+            if (direction != BoilerSteamOutletBlock.getFacing(be.getBlockState())) {
+                return null;
+            }
+            return be.exposedGasHandler;
+        });
     }
 
     @Override
@@ -79,6 +85,10 @@ public class BoilerSteamOutletBlockEntity extends SmartBlockEntity implements IH
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         CCBLang.translate("gui.boiler_steam_outlet.header").forGoggles(tooltip);
+        CCBLang.translate("gui.boiler_steam_outlet.steam_generation").style(ChatFormatting.GRAY).forGoggles(tooltip);
+        CCBLang.number(controller.getSteamGenerationRate()).space().translate("gui.unit.milli_buckets_per_second").style(ChatFormatting.AQUA).forGoggles(tooltip, 1);
+        CCBLang.translate("gui.boiler_steam_outlet.steam_output").style(ChatFormatting.GRAY).forGoggles(tooltip);
+        CCBLang.number(controller.getSteamOutputRate()).space().translate("gui.unit.milli_buckets_per_second").style(ChatFormatting.AQUA).forGoggles(tooltip, 1);
         return true;
     }
 

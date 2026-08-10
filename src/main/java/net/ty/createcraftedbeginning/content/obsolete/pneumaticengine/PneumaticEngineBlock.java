@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.obsolete.pneumaticengine;
 import com.simibubi.create.content.kinetics.base.KineticBlock;
 import com.simibubi.create.content.kinetics.simpleRelays.ICogWheel;
 import com.simibubi.create.foundation.block.IBE;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -21,8 +22,11 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PneumaticEngineBlock extends KineticBlock implements IBE<PneumaticEngineBlockEntity>, ICogWheel {
     public PneumaticEngineBlock(Properties properties) {
         super(properties);
@@ -50,17 +54,17 @@ public class PneumaticEngineBlock extends KineticBlock implements IBE<PneumaticE
     }
 
     @Override
-    protected boolean isPathfindable(@NotNull BlockState state, @NotNull PathComputationType pathComputationType) {
+    protected boolean isPathfindable(BlockState state, PathComputationType pathComputationType) {
         return false;
     }
 
     @Override
-    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter worldIn, @NotNull BlockPos pos, @NotNull CollisionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
         return box(1, 0, 1, 15, 16, 15);
     }
 
     @Override
-    public InteractionResult onWrenched(BlockState state, @NotNull UseOnContext context) {
+    public InteractionResult onWrenched(BlockState state, UseOnContext context) {
         BlockPos pos = context.getClickedPos();
         Level level = context.getLevel();
         BlockEntity be = level.getBlockEntity(pos);

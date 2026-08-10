@@ -1,11 +1,16 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighthatch;
 
 import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.INamedIconOptions;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.createmod.catnip.lang.Lang;
 import net.ty.createcraftedbeginning.foundation.gui.CCBIcons;
 
 import static java.lang.Math.clamp;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 enum AirtightHatchTransferMode implements INamedIconOptions {
     NO_TRANSFER(CCBIcons.I_NO_TRANSFER),
     INPUT_ONLY(CCBIcons.I_INPUT_ONLY),

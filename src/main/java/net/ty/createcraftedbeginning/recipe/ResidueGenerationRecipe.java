@@ -48,8 +48,11 @@ public class ResidueGenerationRecipe extends StandardProcessingWithGasRecipe<Sin
 
             boolean hasItemOutput = !recipe.getRollableResults().isEmpty();
             boolean hasFluidOutput = !recipe.getFluidResults().isEmpty();
-            if (hasItemOutput == hasFluidOutput) {
+            if (hasItemOutput && hasFluidOutput) {
                 continue;
+            }
+            if (!hasItemOutput && !hasFluidOutput) {
+                return ResidueOutput.EMPTY;
             }
 
             if (hasFluidOutput) {
@@ -72,11 +75,11 @@ public class ResidueGenerationRecipe extends StandardProcessingWithGasRecipe<Sin
         }
 
         int outputTypes = (results.isEmpty() ? 0 : 1) + (fluidResults.isEmpty() ? 0 : 1);
-        if (outputTypes == 1) {
+        if (outputTypes <= 1) {
             return errors;
         }
 
-        errors.add("Residue generation recipes must output exactly one item or one fluid, never both.");
+        errors.add("Residue generation recipes may output at most one item or one fluid, never both.");
         return errors;
     }
 
@@ -115,6 +118,10 @@ public class ResidueGenerationRecipe extends StandardProcessingWithGasRecipe<Sin
 
     public boolean isIngredientEmpty() {
         return gasIngredients.isEmpty();
+    }
+
+    public boolean hasResidueOutput() {
+        return !results.isEmpty() || !fluidResults.isEmpty();
     }
 
     public record ResidueOutput(ItemStack itemStack, FluidStack fluidStack) {

@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.ponder.scenes.disabled;
+package net.ty.createcraftedbeginning.ponder.scenes.obsolete;
 
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
@@ -64,6 +64,7 @@ public class PneumaticEngineScenes {
         scene.markAsFinished();
     }
 
+    @SuppressWarnings("unused")
     public static void limitation(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
