@@ -11,12 +11,16 @@ import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
+import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.client.CCBGasClientTextures;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
+import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterContainerContents;
+import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -59,6 +63,21 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
             return IIngredientHelper.super.getColors(ingredient);
         }
         return colorHelper.getColors(CCBGasClientTextures.getGasTexture(ingredient.getGasHolder()), ingredient.getHint(), 1);
+    }
+
+    @Override
+    public ItemStack getCheatItemStack(GasStack ingredient) {
+        if (ingredient.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack canister = new ItemStack(CCBItems.CREATIVE_GAS_CANISTER.asItem());
+        if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents)) {
+            return ItemStack.EMPTY;
+        }
+
+        contents.setGasInTank(0, ingredient);
+        return canister;
     }
 
     @Override
