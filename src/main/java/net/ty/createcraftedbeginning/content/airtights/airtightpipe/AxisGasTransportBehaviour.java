@@ -49,14 +49,15 @@ public abstract class AxisGasTransportBehaviour extends GasTransportBehaviour {
             return AttachmentTypes.NONE;
         }
 
-        BlockState otherState = level.getBlockState(pos.relative(direction));
+        BlockPos otherPos = pos.relative(direction);
+        BlockState otherState = level.getBlockState(otherPos);
         Block otherBlock = otherState.getBlock();
         Axis pipeAxis = state.getValue(BlockStateProperties.AXIS);
         if (otherBlock instanceof IAxisPipe axisPipe && axisPipe.getAxis(otherState) == pipeAxis) {
             return AttachmentTypes.NONE;
         }
 
-        if (otherBlock instanceof IAirtightPipeDrain) {
+        if (otherBlock instanceof IAirtightPipeDrain drain && drain.shouldRenderDrain(level, otherPos, otherState, direction.getOpposite())) {
             return AttachmentTypes.DRAIN;
         }
         return AttachmentTypes.RIM;

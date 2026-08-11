@@ -136,11 +136,11 @@ public final class CCBClientRegistrations {
     }
 
     public static void registerVisualizers(FMLClientSetupEvent ignoredEvent) {
-        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIRTIGHT_PUMP.get()).factory(SingleAxisRotatingVisual.ofZ(CCBPartialModels.AIRTIGHT_PUMP_COGS)).apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIRTIGHT_PUMP.get()).factory(SingleAxisRotatingVisual.ofZ(CCBPartialModels.AIRTIGHT_PUMP_COGS)).skipVanillaRender(blockEntity -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.PORTABLE_GAS_INTERFACE.get()).factory(PortableGasInterfaceVisual::new).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.BREEZE_COOLER.get()).factory(BreezeCoolerVisual::new).skipVanillaRender(blockEntity -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.BREEZE_CHAMBER.get()).factory(BreezeChamberVisual::new).skipVanillaRender(blockEntity -> true).apply();
-        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_PACKAGER.get()).factory(GasPackagerVisual::new).apply();
-        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_REPACKAGER.get()).factory(GasRepackagerVisual::new).apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_PACKAGER.get()).factory(GasPackagerVisual::new).skipVanillaRender(blockEntity -> false).apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_REPACKAGER.get()).factory(GasRepackagerVisual::new).skipVanillaRender(blockEntity -> false).apply();
     }
 }

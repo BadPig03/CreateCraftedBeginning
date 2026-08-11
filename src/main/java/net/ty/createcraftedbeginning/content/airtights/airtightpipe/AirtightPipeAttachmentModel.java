@@ -66,7 +66,10 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
         Block adjacentBlock = adjacentState.getBlock();
 
         if (state.getBlock() instanceof AirtightPumpBlock) {
-            return adjacentBlock instanceof IAirtightPipeDrain ? AttachmentTypes.DRAIN : AttachmentTypes.NONE;
+            if (adjacentBlock instanceof IAirtightPipeDrain drain && drain.shouldRenderDrain(level, pos.relative(direction), adjacentState, direction.getOpposite())) {
+                return AttachmentTypes.DRAIN;
+            }
+            return AttachmentTypes.NONE;
         }
 
         if (!state.hasProperty(BlockStateProperties.AXIS)) {
@@ -82,7 +85,7 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
             return AttachmentTypes.NONE;
         }
 
-        if (adjacentBlock instanceof IAirtightPipeDrain) {
+        if (adjacentBlock instanceof IAirtightPipeDrain drain && drain.shouldRenderDrain(level, pos.relative(direction), adjacentState, direction.getOpposite())) {
             return AttachmentTypes.DRAIN;
         }
         return AttachmentTypes.RIM;

@@ -11,8 +11,10 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.neoforged.neoforge.fluids.FluidType;
+import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipe;
+import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
 import org.jetbrains.annotations.Nullable;
@@ -43,29 +45,32 @@ public class VirtualGasItemRecipeLookupPlugin implements IRecipeManagerPlugin {
     private static boolean processingRecipeMatches(ProcessingWithGasRecipe<?, ?> recipe, GasFocus focus) {
         boolean matchesInput = recipe.getGasIngredients().stream().anyMatch(ingredient -> ingredient.ingredient().test(focus.gas().copyWithAmount(Math.max(1, ingredient.amount()))));
         boolean matchesOutput = recipe.getGasResults().stream().anyMatch(result -> GasStack.isSameGasSameComponents(result, focus.gas()));
-        RecipeIngredientRole role = focus.role();
-        if (role == RecipeIngredientRole.INPUT) {
-            return matchesInput;
-        }
-
-        if (role == RecipeIngredientRole.OUTPUT) {
-            return matchesOutput;
-        }
-        return matchesInput || matchesOutput;
+        return switch (focus.role()) {
+            case INPUT -> matchesInput;
+            case OUTPUT -> matchesOutput;
+            default -> matchesInput || matchesOutput;
+        };
     }
 
-    private static @Nullable GasFocus readVirtualGasFocus(IFocus<?> focus) {
+    private static @Nullable GasFocus readGasFocus(IFocus<?> focus) {
         Optional<ItemStack> focusedStack = focus.getTypedValue().getItemStack();
         if (focusedStack.isEmpty()) {
             return null;
         }
 
         ItemStack stack = focusedStack.get();
-        if (!GasVirtualUtils.isVirtualItem(stack)) {
-            return null;
+        GasStack gas;
+        if (GasVirtualUtils.isVirtualItem(stack)) {
+            gas = GasVirtualUtils.getGasType(stack);
+        }
+        else {
+            IGasCanisterContainer container = stack.getCapability(GasHandler.ITEM);
+            if (container == null || container.getTanks() != 1) {
+                return null;
+            }
+            gas = container.getGasInTank(0);
         }
 
-        GasStack gas = GasVirtualUtils.getGasType(stack);
         if (gas.isEmpty()) {
             return null;
         }
@@ -74,7 +79,7 @@ public class VirtualGasItemRecipeLookupPlugin implements IRecipeManagerPlugin {
 
     @Override
     public <V> List<RecipeType<?>> getRecipeTypes(IFocus<V> focus) {
-        GasFocus gasFocus = readVirtualGasFocus(focus);
+        GasFocus gasFocus = readGasFocus(focus);
         if (gasFocus == null) {
             return List.of();
         }
@@ -97,7 +102,7 @@ public class VirtualGasItemRecipeLookupPlugin implements IRecipeManagerPlugin {
 
     @Override
     public <T, V> List<T> getRecipes(IRecipeCategory<T> recipeCategory, IFocus<V> focus) {
-        GasFocus gasFocus = readVirtualGasFocus(focus);
+        GasFocus gasFocus = readGasFocus(focus);
         if (gasFocus == null) {
             return List.of();
         }
