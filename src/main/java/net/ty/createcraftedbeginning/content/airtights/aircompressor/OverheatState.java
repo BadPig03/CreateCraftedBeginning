@@ -48,12 +48,12 @@ public enum OverheatState {
 
     public static OverheatState fromName(String name) {
         String normalizedName = name.toLowerCase(Locale.ROOT);
-        for (OverheatState state : values()) {
-            if (!state.serializedName.equals(normalizedName)) {
+        for (OverheatState overheatState : values()) {
+            if (!overheatState.serializedName.equals(normalizedName)) {
                 continue;
             }
 
-            return state;
+            return overheatState;
         }
         return NORMAL;
     }
@@ -62,10 +62,10 @@ public enum OverheatState {
         return fromName(item.getOrDefault(CCBDataComponents.COMPRESSOR_OVERHEAT_STATE, NORMAL.serializedName));
     }
 
-    public static OverheatState fromStoredHeat(int storedHeat, int threshold) {
-        int safeThreshold = Math.max(1, threshold);
-        int stateIndex = Math.min(MELTDOWN.ordinal(), Math.max(0, storedHeat) / safeThreshold);
-        return values()[stateIndex];
+    public static OverheatState fromStoredHeat(int storedHeat, int overheatThreshold) {
+        int safeOverheatThreshold = Math.max(1, overheatThreshold);
+        int overheatStateIndex = Math.min(MELTDOWN.ordinal(), Math.max(0, storedHeat) / safeOverheatThreshold);
+        return values()[overheatStateIndex];
     }
 
     private static Vec3 getParticlePosition(BlockPos pos, RandomSource random, float radius) {
@@ -100,8 +100,8 @@ public enum OverheatState {
         spawnParticles(level, pos);
     }
 
-    public void tick(AirCompressorBlockEntity blockEntity) {
-        Level level = blockEntity.getLevel();
+    public void tick(AirCompressorBlockEntity compressor) {
+        Level level = compressor.getLevel();
         if (level == null) {
             return;
         }
@@ -111,10 +111,10 @@ public enum OverheatState {
                 return;
             }
 
-            BlockPos pos = blockEntity.getBlockPos();
-            level.destroyBlock(pos, false);
+            BlockPos compressorPos = compressor.getBlockPos();
+            level.destroyBlock(compressorPos, false);
             if (CCBConfig.server().airtights.explodesOnMeltdown.get()) {
-                level.explode(null, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 8, true, ExplosionInteraction.NONE);
+                level.explode(null, compressorPos.getX() + 0.5, compressorPos.getY() + 0.5, compressorPos.getZ() + 0.5, 8, true, ExplosionInteraction.NONE);
             }
             return;
         }
@@ -123,7 +123,7 @@ public enum OverheatState {
             return;
         }
 
-        spawnParticles(level, blockEntity.getBlockPos());
+        spawnParticles(level, compressor.getBlockPos());
     }
 
     private void spawnParticles(Level level, BlockPos pos) {

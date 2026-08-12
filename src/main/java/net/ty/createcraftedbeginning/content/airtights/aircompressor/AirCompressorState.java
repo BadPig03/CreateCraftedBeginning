@@ -29,9 +29,9 @@ final class AirCompressorState {
         return OverheatState.fromName(tag.getString(COMPOUND_KEY_OVERHEAT_STATE));
     }
 
-    private static int readStoredHeat(CompoundTag tag, OverheatState savedState) {
+    private static int readStoredHeat(CompoundTag tag, OverheatState savedOverheatState) {
         if (!tag.contains(COMPOUND_KEY_STORED_HEAT)) {
-            return inferStoredHeat(savedState);
+            return inferStoredHeat(savedOverheatState);
         }
         return AirCompressorThermal.clampStoredHeat(tag.getInt(COMPOUND_KEY_STORED_HEAT));
     }
@@ -43,29 +43,29 @@ final class AirCompressorState {
         return CoolantEfficiency.fromName(tag.getString(COMPOUND_KEY_COOLANT_EFFICIENCY));
     }
 
-    private static int inferStoredHeat(OverheatState savedState) {
-        if (savedState == OverheatState.NORMAL) {
+    private static int inferStoredHeat(OverheatState savedOverheatState) {
+        if (savedOverheatState == OverheatState.NORMAL) {
             return 0;
         }
 
-        if (savedState == OverheatState.MELTDOWN) {
+        if (savedOverheatState == OverheatState.MELTDOWN) {
             return AirCompressorThermal.getMaxStoredHeat();
         }
 
-        int threshold = AirCompressorThermal.getNextOverheatThreshold();
-        return AirCompressorThermal.clampStoredHeat(savedState.ordinal() * threshold + threshold / 2);
+        int overheatThreshold = AirCompressorThermal.getNextOverheatThreshold();
+        return AirCompressorThermal.clampStoredHeat(savedOverheatState.ordinal() * overheatThreshold + overheatThreshold / 2);
     }
 
     CoolantEfficiency getCoolantEfficiency() {
         return coolantEfficiency;
     }
 
-    boolean setCoolantEfficiency(CoolantEfficiency newEfficiency) {
-        if (coolantEfficiency == newEfficiency) {
+    boolean setCoolantEfficiency(CoolantEfficiency newCoolantEfficiency) {
+        if (coolantEfficiency == newCoolantEfficiency) {
             return false;
         }
 
-        coolantEfficiency = newEfficiency;
+        coolantEfficiency = newCoolantEfficiency;
         return true;
     }
 
@@ -73,8 +73,8 @@ final class AirCompressorState {
         return storedHeat;
     }
 
-    void setStoredHeat(int heat) {
-        storedHeat = AirCompressorThermal.clampStoredHeat(heat);
+    void setStoredHeat(int newStoredHeat) {
+        storedHeat = AirCompressorThermal.clampStoredHeat(newStoredHeat);
         overheatState = AirCompressorThermal.getOverheatState(storedHeat);
     }
 
@@ -115,13 +115,13 @@ final class AirCompressorState {
     }
 
     void read(CompoundTag tag, boolean clientPacket) {
-        OverheatState savedState = readOverheatState(tag);
-        overheatState = savedState;
+        OverheatState savedOverheatState = readOverheatState(tag);
+        overheatState = savedOverheatState;
         if (clientPacket) {
             return;
         }
 
-        storedHeat = readStoredHeat(tag, savedState);
+        storedHeat = readStoredHeat(tag, savedOverheatState);
         overheatState = AirCompressorThermal.getOverheatState(storedHeat);
         coolantEfficiency = readCoolantEfficiency(tag);
     }

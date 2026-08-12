@@ -30,12 +30,12 @@ final class AirCompressorProcessing {
     }
 
     @Nullable
-    static CompressionPlan createPlan(Level level, GasStack input) {
-        if (input.isEmpty()) {
+    static CompressionPlan createPlan(Level level, GasStack inputGas) {
+        if (inputGas.isEmpty()) {
             return null;
         }
 
-        PressurizationRecipe recipe = PressurizationRecipe.findRecipe(level, input).orElse(null);
+        PressurizationRecipe recipe = PressurizationRecipe.findRecipe(level, inputGas).orElse(null);
         if (recipe == null) {
             return null;
         }
@@ -57,22 +57,22 @@ final class AirCompressorProcessing {
             return false;
         }
 
-        GasStack input = inputTankBehaviour.getPrimaryHandler().getGasStack();
-        if (input.getAmount() < plan.inputPerBatch()) {
+        GasStack inputGas = inputTankBehaviour.getPrimaryHandler().getGasStack();
+        if (inputGas.getAmount() < plan.inputPerBatch()) {
             return false;
         }
 
-        GasStack output = outputTankBehaviour.getPrimaryHandler().getGasStack();
-        boolean hasCompatibleOutput = output.isEmpty() || GasStack.isSameGasSameComponents(output, plan.outputPerBatch());
+        GasStack outputGas = outputTankBehaviour.getPrimaryHandler().getGasStack();
+        boolean hasCompatibleOutput = outputGas.isEmpty() || GasStack.isSameGasSameComponents(outputGas, plan.outputPerBatch());
         return hasCompatibleOutput && outputTankBehaviour.getPrimaryHandler().getSpace() >= plan.outputPerBatch().getAmount();
     }
 
     static WorkState accumulateWork(WorkState workState, CompressionPlan plan, float speed, OverheatState overheatState) {
         long accumulatedWork = workState.recipe() == plan.recipe() ? workState.accumulatedWork() : 0;
         float scaledWork = Mth.abs(speed) * getPressurizationRateMultiplier() * overheatState.getEfficiencyPercent();
-        long addedWork = Math.max(0, Mth.floor(scaledWork));
-        long updatedWork = addedWork >= Long.MAX_VALUE - accumulatedWork ? Long.MAX_VALUE : accumulatedWork + addedWork;
-        return new WorkState(plan.recipe(), updatedWork);
+        long workIncrement = Math.max(0, Mth.floor(scaledWork));
+        long updatedAccumulatedWork = workIncrement >= Long.MAX_VALUE - accumulatedWork ? Long.MAX_VALUE : accumulatedWork + workIncrement;
+        return new WorkState(plan.recipe(), updatedAccumulatedWork);
     }
 
     static WorkState pressurize(WorkState workState, CompressionPlan plan, SmartGasTankBehaviour inputTankBehaviour, SmartGasTankBehaviour outputTankBehaviour) {
@@ -80,27 +80,27 @@ final class AirCompressorProcessing {
         long batchesByWork = accumulatedWork / 100 / plan.inputPerBatch();
         long batchesByInput = inputTankBehaviour.getPrimaryHandler().getGasAmount() / plan.inputPerBatch();
         long batchesByOutput = outputTankBehaviour.getPrimaryHandler().getSpace() / plan.outputPerBatch().getAmount();
-        long batches = Math.min(batchesByWork, Math.min(batchesByInput, batchesByOutput));
-        if (batches <= 0) {
+        long batchCount = Math.min(batchesByWork, Math.min(batchesByInput, batchesByOutput));
+        if (batchCount <= 0) {
             return new WorkState(plan.recipe(), accumulatedWork);
         }
 
-        long totalInput = batches * plan.inputPerBatch();
-        long totalOutput = batches * plan.outputPerBatch().getAmount();
-        GasStack outputStack = plan.outputPerBatch().copyWithAmount(totalOutput);
+        long totalInputAmount = batchCount * plan.inputPerBatch();
+        long totalOutputAmount = batchCount * plan.outputPerBatch().getAmount();
+        GasStack outputStack = plan.outputPerBatch().copyWithAmount(totalOutputAmount);
         ResourceTransaction transaction = new ResourceTransaction().add(ResourceTransaction.participant(() -> {
-            GasStack simulatedDrain = inputTankBehaviour.getInternalGasHandler().forceDrain(totalInput, GasAction.SIMULATE);
-            long simulatedFill = outputTankBehaviour.getInternalGasHandler().forceFill(outputStack, GasAction.SIMULATE);
-            return simulatedDrain.getAmount() == totalInput && plan.recipe().getGasIngredient().ingredient().test(simulatedDrain) && simulatedFill == totalOutput;
+            GasStack simulatedDrain = inputTankBehaviour.getInternalGasHandler().forceDrain(totalInputAmount, GasAction.SIMULATE);
+            long simulatedFillAmount = outputTankBehaviour.getInternalGasHandler().forceFill(outputStack, GasAction.SIMULATE);
+            return simulatedDrain.getAmount() == totalInputAmount && plan.recipe().getGasIngredient().ingredient().test(simulatedDrain) && simulatedFillAmount == totalOutputAmount;
         }, () -> MachineResourceSnapshots.snapshotGasContents(inputTankBehaviour, outputTankBehaviour), () -> {
-            GasStack drained = inputTankBehaviour.getInternalGasHandler().forceDrain(totalInput, GasAction.EXECUTE);
-            return drained.getAmount() == totalInput && plan.recipe().getGasIngredient().ingredient().test(drained) && outputTankBehaviour.getInternalGasHandler().forceFill(outputStack, GasAction.EXECUTE) == totalOutput;
+            GasStack drainedInputGas = inputTankBehaviour.getInternalGasHandler().forceDrain(totalInputAmount, GasAction.EXECUTE);
+            return drainedInputGas.getAmount() == totalInputAmount && plan.recipe().getGasIngredient().ingredient().test(drainedInputGas) && outputTankBehaviour.getInternalGasHandler().forceFill(outputStack, GasAction.EXECUTE) == totalOutputAmount;
         }, snapshot -> MachineResourceSnapshots.restoreGasContents(snapshot, inputTankBehaviour, outputTankBehaviour)));
         if (!transaction.commit()) {
             return new WorkState(plan.recipe(), accumulatedWork);
         }
 
-        long remainingWork = accumulatedWork - totalInput * 100;
+        long remainingWork = accumulatedWork - totalInputAmount * 100;
         return new WorkState(plan.recipe(), remainingWork);
     }
 

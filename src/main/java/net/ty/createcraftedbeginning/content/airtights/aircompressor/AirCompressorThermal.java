@@ -34,60 +34,59 @@ final class AirCompressorThermal {
         return Math.clamp(storedHeat, 0, getMaxStoredHeat());
     }
 
-    static int getNextStateHeat(OverheatState state) {
-        if (state == OverheatState.MELTDOWN) {
+    static int getNextStateHeat(OverheatState overheatState) {
+        if (overheatState == OverheatState.MELTDOWN) {
             return getMaxStoredHeat();
         }
-        return clampStoredHeat((state.ordinal() + 1) * getNextOverheatThreshold());
+        return clampStoredHeat((overheatState.ordinal() + 1) * getNextOverheatThreshold());
     }
 
     static OverheatState getOverheatState(int storedHeat) {
         return OverheatState.fromStoredHeat(storedHeat, getNextOverheatThreshold());
     }
 
-    static int updateStoredHeat(int storedHeat, float speed, boolean operating, CoolantEfficiency coolantEfficiency, Level level) {
-        int netHeat = getHeatAdded(speed, operating) - coolantEfficiency.getHeatReduced(level);
-        long updatedHeat = (long) storedHeat + netHeat;
-        return (int) Math.max(0, Math.min(updatedHeat, getMaxStoredHeat()));
+    static int updateStoredHeat(int storedHeat, float speed, boolean isOperating, CoolantEfficiency coolantEfficiency, Level level) {
+        int netHeatChange = getHeatAdded(speed, isOperating) - coolantEfficiency.getHeatReduced(level);
+        long updatedStoredHeat = (long) storedHeat + netHeatChange;
+        return (int) Math.max(0, Math.min(updatedStoredHeat, getMaxStoredHeat()));
     }
 
     static CoolantEfficiency getCoolantEfficiency(Level level, BlockPos coolantPos) {
         BlockState coolantState = level.getBlockState(coolantPos);
-        AirtightCoolantHandler coolantHandler = AirtightCoolantHandlerUtils.of(coolantState.getBlock());
-        return coolantHandler.getCoolantEfficiency(level, coolantPos, coolantState);
+        return AirtightCoolantHandlerUtils.of(coolantState.getBlock()).getCoolantEfficiency(level, coolantPos, coolantState);
     }
 
-    static CoolantEfficiency tickCoolant(ServerLevel level, BlockPos coolantPos, boolean shouldConsume, RandomSource random) {
+    static CoolantEfficiency tickCoolant(ServerLevel level, BlockPos coolantPos, boolean shouldConsumeCoolant, RandomSource random) {
         BlockState coolantState = level.getBlockState(coolantPos);
         AirtightCoolantHandler coolantHandler = AirtightCoolantHandlerUtils.of(coolantState.getBlock());
-        CoolantEfficiency efficiency = coolantHandler.getCoolantEfficiency(level, coolantPos, coolantState);
-        float consumeChance = Mth.clamp(CCBConfig.server().airtights.coolantConsumptionChance.getF(), 0, 1);
-        if (efficiency == CoolantEfficiency.NONE || !shouldConsume || random.nextFloat() >= consumeChance) {
-            return efficiency;
+        CoolantEfficiency coolantEfficiency = coolantHandler.getCoolantEfficiency(level, coolantPos, coolantState);
+        float coolantConsumptionChance = Mth.clamp(CCBConfig.server().airtights.coolantConsumptionChance.getF(), 0, 1);
+        if (coolantEfficiency == CoolantEfficiency.NONE || !shouldConsumeCoolant || random.nextFloat() >= coolantConsumptionChance) {
+            return coolantEfficiency;
         }
 
-        BlockState meltedState = coolantHandler.getMeltBlockState(level, coolantPos, coolantState);
-        if (meltedState == null || meltedState.equals(coolantState)) {
+        BlockState meltedCoolantState = coolantHandler.getMeltBlockState(level, coolantPos, coolantState);
+        if (meltedCoolantState == null || meltedCoolantState.equals(coolantState)) {
             return getCoolantEfficiency(level, coolantPos);
         }
 
-        if (meltedState.isAir()) {
+        if (meltedCoolantState.isAir()) {
             level.removeBlock(coolantPos, false);
         }
         else {
-            level.setBlockAndUpdate(coolantPos, meltedState);
+            level.setBlockAndUpdate(coolantPos, meltedCoolantState);
         }
         return getCoolantEfficiency(level, coolantPos);
     }
 
-    private static int getHeatAdded(float speed, boolean operating) {
-        if (!operating) {
+    private static int getHeatAdded(float speed, boolean isOperating) {
+        if (!isOperating) {
             return 0;
         }
 
         float mediumSpeed = Math.max(1, SpeedLevel.MEDIUM.getSpeedValue());
         float maximumSpeed = Math.max(mediumSpeed, AllConfigs.server().kinetics.maxRotationSpeed.get());
-        float progress = maximumSpeed == mediumSpeed ? 1 : Mth.clamp((Mth.abs(speed) - mediumSpeed) / (maximumSpeed - mediumSpeed), 0, 1);
-        return Mth.floor(Mth.lerp(progress, 3, 5) + 0.5f);
+        float speedProgress = maximumSpeed == mediumSpeed ? 1 : Mth.clamp((Mth.abs(speed) - mediumSpeed) / (maximumSpeed - mediumSpeed), 0, 1);
+        return Mth.floor(Mth.lerp(speedProgress, 3, 5) + 0.5f);
     }
 }

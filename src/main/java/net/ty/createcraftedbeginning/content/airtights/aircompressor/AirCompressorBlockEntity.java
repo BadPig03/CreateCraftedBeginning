@@ -62,13 +62,13 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIR_COMPRESSOR.get(), (compressor, side) -> {
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIR_COMPRESSOR.get(), (compressor, queriedSide) -> {
             Direction inputSide = AirCompressorBlock.getInputSide(compressor.getBlockState());
-            if (side == inputSide) {
+            if (queriedSide == inputSide) {
                 return compressor.inputTankBehaviour.getCapability();
             }
 
-            if (side == inputSide.getOpposite()) {
+            if (queriedSide == inputSide.getOpposite()) {
                 return compressor.outputTankBehaviour.getCapability();
             }
             return null;
@@ -81,14 +81,14 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         }
 
         int previousStoredHeat = state.getStoredHeat();
-        OverheatState previousState = state.getOverheatState();
-        state.setStoredHeat(AirCompressorThermal.getNextStateHeat(previousState));
-        notifyIfOverheatStateChanged(previousState);
+        OverheatState previousOverheatState = state.getOverheatState();
+        state.setStoredHeat(AirCompressorThermal.getNextStateHeat(previousOverheatState));
+        notifyIfOverheatStateChanged(previousOverheatState);
         markDirty(previousStoredHeat, true);
     }
 
-    public void setCoolantEfficiency(CoolantEfficiency newEfficiency) {
-        if (!state.setCoolantEfficiency(newEfficiency)) {
+    public void setCoolantEfficiency(CoolantEfficiency newCoolantEfficiency) {
+        if (!state.setCoolantEfficiency(newCoolantEfficiency)) {
             return;
         }
 
@@ -124,9 +124,9 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     }
 
     public void loadFromItem(ItemStack stack) {
-        OverheatState previousState = state.getOverheatState();
+        OverheatState previousOverheatState = state.getOverheatState();
         state.loadFromItem(stack);
-        notifyIfOverheatStateChanged(previousState);
+        notifyIfOverheatStateChanged(previousOverheatState);
     }
 
     public void saveToItem(ItemStack stack) {
@@ -194,17 +194,16 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.FEELING_THE_PRESSURE, CCBAdvancements.A_CLOSE_CALL);
         behaviours.add(advancementBehaviour);
 
-        long maxCapacity = AirCompressorProcessing.getTankCapacity();
-        inputTankBehaviour = new SmartGasTankBehaviour(SmartGasTankBehaviour.INPUT, this, 1, maxCapacity, false);
-        outputTankBehaviour = new SmartGasTankBehaviour(SmartGasTankBehaviour.OUTPUT, this, 1, maxCapacity, false).forbidInsertion();
+        long tankCapacity = AirCompressorProcessing.getTankCapacity();
+        inputTankBehaviour = new SmartGasTankBehaviour(SmartGasTankBehaviour.INPUT, this, 1, tankCapacity, false);
+        outputTankBehaviour = new SmartGasTankBehaviour(SmartGasTankBehaviour.OUTPUT, this, 1, tankCapacity, false).forbidInsertion();
         behaviours.add(inputTankBehaviour);
         behaviours.add(outputTankBehaviour);
     }
 
     @Override
     public boolean addToTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        GasStack inputGas = inputTankBehaviour.getPrimaryHandler().getGasStack();
-        return AirCompressorTooltip.addHoveringInformation(tooltip, level, inputGas, overStressed, isSpeedRequirementFulfilled(), getSpeed());
+        return AirCompressorTooltip.addHoveringInformation(tooltip, level, inputTankBehaviour.getPrimaryHandler().getGasStack(), overStressed, isSpeedRequirementFulfilled(), getSpeed());
     }
 
     @Override
@@ -216,33 +215,33 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
     }
 
     private void tickClient(Level level) {
-        int threshold = AirCompressorThermal.getNextOverheatThreshold();
+        int overheatThreshold = AirCompressorThermal.getNextOverheatThreshold();
         OverheatState overheatState = state.getOverheatState();
         if (level instanceof PonderLevel ponderLevel) {
-            ponderCounter = (ponderCounter + 1) % threshold;
+            ponderCounter = (ponderCounter + 1) % overheatThreshold;
             overheatState.spawnParticlesInPonderLevel(ponderLevel, worldPosition, ponderCounter);
         }
         overheatState.tick(this);
     }
 
     private void tickServer(Level level) {
-        ServerTickResult result = controller.tickServer(level, state, overStressed, getSpeed(), inputTankBehaviour, outputTankBehaviour);
-        if (result.initiallyMeltdown()) {
+        ServerTickResult tickResult = controller.tickServer(level, state, overStressed, getSpeed(), inputTankBehaviour, outputTankBehaviour);
+        if (tickResult.initiallyMeltdown()) {
             state.getOverheatState().tick(this);
             return;
         }
 
-        if (result.closeCall()) {
+        if (tickResult.closeCall()) {
             advancementBehaviour.awardPlayer(CCBAdvancements.A_CLOSE_CALL);
         }
-        boolean overheatStateChanged = result.overheatStateChanged(state);
+        boolean overheatStateChanged = tickResult.overheatStateChanged(state);
         if (overheatStateChanged) {
             notifyUpdate();
         }
-        if (result.enteredMeltdown()) {
+        if (tickResult.enteredMeltdown()) {
             updateOperatingBlockState(level, false);
         }
-        markDirty(result.previousStoredHeat(), overheatStateChanged);
+        markDirty(tickResult.previousStoredHeat(), overheatStateChanged);
     }
 
     private void updateOperatingBlockState(Level level, boolean operating) {
@@ -293,8 +292,8 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         setChanged();
     }
 
-    private void notifyIfOverheatStateChanged(OverheatState previousState) {
-        if (previousState == state.getOverheatState()) {
+    private void notifyIfOverheatStateChanged(OverheatState previousOverheatState) {
+        if (previousOverheatState == state.getOverheatState()) {
             return;
         }
 
@@ -311,8 +310,8 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
 
     @Override
     public int getMaxValue() {
-        long totalCapacity = inputTankBehaviour.getPrimaryHandler().getCapacity() + outputTankBehaviour.getPrimaryHandler().getCapacity();
-        return GasAmountUtils.toWholeBucketsClamped(totalCapacity);
+        long totalTankCapacity = inputTankBehaviour.getPrimaryHandler().getCapacity() + outputTankBehaviour.getPrimaryHandler().getCapacity();
+        return GasAmountUtils.toWholeBucketsClamped(totalTankCapacity);
     }
 
     @Override
@@ -322,8 +321,8 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
 
     @Override
     public int getCurrentValue() {
-        long totalAmount = inputTankBehaviour.getPrimaryHandler().getGasAmount() + outputTankBehaviour.getPrimaryHandler().getGasAmount();
-        return GasAmountUtils.toWholeBucketsClamped(totalAmount);
+        long totalGasAmount = inputTankBehaviour.getPrimaryHandler().getGasAmount() + outputTankBehaviour.getPrimaryHandler().getGasAmount();
+        return GasAmountUtils.toWholeBucketsClamped(totalGasAmount);
     }
 
     @Override

@@ -24,15 +24,15 @@ final class AirCompressorTooltip {
     private AirCompressorTooltip() {
     }
 
-    static boolean addHoveringInformation(List<Component> tooltip, @Nullable Level level, GasStack inputGas, boolean overStressed, boolean speedRequirementFulfilled, float speed) {
-        boolean added = false;
+    static boolean addHoveringInformation(List<Component> tooltip, @Nullable Level level, GasStack inputGas, boolean overStressed, boolean isSpeedRequirementFulfilled, float speed) {
+        boolean hasInvalidGasWarning = false;
         if (isInputGasInvalid(level, inputGas)) {
             CCBLang.translate("gui.invalid_ingredient").style(ChatFormatting.GOLD).forGoggles(tooltip);
             CCBLang.addToGoggles(tooltip, "gui.air_compressor.invalid_gas", inputGas.getHoverName());
-            added = true;
+            hasInvalidGasWarning = true;
         }
         if (overStressed && CCBClientBridge.isOverstressedTooltipEnabled()) {
-            if (added) {
+            if (hasInvalidGasWarning) {
                 tooltip.add(CommonComponents.EMPTY);
             }
             CCBLang.translate("gui.overstressed").style(ChatFormatting.GOLD).forGoggles(tooltip);
@@ -40,11 +40,11 @@ final class AirCompressorTooltip {
             return true;
         }
 
-        if (speedRequirementFulfilled || speed == 0) {
-            return added;
+        if (isSpeedRequirementFulfilled || speed == 0) {
+            return hasInvalidGasWarning;
         }
 
-        if (added) {
+        if (hasInvalidGasWarning) {
             tooltip.add(CommonComponents.EMPTY);
         }
         CCBLang.translate("gui.speed_requirement").style(ChatFormatting.GOLD).forGoggles(tooltip);
@@ -68,27 +68,27 @@ final class AirCompressorTooltip {
         CCBLang.number(stressApplied * Mth.abs(theoreticalSpeed)).translate("gui.unit.stress").style(ChatFormatting.AQUA).space().add(CCBLang.translate("gui.at_current_speed").style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
     }
 
-    private static boolean isInputGasInvalid(@Nullable Level level, GasStack input) {
-        return level != null && !input.isEmpty() && PressurizationRecipe.findRecipe(level, input).isEmpty();
+    private static boolean isInputGasInvalid(@Nullable Level level, GasStack inputGas) {
+        return level != null && !inputGas.isEmpty() && PressurizationRecipe.findRecipe(level, inputGas).isEmpty();
     }
 
     private static void addTankDetails(List<Component> tooltip, GasStack inputGas, GasStack outputGas) {
-        long maxCapacity = AirCompressorProcessing.getTankCapacity();
+        long tankCapacity = AirCompressorProcessing.getTankCapacity();
         tooltip.add(CommonComponents.EMPTY);
-        addTankTooltip(tooltip, "gui.air_compressor.input_capacity", inputGas, maxCapacity);
+        addTankTooltip(tooltip, "gui.air_compressor.input_capacity", inputGas, tankCapacity);
         tooltip.add(CommonComponents.EMPTY);
-        addTankTooltip(tooltip, "gui.air_compressor.output_capacity", outputGas, maxCapacity);
+        addTankTooltip(tooltip, "gui.air_compressor.output_capacity", outputGas, tankCapacity);
     }
 
-    private static void addTankTooltip(List<Component> tooltip, String titleKey, GasStack gas, long maxCapacity) {
+    private static void addTankTooltip(List<Component> tooltip, String titleKey, GasStack gas, long tankCapacity) {
         CCBLang.translate(titleKey).style(ChatFormatting.GRAY).forGoggles(tooltip);
         if (gas.isEmpty()) {
             CCBLang.gasName(GasStack.EMPTY).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-            GasAmountUtils.precise(maxCapacity).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
+            GasAmountUtils.precise(tankCapacity).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
             return;
         }
 
         CCBLang.gasName(gas).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-        GasAmountUtils.precise(gas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmountUtils.precise(maxCapacity).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+        GasAmountUtils.precise(gas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmountUtils.precise(tankCapacity).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
     }
 }

@@ -11,7 +11,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * KubeJS event used to register Airtight Arm Handlers for gases.
  * <p>
  * This event is exposed through {@code CCBEvents.airtightArmHandler} and
- * allows scripts to associate a gas with Airtight Extended Arm behavior values.
+ * allows scripts to associate a gas with Airtight Extended Arm behaviour values.
  * <p>
  * Example usage in KubeJS:
  *
@@ -26,7 +26,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class AirtightArmHandlerEvent implements KubeEvent {
     /**
-     * Registers Airtight Arm behavior values for the gas identified by the given
+     * Registers Airtight Arm behaviour values for the gas identified by the given
      * resource location.
      * <p>
      * The provided {@link ResourceLocation} is passed to

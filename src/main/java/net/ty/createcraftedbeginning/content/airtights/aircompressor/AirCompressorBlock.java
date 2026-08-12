@@ -37,7 +37,6 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.coolantshandlers.CoolantEfficiency;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IAirtightComponent;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -170,9 +169,7 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
             return;
         }
 
-        BlockPos coolantPos = pos.below();
-        CoolantEfficiency efficiency = AirCompressorThermal.tickCoolant(level, coolantPos, state.getValue(ACTIVE), random);
-        compressor.setCoolantEfficiency(efficiency);
+        compressor.setCoolantEfficiency(AirCompressorThermal.tickCoolant(level, pos.below(), state.getValue(ACTIVE), random));
     }
 
     @Override
