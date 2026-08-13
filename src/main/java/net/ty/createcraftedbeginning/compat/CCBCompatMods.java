@@ -15,7 +15,8 @@ import java.util.function.Supplier;
 public enum CCBCompatMods {
     CREATE_FLUID_LOGISTICS("fluidlogistics"),
     JEI("jei"),
-    SABLE("sable");
+    SABLE("sable"),
+    FUNCTIONAL_STORAGE("functionalstorage");
 
     private final String id;
 

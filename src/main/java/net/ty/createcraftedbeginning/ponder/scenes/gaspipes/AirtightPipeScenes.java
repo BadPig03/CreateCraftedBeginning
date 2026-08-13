@@ -1,9 +1,11 @@
 package net.ty.createcraftedbeginning.ponder.scenes.gaspipes;
 
 import com.simibubi.create.AllBlocks;
+import com.simibubi.create.AllItems;
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
 import com.simibubi.create.content.kinetics.motor.CreativeMotorBlock;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
+import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.element.ElementLink;
 import net.createmod.ponder.api.element.WorldSectionElement;
@@ -14,11 +16,14 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -52,6 +57,7 @@ public class AirtightPipeScenes {
 
         Vec3 middlePipeVec = util.vector().centerOf(middlePipePos);
         Vec3 leftPipeVec = util.vector().centerOf(leftPipePos);
+        Vec3 rightPipeVec = util.vector().centerOf(rightPipePos);
 
         AABB pipeArea = new AABB(leftPipeVec, util.vector().centerOf(rightPipePos));
         AABB pumpArea = new AABB(leftPipeVec, leftPipeVec);
@@ -64,6 +70,10 @@ public class AirtightPipeScenes {
         Object pumpObject = new Object();
 
         float mediumSpeed = SpeedLevel.MEDIUM.getSpeedValue();
+
+        ItemStack airtightSheetItem = new ItemStack(CCBItems.AIRTIGHT_SHEET.asItem());
+        ItemStack waterBucketItem = new ItemStack(Items.WATER_BUCKET);
+        ItemStack wrenchItem = new ItemStack(AllItems.WRENCH.asItem());
 
         scene.idle(20);
         scene.world().showSection(leftTankSelection, Direction.WEST);
@@ -97,6 +107,44 @@ public class AirtightPipeScenes {
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, frontConnectionObject, connectionArea.move(0, 0, 0.5), 60);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, backConnectionObject, connectionArea.move(0, 0, -0.5), 60);
         scene.overlay().showText(60).text("However, the Pipes will not connect to any other adjacent pipe segments").colored(PonderPalette.RED).pointAt(Vec3.atCenterOf(upPipePos)).placeNearTarget().attachKeyFrame();
+
+        scene.idle(80);
+        scene.overlay().showControls(util.vector().blockSurface(rightPipePos, Direction.UP), Pointing.DOWN, 67).rightClick().withItem(airtightSheetItem.copy());
+
+        scene.idle(7);
+        for (BlockPos pos : pipeSelection) {
+            scene.idle(5);
+            scene.world().modifyBlock(pos, state -> state.setValue(AirtightPipeBlock.CASED, true), false);
+        }
+
+        scene.idle(5);
+        scene.world().modifyBlocks(frontPipeSelection, state -> state.setValue(AirtightPipeBlock.CASED, true).setValue(AirtightPipeBlock.WATERLOGGED, false), false);
+        scene.overlay().showText(60).text("Airtight Sheets can encase Airtight Pipes without being consumed").colored(PonderPalette.BLUE).pointAt(rightPipeVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(80);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, upConnectionObject, connectionArea.move(0, 0.5, 0), 60);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, frontConnectionObject, connectionArea.move(0, 0, 0.5), 60);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, backConnectionObject, connectionArea.move(0, 0, -0.5), 60);
+        scene.overlay().showText(60).text("The casing only connects across pipe segments that are actually connected, and does not create side connections").colored(PonderPalette.RED).pointAt(middlePipeVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(80);
+        scene.overlay().showControls(util.vector().blockSurface(rightPipePos, Direction.UP), Pointing.DOWN, 67).rightClick().withItem(waterBucketItem.copy());
+
+        scene.idle(7);
+        scene.overlay().showText(60).text("Encased Airtight Pipes cannot be waterlogged").colored(PonderPalette.RED).pointAt(rightPipeVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(80);
+        scene.overlay().showControls(util.vector().blockSurface(rightPipePos, Direction.UP), Pointing.DOWN, 67).rightClick().withItem(wrenchItem.copy());
+
+        scene.idle(7);
+        for (BlockPos pos : pipeSelection) {
+            scene.idle(5);
+            scene.world().modifyBlock(pos, state -> state.setValue(AirtightPipeBlock.CASED, false), false);
+        }
+
+        scene.idle(5);
+        scene.world().modifyBlocks(frontPipeSelection, state -> state.setValue(AirtightPipeBlock.CASED, false), false);
+        scene.overlay().showText(60).text("Use a Wrench to remove the casing").colored(PonderPalette.BLUE).pointAt(rightPipeVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().restoreBlocks(pumpSelection);

@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-06T16:26:20.7505869	Registrate Provider for createcraftedbeginning [Registries, Data Maps, Recipes, Advancements, Loot Tables, Tags (enchantments), Tags (blocks), Tags (items), Tags (fluids), Tags (entity_types), generic_server_provider, Blockstates, Item models, Lang (en_us/en_ud), generic_client_provider]
+// 1.21.1	2026-08-13T08:46:38.6105223	Registrate Provider for createcraftedbeginning [Registries, Data Maps, Recipes, Advancements, Loot Tables, Tags (enchantments), Tags (blocks), Tags (items), Tags (fluids), Tags (entity_types), generic_server_provider, Blockstates, Item models, Lang (en_us/en_ud), generic_client_provider]
 89cbcebfdf0a539cf4a9c69419bd236fa050d53a assets/createcraftedbeginning/blockstates/airtight_check_valve.json
 d3d0810d6708e3662fe5192674cf577476cca23f assets/createcraftedbeginning/blockstates/airtight_encased_pipe.json
 cb5e887d5bfa4f2fa210775d0ff7bc61f5d2b2e6 assets/createcraftedbeginning/blockstates/airtight_engine.json
@@ -6,7 +6,7 @@ cb5e887d5bfa4f2fa210775d0ff7bc61f5d2b2e6 assets/createcraftedbeginning/blockstat
 0e670b262b5fc367ded29d822ecaaf007926316b assets/createcraftedbeginning/blockstates/airtight_forging_press_structural.json
 0e670b262b5fc367ded29d822ecaaf007926316b assets/createcraftedbeginning/blockstates/airtight_forging_press_structural_shaft.json
 2d12c47333dc41acb1ac5380b9266e4c79f0b77c assets/createcraftedbeginning/blockstates/airtight_hatch.json
-13330014e04c2912a9f128c8a5fc8b3fd02e9ef4 assets/createcraftedbeginning/blockstates/airtight_pipe.json
+52aea6af1991dc0bcd8cb0e0665a87aaa23054a7 assets/createcraftedbeginning/blockstates/airtight_pipe.json
 15b7fa58f85dfc88c979913858573a725e1a7810 assets/createcraftedbeginning/blockstates/airtight_pump.json
 aa6fe7adbe3d2b2762e43c3f86128dcae869e20f assets/createcraftedbeginning/blockstates/airtight_reactor_kettle.json
 dfcb6215271c6dbebf88934e3aa2c7a204acc21d assets/createcraftedbeginning/blockstates/airtight_reactor_kettle_structural.json
@@ -121,8 +121,8 @@ e11c270e2576bf1a0d3e8dfcb9c6c5833033cacc assets/createcraftedbeginning/blockstat
 b50e1f4728fb603d01c65c43b1c866be02968b6e assets/createcraftedbeginning/blockstates/tesla_turbine.json
 0632b7cd88b3d717e8b8eb546ab73e334336f2a0 assets/createcraftedbeginning/blockstates/tesla_turbine_nozzle.json
 67bca9ac71b2470ac97f87450d759512ea9947c3 assets/createcraftedbeginning/blockstates/tesla_turbine_structural.json
-4b38d378287ec56c7fceaea858e737663681bf9e assets/createcraftedbeginning/lang/en_ud.json
-18561daa27b28b700d35ee4ab2d12141a65718bb assets/createcraftedbeginning/lang/en_us.json
+ba6ef6d4386a2176eeb8b32fa12267e6c14c6b92 assets/createcraftedbeginning/lang/en_ud.json
+c8322051b126c1b35d5fb2a77e5909b2c52c4462 assets/createcraftedbeginning/lang/en_us.json
 b82a1476d9e5f5ac6dfe30af323c7a6505fc0214 assets/createcraftedbeginning/models/block/airtight_sheet_block.json
 432890d5a92c5f73d9deccdc8c669384232dc2a2 assets/createcraftedbeginning/models/block/brimstone.json
 17adfd5b14316a3c6f55c666060f9dfc505ad78b assets/createcraftedbeginning/models/block/chiseled_crying_obsidian_bricks.json
@@ -543,6 +543,9 @@ e9c7525a8e764a7eeb0b15a86dab867fd88f6231 data/createcraftedbeginning/loot_table/
 ca233df91c9dfb02456330a607e4dffa0bf2f25b data/createcraftedbeginning/loot_table/blocks/end_sculk_silencer.json
 55d5eec06a6849319268e991d0f3e15f65795bd2 data/createcraftedbeginning/loot_table/blocks/end_sculk_silencer_structural.json
 76043f193fdada98ed93e7ece7ff80c30e488c9d data/createcraftedbeginning/loot_table/blocks/gas_canister.json
+a248c135f3ef779f32e60f1cbb05a7486a1d5ed7 data/createcraftedbeginning/loot_table/blocks/gas_drawer_1.json
+65fa98bfde9c0ff5fd7ec31091f8090d7c29cea6 data/createcraftedbeginning/loot_table/blocks/gas_drawer_2.json
+81de78918a068e2b2ebbcfa520879757326b067f data/createcraftedbeginning/loot_table/blocks/gas_drawer_4.json
 e6cfaddf644ba5f64a74c62ad992a1220b2d5ded data/createcraftedbeginning/loot_table/blocks/gas_factory_gauge.json
 db28de7f570f9b97b1ddfa7e7c4416640cfb05ad data/createcraftedbeginning/loot_table/blocks/gas_injection_chamber.json
 35b9f9ffd5af4fcba0a9bdd5090a0c0440eb21f8 data/createcraftedbeginning/loot_table/blocks/gas_packager.json

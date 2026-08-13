@@ -1,16 +1,25 @@
 {
   "variants": {
-    "axis=x": {
+    "axis=x,cased=false": {
       "model": "createcraftedbeginning:block/airtight_pipe/pipe",
       "x": 90,
       "y": 90
     },
-    "axis=y": {
+    "axis=x,cased=true": {
+      "model": "createcraftedbeginning:block/airtight_pipe/casing"
+    },
+    "axis=y,cased=false": {
       "model": "createcraftedbeginning:block/airtight_pipe/pipe"
     },
-    "axis=z": {
+    "axis=y,cased=true": {
+      "model": "createcraftedbeginning:block/airtight_pipe/casing"
+    },
+    "axis=z,cased=false": {
       "model": "createcraftedbeginning:block/airtight_pipe/pipe",
       "x": 90
+    },
+    "axis=z,cased=true": {
+      "model": "createcraftedbeginning:block/airtight_pipe/casing"
     }
   }
 }

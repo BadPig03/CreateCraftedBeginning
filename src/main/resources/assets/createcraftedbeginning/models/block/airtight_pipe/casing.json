@@ -1,0 +1,9 @@
+{
+	"credit": "Made with Blockbench",
+	"parent": "minecraft:block/cube_all",
+	"textures": {
+		"1": "createcraftedbeginning:block/airtight_sheet_block",
+		"all": "createcraftedbeginning:block/airtight_pipe/casing_side",
+		"particle": "createcraftedbeginning:block/airtight_sheet_block"
+	}
+}

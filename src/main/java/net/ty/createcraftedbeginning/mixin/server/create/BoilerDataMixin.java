@@ -12,11 +12,11 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-@SuppressWarnings("MethodMayBeStatic")
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(value = BoilerData.class, remap = false)
 public abstract class BoilerDataMixin {
+    @SuppressWarnings("MethodMayBeStatic")
     @WrapOperation(method = "evaluate", at = @At(value = "INVOKE", target = "Lcom/tterrag/registrate/util/entry/BlockEntry;has(Lnet/minecraft/world/level/block/state/BlockState;)Z", ordinal = 0))
     private boolean ccb$evaluate(BlockEntry<?> entry, BlockState state, Operation<Boolean> original) {
         return original.call(entry, state) || BoilerSteamOutletBlock.isActive(state);

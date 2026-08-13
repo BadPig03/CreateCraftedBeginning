@@ -1,10 +1,12 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightpipe;
 
+import com.simibubi.create.content.decoration.bracket.BracketedBlockEntityBehaviour;
 import com.simibubi.create.content.fluids.pipes.IAxisPipe;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.model.BakedModelWrapperWithData;
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
@@ -52,6 +54,11 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
     }
 
     private static void addQuads(List<BakedQuad> quads, @Nullable BlockState state, @Nullable Direction side, RandomSource rand, ModelData data, PipeModelData pipeData, @Nullable RenderType renderType) {
+        BakedModel bracket = pipeData.getBracket();
+        if (bracket != null) {
+            quads.addAll(bracket.getQuads(state, side, rand, data, renderType));
+        }
+
         for (Direction direction : Iterate.directions) {
             AttachmentTypes type = pipeData.getAttachment(direction);
             for (AirtightPipeAttachmentPartial partial : getPartials(type)) {
@@ -102,10 +109,18 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
     @Override
     protected Builder gatherModelData(Builder builder, BlockAndTintGetter level, BlockPos pos, BlockState state, ModelData blockEntityData) {
         PipeModelData pipeData = new PipeModelData();
+        if (state.hasProperty(AirtightPipeBlock.CASED) && state.getValue(AirtightPipeBlock.CASED)) {
+            return builder.with(PIPE_PROPERTY, pipeData);
+        }
+
         GasTransportBehaviour transport = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
+        BracketedBlockEntityBehaviour bracket = BlockEntityBehaviour.get(level, pos, BracketedBlockEntityBehaviour.TYPE);
         for (Direction direction : Iterate.directions) {
             AttachmentTypes attachment = transport == null ? getFallbackAttachment(level, pos, state, direction) : transport.getRenderedRimAttachment(level, pos, state, direction);
             pipeData.putAttachment(direction, attachment);
+        }
+        if (bracket != null) {
+            pipeData.putBracket(bracket.getBracket());
         }
         return builder.with(PIPE_PROPERTY, pipeData);
     }
@@ -162,6 +177,8 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
 
     private static class PipeModelData {
         private final AttachmentTypes[] attachments;
+        @Nullable
+        private BakedModel bracket;
 
         public PipeModelData() {
             attachments = new AttachmentTypes[Direction.values().length];
@@ -170,6 +187,19 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
 
         public void putAttachment(Direction direction, AttachmentTypes attachment) {
             attachments[direction.get3DDataValue()] = attachment;
+        }
+
+        public void putBracket(@Nullable BlockState state) {
+            if (state == null) {
+                return;
+            }
+
+            bracket = Minecraft.getInstance().getBlockRenderer().getBlockModel(state);
+        }
+
+        @Nullable
+        public BakedModel getBracket() {
+            return bracket;
         }
 
         @Contract(pure = true)

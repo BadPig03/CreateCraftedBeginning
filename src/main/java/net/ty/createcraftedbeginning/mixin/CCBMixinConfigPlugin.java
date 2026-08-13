@@ -13,11 +13,12 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class CCBMixinConfigPlugin implements IMixinConfigPlugin {
-    private static final boolean JEI_RECIPE_TRANSFER_AVAILABLE = hasClassResource();
+    private static final boolean JEI_RECIPE_TRANSFER_AVAILABLE = hasClassResource("mezz.jei.api.recipe.transfer.IRecipeTransferError");
+    private static final boolean FUNCTIONAL_STORAGE_AVAILABLE = hasClassResource("com.buuz135.functionalstorage.FunctionalStorage");
 
-    private static boolean hasClassResource() {
+    private static boolean hasClassResource(String className) {
         ClassLoader classLoader = CCBMixinConfigPlugin.class.getClassLoader();
-        return classLoader != null && classLoader.getResource("mezz.jei.api.recipe.transfer.IRecipeTransferError".replace('.', '/') + ".class") != null;
+        return classLoader != null && classLoader.getResource(className.replace('.', '/') + ".class") != null;
     }
 
     @Override
@@ -31,7 +32,13 @@ public final class CCBMixinConfigPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        return !mixinClassName.startsWith("net.ty.createcraftedbeginning.mixin.compat.jei.") || JEI_RECIPE_TRANSFER_AVAILABLE;
+        if (mixinClassName.startsWith("net.ty.createcraftedbeginning.mixin.compat.jei.")) {
+            return JEI_RECIPE_TRANSFER_AVAILABLE;
+        }
+        else if (mixinClassName.startsWith("net.ty.createcraftedbeginning.mixin.compat.functionalstorage.")) {
+            return FUNCTIONAL_STORAGE_AVAILABLE;
+        }
+        return true;
     }
 
     @Override

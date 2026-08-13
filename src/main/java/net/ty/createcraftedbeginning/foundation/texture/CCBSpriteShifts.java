@@ -14,6 +14,8 @@ public class CCBSpriteShifts {
     public static final CTSpriteShiftEntry END_CASING = omni("end_casing");
     public static final CTSpriteShiftEntry AIR_VENT = omni("air_vent/air_vent");
 
+    public static final CTSpriteShiftEntry AIRTIGHT_PIPE_CASING = getCT("airtight_pipe/casing_side", "airtight_pipe/casing");
+
     public static final CTSpriteShiftEntry AIRTIGHT_TANK_TOP = rectangle("airtight_tank/top");
     public static final CTSpriteShiftEntry AIRTIGHT_TANK = rectangle("airtight_tank/vertical");
     public static final CTSpriteShiftEntry HORIZONTAL_AIRTIGHT_TANK = rectangle("airtight_tank/horizontal/vertical");

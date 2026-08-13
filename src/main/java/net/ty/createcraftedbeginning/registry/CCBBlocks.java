@@ -55,7 +55,7 @@ import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncine
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerBlock;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerMovementBehaviour;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerStructuralBlock;
-import net.ty.createcraftedbeginning.content.obsolete.phohostressbearing.PhotoStressBearingBlock;
+import net.ty.createcraftedbeginning.content.photostresses.phohostressbearing.PhotoStressBearingBlock;
 import net.ty.createcraftedbeginning.content.obsolete.pneumaticengine.PneumaticEngineBlock;
 import net.ty.createcraftedbeginning.registry.registrate.CCBBlockModelTransformer;
 import net.ty.createcraftedbeginning.registry.registrate.CCBBlockPropertiesTransformer;

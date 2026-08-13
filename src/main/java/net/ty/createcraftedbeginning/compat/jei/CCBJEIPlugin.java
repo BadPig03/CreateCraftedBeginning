@@ -41,6 +41,8 @@ import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.client.CCBClientRecipeUtils;
+import net.ty.createcraftedbeginning.compat.CCBCompatMods;
+import net.ty.createcraftedbeginning.compat.functionalstorage.client.FunctionalStorageJEICompat;
 import net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory.Builder;
 import net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory.Factory;
@@ -157,6 +159,9 @@ public class CCBJEIPlugin implements IModPlugin {
     @Override
     public void registerItemSubtypes(ISubtypeRegistration registration) {
         registration.registerSubtypeInterpreter(CCBItems.GAS_INJECTION_CHAMBER_FILTER.get(), FanProcessingFilterSubtypeInterpreter.INSTANCE);
+        if (CCBCompatMods.FUNCTIONAL_STORAGE.isLoaded()) {
+            FunctionalStorageHook.registerItemSubtypes(registration);
+        }
     }
 
     @Override
@@ -204,6 +209,12 @@ public class CCBJEIPlugin implements IModPlugin {
     @Override
     public void onRuntimeUnavailable() {
         runtime = null;
+    }
+
+    private static final class FunctionalStorageHook {
+        private static void registerItemSubtypes(ISubtypeRegistration registration) {
+            FunctionalStorageJEICompat.registerItemSubtypes(registration);
+        }
     }
 
     private void loadCategories() {

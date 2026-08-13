@@ -13,6 +13,15 @@ version = mod_version
 group = mod_group_id
 
 repositories {
+    mavenCentral()
+
+    maven {
+        url = "https://cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
+
     maven {
         url = "https://maven.createmod.net"
     } // Create, Ponder, Flywheel
@@ -143,6 +152,11 @@ dependencies {
     runtimeOnly("dev.engine-room.flywheel:flywheel-neoforge-${minecraft_version}:${flywheel_version}")
 
     implementation "maven.modrinth:jade:${jade_version}"
+
+    // Optional at runtime: compile against Functional Storage/Titanium without forcing either mod
+    // into CCB's published dependency graph.
+    compileOnly("curse.maven:functional-storage-556861:6930104")
+    compileOnly("com.hrznstudio:titanium:1.21-4.0.42")
 
     compileOnly("mezz.jei:jei-1.21.1-neoforge-api:${jei_version}")
     runtimeOnly("mezz.jei:jei-1.21.1-neoforge:${jei_version}")

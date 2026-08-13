@@ -28,6 +28,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.TickPriority;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
@@ -35,7 +36,6 @@ import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipe
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IAirtightComponent;
 import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPropagator;
-import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBBlockTags;
@@ -140,7 +140,7 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
 
     @Override
     public VoxelShape getOcclusionShape(BlockState blockState, BlockGetter level, BlockPos blockPos) {
-        return CCBShapes.ENCASED_PIPE_SHAPE;
+        return Shapes.block();
     }
 
     @Override

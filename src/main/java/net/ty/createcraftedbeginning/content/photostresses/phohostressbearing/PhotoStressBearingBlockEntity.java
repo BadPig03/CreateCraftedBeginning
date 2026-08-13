@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.content.obsolete.phohostressbearing;
+package net.ty.createcraftedbeginning.content.photostresses.phohostressbearing;
 
 import com.simibubi.create.content.contraptions.bearing.WindmillBearingBlockEntity.RotationDirection;
 import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
@@ -72,7 +72,7 @@ public class PhotoStressBearingBlockEntity extends GeneratingKineticBlockEntity 
 
     @Override
     public float getGeneratedSpeed() {
-        if (!isInOverworld() || level == null) {
+        if (level == null || level.dimension() != Level.OVERWORLD) {
             return 0;
         }
 
@@ -94,18 +94,12 @@ public class PhotoStressBearingBlockEntity extends GeneratingKineticBlockEntity 
         notifyUpdate();
     }
 
-    private boolean isInOverworld() {
-        return level != null && level.dimension() == Level.OVERWORLD;
-    }
-
     @Override
     public void tick() {
         super.tick();
-
         if (!isOverStressed()) {
             updateGeneratedRotation();
         }
-
         if (level != null && level instanceof PonderLevel) {
             skyLight = getPonderSkyLight(level);
         }
@@ -139,8 +133,8 @@ public class PhotoStressBearingBlockEntity extends GeneratingKineticBlockEntity 
         }
 
         Vec3 centerOf = VecHelper.getCenterOf(worldPosition);
-        Vec3 v = VecHelper.offsetRandomly(centerOf, level.random, 0.95f);
-        Vec3 m = centerOf.subtract(v);
-        level.addParticle(particleColor, v.x, v.y, v.z, m.x, m.y, m.z);
+        Vec3 offset = VecHelper.offsetRandomly(centerOf, level.random, 0.95f);
+        Vec3 subtracted = centerOf.subtract(offset);
+        level.addParticle(particleColor, offset.x, offset.y, offset.z, subtracted.x, subtracted.y, subtracted.z);
     }
 }

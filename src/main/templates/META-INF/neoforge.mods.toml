@@ -39,3 +39,10 @@ config="createcraftedbeginning.mixins.json"
     versionRange = "[${kubejs_version},)"
     ordering = "AFTER"
     side = "BOTH"
+
+[[dependencies.createcraftedbeginning]]
+    modId = "functionalstorage"
+    type = "optional"
+    versionRange = "[1.21.1-1.5.4,)"
+    ordering = "AFTER"
+    side = "BOTH"

@@ -11,6 +11,7 @@
     "server.accessor.ZombieAccessor",
     "server.create.BasinBlockEntityMixin",
     "server.create.BeltMovementHandlerMixin",
+    "server.create.BracketBlockMixin",
     "server.create.FactoryPanelBehaviourMixin",
     "server.create.FactoryPanelConfigurationPacketMixin",
     "server.create.FanProcessingMixin",
@@ -35,7 +36,10 @@
     "server.minecraft.EntityMixin",
     "server.minecraft.HoglinMixin",
     "server.minecraft.PlayerMixin",
-    "server.minecraft.VibrationSystemListenerMixin"
+    "server.minecraft.VibrationSystemListenerMixin",
+    "compat.functionalstorage.ConnectedDrawersMixin",
+    "compat.functionalstorage.StorageControllerTileMixin",
+    "compat.functionalstorage.UpgradeItemMixin"
   ],
   "client": [
     "client.accessor.CreativeModeInventoryScreenAccessor",

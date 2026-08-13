@@ -36,7 +36,6 @@ public class CCBShapes {
     public static final VoxelShape COOLER_BLOCK_SHAPE = shape(1, 0, 1, 15, 14, 15).build();
     public static final VoxelShape COOLER_BLOCK_SPECIAL_COLLISION_SHAPE = shape(0, 0, 0, 16, 4, 16).build();
     public static final VoxelShape CRATE_SHAPE = shape(1, 0, 1, 15, 14, 15).build();
-    public static final VoxelShape ENCASED_PIPE_SHAPE = shape(0, 0, 0, 16, 16, 16).build();
     public static final VoxelShape GAS_CANISTER_SHAPE = shape(4, 0, 4, 12, 12, 12).add(6, 12, 6, 10, 13, 10).build();
     public static final VoxelShape GAS_INJECTION_CHAMBER_SHAPE = shape(1, 1, 1, 15, 15, 15).add(2, 15, 2, 14, 16, 14).build();
     public static final VoxelShape END_SCULK_SILENCER_SHAPE = shape(0, 0, 0, 16, 8, 16).add(1, 8, 1, 15, 15, 15).build();

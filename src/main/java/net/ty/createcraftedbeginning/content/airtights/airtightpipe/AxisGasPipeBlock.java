@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightpipe;
 
-import com.simibubi.create.content.equipment.wrench.IWrenchable;
+import com.simibubi.create.content.decoration.bracket.BracketedBlockEntityBehaviour;
+import com.simibubi.create.content.equipment.wrench.IWrenchableWithBracket;
 import com.simibubi.create.content.fluids.pipes.IAxisPipe;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
@@ -44,11 +45,12 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterloggedBlock, IWrenchable, IAxisPipe {
+public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterloggedBlock, IWrenchableWithBracket, IAxisPipe {
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     public AxisGasPipeBlock(Properties properties) {
@@ -102,7 +104,24 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
     }
 
     @Override
+    public Optional<ItemStack> removeBracket(BlockGetter level, BlockPos pos, boolean inOnReplacedContext) {
+        BracketedBlockEntityBehaviour behaviour = BlockEntityBehaviour.get(level, pos, BracketedBlockEntityBehaviour.TYPE);
+        if (behaviour == null) {
+            return Optional.empty();
+        }
+
+        BlockState bracket = behaviour.removeBracket(inOnReplacedContext);
+        if (bracket == null) {
+            return Optional.empty();
+        }
+        return Optional.of(new ItemStack(bracket.getBlock()));
+    }
+
+    @Override
     public InteractionResult onWrenched(BlockState state, UseOnContext context) {
+        if (tryRemoveBracket(context)) {
+            return InteractionResult.SUCCESS;
+        }
         return InteractionResult.FAIL;
     }
 
@@ -175,8 +194,12 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-        if (!state.is(newState.getBlock()) && !level.isClientSide) {
+        boolean blockTypeChanged = !state.is(newState.getBlock());
+        if (blockTypeChanged && !level.isClientSide) {
             GasPropagator.propagatePipe(level, pos);
+        }
+        if (state != newState && !isMoving) {
+            removeBracket(level, pos, true).ifPresent(stack -> popResource(level, pos, stack));
         }
         super.onRemove(state, level, pos, newState, isMoving);
     }

@@ -19,7 +19,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.content.obsolete.phohostressbearing.PhotoStressBearingBlockEntity;
+import net.ty.createcraftedbeginning.content.photostresses.phohostressbearing.PhotoStressBearingBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;

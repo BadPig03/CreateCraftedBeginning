@@ -21,6 +21,7 @@ import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.compat.CCBCompatBootstrap;
 import net.ty.createcraftedbeginning.compat.CCBCompatMods;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIEvents;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlockEntity;
@@ -105,6 +106,7 @@ public class CCBCommonEvents {
         CreativeGasCanisterItem.registerCapabilities(event);
         GasCanisterItem.registerCapabilities(event);
         GasCanisterPackItem.registerCapabilities(event);
+        CCBCompatBootstrap.registerCapabilities(event);
     }
 
     @SubscribeEvent

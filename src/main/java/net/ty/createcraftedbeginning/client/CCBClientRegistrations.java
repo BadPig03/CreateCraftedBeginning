@@ -1,11 +1,15 @@
 package net.ty.createcraftedbeginning.client;
 
+import com.simibubi.create.AllPartialModels;
 import com.simibubi.create.CreateClient;
+import com.simibubi.create.content.kinetics.base.OrientedRotatingVisual;
 import com.simibubi.create.content.kinetics.base.SingleAxisRotatingVisual;
 import com.simibubi.create.foundation.block.render.CustomBlockModels;
 import com.simibubi.create.foundation.blockEntity.renderer.SmartBlockEntityRenderer;
+import dev.engine_room.flywheel.lib.model.Models;
 import dev.engine_room.flywheel.lib.visualization.SimpleBlockEntityVisualizer;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.Direction;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
@@ -54,7 +58,7 @@ import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerVi
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerRenderer;
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerStructuralRenderer;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerRenderer;
-import net.ty.createcraftedbeginning.content.obsolete.phohostressbearing.PhotoStressBearingRenderer;
+import net.ty.createcraftedbeginning.content.photostresses.phohostressbearing.PhotoStressBearingRenderer;
 import net.ty.createcraftedbeginning.content.obsolete.pneumaticengine.PneumaticEngineRenderer;
 import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -142,5 +146,6 @@ public final class CCBClientRegistrations {
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.BREEZE_CHAMBER.get()).factory(BreezeChamberVisual::new).skipVanillaRender(be -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_PACKAGER.get()).factory(GasPackagerVisual::new).neverSkipVanillaRender().apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_REPACKAGER.get()).factory(GasRepackagerVisual::new).neverSkipVanillaRender().apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.PHOTO_STRESS_BEARING.get()).factory((ctx, blockEntity, partialTick) -> new OrientedRotatingVisual<>(ctx, blockEntity, partialTick, Direction.SOUTH, Direction.DOWN, Models.partial(AllPartialModels.SHAFT_HALF))).skipVanillaRender(be -> true).apply();
     }
 }

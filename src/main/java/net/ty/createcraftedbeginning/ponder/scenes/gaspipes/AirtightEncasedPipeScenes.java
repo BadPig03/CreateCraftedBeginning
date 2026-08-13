@@ -98,7 +98,7 @@ public class AirtightEncasedPipeScenes {
 
         scene.idle(7);
         scene.world().setBlock(replacePos, CCBBlocks.AIRTIGHT_ENCASED_PIPE_BLOCK.getDefaultState(), false);
-        scene.overlay().showText(60).text("The Airtight Encased Pipe can directly replace an Airtight Pipe").colored(PonderPalette.GREEN).pointAt(util.vector().centerOf(replacePos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("The Airtight Encased Pipe can directly replace an uncased Airtight Pipe").colored(PonderPalette.GREEN).pointAt(util.vector().centerOf(replacePos)).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();

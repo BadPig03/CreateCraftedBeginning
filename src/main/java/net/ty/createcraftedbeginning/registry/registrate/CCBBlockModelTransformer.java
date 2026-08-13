@@ -43,6 +43,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.Airt
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralShaftBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeCTBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlockItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralCogBlock;
@@ -162,12 +163,16 @@ public final class CCBBlockModelTransformer {
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtightPipe() {
         return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> {
+            if (state.getValue(AirtightPipeBlock.CASED)) {
+                return ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/airtight_pipe/casing"))).build();
+            }
+
             Axis axis = state.getValue(AirtightPipeBlock.AXIS);
             int rotationX = axis == Axis.Y ? 0 : 90;
             int rotationY = axis == Axis.X ? 90 : 0;
 
             return ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/airtight_pipe/pipe"))).uvLock(false).rotationX(rotationX).rotationY(rotationY).build();
-        }, BlockStateProperties.WATERLOGGED)).item().properties(Properties::fireResistant).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+        }, BlockStateProperties.WATERLOGGED)).onRegister(CreateRegistrate.connectedTextures(AirtightPipeCTBehaviour::new)).item().properties(Properties::fireResistant).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)

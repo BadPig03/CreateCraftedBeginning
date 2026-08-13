@@ -1,0 +1,27 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "functionalstorage"
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": {
+      "tag": "minecraft:planks"
+    },
+    "C": {
+      "item": "createcraftedbeginning:gas_canister"
+    }
+  },
+  "pattern": [
+    "PCP",
+    "PPP",
+    "PCP"
+  ],
+  "result": {
+    "id": "createcraftedbeginning:gas_drawer_2",
+    "count": 2
+  }
+}

@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.content.obsolete.phohostressbearing;
+package net.ty.createcraftedbeginning.content.photostresses.phohostressbearing;
 
 import com.simibubi.create.content.kinetics.base.KineticBlock;
 import com.simibubi.create.foundation.block.IBE;
@@ -6,13 +6,10 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.PathComputationType;
-import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -35,18 +32,8 @@ public class PhotoStressBearingBlock extends KineticBlock implements IBE<PhotoSt
     }
 
     @Override
-    public boolean hideStressImpact() {
-        return true;
-    }
-
-    @Override
     protected boolean isPathfindable(BlockState state, PathComputationType pathComputationType) {
         return false;
-    }
-
-    @Override
-    public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
-        return box(0, 0, 0, 16, 16, 16);
     }
 
     @Override

@@ -43,7 +43,7 @@ import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncine
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerStructuralBlockEntity;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerBlockEntity;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerStructuralBlockEntity;
-import net.ty.createcraftedbeginning.content.obsolete.phohostressbearing.PhotoStressBearingBlockEntity;
+import net.ty.createcraftedbeginning.content.photostresses.phohostressbearing.PhotoStressBearingBlockEntity;
 import net.ty.createcraftedbeginning.content.obsolete.pneumaticengine.PneumaticEngineBlockEntity;
 import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrate;
 

@@ -47,12 +47,17 @@ import java.util.function.Predicate;
 @MethodsReturnNonnullByDefault
 public class CCBCreativeTabs {
     private static final DeferredRegister<CreativeModeTab> REGISTER = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CCBAPI.MOD_ID);
+    private static final EnumMap<CCBCreativeTabSection, List<ItemProviderEntry<?, ?>>> SECTION_TAIL_ITEMS = new EnumMap<>(CCBCreativeTabSection.class);
 
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CREATIVE_TAB = REGISTER.register("base", () -> builder().title(CCBLang.translateDirect("item_groups.base_creative_tab")).withTabsBefore(AllCreativeModeTabs.BASE_CREATIVE_TAB.getKey()).icon(() -> new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK)).displayItems(new RegistrateDisplayItemsGenerator()).build());
 
     @Internal
     public static void register(IEventBus eventBus) {
         REGISTER.register(eventBus);
+    }
+
+    public static void registerSectionTail(CCBCreativeTabSection section, ItemProviderEntry<?, ?>... entries) {
+        SECTION_TAIL_ITEMS.computeIfAbsent(section, ignored -> new ArrayList<>()).addAll(List.of(entries));
     }
 
     private static Builder builder() {
@@ -68,7 +73,7 @@ public class CCBCreativeTabs {
             itemsExclusions.addAll(List.of(CCBItems.BALLOON_RARE_REVERTED, CCBItems.BALLOON_RARE_SMILE, CCBItems.BALLOON_RARE_CRY, CCBItems.BALLOON_RARE_EYE, CCBItems.BALLOON_RARE_ISAAC, CCBItems.BALLOON_RARE_GHAST, CCBItems.BALLOON_RARE_TROLLFACE, CCBItems.BALLOON_RARE_TENNA, CCBItems.BALLOON_RARE_PVZ, CCBItems.BALLOON_RARE_QUESTION_MARKS, CCBItems.BALLOON_RARE_POWERFUL, CCBItems.BALLOON_RARE_CHEESE));
             itemsExclusions.stream().map(ItemProviderEntry::asItem).forEach(exclusions::add);
 
-            List<ItemProviderEntry<?, ?>> blocksExclusions = List.of(CCBBlocks.PHOTO_STRESS_BEARING_BLOCK, CCBBlocks.PNEUMATIC_ENGINE_BLOCK);
+            List<ItemProviderEntry<?, ?>> blocksExclusions = List.of(CCBBlocks.PNEUMATIC_ENGINE_BLOCK);
             blocksExclusions.stream().map(ItemProviderEntry::asItem).forEach(exclusions::add);
             return exclusions::contains;
         }
@@ -104,6 +109,20 @@ public class CCBCreativeTabs {
 
                 int insertionIndex = ordering.before ? anchorIndex : anchorIndex + 1;
                 items.add(insertionIndex, item);
+            }
+        }
+
+        private static void applySectionTail(List<Item> items, CCBCreativeTabSection section) {
+            List<ItemProviderEntry<?, ?>> tailEntries = SECTION_TAIL_ITEMS.get(section);
+            if (tailEntries == null || tailEntries.isEmpty()) {
+                return;
+            }
+
+            for (ItemProviderEntry<?, ?> entry : tailEntries) {
+                Item item = entry.asItem();
+                if (items.remove(item)) {
+                    items.add(item);
+                }
             }
         }
 
@@ -158,6 +177,7 @@ public class CCBCreativeTabs {
                 items.addAll(collectBlocks(exclusionPredicate, section));
                 items.addAll(collectItems(exclusionPredicate, section));
                 applyOrderings(items, orderings);
+                applySectionTail(items, section);
 
                 List<ItemStack> stacks = new ArrayList<>(items.size());
                 items.stream().map(stackFunc).forEach(stacks::add);

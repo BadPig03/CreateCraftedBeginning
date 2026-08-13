@@ -10,6 +10,7 @@ import net.ty.createcraftedbeginning.client.CCBClientBridgeImpl;
 import net.ty.createcraftedbeginning.client.CCBClientRegistrations;
 import net.ty.createcraftedbeginning.client.CCBFluidClientExtensions;
 import net.ty.createcraftedbeginning.client.CCBParticleProviders;
+import net.ty.createcraftedbeginning.compat.functionalstorage.FunctionalStorageClientBootstrap;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonRenderHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.AirtightExtendArmRenderHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillRenderHandler;
@@ -29,6 +30,7 @@ public class CreateCraftedBeginningClient {
     public CreateCraftedBeginningClient(IEventBus modEventBus) {
         CCBClientBridge.install(new CCBClientBridgeImpl());
         CCBClientRegistrations.initialize();
+        FunctionalStorageClientBootstrap.addListeners(modEventBus);
 
         IEventBus eventBus = NeoForge.EVENT_BUS;
         modEventBus.addListener(CCBFluidClientExtensions::register);
