@@ -1,0 +1,79 @@
+package net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle;
+
+import com.simibubi.create.content.kinetics.base.KineticBlockEntityVisual;
+import com.simibubi.create.content.kinetics.base.RotatingInstance;
+import com.simibubi.create.foundation.render.AllInstanceTypes;
+import dev.engine_room.flywheel.api.instance.Instance;
+import dev.engine_room.flywheel.api.visualization.VisualizationContext;
+import dev.engine_room.flywheel.lib.model.Models;
+import dev.engine_room.flywheel.lib.visual.SimpleTickableVisual;
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import org.jetbrains.annotations.Nullable;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.function.Consumer;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public class AirtightReactorKettleStructuralCogVisual extends KineticBlockEntityVisual<AirtightReactorKettleStructuralCogBlockEntity> implements SimpleTickableVisual {
+    @Nullable
+    private final RotatingInstance rotatingModel;
+
+    public AirtightReactorKettleStructuralCogVisual(VisualizationContext context, AirtightReactorKettleStructuralCogBlockEntity blockEntity, float partialTick) {
+        super(context, blockEntity, partialTick);
+        AirtightReactorKettleStructuralPosition position = blockEntity.getBlockState().getValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION);
+        if (position == AirtightReactorKettleStructuralPosition.TOP_CENTER) {
+            rotatingModel = null;
+            return;
+        }
+
+        rotatingModel = instancerProvider().instancer(AllInstanceTypes.ROTATING, Models.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_COGS)).createInstance().setup(blockEntity).setPosition(getVisualPosition());
+        rotatingModel.setChanged();
+    }
+
+    @Override
+    public void update(float partialTick) {
+        if (rotatingModel == null) {
+            return;
+        }
+
+        rotatingModel.setup(blockEntity).setChanged();
+    }
+
+    @Override
+    protected void _delete() {
+        if (rotatingModel == null) {
+            return;
+        }
+
+        rotatingModel.delete();
+    }
+
+    @Override
+    public void tick(Context context) {
+        if (rotatingModel == null) {
+            return;
+        }
+
+        applyOverstressEffect(blockEntity, rotatingModel);
+    }
+
+    @Override
+    public void updateLight(float partialTick) {
+        if (rotatingModel == null) {
+            return;
+        }
+
+        relight(rotatingModel);
+    }
+
+    @Override
+    public void collectCrumblingInstances(Consumer<Instance> consumer) {
+        if (rotatingModel == null) {
+            return;
+        }
+
+        consumer.accept(rotatingModel);
+    }
+}

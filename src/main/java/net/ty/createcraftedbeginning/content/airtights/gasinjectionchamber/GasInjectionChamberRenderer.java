@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.foundation.blockEntity.renderer.SmartBlockEntityRenderer;
+import dev.engine_room.flywheel.api.visualization.VisualizationManager;
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
 import net.createmod.catnip.render.CachedBuffers;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -29,31 +30,27 @@ public class GasInjectionChamberRenderer extends SmartBlockEntityRenderer<GasInj
         super(context);
     }
 
-    private static float getNozzleSqueeze(float ticks) {
+    static float getNozzleSqueeze(float ticks) {
         if (ticks < 0) {
             return 0;
         }
-
-        if (ticks < NOZZLE_TIME) {
+        else if (ticks < NOZZLE_TIME) {
             return Mth.lerp((NOZZLE_TIME - ticks) / NOZZLE_TIME, -0.75f, 0);
         }
-
-        if (ticks < PROCESSING_TIME - NOZZLE_TIME) {
+        else if (ticks < PROCESSING_TIME - NOZZLE_TIME) {
             return -0.75f;
         }
-
-        if (ticks < PROCESSING_TIME) {
+        else if (ticks < PROCESSING_TIME) {
             return Mth.lerp((PROCESSING_TIME - ticks) / NOZZLE_TIME, 0, -0.75f);
         }
         return 0;
     }
 
-    private static float getNozzleSqueezePart(float ticks) {
+    static float getNozzleSqueezePart(float ticks) {
         int squeezeTime = NOZZLE_PART_TIME - NOZZLE_IDLE_TIME;
         int squeezeEnd = NOZZLE_TIME + squeezeTime;
         int releaseStart = PROCESSING_TIME - NOZZLE_TIME - squeezeTime;
         int releaseEnd = PROCESSING_TIME - NOZZLE_TIME;
-
         if (ticks < NOZZLE_TIME) {
             return 0;
         }
@@ -90,6 +87,10 @@ public class GasInjectionChamberRenderer extends SmartBlockEntityRenderer<GasInj
     @Override
     protected void renderSafe(GasInjectionChamberBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         super.renderSafe(blockEntity, partialTicks, poseStack, buffer, light, overlay);
+        if (VisualizationManager.supportsVisualization(blockEntity.getLevel())) {
+            return;
+        }
+
         poseStack.pushPose();
 
         BlockState state = blockEntity.getBlockState();

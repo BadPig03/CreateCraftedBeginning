@@ -5,6 +5,7 @@ import com.simibubi.create.content.kinetics.belt.BeltHelper;
 import com.simibubi.create.content.logistics.depot.DepotRenderer;
 import com.simibubi.create.foundation.blockEntity.renderer.SmartBlockEntityRenderer;
 import com.simibubi.create.foundation.item.SmartInventory;
+import dev.engine_room.flywheel.api.visualization.VisualizationManager;
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.render.CachedBuffers;
@@ -139,7 +140,9 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
     @Override
     protected void renderSafe(AirtightForgingPressBlockEntity press, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         super.renderSafe(press, partialTicks, poseStack, buffer, light, overlay);
-        renderPressHead(press, partialTicks, poseStack, buffer, light);
+        if (!VisualizationManager.supportsVisualization(press.getLevel())) {
+            renderPressHead(press, partialTicks, poseStack, buffer, light);
+        }
         renderItems(press, partialTicks, poseStack, buffer, light, overlay);
     }
 

@@ -28,20 +28,27 @@ import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthe
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.AirtightLeggingsScreen;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.windcharge.AirtightCannonWindChargeProjectileEntityRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineRenderer;
+import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineVisual;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralShaftRenderer;
+import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralShaftVisual;
+import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressVisual;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillScreen;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentModel;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralCogRenderer;
+import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralCogVisual;
+import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleVisual;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentRenderer;
+import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentVisual;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackScreen;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeModel;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeRenderer;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeSetGasScreen;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreen;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberRenderer;
+import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberVisual;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerRenderer;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerVisual;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerRenderer;
@@ -50,6 +57,7 @@ import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.Port
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceVisual;
 import net.ty.createcraftedbeginning.content.airtights.smartairtightpipe.SmartAirtightPipeRenderer;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineRenderer;
+import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineVisual;
 import net.ty.createcraftedbeginning.content.airtights.weatherflares.projectile.WeatherFlareProjectileRenderer;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberRenderer;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberVisual;
@@ -58,8 +66,9 @@ import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerVi
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerRenderer;
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerStructuralRenderer;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerRenderer;
-import net.ty.createcraftedbeginning.content.photostresses.phohostressbearing.PhotoStressBearingRenderer;
+import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerVisual;
 import net.ty.createcraftedbeginning.content.obsolete.pneumaticengine.PneumaticEngineRenderer;
+import net.ty.createcraftedbeginning.content.photostresses.phohostressbearing.PhotoStressBearingRenderer;
 import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -140,12 +149,24 @@ public final class CCBClientRegistrations {
     }
 
     public static void registerVisualizers(FMLClientSetupEvent ignoredEvent) {
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIR_VENT.get()).factory(AirVentVisual::new).skipVanillaRender(be -> true).apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIR_COMPRESSOR.get()).factory(SingleAxisRotatingVisual.of(CCBPartialModels.SHAFT_HALF_UP)).skipVanillaRender(be -> true).apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIRTIGHT_ENGINE.get()).factory(AirtightEngineVisual::new).skipVanillaRender(be -> true).apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIRTIGHT_FORGING_PRESS.get()).factory(AirtightForgingPressVisual::new).neverSkipVanillaRender().apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get()).factory(AirtightForgingPressStructuralShaftVisual::new).skipVanillaRender(be -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIRTIGHT_PUMP.get()).factory(SingleAxisRotatingVisual.ofZ(CCBPartialModels.AIRTIGHT_PUMP_COGS)).skipVanillaRender(be -> true).apply();
-        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.PORTABLE_GAS_INTERFACE.get()).factory(PortableGasInterfaceVisual::new).skipVanillaRender(be -> true).apply();
-        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.BREEZE_COOLER.get()).factory(BreezeCoolerVisual::new).skipVanillaRender(be -> true).apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get()).factory(AirtightReactorKettleVisual::new).neverSkipVanillaRender().apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG.get()).factory(AirtightReactorKettleStructuralCogVisual::new).skipVanillaRender(be -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.BREEZE_CHAMBER.get()).factory(BreezeChamberVisual::new).skipVanillaRender(be -> true).apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.BREEZE_COOLER.get()).factory(BreezeCoolerVisual::new).skipVanillaRender(be -> true).apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.END_INCINERATION_BLOWER.get()).factory(SingleAxisRotatingVisual.of(CCBPartialModels.END_INCINERATION_BLOWER_CORE)).skipVanillaRender(be -> true).apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.END_INCINERATION_BLOWER_STRUCTURAL.get()).factory(SingleAxisRotatingVisual.of(CCBPartialModels.SHAFT_HALF_DOWN)).skipVanillaRender(be -> true).apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.END_SCULK_SILENCER.get()).factory(EndSculkSilencerVisual::new).skipVanillaRender(be -> true).apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_INJECTION_CHAMBER.get()).factory(GasInjectionChamberVisual::new).neverSkipVanillaRender().apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_PACKAGER.get()).factory(GasPackagerVisual::new).neverSkipVanillaRender().apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_REPACKAGER.get()).factory(GasRepackagerVisual::new).neverSkipVanillaRender().apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.PHOTO_STRESS_BEARING.get()).factory((ctx, blockEntity, partialTick) -> new OrientedRotatingVisual<>(ctx, blockEntity, partialTick, Direction.SOUTH, Direction.DOWN, Models.partial(AllPartialModels.SHAFT_HALF))).skipVanillaRender(be -> true).apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.PORTABLE_GAS_INTERFACE.get()).factory(PortableGasInterfaceVisual::new).skipVanillaRender(be -> true).apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.TESLA_TURBINE.get()).factory(TeslaTurbineVisual::new).skipVanillaRender(be -> true).apply();
     }
 }
