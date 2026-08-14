@@ -144,10 +144,10 @@ public final class GasDrawerInfoGuiAddon extends BasicScreenAddon {
         GasStack stack = renderGas.stack();
         tooltip.add(CCBLang.translateDirect("gui.gas_canister.content").withStyle(ChatFormatting.GOLD).append(stack.getHoverName().copy().withStyle(ChatFormatting.WHITE)));
         if (!stack.isComponentsPatchEmpty()) {
-            tooltip.add(Component.translatable("gui.createcraftedbeginning.gas_drawer.has_components").withStyle(ChatFormatting.DARK_GRAY));
+            tooltip.add(CCBLang.translateDirect("compat.functional_storage.gas_drawer.has_components").withStyle(ChatFormatting.DARK_GRAY));
         }
         if (renderGas.filterOnly()) {
-            tooltip.add(Component.translatable("gui.createcraftedbeginning.gas_drawer.locked_filter").withStyle(ChatFormatting.GRAY));
+            tooltip.add(CCBLang.translateDirect("compat.functional_storage.gas_drawer.locked_filter").withStyle(ChatFormatting.GRAY));
         }
 
         long amount = renderGas.filterOnly() ? 0 : stack.getAmount();

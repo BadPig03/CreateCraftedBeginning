@@ -144,17 +144,11 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
         float x2 = (float) bounds.maxX;
         float y1 = (float) bounds.minY;
         float y2 = (float) bounds.maxY;
-        float z1 = (float) bounds.minZ;
         float z2 = (float) bounds.maxZ;
         float u0 = sprite.getU0();
         float u1 = sprite.getU1();
         float v0 = sprite.getV0();
         float v1 = sprite.getV1();
-        builder.addVertex(matrix, x1, y2, z2).setColor(red, green, blue, alpha).setUv(u0, v1).setOverlay(overlay).setLight(light).setNormal(0, 1, 0);
-        builder.addVertex(matrix, x2, y2, z2).setColor(red, green, blue, alpha).setUv(u1, v1).setOverlay(overlay).setLight(light).setNormal(0, 1, 0);
-        builder.addVertex(matrix, x2, y2, z1).setColor(red, green, blue, alpha).setUv(u1, v0).setOverlay(overlay).setLight(light).setNormal(0, 1, 0);
-        builder.addVertex(matrix, x1, y2, z1).setColor(red, green, blue, alpha).setUv(u0, v0).setOverlay(overlay).setLight(light).setNormal(0, 1, 0);
-
         float frontX1 = x1;
         float frontX2 = x2;
         float frontWidth = x2 - x1;
@@ -165,7 +159,6 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
             frontX1 = centerX - halfSize;
             frontX2 = centerX + halfSize;
         }
-
         builder.addVertex(matrix, frontX2, y1, z2).setColor(red, green, blue, alpha).setUv(u1, v1).setOverlay(overlay).setLight(light).setNormal(0, 0, 1);
         builder.addVertex(matrix, frontX2, y2, z2).setColor(red, green, blue, alpha).setUv(u1, v0).setOverlay(overlay).setLight(light).setNormal(0, 0, 1);
         builder.addVertex(matrix, frontX1, y2, z2).setColor(red, green, blue, alpha).setUv(u0, v0).setOverlay(overlay).setLight(light).setNormal(0, 0, 1);

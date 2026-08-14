@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour.TankSegment;
 import com.simibubi.create.foundation.blockEntity.renderer.SmartBlockEntityRenderer;
+import dev.engine_room.flywheel.api.visualization.VisualizationManager;
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.createmod.catnip.data.Iterate;
@@ -242,9 +243,14 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
     @Override
     protected void renderSafe(AirtightReactorKettleBlockEntity kettle, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         super.renderSafe(kettle, partialTicks, poseStack, buffer, light, overlay);
-        renderMixerModels(kettle, partialTicks, poseStack, buffer, light);
+        boolean visualizeModels = VisualizationManager.supportsVisualization(kettle.getLevel());
+        if (!visualizeModels) {
+            renderMixerModels(kettle, partialTicks, poseStack, buffer, light);
+        }
         float fluidLevel = renderFluids(kettle, partialTicks, poseStack, buffer, light);
-        renderWindowsModels(kettle, partialTicks, poseStack, buffer, light);
+        if (!visualizeModels) {
+            renderWindowsModels(kettle, partialTicks, poseStack, buffer, light);
+        }
         renderItems(kettle, fluidLevel, partialTicks, poseStack, buffer, light, overlay);
     }
 
