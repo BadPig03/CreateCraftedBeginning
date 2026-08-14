@@ -3,7 +3,9 @@
   "heat_requirement": "heated",
   "ingredients": [
     {
-      "item": "createcraftedbeginning:powdered_amethyst_block"
+      "type": "fluid_stack",
+      "amount": 1000,
+      "fluid": "createcraftedbeginning:amethyst_suspension"
     },
     {
       "item": "minecraft:quartz"
