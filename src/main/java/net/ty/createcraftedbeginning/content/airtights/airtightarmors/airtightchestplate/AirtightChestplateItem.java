@@ -28,7 +28,7 @@ import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandler;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsUtils;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.ElytraUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.HasteUpgrade;
@@ -140,13 +140,13 @@ public class AirtightChestplateItem extends AirtightChestplateArmorItem implemen
         tooltip.add(CommonComponents.EMPTY);
         tooltip.add(CCBLang.gasName(gas).add(CCBLang.translate("gui.gas_tools.content")).style(ChatFormatting.GRAY).component());
 
-        float consumption = handler.getConsumptionMultiplier(EquipmentSlot.CHEST);
-        MutableComponent advancedConsumption = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptionUtils.format(consumption) + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptionUtils.formatPercent(consumption)).add(advancedConsumption.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        float consumptionMultiplier = handler.getConsumptionMultiplier(EquipmentSlot.CHEST);
+        MutableComponent advancedConsumption = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptions.format(consumptionMultiplier) + ']').component() : Component.empty();
+        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptions.formatPercent(consumptionMultiplier)).add(advancedConsumption.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
 
         float boostMultiplier = handler.getMultiplierForBoostingElytra();
-        MutableComponent advancedBoost = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptionUtils.format(boostMultiplier) + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.airtight_armors.elytra_boost", GasConsumptionUtils.formatPercent(boostMultiplier)).add(advancedBoost.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        MutableComponent advancedBoost = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptions.format(boostMultiplier) + ']').component() : Component.empty();
+        tooltip.add(CCBLang.translate("gui.airtight_armors.elytra_boost", GasConsumptions.formatPercent(boostMultiplier)).add(advancedBoost.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
     }
 
     @Override
@@ -161,8 +161,8 @@ public class AirtightChestplateItem extends AirtightChestplateArmorItem implemen
 
     @Override
     public @Nullable AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
-        InteractionHand hand = player.getMainHandItem().is(this) ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
-        ItemStack chestplate = player.getItemInHand(hand);
-        return new AirtightChestplateMenu(CCBMenuTypes.AIRTIGHT_CHESTPLATE_MENU.get(), containerId, playerInventory, chestplate, hand);
+        InteractionHand sourceHand = player.getMainHandItem().is(this) ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
+        ItemStack chestplate = player.getItemInHand(sourceHand);
+        return new AirtightChestplateMenu(CCBMenuTypes.AIRTIGHT_CHESTPLATE_MENU.get(), containerId, playerInventory, chestplate, sourceHand);
     }
 }

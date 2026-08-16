@@ -126,7 +126,7 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
         return ItemStack.isSameItem(playerInventory.getSelected(), contentHolder);
     }
 
-    private CanisterData readCanister(int slot) {
+    protected CanisterData readCanister(int slot) {
         ItemStack canister = packInventory.getStackInSlot(slot);
         GasStack gas = GasStack.EMPTY;
         long capacity = 0;
@@ -217,7 +217,7 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
         return GasCanisterPackType.getTypeFromFlags(flags).ordinal();
     }
 
-    private boolean hasCanister(int slot) {
+    protected boolean hasCanister(int slot) {
         ItemStack canister = packInventory.getStackInSlot(slot);
         return CanisterContainerSuppliers.isValidGasCanister(canister) || CanisterContainerSuppliers.isValidCreativeGasCanister(canister);
     }

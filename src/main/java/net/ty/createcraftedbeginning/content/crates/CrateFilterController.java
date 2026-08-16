@@ -11,10 +11,10 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class CrateFilterController {
+public final class CrateFilterController {
     private FilteringBehaviour filteringBehaviour;
 
-    ItemStack getFilterItem() {
+    public ItemStack getFilterItem() {
         if (filteringBehaviour == null) {
             return ItemStack.EMPTY;
         }
@@ -23,7 +23,7 @@ final class CrateFilterController {
         return filter.isEmpty() ? ItemStack.EMPTY : filter.copyWithCount(1);
     }
 
-    void setFilterItem(ItemStack filterItem) {
+    public void setFilterItem(ItemStack filterItem) {
         if (filteringBehaviour == null) {
             return;
         }
@@ -31,7 +31,7 @@ final class CrateFilterController {
         filteringBehaviour.setFilter(filterItem.isEmpty() ? ItemStack.EMPTY : filterItem.copyWithCount(1));
     }
 
-    boolean canStoreItem(ItemStack stack) {
+    public boolean canStoreItem(ItemStack stack) {
         if (filteringBehaviour == null) {
             return true;
         }
@@ -40,7 +40,7 @@ final class CrateFilterController {
         return filterItem.isEmpty() || FilterItem.testDirect(filterItem, stack, false);
     }
 
-    void addBehaviour(FilteredCrateBlockEntity blockEntity, List<BlockEntityBehaviour> behaviours) {
+    public void addBehaviour(FilteredCrateBlockEntity blockEntity, List<BlockEntityBehaviour> behaviours) {
         filteringBehaviour = new FilteringBehaviour(blockEntity, new CrateFilterSlot());
         behaviours.add(filteringBehaviour);
     }

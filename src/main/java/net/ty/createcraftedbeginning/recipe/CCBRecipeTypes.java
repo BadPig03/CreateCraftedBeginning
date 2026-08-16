@@ -55,7 +55,6 @@ public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
 
     public static final Codec<CCBRecipeTypes> CODEC = StringRepresentable.fromEnum(CCBRecipeTypes::values);
     public final ResourceLocation id;
-    public final Supplier<RecipeSerializer<?>> serializerSupplier;
     private final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<?>> serializerObject;
     private final Supplier<RecipeType<?>> type;
 
@@ -66,7 +65,6 @@ public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
     CCBRecipeTypes(Supplier<RecipeSerializer<?>> serializerSupplier) {
         String name = Lang.asId(name());
         id = CCBAPI.asResource(name);
-        this.serializerSupplier = serializerSupplier;
         serializerObject = Registers.SERIALIZER_REGISTER.register(name, serializerSupplier);
         type = Registers.TYPE_REGISTER.register(name, () -> RecipeType.simple(id));
     }

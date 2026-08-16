@@ -32,8 +32,8 @@ public final class AirtightLeggingsUpgradeRegistry {
     }
 
     public static boolean allUpgradesEnabled(Player player) {
-        ItemStack item = player.getItemBySlot(EquipmentSlot.LEGS);
-        return item.is(CCBItems.AIRTIGHT_LEGGINGS) && REGISTRY.allUpgradesEnabled(item);
+        ItemStack leggings = player.getItemBySlot(EquipmentSlot.LEGS);
+        return leggings.is(CCBItems.AIRTIGHT_LEGGINGS) && REGISTRY.allUpgradesEnabled(leggings);
     }
 
     public static List<AirtightUpgrade> getAll() {

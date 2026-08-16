@@ -54,8 +54,8 @@ public enum QuickSwimmingUpgrade implements TickingAirtightUpgrade {
             return false;
         }
 
-        MobEffectInstance effect = player.getEffect(MobEffects.DOLPHINS_GRACE);
-        return effect == null || effect.getAmplifier() == 0;
+        MobEffectInstance dolphinsGraceEffect = player.getEffect(MobEffects.DOLPHINS_GRACE);
+        return dolphinsGraceEffect == null || dolphinsGraceEffect.getAmplifier() == 0;
     }
 
     @Override
@@ -115,7 +115,7 @@ public enum QuickSwimmingUpgrade implements TickingAirtightUpgrade {
 
     @Override
     public boolean shouldApplyEffect(Player player, ItemStack item) {
-        MobEffectInstance effect = player.getEffect(MobEffects.DOLPHINS_GRACE);
-        return effect == null || effect.getAmplifier() == 0 && effect.endsWithin(REFRESH_THRESHOLD);
+        MobEffectInstance dolphinsGraceEffect = player.getEffect(MobEffects.DOLPHINS_GRACE);
+        return dolphinsGraceEffect == null || dolphinsGraceEffect.getAmplifier() == 0 && dolphinsGraceEffect.endsWithin(REFRESH_THRESHOLD);
     }
 }

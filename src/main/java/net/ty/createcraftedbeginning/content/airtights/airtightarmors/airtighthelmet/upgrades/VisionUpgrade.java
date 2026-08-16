@@ -109,7 +109,7 @@ public enum VisionUpgrade implements TickingAirtightUpgrade {
 
     @Override
     public boolean shouldApplyEffect(Player player, ItemStack item) {
-        MobEffectInstance effect = player.getEffect(MobEffects.NIGHT_VISION);
-        return effect == null || effect.getAmplifier() == 0 && effect.endsWithin(REFRESH_THRESHOLD);
+        MobEffectInstance nightVisionEffect = player.getEffect(MobEffects.NIGHT_VISION);
+        return nightVisionEffect == null || nightVisionEffect.getAmplifier() == 0 && nightVisionEffect.endsWithin(REFRESH_THRESHOLD);
     }
 }

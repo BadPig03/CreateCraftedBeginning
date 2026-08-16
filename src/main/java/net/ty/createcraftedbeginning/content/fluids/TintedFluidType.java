@@ -15,8 +15,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class TintedFluidType extends FluidType {
-    private final ResourceLocation stillTexture;
-    private final ResourceLocation flowingTexture;
+    protected final ResourceLocation stillTexture;
+    protected final ResourceLocation flowingTexture;
 
     public TintedFluidType(Properties properties, ResourceLocation stillTexture, ResourceLocation flowingTexture) {
         super(properties);

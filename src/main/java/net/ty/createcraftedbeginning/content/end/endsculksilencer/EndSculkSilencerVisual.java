@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class EndSculkSilencerVisual extends AbstractBlockEntityVisual<EndSculkSilencerBlockEntity> implements SimpleDynamicVisual {
-    private final TransformedInstance core;
+    protected final TransformedInstance core;
 
     public EndSculkSilencerVisual(VisualizationContext context, EndSculkSilencerBlockEntity blockEntity, float partialTick) {
         super(context, blockEntity, partialTick);
@@ -26,7 +26,7 @@ public class EndSculkSilencerVisual extends AbstractBlockEntityVisual<EndSculkSi
         animate(partialTick);
     }
 
-    private void animate(float partialTick) {
+    protected void animate(float partialTick) {
         float angle = blockEntity.getAnimation().getValue(partialTick) * Mth.DEG_TO_RAD;
         core.setIdentityTransform().translate(getVisualPosition()).translateY(0.5f).translate(Translate.CENTER).rotateX(angle).rotateY(angle).rotateZ(Mth.PI / 4).translateBack(Translate.CENTER).setChanged();
     }

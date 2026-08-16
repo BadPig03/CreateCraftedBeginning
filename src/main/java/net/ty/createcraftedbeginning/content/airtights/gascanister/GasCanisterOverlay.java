@@ -18,7 +18,7 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
@@ -60,7 +60,7 @@ public enum GasCanisterOverlay implements Layer {
         if (isCreative) {
             return CCBLang.translateDirect("gui.gas_container.infinity").withStyle(ChatFormatting.GOLD);
         }
-        return GasAmountUtils.precise(amount).color(Color.mixColors(GasCanisterUtils.COLOR_RED, GasCanisterUtils.COLOR_WHITE, Mth.clamp(2.0f * amount / capacity, 0, 1))).add(CCBLang.text(" / ").style(ChatFormatting.WHITE)).add(GasAmountUtils.precise(capacity).style(ChatFormatting.GRAY)).component();
+        return GasAmounts.precise(amount).color(Color.mixColors(GasCanisterUtils.COLOR_RED, GasCanisterUtils.COLOR_WHITE, Mth.clamp(2.0f * amount / capacity, 0, 1))).add(CCBLang.text(" / ").style(ChatFormatting.WHITE)).add(GasAmounts.precise(capacity).style(ChatFormatting.GRAY)).component();
     }
 
     @Override

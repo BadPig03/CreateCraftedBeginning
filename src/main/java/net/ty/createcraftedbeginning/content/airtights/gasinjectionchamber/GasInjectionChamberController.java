@@ -15,14 +15,14 @@ import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchambe
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasInjectionChamberController {
+public final class GasInjectionChamberController {
     private final GasInjectionChamberBlockEntity chamber;
     private final GasInjectionChamberOperationState operation;
     private final GasInjectionChamberBeltProcessor beltProcessor;
     private final GasInjectionChamberBasinProcessor basinProcessor;
     private final GasInjectionChamberVisualState visual;
 
-    GasInjectionChamberController(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation, GasInjectionChamberBeltProcessor beltProcessor, GasInjectionChamberBasinProcessor basinProcessor, GasInjectionChamberVisualState visual) {
+    public GasInjectionChamberController(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation, GasInjectionChamberBeltProcessor beltProcessor, GasInjectionChamberBasinProcessor basinProcessor, GasInjectionChamberVisualState visual) {
         this.chamber = chamber;
         this.operation = operation;
         this.beltProcessor = beltProcessor;
@@ -30,7 +30,7 @@ final class GasInjectionChamberController {
         this.visual = visual;
     }
 
-    void tick() {
+    public void tick() {
         operation.capturePreviousProcessingTicks();
         Level level = chamber.getLevel();
         if (level == null) {
@@ -57,15 +57,15 @@ final class GasInjectionChamberController {
         chamber.setChanged();
     }
 
-    ProcessingResult onItemEntered(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
+    public ProcessingResult onItemEntered(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
         return beltProcessor.onItemEntered(transported, handler);
     }
 
-    ProcessingResult onItemHeld(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
+    public ProcessingResult onItemHeld(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
         return beltProcessor.onItemHeld(transported, handler);
     }
 
-    boolean isFanProcessingOperationStillValid(ResourceLocation typeId) {
+    public boolean isFanProcessingOperationStillValid(ResourceLocation typeId) {
         return beltProcessor.isFanProcessingOperationStillValid(typeId);
     }
 

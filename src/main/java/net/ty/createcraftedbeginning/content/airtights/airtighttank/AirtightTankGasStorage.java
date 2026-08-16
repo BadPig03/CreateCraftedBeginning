@@ -9,41 +9,41 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightTankGasStorage {
+public final class AirtightTankGasStorage {
     private final AbstractAirtightTankBlockEntity owner;
     private GasTank tankInventory;
     private IGasHandler gasCapability;
 
-    AirtightTankGasStorage(AbstractAirtightTankBlockEntity owner) {
+    public AirtightTankGasStorage(AbstractAirtightTankBlockEntity owner) {
         this.owner = owner;
     }
 
-    void initialize(GasTank tankInventory) {
+    public void initialize(GasTank tankInventory) {
         this.tankInventory = tankInventory;
         refreshCapability();
     }
 
-    GasTank getTankInventory() {
+    public GasTank getTankInventory() {
         return tankInventory;
     }
 
-    IGasHandler getCapability() {
+    public IGasHandler getCapability() {
         if (gasCapability == null) {
             refreshCapability();
         }
         return gasCapability;
     }
 
-    void refreshCapability() {
+    public void refreshCapability() {
         gasCapability = handlerForCapability();
         owner.invalidateGasCapabilities();
     }
 
-    void invalidate() {
+    public void invalidate() {
         owner.invalidateGasCapabilities();
     }
 
-    void onGasStackChanged(GasStack ignored) {
+    public void onGasStackChanged(GasStack ignored) {
         if (!owner.isController() || owner.getLevel() == null || owner.getLevel().isClientSide) {
             return;
         }

@@ -15,7 +15,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirVentBlockEntity extends SyncedBlockEntity {
-    private final AirVentLouverState louvers = new AirVentLouverState();
+    protected final AirVentLouverState louvers = new AirVentLouverState();
 
     public AirVentBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);

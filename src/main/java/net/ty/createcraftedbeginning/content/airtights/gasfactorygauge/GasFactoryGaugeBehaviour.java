@@ -29,7 +29,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeRestockController.Effect;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeRestockController.Result;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
@@ -114,7 +114,7 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour implements S
         if (value.value() == 0) {
             return CCBLang.translateDirect("gui.gas_factory_gauge.inactive");
         }
-        return CCBLang.text(GasAmountUtils.formatLosslessCompact(toGasAmount(value))).component();
+        return CCBLang.text(GasAmounts.formatLosslessCompact(toGasAmount(value))).component();
     }
 
     @Override

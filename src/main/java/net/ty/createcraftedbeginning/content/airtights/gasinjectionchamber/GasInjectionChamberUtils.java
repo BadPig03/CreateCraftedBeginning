@@ -14,6 +14,7 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.GasTags;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -27,7 +28,7 @@ import java.util.Optional;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasInjectionChamberUtils {
-    public static final Map<ResourceLocation, Integer> COLORS = new HashMap<>();
+    private static final Map<ResourceLocation, Integer> COLORS = new HashMap<>();
 
     private static final int DEFAULT_COLOR = 0xFFFFFFFF;
 
@@ -66,7 +67,7 @@ public final class GasInjectionChamberUtils {
         return stack.is(CCBItems.GAS_INJECTION_CHAMBER_FILTER.get());
     }
 
-    public static int sampleColor(FanProcessingType type, RandomSource random) {
+    private static int sampleColor(FanProcessingType type, RandomSource random) {
         ColorCapture capture = new ColorCapture();
         type.morphAirFlow(capture, random);
         return capture.hasColor ? 0xFF000000 | capture.color : DEFAULT_COLOR;
@@ -91,15 +92,15 @@ public final class GasInjectionChamberUtils {
     }
 
     public static long getFanProcessingGasCost(GasStack gas, int itemCount) {
-        if (gas.isEmpty() || itemCount <= 0 || gas.is(CCBGasTags.CREATIVE.tag)) {
+        if (gas.isEmpty() || itemCount <= 0 || GasTags.isTag(gas, CCBGasTags.CREATIVE.tag)) {
             return 0;
         }
 
         int divisor = 1;
-        if (gas.is(CCBGasTags.ENERGIZED.tag)) {
+        if (GasTags.isTag(gas, CCBGasTags.ENERGIZED.tag)) {
             divisor *= 5;
         }
-        if (gas.is(CCBGasTags.PRESSURIZED.tag)) {
+        if (GasTags.isTag(gas, CCBGasTags.PRESSURIZED.tag)) {
             divisor *= 20;
         }
 
@@ -112,7 +113,7 @@ public final class GasInjectionChamberUtils {
             return 0;
         }
 
-        if (gas.is(CCBGasTags.CREATIVE.tag)) {
+        if (GasTags.isTag(gas, CCBGasTags.CREATIVE.tag)) {
             return desiredCount;
         }
 
@@ -131,7 +132,7 @@ public final class GasInjectionChamberUtils {
     }
 
     public static boolean consumesFanProcessingGas(GasStack gas) {
-        return CCBConfig.server().airtights.baseFanProcessingGasPerItem.get() > 0 && !gas.isEmpty() && !gas.is(CCBGasTags.CREATIVE.tag);
+        return CCBConfig.server().airtights.baseFanProcessingGasPerItem.get() > 0 && !gas.isEmpty() && !GasTags.isTag(gas, CCBGasTags.CREATIVE.tag);
     }
 
     public static ItemStack create(ItemStack input, FanProcessingType type) {
@@ -149,7 +150,7 @@ public final class GasInjectionChamberUtils {
         return result;
     }
 
-    public static String getFanProcessingTypeTranslationKey(ResourceLocation typeId) {
+    private static String getFanProcessingTypeTranslationKey(ResourceLocation typeId) {
         return "fan_processing_type." + typeId.getNamespace() + '.' + typeId.getPath().replace('/', '.');
     }
 

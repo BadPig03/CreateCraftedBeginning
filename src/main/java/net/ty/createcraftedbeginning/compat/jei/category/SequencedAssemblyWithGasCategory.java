@@ -49,7 +49,7 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
     private static final String[] ROMANS = {"I", "II", "III", "IV", "V", "VI", "-"};
     private static final int STEP_MARGIN = 3;
     private static final int RANDOM_OUTPUT_OFFSET = -7;
-    public Map<ResourceLocation, SequencedAssemblyWithGasSubCategory> subCategories = new HashMap<>();
+    protected Map<ResourceLocation, SequencedAssemblyWithGasSubCategory> subCategories = new HashMap<>();
 
     public SequencedAssemblyWithGasCategory(Info<SequencedAssemblyWithGasRecipe> info) {
         super(info);
@@ -191,7 +191,7 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
         }
     }
 
-    private int getSequenceWidth(SequencedAssemblyWithGasRecipe recipe) {
+    protected int getSequenceWidth(SequencedAssemblyWithGasRecipe recipe) {
         int width = 0;
         for (SequencedWithGasRecipe<?> step : recipe.getSequence()) {
             width += getSubCategory(step).getWidth() + STEP_MARGIN;
@@ -199,7 +199,7 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
         return width - STEP_MARGIN;
     }
 
-    private SequencedAssemblyWithGasSubCategory getSubCategory(SequencedWithGasRecipe<?> step) {
+    protected SequencedAssemblyWithGasSubCategory getSubCategory(SequencedWithGasRecipe<?> step) {
         ResourceLocation serializerId = RegisteredObjectsHelper.getKeyOrThrow(step.getRecipe().getSerializer());
         return subCategories.computeIfAbsent(serializerId, ignored -> createSubCategory(step));
     }

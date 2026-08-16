@@ -10,17 +10,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasDrawerStorage implements INBTSerializable<CompoundTag> {
-    static final String COMPOUND_KEY_STORAGE = "gasStorage";
+public final class GasDrawerStorage implements INBTSerializable<CompoundTag> {
+    public static final String COMPOUND_KEY_STORAGE = "gasStorage";
     private static final String COMPOUND_KEY_GAS = "Gas";
 
     private final GasDrawerHandler handler;
 
-    GasDrawerStorage(GasDrawerHandler handler) {
+    public GasDrawerStorage(GasDrawerHandler handler) {
         this.handler = handler;
     }
 
-    static GasStack readStoredGas(CompoundTag storage, int slot, Provider provider) {
+    public static GasStack readStoredGas(CompoundTag storage, int slot, Provider provider) {
         CompoundTag tank = storage.getCompound(Integer.toString(slot));
         if (!tank.contains(COMPOUND_KEY_GAS)) {
             return GasStack.EMPTY;

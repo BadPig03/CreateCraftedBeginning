@@ -239,7 +239,7 @@ public final class BalloonGasContents {
             return amount;
         }
 
-        public GasEntry withAmount(long amount) {
+        private GasEntry withAmount(long amount) {
             return amount == this.amount ? this : new GasEntry(gasHolder, amount, components);
         }
 

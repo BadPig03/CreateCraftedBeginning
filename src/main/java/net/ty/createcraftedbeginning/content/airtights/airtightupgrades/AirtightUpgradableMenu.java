@@ -33,10 +33,10 @@ import java.util.Map;
 public abstract class AirtightUpgradableMenu extends MenuBase<ItemStack> {
     public static final int UPGRADE_SLOT_INDEX = 0;
     protected static final int PLAYER_INVENTORY_SLOTS = Inventory.INVENTORY_SIZE;
-    private final InteractionHand sourceHand;
+    protected final InteractionHand sourceHand;
     protected InventoryHandler menuInventory;
     protected List<AirtightUpgradeStatus> currentStatusList;
-    private int serverStateRevision;
+    protected int serverStateRevision;
 
     public AirtightUpgradableMenu(MenuType<?> type, int id, Inventory inventory, RegistryFriendlyByteBuf extraData) {
         super(type, id, inventory, extraData);
@@ -90,7 +90,7 @@ public abstract class AirtightUpgradableMenu extends MenuBase<ItemStack> {
         return normalized;
     }
 
-    private int findStatusIndex(ResourceLocation id) {
+    protected int findStatusIndex(ResourceLocation id) {
         for (int i = 0; i < currentStatusList.size(); i++) {
             if (!currentStatusList.get(i).id().equals(id)) {
                 continue;
@@ -101,7 +101,7 @@ public abstract class AirtightUpgradableMenu extends MenuBase<ItemStack> {
         return -1;
     }
 
-    private boolean setStatus(AirtightUpgradeStatus status) {
+    protected boolean setStatus(AirtightUpgradeStatus status) {
         int index = findStatusIndex(status.id());
         if (index < 0) {
             return false;
@@ -190,7 +190,7 @@ public abstract class AirtightUpgradableMenu extends MenuBase<ItemStack> {
         }
 
         menuInventory.extractItem(UPGRADE_SLOT_INDEX, 1, false);
-        return setStatus(new AirtightUpgradeStatus(id, true, true));
+        return setStatus(new AirtightUpgradeStatus(id, upgrade.startsEnabled(), true));
     }
 
     public boolean tryToggleUpgrade(ResourceLocation id) {

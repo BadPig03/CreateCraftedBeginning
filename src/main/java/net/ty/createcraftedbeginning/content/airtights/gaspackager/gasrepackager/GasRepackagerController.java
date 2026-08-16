@@ -14,14 +14,14 @@ import java.util.Map.Entry;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasRepackagerController {
+public final class GasRepackagerController {
     private final GasRepackagerBlockEntity blockEntity;
 
-    GasRepackagerController(GasRepackagerBlockEntity blockEntity) {
+    public GasRepackagerController(GasRepackagerBlockEntity blockEntity) {
         this.blockEntity = blockEntity;
     }
 
-    void attemptToRepackage(IItemHandler targetInv) {
+    public void attemptToRepackage(IItemHandler targetInv) {
         ScanResult scan = GasRepackagerUtils.scanPackages(targetInv);
         if (tryHandleCompletedOrder(targetInv, scan) || tryRepackageSimpleGasGroup(targetInv, scan)) {
             return;

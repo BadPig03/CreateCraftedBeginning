@@ -10,6 +10,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -74,7 +75,7 @@ public class TeslaTurbineFlowMeter {
         }
 
         float value = compoundTag.getFloat(key);
-        return Float.isFinite(value) ? value : 0;
+        return GasConsumptions.isFinite(value) ? value : 0;
     }
 
     private static void readSamples(CompoundTag compoundTag, String key, float[] samples, boolean nonNegative) {
@@ -86,7 +87,7 @@ public class TeslaTurbineFlowMeter {
         ListTag samplesTag = compoundTag.getList(key, Tag.TAG_FLOAT);
         for (int i = 0; i < Math.min(TeslaTurbineUtils.FLOW_SAMPLE_COUNT, samplesTag.size()); i++) {
             float sample = samplesTag.getFloat(i);
-            if (!Float.isFinite(sample)) {
+            if (!GasConsumptions.isFinite(sample)) {
                 continue;
             }
 
@@ -301,8 +302,8 @@ public class TeslaTurbineFlowMeter {
             totalAbsoluteFlow += absoluteFlowOverTime[i];
         }
 
-        netFlow = Float.isFinite(totalNetFlow) ? totalNetFlow / TeslaTurbineUtils.FLOW_SAMPLE_COUNT : 0;
-        absoluteFlow = Float.isFinite(totalAbsoluteFlow) ? Math.max(0, totalAbsoluteFlow / TeslaTurbineUtils.FLOW_SAMPLE_COUNT) : 0;
+        netFlow = GasConsumptions.isFinite(totalNetFlow) ? totalNetFlow / TeslaTurbineUtils.FLOW_SAMPLE_COUNT : 0;
+        absoluteFlow = GasConsumptions.isFinite(totalAbsoluteFlow) ? Math.max(0, totalAbsoluteFlow / TeslaTurbineUtils.FLOW_SAMPLE_COUNT) : 0;
         boolean gasSupplyEnded = absoluteFlow < TeslaTurbineUtils.MIN_GAS_SUPPLY_THRESHOLD && gatheredClockwise == 0 && gatheredCounterClockwise == 0 && !gasType.isEmpty();
         if (gasSupplyEnded) {
             if (notify) {

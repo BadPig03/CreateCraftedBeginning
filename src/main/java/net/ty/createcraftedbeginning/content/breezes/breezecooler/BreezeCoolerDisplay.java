@@ -26,16 +26,16 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class BreezeCoolerDisplay {
+public final class BreezeCoolerDisplay {
     private final BreezeCoolerBlockEntity cooler;
     private boolean goggles;
     private boolean trainHat;
 
-    BreezeCoolerDisplay(BreezeCoolerBlockEntity cooler) {
+    public BreezeCoolerDisplay(BreezeCoolerBlockEntity cooler) {
         this.cooler = cooler;
     }
 
-    boolean addToGoggleTooltip(List<Component> tooltip) {
+    public boolean addToGoggleTooltip(List<Component> tooltip) {
         if (cooler.getLevel() == null || cooler.isStockKeeper()) {
             return false;
         }
@@ -87,7 +87,7 @@ final class BreezeCoolerDisplay {
         return data.time() <= 0 || data.amount() <= 0;
     }
 
-    void spawnParticles() {
+    public void spawnParticles() {
         if (cooler.getLevel() == null) {
             return;
         }
@@ -111,7 +111,7 @@ final class BreezeCoolerDisplay {
         cooler.getLevel().addParticle(ParticleTypes.SNOWFLAKE, chilledParticlePos.x, chilledParticlePos.y, chilledParticlePos.z, 0, openTop ? 0.0625 : random.nextDouble() * 0.0125, 0);
     }
 
-    void playSound() {
+    public void playSound() {
         if (cooler.getLevel() == null) {
             return;
         }
@@ -119,7 +119,7 @@ final class BreezeCoolerDisplay {
         cooler.getLevel().playSound(null, cooler.getBlockPos(), SoundEvents.BREEZE_SHOOT, SoundSource.BLOCKS, 0.125f + cooler.getLevel().random.nextFloat() * 0.125f, 0.75f - cooler.getLevel().random.nextFloat() * 0.25f);
     }
 
-    void spawnParticleBurst() {
+    public void spawnParticleBurst() {
         Level level = cooler.getLevel();
         if (level == null) {
             return;
@@ -135,7 +135,7 @@ final class BreezeCoolerDisplay {
         }
     }
 
-    void tickAnimation(float targetAngle) {
+    public void tickAnimation(float targetAngle) {
         boolean active = cooler.getBlockState().getValue(BreezeCoolerBlock.ATTACHED);
         if (active) {
             float facingAngle = (AngleHelper.horizontalAngle(cooler.getBlockState().getOptionalValue(BreezeCoolerBlock.FACING).orElse(Direction.SOUTH)) + 180) % 360;
@@ -149,19 +149,19 @@ final class BreezeCoolerDisplay {
         cooler.getHeadAnimationInternal().tickChaser();
     }
 
-    boolean hasGoggles() {
+    public boolean hasGoggles() {
         return goggles;
     }
 
-    boolean hasTrainHat() {
+    public boolean hasTrainHat() {
         return trainHat;
     }
 
-    void setGoggles(boolean goggles) {
+    public void setGoggles(boolean goggles) {
         this.goggles = goggles;
     }
 
-    void setTrainHat(boolean trainHat) {
+    public void setTrainHat(boolean trainHat) {
         this.trainHat = trainHat;
     }
 }

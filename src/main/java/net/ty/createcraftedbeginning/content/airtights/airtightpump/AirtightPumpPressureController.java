@@ -18,7 +18,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightPumpPressureController {
+public final class AirtightPumpPressureController {
     private static final int RECOVERY_INITIAL_BACKOFF = 20;
     private static final int RECOVERY_MAX_BACKOFF = 640;
     private static final float MIN_PUMP_SPEED = SpeedLevel.MEDIUM.getSpeedValue();
@@ -33,19 +33,19 @@ final class AirtightPumpPressureController {
     private float lastLazyAbsSpeed;
     private Direction lastLazyFacing;
 
-    AirtightPumpPressureController(AirtightPumpBlockEntity pump) {
+    public AirtightPumpPressureController(AirtightPumpBlockEntity pump) {
         this.pump = pump;
     }
 
-    static boolean isPullingOnSide(boolean frontSide) {
+    public static boolean isPullingOnSide(boolean frontSide) {
         return !frontSide;
     }
 
-    static boolean isSideAccessible(BlockState state, Direction direction) {
+    public static boolean isSideAccessible(BlockState state, Direction direction) {
         return state.getBlock() instanceof AirtightPumpBlock && state.getValue(AirtightPumpBlock.FACING).getAxis() == direction.getAxis();
     }
 
-    static boolean isFront(BlockState state, Direction direction) {
+    public static boolean isFront(BlockState state, Direction direction) {
         return state.getBlock() instanceof AirtightPumpBlock && direction == state.getValue(AirtightPumpBlock.FACING);
     }
 
@@ -53,7 +53,7 @@ final class AirtightPumpPressureController {
         return Mth.abs(speed) >= MIN_PUMP_SPEED;
     }
 
-    void beforeTick() {
+    public void beforeTick() {
         if (!shouldRunServerLogic() || !pressureUpdate) {
             return;
         }
@@ -61,7 +61,7 @@ final class AirtightPumpPressureController {
         rebuildPressure();
     }
 
-    void afterTick() {
+    public void afterTick() {
         Level level = pump.getLevel();
         if (!shouldRunServerLogic() || level == null) {
             return;
@@ -87,15 +87,15 @@ final class AirtightPumpPressureController {
         });
     }
 
-    boolean shouldHandleSpeedChange(float previousSpeed) {
+    public boolean shouldHandleSpeedChange(float previousSpeed) {
         return shouldRunServerLogic() && Mth.abs(previousSpeed) != Mth.abs(pump.getSpeed());
     }
 
-    boolean hasRequiredSpeed() {
+    public boolean hasRequiredSpeed() {
         return hasRequiredSpeed(pump.getSpeed());
     }
 
-    void lazyTick() {
+    public void lazyTick() {
         Level level = pump.getLevel();
         GasTransportBehaviour transportBehaviour = getTransportBehaviour();
         if (!shouldRunServerLogic() || transportBehaviour == null || level == null) {
@@ -129,7 +129,7 @@ final class AirtightPumpPressureController {
         recoverMissingPressure(recoverFront, recoverBack);
     }
 
-    void updatePipesOnSide(Direction side) {
+    public void updatePipesOnSide(Direction side) {
         if (!isSideAccessible(side)) {
             return;
         }
@@ -143,27 +143,27 @@ final class AirtightPumpPressureController {
         transportBehaviour.wipePressure();
     }
 
-    void markPressureUpdate() {
+    public void markPressureUpdate() {
         pressureUpdate = true;
     }
 
-    boolean canTransport(BlockState state, Direction direction) {
+    public boolean canTransport(BlockState state, Direction direction) {
         return isPumpRunning() && isSideAccessible(state, direction) && isPullingOnSide(isFront(state, direction));
     }
 
-    boolean isPumpRunning() {
+    public boolean isPumpRunning() {
         return pump.getLevel() != null && !pump.isRemoved() && hasRequiredSpeed(pump.getSpeed());
     }
 
-    float getPumpPressure() {
+    public float getPumpPressure() {
         return isPumpRunning() ? Mth.abs(pump.getSpeed()) : 0;
     }
 
-    boolean isSideAccessible(Direction direction) {
+    public boolean isSideAccessible(Direction direction) {
         return isSideAccessible(pump.getBlockState(), direction);
     }
 
-    boolean isFront(Direction direction) {
+    public boolean isFront(Direction direction) {
         return isFront(pump.getBlockState(), direction);
     }
 
@@ -176,7 +176,7 @@ final class AirtightPumpPressureController {
         return pump.getBlockState().getValue(AirtightPumpBlock.FACING);
     }
 
-    void rebuildPressure() {
+    public void rebuildPressure() {
         Level level = pump.getLevel();
         if (level == null) {
             return;

@@ -16,8 +16,8 @@ public class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
     private static final int SLOT_COUNT = 2;
     private static final int VIRTUAL_DISCARD_SLOT_LIMIT = Integer.MAX_VALUE;
 
-    private final Predicate<ItemStack> trackedItemPredicate;
-    private final Runnable trackedDiscardListener;
+    protected final Predicate<ItemStack> trackedItemPredicate;
+    protected final Runnable trackedDiscardListener;
 
     public DiscardingCrateItemStackHandler(IntSupplier maxCountSupplier, Predicate<ItemStack> itemValidator, Runnable contentsChangedListener, Predicate<ItemStack> trackedDiscardPredicate, Runnable trackedDiscardListener) {
         super(maxCountSupplier, itemValidator, contentsChangedListener);

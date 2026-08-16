@@ -44,6 +44,10 @@ public class UltrawarmAirCannonHandler implements AirtightCannonHandler, Airtigh
         }
     }
 
+    protected int getIgnitionDuration() {
+        return DEFAULT_DURATION;
+    }
+
     @Override
     public ItemStack getRenderIcon(Level level) {
         return new ItemStack(CCBItems.ULTRAWARM_WIND_CHARGE.asItem());
@@ -57,9 +61,11 @@ public class UltrawarmAirCannonHandler implements AirtightCannonHandler, Airtigh
             double offsetY = (random.nextDouble() - 0.5) * 0.6;
             double offsetZ = (random.nextDouble() - 0.5) * 0.6;
             level.addParticle(ParticleTypes.FLAME, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, (random.nextDouble() - 0.5) * 0.02, random.nextDouble() * 0.02 + 0.01, (random.nextDouble() - 0.5) * 0.02);
-            if (random.nextFloat() < 0.25f) {
-                level.addParticle(ParticleTypes.SMOKE, pos.x, pos.y + 0.2, pos.z, 0, 0, 0);
+            if (!(random.nextFloat() < 0.25f)) {
+                continue;
             }
+
+            level.addParticle(ParticleTypes.SMOKE, pos.x, pos.y + 0.2, pos.z, 0, 0, 0);
         }
     }
 
@@ -87,7 +93,7 @@ public class UltrawarmAirCannonHandler implements AirtightCannonHandler, Airtigh
     public final void explode(Level level, Vec3 pos, AirtightCannonShotContext context) {
         float radius = DEFAULT_RADIUS * context.effectMultiplier();
         DamageSource explosionDamageSource = CCBDamageTypes.source(DamageTypes.ON_FIRE, level, context.projectile());
-        level.explode(context.projectile(), explosionDamageSource, AirtightCannonUtils.createDamageCalculator(context.knockbackMultiplier()), pos.x(), pos.y(), pos.z(), radius, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
+        level.explode(context.projectile(), explosionDamageSource, AirtightCannonUtils.createDamageCalculator(context), pos.x(), pos.y(), pos.z(), radius, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
         List<LivingEntity> entities = AirtightCannonUtils.getNearbyEntities(level, pos, radius, context);
         applyAdditionalEffects(level, entities, explosionDamageSource, context);
     }
@@ -103,6 +109,6 @@ public class UltrawarmAirCannonHandler implements AirtightCannonHandler, Airtigh
     }
 
     protected void applyAdditionalEffects(Level level, List<LivingEntity> entities, DamageSource explosionDamageSource, AirtightCannonShotContext context) {
-        addIgnition(entities, DEFAULT_DURATION, context.effectMultiplier());
+        addIgnition(entities, getIgnitionDuration(), context.effectMultiplier());
     }
 }

@@ -12,6 +12,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.content.airtights.gas.flowsources.AdjacentPipeSource;
@@ -19,6 +20,7 @@ import net.ty.createcraftedbeginning.content.airtights.gas.flowsources.BlockedSo
 import net.ty.createcraftedbeginning.content.airtights.gas.flowsources.ExternalHandlerSource;
 import net.ty.createcraftedbeginning.content.airtights.gas.flowsources.GasFlowSource;
 import net.ty.createcraftedbeginning.content.airtights.gas.flowsources.OpenEndedSource;
+import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IVentingGasSource;
 import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPropagator.AdjacentTarget;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,11 +34,14 @@ public final class GasPipeConnection {
     private static final String COMPOUND_KEY_AIR_FLOW = "AirFlow";
     private static final String COMPOUND_KEY_INBOUND = "Inbound";
     private static final String COMPOUND_KEY_GAS = "Gas";
+    private static final String COMPOUND_KEY_PENDING_TRANSFER = "PendingTransfer";
+    private static final String COMPOUND_KEY_SIDE = "Side";
 
     private final Direction side;
-    private float inboundPressure;
-    private float outwardPressure;
+    private long inboundPressureUnits;
+    private long outwardPressureUnits;
     private boolean pressureContributed;
+    private GasStack pendingTransfer;
 
     @Nullable
     private GasFlowSource source;
@@ -49,6 +54,37 @@ public final class GasPipeConnection {
 
     public GasPipeConnection(Direction side) {
         this.side = side;
+        pendingTransfer = GasStack.EMPTY;
+    }
+
+    @Nullable
+    public static GasPipeConnection readRetiredData(CompoundTag retiredData, Provider provider) {
+        if (!retiredData.contains(COMPOUND_KEY_SIDE, Tag.TAG_INT) || !retiredData.contains(COMPOUND_KEY_PENDING_TRANSFER, Tag.TAG_COMPOUND)) {
+            return null;
+        }
+
+        GasStack pending = GasStack.parseOptional(provider, retiredData.getCompound(COMPOUND_KEY_PENDING_TRANSFER));
+        if (pending.isEmpty()) {
+            return null;
+        }
+
+        int sideId = retiredData.getInt(COMPOUND_KEY_SIDE);
+        Direction retiredSide = null;
+        for (Direction direction : Direction.values()) {
+            if (direction.get3DDataValue() != sideId) {
+                continue;
+            }
+
+            retiredSide = direction;
+            break;
+        }
+        if (retiredSide == null) {
+            return null;
+        }
+
+        GasPipeConnection connection = new GasPipeConnection(retiredSide);
+        connection.pendingTransfer = pending;
+        return connection;
     }
 
     public Direction getSide() {
@@ -77,8 +113,9 @@ public final class GasPipeConnection {
             return false;
         }
 
-        boolean singlePressure = comparePressure() != 0 && (inboundPressure == 0 || outwardPressure == 0);
-        if (!singlePressure || comparePressure() < 0 == flow.inbound) {
+        int pressureDirection = getPressureDirection();
+        boolean singlePressure = pressureDirection != 0 && (inboundPressureUnits == 0 || outwardPressureUnits == 0);
+        if (!singlePressure || pressureDirection < 0 == flow.inbound) {
             return false;
         }
 
@@ -86,23 +123,38 @@ public final class GasPipeConnection {
         return true;
     }
 
-    public float comparePressure() {
-        return outwardPressure - inboundPressure;
+    @SuppressWarnings("unused")
+    private float comparePressure() {
+        return GasPressure.toPressure(outwardPressureUnits) - GasPressure.toPressure(inboundPressureUnits);
     }
 
-    public float getOutwardPressure() {
-        return outwardPressure;
+    public int getPressureDirection() {
+        return Long.compare(outwardPressureUnits, inboundPressureUnits);
     }
 
-    public float getInboundPressure() {
-        return inboundPressure;
+    @SuppressWarnings("unused")
+    private float getOutwardPressure() {
+        return GasPressure.toPressure(outwardPressureUnits);
+    }
+
+    public long getOutwardPressureUnits() {
+        return outwardPressureUnits;
+    }
+
+    @SuppressWarnings("unused")
+    private float getInboundPressure() {
+        return GasPressure.toPressure(inboundPressureUnits);
+    }
+
+    public long getInboundPressureUnits() {
+        return inboundPressureUnits;
     }
 
     public void setPumpPressure(boolean inbound, float amount) {
-        amount = amount > 0 && Float.isFinite(amount) ? amount : 0;
-        pressureContributed = amount > 0;
-        inboundPressure = inbound ? amount : 0;
-        outwardPressure = inbound ? 0 : amount;
+        long units = GasPressure.toUnits(amount);
+        pressureContributed = units > 0;
+        inboundPressureUnits = inbound ? units : 0;
+        outwardPressureUnits = inbound ? 0 : units;
     }
 
     public void manageSource(Level level, BlockPos pos, BlockEntity blockEntity) {
@@ -154,7 +206,7 @@ public final class GasPipeConnection {
             return true;
         }
 
-        if (flow.inbound != comparePressure() < 0) {
+        if (flow.inbound != getPressureDirection() < 0) {
             boolean inbound = !flow.inbound;
             if (inbound && !provided.isEmpty() || !inbound && !internalGas.isEmpty()) {
                 GasPropagator.resetAffectedNetworks(level, pos, side);
@@ -170,7 +222,7 @@ public final class GasPipeConnection {
         }
 
         if (network == null) {
-            network = new GasNetwork(level, new BlockFace(pos, side), this::getCurrentGasHandlerProvider);
+            network = new GasNetwork(level, new BlockFace(pos, side), this::getCurrentGasHandlerProvider, pendingTransfer, this::setPendingTransfer);
         }
         else if (!network.isActive()) {
             network.reset();
@@ -185,11 +237,11 @@ public final class GasPipeConnection {
             return false;
         }
 
-        boolean prioritizeInbound = comparePressure() < 0;
+        boolean prioritizeInbound = getPressureDirection() < 0;
         for (boolean matchesPriority : Iterate.trueAndFalse) {
             boolean inbound = prioritizeInbound == matchesPriority;
-            float pressure = inbound ? inboundPressure : outwardPressure;
-            if (pressure == 0) {
+            long pressureUnits = inbound ? inboundPressureUnits : outwardPressureUnits;
+            if (pressureUnits == 0) {
                 continue;
             }
 
@@ -241,7 +293,7 @@ public final class GasPipeConnection {
     }
 
     public boolean hasPressure() {
-        return Float.compare(inboundPressure, outwardPressure) != 0;
+        return getPressureDirection() != 0;
     }
 
     public boolean hasPressureContribution() {
@@ -290,16 +342,33 @@ public final class GasPipeConnection {
         else if (source == null && previousSource instanceof OpenEndedSource previousOpenEnd) {
             openEndedSource = previousOpenEnd;
         }
-        if (openEndedSource == null) {
+        if (openEndedSource != null) {
+            CompoundTag openEndData = openEndedSource.write(provider);
+            if (!openEndData.isEmpty()) {
+                connectionData.put(COMPOUND_KEY_OPEN_END, openEndData);
+            }
+        }
+
+        writePendingTransferData(connectionData, provider);
+    }
+
+    private void writePendingTransferData(CompoundTag connectionData, Provider provider) {
+        if (pendingTransfer.isEmpty()) {
             return;
         }
 
-        CompoundTag openEndData = openEndedSource.write(provider);
-        if (openEndData.isEmpty()) {
-            return;
+        connectionData.put(COMPOUND_KEY_PENDING_TRANSFER, pendingTransfer.saveOptional(provider));
+    }
+
+    public CompoundTag writeRetiredData(Provider provider) {
+        if (pendingTransfer.isEmpty()) {
+            return new CompoundTag();
         }
 
-        connectionData.put(COMPOUND_KEY_OPEN_END, openEndData);
+        CompoundTag retiredData = new CompoundTag();
+        retiredData.putInt(COMPOUND_KEY_SIDE, side.get3DDataValue());
+        writePendingTransferData(retiredData, provider);
+        return retiredData;
     }
 
     public void read(CompoundTag compoundTag, Provider provider, BlockPos blockPos, boolean clientPacket) {
@@ -337,13 +406,14 @@ public final class GasPipeConnection {
     }
 
     private void readPersistentData(CompoundTag connectionData, Provider provider, BlockPos blockPos) {
-        inboundPressure = 0;
-        outwardPressure = 0;
+        inboundPressureUnits = 0;
+        outwardPressureUnits = 0;
         pressureContributed = false;
         flow = null;
-        retireNetwork();
+        network = null;
         source = null;
         previousSource = null;
+        pendingTransfer = connectionData.contains(COMPOUND_KEY_PENDING_TRANSFER, Tag.TAG_COMPOUND) ? GasStack.parseOptional(provider, connectionData.getCompound(COMPOUND_KEY_PENDING_TRANSFER)) : GasStack.EMPTY;
         if (!connectionData.contains(COMPOUND_KEY_OPEN_END, Tag.TAG_COMPOUND)) {
             return;
         }
@@ -353,13 +423,13 @@ public final class GasPipeConnection {
         previousSource = openEndedSource;
     }
 
-    public boolean prepareForRemoval() {
-        inboundPressure = 0;
-        outwardPressure = 0;
+    public boolean prepareForRemoval(Level level, BlockPos pos) {
+        inboundPressureUnits = 0;
+        outwardPressureUnits = 0;
         pressureContributed = false;
         flow = null;
         retireNetwork();
-        if (network != null) {
+        if (network != null || !recoverPendingTransferWithoutNetwork(level, pos)) {
             return false;
         }
 
@@ -368,9 +438,61 @@ public final class GasPipeConnection {
         return true;
     }
 
+    private boolean recoverPendingTransferWithoutNetwork(Level level, BlockPos pos) {
+        if (pendingTransfer.isEmpty()) {
+            return true;
+        }
+
+        if (source == null && !determineSource(level, pos)) {
+            return false;
+        }
+        GasFlowSource currentSource = source;
+        if (currentSource == null || !currentSource.isEndpoint()) {
+            return false;
+        }
+
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+        if (blockEntity == null) {
+            return false;
+        }
+        currentSource.manageSource(level, blockEntity);
+
+        ICapabilityProvider<IGasHandler> sourceProvider = currentSource.getGasHandlerProvider();
+        if (sourceProvider == null) {
+            return false;
+        }
+
+        IGasHandler sourceCap = sourceProvider.getCapability();
+        if (sourceCap == null) {
+            return false;
+        }
+
+        if (sourceCap instanceof IVentingGasSource) {
+            setPendingTransfer(GasStack.EMPTY);
+            blockEntity.setChanged();
+            return true;
+        }
+
+        long returned = sourceCap.fill(pendingTransfer.copy(), GasAction.EXECUTE);
+        returned = Math.clamp(returned, 0, pendingTransfer.getAmount());
+        if (returned <= 0) {
+            return false;
+        }
+
+        GasStack remainder = pendingTransfer.copy();
+        remainder.shrink(returned);
+        setPendingTransfer(remainder);
+        blockEntity.setChanged();
+        return pendingTransfer.isEmpty();
+    }
+
+    private void setPendingTransfer(GasStack stack) {
+        pendingTransfer = stack.isEmpty() ? GasStack.EMPTY : stack.copy();
+    }
+
     public void wipePressure() {
-        inboundPressure = 0;
-        outwardPressure = 0;
+        inboundPressureUnits = 0;
+        outwardPressureUnits = 0;
         pressureContributed = false;
         if (source != null) {
             previousSource = source;
@@ -394,34 +516,38 @@ public final class GasPipeConnection {
         return flow.gas;
     }
 
-    public void addPressure(boolean inbound, float newAmount) {
-        if (newAmount <= 0 || !Float.isFinite(newAmount)) {
+    public void addPressureUnits(boolean inbound, long newAmountUnits) {
+        if (newAmountUnits <= 0) {
             return;
         }
 
         pressureContributed = true;
         if (inbound) {
-            inboundPressure += newAmount;
+            inboundPressureUnits = GasPressure.addSaturated(inboundPressureUnits, newAmountUnits);
         }
         else {
-            outwardPressure += newAmount;
+            outwardPressureUnits = GasPressure.addSaturated(outwardPressureUnits, newAmountUnits);
         }
         normalizeOpposingPressure();
     }
 
     private void normalizeOpposingPressure() {
-        inboundPressure = inboundPressure > 0 && Float.isFinite(inboundPressure) ? inboundPressure : 0;
-        outwardPressure = outwardPressure > 0 && Float.isFinite(outwardPressure) ? outwardPressure : 0;
-        float cancellation = Math.min(inboundPressure, outwardPressure);
-        inboundPressure -= cancellation;
-        outwardPressure -= cancellation;
+        long cancellation = Math.min(inboundPressureUnits, outwardPressureUnits);
+        inboundPressureUnits -= cancellation;
+        outwardPressureUnits -= cancellation;
+        if (GasPressure.isZero(inboundPressureUnits)) {
+            inboundPressureUnits = 0;
+        }
+        if (GasPressure.isZero(outwardPressureUnits)) {
+            outwardPressureUnits = 0;
+        }
     }
 
     public static final class AirFlow {
         public boolean inbound;
         public GasStack gas;
 
-        public AirFlow(boolean inbound, GasStack gas) {
+        private AirFlow(boolean inbound, GasStack gas) {
             this.inbound = inbound;
             this.gas = gas;
         }

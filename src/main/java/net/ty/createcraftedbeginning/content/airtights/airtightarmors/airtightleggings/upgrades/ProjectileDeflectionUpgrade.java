@@ -103,16 +103,16 @@ public enum ProjectileDeflectionUpgrade implements AirtightUpgrade {
         return item.is(CCBItems.AIRTIGHT_LEGGINGS) && AirtightUpgrade.super.isActive(player, item);
     }
 
-    public boolean canApply(Player player, Vec3 movement) {
+    public boolean canApply(Player player, Vec3 projectileMovement) {
         if (!isActive(player, player.getItemBySlot(EquipmentSlot.LEGS))) {
             return false;
         }
 
+        float gasConsumption = (float) projectileMovement.length();
         if (player.level().isClientSide) {
-            return true;
+            return GlobalAirtightUpgradesConsumptionManager.canConsumeGas(player, this, EquipmentSlot.LEGS, gasConsumption, handler -> true);
         }
 
-        float consumption = (float) movement.length();
-        return GlobalAirtightUpgradesConsumptionManager.tryConsumeGas(player, this, EquipmentSlot.LEGS, consumption);
+        return GlobalAirtightUpgradesConsumptionManager.tryConsumeGas(player, this, EquipmentSlot.LEGS, gasConsumption);
     }
 }

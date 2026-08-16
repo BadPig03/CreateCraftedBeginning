@@ -17,8 +17,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
+import net.ty.createcraftedbeginning.advancement.triggers.CCBTriggersRegistry;
+import net.ty.createcraftedbeginning.advancement.triggers.SimpleCCBTrigger;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -35,6 +36,7 @@ import java.util.function.UnaryOperator;
 public class CCBAdvancement {
     private static final List<CCBAdvancement> ENTRIES = new ArrayList<>();
     private static final ResourceLocation BACKGROUND = CCBAPI.asResource("textures/gui/advancements.png");
+
     private final Advancement.Builder advancementBuilder = Advancement.Builder.advancement();
     private final Builder builder = new Builder();
     private final String id;
@@ -45,18 +47,16 @@ public class CCBAdvancement {
     private String title;
     private String description;
 
-    public CCBAdvancement(String id, UnaryOperator<Builder> operator) {
-        this.id = id;
+    public CCBAdvancement(String advancementId, UnaryOperator<Builder> operator) {
+        id = advancementId;
         operator.apply(builder);
         if (!builder.externalTrigger) {
-            builtinTrigger = CCBTriggers.addSimple(id + "_builtin");
+            builtinTrigger = CCBTriggersRegistry.add(advancementId + "_builtin");
             advancementBuilder.addCriterion("0", builtinTrigger.createCriterion(SimpleCCBTrigger.instance()));
         }
-
         ENTRIES.add(this);
     }
 
-    @Contract(pure = true)
     public static @Unmodifiable List<CCBAdvancement> all() {
         return List.copyOf(ENTRIES);
     }
@@ -89,24 +89,21 @@ public class CCBAdvancement {
         if (builder.iconFactory != null) {
             builder.icon(builder.iconFactory.apply(provider));
         }
-
         advancementBuilder.display(builder.icon, Component.translatable(titleKey()), Component.translatable(descriptionKey()).withStyle(style -> style.withColor(0xDBA213)), "root".equals(id) ? BACKGROUND : null, builder.type.advancementType, builder.type.toast, builder.type.announce, builder.type.hide);
         dataGenResult = advancementBuilder.save(consumer, CCBAPI.asResource(id).toString());
-    }
-
-    @Contract(pure = true)
-    private String titleKey() {
-        return "advancement." + CCBAPI.MOD_ID + '.' + id;
-    }
-
-    @Contract(pure = true)
-    private String descriptionKey() {
-        return titleKey() + ".desc";
     }
 
     public void provideLang(BiConsumer<String, String> consumer) {
         consumer.accept(titleKey(), title);
         consumer.accept(descriptionKey(), description);
+    }
+
+    private String titleKey() {
+        return "advancement." + CCBAPI.MOD_ID + '.' + id;
+    }
+
+    private String descriptionKey() {
+        return titleKey() + ".desc";
     }
 
     public enum TaskType {
@@ -176,7 +173,7 @@ public class CCBAdvancement {
             return this;
         }
 
-        public Builder externalTrigger(Criterion<?> trigger) {
+        private Builder externalTrigger(Criterion<?> trigger) {
             advancementBuilder.addCriterion(String.valueOf(keyIndex), trigger);
             externalTrigger = true;
             keyIndex++;

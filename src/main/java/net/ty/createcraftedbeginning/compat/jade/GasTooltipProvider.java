@@ -10,7 +10,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.compat.jade.gas.GasConstants;
 import net.ty.createcraftedbeginning.compat.jade.gas.GasDataProvider;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.ICreativeGasContainer;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlockEntity;
@@ -45,11 +44,11 @@ public enum GasTooltipProvider implements IServerDataProvider<BlockAccessor>, IC
     @Override
     public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
         CompoundTag data = accessor.getServerData();
-        if (!data.contains(GasConstants.STORAGE_KEY) || !data.contains(GasConstants.STORAGE_UID_KEY)) {
+        if (!data.contains(GasDataProvider.STORAGE_KEY) || !data.contains(GasDataProvider.STORAGE_UID_KEY)) {
             return;
         }
 
-        if (!JadePlugin.GAS_BLOCK_TOOLTIP.toString().equals(data.getString(GasConstants.STORAGE_UID_KEY))) {
+        if (!JadePlugin.GAS_BLOCK_TOOLTIP.toString().equals(data.getString(GasDataProvider.STORAGE_UID_KEY))) {
             return;
         }
 

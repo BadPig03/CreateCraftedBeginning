@@ -30,6 +30,8 @@ import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.client.CCBCreativeTabBanners.BannerLayout;
+import net.ty.createcraftedbeginning.client.contents.GasCanisterPackClientOverrides;
+import net.ty.createcraftedbeginning.client.contents.GasFilteringRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateFirstPersonRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateLayer;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.AirtightLeggingsLayer;
@@ -112,7 +114,7 @@ public class CCBClientEvents {
     }
 
     @SubscribeEvent
-    static void onRegisterAdditionalModels(RegisterAdditional event) {
+    public static void onRegisterAdditionalModels(RegisterAdditional event) {
         CCBPartialModels.registerBalloons();
     }
 

@@ -16,6 +16,7 @@ import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandler;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlerUtils;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePowerMode;
@@ -46,14 +47,14 @@ public enum ElytraUpgrade implements AirtightUpgrade {
     }
 
     private static Optional<AffordableFuel> findBoostFuel(Player player, ItemStack chestplate) {
-        int baseCost = INSTANCE.getGasConsumptionPerSecond(player, chestplate);
+        int baseGasCost = INSTANCE.getGasConsumptionPerSecond(player, chestplate);
         return CanisterContainerConsumers.findAffordableFuel(player, gasType -> {
-            AirtightArmorsHandler armorsHandler = AirtightArmorsHandlerUtils.of(gasType);
-            float boostMultiplier = armorsHandler.getMultiplierForBoostingElytra();
-            if (!Float.isFinite(boostMultiplier) || boostMultiplier <= 0) {
+            AirtightArmorsHandler armorHandler = AirtightArmorsHandlerUtils.of(gasType);
+            float boostMultiplier = armorHandler.getMultiplierForBoostingElytra();
+            if (!GasConsumptions.isFinite(boostMultiplier) || boostMultiplier <= 0) {
                 return -1;
             }
-            return baseCost * armorsHandler.getConsumptionMultiplier(EquipmentSlot.CHEST);
+            return baseGasCost * armorHandler.getConsumptionMultiplier(EquipmentSlot.CHEST);
         });
     }
 
@@ -67,13 +68,13 @@ public enum ElytraUpgrade implements AirtightUpgrade {
             return false;
         }
 
-        Optional<AffordableFuel> fuel = findBoostFuel(player, chestplate);
-        if (fuel.isEmpty()) {
+        Optional<AffordableFuel> boostFuel = findBoostFuel(player, chestplate);
+        if (boostFuel.isEmpty()) {
             return false;
         }
 
-        float multiplier = AirtightArmorsHandlerUtils.of(fuel.get().gasType()).getMultiplierForBoostingElytra();
-        return applySpeedBoost(player, multiplier);
+        float boostMultiplier = AirtightArmorsHandlerUtils.of(boostFuel.get().gasType()).getMultiplierForBoostingElytra();
+        return applySpeedBoost(player, boostMultiplier);
     }
 
     public static boolean tryApplySpeedBoost(Player player) {
@@ -86,15 +87,15 @@ public enum ElytraUpgrade implements AirtightUpgrade {
             return false;
         }
 
-        Optional<AffordableFuel> fuel = findBoostFuel(player, chestplate);
-        if (fuel.isEmpty()) {
+        Optional<AffordableFuel> boostFuel = findBoostFuel(player, chestplate);
+        if (boostFuel.isEmpty()) {
             GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas");
             return false;
         }
 
-        AffordableFuel selectedFuel = fuel.get();
-        float multiplier = AirtightArmorsHandlerUtils.of(selectedFuel.gasType()).getMultiplierForBoostingElytra();
-        if (!Float.isFinite(multiplier) || multiplier <= 0) {
+        AffordableFuel selectedFuel = boostFuel.get();
+        float boostMultiplier = AirtightArmorsHandlerUtils.of(selectedFuel.gasType()).getMultiplierForBoostingElytra();
+        if (!GasConsumptions.isFinite(boostMultiplier) || boostMultiplier <= 0) {
             return false;
         }
 
@@ -103,25 +104,26 @@ public enum ElytraUpgrade implements AirtightUpgrade {
             return false;
         }
 
-        return applySpeedBoost(player, multiplier);
+        return applySpeedBoost(player, boostMultiplier);
     }
 
-    private static boolean applySpeedBoost(Player player, float multiplier) {
-        if (!Float.isFinite(multiplier) || multiplier <= 0) {
+    private static boolean applySpeedBoost(Player player, float boostMultiplier) {
+        if (!GasConsumptions.isFinite(boostMultiplier) || boostMultiplier <= 0) {
             return false;
         }
 
-        Vec3 position = player.position();
-        Vec3 boost = player.getLookAngle().scale(0.85 * multiplier);
-        Vec3 movement = player.getDeltaMovement().scale(0.75 * multiplier);
-        player.setDeltaMovement(movement.add(boost));
+        Vec3 playerPosition = player.position();
+        Vec3 lookAngle = player.getLookAngle();
+        Vec3 currentMovement = player.getDeltaMovement();
+        Vec3 boostDelta = lookAngle.scale(0.1).add(lookAngle.scale(1.5).subtract(currentMovement).scale(0.8));
+        player.setDeltaMovement(currentMovement.add(boostDelta.scale(boostMultiplier)));
         player.hasImpulse = true;
         if (!(player.level() instanceof ServerLevel serverLevel)) {
             return true;
         }
 
-        serverLevel.sendParticles(ParticleTypes.GUST_EMITTER_SMALL, position.x, position.y, position.z, 1, 0, 0, 0, 0);
-        CCBSoundEvents.AIRTIGHT_JETPACK_LAUNCH.playOnServer(serverLevel, BlockPos.containing(position));
+        serverLevel.sendParticles(ParticleTypes.GUST_EMITTER_SMALL, playerPosition.x, playerPosition.y, playerPosition.z, 1, 0, 0, 0, 0);
+        CCBSoundEvents.AIRTIGHT_JETPACK_LAUNCH.playOnServer(serverLevel, BlockPos.containing(playerPosition));
         return true;
     }
 

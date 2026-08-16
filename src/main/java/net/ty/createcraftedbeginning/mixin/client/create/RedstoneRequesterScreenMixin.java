@@ -15,7 +15,7 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.ItemStackHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUtils;
@@ -99,10 +99,10 @@ public abstract class RedstoneRequesterScreenMixin extends AbstractSimiContainer
 
         List<Component> tooltips = new ArrayList<>();
         tooltips.add(CCBLang.translate("gui.gas_virtual_item.send_item", CCBLang.itemName(stack).add(CCBLang.text(" x" + GasRequestUtils.formatPrecise(amounts.get(slotIndex))))).color(ScrollInput.HEADER_RGB).component());
-        tooltips.add(CCBLang.translate("gui.gas_virtual_item.scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getScrollStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-        tooltips.add(CCBLang.translate("gui.gas_virtual_item.shift_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getShiftStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-        tooltips.add(CCBLang.translate("gui.gas_virtual_item.alt_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getAltStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-        tooltips.add(CCBLang.translate("gui.gas_virtual_item.ctrl_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getCtrlStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltips.add(CCBLang.translate("gui.gas_virtual_item.scroll", GasAmounts.formatPrecise(GasRequestClientUtils.getScrollStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltips.add(CCBLang.translate("gui.gas_virtual_item.shift_to_scroll", GasAmounts.formatPrecise(GasRequestClientUtils.getShiftStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltips.add(CCBLang.translate("gui.gas_virtual_item.alt_to_scroll", GasAmounts.formatPrecise(GasRequestClientUtils.getAltStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltips.add(CCBLang.translate("gui.gas_virtual_item.ctrl_to_scroll", GasAmounts.formatPrecise(GasRequestClientUtils.getCtrlStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
         cir.setReturnValue(tooltips);
     }
 

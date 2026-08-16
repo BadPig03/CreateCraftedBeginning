@@ -25,7 +25,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlockEntity implements ThresholdSwitchObservable {
-    private final PortableGasInterfaceDisplay display;
+    protected final PortableGasInterfaceDisplay display;
     protected IGasHandler capability;
 
     public PortableGasInterfaceBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -128,23 +128,23 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
         return display.format(value);
     }
 
-    IGasHandler getGasCapability() {
+    public IGasHandler getGasCapability() {
         return capability;
     }
 
-    float getConnectionAnimationValue(float partialTicks) {
+    public float getConnectionAnimationValue(float partialTicks) {
         return connectionAnimation.getValue(partialTicks);
     }
 
-    boolean canAccessGasStorage(IGasHandler handler) {
+    public boolean canAccessGasStorage(IGasHandler handler) {
         return capability == handler && canTransfer();
     }
 
-    void onGasContentTransferred() {
+    public void onGasContentTransferred() {
         onContentTransferred();
     }
 
-    public class InterfaceGasHandler extends PortableGasInterfaceGasHandler {
+    protected class InterfaceGasHandler extends PortableGasInterfaceGasHandler {
         public InterfaceGasHandler(IGasHandler wrapped) {
             super(PortableGasInterfaceBlockEntity.this, wrapped);
         }

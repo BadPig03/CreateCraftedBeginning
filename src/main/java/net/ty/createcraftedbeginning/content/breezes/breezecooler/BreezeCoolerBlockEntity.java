@@ -38,15 +38,15 @@ import java.util.function.Consumer;
 @MethodsReturnNonnullByDefault
 public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
     private static Consumer<BreezeCoolerBlockEntity> clientTicker = cooler -> {};
-    private final LerpedFloat headAnimation;
-    private final BreezeCoolerSerialization serialization;
-    private final BreezeCoolerRecipeCache recipeCache;
-    private final BreezeCoolerController controller;
-    private final BreezeCoolerDisplay display;
+    protected final LerpedFloat headAnimation;
+    protected final BreezeCoolerSerialization serialization;
+    protected final BreezeCoolerRecipeCache recipeCache;
+    protected final BreezeCoolerController controller;
+    protected final BreezeCoolerDisplay display;
     protected LerpedFloat headAngle;
-    private CCBAdvancementBehaviour advancementBehaviour;
-    private SmartFluidTankBehaviour tankBehaviour;
-    private BaseCoolerState currentState;
+    protected CCBAdvancementBehaviour advancementBehaviour;
+    protected SmartFluidTankBehaviour tankBehaviour;
+    protected BaseCoolerState currentState;
 
     public BreezeCoolerBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -238,23 +238,23 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         display.tickAnimation(targetAngle);
     }
 
-    LerpedFloat getHeadAnimationInternal() {
+    public LerpedFloat getHeadAnimationInternal() {
         return headAnimation;
     }
 
-    void runClientTicker() {
+    public void runClientTicker() {
         clientTicker.accept(this);
     }
 
-    void setCoolerStateFromSerialization(BaseCoolerState state) {
+    public void setCoolerStateFromSerialization(BaseCoolerState state) {
         currentState = state;
     }
 
-    void setGogglesFromSerialization(boolean goggles) {
+    public void setGogglesFromSerialization(boolean goggles) {
         display.setGoggles(goggles);
     }
 
-    void setTrainHatFromSerialization(boolean trainHat) {
+    public void setTrainHatFromSerialization(boolean trainHat) {
         display.setTrainHat(trainHat);
     }
 

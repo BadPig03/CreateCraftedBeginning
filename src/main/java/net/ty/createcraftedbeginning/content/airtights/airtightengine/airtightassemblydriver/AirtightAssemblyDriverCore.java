@@ -109,7 +109,7 @@ public final class AirtightAssemblyDriverCore {
         serialization.read(tag, provider, clientPacket);
     }
 
-    AirtightAssemblyDriverController getController() {
+    public AirtightAssemblyDriverController getController() {
         return controller;
     }
 }

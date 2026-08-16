@@ -211,7 +211,7 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
         return CanisterContainerSuppliers.isValidCanisterContainer(stack);
     }
 
-    private int findFirstEmptySlot() {
+    protected int findFirstEmptySlot() {
         for (int i = 0; i < filterInventory.getSlots(); i++) {
             if (!filterInventory.getStackInSlot(i).isEmpty()) {
                 continue;
@@ -222,7 +222,7 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
         return -1;
     }
 
-    private boolean containsGas(GasStack gas, int ignoredSlot) {
+    protected boolean containsGas(GasStack gas, int ignoredSlot) {
         for (int i = 0; i < filterInventory.getSlots(); i++) {
             if (i == ignoredSlot) {
                 continue;

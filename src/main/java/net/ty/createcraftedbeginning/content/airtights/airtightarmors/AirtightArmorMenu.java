@@ -22,7 +22,7 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class AirtightArmorMenu extends AirtightUpgradableMenu {
-    private final UpgradeRegistryAccess upgradeRegistry;
+    protected final UpgradeRegistryAccess upgradeRegistry;
 
     protected AirtightArmorMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData, UpgradeRegistryAccess upgradeRegistry) {
         super(type, id, inv, extraData);
@@ -62,7 +62,7 @@ public abstract class AirtightArmorMenu extends AirtightUpgradableMenu {
         currentStatusList = normalizeStatusList(stack.getOrDefault(CCBDataComponents.AIRTIGHT_UPGRADE_STATUS, upgradeRegistry.defaultStatuses().get()), upgrades);
     }
 
-    void forEachUpgrade(Consumer<AirtightUpgrade> action) {
+    public void forEachUpgrade(Consumer<AirtightUpgrade> action) {
         upgradeRegistry.upgrades().get().forEach(action);
     }
 

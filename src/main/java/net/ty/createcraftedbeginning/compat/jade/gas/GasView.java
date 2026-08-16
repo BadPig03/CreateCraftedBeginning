@@ -5,7 +5,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import org.jetbrains.annotations.Nullable;
 import snownee.jade.api.ui.IElement;
 
@@ -14,6 +14,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasView {
+    public static final String STORAGE_GAS_KEY = "gas";
+    public static final String STORAGE_CAPACITY_KEY = "capacity";
+    public static final String STORAGE_CREATIVE_KEY = "creative";
+
     public IElement overlay;
     public String current;
     public String max;
@@ -24,28 +28,28 @@ public class GasView {
     public Component overrideText;
     public boolean creative;
 
-    public GasView(IElement overlay) {
+    protected GasView(IElement overlay) {
         this.overlay = overlay;
     }
 
     @Nullable
     public static GasView readDefault(CompoundTag compoundTag) {
-        long capacity = compoundTag.getLong(GasConstants.STORAGE_CAPACITY_KEY);
+        long capacity = compoundTag.getLong(STORAGE_CAPACITY_KEY);
         if (capacity <= 0) {
             return null;
         }
 
-        GasObject gas = GasObject.CODEC.parse(NbtOps.INSTANCE, compoundTag.get(GasConstants.STORAGE_GAS_KEY)).result().orElse(null);
+        GasObject gas = GasObject.CODEC.parse(NbtOps.INSTANCE, compoundTag.get(STORAGE_GAS_KEY)).result().orElse(null);
         if (gas == null) {
             return null;
         }
 
         GasView view = new GasView(new GasStackElement(gas));
         view.gasName = Component.translatable(gas.gasType().getTranslationKey());
-        view.current = GasAmountUtils.formatLosslessCompact(gas.amount());
-        view.max = GasAmountUtils.formatLosslessCompact(capacity);
+        view.current = GasAmounts.formatLosslessCompact(gas.amount());
+        view.max = GasAmounts.formatLosslessCompact(capacity);
         view.ratio = (float) gas.amount() / capacity;
-        view.creative = compoundTag.getBoolean(GasConstants.STORAGE_CREATIVE_KEY);
+        view.creative = compoundTag.getBoolean(STORAGE_CREATIVE_KEY);
         if (!gas.isEmpty()) {
             return view;
         }
@@ -57,14 +61,14 @@ public class GasView {
     public static CompoundTag writeDefault(GasObject gasObject, long capacity, boolean creative) {
         CompoundTag data = new CompoundTag();
         if (capacity > 0) {
-            data.put(GasConstants.STORAGE_GAS_KEY, GasObject.CODEC.encodeStart(NbtOps.INSTANCE, gasObject).result().orElseThrow());
-            data.putLong(GasConstants.STORAGE_CAPACITY_KEY, capacity);
+            data.put(STORAGE_GAS_KEY, GasObject.CODEC.encodeStart(NbtOps.INSTANCE, gasObject).result().orElseThrow());
+            data.putLong(STORAGE_CAPACITY_KEY, capacity);
         }
         if (!creative) {
             return data;
         }
 
-        data.putBoolean(GasConstants.STORAGE_CREATIVE_KEY, true);
+        data.putBoolean(STORAGE_CREATIVE_KEY, true);
         return data;
     }
 }

@@ -114,7 +114,7 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
         placeTankLayer(context, level, startPos, face, tankAxis, width);
     }
 
-    private int countTanksToPlace(Level level, BlockPos startPos, Axis axis, int width) {
+    protected int countTanksToPlace(Level level, BlockPos startPos, Axis axis, int width) {
         int tanksToPlace = 0;
         for (int uOffset = 0; uOffset < width; uOffset++) {
             for (int vOffset = 0; vOffset < width; vOffset++) {
@@ -134,7 +134,7 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
         return tanksToPlace;
     }
 
-    private void placeTankLayer(BlockPlaceContext context, Level level, BlockPos startPos, Direction face, Axis axis, int width) {
+    protected void placeTankLayer(BlockPlaceContext context, Level level, BlockPos startPos, Direction face, Axis axis, int width) {
         for (int uOffset = 0; uOffset < width; uOffset++) {
             for (int vOffset = 0; vOffset < width; vOffset++) {
                 BlockPos offsetPos = offsetLayer(startPos, axis, uOffset, vOffset);
@@ -148,7 +148,7 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
         }
     }
 
-    private boolean isCompatibleHorizontalTank(BlockState state, Axis axis) {
+    protected boolean isCompatibleHorizontalTank(BlockState state, Axis axis) {
         if (state.getBlock() != getBlock()) {
             return false;
         }

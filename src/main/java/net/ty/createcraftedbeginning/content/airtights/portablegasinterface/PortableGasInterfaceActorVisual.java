@@ -13,7 +13,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class PortableGasInterfaceActorVisual extends ActorVisual {
-    private final PortableGasInterfaceInstance instance;
+    protected final PortableGasInterfaceInstance instance;
 
     public PortableGasInterfaceActorVisual(VisualizationContext context, VirtualRenderWorld world, MovementContext movementContext) {
         super(context, world, movementContext);

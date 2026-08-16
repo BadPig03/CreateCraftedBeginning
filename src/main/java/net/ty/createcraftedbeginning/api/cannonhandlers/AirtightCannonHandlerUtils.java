@@ -7,36 +7,20 @@ import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVis
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-/**
- * Provides lookup and registration helpers for gas-specific airtight cannon behaviour.
- * Handlers define explosion behaviour, gas consumption, and contextual tooltip content.
- */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class AirtightCannonHandlerUtils {
     private AirtightCannonHandlerUtils() {
     }
 
-    /**
-     * Resolves the airtight cannon handler associated with the supplied input.
-     *
-     * @param gasStack the gas stack to inspect or process
-     * @return the resolved airtight cannon handler
-     */
     public static AirtightCannonHandler of(GasStack gasStack) {
         return of(gasStack.getGasType());
     }
 
-    /**
-     * Resolves the airtight cannon handler associated with the supplied input.
-     *
-     * @param gasType the gas type to inspect or process
-     * @return the resolved airtight cannon handler
-     */
     public static AirtightCannonHandler of(Gas gasType) {
         if (gasType.isEmpty()) {
             return DefaultCannonHandler.INSTANCE;
@@ -46,12 +30,6 @@ public final class AirtightCannonHandlerUtils {
         return cannonHandler != null ? cannonHandler : DefaultCannonHandler.INSTANCE;
     }
 
-    /**
-     * Registers a custom airtight cannon handler for the supplied target.
-     *
-     * @param location the resource location identifying the target value
-     * @param handler  the handler to register or invoke
-     */
     public static void register(ResourceLocation location, AirtightCannonHandler handler) {
         Gas gasType = Gas.getGasTypeByName(location);
         if (gasType.isEmpty()) {
@@ -66,12 +44,12 @@ public final class AirtightCannonHandlerUtils {
         }
 
         float consumptionMultiplier = handler.getGasConsumptionMultiplier();
-        if (!GasConsumptionUtils.isNonNegativeFinite(consumptionMultiplier)) {
+        if (!GasConsumptions.isNonNegativeFinite(consumptionMultiplier)) {
             CCBAPI.LOGGER.error("Failed to register Airtight Cannon Handler for gas '{}': consumption multiplier must be finite and non-negative, got {}.", location, consumptionMultiplier);
             return;
         }
 
-        if (handler instanceof AirtightCannonVisualHandler visualHandler && !GasConsumptionUtils.isFinite(visualHandler.getRotationSpeed())) {
+        if (handler instanceof AirtightCannonVisualHandler visualHandler && !GasConsumptions.isFinite(visualHandler.getRotationSpeed())) {
             CCBAPI.LOGGER.error("Failed to register Airtight Cannon Handler for gas '{}': rotation speed must be finite, got {}.", location, visualHandler.getRotationSpeed());
             return;
         }

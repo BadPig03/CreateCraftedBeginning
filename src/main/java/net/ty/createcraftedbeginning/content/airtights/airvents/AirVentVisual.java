@@ -20,16 +20,16 @@ import java.util.function.Consumer;
 @MethodsReturnNonnullByDefault
 public class AirVentVisual extends AbstractBlockEntityVisual<AirVentBlockEntity> implements SimpleDynamicVisual {
     private static final float LOUVER_SURFACE_OFFSET = 0.001953125f;
-    private final TransformedInstance[] louvers = new TransformedInstance[Direction.values().length];
-    private int visibleMask = -1;
-    private int openedMask = -1;
+    protected final TransformedInstance[] louvers = new TransformedInstance[Direction.values().length];
+    protected int visibleMask = -1;
+    protected int openedMask = -1;
 
     public AirVentVisual(VisualizationContext context, AirVentBlockEntity blockEntity, float partialTick) {
         super(context, blockEntity, partialTick);
         syncLouvers();
     }
 
-    private void syncLouvers() {
+    protected void syncLouvers() {
         int nextVisibleMask = blockEntity.getVisibleLouverMask();
         int nextOpenedMask = blockEntity.getOpenedLouverMask();
         if (nextVisibleMask == visibleMask && nextOpenedMask == openedMask) {
@@ -66,7 +66,7 @@ public class AirVentVisual extends AbstractBlockEntityVisual<AirVentBlockEntity>
         openedMask = nextOpenedMask;
     }
 
-    private void orientLouver(TransformedInstance louver, Direction direction) {
+    protected void orientLouver(TransformedInstance louver, Direction direction) {
         Direction facing = direction.getOpposite();
         louver.setIdentityTransform().translate(getVisualPosition()).translate(direction.getStepX() * LOUVER_SURFACE_OFFSET, direction.getStepY() * LOUVER_SURFACE_OFFSET, direction.getStepZ() * LOUVER_SURFACE_OFFSET).rotateYCentered(AngleHelper.rad(AngleHelper.horizontalAngle(facing))).rotateXCentered(AngleHelper.rad(AngleHelper.verticalAngle(facing))).setChanged();
     }

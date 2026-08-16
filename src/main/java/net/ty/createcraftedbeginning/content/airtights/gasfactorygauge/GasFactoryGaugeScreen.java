@@ -29,7 +29,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonStyleUtils;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.client.GasFactoryGaugeClientUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
@@ -50,17 +50,17 @@ import java.util.Map;
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class GasFactoryGaugeScreen extends AbstractSimiScreen {
-    private final boolean restocker;
-    private final GasFactoryGaugeBehaviour behaviour;
+    protected final boolean restocker;
+    protected final GasFactoryGaugeBehaviour behaviour;
 
-    private AddressEditBox addressBox;
-    private ScrollInput promiseExpiration;
-    private boolean sendReset;
-    private boolean sendRedstoneReset;
+    protected AddressEditBox addressBox;
+    protected ScrollInput promiseExpiration;
+    protected boolean sendReset;
+    protected boolean sendRedstoneReset;
 
-    private BigItemStack outputConfig;
-    private List<BigItemStack> inputConfig;
-    private List<FactoryPanelConnection> connections;
+    protected BigItemStack outputConfig;
+    protected List<BigItemStack> inputConfig;
+    protected List<FactoryPanelConnection> connections;
 
     public GasFactoryGaugeScreen(GasFactoryGaugeBehaviour behaviour) {
         this.behaviour = behaviour;
@@ -70,10 +70,10 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
     }
 
     private static void addGasScrollTooltips(List<Component> tooltips) {
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getScrollStep()));
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.shift_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getShiftStep()));
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.alt_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getAltStep()));
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.ctrl_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getCtrlStep()));
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.scroll", GasAmounts.formatPrecise(GasRequestClientUtils.getScrollStep()));
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.shift_to_scroll", GasAmounts.formatPrecise(GasRequestClientUtils.getShiftStep()));
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.alt_to_scroll", GasAmounts.formatPrecise(GasRequestClientUtils.getAltStep()));
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.ctrl_to_scroll", GasAmounts.formatPrecise(GasRequestClientUtils.getCtrlStep()));
     }
 
     private static void addItemScrollTooltips(List<Component> tooltips) {
@@ -91,7 +91,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         tooltips.add(CCBLang.translate(key).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
     }
 
-    private void updateConfigs() {
+    protected void updateConfigs() {
         if (minecraft == null) {
             return;
         }
@@ -220,7 +220,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         poseStack.popPose();
     }
 
-    private void renderPromises(GuiGraphics graphics, int mouseX, int mouseY, int x, int y) {
+    protected void renderPromises(GuiGraphics graphics, int mouseX, int mouseY, int x, int y) {
         int state = promiseExpiration.getState();
         MutableComponent text = CCBLang.text(state == -1 ? " /" : state == 0 ? "30s" : state + "m").component();
         graphics.drawString(font, text, promiseExpiration.getX() + 3, promiseExpiration.getY() + 4, 0xFFEEEEEE, true);
@@ -253,7 +253,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
     }
 
-    private void renderLinks(GuiGraphics graphics, int mouseX, int mouseY, int x, int y) {
+    protected void renderLinks(GuiGraphics graphics, int mouseX, int mouseY, int x, int y) {
         int itemX = x + 9;
         int itemY = y + windowHeight - 24;
         AllGuiTextures.FROGPORT_SLOT.render(graphics, itemX - 1, itemY - 1);
@@ -268,7 +268,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
     }
 
-    private void renderOutputs(GuiGraphics graphics, int mouseX, int mouseY, int slot, int x, int y) {
+    protected void renderOutputs(GuiGraphics graphics, int mouseX, int mouseY, int slot, int x, int y) {
         if (restocker) {
             renderInputItem(graphics, slot, new BigItemStack(behaviour.getFilter(), 1), mouseX, mouseY);
             return;
@@ -290,7 +290,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
     }
 
-    private int renderInputs(GuiGraphics graphics, int mouseX, int mouseY) {
+    protected int renderInputs(GuiGraphics graphics, int mouseX, int mouseY) {
         int slot = 0;
         for (BigItemStack itemStack : inputConfig) {
             renderInputItem(graphics, slot++, itemStack, mouseX, mouseY);
@@ -313,7 +313,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         return slot;
     }
 
-    private void renderInputItem(GuiGraphics graphics, int slot, BigItemStack entry, int mouseX, int mouseY) {
+    protected void renderInputItem(GuiGraphics graphics, int slot, BigItemStack entry, int mouseX, int mouseY) {
         int inputX = guiLeft + (restocker ? 88 : 68 + slot % 3 * 20);
         int inputY = guiTop + (restocker ? 33 : 28) + slot / 3 * 20;
         graphics.renderItem(entry.stack, inputX, inputY);
@@ -346,7 +346,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
     }
 
-    private void renderAddressBoxTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
+    protected void renderAddressBoxTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
         List<Component> tooltips = new ArrayList<>();
         if (!addressBox.getValue().isBlank()) {
             tooltips.add(CCBLang.translate(restocker ? "gui.gas_factory_gauge.restocker_address_given" : "gui.gas_factory_gauge.recipe_address_given").color(ScrollInput.HEADER_RGB).component());
@@ -460,7 +460,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         super.removed();
     }
 
-    private void playButtonSound() {
+    protected void playButtonSound() {
         if (minecraft == null) {
             return;
         }
@@ -468,12 +468,12 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1, 0.25f));
     }
 
-    private void sendIt(@Nullable FactoryPanelPosition removeConnection, boolean clearPromises) {
+    protected void sendIt(@Nullable FactoryPanelPosition removeConnection, boolean clearPromises) {
         FactoryPanelConfigurationPacket packet = new FactoryPanelConfigurationPacket(behaviour.getPanelPosition(), addressBox.getValue(), collectInputAmounts(), List.of(), outputConfig.count, promiseExpiration.getState(), removeConnection, clearPromises, sendReset, sendRedstoneReset);
         CatnipServices.NETWORK.sendToServer(packet);
     }
 
-    private Map<FactoryPanelPosition, Integer> collectInputAmounts() {
+    protected Map<FactoryPanelPosition, Integer> collectInputAmounts() {
         Map<FactoryPanelPosition, Integer> inputs = new HashMap<>();
         if (inputConfig.size() != connections.size()) {
             return inputs;

@@ -4,7 +4,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
@@ -14,14 +14,14 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class CreativeAirtightTankDisplay {
+public final class CreativeAirtightTankDisplay {
     private final CreativeAirtightTankBlockEntity owner;
 
-    CreativeAirtightTankDisplay(CreativeAirtightTankBlockEntity owner) {
+    public CreativeAirtightTankDisplay(CreativeAirtightTankBlockEntity owner) {
         this.owner = owner;
     }
 
-    boolean addToGoggleTooltip(List<Component> tooltip) {
+    public boolean addToGoggleTooltip(List<Component> tooltip) {
         if (owner.getLevel() == null) {
             return false;
         }
@@ -44,21 +44,21 @@ final class CreativeAirtightTankDisplay {
         return true;
     }
 
-    int getMaxValue() {
-        return owner.getControllerBE() == null ? 0 : GasAmountUtils.toWholeBucketsClamped(CreativeAirtightTankBlockEntity.getCapacityPerTank());
+    public int getMaxValue() {
+        return owner.getControllerBE() == null ? 0 : GasAmounts.toWholeBucketsClamped(CreativeAirtightTankBlockEntity.getCapacityPerTank());
     }
 
-    int getCurrentValue() {
+    public int getCurrentValue() {
         CreativeAirtightTankBlockEntity controller = owner.getControllerBE();
         if (controller == null) {
             return 0;
         }
 
         GasStack gas = controller.getCapability().getGasInTank(0);
-        return gas.isEmpty() ? 0 : GasAmountUtils.toWholeBucketsClamped(CreativeAirtightTankBlockEntity.getCapacityPerTank());
+        return gas.isEmpty() ? 0 : GasAmounts.toWholeBucketsClamped(CreativeAirtightTankBlockEntity.getCapacityPerTank());
     }
 
-    MutableComponent format(int value) {
-        return GasAmountUtils.formatWholeBuckets(value);
+    public MutableComponent format(int value) {
+        return GasAmounts.formatWholeBuckets(value);
     }
 }

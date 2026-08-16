@@ -64,7 +64,7 @@ public class CreativeAirtightTankItem extends BlockItem {
         return super.updateCustomBlockEntityTag(blockPos, level, player, itemStack, blockState);
     }
 
-    private void tryMultiPlace(BlockPlaceContext context) {
+    protected void tryMultiPlace(BlockPlaceContext context) {
         Player player = context.getPlayer();
         if (player == null || player.isShiftKeyDown()) {
             return;
@@ -113,7 +113,7 @@ public class CreativeAirtightTankItem extends BlockItem {
         placeTankLayer(context, level, startPos, face, width);
     }
 
-    private int countTanksToPlace(Level level, BlockPos startPos, int width) {
+    protected int countTanksToPlace(Level level, BlockPos startPos, int width) {
         int count = 0;
         for (int xOffset = 0; xOffset < width; xOffset++) {
             for (int zOffset = 0; zOffset < width; zOffset++) {
@@ -133,7 +133,7 @@ public class CreativeAirtightTankItem extends BlockItem {
         return count;
     }
 
-    private void placeTankLayer(BlockPlaceContext context, Level level, BlockPos startPos, Direction face, int width) {
+    protected void placeTankLayer(BlockPlaceContext context, Level level, BlockPos startPos, Direction face, int width) {
         for (int xOffset = 0; xOffset < width; xOffset++) {
             for (int zOffset = 0; zOffset < width; zOffset++) {
                 BlockPos offsetPos = startPos.offset(xOffset, 0, zOffset);

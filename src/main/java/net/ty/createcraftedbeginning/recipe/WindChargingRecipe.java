@@ -28,6 +28,7 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -39,8 +40,8 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
     private static final TagKey<Item> WIND_CHARGING_EXCLUDED = ItemTags.create(CCBAPI.asResource("wind_charging_excluded"));
     private static final WindChargingData EMPTY = new WindChargingData(WindChargingAction.CHARGE, 0, 0, ItemStack.EMPTY);
 
-    private final ProcessingRecipeParams recipeParams;
-    private final WindChargingAction action;
+    protected final ProcessingRecipeParams recipeParams;
+    protected final WindChargingAction action;
 
     public WindChargingRecipe(ProcessingRecipeParams params) {
         this(params, WindChargingAction.CHARGE);
@@ -91,7 +92,7 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
         double effectScore = getEffectScore(properties.effects());
         double multiplier = getChargeMultiplier(effectScore);
         double calculatedTime = Math.pow(foodValue, 1.39858) * 100 * Math.abs(multiplier);
-        int magnitude = !Double.isFinite(calculatedTime) || calculatedTime >= Integer.MAX_VALUE ? Integer.MAX_VALUE : Mth.ceil(calculatedTime);
+        int magnitude = !GasConsumptions.isFinite(calculatedTime) || calculatedTime >= Integer.MAX_VALUE ? Integer.MAX_VALUE : Mth.ceil(calculatedTime);
         if (magnitude <= 0) {
             return EMPTY;
         }

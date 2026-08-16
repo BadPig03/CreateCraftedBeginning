@@ -45,12 +45,6 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
     protected TemperatureCondition temperatureCondition;
     private Supplier<ItemStack> forcedResult;
 
-    /**
-     * Creates a new {@code ProcessingWithGasRecipe} instance.
-     *
-     * @param typeInfo the type info to use
-     * @param params   the parameters used to configure the operation
-     */
     public ProcessingWithGasRecipe(IRecipeTypeInfo typeInfo, P params) {
         this.params = params;
         this.typeInfo = typeInfo;
@@ -67,15 +61,6 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
         forcedResult = null;
     }
 
-    /**
-     * Creates a codec for serializing and deserializing values of this type.
-     *
-     * @param <P>         the value type constrained by {@code extends ProcessingWithGasRecipeParams}
-     * @param <R>         the value type constrained by {@code extends ProcessingWithGasRecipe<?, P>}
-     * @param factory     the factory used to create the requested value
-     * @param paramsCodec the params codec to use
-     * @return the configured codec
-     */
     public static <P extends ProcessingWithGasRecipeParams, R extends ProcessingWithGasRecipe<?, P>> MapCodec<R> codec(Factory<P, R> factory, MapCodec<P> paramsCodec) {
         return paramsCodec.xmap(factory::create, recipe -> recipe.getParams()).validate(recipe -> {
             List<String> errors = recipe.validate();
@@ -88,24 +73,10 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
         });
     }
 
-    /**
-     * Creates a stream codec for network serialization of values of this type.
-     *
-     * @param <P>         the value type constrained by {@code extends ProcessingWithGasRecipeParams}
-     * @param <R>         the value type constrained by {@code extends ProcessingWithGasRecipe<?, P>}
-     * @param factory     the factory used to create the requested value
-     * @param paramsCodec the params codec to use
-     * @return the configured codec
-     */
     public static <P extends ProcessingWithGasRecipeParams, R extends ProcessingWithGasRecipe<?, P>> @NotNull StreamCodec<RegistryFriendlyByteBuf, R> streamCodec(Factory<P, R> factory, StreamCodec<RegistryFriendlyByteBuf, P> paramsCodec) {
         return paramsCodec.map(factory::create, ProcessingWithGasRecipe::getParams);
     }
 
-    /**
-     * Validates the supplied state and reports invalid values.
-     *
-     * @return the resulting values
-     */
     public List<String> validate() {
         List<String> errors = new ArrayList<>();
         int ingredientCount = ingredients.size();
@@ -178,135 +149,70 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
     protected void validateSpecial(List<String> errors) {
     }
 
-    /**
-     * Returns the params.
-     *
-     * @return the params
-     */
     public P getParams() {
         return params;
     }
 
-    /**
-     * Returns the fluid ingredients.
-     *
-     * @return the fluid ingredients
-     */
     public NonNullList<SizedFluidIngredient> getFluidIngredients() {
         return fluidIngredients;
     }
 
-    /**
-     * Returns the gas ingredients.
-     *
-     * @return the gas ingredients
-     */
     public NonNullList<SizedGasIngredient> getGasIngredients() {
         return gasIngredients;
     }
 
-    /**
-     * Returns the fluid results.
-     *
-     * @return the fluid results
-     */
     public NonNullList<FluidStack> getFluidResults() {
         return fluidResults;
     }
 
-    /**
-     * Returns the gas results.
-     *
-     * @return the gas results
-     */
     public NonNullList<GasStack> getGasResults() {
         return gasResults;
     }
 
-    /**
-     * Returns the rollable results.
-     *
-     * @return the rollable results
-     */
     public List<ProcessingOutput> getRollableResults() {
         return results;
     }
 
-    /**
-     * Forces the next generated result to use the supplied stack.
-     *
-     * @param stack the stack to inspect or process
-     */
     public void enforceNextResult(Supplier<ItemStack> stack) {
         forcedResult = stack;
     }
 
-    /**
-     * Rolls the results using the supplied random source.
-     *
-     * @param randomSource the random source used by the operation
-     * @return the resulting values
-     */
     public List<ItemStack> rollResults(RandomSource randomSource) {
         return rollResults(getRollableResults(), randomSource);
     }
 
-    /**
-     * Rolls the results using the supplied random source.
-     *
-     * @param rollableResults the rollable results to inspect or process
-     * @param randomSource    the random source used by the operation
-     * @return the resulting values
-     */
     public List<ItemStack> rollResults(List<ProcessingOutput> rollableResults, RandomSource randomSource) {
         List<ItemStack> results = new ArrayList<>();
         for (int i = 0; i < rollableResults.size(); i++) {
             ProcessingOutput output = rollableResults.get(i);
             ItemStack stack = i == 0 && forcedResult != null ? forcedResult.get() : output.rollOutput(randomSource);
-            if (!stack.isEmpty()) {
-                results.add(stack);
+            if (stack.isEmpty()) {
+                continue;
             }
+
+            results.add(stack);
         }
         return results;
     }
 
-    /**
-     * Returns the processing duration.
-     *
-     * @return the processing duration
-     */
     public int getProcessingDuration() {
         return processingDuration;
     }
 
-    /**
-     * Returns the temperature condition.
-     *
-     * @return the temperature condition
-     */
     public TemperatureCondition getTemperatureCondition() {
         return temperatureCondition;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ItemStack assemble(I input, Provider provider) {
         return getResultItem(provider);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean canCraftInDimensions(int width, int height) {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ItemStack getResultItem(Provider provider) {
         if (forcedResult != null) {
@@ -315,63 +221,37 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
         return getRollableResults().isEmpty() ? ItemStack.EMPTY : getRollableResults().getFirst().getStack();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public NonNullList<Ingredient> getIngredients() {
         return ingredients;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isSpecial() {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getGroup() {
         return "processing";
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public RecipeSerializer<?> getSerializer() {
         return serializer;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public RecipeType<?> getType() {
         return type;
     }
 
-    /**
-     * Returns the type info.
-     *
-     * @return the type info
-     */
     public IRecipeTypeInfo getTypeInfo() {
         return typeInfo;
     }
 
     @FunctionalInterface
     public interface Factory<P extends ProcessingWithGasRecipeParams, R extends ProcessingWithGasRecipe<?, P>> {
-        /**
-         * Creates a new value from the supplied arguments.
-         *
-         * @param params the parameters used to configure the operation
-         * @return the created value
-         */
         R create(P params);
     }
 }

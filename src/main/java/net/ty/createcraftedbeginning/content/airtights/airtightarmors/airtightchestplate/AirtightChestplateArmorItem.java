@@ -42,8 +42,7 @@ public class AirtightChestplateArmorItem extends ArmorItem implements CustomRend
     }
 
     private static void renderModel(PoseStack poseStack, MultiBufferSource bufferSource, int light, Model model, ResourceLocation texture) {
-        VertexConsumer consumer = bufferSource.getBuffer(RenderType.armorCutoutNoCull(texture));
-        model.renderToBuffer(poseStack, consumer, light, OverlayTexture.NO_OVERLAY, -1);
+        model.renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.armorCutoutNoCull(texture)), light, OverlayTexture.NO_OVERLAY, -1);
     }
 
     private static void renderTrim(TextureAtlas trimAtlas, PoseStack poseStack, MultiBufferSource bufferSource, int light, ArmorTrim trim, Model model, boolean inner) {
@@ -55,8 +54,7 @@ public class AirtightChestplateArmorItem extends ArmorItem implements CustomRend
     }
 
     private static void renderGlint(PoseStack poseStack, MultiBufferSource bufferSource, int light, Model model) {
-        VertexConsumer consumer = bufferSource.getBuffer(RenderType.armorEntityGlint());
-        model.renderToBuffer(poseStack, consumer, light, OverlayTexture.NO_OVERLAY);
+        model.renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.armorEntityGlint()), light, OverlayTexture.NO_OVERLAY);
     }
 
     @OnlyIn(Dist.CLIENT)

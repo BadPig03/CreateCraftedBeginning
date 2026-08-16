@@ -13,7 +13,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonGasContents.GasEntry;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 
@@ -54,7 +54,7 @@ public class BalloonItem extends PackageItem {
         }
 
         for (GasEntry gas : contents.gases()) {
-            tooltip.add(CCBLang.gasName(gas.getGasType()).add(CCBLang.text(" ").add(GasAmountUtils.precise(gas.getAmount()))).style(ChatFormatting.GRAY).component());
+            tooltip.add(CCBLang.gasName(gas.getGasType()).add(CCBLang.text(" ").add(GasAmounts.precise(gas.getAmount()))).style(ChatFormatting.GRAY).component());
         }
     }
 

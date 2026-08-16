@@ -40,10 +40,15 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
     private static final int PRIMARY_RESULT_INDEX = 0;
 
     @Nullable
-    private SmithingRecipe smithingRecipe;
+    protected SmithingRecipe smithingRecipe;
 
     public ForgingPressRecipe(ProcessingWithGasRecipeParams params) {
         super(CCBRecipeTypes.FORGING_PRESS, params);
+    }
+
+    public static boolean canConvertSmithingRecipe(Recipe<?> source) {
+        return source instanceof SmithingTransformRecipe && source instanceof SmithingTransformRecipeAccess
+            || source instanceof SmithingTrimRecipe && source instanceof SmithingTrimRecipeAccess;
     }
 
     public static RecipeHolder<ForgingPressRecipe> convertToForgingPressRecipe(RecipeHolder<?> holder) {
@@ -384,7 +389,7 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
         return planFluidAndGasConsumption(this, fluids, gases, new int[fluids.getTanks()], new long[gases.getTanks()], 1);
     }
 
-    private boolean matchesItemInputs(RecipeInput input) {
+    protected boolean matchesItemInputs(RecipeInput input) {
         NonNullList<Ingredient> ingredients = getIngredients();
         int slots = Math.max(input.size(), ingredients.size());
         for (int slot = 0; slot < slots; slot++) {
@@ -405,14 +410,14 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
         return true;
     }
 
-    public interface ForgingPressRecipeInput extends RecipeInput {
+    protected interface ForgingPressRecipeInput extends RecipeInput {
         IFluidHandler getFluidHandler();
 
         IGasHandler getGasHandler();
     }
 
-    private record CraftPlan(int crafts, int[] fluidAmounts, long[] gasAmounts) {
-        private CraftPlan {
+    protected record CraftPlan(int crafts, int[] fluidAmounts, long[] gasAmounts) {
+        protected CraftPlan {
             fluidAmounts = fluidAmounts.clone();
             gasAmounts = gasAmounts.clone();
         }

@@ -18,7 +18,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class ExternalHandlerSource extends GasFlowSource {
-    @Nullable ICapabilityProvider<IGasHandler> gasHandlerCache;
+    @Nullable private ICapabilityProvider<IGasHandler> gasHandlerCache;
 
     public ExternalHandlerSource(BlockFace location) {
         super(location);

@@ -268,7 +268,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         }
     }
 
-    private static class NozzlePlacementHelper implements IPlacementHelper {
+    protected static class NozzlePlacementHelper implements IPlacementHelper {
 
         @Contract(pure = true)
         @Override

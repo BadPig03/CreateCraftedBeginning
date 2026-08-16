@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.client;
+package net.ty.createcraftedbeginning.client.contents;
 
 import com.simibubi.create.AllSpecialTextures;
 import com.simibubi.create.CreateClient;

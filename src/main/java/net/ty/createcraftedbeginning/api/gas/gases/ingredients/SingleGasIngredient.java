@@ -18,11 +18,6 @@ public class SingleGasIngredient extends GasIngredient {
 
     private final Holder<Gas> gas;
 
-    /**
-     * Creates a new {@code SingleGasIngredient} instance.
-     *
-     * @param gas the gas to inspect or process
-     */
     public SingleGasIngredient(Holder<Gas> gas) {
         if (gas.value().isEmpty()) {
             throw new IllegalStateException("SingleGasIngredient must not be constructed with minecraft:empty, use GasIngredient.empty() instead!");
@@ -36,51 +31,31 @@ public class SingleGasIngredient extends GasIngredient {
         return Stream.of(new GasStack(gas, FluidType.BUCKET_VOLUME));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isSimple() {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public GasIngredientType<?> getType() {
         return GasRegistries.SINGLE_GAS_INGREDIENT_TYPE.get();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean test(GasStack gasStack) {
         return gasStack.is(gas);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return gas().value().hashCode();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(Object obj) {
         return this == obj || obj instanceof SingleGasIngredient other && gas.equals(other.gas().value());
     }
 
-    /**
-     * Sets the gas stack used by this builder.
-     *
-     * @return the resulting holder
-     */
     public Holder<Gas> gas() {
         return gas;
     }

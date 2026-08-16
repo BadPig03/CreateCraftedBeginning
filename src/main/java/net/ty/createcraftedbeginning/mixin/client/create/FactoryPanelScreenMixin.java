@@ -9,7 +9,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
@@ -58,10 +58,10 @@ public abstract class FactoryPanelScreenMixin extends AbstractSimiScreen {
         if (mouseX >= x - 2 && mouseX < x + 18 && mouseY >= y - 2 && mouseY < y + 18) {
             List<Component> tooltips = new ArrayList<>();
             tooltips.add(CCBLang.translate("gui.gas_factory_gauge.sending_item", CCBLang.itemName(item).add(CCBLang.text(" x" + GasRequestUtils.formatPrecise(count)))).color(ScrollInput.HEADER_RGB).component());
-            tooltips.add(CCBLang.translate("gui.gas_virtual_item.scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getScrollStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-            tooltips.add(CCBLang.translate("gui.gas_virtual_item.shift_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getShiftStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-            tooltips.add(CCBLang.translate("gui.gas_virtual_item.alt_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getAltStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-            tooltips.add(CCBLang.translate("gui.gas_virtual_item.ctrl_to_scroll", GasAmountUtils.formatPrecise(GasRequestClientUtils.getCtrlStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+            tooltips.add(CCBLang.translate("gui.gas_virtual_item.scroll", GasAmounts.formatPrecise(GasRequestClientUtils.getScrollStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+            tooltips.add(CCBLang.translate("gui.gas_virtual_item.shift_to_scroll", GasAmounts.formatPrecise(GasRequestClientUtils.getShiftStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+            tooltips.add(CCBLang.translate("gui.gas_virtual_item.alt_to_scroll", GasAmounts.formatPrecise(GasRequestClientUtils.getAltStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+            tooltips.add(CCBLang.translate("gui.gas_virtual_item.ctrl_to_scroll", GasAmounts.formatPrecise(GasRequestClientUtils.getCtrlStep())).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
             tooltips.add(CCBLang.translate("gui.gas_factory_gauge.left_click_disconnect").style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
             graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
         }

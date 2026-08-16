@@ -4,7 +4,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.FluidState;
@@ -34,19 +33,18 @@ public final class AirtightHelmetClientEvents {
         }
 
         Camera camera = event.getCamera();
-        BlockPos pos = camera.getBlockPosition();
-        FluidState fluid = level.getFluidState(pos);
-        if (camera.getPosition().y >= pos.getY() + fluid.getHeight(level, pos)) {
+        BlockPos cameraPos = camera.getBlockPosition();
+        FluidState fluidState = level.getFluidState(cameraPos);
+        if (camera.getPosition().y >= cameraPos.getY() + fluidState.getHeight(level, cameraPos)) {
             return;
         }
 
-        FluidType fluidType = fluid.getType().getFluidType();
+        FluidType fluidType = fluidState.getType().getFluidType();
         if (fluidType == Fluids.EMPTY.getFluidType()) {
             return;
         }
 
-        Entity entity = camera.getEntity();
-        if (!(entity instanceof Player player) || player.isSpectator() || !VisionUpgrade.INSTANCE.canApply(player)) {
+        if (!(camera.getEntity() instanceof Player player) || player.isSpectator() || !VisionUpgrade.INSTANCE.canApply(player)) {
             return;
         }
 

@@ -12,7 +12,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightHatchController {
+public final class AirtightHatchController {
     private static final int TICKS_PER_SECOND = 20;
 
     private final AirtightHatchBlockEntity hatch;
@@ -20,7 +20,7 @@ final class AirtightHatchController {
 
     private long transferRemainder;
 
-    AirtightHatchController(AirtightHatchBlockEntity hatch, AirtightHatchCanisterManager canisterManager) {
+    public AirtightHatchController(AirtightHatchBlockEntity hatch, AirtightHatchCanisterManager canisterManager) {
         this.hatch = hatch;
         this.canisterManager = canisterManager;
     }
@@ -132,7 +132,7 @@ final class AirtightHatchController {
         return drained.copyWithAmount(requestedAmount);
     }
 
-    void tick() {
+    public void tick() {
         Level level = hatch.getLevel();
         if (level == null || level.isClientSide || hatch.isEmpty()) {
             return;
@@ -146,7 +146,7 @@ final class AirtightHatchController {
         tryTransferGas(level, transferQuota);
     }
 
-    void lazyTick() {
+    public void lazyTick() {
         Level level = hatch.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -169,7 +169,7 @@ final class AirtightHatchController {
         canisterManager.updateCapacity(true);
     }
 
-    void resetTransferQuota() {
+    public void resetTransferQuota() {
         transferRemainder = 0;
     }
 

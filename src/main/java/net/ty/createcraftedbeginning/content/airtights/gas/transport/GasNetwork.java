@@ -1,231 +1,63 @@
 package net.ty.createcraftedbeginning.content.airtights.gas.transport;
 
-import com.simibubi.create.api.packager.InventoryIdentifier;
 import com.simibubi.create.foundation.ICapabilityProvider;
-import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
-import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gas.flowsources.GasFlowSource;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IVentingGasSource;
-import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPipeConnection.AirFlow;
+import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasTransferBudget.Step;
+import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasTransferExecutor.PlannedTransfer;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.lang.ref.WeakReference;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasNetwork {
-    private static final int TRAVERSAL_WORK_BUDGET_PER_TICK = 256;
-    private static final int QUEUED_ENTRY_WORK = 1;
-    private static final int FRONTIER_ENTRY_WORK = 1 + Direction.values().length;
     private static final int PAUSE_INTERVAL = 2;
 
     private final Level level;
     private final BlockFace start;
-    private final Deque<BlockFace> queued;
-    private final Deque<BlockFace> frontier;
-    private final Set<BlockFace> frontierMembership;
-    private final Set<BlockPos> visited;
-    private final Map<BlockFace, GasFlowSource> targets;
-    private final Map<BlockPos, WeakReference<GasTransportBehaviour>> cache;
     private final Supplier<@Nullable ICapabilityProvider<IGasHandler>> sourceSupplier;
-    private @Nullable PendingTransfer pendingTransfer;
-    private long transferSpeed;
+    private final Consumer<GasStack> pendingTransferSink;
+    private final GasNetworkTraversal traversal;
+    private final GasTransferPlanner planner;
+    @Nullable
+    private ICapabilityProvider<IGasHandler> pendingSourceProvider;
+    private GasStack pendingTransfer;
+    private long transferCreditUnits;
     private int pauseBeforePropagation;
-    private int allocationCursor;
     private boolean active;
-    private GasStack gas;
 
-    public GasNetwork(Level level, BlockFace location, Supplier<@Nullable ICapabilityProvider<IGasHandler>> sourceSupplier) {
+    public GasNetwork(Level level, BlockFace location, Supplier<@Nullable ICapabilityProvider<IGasHandler>> sourceSupplier, GasStack initialPendingTransfer, Consumer<GasStack> pendingTransferSink) {
         this.level = level;
         this.sourceSupplier = sourceSupplier;
+        this.pendingTransferSink = pendingTransferSink;
         start = location;
-        gas = GasStack.EMPTY;
-        frontier = new ArrayDeque<>();
-        frontierMembership = new HashSet<>();
-        visited = new HashSet<>();
-        targets = new TreeMap<>(GasNetwork::compareBlockFaces);
-        cache = new HashMap<>();
-        queued = new ArrayDeque<>();
+        pendingTransfer = initialPendingTransfer.isEmpty() ? GasStack.EMPTY : initialPendingTransfer.copy();
+        traversal = new GasNetworkTraversal(level, location);
+        planner = new GasTransferPlanner(traversal, location);
         reset();
-    }
-
-    private static GasStack executeTransferPlan(IGasHandler sourceCap, GasStack gasType, List<PlannedTransfer> transferPlan) {
-        long plannedAmount = 0;
-        for (PlannedTransfer plannedTransfer : transferPlan) {
-            plannedAmount = Math.min(gasType.getAmount(), plannedAmount + plannedTransfer.amount);
-        }
-        if (plannedAmount <= 0) {
-            return GasStack.EMPTY;
-        }
-
-        GasStack drained = executeSourceDrain(sourceCap, gasType.copyWithAmount(plannedAmount));
-        if (drained.isEmpty() || !GasStack.isSameGasSameComponents(drained, gasType)) {
-            return drained;
-        }
-
-        long remainingBudget = Math.min(plannedAmount, drained.getAmount());
-        for (PlannedTransfer plannedTransfer : transferPlan) {
-            if (remainingBudget <= 0 || drained.isEmpty()) {
-                break;
-            }
-
-            long offeredAmount = Math.min(plannedTransfer.amount, Math.min(remainingBudget, drained.getAmount()));
-            if (offeredAmount <= 0) {
-                continue;
-            }
-
-            GasStack offered = drained.copyWithAmount(offeredAmount);
-            long filled = plannedTransfer.handler.fill(offered, GasAction.EXECUTE);
-            filled = Math.clamp(filled, 0, offeredAmount);
-            drained.shrink(filled);
-            remainingBudget -= filled;
-        }
-        return drained;
-    }
-
-    private static GasStack executeSourceDrain(IGasHandler sourceCap, GasStack request) {
-        if (request.isEmpty()) {
-            return GasStack.EMPTY;
-        }
-
-        GasStack drained = sourceCap.drain(request, GasAction.EXECUTE);
-        if (!drained.isEmpty()) {
-            return drained;
-        }
-
-        GasStack genericPreview = sourceCap.drain(request.getAmount(), GasAction.SIMULATE);
-        if (genericPreview.isEmpty() || !GasStack.isSameGasSameComponents(genericPreview, request)) {
-            return GasStack.EMPTY;
-        }
-        return sourceCap.drain(request.getAmount(), GasAction.EXECUTE);
-    }
-
-    private static boolean identifiesSameInventory(@Nullable InventoryIdentifier first, BlockFace firstFace, @Nullable InventoryIdentifier second, BlockFace secondFace) {
-        return first != null && first == second || first != null && first.contains(secondFace) || second != null && second.contains(firstFace);
-    }
-
-    private static int compareBlockFaces(BlockFace first, BlockFace second) {
-        BlockPos firstPos = first.getPos();
-        BlockPos secondPos = second.getPos();
-        int x = Integer.compare(firstPos.getX(), secondPos.getX());
-        if (x != 0) {
-            return x;
-        }
-
-        int y = Integer.compare(firstPos.getY(), secondPos.getY());
-        if (y != 0) {
-            return y;
-        }
-
-        int z = Integer.compare(firstPos.getZ(), secondPos.getZ());
-        return z != 0 ? z : Integer.compare(first.getFace().ordinal(), second.getFace().ordinal());
-    }
-
-    private List<PlannedTransfer> createTransferPlan(GasStack available, List<TransferTarget> availableTargets) {
-        List<TargetCapacity> capacities = new ArrayList<>();
-        for (TransferTarget target : availableTargets) {
-            long capacity = Math.clamp(target.handler.fill(available.copy(), GasAction.SIMULATE), 0, available.getAmount());
-            if (capacity <= 0) {
-                continue;
-            }
-
-            capacities.add(new TargetCapacity(target, capacity));
-        }
-        if (capacities.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        Map<BlockFace, Long> allocations = new HashMap<>();
-        List<TargetCapacity> uncappedTargets = new ArrayList<>(capacities);
-        long remaining = available.getAmount();
-        while (!uncappedTargets.isEmpty() && remaining > 0) {
-            long equalShare = remaining / uncappedTargets.size();
-            boolean removedTarget = false;
-            for (Iterator<TargetCapacity> iterator = uncappedTargets.iterator(); iterator.hasNext(); ) {
-                TargetCapacity target = iterator.next();
-                if (target.capacity > equalShare) {
-                    continue;
-                }
-
-                allocations.put(target.target.location, target.capacity);
-                remaining -= target.capacity;
-                iterator.remove();
-                removedTarget = true;
-            }
-            if (!removedTarget) {
-                break;
-            }
-        }
-
-        if (!uncappedTargets.isEmpty() && remaining > 0) {
-            long equalShare = remaining / uncappedTargets.size();
-            long remainder = remaining % uncappedTargets.size();
-            for (TargetCapacity target : uncappedTargets) {
-                if (equalShare <= 0) {
-                    continue;
-                }
-
-                allocations.put(target.target.location, equalShare);
-            }
-
-            int remainderStart = Math.floorMod(allocationCursor, uncappedTargets.size());
-            for (int i = 0; i < remainder; i++) {
-                TargetCapacity target = uncappedTargets.get((remainderStart + i) % uncappedTargets.size());
-                allocations.merge(target.target.location, 1L, Long::sum);
-            }
-            if (remainder > 0) {
-                allocationCursor = (remainderStart + (int) remainder) % uncappedTargets.size();
-            }
-        }
-
-        List<PlannedTransfer> plan = new ArrayList<>(allocations.size());
-        for (TargetCapacity target : capacities) {
-            long amount = allocations.getOrDefault(target.target.location, 0L);
-            if (amount <= 0) {
-                continue;
-            }
-
-            plan.add(new PlannedTransfer(target.target.handler, amount));
-        }
-        return plan;
     }
 
     public void reset() {
         recoverPendingTransferInternal();
-        clearTraversalState();
-        queued.addLast(start);
+        traversal.reset();
         pauseBeforePropagation = PAUSE_INTERVAL;
         active = true;
     }
 
     public void stop() {
-        clearTraversalState();
+        traversal.clear();
+        transferCreditUnits = 0;
+        pauseBeforePropagation = 0;
         active = false;
     }
 
@@ -237,20 +69,9 @@ public final class GasNetwork {
         return recoverPendingTransferInternal();
     }
 
-    private void clearTraversalState() {
-        frontier.clear();
-        frontierMembership.clear();
-        visited.clear();
-        targets.clear();
-        cache.clear();
-        queued.clear();
-        gas = GasStack.EMPTY;
-        transferSpeed = 0;
-        pauseBeforePropagation = 0;
-    }
-
     public void tick() {
-        if (!recoverPendingTransferInternal() || !active) {
+        if (!active) {
+            recoverPendingTransferInternal();
             return;
         }
 
@@ -259,132 +80,28 @@ public final class GasNetwork {
             return;
         }
 
-        int remainingWork = TRAVERSAL_WORK_BUDGET_PER_TICK;
-        Deque<BlockFace> deferredFrontier = new ArrayDeque<>();
-        while (remainingWork > 0) {
-            boolean performedWork = false;
-            if (!queued.isEmpty()) {
-                processQueuedEntry(queued.removeFirst());
-                remainingWork -= QUEUED_ENTRY_WORK;
-                performedWork = true;
-            }
-
-            if (!frontier.isEmpty() && remainingWork >= FRONTIER_ENTRY_WORK) {
-                BlockFace blockFace = frontier.removeFirst();
-                remainingWork -= FRONTIER_ENTRY_WORK;
-                performedWork = true;
-                if (processFrontierEntry(blockFace)) {
-                    deferredFrontier.addLast(blockFace);
-                }
-                else {
-                    frontierMembership.remove(blockFace);
-                }
-            }
-
-            if (!performedWork) {
-                break;
-            }
-        }
-
-        frontier.addAll(deferredFrontier);
+        planner.beginTick();
+        traversal.tick();
         transferGas();
     }
 
-    private void processQueuedEntry(BlockFace blockFace) {
-        if (!isPresent(blockFace)) {
-            return;
-        }
-
-        GasPipeConnection connection = get(blockFace);
-        if (connection == null) {
-            return;
-        }
-
-        if (blockFace.equals(start)) {
-            transferSpeed = (int) Math.max(1, connection.getInboundPressure() / 2);
-        }
-        if (!frontierMembership.add(blockFace)) {
-            return;
-        }
-
-        frontier.addLast(blockFace);
-    }
-
-    private boolean processFrontierEntry(BlockFace blockFace) {
-        if (!isPresent(blockFace)) {
-            return false;
-        }
-
-        GasPipeConnection connection = get(blockFace);
-        if (connection == null) {
-            return false;
-        }
-
-        AirFlow flow = connection.getFlow();
-        if (flow == null) {
-            return true;
-        }
-
-        if (!gas.isEmpty() && !GasStack.isSameGasSameComponents(flow.gas, gas)) {
-            return false;
-        }
-
-        if (!flow.inbound) {
-            return connection.comparePressure() < 0;
-        }
-
-        if (gas.isEmpty()) {
-            gas = flow.gas;
-        }
-        boolean keepInFrontier = false;
-        for (Direction side : Iterate.directions) {
-            if (side == blockFace.getFace()) {
-                continue;
-            }
-
-            BlockFace adjacentLocation = new BlockFace(blockFace.getPos(), side);
-            GasPipeConnection adjacent = get(adjacentLocation);
-            if (adjacent == null) {
-                continue;
-            }
-
-            AirFlow outFlow = adjacent.getFlow();
-            if (outFlow == null) {
-                if (adjacent.hasPressure() && adjacent.getOutwardPressure() > 0) {
-                    keepInFrontier = true;
-                }
-                continue;
-            }
-
-            if (outFlow.inbound) {
-                if (adjacent.comparePressure() > 0) {
-                    keepInFrontier = true;
-                }
-                continue;
-            }
-
-            if (adjacent.getSource() == null && !adjacent.determineSource(level, blockFace.getPos())) {
-                keepInFrontier = true;
-                continue;
-            }
-
-            GasFlowSource adjacentSource = adjacent.getSource();
-            if (adjacentSource != null && adjacentSource.isEndpoint()) {
-                targets.put(adjacentLocation, adjacentSource);
-                continue;
-            }
-
-            if (!visited.add(adjacentLocation.getConnectedPos())) {
-                continue;
-            }
-
-            queued.addLast(adjacentLocation.getOpposite());
-        }
-        return keepInFrontier;
-    }
-
     private void transferGas() {
-        if (!recoverPendingTransferInternal() || gas.isEmpty() || transferSpeed <= 0) {
+        if (!pendingTransfer.isEmpty()) {
+            recoverPendingTransferToTargets();
+            if (!pendingTransfer.isEmpty()) {
+                recoverPendingTransferInternal();
+            }
+            return;
+        }
+
+        GasStack gas = traversal.getGas();
+        long transferRateUnits = traversal.getTransferRateUnits();
+        if (gas.isEmpty() || transferRateUnits <= 0) {
+            return;
+        }
+
+        long transferBudget = consumeTransferBudget(transferRateUnits);
+        if (transferBudget <= 0) {
             return;
         }
 
@@ -394,231 +111,142 @@ public final class GasNetwork {
         }
 
         IGasHandler sourceCap = sourceProvider.getCapability();
-        if (sourceCap == null) {
+        if (sourceCap == null || !traversal.hasTransferTargets()) {
             return;
         }
 
-        if (targets.isEmpty()) {
-            return;
-        }
-
-        GasStack available = simulateSourceDrain(sourceCap, transferSpeed);
+        GasStack available = GasTransferExecutor.simulateSourceDrain(sourceCap, gas, transferBudget);
         if (available.isEmpty()) {
             return;
         }
 
-        List<TransferTarget> availableTargets = collectAvailableTargets(sourceCap);
-        if (availableTargets.isEmpty()) {
-            return;
-        }
-
-        List<PlannedTransfer> transferPlan = createTransferPlan(available, availableTargets);
+        List<PlannedTransfer> transferPlan = planner.createTransferPlan(available, sourceCap);
         if (transferPlan.isEmpty()) {
             return;
         }
 
-        GasStack remainder = executeTransferPlan(sourceCap, available, transferPlan);
+        GasStack remainder = GasTransferExecutor.executeTransferPlan(sourceCap, available, transferPlan);
         if (remainder.isEmpty()) {
             return;
         }
 
-        pendingTransfer = new PendingTransfer(sourceProvider, remainder.copy());
+        remainder = redistributeRemainder(sourceCap, remainder);
+        if (remainder.isEmpty()) {
+            return;
+        }
+
+        setPendingTransfer(sourceProvider, remainder);
         recoverPendingTransferInternal();
     }
 
+    private long consumeTransferBudget(long transferRateUnits) {
+        Step step = GasTransferBudget.consume(transferRateUnits, transferCreditUnits);
+        transferCreditUnits = step.creditUnits();
+        return step.budget();
+    }
+
+    private void recoverPendingTransferToTargets() {
+        GasStack gas = traversal.getGas();
+        if (pendingTransfer.isEmpty() || gas.isEmpty() || !GasStack.isSameGasSameComponents(pendingTransfer, gas) || !traversal.hasTransferTargets()) {
+            pendingTransfer.isEmpty();
+            return;
+        }
+
+        ICapabilityProvider<IGasHandler> sourceProvider = pendingSourceProvider;
+        if (sourceProvider == null || sourceProvider.getCapability() == null) {
+            sourceProvider = sourceSupplier.get();
+        }
+        if (sourceProvider == null) {
+            return;
+        }
+
+        IGasHandler sourceCap = sourceProvider.getCapability();
+        if (sourceCap == null) {
+            return;
+        }
+
+        GasStack remainder = distributeToTargets(sourceCap, pendingTransfer.copy(), 2);
+        setPendingTransfer(sourceProvider, remainder);
+        pendingTransfer.isEmpty();
+    }
+
+    private GasStack redistributeRemainder(IGasHandler sourceCap, GasStack remainder) {
+        GasStack gas = traversal.getGas();
+        if (remainder.isEmpty() || gas.isEmpty() || !GasStack.isSameGasSameComponents(remainder, gas)) {
+            return remainder;
+        }
+        return distributeToTargets(sourceCap, remainder, 1);
+    }
+
+    private GasStack distributeToTargets(IGasHandler sourceCap, GasStack available, int maxPasses) {
+        if (available.isEmpty() || maxPasses <= 0) {
+            return available;
+        }
+
+        GasStack remainder = available.copy();
+        for (int pass = 0; pass < maxPasses && !remainder.isEmpty() && planner.hasProbeBudget(); pass++) {
+            List<PlannedTransfer> transferPlan = planner.createTransferPlan(remainder, sourceCap);
+            if (transferPlan.isEmpty()) {
+                continue;
+            }
+
+            remainder = GasTransferExecutor.executeTargetPlan(remainder, transferPlan);
+        }
+        return remainder;
+    }
+
     private boolean recoverPendingTransferInternal() {
-        PendingTransfer pending = pendingTransfer;
-        if (pending == null) {
+        if (pendingTransfer.isEmpty()) {
             return true;
         }
 
-        IGasHandler sourceCap = pending.sourceProvider.getCapability();
+        ICapabilityProvider<IGasHandler> sourceProvider = pendingSourceProvider;
+        IGasHandler sourceCap = sourceProvider == null ? null : sourceProvider.getCapability();
         if (sourceCap == null) {
-            ICapabilityProvider<IGasHandler> currentSource = sourceSupplier.get();
-            if (currentSource == null) {
+            sourceProvider = sourceSupplier.get();
+            if (sourceProvider == null) {
                 return false;
             }
 
-            sourceCap = currentSource.getCapability();
+            sourceCap = sourceProvider.getCapability();
             if (sourceCap == null) {
                 return false;
             }
-
-            pending.sourceProvider = currentSource;
         }
 
         if (sourceCap instanceof IVentingGasSource) {
-            pendingTransfer = null;
+            setPendingTransfer(null, GasStack.EMPTY);
             return true;
         }
 
-        long returned = sourceCap.fill(pending.remainder.copy(), GasAction.EXECUTE);
-        returned = Math.clamp(returned, 0, pending.remainder.getAmount());
-        pending.remainder.shrink(returned);
-        if (!pending.remainder.isEmpty()) {
+        long returned = sourceCap.fill(pendingTransfer.copy(), GasAction.EXECUTE);
+        returned = Math.clamp(returned, 0, pendingTransfer.getAmount());
+        if (returned <= 0) {
+            pendingSourceProvider = sourceProvider;
             return false;
         }
 
-        pendingTransfer = null;
-        return true;
+        GasStack remainder = pendingTransfer.copy();
+        remainder.shrink(returned);
+        setPendingTransfer(remainder.isEmpty() ? null : sourceProvider, remainder);
+        return pendingTransfer.isEmpty();
     }
 
-    private GasStack simulateSourceDrain(IGasHandler sourceCap, long maxAmount) {
-        if (maxAmount <= 0 || gas.isEmpty()) {
-            return GasStack.EMPTY;
+    private void setPendingTransfer(@Nullable ICapabilityProvider<IGasHandler> sourceProvider, GasStack remainder) {
+        GasStack normalized = remainder.isEmpty() ? GasStack.EMPTY : remainder.copy();
+        boolean changed = !GasStack.matches(pendingTransfer, normalized);
+        pendingTransfer = normalized;
+        pendingSourceProvider = normalized.isEmpty() ? null : sourceProvider;
+        if (!changed) {
+            return;
         }
 
-        for (int i = 0; i < sourceCap.getTanks(); i++) {
-            GasStack contained = sourceCap.getGasInTank(i);
-            if (contained.isEmpty() || !GasStack.isSameGasSameComponents(contained, gas)) {
-                continue;
-            }
-
-            GasStack drained = sourceCap.drain(contained.copyWithAmount(maxAmount), GasAction.SIMULATE);
-            if (drained.isEmpty()) {
-                break;
-            }
-
-            return GasStack.isSameGasSameComponents(drained, gas) ? drained : GasStack.EMPTY;
+        pendingTransferSink.accept(normalized.isEmpty() ? GasStack.EMPTY : normalized.copy());
+        BlockEntity blockEntity = level.getBlockEntity(start.getPos());
+        if (blockEntity == null) {
+            return;
         }
 
-        GasStack drained = sourceCap.drain(maxAmount, GasAction.SIMULATE);
-        return !drained.isEmpty() && GasStack.isSameGasSameComponents(drained, gas) ? drained : GasStack.EMPTY;
-    }
-
-    private List<TransferTarget> collectAvailableTargets(IGasHandler sourceCap) {
-        refreshTargets();
-        List<TransferTarget> availableTargets = new ArrayList<>();
-        List<IdentifiedInventory> identifiedInventories = new ArrayList<>();
-        Set<IGasHandler> handlers = Collections.newSetFromMap(new IdentityHashMap<>());
-        BlockFace sourceFace = start.getOpposite();
-        InventoryIdentifier sourceIdentifier = getInventoryIdentifier(sourceFace);
-        for (Entry<BlockFace, GasFlowSource> entry : targets.entrySet()) {
-            ICapabilityProvider<IGasHandler> provider = entry.getValue().getGasHandlerProvider();
-            if (provider == null) {
-                continue;
-            }
-
-            IGasHandler targetHandler = provider.getCapability();
-            if (targetHandler == null || targetHandler == sourceCap || !handlers.add(targetHandler)) {
-                continue;
-            }
-
-            BlockFace targetFace = entry.getKey().getOpposite();
-            InventoryIdentifier identifier = getInventoryIdentifier(targetFace);
-            if (identifier != null) {
-                if (identifiesSameInventory(sourceIdentifier, sourceFace, identifier, targetFace)) {
-                    continue;
-                }
-
-                boolean duplicate = identifiedInventories.stream().anyMatch(existing -> identifiesSameInventory(existing.identifier, existing.face, identifier, targetFace));
-                if (duplicate) {
-                    continue;
-                }
-
-                identifiedInventories.add(new IdentifiedInventory(identifier, targetFace));
-            }
-
-            availableTargets.add(new TransferTarget(entry.getKey(), targetHandler));
-        }
-        return availableTargets;
-    }
-
-    @Nullable
-    private InventoryIdentifier getInventoryIdentifier(BlockFace inventoryFace) {
-        BlockEntity blockEntity = level.getBlockEntity(inventoryFace.getPos());
-        if (!(blockEntity instanceof IGasInventoryIdentifierProvider provider)) {
-            return null;
-        }
-        return provider.getGasInventoryIdentifier(inventoryFace.getFace());
-    }
-
-    private void refreshTargets() {
-        for (Iterator<Entry<BlockFace, GasFlowSource>> iterator = targets.entrySet().iterator(); iterator.hasNext(); ) {
-            Entry<BlockFace, GasFlowSource> entry = iterator.next();
-            GasFlowSource refreshed = refreshTarget(entry.getKey());
-            if (refreshed == null) {
-                iterator.remove();
-                continue;
-            }
-
-            entry.setValue(refreshed);
-        }
-    }
-
-    @Nullable
-    private GasFlowSource refreshTarget(BlockFace location) {
-        if (!isPresent(location)) {
-            return null;
-        }
-
-        GasPipeConnection connection = get(location);
-        if (connection == null) {
-            return null;
-        }
-
-        AirFlow flow = connection.getFlow();
-        if (flow == null || flow.inbound || !GasStack.isSameGasSameComponents(flow.gas, gas)) {
-            return null;
-        }
-
-        if (connection.getSource() == null && !connection.determineSource(level, location.getPos())) {
-            return null;
-        }
-
-        GasFlowSource source = connection.getSource();
-        if (source == null || !source.isEndpoint()) {
-            return null;
-        }
-        return source;
-    }
-
-    @Nullable
-    private GasPipeConnection get(BlockFace location) {
-        BlockPos pos = location.getPos();
-        GasTransportBehaviour transfer = getGasTransfer(pos);
-        if (transfer == null) {
-            return null;
-        }
-        return transfer.getConnection(location.getFace());
-    }
-
-    @Nullable
-    private GasTransportBehaviour getGasTransfer(BlockPos pos) {
-        WeakReference<GasTransportBehaviour> reference = cache.get(pos);
-        GasTransportBehaviour cachedBehaviour = reference == null ? null : reference.get();
-        if (cachedBehaviour != null && !cachedBehaviour.blockEntity.isRemoved()) {
-            return cachedBehaviour;
-        }
-
-        GasTransportBehaviour behaviour = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
-        if (behaviour == null) {
-            return null;
-        }
-
-        cache.put(pos, new WeakReference<>(behaviour));
-        return behaviour;
-    }
-
-    private boolean isPresent(BlockFace location) {
-        return level.isLoaded(location.getPos());
-    }
-
-    private record TransferTarget(BlockFace location, IGasHandler handler) {}
-
-    private record IdentifiedInventory(InventoryIdentifier identifier, BlockFace face) {}
-
-    private record TargetCapacity(TransferTarget target, long capacity) {}
-
-    private record PlannedTransfer(IGasHandler handler, long amount) {}
-
-    private static final class PendingTransfer {
-        private final GasStack remainder;
-        private ICapabilityProvider<IGasHandler> sourceProvider;
-
-        private PendingTransfer(ICapabilityProvider<IGasHandler> sourceProvider, GasStack remainder) {
-            this.sourceProvider = sourceProvider;
-            this.remainder = remainder;
-        }
+        blockEntity.setChanged();
     }
 }

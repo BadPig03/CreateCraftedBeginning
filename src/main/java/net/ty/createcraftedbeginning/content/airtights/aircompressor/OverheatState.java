@@ -46,8 +46,8 @@ public enum OverheatState {
         this.flameThreshold = flameThreshold;
     }
 
-    public static OverheatState fromName(String name) {
-        String normalizedName = name.toLowerCase(Locale.ROOT);
+    public static OverheatState fromName(String serializedName) {
+        String normalizedName = serializedName.toLowerCase(Locale.ROOT);
         for (OverheatState overheatState : values()) {
             if (!overheatState.serializedName.equals(normalizedName)) {
                 continue;
@@ -58,8 +58,8 @@ public enum OverheatState {
         return NORMAL;
     }
 
-    public static OverheatState fromItem(ItemStack item) {
-        return fromName(item.getOrDefault(CCBDataComponents.COMPRESSOR_OVERHEAT_STATE, NORMAL.serializedName));
+    public static OverheatState fromItem(ItemStack stack) {
+        return AirCompressorThermal.getOverheatState(stack.getOrDefault(CCBDataComponents.COMPRESSOR_STORED_HEAT, 0));
     }
 
     public static OverheatState fromStoredHeat(int storedHeat, int overheatThreshold) {
@@ -68,8 +68,8 @@ public enum OverheatState {
         return values()[overheatStateIndex];
     }
 
-    private static Vec3 getParticlePosition(BlockPos pos, RandomSource random, float radius) {
-        return VecHelper.getCenterOf(pos).add(VecHelper.offsetRandomly(Vec3.ZERO, random, radius).multiply(1, 0.25, 1).normalize().scale(0.5 + random.nextFloat() * 0.125)).add(0, 0.5, 0);
+    private static Vec3 getParticlePosition(BlockPos compressorPos, RandomSource random, float radius) {
+        return VecHelper.getCenterOf(compressorPos).add(VecHelper.offsetRandomly(Vec3.ZERO, random, radius).multiply(1, 0.25, 1).normalize().scale(0.5 + random.nextFloat() * 0.125)).add(0, 0.5, 0);
     }
 
     public ChatFormatting getDisplayColor() {
@@ -92,12 +92,12 @@ public enum OverheatState {
         return "gui.air_compressor." + serializedName;
     }
 
-    public void spawnParticlesInPonderLevel(PonderLevel level, BlockPos pos, int tick) {
-        if (ponderParticleTickRate <= 0 || tick % ponderParticleTickRate != 0) {
+    public void spawnParticlesInPonderLevel(PonderLevel level, BlockPos compressorPos, int ponderTick) {
+        if (ponderParticleTickRate <= 0 || ponderTick % ponderParticleTickRate != 0) {
             return;
         }
 
-        spawnParticles(level, pos);
+        spawnParticles(level, compressorPos);
     }
 
     public void tick(AirCompressorBlockEntity compressor) {
@@ -126,17 +126,17 @@ public enum OverheatState {
         spawnParticles(level, compressor.getBlockPos());
     }
 
-    private void spawnParticles(Level level, BlockPos pos) {
+    private void spawnParticles(Level level, BlockPos compressorPos) {
         RandomSource random = level.getRandom();
         if (random.nextFloat() >= smokeThreshold) {
-            Vec3 particlePos = getParticlePosition(pos, random, 0.5f);
+            Vec3 particlePos = getParticlePosition(compressorPos, random, 0.5f);
             level.addParticle(ParticleTypes.SMOKE, particlePos.x, particlePos.y, particlePos.z, 0, random.nextFloat() * 0.0125, 0);
         }
         if (random.nextFloat() < flameThreshold) {
             return;
         }
 
-        Vec3 particlePos = getParticlePosition(pos, random, 1);
+        Vec3 particlePos = getParticlePosition(compressorPos, random, 1);
         level.addParticle(ParticleTypes.FLAME, particlePos.x, particlePos.y, particlePos.z, 0, random.nextFloat() * 0.025, 0);
     }
 }

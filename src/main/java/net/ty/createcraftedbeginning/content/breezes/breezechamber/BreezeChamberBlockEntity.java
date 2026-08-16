@@ -20,7 +20,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.IChamberGasTank;
@@ -43,16 +43,16 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     private static final int LAZY_TICK_RATE = 20;
     private static Consumer<BreezeChamberBlockEntity> clientTicker = chamber -> {};
 
-    private final LerpedFloat headAnimation;
-    private final BreezeChamberSerialization serialization;
-    private final BreezeChamberGasProcessor gasProcessor;
-    private final BreezeChamberController controller;
-    private final BreezeChamberDisplay display;
+    protected final LerpedFloat headAnimation;
+    protected final BreezeChamberSerialization serialization;
+    protected final BreezeChamberGasProcessor gasProcessor;
+    protected final BreezeChamberController controller;
+    protected final BreezeChamberDisplay display;
     protected LerpedFloat headAngle;
     protected WeakReference<IChamberGasTank> source;
-    private CCBAdvancementBehaviour advancementBehaviour;
-    private SmartGasTankBehaviour tankBehaviour;
-    private BaseChamberState currentState;
+    protected CCBAdvancementBehaviour advancementBehaviour;
+    protected SmartGasTankBehaviour tankBehaviour;
+    protected BaseChamberState currentState;
 
     public BreezeChamberBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -73,7 +73,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     public static long getMaxCapacity() {
-        return CCBConfig.server().airtights.maxBreezeChamberCapacity.get() * GasAmountUtils.MILLIBUCKETS_PER_BUCKET;
+        return CCBConfig.server().airtights.maxBreezeChamberCapacity.get() * GasAmounts.MILLIBUCKETS_PER_BUCKET;
     }
 
     public static int getMaxWindCapacity() {
@@ -248,35 +248,35 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         display.spawnParticles();
     }
 
-    BaseChamberState getChamberStateInternal() {
+    public BaseChamberState getChamberStateInternal() {
         return currentState;
     }
 
-    SmartGasTankBehaviour getTankBehaviourInternal() {
+    public SmartGasTankBehaviour getTankBehaviourInternal() {
         return tankBehaviour;
     }
 
-    BreezeChamberGasProcessor getGasProcessorInternal() {
+    public BreezeChamberGasProcessor getGasProcessorInternal() {
         return gasProcessor;
     }
 
-    LerpedFloat getHeadAnimationInternal() {
+    public LerpedFloat getHeadAnimationInternal() {
         return headAnimation;
     }
 
-    void runClientTicker() {
+    public void runClientTicker() {
         clientTicker.accept(this);
     }
 
-    void setChamberStateFromSerialization(BaseChamberState state) {
+    public void setChamberStateFromSerialization(BaseChamberState state) {
         currentState = state;
     }
 
-    void setGogglesFromSerialization(boolean goggles) {
+    public void setGogglesFromSerialization(boolean goggles) {
         display.setGoggles(goggles);
     }
 
-    void setTrainHatFromSerialization(boolean trainHat) {
+    public void setTrainHatFromSerialization(boolean trainHat) {
         display.setTrainHat(trainHat);
     }
 

@@ -197,7 +197,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
         getAnimation(context).chase(0, 0.25f, Chaser.LINEAR);
     }
 
-    private void tickClient(MovementContext context) {
+    protected void tickClient(MovementContext context) {
         if (findInterface(context, BlockPos.containing(context.position))) {
             return;
         }
@@ -205,7 +205,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
         reset(context);
     }
 
-    private void tickServer(MovementContext context, boolean isOnCarriage) {
+    protected void tickServer(MovementContext context, boolean isOnCarriage) {
         if (!context.data.contains(COMPOUND_KEY_WORKING_POSITION)) {
             if (context.stall) {
                 cancelStall(context);

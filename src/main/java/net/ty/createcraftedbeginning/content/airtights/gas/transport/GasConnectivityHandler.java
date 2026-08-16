@@ -357,7 +357,7 @@ public class GasConnectivityHandler {
     private static class SearchCache {
         protected Map<BlockPos, Optional<@NotNull IGasTankMultiBlockEntityContainer>> controllerMap;
 
-        public SearchCache() {
+        protected SearchCache() {
             controllerMap = new HashMap<>();
         }
 

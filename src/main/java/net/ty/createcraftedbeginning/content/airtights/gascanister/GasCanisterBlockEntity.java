@@ -14,7 +14,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.SmartGasTank;
@@ -30,8 +30,8 @@ import java.util.List;
 public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
     private static final String COMPOUND_KEY_CANISTER = "Canister";
 
-    private ItemStack canister = ItemStack.EMPTY;
-    private SmartGasTankBehaviour tankBehaviour;
+    protected ItemStack canister = ItemStack.EMPTY;
+    protected SmartGasTankBehaviour tankBehaviour;
 
     public GasCanisterBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -92,12 +92,12 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
 
         GasStack content = tank.getGasStack();
         if (content.isEmpty()) {
-            CCBLang.translate("gui.gas_container.capacity").add(GasAmountUtils.precise(tank.getCapacity()).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+            CCBLang.translate("gui.gas_container.capacity").add(GasAmounts.precise(tank.getCapacity()).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
             return true;
         }
 
         CCBLang.gasName(content).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-        GasAmountUtils.precise(content.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmountUtils.precise(tank.getCapacity()).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+        GasAmounts.precise(content.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmounts.precise(tank.getCapacity()).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
         return true;
     }
 
@@ -105,7 +105,7 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
         return canister;
     }
 
-    private void updateCapacity() {
+    protected void updateCapacity() {
         if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents contents)) {
             return;
         }

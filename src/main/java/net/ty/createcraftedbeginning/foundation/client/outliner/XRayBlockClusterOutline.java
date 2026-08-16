@@ -35,7 +35,7 @@ public class XRayBlockClusterOutline extends CCBOutline {
     protected final Vector3f pos3Temp = new Vector3f();
     protected final Vector3f normalTemp = new Vector3f();
     protected final Vector3f originTemp = new Vector3f();
-    private final Cluster cluster;
+    protected final Cluster cluster;
 
     public XRayBlockClusterOutline(Iterable<BlockPos> positions) {
         cluster = new Cluster();
@@ -159,7 +159,7 @@ public class XRayBlockClusterOutline extends CCBOutline {
         bufferQuad(pose, consumer, pos0, pos1, pos2, pos3, color, lightmap, normal);
     }
 
-    private static class Cluster {
+    protected static class Cluster {
         private final Map<MergeEntry, AxisDirection> visibleFaces = new HashMap<>();
         private final Set<MergeEntry> visibleEdges = new HashSet<>();
         private BlockPos anchor;
@@ -230,7 +230,7 @@ public class XRayBlockClusterOutline extends CCBOutline {
         }
     }
 
-    private record MergeEntry(Axis axis, BlockPos pos) {
+    protected record MergeEntry(Axis axis, BlockPos pos) {
         @Override
         public boolean equals(Object object) {
             return this == object || object instanceof MergeEntry(Axis axis1, BlockPos pos1) && axis == axis1 && pos.equals(pos1);

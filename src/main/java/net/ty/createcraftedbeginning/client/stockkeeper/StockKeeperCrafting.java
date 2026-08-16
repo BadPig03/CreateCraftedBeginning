@@ -19,8 +19,8 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class StockKeeperCraftingUtils {
-    private StockKeeperCraftingUtils() {
+public final class StockKeeperCrafting {
+    private StockKeeperCrafting() {
     }
 
     public static boolean requestCraftable(AbstractContainerScreen<?> screen, GasCraftableBigItemStack recipe, int requestedOutputDifference) {
@@ -67,22 +67,22 @@ public final class StockKeeperCraftingUtils {
         return screen instanceof StockKeeperRequestScreen requestScreen && requestScreen.recipesToOrder.stream().anyMatch(recipe -> recipe instanceof GasCraftableBigItemStack);
     }
 
-    public static boolean hasMatchingStack(List<?> stacks, ItemStack target) {
+    private static boolean hasMatchingStack(List<?> stacks, ItemStack target) {
         for (Object object : stacks) {
             ItemStack stack;
-            if (object instanceof BigItemStack bigItemStack) {
-                stack = bigItemStack.stack;
+            switch (object) {
+                case BigItemStack bigItemStack -> stack = bigItemStack.stack;
+                case ItemStack itemStack -> stack = itemStack;
+                default -> {
+                    continue;
+                }
             }
-            else if (object instanceof ItemStack itemStack) {
-                stack = itemStack;
-            }
-            else {
+
+            if (!ItemStack.isSameItemSameComponents(stack, target)) {
                 continue;
             }
 
-            if (ItemStack.isSameItemSameComponents(stack, target)) {
-                return true;
-            }
+            return true;
         }
         return false;
     }
@@ -138,7 +138,7 @@ public final class StockKeeperCraftingUtils {
         }
     }
 
-    public static @Nullable BigItemStack findMatchingOrder(List<BigItemStack> stacks, ItemStack target) {
+    private static @Nullable BigItemStack findMatchingOrder(List<BigItemStack> stacks, ItemStack target) {
         return stacks.stream().filter(entry -> ItemStack.isSameItemSameComponents(entry.stack, target)).findFirst().orElse(null);
     }
 

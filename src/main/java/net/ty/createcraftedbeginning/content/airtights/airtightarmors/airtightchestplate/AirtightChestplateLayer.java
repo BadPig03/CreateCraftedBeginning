@@ -80,8 +80,8 @@ public class AirtightChestplateLayer<T extends LivingEntity, M extends EntityMod
         model.body.translateAndRotate(poseStack);
         poseStack.translate(0.5, 0.75, 0);
         if (renderJetpack) {
-            SuperByteBuffer backpack = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_JETPACK, CCBBlocks.GAS_CANISTER_BLOCK.getDefaultState());
-            backpack.rotateZ(Mth.PI).disableDiffuse().light(light).renderInto(poseStack, vertexConsumer);
+            SuperByteBuffer jetpack = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_JETPACK, CCBBlocks.GAS_CANISTER_BLOCK.getDefaultState());
+            jetpack.rotateZ(Mth.PI).disableDiffuse().light(light).renderInto(poseStack, vertexConsumer);
         }
         if (renderElytra) {
             SuperByteBuffer elytra = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_ELYTRA, CCBBlocks.GAS_CANISTER_BLOCK.getDefaultState());

@@ -31,7 +31,7 @@ public abstract class BaseCoolerState {
     protected int remainingTime;
     protected boolean isCreative;
 
-    public BaseCoolerState(int remainingTime, boolean isCreative) {
+    protected BaseCoolerState(int remainingTime, boolean isCreative) {
         this.remainingTime = remainingTime;
         this.isCreative = isCreative;
     }

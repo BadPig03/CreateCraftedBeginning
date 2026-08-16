@@ -31,7 +31,7 @@ public abstract class TrainCargoManagerMixin extends MountedStorageManager {
 
     @Unique
     private class ccb$CargoGasWrapper extends MountedGasStorageWrapper {
-        ccb$CargoGasWrapper(MountedGasStorageWrapper wrapped) {
+        public ccb$CargoGasWrapper(MountedGasStorageWrapper wrapped) {
             super(wrapped.storages);
         }
 

@@ -24,9 +24,9 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implements IHaveGoggleInformation {
     private static final String COMPOUND_KEY_CORE = "Core";
-    private final TeslaTurbineCore core;
+    protected final TeslaTurbineCore core;
 
-    private CCBAdvancementBehaviour advancementBehaviour;
+    protected CCBAdvancementBehaviour advancementBehaviour;
 
     public TeslaTurbineBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -114,7 +114,7 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
         return core.createGasHandler(clockwise);
     }
 
-    void refreshStructure() {
+    public void refreshStructure() {
         core.getStructureManager().tick();
     }
 }

@@ -18,7 +18,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class CardboardCrateMountedStorage extends CrateMountedItemStorage<CardboardCrateBlockEntity> {
     public static final MapCodec<CardboardCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(ItemStack.OPTIONAL_CODEC.fieldOf("content").forGetter(CardboardCrateMountedStorage::getStoredItem), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("count").forGetter(CardboardCrateMountedStorage::getStoredCount), Codec.BOOL.optionalFieldOf("discardedPackage", false).forGetter(CardboardCrateMountedStorage::hasDiscardedPackage)).apply(instance, CardboardCrateMountedStorage::new));
 
-    private boolean discardedPackage;
+    protected boolean discardedPackage;
 
     public CardboardCrateMountedStorage(ItemStack content, int count) {
         this(content, count, false);

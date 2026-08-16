@@ -54,8 +54,7 @@ public class AirtightArmorsEvents {
             return;
         }
 
-        float reducedDamage = AirtightArmorsUtils.applyPaidResistance(player, event.getOriginalDamage(), event.getNewDamage());
-        event.setNewDamage(reducedDamage);
+        event.setNewDamage(AirtightArmorsUtils.applyPaidResistance(player, event.getOriginalDamage(), event.getNewDamage()));
     }
 
     @SubscribeEvent

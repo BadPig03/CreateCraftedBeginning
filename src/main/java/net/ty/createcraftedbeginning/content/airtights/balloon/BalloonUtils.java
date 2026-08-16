@@ -14,7 +14,7 @@ import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandler;
 import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlerUtils;
 import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonShotContext;
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandlerUtils;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonGasContents.GasEntry;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
@@ -76,7 +76,7 @@ public final class BalloonUtils {
     }
 
     public static long getCapacity() {
-        return CCBConfig.server().airtights.maxGasPerBalloon.get() * GasAmountUtils.MILLIBUCKETS_PER_BUCKET;
+        return CCBConfig.server().airtights.maxGasPerBalloon.get() * GasAmounts.MILLIBUCKETS_PER_BUCKET;
     }
 
     public static boolean fitsInBalloon(BalloonGasContents contents) {

@@ -40,9 +40,9 @@ import java.util.List;
 public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clearable {
     private static final ItemStackHandler EMPTY_GAS_INVENTORY_HANDLER = new ItemStackHandler(0);
 
-    private final GasPackagerPendingGas pendingGas;
-    private final GasPackagerController controller;
-    private GasManipulationBehaviour gasInventory;
+    protected final GasPackagerPendingGas pendingGas;
+    protected final GasPackagerController controller;
+    protected GasManipulationBehaviour gasInventory;
 
     public GasPackagerBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
@@ -166,25 +166,25 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         return identifier == null ? null : new IdentifiedInventory(identifier, EMPTY_GAS_INVENTORY_HANDLER);
     }
 
-    @Nullable IGasHandler gasHandlerForController() {
+    @Nullable public IGasHandler gasHandlerForController() {
         return gasInventory == null ? null : gasInventory.getInventory();
     }
 
-    boolean isGasPackageAnimationActive() {
+    public boolean isGasPackageAnimationActive() {
         return animationTicks > 0;
     }
 
-    boolean canStartGasPackage() {
+    public boolean canStartGasPackage() {
         return heldBox.isEmpty() && animationTicks == 0 && buttonCooldown <= 0;
     }
 
-    void beginGasPackageInsertion(ItemStack box) {
+    public void beginGasPackageInsertion(ItemStack box) {
         previouslyUnwrapped = box.copy();
         animationInward = true;
         animationTicks = CYCLE;
     }
 
-    void emitGasPackageReceivedEvent(ItemStack box) {
+    public void emitGasPackageReceivedEvent(ItemStack box) {
         if (computerBehaviour == null) {
             return;
         }
@@ -192,7 +192,7 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         computerBehaviour.prepareComputerEvent(new PackageEvent(box, "package_received"));
     }
 
-    void enqueueCreatedGasBalloon(ItemStack balloon) {
+    public void enqueueCreatedGasBalloon(ItemStack balloon) {
         if (balloon.isEmpty()) {
             return;
         }
@@ -210,7 +210,7 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         animationTicks = CYCLE;
     }
 
-    void enqueueReturnedGasBalloon(ItemStack balloon) {
+    public void enqueueReturnedGasBalloon(ItemStack balloon) {
         if (balloon.isEmpty()) {
             return;
         }
@@ -218,24 +218,24 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         queuedExitingPackages.addFirst(new BigItemStack(balloon, 1));
     }
 
-    ItemStack pendingUnwrappedPackage() {
+    public ItemStack pendingUnwrappedPackage() {
         return previouslyUnwrapped;
     }
 
-    String signAddressForGasPackage() {
+    public String signAddressForGasPackage() {
         return signBasedAddress;
     }
 
-    void markGasInventoryChanged() {
+    public void markGasInventoryChanged() {
         controller.invalidateInventoryCache();
         triggerStockCheck();
     }
 
-    void requestGasStockCheck() {
+    public void requestGasStockCheck() {
         triggerStockCheck();
     }
 
-    void notifyGasPackageUpdate() {
+    public void notifyGasPackageUpdate() {
         notifyUpdate();
     }
 }

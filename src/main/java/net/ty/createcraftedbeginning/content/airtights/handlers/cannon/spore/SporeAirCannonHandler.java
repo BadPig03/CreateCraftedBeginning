@@ -64,7 +64,7 @@ public class SporeAirCannonHandler implements AirtightCannonHandler, AirtightCan
     @Override
     public void explode(Level level, Vec3 pos, AirtightCannonShotContext context) {
         float radius = DEFAULT_RADIUS * context.effectMultiplier();
-        level.explode(context.projectile(), CCBDamageTypes.source(DamageTypes.OUTSIDE_BORDER, level, context.projectile()), AirtightCannonUtils.createDamageCalculator(context.knockbackMultiplier()), pos.x(), pos.y(), pos.z(), radius, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
+        level.explode(context.projectile(), CCBDamageTypes.source(DamageTypes.OUTSIDE_BORDER, level, context.projectile()), AirtightCannonUtils.createDamageCalculator(context), pos.x(), pos.y(), pos.z(), radius, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
     }
 
     @Override

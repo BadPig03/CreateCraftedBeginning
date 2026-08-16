@@ -26,7 +26,7 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public class ResidueGenerationCategory extends CCBRecipeCategory<ResidueGenerationRecipe> {
     private static final int NO_RESIDUE_TEXT_COLOR = 0x888888;
-    private final AnimatedAirtightEngine engine = new AnimatedAirtightEngine();
+    protected final AnimatedAirtightEngine engine = new AnimatedAirtightEngine();
 
     public ResidueGenerationCategory(Info<ResidueGenerationRecipe> info) {
         super(info);

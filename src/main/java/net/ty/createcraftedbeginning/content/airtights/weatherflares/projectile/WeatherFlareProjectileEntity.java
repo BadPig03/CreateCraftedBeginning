@@ -27,6 +27,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.api.weatherflares.IWeatherFlare;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBEntityTypes;
@@ -39,7 +40,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile implements ItemSupplier, IEntityWithComplexSpawn {
-    public static final double MIN_DELTA_MOVEMENT_LENGTH = 0.01;
+    protected static final double MIN_DELTA_MOVEMENT_LENGTH = 0.01;
     private static final double MIN_DELTA_MOVEMENT_LENGTH_SQR = MIN_DELTA_MOVEMENT_LENGTH * MIN_DELTA_MOVEMENT_LENGTH;
     private static final double MIN_WEATHER_DURATION_RATIO = MIN_DELTA_MOVEMENT_LENGTH;
     private static final float DEFAULT_SIZE = 0.25f;
@@ -51,10 +52,10 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
     private static final String COMPOUND_KEY_START_Y = "StartY";
     private static final String COMPOUND_KEY_COPIED = "Copied";
 
-    private ItemStack itemStack;
-    private int lifeTime;
-    private double startY;
-    private boolean copied;
+    protected ItemStack itemStack;
+    protected int lifeTime;
+    protected double startY;
+    protected boolean copied;
 
     public WeatherFlareProjectileEntity(EntityType<WeatherFlareProjectileEntity> entityType, Level level) {
         super(entityType, level);
@@ -180,7 +181,7 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
         }
         if (tag.contains(COMPOUND_KEY_START_Y, Tag.TAG_ANY_NUMERIC)) {
             double storedStartY = tag.getDouble(COMPOUND_KEY_START_Y);
-            if (Double.isFinite(storedStartY)) {
+            if (GasConsumptions.isFinite(storedStartY)) {
                 startY = storedStartY;
             }
         }
@@ -230,7 +231,7 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
         return DoubleDoubleImmutablePair.of(entity.position().x - position().x, entity.position().z - position().z);
     }
 
-    private void explode() {
+    protected void explode() {
         if (!(level() instanceof ServerLevel level) || !(itemStack.getItem() instanceof IWeatherFlare flare)) {
             return;
         }
@@ -244,7 +245,7 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
         discard();
     }
 
-    private void grantAdvancements(ServerLevel level, boolean wasStormy) {
+    protected void grantAdvancements(ServerLevel level, boolean wasStormy) {
         if (!(getOwner() instanceof Player player)) {
             return;
         }
@@ -262,7 +263,7 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
         CCBAdvancements.I_AM_THE_STORM_THAT_IS_APPROACHING.awardTo(player);
     }
 
-    private void destroy() {
+    protected void destroy() {
         Level level = level();
         if (level.isClientSide) {
             return;

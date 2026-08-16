@@ -29,7 +29,7 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
@@ -49,23 +49,23 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     private static final int MAX_OUTPUT_SLOT = 8;
     private static final int LAZY_TICK_RATE = 4;
 
-    private final AirtightForgingPressCore core;
-    private final AirtightForgingPressController controller;
-    private final AirtightForgingPressCrafting crafting;
-    private final AirtightForgingPressSerialization serialization;
-    private final IItemHandler inputOutputCapability;
-    private final IItemHandlerModifiable recipeInputCapability;
-    private final SmartInventory inputInventory;
-    private final SmartInventory outputInventory;
-    private final SmartInventory pressHeadInventory;
-    private final SmartInventory processingInventory;
+    protected final AirtightForgingPressCore core;
+    protected final AirtightForgingPressController controller;
+    protected final AirtightForgingPressCrafting crafting;
+    protected final AirtightForgingPressSerialization serialization;
+    protected final IItemHandler inputOutputCapability;
+    protected final IItemHandlerModifiable recipeInputCapability;
+    protected final SmartInventory inputInventory;
+    protected final SmartInventory outputInventory;
+    protected final SmartInventory pressHeadInventory;
+    protected final SmartInventory processingInventory;
 
-    private DeferralBehaviour updateChecker;
-    private IFluidHandler fluidCapability;
-    private IGasHandler gasCapability;
-    private SmartFluidTankBehaviour fluidTank;
-    private SmartGasTankBehaviour gasTank;
-    private ItemStack recipeFilter = ItemStack.EMPTY;
+    protected DeferralBehaviour updateChecker;
+    protected IFluidHandler fluidCapability;
+    protected IGasHandler gasCapability;
+    protected SmartFluidTankBehaviour fluidTank;
+    protected SmartGasTankBehaviour gasTank;
+    protected ItemStack recipeFilter = ItemStack.EMPTY;
 
     public AirtightForgingPressBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -93,7 +93,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     }
 
     public static long getGasCapacity() {
-        return Math.max(1, CCBConfig.server().airtights.forgingPressGasCapacity.get()) * GasAmountUtils.MILLIBUCKETS_PER_BUCKET;
+        return Math.max(1, CCBConfig.server().airtights.forgingPressGasCapacity.get()) * GasAmounts.MILLIBUCKETS_PER_BUCKET;
     }
 
     @Override
@@ -278,27 +278,27 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         return controller.getPressHeadDistance(partialTicks);
     }
 
-    AirtightForgingPressCore getCore() {
+    public AirtightForgingPressCore getCore() {
         return core;
     }
 
-    SmartFluidTankBehaviour getFluidTankBehaviour() {
+    public SmartFluidTankBehaviour getFluidTankBehaviour() {
         return fluidTank;
     }
 
-    SmartGasTankBehaviour getGasTankBehaviour() {
+    public SmartGasTankBehaviour getGasTankBehaviour() {
         return gasTank;
     }
 
-    void loadRecipeFilter(ItemStack stack) {
+    public void loadRecipeFilter(ItemStack stack) {
         recipeFilter = stack.isEmpty() ? ItemStack.EMPTY : stack.copy();
     }
 
-    private boolean updateForgingPress() {
+    protected boolean updateForgingPress() {
         return controller.updateForgingPress();
     }
 
-    private void syncRecipeFilterReplicas() {
+    protected void syncRecipeFilterReplicas() {
         if (level == null) {
             return;
         }

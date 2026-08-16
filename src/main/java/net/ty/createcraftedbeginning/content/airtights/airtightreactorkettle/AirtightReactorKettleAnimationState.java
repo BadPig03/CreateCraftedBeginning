@@ -19,7 +19,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightReactorKettleAnimationState {
+public final class AirtightReactorKettleAnimationState {
     private final AirtightReactorKettleBlockEntity kettle;
     private final LerpedFloat ingredientRotation = LerpedFloat.angular().startWithValue(0);
     private final LerpedFloat ingredientRotationSpeed = LerpedFloat.linear().startWithValue(0);
@@ -27,11 +27,11 @@ final class AirtightReactorKettleAnimationState {
     private final LerpedFloat mixerRotationSpeed = LerpedFloat.linear().startWithValue(0);
     private final LerpedFloat windowDistance = LerpedFloat.linear().startWithValue(0.5);
 
-    AirtightReactorKettleAnimationState(AirtightReactorKettleBlockEntity kettle) {
+    public AirtightReactorKettleAnimationState(AirtightReactorKettleBlockEntity kettle) {
         this.kettle = kettle;
     }
 
-    void tickClient() {
+    public void tickClient() {
         CatnipServices.PLATFORM.executeOnClientOnly(() -> this::tickAudio);
         ingredientRotationSpeed.tickChaser();
         ingredientRotation.setValue(ingredientRotation.getValue() + ingredientRotationSpeed.getValue());
@@ -39,7 +39,7 @@ final class AirtightReactorKettleAnimationState {
         mixerRotation.setValue(mixerRotation.getValue() + mixerRotationSpeed.getValue());
     }
 
-    void updateTargets(boolean moving, int operatingTicks, boolean windowsOpen) {
+    public void updateTargets(boolean moving, int operatingTicks, boolean windowsOpen) {
         float speed = Mth.clamp(kettle.getCore().getStructureManager().getSpeed() * 0.5f, -64, 64);
         if (kettle.getLevel() instanceof PonderLevel) {
             speed = SpeedLevel.FAST.getSpeedValue() * 0.5f;
@@ -64,15 +64,15 @@ final class AirtightReactorKettleAnimationState {
         windowDistance.tickChaser();
     }
 
-    LerpedFloat getIngredientRotation() {
+    public LerpedFloat getIngredientRotation() {
         return ingredientRotation;
     }
 
-    LerpedFloat getMixerRotation() {
+    public LerpedFloat getMixerRotation() {
         return mixerRotation;
     }
 
-    LerpedFloat getWindowDistance() {
+    public LerpedFloat getWindowDistance() {
         return windowDistance;
     }
 

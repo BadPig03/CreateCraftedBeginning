@@ -8,7 +8,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.content.particles.ColoredBreezeCloudParticleType.ColoredBreezeCloudParticleOptions;
@@ -19,16 +19,16 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasInjectionChamberDisplay {
+public final class GasInjectionChamberDisplay {
     private final GasInjectionChamberBlockEntity chamber;
     private final GasInjectionChamberOperationState operation;
 
-    GasInjectionChamberDisplay(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation) {
+    public GasInjectionChamberDisplay(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation) {
         this.chamber = chamber;
         this.operation = operation;
     }
 
-    boolean addToGoggleTooltip(List<Component> tooltip) {
+    public boolean addToGoggleTooltip(List<Component> tooltip) {
         if (chamber.getLevel() == null) {
             return false;
         }
@@ -37,28 +37,28 @@ final class GasInjectionChamberDisplay {
         CCBLang.translate("gui.gas_container").forGoggles(tooltip);
         GasStack gas = gasHandler.getGasInTank(0);
         if (gas.isEmpty()) {
-            CCBLang.translate("gui.gas_container.capacity").add(GasAmountUtils.precise(gasHandler.getTankCapacity(0)).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+            CCBLang.translate("gui.gas_container.capacity").add(GasAmounts.precise(gasHandler.getTankCapacity(0)).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
             return true;
         }
 
         CCBLang.gasName(gas).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-        GasAmountUtils.precise(gas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmountUtils.precise(gasHandler.getTankCapacity(0)).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+        GasAmounts.precise(gas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmounts.precise(gasHandler.getTankCapacity(0)).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
         return true;
     }
 
-    int getMaxValue() {
-        return GasAmountUtils.toMillibucketsClamped(chamber.getGasTankBehaviour().getPrimaryHandler().getCapacity());
+    public int getMaxValue() {
+        return GasAmounts.toMillibucketsClamped(chamber.getGasTankBehaviour().getPrimaryHandler().getCapacity());
     }
 
-    int getCurrentValue() {
-        return GasAmountUtils.toMillibucketsClamped(chamber.getGasTankBehaviour().getPrimaryHandler().getGasAmount());
+    public int getCurrentValue() {
+        return GasAmounts.toMillibucketsClamped(chamber.getGasTankBehaviour().getPrimaryHandler().getGasAmount());
     }
 
-    MutableComponent format(int value) {
-        return GasAmountUtils.precise(value).component();
+    public MutableComponent format(int value) {
+        return GasAmounts.precise(value).component();
     }
 
-    float getRenderedProcessingTicks(float partialTicks) {
+    public float getRenderedProcessingTicks(float partialTicks) {
         int processingTicks = operation.getProcessingTicks();
         if (processingTicks < 0) {
             return -1;
@@ -68,7 +68,7 @@ final class GasInjectionChamberDisplay {
         return previousProcessingTicks < 0 ? processingTicks : Mth.lerp(partialTicks, previousProcessingTicks, processingTicks);
     }
 
-    void spawnCloud(int color) {
+    public void spawnCloud(int color) {
         Level level = chamber.getLevel();
         if (level == null || !level.isClientSide || chamber.isVirtual()) {
             return;

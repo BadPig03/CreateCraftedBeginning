@@ -15,16 +15,16 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class ResidueOutletInsertionPlanner {
+public final class ResidueOutletInsertionPlanner {
     private final ResidueOutletBlockEntity outlet;
     private final ResidueOutletInventory inventory;
 
-    ResidueOutletInsertionPlanner(ResidueOutletBlockEntity outlet, ResidueOutletInventory inventory) {
+    public ResidueOutletInsertionPlanner(ResidueOutletBlockEntity outlet, ResidueOutletInventory inventory) {
         this.outlet = outlet;
         this.inventory = inventory;
     }
 
-    @Nullable ResidueOutletBlockEntity.ResidueInsertionPlan create(FluidStack fluidStack, ItemStack itemStack, int maxAmount) {
+    @Nullable public ResidueOutletBlockEntity.ResidueInsertionPlan create(FluidStack fluidStack, ItemStack itemStack, int maxAmount) {
         boolean hasFluid = !fluidStack.isEmpty();
         boolean hasItem = !itemStack.isEmpty();
         Level level = outlet.getLevel();

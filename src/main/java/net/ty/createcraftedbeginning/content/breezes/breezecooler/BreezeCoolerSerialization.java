@@ -14,7 +14,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class BreezeCoolerSerialization {
+public final class BreezeCoolerSerialization {
     private static final String STATE_TYPE = "StateType";
     private static final String STATE_DATA = "StateData";
     private static final String GOGGLES = "Goggles";
@@ -36,7 +36,7 @@ final class BreezeCoolerSerialization {
         };
     }
 
-    void write(BreezeCoolerBlockEntity cooler, CompoundTag tag) {
+    public void write(BreezeCoolerBlockEntity cooler, CompoundTag tag) {
         BaseCoolerState state = cooler.getCurrentState();
         CompoundTag stateTag = new CompoundTag();
         state.save(stateTag);
@@ -46,7 +46,7 @@ final class BreezeCoolerSerialization {
         tag.putBoolean(TRAIN_HAT, cooler.hasTrainHat());
     }
 
-    void read(BreezeCoolerBlockEntity cooler, CompoundTag tag) {
+    public void read(BreezeCoolerBlockEntity cooler, CompoundTag tag) {
         if (tag.contains(STATE_DATA, Tag.TAG_COMPOUND)) {
             cooler.setCoolerStateFromSerialization(readState(tag));
         }

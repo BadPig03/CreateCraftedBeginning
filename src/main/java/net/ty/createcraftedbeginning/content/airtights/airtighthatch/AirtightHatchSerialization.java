@@ -9,19 +9,19 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightHatchSerialization {
-    static final String COMPOUND_KEY_CANISTER = "Canister";
-    static final String COMPOUND_KEY_CAPACITY = "Capacity";
+public final class AirtightHatchSerialization {
+    public static final String COMPOUND_KEY_CANISTER = "Canister";
+    private static final String COMPOUND_KEY_CAPACITY = "Capacity";
 
     private final AirtightHatchBlockEntity hatch;
     private final AirtightHatchCanisterManager canisterManager;
 
-    AirtightHatchSerialization(AirtightHatchBlockEntity hatch, AirtightHatchCanisterManager canisterManager) {
+    public AirtightHatchSerialization(AirtightHatchBlockEntity hatch, AirtightHatchCanisterManager canisterManager) {
         this.hatch = hatch;
         this.canisterManager = canisterManager;
     }
 
-    void write(CompoundTag tag, Provider provider, boolean clientPacket) {
+    public void write(CompoundTag tag, Provider provider, boolean clientPacket) {
         if (clientPacket) {
             tag.putLong(COMPOUND_KEY_CAPACITY, hatch.getHatchCapacity());
             return;
@@ -36,7 +36,7 @@ final class AirtightHatchSerialization {
         tag.putLong(COMPOUND_KEY_CAPACITY, hatch.getHatchCapacity());
     }
 
-    void read(CompoundTag tag, Provider provider, boolean clientPacket) {
+    public void read(CompoundTag tag, Provider provider, boolean clientPacket) {
         if (clientPacket) {
             if (tag.contains(COMPOUND_KEY_CAPACITY)) {
                 hatch.getGasTankBehaviour().getPrimaryHandler().setCapacity(Math.max(0, tag.getLong(COMPOUND_KEY_CAPACITY)));

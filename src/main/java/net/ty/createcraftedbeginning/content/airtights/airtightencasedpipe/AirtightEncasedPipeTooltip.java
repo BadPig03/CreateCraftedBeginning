@@ -16,11 +16,11 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightEncasedPipeTooltip {
+public final class AirtightEncasedPipeTooltip {
     private AirtightEncasedPipeTooltip() {
     }
 
-    static boolean addTo(List<Component> tooltip, Level level, BlockPos pos, BlockState state) {
+    public static boolean addTo(List<Component> tooltip, Level level, BlockPos pos, BlockState state) {
         List<Direction> invalidDirections = getInvalidDirections(level, pos, state);
         if (invalidDirections.isEmpty()) {
             return false;

@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightcannon;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.monster.breeze.Breeze;
@@ -21,26 +20,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AirtightCannonEvents {
     @SubscribeEvent
     public static void onAirtightCannonKillEntity(LivingDeathEvent event) {
-        LivingEntity entity = event.getEntity();
-        if (entity.level().isClientSide) {
+        LivingEntity killedEntity = event.getEntity();
+        if (killedEntity.level().isClientSide || killedEntity.getType().getCategory() != MobCategory.MONSTER) {
             return;
         }
 
-        Entity directEntity = event.getSource().getDirectEntity();
-        if (!(directEntity instanceof AirtightCannonWindChargeProjectileEntity projectile)) {
-            return;
-        }
-
-        if (!(projectile.getOwner() instanceof Player player)) {
-            return;
-        }
-
-        if (entity.getType().getCategory() != MobCategory.MONSTER) {
+        if (!(event.getSource().getDirectEntity() instanceof AirtightCannonWindChargeProjectileEntity windCharge) || !(windCharge.getOwner() instanceof Player player)) {
             return;
         }
 
         CCBAdvancements.WIND_CHARGED.awardTo(player);
-        if (!(entity instanceof Breeze)) {
+        if (!(killedEntity instanceof Breeze)) {
             return;
         }
 

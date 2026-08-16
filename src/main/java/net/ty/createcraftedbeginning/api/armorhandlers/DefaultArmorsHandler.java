@@ -16,25 +16,16 @@ public final class DefaultArmorsHandler implements AirtightArmorsHandler {
     private DefaultArmorsHandler() {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean canCureEffect(MobEffectInstance effectInstance) {
         return effectInstance.getEffect().value().getCategory() == MobEffectCategory.HARMFUL && effectInstance.getCures().contains(EffectCures.MILK);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getConsumptionMultiplier(EquipmentSlot slot) {
         return 1;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getMultiplierForBoostingElytra() {
         return 0.5f;

@@ -12,8 +12,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightEncasedPipeTransportBehaviour extends GasTransportBehaviour {
-    AirtightEncasedPipeTransportBehaviour(SmartBlockEntity blockEntity) {
+public final class AirtightEncasedPipeTransportBehaviour extends GasTransportBehaviour {
+    public AirtightEncasedPipeTransportBehaviour(SmartBlockEntity blockEntity) {
         super(blockEntity);
     }
 

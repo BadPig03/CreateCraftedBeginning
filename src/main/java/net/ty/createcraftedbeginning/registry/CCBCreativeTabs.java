@@ -40,13 +40,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBCreativeTabs {
     private static final DeferredRegister<CreativeModeTab> REGISTER = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CCBAPI.MOD_ID);
+    private static final EnumMap<CCBCreativeTabSection, List<ItemProviderEntry<?, ?>>> SECTION_INIT_ITEMS = new EnumMap<>(CCBCreativeTabSection.class);
     private static final EnumMap<CCBCreativeTabSection, List<ItemProviderEntry<?, ?>>> SECTION_TAIL_ITEMS = new EnumMap<>(CCBCreativeTabSection.class);
 
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CREATIVE_TAB = REGISTER.register("base", () -> builder().title(CCBLang.translateDirect("item_groups.base_creative_tab")).withTabsBefore(AllCreativeModeTabs.BASE_CREATIVE_TAB.getKey()).icon(() -> new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK)).displayItems(new RegistrateDisplayItemsGenerator()).build());
@@ -54,6 +54,10 @@ public class CCBCreativeTabs {
     @Internal
     public static void register(IEventBus eventBus) {
         REGISTER.register(eventBus);
+    }
+
+    public static void registerSectionInit(CCBCreativeTabSection section, ItemProviderEntry<?, ?>... entries) {
+        SECTION_INIT_ITEMS.computeIfAbsent(section, ignored -> new ArrayList<>()).addAll(List.of(entries));
     }
 
     public static void registerSectionTail(CCBCreativeTabSection section, ItemProviderEntry<?, ?>... entries) {
@@ -80,15 +84,11 @@ public class CCBCreativeTabs {
 
         private static List<ItemOrdering> makeOrderings() {
             List<ItemOrdering> orderings = new ReferenceArrayList<>();
-            orderings.add(ItemOrdering.before(CCBItems.AIRTIGHT_SHEET.asItem(), CCBBlocks.AIRTIGHT_PIPE_BLOCK.asItem()));
             orderings.add(ItemOrdering.before(CCBItems.GAS_CANISTER.asItem(), CCBItems.CREATIVE_GAS_CANISTER.asItem()));
+
             orderings.add(ItemOrdering.after(CCBItems.TESLA_TURBINE_ROTOR.asItem(), CCBBlocks.TESLA_TURBINE_NOZZLE_BLOCK.asItem()));
             orderings.add(ItemOrdering.after(CCBItems.GAS_INJECTION_CHAMBER_FILTER.asItem(), CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK.asItem()));
             return orderings;
-        }
-
-        private static Function<Item, ItemStack> makeStackFunc() {
-            return ItemStack::new;
         }
 
         private static void applyOrderings(List<Item> items, List<ItemOrdering> orderings) {
@@ -112,17 +112,25 @@ public class CCBCreativeTabs {
             }
         }
 
-        private static void applySectionTail(List<Item> items, CCBCreativeTabSection section) {
-            List<ItemProviderEntry<?, ?>> tailEntries = SECTION_TAIL_ITEMS.get(section);
-            if (tailEntries == null || tailEntries.isEmpty()) {
-                return;
+        private static void applySectionItems(List<Item> items, CCBCreativeTabSection section) {
+            List<ItemProviderEntry<?, ?>> initEntries = SECTION_INIT_ITEMS.getOrDefault(section, List.of());
+            for (ItemProviderEntry<?, ?> entry : initEntries) {
+                Item item = entry.asItem();
+                if (!items.remove(item)) {
+                    continue;
+                }
+
+                items.addFirst(item);
             }
 
+            List<ItemProviderEntry<?, ?>> tailEntries = SECTION_TAIL_ITEMS.getOrDefault(section, List.of());
             for (ItemProviderEntry<?, ?> entry : tailEntries) {
                 Item item = entry.asItem();
-                if (items.remove(item)) {
-                    items.add(item);
+                if (!items.remove(item)) {
+                    continue;
                 }
+
+                items.add(item);
             }
         }
 
@@ -168,7 +176,6 @@ public class CCBCreativeTabs {
         @Override
         public void accept(ItemDisplayParameters parameters, Output output) {
             Predicate<Item> exclusionPredicate = makeExclusionPredicate();
-            Function<Item, ItemStack> stackFunc = makeStackFunc();
             List<ItemOrdering> orderings = makeOrderings();
             EnumMap<CCBCreativeTabSection, List<ItemStack>> stacksBySection = new EnumMap<>(CCBCreativeTabSection.class);
             Map<Item, CCBCreativeTabSection> itemSections = new IdentityHashMap<>();
@@ -177,10 +184,10 @@ public class CCBCreativeTabs {
                 items.addAll(collectBlocks(exclusionPredicate, section));
                 items.addAll(collectItems(exclusionPredicate, section));
                 applyOrderings(items, orderings);
-                applySectionTail(items, section);
+                applySectionItems(items, section);
 
                 List<ItemStack> stacks = new ArrayList<>(items.size());
-                items.stream().map(stackFunc).forEach(stacks::add);
+                items.stream().map(ItemStack::new).forEach(stacks::add);
                 if (section == CCBCreativeTabSection.CANISTERS) {
                     stacks.addAll(GasCanisterUtils.getAllCanisters());
                 }

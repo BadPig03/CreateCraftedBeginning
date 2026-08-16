@@ -19,11 +19,11 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasPackagerRequestProcessor {
+public final class GasPackagerRequestProcessor {
     private GasPackagerRequestProcessor() {
     }
 
-    static @Nullable Result process(List<PackagingRequest> queuedRequests, IGasHandler handler, long capacity) {
+    public static @Nullable Result process(List<PackagingRequest> queuedRequests, IGasHandler handler, long capacity) {
         discardInvalidLeadingGasRequests(queuedRequests);
         GasRequestPlan plan = planGasRequestBatch(queuedRequests, capacity);
         if (plan.isEmpty()) {
@@ -207,9 +207,9 @@ final class GasPackagerRequestProcessor {
         return balloon;
     }
 
-    record Result(ItemStack balloon, List<Deduction> deductions) {}
+    public record Result(ItemStack balloon, List<Deduction> deductions) {}
 
-    record Deduction(ItemStack token, int amount) {}
+    public record Deduction(ItemStack token, int amount) {}
 
     private record PlannedGasRequest(PackagingRequest request, ItemStack token, GasStack gasType, long amount) {}
 

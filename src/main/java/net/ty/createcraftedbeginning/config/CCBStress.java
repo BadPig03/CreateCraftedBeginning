@@ -90,9 +90,10 @@ public class CCBStress extends ConfigBase {
         return getValue(block, capacities);
     }
 
-    private static class Comments {
-        static String su = "[in Stress Units]";
-        static String impact = "Configure the stress impact of individual mechanical blocks. Stress impact scales proportionally with rotational speed.";
-        static String capacity = "Configure the stress capacity of individual kinetic sources.";
+    protected static class Comments {
+        private static final String su = "[in Stress Units]";
+
+        private static final String impact = "Configure the stress impact of individual mechanical blocks. Stress impact scales proportionally with rotational speed.";
+        private static final String capacity = "Configure the stress capacity of individual kinetic sources.";
     }
 }

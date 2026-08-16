@@ -28,11 +28,11 @@ import java.util.UUID;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasPackagerLogistics {
+public final class GasPackagerLogistics {
     private GasPackagerLogistics() {
     }
 
-    static void deductFromAccurateGasSummary(@Nullable Level level, BlockPos worldPosition, List<Deduction> deductions) {
+    public static void deductFromAccurateGasSummary(@Nullable Level level, BlockPos worldPosition, List<Deduction> deductions) {
         PackagerLinkBlockEntity link = getConnectedStockLink(level, worldPosition);
         if (link == null || deductions.isEmpty()) {
             return;
@@ -46,7 +46,7 @@ final class GasPackagerLogistics {
         link.behaviour.deductFromAccurateSummary(contents);
     }
 
-    static void submitNewGasArrivals(@Nullable Level level, BlockPos worldPosition, @Nullable InventorySummary previous, InventoryIdentifier identifier, InventorySummary current) {
+    public static void submitNewGasArrivals(@Nullable Level level, BlockPos worldPosition, @Nullable InventorySummary previous, InventoryIdentifier identifier, InventorySummary current) {
         if (level == null || level.isClientSide()) {
             return;
         }

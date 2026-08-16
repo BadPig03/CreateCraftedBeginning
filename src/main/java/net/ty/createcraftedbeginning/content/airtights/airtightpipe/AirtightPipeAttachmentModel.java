@@ -41,7 +41,7 @@ import java.util.List;
 public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
     private static final ModelProperty<PipeModelData> PIPE_PROPERTY = new ModelProperty<>();
 
-    private final boolean ambientOcclusion;
+    protected final boolean ambientOcclusion;
 
     public AirtightPipeAttachmentModel(BakedModel template, boolean ambientOcclusion) {
         super(template);
@@ -175,21 +175,21 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
         return ChunkRenderTypeSet.union(renderTypes);
     }
 
-    private static class PipeModelData {
+    protected static class PipeModelData {
         private final AttachmentTypes[] attachments;
         @Nullable
         private BakedModel bracket;
 
-        public PipeModelData() {
+        protected PipeModelData() {
             attachments = new AttachmentTypes[Direction.values().length];
             Arrays.fill(attachments, AttachmentTypes.NONE);
         }
 
-        public void putAttachment(Direction direction, AttachmentTypes attachment) {
+        private void putAttachment(Direction direction, AttachmentTypes attachment) {
             attachments[direction.get3DDataValue()] = attachment;
         }
 
-        public void putBracket(@Nullable BlockState state) {
+        private void putBracket(@Nullable BlockState state) {
             if (state == null) {
                 return;
             }
@@ -198,7 +198,7 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
         }
 
         @Nullable
-        public BakedModel getBracket() {
+        private BakedModel getBracket() {
             return bracket;
         }
 

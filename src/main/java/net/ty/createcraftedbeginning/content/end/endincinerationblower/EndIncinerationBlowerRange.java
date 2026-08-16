@@ -12,15 +12,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class EndIncinerationBlowerRange {
+public final class EndIncinerationBlowerRange {
     private EndIncinerationBlowerRange() {
     }
 
-    static float getMaxRange() {
+    public static float getMaxRange() {
         return Mth.clamp(CCBConfig.server().endDevices.maxRange.getF(), 0, 32);
     }
 
-    static float calculateRange(float speed) {
+    public static float calculateRange(float speed) {
         float absSpeed = Mth.abs(speed);
         float mediumSpeed = SpeedLevel.MEDIUM.getSpeedValue();
         if (absSpeed < mediumSpeed) {
@@ -29,11 +29,11 @@ final class EndIncinerationBlowerRange {
         return Mth.clamp(absSpeed / mediumSpeed - 0.5f, 0, getMaxRange());
     }
 
-    static int calculateBlockRadius(float speed) {
+    public static int calculateBlockRadius(float speed) {
         return Mth.floor(calculateRange(speed));
     }
 
-    static AABB calculateArea(BlockPos pos, float speed) {
+    public static AABB calculateArea(BlockPos pos, float speed) {
         Vec3 center = Vec3.atCenterOf(pos);
         float range = calculateRange(speed);
         return new AABB(center.x - range, center.y - range, center.z - range, center.x + range, center.y + range, center.z + range);

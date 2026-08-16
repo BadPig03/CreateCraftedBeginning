@@ -24,11 +24,11 @@ import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class BreezeChamberGasProcessor {
+public final class BreezeChamberGasProcessor {
     private static final int GAS_PROCESSING_INTERVAL = 20;
     private final BreezeChamberBlockEntity chamber;
 
-    BreezeChamberGasProcessor(BreezeChamberBlockEntity chamber) {
+    public BreezeChamberGasProcessor(BreezeChamberBlockEntity chamber) {
         this.chamber = chamber;
     }
 
@@ -59,20 +59,20 @@ final class BreezeChamberGasProcessor {
         };
     }
 
-    boolean isControllerActive() {
+    public boolean isControllerActive() {
         IChamberGasTank tank = getTank();
         return tank != null && isControllerActive(tank);
     }
 
-    Gas getTankGasType() {
+    public Gas getTankGasType() {
         return getTankGasStack().getGasType();
     }
 
-    boolean isOutputFull() {
+    public boolean isOutputFull() {
         return outputTank().getSpace() == 0;
     }
 
-    boolean isOutputMismatched() {
+    public boolean isOutputMismatched() {
         GasStack inputStack = getTankGasStack();
         GasTank output = outputTank();
         if (inputStack.isEmpty() || output.isEmpty()) {
@@ -83,7 +83,7 @@ final class BreezeChamberGasProcessor {
         return getConversion(type, inputStack).map(conversion -> !GasStack.isSameGasSameComponents(output.getGasStack(), conversion.output())).orElse(false);
     }
 
-    boolean isInputInvalid() {
+    public boolean isInputInvalid() {
         GasStack inputStack = getTankGasStack();
         if (inputStack.isEmpty()) {
             return false;
@@ -93,7 +93,7 @@ final class BreezeChamberGasProcessor {
         return type != ChargerType.NONE && getConversion(type, inputStack).isEmpty();
     }
 
-    void tickGasProcessing(ChargerType chargerType) {
+    public void tickGasProcessing(ChargerType chargerType) {
         if (chamber.getLevel() == null || chamber.getLevel().isClientSide || chargerType == ChargerType.NONE) {
             return;
         }

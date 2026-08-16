@@ -11,40 +11,22 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasAmountUtils {
+public final class GasAmounts {
     public static final long MILLIBUCKETS_PER_BUCKET = FluidType.BUCKET_VOLUME;
     public static final long MILLIBUCKETS_PER_KILOBUCKET = MILLIBUCKETS_PER_BUCKET * 1000;
     public static final long MILLIBUCKETS_PER_MEGABUCKET = MILLIBUCKETS_PER_KILOBUCKET * 1000;
 
-    private GasAmountUtils() {
+    private GasAmounts() {
     }
 
-    /**
-     * Creates a precisely formatted gas-amount component.
-     *
-     * @param mb the gas amount, in millibuckets
-     * @return the resulting lang builder
-     */
     public static LangBuilder precise(long mb) {
         return new LangBuilder(CCBAPI.MOD_ID).text(LangNumberFormat.format(mb)).add(new LangBuilder(CCBAPI.MOD_ID).translate("gui.unit.milli_buckets"));
     }
 
-    /**
-     * Formats the supplied amount with precise units.
-     *
-     * @param mb the gas amount, in millibuckets
-     * @return the formatted text
-     */
     public static String formatPrecise(long mb) {
         return precise(mb).component().getString();
     }
 
-    /**
-     * Formats the supplied amount using compact units.
-     *
-     * @param mb the gas amount, in millibuckets
-     * @return the formatted text
-     */
     public static String formatCompact(long mb) {
         if (mb < MILLIBUCKETS_PER_BUCKET) {
             return mb + "mB";
@@ -56,12 +38,6 @@ public final class GasAmountUtils {
         return formatTenths(mb, MILLIBUCKETS_PER_KILOBUCKET) + "kB";
     }
 
-    /**
-     * Formats the supplied amount for stock-keeper displays.
-     *
-     * @param mb the gas amount, in millibuckets
-     * @return the formatted text
-     */
     public static String formatStockKeeper(long mb) {
         if (mb >= MILLIBUCKETS_PER_MEGABUCKET / 10) {
             return formatTenths(mb, MILLIBUCKETS_PER_MEGABUCKET) + "mb";
@@ -77,12 +53,6 @@ public final class GasAmountUtils {
         return mb + "mb";
     }
 
-    /**
-     * Formats the supplied amount compactly without discarding precision.
-     *
-     * @param mb the gas amount, in millibuckets
-     * @return the formatted text
-     */
     public static String formatLosslessCompact(long mb) {
         if (mb >= MILLIBUCKETS_PER_MEGABUCKET && mb % (MILLIBUCKETS_PER_MEGABUCKET / 10) == 0) {
             return formatTenths(mb, MILLIBUCKETS_PER_MEGABUCKET) + "mB";
@@ -98,32 +68,15 @@ public final class GasAmountUtils {
         return formatPrecise(mb);
     }
 
-    /**
-     * Converts this value to a whole buckets clamped representation.
-     *
-     * @param mb the gas amount, in millibuckets
-     * @return the converted value
-     */
+
     public static int toWholeBucketsClamped(long mb) {
         return Math.clamp(mb / MILLIBUCKETS_PER_BUCKET, 0, Integer.MAX_VALUE);
     }
 
-    /**
-     * Converts this value to a millibuckets clamped representation.
-     *
-     * @param mb the gas amount, in millibuckets
-     * @return the converted value
-     */
     public static int toMillibucketsClamped(long mb) {
         return Math.clamp(mb, 0, Integer.MAX_VALUE);
     }
 
-    /**
-     * Formats the supplied amount as whole buckets.
-     *
-     * @param b the gas amount, in buckets
-     * @return the formatted text
-     */
     public static MutableComponent formatWholeBuckets(long b) {
         return new LangBuilder(CCBAPI.MOD_ID).text(LangNumberFormat.format(b)).space().add(new LangBuilder(CCBAPI.MOD_ID).translate("gui.threshold.buckets")).component();
     }

@@ -9,18 +9,18 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class BreezeCoolerRecipeCache {
+public final class BreezeCoolerRecipeCache {
     private static final int CACHE_INTERVAL = 100;
     private final BreezeCoolerBlockEntity cooler;
     private FluidStack cachedFluid = FluidStack.EMPTY;
     private CoolingData cachedData = CoolingData.EMPTY;
     private long expiry = Long.MIN_VALUE;
 
-    BreezeCoolerRecipeCache(BreezeCoolerBlockEntity cooler) {
+    public BreezeCoolerRecipeCache(BreezeCoolerBlockEntity cooler) {
         this.cooler = cooler;
     }
 
-    CoolingData getFluidCoolingData(FluidStack fluidStack) {
+    public CoolingData getFluidCoolingData(FluidStack fluidStack) {
         if (cooler.getLevel() == null || fluidStack.isEmpty()) {
             return CoolingData.EMPTY;
         }

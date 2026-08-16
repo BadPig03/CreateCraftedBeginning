@@ -11,11 +11,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public record GasIngredientType<T extends GasIngredient>(MapCodec<T> codec, StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec) {
-    /**
-     * Creates a new {@code GasIngredientType} instance.
-     *
-     * @param mapCodec the map codec to use
-     */
     public GasIngredientType(MapCodec<T> mapCodec) {
         this(mapCodec, ByteBufCodecs.fromCodecWithRegistries(mapCodec.codec()));
     }

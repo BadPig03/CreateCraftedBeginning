@@ -17,13 +17,13 @@ import java.util.Objects;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class CCBClientBridge {
-    private static final Service NOOP = new Service() {};
-    private static volatile Service service = NOOP;
+    private static final CCBService NOOP = new CCBService() {};
+    private static volatile CCBService service = NOOP;
 
     private CCBClientBridge() {
     }
 
-    public static void install(Service implementation) {
+    public static void install(CCBService implementation) {
         service = Objects.requireNonNull(implementation, "implementation");
     }
 
@@ -77,7 +77,7 @@ public final class CCBClientBridge {
         return service.createGasFactoryGaugeBehaviour(extraData);
     }
 
-    public interface Service {
+    public interface CCBService {
         default @Nullable Player getClientPlayer() {
             return null;
         }

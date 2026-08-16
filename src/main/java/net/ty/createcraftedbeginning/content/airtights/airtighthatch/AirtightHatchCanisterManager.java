@@ -19,12 +19,12 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightHatchCanisterManager {
+public final class AirtightHatchCanisterManager {
     private final AirtightHatchBlockEntity hatch;
 
     private ItemStack canister = ItemStack.EMPTY;
 
-    AirtightHatchCanisterManager(AirtightHatchBlockEntity hatch) {
+    public AirtightHatchCanisterManager(AirtightHatchBlockEntity hatch) {
         this.hatch = hatch;
     }
 
@@ -37,15 +37,15 @@ final class AirtightHatchCanisterManager {
         return Math.max(Math.max(0, currentCapacity), normalizedGasAmount);
     }
 
-    ItemStack getStoredCanister() {
+    public ItemStack getStoredCanister() {
         return canister;
     }
 
-    void setStoredCanister(ItemStack canister) {
+    public void setStoredCanister(ItemStack canister) {
         this.canister = canister;
     }
 
-    ItemStack createCanisterItemStack() {
+    public ItemStack createCanisterItemStack() {
         ItemStack stack = canister.copyWithCount(1);
         if (stack.isEmpty() || !(stack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents)) {
             return ItemStack.EMPTY;
@@ -55,7 +55,7 @@ final class AirtightHatchCanisterManager {
         return stack;
     }
 
-    boolean giveCanisterToPlayer(Player player) {
+    public boolean giveCanisterToPlayer(Player player) {
         ItemStack removedCanister = removeCanister();
         if (removedCanister.isEmpty()) {
             return false;
@@ -65,7 +65,7 @@ final class AirtightHatchCanisterManager {
         return true;
     }
 
-    boolean installCanister(ItemStack sourceStack) {
+    public boolean installCanister(ItemStack sourceStack) {
         Level level = hatch.getLevel();
         if (level == null || level.isClientSide || sourceStack.isEmpty() || !hatch.isEmpty()) {
             return false;
@@ -116,7 +116,7 @@ final class AirtightHatchCanisterManager {
         }
     }
 
-    ItemStack removeCanister() {
+    private ItemStack removeCanister() {
         Level level = hatch.getLevel();
         if (level == null || level.isClientSide || hatch.isEmpty()) {
             return ItemStack.EMPTY;
@@ -162,7 +162,7 @@ final class AirtightHatchCanisterManager {
         }
     }
 
-    void updateCapacity(boolean syncImmediately) {
+    public void updateCapacity(boolean syncImmediately) {
         if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
             return;
         }

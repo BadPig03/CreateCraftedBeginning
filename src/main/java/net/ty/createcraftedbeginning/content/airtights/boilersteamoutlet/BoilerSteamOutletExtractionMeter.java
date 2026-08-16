@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class BoilerSteamOutletExtractionMeter {
+public final class BoilerSteamOutletExtractionMeter {
     private static final int SAMPLE_RATE = 5;
     private static final int SAMPLE_COUNT = 10;
     private static final int SAMPLE_WINDOW_TICKS = SAMPLE_RATE * SAMPLE_COUNT;
@@ -29,14 +29,14 @@ final class BoilerSteamOutletExtractionMeter {
     private long rollingExtraction;
     private double averageExtractionRate;
 
-    static long saturatedAdd(long current, long amount) {
+    public static long saturatedAdd(long current, long amount) {
         if (amount <= 0) {
             return current;
         }
         return Long.MAX_VALUE - current < amount ? Long.MAX_VALUE : current + amount;
     }
 
-    TickResult tick() {
+    public TickResult tick() {
         if (!hasSampleState()) {
             ticksUntilNextSample = SAMPLE_RATE;
             return TickResult.NONE;
@@ -53,11 +53,11 @@ final class BoilerSteamOutletExtractionMeter {
         return Double.compare(previousAverage, averageExtractionRate) == 0 ? TickResult.RECORDED : TickResult.AVERAGE_CHANGED;
     }
 
-    double getAverageExtractionRatePerSecond() {
+    public double getAverageExtractionRatePerSecond() {
         return averageExtractionRate * TICKS_PER_SECOND;
     }
 
-    boolean recordExtraction(GasStack drained, GasAction action) {
+    public boolean recordExtraction(GasStack drained, GasAction action) {
         if (action.simulate() || drained.isEmpty()) {
             return false;
         }
@@ -66,7 +66,7 @@ final class BoilerSteamOutletExtractionMeter {
         return true;
     }
 
-    void write(CompoundTag tag, boolean clientPacket) {
+    public void write(CompoundTag tag, boolean clientPacket) {
         tag.putDouble(COMPOUND_KEY_AVERAGE_EXTRACTION_RATE, averageExtractionRate);
         if (clientPacket) {
             return;
@@ -78,7 +78,7 @@ final class BoilerSteamOutletExtractionMeter {
         tag.putLongArray(COMPOUND_KEY_SAMPLES, extractedPerSample);
     }
 
-    void read(CompoundTag tag, boolean clientPacket) {
+    public void read(CompoundTag tag, boolean clientPacket) {
         averageExtractionRate = Math.max(0, tag.getDouble(COMPOUND_KEY_AVERAGE_EXTRACTION_RATE));
         if (clientPacket) {
             return;
@@ -125,7 +125,7 @@ final class BoilerSteamOutletExtractionMeter {
         Arrays.fill(extractedPerSample, 0);
     }
 
-    enum TickResult {
+    public enum TickResult {
         NONE,
         RECORDED,
         AVERAGE_CHANGED

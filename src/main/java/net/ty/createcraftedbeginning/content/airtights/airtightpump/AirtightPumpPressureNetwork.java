@@ -7,6 +7,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPressure;
 import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPropagator;
 import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPropagator.AdjacentTarget;
 import org.jetbrains.annotations.Nullable;
@@ -21,13 +22,13 @@ import java.util.Map;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightPumpPressureNetwork {
+public final class AirtightPumpPressureNetwork {
     private static final int DIRECTION_COUNT = Direction.values().length;
 
     private AirtightPumpPressureNetwork() {
     }
 
-    static boolean distributePressureTo(AirtightPumpBlockEntity pump, Direction side) {
+    public static boolean distributePressureTo(AirtightPumpBlockEntity pump, Direction side) {
         Level level = pump.getLevel();
         if (!pump.isPumpRunning() || level == null) {
             return false;
@@ -188,8 +189,13 @@ final class AirtightPumpPressureNetwork {
     }
 
     private static void applyPressureGraph(Level level, BlockPos pumpPos, PressureGraph graph, boolean pull, float pressure) {
+        long pressureUnits = GasPressure.toUnits(pressure);
+        if (pressureUnits <= 0) {
+            return;
+        }
+
         Deque<PressureNode> frontier = new ArrayDeque<>();
-        graph.start.pendingPressure = pressure;
+        graph.start.pendingPressureUnits = pressureUnits;
         graph.start.pressureQueued = true;
         frontier.addLast(graph.start);
 
@@ -211,19 +217,20 @@ final class AirtightPumpPressureNetwork {
                 continue;
             }
 
-            addPressureToPipe(level, pumpPos, current.pos, current.entryFace, !pull, current.pendingPressure);
-            float branchPressure = current.pendingPressure / validEdgeCount;
+            addPressureToPipe(level, pumpPos, current.pos, current.entryFace, !pull, current.pendingPressureUnits);
+            int validEdgeIndex = 0;
             for (FlowEdge edge : current.edges) {
                 if (edge.target != null && !edge.target.reachable) {
                     continue;
                 }
 
-                addPressureToPipe(level, pumpPos, current.pos, edge.face, edge.inbound, branchPressure);
-                if (edge.target == null || edge.target.pressureApplied) {
+                long branchPressureUnits = GasPressure.splitShare(current.pendingPressureUnits, validEdgeCount, validEdgeIndex++);
+                addPressureToPipe(level, pumpPos, current.pos, edge.face, edge.inbound, branchPressureUnits);
+                if (edge.target == null || edge.target.pressureApplied || branchPressureUnits <= 0) {
                     continue;
                 }
 
-                edge.target.pendingPressure += branchPressure;
+                edge.target.pendingPressureUnits = GasPressure.addSaturated(edge.target.pendingPressureUnits, branchPressureUnits);
                 if (edge.target.pressureQueued) {
                     continue;
                 }
@@ -234,8 +241,8 @@ final class AirtightPumpPressureNetwork {
         }
     }
 
-    private static void addPressureToPipe(Level level, BlockPos pumpPos, BlockPos pipePos, Direction pipeSide, boolean inbound, float pressure) {
-        if (pipePos.equals(pumpPos) || pressure <= 0) {
+    private static void addPressureToPipe(Level level, BlockPos pumpPos, BlockPos pipePos, Direction pipeSide, boolean inbound, long pressureUnits) {
+        if (pipePos.equals(pumpPos) || pressureUnits <= 0) {
             return;
         }
 
@@ -244,7 +251,7 @@ final class AirtightPumpPressureNetwork {
             return;
         }
 
-        transport.addPressure(pipeSide, inbound, pressure);
+        transport.addPressureUnits(pipeSide, inbound, pressureUnits);
     }
 
     private static final class PressureGraph {
@@ -293,7 +300,7 @@ final class AirtightPumpPressureNetwork {
         private boolean reachable;
         private boolean pressureQueued;
         private boolean pressureApplied;
-        private float pendingPressure;
+        private long pendingPressureUnits;
 
         private PressureNode(BlockPos pos, Direction entryFace, int distance) {
             this.pos = pos;

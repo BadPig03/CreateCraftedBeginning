@@ -71,6 +71,7 @@ import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBl
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockItem;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.EmptyBreezeCoolerBlock;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlockItem;
+import net.ty.createcraftedbeginning.content.photostresses.opticalfiber.OpticalFiberBlock;
 import net.ty.createcraftedbeginning.foundation.texture.CCBSpriteShifts;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -123,6 +124,27 @@ public final class CCBBlockModelTransformer {
     @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> pneumaticEngine() {
         return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().transform(ModelGen.customItemModel("pneumatic_engine", "item"));
+    }
+
+
+    @Contract(pure = true)
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> opticalFiber() {
+        return builder -> builder.blockstate((context, provider) -> {
+            var multipart = provider.getMultipartBuilder(context.getEntry());
+            multipart.part().modelFile(provider.models().getExistingFile(provider.modLoc("block/optical_fiber/core"))).addModel().end();
+            for (Direction direction : Iterate.directions) {
+                multipart.part()
+                        .modelFile(provider.models().getExistingFile(provider.modLoc("block/optical_fiber/" + direction.getSerializedName())))
+                        .addModel()
+                        .condition(OpticalFiberBlock.PROPERTY_BY_DIRECTION.get(direction), true)
+                        .end();
+            }
+        }).item().transform(ModelGen.customItemModel("optical_fiber", "item"));
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> photoSail() {
+        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().transform(ModelGen.customItemModel("photo_sail", "item"));
     }
 
     @Contract(pure = true)

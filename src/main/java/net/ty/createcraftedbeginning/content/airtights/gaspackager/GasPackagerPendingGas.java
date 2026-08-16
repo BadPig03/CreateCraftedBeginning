@@ -18,7 +18,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasPackagerPendingGas {
+public final class GasPackagerPendingGas {
     private static final String COMPOUND_KEY_PENDING_GASES = "PendingGases";
 
     private BalloonGasContents pendingGases = BalloonGasContents.EMPTY;
@@ -27,11 +27,11 @@ final class GasPackagerPendingGas {
         return stack.isEmpty() ? ItemStack.EMPTY : stack.copy();
     }
 
-    boolean isEmpty() {
+    public boolean isEmpty() {
         return pendingGases.isEmpty();
     }
 
-    boolean canStage(ItemStack box, IGasHandler handler) {
+    public boolean canStage(ItemStack box, IGasHandler handler) {
         if (!BalloonUtils.containsGasContents(box)) {
             return false;
         }
@@ -40,11 +40,11 @@ final class GasPackagerPendingGas {
         return !contents.isEmpty() && BalloonUtils.fitsInBalloon(contents) && GasPackagerUtils.canInsertAll(handler, contents);
     }
 
-    void stage(ItemStack box) {
+    public void stage(ItemStack box) {
         pendingGases = BalloonUtils.getGasContents(box).copy();
     }
 
-    InsertionResult insertInto(@Nullable IGasHandler handler, ItemStack previouslyUnwrapped) {
+    public InsertionResult insertInto(@Nullable IGasHandler handler, ItemStack previouslyUnwrapped) {
         BalloonGasContents contents = pendingGases.copy();
         if (contents.isEmpty()) {
             return InsertionResult.NO_OP;
@@ -80,7 +80,7 @@ final class GasPackagerPendingGas {
         return new InsertionResult(returned, true);
     }
 
-    void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+    public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         if (!compoundTag.contains(COMPOUND_KEY_PENDING_GASES) || clientPacket) {
             return;
         }
@@ -89,7 +89,7 @@ final class GasPackagerPendingGas {
         pendingGases = pendingTag == null ? BalloonGasContents.EMPTY : BalloonGasContents.parseOptional(provider, pendingTag);
     }
 
-    void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+    public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         if (clientPacket) {
             return;
         }
@@ -97,11 +97,11 @@ final class GasPackagerPendingGas {
         compoundTag.put(COMPOUND_KEY_PENDING_GASES, pendingGases.saveOptional(provider));
     }
 
-    void clear() {
+    public void clear() {
         pendingGases = BalloonGasContents.EMPTY;
     }
 
-    record InsertionResult(ItemStack returnedPackage, boolean inventoryChanged) {
+    public record InsertionResult(ItemStack returnedPackage, boolean inventoryChanged) {
         private static final InsertionResult NO_OP = new InsertionResult(ItemStack.EMPTY, false);
     }
 }

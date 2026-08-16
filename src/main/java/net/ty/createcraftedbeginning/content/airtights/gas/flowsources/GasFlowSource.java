@@ -18,7 +18,7 @@ import java.util.function.Predicate;
 public abstract class GasFlowSource {
     protected BlockFace location;
 
-    public GasFlowSource(BlockFace location) {
+    protected GasFlowSource(BlockFace location) {
         this.location = location;
     }
 

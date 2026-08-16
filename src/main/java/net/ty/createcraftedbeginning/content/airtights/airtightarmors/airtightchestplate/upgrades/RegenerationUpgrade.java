@@ -55,8 +55,8 @@ public enum RegenerationUpgrade implements TickingAirtightUpgrade {
             return false;
         }
 
-        MobEffectInstance effect = player.getEffect(MobEffects.REGENERATION);
-        return effect == null || effect.getAmplifier() <= AMPLIFIER;
+        MobEffectInstance regenerationEffect = player.getEffect(MobEffects.REGENERATION);
+        return regenerationEffect == null || regenerationEffect.getAmplifier() <= AMPLIFIER;
     }
 
     @Override
@@ -116,7 +116,7 @@ public enum RegenerationUpgrade implements TickingAirtightUpgrade {
 
     @Override
     public boolean shouldApplyEffect(Player player, ItemStack item) {
-        MobEffectInstance effect = player.getEffect(MobEffects.REGENERATION);
-        return effect == null || effect.getAmplifier() <= AMPLIFIER && effect.endsWithin(REFRESH_THRESHOLD);
+        MobEffectInstance regenerationEffect = player.getEffect(MobEffects.REGENERATION);
+        return regenerationEffect == null || regenerationEffect.getAmplifier() <= AMPLIFIER && regenerationEffect.endsWithin(REFRESH_THRESHOLD);
     }
 }

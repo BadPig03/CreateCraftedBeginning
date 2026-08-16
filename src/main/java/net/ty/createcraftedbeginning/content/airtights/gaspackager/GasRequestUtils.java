@@ -3,7 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.gaspackager;
 import com.simibubi.create.content.logistics.BigItemStack;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -17,14 +17,14 @@ public final class GasRequestUtils {
         if (amount >= BigItemStack.INF) {
             return keeper ? "+" : Component.translatable("jade.gas.infinity_mark").getString();
         }
-        return keeper ? GasAmountUtils.formatStockKeeper(amount) : GasAmountUtils.formatCompact(amount);
+        return keeper ? GasAmounts.formatStockKeeper(amount) : GasAmounts.formatCompact(amount);
     }
 
     public static String formatPrecise(int amount) {
         if (amount >= BigItemStack.INF) {
             return Component.translatable("jade.gas.infinity_mark").getString();
         }
-        return GasAmountUtils.formatPrecise(amount);
+        return GasAmounts.formatPrecise(amount);
     }
 
     public static int toLogisticsAmount(long gasAmount) {

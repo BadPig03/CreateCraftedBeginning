@@ -49,13 +49,13 @@ public enum WaterBreathingUpgrade implements AirtightUpgrade {
 
     @Override
     public boolean meetsConditions(Player player, ItemStack item) {
-        FluidType fluid = player.getEyeInFluidType();
-        if (fluid.isAir()) {
+        FluidType eyeFluidType = player.getEyeInFluidType();
+        if (eyeFluidType.isAir()) {
             return false;
         }
 
-        BlockPos pos = BlockPos.containing(player.position());
-        return !player.level().getBlockState(pos).is(Blocks.BUBBLE_COLUMN) && !MobEffectUtil.hasWaterBreathing(player) && player.canDrownInFluidType(fluid) && !player.getAbilities().invulnerable;
+        BlockPos playerPos = BlockPos.containing(player.position());
+        return !player.level().getBlockState(playerPos).is(Blocks.BUBBLE_COLUMN) && !MobEffectUtil.hasWaterBreathing(player) && player.canDrownInFluidType(eyeFluidType) && !player.getAbilities().invulnerable;
     }
 
     @Override

@@ -33,45 +33,10 @@ import java.util.stream.Stream;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasDataProvider {
+    public static final String STORAGE_KEY = "JadeGasStorage";
+    public static final String STORAGE_UID_KEY = "JadeGasStorageUid";
+
     private static final ResourceLocation ICON = CCBAPI.asResource("icon");
-
-    @Contract(pure = true)
-    public static GasCollectingResult fromGasHandlerStream(IGasHandler gasHandler) {
-        GasCollectingResult result = new GasCollectingResult();
-        for (int i = 0; i < gasHandler.getTanks(); i++) {
-            long capacity = gasHandler.getTankCapacity(i);
-            if (capacity <= 0) {
-                continue;
-            }
-
-            result.tanks++;
-            if (!gasHandler.getGasInTank(i).isEmpty()) {
-                continue;
-            }
-
-            result.emptyTanks++;
-            result.emptyCapacity = LongMath.saturatedAdd(result.emptyCapacity, capacity);
-        }
-
-        if (result.tanks == 0) {
-            result.stream = Stream.empty();
-            return result;
-        }
-
-        result.stream = IntStream.range(0, gasHandler.getTanks()).mapToObj(i -> {
-            long capacity = gasHandler.getTankCapacity(i);
-            if (capacity <= 0) {
-                return null;
-            }
-
-            GasStack gas = gasHandler.getGasInTank(i);
-            if (gas.isEmpty()) {
-                return null;
-            }
-            return new Tuple<>(GasObject.of(gas.getGasType(), gas.getAmount(), gas.getComponentsPatch()), capacity);
-        }).filter(Objects::nonNull);
-        return result;
-    }
 
     public static @Unmodifiable List<ViewGroup<CompoundTag>> fromGasHandler(IGasHandler gasHandler, boolean creative) {
         GasCollectingResult result = fromGasHandlerStream(gasHandler);
@@ -116,14 +81,14 @@ public class GasDataProvider {
         for (IGasHandler gasHandler : gasHandlers) {
             groups.addAll(fromGasHandler(gasHandler, creative));
         }
-        ViewGroup.saveList(data, GasConstants.STORAGE_KEY, groups, Function.identity());
-        data.putString(GasConstants.STORAGE_UID_KEY, location.toString());
+        ViewGroup.saveList(data, STORAGE_KEY, groups, Function.identity());
+        data.putString(STORAGE_UID_KEY, location.toString());
     }
 
     public static void appendData(ITooltip tooltip, CompoundTag data, boolean showDetails) {
         List<ViewGroup<CompoundTag>> groups;
         try {
-            groups = ViewGroup.readList(data, GasConstants.STORAGE_KEY, Function.identity());
+            groups = ViewGroup.readList(data, STORAGE_KEY, Function.identity());
         } catch (Exception exception) {
             CCBAPI.LOGGER.error("Failed to read gas storage data", exception);
             return;
@@ -158,6 +123,44 @@ public class GasDataProvider {
         });
     }
 
+    @Contract(pure = true)
+    private static GasCollectingResult fromGasHandlerStream(IGasHandler gasHandler) {
+        GasCollectingResult result = new GasCollectingResult();
+        for (int i = 0; i < gasHandler.getTanks(); i++) {
+            long capacity = gasHandler.getTankCapacity(i);
+            if (capacity <= 0) {
+                continue;
+            }
+
+            result.tanks++;
+            if (!gasHandler.getGasInTank(i).isEmpty()) {
+                continue;
+            }
+
+            result.emptyTanks++;
+            result.emptyCapacity = LongMath.saturatedAdd(result.emptyCapacity, capacity);
+        }
+
+        if (result.tanks == 0) {
+            result.stream = Stream.empty();
+            return result;
+        }
+
+        result.stream = IntStream.range(0, gasHandler.getTanks()).mapToObj(i -> {
+            long capacity = gasHandler.getTankCapacity(i);
+            if (capacity <= 0) {
+                return null;
+            }
+
+            GasStack gas = gasHandler.getGasInTank(i);
+            if (gas.isEmpty()) {
+                return null;
+            }
+            return new Tuple<>(GasObject.of(gas.getGasType(), gas.getAmount(), gas.getComponentsPatch()), capacity);
+        }).filter(Objects::nonNull);
+        return result;
+    }
+
     private static void appendView(ITooltip tooltip, GasView view, boolean showDetails, IElementHelper helper) {
         Component text = getText(view, showDetails);
         ProgressStyle style = helper.progressStyle().overlay(view.overlay);
@@ -184,10 +187,10 @@ public class GasDataProvider {
         return Component.translatable("jade.gas", name, current);
     }
 
-    public static class GasCollectingResult {
+    private static class GasCollectingResult {
         public Stream<Tuple<GasObject, Long>> stream;
-        public long emptyCapacity;
         public int tanks;
-        public int emptyTanks;
+        private long emptyCapacity;
+        private int emptyTanks;
     }
 }

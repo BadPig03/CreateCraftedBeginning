@@ -7,27 +7,27 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightTankStorageController {
+public final class AirtightTankStorageController {
     private final AirtightTankBlockEntity owner;
 
-    AirtightTankStorageController(AirtightTankBlockEntity owner) {
+    public AirtightTankStorageController(AirtightTankBlockEntity owner) {
         this.owner = owner;
     }
 
-    void resizeToBlocks(int blocks) {
+    public void resizeToBlocks(int blocks) {
         setCapacityForBlocks(blocks);
         drainOverflow();
     }
 
-    void setCapacityForBlocks(int blocks) {
+    private void setCapacityForBlocks(int blocks) {
         owner.getTankInventory().setCapacity((long) blocks * AirtightTankBlockEntity.getCapacityPerTank());
     }
 
-    void setCapacityForStructure() {
+    public void setCapacityForStructure() {
         setCapacityForBlocks(owner.getTotalTankSize());
     }
 
-    void drainOverflow() {
+    public void drainOverflow() {
         long overflow = owner.getTankInventory().getGasAmount() - owner.getTankInventory().getCapacity();
         if (overflow <= 0) {
             return;

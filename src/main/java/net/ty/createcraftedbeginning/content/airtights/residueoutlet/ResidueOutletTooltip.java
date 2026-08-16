@@ -13,11 +13,11 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class ResidueOutletTooltip {
+public final class ResidueOutletTooltip {
     private final ResidueOutletBlockEntity outlet;
     private final ResidueOutletInventory inventory;
 
-    ResidueOutletTooltip(ResidueOutletBlockEntity outlet, ResidueOutletInventory inventory) {
+    public ResidueOutletTooltip(ResidueOutletBlockEntity outlet, ResidueOutletInventory inventory) {
         this.outlet = outlet;
         this.inventory = inventory;
     }
@@ -31,7 +31,7 @@ final class ResidueOutletTooltip {
         CCBLang.fluidName(fluid).add(CCBLang.text(" ")).style(ChatFormatting.GRAY).add(CCBLang.number(fluid.getAmount()).add(unit).style(ChatFormatting.BLUE)).forGoggles(tooltip, 1);
     }
 
-    boolean addToGoggleTooltip(List<Component> tooltip) {
+    public boolean addToGoggleTooltip(List<Component> tooltip) {
         ItemStack item = inventory.getStackInSlot(0);
         FluidStack fluid = outlet.getStoredFluid();
         if (item.isEmpty() && fluid.isEmpty()) {

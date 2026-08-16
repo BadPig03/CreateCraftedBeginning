@@ -5,7 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.component.DataComponentPatch;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
 import org.jetbrains.annotations.Contract;
 
@@ -33,7 +33,7 @@ public record GasObject(Gas gasType, long amount, DataComponentPatch components)
 
     @Contract("_ -> new")
     public static GasObject of(Gas gasType) {
-        return of(gasType, GasAmountUtils.MILLIBUCKETS_PER_BUCKET);
+        return of(gasType, GasAmounts.MILLIBUCKETS_PER_BUCKET);
     }
 
     public static boolean isSameGasSameComponents(GasObject first, GasObject second) {

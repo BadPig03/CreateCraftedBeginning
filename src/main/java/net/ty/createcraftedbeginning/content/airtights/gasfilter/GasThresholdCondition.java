@@ -17,7 +17,7 @@ import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IMountedStorageManagerWithGas;
 import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorageWrapper;
@@ -33,8 +33,8 @@ import java.util.function.Predicate;
 public class GasThresholdCondition extends CargoThresholdCondition {
     private static final String COMPOUND_KEY_GAS_FILTER = "GasFilter";
 
-    private ItemStack filterItem = ItemStack.EMPTY;
-    private Predicate<GasStack> compiledFilter = GasFilterUtils.compile(ItemStack.EMPTY);
+    protected ItemStack filterItem = ItemStack.EMPTY;
+    protected Predicate<GasStack> compiledFilter = GasFilterUtils.compile(ItemStack.EMPTY);
 
     private static long saturatedAdd(long current, long addition) {
         if (addition <= 0) {
@@ -54,7 +54,7 @@ public class GasThresholdCondition extends CargoThresholdCondition {
     @Override
     protected boolean test(Level level, Train train, CompoundTag context) {
         Ops operator = getOperator();
-        long targetAmount = Math.max(0, (long) getThreshold() * GasAmountUtils.MILLIBUCKETS_PER_BUCKET);
+        long targetAmount = Math.max(0, (long) getThreshold() * GasAmounts.MILLIBUCKETS_PER_BUCKET);
         long totalAmount = 0;
         for (Carriage carriage : train.carriages) {
             if (!(carriage.storage instanceof IMountedStorageManagerWithGas withGas)) {
@@ -72,7 +72,7 @@ public class GasThresholdCondition extends CargoThresholdCondition {
             }
         }
 
-        requestStatusToUpdate(GasAmountUtils.toWholeBucketsClamped(totalAmount), context);
+        requestStatusToUpdate(GasAmounts.toWholeBucketsClamped(totalAmount), context);
         return testLong(operator, totalAmount, targetAmount);
     }
 
@@ -158,7 +158,7 @@ public class GasThresholdCondition extends CargoThresholdCondition {
         return filterItem.copy();
     }
 
-    private void updateFilter(ItemStack stack) {
+    protected void updateFilter(ItemStack stack) {
         filterItem = stack.isEmpty() || GasFilterUtils.isFilter(stack) ? GasFilterUtils.normalizeStack(stack) : ItemStack.EMPTY;
         compiledFilter = GasFilterUtils.compile(filterItem);
     }

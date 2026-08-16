@@ -8,7 +8,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
 import net.ty.createcraftedbeginning.config.CCBConfig;
@@ -23,7 +23,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasCanisterContainerContents implements IGasCanisterContainer {
-    public static final List<GasStack> DEFAULT_CONTENT = List.of(GasStack.EMPTY);
+    protected static final List<GasStack> DEFAULT_CONTENT = List.of(GasStack.EMPTY);
     public static final int ECONOMIZE_MAX_LEVEL = 3;
     protected final ItemStack canister;
 
@@ -35,7 +35,7 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
     }
 
     public static long getDefaultCapacity() {
-        return CCBConfig.server().airtights.maxCanisterCapacity.get() * GasAmountUtils.MILLIBUCKETS_PER_BUCKET;
+        return CCBConfig.server().airtights.maxCanisterCapacity.get() * GasAmounts.MILLIBUCKETS_PER_BUCKET;
     }
 
     public static long getEnchantedCapacity(ItemStack itemStack) {
@@ -198,7 +198,7 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
     public void setCapacity(int tank, long capacity) {
     }
 
-    private long fillEmpty(GasStack resource, long tankCapacity) {
+    protected long fillEmpty(GasStack resource, long tankCapacity) {
         long amount = Math.min(tankCapacity, resource.getAmount());
         if (amount <= 0) {
             return 0;
@@ -209,7 +209,7 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
         return amount;
     }
 
-    private long fillExisting(GasStack storedGas, GasStack resource, long tankCapacity) {
+    protected long fillExisting(GasStack storedGas, GasStack resource, long tankCapacity) {
         long remainingSpace = Math.max(0, tankCapacity - storedGas.getAmount());
         long amount = Math.min(remainingSpace, resource.getAmount());
         gas.grow(amount);

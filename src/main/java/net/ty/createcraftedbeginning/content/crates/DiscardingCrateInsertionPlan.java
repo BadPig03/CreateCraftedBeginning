@@ -8,8 +8,8 @@ import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-record DiscardingCrateInsertionPlan(ItemStack content, int count, boolean trackedDiscard) {
-    static DiscardingCrateInsertionPlan plan(ItemStack storedContent, int storedCount, ItemStack incoming, int maxCount, Predicate<ItemStack> trackedItemPredicate) {
+public record DiscardingCrateInsertionPlan(ItemStack content, int count, boolean trackedDiscard) {
+    public static DiscardingCrateInsertionPlan plan(ItemStack storedContent, int storedCount, ItemStack incoming, int maxCount, Predicate<ItemStack> trackedItemPredicate) {
         int incomingCount = incoming.getCount();
         if (storedContent.isEmpty()) {
             int nextCount = Math.min(incomingCount, maxCount);

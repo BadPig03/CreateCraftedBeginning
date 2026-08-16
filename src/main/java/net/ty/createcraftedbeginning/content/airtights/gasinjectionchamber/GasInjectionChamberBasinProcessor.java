@@ -23,11 +23,11 @@ import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasInjectionChamberBasinProcessor {
+public final class GasInjectionChamberBasinProcessor {
     private final GasInjectionChamberBlockEntity chamber;
     private final GasInjectionChamberOperationState operation;
 
-    GasInjectionChamberBasinProcessor(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation) {
+    public GasInjectionChamberBasinProcessor(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation) {
         this.chamber = chamber;
         this.operation = operation;
     }
@@ -91,7 +91,7 @@ final class GasInjectionChamberBasinProcessor {
         snapshot.outputBuffer().stream().map(FluidStack::copy).forEach(outputBuffer::add);
     }
 
-    void tryStartOperation() {
+    public void tryStartOperation() {
         Optional<BasinBlockEntity> basin = getBasin();
         if (basin.isEmpty() || !prepareOperation(basin.get())) {
             return;
@@ -101,7 +101,7 @@ final class GasInjectionChamberBasinProcessor {
         chamber.notifyUpdate();
     }
 
-    boolean executeRecipeOperation() {
+    public boolean executeRecipeOperation() {
         if (chamber.getLevel() == null) {
             return false;
         }
@@ -124,10 +124,6 @@ final class GasInjectionChamberBasinProcessor {
 
         BasinTransactionAccess transactionAccess = (BasinTransactionAccess) basin;
         SmartFluidTankBehaviour outputTank = transactionAccess.ccb$getTransactionOutputTank();
-        if (outputTank == null) {
-            return false;
-        }
-
         Provider provider = chamber.getLevel().registryAccess();
         ResourceTransaction transaction = new ResourceTransaction().add(GasInjectionChamberTransactions.operationGasParticipant(chamber, operation, provider)).add(ResourceTransaction.participant(() -> canDrainFluids(fluids, operation.fluidInputs) && basin.acceptOutputs(List.of(), List.of(result), true), () -> snapshotBasinFluids(basin, outputTank, transactionAccess, provider), () -> consumeBasinFluids(fluids) && basin.acceptOutputs(List.of(), List.of(result), false), snapshot -> restoreBasinFluids(basin, outputTank, transactionAccess, provider, snapshot)));
         if (!transaction.commit()) {

@@ -291,7 +291,7 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
         save();
     }
 
-    private void setCanister(int tank, CanisterData canister) {
+    protected void setCanister(int tank, CanisterData canister) {
         capacities.set(tank, canister.capacity());
         gases.set(tank, canister.gas().copy());
         compoundTags.set(tank, canister.compoundTag().copy());
@@ -314,7 +314,7 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
         setComponentIfChanged(CCBDataComponents.CANISTER_PACK_CONTAINER_CREATIVES, List.copyOf(creatives));
     }
 
-    private <T> void setComponentIfChanged(DataComponentType<T> component, T value) {
+    protected <T> void setComponentIfChanged(DataComponentType<T> component, T value) {
         if (Objects.equals(pack.get(component), value)) {
             return;
         }

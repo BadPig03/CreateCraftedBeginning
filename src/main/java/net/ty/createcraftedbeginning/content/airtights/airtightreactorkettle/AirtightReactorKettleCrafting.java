@@ -24,10 +24,10 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightReactorKettleCrafting {
+public final class AirtightReactorKettleCrafting {
     private final AirtightReactorKettleBlockEntity kettle;
 
-    AirtightReactorKettleCrafting(AirtightReactorKettleBlockEntity kettle) {
+    public AirtightReactorKettleCrafting(AirtightReactorKettleBlockEntity kettle) {
         this.kettle = kettle;
     }
 
@@ -123,7 +123,7 @@ final class AirtightReactorKettleCrafting {
         return true;
     }
 
-    CraftPlan createCraftPlan(int[] itemAmounts, int[] fluidAmounts, long[] gasAmounts, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
+    public CraftPlan createCraftPlan(int[] itemAmounts, int[] fluidAmounts, long[] gasAmounts, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
         IItemHandlerModifiable itemCapability = kettle.getItemCapability();
         IFluidHandler fluidCapability = kettle.getFluidCapability();
         IGasHandler gasCapability = kettle.getGasCapability();
@@ -149,22 +149,22 @@ final class AirtightReactorKettleCrafting {
         return new CraftPlan(MachineResourceSnapshots.copyItems(itemCapability), MachineResourceSnapshots.copyFluids(fluidCapability), MachineResourceSnapshots.copyGases(gasCapability), itemAmounts, fluidAmounts, gasAmounts, outputItems, outputFluids, outputGases);
     }
 
-    boolean commitCraft(CraftPlan plan) {
+    public boolean commitCraft(CraftPlan plan) {
         if (kettle.getLevel() == null) {
             return false;
         }
 
         Provider provider = kettle.getLevel().registryAccess();
-        ResourceTransaction transaction = new ResourceTransaction().add(ResourceTransaction.participant(() -> MachineResourceSnapshots.matchesItems(kettle.getItemCapability(), plan.expectedItems), this::snapshotItemInventories, () -> executeItemPlan(plan), this::restoreItemInventories)).add(ResourceTransaction.participant(() -> MachineResourceSnapshots.matchesFluids(kettle.getFluidCapability(), plan.expectedFluids), () -> MachineResourceSnapshots.snapshotFluidTanks(provider, kettle.getInputFluidTank(), kettle.getOutputFluidTank()), () -> executeFluidPlan(plan), snapshot -> MachineResourceSnapshots.restoreFluidTanks(provider, snapshot, kettle.getInputFluidTank(), kettle.getOutputFluidTank()))).add(ResourceTransaction.participant(() -> MachineResourceSnapshots.matchesGases(kettle.getGasCapability(), plan.expectedGases), () -> MachineResourceSnapshots.snapshotGasTanks(provider, kettle.getInputGasTank(), kettle.getOutputGasTank()), () -> executeGasPlan(plan), snapshot -> MachineResourceSnapshots.restoreGasTanks(provider, snapshot, kettle.getInputGasTank(), kettle.getOutputGasTank())));
+        ResourceTransaction transaction = new ResourceTransaction().add(ResourceTransaction.participant(() -> MachineResourceSnapshots.matchesItems(kettle.getItemCapability(), plan.expectedItems()), this::snapshotItemInventories, () -> executeItemPlan(plan), this::restoreItemInventories)).add(ResourceTransaction.participant(() -> MachineResourceSnapshots.matchesFluids(kettle.getFluidCapability(), plan.expectedFluids()), () -> MachineResourceSnapshots.snapshotFluidTanks(provider, kettle.getInputFluidTank(), kettle.getOutputFluidTank()), () -> executeFluidPlan(plan), snapshot -> MachineResourceSnapshots.restoreFluidTanks(provider, snapshot, kettle.getInputFluidTank(), kettle.getOutputFluidTank()))).add(ResourceTransaction.participant(() -> MachineResourceSnapshots.matchesGases(kettle.getGasCapability(), plan.expectedGases()), () -> MachineResourceSnapshots.snapshotGasTanks(provider, kettle.getInputGasTank(), kettle.getOutputGasTank()), () -> executeGasPlan(plan), snapshot -> MachineResourceSnapshots.restoreGasTanks(provider, snapshot, kettle.getInputGasTank(), kettle.getOutputGasTank())));
 
         boolean committed = transaction.commit();
-        if (committed && plan.outputItems.stream().anyMatch(stack -> stack.is(AllItems.ANDESITE_ALLOY))) {
+        if (committed && plan.outputItems().stream().anyMatch(stack -> stack.is(AllItems.ANDESITE_ALLOY))) {
             kettle.awardBackToBasics();
         }
         return committed;
     }
 
-    boolean acceptOutputs(List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases, boolean simulate) {
+    public boolean acceptOutputs(List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases, boolean simulate) {
         IFluidHandler targetFluidTank = kettle.getOutputFluidTank().getCapability();
         IGasHandler targetGasTank = kettle.getOutputGasTank().getCapability();
         boolean hasItemOutputs = outputItems.stream().anyMatch(stack -> !stack.isEmpty());
@@ -200,39 +200,39 @@ final class AirtightReactorKettleCrafting {
     }
 
     private boolean executeItemPlan(CraftPlan plan) {
-        if (!consumeItems(kettle.getItemCapability(), plan.expectedItems, plan.itemAmounts)) {
+        if (!consumeItems(kettle.getItemCapability(), plan.expectedItems(), plan.itemAmounts())) {
             return false;
         }
 
         kettle.getOutputInventory().allowInsertion();
         try {
-            return insertItemOutputs(kettle.getOutputInventory(), plan.outputItems);
+            return insertItemOutputs(kettle.getOutputInventory(), plan.outputItems());
         } finally {
             kettle.getOutputInventory().forbidInsertion();
         }
     }
 
     private boolean executeFluidPlan(CraftPlan plan) {
-        if (!consumeFluids(kettle.getFluidCapability(), plan.expectedFluids, plan.fluidAmounts)) {
+        if (!consumeFluids(kettle.getFluidCapability(), plan.expectedFluids(), plan.fluidAmounts())) {
             return false;
         }
 
         kettle.getOutputFluidTank().allowInsertion();
         try {
-            return insertFluidOutputs(kettle.getOutputFluidTank().getCapability(), plan.outputFluids);
+            return insertFluidOutputs(kettle.getOutputFluidTank().getCapability(), plan.outputFluids());
         } finally {
             kettle.getOutputFluidTank().forbidInsertion();
         }
     }
 
     private boolean executeGasPlan(CraftPlan plan) {
-        if (!consumeGases(kettle.getGasCapability(), plan.expectedGases, plan.gasAmounts)) {
+        if (!consumeGases(kettle.getGasCapability(), plan.expectedGases(), plan.gasAmounts())) {
             return false;
         }
 
         kettle.getOutputGasTank().allowInsertion();
         try {
-            return insertGasOutputs(kettle.getOutputGasTank().getCapability(), plan.outputGases);
+            return insertGasOutputs(kettle.getOutputGasTank().getCapability(), plan.outputGases());
         } finally {
             kettle.getOutputGasTank().forbidInsertion();
         }

@@ -14,7 +14,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock.WindLevel;
@@ -26,16 +26,16 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class BreezeChamberDisplay {
+public final class BreezeChamberDisplay {
     private final BreezeChamberBlockEntity chamber;
     private boolean goggles;
     private boolean trainHat;
 
-    BreezeChamberDisplay(BreezeChamberBlockEntity chamber) {
+    public BreezeChamberDisplay(BreezeChamberBlockEntity chamber) {
         this.chamber = chamber;
     }
 
-    boolean addToGoggleTooltip(List<Component> tooltip) {
+    public boolean addToGoggleTooltip(List<Component> tooltip) {
         if (chamber.getLevel() == null) {
             return false;
         }
@@ -75,11 +75,11 @@ final class BreezeChamberDisplay {
         long capacity = handler.getTankCapacity(0);
         CCBLang.translate("gui.gas_container.capacity").style(ChatFormatting.GRAY).forGoggles(tooltip);
         if (gasStack.isEmpty()) {
-            GasAmountUtils.precise(capacity).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
+            GasAmounts.precise(capacity).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
         }
         else {
             CCBLang.gasName(gasStack).style(ChatFormatting.WHITE).forGoggles(tooltip, 1);
-            GasAmountUtils.precise(gasStack.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmountUtils.precise(capacity).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+            GasAmounts.precise(gasStack.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmounts.precise(capacity).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
         }
         if (inputInvalid || outputFailed) {
             tooltip.add(CommonComponents.EMPTY);
@@ -94,7 +94,7 @@ final class BreezeChamberDisplay {
         return true;
     }
 
-    void playSound(boolean bad) {
+    public void playSound(boolean bad) {
         if (chamber.getLevel() == null) {
             return;
         }
@@ -107,7 +107,7 @@ final class BreezeChamberDisplay {
         }
     }
 
-    void spawnParticleBurst(boolean bad) {
+    public void spawnParticleBurst(boolean bad) {
         Level level = chamber.getLevel();
         if (level == null) {
             return;
@@ -124,7 +124,7 @@ final class BreezeChamberDisplay {
         }
     }
 
-    void tickAnimation(float targetAngle) {
+    public void tickAnimation(float targetAngle) {
         boolean active = chamber.isControllerActive();
         if (active) {
             float facingAngle = (AngleHelper.horizontalAngle(chamber.getBlockState().getOptionalValue(BreezeChamberBlock.FACING).orElse(Direction.NORTH)) + 180) % 360;
@@ -138,7 +138,7 @@ final class BreezeChamberDisplay {
         chamber.getHeadAnimationInternal().tickChaser();
     }
 
-    void spawnParticles() {
+    public void spawnParticles() {
         WindLevel windLevel = chamber.getWindLevelFromBlock();
         if (chamber.getLevel() == null) {
             return;
@@ -164,19 +164,19 @@ final class BreezeChamberDisplay {
         chamber.getLevel().addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), galeParticlePos.x, galeParticlePos.y, galeParticlePos.z, 0, yMotion, 0);
     }
 
-    boolean hasGoggles() {
+    public boolean hasGoggles() {
         return goggles;
     }
 
-    boolean hasTrainHat() {
+    public boolean hasTrainHat() {
         return trainHat;
     }
 
-    void setGoggles(boolean goggles) {
+    public void setGoggles(boolean goggles) {
         this.goggles = goggles;
     }
 
-    void setTrainHat(boolean trainHat) {
+    public void setTrainHat(boolean trainHat) {
         this.trainHat = trainHat;
     }
 }

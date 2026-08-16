@@ -14,11 +14,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasInjectionChamberTransactions {
+public final class GasInjectionChamberTransactions {
     private GasInjectionChamberTransactions() {
     }
 
-    static Participant<GasTankSnapshot> operationGasParticipant(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation, Provider provider) {
+    public static Participant<GasTankSnapshot> operationGasParticipant(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation, Provider provider) {
         IGasTank tank = chamber.getGasTank();
         return ResourceTransaction.participant(() -> !operation.gas.isEmpty() && GasStack.matches(tank.drain(operation.gas, GasAction.SIMULATE), operation.gas), () -> MachineResourceSnapshots.snapshotGasTanks(provider, chamber.getGasTankBehaviour()), () -> !operation.gas.isEmpty() && GasStack.matches(tank.drain(operation.gas, GasAction.EXECUTE), operation.gas), snapshot -> MachineResourceSnapshots.restoreGasTanks(provider, snapshot, chamber.getGasTankBehaviour()));
     }

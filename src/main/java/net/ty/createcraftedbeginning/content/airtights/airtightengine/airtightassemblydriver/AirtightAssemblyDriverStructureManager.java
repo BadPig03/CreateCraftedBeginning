@@ -200,7 +200,7 @@ public class AirtightAssemblyDriverStructureManager {
     }
 
     private record DerivedState(int attachedEngines, int attachedOutlets, int attachedChambers, int attachedWindChargingLevel, boolean structureValid) {
-        boolean matches(AirtightAssemblyDriverStructureManager manager) {
+        public boolean matches(AirtightAssemblyDriverStructureManager manager) {
             return attachedEngines == manager.attachedEngines && attachedOutlets == manager.attachedOutlets && attachedChambers == manager.attachedChambers && attachedWindChargingLevel == manager.attachedWindChargingLevel && structureValid == manager.structureValid;
         }
     }

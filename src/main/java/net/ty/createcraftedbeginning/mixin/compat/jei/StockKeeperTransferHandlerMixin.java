@@ -14,9 +14,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.ty.createcraftedbeginning.client.stockkeeper.GasCraftableBigItemStack;
-import net.ty.createcraftedbeginning.client.stockkeeper.StockKeeperCraftingUtils;
-import net.ty.createcraftedbeginning.compat.jei.utils.StockKeeperTransferUtils.OutputTarget;
-import net.ty.createcraftedbeginning.compat.jei.utils.StockKeeperTransferUtils;
+import net.ty.createcraftedbeginning.client.stockkeeper.StockKeeperCrafting;
+import net.ty.createcraftedbeginning.compat.jei.utils.StockKeeperTransfers.OutputTarget;
+import net.ty.createcraftedbeginning.compat.jei.utils.StockKeeperTransfers;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -33,7 +33,7 @@ import java.util.List;
 public abstract class StockKeeperTransferHandlerMixin {
     @Inject(method = "transferRecipeOnClient", at = @At("HEAD"), cancellable = true, order = 900)
     private void ccb$transferRecipeOnClient(StockKeeperRequestMenu container, RecipeHolder<Recipe<?>> recipeHolder, IRecipeSlotsView recipeSlots, Player player, boolean maxTransfer, boolean doTransfer, CallbackInfoReturnable<@Nullable IRecipeTransferError> cir) {
-        if (!(StockKeeperTransferUtils.containsGasIngredient(recipeSlots, RecipeIngredientRole.INPUT) || StockKeeperTransferUtils.containsGasIngredient(recipeSlots, RecipeIngredientRole.OUTPUT))) {
+        if (!(StockKeeperTransfers.containsGasIngredient(recipeSlots, RecipeIngredientRole.INPUT) || StockKeeperTransfers.containsGasIngredient(recipeSlots, RecipeIngredientRole.OUTPUT))) {
             return;
         }
 
@@ -48,14 +48,14 @@ public abstract class StockKeeperTransferHandlerMixin {
             return;
         }
 
-        List<BigItemStack> requirements = StockKeeperTransferUtils.collectRequirements(recipeSlots, summary, screen.itemsToOrder);
+        List<BigItemStack> requirements = StockKeeperTransfers.collectRequirements(recipeSlots, summary, screen.itemsToOrder);
         if (requirements == null || requirements.isEmpty()) {
-            cir.setReturnValue(StockKeeperTransferUtils.throwError("gui.stock_keeper.not_in_stock"));
+            cir.setReturnValue(StockKeeperTransfers.throwError("gui.stock_keeper.not_in_stock"));
             return;
         }
 
         Recipe<?> recipe = recipeHolder.value();
-        OutputTarget outputTarget = StockKeeperTransferUtils.getOutputTarget(recipeSlots, player, recipe);
+        OutputTarget outputTarget = StockKeeperTransfers.getOutputTarget(recipeSlots, player, recipe);
         if (outputTarget == null) {
             cir.setReturnValue(() -> Type.INTERNAL);
             return;
@@ -64,7 +64,7 @@ public abstract class StockKeeperTransferHandlerMixin {
         GasCraftableBigItemStack existing = screen.recipesToOrder.stream().filter(entry -> entry instanceof GasCraftableBigItemStack gasRecipe && gasRecipe.matches(recipe, outputTarget.displayStack())).map(entry -> (GasCraftableBigItemStack) entry).findFirst().orElse(null);
         boolean isNewEntry = existing == null;
         if (isNewEntry && screen.recipesToOrder.size() >= 9) {
-            cir.setReturnValue(StockKeeperTransferUtils.throwError("gui.stock_keeper.slots_full"));
+            cir.setReturnValue(StockKeeperTransfers.throwError("gui.stock_keeper.slots_full"));
             return;
         }
 
@@ -72,15 +72,15 @@ public abstract class StockKeeperTransferHandlerMixin {
         if (entry == null) {
             entry = new GasCraftableBigItemStack(outputTarget.displayStack(), recipe, outputTarget.outputPerCraft(), requirements);
         }
-        if (!StockKeeperCraftingUtils.canFitNewOrderTypes(screen.itemsToOrder, entry.getRequirements())) {
-            cir.setReturnValue(StockKeeperTransferUtils.throwError("gui.stock_keeper.slots_full"));
+        if (!StockKeeperCrafting.canFitNewOrderTypes(screen.itemsToOrder, entry.getRequirements())) {
+            cir.setReturnValue(StockKeeperTransfers.throwError("gui.stock_keeper.slots_full"));
             return;
         }
 
-        int maxSets = StockKeeperCraftingUtils.getMaxAdditionalSets(summary, screen.itemsToOrder, entry.getRequirements());
+        int maxSets = StockKeeperCrafting.getMaxAdditionalSets(summary, screen.itemsToOrder, entry.getRequirements());
         int requestedSets = maxTransfer ? maxSets : 1;
         if (requestedSets <= 0) {
-            cir.setReturnValue(StockKeeperTransferUtils.throwError("gui.stock_keeper.not_in_stock"));
+            cir.setReturnValue(StockKeeperTransfers.throwError("gui.stock_keeper.not_in_stock"));
             return;
         }
 
@@ -92,7 +92,7 @@ public abstract class StockKeeperTransferHandlerMixin {
         if (isNewEntry) {
             screen.recipesToOrder.add(entry);
         }
-        if (StockKeeperCraftingUtils.requestCraftable(screen, entry, entry.getOutputPerCraft() * requestedSets)) {
+        if (StockKeeperCrafting.requestCraftable(screen, entry, entry.getOutputPerCraft() * requestedSets)) {
             cir.setReturnValue(null);
             return;
         }
@@ -100,6 +100,6 @@ public abstract class StockKeeperTransferHandlerMixin {
         if (isNewEntry) {
             screen.recipesToOrder.remove(entry);
         }
-        cir.setReturnValue(StockKeeperTransferUtils.throwError("gui.stock_keeper.not_in_stock"));
+        cir.setReturnValue(StockKeeperTransfers.throwError("gui.stock_keeper.not_in_stock"));
     }
 }

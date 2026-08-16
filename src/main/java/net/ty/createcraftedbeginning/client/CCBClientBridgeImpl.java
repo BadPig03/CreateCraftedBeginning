@@ -30,13 +30,13 @@ import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonRenderHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlock;
-import net.ty.createcraftedbeginning.content.airtights.gas.network.GasAreaOutlinePacket;
+import net.ty.createcraftedbeginning.content.airtights.gas.GasAreaOutlinePacket;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeScreen;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlock;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.platform.CCBClientBridge.CCBService;
 import net.ty.createcraftedbeginning.platform.CCBClientBridge.ScreenTarget;
-import net.ty.createcraftedbeginning.platform.CCBClientBridge.Service;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -45,7 +45,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
-public final class CCBClientBridgeImpl implements Service {
+public final class CCBClientBridgeImpl implements CCBService {
     private static final int COLOR_RED = 0xFFFF5D6C;
 
     @Override

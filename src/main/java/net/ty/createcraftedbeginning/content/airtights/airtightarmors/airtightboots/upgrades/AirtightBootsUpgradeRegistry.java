@@ -32,8 +32,8 @@ public final class AirtightBootsUpgradeRegistry {
     }
 
     public static boolean allUpgradesEnabled(Player player) {
-        ItemStack item = player.getItemBySlot(EquipmentSlot.FEET);
-        return item.is(CCBItems.AIRTIGHT_BOOTS) && REGISTRY.allUpgradesEnabled(item);
+        ItemStack boots = player.getItemBySlot(EquipmentSlot.FEET);
+        return boots.is(CCBItems.AIRTIGHT_BOOTS) && REGISTRY.allUpgradesEnabled(boots);
     }
 
     public static List<AirtightUpgrade> getAll() {

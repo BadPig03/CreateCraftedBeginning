@@ -10,15 +10,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class EndSculkSilencerController {
+public final class EndSculkSilencerController {
     private final EndSculkSilencerBlockEntity blockEntity;
     private boolean inSableSubLevel;
 
-    EndSculkSilencerController(EndSculkSilencerBlockEntity blockEntity) {
+    public EndSculkSilencerController(EndSculkSilencerBlockEntity blockEntity) {
         this.blockEntity = blockEntity;
     }
 
-    void refresh() {
+    public void refresh() {
         if (!(blockEntity.getLevel() instanceof ServerLevel serverLevel)) {
             return;
         }
@@ -28,7 +28,7 @@ final class EndSculkSilencerController {
         refresh(serverLevel, projection.blockPos());
     }
 
-    void tickServer(ServerLevel serverLevel) {
+    public void tickServer(ServerLevel serverLevel) {
         if (!inSableSubLevel) {
             return;
         }
@@ -38,7 +38,7 @@ final class EndSculkSilencerController {
         refresh(serverLevel, projection.blockPos());
     }
 
-    void remove() {
+    public void remove() {
         if (!(blockEntity.getLevel() instanceof ServerLevel serverLevel)) {
             return;
         }

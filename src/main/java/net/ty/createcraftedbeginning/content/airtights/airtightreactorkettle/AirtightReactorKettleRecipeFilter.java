@@ -13,11 +13,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightReactorKettleRecipeFilter {
+public final class AirtightReactorKettleRecipeFilter {
     private AirtightReactorKettleRecipeFilter() {
     }
 
-    static @Nullable FilteringBehaviour getBehaviour(AirtightReactorKettleBlockEntity kettle) {
+    public static @Nullable FilteringBehaviour getBehaviour(AirtightReactorKettleBlockEntity kettle) {
         BlockPos filterPos = kettle.getBlockPos().below().north();
         Level level = kettle.getLevel();
         if (level == null || !(level.getBlockEntity(filterPos) instanceof AirtightReactorKettleStructuralBlockEntity structural)) {
@@ -26,7 +26,7 @@ final class AirtightReactorKettleRecipeFilter {
         return structural.getFilteringBehaviour();
     }
 
-    static boolean matches(AirtightReactorKettleBlockEntity kettle, ReactorKettleRecipe recipe) {
+    public static boolean matches(AirtightReactorKettleBlockEntity kettle, ReactorKettleRecipe recipe) {
         FilteringBehaviour filter = getBehaviour(kettle);
         Level level = kettle.getLevel();
         if (filter == null || level == null) {

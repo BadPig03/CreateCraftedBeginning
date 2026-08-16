@@ -6,7 +6,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
@@ -16,13 +16,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasDrawerTransfer {
-    private static final long TRANSFER_PER_OPERATION = 4 * GasAmountUtils.MILLIBUCKETS_PER_BUCKET;
+public final class GasDrawerTransfer {
+    private static final long TRANSFER_PER_OPERATION = 4 * GasAmounts.MILLIBUCKETS_PER_BUCKET;
 
     private GasDrawerTransfer() {
     }
 
-    static void push(Level level, GasDrawerBlockEntity drawer, ItemStack upgrade) {
+    public static void push(Level level, GasDrawerBlockEntity drawer, ItemStack upgrade) {
         IGasHandler target = getAdjacentHandler(level, drawer, upgrade);
         if (target == null) {
             return;
@@ -51,7 +51,7 @@ final class GasDrawerTransfer {
         }
     }
 
-    static void pull(Level level, GasDrawerBlockEntity drawer, ItemStack upgrade) {
+    public static void pull(Level level, GasDrawerBlockEntity drawer, ItemStack upgrade) {
         IGasHandler source = getAdjacentHandler(level, drawer, upgrade);
         if (source == null) {
             return;

@@ -12,26 +12,26 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class CrateDisplay {
+public final class CrateDisplay {
     private final CrateBlockEntityStorage storage;
 
-    CrateDisplay(CrateBlockEntityStorage storage) {
+    public CrateDisplay(CrateBlockEntityStorage storage) {
         this.storage = storage;
     }
 
-    int maxValue() {
+    public int maxValue() {
         return storage.handler().getSlotLimit(0);
     }
 
-    int currentValue() {
+    public int currentValue() {
         return storage.storedCount();
     }
 
-    MutableComponent format(int value) {
+    public MutableComponent format(int value) {
         return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.items")).component();
     }
 
-    void addToGoggleTooltip(List<Component> tooltip) {
+    public void addToGoggleTooltip(List<Component> tooltip) {
         CCBLang.translate("gui.crates.header").forGoggles(tooltip);
         ItemStack content = storage.storedItem();
         int count = storage.storedCount();

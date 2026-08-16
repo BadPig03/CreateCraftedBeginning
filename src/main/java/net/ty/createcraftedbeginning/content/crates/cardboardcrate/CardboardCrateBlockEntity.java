@@ -18,13 +18,13 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CardboardCrateBlockEntity extends CratesBlockEntity {
-    private CCBAdvancementBehaviour advancementBehaviour;
+    protected CCBAdvancementBehaviour advancementBehaviour;
 
     public CardboardCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state, () -> CCBConfig.server().crates.maxCardboardCapacity.get(), CardboardCrateBlockEntity::isPackage);
     }
 
-    static boolean isPackage(ItemStack stack) {
+    public static boolean isPackage(ItemStack stack) {
         return !stack.isEmpty() && stack.getItem() instanceof PackageItem;
     }
 

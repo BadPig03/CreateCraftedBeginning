@@ -33,12 +33,12 @@ import java.util.Objects;
 public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ResidueOutletInsertionTarget {
     private static final int LAZY_TICK_RATE = 20;
 
-    private final ResidueOutletInventory inventory;
-    private final ResidueOutletInsertionPlanner insertionPlanner;
-    private final ResidueOutletSerialization serialization;
-    private final ResidueOutletTooltip tooltip;
+    protected final ResidueOutletInventory inventory;
+    protected final ResidueOutletInsertionPlanner insertionPlanner;
+    protected final ResidueOutletSerialization serialization;
+    protected final ResidueOutletTooltip tooltip;
 
-    private SmartFluidTankBehaviour fluidTankBehaviour;
+    protected SmartFluidTankBehaviour fluidTankBehaviour;
 
     public ResidueOutletBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -115,11 +115,11 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
         return inventory;
     }
 
-    SmartFluidTankBehaviour getFluidTankBehaviour() {
+    public SmartFluidTankBehaviour getFluidTankBehaviour() {
         return fluidTankBehaviour;
     }
 
-    FluidStack getStoredFluid() {
+    public FluidStack getStoredFluid() {
         return fluidTankBehaviour.getPrimaryHandler().getFluidInTank(0);
     }
 

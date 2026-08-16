@@ -30,7 +30,7 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
     private static final CCBGUITextures CANISTER = CCBGUITextures.GAS_CANISTER_PACK_CANISTER;
     private static final CCBGUITextures CREATIVE_CANISTER = CCBGUITextures.GAS_CANISTER_PACK_CREATIVE_CANISTER;
     private static final AllGuiTextures PLAYER_INVENTORY = AllGuiTextures.PLAYER_INVENTORY;
-    private ItemStack pack;
+    protected ItemStack pack;
 
     public GasCanisterPackScreen(GasCanisterPackMenu container, Inventory inv, Component title) {
         super(container, inv, title);
@@ -93,12 +93,12 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
         GuiGameElement.of(pack).scale(4).at(leftPos + BACKGROUND.getWidth() + 11, topPos + BACKGROUND.getHeight() - 48, -200).render(graphics);
     }
 
-    private void initButtons() {
+    protected void initButtons() {
         IconButton confirm = new IconButton(leftPos + BACKGROUND.getWidth() - 33, topPos + BACKGROUND.getHeight() - 24, AllIcons.I_CONFIRM).withCallback(() -> menu.player.closeContainer());
         addRenderableWidget(confirm);
     }
 
-    private void drawGasCanisters(GuiGraphics graphics) {
+    protected void drawGasCanisters(GuiGraphics graphics) {
         int y = topPos + 27;
         PackItemHandler packInventory = menu.packInventory;
         drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.I_SLOT_INDEX), leftPos + 23, y);

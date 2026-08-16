@@ -21,7 +21,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
-    private final GasRepackagerController controller;
+    protected final GasRepackagerController controller;
 
     public GasRepackagerBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
@@ -42,12 +42,12 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
         controller.attemptToRepackage(targetInv);
     }
 
-    String resolveGasOutputAddress(String originalAddress) {
+    public String resolveGasOutputAddress(String originalAddress) {
         updateSignAddress();
         return signBasedAddress.isBlank() ? originalAddress : signBasedAddress;
     }
 
-    void acceptPassThroughPackage(ItemStack packageStack) {
+    public void acceptPassThroughPackage(ItemStack packageStack) {
         ItemStack box = packageStack.copy();
         if (PackageItem.hasOrderData(box)) {
             queuedExitingPackages.add(new BigItemStack(box, 1));
@@ -61,7 +61,7 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
         notifyUpdate();
     }
 
-    void restoreRollbackRemainders(List<ItemStack> remainders) {
+    public void restoreRollbackRemainders(List<ItemStack> remainders) {
         boolean changed = false;
         for (ItemStack remainder : remainders) {
             if (remainder.isEmpty()) {
@@ -85,7 +85,7 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
         notifyUpdate();
     }
 
-    void enqueuePassThroughBoxes(List<BigItemStack> boxes) {
+    public void enqueuePassThroughBoxes(List<BigItemStack> boxes) {
         if (boxes.isEmpty()) {
             return;
         }
@@ -94,7 +94,7 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
         notifyUpdate();
     }
 
-    void enqueueRepackagedBoxes(List<BigItemStack> boxes) {
+    public void enqueueRepackagedBoxes(List<BigItemStack> boxes) {
         if (boxes.isEmpty()) {
             return;
         }

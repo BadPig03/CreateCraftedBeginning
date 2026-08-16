@@ -11,7 +11,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
-import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer.MachineFillingStrategy;
+import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer.MachineFillingMode;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterContainerContents;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
@@ -61,7 +61,7 @@ public final class GasCanisterUtils {
             return 0;
         }
 
-        if (canisterContents.getMachineFillingStrategy() == MachineFillingStrategy.DENY) {
+        if (canisterContents.getMachineFillingMode() == MachineFillingMode.DENY) {
             return 0;
         }
         return canisterContents.fill(0, resource.copyWithAmount(maxAmount), GasAction.SIMULATE);

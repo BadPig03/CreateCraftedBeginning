@@ -20,18 +20,18 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class BreezeChamberController {
+public final class BreezeChamberController {
     private static final int WIND_STATE_SYNC_INTERVAL = 20;
     private final BreezeChamberBlockEntity chamber;
     private boolean controllerActiveInitialized;
     private boolean lastControllerActive;
     private int lastWindLevel = -1;
 
-    BreezeChamberController(BreezeChamberBlockEntity chamber) {
+    public BreezeChamberController(BreezeChamberBlockEntity chamber) {
         this.chamber = chamber;
     }
 
-    void tick() {
+    public void tick() {
         Level level = chamber.getLevel();
         if (level == null) {
             return;
@@ -47,7 +47,7 @@ final class BreezeChamberController {
         chamber.runClientTicker();
     }
 
-    void lazyTick() {
+    public void lazyTick() {
         Level level = chamber.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -61,7 +61,7 @@ final class BreezeChamberController {
         level.destroyBlock(chamber.getBlockPos(), true);
     }
 
-    void onLoad() {
+    public void onLoad() {
         Level level = chamber.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -72,7 +72,7 @@ final class BreezeChamberController {
         updateGasCapabilityState();
     }
 
-    void onStateChanged() {
+    public void onStateChanged() {
         chamber.setChanged();
         Level level = chamber.getLevel();
         if (level == null || level.isClientSide && !chamber.isVirtual()) {
@@ -84,7 +84,7 @@ final class BreezeChamberController {
         chamber.notifyUpdate();
     }
 
-    InteractionResultHolder<ItemStack> tryUpdateChargerByItem(ItemStack stack, boolean forceOverflow, boolean simulate) {
+    public InteractionResultHolder<ItemStack> tryUpdateChargerByItem(ItemStack stack, boolean forceOverflow, boolean simulate) {
         Level level = chamber.getLevel();
         if (level == null) {
             return InteractionResultHolder.fail(ItemStack.EMPTY);
@@ -95,7 +95,7 @@ final class BreezeChamberController {
         return result == InteractionResult.SUCCESS ? InteractionResultHolder.success(data.recipeResult().copy()) : InteractionResultHolder.fail(ItemStack.EMPTY);
     }
 
-    void syncWindProgress() {
+    public void syncWindProgress() {
         Level level = chamber.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -110,7 +110,7 @@ final class BreezeChamberController {
         chamber.notifyUpdate();
     }
 
-    void loadFromItem(ItemStack stack) {
+    public void loadFromItem(ItemStack stack) {
         int maxWindCapacity = BreezeChamberBlockEntity.getMaxWindCapacity();
         int time = Mth.clamp(stack.getOrDefault(CCBDataComponents.BREEZE_TIME, 0), -maxWindCapacity, maxWindCapacity);
         boolean creative = stack.getOrDefault(CCBDataComponents.BREEZE_CREATIVE, false);
@@ -122,7 +122,7 @@ final class BreezeChamberController {
         chamber.playSound(time < 0);
     }
 
-    void switchToGaleState() {
+    public void switchToGaleState() {
         if (!(chamber.getLevel() instanceof PonderLevel)) {
             return;
         }
@@ -131,7 +131,7 @@ final class BreezeChamberController {
         chamber.spawnParticleBurst(false);
     }
 
-    void switchToIllState() {
+    public void switchToIllState() {
         if (!(chamber.getLevel() instanceof PonderLevel)) {
             return;
         }

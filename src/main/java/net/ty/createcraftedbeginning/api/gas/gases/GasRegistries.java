@@ -19,18 +19,16 @@ import net.ty.createcraftedbeginning.api.gas.gases.ingredients.TagGasIngredient;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-/**
- * Registry keys and registry instances that form part of the public gas contract.
- */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("deprecation")
 public final class GasRegistries {
     public static final ResourceKey<Registry<Gas>> GAS_REGISTRY_KEY = registryKey("gas");
     public static final ResourceKey<Registry<GasIngredientType<?>>> GAS_INGREDIENT_TYPES_KEY = registryKey("gas_ingredient_type");
     public static final ResourceKey<Gas> EMPTY_GAS_KEY = ResourceKey.create(GAS_REGISTRY_KEY, CCBAPI.asResource("empty"));
 
+    @SuppressWarnings("deprecation")
     public static final DefaultedRegistry<Gas> GAS_REGISTRY = (DefaultedRegistry<Gas>) new RegistryBuilder<>(GAS_REGISTRY_KEY).defaultKey(EMPTY_GAS_KEY).sync(true).withIntrusiveHolders().create();
+
     public static final DeferredRegister<GasIngredientType<?>> GAS_INGREDIENT_TYPES = DeferredRegister.create(GAS_INGREDIENT_TYPES_KEY, CCBAPI.MOD_ID);
     public static final DeferredHolder<GasIngredientType<?>, GasIngredientType<SingleGasIngredient>> SINGLE_GAS_INGREDIENT_TYPE = GAS_INGREDIENT_TYPES.register("single", () -> new GasIngredientType<>(SingleGasIngredient.CODEC));
     public static final DeferredHolder<GasIngredientType<?>, GasIngredientType<TagGasIngredient>> TAG_GAS_INGREDIENT_TYPE = GAS_INGREDIENT_TYPES.register("tag", () -> new GasIngredientType<>(TagGasIngredient.CODEC));

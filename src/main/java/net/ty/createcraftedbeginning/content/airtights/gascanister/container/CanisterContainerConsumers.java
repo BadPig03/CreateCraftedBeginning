@@ -9,7 +9,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
 import net.ty.createcraftedbeginning.api.gascanisters.events.CanisterContainerEvent;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
@@ -98,7 +98,7 @@ public final class CanisterContainerConsumers {
                     continue;
                 }
 
-                long amount = GasConsumptionUtils.roundUp(rawCostFunction.applyAsDouble(gas));
+                long amount = GasConsumptions.roundUp(rawCostFunction.applyAsDouble(gas));
                 if (amount < 0 || !interactContainer(player, gas, amount, () -> true, true)) {
                     continue;
                 }

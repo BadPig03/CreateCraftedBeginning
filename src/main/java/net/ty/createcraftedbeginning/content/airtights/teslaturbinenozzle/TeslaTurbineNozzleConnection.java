@@ -16,15 +16,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class TeslaTurbineNozzleConnection {
+public final class TeslaTurbineNozzleConnection {
     private final TeslaTurbineNozzleBlockEntity nozzle;
     private TeslaTurbineBlockEntity turbine;
 
-    TeslaTurbineNozzleConnection(TeslaTurbineNozzleBlockEntity nozzle) {
+    public TeslaTurbineNozzleConnection(TeslaTurbineNozzleBlockEntity nozzle) {
         this.nozzle = nozzle;
     }
 
-    @Nullable IGasHandler getGasCapability(@Nullable Direction direction) {
+    @Nullable public IGasHandler getGasCapability(@Nullable Direction direction) {
         BlockState state = nozzle.getBlockState();
         if (direction != state.getValue(TeslaTurbineNozzleBlock.FACING)) {
             return null;
@@ -41,11 +41,11 @@ final class TeslaTurbineNozzleConnection {
         return turbine.createGasHandler(clockwise);
     }
 
-    void invalidate() {
+    public void invalidate() {
         turbine = null;
     }
 
-    void scheduleValidation() {
+    public void scheduleValidation() {
         Level level = nozzle.getLevel();
         if (level == null || level.isClientSide) {
             return;

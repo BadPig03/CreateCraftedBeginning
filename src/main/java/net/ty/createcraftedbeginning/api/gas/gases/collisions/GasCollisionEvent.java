@@ -14,7 +14,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public class GasCollisionEvent extends Event {
     private final Gas firstGasType;
     private final Gas secondGasType;
@@ -24,15 +23,6 @@ public class GasCollisionEvent extends Event {
     @Nullable
     private BlockState state;
 
-    /**
-     * Creates a new {@code GasCollisionEvent} instance.
-     *
-     * @param level         the level in which the operation is performed
-     * @param pos           the target block position
-     * @param firstGasType  the first gas type to use
-     * @param secondGasType the second gas type to use
-     * @param state         the block state to inspect or process
-     */
     public GasCollisionEvent(Level level, BlockPos pos, Gas firstGasType, Gas secondGasType, @Nullable BlockState state) {
         this.level = level;
         this.pos = pos;
@@ -41,14 +31,6 @@ public class GasCollisionEvent extends Event {
         this.state = state;
     }
 
-    /**
-     * Handles a collision involving the supplied gas stack.
-     *
-     * @param level          the level in which the operation is performed
-     * @param pos            the target block position
-     * @param firstGasStack  the first gas stack to inspect or process
-     * @param secondGasStack the second gas stack to inspect or process
-     */
     public static void handleCollision(Level level, BlockPos pos, GasStack firstGasStack, GasStack secondGasStack) {
         level.destroyBlock(pos, true);
         GasCollisionEvent event = new GasCollisionEvent(level, pos, firstGasStack.getGasType(), secondGasStack.getGasType(), null);
@@ -60,57 +42,29 @@ public class GasCollisionEvent extends Event {
         level.setBlockAndUpdate(pos, event.state);
     }
 
-    /**
-     * Returns the level.
-     *
-     * @return the level
-     */
     public Level getLevel() {
         return level;
     }
 
-    /**
-     * Returns the pos.
-     *
-     * @return the pos
-     */
     public BlockPos getPos() {
         return pos;
     }
 
-    /**
-     * Returns the state.
-     *
-     * @return the state
-     */
     @Nullable
     public BlockState getState() {
         return state;
     }
 
-    /**
-     * Sets the state.
-     *
-     * @param state the block state to inspect or process
-     */
     public void setState(@Nullable BlockState state) {
         this.state = state;
     }
 
-    /**
-     * Returns the first available gas type.
-     *
-     * @return the first available gas type
-     */
+    @SuppressWarnings("unused")
     public Gas getFirstGasType() {
         return firstGasType;
     }
 
-    /**
-     * Returns the second gas type.
-     *
-     * @return the second gas type
-     */
+    @SuppressWarnings("unused")
     public Gas getSecondGasType() {
         return secondGasType;
     }

@@ -19,18 +19,18 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class BreezeCoolerController {
+public final class BreezeCoolerController {
     private static final int COOLING_STATE_SYNC_INTERVAL = 20;
     private static final int COOLING_EFFECT_INTERVAL = 10;
     private final BreezeCoolerBlockEntity cooler;
     private boolean stockKeeper;
     private long lastCoolingEffectTime = Long.MIN_VALUE;
 
-    BreezeCoolerController(BreezeCoolerBlockEntity cooler) {
+    public BreezeCoolerController(BreezeCoolerBlockEntity cooler) {
         this.cooler = cooler;
     }
 
-    void tick() {
+    public void tick() {
         Level level = cooler.getLevel();
         if (level == null || !cooler.getCurrentState().tick(cooler)) {
             return;
@@ -43,11 +43,11 @@ final class BreezeCoolerController {
         cooler.runClientTicker();
     }
 
-    void lazyTick() {
+    public void lazyTick() {
         stockKeeper = BlazeBurnerBlockEntity.getStockTicker(cooler.getLevel(), cooler.getBlockPos()) != null;
     }
 
-    void onLoad() {
+    public void onLoad() {
         Level level = cooler.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -56,7 +56,7 @@ final class BreezeCoolerController {
         syncFrostLevelBlockState();
     }
 
-    void onStateChanged() {
+    public void onStateChanged() {
         cooler.setChanged();
         Level level = cooler.getLevel();
         if (level == null || level.isClientSide && !cooler.isVirtual()) {
@@ -67,7 +67,7 @@ final class BreezeCoolerController {
         cooler.notifyUpdate();
     }
 
-    boolean tryUpdateCoolantByItem(ItemStack stack, boolean forceOverflow, boolean simulate) {
+    public boolean tryUpdateCoolantByItem(ItemStack stack, boolean forceOverflow, boolean simulate) {
         if (stack.is(CCBItems.CREATIVE_ICE_CREAM)) {
             if (simulate) {
                 return true;
@@ -96,11 +96,11 @@ final class BreezeCoolerController {
         return true;
     }
 
-    void markCoolingChanged() {
+    public void markCoolingChanged() {
         cooler.setChanged();
     }
 
-    void syncCoolingProgress() {
+    public void syncCoolingProgress() {
         Level level = cooler.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -115,7 +115,7 @@ final class BreezeCoolerController {
         cooler.notifyUpdate();
     }
 
-    void playCoolingEffects() {
+    public void playCoolingEffects() {
         Level level = cooler.getLevel();
         if (level == null) {
             return;
@@ -131,7 +131,7 @@ final class BreezeCoolerController {
         cooler.spawnParticleBurst();
     }
 
-    void switchToChilledState() {
+    public void switchToChilledState() {
         if (!(cooler.getLevel() instanceof PonderLevel)) {
             return;
         }
@@ -140,7 +140,7 @@ final class BreezeCoolerController {
         cooler.spawnParticleBurst();
     }
 
-    boolean isStockKeeper() {
+    public boolean isStockKeeper() {
         return stockKeeper;
     }
 

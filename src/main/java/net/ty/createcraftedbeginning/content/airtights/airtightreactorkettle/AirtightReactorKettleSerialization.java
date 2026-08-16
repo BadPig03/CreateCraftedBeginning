@@ -8,7 +8,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightReactorKettleSerialization {
+public final class AirtightReactorKettleSerialization {
     private static final String COMPOUND_KEY_CORE = "Core";
     private static final String COMPOUND_KEY_INPUT_ITEMS = "InputItems";
     private static final String COMPOUND_KEY_OPEN_STATE = "OpenState";
@@ -20,12 +20,12 @@ final class AirtightReactorKettleSerialization {
     private final AirtightReactorKettleBlockEntity kettle;
     private final AirtightReactorKettleController controller;
 
-    AirtightReactorKettleSerialization(AirtightReactorKettleBlockEntity kettle, AirtightReactorKettleController controller) {
+    public AirtightReactorKettleSerialization(AirtightReactorKettleBlockEntity kettle, AirtightReactorKettleController controller) {
         this.kettle = kettle;
         this.controller = controller;
     }
 
-    void write(CompoundTag tag, Provider provider) {
+    public void write(CompoundTag tag, Provider provider) {
         tag.put(COMPOUND_KEY_CORE, kettle.getCore().write());
         tag.put(COMPOUND_KEY_INPUT_ITEMS, kettle.getInputInventory().serializeNBT(provider));
         tag.put(COMPOUND_KEY_OUTPUT_ITEMS, kettle.getOutputInventory().serializeNBT(provider));
@@ -35,7 +35,7 @@ final class AirtightReactorKettleSerialization {
         tag.putBoolean(COMPOUND_KEY_OPEN_STATE, controller.getWindowsOpenState());
     }
 
-    void read(CompoundTag tag, Provider provider, boolean clientPacket) {
+    public void read(CompoundTag tag, Provider provider, boolean clientPacket) {
         if (tag.contains(COMPOUND_KEY_CORE)) {
             kettle.getCore().read(tag.getCompound(COMPOUND_KEY_CORE));
         }

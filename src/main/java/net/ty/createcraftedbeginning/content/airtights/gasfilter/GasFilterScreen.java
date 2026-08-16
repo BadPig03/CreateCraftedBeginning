@@ -40,8 +40,8 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
     private static final Component OPTION_ENABLED = CCBLang.translateDirect("gui.option_enabled");
     private static final Component OPTION_DISABLED = CCBLang.translateDirect("gui.option_disabled");
 
-    private IconButton whitelistButton;
-    private IconButton blacklistButton;
+    protected IconButton whitelistButton;
+    protected IconButton blacklistButton;
 
     public GasFilterScreen(GasFilterMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -86,7 +86,7 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
         GuiGameElement.of(FILTER).scale(4).at(leftPos + BACKGROUND.getWidth() + 8, topPos + BACKGROUND.getHeight() - 53, -200).render(graphics);
     }
 
-    private void initButtons() {
+    protected void initButtons() {
         IconButton confirmButton = new IconButton(leftPos + BACKGROUND.getWidth() - 33, topPos + BACKGROUND.getHeight() - 29, AllIcons.I_CONFIRM).withCallback(() -> menu.player.closeContainer());
         addRenderableWidget(confirmButton);
 
@@ -108,12 +108,12 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
         addRenderableWidget(resetButton);
     }
 
-    private void updateStates() {
+    protected void updateStates() {
         blacklistButton.green = menu.blacklist;
         whitelistButton.green = !menu.blacklist;
     }
 
-    private void renderTooltips(GuiGraphics graphics, int mouseX, int mouseY) {
+    protected void renderTooltips(GuiGraphics graphics, int mouseX, int mouseY) {
         boolean isShiftDown = hasShiftDown();
         renderModeTooltip(graphics, blacklistButton, BLACKLIST_TITLE, BLACKLIST_DESCRIPTION, isShiftDown, mouseX, mouseY);
         renderModeTooltip(graphics, whitelistButton, WHITELIST_TITLE, WHITELIST_DESCRIPTION, isShiftDown, mouseX, mouseY);
@@ -133,7 +133,7 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
         graphics.renderTooltip(font, tooltips, Optional.empty(), mouseX, mouseY);
     }
 
-    private void renderModeTooltip(GuiGraphics graphics, IconButton button, Component title, Component description, boolean isShiftDown, int mouseX, int mouseY) {
+    protected void renderModeTooltip(GuiGraphics graphics, IconButton button, Component title, Component description, boolean isShiftDown, int mouseX, int mouseY) {
         if (!button.isHovered()) {
             return;
         }

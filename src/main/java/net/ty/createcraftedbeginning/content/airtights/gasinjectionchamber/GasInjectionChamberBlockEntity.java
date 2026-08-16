@@ -24,7 +24,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
@@ -48,17 +48,17 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     public static final int NOZZLE_PART_TIME = 15;
     public static final int NOZZLE_IDLE_TIME = 5;
     public static final int PROCESSING_TIME = 60;
-    static final int INJECTION_EXECUTION_TICK = PROCESSING_TIME - NOZZLE_TIME - NOZZLE_PART_TIME - NOZZLE_IDLE_TIME;
+    public static final int INJECTION_EXECUTION_TICK = PROCESSING_TIME - NOZZLE_TIME - NOZZLE_PART_TIME - NOZZLE_IDLE_TIME;
 
-    private final GasInjectionChamberOperationState operation;
-    private final GasInjectionChamberFilterState filter;
-    private final GasInjectionChamberDisplay display;
-    private final GasInjectionChamberController controller;
-    private final GasInjectionChamberSerialization serialization;
+    protected final GasInjectionChamberOperationState operation;
+    protected final GasInjectionChamberFilterState filter;
+    protected final GasInjectionChamberDisplay display;
+    protected final GasInjectionChamberController controller;
+    protected final GasInjectionChamberSerialization serialization;
 
-    private SmartGasTankBehaviour tankBehaviour;
-    private IGasHandler exposedGasHandler;
-    private boolean basinCheckScheduled = true;
+    protected SmartGasTankBehaviour tankBehaviour;
+    protected IGasHandler exposedGasHandler;
+    protected boolean basinCheckScheduled = true;
 
     public GasInjectionChamberBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState blockState) {
         super(type, pos, blockState);
@@ -78,7 +78,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     }
 
     public static long getMaxCapacity() {
-        return CCBConfig.server().airtights.maxGasInjectionChamberCapacity.get() * GasAmountUtils.MILLIBUCKETS_PER_BUCKET;
+        return CCBConfig.server().airtights.maxGasInjectionChamberCapacity.get() * GasAmounts.MILLIBUCKETS_PER_BUCKET;
     }
 
     @Override
@@ -207,7 +207,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         basinCheckScheduled = true;
     }
 
-    boolean consumeBasinCheckScheduled() {
+    public boolean consumeBasinCheckScheduled() {
         if (!basinCheckScheduled) {
             return false;
         }
@@ -216,46 +216,46 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         return true;
     }
 
-    SmartGasTankBehaviour getGasTankBehaviour() {
+    public SmartGasTankBehaviour getGasTankBehaviour() {
         return tankBehaviour;
     }
 
-    IGasTank getGasTank() {
+    public IGasTank getGasTank() {
         return tankBehaviour.getPrimaryHandler();
     }
 
-    GasStack getGasInTank() {
+    public GasStack getGasInTank() {
         return getGasTank().getGasStack();
     }
 
-    void clearOperationState() {
+    public void clearOperationState() {
         operation.clear();
         filter.setClientLocked(false);
     }
 
-    void cancelOperationState() {
+    public void cancelOperationState() {
         operation.setProcessingTicks(-1);
         clearOperationState();
         notifyUpdate();
     }
 
-    boolean isFanProcessingOperationStillValid(ResourceLocation typeId) {
+    public boolean isFanProcessingOperationStillValid(ResourceLocation typeId) {
         return controller.isFanProcessingOperationStillValid(typeId);
     }
 
-    private boolean isOperationGasLocked() {
+    protected boolean isOperationGasLocked() {
         return operation.isGasLocked();
     }
 
-    private GasStack getOperationGas() {
+    protected GasStack getOperationGas() {
         return operation.gas;
     }
 
-    private ProcessingResult onItemEntered(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
+    protected ProcessingResult onItemEntered(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
         return controller.onItemEntered(transported, handler);
     }
 
-    private ProcessingResult onItemHeld(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
+    protected ProcessingResult onItemHeld(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
         return controller.onItemHeld(transported, handler);
     }
 }

@@ -4,7 +4,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 
@@ -13,10 +13,10 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightHatchDisplay {
+public final class AirtightHatchDisplay {
     private final AirtightHatchBlockEntity hatch;
 
-    AirtightHatchDisplay(AirtightHatchBlockEntity hatch) {
+    public AirtightHatchDisplay(AirtightHatchBlockEntity hatch) {
         this.hatch = hatch;
     }
 
@@ -32,15 +32,15 @@ final class AirtightHatchDisplay {
 
     private static void addStandardTooltip(List<Component> tooltip, GasStack gas, long capacity) {
         if (gas.isEmpty()) {
-            CCBLang.translate("gui.gas_container.capacity").add(GasAmountUtils.precise(capacity).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+            CCBLang.translate("gui.gas_container.capacity").add(GasAmounts.precise(capacity).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
             return;
         }
 
         CCBLang.gasName(gas).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-        GasAmountUtils.precise(gas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmountUtils.precise(capacity).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+        GasAmounts.precise(gas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmounts.precise(capacity).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
     }
 
-    boolean addToGoggleTooltip(List<Component> tooltip) {
+    public boolean addToGoggleTooltip(List<Component> tooltip) {
         if (hatch.isEmpty()) {
             return false;
         }
@@ -57,15 +57,15 @@ final class AirtightHatchDisplay {
         return true;
     }
 
-    int getMaxValue() {
-        return hatch.isEmpty() ? 0 : GasAmountUtils.toWholeBucketsClamped(hatch.getHatchCapacity());
+    public int getMaxValue() {
+        return hatch.isEmpty() ? 0 : GasAmounts.toWholeBucketsClamped(hatch.getHatchCapacity());
     }
 
-    int getCurrentValue() {
-        return hatch.isEmpty() ? 0 : GasAmountUtils.toWholeBucketsClamped(hatch.getHatchGasContent().getAmount());
+    public int getCurrentValue() {
+        return hatch.isEmpty() ? 0 : GasAmounts.toWholeBucketsClamped(hatch.getHatchGasContent().getAmount());
     }
 
-    MutableComponent format(int value) {
-        return GasAmountUtils.formatWholeBuckets(value);
+    public MutableComponent format(int value) {
+        return GasAmounts.formatWholeBuckets(value);
     }
 }

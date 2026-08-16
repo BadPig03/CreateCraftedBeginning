@@ -23,12 +23,12 @@ import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchambe
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasInjectionChamberOperationPlanner {
+public final class GasInjectionChamberOperationPlanner {
     private final GasInjectionChamberBlockEntity chamber;
     private final GasInjectionChamberOperationState operation;
     private final GasInjectionChamberFilterState filter;
 
-    GasInjectionChamberOperationPlanner(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation, GasInjectionChamberFilterState filter) {
+    public GasInjectionChamberOperationPlanner(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation, GasInjectionChamberFilterState filter) {
         this.chamber = chamber;
         this.operation = operation;
         this.filter = filter;
@@ -64,7 +64,7 @@ final class GasInjectionChamberOperationPlanner {
         }
     }
 
-    boolean prepareOperation(ItemStack itemStack) {
+    public boolean prepareOperation(ItemStack itemStack) {
         if (chamber.getLevel() == null) {
             return false;
         }
@@ -73,7 +73,7 @@ final class GasInjectionChamberOperationPlanner {
         return !tankGas.isEmpty() && (prepareCanisterOperation(itemStack, tankGas) || prepareRecipeOperation(itemStack, tankGas) || prepareFanProcessingOperation(itemStack, tankGas));
     }
 
-    boolean prepareOperationResultsIfNeeded(ItemStack itemStack) {
+    public boolean prepareOperationResultsIfNeeded(ItemStack itemStack) {
         return operation.resultPrepared || switch (operation.type) {
             case ITEM_RECIPE -> prepareRecipeResults(itemStack);
             case FAN_PROCESSING -> prepareFanProcessingResults();
@@ -81,11 +81,11 @@ final class GasInjectionChamberOperationPlanner {
         };
     }
 
-    boolean wasProcessedByInstalledFilter(TransportedItemStack transported) {
+    public boolean wasProcessedByInstalledFilter(TransportedItemStack transported) {
         return transported.processedBy != null && transported.processingTime == -1 && filter.getFanProcessingType().flatMap(GasInjectionChamberUtils::getFanProcessingType).filter(type -> type == transported.processedBy).isPresent();
     }
 
-    boolean isFanProcessingOperationStillValid(@Nullable ResourceLocation typeId) {
+    public boolean isFanProcessingOperationStillValid(@Nullable ResourceLocation typeId) {
         return typeId != null && filter.getFanProcessingType().filter(typeId::equals).isPresent();
     }
 

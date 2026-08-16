@@ -4,7 +4,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverCore;
@@ -15,14 +15,14 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightTankDisplay {
+public final class AirtightTankDisplay {
     private final AirtightTankBlockEntity owner;
 
-    AirtightTankDisplay(AirtightTankBlockEntity owner) {
+    public AirtightTankDisplay(AirtightTankBlockEntity owner) {
         this.owner = owner;
     }
 
-    boolean addToGoggleTooltip(List<Component> tooltip) {
+    public boolean addToGoggleTooltip(List<Component> tooltip) {
         AirtightTankBlockEntity controller = owner.getControllerBE();
         if (controller == null) {
             return false;
@@ -38,21 +38,21 @@ final class AirtightTankDisplay {
         GasStack gasStack = handler.getGasInTank(0);
         long capacity = handler.getTankCapacity(0);
         if (gasStack.isEmpty()) {
-            CCBLang.translate("gui.gas_container.capacity").add(GasAmountUtils.precise(capacity).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+            CCBLang.translate("gui.gas_container.capacity").add(GasAmounts.precise(capacity).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
             return true;
         }
 
         CCBLang.gasName(gasStack).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-        GasAmountUtils.precise(gasStack.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmountUtils.precise(capacity).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+        GasAmounts.precise(gasStack.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmounts.precise(capacity).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
         return true;
     }
 
-    int getMaxValue() {
+    public int getMaxValue() {
         AirtightTankBlockEntity controller = owner.getControllerBE();
-        return controller == null ? 0 : GasAmountUtils.toWholeBucketsClamped(controller.getCapability().getTankCapacity(0));
+        return controller == null ? 0 : GasAmounts.toWholeBucketsClamped(controller.getCapability().getTankCapacity(0));
     }
 
-    int getCurrentValue() {
+    public int getCurrentValue() {
         AirtightTankBlockEntity controller = owner.getControllerBE();
         if (controller == null) {
             return 0;
@@ -66,10 +66,10 @@ final class AirtightTankDisplay {
                 amount += stack.getAmount();
             }
         }
-        return GasAmountUtils.toWholeBucketsClamped(amount);
+        return GasAmounts.toWholeBucketsClamped(amount);
     }
 
-    MutableComponent format(int value) {
-        return GasAmountUtils.formatWholeBuckets(value);
+    public MutableComponent format(int value) {
+        return GasAmounts.formatWholeBuckets(value);
     }
 }

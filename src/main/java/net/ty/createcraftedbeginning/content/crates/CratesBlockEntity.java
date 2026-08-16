@@ -25,8 +25,8 @@ import java.util.function.Predicate;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class CratesBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ThresholdSwitchObservable {
-    private final CrateBlockEntityStorage storage;
-    private final CrateDisplay display;
+    protected final CrateBlockEntityStorage storage;
+    protected final CrateDisplay display;
 
     protected CratesBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, IntSupplier maxCountSupplier) {
         this(type, pos, state, maxCountSupplier, null);

@@ -21,7 +21,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType.BlockEntitySupplie
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.compat.functionalstorage.registry.CCBFunctionalStorageBlockEntities;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
@@ -114,7 +114,7 @@ public final class GasDrawerBlock extends Drawer<GasDrawerBlockEntity> {
             }
 
             hasContents = true;
-            tooltip.add(Component.literal("- ").withStyle(ChatFormatting.GRAY).append(Component.literal(GasAmountUtils.formatCompact(gas.getAmount())).withStyle(ChatFormatting.YELLOW)).append(Component.literal(" ")).append(gas.getHoverName().copy().withStyle(ChatFormatting.GOLD)));
+            tooltip.add(Component.literal("- ").withStyle(ChatFormatting.GRAY).append(Component.literal(GasAmounts.formatCompact(gas.getAmount())).withStyle(ChatFormatting.YELLOW)).append(Component.literal(" ")).append(gas.getHoverName().copy().withStyle(ChatFormatting.GOLD)));
             if (gas.isComponentsPatchEmpty()) {
                 continue;
             }

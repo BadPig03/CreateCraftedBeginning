@@ -16,14 +16,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
-public final class CCBParticleUtils {
+public final class CCBParticles {
     private static final int REDUCED_DESTROY_PARTICLE_COUNT = 16;
     private static final double PARTICLE_POSITION_MARGIN = 0.2;
     private static final double PARTICLE_POSITION_RANGE = 0.6;
     private static final double PARTICLE_OUTWARD_SPEED = 0.12;
     private static final double PARTICLE_UPWARD_SPEED = 0.04;
 
-    private CCBParticleUtils() {
+    private CCBParticles() {
     }
 
     public static void addReducedDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager) {
@@ -36,7 +36,6 @@ public final class CCBParticleUtils {
         double centerX = pos.getX() + 0.5;
         double centerY = pos.getY() + 0.5;
         double centerZ = pos.getZ() + 0.5;
-
         for (int i = 0; i < REDUCED_DESTROY_PARTICLE_COUNT; i++) {
             double x = pos.getX() + PARTICLE_POSITION_MARGIN + random.nextDouble() * PARTICLE_POSITION_RANGE;
             double y = pos.getY() + PARTICLE_POSITION_MARGIN + random.nextDouble() * PARTICLE_POSITION_RANGE;

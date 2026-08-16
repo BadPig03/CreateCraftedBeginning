@@ -55,10 +55,10 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
     protected final Map<AirtightUpgrade, IconButton> upgradeButtons = new HashMap<>();
     protected final Map<AirtightUpgrade, AbstractSimiWidget> upgradeIndicators = new HashMap<>();
     protected final Map<AirtightUpgrade, ScreenButtonConfig> buttonConfigsMap = new HashMap<>();
-    private final Set<ResourceLocation> pendingUpgradeRequests = new HashSet<>();
+    protected final Set<ResourceLocation> pendingUpgradeRequests = new HashSet<>();
 
     protected IconButton disableUpgradeButton;
-    private int lastServerStateRevision;
+    protected int lastServerStateRevision;
 
     public AirtightUpgradableScreen(T container, Inventory inv, Component title, CCBGUITextures background) {
         super(container, inv, title);
@@ -111,7 +111,7 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
         return ImmutableList.of(new Rect2i(leftPos + 2 + background.getWidth(), topPos + background.getHeight() - 48, 48, 48));
     }
 
-    private void renderButtonTooltip(GuiGraphics guiGraphics, ScreenButtonConfig config, int mouseX, int mouseY) {
+    protected void renderButtonTooltip(GuiGraphics guiGraphics, ScreenButtonConfig config, int mouseX, int mouseY) {
         IconButton button = config.getIconButton();
         List<Component> tooltips = new ArrayList<>(List.of(config.getTitle()));
         Item upgradeItem = config.getUpgradeItem();
@@ -235,7 +235,7 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
             this.upgradeItem = upgradeItem;
         }
 
-        public IconButton getIconButton() {
+        private IconButton getIconButton() {
             return iconButton;
         }
 
@@ -251,7 +251,7 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
             return enabledSupplier.get();
         }
 
-        public boolean canBeInstalled() {
+        private boolean canBeInstalled() {
             return installableSupplier.get();
         }
 

@@ -11,7 +11,7 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.registries.NewRegistryEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
-import net.ty.createcraftedbeginning.advancement.CCBTriggers;
+import net.ty.createcraftedbeginning.advancement.triggers.CCBTriggersRegistry;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.events.RegisterAirtightHandlersEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
@@ -110,7 +110,7 @@ public class CreateCraftedBeginning {
         }
 
         CCBAdvancements.register();
-        CCBTriggers.register();
+        CCBTriggersRegistry.register();
     }
 
     public static void init(FMLCommonSetupEvent event) {

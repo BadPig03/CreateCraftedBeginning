@@ -15,7 +15,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.client.stockkeeper.StockKeeperCraftingUtils;
+import net.ty.createcraftedbeginning.client.stockkeeper.StockKeeperCrafting;
 import net.ty.createcraftedbeginning.compat.fluidlogistics.FluidLogisticsStockKeeperCompat;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
@@ -29,8 +29,8 @@ import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class StockKeeperTransferUtils {
-    private StockKeeperTransferUtils() {
+public final class StockKeeperTransfers {
+    private StockKeeperTransfers() {
     }
 
     public static @Nullable List<BigItemStack> collectRequirements(IRecipeSlotsView recipeSlots, InventorySummary summary, List<BigItemStack> existingOrders) {
@@ -46,7 +46,7 @@ public final class StockKeeperTransferUtils {
                 return null;
             }
 
-            StockKeeperCraftingUtils.mergeRequirement(requirements, chosen);
+            StockKeeperCrafting.mergeRequirement(requirements, chosen);
         }
         return requirements;
     }
@@ -117,8 +117,8 @@ public final class StockKeeperTransferUtils {
         int bestBatches = 0;
         boolean bestAlreadyUsed = false;
         for (BigItemStack candidate : candidates) {
-            int alreadySelected = StockKeeperCraftingUtils.getMatchingCount(selectedRequirements, candidate.stack);
-            int alreadyOrdered = StockKeeperCraftingUtils.getMatchingCount(existingOrders, candidate.stack);
+            int alreadySelected = StockKeeperCrafting.getMatchingCount(selectedRequirements, candidate.stack);
+            int alreadyOrdered = StockKeeperCrafting.getMatchingCount(existingOrders, candidate.stack);
             int available = summary.getCountOf(candidate.stack) - alreadySelected - alreadyOrdered;
             if (available < candidate.count) {
                 continue;

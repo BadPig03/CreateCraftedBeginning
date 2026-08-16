@@ -12,17 +12,11 @@ public final class DefaultEngineHandler implements AirtightEngineHandler {
     private DefaultEngineHandler() {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public double getWorkFactor() {
         return 0;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int getMaxLevel() {
         return 0;

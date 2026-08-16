@@ -22,7 +22,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor.ARGB32;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.client.CCBGasClientTextures;
 import net.ty.createcraftedbeginning.compat.functionalstorage.GasDrawerBlockEntity;
@@ -81,7 +81,7 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
             poseStack.translate(-0.25, 0, 0);
         }
 
-        String amount = renderGas.filterOnly() ? "0" : drawer.isCreative() ? "∞" : GasAmountUtils.formatCompact(renderGas.stack().getAmount());
+        String amount = renderGas.filterOnly() ? "0" : drawer.isCreative() ? "∞" : GasAmounts.formatCompact(renderGas.stack().getAmount());
         DrawerRenderer.renderText(poseStack, buffers, overlay, Component.literal(amount).withStyle(ChatFormatting.WHITE), Direction.NORTH, 0.007f);
         poseStack.popPose();
     }
@@ -114,7 +114,7 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
             if (compact) {
                 poseStack.translate(-0.25, 0, 0);
             }
-            String amount = creative ? "∞" : GasAmountUtils.formatCompact(stack.getAmount());
+            String amount = creative ? "∞" : GasAmounts.formatCompact(stack.getAmount());
             DrawerRenderer.renderText(poseStack, buffers, overlay, Component.literal(amount).withStyle(ChatFormatting.WHITE), Direction.NORTH, 0.007f);
             poseStack.popPose();
         }

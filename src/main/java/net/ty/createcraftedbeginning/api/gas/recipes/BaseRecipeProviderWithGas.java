@@ -18,13 +18,6 @@ public abstract class BaseRecipeProviderWithGas extends RecipeProvider {
     protected final String modId;
     protected final List<GeneratedRecipe> all = new ArrayList<>();
 
-    /**
-     * Creates a new {@code BaseRecipeProviderWithGas} instance.
-     *
-     * @param output     the output to add or process
-     * @param registries the registries to use
-     * @param modId      the mod identifier to test
-     */
     public BaseRecipeProviderWithGas(PackOutput output, CompletableFuture<Provider> registries, String modId) {
         super(output, registries);
         this.modId = modId;
@@ -46,11 +39,6 @@ public abstract class BaseRecipeProviderWithGas extends RecipeProvider {
 
     @FunctionalInterface
     public interface GeneratedRecipe {
-        /**
-         * Registers the supplied value with the appropriate API registry.
-         *
-         * @param recipeOutput the recipe output to use
-         */
         void register(RecipeOutput recipeOutput);
     }
 }

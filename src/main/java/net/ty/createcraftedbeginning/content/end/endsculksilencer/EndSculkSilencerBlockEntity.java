@@ -31,9 +31,9 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
     private static final String COMPOUND_KEY_SHOW_OUTLINE = "ShowOutline";
     private static Consumer<EndSculkSilencerBlockEntity> clientTicker = silencer -> {};
 
-    private final EndSculkSilencerAnimationState animationState;
-    private final EndSculkSilencerController controller;
-    private boolean showOutline;
+    protected final EndSculkSilencerAnimationState animationState;
+    protected final EndSculkSilencerController controller;
+    protected boolean showOutline;
 
     public EndSculkSilencerBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);

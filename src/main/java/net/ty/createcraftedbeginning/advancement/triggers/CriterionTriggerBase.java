@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.advancement;
+package net.ty.createcraftedbeginning.advancement.triggers;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.advancements.CriterionTrigger;
@@ -6,7 +6,7 @@ import net.minecraft.advancements.critereon.SimpleCriterionTrigger.SimpleInstanc
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.PlayerAdvancements;
 import net.minecraft.server.level.ServerPlayer;
-import net.ty.createcraftedbeginning.advancement.CriterionTriggerBase.Instance;
+import net.ty.createcraftedbeginning.advancement.triggers.CriterionTriggerBase.Instance;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,8 +23,7 @@ import java.util.function.Supplier;
 @MethodsReturnNonnullByDefault
 public abstract class CriterionTriggerBase<T extends Instance> implements CriterionTrigger<T> {
     protected final Map<PlayerAdvancements, Set<Listener<T>>> listeners = new HashMap<>();
-
-    private final ResourceLocation id;
+    protected final ResourceLocation id;
 
     public CriterionTriggerBase(String id) {
         this.id = CCBAPI.asResource(id);

@@ -5,38 +5,20 @@ import net.minecraft.resources.ResourceLocation;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-/**
- * Provides lookup and registration helpers for gas-specific airtight drill behaviour.
- * Handlers define damage, gas consumption, tooltip content, and optional extra behaviour.
- */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class AirtightDrillHandlerUtils {
     private AirtightDrillHandlerUtils() {
     }
 
-    /**
-     * Resolves the airtight drill handler associated with the supplied input.
-     *
-     * @param gasStack the gas stack to inspect or process
-     * @return the resolved airtight drill handler
-     * @throws IllegalArgumentException if an argument is invalid
-     */
     public static AirtightDrillHandler of(GasStack gasStack) throws IllegalArgumentException {
         return of(gasStack.getGasType());
     }
 
-    /**
-     * Resolves the airtight drill handler associated with the supplied input.
-     *
-     * @param gasType the gas type to inspect or process
-     * @return the resolved airtight drill handler
-     * @throws IllegalArgumentException if an argument is invalid
-     */
     public static AirtightDrillHandler of(Gas gasType) throws IllegalArgumentException {
         if (gasType.isEmpty()) {
             throw new IllegalArgumentException();
@@ -49,26 +31,14 @@ public final class AirtightDrillHandlerUtils {
         return drillHandler;
     }
 
-    /**
-     * Registers a custom airtight drill handler for the supplied target.
-     *
-     * @param location    the resource location identifying the target value
-     * @param damage      the damage value to use
-     * @param consumption the consumption value to use
-     */
     public static void register(ResourceLocation location, int damage, float consumption) {
         register(location, new AirtightDrillHandler() {
-            /**
-             * {@inheritDoc}
-             */
+
             @Override
             public int getDamageAddition() {
                 return damage;
             }
 
-            /**
-             * {@inheritDoc}
-             */
             @Override
             public float getConsumptionMultiplier() {
                 return consumption;
@@ -76,12 +46,6 @@ public final class AirtightDrillHandlerUtils {
         });
     }
 
-    /**
-     * Registers a custom airtight drill handler for the supplied target.
-     *
-     * @param location the resource location identifying the target value
-     * @param handler  the handler to register or invoke
-     */
     public static void register(ResourceLocation location, AirtightDrillHandler handler) {
         Gas gasType = Gas.getGasTypeByName(location);
         if (gasType.isEmpty()) {
@@ -95,12 +59,12 @@ public final class AirtightDrillHandlerUtils {
             return;
         }
 
-        if (!GasConsumptionUtils.isNonNegative(handler.getDamageAddition())) {
+        if (!GasConsumptions.isNonNegative(handler.getDamageAddition())) {
             CCBAPI.LOGGER.error("Failed to register Airtight Drill Handler for gas '{}': damage addition must be non-negative, got {}.", location, handler.getDamageAddition());
             return;
         }
 
-        if (!GasConsumptionUtils.isNonNegativeFinite(handler.getConsumptionMultiplier())) {
+        if (!GasConsumptions.isNonNegativeFinite(handler.getConsumptionMultiplier())) {
             CCBAPI.LOGGER.error("Failed to register Airtight Drill Handler for gas '{}': consumption multiplier must be finite and non-negative, got {}.", location, handler.getConsumptionMultiplier());
             return;
         }

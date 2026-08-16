@@ -18,7 +18,6 @@ public class ItemApplicationWithGasRecipeParams extends ProcessingWithGasRecipeP
         params.keepHeldItem = keepHeldItem;
         return params;
     }));
-
     public static StreamCodec<RegistryFriendlyByteBuf, ItemApplicationWithGasRecipeParams> STREAM_CODEC = streamCodec(ItemApplicationWithGasRecipeParams::new);
 
     public boolean keepHeldItem;

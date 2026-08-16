@@ -92,16 +92,16 @@ public enum CCBOutliner {
     }
 
     public static class CCBOutlineEntry {
-        public static final int FADE_TICKS = 8;
+        private static final int FADE_TICKS = 8;
 
         private final CCBOutline outline;
         private int ticksTillRemoval = 1;
 
-        public CCBOutlineEntry(CCBOutline outline) {
+        protected CCBOutlineEntry(CCBOutline outline) {
             this.outline = outline;
         }
 
-        public CCBOutline getOutline() {
+        private CCBOutline getOutline() {
             return outline;
         }
 
@@ -109,7 +109,7 @@ public enum CCBOutliner {
             return ticksTillRemoval >= -FADE_TICKS;
         }
 
-        public boolean isFading() {
+        private boolean isFading() {
             return ticksTillRemoval < 0;
         }
 

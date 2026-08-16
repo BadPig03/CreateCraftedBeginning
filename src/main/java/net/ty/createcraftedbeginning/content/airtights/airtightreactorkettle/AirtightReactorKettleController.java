@@ -17,9 +17,9 @@ import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightReactorKettleController {
-    static final int OPERATING_FINISHED = 40;
-    static final int PROCESSING_STARTED = 20;
+public final class AirtightReactorKettleController {
+    private static final int OPERATING_FINISHED = 40;
+    public static final int PROCESSING_STARTED = 20;
 
     private final AirtightReactorKettleBlockEntity kettle;
     private final AirtightReactorKettleAnimationState animationState;
@@ -35,14 +35,14 @@ final class AirtightReactorKettleController {
     private ReactorKettleRecipe currentRecipe;
     private long observedRecipeCacheVersion;
 
-    AirtightReactorKettleController(AirtightReactorKettleBlockEntity kettle, AirtightReactorKettleAnimationState animationState) {
+    public AirtightReactorKettleController(AirtightReactorKettleBlockEntity kettle, AirtightReactorKettleAnimationState animationState) {
         this.kettle = kettle;
         this.animationState = animationState;
         observedAutomaticMixingEnabled = CCBConfig.server().airtights.enableAutomaticMixingRecipes.get();
         observedRecipeCacheVersion = AirtightReactorKettleUtils.getRecipeCacheVersion();
     }
 
-    void tick() {
+    public void tick() {
         if (kettle.getLevel() == null) {
             return;
         }
@@ -56,7 +56,7 @@ final class AirtightReactorKettleController {
         kettle.scheduleUpdate();
     }
 
-    void lazyTick() {
+    public void lazyTick() {
         Level level = kettle.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -73,7 +73,7 @@ final class AirtightReactorKettleController {
         kettle.scheduleUpdate();
     }
 
-    boolean updateReactorKettle() {
+    public boolean updateReactorKettle() {
         observedRecipeCacheVersion = AirtightReactorKettleUtils.getRecipeCacheVersion();
         Level level = kettle.getLevel();
         if (level == null) {
@@ -110,40 +110,40 @@ final class AirtightReactorKettleController {
         return true;
     }
 
-    void startProcessInPonderLevel() {
+    public void startProcessInPonderLevel() {
         update(false);
         updateReactorKettle();
     }
 
-    void notifyContentsChanged() {
+    public void notifyContentsChanged() {
         contentsChanged = true;
     }
 
-    void notifyFiltersChanged() {
+    public void notifyFiltersChanged() {
         filterChanged = true;
     }
 
-    boolean isFilterChanged() {
+    public boolean isFilterChanged() {
         return filterChanged;
     }
 
-    boolean getWindowsOpenState() {
+    public boolean getWindowsOpenState() {
         return windowsOpenState;
     }
 
-    boolean isOperating() {
+    public boolean isOperating() {
         return operating;
     }
 
-    int getOperatingTicks() {
+    public int getOperatingTicks() {
         return operatingTicks;
     }
 
-    int getProcessingTicks() {
+    public int getProcessingTicks() {
         return processingTicks;
     }
 
-    float getDamage() {
+    public float getDamage() {
         if (!operating) {
             return 0;
         }
@@ -155,7 +155,7 @@ final class AirtightReactorKettleController {
         return absSpeed / 32 * Math.max(0, CCBConfig.server().airtights.reactorKettleMixerDamageMultiplier.getF());
     }
 
-    float getMixerOffset(float partialTicks) {
+    public float getMixerOffset(float partialTicks) {
         if (!operating) {
             return 0;
         }
@@ -172,7 +172,7 @@ final class AirtightReactorKettleController {
         return (progress - 0.5f) * 0.72f;
     }
 
-    void loadOperationState(boolean operating, int operatingTicks, int processingTicks, boolean windowsOpenState, boolean clientPacket) {
+    public void loadOperationState(boolean operating, int operatingTicks, int processingTicks, boolean windowsOpenState, boolean clientPacket) {
         this.operating = operating;
         this.operatingTicks = operatingTicks;
         this.processingTicks = processingTicks;

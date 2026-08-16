@@ -12,7 +12,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightTankMultiblockController {
+public final class AirtightTankMultiblockController {
     private static final int SYNC_RATE = 4;
 
     private final AbstractAirtightTankBlockEntity owner;
@@ -25,11 +25,11 @@ final class AirtightTankMultiblockController {
     private int syncCooldown;
     private boolean queuedSync;
 
-    AirtightTankMultiblockController(AbstractAirtightTankBlockEntity owner) {
+    public AirtightTankMultiblockController(AbstractAirtightTankBlockEntity owner) {
         this.owner = owner;
     }
 
-    void initialize() {
+    public void initialize() {
         sendData();
         if (owner.getLevel() == null || !owner.getLevel().isClientSide) {
             return;
@@ -38,7 +38,7 @@ final class AirtightTankMultiblockController {
         owner.invalidateRenderBounds();
     }
 
-    boolean tick() {
+    public boolean tick() {
         tickSyncCooldown();
         if (lastKnownPos == null) {
             lastKnownPos = owner.getBlockPos();
@@ -59,7 +59,7 @@ final class AirtightTankMultiblockController {
         return owner.isController();
     }
 
-    void sendData() {
+    public void sendData() {
         if (syncCooldown > 0) {
             queuedSync = true;
             return;
@@ -70,7 +70,7 @@ final class AirtightTankMultiblockController {
         syncCooldown = SYNC_RATE;
     }
 
-    void updateConnectivity() {
+    public void updateConnectivity() {
         updateConnectivity = false;
         if (owner.getLevel() == null || owner.getLevel().isClientSide || !owner.isController()) {
             return;
@@ -79,12 +79,12 @@ final class AirtightTankMultiblockController {
         GasConnectivityHandler.formMulti(owner, owner.getLevel());
     }
 
-    BlockPos getController() {
+    public BlockPos getController() {
         return isController() ? owner.getBlockPos() : controllerPos;
     }
 
     @SuppressWarnings("unchecked")
-    <T extends BlockEntity & IMultiBlockEntityContainer> @Nullable T getControllerBE() {
+    public <T extends BlockEntity & IMultiBlockEntityContainer> @Nullable T getControllerBE() {
         if (isController() || owner.getLevel() == null) {
             return (T) owner;
         }
@@ -101,11 +101,11 @@ final class AirtightTankMultiblockController {
         return blockEntity instanceof AbstractAirtightTankBlockEntity tank ? (T) tank : null;
     }
 
-    boolean isController() {
+    public boolean isController() {
         return controllerPos == null || owner.getBlockPos().equals(controllerPos);
     }
 
-    void setController(BlockPos controller) {
+    public void setController(BlockPos controller) {
         if (owner.getLevel() == null || owner.getLevel().isClientSide && !owner.isVirtual() || controller.equals(controllerPos)) {
             return;
         }
@@ -115,11 +115,11 @@ final class AirtightTankMultiblockController {
         owner.notifyUpdate();
     }
 
-    void preventConnectivityUpdate() {
+    public void preventConnectivityUpdate() {
         updateConnectivity = false;
     }
 
-    void notifyMultiUpdated() {
+    public void notifyMultiUpdated() {
         if (owner.getLevel() == null) {
             return;
         }
@@ -130,7 +130,7 @@ final class AirtightTankMultiblockController {
         owner.setChanged();
     }
 
-    void removeController(boolean keepFluids) {
+    public void removeController(boolean keepFluids) {
         if (owner.getLevel() == null || owner.getLevel().isClientSide) {
             return;
         }
@@ -159,47 +159,47 @@ final class AirtightTankMultiblockController {
         sendData();
     }
 
-    @Nullable BlockPos getLastKnownPos() {
+    @Nullable public BlockPos getLastKnownPos() {
         return lastKnownPos;
     }
 
-    void setLastKnownPos(@Nullable BlockPos lastKnownPos) {
+    public void setLastKnownPos(@Nullable BlockPos lastKnownPos) {
         this.lastKnownPos = lastKnownPos;
     }
 
-    @Nullable BlockPos getControllerPos() {
+    @Nullable public BlockPos getControllerPos() {
         return controllerPos;
     }
 
-    void setControllerPos(@Nullable BlockPos controllerPos) {
+    public void setControllerPos(@Nullable BlockPos controllerPos) {
         this.controllerPos = controllerPos;
     }
 
-    boolean isUpdateConnectivity() {
+    public boolean isUpdateConnectivity() {
         return updateConnectivity;
     }
 
-    void setUpdateConnectivity(boolean updateConnectivity) {
+    public void setUpdateConnectivity(boolean updateConnectivity) {
         this.updateConnectivity = updateConnectivity;
     }
 
-    void requestCapabilityRefresh() {
+    public void requestCapabilityRefresh() {
         updateCapability = true;
     }
 
-    int getWidth() {
+    public int getWidth() {
         return width;
     }
 
-    void setWidth(int width) {
+    public void setWidth(int width) {
         this.width = Mth.clamp(width, 1, AbstractAirtightTankBlockEntity.configuredMaxWidth());
     }
 
-    int getHeight() {
+    public int getHeight() {
         return height;
     }
 
-    void setHeight(int height) {
+    public void setHeight(int height) {
         this.height = Mth.clamp(height, 1, AbstractAirtightTankBlockEntity.configuredMaxLength());
     }
 }

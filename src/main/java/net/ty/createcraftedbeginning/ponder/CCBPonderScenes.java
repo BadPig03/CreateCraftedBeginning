@@ -35,6 +35,7 @@ import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AirtightPipeScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AirtightPumpScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.SmartAirtightPipeScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.other.AirVentScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.photostresses.PhotoStressBearingScenes;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Contract;
 
@@ -51,6 +52,9 @@ public class CCBPonderScenes {
         entryHelper.forComponents(CCBBlocks.BRASS_CRATE_BLOCK).addStoryBoard("crates_story_board", BrassCrateScenes::scene, CCBPonderTags.CRATES_TAG_ID);
         entryHelper.forComponents(CCBBlocks.STURDY_CRATE_BLOCK).addStoryBoard("crates_story_board", SturdyCrateScenes::scene, CCBPonderTags.CRATES_TAG_ID);
         entryHelper.forComponents(CCBBlocks.CARDBOARD_CRATE_BLOCK).addStoryBoard("crates_story_board", CardboardCrateScenes::scene, CCBPonderTags.CRATES_TAG_ID);
+
+        entryHelper.forComponents(CCBBlocks.PHOTO_STRESS_BEARING_BLOCK).addStoryBoard("photo_stress_bearing_story_board", PhotoStressBearingScenes::scene, AllCreatePonderTags.KINETIC_SOURCES);
+        entryHelper.forComponents(CCBBlocks.OPTICAL_FIBER_BLOCK).addStoryBoard("photo_stress_bearing_story_board", PhotoStressBearingScenes::scene, AllCreatePonderTags.KINETIC_SOURCES);
 
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_PIPE_BLOCK).addStoryBoard("airtight_pipe_moving_story_board", AirtightPipeScenes::moving, CCBPonderTags.GAS_PIPES_TAG_ID).addStoryBoard("airtight_pipe_interaction_story_board", AirtightPipeScenes::interaction, CCBPonderTags.GAS_PIPES_TAG_ID);
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_ENCASED_PIPE_BLOCK).addStoryBoard("airtight_encased_pipe_story_board", AirtightEncasedPipeScenes::scene, CCBPonderTags.GAS_PIPES_TAG_ID);

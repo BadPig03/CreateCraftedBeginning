@@ -21,18 +21,18 @@ import java.util.function.Predicate;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasHandler, GasManipulationBehaviour> {
-    public static final BehaviourType<GasManipulationBehaviour> OBSERVE = new BehaviourType<>();
+    protected static final BehaviourType<GasManipulationBehaviour> OBSERVE = new BehaviourType<>();
 
-    private final BehaviourType<GasManipulationBehaviour> behaviourType;
+    protected final BehaviourType<GasManipulationBehaviour> behaviourType;
 
-    private ItemStack compiledFilterStack = ItemStack.EMPTY;
-    private Predicate<GasStack> compiledFilter = GasFilterUtils.compile(ItemStack.EMPTY);
+    protected ItemStack compiledFilterStack = ItemStack.EMPTY;
+    protected Predicate<GasStack> compiledFilter = GasFilterUtils.compile(ItemStack.EMPTY);
 
     public GasManipulationBehaviour(SmartBlockEntity be, InterfaceProvider target) {
         this(OBSERVE, be, target);
     }
 
-    private GasManipulationBehaviour(BehaviourType<GasManipulationBehaviour> type, SmartBlockEntity be, InterfaceProvider target) {
+    protected GasManipulationBehaviour(BehaviourType<GasManipulationBehaviour> type, SmartBlockEntity be, InterfaceProvider target) {
         super(be, target);
         behaviourType = type;
     }
@@ -66,7 +66,7 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
         return GasStack.EMPTY;
     }
 
-    private @Nullable Predicate<GasStack> getItemFilterTest() {
+    protected @Nullable Predicate<GasStack> getItemFilterTest() {
         FilteringBehaviour itemFilter = blockEntity.getBehaviour(FilteringBehaviour.TYPE);
         if (itemFilter == null) {
             return null;
@@ -76,7 +76,7 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
         return filterStack.isEmpty() ? null : getCompiledFilter(filterStack);
     }
 
-    private Predicate<GasStack> getCompiledFilter(ItemStack filterStack) {
+    protected Predicate<GasStack> getCompiledFilter(ItemStack filterStack) {
         if (ItemStack.isSameItemSameComponents(compiledFilterStack, filterStack)) {
             return compiledFilter;
         }

@@ -34,7 +34,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.client.stockkeeper.GasCraftableBigItemStack;
-import net.ty.createcraftedbeginning.client.stockkeeper.StockKeeperCraftingUtils;
+import net.ty.createcraftedbeginning.client.stockkeeper.StockKeeperCrafting;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUtils;
@@ -347,17 +347,17 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
             return;
         }
 
-        StockKeeperCraftingUtils.requestCraftable(this, gasCraftable, requestedDifference);
+        StockKeeperCrafting.requestCraftable(this, gasCraftable, requestedDifference);
         ci.cancel();
     }
 
     @Inject(method = "updateCraftableAmounts", at = @At("HEAD"), cancellable = true)
     private void ccb$updateCraftableAmounts(CallbackInfo ci) {
-        if (!StockKeeperCraftingUtils.hasGasCraftable(this)) {
+        if (!StockKeeperCrafting.hasGasCraftable(this)) {
             return;
         }
 
-        StockKeeperCraftingUtils.updateCraftableAmounts(this);
+        StockKeeperCrafting.updateCraftableAmounts(this);
         canRequestCraftingPackage = true;
         ci.cancel();
     }

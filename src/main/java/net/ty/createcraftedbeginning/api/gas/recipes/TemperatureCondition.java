@@ -33,50 +33,23 @@ public enum TemperatureCondition implements StringRepresentable {
         this.function = function;
     }
 
-    /**
-     * Resolves the temperature condition that matches the supplied temperature.
-     *
-     * @param temperature the temperature value to classify
-     * @return the matching temperature condition
-     */
     public static TemperatureCondition getConditionByTemperature(float temperature) {
         return Arrays.stream(values()).filter(condition -> condition.test(temperature)).findFirst().orElse(NONE);
     }
 
-    /**
-     * Returns the serialized name used by codecs and data files.
-     *
-     * @return the serialized condition name
-     */
     @Override
     public String getSerializedName() {
         return Lang.asId(name());
     }
 
-    /**
-     * Returns the translation key used to display this temperature condition.
-     *
-     * @return the translation key for this condition
-     */
     public String getTranslationKey() {
         return "recipe.temperature_condition." + getSerializedName();
     }
 
-    /**
-     * Returns the ARGB color associated with this temperature condition.
-     *
-     * @return the condition color
-     */
     public int getColor() {
         return color;
     }
 
-    /**
-     * Tests whether the supplied temperature belongs to this condition.
-     *
-     * @param temperature the temperature value to test
-     * @return {@code true} when the temperature matches this condition; otherwise {@code false}
-     */
     public boolean test(float temperature) {
         return function.apply(temperature);
     }

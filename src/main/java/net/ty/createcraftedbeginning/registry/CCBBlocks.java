@@ -1,7 +1,5 @@
 package net.ty.createcraftedbeginning.registry;
 
-import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrateProvider;
-
 import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
 import com.tterrag.registrate.util.entry.BlockEntry;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -55,12 +53,15 @@ import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncine
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerBlock;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerMovementBehaviour;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerStructuralBlock;
-import net.ty.createcraftedbeginning.content.photostresses.phohostressbearing.PhotoStressBearingBlock;
 import net.ty.createcraftedbeginning.content.obsolete.pneumaticengine.PneumaticEngineBlock;
+import net.ty.createcraftedbeginning.content.photostresses.opticalfiber.OpticalFiberBlock;
+import net.ty.createcraftedbeginning.content.photostresses.photosail.PhotoSailBlock;
+import net.ty.createcraftedbeginning.content.photostresses.phohostressbearing.PhotoStressBearingBlock;
+import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.CCBCreativeTabSection;
 import net.ty.createcraftedbeginning.registry.registrate.CCBBlockModelTransformer;
 import net.ty.createcraftedbeginning.registry.registrate.CCBBlockPropertiesTransformer;
 import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrate;
-import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.CCBCreativeTabSection;
+import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrateProvider;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -73,6 +74,8 @@ public class CCBBlocks {
     static {
         CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.AIRTIGHTS);
     }
+
+    public static final BlockEntry<Block> AIRTIGHT_SHEET_BLOCK = CCB_REGISTRATE.block("airtight_sheet_block", Block::new).transform(CCBBlockModelTransformer.airtightSheetBlock()).transform(CCBBlockPropertiesTransformer.airtightMetal()).register();
 
     public static final BlockEntry<AirtightPipeBlock> AIRTIGHT_PIPE_BLOCK = CCB_REGISTRATE.block("airtight_pipe", AirtightPipeBlock::new).transform(CCBBlockModelTransformer.airtightPipe()).transform(CCBBlockPropertiesTransformer.airtightComponent()).register();
     public static final BlockEntry<AirtightEncasedPipeBlock> AIRTIGHT_ENCASED_PIPE_BLOCK = CCB_REGISTRATE.block("airtight_encased_pipe", AirtightEncasedPipeBlock::new).transform(CCBBlockModelTransformer.airtightEncasedPipe()).transform(CCBBlockPropertiesTransformer.airtightComponent()).register();
@@ -121,11 +124,17 @@ public class CCBBlocks {
         CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.PHOTO_STRESSES);
     }
 
+    public static final BlockEntry<ColoredFallingBlock> POWDERED_AMETHYST_BLOCK = CCB_REGISTRATE.block("powdered_amethyst_block", properties -> new ColoredFallingBlock(new ColorRGBA(0xFF8D6ACC), properties)).transform(CCBBlockModelTransformer.powderedAmethystBlock()).transform(CCBBlockPropertiesTransformer.powderedAmethystBlock()).register();
+
+    public static final BlockEntry<OpticalFiberBlock> OPTICAL_FIBER_BLOCK = CCB_REGISTRATE.block("optical_fiber", OpticalFiberBlock::new).transform(CCBBlockModelTransformer.opticalFiber()).transform(CCBBlockPropertiesTransformer.opticalFiber()).register();
+    public static final BlockEntry<PhotoSailBlock> PHOTO_SAIL_BLOCK = CCB_REGISTRATE.block("photo_sail", PhotoSailBlock::new).transform(CCBBlockModelTransformer.photoSail()).transform(CCBBlockPropertiesTransformer.photoSail()).register();
     public static final BlockEntry<PhotoStressBearingBlock> PHOTO_STRESS_BEARING_BLOCK = CCB_REGISTRATE.block("photo-stress_bearing", PhotoStressBearingBlock::new).transform(CCBBlockModelTransformer.photoStressBearing()).transform(CCBBlockPropertiesTransformer.photoStressBearing()).register();
 
     static {
         CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.ENDS);
     }
+
+    public static final BlockEntry<Block> END_ALLOY_BLOCK = CCB_REGISTRATE.block("end_alloy_block", Block::new).transform(CCBBlockModelTransformer.endAlloyBlock()).transform(CCBBlockPropertiesTransformer.endAlloyBlock()).register();
 
     public static final BlockEntry<EndCasingBlock> END_CASING_BLOCK = CCB_REGISTRATE.block("end_casing", EndCasingBlock::new).transform(CCBBlockModelTransformer.endCasing()).transform(CCBBlockPropertiesTransformer.endCasing()).register();
     public static final BlockEntry<EndIncinerationBlowerBlock> END_INCINERATION_BLOWER_BLOCK = CCB_REGISTRATE.block("end_incineration_blower", EndIncinerationBlowerBlock::new).transform(CCBBlockModelTransformer.endIncinerationBlower()).transform(CCBBlockPropertiesTransformer.endComponentWithImpact(4)).register();
@@ -142,10 +151,6 @@ public class CCBBlocks {
     public static final BlockEntry<SturdyCrateBlock> STURDY_CRATE_BLOCK = CCB_REGISTRATE.block("sturdy_crate", SturdyCrateBlock::new).transform(CCBBlockModelTransformer.uncontainableCrate()).transform(CCBBlockPropertiesTransformer.sturdyCrate()).register();
     public static final BlockEntry<CardboardCrateBlock> CARDBOARD_CRATE_BLOCK = CCB_REGISTRATE.block("cardboard_crate", CardboardCrateBlock::new).transform(CCBBlockModelTransformer.crate("cardboard")).transform(CCBBlockPropertiesTransformer.cardboardCrate()).register();
     public static final BlockEntry<AirVentBlock> AIR_VENT_BLOCK = CCB_REGISTRATE.block("air_vent", AirVentBlock::new).transform(CCBBlockModelTransformer.airVent()).transform(CCBBlockPropertiesTransformer.airVent()).register();
-
-    public static final BlockEntry<Block> AIRTIGHT_SHEET_BLOCK = CCB_REGISTRATE.block("airtight_sheet_block", Block::new).transform(CCBBlockModelTransformer.airtightSheetBlock()).transform(CCBBlockPropertiesTransformer.airtightMetal()).register();
-    public static final BlockEntry<Block> END_ALLOY_BLOCK = CCB_REGISTRATE.block("end_alloy_block", Block::new).transform(CCBBlockModelTransformer.endAlloyBlock()).transform(CCBBlockPropertiesTransformer.endAlloyBlock()).register();
-    public static final BlockEntry<ColoredFallingBlock> POWDERED_AMETHYST_BLOCK = CCB_REGISTRATE.block("powdered_amethyst_block", properties -> new ColoredFallingBlock(new ColorRGBA(0xFF8D6ACC), properties)).transform(CCBBlockModelTransformer.powderedAmethystBlock()).transform(CCBBlockPropertiesTransformer.powderedAmethystBlock()).register();
 
     public static final BlockEntry<Block> OBSIDIAN_BRICKS = CCB_REGISTRATE.block("obsidian_bricks", Block::new).transform(CCBBlockModelTransformer.obsidianAlikeBlocks("obsidian_bricks")).transform(CCBBlockPropertiesTransformer.obsidianBlock()).register();
     public static final BlockEntry<SlabBlock> OBSIDIAN_BRICKS_SLAB = CCB_REGISTRATE.block("obsidian_bricks_slab", properties -> new SlabBlock(Properties.ofFullCopy(OBSIDIAN_BRICKS.get()))).transform(CCBBlockModelTransformer.obsidianAlikeSlabs("obsidian_bricks")).transform(CCBBlockPropertiesTransformer.obsidianSlab()).register();

@@ -8,19 +8,19 @@ import java.util.OptionalInt;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasInjectionChamberVisualState {
+public final class GasInjectionChamberVisualState {
     private static final String COMPOUND_KEY_CLOUD = "Cloud";
     private static final String COMPOUND_KEY_CLOUD_COLOR = "CloudColor";
 
     private int cloudColor = 0xFFFFFFFF;
     private boolean sendCloud;
 
-    void queueCloud(int color) {
+    public void queueCloud(int color) {
         cloudColor = color;
         sendCloud = true;
     }
 
-    void writeCloud(CompoundTag tag, boolean clientPacket) {
+    public void writeCloud(CompoundTag tag, boolean clientPacket) {
         if (!sendCloud || !clientPacket) {
             return;
         }
@@ -30,7 +30,7 @@ final class GasInjectionChamberVisualState {
         sendCloud = false;
     }
 
-    OptionalInt readCloud(CompoundTag tag, boolean clientPacket) {
+    public OptionalInt readCloud(CompoundTag tag, boolean clientPacket) {
         if (!clientPacket || !tag.contains(COMPOUND_KEY_CLOUD)) {
             return OptionalInt.empty();
         }

@@ -9,6 +9,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -37,13 +39,14 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     public static final BehaviourType<GasTransportBehaviour> TYPE = new BehaviourType<>();
 
     private static final int CONNECTION_REFRESH_INTERVAL = 20;
+    private static final String COMPOUND_KEY_RETIRED_CONNECTIONS = "RetiredGasConnections";
 
-    private EnumMap<Direction, GasPipeConnection> interfaces;
+    protected EnumMap<Direction, GasPipeConnection> interfaces;
     @Nullable
-    private List<GasPipeConnection> retiredConnections;
-    private UpdatePhase phase;
-    private boolean connectionsDirty;
-    private int connectionRefreshTicks;
+    protected List<GasPipeConnection> retiredConnections;
+    protected UpdatePhase phase;
+    protected boolean connectionsDirty;
+    protected int connectionRefreshTicks;
 
     public GasTransportBehaviour(SmartBlockEntity be) {
         super(be);
@@ -75,7 +78,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         return connection.provideOutboundFlow();
     }
 
-    private void createConnectionData() {
+    protected void createConnectionData() {
         if (interfaces != null) {
             return;
         }
@@ -93,7 +96,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         }
     }
 
-    private void refreshConnectionData() {
+    protected void refreshConnectionData() {
         Level level = getWorld();
         if (interfaces == null) {
             createConnectionData();
@@ -131,8 +134,9 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         blockEntity.notifyUpdate();
     }
 
-    private void retireConnection(GasPipeConnection connection) {
-        if (connection.prepareForRemoval()) {
+    protected void retireConnection(GasPipeConnection connection) {
+        Level level = getWorld();
+        if (level != null && connection.prepareForRemoval(level, getPos())) {
             return;
         }
 
@@ -140,14 +144,21 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
             retiredConnections = new ArrayList<>();
         }
         retiredConnections.add(connection);
+        blockEntity.setChanged();
     }
 
-    private void recoverRetiredConnections() {
+    protected void recoverRetiredConnections() {
         if (retiredConnections == null) {
             return;
         }
 
-        retiredConnections.removeIf(GasPipeConnection::prepareForRemoval);
+        Level level = getWorld();
+        if (level == null) {
+            return;
+        }
+
+        BlockPos pos = getPos();
+        retiredConnections.removeIf(connection -> connection.prepareForRemoval(level, pos));
         if (!retiredConnections.isEmpty()) {
             return;
         }
@@ -162,7 +173,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         connectionRefreshTicks = CONNECTION_REFRESH_INTERVAL;
     }
 
-    private void refreshConnectionsIfNeeded() {
+    protected void refreshConnectionsIfNeeded() {
         if (!connectionsDirty && --connectionRefreshTicks > 0) {
             recoverRetiredConnections();
             return;
@@ -230,7 +241,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         return connection == null ? null : connection.getFlow();
     }
 
-    public void addPressure(Direction side, boolean inbound, float pressure) {
+    public void addPressureUnits(Direction side, boolean inbound, long pressureUnits) {
         GasPipeConnection connection = getConnection(side);
         BlockState state = blockEntity.getBlockState();
         boolean flowAllowed = inbound ? allowsInboundFlow(state, side) : allowsOutboundFlow(state, side);
@@ -238,7 +249,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
             return;
         }
 
-        connection.addPressure(inbound, pressure);
+        connection.addPressureUnits(inbound, pressureUnits);
     }
 
     public void wipePressure() {
@@ -327,6 +338,9 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         for (GasPipeConnection connection : interfaces.values()) {
             connection.read(compoundTag, provider, blockEntity.getBlockPos(), clientPacket);
         }
+        if (!clientPacket) {
+            readRetiredConnections(compoundTag, provider);
+        }
     }
 
     @Override
@@ -336,9 +350,49 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         for (GasPipeConnection connection : interfaces.values()) {
             connection.write(compoundTag, provider, clientPacket);
         }
+        if (!clientPacket) {
+            writeRetiredConnections(compoundTag, provider);
+        }
     }
 
-    private void updateSources(Level level, BlockPos pos, Collection<GasPipeConnection> connections) {
+    protected void readRetiredConnections(CompoundTag compoundTag, Provider provider) {
+        retiredConnections = null;
+        if (!compoundTag.contains(COMPOUND_KEY_RETIRED_CONNECTIONS, Tag.TAG_LIST)) {
+            return;
+        }
+
+        ListTag retiredData = compoundTag.getList(COMPOUND_KEY_RETIRED_CONNECTIONS, Tag.TAG_COMPOUND);
+        for (int i = 0; i < retiredData.size(); i++) {
+            GasPipeConnection connection = GasPipeConnection.readRetiredData(retiredData.getCompound(i), provider);
+            if (connection == null) {
+                continue;
+            }
+
+            if (retiredConnections == null) {
+                retiredConnections = new ArrayList<>();
+            }
+            retiredConnections.add(connection);
+        }
+    }
+
+    protected void writeRetiredConnections(CompoundTag compoundTag, Provider provider) {
+        if (retiredConnections == null || retiredConnections.isEmpty()) {
+            return;
+        }
+
+        ListTag retiredData = new ListTag();
+        for (GasPipeConnection connection : retiredConnections) {
+            CompoundTag connectionData = connection.writeRetiredData(provider);
+            if (!connectionData.isEmpty()) {
+                retiredData.add(connectionData);
+            }
+        }
+        if (!retiredData.isEmpty()) {
+            compoundTag.put(COMPOUND_KEY_RETIRED_CONNECTIONS, retiredData);
+        }
+    }
+
+    protected void updateSources(Level level, BlockPos pos, Collection<GasPipeConnection> connections) {
         boolean sendUpdate = false;
         for (GasPipeConnection connection : connections) {
             sendUpdate |= connection.flipFlowsIfPressureReversed();
@@ -351,7 +405,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         blockEntity.notifyUpdate();
     }
 
-    private boolean updateFlows(Level level, BlockPos pos, Collection<GasPipeConnection> connections) {
+    protected boolean updateFlows(Level level, BlockPos pos, Collection<GasPipeConnection> connections) {
         BlockState state = blockEntity.getBlockState();
         GasPipeConnection singleSource = null;
         GasStack availableFlow = GasStack.EMPTY;
@@ -405,7 +459,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         return true;
     }
 
-    private enum UpdatePhase {
+    protected enum UpdatePhase {
         WAIT_FOR_PUMPS,
         FLIP_FLOWS,
         IDLE

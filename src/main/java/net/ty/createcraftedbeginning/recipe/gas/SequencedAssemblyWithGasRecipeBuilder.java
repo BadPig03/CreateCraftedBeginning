@@ -28,8 +28,8 @@ import java.util.function.UnaryOperator;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class SequencedAssemblyWithGasRecipeBuilder {
-    private final ResourceLocation id;
-    private final SequencedAssemblyWithGasRecipe recipe;
+    protected final ResourceLocation id;
+    protected final SequencedAssemblyWithGasRecipe recipe;
     protected List<ICondition> recipeConditions;
 
     public SequencedAssemblyWithGasRecipeBuilder(ResourceLocation id) {

@@ -21,9 +21,9 @@ public class CCBCrates extends ConfigBase {
     }
 
     private static class Comments {
-        static String maxAndesiteCapacity = "The maximum item capacity of an Andesite Crate.";
-        static String maxBrassCapacity = "The maximum item capacity of a Brass Crate.";
-        static String maxSturdyCapacity = "The maximum item capacity of a Sturdy Crate.";
-        static String maxCardboardCapacity = "The maximum item capacity of a Cardboard Crate.";
+        private static final String maxAndesiteCapacity = "The maximum item capacity of an Andesite Crate.";
+        private static final String maxBrassCapacity = "The maximum item capacity of a Brass Crate.";
+        private static final String maxSturdyCapacity = "The maximum item capacity of a Sturdy Crate.";
+        private static final String maxCardboardCapacity = "The maximum item capacity of a Cardboard Crate.";
     }
 }

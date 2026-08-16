@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightc
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -27,8 +26,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AirtightChestplateEvents {
     @SubscribeEvent
     public static void onPlayerVisibility(LivingVisibilityEvent event) {
-        LivingEntity entity = event.getEntity();
-        if (!(entity instanceof Player player) || !InvisibilityUpgrade.INSTANCE.canApply(player)) {
+        if (!(event.getEntity() instanceof Player player) || !InvisibilityUpgrade.INSTANCE.canApply(player)) {
             return;
         }
 

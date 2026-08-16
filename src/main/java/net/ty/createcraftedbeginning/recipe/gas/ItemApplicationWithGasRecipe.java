@@ -19,7 +19,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class ItemApplicationWithGasRecipe extends ProcessingWithGasRecipe<RecipeWrapper, ItemApplicationWithGasRecipeParams> {
-    private final boolean keepHeldItem;
+    protected final boolean keepHeldItem;
 
     public ItemApplicationWithGasRecipe(CCBRecipeTypes type, ItemApplicationWithGasRecipeParams params) {
         super(type, params);

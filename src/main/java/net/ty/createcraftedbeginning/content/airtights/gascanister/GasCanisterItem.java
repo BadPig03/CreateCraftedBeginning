@@ -13,7 +13,7 @@ import net.minecraft.world.level.block.Block;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
@@ -85,12 +85,12 @@ public class GasCanisterItem extends Item implements IGasFilter {
         GasStack content = contents.getGasInTank(0);
         long capacity = contents.getTankCapacity(0);
         if (content.isEmpty()) {
-            tooltip.add(CCBLang.translate("gui.gas_canister.capacity").add(GasAmountUtils.precise(capacity).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
+            tooltip.add(CCBLang.translate("gui.gas_canister.capacity").add(GasAmounts.precise(capacity).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
             return;
         }
 
         tooltip.add(CCBLang.translate("gui.gas_canister.content").add(CCBLang.gasName(content).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
-        tooltip.add(CCBLang.translate("gui.gas_canister.capacity").add(GasAmountUtils.precise(content.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmountUtils.precise(capacity).style(ChatFormatting.DARK_GRAY))).style(ChatFormatting.GRAY).component());
+        tooltip.add(CCBLang.translate("gui.gas_canister.capacity").add(GasAmounts.precise(content.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmounts.precise(capacity).style(ChatFormatting.DARK_GRAY))).style(ChatFormatting.GRAY).component());
     }
 
     @Override

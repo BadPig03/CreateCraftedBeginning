@@ -11,7 +11,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-enum AirtightHatchTransferMode implements INamedIconOptions {
+public enum AirtightHatchTransferMode implements INamedIconOptions {
     NO_TRANSFER(CCBIcons.I_NO_TRANSFER),
     INPUT_ONLY(CCBIcons.I_INPUT_ONLY),
     OUTPUT_ONLY(CCBIcons.I_OUTPUT_ONLY),
@@ -27,7 +27,7 @@ enum AirtightHatchTransferMode implements INamedIconOptions {
         translationKey = "createcraftedbeginning.gui.airtight_hatch.transfer_mode." + Lang.asId(name());
     }
 
-    static AirtightHatchTransferMode fromValue(int value) {
+    public static AirtightHatchTransferMode fromValue(int value) {
         return VALUES[clamp(value, 0, VALUES.length - 1)];
     }
 

@@ -11,6 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.SmartGasTank;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.registry.gas.CCBGases;
 import org.jetbrains.annotations.Nullable;
@@ -19,8 +20,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class BoilerSteamOutletProduction {
-    static final int STRESS_PER_STEAM_MB = 1024;
+public final class BoilerSteamOutletProduction {
+    private static final int STRESS_PER_STEAM_MB = 1024;
     private static final int STEAM_ENGINE_BASE_SPEED = 16;
     private static final int TICKS_PER_SECOND = 20;
 
@@ -33,13 +34,13 @@ final class BoilerSteamOutletProduction {
     private long accountingTick = Long.MIN_VALUE;
     private long productionThisTick;
 
-    BoilerSteamOutletProduction(BoilerSteamOutletBlockEntity outlet) {
+    public BoilerSteamOutletProduction(BoilerSteamOutletBlockEntity outlet) {
         this.outlet = outlet;
     }
 
-    static long getMaximumOutputCapacity() {
+    public static long getMaximumOutputCapacity() {
         double capacity = getFullLoadProductionRate();
-        if (!Double.isFinite(capacity) || capacity <= 0) {
+        if (!GasConsumptions.isFinite(capacity) || capacity <= 0) {
             return 1;
         }
 
@@ -54,7 +55,7 @@ final class BoilerSteamOutletProduction {
         return fullLoadStress / STRESS_PER_STEAM_MB;
     }
 
-    boolean ensureCurrentTick() {
+    public boolean ensureCurrentTick() {
         Level level = outlet.getLevel();
         if (level == null || level.isClientSide) {
             return false;
@@ -69,7 +70,7 @@ final class BoilerSteamOutletProduction {
         double idealProduction = getMaximumProductionRate();
         boolean productionRateChanged = Double.compare(currentProductionRate, idealProduction) != 0;
         currentProductionRate = idealProduction;
-        if (!Double.isFinite(idealProduction) || idealProduction <= 0) {
+        if (!GasConsumptions.isFinite(idealProduction) || idealProduction <= 0) {
             productionThisTick = 0;
             setAvailableSteam(0);
             return productionRateChanged;
@@ -82,11 +83,11 @@ final class BoilerSteamOutletProduction {
         return productionRateChanged;
     }
 
-    double getProductionRatePerSecond() {
+    public double getProductionRatePerSecond() {
         return currentProductionRate * TICKS_PER_SECOND;
     }
 
-    void write(CompoundTag tag, boolean clientPacket) {
+    public void write(CompoundTag tag, boolean clientPacket) {
         if (!clientPacket) {
             return;
         }
@@ -94,7 +95,7 @@ final class BoilerSteamOutletProduction {
         tag.putDouble(COMPOUND_KEY_PRODUCTION_RATE, currentProductionRate);
     }
 
-    void read(CompoundTag tag, boolean clientPacket) {
+    public void read(CompoundTag tag, boolean clientPacket) {
         currentProductionRate = clientPacket ? Math.max(0, tag.getDouble(COMPOUND_KEY_PRODUCTION_RATE)) : 0;
         resetTickAccounting();
     }
@@ -137,7 +138,7 @@ final class BoilerSteamOutletProduction {
 
         double efficiency = controller.boiler.getEngineEfficiency(controller.getTotalTankSize());
         double production = getFullLoadProductionRate() * efficiency;
-        return Double.isFinite(production) && production > 0 ? production : 0;
+        return GasConsumptions.isFinite(production) && production > 0 ? production : 0;
     }
 
     private @Nullable FluidTankBlockEntity getControllerTank() {

@@ -95,7 +95,7 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
         AirtightForgingPressUtils.updateRecipeFilter(this, stack);
     }
 
-    void syncFilterFromMaster(ItemStack stack) {
+    public void syncFilterFromMaster(ItemStack stack) {
         if (filteringBehaviour == null || ItemStack.matches(filteringBehaviour.getFilter(), stack)) {
             return;
         }

@@ -8,35 +8,16 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-/**
- * Provides lookup and registration helpers for gas-specific airtight turbine behaviour.
- * Registered handlers determine the maximum Tesla Turbine operating level unlocked
- * by each supported gas. This value is a gas grade, not a linear energy multiplier.
- */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class AirtightTurbineHandlerUtils {
     private AirtightTurbineHandlerUtils() {
     }
 
-    /**
-     * Resolves the airtight turbine handler associated with the supplied input.
-     *
-     * @param gasStack the gas stack to inspect or process
-     * @return the resolved airtight turbine handler
-     * @throws IllegalArgumentException if an argument is invalid
-     */
     public static AirtightTurbineHandler of(GasStack gasStack) throws IllegalArgumentException {
         return of(gasStack.getGasType());
     }
 
-    /**
-     * Resolves the airtight turbine handler associated with the supplied input.
-     *
-     * @param gasType the gas type to inspect or process
-     * @return the resolved airtight turbine handler
-     * @throws IllegalArgumentException if an argument is invalid
-     */
     public static AirtightTurbineHandler of(Gas gasType) throws IllegalArgumentException {
         if (gasType.isEmpty()) {
             throw new IllegalArgumentException();
@@ -49,12 +30,6 @@ public final class AirtightTurbineHandlerUtils {
         return turbineHandler;
     }
 
-    /**
-     * Registers a custom airtight turbine handler for the supplied target.
-     *
-     * @param location the resource location identifying the target gas
-     * @param maxLevel the maximum Tesla Turbine operating level unlocked by the gas
-     */
     public static void register(ResourceLocation location, int maxLevel) {
         Gas gasType = Gas.getGasTypeByName(location);
         if (gasType.isEmpty()) {

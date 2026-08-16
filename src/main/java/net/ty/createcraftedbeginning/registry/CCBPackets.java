@@ -19,7 +19,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.Airtight
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedStorageSyncWithGasPacket;
-import net.ty.createcraftedbeginning.content.airtights.gas.network.GasAreaOutlinePacket;
+import net.ty.createcraftedbeginning.content.airtights.gas.GasAreaOutlinePacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlayPacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClientPacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackMenuSyncPacket;

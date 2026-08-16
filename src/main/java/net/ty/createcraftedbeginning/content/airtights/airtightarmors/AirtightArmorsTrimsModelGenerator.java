@@ -22,16 +22,16 @@ import java.util.Map;
 @MethodsReturnNonnullByDefault
 public class AirtightArmorsTrimsModelGenerator extends TrimmableArmorModelGenerator {
     public static <T extends ArmorItem> void generate(DataGenContext<Item, T> context, RegistrateItemModelProvider provider) {
-        T item = context.get();
-        ItemModelBuilder builder = provider.generated(context);
-        for (TrimModelData data : ItemModelGeneratorsAccessor.create$getGENERATED_TRIM_MODELS()) {
-            String trimId = data.name(item.getMaterial());
-            ResourceLocation modelLocation = ModelLocationUtils.getModelLocation(item).withSuffix('_' + trimId + "_trim");
-            ItemModelBuilder itemModel = provider.withExistingParent(modelLocation.getPath(), "item/generated").texture("layer0", TextureMapping.getItemTexture(item));
-            @SuppressWarnings("unchecked") Map<String, String> textures = (Map<String, String>) TEXTURES_HANDLE.get(itemModel);
-            ResourceLocation trimTexture = CCBAPI.asResource("trims/items/airtight_" + item.getType().getName() + "_trim_" + trimId);
-            textures.put("layer1", trimTexture.toString());
-            builder.override().predicate(ItemModelGenerators.TRIM_TYPE_PREDICATE_ID, data.itemModelIndex()).model(itemModel).end();
+        T armorItem = context.get();
+        ItemModelBuilder baseModel = provider.generated(context);
+        for (TrimModelData trimData : ItemModelGeneratorsAccessor.create$getGENERATED_TRIM_MODELS()) {
+            String trimId = trimData.name(armorItem.getMaterial());
+            ResourceLocation modelLocation = ModelLocationUtils.getModelLocation(armorItem).withSuffix('_' + trimId + "_trim");
+            ItemModelBuilder trimModel = provider.withExistingParent(modelLocation.getPath(), "item/generated").texture("layer0", TextureMapping.getItemTexture(armorItem));
+            @SuppressWarnings("unchecked") Map<String, String> trimTextures = (Map<String, String>) TEXTURES_HANDLE.get(trimModel);
+            ResourceLocation trimTexture = CCBAPI.asResource("trims/items/airtight_" + armorItem.getType().getName() + "_trim_" + trimId);
+            trimTextures.put("layer1", trimTexture.toString());
+            baseModel.override().predicate(ItemModelGenerators.TRIM_TYPE_PREDICATE_ID, trimData.itemModelIndex()).model(trimModel).end();
         }
     }
 }

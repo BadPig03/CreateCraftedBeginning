@@ -151,6 +151,16 @@ public final class CCBBlockPropertiesTransformer {
     }
 
     @Contract(pure = true)
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> opticalFiber() {
+        return builder -> pickaxeOnly(builder.initialProperties(CCBSharedProperties::stone)).properties(properties -> properties.mapColor(MapColor.COLOR_PURPLE).noOcclusion());
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> photoSail() {
+        return builder -> pickaxeOnly(builder.initialProperties(CCBSharedProperties::stone)).properties(properties -> properties.mapColor(MapColor.COLOR_PURPLE).noOcclusion());
+    }
+
+    @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> photoStressBearing() {
         return builder -> pickaxeOnly(builder.initialProperties(CCBSharedProperties::stone)).transform(CCBStress.setCapacity(8)).properties(properties -> properties.mapColor(MapColor.COLOR_PURPLE).noOcclusion());
     }

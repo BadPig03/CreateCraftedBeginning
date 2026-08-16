@@ -418,11 +418,11 @@ public final class AirtightForgingPressUtils {
         return Optional.empty();
     }
 
-    private static boolean isAllowedAutomaticPressingRecipe(RecipeHolder<? extends Recipe<?>> holder) {
+    public static boolean isAllowedAutomaticPressingRecipe(RecipeHolder<? extends Recipe<?>> holder) {
         return holder.value() instanceof PressingRecipe && !AllRecipeTypes.shouldIgnoreInAutomation(holder);
     }
 
-    private static boolean isAllowedAutomaticSmithingRecipe(RecipeHolder<? extends Recipe<?>> holder) {
+    public static boolean isAllowedAutomaticSmithingRecipe(RecipeHolder<? extends Recipe<?>> holder) {
         return holder.value().getType() == RecipeType.SMITHING && holder.value() instanceof SmithingRecipe && !AllRecipeTypes.shouldIgnoreInAutomation(holder);
     }
 

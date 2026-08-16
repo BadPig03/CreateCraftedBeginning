@@ -37,9 +37,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AirtightExtendArmRenderHandler {
     public static final AirtightExtendArmRenderHandler INSTANCE = new AirtightExtendArmRenderHandler();
 
-    private float handAnimation;
-    private float lastHandAnimation;
-    private PartialModel pose = CCBPartialModels.AIRTIGHT_EXTEND_ARM_PUNCHING;
+    protected float handAnimation;
+    protected float lastHandAnimation;
+    protected PartialModel pose = CCBPartialModels.AIRTIGHT_EXTEND_ARM_PUNCHING;
 
     private static void renderPlayerArm(RenderHandEvent event, EntityRenderDispatcher renderDispatcher, LocalPlayer player, boolean rightHand, float flip) {
         PoseStack poseStack = event.getPoseStack();
@@ -130,7 +130,7 @@ public class AirtightExtendArmRenderHandler {
         event.setCanceled(true);
     }
 
-    private void renderMainHand(RenderHandEvent event, Minecraft minecraft, LocalPlayer player, ItemStack offhandItem, boolean armInOffhand) {
+    protected void renderMainHand(RenderHandEvent event, Minecraft minecraft, LocalPlayer player, ItemStack offhandItem, boolean armInOffhand) {
         boolean rightHand = event.getHand() == InteractionHand.MAIN_HAND ^ player.getMainArm() == HumanoidArm.LEFT;
         float flip = rightHand ? 1 : -1;
         float swingProgress = event.getSwingProgress();

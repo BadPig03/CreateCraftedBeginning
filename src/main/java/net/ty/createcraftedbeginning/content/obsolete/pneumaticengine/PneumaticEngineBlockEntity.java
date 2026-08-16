@@ -24,9 +24,9 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
-    private boolean isActive;
-    private boolean isClockwise;
-    private int airTimer;
+    protected boolean isActive;
+    protected boolean isClockwise;
+    protected int airTimer;
 
     public PneumaticEngineBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -115,7 +115,7 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
         isActive = currentActive;
     }
 
-    private void spawnAirParticle() {
+    protected void spawnAirParticle() {
         if (level == null || !level.isClientSide || speed == 0) {
             return;
         }
@@ -128,7 +128,7 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
         level.addParticle(ParticleTypes.CLOUD, centerOf.x, centerOf.y, centerOf.z, motion.x, motion.y, motion.z);
     }
 
-    private void consumeTankAir() {
+    protected void consumeTankAir() {
         if (level == null) {
             return;
         }
@@ -143,7 +143,7 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
         tank.setChanged();
     }
 
-    private boolean isBelowTankAndHasAir() {
+    protected boolean isBelowTankAndHasAir() {
         if (level == null) {
             return false;
         }

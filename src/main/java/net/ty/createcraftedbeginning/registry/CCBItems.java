@@ -178,5 +178,8 @@ public class CCBItems {
     public static final ItemEntry<CreativeGasCanisterItem> CREATIVE_GAS_CANISTER = CCB_REGISTRATE.item("creative_gas_canister", p -> new CreativeGasCanisterItem(p, CREATIVE_GAS_CANISTER_PLACEABLE)).transform(CCBItemPropertiesTransformer.creativeGasCanister()).register();
 
     public static void register() {
+        CCBCreativeTabs.registerSectionInit(CCBCreativeTabSection.AIRTIGHTS, AIRTIGHT_SHEET);
+        CCBCreativeTabs.registerSectionInit(CCBCreativeTabSection.PHOTO_STRESSES, POWDERED_AMETHYST, AMETHYST_CRYSTAL_SHEET);
+        CCBCreativeTabs.registerSectionInit(CCBCreativeTabSection.ENDS, END_ALLOY, END_ALLOY_SHEET);
     }
 }

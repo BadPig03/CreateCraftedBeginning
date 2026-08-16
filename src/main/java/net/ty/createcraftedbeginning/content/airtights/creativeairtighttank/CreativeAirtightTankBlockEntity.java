@@ -14,7 +14,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.CreativeSmartGasTank;
@@ -29,9 +29,9 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEntity implements IHaveGoggleInformation, IChamberGasTank, ICreativeGasContainer, ThresholdSwitchObservable {
-    private final CreativeAirtightTankStorageController storageController;
-    private final CreativeAirtightTankDisplay display;
-    private final CreativeAirtightTankSerialization serialization;
+    protected final CreativeAirtightTankStorageController storageController;
+    protected final CreativeAirtightTankDisplay display;
+    protected final CreativeAirtightTankSerialization serialization;
 
     public CreativeAirtightTankBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -46,7 +46,7 @@ public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEn
     }
 
     public static long getCapacityPerTank() {
-        return Integer.MAX_VALUE * GasAmountUtils.MILLIBUCKETS_PER_BUCKET;
+        return Integer.MAX_VALUE * GasAmounts.MILLIBUCKETS_PER_BUCKET;
     }
 
     @Override
@@ -170,7 +170,7 @@ public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEn
         return true;
     }
 
-    void updateClientStructureState() {
+    public void updateClientStructureState() {
         if (level != null) {
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 16);
         }

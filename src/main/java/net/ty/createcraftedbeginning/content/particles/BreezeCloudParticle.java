@@ -20,7 +20,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class BreezeCloudParticle extends TextureSheetParticle {
-    private final SpriteSet sprites;
+    protected final SpriteSet sprites;
 
     protected BreezeCloudParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, SpriteSet sprites) {
         this(level, x, y, z, xSpeed, ySpeed, zSpeed, sprites, 0xFFFFFFFF);

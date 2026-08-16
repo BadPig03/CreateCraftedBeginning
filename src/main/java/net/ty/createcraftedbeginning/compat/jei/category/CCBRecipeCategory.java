@@ -54,8 +54,8 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
     protected final IDrawable background;
     protected final IDrawable icon;
 
-    private final Supplier<List<RecipeHolder<T>>> recipes;
-    private final List<Supplier<? extends ItemStack>> catalysts;
+    protected final Supplier<List<RecipeHolder<T>>> recipes;
+    protected final List<Supplier<? extends ItemStack>> catalysts;
 
     public CCBRecipeCategory(Info<T> info) {
         type = info.recipeType();

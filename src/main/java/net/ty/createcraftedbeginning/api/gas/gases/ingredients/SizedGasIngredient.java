@@ -38,12 +38,6 @@ public final class SizedGasIngredient {
     @Nullable
     private GasStack[] cachedStacks;
 
-    /**
-     * Creates a new {@code SizedGasIngredient} instance.
-     *
-     * @param ingredient the ingredient to add or inspect
-     * @param amount     the amount to use
-     */
     public SizedGasIngredient(GasIngredient ingredient, long amount) {
         if (amount <= 0) {
             throw new IllegalArgumentException("Size must be positive");
@@ -53,89 +47,41 @@ public final class SizedGasIngredient {
         this.amount = amount;
     }
 
-    @Contract("_ -> new")
     private static <T> @NotNull RecordCodecBuilder<T, String> validatedType(String requiredType) {
         return Codec.STRING.validate(type -> type.equals(requiredType) ? DataResult.success(type) : DataResult.error(() -> "Invalid Type: " + type)).fieldOf("type").forGetter(value -> requiredType);
     }
 
-    /**
-     * Creates a sized gas ingredient from the supplied values.
-     *
-     * @param gasType the gas type to inspect or process
-     * @param amount  the amount to use
-     * @return the created value
-     */
     @Contract("_, _ -> new")
     public static SizedGasIngredient of(Gas gasType, long amount) {
         return new SizedGasIngredient(GasIngredient.of(gasType), amount);
     }
 
-    /**
-     * Creates a sized gas ingredient from the supplied value.
-     *
-     * @param stack the stack to inspect or process
-     * @return the created value
-     */
     @Contract("_ -> new")
     public static SizedGasIngredient of(GasStack stack) {
         return new SizedGasIngredient(GasIngredient.single(stack), stack.getAmount());
     }
 
-    /**
-     * Creates a sized gas ingredient from the supplied values.
-     *
-     * @param tag    the tag to inspect or process
-     * @param amount the amount to use
-     * @return the created value
-     */
     @Contract("_, _ -> new")
     public static SizedGasIngredient of(TagKey<Gas> tag, long amount) {
         return new SizedGasIngredient(GasIngredient.tag(tag), amount);
     }
 
-    /**
-     * Adds the supplied ingredient to this builder.
-     *
-     * @return the resulting gas ingredient
-     */
     public GasIngredient ingredient() {
         return ingredient;
     }
 
-    /**
-     * Sets the amount used by this builder.
-     *
-     * @return the amount value
-     */
     public long amount() {
         return amount;
     }
 
-    /**
-     * Checks whether the supplied value matches this condition.
-     *
-     * @param stack the stack to inspect or process
-     * @return {@code true} if the supplied value matches this condition; otherwise {@code false}
-     */
     public boolean test(GasStack stack) {
         return ingredient.test(stack) && stack.getAmount() >= amount;
     }
 
-    /**
-     * Checks whether the supplied value matches this condition.
-     *
-     * @param gasType the gas type to inspect or process
-     * @return {@code true} if the supplied value matches this condition; otherwise {@code false}
-     */
     public boolean test(Gas gasType) {
         return ingredient.test(new GasStack(gasType, amount));
     }
 
-    /**
-     * Returns the gases.
-     *
-     * @return the gases
-     */
     public GasStack[] getGases() {
         if (cachedStacks != null) {
             return cachedStacks;
@@ -145,34 +91,20 @@ public final class SizedGasIngredient {
         return cachedStacks;
     }
 
-    /**
-     * Returns the first available gas.
-     *
-     * @return the first available gas
-     */
     public GasStack getFirstGas() {
         return getGases()[0];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return Objects.hash(ingredient, amount);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(Object obj) {
         return this == obj || obj instanceof SizedGasIngredient other && other.amount() == amount && ingredient.equals(other.ingredient());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return amount + "x " + ingredient;

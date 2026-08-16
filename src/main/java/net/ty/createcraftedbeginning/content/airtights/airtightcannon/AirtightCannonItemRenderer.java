@@ -22,11 +22,10 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.IItemDecorator;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandler;
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlareSupplierUtils;
-import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
 import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
@@ -54,9 +53,9 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
             return false;
         }
 
-        ItemStack icon = getDecoratorIcon(player, level);
-        if (!icon.isEmpty()) {
-            renderItem(guiGraphics, xOffset, yOffset, icon);
+        ItemStack decoratorIcon = getDecoratorIcon(player, level);
+        if (!decoratorIcon.isEmpty()) {
+            renderItem(guiGraphics, xOffset, yOffset, decoratorIcon);
         }
         return false;
     };
@@ -80,29 +79,28 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
             cachedLevel = new WeakReference<>(level);
         }
 
-        ItemStack flareItem = WeatherFlareSupplierUtils.getFirstFlare(player);
-        if (!flareItem.isEmpty()) {
-            cachedDecoratorIcon = flareItem;
+        ItemStack flareStack = WeatherFlareSupplierUtils.getFirstFlare(player);
+        if (!flareStack.isEmpty()) {
+            cachedDecoratorIcon = flareStack;
             return cachedDecoratorIcon;
         }
 
-        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
+        GasStack gasContent = CanisterContainerClients.getDisplayedGasContent();
         if (gasContent.isEmpty()) {
             cachedDecoratorIcon = ItemStack.EMPTY;
             return cachedDecoratorIcon;
         }
 
-        AirtightCannonVisualHandler visualHandler = AirtightCannonVisualHandlerUtils.of(gasContent.getGasType());
-        cachedDecoratorIcon = visualHandler.getRenderIcon(level);
+        cachedDecoratorIcon = AirtightCannonVisualHandlerUtils.of(gasContent.getGasType()).getRenderIcon(level);
         return cachedDecoratorIcon;
     }
 
-    private static void renderItem(GuiGraphics guiGraphics, int xOffset, int yOffset, ItemStack icon) {
+    private static void renderItem(GuiGraphics guiGraphics, int xOffset, int yOffset, ItemStack decoratorIcon) {
         PoseStack poseStack = guiGraphics.pose();
         poseStack.pushPose();
         poseStack.translate(xOffset, yOffset + 8, 100);
         poseStack.scale(0.5f, 0.5f, 0.5f);
-        guiGraphics.renderItem(icon, 0, 0);
+        guiGraphics.renderItem(decoratorIcon, 0, 0);
         poseStack.popPose();
     }
 
@@ -114,9 +112,9 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
             return;
         }
 
-        boolean inMainHand = player.getMainHandItem() == cannon;
-        boolean inOffHand = player.getOffhandItem() == cannon;
-        if (!inMainHand && !inOffHand) {
+        boolean isInMainHand = player.getMainHandItem() == cannon;
+        boolean isInOffHand = player.getOffhandItem() == cannon;
+        if (!isInMainHand && !isInOffHand) {
             renderer.render(CCBPartialModels.AIRTIGHT_CANNON_BARREL.get(), light);
             renderer.render(CCBPartialModels.AIRTIGHT_CANNON_PISTON_LEFT.get(), light);
             renderer.render(CCBPartialModels.AIRTIGHT_CANNON_PISTON_RIGHT.get(), light);
@@ -127,17 +125,16 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
         boolean isUsing = player.getUseItem() == cannon;
         int useTime = isUsing ? cannon.getUseDuration(player) - player.getUseItemRemainingTicks() : 0;
         float chargeTime = useTime + (isUsing ? partialTick : 0);
-        int efficientUseTime = AirtightCannonUtils.getEfficientUseTime(cannon);
-        float barrelOffset = Mth.clamp(chargeTime / efficientUseTime, 0, 2) / 10;
+        float barrelOffset = Mth.clamp(chargeTime / AirtightCannonUtils.getEfficientUseTime(cannon), 0, 2) / 10;
 
         poseStack.pushPose();
         poseStack.translate(0, 0, barrelOffset);
         renderer.render(CCBPartialModels.AIRTIGHT_CANNON_BARREL.get(), light);
         poseStack.popPose();
 
-        boolean leftHanded = player.getMainArm() == HumanoidArm.LEFT;
-        float animation = AirtightCannonRenderHandler.INSTANCE.getAnimation(inMainHand ^ leftHanded, partialTick);
-        float pistonOffset = Mth.clamp(animation * 2, 0, 1) / 8;
+        boolean isLeftHanded = player.getMainArm() == HumanoidArm.LEFT;
+        float pistonAnimation = AirtightCannonRenderHandler.INSTANCE.getAnimation(isInMainHand ^ isLeftHanded, partialTick);
+        float pistonOffset = Mth.clamp(pistonAnimation * 2, 0, 1) / 8;
 
         poseStack.pushPose();
         poseStack.translate(pistonOffset, 0, 0);

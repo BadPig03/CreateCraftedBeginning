@@ -66,7 +66,7 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
         transport.markConnectionsDirty();
     }
 
-    static boolean hasPlacementConnection(Level level, BlockPos pos, Direction direction) {
+    public static boolean hasPlacementConnection(Level level, BlockPos pos, Direction direction) {
         BlockPos otherPos = pos.relative(direction);
         BlockState otherState = level.getBlockState(otherPos);
         return !otherState.isAir() && (!otherState.canBeReplaced() || CCBBlockTags.GAS_SOURCES.matches(otherState)) && GasTransportBehaviour.isValidAirtightComponents(level, otherPos, otherState, direction);

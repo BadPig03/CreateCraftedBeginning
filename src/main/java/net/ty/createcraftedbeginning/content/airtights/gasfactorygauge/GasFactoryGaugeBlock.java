@@ -138,7 +138,7 @@ public class GasFactoryGaugeBlock extends FactoryPanelBlock {
         return simpleCodec(GasFactoryGaugeBlock::new);
     }
 
-    private boolean tryDestroyGasSubPanelFirst(BlockState state, Level level, BlockPos pos, Player player) {
+    protected boolean tryDestroyGasSubPanelFirst(BlockState state, Level level, BlockPos pos, Player player) {
         double range = player.getAttributeValue(Attributes.BLOCK_INTERACTION_RANGE) + 1;
         Vec3 location = player.pick(range, 1, false).getLocation();
         PanelSlot destroyedSlot = getTargetedSlot(pos, state, location);

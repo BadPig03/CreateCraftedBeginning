@@ -43,12 +43,12 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
     private static final String COMPOUND_KEY_FILTER = "Filter";
     private static final String COMPOUND_KEY_FILTERING = "Filtering";
 
-    private final Predicate<ItemStack> predicate = GasFilterUtils::isFilter;
-    private final ValueBoxTransform slotPositioning;
+    protected final Predicate<ItemStack> predicate = GasFilterUtils::isFilter;
+    protected final ValueBoxTransform slotPositioning;
 
     protected FilterItemStack filter;
-    private Predicate<GasStack> compiledFilter;
-    private Consumer<ItemStack> callback;
+    protected Predicate<GasStack> compiledFilter;
+    protected Consumer<ItemStack> callback;
 
     public GasFilteringBehaviour(SmartBlockEntity be, ValueBoxTransform slot) {
         super(be);
@@ -67,7 +67,7 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
         return compiledFilter.test(stack);
     }
 
-    private void rebuildCompiledFilter() {
+    protected void rebuildCompiledFilter() {
         compiledFilter = GasFilterUtils.compile(filter.item());
     }
 

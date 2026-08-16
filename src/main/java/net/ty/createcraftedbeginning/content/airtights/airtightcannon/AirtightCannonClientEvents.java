@@ -22,15 +22,17 @@ public final class AirtightCannonClientEvents {
     @SubscribeEvent
     public static void onComputeFovModifier(ComputeFovModifierEvent event) {
         Player player = event.getPlayer();
-        ItemStack usingItem = player.getUseItem();
-        if (!usingItem.is(CCBItems.AIRTIGHT_CANNON) || !player.isUsingItem()) {
+        if (!player.isUsingItem()) {
             return;
         }
 
-        int useTime = usingItem.getUseDuration(player) - player.getUseItemRemainingTicks();
-        int efficientUseTime = AirtightCannonUtils.getEfficientUseTime(usingItem);
-        float chargeProgress = Math.min((float) useTime / (efficientUseTime * 2), 1);
-        float fovModifier = 1 - chargeProgress * 0.15f;
-        event.setNewFovModifier(event.getFovModifier() * fovModifier);
+        ItemStack cannon = player.getUseItem();
+        if (!cannon.is(CCBItems.AIRTIGHT_CANNON)) {
+            return;
+        }
+
+        int useTime = cannon.getUseDuration(player) - player.getUseItemRemainingTicks();
+        float chargeProgress = Math.min((float) useTime / (AirtightCannonUtils.getEfficientUseTime(cannon) * 2), 1);
+        event.setNewFovModifier(event.getFovModifier() * (1 - chargeProgress * 0.15f));
     }
 }

@@ -17,7 +17,7 @@ import java.util.UUID;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class EndIncinerationBlowerOwner {
+public final class EndIncinerationBlowerOwner {
     private static final String COMPOUND_KEY_OWNER = "Owner";
     private static final String FAKE_PLAYER_NAME = "[CCB_EIB]";
     private static final String FAKE_PLAYER_UUID_PREFIX = "createcraftedbeginning:end_incineration_blower:";
@@ -25,7 +25,7 @@ final class EndIncinerationBlowerOwner {
     private GameProfile fakePlayerProfile;
     private UUID owner;
 
-    boolean setOwner(UUID owner) {
+    public boolean setOwner(UUID owner) {
         if (Objects.equals(this.owner, owner)) {
             return false;
         }
@@ -35,7 +35,7 @@ final class EndIncinerationBlowerOwner {
         return true;
     }
 
-    void write(CompoundTag compoundTag) {
+    public void write(CompoundTag compoundTag) {
         if (owner == null) {
             return;
         }
@@ -43,12 +43,12 @@ final class EndIncinerationBlowerOwner {
         compoundTag.putUUID(COMPOUND_KEY_OWNER, owner);
     }
 
-    void read(CompoundTag compoundTag) {
+    public void read(CompoundTag compoundTag) {
         owner = compoundTag.contains(COMPOUND_KEY_OWNER) ? compoundTag.getUUID(COMPOUND_KEY_OWNER) : null;
         fakePlayerProfile = null;
     }
 
-    FakePlayer getFakePlayer(ServerLevel level, BlockPos pos) {
+    public FakePlayer getFakePlayer(ServerLevel level, BlockPos pos) {
         if (fakePlayerProfile == null) {
             String identity = owner == null ? "unowned" : owner.toString();
             UUID profileId = UUID.nameUUIDFromBytes((FAKE_PLAYER_UUID_PREFIX + identity).getBytes(StandardCharsets.UTF_8));

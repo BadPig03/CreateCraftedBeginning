@@ -8,12 +8,6 @@ import org.slf4j.Logger;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-/**
- * Stable entry point for constants and helpers that are safe for API consumers.
- *
- * <p>API code must depend on this class instead of the mod bootstrap class so the
- * public surface does not acquire a dependency on CCB's internal registration order.</p>
- */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class CCBAPI {
@@ -24,12 +18,6 @@ public final class CCBAPI {
     private CCBAPI() {
     }
 
-    /**
-     * Creates a resource location in the Create Crafted Beginning namespace.
-     *
-     * @param path the path component of the resource location
-     * @return a new resource location using {@link #MOD_ID} as its namespace
-     */
     @Contract("_ -> new")
     public static ResourceLocation asResource(String path) {
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);

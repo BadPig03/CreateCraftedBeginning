@@ -32,9 +32,6 @@ public abstract class GasIngredient implements Predicate<GasStack> {
         private static final StreamCodec<RegistryFriendlyByteBuf, GasIngredient> DISPATCH_CODEC = ByteBufCodecs.registry(GasRegistries.GAS_INGREDIENT_TYPES_KEY).dispatch(GasIngredient::getType, GasIngredientType::streamCodec);
         private static final StreamCodec<RegistryFriendlyByteBuf, List<GasStack>> GAS_LIST_CODEC = GasStack.STREAM_CODEC.apply(ByteBufCodecs.collection(NonNullList::createWithCapacity));
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public void encode(RegistryFriendlyByteBuf buf, GasIngredient ingredient) {
             if (ingredient.isSimple()) {
@@ -46,9 +43,6 @@ public abstract class GasIngredient implements Predicate<GasStack> {
             DISPATCH_CODEC.encode(buf, ingredient);
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public GasIngredient decode(RegistryFriendlyByteBuf buf) {
             int size = buf.readVarInt();
@@ -116,40 +110,18 @@ public abstract class GasIngredient implements Predicate<GasStack> {
         });
     }
 
-    /**
-     * Returns an empty instance.
-     *
-     * @return the created value
-     */
     public static GasIngredient empty() {
         return EmptyGasIngredient.INSTANCE;
     }
 
-    /**
-     * Creates a gas ingredient from the supplied values.
-     *
-     * @return the created value
-     */
     public static GasIngredient of() {
         return empty();
     }
 
-    /**
-     * Creates a gas ingredient from the supplied value.
-     *
-     * @param gases the gases to use
-     * @return the created value
-     */
     public static GasIngredient of(GasStack... gases) {
         return of(Arrays.stream(gases).map(GasStack::getGasType));
     }
 
-    /**
-     * Creates a gas ingredient from the supplied value.
-     *
-     * @param gases the gases to use
-     * @return the created value
-     */
     public static GasIngredient of(Gas... gases) {
         return of(Arrays.stream(gases));
     }
@@ -158,45 +130,21 @@ public abstract class GasIngredient implements Predicate<GasStack> {
         return CompoundGasIngredient.of(gases.map(GasIngredient::single));
     }
 
-    /**
-     * Creates an ingredient that matches a single gas.
-     *
-     * @param stack the stack to inspect or process
-     * @return the created value
-     */
     @Contract("_ -> new")
     public static GasIngredient single(GasStack stack) {
         return single(stack.getGasType());
     }
 
-    /**
-     * Creates an ingredient that matches a single gas.
-     *
-     * @param gasType the gas type to inspect or process
-     * @return the created value
-     */
     @Contract("_ -> new")
     public static GasIngredient single(Gas gasType) {
         return single(gasType.getHolder());
     }
 
-    /**
-     * Creates an ingredient that matches a single gas.
-     *
-     * @param gasHolder the gas holder to use
-     * @return the created value
-     */
     @Contract("_ -> new")
     public static GasIngredient single(Holder<Gas> gasHolder) {
         return new SingleGasIngredient(gasHolder);
     }
 
-    /**
-     * Creates an ingredient that matches gases in the supplied tag.
-     *
-     * @param tag the tag to inspect or process
-     * @return the created value
-     */
     @Contract("_ -> new")
     public static GasIngredient tag(TagKey<Gas> tag) {
         return new TagGasIngredient(tag);
@@ -204,25 +152,10 @@ public abstract class GasIngredient implements Predicate<GasStack> {
 
     protected abstract Stream<GasStack> generateStacks();
 
-    /**
-     * Checks whether this value is simple.
-     *
-     * @return {@code true} if this value is simple; otherwise {@code false}
-     */
     public abstract boolean isSimple();
 
-    /**
-     * Returns the type.
-     *
-     * @return the type
-     */
     public abstract GasIngredientType<?> getType();
 
-    /**
-     * Returns the stacks.
-     *
-     * @return the stacks
-     */
     public final GasStack[] getStacks() {
         if (stacks != null) {
             return stacks;
@@ -232,30 +165,16 @@ public abstract class GasIngredient implements Predicate<GasStack> {
         return stacks;
     }
 
-    /**
-     * Checks whether this value is empty.
-     *
-     * @return {@code true} if this value is empty; otherwise {@code false}
-     */
     public final boolean isEmpty() {
         return this == empty();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public abstract boolean test(GasStack gasStack);
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public abstract int hashCode();
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public abstract boolean equals(Object obj);
 }

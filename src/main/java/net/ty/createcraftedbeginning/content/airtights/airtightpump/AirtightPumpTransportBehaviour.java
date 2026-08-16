@@ -16,10 +16,10 @@ import java.util.Collection;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightPumpTransportBehaviour extends GasTransportBehaviour {
+public final class AirtightPumpTransportBehaviour extends GasTransportBehaviour {
     private final AirtightPumpBlockEntity pump;
 
-    AirtightPumpTransportBehaviour(AirtightPumpBlockEntity pump) {
+    public AirtightPumpTransportBehaviour(AirtightPumpBlockEntity pump) {
         super(pump);
         this.pump = pump;
     }

@@ -32,8 +32,8 @@ public final class AirtightHelmetUpgradeRegistry {
     }
 
     public static boolean allUpgradesEnabled(Player player) {
-        ItemStack item = player.getItemBySlot(EquipmentSlot.HEAD);
-        return item.is(CCBItems.AIRTIGHT_HELMET) && REGISTRY.allUpgradesEnabled(item);
+        ItemStack helmet = player.getItemBySlot(EquipmentSlot.HEAD);
+        return helmet.is(CCBItems.AIRTIGHT_HELMET) && REGISTRY.allUpgradesEnabled(helmet);
     }
 
     public static List<AirtightUpgrade> getAll() {

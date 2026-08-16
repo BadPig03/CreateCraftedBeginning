@@ -23,8 +23,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public final class CCBCreativeTabBanners {
-    public static final int DEFAULT_SECONDARY_TITLE_COLOR = 0xFFCCCCCC;
-    public static final int DEFAULT_TITLE_BACKGROUND = 0xBB001E3C;
+    private static final int DEFAULT_SECONDARY_TITLE_COLOR = 0xFFCCCCCC;
+    private static final int DEFAULT_TITLE_BACKGROUND = 0xBB001E3C;
 
     private CCBCreativeTabBanners() {
     }

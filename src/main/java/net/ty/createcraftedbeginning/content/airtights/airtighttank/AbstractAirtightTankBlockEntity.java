@@ -24,8 +24,8 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity implements IGasTankMultiBlockEntityContainer {
-    private final AirtightTankMultiblockController multiblockController;
-    private final AirtightTankGasStorage gasStorage;
+    protected final AirtightTankMultiblockController multiblockController;
+    protected final AirtightTankGasStorage gasStorage;
 
     protected AbstractAirtightTankBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -225,11 +225,11 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
 
     protected abstract long capacityPerBlock();
 
-    final AirtightTankMultiblockController multiblockController() {
+    public final AirtightTankMultiblockController multiblockController() {
         return multiblockController;
     }
 
-    final void sendDataImmediately() {
+    public final void sendDataImmediately() {
         super.sendData();
     }
 
@@ -237,7 +237,7 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
         invalidateRenderBoundingBox();
     }
 
-    final void invalidateGasCapabilities() {
+    public final void invalidateGasCapabilities() {
         invalidateCapabilities();
     }
 }

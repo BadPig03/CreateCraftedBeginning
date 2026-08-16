@@ -24,8 +24,8 @@ import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightForgingPressController {
-    static final int CYCLE_DURATION = 30;
+public final class AirtightForgingPressController {
+    private static final int CYCLE_DURATION = 30;
     private static final float PRESS_HEAD_IDLE_OFFSET = -0.625f;
     private static final float PRESS_HEAD_TRAVEL = 0.8125f;
 
@@ -42,14 +42,14 @@ final class AirtightForgingPressController {
     private float operatingTicks;
     private long observedRecipeCacheVersion;
 
-    AirtightForgingPressController(AirtightForgingPressBlockEntity press) {
+    public AirtightForgingPressController(AirtightForgingPressBlockEntity press) {
         this.press = press;
         observedAutomaticPressingEnabled = CCBConfig.server().airtights.enableAutomaticPressingRecipes.get();
         observedAutomaticSmithingEnabled = CCBConfig.server().airtights.enableAutomaticSmithingRecipes.get();
         observedRecipeCacheVersion = AirtightForgingPressUtils.getRecipeCacheVersion();
     }
 
-    void tick() {
+    public void tick() {
         Level level = press.getLevel();
         if (level == null) {
             return;
@@ -64,7 +64,7 @@ final class AirtightForgingPressController {
         press.scheduleUpdate();
     }
 
-    void lazyTick() {
+    public void lazyTick() {
         Level level = press.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -83,7 +83,7 @@ final class AirtightForgingPressController {
         update(true);
     }
 
-    boolean updateForgingPress() {
+    public boolean updateForgingPress() {
         observedRecipeCacheVersion = AirtightForgingPressUtils.getRecipeCacheVersion();
         Level level = press.getLevel();
         if (level == null) {
@@ -130,21 +130,21 @@ final class AirtightForgingPressController {
         return true;
     }
 
-    void startProcessInPonderLevel() {
+    public void startProcessInPonderLevel() {
         update(false);
         updateForgingPress();
     }
 
-    void notifyContentsChanged() {
+    public void notifyContentsChanged() {
         contentsChanged = true;
     }
 
-    void notifyFilterChanged() {
+    public void notifyFilterChanged() {
         filterChanged = true;
         contentsChanged = true;
     }
 
-    float getPressHeadDistance(float partialTicks) {
+    public float getPressHeadDistance(float partialTicks) {
         if (!operating) {
             return PRESS_HEAD_IDLE_OFFSET;
         }
@@ -161,15 +161,15 @@ final class AirtightForgingPressController {
         return PRESS_HEAD_IDLE_OFFSET + distance * PRESS_HEAD_TRAVEL;
     }
 
-    boolean isOperating() {
+    public boolean isOperating() {
         return operating;
     }
 
-    float getOperatingTicks() {
+    public float getOperatingTicks() {
         return operatingTicks;
     }
 
-    void loadOperationState(boolean operating, float operatingTicks, boolean clientPacket) {
+    public void loadOperationState(boolean operating, float operatingTicks, boolean clientPacket) {
         this.operating = operating;
         this.operatingTicks = operatingTicks;
         if (clientPacket) {

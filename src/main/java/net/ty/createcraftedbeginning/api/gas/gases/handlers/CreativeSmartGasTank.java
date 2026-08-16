@@ -19,61 +19,38 @@ public class CreativeSmartGasTank extends SmartGasTank {
         return tank;
     }));
 
-    /**
-     * Creates a new {@code CreativeSmartGasTank} instance.
-     *
-     * @param capacity       the capacity to use
-     * @param updateCallback the callback invoked when the stored gas changes
-     */
     public CreativeSmartGasTank(long capacity, Consumer<GasStack> updateCallback) {
         super(capacity, updateCallback);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public GasStack drain(GasStack resource, GasAction action) {
         return super.drain(resource, GasAction.SIMULATE);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public GasStack drain(long maxDrain, GasAction action) {
         return super.drain(maxDrain, GasAction.SIMULATE);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public long fill(GasStack resource, GasAction action) {
         return resource.getAmount();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public long getGasAmount() {
-        return getGasStack().isEmpty() ? 0 : getTankCapacity(0);
+        if (getGasStack().isEmpty()) {
+            return 0;
+        }
+        return getTankCapacity(0);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public AtomicFillResult tryFillAtomically(List<GasStack> resources, GasAction action) {
         return AtomicFillResult.SUCCESS;
     }
 
-    /**
-     * Sets the contained gas.
-     *
-     * @param gasStack the gas stack to inspect or process
-     */
     public void setContainedGas(GasStack gasStack) {
         gas = gasStack.copy();
         if (!gasStack.isEmpty()) {

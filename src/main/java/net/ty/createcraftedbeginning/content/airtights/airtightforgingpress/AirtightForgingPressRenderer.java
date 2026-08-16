@@ -146,5 +146,5 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
         renderItems(press, partialTicks, poseStack, buffer, light, overlay);
     }
 
-    private record OutputPlacement(float angle, Vec3 offset) {}
+    protected record OutputPlacement(float angle, Vec3 offset) {}
 }

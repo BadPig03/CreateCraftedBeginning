@@ -32,7 +32,7 @@ public abstract class CCBOutline {
     protected final Vector4f posTransformTemp = new Vector4f();
     protected final Vector3f normalTransformTemp = new Vector3f();
 
-    public CCBOutline() {
+    protected CCBOutline() {
         params = new CCBOutlineParams();
     }
 
@@ -72,7 +72,7 @@ public abstract class CCBOutline {
         bufferCuboid(pose, consumer, minPos, maxPos, color, lightmap, disableNormals);
     }
 
-    public void bufferCuboid(Pose pose, VertexConsumer consumer, Vector3f minPos, Vector3f maxPos, Vector4f color, int lightmap, boolean disableNormals) {
+    protected void bufferCuboid(Pose pose, VertexConsumer consumer, Vector3f minPos, Vector3f maxPos, Vector4f color, int lightmap, boolean disableNormals) {
         Vector4f position = posTransformTemp;
         Vector3f normal = normalTransformTemp;
         float minX = minPos.x();
@@ -208,9 +208,9 @@ public abstract class CCBOutline {
         protected float alpha;
         protected int lightmap;
         protected Color rgb;
-        private float lineWidth;
+        protected float lineWidth;
 
-        public CCBOutlineParams() {
+        protected CCBOutlineParams() {
             faceTexture = highlightedFaceTexture = null;
             alpha = 1;
             lineWidth = 0.03125f;

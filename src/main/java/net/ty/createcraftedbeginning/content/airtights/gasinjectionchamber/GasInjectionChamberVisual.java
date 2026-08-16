@@ -19,18 +19,18 @@ import java.util.function.Consumer;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasInjectionChamberVisual extends AbstractBlockEntityVisual<GasInjectionChamberBlockEntity> implements SimpleDynamicVisual {
-    private final TransformedInstance nozzle;
-    private final TransformedInstance nozzleTop;
-    private final TransformedInstance nozzleBottom;
+    protected final TransformedInstance nozzle;
+    protected final TransformedInstance nozzleTop;
+    protected final TransformedInstance nozzleBottom;
 
     @Nullable
-    private TransformedInstance filter;
+    protected TransformedInstance filter;
     @Nullable
-    private TransformedInstance filterInner;
+    protected TransformedInstance filterInner;
 
-    private float lastNozzleOffset = Float.NaN;
-    private float lastPartOffset = Float.NaN;
-    private int lastFilterColor = Integer.MIN_VALUE;
+    protected float lastNozzleOffset = Float.NaN;
+    protected float lastPartOffset = Float.NaN;
+    protected int lastFilterColor = Integer.MIN_VALUE;
 
     public GasInjectionChamberVisual(VisualizationContext context, GasInjectionChamberBlockEntity blockEntity, float partialTick) {
         super(context, blockEntity, partialTick);
@@ -41,7 +41,7 @@ public class GasInjectionChamberVisual extends AbstractBlockEntityVisual<GasInje
         animate(partialTick);
     }
 
-    private void animate(float partialTick) {
+    protected void animate(float partialTick) {
         ItemStack installedFilter = blockEntity.getInstalledFilter();
         boolean filterInstancesChanged = updateFilterInstances(installedFilter);
 
@@ -68,7 +68,7 @@ public class GasInjectionChamberVisual extends AbstractBlockEntityVisual<GasInje
         lastFilterColor = color;
     }
 
-    private boolean updateFilterInstances(ItemStack installedFilter) {
+    protected boolean updateFilterInstances(ItemStack installedFilter) {
         if (installedFilter.isEmpty()) {
             if (filter == null || filterInner == null) {
                 return false;
@@ -93,7 +93,7 @@ public class GasInjectionChamberVisual extends AbstractBlockEntityVisual<GasInje
         return true;
     }
 
-    private void updateTransforms(float nozzleOffset, float partOffset) {
+    protected void updateTransforms(float nozzleOffset, float partOffset) {
         nozzle.setIdentityTransform().translate(getVisualPosition()).translateY(nozzleOffset).setChanged();
 
         float attachedOffset = nozzleOffset + partOffset;

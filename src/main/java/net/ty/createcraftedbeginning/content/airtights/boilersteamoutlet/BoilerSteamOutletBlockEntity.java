@@ -30,10 +30,10 @@ import java.util.List;
 public class BoilerSteamOutletBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
     private static final int LAZY_TICK_RATE = 20;
 
-    private final BoilerSteamOutletController controller;
+    protected final BoilerSteamOutletController controller;
 
-    private SmartGasTankBehaviour steamTank;
-    private IGasHandler exposedGasHandler;
+    protected SmartGasTankBehaviour steamTank;
+    protected IGasHandler exposedGasHandler;
 
     public BoilerSteamOutletBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -100,7 +100,7 @@ public class BoilerSteamOutletBlockEntity extends SmartBlockEntity implements IH
         controller.ensureCurrentTick();
     }
 
-    @Nullable SmartGasTankBehaviour getSteamTankBehaviour() {
+    @Nullable public SmartGasTankBehaviour getSteamTankBehaviour() {
         return steamTank;
     }
 }

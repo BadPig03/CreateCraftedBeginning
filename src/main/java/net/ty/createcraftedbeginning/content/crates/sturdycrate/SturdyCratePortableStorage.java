@@ -8,15 +8,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class SturdyCratePortableStorage {
+public final class SturdyCratePortableStorage {
     private SturdyCratePortableStorage() {
     }
 
-    static boolean hasStoredData(SturdyCrateBlockEntity crate) {
+    public static boolean hasStoredData(SturdyCrateBlockEntity crate) {
         return crate.getStoredCount() > 0 || !crate.getFilterItem().isEmpty();
     }
 
-    static void saveToItem(SturdyCrateBlockEntity crate, ItemStack crateItem) {
+    public static void saveToItem(SturdyCrateBlockEntity crate, ItemStack crateItem) {
         SturdyCrateContents contents = new SturdyCrateContents(crate.getStoredItem(), crate.getStoredCount(), crate.getFilterItem());
         if (contents.hasData()) {
             crateItem.set(CCBDataComponents.STURDY_CRATE_CONTENTS, contents);
@@ -26,7 +26,7 @@ final class SturdyCratePortableStorage {
         crateItem.remove(CCBDataComponents.STURDY_CRATE_CONTENTS);
     }
 
-    static void loadFromItem(SturdyCrateBlockEntity crate, ItemStack crateItem) {
+    public static void loadFromItem(SturdyCrateBlockEntity crate, ItemStack crateItem) {
         SturdyCrateContents contents = crateItem.get(CCBDataComponents.STURDY_CRATE_CONTENTS);
         if (contents == null) {
             contents = SturdyCrateContents.empty();

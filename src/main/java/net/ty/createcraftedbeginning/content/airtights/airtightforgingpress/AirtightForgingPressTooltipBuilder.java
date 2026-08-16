@@ -13,7 +13,7 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
@@ -123,7 +123,7 @@ public class AirtightForgingPressTooltipBuilder {
                 continue;
             }
 
-            CCBLang.gasName(gas).space().style(ChatFormatting.GRAY).add(GasAmountUtils.precise(gas.getAmount()).style(ChatFormatting.AQUA)).forGoggles(tooltip, 1);
+            CCBLang.gasName(gas).space().style(ChatFormatting.GRAY).add(GasAmounts.precise(gas.getAmount()).style(ChatFormatting.AQUA)).forGoggles(tooltip, 1);
         }
     }
 

@@ -13,17 +13,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public enum DefaultCoolantHandler implements AirtightCoolantHandler {
     INSTANCE;
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CoolantEfficiency getCoolantEfficiency(Level level, BlockPos pos, BlockState blockState) {
         return CoolantEfficiency.NONE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public @Nullable BlockState getMeltBlockState(Level level, BlockPos pos, BlockState blockState) {
         return null;

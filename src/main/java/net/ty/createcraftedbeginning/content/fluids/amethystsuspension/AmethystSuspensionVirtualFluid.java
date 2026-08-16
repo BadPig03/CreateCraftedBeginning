@@ -13,7 +13,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AmethystSuspensionVirtualFluid extends BaseFlowingFluid {
-    private final boolean isSource;
+    protected final boolean isSource;
 
     public AmethystSuspensionVirtualFluid(Properties properties, boolean isSource) {
         super(properties);

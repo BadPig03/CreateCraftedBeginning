@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.client;
+package net.ty.createcraftedbeginning.client.contents;
 
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.MethodsReturnNonnullByDefault;

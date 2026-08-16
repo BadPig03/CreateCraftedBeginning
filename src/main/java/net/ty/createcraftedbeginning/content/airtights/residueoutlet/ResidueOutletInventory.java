@@ -208,8 +208,8 @@ public class ResidueOutletInventory extends ItemHandlerContainer implements IIte
         outlet.setChanged();
     }
 
-    public static class InternalStackHandler extends ItemStackHandler {
-        private final ResidueOutletBlockEntity outlet;
+    private static class InternalStackHandler extends ItemStackHandler {
+        protected final ResidueOutletBlockEntity outlet;
 
         public InternalStackHandler(ResidueOutletBlockEntity outlet) {
             super(MAX_SIZE);

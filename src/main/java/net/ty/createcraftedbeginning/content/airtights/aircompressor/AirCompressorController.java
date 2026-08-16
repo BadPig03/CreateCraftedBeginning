@@ -9,19 +9,20 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirCompressorController {
+public final class AirCompressorController {
     private final OperatingStateUpdater operatingStateUpdater;
+
     private boolean queuedPressurization;
 
-    AirCompressorController(OperatingStateUpdater operatingStateUpdater) {
+    public AirCompressorController(OperatingStateUpdater operatingStateUpdater) {
         this.operatingStateUpdater = operatingStateUpdater;
     }
 
-    void queuePressurization() {
+    public void queuePressurization() {
         queuedPressurization = true;
     }
 
-    ServerTickResult tickServer(Level level, AirCompressorState compressorState, boolean overStressed, float speed, SmartGasTankBehaviour inputTankBehaviour, SmartGasTankBehaviour outputTankBehaviour) {
+    public ServerTickResult tickServer(Level level, AirCompressorState compressorState, boolean overStressed, float speed, SmartGasTankBehaviour inputTankBehaviour, SmartGasTankBehaviour outputTankBehaviour) {
         boolean shouldPressurize = queuedPressurization;
         queuedPressurization = false;
 
@@ -34,6 +35,7 @@ final class AirCompressorController {
 
         CompressionPlan plan = AirCompressorProcessing.createPlan(level, inputTankBehaviour.getPrimaryHandler().getGasStack());
         boolean operating = AirCompressorProcessing.canOperate(plan, overStressed, speed, previousOverheatState, inputTankBehaviour, outputTankBehaviour);
+        boolean operatingForHeat = operating;
         if (shouldPressurize && operating) {
             compressorState.setWorkState(AirCompressorProcessing.pressurize(compressorState.getWorkState(), plan, inputTankBehaviour, outputTankBehaviour));
             operating = AirCompressorProcessing.canOperate(plan, false, speed, previousOverheatState, inputTankBehaviour, outputTankBehaviour);
@@ -44,20 +46,20 @@ final class AirCompressorController {
             compressorState.setWorkState(AirCompressorProcessing.accumulateWork(compressorState.getWorkState(), plan, speed, previousOverheatState));
         }
 
-        compressorState.setStoredHeat(AirCompressorThermal.updateStoredHeat(previousStoredHeat, speed, operating, compressorState.getCoolantEfficiency(), level));
+        boolean closeCall = AirCompressorThermal.isMeltdownPreventedByCoolant(previousStoredHeat, speed, operatingForHeat, compressorState.getCoolantEfficiency(), level);
+        compressorState.setStoredHeat(AirCompressorThermal.updateStoredHeat(previousStoredHeat, speed, operatingForHeat, compressorState.getCoolantEfficiency(), level));
         OverheatState updatedOverheatState = compressorState.getOverheatState();
-        boolean closeCall = previousOverheatState == OverheatState.SEVERE && updatedOverheatState.ordinal() < OverheatState.SEVERE.ordinal();
         boolean enteredMeltdown = updatedOverheatState == OverheatState.MELTDOWN;
         return new ServerTickResult(false, closeCall, enteredMeltdown, previousStoredHeat, previousOverheatState);
     }
 
     @FunctionalInterface
-    interface OperatingStateUpdater {
+    public interface OperatingStateUpdater {
         void update(Level level, boolean operating);
     }
 
-    record ServerTickResult(boolean initiallyMeltdown, boolean closeCall, boolean enteredMeltdown, int previousStoredHeat, OverheatState previousOverheatState) {
-        boolean overheatStateChanged(AirCompressorState compressorState) {
+    public record ServerTickResult(boolean initiallyMeltdown, boolean closeCall, boolean enteredMeltdown, int previousStoredHeat, OverheatState previousOverheatState) {
+        public boolean overheatStateChanged(AirCompressorState compressorState) {
             return previousOverheatState != compressorState.getOverheatState();
         }
     }

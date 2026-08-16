@@ -19,11 +19,11 @@ import java.util.UUID;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasFactoryGaugeRestockController {
+public final class GasFactoryGaugeRestockController {
     private GasFactoryGaugeRestockController() {
     }
 
-    static Result request(UUID network, ItemStack gasToken, GasPackagerBlockEntity packager, int targetAmount, int promisedAmount, int storedAmount, String recipeAddress) {
+    public static Result request(UUID network, ItemStack gasToken, GasPackagerBlockEntity packager, int targetAmount, int promisedAmount, int storedAmount, String recipeAddress) {
         IdentifiedInventory excludedInventory = packager.getIdentifiedGasInventory();
         if (excludedInventory == null) {
             return Result.NONE;
@@ -47,13 +47,13 @@ final class GasFactoryGaugeRestockController {
         return accepted ? Result.accepted(orderedGas) : Result.failed();
     }
 
-    enum Effect {
+    public enum Effect {
         NONE,
         SUCCESS,
         FAILURE
     }
 
-    record Result(Effect effect, @Nullable BigItemStack promisedGas) {
+    public record Result(Effect effect, @Nullable BigItemStack promisedGas) {
         private static final Result NONE = new Result(Effect.NONE, null);
 
         private static Result accepted(BigItemStack orderedGas) {

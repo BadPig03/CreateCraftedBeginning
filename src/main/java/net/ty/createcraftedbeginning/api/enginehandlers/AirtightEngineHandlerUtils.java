@@ -5,14 +5,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-/**
- * Provides lookup and registration helpers for gas-specific airtight engine behaviour.
- * Registered handlers determine the work factor and maximum engine level contributed
- * by each supported gas.
- */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class AirtightEngineHandlerUtils {
@@ -21,24 +17,10 @@ public final class AirtightEngineHandlerUtils {
     private AirtightEngineHandlerUtils() {
     }
 
-    /**
-     * Resolves the airtight engine handler associated with the supplied input.
-     *
-     * @param gasStack the gas stack to inspect or process
-     * @return the resolved airtight engine handler
-     * @throws IllegalArgumentException if an argument is invalid
-     */
     public static AirtightEngineHandler of(GasStack gasStack) throws IllegalArgumentException {
         return of(gasStack.getGasType());
     }
 
-    /**
-     * Resolves the airtight engine handler associated with the supplied input.
-     *
-     * @param gasType the gas type to inspect or process
-     * @return the resolved airtight engine handler
-     * @throws IllegalArgumentException if an argument is invalid
-     */
     public static AirtightEngineHandler of(Gas gasType) throws IllegalArgumentException {
         if (gasType.isEmpty()) {
             throw new IllegalArgumentException();
@@ -51,23 +33,10 @@ public final class AirtightEngineHandlerUtils {
         return engineHandler;
     }
 
-    /**
-     * Registers a custom airtight engine handler that can reach the normal maximum level.
-     *
-     * @param location   the resource location identifying the target gas
-     * @param workFactor the effective supply contributed by each unit of gas
-     */
     public static void register(ResourceLocation location, double workFactor) {
         register(location, workFactor, AirtightEngineHandler.MAX_LEVEL);
     }
 
-    /**
-     * Registers a custom airtight engine handler for the supplied target.
-     *
-     * @param location   the resource location identifying the target gas
-     * @param workFactor the effective supply contributed by each unit of gas
-     * @param maxLevel   the highest airtight engine level the gas can sustain
-     */
     public static void register(ResourceLocation location, double workFactor, int maxLevel) {
         Gas gasType = Gas.getGasTypeByName(location);
         if (gasType.isEmpty()) {
@@ -81,7 +50,7 @@ public final class AirtightEngineHandlerUtils {
             return;
         }
 
-        if (!Double.isFinite(workFactor) || workFactor < 0 || workFactor > MAX_WORK_FACTOR) {
+        if (!GasConsumptions.isFinite(workFactor) || workFactor < 0 || workFactor > MAX_WORK_FACTOR) {
             CCBAPI.LOGGER.error("Failed to register Airtight Engine Handler for gas '{}': work factor is out of range! Valid range is [0, {}].", location, MAX_WORK_FACTOR);
             return;
         }
@@ -92,17 +61,11 @@ public final class AirtightEngineHandlerUtils {
         }
 
         AirtightEngineHandler.REGISTRY.register(gasType, new AirtightEngineHandler() {
-            /**
-             * {@inheritDoc}
-             */
             @Override
             public double getWorkFactor() {
                 return workFactor;
             }
 
-            /**
-             * {@inheritDoc}
-             */
             @Override
             public int getMaxLevel() {
                 return maxLevel;

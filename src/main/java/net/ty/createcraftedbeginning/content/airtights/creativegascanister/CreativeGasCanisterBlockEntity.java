@@ -31,8 +31,8 @@ import java.util.List;
 public class CreativeGasCanisterBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ICreativeGasContainer {
     private static final String COMPOUND_KEY_CANISTER = "Canister";
 
-    private ItemStack canister = ItemStack.EMPTY;
-    private SmartGasTankBehaviour tankBehaviour;
+    protected ItemStack canister = ItemStack.EMPTY;
+    protected SmartGasTankBehaviour tankBehaviour;
 
     public CreativeGasCanisterBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -106,7 +106,7 @@ public class CreativeGasCanisterBlockEntity extends SmartBlockEntity implements 
         return canister;
     }
 
-    private void updateCapacity() {
+    protected void updateCapacity() {
         if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents)) {
             return;
         }

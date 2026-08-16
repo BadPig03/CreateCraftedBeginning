@@ -20,7 +20,6 @@ public class CCBPartialModels {
     public static final PartialModel BREEZE_LOGISTICS_HAT = entity("logistics_hat");
 
     public static final PartialModel PNEUMATIC_ENGINE_COGS = block("pneumatic_engine/block_cogs");
-    public static final PartialModel PHOTO_STRESS_BEARING_SHAFT = block("photo-stress_bearing/block_shaft");
 
     public static final PartialModel AIRTIGHT_PUMP_COGS = block("airtight_pump/block_cogs");
     public static final PartialModel AIRTIGHT_ENGINE_COGS = block("airtight_engine/block_cogs");
@@ -103,11 +102,11 @@ public class CCBPartialModels {
     public static final PartialModel BALLOON_RARE_QUESTION_MARKS = balloon("balloon_rare_question_marks");
     public static final PartialModel BALLOON_RARE_POWERFUL = balloon("balloon_rare_powerful");
     public static final PartialModel BALLOON_RARE_CHEESE = balloon("balloon_rare_cheese");
-    public static final PartialModel BALLOON_RIGGING_10X8 = balloonRigging("balloon_rigging_10x8");
-    public static final PartialModel BALLOON_RIGGING_10X12 = balloonRigging("balloon_rigging_10x12");
-    public static final PartialModel BALLOON_RIGGING_12X10 = balloonRigging("balloon_rigging_12x10");
-    public static final PartialModel BALLOON_RIGGING_12X12 = balloonRigging("balloon_rigging_12x12");
-    public static final PartialModel BALLOON_RIGGING_RARE = balloonRigging("balloon_rigging_rare");
+    private static final PartialModel BALLOON_RIGGING_10X8 = balloonRigging("balloon_rigging_10x8");
+    private static final PartialModel BALLOON_RIGGING_10X12 = balloonRigging("balloon_rigging_10x12");
+    private static final PartialModel BALLOON_RIGGING_12X10 = balloonRigging("balloon_rigging_12x10");
+    private static final PartialModel BALLOON_RIGGING_12X12 = balloonRigging("balloon_rigging_12x12");
+    private static final PartialModel BALLOON_RIGGING_RARE = balloonRigging("balloon_rigging_rare");
 
     public static final PartialModel GAS_PACKAGER_TRAY_REGULAR = block("gas_packager/tray");
     public static final PartialModel GAS_PACKAGER_TRAY_DEFRAG = block("gas_repackager/tray");

@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class FanProcessingFilterRecipeLookupPlugin implements IRecipeManagerPlugin {
-    public static final Map<ResourceLocation, ResourceLocation> PROCESSING_TYPES = new HashMap<>();
+    private static final Map<ResourceLocation, ResourceLocation> PROCESSING_TYPES = new HashMap<>();
 
     static {
         PROCESSING_TYPES.put(Create.asResource("splashing"), Create.asResource("fan_washing"));

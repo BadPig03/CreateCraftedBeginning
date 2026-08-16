@@ -17,8 +17,8 @@ import java.util.function.Predicate;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CrateMountedItemStorage<B extends CratesBlockEntity> extends MountedItemStorage {
-    private final Class<B> blockEntityClass;
-    private final CrateItemStackHandler handler;
+    protected final Class<B> blockEntityClass;
+    protected final CrateItemStackHandler handler;
 
     protected CrateMountedItemStorage(MountedItemStorageType<?> type, Class<B> blockEntityClass, ItemStack content, int count, IntSupplier maxCountSupplier) {
         this(type, blockEntityClass, content, count, maxCountSupplier, null);

@@ -13,7 +13,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.armhandlers.AirtightArmHandler;
 import net.ty.createcraftedbeginning.api.armhandlers.AirtightArmHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 
@@ -56,10 +56,10 @@ public class AirtightExtendArmItem extends Item {
         tooltip.add(CCBLang.gasName(gas).add(CCBLang.translate("gui.gas_tools.content")).style(ChatFormatting.GRAY).component());
 
         float consumptionMultiplier = handler.getGasConsumptionMultiplier();
-        MutableComponent advancedConsumption = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptionUtils.format(consumptionMultiplier) + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptionUtils.formatPercent(consumptionMultiplier)).add(advancedConsumption.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
-        tooltip.add(CCBLang.translate("gui.airtight_extend_arm.block_interaction_range", GasConsumptionUtils.format(handler.getIncreasedBlockInteractionRange())).style(ChatFormatting.DARK_GREEN).component());
-        tooltip.add(CCBLang.translate("gui.airtight_extend_arm.entity_interaction_range", GasConsumptionUtils.format(handler.getIncreasedEntityInteractionRange())).style(ChatFormatting.DARK_GREEN).component());
-        tooltip.add(CCBLang.translate("gui.airtight_extend_arm.attack_knockback", GasConsumptionUtils.format(handler.getIncreasedKnockback())).style(ChatFormatting.DARK_GREEN).component());
+        MutableComponent advancedConsumption = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptions.format(consumptionMultiplier) + ']').component() : Component.empty();
+        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptions.formatPercent(consumptionMultiplier)).add(advancedConsumption.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        tooltip.add(CCBLang.translate("gui.airtight_extend_arm.block_interaction_range", GasConsumptions.format(handler.getIncreasedBlockInteractionRange())).style(ChatFormatting.DARK_GREEN).component());
+        tooltip.add(CCBLang.translate("gui.airtight_extend_arm.entity_interaction_range", GasConsumptions.format(handler.getIncreasedEntityInteractionRange())).style(ChatFormatting.DARK_GREEN).component());
+        tooltip.add(CCBLang.translate("gui.airtight_extend_arm.attack_knockback", GasConsumptions.format(handler.getIncreasedKnockback())).style(ChatFormatting.DARK_GREEN).component());
     }
 }

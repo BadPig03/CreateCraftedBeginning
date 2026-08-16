@@ -11,7 +11,7 @@ import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandler;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsUtils;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers.AffordableFuel;
@@ -42,7 +42,7 @@ public final class GlobalAirtightUpgradesConsumptionManager {
 
     private static double getRawGasConsumption(Player player, AirtightUpgrade upgrade, EquipmentSlot slot, float baseConsumption, AirtightArmorsHandler handler) {
         double rawCost = baseConsumption * handler.getConsumptionMultiplier(slot) * upgrade.getGasConsumptionMultiplier(player);
-        return GasConsumptionUtils.isNonNegativeFinite(rawCost) ? rawCost : -1;
+        return GasConsumptions.isNonNegativeFinite(rawCost) ? rawCost : -1;
     }
 
     private static void clearExpired(Player player) {
@@ -145,7 +145,7 @@ public final class GlobalAirtightUpgradesConsumptionManager {
     }
 
     public static boolean tryConsumeGas(Player player, AirtightUpgrade upgrade, EquipmentSlot slot, float consumption, Predicate<AirtightArmorsHandler> handlerPredicate) {
-        if (!GasConsumptionUtils.isNonNegativeFinite(consumption)) {
+        if (!GasConsumptions.isNonNegativeFinite(consumption)) {
             return false;
         }
 
@@ -159,7 +159,7 @@ public final class GlobalAirtightUpgradesConsumptionManager {
     }
 
     private static Optional<AffordableFuel> findAffordableFuel(Player player, AirtightUpgrade upgrade, EquipmentSlot slot, float consumption, Predicate<AirtightArmorsHandler> handlerPredicate) {
-        if (!GasConsumptionUtils.isNonNegativeFinite(consumption)) {
+        if (!GasConsumptions.isNonNegativeFinite(consumption)) {
             return Optional.empty();
         }
         return CanisterContainerConsumers.findAffordableFuel(player, gas -> {
@@ -202,7 +202,7 @@ public final class GlobalAirtightUpgradesConsumptionManager {
                 }
 
                 totalCost += rawCost;
-                if (!GasConsumptionUtils.isNonNegativeFinite(totalCost)) {
+                if (!GasConsumptions.isNonNegativeFinite(totalCost)) {
                     return -1;
                 }
             }

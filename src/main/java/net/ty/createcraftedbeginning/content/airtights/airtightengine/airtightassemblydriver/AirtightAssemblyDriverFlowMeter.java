@@ -9,6 +9,7 @@ import net.ty.createcraftedbeginning.api.enginehandlers.AirtightEngineHandlerUti
 import net.ty.createcraftedbeginning.api.enginehandlers.DefaultEngineHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
@@ -53,7 +54,7 @@ public class AirtightAssemblyDriverFlowMeter {
 
     private static double getWorkFactor(AirtightEngineHandler handler) {
         double workFactor = handler.getWorkFactor();
-        return Double.isFinite(workFactor) && workFactor > 0 ? workFactor : 0;
+        return GasConsumptions.isFinite(workFactor) && workFactor > 0 ? workFactor : 0;
     }
 
     private static int getMaxLevel(AirtightEngineHandler handler) {
@@ -204,7 +205,7 @@ public class AirtightAssemblyDriverFlowMeter {
     private void readClient(CompoundTag compoundTag, Provider provider) {
         gasType = readNormalizedGas(compoundTag, provider);
         float storedSupply = compoundTag.contains(COMPOUND_KEY_GAS_SUPPLY) ? compoundTag.getFloat(COMPOUND_KEY_GAS_SUPPLY) : 0;
-        gasSupply = Float.isFinite(storedSupply) ? Math.clamp(storedSupply, 0, getMaxDisplayedGasSupply()) : 0;
+        gasSupply = GasConsumptions.isFinite(storedSupply) ? Math.clamp(storedSupply, 0, getMaxDisplayedGasSupply()) : 0;
         if (!gasType.isEmpty()) {
             return;
         }

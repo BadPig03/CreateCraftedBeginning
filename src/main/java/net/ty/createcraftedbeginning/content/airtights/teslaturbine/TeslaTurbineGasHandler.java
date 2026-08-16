@@ -10,11 +10,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class TeslaTurbineGasHandler implements IGasHandler {
+public final class TeslaTurbineGasHandler implements IGasHandler {
     private final TeslaTurbineFlowMeter flowMeter;
     private final boolean clockwise;
 
-    TeslaTurbineGasHandler(TeslaTurbineFlowMeter flowMeter, boolean clockwise) {
+    public TeslaTurbineGasHandler(TeslaTurbineFlowMeter flowMeter, boolean clockwise) {
         this.flowMeter = flowMeter;
         this.clockwise = clockwise;
     }

@@ -19,8 +19,8 @@ import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasInjectionChamberOperationState {
-    static final String COMPOUND_KEY_PROCESSING_TICKS = "ProcessingTicks";
+public final class GasInjectionChamberOperationState {
+    public static final String COMPOUND_KEY_PROCESSING_TICKS = "ProcessingTicks";
 
     private static final String COMPOUND_KEY_OPERATION_TYPE = "OperationType";
     private static final String COMPOUND_KEY_OPERATION_GAS = "OperationGas";
@@ -32,33 +32,33 @@ final class GasInjectionChamberOperationState {
     private static final String COMPOUND_KEY_OPERATION_RESULT_PREPARED = "OperationResultPrepared";
     private static final String COMPOUND_KEY_OPERATION_EXECUTED = "OperationExecuted";
 
-    final List<ItemStack> results = new ArrayList<>();
-    final List<FluidStack> fluidInputs = new ArrayList<>();
-    GasStack gas = GasStack.EMPTY;
-    FluidStack fluidResult = FluidStack.EMPTY;
-    @Nullable ResourceLocation fanProcessingTypeId;
-    ItemStack input = ItemStack.EMPTY;
-    boolean resultPrepared;
-    boolean executed;
-    @Nullable GasInjectionRecipe recipe;
-    OperationType type = OperationType.NONE;
+    public final List<ItemStack> results = new ArrayList<>();
+    public final List<FluidStack> fluidInputs = new ArrayList<>();
+    public GasStack gas = GasStack.EMPTY;
+    public FluidStack fluidResult = FluidStack.EMPTY;
+    @Nullable public ResourceLocation fanProcessingTypeId;
+    public ItemStack input = ItemStack.EMPTY;
+    public boolean resultPrepared;
+    public boolean executed;
+    @Nullable public GasInjectionRecipe recipe;
+    public OperationType type = OperationType.NONE;
 
     private int processingTicks = -1;
     private int previousProcessingTicks = -1;
 
-    int getProcessingTicks() {
+    public int getProcessingTicks() {
         return processingTicks;
     }
 
-    void setProcessingTicks(int ticks) {
+    public void setProcessingTicks(int ticks) {
         processingTicks = ticks;
     }
 
-    int getPreviousProcessingTicks() {
+    public int getPreviousProcessingTicks() {
         return previousProcessingTicks;
     }
 
-    void synchronizeProcessingTicks(int synchronizedTicks, boolean clientPacket) {
+    public void synchronizeProcessingTicks(int synchronizedTicks, boolean clientPacket) {
         if (clientPacket && processingTicks >= 0 && synchronizedTicks >= 0) {
             return;
         }
@@ -67,23 +67,23 @@ final class GasInjectionChamberOperationState {
         previousProcessingTicks = synchronizedTicks;
     }
 
-    void capturePreviousProcessingTicks() {
+    public void capturePreviousProcessingTicks() {
         previousProcessingTicks = processingTicks;
     }
 
-    void decrementProcessingTicks() {
+    public void decrementProcessingTicks() {
         --processingTicks;
     }
 
-    boolean isRunning() {
+    public boolean isRunning() {
         return processingTicks >= 0;
     }
 
-    boolean isGasLocked() {
+    public boolean isGasLocked() {
         return type.usesGas && processingTicks >= 0 && !executed;
     }
 
-    void setOperation(OperationType type, ItemStack input, int inputCount, GasStack gas, long requiredAmount, @Nullable GasInjectionRecipe recipe, @Nullable ResourceLocation fanProcessingTypeId) {
+    public void setOperation(OperationType type, ItemStack input, int inputCount, GasStack gas, long requiredAmount, @Nullable GasInjectionRecipe recipe, @Nullable ResourceLocation fanProcessingTypeId) {
         this.type = type;
         this.input = input.copyWithCount(inputCount);
         this.gas = gas.isEmpty() ? GasStack.EMPTY : gas.copyWithAmount(requiredAmount);
@@ -96,7 +96,7 @@ final class GasInjectionChamberOperationState {
         executed = false;
     }
 
-    void setBasinOperation(GasStack gas, long requiredAmount, List<FluidStack> fluidInputs, FluidStack result) {
+    public void setBasinOperation(GasStack gas, long requiredAmount, List<FluidStack> fluidInputs, FluidStack result) {
         type = OperationType.BASIN_RECIPE;
         input = ItemStack.EMPTY;
         this.gas = gas.copyWithAmount(requiredAmount);
@@ -110,7 +110,7 @@ final class GasInjectionChamberOperationState {
         executed = false;
     }
 
-    void clear() {
+    public void clear() {
         type = OperationType.NONE;
         gas = GasStack.EMPTY;
         fluidInputs.clear();
@@ -123,7 +123,7 @@ final class GasInjectionChamberOperationState {
         executed = false;
     }
 
-    void writeOperation(CompoundTag tag, Provider provider) {
+    public void writeOperation(CompoundTag tag, Provider provider) {
         if (type == OperationType.NONE) {
             return;
         }
@@ -157,7 +157,7 @@ final class GasInjectionChamberOperationState {
         tag.putBoolean(COMPOUND_KEY_OPERATION_EXECUTED, executed);
     }
 
-    boolean readOperation(CompoundTag tag, Provider provider, Predicate<ResourceLocation> fanOperationValidator) {
+    public boolean readOperation(CompoundTag tag, Provider provider, Predicate<ResourceLocation> fanOperationValidator) {
         recipe = null;
         type = OperationType.byName(tag.getString(COMPOUND_KEY_OPERATION_TYPE));
         gas = tag.contains(COMPOUND_KEY_OPERATION_GAS) ? GasStack.parseOptional(provider, tag.getCompound(COMPOUND_KEY_OPERATION_GAS)) : GasStack.EMPTY;
@@ -210,22 +210,22 @@ final class GasInjectionChamberOperationState {
         return !gas.isEmpty() && fanProcessingTypeId != null && GasInjectionChamberUtils.getFanProcessingType(fanProcessingTypeId).isPresent() && fanOperationValidator.test(fanProcessingTypeId);
     }
 
-    enum OperationType {
+    public enum OperationType {
         NONE("none", false),
         ITEM_RECIPE("recipe", true),
         BASIN_RECIPE("basin_recipe", true),
         CANISTER("canister", true),
         FAN_PROCESSING("fan_processing", true);
 
-        final String serializedName;
-        final boolean usesGas;
+        public final String serializedName;
+        public final boolean usesGas;
 
         OperationType(String serializedName, boolean usesGas) {
             this.serializedName = serializedName;
             this.usesGas = usesGas;
         }
 
-        static OperationType byName(String name) {
+        private static OperationType byName(String name) {
             for (OperationType type : values()) {
                 if (type.serializedName.equals(name)) {
                     return type;

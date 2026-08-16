@@ -11,7 +11,7 @@ import java.util.function.IntSupplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class FilteredCrateMountedItemStorage<B extends FilteredCrateBlockEntity> extends CrateMountedItemStorage<B> {
-    private final ItemStack filterItem;
+    protected final ItemStack filterItem;
 
     protected FilteredCrateMountedItemStorage(MountedItemStorageType<?> type, Class<B> blockEntityClass, ItemStack content, int count, ItemStack filterItem, IntSupplier maxCountSupplier) {
         super(type, blockEntityClass, content, count, maxCountSupplier);

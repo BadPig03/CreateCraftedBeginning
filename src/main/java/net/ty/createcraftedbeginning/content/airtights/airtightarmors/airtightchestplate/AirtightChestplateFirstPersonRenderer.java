@@ -50,13 +50,13 @@ public class AirtightChestplateFirstPersonRenderer {
         }
 
         PlayerModel<AbstractClientPlayer> model = renderer.getModel();
-        ModelPart armPart = event.getArm() == HumanoidArm.LEFT ? model.leftSleeve : model.rightSleeve;
+        ModelPart sleeve = event.getArm() == HumanoidArm.LEFT ? model.leftSleeve : model.rightSleeve;
         model.attackTime = 0;
         model.crouching = false;
         model.swimAmount = 0;
         model.setupAnim(player, 0, 0, 0, 0, 0);
-        armPart.xRot = 0;
-        armPart.render(event.getPoseStack(), event.getMultiBufferSource().getBuffer(RenderType.entitySolid(CHESTPLATE_ARM_LOCATION)), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+        sleeve.xRot = 0;
+        sleeve.render(event.getPoseStack(), event.getMultiBufferSource().getBuffer(RenderType.entitySolid(CHESTPLATE_ARM_LOCATION)), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
         event.setCanceled(true);
     }
 }

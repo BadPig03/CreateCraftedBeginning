@@ -9,7 +9,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightForgingPressSerialization {
+public final class AirtightForgingPressSerialization {
     private static final String COMPOUND_KEY_CORE = "Core";
     private static final String COMPOUND_KEY_FILTER = "Filter";
     private static final String COMPOUND_KEY_INPUT_ITEMS = "InputItems";
@@ -22,12 +22,12 @@ final class AirtightForgingPressSerialization {
     private final AirtightForgingPressBlockEntity press;
     private final AirtightForgingPressController controller;
 
-    AirtightForgingPressSerialization(AirtightForgingPressBlockEntity press, AirtightForgingPressController controller) {
+    public AirtightForgingPressSerialization(AirtightForgingPressBlockEntity press, AirtightForgingPressController controller) {
         this.press = press;
         this.controller = controller;
     }
 
-    void write(CompoundTag tag, Provider provider) {
+    public void write(CompoundTag tag, Provider provider) {
         tag.put(COMPOUND_KEY_CORE, press.getCore().write());
         tag.put(COMPOUND_KEY_PRESS_HEAD_ITEMS, press.getPressHeadInventory().serializeNBT(provider));
         tag.put(COMPOUND_KEY_PROCESSING_ITEMS, press.getAdditionInventory().serializeNBT(provider));
@@ -38,7 +38,7 @@ final class AirtightForgingPressSerialization {
         tag.putBoolean(COMPOUND_KEY_OPERATING, controller.isOperating());
     }
 
-    void read(CompoundTag tag, Provider provider, boolean clientPacket) {
+    public void read(CompoundTag tag, Provider provider, boolean clientPacket) {
         if (tag.contains(COMPOUND_KEY_CORE)) {
             press.getCore().read(tag.getCompound(COMPOUND_KEY_CORE));
         }

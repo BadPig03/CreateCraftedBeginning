@@ -35,12 +35,12 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ICreativeGasContainer, ThresholdSwitchObservable {
     private static final int LAZY_TICK_RATE = 20;
-    private final AirtightHatchCanisterManager canisterManager;
-    private final AirtightHatchController controller;
-    private final AirtightHatchSerialization serialization;
-    private final AirtightHatchDisplay display;
-    private SmartGasTankBehaviour tankBehaviour;
-    private ScrollOptionBehaviour<AirtightHatchTransferMode> hatchTransferMode;
+    protected final AirtightHatchCanisterManager canisterManager;
+    protected final AirtightHatchController controller;
+    protected final AirtightHatchSerialization serialization;
+    protected final AirtightHatchDisplay display;
+    protected SmartGasTankBehaviour tankBehaviour;
+    protected ScrollOptionBehaviour<AirtightHatchTransferMode> hatchTransferMode;
 
     public AirtightHatchBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -164,15 +164,15 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         return canisterManager.installCanister(sourceStack);
     }
 
-    SmartGasTankBehaviour getGasTankBehaviour() {
+    public SmartGasTankBehaviour getGasTankBehaviour() {
         return tankBehaviour;
     }
 
-    int getTransferModeValue() {
+    public int getTransferModeValue() {
         return hatchTransferMode.getValue();
     }
 
-    void resetTransferQuota() {
+    public void resetTransferQuota() {
         controller.resetTransferQuota();
     }
 }

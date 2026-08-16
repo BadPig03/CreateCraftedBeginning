@@ -18,13 +18,6 @@ import java.util.function.UnaryOperator;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class ProcessingWithGasRecipeGen<P extends ProcessingWithGasRecipeParams, R extends ProcessingWithGasRecipe<?, P>, B extends ProcessingWithGasRecipeBuilder<P, R, B>> extends BaseRecipeProviderWithGas {
-    /**
-     * Creates a new {@code ProcessingWithGasRecipeGen} instance.
-     *
-     * @param output           the output to add or process
-     * @param registries       the registries to use
-     * @param defaultNamespace the default namespace to use
-     */
     public ProcessingWithGasRecipeGen(PackOutput output, CompletableFuture<Provider> registries, String defaultNamespace) {
         super(output, registries, defaultNamespace);
     }

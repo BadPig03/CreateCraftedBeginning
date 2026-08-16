@@ -84,7 +84,7 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
         return TeslaTurbineStructuralPosition.isMid(structurePosition) || hasOtherNozzle(level, structurePos, nozzlePos, structureAxis, structurePosition);
     }
 
-    static boolean hasOtherNozzle(BlockGetter level, BlockPos structurePos, BlockPos nozzlePos, Axis structureAxis, TeslaTurbineStructuralPosition structurePosition) {
+    public static boolean hasOtherNozzle(BlockGetter level, BlockPos structurePos, BlockPos nozzlePos, Axis structureAxis, TeslaTurbineStructuralPosition structurePosition) {
         for (Direction direction : TeslaTurbineStructuralPosition.getPossiblePosition(structurePosition, structureAxis)) {
             BlockPos candidatePos = structurePos.relative(direction);
             if (candidatePos.equals(nozzlePos)) {
@@ -201,7 +201,7 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
         return null;
     }
 
-    private void scheduleValidation(Level level, BlockPos pos) {
+    protected void scheduleValidation(Level level, BlockPos pos) {
         if (level.isClientSide || level.getBlockTicks().hasScheduledTick(pos, this)) {
             return;
         }

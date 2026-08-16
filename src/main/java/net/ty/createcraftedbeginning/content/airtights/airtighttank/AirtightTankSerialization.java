@@ -9,18 +9,18 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightTankSerialization {
+public final class AirtightTankSerialization {
     private static final String CORE = "Core";
 
     private final AirtightTankBlockEntity owner;
     private final AirtightTankStorageController storage;
 
-    AirtightTankSerialization(AirtightTankBlockEntity owner, AirtightTankStorageController storage) {
+    public AirtightTankSerialization(AirtightTankBlockEntity owner, AirtightTankStorageController storage) {
         this.owner = owner;
         this.storage = storage;
     }
 
-    void write(CompoundTag tag, Provider provider, boolean clientPacket) {
+    public void write(CompoundTag tag, Provider provider, boolean clientPacket) {
         AirtightTankSerializationSupport.writeMultiblock(owner, tag, clientPacket);
         if (!owner.isController()) {
             return;
@@ -30,11 +30,11 @@ final class AirtightTankSerialization {
         tag.put(AirtightTankSerializationSupport.TANK_CONTENT, owner.getTankInventory().write(provider, new CompoundTag()));
     }
 
-    void writeSafe(CompoundTag tag) {
+    public void writeSafe(CompoundTag tag) {
         AirtightTankSerializationSupport.writeSafeMultiblock(owner, tag);
     }
 
-    void read(CompoundTag tag, Provider provider, boolean clientPacket) {
+    public void read(CompoundTag tag, Provider provider, boolean clientPacket) {
         boolean clientStructureChanged = AirtightTankSerializationSupport.readMultiblock(owner, tag, clientPacket);
         if (owner.isController()) {
             storage.setCapacityForStructure();

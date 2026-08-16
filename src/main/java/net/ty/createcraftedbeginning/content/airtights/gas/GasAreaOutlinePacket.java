@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.content.airtights.gas.network;
+package net.ty.createcraftedbeginning.content.airtights.gas;
 
 import io.netty.buffer.ByteBuf;
 import net.createmod.catnip.net.base.ClientboundPacketPayload;

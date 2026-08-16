@@ -36,11 +36,11 @@ public enum CreativeFlightUpgrade implements TickingAirtightUpgrade {
 
     @Override
     public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
-        int consumption = CCBConfig.server().equipments.creativeFlightConsumption.get();
-        if (consumption == 0) {
+        int gasCost = CCBConfig.server().equipments.creativeFlightConsumption.get();
+        if (gasCost == 0) {
             return List.of(CCBLang.translateDirect("gui.gas_consumption.supply_require_only"));
         }
-        return List.of(CCBLang.translateDirect("gui.airtight_chestplate.creative_flight_upgrade.gas_cost.flying", consumption));
+        return List.of(CCBLang.translateDirect("gui.airtight_chestplate.creative_flight_upgrade.gas_cost.flying", gasCost));
     }
 
     @Override
@@ -113,7 +113,7 @@ public enum CreativeFlightUpgrade implements TickingAirtightUpgrade {
 
     @Override
     public boolean shouldApplyEffect(Player player, ItemStack item) {
-        MobEffectInstance effect = player.getEffect(CCBMobEffects.JETPACK_FLIGHT);
-        return effect == null || effect.getAmplifier() == 0 && effect.endsWithin(REFRESH_THRESHOLD);
+        MobEffectInstance flightEffect = player.getEffect(CCBMobEffects.JETPACK_FLIGHT);
+        return flightEffect == null || flightEffect.getAmplifier() == 0 && flightEffect.endsWithin(REFRESH_THRESHOLD);
     }
 }

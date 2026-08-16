@@ -27,10 +27,10 @@ import java.util.function.Consumer;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class TeslaTurbineVisual extends KineticBlockEntityVisual<TeslaTurbineBlockEntity> implements SimpleDynamicVisual, SimpleTickableVisual {
-    private final Axis axis;
-    private final RotatingInstance shaft;
-    private final List<RotatingInstance> rotors = new ArrayList<>();
-    private int rotorCount = -1;
+    protected final Axis axis;
+    protected final RotatingInstance shaft;
+    protected final List<RotatingInstance> rotors = new ArrayList<>();
+    protected int rotorCount = -1;
 
     public TeslaTurbineVisual(VisualizationContext context, TeslaTurbineBlockEntity blockEntity, float partialTick) {
         super(context, blockEntity, partialTick);
@@ -39,13 +39,13 @@ public class TeslaTurbineVisual extends KineticBlockEntityVisual<TeslaTurbineBlo
         syncRotors();
     }
 
-    private RotatingInstance createRotatingInstance(PartialModel partialModel) {
+    protected RotatingInstance createRotatingInstance(PartialModel partialModel) {
         RotatingInstance instance = instancerProvider().instancer(AllInstanceTypes.ROTATING, Models.partial(partialModel)).createInstance().rotateToFace(Direction.UP, axis).setup(blockEntity).setPosition(getVisualPosition());
         instance.setChanged();
         return instance;
     }
 
-    private void syncRotors() {
+    protected void syncRotors() {
         int desiredRotorCount = blockEntity.getBlockState().getValue(TeslaTurbineBlock.ROTOR);
         if (desiredRotorCount == rotorCount) {
             return;

@@ -12,7 +12,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightAssemblyDriverController {
+public final class AirtightAssemblyDriverController {
     private final AirtightAssemblyDriverCore driverCore;
 
     private boolean saveDirty;
@@ -20,11 +20,11 @@ final class AirtightAssemblyDriverController {
     private boolean activeState;
     private boolean activeStateInitialized;
 
-    AirtightAssemblyDriverController(AirtightAssemblyDriverCore driverCore) {
+    public AirtightAssemblyDriverController(AirtightAssemblyDriverCore driverCore) {
         this.driverCore = driverCore;
     }
 
-    void tick(AirtightTankBlockEntity controller) {
+    public void tick(AirtightTankBlockEntity controller) {
         Level level = controller.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -48,20 +48,20 @@ final class AirtightAssemblyDriverController {
         flushDirtyState(controller);
     }
 
-    void markForSave() {
+    public void markForSave() {
         saveDirty = true;
     }
 
-    void markForClientSync() {
+    public void markForClientSync() {
         clientDirty = true;
     }
 
-    void markForSaveAndClientSync() {
+    public void markForSaveAndClientSync() {
         saveDirty = true;
         clientDirty = true;
     }
 
-    void reset() {
+    public void reset() {
         activeState = false;
         activeStateInitialized = true;
         driverCore.getFlowMeter().reset(true);
@@ -70,12 +70,12 @@ final class AirtightAssemblyDriverController {
         driverCore.getResidueManager().reset();
     }
 
-    void onReadComplete() {
+    public void onReadComplete() {
         saveDirty = false;
         clientDirty = false;
     }
 
-    void onPersistentLoaded() {
+    public void onPersistentLoaded() {
         activeState = false;
         activeStateInitialized = false;
     }

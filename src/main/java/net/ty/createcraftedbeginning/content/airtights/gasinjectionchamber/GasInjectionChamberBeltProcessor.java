@@ -13,7 +13,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
-import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer.MachineFillingStrategy;
+import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer.MachineFillingMode;
 import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 
@@ -29,14 +29,14 @@ import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchambe
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasInjectionChamberBeltProcessor {
+public final class GasInjectionChamberBeltProcessor {
     private final GasInjectionChamberBlockEntity chamber;
     private final GasInjectionChamberOperationState operation;
     private final GasInjectionChamberFilterState filter;
     private final GasInjectionChamberVisualState visual;
     private final GasInjectionChamberOperationPlanner planner;
 
-    GasInjectionChamberBeltProcessor(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation, GasInjectionChamberFilterState filter, GasInjectionChamberVisualState visual, GasInjectionChamberOperationPlanner planner) {
+    public GasInjectionChamberBeltProcessor(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation, GasInjectionChamberFilterState filter, GasInjectionChamberVisualState visual, GasInjectionChamberOperationPlanner planner) {
         this.chamber = chamber;
         this.operation = operation;
         this.filter = filter;
@@ -44,7 +44,7 @@ final class GasInjectionChamberBeltProcessor {
         this.planner = planner;
     }
 
-    ProcessingResult onItemEntered(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
+    public ProcessingResult onItemEntered(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
         if (handler.blockEntity.isVirtual()) {
             return PASS;
         }
@@ -61,7 +61,7 @@ final class GasInjectionChamberBeltProcessor {
         return planner.prepareOperation(transported.stack) ? HOLD : PASS;
     }
 
-    ProcessingResult onItemHeld(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
+    public ProcessingResult onItemHeld(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
         if (handler.blockEntity.isVirtual() || chamber.getLevel() == null) {
             return PASS;
         }
@@ -97,7 +97,7 @@ final class GasInjectionChamberBeltProcessor {
         return executeInjection(transported, handler);
     }
 
-    boolean isFanProcessingOperationStillValid(ResourceLocation typeId) {
+    public boolean isFanProcessingOperationStillValid(ResourceLocation typeId) {
         return planner.isFanProcessingOperationStillValid(typeId);
     }
 
@@ -185,7 +185,7 @@ final class GasInjectionChamberBeltProcessor {
         }
 
         IGasCanisterContainer canisterContents = transported.stack.getCapability(GasHandler.ITEM);
-        if (canisterContents == null || canisterContents.getMachineFillingStrategy() == MachineFillingStrategy.DENY) {
+        if (canisterContents == null || canisterContents.getMachineFillingMode() == MachineFillingMode.DENY) {
             return false;
         }
 

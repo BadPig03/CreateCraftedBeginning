@@ -21,13 +21,5 @@ public interface AirtightThermoregulatorHandler {
 
     SimpleRegistry<Block, AirtightThermoregulatorHandler> REGISTRY = SimpleRegistry.create();
 
-    /**
-     * Returns the heat.
-     *
-     * @param level the level in which the operation is performed
-     * @param pos   the target block position
-     * @param state the block state to inspect or process
-     * @return the heat
-     */
     float getHeat(Level level, BlockPos pos, BlockState state);
 }

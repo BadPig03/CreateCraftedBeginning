@@ -4,19 +4,20 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.api.enginehandlers.AirtightEngineHandler;
 import net.ty.createcraftedbeginning.api.enginehandlers.AirtightEngineHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightAssemblyDriverGasHandler implements IGasHandler {
+public final class AirtightAssemblyDriverGasHandler implements IGasHandler {
     private final AirtightAssemblyDriverFlowMeter flowMeter;
 
-    AirtightAssemblyDriverGasHandler(AirtightAssemblyDriverFlowMeter flowMeter) {
+    public AirtightAssemblyDriverGasHandler(AirtightAssemblyDriverFlowMeter flowMeter) {
         this.flowMeter = flowMeter;
     }
 
@@ -28,7 +29,7 @@ final class AirtightAssemblyDriverGasHandler implements IGasHandler {
 
         AirtightEngineHandler handler = AirtightEngineHandlerUtils.of(gasStack);
         double workFactor = handler.getWorkFactor();
-        return Double.isFinite(workFactor) && workFactor > 0 && handler.getMaxLevel() > 0;
+        return GasConsumptions.isFinite(workFactor) && workFactor > 0 && handler.getMaxLevel() > 0;
     }
 
     @Override
@@ -58,6 +59,6 @@ final class AirtightAssemblyDriverGasHandler implements IGasHandler {
 
     @Override
     public long getTankCapacity(int tank) {
-        return CCBConfig.server().airtights.maxAirtightTankCapacityPerBlock.get() * GasAmountUtils.MILLIBUCKETS_PER_BUCKET;
+        return CCBConfig.server().airtights.maxAirtightTankCapacityPerBlock.get() * GasAmounts.MILLIBUCKETS_PER_BUCKET;
     }
 }

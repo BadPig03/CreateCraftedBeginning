@@ -7,7 +7,7 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.platform.CCBClientBridge;
@@ -20,11 +20,11 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirCompressorTooltip {
+public final class AirCompressorTooltip {
     private AirCompressorTooltip() {
     }
 
-    static boolean addHoveringInformation(List<Component> tooltip, @Nullable Level level, GasStack inputGas, boolean overStressed, boolean isSpeedRequirementFulfilled, float speed) {
+    public static boolean addHoveringInformation(List<Component> tooltip, @Nullable Level level, GasStack inputGas, boolean overStressed, boolean isSpeedRequirementFulfilled, float speed) {
         boolean hasInvalidGasWarning = false;
         if (isInputGasInvalid(level, inputGas)) {
             CCBLang.translate("gui.invalid_ingredient").style(ChatFormatting.GOLD).forGoggles(tooltip);
@@ -52,7 +52,7 @@ final class AirCompressorTooltip {
         return true;
     }
 
-    static void addGoggleInformation(List<Component> tooltip, boolean isPlayerSneaking, OverheatState overheatState, GasStack inputGas, GasStack outputGas, double stressApplied, float theoreticalSpeed) {
+    public static void addGoggleInformation(List<Component> tooltip, boolean isPlayerSneaking, OverheatState overheatState, GasStack inputGas, GasStack outputGas, double stressApplied, float theoreticalSpeed) {
         CCBLang.translate("gui.air_compressor").forGoggles(tooltip);
         CCBLang.translate("gui.air_compressor.overheat_state").style(ChatFormatting.GRAY).forGoggles(tooltip);
         CCBLang.translate(overheatState.getTranslationKey()).style(overheatState.getDisplayColor()).forGoggles(tooltip, 1);
@@ -84,11 +84,11 @@ final class AirCompressorTooltip {
         CCBLang.translate(titleKey).style(ChatFormatting.GRAY).forGoggles(tooltip);
         if (gas.isEmpty()) {
             CCBLang.gasName(GasStack.EMPTY).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-            GasAmountUtils.precise(tankCapacity).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
+            GasAmounts.precise(tankCapacity).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
             return;
         }
 
         CCBLang.gasName(gas).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-        GasAmountUtils.precise(gas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmountUtils.precise(tankCapacity).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+        GasAmounts.precise(gas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmounts.precise(tankCapacity).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
     }
 }

@@ -12,17 +12,11 @@ public final class DefaultDrillHandler implements AirtightDrillHandler {
     private DefaultDrillHandler() {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int getDamageAddition() {
         return 0;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getConsumptionMultiplier() {
         return 1;

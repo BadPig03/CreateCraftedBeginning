@@ -1,5 +1,6 @@
 {
   "values": [
+    "createcraftedbeginning:airtight_sheet_block",
     "createcraftedbeginning:airtight_pipe",
     "createcraftedbeginning:airtight_encased_pipe",
     "createcraftedbeginning:airtight_check_valve",
@@ -32,7 +33,10 @@
     "createcraftedbeginning:gas_factory_gauge",
     "createcraftedbeginning:gas_canister",
     "createcraftedbeginning:creative_gas_canister",
+    "createcraftedbeginning:optical_fiber",
+    "createcraftedbeginning:photo_sail",
     "createcraftedbeginning:photo-stress_bearing",
+    "createcraftedbeginning:end_alloy_block",
     "createcraftedbeginning:end_casing",
     "createcraftedbeginning:end_incineration_blower",
     "createcraftedbeginning:end_incineration_blower_structural",
@@ -42,8 +46,6 @@
     "createcraftedbeginning:brass_crate",
     "createcraftedbeginning:sturdy_crate",
     "createcraftedbeginning:air_vent",
-    "createcraftedbeginning:airtight_sheet_block",
-    "createcraftedbeginning:end_alloy_block",
     "createcraftedbeginning:obsidian_bricks",
     "createcraftedbeginning:obsidian_bricks_slab",
     "createcraftedbeginning:chiseled_obsidian_bricks",

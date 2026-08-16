@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class EndIncinerationBlowerVisualState {
+public final class EndIncinerationBlowerVisualState {
     private static final int PROCESSING_PARTICLE_INTERVAL_TICKS = 10;
     private static final int MAX_PROCESSING_PARTICLE_TARGETS = 8;
 
@@ -64,7 +64,7 @@ final class EndIncinerationBlowerVisualState {
         return Math.floorMod(level.getGameTime(), PROCESSING_PARTICLE_INTERVAL_TICKS) == Math.floorMod(pos.hashCode(), PROCESSING_PARTICLE_INTERVAL_TICKS);
     }
 
-    void tick(Level level, BlockPos pos, float speed, Supplier<BlowerWorkingMode> workingModeSupplier) {
+    public void tick(Level level, BlockPos pos, float speed, Supplier<BlowerWorkingMode> workingModeSupplier) {
         spawnParticles(level, pos, speed);
         if (level instanceof PonderLevel || !shouldSpawnProcessingParticles(level, pos)) {
             return;

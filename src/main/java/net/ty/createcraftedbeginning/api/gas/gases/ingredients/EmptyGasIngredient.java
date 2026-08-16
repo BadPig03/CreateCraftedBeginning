@@ -22,41 +22,26 @@ public class EmptyGasIngredient extends GasIngredient {
         return Stream.empty();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isSimple() {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public GasIngredientType<?> getType() {
         return GasRegistries.EMPTY_GAS_INGREDIENT_TYPE.get();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean test(GasStack gasStack) {
         return gasStack.isEmpty();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return 0;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(Object obj) {
         return this == obj;

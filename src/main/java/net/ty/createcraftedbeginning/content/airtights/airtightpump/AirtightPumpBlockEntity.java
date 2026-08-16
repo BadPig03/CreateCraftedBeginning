@@ -87,19 +87,19 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasT
         return advancementBehaviour;
     }
 
-    boolean isPumpRunning() {
+    public boolean isPumpRunning() {
         return pressureController.isPumpRunning();
     }
 
-    boolean isSideAccessible(Direction direction) {
+    public boolean isSideAccessible(Direction direction) {
         return pressureController.isSideAccessible(direction);
     }
 
-    boolean isFront(Direction direction) {
+    public boolean isFront(Direction direction) {
         return pressureController.isFront(direction);
     }
 
-    float getPumpPressure() {
+    public float getPumpPressure() {
         return pressureController.getPumpPressure();
     }
 }

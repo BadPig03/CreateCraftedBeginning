@@ -36,11 +36,11 @@ public final class CCBFluidClientExtensions {
 
     public static void register(RegisterClientExtensionsEvent event) {
         for (Registration registration : CCBFluidClientExtensionRegistry.registrations()) {
-            if (registration instanceof SimpleRegistration(FluidType type, ResourceLocation texture, ResourceLocation flowingTexture)) {
-                event.registerFluidType(createSimple(texture, flowingTexture), type);
-            }
-            else if (registration instanceof TintedRegistration(TintedFluidType type)) {
-                event.registerFluidType(createTinted(type), type);
+            switch (registration) {
+                case SimpleRegistration(FluidType type, ResourceLocation texture, ResourceLocation flowingTexture) -> event.registerFluidType(createSimple(texture, flowingTexture), type);
+                case TintedRegistration(TintedFluidType type) -> event.registerFluidType(createTinted(type), type);
+                default -> {
+                }
             }
         }
     }

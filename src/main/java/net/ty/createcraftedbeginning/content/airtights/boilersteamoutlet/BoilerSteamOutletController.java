@@ -12,18 +12,18 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class BoilerSteamOutletController {
+public final class BoilerSteamOutletController {
     private final BoilerSteamOutletBlockEntity outlet;
     private final BoilerSteamOutletProduction production;
     private final BoilerSteamOutletExtractionMeter extractionMeter;
 
-    BoilerSteamOutletController(BoilerSteamOutletBlockEntity outlet) {
+    public BoilerSteamOutletController(BoilerSteamOutletBlockEntity outlet) {
         this.outlet = outlet;
         production = new BoilerSteamOutletProduction(outlet);
         extractionMeter = new BoilerSteamOutletExtractionMeter();
     }
 
-    void tickServer() {
+    public void tickServer() {
         Level level = outlet.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -43,7 +43,7 @@ final class BoilerSteamOutletController {
         outlet.sendData();
     }
 
-    void lazyTickServer() {
+    public void lazyTickServer() {
         Level level = outlet.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -57,7 +57,7 @@ final class BoilerSteamOutletController {
         level.destroyBlock(outlet.getBlockPos(), true);
     }
 
-    void ensureCurrentTick() {
+    public void ensureCurrentTick() {
         if (!production.ensureCurrentTick()) {
             return;
         }
@@ -66,15 +66,15 @@ final class BoilerSteamOutletController {
         outlet.sendData();
     }
 
-    double getSteamGenerationRate() {
+    public double getSteamGenerationRate() {
         return production.getProductionRatePerSecond();
     }
 
-    double getSteamOutputRate() {
+    public double getSteamOutputRate() {
         return extractionMeter.getAverageExtractionRatePerSecond();
     }
 
-    void recordExtraction(GasStack drained, GasAction action) {
+    public void recordExtraction(GasStack drained, GasAction action) {
         if (!extractionMeter.recordExtraction(drained, action)) {
             return;
         }
@@ -82,12 +82,12 @@ final class BoilerSteamOutletController {
         outlet.setChanged();
     }
 
-    void write(CompoundTag tag, boolean clientPacket) {
+    public void write(CompoundTag tag, boolean clientPacket) {
         production.write(tag, clientPacket);
         extractionMeter.write(tag, clientPacket);
     }
 
-    void read(CompoundTag tag, boolean clientPacket) {
+    public void read(CompoundTag tag, boolean clientPacket) {
         production.read(tag, clientPacket);
         extractionMeter.read(tag, clientPacket);
     }

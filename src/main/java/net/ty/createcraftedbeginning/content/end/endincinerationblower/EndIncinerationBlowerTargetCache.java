@@ -16,7 +16,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class EndIncinerationBlowerTargetCache {
+public final class EndIncinerationBlowerTargetCache {
     private static final int ITEM_ENTITY_CACHE_INTERVAL = 5;
     private static final int TRANSPORTED_HANDLER_CACHE_INTERVAL = 20;
 
@@ -28,11 +28,11 @@ final class EndIncinerationBlowerTargetCache {
     private long nextItemEntityScanTime = Long.MIN_VALUE;
     private long nextTransportedHandlerScanTime = Long.MIN_VALUE;
 
-    EndIncinerationBlowerTargetCache(BlockPos origin) {
+    public EndIncinerationBlowerTargetCache(BlockPos origin) {
         this.origin = origin;
     }
 
-    List<ItemEntity> getAffectedItems(ServerLevel level, AABB area, EntityArea entityArea) {
+    public List<ItemEntity> getAffectedItems(ServerLevel level, AABB area, EntityArea entityArea) {
         long gameTime = level.getGameTime();
         if (gameTime < nextItemEntityScanTime) {
             return affectedItems;
@@ -48,7 +48,7 @@ final class EndIncinerationBlowerTargetCache {
         return affectedItems;
     }
 
-    List<TransportedItemStackHandlerBehaviour> getTransportedHandlers(Level level, float speed) {
+    public List<TransportedItemStackHandlerBehaviour> getTransportedHandlers(Level level, float speed) {
         int blockRadius = EndIncinerationBlowerRange.calculateBlockRadius(speed);
         long gameTime = level.getGameTime();
         if (cachedBlockRadius == blockRadius && gameTime < nextTransportedHandlerScanTime) {

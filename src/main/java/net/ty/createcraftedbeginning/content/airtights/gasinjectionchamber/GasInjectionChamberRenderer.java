@@ -30,7 +30,7 @@ public class GasInjectionChamberRenderer extends SmartBlockEntityRenderer<GasInj
         super(context);
     }
 
-    static float getNozzleSqueeze(float ticks) {
+    public static float getNozzleSqueeze(float ticks) {
         if (ticks < 0) {
             return 0;
         }
@@ -46,7 +46,7 @@ public class GasInjectionChamberRenderer extends SmartBlockEntityRenderer<GasInj
         return 0;
     }
 
-    static float getNozzleSqueezePart(float ticks) {
+    public static float getNozzleSqueezePart(float ticks) {
         int squeezeTime = NOZZLE_PART_TIME - NOZZLE_IDLE_TIME;
         int squeezeEnd = NOZZLE_TIME + squeezeTime;
         int releaseStart = PROCESSING_TIME - NOZZLE_TIME - squeezeTime;

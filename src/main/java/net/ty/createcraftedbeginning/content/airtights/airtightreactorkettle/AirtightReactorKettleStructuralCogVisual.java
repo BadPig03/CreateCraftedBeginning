@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 @MethodsReturnNonnullByDefault
 public class AirtightReactorKettleStructuralCogVisual extends KineticBlockEntityVisual<AirtightReactorKettleStructuralCogBlockEntity> implements SimpleTickableVisual {
     @Nullable
-    private final RotatingInstance rotatingModel;
+    protected final RotatingInstance rotatingModel;
 
     public AirtightReactorKettleStructuralCogVisual(VisualizationContext context, AirtightReactorKettleStructuralCogBlockEntity blockEntity, float partialTick) {
         super(context, blockEntity, partialTick);

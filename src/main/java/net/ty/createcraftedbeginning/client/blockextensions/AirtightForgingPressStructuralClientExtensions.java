@@ -12,7 +12,7 @@ import net.minecraft.world.phys.HitResult;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
-import net.ty.createcraftedbeginning.client.CCBParticleUtils;
+import net.ty.createcraftedbeginning.client.CCBParticles;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressUtils;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.IAirtightForgingPressStructural;
 import org.jetbrains.annotations.Nullable;
@@ -38,7 +38,7 @@ public final class AirtightForgingPressStructuralClientExtensions implements ICl
 
     @Override
     public boolean addDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager) {
-        CCBParticleUtils.addReducedDestroyEffects(state, level, pos, manager);
+        CCBParticles.addReducedDestroyEffects(state, level, pos, manager);
         return true;
     }
 

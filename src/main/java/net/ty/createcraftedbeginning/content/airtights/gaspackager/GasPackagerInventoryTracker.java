@@ -14,7 +14,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasPackagerInventoryTracker {
+public final class GasPackagerInventoryTracker {
     private InventorySummary availableItems = new InventorySummary();
     @Nullable
     private InventoryIdentifier availableItemsIdentifier;
@@ -41,7 +41,7 @@ final class GasPackagerInventoryTracker {
         return summary;
     }
 
-    ScanResult scan(@Nullable InventoryIdentifier identifier, @Nullable IGasHandler handler, long currentTick) {
+    public ScanResult scan(@Nullable InventoryIdentifier identifier, @Nullable IGasHandler handler, long currentTick) {
         if (identifier == null || handler == null) {
             return new ScanResult(clear(), null, false);
         }
@@ -66,11 +66,11 @@ final class GasPackagerInventoryTracker {
         return new ScanResult(summary, previous, true);
     }
 
-    void invalidate() {
+    public void invalidate() {
         availableItemsScanTick = Long.MIN_VALUE;
     }
 
-    InventorySummary clearAvailableItems() {
+    public InventorySummary clearAvailableItems() {
         return clear();
     }
 
@@ -85,5 +85,5 @@ final class GasPackagerInventoryTracker {
         return availableItems;
     }
 
-    record ScanResult(InventorySummary summary, @Nullable InventorySummary previous, boolean changed) {}
+    public record ScanResult(InventorySummary summary, @Nullable InventorySummary previous, boolean changed) {}
 }

@@ -29,11 +29,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class EndIncinerationBlowerEffectProcessor {
+public final class EndIncinerationBlowerEffectProcessor {
     private final EndIncinerationBlowerBlockEntity blockEntity;
     private final EndIncinerationBlowerTargetCache targetCache;
 
-    EndIncinerationBlowerEffectProcessor(EndIncinerationBlowerBlockEntity blockEntity) {
+    public EndIncinerationBlowerEffectProcessor(EndIncinerationBlowerBlockEntity blockEntity) {
         this.blockEntity = blockEntity;
         targetCache = new EndIncinerationBlowerTargetCache(blockEntity.getBlockPos());
     }
@@ -75,7 +75,7 @@ final class EndIncinerationBlowerEffectProcessor {
         return applied.get();
     }
 
-    void tick(ServerLevel level) {
+    public void tick(ServerLevel level) {
         float absSpeed = Mth.abs(blockEntity.getSpeed());
         EndIncinerationBlowerStructuralBlockEntity structural = blockEntity.getStructuralForEffect();
         if (absSpeed < SpeedLevel.MEDIUM.getSpeedValue() || structural == null) {

@@ -16,7 +16,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor.ARGB32;
 import net.minecraft.world.inventory.InventoryMenu;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.client.CCBGasClientTextures;
 import net.ty.createcraftedbeginning.compat.functionalstorage.GasDrawerBlockEntity;
@@ -151,7 +151,7 @@ public final class GasDrawerInfoGuiAddon extends BasicScreenAddon {
         }
 
         long amount = renderGas.filterOnly() ? 0 : stack.getAmount();
-        String value = drawer.isCreative() && !renderGas.filterOnly() ? "∞" : GasAmountUtils.formatCompact(amount) + '/' + GasAmountUtils.formatCompact(drawer.getPhysicalTankCapacity());
+        String value = drawer.isCreative() && !renderGas.filterOnly() ? "∞" : GasAmounts.formatCompact(amount) + '/' + GasAmounts.formatCompact(drawer.getPhysicalTankCapacity());
         tooltip.add(Component.translatable("gui.functionalstorage.amount").withStyle(ChatFormatting.GOLD).append(Component.literal(value).withStyle(ChatFormatting.WHITE)));
     }
 

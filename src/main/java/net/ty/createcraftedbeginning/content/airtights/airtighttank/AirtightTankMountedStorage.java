@@ -26,7 +26,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AirtightTankMountedStorage extends WrapperMountedGasStorage<Handler> implements SyncedMountedStorage {
     public static final MapCodec<AirtightTankMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(Codec.LONG.fieldOf("capacity").forGetter(AirtightTankMountedStorage::getCapacity), GasStack.OPTIONAL_CODEC.fieldOf("gas").forGetter(AirtightTankMountedStorage::getGasStack)).apply(instance, AirtightTankMountedStorage::new));
 
-    private boolean dirty;
+    protected boolean dirty;
 
     protected AirtightTankMountedStorage(long capacity, GasStack stack) {
         this(CCBMountedStorage.AIRTIGHT_TANK.get(), capacity, stack);

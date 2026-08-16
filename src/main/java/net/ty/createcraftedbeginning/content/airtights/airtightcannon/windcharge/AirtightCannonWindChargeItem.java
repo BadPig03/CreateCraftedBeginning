@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightcannon.windcharge;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.core.Holder;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
@@ -31,7 +30,7 @@ public class AirtightCannonWindChargeItem extends Item {
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        ItemStack stack = player.getItemInHand(hand);
+        ItemStack windChargeStack = player.getItemInHand(hand);
         if (!level.isClientSide) {
             shoot(level, player);
         }
@@ -39,22 +38,19 @@ public class AirtightCannonWindChargeItem extends Item {
         level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.WIND_CHARGE_THROW, SoundSource.NEUTRAL, 0.5f, 0.4f / (level.getRandom().nextFloat() * 0.4f + 0.8f));
         player.getCooldowns().addCooldown(this, COOLDOWN);
         player.awardStat(Stats.ITEM_USED.get(this));
-
-        stack.consume(1, player);
-        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+        windChargeStack.consume(1, player);
+        return InteractionResultHolder.sidedSuccess(windChargeStack, level.isClientSide);
     }
 
     private void shoot(Level level, Player player) {
-        Vec3 eyePos = player.getEyePosition();
-        Vec3 lookVec = player.getLookAngle();
-        Vec3 barrelPos = eyePos.add(lookVec.scale(0.75));
-        Vec3 motion = lookVec.normalize().scale(2);
-        Holder<Gas> gasHolder = gasSupplier.get().getHolder();
+        Vec3 lookDirection = player.getLookAngle();
+        Vec3 barrelPos = player.getEyePosition().add(lookDirection.scale(0.75));
+        Vec3 launchMotion = lookDirection.normalize().scale(2);
 
-        AirtightCannonWindChargeProjectileEntity windCharge = new AirtightCannonWindChargeProjectileEntity(level, gasHolder, motion);
+        AirtightCannonWindChargeProjectileEntity windCharge = new AirtightCannonWindChargeProjectileEntity(level, gasSupplier.get().getHolder(), launchMotion);
         windCharge.setPos(barrelPos);
         windCharge.setOwner(player);
-        windCharge.setDeltaMovement(motion);
+        windCharge.setDeltaMovement(launchMotion);
         windCharge.setMultiplier(1);
         windCharge.setKnockback(0.1f);
 

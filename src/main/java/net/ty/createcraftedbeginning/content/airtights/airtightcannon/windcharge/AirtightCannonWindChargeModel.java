@@ -45,7 +45,6 @@ public class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWin
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
         PartDefinition bone = root.addOrReplaceChild(NAME_BONE, CubeListBuilder.create(), PartPose.offset(0, 0, 0));
-
         switch (modelType) {
             case NATURAL -> {
                 bone.addOrReplaceChild(NAME_WIND_OUTER, CubeListBuilder.create().texOffs(15, 20).addBox(-4, -1, -4, 8, 2, 8, new CubeDeformation(0)), PartPose.offsetAndRotation(0, 0, 0, 0, -0.7853982f, 0));
@@ -60,14 +59,13 @@ public class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWin
                 bone.addOrReplaceChild(NAME_WIND_INNER, CubeListBuilder.create(), PartPose.offsetAndRotation(0, 0, 0, 0, -0.7853982f, 0));
             }
         }
-
         bone.addOrReplaceChild(NAME_CORE, CubeListBuilder.create().texOffs(0, 0).addBox(-2, -2, -2, 4, 4, 4, new CubeDeformation(0)), PartPose.offset(0, 0, 0));
         return LayerDefinition.create(mesh, 64, 32);
     }
 
     public void setupAnimation(CannonAnimationType animationType, float rotationSpeed, float ageInTicks) {
         resetRotations();
-        float rotation = ageInTicks * rotationSpeed * Mth.PI / 180;
+        float rotation = ageInTicks * rotationSpeed * Mth.DEG_TO_RAD;
         switch (animationType) {
             case CORE_Y -> core.yRot = -rotation;
             case NATURAL_Y -> {

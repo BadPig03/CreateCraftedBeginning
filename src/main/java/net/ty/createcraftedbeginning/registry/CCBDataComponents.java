@@ -41,7 +41,6 @@ public class CCBDataComponents {
 
     public static final DataComponentType<Integer> GAS_CANISTER_PACK_FLAGS = register("gas_canister_pack_flags", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
 
-    public static final DataComponentType<String> COMPRESSOR_OVERHEAT_STATE = register("compressor_overheat_state", builder -> builder.persistent(Codec.STRING).networkSynchronized(ByteBufCodecs.STRING_UTF8));
     public static final DataComponentType<Integer> COMPRESSOR_STORED_HEAT = register("compressor_stored_heat", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
 
     public static final DataComponentType<Integer> BREEZE_TIME = register("breeze_time", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));

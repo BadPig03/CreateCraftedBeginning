@@ -19,11 +19,6 @@ public class IntersectionGasIngredient extends GasIngredient {
     public static final MapCodec<IntersectionGasIngredient> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(LIST_CODEC_NON_EMPTY.fieldOf("children").forGetter(IntersectionGasIngredient::children)).apply(instance, IntersectionGasIngredient::new));
     private final List<GasIngredient> children;
 
-    /**
-     * Creates a new {@code IntersectionGasIngredient} instance.
-     *
-     * @param children the children to inspect or process
-     */
     public IntersectionGasIngredient(List<GasIngredient> children) {
         if (children.isEmpty()) {
             throw new IllegalArgumentException("Cannot create an IntersectionGasIngredient with no children, use GasIngredient.of() to create an empty ingredient");
@@ -32,12 +27,6 @@ public class IntersectionGasIngredient extends GasIngredient {
         this.children = children;
     }
 
-    /**
-     * Creates a gas ingredient from the supplied value.
-     *
-     * @param ingredients the ingredients to add or inspect
-     * @return the created value
-     */
     public static GasIngredient of(GasIngredient @NotNull ... ingredients) {
         if (ingredients.length == 0) {
             throw new IllegalArgumentException("Cannot create an IntersectionGasIngredient with no children, use GasIngredient.of() to create an empty ingredient");
@@ -48,59 +37,36 @@ public class IntersectionGasIngredient extends GasIngredient {
         return new IntersectionGasIngredient(Arrays.asList(ingredients));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Stream<GasStack> generateStacks() {
         return children.stream().flatMap(GasIngredient::generateStacks).filter(this);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isSimple() {
         return children.stream().allMatch(GasIngredient::isSimple);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public GasIngredientType<?> getType() {
         return GasRegistries.INTERSECTION_GAS_INGREDIENT_TYPE.get();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean test(GasStack stack) {
         return children.stream().allMatch(child -> child.test(stack));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return Objects.hash(children);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(Object obj) {
         return this == obj || obj instanceof IntersectionGasIngredient other && children.equals(other.children());
     }
 
-    /**
-     * Returns the child ingredients that compose this ingredient.
-     *
-     * @return the resulting values
-     */
     public List<GasIngredient> children() {
         return children;
     }

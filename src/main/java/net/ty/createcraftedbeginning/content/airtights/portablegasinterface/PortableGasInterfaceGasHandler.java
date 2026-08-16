@@ -9,11 +9,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-class PortableGasInterfaceGasHandler implements IGasHandler {
-    private final PortableGasInterfaceBlockEntity gasInterface;
-    private final IGasHandler wrapped;
+public class PortableGasInterfaceGasHandler implements IGasHandler {
+    protected final PortableGasInterfaceBlockEntity gasInterface;
+    protected final IGasHandler wrapped;
 
-    PortableGasInterfaceGasHandler(PortableGasInterfaceBlockEntity gasInterface, IGasHandler wrapped) {
+    public PortableGasInterfaceGasHandler(PortableGasInterfaceBlockEntity gasInterface, IGasHandler wrapped) {
         this.gasInterface = gasInterface;
         this.wrapped = wrapped;
     }
@@ -71,11 +71,11 @@ class PortableGasInterfaceGasHandler implements IGasHandler {
         return wrapped.getTankCapacity(tank);
     }
 
-    private boolean canAccessStorage() {
+    protected boolean canAccessStorage() {
         return gasInterface.canAccessGasStorage(this);
     }
 
-    private void keepAliveIfTransferred(boolean transferred, GasAction action) {
+    protected void keepAliveIfTransferred(boolean transferred, GasAction action) {
         if (!transferred || !action.execute()) {
             return;
         }

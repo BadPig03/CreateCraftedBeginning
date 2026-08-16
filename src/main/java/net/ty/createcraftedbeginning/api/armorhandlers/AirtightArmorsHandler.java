@@ -13,26 +13,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public interface AirtightArmorsHandler {
     SimpleRegistry<Gas, AirtightArmorsHandler> REGISTRY = SimpleRegistry.create();
 
-    /**
-     * Checks whether the supplied status effect can be cured.
-     *
-     * @param effectInstance the status effect instance to inspect
-     * @return {@code true} if the supplied status effect can be cured; otherwise {@code false}
-     */
     boolean canCureEffect(MobEffectInstance effectInstance);
 
-    /**
-     * Returns the consumption multiplier.
-     *
-     * @param slot the zero-based slot index
-     * @return the consumption multiplier
-     */
     float getConsumptionMultiplier(EquipmentSlot slot);
 
-    /**
-     * Returns the multiplier for boosting elytra.
-     *
-     * @return the multiplier for boosting elytra
-     */
     float getMultiplierForBoostingElytra();
 }

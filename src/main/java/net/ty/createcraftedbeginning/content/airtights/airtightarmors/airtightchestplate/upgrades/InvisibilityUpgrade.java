@@ -110,7 +110,7 @@ public enum InvisibilityUpgrade implements TickingAirtightUpgrade {
 
     @Override
     public boolean shouldApplyEffect(Player player, ItemStack item) {
-        MobEffectInstance effect = player.getEffect(MobEffects.INVISIBILITY);
-        return effect == null || effect.getAmplifier() == 0 && effect.endsWithin(REFRESH_THRESHOLD);
+        MobEffectInstance invisibilityEffect = player.getEffect(MobEffects.INVISIBILITY);
+        return invisibilityEffect == null || invisibilityEffect.getAmplifier() == 0 && invisibilityEffect.endsWithin(REFRESH_THRESHOLD);
     }
 }

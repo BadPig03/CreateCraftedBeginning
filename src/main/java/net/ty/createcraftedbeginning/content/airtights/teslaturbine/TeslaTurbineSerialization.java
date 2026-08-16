@@ -8,14 +8,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class TeslaTurbineSerialization {
+public final class TeslaTurbineSerialization {
     private static final String COMPOUND_KEY_FLOW_METER = "FlowMeter";
     private static final String COMPOUND_KEY_LEVEL_CALCULATOR = "LevelCalculator";
     private static final String COMPOUND_KEY_STRUCTURE_MANAGER = "StructureManager";
 
     private final TeslaTurbineCore core;
 
-    TeslaTurbineSerialization(TeslaTurbineCore core) {
+    public TeslaTurbineSerialization(TeslaTurbineCore core) {
         this.core = core;
     }
 
@@ -23,7 +23,7 @@ final class TeslaTurbineSerialization {
         return tag.contains(key) ? tag.getCompound(key) : new CompoundTag();
     }
 
-    CompoundTag write(Provider provider, boolean clientPacket) {
+    public CompoundTag write(Provider provider, boolean clientPacket) {
         CompoundTag tag = new CompoundTag();
         tag.put(COMPOUND_KEY_FLOW_METER, core.getFlowMeter().write(provider, clientPacket));
         if (!clientPacket) {
@@ -35,7 +35,7 @@ final class TeslaTurbineSerialization {
         return tag;
     }
 
-    void read(CompoundTag tag, Provider provider, boolean clientPacket) {
+    public void read(CompoundTag tag, Provider provider, boolean clientPacket) {
         if (clientPacket) {
             readClient(tag, provider);
         }

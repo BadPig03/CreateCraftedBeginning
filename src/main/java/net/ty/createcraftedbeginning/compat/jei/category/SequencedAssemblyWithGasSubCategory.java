@@ -14,7 +14,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
@@ -32,9 +32,9 @@ import static net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategor
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class SequencedAssemblyWithGasSubCategory {
-    private final int width;
+    protected final int width;
 
-    public SequencedAssemblyWithGasSubCategory(int width) {
+    protected SequencedAssemblyWithGasSubCategory(int width) {
         this.width = width;
     }
 
@@ -136,7 +136,7 @@ public abstract class SequencedAssemblyWithGasSubCategory {
         public void setRecipe(IRecipeLayoutBuilder builder, SequencedWithGasRecipe<?> recipe, IFocusGroup focuses, int x) {
             SizedGasIngredient gasIngredient = recipe.getRecipe().getGasIngredients().getFirst();
             List<GasStack> stacks = Arrays.stream(gasIngredient.getGases()).map(GasStack::copy).toList();
-            builder.addSlot(RecipeIngredientRole.INPUT, x + 4, 15).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, stacks).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmountUtils.precise(gasIngredient.amount()).style(ChatFormatting.GRAY).component()));
+            builder.addSlot(RecipeIngredientRole.INPUT, x + 4, 15).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, stacks).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmounts.precise(gasIngredient.amount()).style(ChatFormatting.GRAY).component()));
         }
 
         @Override

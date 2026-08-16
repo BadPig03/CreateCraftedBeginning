@@ -14,7 +14,7 @@ import java.util.function.IntSupplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class FilteredCrateBlockEntity extends CratesBlockEntity {
-    private CrateFilterController filterController;
+    protected CrateFilterController filterController;
 
     protected FilteredCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, IntSupplier maxCountSupplier) {
         super(type, pos, state, maxCountSupplier);

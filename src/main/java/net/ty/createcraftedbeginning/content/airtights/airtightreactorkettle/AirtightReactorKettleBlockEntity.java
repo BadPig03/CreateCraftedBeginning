@@ -34,7 +34,7 @@ import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.CombinedGasTankWrapper;
@@ -57,24 +57,24 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     private static final int LAZY_TICK_RATE = 4;
     private static final int MAX_ITEM_SLOT = 27;
 
-    private final AirtightReactorKettleCore core;
-    private final AirtightReactorKettleAnimationState animationState;
-    private final AirtightReactorKettleController controller;
-    private final AirtightReactorKettleCrafting crafting;
-    private final AirtightReactorKettleSerialization serialization;
-    private final AirtightReactorKettleInventory inputInventory;
-    private final SmartInventory outputInventory;
-    private final Couple<SmartInventory> inventories;
-    private final IItemHandlerModifiable itemCapability;
+    protected final AirtightReactorKettleCore core;
+    protected final AirtightReactorKettleAnimationState animationState;
+    protected final AirtightReactorKettleController controller;
+    protected final AirtightReactorKettleCrafting crafting;
+    protected final AirtightReactorKettleSerialization serialization;
+    protected final AirtightReactorKettleInventory inputInventory;
+    protected final SmartInventory outputInventory;
+    protected final Couple<SmartInventory> inventories;
+    protected final IItemHandlerModifiable itemCapability;
 
-    private DeferralBehaviour updateChecker;
-    private IFluidHandler fluidCapability;
-    private IGasHandler gasCapability;
-    private SmartFluidTankBehaviour inputFluidTank;
-    private SmartFluidTankBehaviour outputFluidTank;
-    private SmartGasTankBehaviour inputGasTank;
-    private SmartGasTankBehaviour outputGasTank;
-    private CCBAdvancementBehaviour advancementBehaviour;
+    protected DeferralBehaviour updateChecker;
+    protected IFluidHandler fluidCapability;
+    protected IGasHandler gasCapability;
+    protected SmartFluidTankBehaviour inputFluidTank;
+    protected SmartFluidTankBehaviour outputFluidTank;
+    protected SmartGasTankBehaviour inputGasTank;
+    protected SmartGasTankBehaviour outputGasTank;
+    protected CCBAdvancementBehaviour advancementBehaviour;
 
     public AirtightReactorKettleBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -105,7 +105,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     }
 
     public static long getGasCapacity() {
-        return Math.max(1, CCBConfig.server().airtights.reactorKettleGasCapacity.get()) * GasAmountUtils.MILLIBUCKETS_PER_BUCKET;
+        return Math.max(1, CCBConfig.server().airtights.reactorKettleGasCapacity.get()) * GasAmounts.MILLIBUCKETS_PER_BUCKET;
     }
 
     @Override
@@ -327,23 +327,23 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         controller.startProcessInPonderLevel();
     }
 
-    AirtightReactorKettleController getController() {
+    public AirtightReactorKettleController getController() {
         return controller;
     }
 
-    AirtightReactorKettleInventory getInputInventory() {
+    public AirtightReactorKettleInventory getInputInventory() {
         return inputInventory;
     }
 
-    SmartInventory getOutputInventory() {
+    public SmartInventory getOutputInventory() {
         return outputInventory;
     }
 
-    void awardBackToBasics() {
+    public void awardBackToBasics() {
         advancementBehaviour.awardPlayer(CCBAdvancements.BACK_TO_BASICS);
     }
 
-    private void addFluidBehaviours(List<BlockEntityBehaviour> behaviours) {
+    protected void addFluidBehaviours(List<BlockEntityBehaviour> behaviours) {
         inputFluidTank = new SmartFluidTankBehaviour(SmartFluidTankBehaviour.INPUT, this, 3, getFluidCapacity(), true).whenFluidUpdates(this::notifyContentsChanged);
         outputFluidTank = new SmartFluidTankBehaviour(SmartFluidTankBehaviour.OUTPUT, this, 2, getFluidCapacity(), true).forbidInsertion().whenFluidUpdates(this::notifyContentsChanged);
         fluidCapability = new CombinedTankWrapper(inputFluidTank.getCapability(), outputFluidTank.getCapability());
@@ -351,7 +351,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         behaviours.add(outputFluidTank);
     }
 
-    private void addGasBehaviours(List<BlockEntityBehaviour> behaviours) {
+    protected void addGasBehaviours(List<BlockEntityBehaviour> behaviours) {
         inputGasTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.INPUT, this, 3, getGasCapacity(), true).whenGasUpdates(this::notifyContentsChanged);
         outputGasTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.OUTPUT, this, 2, getGasCapacity(), true).forbidInsertion().whenGasUpdates(this::notifyContentsChanged);
         gasCapability = new CombinedGasTankWrapper(inputGasTank.getCapability(), outputGasTank.getCapability());
@@ -359,31 +359,21 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         behaviours.add(outputGasTank);
     }
 
-    private boolean updateReactorKettle() {
+    protected boolean updateReactorKettle() {
         return controller.updateReactorKettle();
     }
 
-    public static final class CraftPlan {
-        final List<ItemStack> expectedItems;
-        final List<FluidStack> expectedFluids;
-        final List<GasStack> expectedGases;
-        final int[] itemAmounts;
-        final int[] fluidAmounts;
-        final long[] gasAmounts;
-        final List<ItemStack> outputItems;
-        final List<FluidStack> outputFluids;
-        final List<GasStack> outputGases;
-
-        CraftPlan(List<ItemStack> expectedItems, List<FluidStack> expectedFluids, List<GasStack> expectedGases, int[] itemAmounts, int[] fluidAmounts, long[] gasAmounts, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
-            this.expectedItems = expectedItems.stream().map(ItemStack::copy).toList();
-            this.expectedFluids = expectedFluids.stream().map(FluidStack::copy).toList();
-            this.expectedGases = expectedGases.stream().map(GasStack::copy).toList();
-            this.itemAmounts = itemAmounts.clone();
-            this.fluidAmounts = fluidAmounts.clone();
-            this.gasAmounts = gasAmounts.clone();
-            this.outputItems = outputItems.stream().map(ItemStack::copy).toList();
-            this.outputFluids = outputFluids.stream().map(FluidStack::copy).toList();
-            this.outputGases = outputGases.stream().map(GasStack::copy).toList();
+    public record CraftPlan(List<ItemStack> expectedItems, List<FluidStack> expectedFluids, List<GasStack> expectedGases, int[] itemAmounts, int[] fluidAmounts, long[] gasAmounts, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
+            public CraftPlan(List<ItemStack> expectedItems, List<FluidStack> expectedFluids, List<GasStack> expectedGases, int[] itemAmounts, int[] fluidAmounts, long[] gasAmounts, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
+                this.expectedItems = expectedItems.stream().map(ItemStack::copy).toList();
+                this.expectedFluids = expectedFluids.stream().map(FluidStack::copy).toList();
+                this.expectedGases = expectedGases.stream().map(GasStack::copy).toList();
+                this.itemAmounts = itemAmounts.clone();
+                this.fluidAmounts = fluidAmounts.clone();
+                this.gasAmounts = gasAmounts.clone();
+                this.outputItems = outputItems.stream().map(ItemStack::copy).toList();
+                this.outputFluids = outputFluids.stream().map(FluidStack::copy).toList();
+                this.outputGases = outputGases.stream().map(GasStack::copy).toList();
+            }
         }
-    }
 }

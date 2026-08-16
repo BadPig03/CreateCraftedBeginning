@@ -7,21 +7,12 @@ import net.ty.createcraftedbeginning.api.CCBAPI;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-/**
- * Provides lookup and registration helpers for airtight gas-fill sources.
- */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class AirtightFillHandlerUtils {
     private AirtightFillHandlerUtils() {
     }
 
-    /**
-     * Resolves the airtight fill handler associated with the supplied input.
-     *
-     * @param block the target block
-     * @return the resolved airtight fill handler
-     */
     public static AirtightFillHandler of(Block block) {
         AirtightFillHandler fillHandler = AirtightFillHandler.REGISTRY.get(block);
         if (fillHandler == null) {
@@ -30,12 +21,6 @@ public final class AirtightFillHandlerUtils {
         return fillHandler;
     }
 
-    /**
-     * Registers a custom airtight fill handler for the supplied target.
-     *
-     * @param block   the target block
-     * @param handler the handler to register or invoke
-     */
     public static void register(Block block, AirtightFillHandler handler) {
         AirtightFillHandler fillHandler = AirtightFillHandler.REGISTRY.get(block);
         if (fillHandler != null) {

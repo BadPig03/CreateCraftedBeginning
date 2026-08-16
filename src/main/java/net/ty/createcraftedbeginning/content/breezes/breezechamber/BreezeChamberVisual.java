@@ -29,18 +29,18 @@ import java.util.function.Consumer;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class BreezeChamberVisual extends AbstractBlockEntityVisual<BreezeChamberBlockEntity> implements SimpleDynamicVisual, SimpleTickableVisual {
-    private final TransformedInstance head;
-    private WindLevel windLevel;
+    protected final TransformedInstance head;
+    protected WindLevel windLevel;
     @Nullable
-    private TransformedInstance goggles;
+    protected TransformedInstance goggles;
     @Nullable
-    private PartialModel gogglesModel;
+    protected PartialModel gogglesModel;
     @Nullable
-    private TransformedInstance hat;
+    protected TransformedInstance hat;
     @Nullable
-    private TransformedInstance wind;
+    protected TransformedInstance wind;
 
-    private boolean controllerActive;
+    protected boolean controllerActive;
 
     public BreezeChamberVisual(VisualizationContext ctx, BreezeChamberBlockEntity blockEntity, float partialTick) {
         super(ctx, blockEntity, partialTick);
@@ -50,7 +50,7 @@ public class BreezeChamberVisual extends AbstractBlockEntityVisual<BreezeChamber
         animate(partialTick);
     }
 
-    private void animate(float partialTicks) {
+    protected void animate(float partialTicks) {
         float animation = blockEntity.getHeadAnimation().getValue(partialTicks) * 0.175f;
         boolean active = animation > 0.125f;
         WindLevel renderWindLevel = blockEntity.getWindLevelForRender();

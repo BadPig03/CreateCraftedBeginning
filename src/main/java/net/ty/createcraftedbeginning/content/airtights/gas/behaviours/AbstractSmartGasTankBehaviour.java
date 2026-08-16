@@ -26,7 +26,7 @@ public abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour
 
     private static final int SYNC_RATE = 8;
 
-    private final BehaviourType<?> behaviourType;
+    protected final BehaviourType<?> behaviourType;
 
     protected int syncCooldown;
     protected boolean queuedSync;

@@ -29,20 +29,20 @@ import java.util.function.Consumer;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBlockEntity> implements SimpleDynamicVisual, SimpleTickableVisual {
-    private final TransformedInstance head;
-    private FrostLevel frostLevel;
+    protected final TransformedInstance head;
+    protected FrostLevel frostLevel;
     @Nullable
-    private TransformedInstance goggles;
+    protected TransformedInstance goggles;
     @Nullable
-    private PartialModel gogglesModel;
+    protected PartialModel gogglesModel;
     @Nullable
-    private TransformedInstance hat;
+    protected TransformedInstance hat;
     @Nullable
-    private PartialModel hatModel;
+    protected PartialModel hatModel;
     @Nullable
-    private TransformedInstance wind;
+    protected TransformedInstance wind;
 
-    private boolean validBlockAbove;
+    protected boolean validBlockAbove;
 
     public BreezeCoolerVisual(VisualizationContext ctx, BreezeCoolerBlockEntity blockEntity, float partialTick) {
         super(ctx, blockEntity, partialTick);
@@ -52,7 +52,7 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
         animate(partialTick);
     }
 
-    private void animate(float partialTicks) {
+    protected void animate(float partialTicks) {
         float animation = blockEntity.getHeadAnimation().getValue(partialTicks) * 0.175f;
         boolean active = animation > 0.125f;
         FrostLevel currentFrostLevel = blockEntity.getFrostLevelForRender();

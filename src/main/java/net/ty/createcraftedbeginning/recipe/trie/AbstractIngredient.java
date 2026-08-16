@@ -9,8 +9,8 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AbstractIngredient {
-    final Set<AbstractVariant> variants;
-    final int hashCode;
+    public final Set<AbstractVariant> variants;
+    public final int hashCode;
 
     public AbstractIngredient(Set<AbstractVariant> variants) {
         this.variants = ImmutableSet.copyOf(variants);

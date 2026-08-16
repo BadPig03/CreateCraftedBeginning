@@ -21,12 +21,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AirtightCannonPacket extends ShootGadgetPacket {
     public static final StreamCodec<RegistryFriendlyByteBuf, AirtightCannonPacket> STREAM_CODEC = StreamCodec.composite(CatnipStreamCodecs.VEC3, packet -> packet.location, CatnipStreamCodecs.VEC3, packet -> packet.motion, ItemStack.OPTIONAL_STREAM_CODEC, packet -> packet.item, CatnipStreamCodecs.HAND, packet -> packet.hand, ByteBufCodecs.FLOAT, packet -> packet.pitch, ByteBufCodecs.BOOL, packet -> packet.self, AirtightCannonPacket::new);
 
-    private final float pitch;
-    private final Vec3 motion;
-    private final ItemStack item;
+    protected final float pitch;
+    protected final Vec3 motion;
+    protected final ItemStack item;
 
-    public AirtightCannonPacket(Vec3 location, Vec3 motion, ItemStack item, InteractionHand hand, float pitch, boolean self) {
-        super(location, hand, self);
+    public AirtightCannonPacket(Vec3 location, Vec3 motion, ItemStack item, InteractionHand hand, float pitch, boolean isSelf) {
+        super(location, hand, isSelf);
         this.motion = motion;
         this.item = item;
         this.pitch = pitch;

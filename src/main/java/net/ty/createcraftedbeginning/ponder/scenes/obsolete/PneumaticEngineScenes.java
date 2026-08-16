@@ -65,7 +65,7 @@ public class PneumaticEngineScenes {
     }
 
     @SuppressWarnings("unused")
-    public static void limitation(SceneBuilder builder, SceneBuildingUtil util) {
+    private static void limitation(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("pneumatic_engine_limitation", "Limitations of Pneumatic Engines");

@@ -46,7 +46,7 @@ public record SturdyCrateContents(ItemStack content, int count, ItemStack filter
         return !content.isEmpty() && count > 0;
     }
 
-    public boolean hasFilter() {
+    private boolean hasFilter() {
         return !filterItem.isEmpty();
     }
 

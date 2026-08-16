@@ -31,7 +31,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.storage.loot.LootParams;
@@ -50,7 +49,6 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<AirCompressorBlockEntity>, SimpleWaterloggedBlock, IWrenchable, IAirtightComponent {
     public static final BooleanProperty ACTIVE = BooleanProperty.create("active");
-    public static final EnumProperty<Axis> AXIS = BlockStateProperties.AXIS;
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     public AirCompressorBlock(Properties properties) {
@@ -70,11 +68,11 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
 
     @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
-        BlockState state = super.getStateForPlacement(context);
-        if (state == null) {
+        BlockState placementState = super.getStateForPlacement(context);
+        if (placementState == null) {
             return null;
         }
-        return ProperWaterloggedBlock.withWater(context.getLevel(), AirCompressorPlacement.getStateForPlacement(context, state), context.getClickedPos());
+        return ProperWaterloggedBlock.withWater(context.getLevel(), AirCompressorPlacement.getStateForPlacement(context, placementState), context.getClickedPos());
     }
 
     @Override
@@ -89,10 +87,11 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
 
     @Override
     public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
-        if (!level.isClientSide && player.isCreative()) {
-            dropStoredState(level, pos);
+        if (!level.isClientSide && player.isCreative() && level.getBlockEntity(pos) instanceof AirCompressorBlockEntity compressor && compressor.getStoredHeat() != 0) {
+            ItemStack compressorStack = new ItemStack(this);
+            compressor.saveToItem(compressorStack);
+            Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, compressorStack);
         }
-
         super.playerWillDestroy(level, pos, state, player);
         return state;
     }
@@ -183,7 +182,7 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
     }
 
     @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity entity, ItemStack stack) {
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
         super.setPlacedBy(level, pos, state, entity, stack);
         CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
         if (!(level.getBlockEntity(pos) instanceof AirCompressorBlockEntity compressor)) {
@@ -207,16 +206,6 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
     @Override
     public BlockEntityType<? extends AirCompressorBlockEntity> getBlockEntityType() {
         return CCBBlockEntities.AIR_COMPRESSOR.get();
-    }
-
-    private void dropStoredState(Level level, BlockPos pos) {
-        if (!(level.getBlockEntity(pos) instanceof AirCompressorBlockEntity compressor) || compressor.getStoredHeat() == 0) {
-            return;
-        }
-
-        ItemStack item = new ItemStack(this);
-        compressor.saveToItem(item);
-        Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, item);
     }
 
     @Override

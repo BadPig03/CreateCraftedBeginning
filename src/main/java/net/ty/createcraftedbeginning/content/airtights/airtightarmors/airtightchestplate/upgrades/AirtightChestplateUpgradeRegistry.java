@@ -32,8 +32,8 @@ public final class AirtightChestplateUpgradeRegistry {
     }
 
     public static boolean allUpgradesEnabled(Player player) {
-        ItemStack item = player.getItemBySlot(EquipmentSlot.CHEST);
-        return item.is(CCBItems.AIRTIGHT_CHESTPLATE) && REGISTRY.allUpgradesEnabled(item);
+        ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
+        return chestplate.is(CCBItems.AIRTIGHT_CHESTPLATE) && REGISTRY.allUpgradesEnabled(chestplate);
     }
 
     public static List<AirtightUpgrade> getAll() {

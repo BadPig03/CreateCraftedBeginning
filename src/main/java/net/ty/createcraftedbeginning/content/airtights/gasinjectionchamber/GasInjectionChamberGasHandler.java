@@ -12,12 +12,12 @@ import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasInjectionChamberGasHandler implements IGasHandler {
+public final class GasInjectionChamberGasHandler implements IGasHandler {
     private final IGasHandler delegate;
     private final BooleanSupplier locked;
     private final Supplier<GasStack> operationGas;
 
-    GasInjectionChamberGasHandler(IGasHandler delegate, BooleanSupplier locked, Supplier<GasStack> operationGas) {
+    public GasInjectionChamberGasHandler(IGasHandler delegate, BooleanSupplier locked, Supplier<GasStack> operationGas) {
         this.delegate = delegate;
         this.locked = locked;
         this.operationGas = operationGas;

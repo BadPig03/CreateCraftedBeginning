@@ -13,6 +13,7 @@ import net.minecraft.world.entity.player.Player;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.armhandlers.AirtightArmHandler;
 import net.ty.createcraftedbeginning.api.armhandlers.AirtightArmHandlerUtils;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers.AffordableFuel;
@@ -93,15 +94,15 @@ public final class AirtightExtendArmUtils {
         return player.getMainHandItem().is(CCBItems.AIRTIGHT_EXTEND_ARM) || player.getOffhandItem().is(CCBItems.AIRTIGHT_EXTEND_ARM);
     }
 
-    public static boolean isArmPowered(Player player) {
+    private static boolean isArmPowered(Player player) {
         return isBlockInteractionPowered(player) || isEntityInteractionPowered(player);
     }
 
-    public static boolean isBlockInteractionPowered(Player player) {
+    private static boolean isBlockInteractionPowered(Player player) {
         return hasModifier(player.getAttributes().getInstance(Attributes.BLOCK_INTERACTION_RANGE), BLOCK_RANGE_MODIFIER_ID);
     }
 
-    public static boolean isEntityInteractionPowered(Player player) {
+    private static boolean isEntityInteractionPowered(Player player) {
         AttributeMap attributes = player.getAttributes();
         return hasModifier(attributes.getInstance(Attributes.ENTITY_INTERACTION_RANGE), ENTITY_RANGE_MODIFIER_ID) || hasModifier(attributes.getInstance(Attributes.ATTACK_KNOCKBACK), KNOCKBACK_MODIFIER_ID);
     }
@@ -206,7 +207,7 @@ public final class AirtightExtendArmUtils {
             return;
         }
 
-        if (!Double.isFinite(amount) || amount <= 0) {
+        if (!GasConsumptions.isFinite(amount) || amount <= 0) {
             instance.removeModifier(id);
             return;
         }

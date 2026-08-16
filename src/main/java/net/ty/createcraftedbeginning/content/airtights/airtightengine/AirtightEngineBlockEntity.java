@@ -28,10 +28,10 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
     private static final int LAZY_TICK_RATE = 20;
     private static final List<BlockPos> COG_NEIGHBOUR_OFFSETS = List.of(new BlockPos(-1, -1, 0), new BlockPos(-1, 0, -1), new BlockPos(-1, 0, 1), new BlockPos(-1, 1, 0), new BlockPos(0, -1, -1), new BlockPos(0, -1, 1), new BlockPos(0, 1, -1), new BlockPos(0, 1, 1), new BlockPos(1, -1, 0), new BlockPos(1, 0, -1), new BlockPos(1, 0, 1), new BlockPos(1, 1, 0));
 
-    private final AirtightEngineAnimationState animationState = new AirtightEngineAnimationState();
-    private final AirtightEngineDriveController driveController = new AirtightEngineDriveController(this);
+    protected final AirtightEngineAnimationState animationState = new AirtightEngineAnimationState();
+    protected final AirtightEngineDriveController driveController = new AirtightEngineDriveController(this);
 
-    private CCBAdvancementBehaviour advancementBehaviour;
+    protected CCBAdvancementBehaviour advancementBehaviour;
 
     public AirtightEngineBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -150,19 +150,19 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
         return animationState.getPistonPhase(partialTicks);
     }
 
-    boolean isEngineOverStressed() {
+    public boolean isEngineOverStressed() {
         return isOverStressed();
     }
 
-    boolean hasKineticNetwork() {
+    public boolean hasKineticNetwork() {
         return hasNetwork();
     }
 
-    void applyGeneratedRotation() {
+    public void applyGeneratedRotation() {
         updateGeneratedRotation();
     }
 
-    void rebuildKineticNetwork() {
+    public void rebuildKineticNetwork() {
         if (level == null || level.isClientSide) {
             return;
         }

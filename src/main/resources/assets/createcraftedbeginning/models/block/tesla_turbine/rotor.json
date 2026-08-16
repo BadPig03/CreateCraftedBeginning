@@ -1,5 +1,7 @@
 {
 	"credit": "Made with Blockbench",
+	"render_type": "minecraft:cutout_mipped",
+	"ambientocclusion": false,
 	"texture_size": [32, 32],
 	"textures": {
 		"1": "createcraftedbeginning:block/tesla_turbine/rotor",

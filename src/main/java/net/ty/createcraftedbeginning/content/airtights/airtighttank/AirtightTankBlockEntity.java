@@ -13,7 +13,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.SmartGasTank;
 import net.ty.createcraftedbeginning.config.CCBConfig;
@@ -26,10 +26,10 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity implements IHaveGoggleInformation, IChamberGasTank, ThresholdSwitchObservable {
-    private final AirtightAssemblyDriverCore driverCore;
-    private final AirtightTankStorageController storageController;
-    private final AirtightTankDisplay display;
-    private final AirtightTankSerialization serialization;
+    protected final AirtightAssemblyDriverCore driverCore;
+    protected final AirtightTankStorageController storageController;
+    protected final AirtightTankDisplay display;
+    protected final AirtightTankSerialization serialization;
 
     public AirtightTankBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -45,7 +45,7 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
     }
 
     public static long getCapacityPerTank() {
-        return CCBConfig.server().airtights.maxAirtightTankCapacityPerBlock.get() * GasAmountUtils.MILLIBUCKETS_PER_BUCKET;
+        return CCBConfig.server().airtights.maxAirtightTankCapacityPerBlock.get() * GasAmounts.MILLIBUCKETS_PER_BUCKET;
     }
 
     public static int getConfiguredMaxLength() {

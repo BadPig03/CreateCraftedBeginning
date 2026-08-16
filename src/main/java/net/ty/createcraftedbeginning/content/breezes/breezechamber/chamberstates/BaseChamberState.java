@@ -102,7 +102,7 @@ public abstract class BaseChamberState {
         };
     }
 
-    private InteractionResult insertCharge(BreezeChamberBlockEntity chamber, ItemStack stack, int chargingTime, boolean forceOverflow, boolean simulate) {
+    protected InteractionResult insertCharge(BreezeChamberBlockEntity chamber, ItemStack stack, int chargingTime, boolean forceOverflow, boolean simulate) {
         if (chargingTime == 0) {
             return InteractionResult.FAIL;
         }
@@ -124,7 +124,7 @@ public abstract class BaseChamberState {
         return InteractionResult.SUCCESS;
     }
 
-    private InteractionResult clearIll(BreezeChamberBlockEntity chamber, ItemStack stack, boolean simulate) {
+    protected InteractionResult clearIll(BreezeChamberBlockEntity chamber, ItemStack stack, boolean simulate) {
         if (getChargerType() != ChargerType.BAD) {
             return InteractionResult.PASS;
         }
@@ -145,7 +145,7 @@ public abstract class BaseChamberState {
         return InteractionResult.SUCCESS;
     }
 
-    private void cycleCreative(BreezeChamberBlockEntity chamber, boolean simulate) {
+    protected void cycleCreative(BreezeChamberBlockEntity chamber, boolean simulate) {
         if (simulate) {
             return;
         }

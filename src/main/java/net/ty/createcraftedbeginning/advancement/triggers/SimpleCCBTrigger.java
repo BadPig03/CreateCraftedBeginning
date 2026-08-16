@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.advancement;
+package net.ty.createcraftedbeginning.advancement.triggers;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -6,8 +6,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.advancements.critereon.ContextAwarePredicate;
 import net.minecraft.advancements.critereon.EntityPredicate;
 import net.minecraft.server.level.ServerPlayer;
-import net.ty.createcraftedbeginning.advancement.SimpleCCBTrigger.Instance;
-import org.jetbrains.annotations.Contract;
+import net.ty.createcraftedbeginning.advancement.triggers.SimpleCCBTrigger.Instance;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -17,12 +16,11 @@ import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class SimpleCCBTrigger extends CriterionTriggerBase<Instance> {
+public final class SimpleCCBTrigger extends CriterionTriggerBase<Instance> {
     public SimpleCCBTrigger(String id) {
         super(id);
     }
 
-    @Contract(" -> new")
     public static Instance instance() {
         return new Instance();
     }
@@ -39,7 +37,7 @@ public class SimpleCCBTrigger extends CriterionTriggerBase<Instance> {
     public static class Instance extends CriterionTriggerBase.Instance {
         private static final Codec<Instance> CODEC = RecordCodecBuilder.create(builder -> builder.group(EntityPredicate.ADVANCEMENT_CODEC.optionalFieldOf("player").forGetter(Instance::player)).apply(builder, Instance::new));
 
-        private final Optional<ContextAwarePredicate> player;
+        protected final Optional<ContextAwarePredicate> player;
 
         public Instance() {
             this(Optional.empty());
@@ -50,13 +48,13 @@ public class SimpleCCBTrigger extends CriterionTriggerBase<Instance> {
         }
 
         @Override
-        protected boolean test(@Nullable List<Supplier<Object>> suppliers) {
-            return true;
+        public Optional<ContextAwarePredicate> player() {
+            return player;
         }
 
         @Override
-        public Optional<ContextAwarePredicate> player() {
-            return player;
+        protected boolean test(@Nullable List<Supplier<Object>> suppliers) {
+            return true;
         }
     }
 }

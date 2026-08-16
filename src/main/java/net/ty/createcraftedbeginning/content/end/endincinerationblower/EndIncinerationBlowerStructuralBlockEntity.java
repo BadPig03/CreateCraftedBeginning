@@ -18,7 +18,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class EndIncinerationBlowerStructuralBlockEntity extends EndMechanicalStructuralBlockEntity<EndIncinerationBlowerBlockEntity> {
-    private ScrollOptionBehaviour<BlowerWorkingMode> blowerWorkingMode;
+    protected ScrollOptionBehaviour<BlowerWorkingMode> blowerWorkingMode;
 
     public EndIncinerationBlowerStructuralBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);

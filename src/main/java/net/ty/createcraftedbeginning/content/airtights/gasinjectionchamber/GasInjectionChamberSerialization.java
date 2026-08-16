@@ -9,14 +9,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasInjectionChamberSerialization {
+public final class GasInjectionChamberSerialization {
     private final GasInjectionChamberBlockEntity chamber;
     private final GasInjectionChamberOperationState operation;
     private final GasInjectionChamberFilterState filter;
     private final GasInjectionChamberVisualState visual;
     private final GasInjectionChamberDisplay display;
 
-    GasInjectionChamberSerialization(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation, GasInjectionChamberFilterState filter, GasInjectionChamberVisualState visual, GasInjectionChamberDisplay display) {
+    public GasInjectionChamberSerialization(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation, GasInjectionChamberFilterState filter, GasInjectionChamberVisualState visual, GasInjectionChamberDisplay display) {
         this.chamber = chamber;
         this.operation = operation;
         this.filter = filter;
@@ -24,7 +24,7 @@ final class GasInjectionChamberSerialization {
         this.display = display;
     }
 
-    void write(CompoundTag tag, Provider provider, boolean clientPacket) {
+    public void write(CompoundTag tag, Provider provider, boolean clientPacket) {
         tag.putInt(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS, operation.getProcessingTicks());
         filter.writeInstalledFilter(tag, provider);
         if (clientPacket) {
@@ -36,7 +36,7 @@ final class GasInjectionChamberSerialization {
         visual.writeCloud(tag, clientPacket);
     }
 
-    void read(CompoundTag tag, Provider provider, boolean clientPacket) {
+    public void read(CompoundTag tag, Provider provider, boolean clientPacket) {
         if (tag.contains(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS)) {
             operation.synchronizeProcessingTicks(tag.getInt(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS), clientPacket);
         }

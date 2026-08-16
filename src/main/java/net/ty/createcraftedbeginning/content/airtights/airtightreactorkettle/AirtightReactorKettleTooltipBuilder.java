@@ -13,7 +13,7 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.recipes.TemperatureCondition;
@@ -146,7 +146,7 @@ public class AirtightReactorKettleTooltipBuilder {
                 continue;
             }
 
-            CCBLang.gasName(stack).add(CCBLang.text(" ")).style(ChatFormatting.GRAY).add(GasAmountUtils.precise(stack.getAmount()).style(ChatFormatting.AQUA)).forGoggles(tooltip, 1);
+            CCBLang.gasName(stack).add(CCBLang.text(" ")).style(ChatFormatting.GRAY).add(GasAmounts.precise(stack.getAmount()).style(ChatFormatting.AQUA)).forGoggles(tooltip, 1);
             gasCount++;
         }
         return gasCount;

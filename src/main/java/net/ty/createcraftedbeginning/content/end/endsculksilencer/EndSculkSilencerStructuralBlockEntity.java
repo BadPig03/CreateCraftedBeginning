@@ -18,7 +18,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class EndSculkSilencerStructuralBlockEntity extends EndMechanicalStructuralBlockEntity<EndSculkSilencerBlockEntity> {
-    private ScrollOptionBehaviour<SilencerWorkingRange> silencerWorkingRange;
+    protected ScrollOptionBehaviour<SilencerWorkingRange> silencerWorkingRange;
 
     public EndSculkSilencerStructuralBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
@@ -46,7 +46,7 @@ public class EndSculkSilencerStructuralBlockEntity extends EndMechanicalStructur
         return silencerWorkingRange == null ? SilencerWorkingRange.ONE_BY_ONE.getWorkingRange() : silencerWorkingRange.get().getWorkingRange();
     }
 
-    private void onWorkingRangeChanged(int ignored) {
+    protected void onWorkingRangeChanged(int ignored) {
         if (level == null || level.isClientSide) {
             return;
         }
@@ -59,7 +59,7 @@ public class EndSculkSilencerStructuralBlockEntity extends EndMechanicalStructur
         master.refreshSilencerState();
     }
 
-    public enum SilencerWorkingRange implements INamedIconOptions {
+    protected enum SilencerWorkingRange implements INamedIconOptions {
         ONE_BY_ONE(CCBIcons.I_1X1, 1),
         THREE_BY_THREE(CCBIcons.I_3X3, 2),
         FIVE_BY_FIVE(CCBIcons.I_5X5, 3);

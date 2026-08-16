@@ -13,39 +13,28 @@ import java.util.stream.Stream;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@SuppressWarnings("unused")
 public final class WeatherFlareSupplierUtils {
     private static final List<Function<Player, List<ItemStack>>> FLARE_SUPPLIERS = new ArrayList<>();
 
     private WeatherFlareSupplierUtils() {
     }
 
-    /**
-     * Adds the supplied flare supplier.
-     *
-     * @param supplier the supplier used to obtain the value
-     */
+    @SuppressWarnings("unused")
     public static void addFlareSupplier(Function<Player, List<ItemStack>> supplier) {
         FLARE_SUPPLIERS.add(supplier);
     }
 
-    /**
-     * Returns the flares from inventory.
-     *
-     * @param player the player performing the operation
-     * @return the flares from inventory
-     */
     public static List<ItemStack> getFlaresFromInventory(Player player) {
         List<ItemStack> flares = new ArrayList<>();
 
         ItemStack offHandItem = player.getOffhandItem();
-        if (WeatherFlaresQueryUtils.isValidFlare(offHandItem)) {
+        if (WeatherFlareQueryUtils.isValidFlare(offHandItem)) {
             flares.add(offHandItem);
         }
 
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack item = player.getInventory().getItem(i);
-            if (!WeatherFlaresQueryUtils.isValidFlare(item) || offHandItem == item) {
+            if (!WeatherFlareQueryUtils.isValidFlare(item) || offHandItem == item) {
                 continue;
             }
 
@@ -54,32 +43,21 @@ public final class WeatherFlareSupplierUtils {
         return flares;
     }
 
-    /**
-     * Returns all flares.
-     *
-     * @param player the player performing the operation
-     * @return all flares
-     */
+    @SuppressWarnings("unused")
     public static @Unmodifiable List<ItemStack> getAllFlares(Player player) {
         List<ItemStack> inventoryFlares = getFlaresFromInventory(player);
-        return Stream.concat(inventoryFlares.stream(), FLARE_SUPPLIERS.stream().flatMap(supplier -> supplier.apply(player).stream())).filter(WeatherFlaresQueryUtils::isValidFlare).toList();
+        return Stream.concat(inventoryFlares.stream(), FLARE_SUPPLIERS.stream().flatMap(supplier -> supplier.apply(player).stream())).filter(WeatherFlareQueryUtils::isValidFlare).toList();
     }
 
-    /**
-     * Returns the first available flare.
-     *
-     * @param player the player performing the operation
-     * @return the first available flare
-     */
     public static ItemStack getFirstFlare(Player player) {
         ItemStack offHandItem = player.getOffhandItem();
-        if (WeatherFlaresQueryUtils.isValidFlare(offHandItem)) {
+        if (WeatherFlareQueryUtils.isValidFlare(offHandItem)) {
             return offHandItem;
         }
 
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack item = player.getInventory().getItem(i);
-            if (item == offHandItem || !WeatherFlaresQueryUtils.isValidFlare(item)) {
+            if (item == offHandItem || !WeatherFlareQueryUtils.isValidFlare(item)) {
                 continue;
             }
 
@@ -88,7 +66,7 @@ public final class WeatherFlareSupplierUtils {
 
         for (Function<Player, List<ItemStack>> supplier : FLARE_SUPPLIERS) {
             for (ItemStack flare : supplier.apply(player)) {
-                if (!WeatherFlaresQueryUtils.isValidFlare(flare)) {
+                if (!WeatherFlareQueryUtils.isValidFlare(flare)) {
                     continue;
                 }
 

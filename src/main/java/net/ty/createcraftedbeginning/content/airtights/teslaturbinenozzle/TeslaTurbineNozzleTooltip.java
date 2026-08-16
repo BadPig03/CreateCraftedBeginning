@@ -10,14 +10,14 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class TeslaTurbineNozzleTooltip {
+public final class TeslaTurbineNozzleTooltip {
     private final TeslaTurbineNozzleBlockEntity nozzle;
 
-    TeslaTurbineNozzleTooltip(TeslaTurbineNozzleBlockEntity nozzle) {
+    public TeslaTurbineNozzleTooltip(TeslaTurbineNozzleBlockEntity nozzle) {
         this.nozzle = nozzle;
     }
 
-    boolean addToGoggleTooltip(List<Component> tooltip) {
+    public boolean addToGoggleTooltip(List<Component> tooltip) {
         CCBLang.translate("gui.tesla_turbine_nozzle.header").forGoggles(tooltip);
         CCBLang.translate("gui.tesla_turbine_nozzle.flow_direction").style(ChatFormatting.GRAY).forGoggles(tooltip);
 

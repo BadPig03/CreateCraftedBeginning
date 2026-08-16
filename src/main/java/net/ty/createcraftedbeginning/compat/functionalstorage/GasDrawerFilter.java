@@ -11,27 +11,27 @@ import java.util.Arrays;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasDrawerFilter implements INBTSerializable<CompoundTag> {
+public final class GasDrawerFilter implements INBTSerializable<CompoundTag> {
     private final GasStack[] filters;
 
-    GasDrawerFilter(int slots) {
+    public GasDrawerFilter(int slots) {
         filters = new GasStack[slots];
         Arrays.fill(filters, GasStack.EMPTY);
     }
 
-    GasStack get(int slot) {
+    public GasStack get(int slot) {
         return filters[slot];
     }
 
-    void set(int slot, GasStack stack) {
+    public void set(int slot, GasStack stack) {
         filters[slot] = stack.isEmpty() ? GasStack.EMPTY : stack.copyWithAmount(1);
     }
 
-    void clear() {
+    public void clear() {
         Arrays.fill(filters, GasStack.EMPTY);
     }
 
-    int size() {
+    public int size() {
         return filters.length;
     }
 

@@ -68,7 +68,7 @@ public class CreativeAirCannonHandler implements AirtightCannonHandler, Airtight
     public void explode(Level level, Vec3 pos, AirtightCannonShotContext context) {
         float radius = DEFAULT_RADIUS * context.effectMultiplier();
         DamageSource explosionDamageSource = CCBDamageTypes.source(DamageTypes.WIND_CHARGE, level, context.projectile());
-        level.explode(context.projectile(), explosionDamageSource, AirtightCannonUtils.createDamageCalculator(context.knockbackMultiplier()), pos.x(), pos.y(), pos.z(), radius, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
+        level.explode(context.projectile(), explosionDamageSource, AirtightCannonUtils.createDamageCalculator(context), pos.x(), pos.y(), pos.z(), radius, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
         List<LivingEntity> entities = AirtightCannonUtils.getNearbyEntities(level, pos, radius, context);
         AirtightCannonUtils.applyBonusDamage(entities, explosionDamageSource, LETHAL_BONUS_DAMAGE);
     }

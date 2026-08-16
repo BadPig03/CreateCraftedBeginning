@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.client;
+package net.ty.createcraftedbeginning.client.contents;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.item.ItemProperties;

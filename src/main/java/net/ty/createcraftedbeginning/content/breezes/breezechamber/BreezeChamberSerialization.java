@@ -17,7 +17,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class BreezeChamberSerialization {
+public final class BreezeChamberSerialization {
     private static final String STATE_TYPE = "StateType";
     private static final String STATE_DATA = "StateData";
     private static final String GOGGLES = "Goggles";
@@ -25,7 +25,7 @@ final class BreezeChamberSerialization {
     private static final String IS_CREATIVE = "isCreative";
     private static final String REMAINING_TIME = "RemainingTime";
 
-    static BaseChamberState stateForItem(int time, boolean creative) {
+    public static BaseChamberState stateForItem(int time, boolean creative) {
         return createState(chargerTypeForTime(time), time, creative);
     }
 
@@ -60,7 +60,7 @@ final class BreezeChamberSerialization {
         return ChargerType.NONE;
     }
 
-    void write(BreezeChamberBlockEntity chamber, CompoundTag tag) {
+    public void write(BreezeChamberBlockEntity chamber, CompoundTag tag) {
         BaseChamberState state = chamber.getChamberStateInternal();
         CompoundTag stateTag = new CompoundTag();
         state.save(stateTag);
@@ -70,7 +70,7 @@ final class BreezeChamberSerialization {
         tag.putBoolean(TRAIN_HAT, chamber.hasTrainHat());
     }
 
-    void read(BreezeChamberBlockEntity chamber, CompoundTag tag) {
+    public void read(BreezeChamberBlockEntity chamber, CompoundTag tag) {
         if (tag.contains(STATE_DATA, Tag.TAG_COMPOUND)) {
             chamber.setChamberStateFromSerialization(readState(tag));
         }
@@ -84,7 +84,7 @@ final class BreezeChamberSerialization {
         chamber.setTrainHatFromSerialization(tag.getBoolean(TRAIN_HAT));
     }
 
-    void saveToItem(BreezeChamberBlockEntity chamber, ItemStack stack) {
+    public void saveToItem(BreezeChamberBlockEntity chamber, ItemStack stack) {
         BaseChamberState state = chamber.getChamberStateInternal();
         stack.set(CCBDataComponents.BREEZE_TIME, state.getRemainingTime());
         stack.set(CCBDataComponents.BREEZE_CREATIVE, state.isCreative());

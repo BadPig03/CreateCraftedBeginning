@@ -19,10 +19,9 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandler;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsUtils;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightBaseArmorItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.upgrades.GogglesUpgrade;
@@ -120,10 +119,9 @@ public class AirtightHelmetItem extends AirtightBaseArmorItem implements MenuPro
         tooltip.add(CommonComponents.EMPTY);
         tooltip.add(CCBLang.gasName(gas).add(CCBLang.translate("gui.gas_tools.content")).style(ChatFormatting.GRAY).component());
 
-        AirtightArmorsHandler handler = AirtightArmorsHandlerUtils.of(gas.getGasType());
-        float multiplier = handler.getConsumptionMultiplier(EquipmentSlot.HEAD);
-        MutableComponent advancedMultiplier = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptionUtils.format(multiplier) + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptionUtils.formatPercent(multiplier)).add(advancedMultiplier.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        float consumptionMultiplier = AirtightArmorsHandlerUtils.of(gas.getGasType()).getConsumptionMultiplier(EquipmentSlot.HEAD);
+        MutableComponent advancedMultiplier = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptions.format(consumptionMultiplier) + ']').component() : Component.empty();
+        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptions.formatPercent(consumptionMultiplier)).add(advancedMultiplier.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
     }
 
     @Override
@@ -138,8 +136,8 @@ public class AirtightHelmetItem extends AirtightBaseArmorItem implements MenuPro
 
     @Override
     public @Nullable AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
-        InteractionHand hand = player.getMainHandItem().is(this) ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
-        ItemStack helmet = player.getItemInHand(hand);
-        return new AirtightHelmetMenu(CCBMenuTypes.AIRTIGHT_HELMET_MENU.get(), containerId, playerInventory, helmet, hand);
+        InteractionHand sourceHand = player.getMainHandItem().is(this) ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
+        ItemStack helmet = player.getItemInHand(sourceHand);
+        return new AirtightHelmetMenu(CCBMenuTypes.AIRTIGHT_HELMET_MENU.get(), containerId, playerInventory, helmet, sourceHand);
     }
 }

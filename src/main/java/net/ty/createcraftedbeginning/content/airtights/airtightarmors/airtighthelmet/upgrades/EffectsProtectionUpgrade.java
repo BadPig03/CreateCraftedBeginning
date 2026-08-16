@@ -103,15 +103,15 @@ public enum EffectsProtectionUpgrade implements AirtightUpgrade {
         return item.is(CCBItems.AIRTIGHT_HELMET) && AirtightUpgrade.super.isActive(player, item);
     }
 
-    public boolean canApply(Player player, MobEffectInstance effect) {
+    public boolean canApply(Player player, MobEffectInstance incomingEffect) {
         if (!canApply(player)) {
             return false;
         }
 
-        int consumption = (effect.getAmplifier() + 1) * effect.getDuration();
+        int gasConsumption = (incomingEffect.getAmplifier() + 1) * incomingEffect.getDuration();
         if (player.level().isClientSide) {
-            return GlobalAirtightUpgradesConsumptionManager.canConsumeGas(player, this, EquipmentSlot.HEAD, consumption, handler -> handler.canCureEffect(effect));
+            return GlobalAirtightUpgradesConsumptionManager.canConsumeGas(player, this, EquipmentSlot.HEAD, gasConsumption, armorHandler -> armorHandler.canCureEffect(incomingEffect));
         }
-        return GlobalAirtightUpgradesConsumptionManager.tryConsumeGas(player, this, EquipmentSlot.HEAD, consumption, handler -> handler.canCureEffect(effect));
+        return GlobalAirtightUpgradesConsumptionManager.tryConsumeGas(player, this, EquipmentSlot.HEAD, gasConsumption, armorHandler -> armorHandler.canCureEffect(incomingEffect));
     }
 }

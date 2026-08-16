@@ -42,7 +42,7 @@ import net.ty.createcraftedbeginning.api.drillhandlers.AirtightDrillHandler;
 import net.ty.createcraftedbeginning.api.drillhandlers.AirtightDrillHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptionUtils;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.templates.AirtightHandheldDrillMiningTemplates;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.ExperienceConversionUpgrade;
@@ -146,11 +146,11 @@ public final class AirtightHandheldDrillUtils {
         return drill.getOrDefault(CCBDataComponents.DRILL_MINING_DIRECTION, Direction.NORTH);
     }
 
-    public static boolean isInstantBreakable(BlockPos basePos, Level level) {
+    private static boolean isInstantBreakable(BlockPos basePos, Level level) {
         return level.getBlockState(basePos).getDestroySpeed(level, basePos) == 0;
     }
 
-    public static boolean isInstantBreakable(BlockState state, BlockPos pos, Level level) {
+    private static boolean isInstantBreakable(BlockState state, BlockPos pos, Level level) {
         return state.getDestroySpeed(level, pos) == 0;
     }
 
@@ -189,7 +189,7 @@ public final class AirtightHandheldDrillUtils {
         return speed;
     }
 
-    public static float calculateGasConsumptionForBlock(Level level, BlockPos pos, boolean silkTouch, boolean magnet, boolean conversion, boolean liquidReplacement) {
+    private static float calculateGasConsumptionForBlock(Level level, BlockPos pos, boolean silkTouch, boolean magnet, boolean conversion, boolean liquidReplacement) {
         BlockState state = level.getBlockState(pos);
         Block block = state.getBlock();
         if (isInstantBreakable(state, pos, level)) {
@@ -222,7 +222,7 @@ public final class AirtightHandheldDrillUtils {
         return consumption;
     }
 
-    public static float calculateMiningHardnessMultiplier(AirtightHandheldDrillMiningContext context) {
+    private static float calculateMiningHardnessMultiplier(AirtightHandheldDrillMiningContext context) {
         Set<BlockPos> breakSpeedPos = context.breakSpeedPos();
         if (breakSpeedPos.isEmpty()) {
             return 1;
@@ -236,7 +236,7 @@ public final class AirtightHandheldDrillUtils {
         return baseHardness / totalHardness * breakSpeedPos.size();
     }
 
-    public static float calculateMiningSizeMultiplier(AirtightHandheldDrillMiningContext context) {
+    private static float calculateMiningSizeMultiplier(AirtightHandheldDrillMiningContext context) {
         int size = context.breakSpeedPos().size();
         if (size == 0) {
             return 1;
@@ -266,7 +266,7 @@ public final class AirtightHandheldDrillUtils {
         });
     }
 
-    public static double calculateBaseGasConsumption(ItemStack drill, AirtightHandheldDrillMiningContext context) {
+    private static double calculateBaseGasConsumption(ItemStack drill, AirtightHandheldDrillMiningContext context) {
         Set<BlockPos> destructionPos = context.destructionPos();
         if (destructionPos.isEmpty()) {
             return -1;
@@ -278,17 +278,17 @@ public final class AirtightHandheldDrillUtils {
         boolean liquidReplacement = LiquidReplacementUpgrade.INSTANCE.canApply(drill);
         double totalConsumption = destructionPos.stream().mapToDouble(pos -> calculateGasConsumptionForBlock(context.level(), pos, silkTouch, magnet, experienceConversion, liquidReplacement)).sum();
         double baseGasConsumption = 1.5 * Math.pow(totalConsumption, Math.log(2.25));
-        return GasConsumptionUtils.isNonNegativeFinite(baseGasConsumption) ? baseGasConsumption : -1;
+        return GasConsumptions.isNonNegativeFinite(baseGasConsumption) ? baseGasConsumption : -1;
     }
 
-    public static double calculateRawGasConsumption(double baseGasConsumption, Gas gasType) {
-        if (!GasConsumptionUtils.isNonNegativeFinite(baseGasConsumption)) {
+    private static double calculateRawGasConsumption(double baseGasConsumption, Gas gasType) {
+        if (!GasConsumptions.isNonNegativeFinite(baseGasConsumption)) {
             return -1;
         }
 
         AirtightDrillHandler drillHandler = AirtightDrillHandlerUtils.of(gasType);
         double rawConsumption = baseGasConsumption * drillHandler.getConsumptionMultiplier();
-        return GasConsumptionUtils.isNonNegativeFinite(rawConsumption) ? rawConsumption : -1;
+        return GasConsumptions.isNonNegativeFinite(rawConsumption) ? rawConsumption : -1;
     }
 
     private static void destroyBlockAs(ServerLevel level, BlockPos basePos, BlockPos pos, Player player, ItemStack usedTool, boolean magnet, boolean conversion, boolean liquidReplacement, boolean showBreakParticles) {

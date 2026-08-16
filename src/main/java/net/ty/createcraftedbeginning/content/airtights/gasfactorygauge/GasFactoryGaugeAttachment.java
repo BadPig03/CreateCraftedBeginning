@@ -13,14 +13,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasFactoryGaugeAttachment {
+public final class GasFactoryGaugeAttachment {
     private final GasFactoryGaugeBlockEntity blockEntity;
 
-    GasFactoryGaugeAttachment(GasFactoryGaugeBlockEntity blockEntity) {
+    public GasFactoryGaugeAttachment(GasFactoryGaugeBlockEntity blockEntity) {
         this.blockEntity = blockEntity;
     }
 
-    Detection detectAttachedPackager() {
+    public Detection detectAttachedPackager() {
         Level level = blockEntity.getLevel();
         BlockState state = blockEntity.getBlockState();
         if (level == null || !(state.getBlock() instanceof GasFactoryGaugeBlock)) {
@@ -34,7 +34,7 @@ final class GasFactoryGaugeAttachment {
         return level.getBlockEntity(packagerPos) instanceof GasPackagerBlockEntity ? Detection.ATTACHED : Detection.DETACHED;
     }
 
-    @Nullable GasPackagerBlockEntity findAttachedPackager() {
+    @Nullable public GasPackagerBlockEntity findAttachedPackager() {
         Level level = blockEntity.getLevel();
         BlockState state = blockEntity.getBlockState();
         if (level == null || !(state.getBlock() instanceof GasFactoryGaugeBlock)) {
@@ -53,7 +53,7 @@ final class GasFactoryGaugeAttachment {
         return blockEntity.getBlockPos().relative(direction);
     }
 
-    enum Detection {
+    public enum Detection {
         UNAVAILABLE,
         ATTACHED,
         DETACHED

@@ -22,11 +22,11 @@ public class CCBServer extends ConfigBase {
     }
 
     private static class Comments {
-        static String infrastructure = "Core settings for Create: Crafted Beginning.";
-        static String stress = "Fine-tune the kinetic properties of individual components.";
-        static String crates = "Settings for crates added by Create: Crafted Beginning.";
-        static String airtights = "Settings for airtight blocks and items added by Create: Crafted Beginning.";
-        static String equipments = "Settings for equipment added by Create: Crafted Beginning.";
-        static String endDevices = "Settings for endgame mechanical devices added by Create: Crafted Beginning.";
+        private static final String infrastructure = "Core settings for Create: Crafted Beginning.";
+        private static final String stress = "Fine-tune the kinetic properties of individual components.";
+        private static final String crates = "Settings for crates added by Create: Crafted Beginning.";
+        private static final String airtights = "Settings for airtight blocks and items added by Create: Crafted Beginning.";
+        private static final String equipments = "Settings for equipment added by Create: Crafted Beginning.";
+        private static final String endDevices = "Settings for endgame mechanical devices added by Create: Crafted Beginning.";
     }
 }

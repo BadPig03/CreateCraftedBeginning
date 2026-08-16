@@ -10,6 +10,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -33,78 +34,59 @@ import java.util.function.Function;
 public class DefaultCannonHandler implements AirtightCannonHandler, AirtightCannonVisualHandler {
     public static final DefaultCannonHandler INSTANCE = new DefaultCannonHandler();
 
-    private static ExplosionDamageCalculator createDamageCalculator(float knockbackMultiplier) {
-        return new SimpleExplosionDamageCalculator(true, false, Optional.of(knockbackMultiplier), BuiltInRegistries.BLOCK.getTag(BlockTags.BLOCKS_WIND_CHARGE_EXPLOSIONS).map(Function.identity()));
+    private static ExplosionDamageCalculator createDamageCalculator(AirtightCannonShotContext context) {
+        return new SimpleExplosionDamageCalculator(true, false, Optional.of(context.knockbackMultiplier()), BuiltInRegistries.BLOCK.getTag(BlockTags.BLOCKS_WIND_CHARGE_EXPLOSIONS).map(Function.identity())) {
+            @Override
+            public float getKnockbackMultiplier(Entity entity) {
+                if (context.isFriendlyTarget(entity)) {
+                    return 0;
+                }
+                return super.getKnockbackMultiplier(entity);
+            }
+        };
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ItemStack getRenderIcon(Level level) {
         return new ItemStack(Items.WIND_CHARGE);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void renderTrailParticles(Level level, Vec3 pos) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ResourceLocation getTextureLocation() {
         return ResourceLocation.withDefaultNamespace("textures/entity/projectiles/wind_charge.png");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CannonModelType getModelType() {
         return CannonModelType.CORE_ONLY;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CannonAnimationType getAnimationType() {
         return CannonAnimationType.CORE_Y;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getRotationSpeed() {
         return 24;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void explode(Level level, Vec3 pos, AirtightCannonShotContext context) {
         float radius = 1.2f * context.effectMultiplier();
         DamageSource damageSource = new DamageSource(level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DamageTypes.WIND_CHARGE), context.projectile());
-        level.explode(context.projectile(), damageSource, createDamageCalculator(context.knockbackMultiplier()), pos.x(), pos.y(), pos.z(), radius, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
+        level.explode(context.projectile(), damageSource, createDamageCalculator(context), pos.x(), pos.y(), pos.z(), radius, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public float getGasConsumptionMultiplier() {
         return 1;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
     }

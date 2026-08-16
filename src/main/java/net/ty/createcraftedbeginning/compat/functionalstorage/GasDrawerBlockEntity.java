@@ -26,7 +26,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
@@ -39,7 +39,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public final class GasDrawerBlockEntity extends ControllableDrawerTile<GasDrawerBlockEntity> {
     private static final int STORAGE_UPGRADE_SLOTS = 4;
-    private static final long BASE_TOTAL_GAS_CAPACITY = 64 * GasAmountUtils.MILLIBUCKETS_PER_BUCKET;
+    private static final long BASE_TOTAL_GAS_CAPACITY = 64 * GasAmounts.MILLIBUCKETS_PER_BUCKET;
     private static final double BASE_STORAGE_MULTIPLIER = DrawerType.X_1.getSlotAmount();
 
     private final DrawerType drawerType;
@@ -380,7 +380,7 @@ public final class GasDrawerBlockEntity extends ControllableDrawerTile<GasDrawer
         super.syncObject(object);
     }
 
-    void beginTransaction() {
+    public void beginTransaction() {
         if (transactionActive) {
             throw new IllegalStateException("Nested Gas Drawer transactions are not supported");
         }
@@ -389,7 +389,7 @@ public final class GasDrawerBlockEntity extends ControllableDrawerTile<GasDrawer
         transactionDirty = false;
     }
 
-    void endTransaction(boolean commit) {
+    public void endTransaction(boolean commit) {
         boolean dirty = transactionDirty;
         transactionActive = false;
         transactionDirty = false;
@@ -401,7 +401,7 @@ public final class GasDrawerBlockEntity extends ControllableDrawerTile<GasDrawer
         syncObject(gasStorage);
     }
 
-    void onGasChanged() {
+    public void onGasChanged() {
         if (transactionActive) {
             transactionDirty = true;
             return;

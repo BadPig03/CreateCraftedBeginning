@@ -11,31 +11,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public interface AirtightArmHandler {
     SimpleRegistry<Gas, AirtightArmHandler> REGISTRY = SimpleRegistry.create();
 
-    /**
-     * Returns the gas consumption multiplier.
-     *
-     * @return the gas consumption multiplier
-     */
     float getGasConsumptionMultiplier();
 
-    /**
-     * Returns the increased block interaction range.
-     *
-     * @return the increased block interaction range
-     */
     float getIncreasedBlockInteractionRange();
 
-    /**
-     * Returns the increased entity interaction range.
-     *
-     * @return the increased entity interaction range
-     */
     float getIncreasedEntityInteractionRange();
 
-    /**
-     * Returns the increased knockback.
-     *
-     * @return the increased knockback
-     */
     float getIncreasedKnockback();
 }

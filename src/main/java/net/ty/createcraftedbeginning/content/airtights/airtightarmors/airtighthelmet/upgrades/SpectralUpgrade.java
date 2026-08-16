@@ -40,12 +40,12 @@ public enum SpectralUpgrade implements TickingAirtightUpgrade {
 
     private static List<LivingEntity> getNearbyEntities(Player player) {
         BlockPos origin = player.getOnPos();
-        AABB bounds = new AABB(origin).inflate(RADIUS);
-        return player.level().getEntitiesOfClass(LivingEntity.class, bounds, entity -> isValidTarget(origin, entity));
+        AABB scanBounds = new AABB(origin).inflate(RADIUS);
+        return player.level().getEntitiesOfClass(LivingEntity.class, scanBounds, target -> isValidTarget(origin, target));
     }
 
-    private static boolean isValidTarget(BlockPos origin, LivingEntity entity) {
-        return !(entity instanceof Player) && entity.isAlive() && !entity.isRemoved() && origin.closerToCenterThan(entity.position(), RADIUS);
+    private static boolean isValidTarget(BlockPos origin, LivingEntity target) {
+        return !(target instanceof Player) && target.isAlive() && !target.isRemoved() && origin.closerToCenterThan(target.position(), RADIUS);
     }
 
     @Override
@@ -105,13 +105,13 @@ public enum SpectralUpgrade implements TickingAirtightUpgrade {
 
     @Override
     public void applyEffect(Player player) {
-        for (LivingEntity entity : getNearbyEntities(player)) {
-            MobEffectInstance effect = entity.getEffect(MobEffects.GLOWING);
-            if (effect != null && (effect.getAmplifier() != 0 || !effect.endsWithin(REFRESH_THRESHOLD))) {
+        for (LivingEntity target : getNearbyEntities(player)) {
+            MobEffectInstance glowingEffect = target.getEffect(MobEffects.GLOWING);
+            if (glowingEffect != null && (glowingEffect.getAmplifier() != 0 || !glowingEffect.endsWithin(REFRESH_THRESHOLD))) {
                 continue;
             }
 
-            entity.addEffect(new MobEffectInstance(MobEffects.GLOWING, EFFECT_DURATION, 0));
+            target.addEffect(new MobEffectInstance(MobEffects.GLOWING, EFFECT_DURATION, 0));
         }
     }
 

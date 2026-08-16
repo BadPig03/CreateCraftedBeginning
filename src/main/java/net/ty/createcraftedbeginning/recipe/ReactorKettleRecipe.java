@@ -598,5 +598,5 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
         return true;
     }
 
-    private record ItemRequirement(int[] candidateSlots, int matchingItemCount) {}
+    protected record ItemRequirement(int[] candidateSlots, int matchingItemCount) {}
 }

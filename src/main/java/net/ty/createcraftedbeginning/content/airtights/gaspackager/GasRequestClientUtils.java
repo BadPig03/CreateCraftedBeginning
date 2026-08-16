@@ -19,7 +19,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
@@ -197,7 +197,7 @@ public final class GasRequestClientUtils {
     }
 
     private static void addScrollTooltip(List<Component> tooltips, String key, long amount) {
-        tooltips.add(CCBLang.translate(key, GasAmountUtils.formatPrecise(amount)).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+        tooltips.add(CCBLang.translate(key, GasAmounts.formatPrecise(amount)).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
     }
 
     private static void resetRequesterSlot(RedstoneRequesterScreenAccess screenAccessor, RedstoneRequesterMenu requesterMenu, int slotIndex, boolean clear) {

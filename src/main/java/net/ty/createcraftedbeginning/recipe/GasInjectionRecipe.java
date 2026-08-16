@@ -174,7 +174,7 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
         return holder -> holder.value().matches(input, level) && holder.value().matchesGas(gasStack);
     }
 
-    private boolean matchesGas(GasStack gasStack) {
+    protected boolean matchesGas(GasStack gasStack) {
         return getGasIngredient().ingredient().test(gasStack);
     }
 

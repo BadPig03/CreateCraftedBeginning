@@ -5,15 +5,12 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.RegistryLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonShotContext;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -42,8 +39,7 @@ public class PressurizedEnergizedUltrawarmAirCannonHandler extends EnergizedUltr
     }
 
     @Override
-    protected void applyAdditionalEffects(Level level, List<LivingEntity> entities, DamageSource explosionDamageSource, AirtightCannonShotContext context) {
-        super.applyAdditionalEffects(level, entities, explosionDamageSource, context);
-        addIgnition(entities, DEFAULT_DURATION * 2, context.effectMultiplier());
+    protected int getIgnitionDuration() {
+        return DEFAULT_DURATION * 2;
     }
 }

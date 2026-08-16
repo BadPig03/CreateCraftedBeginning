@@ -3,7 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.creativegascanister;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmountUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 
@@ -12,7 +12,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CreativeGasCanisterContainerContents extends GasCanisterContainerContents {
-    private static final long CAPACITY = Integer.MAX_VALUE * GasAmountUtils.MILLIBUCKETS_PER_BUCKET;
+    private static final long CAPACITY = Integer.MAX_VALUE * GasAmounts.MILLIBUCKETS_PER_BUCKET;
 
     public CreativeGasCanisterContainerContents(ItemStack canister) {
         super(canister);
@@ -23,8 +23,8 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
     }
 
     @Override
-    public MachineFillingStrategy getMachineFillingStrategy() {
-        return MachineFillingStrategy.DENY;
+    public MachineFillingMode getMachineFillingMode() {
+        return MachineFillingMode.DENY;
     }
 
     @Override

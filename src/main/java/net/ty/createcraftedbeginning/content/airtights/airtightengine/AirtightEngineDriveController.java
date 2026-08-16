@@ -8,6 +8,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverCore;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
 import org.jetbrains.annotations.Nullable;
@@ -17,7 +18,7 @@ import java.lang.ref.WeakReference;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightEngineDriveController {
+public final class AirtightEngineDriveController {
     private static final String COMPOUND_KEY_GENERATED_SPEED = "GeneratedSpeed";
 
     private final AirtightEngineBlockEntity engine;
@@ -28,23 +29,23 @@ final class AirtightEngineDriveController {
     private float persistedGeneratedSpeed;
     private boolean restoringKineticNetwork;
 
-    AirtightEngineDriveController(AirtightEngineBlockEntity engine) {
+    public AirtightEngineDriveController(AirtightEngineBlockEntity engine) {
         this.engine = engine;
     }
 
-    void beforeInitialize() {
+    public void beforeInitialize() {
         Level level = engine.getLevel();
         restoringKineticNetwork = level != null && !level.isClientSide && engine.hasKineticNetwork() && restoredGeneratedSpeed != 0;
     }
 
-    void afterInitialize() {
+    public void afterInitialize() {
         restoringKineticNetwork = false;
         restoredGeneratedSpeed = 0;
         lastGeneratedSpeed = Float.NaN;
         refreshGeneratedRotationIfNeeded();
     }
 
-    void tickServer() {
+    public void tickServer() {
         if (engine.isEngineOverStressed()) {
             lastGeneratedSpeed = Float.NaN;
             return;
@@ -53,27 +54,27 @@ final class AirtightEngineDriveController {
         refreshGeneratedRotationIfNeeded();
     }
 
-    float getGeneratedSpeed() {
+    public float getGeneratedSpeed() {
         if (restoringKineticNetwork) {
             return restoredGeneratedSpeed;
         }
 
         float generatedSpeed = AirtightEngineBlockEntity.BASE_ROTATION_SPEED * getSpeedModifier() * (getRotationDirection() ? 1 : -1);
-        persistedGeneratedSpeed = Float.isFinite(generatedSpeed) ? generatedSpeed : 0;
+        persistedGeneratedSpeed = GasConsumptions.isFinite(generatedSpeed) ? generatedSpeed : 0;
         return persistedGeneratedSpeed;
     }
 
-    void writePersistent(CompoundTag tag) {
+    public void writePersistent(CompoundTag tag) {
         tag.putFloat(COMPOUND_KEY_GENERATED_SPEED, persistedGeneratedSpeed);
     }
 
-    void readPersistent(CompoundTag tag) {
+    public void readPersistent(CompoundTag tag) {
         float storedSpeed = tag.contains(COMPOUND_KEY_GENERATED_SPEED) ? tag.getFloat(COMPOUND_KEY_GENERATED_SPEED) : 0;
-        restoredGeneratedSpeed = Float.isFinite(storedSpeed) ? storedSpeed : 0;
+        restoredGeneratedSpeed = GasConsumptions.isFinite(storedSpeed) ? storedSpeed : 0;
         persistedGeneratedSpeed = restoredGeneratedSpeed;
     }
 
-    void rebuildKineticNetwork() {
+    public void rebuildKineticNetwork() {
         Level level = engine.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -83,7 +84,7 @@ final class AirtightEngineDriveController {
         engine.rebuildKineticNetwork();
     }
 
-    @Nullable AirtightAssemblyDriverCore getDriverCore() {
+    @Nullable public AirtightAssemblyDriverCore getDriverCore() {
         AirtightTankBlockEntity controller = getTankController();
         return controller == null ? null : controller.getCore();
     }

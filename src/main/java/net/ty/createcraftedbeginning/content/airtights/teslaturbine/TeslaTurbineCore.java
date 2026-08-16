@@ -42,15 +42,15 @@ public class TeslaTurbineCore {
         controller.lazyTick();
     }
 
-    void initialize() {
+    public void initialize() {
         controller.initialize();
     }
 
-    void onSpeedChanged() {
+    public void onSpeedChanged() {
         controller.onSpeedChanged();
     }
 
-    float getGeneratedSpeed() {
+    public float getGeneratedSpeed() {
         return controller.getGeneratedSpeed();
     }
 
@@ -103,7 +103,7 @@ public class TeslaTurbineCore {
         return turbine;
     }
 
-    TeslaTurbineController getController() {
+    public TeslaTurbineController getController() {
         return controller;
     }
 }

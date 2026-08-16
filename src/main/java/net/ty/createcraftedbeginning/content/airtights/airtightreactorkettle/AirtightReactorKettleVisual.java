@@ -21,13 +21,13 @@ import java.util.function.Consumer;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightReactorKettleVisual extends AbstractBlockEntityVisual<AirtightReactorKettleBlockEntity> implements SimpleDynamicVisual {
-    private final TransformedInstance mixer;
-    private final TransformedInstance[] leftWindows = new TransformedInstance[Iterate.horizontalDirections.length];
-    private final TransformedInstance[] rightWindows = new TransformedInstance[Iterate.horizontalDirections.length];
+    protected final TransformedInstance mixer;
+    protected final TransformedInstance[] leftWindows = new TransformedInstance[Iterate.horizontalDirections.length];
+    protected final TransformedInstance[] rightWindows = new TransformedInstance[Iterate.horizontalDirections.length];
 
-    private float lastMixerAngle = Float.NaN;
-    private float lastMixerOffset = Float.NaN;
-    private float lastWindowDistance = Float.NaN;
+    protected float lastMixerAngle = Float.NaN;
+    protected float lastMixerOffset = Float.NaN;
+    protected float lastWindowDistance = Float.NaN;
 
     public AirtightReactorKettleVisual(VisualizationContext context, AirtightReactorKettleBlockEntity blockEntity, float partialTick) {
         super(context, blockEntity, partialTick);
@@ -40,7 +40,7 @@ public class AirtightReactorKettleVisual extends AbstractBlockEntityVisual<Airti
         animate(partialTick);
     }
 
-    private void animate(float partialTick) {
+    protected void animate(float partialTick) {
         float mixerAngle = blockEntity.getMixerRotation().getValue(partialTick) * Mth.DEG_TO_RAD;
         float mixerOffset = blockEntity.getMixerOffset(partialTick);
         if (mixerAngle != lastMixerAngle || mixerOffset != lastMixerOffset) {

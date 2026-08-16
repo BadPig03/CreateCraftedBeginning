@@ -46,11 +46,11 @@ public abstract class BaseTemplate {
         return getBaseAreaStream(params).map(pos -> applyOffset(pos, direction, relativeOffset)).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    private BlockPos applyOffset(BlockPos pos, Direction direction, BlockPos relativeOffset) {
+    protected BlockPos applyOffset(BlockPos pos, Direction direction, BlockPos relativeOffset) {
         return rotate(pos, direction).offset(relativeOffset);
     }
 
-    private BlockPos getRelativeOffset(Direction direction, int @NotNull [] relativeParams) {
+    protected BlockPos getRelativeOffset(Direction direction, int @NotNull [] relativeParams) {
         return rotate(new BlockPos(-relativeParams[0], -relativeParams[1], -relativeParams[2]), direction);
     }
 

@@ -15,7 +15,7 @@ public final class GasDrawerHandler implements IGasHandler {
     private final GasDrawerBlockEntity owner;
     private final GasDrawerTank[] tanks;
 
-    GasDrawerHandler(GasDrawerBlockEntity owner, int size, IntFunction<GasDrawerTank> tankFactory) {
+    public GasDrawerHandler(GasDrawerBlockEntity owner, int size, IntFunction<GasDrawerTank> tankFactory) {
         this.owner = owner;
         tanks = new GasDrawerTank[size];
         for (int tank = 0; tank < size; tank++) {
@@ -23,7 +23,7 @@ public final class GasDrawerHandler implements IGasHandler {
         }
     }
 
-    static boolean hasResources(List<GasStack> resources) {
+    public static boolean hasResources(List<GasStack> resources) {
         for (GasStack resource : resources) {
             if (resource == null || resource.isEmpty()) {
                 continue;
@@ -34,15 +34,15 @@ public final class GasDrawerHandler implements IGasHandler {
         return false;
     }
 
-    GasDrawerTank[] getInternalTanks() {
+    public GasDrawerTank[] getInternalTanks() {
         return tanks;
     }
 
-    GasDrawerTank getInternalTank(int tank) {
+    public GasDrawerTank getInternalTank(int tank) {
         return tanks[tank];
     }
 
-    boolean isEmpty() {
+    public boolean isEmpty() {
         for (GasDrawerTank tank : tanks) {
             if (tank.getStoredStack().isEmpty()) {
                 continue;
@@ -198,7 +198,7 @@ public final class GasDrawerHandler implements IGasHandler {
         return tank >= 0 && tank < tanks.length;
     }
 
-    GasStack[] snapshotContents() {
+    public GasStack[] snapshotContents() {
         GasStack[] snapshot = new GasStack[tanks.length];
         for (int tank = 0; tank < tanks.length; tank++) {
             snapshot[tank] = tanks[tank].getStoredStack().copy();
@@ -206,17 +206,17 @@ public final class GasDrawerHandler implements IGasHandler {
         return snapshot;
     }
 
-    void restoreContents(GasStack[] snapshot) {
+    public void restoreContents(GasStack[] snapshot) {
         for (int tank = 0; tank < tanks.length; tank++) {
             tanks[tank].setGasStack(snapshot[tank].copy());
         }
     }
 
-    void beginTransaction() {
+    public void beginTransaction() {
         owner.beginTransaction();
     }
 
-    void endTransaction(boolean commit) {
+    public void endTransaction(boolean commit) {
         owner.endTransaction(commit);
     }
 }

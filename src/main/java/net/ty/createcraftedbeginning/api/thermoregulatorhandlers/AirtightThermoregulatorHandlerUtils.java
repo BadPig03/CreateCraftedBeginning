@@ -7,21 +7,12 @@ import net.ty.createcraftedbeginning.api.CCBAPI;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-/**
- * Provides lookup and registration helpers for airtight thermoregulator handlers.
- */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class AirtightThermoregulatorHandlerUtils {
     private AirtightThermoregulatorHandlerUtils() {
     }
 
-    /**
-     * Resolves the airtight thermoregulator handler associated with the supplied input.
-     *
-     * @param block the target block
-     * @return the resolved airtight thermoregulator handler
-     */
     public static AirtightThermoregulatorHandler of(Block block) {
         AirtightThermoregulatorHandler thermoregulatorHandler = AirtightThermoregulatorHandler.REGISTRY.get(block);
         if (thermoregulatorHandler == null) {
@@ -30,12 +21,6 @@ public final class AirtightThermoregulatorHandlerUtils {
         return thermoregulatorHandler;
     }
 
-    /**
-     * Registers a custom airtight thermoregulator handler for the supplied target.
-     *
-     * @param block   the target block
-     * @param handler the handler to register or invoke
-     */
     public static void register(Block block, AirtightThermoregulatorHandler handler) {
         AirtightThermoregulatorHandler thermoregulatorHandler = AirtightThermoregulatorHandler.REGISTRY.get(block);
         if (thermoregulatorHandler != null) {

@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.crates;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import net.neoforged.neoforge.items.IItemHandler;
@@ -21,21 +20,13 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
     private static final String COMPOUND_KEY_CONTENT = "Content";
     private static final String COMPOUND_KEY_COUNT = "Count";
 
-    private final IntSupplier maxCountSupplier;
-    private final Predicate<ItemStack> itemValidator;
-    private final Runnable contentsChangedListener;
+    protected final IntSupplier maxCountSupplier;
+    protected final Predicate<ItemStack> itemValidator;
+    protected final Runnable contentsChangedListener;
     protected ItemStack content = ItemStack.EMPTY;
     protected int count;
-    private int batchDepth;
-    private boolean batchChanged;
-
-    public CrateItemStackHandler(int maxCount) {
-        this(() -> maxCount);
-    }
-
-    public CrateItemStackHandler(IntSupplier maxCountSupplier) {
-        this(maxCountSupplier, stack -> true, () -> {});
-    }
+    protected int batchDepth;
+    protected boolean batchChanged;
 
     public CrateItemStackHandler(IntSupplier maxCountSupplier, Predicate<ItemStack> itemValidator, Runnable contentsChangedListener) {
         this.maxCountSupplier = Objects.requireNonNull(maxCountSupplier);
@@ -150,11 +141,6 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
         return content.isEmpty() ? ItemStack.EMPTY : content.copy();
     }
 
-    public boolean isStoredItem(int slot, Item item) {
-        validateSlotIndex(slot);
-        return !content.isEmpty() && content.is(item);
-    }
-
     @Override
     public void setStackInSlot(int slot, ItemStack stack) {
         setStoredItems(slot, stack, Math.min(stack.getCount(), getMaxCount()));
@@ -170,7 +156,7 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
         applyStoredItems(stack, newCount, true);
     }
 
-    final void initializeStoredItems(ItemStack stack, int newCount) {
+    public final void initializeStoredItems(ItemStack stack, int newCount) {
         applyStoredItems(stack, newCount, false);
     }
 
@@ -178,7 +164,7 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
         return !stack.isEmpty() && itemValidator.test(stack);
     }
 
-    private boolean isCompatibleItem(ItemStack stack) {
+    protected boolean isCompatibleItem(ItemStack stack) {
         return passesItemValidator(stack) && (content.isEmpty() || ItemStack.isSameItemSameComponents(content, stack));
     }
 
@@ -215,7 +201,7 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
         }
     }
 
-    private void applyStoredItems(ItemStack stack, int newCount, boolean notify) {
+    protected void applyStoredItems(ItemStack stack, int newCount, boolean notify) {
         ItemStack normalizedContent;
         int normalizedCount;
         if (stack.isEmpty() || newCount <= 0) {

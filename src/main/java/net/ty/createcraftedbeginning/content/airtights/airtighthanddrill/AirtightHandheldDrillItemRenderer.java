@@ -30,7 +30,7 @@ import java.util.WeakHashMap;
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID, value = Dist.CLIENT)
 public class AirtightHandheldDrillItemRenderer extends CustomRenderedItemModelRenderer {
-    private final Map<ItemStack, Float> rotationAngles = new WeakHashMap<>();
+    protected final Map<ItemStack, Float> rotationAngles = new WeakHashMap<>();
 
     @SubscribeEvent
     public static void register(RegisterClientExtensionsEvent event) {

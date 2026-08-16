@@ -254,5 +254,5 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
         renderItems(kettle, fluidLevel, partialTicks, poseStack, buffer, light, overlay);
     }
 
-    private record ItemPlacement(Vec3 position, float angle, Vec3[] copyOffsets) {}
+    protected record ItemPlacement(Vec3 position, float angle, Vec3[] copyOffsets) {}
 }

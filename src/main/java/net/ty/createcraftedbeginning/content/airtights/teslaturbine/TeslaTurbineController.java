@@ -9,7 +9,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class TeslaTurbineController {
+public final class TeslaTurbineController {
     private final TeslaTurbineCore core;
     private final TeslaTurbineBlockEntity turbine;
 
@@ -17,12 +17,12 @@ final class TeslaTurbineController {
     private boolean clientDirty;
     private float lastGeneratedSpeed = Float.NaN;
 
-    TeslaTurbineController(TeslaTurbineCore core, TeslaTurbineBlockEntity turbine) {
+    public TeslaTurbineController(TeslaTurbineCore core, TeslaTurbineBlockEntity turbine) {
         this.core = core;
         this.turbine = turbine;
     }
 
-    void tick() {
+    public void tick() {
         Level level = turbine.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -38,7 +38,7 @@ final class TeslaTurbineController {
         refreshGeneratedRotationIfNeeded();
     }
 
-    void lazyTick() {
+    public void lazyTick() {
         Level level = turbine.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -47,12 +47,12 @@ final class TeslaTurbineController {
         core.getStructureManager().tick();
     }
 
-    void initialize() {
+    public void initialize() {
         lastGeneratedSpeed = Float.NaN;
         refreshGeneratedRotationIfNeeded();
     }
 
-    void onSpeedChanged() {
+    public void onSpeedChanged() {
         Level level = turbine.getLevel();
         if (level == null || level.isClientSide || turbine.getSpeed() == 0 || getGeneratedSpeed() == 0) {
             return;
@@ -70,26 +70,26 @@ final class TeslaTurbineController {
         turbine.getAdvancementBehaviour().awardPlayer(CCBAdvancements.MIRACLE_OF_ENGINEERING);
     }
 
-    float getGeneratedSpeed() {
+    public float getGeneratedSpeed() {
         int direction = core.getFlowMeter().isClockwiseFlow() ? -1 : 1;
         int modifier = turbine.getBlockState().getValue(TeslaTurbineBlock.AXIS) == Axis.Z ? -1 : 1;
         return TeslaTurbineUtils.BASE_ROTATION_SPEED * core.getLevelCalculator().getCurrentLevel() * direction * modifier;
     }
 
-    void markForSave() {
+    public void markForSave() {
         saveDirty = true;
     }
 
-    void markForClientSync() {
+    public void markForClientSync() {
         clientDirty = true;
     }
 
-    void markForSaveAndClientSync() {
+    public void markForSaveAndClientSync() {
         saveDirty = true;
         clientDirty = true;
     }
 
-    void onReadComplete() {
+    public void onReadComplete() {
         saveDirty = false;
         clientDirty = false;
         lastGeneratedSpeed = Float.NaN;

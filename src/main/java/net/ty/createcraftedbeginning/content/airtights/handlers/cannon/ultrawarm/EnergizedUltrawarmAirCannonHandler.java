@@ -41,9 +41,11 @@ public class EnergizedUltrawarmAirCannonHandler extends UltrawarmAirCannonHandle
             double offsetZ = (random.nextDouble() - 0.5) * 0.6;
             level.addParticle(ParticleTypes.SOUL_FIRE_FLAME, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, (random.nextDouble() - 0.5) * 0.02, random.nextDouble() * 0.02 + 0.01, (random.nextDouble() - 0.5) * 0.02);
             level.addParticle(ParticleTypes.WARPED_SPORE, pos.x, pos.y, pos.z, 0, 0, 0);
-            if (random.nextFloat() < 0.25f) {
-                level.addParticle(ParticleTypes.SMOKE, pos.x, pos.y + 0.2, pos.z, 0, 0, 0);
+            if (!(random.nextFloat() < 0.25f)) {
+                continue;
             }
+
+            level.addParticle(ParticleTypes.SMOKE, pos.x, pos.y + 0.2, pos.z, 0, 0, 0);
         }
     }
 
@@ -64,8 +66,9 @@ public class EnergizedUltrawarmAirCannonHandler extends UltrawarmAirCannonHandle
 
     @Override
     protected void applyAdditionalEffects(Level level, List<LivingEntity> entities, DamageSource explosionDamageSource, AirtightCannonShotContext context) {
+        List<LivingEntity> longBurningEntities = entities.stream().filter(entity -> entity.getRemainingFireTicks() >= THRESHOLD).toList();
         super.applyAdditionalEffects(level, entities, explosionDamageSource, context);
         float baseBonusDamage = ENERGIZED_BONUS_DAMAGE * context.effectMultiplier();
-        AirtightCannonUtils.applyBonusDamage(entities, explosionDamageSource, entity -> entity.getRemainingFireTicks() >= THRESHOLD ? baseBonusDamage * 2 : baseBonusDamage);
+        AirtightCannonUtils.applyBonusDamage(entities, explosionDamageSource, entity -> longBurningEntities.contains(entity) ? baseBonusDamage * 2 : baseBonusDamage);
     }
 }

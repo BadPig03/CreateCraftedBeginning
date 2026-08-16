@@ -16,8 +16,8 @@ import java.util.function.Consumer;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightForgingPressVisual extends AbstractBlockEntityVisual<AirtightForgingPressBlockEntity> implements SimpleDynamicVisual {
-    private final TransformedInstance head;
-    private float lastDistance = Float.NaN;
+    protected final TransformedInstance head;
+    protected float lastDistance = Float.NaN;
 
     public AirtightForgingPressVisual(VisualizationContext context, AirtightForgingPressBlockEntity blockEntity, float partialTick) {
         super(context, blockEntity, partialTick);
@@ -25,7 +25,7 @@ public class AirtightForgingPressVisual extends AbstractBlockEntityVisual<Airtig
         animate(partialTick);
     }
 
-    private void animate(float partialTick) {
+    protected void animate(float partialTick) {
         float distance = blockEntity.getPressHeadDistance(partialTick);
         if (distance == lastDistance) {
             return;

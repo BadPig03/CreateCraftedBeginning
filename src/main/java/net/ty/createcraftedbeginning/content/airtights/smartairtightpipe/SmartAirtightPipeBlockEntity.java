@@ -20,7 +20,7 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public class SmartAirtightPipeBlockEntity extends AbstractAirtightPipeBlockEntity {
     @Nullable
-    private GasFilteringBehaviour filter;
+    protected GasFilteringBehaviour filter;
 
     public SmartAirtightPipeBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);

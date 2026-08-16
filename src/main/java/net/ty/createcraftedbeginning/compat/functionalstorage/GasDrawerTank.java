@@ -13,12 +13,12 @@ import java.util.function.Predicate;
 public final class GasDrawerTank extends GasTank {
     private final GasDrawerBlockEntity owner;
 
-    GasDrawerTank(long capacity, GasDrawerBlockEntity owner, Predicate<GasStack> validator) {
+    public GasDrawerTank(long capacity, GasDrawerBlockEntity owner, Predicate<GasStack> validator) {
         super(capacity, validator);
         this.owner = owner;
     }
 
-    GasStack getStoredStack() {
+    public GasStack getStoredStack() {
         return gas;
     }
 

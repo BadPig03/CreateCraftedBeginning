@@ -39,14 +39,14 @@ public final class CanisterContainerSuppliers {
     private CanisterContainerSuppliers() {
     }
 
-    public static void addCanisterContainerSuppliers(Function<Player, List<IGasCanisterContainer>> supplier) {
+    private static void addCanisterContainerSuppliers(Function<Player, List<IGasCanisterContainer>> supplier) {
         CANISTER_CONTAINER_SUPPLIERS.add(supplier);
         synchronized (SUPPLIER_CACHE) {
             SUPPLIER_CACHE.clear();
         }
     }
 
-    public static List<IGasCanisterContainer> getCanisterContainersInInventory(Player player) {
+    private static List<IGasCanisterContainer> getCanisterContainersInInventory(Player player) {
         List<IGasCanisterContainer> containers = new ArrayList<>();
         ItemStack offhand = player.getOffhandItem();
         if (!offhand.isEmpty()) {
