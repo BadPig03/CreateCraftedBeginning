@@ -15,10 +15,8 @@ import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
 import net.ty.createcraftedbeginning.api.gascanisters.events.GasTypeChangedEvent;
-import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.AirtightExtendArmUtils;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
-import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers.AffordableFuel;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackContainerContents;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
@@ -41,7 +39,7 @@ public class GasCanisterEvents {
             return;
         }
 
-        OverlaySelection selection = findCurrentOverlay(player);
+        OverlaySelection selection = findFirstAvailable(CanisterContainerSuppliers.getAllSuppliers(player));
         Gas currentGasType = selection.content().getGasType();
         Gas storedGasType = CanisterContainerClients.getStoredGasType(player);
         if (currentGasType != storedGasType) {
@@ -57,40 +55,12 @@ public class GasCanisterEvents {
         LAST_OVERLAY_STATES.remove(event.getEntity());
     }
 
-    private static OverlaySelection findCurrentOverlay(Player player) {
-        List<IGasCanisterContainer> containers = CanisterContainerSuppliers.getAllSuppliers(player);
-        Gas preferredGas = AirtightExtendArmUtils.getCurrentFuelSelection(player).map(AffordableFuel::gasType).orElse(GasStack.EMPTY.getGasType());
-
-        if (!preferredGas.isEmpty()) {
-            OverlaySelection preferred = findFirstMatching(containers, preferredGas);
-            if (!preferred.content().isEmpty()) {
-                return preferred;
-            }
-        }
-        return findFirstAvailable(containers);
-    }
-
     private static OverlaySelection findFirstAvailable(List<IGasCanisterContainer> containers) {
         for (IGasCanisterContainer container : containers) {
             for (int tank = 0; tank < container.getTanks(); tank++) {
                 GasStack content = container.getGasInTank(tank);
                 long capacity = container.getTankCapacity(tank);
                 if (content.isEmpty() || capacity <= 0) {
-                    continue;
-                }
-
-                return createSelection(container, tank, content, capacity);
-            }
-        }
-        return OverlaySelection.EMPTY;
-    }
-
-    private static OverlaySelection findFirstMatching(List<IGasCanisterContainer> containers, Gas gasType) {
-        for (IGasCanisterContainer container : containers) {
-            for (int tank = 0; tank < container.getTanks(); tank++) {
-                GasStack content = container.getGasInTank(tank);
-                long capacity = container.getTankCapacity(tank);
-                if (content.isEmpty() || !content.is(gasType) || capacity <= 0) {
                     continue;
                 }
 

@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightencasedpipe;
 
-import com.simibubi.create.AllItems;
 import com.simibubi.create.AllSpecialTextures;
 import com.simibubi.create.content.equipment.goggles.GogglesItem;
 import net.createmod.catnip.data.Iterate;
@@ -11,11 +10,11 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.common.Tags.Items;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -71,6 +70,6 @@ public final class AirtightEncasedPipeOutlineRenderer {
     }
 
     private static boolean isHoldingWrench(LocalPlayer player) {
-        return AllItems.WRENCH.isIn(player.getItemInHand(InteractionHand.MAIN_HAND)) || AllItems.WRENCH.isIn(player.getItemInHand(InteractionHand.OFF_HAND));
+        return player.getMainHandItem().is(Items.TOOLS_WRENCH) || player.getOffhandItem().is(Items.TOOLS_WRENCH);
     }
 }

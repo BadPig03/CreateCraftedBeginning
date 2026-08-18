@@ -13,7 +13,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
-import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -42,10 +41,6 @@ public final class AirtightChestplateUpgradeRegistry {
 
     public static List<AirtightUpgradeStatus> getDefaultUpgradeList() {
         return REGISTRY.getDefaultStatuses();
-    }
-
-    public static void forEach(Consumer<AirtightUpgrade> action) {
-        REGISTRY.forEach(action);
     }
 
     public static void tick(Player player, ItemStack item) {

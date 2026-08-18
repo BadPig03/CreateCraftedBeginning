@@ -17,9 +17,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID)
-public class AirtightCannonEvents {
+class AirtightCannonEvents {
+    private AirtightCannonEvents() {
+    }
+
     @SubscribeEvent
-    public static void onAirtightCannonKillEntity(LivingDeathEvent event) {
+    private static void onAirtightCannonKillEntity(LivingDeathEvent event) {
         LivingEntity killedEntity = event.getEntity();
         if (killedEntity.level().isClientSide || killedEntity.getType().getCategory() != MobCategory.MONSTER) {
             return;
@@ -36,5 +39,4 @@ public class AirtightCannonEvents {
 
         CCBAdvancements.WHO_IS_THE_BREEZE_NOW.awardTo(player);
     }
-
 }

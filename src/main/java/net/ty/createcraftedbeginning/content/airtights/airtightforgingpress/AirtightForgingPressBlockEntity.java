@@ -49,23 +49,23 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     private static final int MAX_OUTPUT_SLOT = 8;
     private static final int LAZY_TICK_RATE = 4;
 
-    protected final AirtightForgingPressCore core;
-    protected final AirtightForgingPressController controller;
-    protected final AirtightForgingPressCrafting crafting;
-    protected final AirtightForgingPressSerialization serialization;
-    protected final IItemHandler inputOutputCapability;
-    protected final IItemHandlerModifiable recipeInputCapability;
-    protected final SmartInventory inputInventory;
-    protected final SmartInventory outputInventory;
-    protected final SmartInventory pressHeadInventory;
-    protected final SmartInventory processingInventory;
+    private final AirtightForgingPressCore core;
+    private final AirtightForgingPressController controller;
+    private final AirtightForgingPressCrafting crafting;
+    private final AirtightForgingPressSerialization serialization;
+    private final IItemHandler inputOutputCapability;
+    private final IItemHandlerModifiable recipeInputCapability;
+    private final SmartInventory inputInventory;
+    private final SmartInventory outputInventory;
+    private final SmartInventory pressHeadInventory;
+    private final SmartInventory processingInventory;
 
-    protected DeferralBehaviour updateChecker;
-    protected IFluidHandler fluidCapability;
-    protected IGasHandler gasCapability;
-    protected SmartFluidTankBehaviour fluidTank;
-    protected SmartGasTankBehaviour gasTank;
-    protected ItemStack recipeFilter = ItemStack.EMPTY;
+    private DeferralBehaviour updateChecker;
+    private IFluidHandler fluidCapability;
+    private IGasHandler gasCapability;
+    private SmartFluidTankBehaviour fluidTank;
+    private SmartGasTankBehaviour gasTank;
+    private ItemStack recipeFilter = ItemStack.EMPTY;
 
     public AirtightForgingPressBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -88,11 +88,11 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS.get(), (press, direction) -> press.pressHeadInventory);
     }
 
-    public static int getFluidCapacity() {
+    private static int getFluidCapacity() {
         return Math.max(1, CCBConfig.server().airtights.forgingPressFluidCapacity.get()) * FluidType.BUCKET_VOLUME;
     }
 
-    public static long getGasCapacity() {
+    private static long getGasCapacity() {
         return Math.max(1, CCBConfig.server().airtights.forgingPressGasCapacity.get()) * GasAmounts.MILLIBUCKETS_PER_BUCKET;
     }
 
@@ -124,7 +124,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     }
 
     @Override
-    public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
         serialization.write(compoundTag, provider);
     }
@@ -171,28 +171,8 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         return new Single(worldPosition);
     }
 
-    public void scheduleUpdate() {
-        updateChecker.scheduleUpdate();
-    }
-
     public void startProcessInPonderLevel() {
         controller.startProcessInPonderLevel();
-    }
-
-    public boolean isEmpty() {
-        return inputInventory.isEmpty() && outputInventory.isEmpty() && processingInventory.isEmpty() && pressHeadInventory.isEmpty() && fluidTank.isEmpty() && gasTank.isEmpty();
-    }
-
-    public boolean hasRecipeInputs() {
-        return !inputInventory.isEmpty() || !processingInventory.isEmpty() || !fluidTank.isEmpty() || !gasTank.isEmpty();
-    }
-
-    public void notifyContentsChanged() {
-        if (controller == null) {
-            return;
-        }
-
-        controller.notifyContentsChanged();
     }
 
     @Override
@@ -253,15 +233,31 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         return inputOutputCapability;
     }
 
-    public IItemHandlerModifiable getRecipeInputCapability() {
+    void scheduleUpdate() {
+        updateChecker.scheduleUpdate();
+    }
+
+    boolean hasRecipeInputs() {
+        return !inputInventory.isEmpty() || !processingInventory.isEmpty() || !fluidTank.isEmpty() || !gasTank.isEmpty();
+    }
+
+    void notifyContentsChanged() {
+        if (controller == null) {
+            return;
+        }
+
+        controller.notifyContentsChanged();
+    }
+
+    IItemHandlerModifiable getRecipeInputCapability() {
         return recipeInputCapability;
     }
 
-    public ItemStack getRecipeFilter() {
+    ItemStack getRecipeFilter() {
         return recipeFilter.copy();
     }
 
-    public void setRecipeFilter(ItemStack stack) {
+    void setRecipeFilter(ItemStack stack) {
         ItemStack normalized = stack.isEmpty() ? ItemStack.EMPTY : stack.copyWithCount(1);
         if (ItemStack.matches(recipeFilter, normalized)) {
             return;
@@ -274,31 +270,31 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         sendData();
     }
 
-    public float getPressHeadDistance(float partialTicks) {
+    float getPressHeadDistance(float partialTicks) {
         return controller.getPressHeadDistance(partialTicks);
     }
 
-    public AirtightForgingPressCore getCore() {
+    AirtightForgingPressCore getCore() {
         return core;
     }
 
-    public SmartFluidTankBehaviour getFluidTankBehaviour() {
+    SmartFluidTankBehaviour getFluidTankBehaviour() {
         return fluidTank;
     }
 
-    public SmartGasTankBehaviour getGasTankBehaviour() {
+    SmartGasTankBehaviour getGasTankBehaviour() {
         return gasTank;
     }
 
-    public void loadRecipeFilter(ItemStack stack) {
+    void loadRecipeFilter(ItemStack stack) {
         recipeFilter = stack.isEmpty() ? ItemStack.EMPTY : stack.copy();
     }
 
-    protected boolean updateForgingPress() {
+    private boolean updateForgingPress() {
         return controller.updateForgingPress();
     }
 
-    protected void syncRecipeFilterReplicas() {
+    private void syncRecipeFilterReplicas() {
         if (level == null) {
             return;
         }
@@ -309,9 +305,11 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
             }
 
             BlockPos filterPos = worldPosition.offset(position.getStructureOffset());
-            if (level.getBlockEntity(filterPos) instanceof AirtightForgingPressStructuralBlockEntity structural) {
-                structural.syncFilterFromMaster(recipeFilter);
+            if (!(level.getBlockEntity(filterPos) instanceof AirtightForgingPressStructuralBlockEntity structural)) {
+                continue;
             }
+            
+            structural.syncFilterFromMaster(recipeFilter);
         }
     }
 }

@@ -14,10 +14,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightAssemblyDriverGasHandler implements IGasHandler {
+final class AirtightAssemblyDriverGasHandler implements IGasHandler {
     private final AirtightAssemblyDriverFlowMeter flowMeter;
 
-    public AirtightAssemblyDriverGasHandler(AirtightAssemblyDriverFlowMeter flowMeter) {
+    AirtightAssemblyDriverGasHandler(AirtightAssemblyDriverFlowMeter flowMeter) {
         this.flowMeter = flowMeter;
     }
 

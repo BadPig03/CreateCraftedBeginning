@@ -22,7 +22,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
-public class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWindCharge> {
+class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWindCharge> {
     private static final String NAME_BONE = "bone";
     private static final String NAME_WIND_OUTER = "wind_outer";
     private static final String NAME_WIND_INNER = "wind_inner";
@@ -33,7 +33,7 @@ public class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWin
     private final ModelPart windOuter;
     private final ModelPart windInner;
 
-    public AirtightCannonWindChargeModel(ModelPart root) {
+    AirtightCannonWindChargeModel(ModelPart root) {
         super(RenderType::entityTranslucent);
         bone = root.getChild(NAME_BONE);
         windOuter = bone.getChild(NAME_WIND_OUTER);
@@ -41,7 +41,7 @@ public class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWin
         core = bone.getChild(NAME_CORE);
     }
 
-    public static LayerDefinition createLayerDefinition(CannonModelType modelType) {
+    static LayerDefinition createLayerDefinition(CannonModelType modelType) {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
         PartDefinition bone = root.addOrReplaceChild(NAME_BONE, CubeListBuilder.create(), PartPose.offset(0, 0, 0));
@@ -63,7 +63,7 @@ public class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWin
         return LayerDefinition.create(mesh, 64, 32);
     }
 
-    public void setupAnimation(CannonAnimationType animationType, float rotationSpeed, float ageInTicks) {
+    void setupAnimation(CannonAnimationType animationType, float rotationSpeed, float ageInTicks) {
         resetRotations();
         float rotation = ageInTicks * rotationSpeed * Mth.DEG_TO_RAD;
         switch (animationType) {

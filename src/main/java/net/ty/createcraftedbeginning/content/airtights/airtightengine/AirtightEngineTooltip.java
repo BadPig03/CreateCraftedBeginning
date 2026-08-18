@@ -15,11 +15,11 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightEngineTooltip {
+final class AirtightEngineTooltip {
     private AirtightEngineTooltip() {
     }
 
-    public static void addGoggleInformation(List<Component> tooltip, boolean clockwise, float generatedSpeed) {
+    static void addGoggleInformation(List<Component> tooltip, boolean clockwise, float generatedSpeed) {
         CCBLang.translate("gui.airtight_engine").forGoggles(tooltip);
         CCBLang.translate("gui.airtight_engine.rotation_direction").style(ChatFormatting.GRAY).forGoggles(tooltip);
         String directionKey = clockwise ? "gui.airtight_engine.rotation_direction.clockwise" : "gui.airtight_engine.rotation_direction.counter_clockwise";

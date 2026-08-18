@@ -222,7 +222,7 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
     }
 
     @Override
-    public boolean isAirtight(BlockPos currentPos, BlockState currentState, Direction oppositeDirection) {
+    public boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace) {
         return true;
     }
 }

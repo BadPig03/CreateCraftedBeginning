@@ -29,8 +29,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @EventBusSubscriber(Dist.CLIENT)
 public class AirtightChestplateFirstPersonRenderer {
     private static final ResourceLocation CHESTPLATE_ARM_LOCATION = CCBAPI.asResource("textures/models/armor/airtight_chestplate_arm.png");
-
     private static boolean rendererActive;
+
+    private AirtightChestplateFirstPersonRenderer() {
+    }
 
     public static void tick() {
         Minecraft mc = Minecraft.getInstance();

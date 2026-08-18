@@ -25,12 +25,12 @@ import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public record AirtightHandheldDrillMiningContext(Level level, BlockPos basePos, Set<BlockPos> totalPos, Set<BlockPos> protectedPos, Set<BlockPos> unbreakablePos, Set<BlockPos> liquidPos, Set<BlockPos> instantDestructionPos, Set<BlockPos> destructionPos, Set<BlockPos> breakSpeedPos, float baseHardness, float totalBreakHardness) {
-    public static AirtightHandheldDrillMiningContext of(ItemStack drill, BlockPos basePos, Level level) {
+record AirtightHandheldDrillMiningContext(Level level, BlockPos basePos, Set<BlockPos> totalPos, Set<BlockPos> protectedPos, Set<BlockPos> unbreakablePos, Set<BlockPos> liquidPos, Set<BlockPos> instantDestructionPos, Set<BlockPos> destructionPos, Set<BlockPos> breakSpeedPos, float baseHardness, float totalBreakHardness) {
+    static AirtightHandheldDrillMiningContext of(ItemStack drill, BlockPos basePos, Level level) {
         return of(drill, basePos, level, level.getBlockState(basePos));
     }
 
-    public static AirtightHandheldDrillMiningContext of(ItemStack drill, BlockPos basePos, Level level, BlockState baseState) {
+    static AirtightHandheldDrillMiningContext of(ItemStack drill, BlockPos basePos, Level level, BlockState baseState) {
         Set<BlockPos> totalPos = getTotalPos(drill, basePos, level, baseState);
         Set<BlockPos> protectedPos = new LinkedHashSet<>();
         Set<BlockPos> unbreakablePos = new LinkedHashSet<>();
@@ -40,7 +40,7 @@ public record AirtightHandheldDrillMiningContext(Level level, BlockPos basePos, 
         Set<BlockPos> breakSpeedPos = new LinkedHashSet<>();
         FilterItemStack filter = getFilter(drill);
         Map<Item, Boolean> filterMatches = filter == null ? null : new HashMap<>();
-        boolean protectContainers = HandheldDrillContainerProtectionButton.INSTANCE.canApply(drill);
+        boolean breakContainers = HandheldDrillContainerProtectionButton.INSTANCE.canApply(drill);
         float baseHardness = 0;
         float totalBreakHardness = 0;
         for (BlockPos pos : totalPos) {
@@ -49,7 +49,7 @@ public record AirtightHandheldDrillMiningContext(Level level, BlockPos basePos, 
                 continue;
             }
 
-            boolean isProtected = isProtected(level, pos, state, filter, filterMatches, protectContainers);
+            boolean isProtected = isProtected(level, pos, state, filter, filterMatches, breakContainers);
             if (isProtected) {
                 protectedPos.add(pos);
             }
@@ -77,12 +77,13 @@ public record AirtightHandheldDrillMiningContext(Level level, BlockPos basePos, 
             }
 
             destructionPos.add(pos);
-            if (!isLiquid && !isInstantDestruction) {
-                breakSpeedPos.add(pos);
-                totalBreakHardness += Math.max(0, destroySpeed);
+            if (isLiquid || isInstantDestruction) {
+                continue;
             }
-        }
 
+            breakSpeedPos.add(pos);
+            totalBreakHardness += Math.max(0, destroySpeed);
+        }
         return new AirtightHandheldDrillMiningContext(level, basePos, immutableView(totalPos), immutableView(protectedPos), immutableView(unbreakablePos), immutableView(liquidPos), immutableView(instantDestructionPos), immutableView(destructionPos), immutableView(breakSpeedPos), baseHardness, totalBreakHardness);
     }
 
@@ -100,13 +101,13 @@ public record AirtightHandheldDrillMiningContext(Level level, BlockPos basePos, 
         return filterStack.isEmpty() ? null : FilterItemStack.of(filterStack);
     }
 
-    private static boolean isProtected(Level level, BlockPos pos, BlockState state, @Nullable FilterItemStack filter, @Nullable Map<Item, Boolean> filterMatches, boolean protectContainers) {
+    private static boolean isProtected(Level level, BlockPos pos, BlockState state, @Nullable FilterItemStack filter, @Nullable Map<Item, Boolean> filterMatches, boolean breakContainers) {
         boolean matchesFilter = false;
         if (filter != null && filterMatches != null) {
             Item item = state.getBlock().asItem();
             matchesFilter = filterMatches.computeIfAbsent(item, key -> filter.test(level, new ItemStack(key)));
         }
-        return matchesFilter || protectContainers && level.getCapability(ItemHandler.BLOCK, pos, null) != null;
+        return matchesFilter || !breakContainers && level.getCapability(ItemHandler.BLOCK, pos, null) != null;
     }
 
     private static Set<BlockPos> getTotalPos(ItemStack drill, BlockPos basePos, Level level, BlockState baseState) {
@@ -117,11 +118,11 @@ public record AirtightHandheldDrillMiningContext(Level level, BlockPos basePos, 
         return Collections.unmodifiableSet(positions);
     }
 
-    public boolean isValidBaseTarget() {
+    boolean isValidBaseTarget() {
         return destructionPos.contains(basePos);
     }
 
-    public boolean isEmpty() {
+    boolean isEmpty() {
         return destructionPos.isEmpty();
     }
 }

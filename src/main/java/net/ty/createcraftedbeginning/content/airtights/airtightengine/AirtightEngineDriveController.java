@@ -18,7 +18,7 @@ import java.lang.ref.WeakReference;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightEngineDriveController {
+final class AirtightEngineDriveController {
     private static final String COMPOUND_KEY_GENERATED_SPEED = "GeneratedSpeed";
 
     private final AirtightEngineBlockEntity engine;
@@ -29,23 +29,23 @@ public final class AirtightEngineDriveController {
     private float persistedGeneratedSpeed;
     private boolean restoringKineticNetwork;
 
-    public AirtightEngineDriveController(AirtightEngineBlockEntity engine) {
+    AirtightEngineDriveController(AirtightEngineBlockEntity engine) {
         this.engine = engine;
     }
 
-    public void beforeInitialize() {
+    void beforeInitialize() {
         Level level = engine.getLevel();
         restoringKineticNetwork = level != null && !level.isClientSide && engine.hasKineticNetwork() && restoredGeneratedSpeed != 0;
     }
 
-    public void afterInitialize() {
+    void afterInitialize() {
         restoringKineticNetwork = false;
         restoredGeneratedSpeed = 0;
         lastGeneratedSpeed = Float.NaN;
         refreshGeneratedRotationIfNeeded();
     }
 
-    public void tickServer() {
+    void tickServer() {
         if (engine.isEngineOverStressed()) {
             lastGeneratedSpeed = Float.NaN;
             return;
@@ -54,7 +54,7 @@ public final class AirtightEngineDriveController {
         refreshGeneratedRotationIfNeeded();
     }
 
-    public float getGeneratedSpeed() {
+    float getGeneratedSpeed() {
         if (restoringKineticNetwork) {
             return restoredGeneratedSpeed;
         }
@@ -64,17 +64,17 @@ public final class AirtightEngineDriveController {
         return persistedGeneratedSpeed;
     }
 
-    public void writePersistent(CompoundTag tag) {
+    void writePersistent(CompoundTag tag) {
         tag.putFloat(COMPOUND_KEY_GENERATED_SPEED, persistedGeneratedSpeed);
     }
 
-    public void readPersistent(CompoundTag tag) {
+    void readPersistent(CompoundTag tag) {
         float storedSpeed = tag.contains(COMPOUND_KEY_GENERATED_SPEED) ? tag.getFloat(COMPOUND_KEY_GENERATED_SPEED) : 0;
         restoredGeneratedSpeed = GasConsumptions.isFinite(storedSpeed) ? storedSpeed : 0;
         persistedGeneratedSpeed = restoredGeneratedSpeed;
     }
 
-    public void rebuildKineticNetwork() {
+    void rebuildKineticNetwork() {
         Level level = engine.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -84,7 +84,7 @@ public final class AirtightEngineDriveController {
         engine.rebuildKineticNetwork();
     }
 
-    @Nullable public AirtightAssemblyDriverCore getDriverCore() {
+    @Nullable AirtightAssemblyDriverCore getDriverCore() {
         AirtightTankBlockEntity controller = getTankController();
         return controller == null ? null : controller.getCore();
     }

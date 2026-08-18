@@ -35,12 +35,12 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ICreativeGasContainer, ThresholdSwitchObservable {
     private static final int LAZY_TICK_RATE = 20;
-    protected final AirtightHatchCanisterManager canisterManager;
-    protected final AirtightHatchController controller;
-    protected final AirtightHatchSerialization serialization;
-    protected final AirtightHatchDisplay display;
-    protected SmartGasTankBehaviour tankBehaviour;
-    protected ScrollOptionBehaviour<AirtightHatchTransferMode> hatchTransferMode;
+    private final AirtightHatchCanisterManager canisterManager;
+    private final AirtightHatchController controller;
+    private final AirtightHatchSerialization serialization;
+    private final AirtightHatchDisplay display;
+    private SmartGasTankBehaviour tankBehaviour;
+    private ScrollOptionBehaviour<AirtightHatchTransferMode> hatchTransferMode;
 
     public AirtightHatchBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -66,6 +66,7 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
     @Override
     public void tick() {
         super.tick();
+        updateTransferModeRange();
         controller.tick();
     }
 
@@ -91,6 +92,12 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
     public void invalidate() {
         super.invalidate();
         invalidateCapabilities();
+    }
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        canisterManager.reconcileCanisterState();
     }
 
     @Override
@@ -120,11 +127,13 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
 
     @Override
     public boolean isCreative(Level level, BlockState blockState, BlockPos blockPos) {
+        if (!level.isClientSide) {
+            return canisterManager.isCreative();
+        }
         return blockState.getValue(AirtightHatchBlock.CANISTER_TYPE) == CanisterType.CREATIVE;
     }
 
-    @Nullable
-    public IGasHandler getTargetGasHandler(Level level) {
+    @Nullable IGasHandler getTargetGasHandler(Level level) {
         BlockState state = getBlockState();
         BlockPos pos = getBlockPos();
         if (!AirtightHatchBlock.hasValidAttachment(level, pos, state)) {
@@ -136,43 +145,59 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         return level.getCapability(GasHandler.BLOCK, targetPos, facing.getOpposite());
     }
 
-    public ItemStack createCanisterItemStack() {
+    ItemStack createCanisterItemStack() {
         return canisterManager.createCanisterItemStack();
     }
 
-    public boolean giveCanisterToPlayer(Player player) {
+    boolean giveCanisterToPlayer(Player player) {
         return canisterManager.giveCanisterToPlayer(player);
     }
 
-    public boolean isEmpty() {
-        return getBlockState().getValue(AirtightHatchBlock.CANISTER_TYPE) == CanisterType.EMPTY;
+    boolean isEmpty() {
+        return getCanisterType() == CanisterType.EMPTY;
     }
 
-    public boolean isCreative() {
-        return getBlockState().getValue(AirtightHatchBlock.CANISTER_TYPE) == CanisterType.CREATIVE;
+    boolean isCreative() {
+        return getCanisterType() == CanisterType.CREATIVE;
     }
 
-    public GasStack getHatchGasContent() {
+    GasStack getHatchGasContent() {
         return tankBehaviour.getPrimaryHandler().getGasStack().copy();
     }
 
-    public long getHatchCapacity() {
+    long getHatchCapacity() {
         return tankBehaviour.getPrimaryHandler().getCapacity();
     }
 
-    public boolean installCanister(ItemStack sourceStack) {
+    boolean installCanister(ItemStack sourceStack) {
         return canisterManager.installCanister(sourceStack);
     }
 
-    public SmartGasTankBehaviour getGasTankBehaviour() {
+    SmartGasTankBehaviour getGasTankBehaviour() {
         return tankBehaviour;
     }
 
-    public int getTransferModeValue() {
+    int getTransferModeValue() {
         return hatchTransferMode.getValue();
     }
 
-    public void resetTransferQuota() {
+    void resetTransferMode() {
+        hatchTransferMode.setValue(0);
+    }
+
+    void resetTransferQuota() {
         controller.resetTransferQuota();
+    }
+
+    private CanisterType getCanisterType() {
+        Level level = getLevel();
+        if (level != null && !level.isClientSide) {
+            return canisterManager.getStoredCanisterType();
+        }
+        return getBlockState().getValue(AirtightHatchBlock.CANISTER_TYPE);
+    }
+    private void updateTransferModeRange() {
+        int maxMode = isCreative() ? AirtightHatchTransferMode.OUTPUT_ONLY.ordinal() : AirtightHatchTransferMode.STAY_HALF.ordinal();
+        hatchTransferMode.between(AirtightHatchTransferMode.NO_TRANSFER.ordinal(), maxMode);
     }
 }

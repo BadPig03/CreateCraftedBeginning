@@ -12,7 +12,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightHatchController {
+final class AirtightHatchController {
     private static final int TICKS_PER_SECOND = 20;
 
     private final AirtightHatchBlockEntity hatch;
@@ -20,14 +20,14 @@ public final class AirtightHatchController {
 
     private long transferRemainder;
 
-    public AirtightHatchController(AirtightHatchBlockEntity hatch, AirtightHatchCanisterManager canisterManager) {
+    AirtightHatchController(AirtightHatchBlockEntity hatch, AirtightHatchCanisterManager canisterManager) {
         this.hatch = hatch;
         this.canisterManager = canisterManager;
     }
 
     private static void inputOnly(IGasHandler hatch, IGasHandler target, long limit, boolean creative) {
         GasStack hatchGas = hatch.getGasInTank(0);
-        GasStack available = hatchGas.isEmpty() ? target.drain(limit, GasAction.SIMULATE) : target.drain(hatchGas.copyWithAmount(limit), GasAction.SIMULATE);
+        GasStack available = creative || hatchGas.isEmpty() ? target.drain(limit, GasAction.SIMULATE) : target.drain(hatchGas.copyWithAmount(limit), GasAction.SIMULATE);
         if (available.isEmpty()) {
             return;
         }
@@ -42,11 +42,11 @@ public final class AirtightHatchController {
             return;
         }
 
-        long amount = Math.min(limit, hatchGas.getAmount());
+        long amount = creative ? limit : Math.min(limit, hatchGas.getAmount());
         transferGas(hatch, target, hatchGas.copyWithAmount(amount), creative, false);
     }
 
-    private static void stayHalf(IGasHandler hatch, IGasHandler target, long limit, boolean creative) {
+    private static void stayHalf(IGasHandler hatch, IGasHandler target, long limit) {
         GasStack hatchGas = hatch.getGasInTank(0);
         long delta = hatchGas.getAmount() - hatch.getTankCapacity(0) / 2;
         if (delta == 0) {
@@ -55,11 +55,11 @@ public final class AirtightHatchController {
 
         long amount = Math.min(limit, Math.abs(delta));
         if (delta > 0) {
-            outputOnly(hatch, target, amount, creative);
+            outputOnly(hatch, target, amount, false);
             return;
         }
 
-        inputOnly(hatch, target, amount, creative);
+        inputOnly(hatch, target, amount, false);
     }
 
     private static void transferGas(IGasHandler source, IGasHandler target, GasStack offered, boolean infiniteSource, boolean voidTarget) {
@@ -132,9 +132,18 @@ public final class AirtightHatchController {
         return drained.copyWithAmount(requestedAmount);
     }
 
-    public void tick() {
+    void tick() {
         Level level = hatch.getLevel();
         if (level == null || level.isClientSide || hatch.isEmpty()) {
+            return;
+        }
+
+        AirtightHatchTransferMode mode = AirtightHatchTransferMode.fromValue(hatch.getTransferModeValue());
+        if (hatch.isCreative() && mode == AirtightHatchTransferMode.STAY_HALF) {
+            hatch.resetTransferMode();
+            hatch.resetTransferQuota();
+            hatch.setChanged();
+            hatch.sendData();
             return;
         }
 
@@ -143,10 +152,10 @@ public final class AirtightHatchController {
             return;
         }
 
-        tryTransferGas(level, transferQuota);
+        tryTransferGas(level, transferQuota, mode);
     }
 
-    public void lazyTick() {
+    void lazyTick() {
         Level level = hatch.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -162,6 +171,7 @@ public final class AirtightHatchController {
             return;
         }
 
+        canisterManager.reconcileCanisterState();
         if (hatch.isEmpty()) {
             return;
         }
@@ -169,7 +179,7 @@ public final class AirtightHatchController {
         canisterManager.updateCapacity(true);
     }
 
-    public void resetTransferQuota() {
+    void resetTransferQuota() {
         transferRemainder = 0;
     }
 
@@ -180,8 +190,7 @@ public final class AirtightHatchController {
         return quota;
     }
 
-    private void tryTransferGas(Level level, long quota) {
-        AirtightHatchTransferMode mode = AirtightHatchTransferMode.fromValue(hatch.getTransferModeValue());
+    private void tryTransferGas(Level level, long quota, AirtightHatchTransferMode mode) {
         if (mode == AirtightHatchTransferMode.NO_TRANSFER) {
             return;
         }
@@ -196,7 +205,7 @@ public final class AirtightHatchController {
         switch (mode) {
             case INPUT_ONLY -> inputOnly(hatchHandler, target, quota, creative);
             case OUTPUT_ONLY -> outputOnly(hatchHandler, target, quota, creative);
-            case STAY_HALF -> stayHalf(hatchHandler, target, quota, creative);
+            case STAY_HALF -> stayHalf(hatchHandler, target, quota);
         }
     }
 }

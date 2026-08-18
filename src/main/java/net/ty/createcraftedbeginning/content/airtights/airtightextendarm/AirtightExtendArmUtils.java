@@ -13,8 +13,11 @@ import net.minecraft.world.entity.player.Player;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.armhandlers.AirtightArmHandler;
 import net.ty.createcraftedbeginning.api.armhandlers.AirtightArmHandlerUtils;
+import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers.AffordableFuel;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -24,10 +27,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Map;
 import java.util.Optional;
 import java.util.WeakHashMap;
+import java.util.function.BooleanSupplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightExtendArmUtils {
+final class AirtightExtendArmUtils {
     private static final ResourceLocation BLOCK_RANGE_MODIFIER_ID = CCBAPI.asResource("airtight_extend_arm_block_range");
     private static final ResourceLocation ENTITY_RANGE_MODIFIER_ID = CCBAPI.asResource("airtight_extend_arm_entity_range");
     private static final ResourceLocation KNOCKBACK_MODIFIER_ID = CCBAPI.asResource("airtight_extend_arm_knockback");
@@ -37,7 +41,7 @@ public final class AirtightExtendArmUtils {
     private AirtightExtendArmUtils() {
     }
 
-    public static void tick(Player player) {
+    static void tick(Player player) {
         if (player.level().isClientSide) {
             return;
         }
@@ -54,7 +58,7 @@ public final class AirtightExtendArmUtils {
         refreshArmModifiers(player);
     }
 
-    public static void refreshArmModifiers(Player player) {
+    static void refreshArmModifiers(Player player) {
         if (player.level().isClientSide) {
             return;
         }
@@ -75,39 +79,28 @@ public final class AirtightExtendArmUtils {
         applyArmModifiers(player, AirtightArmHandlerUtils.of(selectedFuel.gasType()));
     }
 
-    public static Optional<AffordableFuel> findAffordableFuel(Player player) {
-        return CanisterContainerConsumers.findAffordableFuel(player, gasType -> getRawGasConsumption(AirtightArmHandlerUtils.of(gasType)));
-    }
-
-    public static Optional<AffordableFuel> getCurrentFuelSelection(Player player) {
-        if (!isHoldingArms(player)) {
-            return Optional.empty();
-        }
-
-        if (player.level().isClientSide) {
-            return findAffordableFuel(player);
-        }
-        return Optional.ofNullable(ACTIVE_FUELS.get(player));
-    }
-
-    public static boolean isHoldingArms(Player player) {
+    static boolean isHoldingArms(Player player) {
         return player.getMainHandItem().is(CCBItems.AIRTIGHT_EXTEND_ARM) || player.getOffhandItem().is(CCBItems.AIRTIGHT_EXTEND_ARM);
     }
 
-    private static boolean isArmPowered(Player player) {
-        return isBlockInteractionPowered(player) || isEntityInteractionPowered(player);
+    static PowerUseResult tryUseBlockPower(Player player, BlockPos pos) {
+        return tryUsePower(player, () -> player.canInteractWithBlock(pos, 0), () -> requiresExtendedBlockRange(player, pos));
     }
 
-    private static boolean isBlockInteractionPowered(Player player) {
-        return hasModifier(player.getAttributes().getInstance(Attributes.BLOCK_INTERACTION_RANGE), BLOCK_RANGE_MODIFIER_ID);
+    static PowerUseResult tryUseEntityPower(Player player, Entity target) {
+        return tryUsePower(player, () -> player.canInteractWithEntity(target, 0), () -> requiresExtendedEntityRange(player, target));
     }
 
-    private static boolean isEntityInteractionPowered(Player player) {
-        AttributeMap attributes = player.getAttributes();
-        return hasModifier(attributes.getInstance(Attributes.ENTITY_INTERACTION_RANGE), ENTITY_RANGE_MODIFIER_ID) || hasModifier(attributes.getInstance(Attributes.ATTACK_KNOCKBACK), KNOCKBACK_MODIFIER_ID);
+    static PowerUseResult tryUseAttackPower(Player player, Entity target) {
+        return tryUsePower(player, () -> player.canInteractWithEntity(target, 0), () -> requiresPoweredAttack(player, target));
     }
 
-    public static boolean requiresExtendedBlockRange(Player player, BlockPos pos) {
+    private static Optional<AffordableFuel> findAffordableFuel(Player player) {
+        Gas selectedGas = getSelectedGasType(player);
+        return CanisterContainerConsumers.findAffordableFuel(player, selectedGas, gasType -> getRawGasConsumption(AirtightArmHandlerUtils.of(gasType)));
+    }
+
+    private static boolean requiresExtendedBlockRange(Player player, BlockPos pos) {
         AttributeInstance instance = player.getAttributes().getInstance(Attributes.BLOCK_INTERACTION_RANGE);
         if (instance == null) {
             return false;
@@ -117,7 +110,7 @@ public final class AirtightExtendArmUtils {
         return rangeAdjustment < 0 && !player.canInteractWithBlock(pos, rangeAdjustment);
     }
 
-    public static boolean requiresExtendedEntityRange(Player player, Entity target) {
+    private static boolean requiresExtendedEntityRange(Player player, Entity target) {
         AttributeInstance instance = player.getAttributes().getInstance(Attributes.ENTITY_INTERACTION_RANGE);
         if (instance == null) {
             return false;
@@ -127,29 +120,50 @@ public final class AirtightExtendArmUtils {
         return rangeAdjustment < 0 && !player.canInteractWithEntity(target, rangeAdjustment);
     }
 
-    public static boolean requiresPoweredAttack(Player player, Entity target) {
+    private static boolean requiresPoweredAttack(Player player, Entity target) {
         AttributeInstance knockback = player.getAttributes().getInstance(Attributes.ATTACK_KNOCKBACK);
         return requiresExtendedEntityRange(player, target) || getModifierAmount(knockback) > 0;
     }
 
-    public static boolean tryConsumeAndRefresh(Player player) {
-        if (player.level().isClientSide || !isHoldingArms(player) || !isArmPowered(player)) {
-            return false;
+    private static PowerUseResult tryUsePower(Player player, BooleanSupplier canReachWithCurrentPower, BooleanSupplier requiresCurrentPower) {
+        if (player.level().isClientSide || !isHoldingArms(player)) {
+            return PowerUseResult.pass();
         }
 
+        refreshArmModifiers(player);
+        if (!canReachWithCurrentPower.getAsBoolean()) {
+            return ACTIVE_FUELS.containsKey(player) ? PowerUseResult.outOfRange() : PowerUseResult.insufficient(getSelectedGasType(player));
+        }
+
+        if (!requiresCurrentPower.getAsBoolean()) {
+            return PowerUseResult.pass();
+        }
+
+        ConsumptionResult consumption = consumeCurrentFuelAndRefresh(player);
+        return consumption.success() ? PowerUseResult.consumed() : PowerUseResult.insufficient(consumption.attemptedGas());
+    }
+
+    private static ConsumptionResult consumeCurrentFuelAndRefresh(Player player) {
         AffordableFuel selectedFuel = ACTIVE_FUELS.get(player);
         if (selectedFuel == null) {
-            refreshArmModifiers(player);
-            return false;
+            return ConsumptionResult.failure(getSelectedGasType(player));
         }
 
+        GasStack attemptedGas = selectedFuel.gasContent().copy();
         boolean consumed = CanisterContainerConsumers.interactContainer(player, selectedFuel.gasType(), selectedFuel.amount(), () -> true, false);
         refreshArmModifiers(player);
-        return consumed;
+        return new ConsumptionResult(consumed, attemptedGas);
+    }
+
+    private static Gas getSelectedGasType(Player player) {
+        if (player.level().isClientSide) {
+            return CanisterContainerClients.getDisplayedGasContent().getGasType();
+        }
+        return CanisterContainerClients.getStoredGasType(player);
     }
 
     private static double getRawGasConsumption(AirtightArmHandler armHandler) {
-        return (double) CCBConfig.server().equipments.perUseConsumption.get() * armHandler.getGasConsumptionMultiplier();
+        return CCBConfig.server().equipments.perUseConsumption.get() * armHandler.getGasConsumptionMultiplier();
     }
 
     private static void removeArmModifiers(Player player) {
@@ -166,10 +180,6 @@ public final class AirtightExtendArmUtils {
         syncModifier(attributes.getInstance(Attributes.BLOCK_INTERACTION_RANGE), BLOCK_RANGE_MODIFIER_ID, armHandler.getIncreasedBlockInteractionRange());
         syncModifier(attributes.getInstance(Attributes.ENTITY_INTERACTION_RANGE), ENTITY_RANGE_MODIFIER_ID, armHandler.getIncreasedEntityInteractionRange());
         syncModifier(attributes.getInstance(Attributes.ATTACK_KNOCKBACK), KNOCKBACK_MODIFIER_ID, armHandler.getIncreasedKnockback());
-    }
-
-    private static boolean hasModifier(@Nullable AttributeInstance instance, ResourceLocation id) {
-        return instance != null && instance.getModifier(id) != null;
     }
 
     private static double getModifierAmount(@Nullable AttributeInstance instance) {
@@ -218,5 +228,56 @@ public final class AirtightExtendArmUtils {
         }
 
         instance.addOrUpdateTransientModifier(new AttributeModifier(id, amount, Operation.ADD_VALUE));
+    }
+
+    private enum PowerUseOutcome {
+        PASS,
+        CONSUMED,
+        INSUFFICIENT_GAS,
+        OUT_OF_RANGE
+    }
+
+    record PowerUseResult(PowerUseOutcome outcome, GasStack attemptedGas) {
+        PowerUseResult {
+            attemptedGas = attemptedGas.copy();
+        }
+
+        private static PowerUseResult pass() {
+            return new PowerUseResult(PowerUseOutcome.PASS, GasStack.EMPTY);
+        }
+
+        private static PowerUseResult consumed() {
+            return new PowerUseResult(PowerUseOutcome.CONSUMED, GasStack.EMPTY);
+        }
+
+        private static PowerUseResult insufficient(Gas gas) {
+            return new PowerUseResult(PowerUseOutcome.INSUFFICIENT_GAS, gas.isEmpty() ? GasStack.EMPTY : new GasStack(gas, 1));
+        }
+
+        private static PowerUseResult insufficient(GasStack gas) {
+            return new PowerUseResult(PowerUseOutcome.INSUFFICIENT_GAS, gas);
+        }
+
+        private static PowerUseResult outOfRange() {
+            return new PowerUseResult(PowerUseOutcome.OUT_OF_RANGE, GasStack.EMPTY);
+        }
+
+        boolean allowed() {
+            return outcome == PowerUseOutcome.PASS || outcome == PowerUseOutcome.CONSUMED;
+        }
+
+        boolean shouldWarn() {
+            return outcome == PowerUseOutcome.INSUFFICIENT_GAS;
+        }
+    }
+
+    private record ConsumptionResult(boolean success, GasStack attemptedGas) {
+        private ConsumptionResult {
+            attemptedGas = attemptedGas.copy();
+        }
+
+        private static ConsumptionResult failure(Gas gas) {
+            return new ConsumptionResult(false, gas.isEmpty() ? GasStack.EMPTY : new GasStack(gas, 1));
+        }
     }
 }

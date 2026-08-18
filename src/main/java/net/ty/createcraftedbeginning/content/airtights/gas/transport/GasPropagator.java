@@ -19,7 +19,7 @@ import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPipeConnection.AirFlow;
+import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPipeConnection.GasFlow;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBBlockTags;
 import org.jetbrains.annotations.Nullable;
 
@@ -184,7 +184,7 @@ public final class GasPropagator {
             return;
         }
 
-        AirFlow flow = connection.getFlow();
+        GasFlow flow = connection.getFlow();
         if (flow == null || !flow.inbound) {
             return;
         }

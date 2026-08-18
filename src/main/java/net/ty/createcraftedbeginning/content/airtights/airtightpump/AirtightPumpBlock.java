@@ -224,7 +224,7 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
     }
 
     @Override
-    public boolean isAirtight(BlockPos currentPos, BlockState currentState, Direction oppositeDirection) {
-        return currentState.getValue(FACING).getAxis() == oppositeDirection.getAxis();
+    public boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace) {
+        return currentState.getValue(FACING).getAxis() == localFace.getAxis();
     }
 }

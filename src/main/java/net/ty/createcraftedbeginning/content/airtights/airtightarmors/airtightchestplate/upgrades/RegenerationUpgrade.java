@@ -25,7 +25,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public enum RegenerationUpgrade implements TickingAirtightUpgrade {
+enum RegenerationUpgrade implements TickingAirtightUpgrade {
     INSTANCE;
 
     private static final ResourceLocation ID = CCBAPI.asResource("regeneration");

@@ -11,5 +11,5 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @FunctionalInterface
 public interface IAirtightComponent {
-    boolean isAirtight(BlockPos currentPos, BlockState currentState, Direction oppositeDirection);
+    boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace);
 }

@@ -27,7 +27,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public enum SpectralUpgrade implements TickingAirtightUpgrade {
+enum SpectralUpgrade implements TickingAirtightUpgrade {
     INSTANCE;
 
     private static final ResourceLocation ID = CCBAPI.asResource("spectral");

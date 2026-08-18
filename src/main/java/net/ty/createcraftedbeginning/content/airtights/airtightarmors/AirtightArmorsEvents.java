@@ -29,6 +29,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID)
 public class AirtightArmorsEvents {
+    private AirtightArmorsEvents() {
+    }
+
     @SubscribeEvent
     public static void onAirtightArmorFireImmune(LivingIncomingDamageEvent event) {
         if (!(event.getEntity() instanceof Player player) || !AirtightArmorsUtils.isEntireArmoredUp(player)) {

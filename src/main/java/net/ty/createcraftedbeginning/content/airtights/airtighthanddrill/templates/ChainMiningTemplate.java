@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class ChainMiningTemplate extends BaseTemplate {
+class ChainMiningTemplate extends BaseTemplate {
     private static Set<BlockPos> collect(Level level, BlockPos origin, BlockState originState, int requestedLimit) {
         if (originState.isAir()) {
             return Set.of();
@@ -86,11 +86,6 @@ public class ChainMiningTemplate extends BaseTemplate {
     }
 
     @Override
-    protected Stream<BlockPos> getBaseAreaStream(int @NotNull [] params) {
-        return Stream.of(BlockPos.ZERO);
-    }
-
-    @Override
     public Set<BlockPos> getTargetPositions(ItemStack drill, BlockPos basePos, Level level, BlockState baseState) {
         int blockLimit = CCBConfig.server().equipments.chainMiningMaxBlocks.get();
         return collect(level, basePos, baseState, blockLimit);
@@ -109,5 +104,10 @@ public class ChainMiningTemplate extends BaseTemplate {
     @Override
     public int getMaxValue(int index) {
         return 8;
+    }
+
+    @Override
+    Stream<BlockPos> getBaseAreaStream(int @NotNull [] params) {
+        return Stream.of(BlockPos.ZERO);
     }
 }

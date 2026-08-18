@@ -21,6 +21,9 @@ import java.util.Map;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightArmorsTrimsModelGenerator extends TrimmableArmorModelGenerator {
+    private AirtightArmorsTrimsModelGenerator() {
+    }
+
     public static <T extends ArmorItem> void generate(DataGenContext<Item, T> context, RegistrateItemModelProvider provider) {
         T armorItem = context.get();
         ItemModelBuilder baseModel = provider.generated(context);

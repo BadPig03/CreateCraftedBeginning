@@ -17,11 +17,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirCompressorPlacement {
+final class AirCompressorPlacement {
     private AirCompressorPlacement() {
     }
 
-    public static BlockState getStateForPlacement(BlockPlaceContext context, BlockState compressorState) {
+    static BlockState getStateForPlacement(BlockPlaceContext context, BlockState compressorState) {
         Direction defaultFacing = context.getHorizontalDirection().getOpposite();
         Player player = context.getPlayer();
         if (player != null && player.isShiftKeyDown()) {
@@ -59,7 +59,7 @@ public final class AirCompressorPlacement {
     private static BlockState getStateForCheckValvePlacement(BlockState compressorState, BlockState valveState, Direction defaultFacing) {
         boolean isInverted = valveState.getValue(AirtightCheckValveBlock.INVERTED);
         return switch (valveState.getValue(AirtightCheckValveBlock.AXIS)) {
-            case X -> compressorState.setValue(AirCompressorBlock.HORIZONTAL_FACING, isInverted ? Direction.NORTH : Direction.SOUTH);
+            case X -> compressorState.setValue(AirCompressorBlock.HORIZONTAL_FACING, isInverted ? Direction.SOUTH : Direction.NORTH);
             case Y -> compressorState.setValue(AirCompressorBlock.HORIZONTAL_FACING, defaultFacing);
             case Z -> compressorState.setValue(AirCompressorBlock.HORIZONTAL_FACING, isInverted ? Direction.WEST : Direction.EAST);
         };

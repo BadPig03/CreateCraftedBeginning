@@ -18,40 +18,36 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirCompressorThermal {
+final class AirCompressorThermal {
     private AirCompressorThermal() {
     }
 
-    public static int getNextOverheatThreshold() {
+    static int getNextOverheatThreshold() {
         return Mth.clamp(CCBConfig.server().airtights.nextOverheatThreshold.get(), 1, Integer.MAX_VALUE / OverheatState.MELTDOWN.ordinal());
     }
 
-    public static int getMaxStoredHeat() {
-        return getNextOverheatThreshold() * OverheatState.MELTDOWN.ordinal();
-    }
-
-    public static int clampStoredHeat(int storedHeat) {
+    static int clampStoredHeat(int storedHeat) {
         return Math.clamp(storedHeat, 0, getMaxStoredHeat());
     }
 
-    public static int getNextStateHeat(OverheatState overheatState) {
+    static int getNextStateHeat(OverheatState overheatState) {
         if (overheatState == OverheatState.MELTDOWN) {
             return getMaxStoredHeat();
         }
         return clampStoredHeat((overheatState.ordinal() + 1) * getNextOverheatThreshold());
     }
 
-    public static OverheatState getOverheatState(int storedHeat) {
+    static OverheatState getOverheatState(int storedHeat) {
         return OverheatState.fromStoredHeat(storedHeat, getNextOverheatThreshold());
     }
 
-    public static int updateStoredHeat(int storedHeat, float speed, boolean isOperating, CoolantEfficiency coolantEfficiency, Level level) {
+    static int updateStoredHeat(int storedHeat, float speed, boolean isOperating, CoolantEfficiency coolantEfficiency, Level level) {
         int netHeatChange = getHeatAdded(speed, isOperating) - coolantEfficiency.getHeatReduced(level);
         long updatedStoredHeat = storedHeat + netHeatChange;
         return (int) Mth.clamp(0, updatedStoredHeat, getMaxStoredHeat());
     }
 
-    public static boolean isMeltdownPreventedByCoolant(int storedHeat, float speed, boolean isOperating, CoolantEfficiency coolantEfficiency, Level level) {
+    static boolean isMeltdownPreventedByCoolant(int storedHeat, float speed, boolean isOperating, CoolantEfficiency coolantEfficiency, Level level) {
         if (!isOperating) {
             return false;
         }
@@ -69,12 +65,12 @@ public final class AirCompressorThermal {
         return heatWithoutCoolant >= maxStoredHeat && heatWithCoolant < maxStoredHeat;
     }
 
-    public static CoolantEfficiency getCoolantEfficiency(Level level, BlockPos coolantPos) {
+    static CoolantEfficiency getCoolantEfficiency(Level level, BlockPos coolantPos) {
         BlockState coolantState = level.getBlockState(coolantPos);
         return AirtightCoolantHandlerUtils.of(coolantState.getBlock()).getCoolantEfficiency(level, coolantPos, coolantState);
     }
 
-    public static CoolantEfficiency tickCoolant(ServerLevel level, BlockPos coolantPos, boolean shouldConsumeCoolant, RandomSource random) {
+    static CoolantEfficiency tickCoolant(ServerLevel level, BlockPos coolantPos, boolean shouldConsumeCoolant, RandomSource random) {
         BlockState coolantState = level.getBlockState(coolantPos);
         AirtightCoolantHandler coolantHandler = AirtightCoolantHandlerUtils.of(coolantState.getBlock());
         CoolantEfficiency coolantEfficiency = coolantHandler.getCoolantEfficiency(level, coolantPos, coolantState);
@@ -95,6 +91,10 @@ public final class AirCompressorThermal {
             level.setBlockAndUpdate(coolantPos, meltedCoolantState);
         }
         return getCoolantEfficiency(level, coolantPos);
+    }
+
+    private static int getMaxStoredHeat() {
+        return getNextOverheatThreshold() * OverheatState.MELTDOWN.ordinal();
     }
 
     private static int getHeatAdded(float speed, boolean isOperating) {

@@ -17,9 +17,12 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID)
-public class AirtightForgingPressEvents {
+final class AirtightForgingPressEvents {
+    private AirtightForgingPressEvents() {
+    }
+
     @SubscribeEvent
-    public static void onItemTooltip(ItemTooltipEvent event) {
+    private static void onItemTooltip(ItemTooltipEvent event) {
         Player player = event.getEntity();
         if (player == null || !CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK.isIn(event.getItemStack())) {
             return;

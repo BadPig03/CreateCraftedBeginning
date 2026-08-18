@@ -95,7 +95,7 @@ public final class AirtightArmorsUtils {
         return boots.is(CCBItems.AIRTIGHT_BOOTS);
     }
 
-    public static float applyPaidResistance(Player player, float originalDamage, float currentDamage) {
+    static float applyPaidResistance(Player player, float originalDamage, float currentDamage) {
         if (originalDamage <= 0 || currentDamage <= 0) {
             return currentDamage;
         }

@@ -22,11 +22,7 @@ public abstract class VibrationSystemListenerMixin {
     @SuppressWarnings("DataFlowIssue")
     @Inject(method = "handleGameEvent", at = @At("HEAD"), cancellable = true)
     private void ccb$handleGameEvent(ServerLevel level, Holder<GameEvent> gameEvent, Context context, Vec3 sourcePosition, CallbackInfoReturnable<Boolean> cir) {
-        if (!EndSculkSilencerEvents.isSilenceableGameEvent(gameEvent)) {
-            return;
-        }
-
-        if (!EndSculkSilencerEvents.hasSilencerCoverage(level)) {
+        if (!EndSculkSilencerEvents.isSilenceableGameEvent(gameEvent) || !EndSculkSilencerEvents.hasSilencerCoverage(level)) {
             return;
         }
 

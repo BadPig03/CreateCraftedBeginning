@@ -21,18 +21,18 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirCompressorProcessing {
-    public static final int LAZY_TICK_RATE = 5;
+final class AirCompressorProcessing {
+    static final int LAZY_TICK_RATE = 5;
 
     private AirCompressorProcessing() {
     }
 
-    public static long getTankCapacity() {
+    static long getTankCapacity() {
         return CCBConfig.server().airtights.maxAirCompressorCapacity.get() * GasAmounts.MILLIBUCKETS_PER_BUCKET;
     }
 
     @Nullable
-    public static CompressionPlan createPlan(Level level, GasStack inputGas) {
+    static CompressionPlan createPlan(Level level, GasStack inputGas) {
         if (inputGas.isEmpty()) {
             return null;
         }
@@ -51,7 +51,7 @@ public final class AirCompressorProcessing {
         return new CompressionPlan(recipeHolder.id(), recipe, inputPerBatch, outputPerBatch);
     }
 
-    public static boolean canOperate(@Nullable CompressionPlan plan, boolean overStressed, float speed, OverheatState overheatState, SmartGasTankBehaviour inputTankBehaviour, SmartGasTankBehaviour outputTankBehaviour) {
+    static boolean canOperate(@Nullable CompressionPlan plan, boolean overStressed, float speed, OverheatState overheatState, SmartGasTankBehaviour inputTankBehaviour, SmartGasTankBehaviour outputTankBehaviour) {
         if (plan == null || overStressed || Mth.abs(speed) < SpeedLevel.MEDIUM.getSpeedValue() || overheatState == OverheatState.MELTDOWN || inputTankBehaviour.getPrimaryHandler().getGasAmount() < plan.inputPerBatch()) {
             return false;
         }
@@ -61,7 +61,7 @@ public final class AirCompressorProcessing {
         return hasCompatibleOutput && outputTankBehaviour.getPrimaryHandler().getSpace() >= plan.outputPerBatch().getAmount();
     }
 
-    public static WorkState accumulateWork(WorkState workState, CompressionPlan plan, float speed, OverheatState overheatState) {
+    static WorkState accumulateWork(WorkState workState, CompressionPlan plan, float speed, OverheatState overheatState) {
         long accumulatedWork = workState.matches(plan.recipeId()) ? workState.accumulatedWork() : 0;
         float scaledWork = Mth.abs(speed) * getPressurizationRateMultiplier() * overheatState.getEfficiencyPercent();
         long workIncrement = Math.max(0, Mth.floor(scaledWork));
@@ -69,7 +69,7 @@ public final class AirCompressorProcessing {
         return new WorkState(plan.recipeId(), updatedAccumulatedWork);
     }
 
-    public static WorkState pressurize(WorkState workState, CompressionPlan plan, SmartGasTankBehaviour inputTankBehaviour, SmartGasTankBehaviour outputTankBehaviour) {
+    static WorkState pressurize(WorkState workState, CompressionPlan plan, SmartGasTankBehaviour inputTankBehaviour, SmartGasTankBehaviour outputTankBehaviour) {
         long accumulatedWork = workState.matches(plan.recipeId()) ? workState.accumulatedWork() : 0;
         long batchesByWork = accumulatedWork / 100 / plan.inputPerBatch();
         long batchesByInput = inputTankBehaviour.getPrimaryHandler().getGasAmount() / plan.inputPerBatch();
@@ -101,5 +101,5 @@ public final class AirCompressorProcessing {
         return CCBConfig.server().airtights.pressurizationRateMultiplier.getF();
     }
 
-    public record CompressionPlan(ResourceLocation recipeId, PressurizationRecipe recipe, long inputPerBatch, GasStack outputPerBatch) {}
+    record CompressionPlan(ResourceLocation recipeId, PressurizationRecipe recipe, long inputPerBatch, GasStack outputPerBatch) {}
 }

@@ -25,18 +25,18 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class AirtightHandheldDrillMenu extends AirtightUpgradableMenu {
     public static final int UPGRADE_SLOT_INDEX = 0;
-    public static final int FILTER_SLOT_INDEX = 1;
     public static final int MAX_SLOTS = 2;
+    static final int FILTER_SLOT_INDEX = 1;
 
     public AirtightHandheldDrillMenu(int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
         this(CCBMenuTypes.AIRTIGHT_HANDHELD_DRILL_MENU.get(), id, inv, extraData);
     }
 
-    public AirtightHandheldDrillMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
+    private AirtightHandheldDrillMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
         super(type, id, inv, extraData);
     }
 
-    public AirtightHandheldDrillMenu(MenuType<?> type, int id, Inventory inv, ItemStack contentHolder, InteractionHand sourceHand) {
+    AirtightHandheldDrillMenu(MenuType<?> type, int id, Inventory inv, ItemStack contentHolder, InteractionHand sourceHand) {
         super(type, id, inv, contentHolder, sourceHand);
     }
 
@@ -157,26 +157,34 @@ public class AirtightHandheldDrillMenu extends AirtightUpgradableMenu {
         ItemStack filterItem = menuInventory.getStackInSlot(FILTER_SLOT_INDEX);
         switch (clickType) {
             case CLONE -> {
-                if (player.hasInfiniteMaterials() && carried.isEmpty() && !filterItem.isEmpty()) {
-                    setCarried(filterItem.copyWithCount(filterItem.getOrDefault(DataComponents.MAX_STACK_SIZE, 64)));
+                if (!player.hasInfiniteMaterials() || !carried.isEmpty() || filterItem.isEmpty()) {
+                    return;
                 }
+
+                setCarried(filterItem.copyWithCount(filterItem.getOrDefault(DataComponents.MAX_STACK_SIZE, 64)));
             }
             case PICKUP -> {
                 Slot filterSlot = getSlot(slotIndex);
                 if (!carried.isEmpty() && filterSlot.mayPlace(carried)) {
                     menuInventory.setStackInSlot(FILTER_SLOT_INDEX, carried.copyWithCount(1));
                     filterSlot.setChanged();
+                    return;
                 }
-                else if (carried.isEmpty()) {
-                    menuInventory.setStackInSlot(FILTER_SLOT_INDEX, ItemStack.EMPTY);
-                    filterSlot.setChanged();
+
+                if (!carried.isEmpty()) {
+                    return;
                 }
+
+                menuInventory.setStackInSlot(FILTER_SLOT_INDEX, ItemStack.EMPTY);
+                filterSlot.setChanged();
             }
             case QUICK_MOVE -> {
-                if (!filterItem.isEmpty()) {
-                    menuInventory.setStackInSlot(FILTER_SLOT_INDEX, ItemStack.EMPTY);
-                    getSlot(slotIndex).setChanged();
+                if (filterItem.isEmpty()) {
+                    return;
                 }
+
+                menuInventory.setStackInSlot(FILTER_SLOT_INDEX, ItemStack.EMPTY);
+                getSlot(slotIndex).setChanged();
             }
         }
     }

@@ -41,7 +41,7 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
         registerDefaultState(defaultBlockState().setValue(INVERTED, false).setValue(DIRECTIONAL_FACING, DirectionalFacing.NULL));
     }
 
-    public static boolean isInputSide(BlockState state, Direction direction) {
+    static boolean isInputSide(BlockState state, Direction direction) {
         if (state.getValue(AXIS) != direction.getAxis()) {
             return false;
         }
@@ -50,7 +50,7 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
         return isPositive != state.getValue(INVERTED);
     }
 
-    public static boolean isOutputSide(BlockState state, Direction direction) {
+    static boolean isOutputSide(BlockState state, Direction direction) {
         return state.getValue(AXIS) == direction.getAxis() && !isInputSide(state, direction);
     }
 
@@ -117,10 +117,12 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
         Axis axis = state.getValue(AXIS);
         Direction output = context.getNearestLookingDirection();
         for (Direction direction : context.getNearestLookingDirections()) {
-            if (direction.getAxis() == axis) {
-                output = direction;
-                break;
+            if (direction.getAxis() != axis) {
+                continue;
             }
+
+            output = direction;
+            break;
         }
 
         boolean isInverted = output.getAxisDirection() == AxisDirection.POSITIVE;
@@ -144,7 +146,7 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
     }
 
     @Override
-    public boolean isAirtight(BlockPos currentPos, BlockState currentState, Direction oppositeDirection) {
-        return currentState.getValue(AXIS) == oppositeDirection.getAxis();
+    public boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace) {
+        return currentState.getValue(AXIS) == localFace.getAxis();
     }
 }

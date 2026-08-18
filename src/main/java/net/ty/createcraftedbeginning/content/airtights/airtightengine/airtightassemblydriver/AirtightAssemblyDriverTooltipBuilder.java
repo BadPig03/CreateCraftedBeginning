@@ -20,10 +20,10 @@ import java.util.Map;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightAssemblyDriverTooltipBuilder {
+class AirtightAssemblyDriverTooltipBuilder {
     private final AirtightAssemblyDriverCore driverCore;
 
-    public AirtightAssemblyDriverTooltipBuilder(AirtightAssemblyDriverCore driverCore) {
+    AirtightAssemblyDriverTooltipBuilder(AirtightAssemblyDriverCore driverCore) {
         this.driverCore = driverCore;
     }
 
@@ -107,7 +107,7 @@ public class AirtightAssemblyDriverTooltipBuilder {
         CCBLang.builder().add(stressText).forGoggles(tooltip, 1);
     }
 
-    public void addToGoggleTooltip(List<Component> tooltip) {
+    void addToGoggleTooltip(List<Component> tooltip) {
         AirtightAssemblyDriverLevelCalculator levelCalculator = driverCore.getLevelCalculator();
         addStatusLine(levelCalculator.getCurrentLevel(), tooltip);
         addProgressBars(levelCalculator.getLevels(), tooltip);

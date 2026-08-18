@@ -26,6 +26,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID)
 public class AirtightLeggingsEvents {
+    private AirtightLeggingsEvents() {
+    }
+
     @SubscribeEvent
     public static void onProjectileImpact(ProjectileImpactEvent event) {
         if (!(event.getRayTraceResult() instanceof EntityHitResult hit) || hit.getType() != Type.ENTITY || !(hit.getEntity() instanceof Player player)) {

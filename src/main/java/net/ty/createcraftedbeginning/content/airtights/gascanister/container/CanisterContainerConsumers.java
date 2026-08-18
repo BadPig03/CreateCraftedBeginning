@@ -109,6 +109,39 @@ public final class CanisterContainerConsumers {
         return Optional.empty();
     }
 
+    public static Optional<AffordableFuel> findAffordableFuel(Player player, Gas selectedGas, ToDoubleFunction<Gas> rawCostFunction) {
+        if (selectedGas.isEmpty()) {
+            return Optional.empty();
+        }
+
+        GasStack selectedContent = GasStack.EMPTY;
+        for (IGasCanisterContainer container : CanisterContainerSuppliers.getAllSuppliers(player)) {
+            for (int tank = 0; tank < container.getTanks(); tank++) {
+                GasStack content = container.getGasInTank(tank);
+                if (content.isEmpty() || !content.is(selectedGas)) {
+                    continue;
+                }
+
+                selectedContent = content;
+                break;
+            }
+
+            if (!selectedContent.isEmpty()) {
+                break;
+            }
+        }
+
+        if (selectedContent.isEmpty()) {
+            return Optional.empty();
+        }
+
+        long amount = GasConsumptions.roundUp(rawCostFunction.applyAsDouble(selectedGas));
+        if (amount < 0 || !interactContainer(player, selectedGas, amount, () -> true, true)) {
+            return Optional.empty();
+        }
+        return Optional.of(new AffordableFuel(selectedContent, amount));
+    }
+
     public static void applyClientContainerSync(Player player, GasStack gasContent) {
         if (!player.level().isClientSide || player.isCreative() || gasContent.isEmpty() || gasContent.getAmount() <= 0) {
             return;
@@ -139,6 +172,9 @@ public final class CanisterContainerConsumers {
             }
             else if (container instanceof GasCanisterPackContainerContents pack) {
                 remaining = planPackDrain(pack, gasType, remaining, player, drainPlan);
+            }
+            else {
+                remaining = planGenericDrain(container, gasType, remaining, drainPlan);
             }
 
             if (remaining <= 0) {
@@ -215,9 +251,37 @@ public final class CanisterContainerConsumers {
         return remaining;
     }
 
+    private static long planGenericDrain(IGasCanisterContainer contents, Gas gasType, long remaining, Map<IGasCanisterContainer, List<PlannedContainerDrain>> drainPlan) {
+        List<PlannedContainerDrain> drains = new ArrayList<>();
+        for (int tank = 0; tank < contents.getTanks() && remaining > 0; tank++) {
+            GasStack storedGas = contents.getGasInTank(tank);
+            if (storedGas.isEmpty() || !storedGas.is(gasType)) {
+                continue;
+            }
+
+            GasStack drained = contents.drain(tank, remaining, GasAction.SIMULATE);
+            if (drained.isEmpty() || !drained.is(gasType)) {
+                continue;
+            }
+
+            long covered = Math.min(drained.getAmount(), remaining);
+            if (covered <= 0) {
+                continue;
+            }
+
+            remaining -= covered;
+            drains.add(new PlannedContainerDrain(tank, drained.copyWithAmount(covered)));
+        }
+
+        if (!drains.isEmpty()) {
+            drainPlan.put(contents, List.copyOf(drains));
+        }
+        return remaining;
+    }
+
     private static boolean executeDrainPlan(Map<IGasCanisterContainer, List<PlannedContainerDrain>> drainPlan, Player player) {
         ResourceTransaction transaction = new ResourceTransaction();
-        drainPlan.forEach((container, drains) -> drains.forEach(drain -> transaction.add(ResourceTransaction.participant(() -> GasStack.matches(container.drain(drain.tank(), drain.gas(), GasAction.SIMULATE), drain.gas()), () -> container.getGasInTank(drain.tank()).copy(), () -> GasStack.matches(container.drain(drain.tank(), drain.gas(), GasAction.EXECUTE), drain.gas()), snapshot -> restoreContainerTank(container, drain.tank(), snapshot)))));
+        drainPlan.forEach((container, drains) -> drains.forEach(drain -> transaction.add(ResourceTransaction.participant(() -> GasStack.matches(container.drain(drain.tank(), drain.gas(), GasAction.SIMULATE), drain.gas()), () -> container.getGasInTank(drain.tank()).copy(), () -> executePlannedDrain(container, drain), snapshot -> restoreContainerTank(container, drain.tank(), snapshot)))));
         if (!transaction.commit()) {
             return false;
         }
@@ -229,6 +293,16 @@ public final class CanisterContainerConsumers {
 
             drains.forEach(drain -> syncPackMenu(player, contents, drain.tank(), drain.gas().getAmount()));
         });
+        return true;
+    }
+
+    private static boolean executePlannedDrain(IGasCanisterContainer container, PlannedContainerDrain drain) {
+        if (!GasStack.matches(container.drain(drain.tank(), drain.gas(), GasAction.EXECUTE), drain.gas())) {
+            return false;
+        }
+        if (isGenericContainer(container)) {
+            container.save();
+        }
         return true;
     }
 
@@ -250,6 +324,13 @@ public final class CanisterContainerConsumers {
         if (!GasStack.matches(container.getGasInTank(tank), snapshot)) {
             throw new IllegalStateException("Gas canister container rollback produced an unexpected state");
         }
+        if (isGenericContainer(container)) {
+            container.save();
+        }
+    }
+
+    private static boolean isGenericContainer(IGasCanisterContainer container) {
+        return !(container instanceof GasCanisterContainerContents) && !(container instanceof GasCanisterPackContainerContents);
     }
 
     private static void syncPackMenu(Player player, GasCanisterPackContainerContents contents, int slot, long amount) {
@@ -302,6 +383,21 @@ public final class CanisterContainerConsumers {
 
                     long covered = GasCanisterContainerContents.getLogicalAmountFromEconomizedDrain(drained, canister);
                     remaining -= Math.min(covered, remaining);
+                }
+            }
+            else {
+                for (int tank = 0; tank < container.getTanks() && remaining > 0; tank++) {
+                    GasStack storedGas = container.getGasInTank(tank);
+                    if (storedGas.isEmpty() || !storedGas.is(gasType)) {
+                        continue;
+                    }
+
+                    GasStack drained = container.drain(tank, remaining, GasAction.SIMULATE);
+                    if (drained.isEmpty() || !drained.is(gasType)) {
+                        continue;
+                    }
+
+                    remaining -= Math.min(drained.getAmount(), remaining);
                 }
             }
 

@@ -44,23 +44,6 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
         return blockState.getValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION).isLowerStore();
     }
 
-    @Nullable
-    public AirtightForgingPressBlockEntity getMasterBlockEntity() {
-        BlockPos masterPos = AirtightForgingPressUtils.getMaster(getBlockPos(), getBlockState());
-        if (level == null || !(level.getBlockEntity(masterPos) instanceof AirtightForgingPressBlockEntity master)) {
-            return null;
-        }
-        return master;
-    }
-
-    public @Nullable IItemHandler getItemCapability() {
-        AirtightForgingPressBlockEntity master = getMasterBlockEntity();
-        if (master == null || !isLowerStore(getBlockState())) {
-            return null;
-        }
-        return master.getInputOutputCapability();
-    }
-
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         AirtightForgingPressStructuralPosition position = getBlockState().getValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION);
@@ -85,27 +68,6 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
         }
 
         syncFilterFromMaster(master.getRecipeFilter());
-    }
-
-    private void onFilterChanged(ItemStack stack) {
-        if (syncingFilter) {
-            return;
-        }
-
-        AirtightForgingPressUtils.updateRecipeFilter(this, stack);
-    }
-
-    public void syncFilterFromMaster(ItemStack stack) {
-        if (filteringBehaviour == null || ItemStack.matches(filteringBehaviour.getFilter(), stack)) {
-            return;
-        }
-
-        syncingFilter = true;
-        try {
-            filteringBehaviour.setFilter(stack);
-        } finally {
-            syncingFilter = false;
-        }
     }
 
     @Override
@@ -154,6 +116,43 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
     @Override
     public MutableComponent format(int value) {
         return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.items")).component();
+    }
+
+    void syncFilterFromMaster(ItemStack stack) {
+        if (filteringBehaviour == null || ItemStack.matches(filteringBehaviour.getFilter(), stack)) {
+            return;
+        }
+
+        syncingFilter = true;
+        try {
+            filteringBehaviour.setFilter(stack);
+        } finally {
+            syncingFilter = false;
+        }
+    }
+
+    @Nullable AirtightForgingPressBlockEntity getMasterBlockEntity() {
+        BlockPos masterPos = AirtightForgingPressUtils.getMaster(getBlockPos(), getBlockState());
+        if (level == null || !(level.getBlockEntity(masterPos) instanceof AirtightForgingPressBlockEntity master)) {
+            return null;
+        }
+        return master;
+    }
+
+    private @Nullable IItemHandler getItemCapability() {
+        AirtightForgingPressBlockEntity master = getMasterBlockEntity();
+        if (master == null || !isLowerStore(getBlockState())) {
+            return null;
+        }
+        return master.getInputOutputCapability();
+    }
+
+    private void onFilterChanged(ItemStack stack) {
+        if (syncingFilter) {
+            return;
+        }
+
+        AirtightForgingPressUtils.updateRecipeFilter(this, stack);
     }
 
     private static class AirtightForgingPressValueBox extends Sided {

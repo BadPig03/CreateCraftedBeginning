@@ -13,7 +13,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.gas.flowsources.GasFlowSource;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasInventoryIdentifierProvider;
-import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPipeConnection.AirFlow;
+import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPipeConnection.GasFlow;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -193,7 +193,7 @@ public final class GasNetworkTraversal {
             return null;
         }
 
-        AirFlow flow = connection.getFlow();
+        GasFlow flow = connection.getFlow();
         if (flow == null || flow.inbound || !GasStack.isSameGasSameComponents(flow.gas, gas)) {
             return null;
         }
@@ -239,7 +239,7 @@ public final class GasNetworkTraversal {
             return false;
         }
 
-        AirFlow flow = connection.getFlow();
+        GasFlow flow = connection.getFlow();
         if (flow == null) {
             return true;
         }
@@ -267,7 +267,7 @@ public final class GasNetworkTraversal {
                 continue;
             }
 
-            AirFlow outFlow = adjacent.getFlow();
+            GasFlow outFlow = adjacent.getFlow();
             if (outFlow == null) {
                 if (adjacent.hasPressure() && adjacent.getOutwardPressureUnits() > 0) {
                     keepInFrontier = true;

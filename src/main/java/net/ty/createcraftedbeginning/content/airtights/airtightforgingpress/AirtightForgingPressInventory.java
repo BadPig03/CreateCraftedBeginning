@@ -8,10 +8,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightForgingPressInventory extends SmartInventory {
+class AirtightForgingPressInventory extends SmartInventory {
     private final AirtightForgingPressBlockEntity blockEntity;
 
-    public AirtightForgingPressInventory(int slots, AirtightForgingPressBlockEntity blockEntity) {
+    AirtightForgingPressInventory(int slots, AirtightForgingPressBlockEntity blockEntity) {
         super(slots, blockEntity);
         this.blockEntity = blockEntity;
     }

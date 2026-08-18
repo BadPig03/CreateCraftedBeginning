@@ -19,7 +19,7 @@ import java.util.Locale;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public enum OverheatState {
+enum OverheatState {
     NORMAL("normal", 100, 0, ChatFormatting.AQUA, 0, 0, 1, 1),
     SLIGHT("slight", 90, 5, ChatFormatting.YELLOW, 8, 4, 0.7f, 1),
     MODERATE("moderate", 60, 10, ChatFormatting.GOLD, 4, 2, 0.4f, 0.8f),
@@ -32,21 +32,21 @@ public enum OverheatState {
     private final ChatFormatting displayColor;
     private final int particleTickRate;
     private final int ponderParticleTickRate;
-    private final float smokeThreshold;
-    private final float flameThreshold;
+    private final float smokeChance;
+    private final float flameChance;
 
-    OverheatState(String serializedName, int efficiencyPercent, int analogOutputSignal, ChatFormatting displayColor, int particleTickRate, int ponderParticleTickRate, float smokeThreshold, float flameThreshold) {
+    OverheatState(String serializedName, int efficiencyPercent, int analogOutputSignal, ChatFormatting displayColor, int particleTickRate, int ponderParticleTickRate, float smokeChance, float flameChance) {
         this.serializedName = serializedName;
         this.efficiencyPercent = efficiencyPercent;
         this.analogOutputSignal = analogOutputSignal;
         this.displayColor = displayColor;
         this.particleTickRate = particleTickRate;
         this.ponderParticleTickRate = ponderParticleTickRate;
-        this.smokeThreshold = smokeThreshold;
-        this.flameThreshold = flameThreshold;
+        this.smokeChance = smokeChance;
+        this.flameChance = flameChance;
     }
 
-    public static OverheatState fromName(String serializedName) {
+    static OverheatState fromName(String serializedName) {
         String normalizedName = serializedName.toLowerCase(Locale.ROOT);
         for (OverheatState overheatState : values()) {
             if (!overheatState.serializedName.equals(normalizedName)) {
@@ -58,11 +58,11 @@ public enum OverheatState {
         return NORMAL;
     }
 
-    public static OverheatState fromItem(ItemStack stack) {
+    static OverheatState fromItem(ItemStack stack) {
         return AirCompressorThermal.getOverheatState(stack.getOrDefault(CCBDataComponents.COMPRESSOR_STORED_HEAT, 0));
     }
 
-    public static OverheatState fromStoredHeat(int storedHeat, int overheatThreshold) {
+    static OverheatState fromStoredHeat(int storedHeat, int overheatThreshold) {
         int safeOverheatThreshold = Math.max(1, overheatThreshold);
         int overheatStateIndex = Math.min(MELTDOWN.ordinal(), Math.max(0, storedHeat) / safeOverheatThreshold);
         return values()[overheatStateIndex];
@@ -72,27 +72,27 @@ public enum OverheatState {
         return VecHelper.getCenterOf(compressorPos).add(VecHelper.offsetRandomly(Vec3.ZERO, random, radius).multiply(1, 0.25, 1).normalize().scale(0.5 + random.nextFloat() * 0.125)).add(0, 0.5, 0);
     }
 
-    public ChatFormatting getDisplayColor() {
+    ChatFormatting getDisplayColor() {
         return displayColor;
     }
 
-    public int getEfficiencyPercent() {
+    int getEfficiencyPercent() {
         return efficiencyPercent;
     }
 
-    public int getAnalogOutputSignal() {
+    int getAnalogOutputSignal() {
         return analogOutputSignal;
     }
 
-    public String getSerializedName() {
+    String getSerializedName() {
         return serializedName;
     }
 
-    public String getTranslationKey() {
+    String getTranslationKey() {
         return "gui.air_compressor." + serializedName;
     }
 
-    public void spawnParticlesInPonderLevel(PonderLevel level, BlockPos compressorPos, int ponderTick) {
+    void spawnParticlesInPonderLevel(PonderLevel level, BlockPos compressorPos, int ponderTick) {
         if (ponderParticleTickRate <= 0 || ponderTick % ponderParticleTickRate != 0) {
             return;
         }
@@ -100,7 +100,7 @@ public enum OverheatState {
         spawnParticles(level, compressorPos);
     }
 
-    public void tick(AirCompressorBlockEntity compressor) {
+    void tick(AirCompressorBlockEntity compressor) {
         Level level = compressor.getLevel();
         if (level == null) {
             return;
@@ -128,11 +128,11 @@ public enum OverheatState {
 
     private void spawnParticles(Level level, BlockPos compressorPos) {
         RandomSource random = level.getRandom();
-        if (random.nextFloat() >= smokeThreshold) {
+        if (random.nextFloat() <= smokeChance) {
             Vec3 particlePos = getParticlePosition(compressorPos, random, 0.5f);
             level.addParticle(ParticleTypes.SMOKE, particlePos.x, particlePos.y, particlePos.z, 0, random.nextFloat() * 0.0125, 0);
         }
-        if (random.nextFloat() < flameThreshold) {
+        if (random.nextFloat() > flameChance) {
             return;
         }
 

@@ -20,11 +20,11 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirCompressorTooltip {
+final class AirCompressorTooltip {
     private AirCompressorTooltip() {
     }
 
-    public static boolean addHoveringInformation(List<Component> tooltip, @Nullable Level level, GasStack inputGas, boolean overStressed, boolean isSpeedRequirementFulfilled, float speed) {
+    static boolean addHoveringInformation(List<Component> tooltip, @Nullable Level level, GasStack inputGas, boolean overStressed, boolean isSpeedRequirementFulfilled, float speed) {
         boolean hasInvalidGasWarning = false;
         if (isInputGasInvalid(level, inputGas)) {
             CCBLang.translate("gui.invalid_ingredient").style(ChatFormatting.GOLD).forGoggles(tooltip);
@@ -52,7 +52,7 @@ public final class AirCompressorTooltip {
         return true;
     }
 
-    public static void addGoggleInformation(List<Component> tooltip, boolean isPlayerSneaking, OverheatState overheatState, GasStack inputGas, GasStack outputGas, double stressApplied, float theoreticalSpeed) {
+    static void addGoggleInformation(List<Component> tooltip, boolean isPlayerSneaking, OverheatState overheatState, GasStack inputGas, GasStack outputGas, double stressApplied, float theoreticalSpeed) {
         CCBLang.translate("gui.air_compressor").forGoggles(tooltip);
         CCBLang.translate("gui.air_compressor.overheat_state").style(ChatFormatting.GRAY).forGoggles(tooltip);
         CCBLang.translate(overheatState.getTranslationKey()).style(overheatState.getDisplayColor()).forGoggles(tooltip, 1);

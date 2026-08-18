@@ -9,18 +9,20 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
+import net.ty.createcraftedbeginning.api.gascanisters.AirtightHatchCanisters;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock.CanisterType;
-import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID)
-public class AirtightHatchEvents {
+final class AirtightHatchEvents {
+    private AirtightHatchEvents() {
+    }
+
     @SubscribeEvent(priority = EventPriority.HIGH)
-    public static void onRightClickBlock(RightClickBlock event) {
+    private static void onRightClickBlock(RightClickBlock event) {
         if (event.getEntity().isShiftKeyDown() || event.getUseItem() != TriState.DEFAULT || event.getUseBlock() != TriState.DEFAULT) {
             return;
         }
@@ -35,8 +37,8 @@ public class AirtightHatchEvents {
             return;
         }
 
-        boolean isOccupied = state.getValue(AirtightHatchBlock.CANISTER_TYPE) != CanisterType.EMPTY;
-        boolean hasCanister = event.getItemStack().getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents;
+        boolean isOccupied = level.getBlockEntity(event.getPos()) instanceof AirtightHatchBlockEntity hatch ? !hatch.isEmpty() : state.getValue(AirtightHatchBlock.CANISTER_TYPE) != CanisterType.EMPTY;
+        boolean hasCanister = AirtightHatchCanisters.isCompatible(event.getItemStack());
         if (!isOccupied && !hasCanister) {
             return;
         }

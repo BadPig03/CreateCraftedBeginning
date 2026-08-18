@@ -45,6 +45,10 @@ public class AirtightForgingPressBlock extends Block implements IBE<AirtightForg
         return CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_BLOCK.getDefaultState().setValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION, position);
     }
 
+    private static boolean isExpectedStructure(BlockState state, AirtightForgingPressStructuralPosition position) {
+        return state.getBlock() instanceof IAirtightForgingPressStructural structural && state.getValue(structural.getStructuralPosition()) == position;
+    }
+
     @Override
     protected boolean skipRendering(BlockState state, BlockState adjacentState, Direction direction) {
         return true;
@@ -78,21 +82,41 @@ public class AirtightForgingPressBlock extends Block implements IBE<AirtightForg
     @Override
     public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         for (AirtightForgingPressStructuralPosition position : AirtightForgingPressStructuralPosition.all()) {
+            BlockState currentState = level.getBlockState(pos.offset(position.getStructureOffset()));
+            if (!currentState.canBeReplaced() && !isExpectedStructure(currentState, position)) {
+                abortStructureFormation(level, pos);
+                return;
+            }
+        }
+
+        for (AirtightForgingPressStructuralPosition position : AirtightForgingPressStructuralPosition.all()) {
             BlockPos structurePos = pos.offset(position.getStructureOffset());
-            BlockState structureState = getStructureState(position);
             BlockState currentState = level.getBlockState(structurePos);
-            if (currentState.canBeReplaced()) {
-                level.setBlockAndUpdate(structurePos, structureState);
+            if (isExpectedStructure(currentState, position)) {
                 continue;
             }
 
-            boolean isExpectedStructure = currentState.getBlock() instanceof IAirtightForgingPressStructural structural && currentState.getValue(structural.getStructuralPosition()) == position;
-            if (isExpectedStructure) {
+            if (currentState.canBeReplaced() && level.setBlockAndUpdate(structurePos, getStructureState(position)) && isExpectedStructure(level.getBlockState(structurePos), position)) {
                 continue;
             }
 
-            level.destroyBlock(pos, false);
+            abortStructureFormation(level, pos);
             return;
+        }
+    }
+
+    private void abortStructureFormation(ServerLevel level, BlockPos pos) {
+        if (level.getBlockState(pos).is(this)) {
+            level.destroyBlock(pos, true);
+        }
+
+        for (AirtightForgingPressStructuralPosition position : AirtightForgingPressStructuralPosition.all()) {
+            BlockPos structurePos = pos.offset(position.getStructureOffset());
+            if (!isExpectedStructure(level.getBlockState(structurePos), position)) {
+                continue;
+            }
+
+            level.destroyBlock(structurePos, false);
         }
     }
 
@@ -112,9 +136,11 @@ public class AirtightForgingPressBlock extends Block implements IBE<AirtightForg
         BlockPos pos = context.getClickedPos();
         for (AirtightForgingPressStructuralPosition position : AirtightForgingPressStructuralPosition.all()) {
             BlockState occupiedState = level.getBlockState(pos.offset(position.getStructureOffset()));
-            if (!occupiedState.canBeReplaced()) {
-                return null;
+            if (occupiedState.canBeReplaced()) {
+                continue;
             }
+
+            return null;
         }
         return state;
     }

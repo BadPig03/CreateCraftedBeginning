@@ -19,7 +19,7 @@ public class AirtightBaseArmorItem extends ArmorItem {
     private static final ResourceLocation OUTER_TEXTURE = CCBAPI.asResource("textures/models/armor/airtight_layer_1.png");
     private static final ResourceLocation INNER_TEXTURE = CCBAPI.asResource("textures/models/armor/airtight_layer_2.png");
 
-    public AirtightBaseArmorItem(Type type, Properties properties) {
+    protected AirtightBaseArmorItem(Type type, Properties properties) {
         super(CCBArmorMaterials.AIRTIGHT, type, properties.stacksTo(1));
     }
 

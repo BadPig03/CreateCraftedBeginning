@@ -8,7 +8,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightAssemblyDriverSerialization {
+final class AirtightAssemblyDriverSerialization {
     private static final String COMPOUND_KEY_FLOW_METER = "FlowMeter";
     private static final String COMPOUND_KEY_STRUCTURE_MANAGER = "StructureManager";
     private static final String COMPOUND_KEY_LEVEL_CALCULATOR = "LevelCalculator";
@@ -16,11 +16,11 @@ public final class AirtightAssemblyDriverSerialization {
 
     private final AirtightAssemblyDriverCore driverCore;
 
-    public AirtightAssemblyDriverSerialization(AirtightAssemblyDriverCore driverCore) {
+    AirtightAssemblyDriverSerialization(AirtightAssemblyDriverCore driverCore) {
         this.driverCore = driverCore;
     }
 
-    public CompoundTag write(Provider provider, boolean clientPacket) {
+    CompoundTag write(Provider provider, boolean clientPacket) {
         CompoundTag tag = new CompoundTag();
         tag.put(COMPOUND_KEY_FLOW_METER, driverCore.getFlowMeter().write(provider, clientPacket));
         tag.put(COMPOUND_KEY_LEVEL_CALCULATOR, driverCore.getLevelCalculator().write(clientPacket));
@@ -33,7 +33,7 @@ public final class AirtightAssemblyDriverSerialization {
         return tag;
     }
 
-    public void read(CompoundTag tag, Provider provider, boolean clientPacket) {
+    void read(CompoundTag tag, Provider provider, boolean clientPacket) {
         if (clientPacket) {
             readClient(tag, provider);
         }

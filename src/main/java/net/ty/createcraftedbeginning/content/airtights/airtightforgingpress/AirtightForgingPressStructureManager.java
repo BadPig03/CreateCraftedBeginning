@@ -10,7 +10,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightForgingPressStructureManager {
+class AirtightForgingPressStructureManager {
     private static final String COMPOUND_KEY_PREVIOUS_SPEED = "PreviousSpeed";
     private static final String COMPOUND_KEY_SPEED = "Speed";
     private static final String COMPOUND_KEY_PREVIOUS_THEORETICAL_SPEED = "PreviousTheoreticalSpeed";
@@ -26,7 +26,7 @@ public class AirtightForgingPressStructureManager {
     private boolean previousOverstressed;
     private boolean overstressed;
 
-    public AirtightForgingPressStructureManager(AirtightForgingPressBlockEntity press) {
+    AirtightForgingPressStructureManager(AirtightForgingPressBlockEntity press) {
         this.press = press;
     }
 
@@ -61,7 +61,7 @@ public class AirtightForgingPressStructureManager {
         return level.getBlockEntity(shaftPos) instanceof AirtightForgingPressStructuralShaftBlockEntity shaft && shaft.getOverstressed();
     }
 
-    public void tick() {
+    void tick() {
         if (!evaluate()) {
             return;
         }
@@ -70,27 +70,7 @@ public class AirtightForgingPressStructureManager {
         press.sendData();
     }
 
-    public boolean evaluate() {
-        Level level = press.getLevel();
-        if (level == null) {
-            return false;
-        }
-
-        BlockPos pressPos = press.getBlockPos();
-        previousSpeed = speed;
-        speed = getSpeed(pressPos, level);
-        previousTheoreticalSpeed = theoreticalSpeed;
-        theoreticalSpeed = getTheoreticalSpeed(pressPos, level);
-        previousOverstressed = overstressed;
-        overstressed = isOverstressed(pressPos, level);
-
-        boolean speedChanged = previousSpeed != speed;
-        boolean theoreticalSpeedChanged = previousTheoreticalSpeed != theoreticalSpeed;
-        boolean stressChanged = previousOverstressed != overstressed;
-        return speedChanged || theoreticalSpeedChanged || stressChanged;
-    }
-
-    public CompoundTag write() {
+    CompoundTag write() {
         CompoundTag tag = new CompoundTag();
         tag.putFloat(COMPOUND_KEY_SPEED, speed);
         tag.putFloat(COMPOUND_KEY_PREVIOUS_SPEED, previousSpeed);
@@ -101,7 +81,7 @@ public class AirtightForgingPressStructureManager {
         return tag;
     }
 
-    public void read(CompoundTag compoundTag) {
+    void read(CompoundTag compoundTag) {
         if (compoundTag.contains(COMPOUND_KEY_SPEED)) {
             speed = compoundTag.getFloat(COMPOUND_KEY_SPEED);
         }
@@ -124,15 +104,44 @@ public class AirtightForgingPressStructureManager {
         previousOverstressed = compoundTag.getBoolean(COMPOUND_KEY_PREVIOUS_OVERSTRESSED);
     }
 
-    public float getSpeed() {
+    float getSpeed() {
         return speed;
     }
 
-    public float getTheoreticalSpeed() {
+    float getTheoreticalSpeed() {
         return theoreticalSpeed;
     }
 
-    public boolean getOverstressed() {
+    float getRealSpeed() {
+        Level level = press.getLevel();
+        if (level == null) {
+            return 0;
+        }
+
+        return getSpeed(press.getBlockPos(), level);
+    }
+
+    boolean getOverstressed() {
         return overstressed;
+    }
+
+    private boolean evaluate() {
+        Level level = press.getLevel();
+        if (level == null) {
+            return false;
+        }
+
+        BlockPos pressPos = press.getBlockPos();
+        previousSpeed = speed;
+        speed = getSpeed(pressPos, level);
+        previousTheoreticalSpeed = theoreticalSpeed;
+        theoreticalSpeed = getTheoreticalSpeed(pressPos, level);
+        previousOverstressed = overstressed;
+        overstressed = isOverstressed(pressPos, level);
+
+        boolean speedChanged = previousSpeed != speed;
+        boolean theoreticalSpeedChanged = previousTheoreticalSpeed != theoreticalSpeed;
+        boolean stressChanged = previousOverstressed != overstressed;
+        return speedChanged || theoreticalSpeedChanged || stressChanged;
     }
 }

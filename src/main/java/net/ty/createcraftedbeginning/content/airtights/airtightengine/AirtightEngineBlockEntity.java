@@ -28,10 +28,10 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
     private static final int LAZY_TICK_RATE = 20;
     private static final List<BlockPos> COG_NEIGHBOUR_OFFSETS = List.of(new BlockPos(-1, -1, 0), new BlockPos(-1, 0, -1), new BlockPos(-1, 0, 1), new BlockPos(-1, 1, 0), new BlockPos(0, -1, -1), new BlockPos(0, -1, 1), new BlockPos(0, 1, -1), new BlockPos(0, 1, 1), new BlockPos(1, -1, 0), new BlockPos(1, 0, -1), new BlockPos(1, 0, 1), new BlockPos(1, 1, 0));
 
-    protected final AirtightEngineAnimationState animationState = new AirtightEngineAnimationState();
-    protected final AirtightEngineDriveController driveController = new AirtightEngineDriveController(this);
+    private final AirtightEngineAnimationState animationState = new AirtightEngineAnimationState();
+    private final AirtightEngineDriveController driveController = new AirtightEngineDriveController(this);
 
-    protected CCBAdvancementBehaviour advancementBehaviour;
+    private CCBAdvancementBehaviour advancementBehaviour;
 
     public AirtightEngineBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -85,7 +85,7 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
     @Override
     public void onSpeedChanged(float previousSpeed) {
         super.onSpeedChanged(previousSpeed);
-        if (level == null || level.isClientSide || getSpeed() == 0) {
+        if (level == null || level.isClientSide || getSpeed() == 0 || getGeneratedSpeed() == 0) {
             return;
         }
 
@@ -103,7 +103,7 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
     }
 
     @Override
-    public void write(CompoundTag tag, Provider provider, boolean clientPacket) {
+    protected void write(CompoundTag tag, Provider provider, boolean clientPacket) {
         super.write(tag, provider, clientPacket);
         if (clientPacket) {
             return;
@@ -142,27 +142,27 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
         return neighbours;
     }
 
-    public void updateRotation() {
+    void updateRotation() {
         driveController.rebuildKineticNetwork();
     }
 
-    public float getPistonPhase(float partialTicks) {
+    float getPistonPhase(float partialTicks) {
         return animationState.getPistonPhase(partialTicks);
     }
 
-    public boolean isEngineOverStressed() {
+    boolean isEngineOverStressed() {
         return isOverStressed();
     }
 
-    public boolean hasKineticNetwork() {
+    boolean hasKineticNetwork() {
         return hasNetwork();
     }
 
-    public void applyGeneratedRotation() {
+    void applyGeneratedRotation() {
         updateGeneratedRotation();
     }
 
-    public void rebuildKineticNetwork() {
+    void rebuildKineticNetwork() {
         if (level == null || level.isClientSide) {
             return;
         }

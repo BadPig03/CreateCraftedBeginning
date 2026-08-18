@@ -19,43 +19,19 @@ import java.util.stream.Stream;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class BaseTemplate {
-    protected abstract Stream<BlockPos> getBaseAreaStream(int[] params);
-
-    public int[] getDefaultRelativePosition() {
-        return new int[]{0, 0, 0};
+    BaseTemplate() {
     }
 
-    public Set<BlockPos> getTargetPositions(ItemStack drill, BlockPos basePos, Level level, BlockState baseState) {
-        int[] params = AirtightHandheldDrillUtils.getMiningSizeParams(drill);
-        int[] relativePosition = AirtightHandheldDrillUtils.getRelativePositionParams(drill);
-        Direction direction = AirtightHandheldDrillUtils.getMiningDirection(drill);
-        BlockPos relativeOffset = getRelativeOffset(direction, relativePosition);
-        return getBaseAreaStream(params).map(pos -> applyOffset(pos, direction, relativeOffset)).map(basePos::offset).collect(Collectors.toCollection(LinkedHashSet::new));
-    }
-
-    public boolean usesSpatialParameters() {
-        return true;
-    }
-
-    public abstract int getMinValue(int index);
-
-    public abstract int getMaxValue(int index);
-
-    public Set<BlockPos> getOffset(int[] params, Direction direction, int[] relativeParams) {
-        BlockPos relativeOffset = getRelativeOffset(direction, relativeParams);
-        return getBaseAreaStream(params).map(pos -> applyOffset(pos, direction, relativeOffset)).collect(Collectors.toCollection(LinkedHashSet::new));
-    }
-
-    protected BlockPos applyOffset(BlockPos pos, Direction direction, BlockPos relativeOffset) {
+    private static BlockPos applyOffset(BlockPos pos, Direction direction, BlockPos relativeOffset) {
         return rotate(pos, direction).offset(relativeOffset);
     }
 
-    protected BlockPos getRelativeOffset(Direction direction, int @NotNull [] relativeParams) {
+    private static BlockPos getRelativeOffset(Direction direction, int @NotNull [] relativeParams) {
         return rotate(new BlockPos(-relativeParams[0], -relativeParams[1], -relativeParams[2]), direction);
     }
 
     @Contract("_, _ -> new")
-    protected BlockPos rotate(BlockPos pos, Direction direction) {
+    private static BlockPos rotate(BlockPos pos, Direction direction) {
         int x = pos.getX();
         int y = pos.getY();
         int z = pos.getZ();
@@ -88,5 +64,32 @@ public abstract class BaseTemplate {
                 break;
         }
         return new BlockPos(newX, newY, newZ);
+    }
+
+    public int[] getDefaultRelativePosition() {
+        return new int[]{0, 0, 0};
+    }
+
+    public Set<BlockPos> getTargetPositions(ItemStack drill, BlockPos basePos, Level level, BlockState baseState) {
+        int[] params = AirtightHandheldDrillUtils.getMiningSizeParams(drill);
+        int[] relativePosition = AirtightHandheldDrillUtils.getRelativePositionParams(drill);
+        Direction direction = AirtightHandheldDrillUtils.getMiningDirection(drill);
+        BlockPos relativeOffset = getRelativeOffset(direction, relativePosition);
+        return getBaseAreaStream(params).map(pos -> applyOffset(pos, direction, relativeOffset)).map(basePos::offset).collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    public boolean usesSpatialParameters() {
+        return true;
+    }
+
+    public abstract int getMinValue(int index);
+
+    public abstract int getMaxValue(int index);
+
+    abstract Stream<BlockPos> getBaseAreaStream(int[] params);
+
+    public Set<BlockPos> getOffset(int[] params, Direction direction, int[] relativeParams) {
+        BlockPos relativeOffset = getRelativeOffset(direction, relativeParams);
+        return getBaseAreaStream(params).map(pos -> applyOffset(pos, direction, relativeOffset)).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }

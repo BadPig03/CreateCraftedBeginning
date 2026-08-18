@@ -8,20 +8,20 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightForgingPressCore {
+class AirtightForgingPressCore {
     private static final String COMPOUND_KEY_STRUCTURE_MANAGER = "StructureManager";
 
     private final AirtightForgingPressBlockEntity press;
     private final AirtightForgingPressStructureManager structureManager;
     private final AirtightForgingPressTooltipBuilder tooltipBuilder;
 
-    public AirtightForgingPressCore(AirtightForgingPressBlockEntity press) {
+    AirtightForgingPressCore(AirtightForgingPressBlockEntity press) {
         this.press = press;
         structureManager = new AirtightForgingPressStructureManager(press);
         tooltipBuilder = new AirtightForgingPressTooltipBuilder(this, press);
     }
 
-    public void lazyTick() {
+    void lazyTick() {
         Level level = press.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -30,21 +30,21 @@ public class AirtightForgingPressCore {
         structureManager.tick();
     }
 
-    public CompoundTag write() {
+    CompoundTag write() {
         CompoundTag tag = new CompoundTag();
         tag.put(COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.write());
         return tag;
     }
 
-    public void read(CompoundTag compoundTag) {
+    void read(CompoundTag compoundTag) {
         structureManager.read(compoundTag.getCompound(COMPOUND_KEY_STRUCTURE_MANAGER));
     }
 
-    public AirtightForgingPressStructureManager getStructureManager() {
+    AirtightForgingPressStructureManager getStructureManager() {
         return structureManager;
     }
 
-    public AirtightForgingPressTooltipBuilder getTooltipBuilder() {
+    AirtightForgingPressTooltipBuilder getTooltipBuilder() {
         return tooltipBuilder;
     }
 }

@@ -12,7 +12,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightForgingPressInteractionPoint extends ArmInteractionPoint {
-    public AirtightForgingPressInteractionPoint(ArmInteractionPointType type, Level level, BlockPos pos, BlockState state) {
+    private AirtightForgingPressInteractionPoint(ArmInteractionPointType type, Level level, BlockPos pos, BlockState state) {
         super(type, level, pos, state);
     }
 

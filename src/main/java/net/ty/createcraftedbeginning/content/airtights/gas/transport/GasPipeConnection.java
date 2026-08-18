@@ -35,18 +35,24 @@ public final class GasPipeConnection {
     private static final String COMPOUND_KEY_INBOUND = "Inbound";
     private static final String COMPOUND_KEY_GAS = "Gas";
     private static final String COMPOUND_KEY_PENDING_TRANSFER = "PendingTransfer";
+    private static final String COMPOUND_KEY_PENDING_TRANSFER_ORIGIN = "PendingTransferOrigin";
     private static final String COMPOUND_KEY_SIDE = "Side";
+    private static final int RETIRED_RECOVERY_INITIAL_DELAY_TICKS = 20;
+    private static final int RETIRED_RECOVERY_MAX_DELAY_TICKS = 640;
 
     private final Direction side;
     private long inboundPressureUnits;
     private long outwardPressureUnits;
     private boolean pressureContributed;
     private GasStack pendingTransfer;
+    private PendingTransferOrigin pendingTransferOrigin;
+    private int retiredRecoveryDelayTicks;
+    private int retiredRecoveryCooldownTicks;
 
     @Nullable
     private GasFlowSource source;
     @Nullable
-    private AirFlow flow;
+    private GasFlow flow;
     @Nullable
     private GasNetwork network;
     @Nullable
@@ -55,6 +61,8 @@ public final class GasPipeConnection {
     public GasPipeConnection(Direction side) {
         this.side = side;
         pendingTransfer = GasStack.EMPTY;
+        pendingTransferOrigin = PendingTransferOrigin.UNSPECIFIED;
+        retiredRecoveryDelayTicks = RETIRED_RECOVERY_INITIAL_DELAY_TICKS;
     }
 
     @Nullable
@@ -84,7 +92,17 @@ public final class GasPipeConnection {
 
         GasPipeConnection connection = new GasPipeConnection(retiredSide);
         connection.pendingTransfer = pending;
+        connection.pendingTransferOrigin = readPendingTransferOrigin(retiredData);
+        connection.beginRetiredRecoveryBackoff();
         return connection;
+    }
+
+    private static PendingTransferOrigin readPendingTransferOrigin(CompoundTag connectionData) {
+        if (!connectionData.contains(COMPOUND_KEY_PENDING_TRANSFER_ORIGIN, Tag.TAG_STRING)) {
+            return PendingTransferOrigin.ANY_ENDPOINT;
+        }
+
+        return PendingTransferOrigin.fromSerializedName(connectionData.getString(COMPOUND_KEY_PENDING_TRANSFER_ORIGIN));
     }
 
     public Direction getSide() {
@@ -92,7 +110,7 @@ public final class GasPipeConnection {
     }
 
     @Nullable
-    public AirFlow getFlow() {
+    public GasFlow getFlow() {
         return flow;
     }
 
@@ -123,27 +141,12 @@ public final class GasPipeConnection {
         return true;
     }
 
-    @SuppressWarnings("unused")
-    private float comparePressure() {
-        return GasPressure.toPressure(outwardPressureUnits) - GasPressure.toPressure(inboundPressureUnits);
-    }
-
     public int getPressureDirection() {
         return Long.compare(outwardPressureUnits, inboundPressureUnits);
     }
 
-    @SuppressWarnings("unused")
-    private float getOutwardPressure() {
-        return GasPressure.toPressure(outwardPressureUnits);
-    }
-
     public long getOutwardPressureUnits() {
         return outwardPressureUnits;
-    }
-
-    @SuppressWarnings("unused")
-    private float getInboundPressure() {
-        return GasPressure.toPressure(inboundPressureUnits);
     }
 
     public long getInboundPressureUnits() {
@@ -187,6 +190,27 @@ public final class GasPipeConnection {
         return true;
     }
 
+    public boolean validateExistingInboundFlow(Level level, BlockPos pos, Predicate<GasStack> extractionPredicate) {
+        if (flow == null || !flow.inbound) {
+            return false;
+        }
+
+        if (source == null && !determineSource(level, pos)) {
+            flow = null;
+            retireNetwork();
+            return true;
+        }
+
+        GasFlowSource flowSource = source;
+        GasStack provided = flowSource.provideGas(extractionPredicate);
+        if (!hasPressure() || getPressureDirection() >= 0 || provided.isEmpty() || !GasStack.isSameGasSameComponents(provided, flow.gas)) {
+            flow = null;
+            retireNetwork();
+            return true;
+        }
+        return false;
+    }
+
     public boolean manageFlows(Level level, BlockPos pos, GasStack internalGas, Predicate<GasStack> extractionPredicate) {
         recoverRetiredNetwork();
         if (source == null && !determineSource(level, pos)) {
@@ -199,7 +223,7 @@ public final class GasPipeConnection {
             return startFlow(flowSource, internalGas, extractionPredicate);
         }
 
-        GasStack provided = flow.inbound ? flowSource.provideGas(extractionPredicate) : internalGas;
+        GasStack provided = flow.inbound ? flow.gas : internalGas;
         if (!hasPressure() || provided.isEmpty() || !GasStack.isSameGasSameComponents(provided, flow.gas)) {
             flow = null;
             retireNetwork();
@@ -227,8 +251,15 @@ public final class GasPipeConnection {
         else if (!network.isActive()) {
             network.reset();
         }
-        network.tick();
         return false;
+    }
+
+    public void tickNetwork() {
+        if (network == null || !network.isActive()) {
+            return;
+        }
+
+        network.tick();
     }
 
     private boolean startFlow(GasFlowSource flowSource, GasStack internalGas, Predicate<GasStack> extractionPredicate) {
@@ -258,14 +289,14 @@ public final class GasPipeConnection {
             return false;
         }
 
-        flow = new AirFlow(inbound, stack);
+        flow = new GasFlow(inbound, stack);
         return true;
     }
 
     @Nullable
     private ICapabilityProvider<IGasHandler> getCurrentGasHandlerProvider() {
         GasFlowSource currentSource = source;
-        if (currentSource == null || !currentSource.isEndpoint()) {
+        if (currentSource == null || !currentSource.isEndpoint() || !pendingTransfer.isEmpty() && !pendingTransferOrigin.accepts(currentSource)) {
             return null;
         }
         return currentSource.getGasHandlerProvider();
@@ -357,7 +388,11 @@ public final class GasPipeConnection {
             return;
         }
 
+        capturePendingTransferOrigin();
         connectionData.put(COMPOUND_KEY_PENDING_TRANSFER, pendingTransfer.saveOptional(provider));
+        if (pendingTransferOrigin != PendingTransferOrigin.UNSPECIFIED && pendingTransferOrigin != PendingTransferOrigin.ANY_ENDPOINT) {
+            connectionData.putString(COMPOUND_KEY_PENDING_TRANSFER_ORIGIN, pendingTransferOrigin.serializedName);
+        }
     }
 
     public CompoundTag writeRetiredData(Provider provider) {
@@ -397,7 +432,7 @@ public final class GasPipeConnection {
 
         boolean inbound = flowData.getBoolean(COMPOUND_KEY_INBOUND);
         if (flow == null) {
-            flow = new AirFlow(inbound, gas);
+            flow = new GasFlow(inbound, gas);
             return;
         }
 
@@ -414,6 +449,7 @@ public final class GasPipeConnection {
         source = null;
         previousSource = null;
         pendingTransfer = connectionData.contains(COMPOUND_KEY_PENDING_TRANSFER, Tag.TAG_COMPOUND) ? GasStack.parseOptional(provider, connectionData.getCompound(COMPOUND_KEY_PENDING_TRANSFER)) : GasStack.EMPTY;
+        pendingTransferOrigin = pendingTransfer.isEmpty() ? PendingTransferOrigin.UNSPECIFIED : readPendingTransferOrigin(connectionData);
         if (!connectionData.contains(COMPOUND_KEY_OPEN_END, Tag.TAG_COMPOUND)) {
             return;
         }
@@ -424,6 +460,7 @@ public final class GasPipeConnection {
     }
 
     public boolean prepareForRemoval(Level level, BlockPos pos) {
+        capturePendingTransferOrigin();
         inboundPressureUnits = 0;
         outwardPressureUnits = 0;
         pressureContributed = false;
@@ -438,6 +475,30 @@ public final class GasPipeConnection {
         return true;
     }
 
+    public void beginRetiredRecoveryBackoff() {
+        retiredRecoveryDelayTicks = RETIRED_RECOVERY_INITIAL_DELAY_TICKS;
+        retiredRecoveryCooldownTicks = RETIRED_RECOVERY_INITIAL_DELAY_TICKS;
+    }
+
+    public boolean tryRecoverRetired(Level level, BlockPos pos) {
+        if (retiredRecoveryCooldownTicks > 0) {
+            retiredRecoveryCooldownTicks--;
+            return false;
+        }
+
+        if (network == null) {
+            source = null;
+        }
+
+        if (prepareForRemoval(level, pos)) {
+            return true;
+        }
+
+        retiredRecoveryDelayTicks = Math.min(retiredRecoveryDelayTicks * 2, RETIRED_RECOVERY_MAX_DELAY_TICKS);
+        retiredRecoveryCooldownTicks = retiredRecoveryDelayTicks;
+        return false;
+    }
+
     private boolean recoverPendingTransferWithoutNetwork(Level level, BlockPos pos) {
         if (pendingTransfer.isEmpty()) {
             return true;
@@ -447,7 +508,7 @@ public final class GasPipeConnection {
             return false;
         }
         GasFlowSource currentSource = source;
-        if (currentSource == null || !currentSource.isEndpoint()) {
+        if (currentSource == null || !currentSource.isEndpoint() || !pendingTransferOrigin.accepts(currentSource)) {
             return false;
         }
 
@@ -488,6 +549,25 @@ public final class GasPipeConnection {
 
     private void setPendingTransfer(GasStack stack) {
         pendingTransfer = stack.isEmpty() ? GasStack.EMPTY : stack.copy();
+        if (pendingTransfer.isEmpty()) {
+            pendingTransferOrigin = PendingTransferOrigin.UNSPECIFIED;
+            return;
+        }
+        capturePendingTransferOrigin();
+    }
+
+    private void capturePendingTransferOrigin() {
+        if (pendingTransfer.isEmpty() || pendingTransferOrigin != PendingTransferOrigin.UNSPECIFIED) {
+            return;
+        }
+
+        GasFlowSource recoverySource = source != null ? source : previousSource;
+        if (recoverySource instanceof OpenEndedSource) {
+            pendingTransferOrigin = PendingTransferOrigin.OPEN_END;
+        }
+        else if (recoverySource instanceof ExternalHandlerSource) {
+            pendingTransferOrigin = PendingTransferOrigin.EXTERNAL;
+        }
     }
 
     public void wipePressure() {
@@ -543,11 +623,41 @@ public final class GasPipeConnection {
         }
     }
 
-    public static final class AirFlow {
+    private enum PendingTransferOrigin {
+        UNSPECIFIED(""),
+        ANY_ENDPOINT("any"),
+        OPEN_END("open_end"),
+        EXTERNAL("external");
+
+        private final String serializedName;
+
+        PendingTransferOrigin(String serializedName) {
+            this.serializedName = serializedName;
+        }
+
+        private static PendingTransferOrigin fromSerializedName(String name) {
+            for (PendingTransferOrigin origin : values()) {
+                if (origin.serializedName.equals(name)) {
+                    return origin;
+                }
+            }
+            return ANY_ENDPOINT;
+        }
+
+        private boolean accepts(GasFlowSource source) {
+            return switch (this) {
+                case OPEN_END -> source instanceof OpenEndedSource;
+                case EXTERNAL -> source instanceof ExternalHandlerSource;
+                case UNSPECIFIED, ANY_ENDPOINT -> true;
+            };
+        }
+    }
+
+    public static final class GasFlow {
         public boolean inbound;
         public GasStack gas;
 
-        private AirFlow(boolean inbound, GasStack gas) {
+        private GasFlow(boolean inbound, GasStack gas) {
             this.inbound = inbound;
             this.gas = gas;
         }

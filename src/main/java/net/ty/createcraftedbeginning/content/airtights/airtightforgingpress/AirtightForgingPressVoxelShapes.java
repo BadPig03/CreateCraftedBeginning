@@ -11,7 +11,10 @@ import java.util.EnumMap;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightForgingPressVoxelShapes {
+final class AirtightForgingPressVoxelShapes {
+    private AirtightForgingPressVoxelShapes() {
+    }
+
     private static final EnumMap<AirtightForgingPressStructuralPosition, VoxelShape> SHAPES_MAP = new EnumMap<>(AirtightForgingPressStructuralPosition.class);
 
     static {
@@ -43,7 +46,7 @@ public final class AirtightForgingPressVoxelShapes {
         SHAPES_MAP.put(AirtightForgingPressStructuralPosition.BOTTOM_RIGHT_DOWN, CCBShapes.AIRTIGHT_FORGING_PRESS_BOTTOM_CORNER.get(Direction.SOUTH));
     }
 
-    public static VoxelShape getShape(AirtightForgingPressStructuralPosition structuralPosition) {
+    static VoxelShape getShape(AirtightForgingPressStructuralPosition structuralPosition) {
         return SHAPES_MAP.getOrDefault(structuralPosition, Shapes.block());
     }
 }

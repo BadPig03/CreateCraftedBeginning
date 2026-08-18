@@ -49,19 +49,19 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
     private static final int COLOR_VALID = 0xFFFFFF;
     private static final int PARAMETER_COUNT = 3;
 
-    protected final List<Label> miningSizeLabels = new ArrayList<>(PARAMETER_COUNT);
-    protected final List<ScrollInput> miningSizeInputs = new ArrayList<>(PARAMETER_COUNT);
-    protected final int[] miningSize;
-    protected final List<Label> relativePositionLabels = new ArrayList<>(PARAMETER_COUNT);
-    protected final List<ScrollInput> relativePositionInputs = new ArrayList<>(PARAMETER_COUNT);
-    protected final int[] relativePosition;
+    private final List<Label> miningSizeLabels = new ArrayList<>(PARAMETER_COUNT);
+    private final List<ScrollInput> miningSizeInputs = new ArrayList<>(PARAMETER_COUNT);
+    private final int[] miningSize;
+    private final List<Label> relativePositionLabels = new ArrayList<>(PARAMETER_COUNT);
+    private final List<ScrollInput> relativePositionInputs = new ArrayList<>(PARAMETER_COUNT);
+    private final int[] relativePosition;
 
-    protected Label miningTemplateLabel;
-    protected ScrollInput miningTemplateInput;
-    protected AirtightHandheldDrillMiningTemplates miningTemplate;
-    protected Label miningDirectionLabel;
-    protected ScrollInput miningDirectionInput;
-    protected Direction miningDirection;
+    private Label miningTemplateLabel;
+    private ScrollInput miningTemplateInput;
+    private AirtightHandheldDrillMiningTemplates miningTemplate;
+    private Label miningDirectionLabel;
+    private ScrollInput miningDirectionInput;
+    private Direction miningDirection;
 
     public AirtightHandheldDrillScreen(AirtightHandheldDrillMenu menu, Inventory inv, Component title) {
         super(menu, inv, title, CCBGUITextures.HANDHELD_DRILL);
@@ -156,7 +156,7 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
         disableUpgradeButton.visible = menu.getCurrentStatusList().stream().allMatch(AirtightUpgradeStatus::isInstalled);
     }
 
-    protected void addUpgradeButton(AirtightUpgrade upgrade) {
+    private void addUpgradeButton(AirtightUpgrade upgrade) {
         Couple<Integer> offset = upgrade.getOffset();
         IconButton button = new IconButton(leftPos + offset.getFirst(), topPos + offset.getSecond(), CCBIcons.get(upgrade.getIcon())).withCallback(() -> onUpgradeButtonPressed(upgrade));
         upgradeButtons.put(upgrade, button);
@@ -186,7 +186,7 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
         super.removed();
     }
 
-    protected void initMiningTemplate() {
+    private void initMiningTemplate() {
         removeWidget(miningTemplateLabel);
         removeWidget(miningTemplateInput);
 
@@ -203,7 +203,7 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
         addRenderableWidget(miningTemplateInput);
     }
 
-    protected void initMiningSize() {
+    private void initMiningSize() {
         removeWidgets(miningSizeLabels);
         removeWidgets(miningSizeInputs);
         miningSizeLabels.clear();
@@ -231,7 +231,7 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
         addRenderableWidgets(miningSizeInputs);
     }
 
-    protected void initMiningRelativePosition() {
+    private void initMiningRelativePosition() {
         removeWidgets(relativePositionLabels);
         removeWidgets(relativePositionInputs);
         relativePositionLabels.clear();
@@ -260,7 +260,7 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
         addRenderableWidgets(relativePositionInputs);
     }
 
-    protected void initMiningDirection() {
+    private void initMiningDirection() {
         removeWidget(miningDirectionLabel);
         removeWidget(miningDirectionInput);
 

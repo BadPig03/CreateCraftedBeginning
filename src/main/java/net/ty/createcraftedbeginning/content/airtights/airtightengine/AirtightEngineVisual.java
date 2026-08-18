@@ -28,11 +28,11 @@ import java.util.function.Consumer;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightEngineVisual extends KineticBlockEntityVisual<AirtightEngineBlockEntity> implements SimpleDynamicVisual, SimpleTickableVisual {
-    protected final Direction direction;
-    protected final Axis axis;
-    protected final int rotationSign;
-    protected final RotatingInstance cogs;
-    protected final TransformedInstance piston;
+    private final Direction direction;
+    private final Axis axis;
+    private final int rotationSign;
+    private final RotatingInstance cogs;
+    private final TransformedInstance piston;
 
     public AirtightEngineVisual(VisualizationContext context, AirtightEngineBlockEntity blockEntity, float partialTick) {
         super(context, blockEntity, partialTick);
@@ -49,7 +49,7 @@ public class AirtightEngineVisual extends KineticBlockEntityVisual<AirtightEngin
         animatePiston(partialTick);
     }
 
-    protected void applyCogBaseRotation() {
+    private void applyCogBaseRotation() {
         if (axis == Axis.X) {
             cogs.rotation.rotateZ(-Mth.HALF_PI * rotationSign);
         }
@@ -61,11 +61,11 @@ public class AirtightEngineVisual extends KineticBlockEntityVisual<AirtightEngin
         }
     }
 
-    protected void updateCogRotation() {
+    private void updateCogRotation() {
         cogs.setup(blockEntity).setPosition(getVisualPosition()).setChanged();
     }
 
-    protected void animatePiston(float partialTick) {
+    private void animatePiston(float partialTick) {
         piston.setIdentityTransform().translate(getVisualPosition()).translate(Translate.CENTER);
         if (axis == Axis.X) {
             piston.rotateZ(-Mth.HALF_PI * rotationSign);

@@ -10,7 +10,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
+import net.ty.createcraftedbeginning.api.gascanisters.IAirtightHatchCanister;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
@@ -22,9 +22,9 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class GasCanisterContainerContents implements IGasCanisterContainer {
-    protected static final List<GasStack> DEFAULT_CONTENT = List.of(GasStack.EMPTY);
+public class GasCanisterContainerContents implements IAirtightHatchCanister {
     public static final int ECONOMIZE_MAX_LEVEL = 3;
+    protected static final List<GasStack> DEFAULT_CONTENT = List.of(GasStack.EMPTY);
     protected final ItemStack canister;
 
     protected GasStack gas;
@@ -196,6 +196,27 @@ public class GasCanisterContainerContents implements IGasCanisterContainer {
 
     @Override
     public void setCapacity(int tank, long capacity) {
+    }
+
+    @Override
+    public HatchCanisterType getAirtightHatchType() {
+        return HatchCanisterType.NORMAL;
+    }
+
+    @Override
+    public GasStack getAirtightHatchContents() {
+        return getGasInTank(0);
+    }
+
+    @Override
+    public long getAirtightHatchCapacity(GasStack contents) {
+        return getTankCapacity(0);
+    }
+
+    @Override
+    public boolean setAirtightHatchContents(GasStack contents) {
+        gas = contents.copy();
+        return true;
     }
 
     protected long fillEmpty(GasStack resource, long tankCapacity) {

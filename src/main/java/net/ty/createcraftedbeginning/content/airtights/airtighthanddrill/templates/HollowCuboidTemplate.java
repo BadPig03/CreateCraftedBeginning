@@ -9,9 +9,19 @@ import java.util.stream.Stream;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class HollowCuboidTemplate extends BaseTemplate {
+class HollowCuboidTemplate extends BaseTemplate {
     @Override
-    protected Stream<BlockPos> getBaseAreaStream(int @NotNull [] params) {
+    public int getMinValue(int index) {
+        return 1;
+    }
+
+    @Override
+    public int getMaxValue(int index) {
+        return 8;
+    }
+
+    @Override
+    Stream<BlockPos> getBaseAreaStream(int @NotNull [] params) {
         int sizeX = params[0];
         int sizeY = params[1];
         int sizeZ = params[2];
@@ -22,15 +32,5 @@ public class HollowCuboidTemplate extends BaseTemplate {
             int z = pos.getZ();
             return x == 0 || x == sizeX - 1 || y == 0 || y == sizeY - 1 || z == 0 || z == sizeZ - 1;
         });
-    }
-
-    @Override
-    public int getMinValue(int index) {
-        return 1;
-    }
-
-    @Override
-    public int getMaxValue(int index) {
-        return 8;
     }
 }

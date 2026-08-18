@@ -89,7 +89,7 @@ public final class AirtightCannonUtils {
         }
     }
 
-    public static Optional<Float> getChargedRatio(ItemStack cannon, int timeCharged) {
+    static Optional<Float> getChargedRatio(ItemStack cannon, int timeCharged) {
         int efficientUseTime = getEfficientUseTime(cannon);
         int minimumUseTime = Math.max(Mth.ceil(efficientUseTime * MIN_CHARGED_RATIO), 1);
         if (timeCharged < minimumUseTime) {
@@ -98,19 +98,12 @@ public final class AirtightCannonUtils {
         return Optional.of(Mth.clamp((float) timeCharged / efficientUseTime, 0, 2));
     }
 
-    public static int getEfficientUseTime(ItemStack cannon) {
+    static int getEfficientUseTime(ItemStack cannon) {
         int quickChargeLevel = getEnchantmentLevel(cannon, Enchantments.QUICK_CHARGE);
         return Math.max(EFFICIENT_USE_TIME - quickChargeLevel * 3, 1);
     }
 
-    public static int getEnchantmentLevel(ItemStack cannon, ResourceKey<Enchantment> enchantment) {
-        if (!cannon.is(CCBItems.AIRTIGHT_CANNON)) {
-            return 0;
-        }
-        return cannon.getTagEnchantments().entrySet().stream().filter(entry -> entry.getKey().is(enchantment)).findFirst().map(Entry::getValue).orElse(0);
-    }
-
-    public static void fireFlares(Level level, Player player, ItemStack flareStack, float chargedRatio) {
+    static void fireFlares(Level level, Player player, ItemStack flareStack, float chargedRatio) {
         InteractionHand hand = player.getUsedItemHand();
         ItemStack cannon = player.getItemInHand(hand);
         if (consumeShotFuel(player, chargedRatio, 1).isEmpty()) {
@@ -135,7 +128,7 @@ public final class AirtightCannonUtils {
         finishShot(player, cannon, hand, barrelPos, lookDirection);
     }
 
-    public static void spawnWindCharges(Level level, Player player, float chargedRatio) {
+    static void spawnWindCharges(Level level, Player player, float chargedRatio) {
         InteractionHand hand = player.getUsedItemHand();
         ItemStack cannon = player.getItemInHand(hand);
         int windChargeCount = getWindChargeCount(cannon);
@@ -178,6 +171,13 @@ public final class AirtightCannonUtils {
         }
 
         finishShot(player, cannon, hand, barrelPos, lookDirection);
+    }
+
+    private static int getEnchantmentLevel(ItemStack cannon, ResourceKey<Enchantment> enchantment) {
+        if (!cannon.is(CCBItems.AIRTIGHT_CANNON)) {
+            return 0;
+        }
+        return cannon.getTagEnchantments().entrySet().stream().filter(entry -> entry.getKey().is(enchantment)).findFirst().map(Entry::getValue).orElse(0);
     }
 
     private static List<LivingEntity> getNearbyEntities(Level level, Vec3 pos, float radius, Entity source, @Nullable Entity owner) {
@@ -244,11 +244,10 @@ public final class AirtightCannonUtils {
         ShootableGadgetItemMethods.sendPackets(player, isSelf -> new AirtightCannonPacket(barrelPos, lookDirection, ItemStack.EMPTY, hand, 1, isSelf));
     }
 
-    private record ShotFuel(Gas gasType, long amount) {
-    }
-
     @FunctionalInterface
     public interface BonusDamageFunction {
         float getDamage(LivingEntity entity);
     }
+
+    private record ShotFuel(Gas gasType, long amount) {}
 }

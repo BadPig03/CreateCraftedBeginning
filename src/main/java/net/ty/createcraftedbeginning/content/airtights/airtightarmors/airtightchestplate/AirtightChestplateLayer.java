@@ -31,11 +31,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightChestplateLayer<T extends LivingEntity, M extends EntityModel<T>> extends RenderLayer<T, M> {
-    public AirtightChestplateLayer(RenderLayerParent<T, M> renderer) {
+    private AirtightChestplateLayer(RenderLayerParent<T, M> renderer) {
         super(renderer);
     }
 
-    public static void registerOn(EntityRenderer<?> renderer) {
+    private static void registerOn(EntityRenderer<?> renderer) {
         if (!(renderer instanceof LivingEntityRenderer<?, ?> livingRenderer)) {
             return;
         }

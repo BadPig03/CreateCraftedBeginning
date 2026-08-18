@@ -47,11 +47,11 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
     private static final double EXTERNAL_IMPULSE_THRESHOLD = 0.05;
     private static final double EXTERNAL_IMPULSE_THRESHOLD_SQR = EXTERNAL_IMPULSE_THRESHOLD * EXTERNAL_IMPULSE_THRESHOLD;
 
-    protected Holder<Gas> gasHolder = Gas.EMPTY_GAS_HOLDER;
-    protected float multiplier = 1;
-    protected float knockback = 0.1f;
-    protected boolean flame;
-    protected Vec3 initMotion = Vec3.ZERO;
+    private Holder<Gas> gasHolder = Gas.EMPTY_GAS_HOLDER;
+    private float multiplier = 1;
+    private float knockback = 0.1f;
+    private boolean flame;
+    private Vec3 initMotion = Vec3.ZERO;
 
     public AirtightCannonWindChargeProjectileEntity(EntityType<AirtightCannonWindChargeProjectileEntity> entityType, Level level) {
         super(entityType, level);
@@ -69,22 +69,6 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
 
     public static void build(Builder<AirtightCannonWindChargeProjectileEntity> builder) {
         builder.sized(DEFAULT_SIZE, DEFAULT_SIZE).eyeHeight(0);
-    }
-
-    public Holder<Gas> getGasHolder() {
-        return gasHolder;
-    }
-
-    public void setMultiplier(float effectMultiplier) {
-        multiplier = effectMultiplier;
-    }
-
-    public void setKnockback(float knockbackMultiplier) {
-        knockback = knockbackMultiplier;
-    }
-
-    public void setFlame(boolean hasFlame) {
-        flame = hasFlame;
     }
 
     @Override
@@ -231,7 +215,23 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         initMotion = new Vec3(motionX, motionY, motionZ);
     }
 
-    protected boolean hasSignificantExternalImpulse() {
+    public void setMultiplier(float effectMultiplier) {
+        multiplier = effectMultiplier;
+    }
+
+    public void setKnockback(float knockbackMultiplier) {
+        knockback = knockbackMultiplier;
+    }
+
+    public void setFlame(boolean hasFlame) {
+        flame = hasFlame;
+    }
+
+    Holder<Gas> getGasHolder() {
+        return gasHolder;
+    }
+
+    private boolean hasSignificantExternalImpulse() {
         double initialSpeedSqr = initMotion.lengthSqr();
         if (initialSpeedSqr <= MIN_INITIAL_MOTION_SQR) {
             return false;
@@ -251,7 +251,7 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         return hasLateralImpulse || hasParallelImpulse;
     }
 
-    protected ListTag createMotionTag() {
+    private ListTag createMotionTag() {
         ListTag motionTag = new ListTag();
         motionTag.add(DoubleTag.valueOf(initMotion.x()));
         motionTag.add(DoubleTag.valueOf(initMotion.y()));
@@ -259,7 +259,7 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         return motionTag;
     }
 
-    protected void readInitialMotion(CompoundTag tag) {
+    private void readInitialMotion(CompoundTag tag) {
         if (!tag.contains(COMPOUND_KEY_INIT_MOTION)) {
             return;
         }
@@ -279,7 +279,7 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         initMotion = new Vec3(motionX, motionY, motionZ);
     }
 
-    protected void readGasHolder(CompoundTag tag) {
+    private void readGasHolder(CompoundTag tag) {
         Tag gasTag = tag.get(COMPOUND_KEY_GAS_HOLDER);
         if (gasTag == null) {
             return;
@@ -288,7 +288,7 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         Gas.HOLDER_CODEC.decode(NbtOps.INSTANCE, gasTag).resultOrPartial(error -> CCBAPI.LOGGER.error("Failed to decode gas holder: {}", error)).map(Pair::getFirst).ifPresent(decodedGasHolder -> gasHolder = decodedGasHolder);
     }
 
-    protected void explodeDirectly(Vec3 position) {
+    private void explodeDirectly(Vec3 position) {
         AirtightCannonHandler cannonHandler = AirtightCannonHandlerUtils.of(gasHolder.value());
         AirtightCannonShotContext shotContext = new AirtightCannonShotContext(this, getOwner(), gasHolder, multiplier, knockback, flame);
         cannonHandler.explode(level(), position, shotContext);

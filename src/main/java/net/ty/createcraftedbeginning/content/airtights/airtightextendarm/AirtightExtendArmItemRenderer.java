@@ -26,14 +26,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(value = Dist.CLIENT, modid = CCBAPI.MOD_ID)
-public class AirtightExtendArmItemRenderer extends CustomRenderedItemModelRenderer {
+final class AirtightExtendArmItemRenderer extends CustomRenderedItemModelRenderer {
     private static final PartialModel COGS = CCBPartialModels.AIRTIGHT_EXTEND_ARM_COGS;
     private static final PartialModel SPRING = CCBPartialModels.AIRTIGHT_EXTEND_ARM_SPRING;
     private static final PartialModel SPRING_CAP = CCBPartialModels.AIRTIGHT_EXTEND_ARM_SPRING_CAP;
     private static final PartialModel POINTING = CCBPartialModels.AIRTIGHT_EXTEND_ARM_POINTING;
 
+    private AirtightExtendArmItemRenderer() {
+    }
+
     @SubscribeEvent
-    public static void register(RegisterClientExtensionsEvent event) {
+    private static void register(RegisterClientExtensionsEvent event) {
         event.registerItem(SimpleCustomRenderer.create(CCBItems.AIRTIGHT_EXTEND_ARM.asItem(), new AirtightExtendArmItemRenderer()), CCBItems.AIRTIGHT_EXTEND_ARM.asItem());
     }
 

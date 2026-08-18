@@ -60,8 +60,11 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
         return false;
     };
 
+    private AirtightCannonItemRenderer() {
+    }
+
     @SubscribeEvent
-    public static void register(RegisterClientExtensionsEvent event) {
+    private static void register(RegisterClientExtensionsEvent event) {
         event.registerItem(SimpleCustomRenderer.create(CCBItems.AIRTIGHT_CANNON.asItem(), new AirtightCannonItemRenderer()), CCBItems.AIRTIGHT_CANNON.asItem());
     }
 

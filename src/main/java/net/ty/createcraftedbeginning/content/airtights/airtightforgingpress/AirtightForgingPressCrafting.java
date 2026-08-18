@@ -24,10 +24,10 @@ import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightForgingPressCrafting {
+final class AirtightForgingPressCrafting {
     private final AirtightForgingPressBlockEntity press;
 
-    public AirtightForgingPressCrafting(AirtightForgingPressBlockEntity press) {
+    AirtightForgingPressCrafting(AirtightForgingPressBlockEntity press) {
         this.press = press;
     }
 
@@ -72,7 +72,7 @@ public final class AirtightForgingPressCrafting {
         return ResourceTransaction.participant(() -> canConsumeItem(inventory, expectedStack, amount), () -> inventory.getStackInSlot(0).copy(), () -> consumeItem(inventory, expectedStack, amount), snapshot -> inventory.setStackInSlot(0, snapshot.copy()));
     }
 
-    public Optional<OutputPlan> planOutputs(List<ItemStack> outputItems) {
+    Optional<OutputPlan> planOutputs(List<ItemStack> outputItems) {
         SmartInventory simulatedOutput = createOutputSimulation();
         if (!insertOutputs(simulatedOutput, outputItems)) {
             return Optional.empty();
@@ -80,7 +80,7 @@ public final class AirtightForgingPressCrafting {
         return Optional.of(new OutputPlan(MachineResourceSnapshots.copyItems(press.getOutputInventory()), MachineResourceSnapshots.copyItems(simulatedOutput)));
     }
 
-    public boolean acceptOutputs(List<ItemStack> outputItems, boolean simulate) {
+    boolean acceptOutputs(List<ItemStack> outputItems, boolean simulate) {
         Optional<OutputPlan> plannedOutput = planOutputs(outputItems);
         if (plannedOutput.isEmpty()) {
             return false;
@@ -99,7 +99,7 @@ public final class AirtightForgingPressCrafting {
         return true;
     }
 
-    public ConsumptionPlan createConsumptionPlan(ItemStack expectedProcessingStack, int processingAmount, ItemStack expectedInputStack, int inputAmount, int[] fluidAmounts, long[] gasAmounts) {
+    ConsumptionPlan createConsumptionPlan(ItemStack expectedProcessingStack, int processingAmount, ItemStack expectedInputStack, int inputAmount, int[] fluidAmounts, long[] gasAmounts) {
         IFluidHandler fluidCapability = press.getFluidCapability();
         IGasHandler gasCapability = press.getGasCapability();
         if (fluidAmounts.length != fluidCapability.getTanks() || gasAmounts.length != gasCapability.getTanks()) {
@@ -115,7 +115,7 @@ public final class AirtightForgingPressCrafting {
         return new ConsumptionPlan(expectedPressHead, expectedProcessingStack, processingAmount, expectedInputStack, inputAmount, expectedFluid, fluidAmounts[0], expectedGas, gasAmounts[0]);
     }
 
-    public boolean commitCraft(ConsumptionPlan consumptionPlan, OutputPlan outputPlan) {
+    boolean commitCraft(ConsumptionPlan consumptionPlan, OutputPlan outputPlan) {
         ResourceTransaction transaction = new ResourceTransaction().require(() -> ItemStack.matches(press.getPressHeadInventory().getStackInSlot(0), consumptionPlan.expectedPressHeadStack())).add(itemConsumptionParticipant(press.getAdditionInventory(), consumptionPlan.expectedProcessingStack(), consumptionPlan.processingAmount())).add(itemConsumptionParticipant(press.getInputInventory(), consumptionPlan.expectedInputStack(), consumptionPlan.inputAmount())).add(ResourceTransaction.participant(() -> canConsumeFluid(consumptionPlan), () -> press.getFluidTankBehaviour().getPrimaryHandler().getFluid().copy(), () -> consumeFluid(consumptionPlan), snapshot -> press.getFluidTankBehaviour().getPrimaryHandler().setFluid(snapshot.copy()))).add(ResourceTransaction.participant(() -> canConsumeGas(consumptionPlan), () -> press.getGasTankBehaviour().getPrimaryHandler().getGasStack().copy(), () -> consumeGas(consumptionPlan), snapshot -> press.getGasTankBehaviour().getPrimaryHandler().setGasStack(snapshot.copy()))).add(ResourceTransaction.participant(() -> outputPlanMatchesCurrent(outputPlan), () -> MachineResourceSnapshots.copyItems(press.getOutputInventory()), () -> {
             applyOutputPlan(outputPlan);
             return true;

@@ -25,7 +25,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public enum QuickSwimmingUpgrade implements TickingAirtightUpgrade {
+enum QuickSwimmingUpgrade implements TickingAirtightUpgrade {
     INSTANCE;
 
     private static final ResourceLocation ID = CCBAPI.asResource("quick_swimming");

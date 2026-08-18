@@ -64,45 +64,45 @@ public enum AirtightForgingPressStructuralPosition implements StringRepresentabl
         return ALL;
     }
 
-    public boolean isShaft() {
-        return isShaft;
-    }
-
-    public boolean isLowerStore() {
-        return masterOffset.getY() == 1;
-    }
-
-    public boolean isUpperStore() {
-        return masterOffset.getY() == -1;
-    }
-
-    public boolean isFilter() {
-        return direction != Direction.UP;
-    }
-
-    public Direction getDirection() {
-        return direction;
-    }
-
-    public Axis getAxis() {
-        return axis;
-    }
-
-    public AxisDirection getAxisDirection() {
-        return axisDirection;
-    }
-
-    public BlockPos getMasterOffset() {
-        return masterOffset;
+    @Contract(pure = true)
+    @Override
+    public String getSerializedName() {
+        return Lang.asId(name());
     }
 
     public BlockPos getStructureOffset() {
         return structureOffset;
     }
 
-    @Contract(pure = true)
-    @Override
-    public String getSerializedName() {
-        return Lang.asId(name());
+    public boolean isShaft() {
+        return isShaft;
+    }
+
+    boolean isLowerStore() {
+        return masterOffset.getY() == 1;
+    }
+
+    boolean isUpperStore() {
+        return masterOffset.getY() == -1;
+    }
+
+    boolean isFilter() {
+        return direction != Direction.UP;
+    }
+
+    Direction getDirection() {
+        return direction;
+    }
+
+    Axis getAxis() {
+        return axis;
+    }
+
+    AxisDirection getAxisDirection() {
+        return axisDirection;
+    }
+
+    BlockPos getMasterOffset() {
+        return masterOffset;
     }
 }

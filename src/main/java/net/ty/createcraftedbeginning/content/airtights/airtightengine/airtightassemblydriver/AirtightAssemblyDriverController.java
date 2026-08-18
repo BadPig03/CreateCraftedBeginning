@@ -12,7 +12,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightAssemblyDriverController {
+final class AirtightAssemblyDriverController {
     private final AirtightAssemblyDriverCore driverCore;
 
     private boolean saveDirty;
@@ -20,11 +20,11 @@ public final class AirtightAssemblyDriverController {
     private boolean activeState;
     private boolean activeStateInitialized;
 
-    public AirtightAssemblyDriverController(AirtightAssemblyDriverCore driverCore) {
+    AirtightAssemblyDriverController(AirtightAssemblyDriverCore driverCore) {
         this.driverCore = driverCore;
     }
 
-    public void tick(AirtightTankBlockEntity controller) {
+    void tick(AirtightTankBlockEntity controller) {
         Level level = controller.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -48,34 +48,34 @@ public final class AirtightAssemblyDriverController {
         flushDirtyState(controller);
     }
 
-    public void markForSave() {
+    void markForSave() {
         saveDirty = true;
     }
 
-    public void markForClientSync() {
+    void markForClientSync() {
         clientDirty = true;
     }
 
-    public void markForSaveAndClientSync() {
+    void markForSaveAndClientSync() {
         saveDirty = true;
         clientDirty = true;
     }
 
-    public void reset() {
+    void reset() {
         activeState = false;
         activeStateInitialized = true;
-        driverCore.getFlowMeter().reset(true);
+        driverCore.getFlowMeter().reset();
         driverCore.getStructureManager().reset();
         driverCore.getLevelCalculator().reset();
         driverCore.getResidueManager().reset();
     }
 
-    public void onReadComplete() {
+    void onReadComplete() {
         saveDirty = false;
         clientDirty = false;
     }
 
-    public void onPersistentLoaded() {
+    void onPersistentLoaded() {
         activeState = false;
         activeStateInitialized = false;
     }
@@ -91,7 +91,7 @@ public final class AirtightAssemblyDriverController {
             return;
         }
 
-        driverCore.getFlowMeter().reset(true);
+        driverCore.getFlowMeter().reset();
     }
 
     private void consumeBufferedGas(GasTank buffer) {

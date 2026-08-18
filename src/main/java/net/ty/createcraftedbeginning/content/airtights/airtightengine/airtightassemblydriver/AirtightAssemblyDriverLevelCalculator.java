@@ -12,7 +12,7 @@ import static net.ty.createcraftedbeginning.content.airtights.airtightengine.air
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightAssemblyDriverLevelCalculator {
+class AirtightAssemblyDriverLevelCalculator {
     private static final String COMPOUND_KEY_RESIDUE_LEVEL = "ResidueLevel";
     private static final String COMPOUND_KEY_SUPPLY_LEVEL = "SupplyLevel";
     private static final String COMPOUND_KEY_WIND_CHARGING_LEVEL = "WindChargingLevel";
@@ -23,7 +23,7 @@ public class AirtightAssemblyDriverLevelCalculator {
     private int residueLevel;
     private int supplyLevel;
 
-    public AirtightAssemblyDriverLevelCalculator(AirtightAssemblyDriverCore driverCore) {
+    AirtightAssemblyDriverLevelCalculator(AirtightAssemblyDriverCore driverCore) {
         this.driverCore = driverCore;
     }
 
@@ -35,7 +35,7 @@ public class AirtightAssemblyDriverLevelCalculator {
         return Mth.clamp(level, 0, MAX_LEVEL);
     }
 
-    public void updateWindChargingLevel(int newLevel) {
+    void updateWindChargingLevel(int newLevel) {
         if (!setWindChargingLevel(newLevel)) {
             return;
         }
@@ -43,7 +43,7 @@ public class AirtightAssemblyDriverLevelCalculator {
         driverCore.markForClientSync();
     }
 
-    public void updateSupplyLevel(int newLevel) {
+    void updateSupplyLevel(int newLevel) {
         if (!setSupplyLevel(newLevel)) {
             return;
         }
@@ -51,7 +51,7 @@ public class AirtightAssemblyDriverLevelCalculator {
         driverCore.markForSaveAndClientSync();
     }
 
-    public void updateResidueLevel(int newLevel) {
+    void updateResidueLevel(int newLevel) {
         if (!setResidueLevel(newLevel)) {
             return;
         }
@@ -59,23 +59,23 @@ public class AirtightAssemblyDriverLevelCalculator {
         driverCore.markForSaveAndClientSync();
     }
 
-    public void loadWindChargingLevel(int newLevel) {
-        setWindChargingLevel(newLevel);
+    void loadWindChargingLevel() {
+        setWindChargingLevel(0);
     }
 
-    public void loadSupplyLevel(int newLevel) {
+    void loadSupplyLevel(int newLevel) {
         setSupplyLevel(newLevel);
     }
 
-    public int getResidueLevel() {
+    int getResidueLevel() {
         return residueLevel;
     }
 
-    public int getSupplyLevel() {
+    int getSupplyLevel() {
         return supplyLevel;
     }
 
-    public Map<LevelKey, Integer> getLevels() {
+    Map<LevelKey, Integer> getLevels() {
         int minLevel = getMinimumLevel();
         int maxLevel = getMaximumLevel();
         Map<LevelKey, Integer> levels = new EnumMap<>(LevelKey.class);
@@ -87,11 +87,11 @@ public class AirtightAssemblyDriverLevelCalculator {
         return levels;
     }
 
-    public int getCurrentLevel() {
+    int getCurrentLevel() {
         return driverCore.getStructureManager().isActive() ? getMinimumLevel() : 0;
     }
 
-    public void reset() {
+    void reset() {
         boolean changed = windChargingLevel != 0 || residueLevel != 0 || supplyLevel != 0;
         windChargingLevel = 0;
         residueLevel = 0;
@@ -103,7 +103,7 @@ public class AirtightAssemblyDriverLevelCalculator {
         driverCore.markForSaveAndClientSync();
     }
 
-    public CompoundTag write(boolean clientPacket) {
+    CompoundTag write(boolean clientPacket) {
         CompoundTag tag = new CompoundTag();
         tag.putInt(COMPOUND_KEY_RESIDUE_LEVEL, residueLevel);
         if (!clientPacket) {
@@ -115,7 +115,7 @@ public class AirtightAssemblyDriverLevelCalculator {
         return tag;
     }
 
-    public void read(CompoundTag compoundTag, boolean clientPacket) {
+    void read(CompoundTag compoundTag, boolean clientPacket) {
         supplyLevel = clientPacket ? readLevel(compoundTag, COMPOUND_KEY_SUPPLY_LEVEL) : 0;
         windChargingLevel = clientPacket ? readLevel(compoundTag, COMPOUND_KEY_WIND_CHARGING_LEVEL) : 0;
         residueLevel = readLevel(compoundTag, COMPOUND_KEY_RESIDUE_LEVEL);
@@ -159,7 +159,7 @@ public class AirtightAssemblyDriverLevelCalculator {
         return true;
     }
 
-    public enum LevelKey {
+    enum LevelKey {
         SUPPLY,
         WIND_CHARGING,
         RESIDUE,

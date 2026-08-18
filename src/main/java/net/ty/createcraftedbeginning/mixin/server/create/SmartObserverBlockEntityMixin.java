@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasManipulationBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPipeConnection.AirFlow;
+import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPipeConnection.GasFlow;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterUtils;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -64,7 +64,7 @@ public abstract class SmartObserverBlockEntityMixin extends SmartBlockEntity {
         if (transportBehaviour != null) {
             Predicate<GasStack> filterTest = ccb$getCompiledGasFilter();
             for (Direction side : Iterate.directions) {
-                AirFlow flow = transportBehaviour.getFlow(side);
+                GasFlow flow = transportBehaviour.getFlow(side);
                 if (flow == null || !flow.inbound) {
                     continue;
                 }

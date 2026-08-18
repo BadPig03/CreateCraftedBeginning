@@ -21,11 +21,11 @@ public class AirtightLeggingsMenu extends AirtightArmorMenu {
         this(CCBMenuTypes.AIRTIGHT_LEGGINGS_MENU.get(), id, inv, extraData);
     }
 
-    public AirtightLeggingsMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
+    private AirtightLeggingsMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
         super(type, id, inv, extraData, UPGRADES);
     }
 
-    public AirtightLeggingsMenu(MenuType<?> type, int id, Inventory inv, ItemStack contentHolder, InteractionHand sourceHand) {
+    AirtightLeggingsMenu(MenuType<?> type, int id, Inventory inv, ItemStack contentHolder, InteractionHand sourceHand) {
         super(type, id, inv, contentHolder, sourceHand, UPGRADES);
     }
 }

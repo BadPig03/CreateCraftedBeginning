@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighthatch;
 
-import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.api.schematic.requirement.SpecialBlockItemRequirement;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
@@ -53,8 +52,8 @@ import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gascanisters.AirtightHatchCanisters;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IAirtightComponent;
-import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -78,27 +77,12 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(CANISTER_TYPE, CanisterType.EMPTY));
     }
 
-    public static boolean hasValidAttachment(LevelReader level, BlockPos hatchPos, BlockState hatchState) {
+    static boolean hasValidAttachment(LevelReader level, BlockPos hatchPos, BlockState hatchState) {
         Direction facing = hatchState.getValue(FACING);
         BlockPos targetPos = hatchPos.relative(facing);
         BlockState targetState = level.getBlockState(targetPos);
-        return canSupportCenter(level, targetPos, facing.getOpposite()) && targetState.getBlock() instanceof IAirtightComponent component && component.isAirtight(targetPos, targetState, facing);
-    }
-
-    private static ItemInteractionResult useOccupiedHatch(ItemStack stack, Level level, BlockPos pos, Player player, boolean isWrench) {
-        if (!isWrench) {
-            if (!stack.isEmpty()) {
-                GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_item", stack.getHoverName());
-            }
-            return ItemInteractionResult.FAIL;
-        }
-
-        if (!(level.getBlockEntity(pos) instanceof AirtightHatchBlockEntity hatch) || !hatch.giveCanisterToPlayer(player)) {
-            return ItemInteractionResult.FAIL;
-        }
-
-        CCBSoundEvents.CANISTER_REMOVED.playOnServer(player.level(), pos, 1, 1);
-        return ItemInteractionResult.SUCCESS;
+        Direction localFace = facing.getOpposite();
+        return canSupportCenter(level, targetPos, localFace) && targetState.getBlock() instanceof IAirtightComponent component && component.canConnectOnFace(targetPos, targetState, localFace);
     }
 
     @Override
@@ -158,8 +142,8 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
         if (!player.isCreative()) {
             getDrops(state, serverLevel, pos, blockEntity, player, context.getItemInHand()).forEach(stack -> ItemHandlerHelper.giveItemToPlayer(player, stack));
         }
-        else if (blockEntity instanceof AirtightHatchBlockEntity hatch && state.getValue(CANISTER_TYPE) != CanisterType.EMPTY) {
-            hatch.giveCanisterToPlayer(player);
+        else if (blockEntity instanceof AirtightHatchBlockEntity hatch && !hatch.isEmpty() && !hatch.giveCanisterToPlayer(player)) {
+            return InteractionResult.SUCCESS;
         }
         state.spawnAfterBreak(serverLevel, pos, ItemStack.EMPTY, true);
         level.destroyBlock(pos, false);
@@ -203,11 +187,27 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        if (state.getValue(CANISTER_TYPE) != CanisterType.EMPTY) {
-            return useOccupiedHatch(stack, level, pos, player, isWrench);
+        if (!(level.getBlockEntity(pos) instanceof AirtightHatchBlockEntity hatch)) {
+            return ItemInteractionResult.FAIL;
         }
 
-        if (!(stack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents)) {
+        if (!hatch.isEmpty()) {
+            if (!isWrench) {
+                if (!stack.isEmpty()) {
+                    GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_item", stack.getHoverName());
+                }
+                return ItemInteractionResult.FAIL;
+            }
+
+            if (!hatch.giveCanisterToPlayer(player)) {
+                return ItemInteractionResult.FAIL;
+            }
+
+            CCBSoundEvents.CANISTER_REMOVED.playOnServer(player.level(), pos, 1, 1);
+            return ItemInteractionResult.SUCCESS;
+        }
+
+        if (!AirtightHatchCanisters.isCompatible(stack)) {
             if (isWrench) {
                 return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
             }
@@ -226,7 +226,7 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
             return ItemInteractionResult.FAIL;
         }
 
-        if (!(level.getBlockEntity(pos) instanceof AirtightHatchBlockEntity hatch) || !hatch.installCanister(stack)) {
+        if (!hatch.installCanister(stack)) {
             return ItemInteractionResult.FAIL;
         }
 
@@ -242,11 +242,14 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
     @Override
     public List<ItemStack> getDrops(BlockState state, Builder builder) {
         List<ItemStack> drops = super.getDrops(state, builder);
-        if (!(builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof AirtightHatchBlockEntity hatch) || state.getValue(CANISTER_TYPE) == CanisterType.EMPTY) {
+        if (!(builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof AirtightHatchBlockEntity hatch)) {
             return drops;
         }
 
-        drops.add(hatch.createCanisterItemStack());
+        ItemStack canister = hatch.createCanisterItemStack();
+        if (!canister.isEmpty()) {
+            drops.add(canister);
+        }
         return drops;
     }
 
@@ -264,18 +267,24 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
     public ItemRequirement getRequiredItems(BlockState state, @Nullable BlockEntity blockEntity) {
         List<StackRequirement> requirements = new ArrayList<>(2);
         requirements.add(new StackRequirement(new ItemStack(asItem()), ItemUseType.CONSUME));
+        if (blockEntity instanceof AirtightHatchBlockEntity hatch) {
+            ItemStack requiredCanister = hatch.createCanisterItemStack();
+            if (!requiredCanister.isEmpty()) {
+                requirements.add(new StrictNbtStackRequirement(requiredCanister, ItemUseType.CONSUME));
+                return new ItemRequirement(requirements);
+            }
+
+            Level level = hatch.getLevel();
+            if (level != null && !level.isClientSide) {
+                return new ItemRequirement(requirements);
+            }
+        }
 
         CanisterType canisterType = state.getValue(CANISTER_TYPE);
-        if (canisterType == CanisterType.EMPTY) {
-            return new ItemRequirement(requirements);
+        if (canisterType != CanisterType.EMPTY) {
+            ItemStack requiredCanister = new ItemStack(canisterType == CanisterType.CREATIVE ? CCBItems.CREATIVE_GAS_CANISTER.asItem() : CCBItems.GAS_CANISTER.asItem());
+            requirements.add(new StrictNbtStackRequirement(requiredCanister, ItemUseType.CONSUME));
         }
-
-        ItemStack requiredCanister = blockEntity instanceof AirtightHatchBlockEntity hatch ? hatch.createCanisterItemStack() : ItemStack.EMPTY;
-        if (requiredCanister.isEmpty()) {
-            requiredCanister = new ItemStack(canisterType == CanisterType.CREATIVE ? CCBItems.CREATIVE_GAS_CANISTER.asItem() : CCBItems.GAS_CANISTER.asItem());
-        }
-
-        requirements.add(new StrictNbtStackRequirement(requiredCanister, ItemUseType.CONSUME));
         return new ItemRequirement(requirements);
     }
 
@@ -293,8 +302,6 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
         EMPTY,
         NORMAL,
         CREATIVE;
-
-        public static final Codec<CanisterType> CODEC = StringRepresentable.fromEnum(CanisterType::values);
 
         @Override
         public String getSerializedName() {

@@ -20,7 +20,7 @@ import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightAssemblyDriverStructureScanner {
+final class AirtightAssemblyDriverStructureScanner {
     private static void scanTankPosition(AirtightTankBlockEntity controller, Level level, Block controllerBlock, BlockPos controllerPos, BlockPos pos, Set<BlockPos> visitedPositions, ScanAccumulator accumulator) {
         if (visitedPositions.contains(pos)) {
             return;
@@ -89,7 +89,7 @@ public final class AirtightAssemblyDriverStructureScanner {
         accumulator.attachedWindChargingLevel += chamber.getWindRemainingLevel();
     }
 
-    public ScanResult scan(AirtightTankBlockEntity controller, Level level) {
+    ScanResult scan(AirtightTankBlockEntity controller, Level level) {
         ScanAccumulator accumulator = new ScanAccumulator();
         Set<BlockPos> visitedPositions = new HashSet<>();
         BlockPos controllerPos = controller.getBlockPos();
@@ -110,7 +110,7 @@ public final class AirtightAssemblyDriverStructureScanner {
         return accumulator.toResult();
     }
 
-    public record ScanResult(boolean complete, boolean structureValid, int attachedEngines, int attachedOutlets, int attachedChambers, int attachedWindChargingLevel, Set<BlockPos> outletPositions) {}
+    record ScanResult(boolean complete, boolean structureValid, int attachedEngines, int attachedOutlets, int attachedChambers, int attachedWindChargingLevel, Set<BlockPos> outletPositions) {}
 
     private static final class ScanAccumulator {
         private final Set<BlockPos> outletPositions = new HashSet<>();

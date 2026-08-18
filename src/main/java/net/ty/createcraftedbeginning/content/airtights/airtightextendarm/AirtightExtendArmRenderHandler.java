@@ -37,9 +37,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AirtightExtendArmRenderHandler {
     public static final AirtightExtendArmRenderHandler INSTANCE = new AirtightExtendArmRenderHandler();
 
-    protected float handAnimation;
-    protected float lastHandAnimation;
-    protected PartialModel pose = CCBPartialModels.AIRTIGHT_EXTEND_ARM_PUNCHING;
+    private float handAnimation;
+    private float lastHandAnimation;
+    private PartialModel pose = CCBPartialModels.AIRTIGHT_EXTEND_ARM_PUNCHING;
+
+    private AirtightExtendArmRenderHandler() {
+    }
 
     private static void renderPlayerArm(RenderHandEvent event, EntityRenderDispatcher renderDispatcher, LocalPlayer player, boolean rightHand, float flip) {
         PoseStack poseStack = event.getPoseStack();
@@ -71,19 +74,19 @@ public class AirtightExtendArmRenderHandler {
         updatePose();
     }
 
-    public float getAnimation(float partialTicks) {
-        return Mth.lerp(partialTicks, lastHandAnimation, handAnimation);
-    }
-
     public void registerListeners(IEventBus bus) {
         bus.addListener(EventPriority.LOWEST, this::onRenderPlayerHand);
     }
 
-    public PartialModel getPose() {
+    float getAnimation(float partialTicks) {
+        return Mth.lerp(partialTicks, lastHandAnimation, handAnimation);
+    }
+
+    PartialModel getPose() {
         return pose;
     }
 
-    protected void updatePose() {
+    private void updatePose() {
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
         if (player == null || !(minecraft.getEntityRenderDispatcher().getItemInHandRenderer() instanceof ItemInHandRendererAccess accessor)) {
@@ -103,7 +106,7 @@ public class AirtightExtendArmRenderHandler {
         pose = CCBPartialModels.AIRTIGHT_EXTEND_ARM_HOLDING;
     }
 
-    protected void onRenderPlayerHand(RenderHandEvent event) {
+    private void onRenderPlayerHand(RenderHandEvent event) {
         if (event.isCanceled()) {
             return;
         }
@@ -130,7 +133,7 @@ public class AirtightExtendArmRenderHandler {
         event.setCanceled(true);
     }
 
-    protected void renderMainHand(RenderHandEvent event, Minecraft minecraft, LocalPlayer player, ItemStack offhandItem, boolean armInOffhand) {
+    private void renderMainHand(RenderHandEvent event, Minecraft minecraft, LocalPlayer player, ItemStack offhandItem, boolean armInOffhand) {
         boolean rightHand = event.getHand() == InteractionHand.MAIN_HAND ^ player.getMainArm() == HumanoidArm.LEFT;
         float flip = rightHand ? 1 : -1;
         float swingProgress = event.getSwingProgress();

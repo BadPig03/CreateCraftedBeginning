@@ -49,26 +49,6 @@ public final class AirtightAssemblyDriverCore {
         controller.tick(tankController);
     }
 
-    public AirtightAssemblyDriverFlowMeter getFlowMeter() {
-        return flowMeter;
-    }
-
-    public AirtightAssemblyDriverStructureManager getStructureManager() {
-        return structureManager;
-    }
-
-    public AirtightAssemblyDriverLevelCalculator getLevelCalculator() {
-        return levelCalculator;
-    }
-
-    public AirtightAssemblyDriverResidueManager getResidueManager() {
-        return residueManager;
-    }
-
-    public IGasHandler getGasHandler() {
-        return gasHandler;
-    }
-
     public void requestStructureEvaluation() {
         structureManager.requestEvaluation();
     }
@@ -85,18 +65,6 @@ public final class AirtightAssemblyDriverCore {
         return structureManager.getAttachedEngines();
     }
 
-    public void markForSave() {
-        controller.markForSave();
-    }
-
-    public void markForClientSync() {
-        controller.markForClientSync();
-    }
-
-    public void markForSaveAndClientSync() {
-        controller.markForSaveAndClientSync();
-    }
-
     public void reset() {
         controller.reset();
     }
@@ -109,7 +77,39 @@ public final class AirtightAssemblyDriverCore {
         serialization.read(tag, provider, clientPacket);
     }
 
-    public AirtightAssemblyDriverController getController() {
+    AirtightAssemblyDriverFlowMeter getFlowMeter() {
+        return flowMeter;
+    }
+
+    AirtightAssemblyDriverStructureManager getStructureManager() {
+        return structureManager;
+    }
+
+    AirtightAssemblyDriverLevelCalculator getLevelCalculator() {
+        return levelCalculator;
+    }
+
+    AirtightAssemblyDriverResidueManager getResidueManager() {
+        return residueManager;
+    }
+
+    AirtightAssemblyDriverController getController() {
         return controller;
+    }
+
+    IGasHandler getGasHandler() {
+        return gasHandler;
+    }
+
+    void markForSave() {
+        controller.markForSave();
+    }
+
+    void markForClientSync() {
+        controller.markForClientSync();
+    }
+
+    void markForSaveAndClientSync() {
+        controller.markForSaveAndClientSync();
     }
 }

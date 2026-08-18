@@ -115,7 +115,7 @@ public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEnt
     }
 
     @Override
-    public boolean isAirtight(BlockPos currentPos, BlockState currentState, Direction oppositeDirection) {
+    public boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace) {
         return true;
     }
 }

@@ -8,13 +8,12 @@ import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightas
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Set;
 
 import static net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverCore.MAX_LEVEL;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightAssemblyDriverStructureManager {
+class AirtightAssemblyDriverStructureManager {
     private static final String COMPOUND_KEY_ATTACHED_ENGINES = "AttachedEngines";
     private static final String COMPOUND_KEY_ATTACHED_OUTLETS = "AttachedOutlets";
     private static final String COMPOUND_KEY_ATTACHED_CHAMBERS = "AttachedChambers";
@@ -34,7 +33,7 @@ public class AirtightAssemblyDriverStructureManager {
     private int attachedEngines;
     private int attachedOutlets;
 
-    public AirtightAssemblyDriverStructureManager(AirtightAssemblyDriverCore driverCore) {
+    AirtightAssemblyDriverStructureManager(AirtightAssemblyDriverCore driverCore) {
         this.driverCore = driverCore;
     }
 
@@ -58,7 +57,7 @@ public class AirtightAssemblyDriverStructureManager {
         return tag.contains(key) ? Mth.clamp(tag.getInt(key), 0, max) : 0;
     }
 
-    public void tick(AirtightTankBlockEntity controller) {
+    void tick(AirtightTankBlockEntity controller) {
         if (!evaluationRequired) {
             return;
         }
@@ -76,43 +75,12 @@ public class AirtightAssemblyDriverStructureManager {
         evaluationCooldown = INCOMPLETE_EVALUATION_RETRY_DELAY;
     }
 
-    public void requestEvaluation() {
+    void requestEvaluation() {
         evaluationRequired = true;
         evaluationCooldown = 0;
     }
 
-    public void evaluate(AirtightTankBlockEntity controller) {
-        Level level = controller.getLevel();
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
-        DerivedState previous = captureDerivedState();
-        evaluationRequired = false;
-        evaluationCooldown = 0;
-
-        ScanResult result = scanner.scan(controller, level);
-        if (result.complete()) {
-            applyScanResult(result);
-            if (previous.attachedOutlets() > attachedOutlets) {
-                driverCore.getResidueManager().applyRemovalPenalty(false);
-            }
-        }
-        else {
-            clearDerivedState();
-            evaluationRequired = true;
-        }
-
-        driverCore.getResidueManager().updateOutletsPositions(result.complete() ? result.outletPositions() : Set.of());
-        driverCore.getLevelCalculator().updateWindChargingLevel(attachedWindChargingLevel);
-        if (previous.matches(this)) {
-            return;
-        }
-
-        driverCore.markForClientSync();
-    }
-
-    public void reset() {
+    void reset() {
         boolean changed = hasDerivedState();
         clearDerivedState();
         evaluationRequired = true;
@@ -126,35 +94,35 @@ public class AirtightAssemblyDriverStructureManager {
         driverCore.markForClientSync();
     }
 
-    public void invalidateForServerLoad() {
+    void invalidateForServerLoad() {
         clearDerivedState();
         evaluationRequired = true;
         evaluationCooldown = INITIAL_EVALUATION_DELAY;
         driverCore.getResidueManager().clearOutletsPositions();
-        driverCore.getLevelCalculator().loadWindChargingLevel(0);
+        driverCore.getLevelCalculator().loadWindChargingLevel();
     }
 
-    public boolean isEvaluationRequired() {
+    boolean isEvaluationRequired() {
         return evaluationRequired;
     }
 
-    public boolean isAssembled() {
+    boolean isAssembled() {
         return attachedEngines > 0 && structureValid;
     }
 
-    public boolean isActive() {
+    boolean isActive() {
         return isAssembled() && attachedOutlets > 0 && attachedWindChargingLevel > 0;
     }
 
-    public int getAttachedEngines() {
+    int getAttachedEngines() {
         return attachedEngines;
     }
 
-    public int getAttachedOutlets() {
+    int getAttachedOutlets() {
         return attachedOutlets;
     }
 
-    public CompoundTag writeClient() {
+    CompoundTag writeClient() {
         CompoundTag tag = new CompoundTag();
         tag.putInt(COMPOUND_KEY_ATTACHED_ENGINES, attachedEngines);
         tag.putInt(COMPOUND_KEY_ATTACHED_OUTLETS, attachedOutlets);
@@ -164,7 +132,7 @@ public class AirtightAssemblyDriverStructureManager {
         return tag;
     }
 
-    public void readClient(CompoundTag tag) {
+    void readClient(CompoundTag tag) {
         int maxAttachedSurfaceBlocks = getMaxAttachedSurfaceBlocks();
         attachedEngines = readBoundedInt(tag, COMPOUND_KEY_ATTACHED_ENGINES, maxAttachedSurfaceBlocks);
         attachedOutlets = readBoundedInt(tag, COMPOUND_KEY_ATTACHED_OUTLETS, maxAttachedSurfaceBlocks);
@@ -173,6 +141,35 @@ public class AirtightAssemblyDriverStructureManager {
         structureValid = tag.getBoolean(COMPOUND_KEY_STRUCTURE_VALID);
         evaluationRequired = false;
         evaluationCooldown = 0;
+    }
+
+    private void evaluate(AirtightTankBlockEntity controller) {
+        Level level = controller.getLevel();
+        if (level == null || level.isClientSide) {
+            return;
+        }
+
+        DerivedState previous = captureDerivedState();
+        evaluationRequired = false;
+        evaluationCooldown = 0;
+
+        ScanResult result = scanner.scan(controller, level);
+        if (result.complete()) {
+            applyScanResult(result);
+            driverCore.getResidueManager().updateOutletsPositions(result.outletPositions());
+        }
+        else {
+            clearDerivedState();
+            evaluationRequired = true;
+            driverCore.getResidueManager().clearOutletsPositions();
+        }
+
+        driverCore.getLevelCalculator().updateWindChargingLevel(attachedWindChargingLevel);
+        if (previous.matches(this)) {
+            return;
+        }
+
+        driverCore.markForClientSync();
     }
 
     private void applyScanResult(ScanResult result) {
@@ -200,7 +197,7 @@ public class AirtightAssemblyDriverStructureManager {
     }
 
     private record DerivedState(int attachedEngines, int attachedOutlets, int attachedChambers, int attachedWindChargingLevel, boolean structureValid) {
-        public boolean matches(AirtightAssemblyDriverStructureManager manager) {
+        private boolean matches(AirtightAssemblyDriverStructureManager manager) {
             return attachedEngines == manager.attachedEngines && attachedOutlets == manager.attachedOutlets && attachedChambers == manager.attachedChambers && attachedWindChargingLevel == manager.attachedWindChargingLevel && structureValid == manager.structureValid;
         }
     }

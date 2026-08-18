@@ -17,15 +17,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightHatchValueBox extends Sided {
+class AirtightHatchValueBox extends Sided {
     private static final int COLOR = 0x191C26;
 
     @Override
     public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, BlockState state) {
-        Vec3 location = getSouthLocation();
-        Direction facing = state.getValue(AirtightHatchBlock.FACING);
-        location = VecHelper.rotateCentered(location, -90, Axis.X);
-        return VecHelper.rotateCentered(location, AngleHelper.horizontalAngle(facing), Axis.Y);
+        Vec3 location = VecHelper.rotateCentered(getSouthLocation(), -90, Axis.X);
+        return VecHelper.rotateCentered(location, AngleHelper.horizontalAngle(state.getValue(AirtightHatchBlock.FACING)), Axis.Y);
     }
 
     @Override

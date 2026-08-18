@@ -10,8 +10,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightCheckValveTransportBehaviour extends AxisGasTransportBehaviour {
-    public AirtightCheckValveTransportBehaviour(SmartBlockEntity blockEntity) {
+final class AirtightCheckValveTransportBehaviour extends AxisGasTransportBehaviour {
+    AirtightCheckValveTransportBehaviour(SmartBlockEntity blockEntity) {
         super(blockEntity);
     }
 

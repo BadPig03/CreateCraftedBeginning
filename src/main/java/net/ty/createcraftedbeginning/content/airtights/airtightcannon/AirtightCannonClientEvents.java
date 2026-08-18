@@ -15,12 +15,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID, value = Dist.CLIENT)
-public final class AirtightCannonClientEvents {
+final class AirtightCannonClientEvents {
     private AirtightCannonClientEvents() {
     }
 
     @SubscribeEvent
-    public static void onComputeFovModifier(ComputeFovModifierEvent event) {
+    private static void onComputeFovModifier(ComputeFovModifierEvent event) {
         Player player = event.getPlayer();
         if (!player.isUsingItem()) {
             return;

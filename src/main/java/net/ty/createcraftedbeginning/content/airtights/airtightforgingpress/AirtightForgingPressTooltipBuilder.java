@@ -26,21 +26,21 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightForgingPressTooltipBuilder {
+class AirtightForgingPressTooltipBuilder {
     private final AirtightForgingPressCore core;
     private final AirtightForgingPressBlockEntity press;
 
-    public AirtightForgingPressTooltipBuilder(AirtightForgingPressCore core, AirtightForgingPressBlockEntity press) {
+    AirtightForgingPressTooltipBuilder(AirtightForgingPressCore core, AirtightForgingPressBlockEntity press) {
         this.core = core;
         this.press = press;
     }
 
-    public void addToGoggleTooltip(List<Component> tooltip) {
+    void addToGoggleTooltip(List<Component> tooltip) {
         addStoredInfo(tooltip);
         addKineticInfo(tooltip);
     }
 
-    public boolean addToTooltip(List<Component> tooltip) {
+    boolean addToTooltip(List<Component> tooltip) {
         AirtightForgingPressStructureManager structureManager = core.getStructureManager();
         if (structureManager.getOverstressed() && CCBClientBridge.isOverstressedTooltipEnabled()) {
             CCBLang.translate("gui.overstressed").style(ChatFormatting.GOLD).forGoggles(tooltip);

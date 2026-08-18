@@ -15,11 +15,11 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightAssemblyDriverResiduePlanner {
+final class AirtightAssemblyDriverResiduePlanner {
     private AirtightAssemblyDriverResiduePlanner() {
     }
 
-    public static @Nullable GenerationPlan create(Level level, List<BlockPos> outletPositions, ResidueOutput output, int requiredAmount, int startIndex) {
+    static @Nullable GenerationPlan create(Level level, List<BlockPos> outletPositions, ResidueOutput output, int requiredAmount, int startIndex) {
         int outletCount = outletPositions.size();
         int remainingAmount = requiredAmount;
         int lastOutletIndex = -1;
@@ -39,7 +39,7 @@ public final class AirtightAssemblyDriverResiduePlanner {
         return remainingAmount == 0 ? new GenerationPlan(List.copyOf(insertions), lastOutletIndex) : null;
     }
 
-    public static boolean commit(GenerationPlan plan) {
+    static boolean commit(GenerationPlan plan) {
         ResourceTransaction transaction = new ResourceTransaction();
         for (ResidueInsertionPlan insertion : plan.insertions()) {
             insertion.addTo(transaction);
@@ -54,5 +54,5 @@ public final class AirtightAssemblyDriverResiduePlanner {
         return outlet.createResidueInsertionPlan(output.fluidStack(), output.itemStack(), maxAmount);
     }
 
-    public record GenerationPlan(List<ResidueInsertionPlan> insertions, int lastOutletIndex) {}
+    record GenerationPlan(List<ResidueInsertionPlan> insertions, int lastOutletIndex) {}
 }

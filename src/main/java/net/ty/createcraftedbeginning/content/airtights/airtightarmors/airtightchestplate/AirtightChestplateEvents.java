@@ -24,6 +24,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID)
 public class AirtightChestplateEvents {
+    private AirtightChestplateEvents() {
+    }
+
     @SubscribeEvent
     public static void onPlayerVisibility(LivingVisibilityEvent event) {
         if (!(event.getEntity() instanceof Player player) || !InvisibilityUpgrade.INSTANCE.canApply(player)) {

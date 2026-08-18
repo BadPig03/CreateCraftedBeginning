@@ -17,32 +17,36 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID, value = Dist.CLIENT)
-public final class AirtightHandheldDrillClientEvents {
+final class AirtightHandheldDrillClientEvents {
     private AirtightHandheldDrillClientEvents() {
     }
 
     @SubscribeEvent
-    public static void onPlayerPreTick(Pre event) {
+    private static void onPlayerPreTick(Pre event) {
         Player player = event.getEntity();
         AirtightHandheldDrillRenderHandler renderHandler = AirtightHandheldDrillRenderHandler.INSTANCE;
         ItemStack drill = player.getMainHandItem();
         if (!drill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
-            if (renderHandler.hasHandAnimation(0)) {
+            if (renderHandler.hasHandAnimation()) {
                 renderHandler.stop();
             }
             return;
         }
 
         Minecraft minecraft = Minecraft.getInstance();
-        boolean hasAnimation = renderHandler.hasHandAnimation(0);
+        boolean hasAnimation = renderHandler.hasHandAnimation();
         boolean isUsingDrill = player.isUsingItem() && player.getUseItem().is(CCBItems.AIRTIGHT_HANDHELD_DRILL);
         boolean isMiningBlock = minecraft.options.keyAttack.isDown() && minecraft.hitResult != null && minecraft.hitResult.getType() == Type.BLOCK;
         boolean shouldRotate = isUsingDrill || isMiningBlock;
         if (shouldRotate && !hasAnimation) {
             renderHandler.start();
+            return;
         }
-        else if (!shouldRotate && hasAnimation) {
-            renderHandler.stop();
+
+        if (shouldRotate || !hasAnimation) {
+            return;
         }
+
+        renderHandler.stop();
     }
 }

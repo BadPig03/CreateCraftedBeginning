@@ -18,6 +18,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID)
 public class AirtightBootsEvents {
+    private AirtightBootsEvents() {
+    }
+
     @SubscribeEvent
     public static void onPlayerIncomingDamage(LivingIncomingDamageEvent event) {
         if (!(event.getEntity() instanceof Player player)) {

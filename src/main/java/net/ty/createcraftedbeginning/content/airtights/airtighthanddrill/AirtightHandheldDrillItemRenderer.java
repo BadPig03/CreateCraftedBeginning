@@ -29,11 +29,14 @@ import java.util.WeakHashMap;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID, value = Dist.CLIENT)
-public class AirtightHandheldDrillItemRenderer extends CustomRenderedItemModelRenderer {
-    protected final Map<ItemStack, Float> rotationAngles = new WeakHashMap<>();
+final class AirtightHandheldDrillItemRenderer extends CustomRenderedItemModelRenderer {
+    private final Map<ItemStack, Float> rotationAngles = new WeakHashMap<>();
+
+    private AirtightHandheldDrillItemRenderer() {
+    }
 
     @SubscribeEvent
-    public static void register(RegisterClientExtensionsEvent event) {
+    private static void register(RegisterClientExtensionsEvent event) {
         event.registerItem(SimpleCustomRenderer.create(CCBItems.AIRTIGHT_HANDHELD_DRILL.asItem(), new AirtightHandheldDrillItemRenderer()), CCBItems.AIRTIGHT_HANDHELD_DRILL.asItem());
     }
 

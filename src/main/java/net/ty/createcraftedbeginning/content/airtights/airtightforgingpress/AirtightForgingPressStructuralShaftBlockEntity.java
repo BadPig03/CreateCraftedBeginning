@@ -42,43 +42,6 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
         return position.isUpperStore() && position == AirtightForgingPressStructuralPosition.TOP_CENTER;
     }
 
-    @Nullable
-    public AirtightForgingPressBlockEntity getMasterBlockEntity() {
-        BlockPos masterPos = AirtightForgingPressUtils.getMaster(getBlockPos(), getBlockState());
-        if (level == null || !(level.getBlockEntity(masterPos) instanceof AirtightForgingPressBlockEntity master)) {
-            return null;
-        }
-        return master;
-    }
-
-    public @Nullable IItemHandlerModifiable getItemCapability() {
-        AirtightForgingPressBlockEntity master = getMasterBlockEntity();
-        if (master == null || !isUpperStore(getBlockState())) {
-            return null;
-        }
-        return master.getAdditionInventory();
-    }
-
-    public @Nullable IFluidHandler getFluidCapability() {
-        AirtightForgingPressBlockEntity master = getMasterBlockEntity();
-        if (master == null || !isUpperStore(getBlockState())) {
-            return null;
-        }
-        return master.getFluidCapability();
-    }
-
-    public @Nullable IGasHandler getGasCapability() {
-        AirtightForgingPressBlockEntity master = getMasterBlockEntity();
-        if (master == null || !isUpperStore(getBlockState())) {
-            return null;
-        }
-        return master.getGasCapability();
-    }
-
-    public boolean getOverstressed() {
-        return overStressed;
-    }
-
     @Override
     public int getMaxValue() {
         AirtightForgingPressBlockEntity master = getMasterBlockEntity();
@@ -147,5 +110,41 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
     public @Nullable InventoryIdentifier getGasInventoryIdentifier(Direction direction) {
         BlockPos masterPos = AirtightForgingPressUtils.getMaster(getBlockPos(), getBlockState());
         return new Single(masterPos);
+    }
+
+    @Nullable AirtightForgingPressBlockEntity getMasterBlockEntity() {
+        BlockPos masterPos = AirtightForgingPressUtils.getMaster(getBlockPos(), getBlockState());
+        if (level == null || !(level.getBlockEntity(masterPos) instanceof AirtightForgingPressBlockEntity master)) {
+            return null;
+        }
+        return master;
+    }
+    
+    boolean getOverstressed() {
+        return overStressed;
+    }
+
+    private @Nullable IItemHandlerModifiable getItemCapability() {
+        AirtightForgingPressBlockEntity master = getMasterBlockEntity();
+        if (master == null || !isUpperStore(getBlockState())) {
+            return null;
+        }
+        return master.getAdditionInventory();
+    }
+
+    private @Nullable IFluidHandler getFluidCapability() {
+        AirtightForgingPressBlockEntity master = getMasterBlockEntity();
+        if (master == null || !isUpperStore(getBlockState())) {
+            return null;
+        }
+        return master.getFluidCapability();
+    }
+
+    private @Nullable IGasHandler getGasCapability() {
+        AirtightForgingPressBlockEntity master = getMasterBlockEntity();
+        if (master == null || !isUpperStore(getBlockState())) {
+            return null;
+        }
+        return master.getGasCapability();
     }
 }

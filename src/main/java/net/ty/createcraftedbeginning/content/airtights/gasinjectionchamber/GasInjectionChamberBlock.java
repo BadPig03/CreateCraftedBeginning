@@ -144,7 +144,7 @@ public class GasInjectionChamberBlock extends HorizontalDirectionalBlock impleme
     }
 
     @Override
-    public boolean isAirtight(BlockPos currentPos, BlockState currentState, Direction oppositeDirection) {
-        return oppositeDirection == Direction.DOWN;
+    public boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace) {
+        return localFace == Direction.UP;
     }
 }

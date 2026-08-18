@@ -25,6 +25,10 @@ public class AirtightEngineRenderer extends KineticBlockEntityRenderer<AirtightE
         super(context);
     }
 
+    private static SuperByteBuffer getPistonModel(BlockState blockState) {
+        return CachedBuffers.partial(CCBPartialModels.AIRTIGHT_ENGINE_PISTON, blockState);
+    }
+
     @Override
     protected void renderSafe(AirtightEngineBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         BlockState state = be.getBlockState();
@@ -55,9 +59,5 @@ public class AirtightEngineRenderer extends KineticBlockEntityRenderer<AirtightE
     @Override
     protected SuperByteBuffer getRotatedModel(AirtightEngineBlockEntity be, BlockState blockState) {
         return CachedBuffers.partial(CCBPartialModels.AIRTIGHT_ENGINE_COGS, blockState);
-    }
-
-    protected SuperByteBuffer getPistonModel(BlockState blockState) {
-        return CachedBuffers.partial(CCBPartialModels.AIRTIGHT_ENGINE_PISTON, blockState);
     }
 }

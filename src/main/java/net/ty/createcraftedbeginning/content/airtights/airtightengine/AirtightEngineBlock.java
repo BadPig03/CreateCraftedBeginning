@@ -47,8 +47,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEngineBlockEntity>, IWrenchable, SimpleWaterloggedBlock, ICogWheel {
     public static final EnumProperty<AttachFace> FACE = BlockStateProperties.ATTACH_FACE;
     public static final Property<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
-    public static final EnumProperty<Axis> AXIS = BlockStateProperties.AXIS;
-    public static final BooleanProperty CLOCKWISE = BooleanProperty.create("clockwise");
+    static final EnumProperty<Axis> AXIS = BlockStateProperties.AXIS;
+    static final BooleanProperty CLOCKWISE = BooleanProperty.create("clockwise");
 
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
@@ -65,7 +65,7 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
         };
     }
 
-    public static boolean isStateValid(BlockState state) {
+    static boolean isStateValid(BlockState state) {
         AttachFace face = state.getValue(FACE);
         Axis axis = state.getValue(AXIS);
         if (face == AttachFace.WALL) {

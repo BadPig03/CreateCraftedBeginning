@@ -1,17 +1,17 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighthatch;
 
 import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.INamedIconOptions;
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.createmod.catnip.lang.Lang;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.foundation.gui.CCBIcons;
-
-import static java.lang.Math.clamp;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import static java.lang.Math.clamp;
+
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public enum AirtightHatchTransferMode implements INamedIconOptions {
+enum AirtightHatchTransferMode implements INamedIconOptions {
     NO_TRANSFER(CCBIcons.I_NO_TRANSFER),
     INPUT_ONLY(CCBIcons.I_INPUT_ONLY),
     OUTPUT_ONLY(CCBIcons.I_OUTPUT_ONLY),
@@ -27,7 +27,7 @@ public enum AirtightHatchTransferMode implements INamedIconOptions {
         translationKey = "createcraftedbeginning.gui.airtight_hatch.transfer_mode." + Lang.asId(name());
     }
 
-    public static AirtightHatchTransferMode fromValue(int value) {
+    static AirtightHatchTransferMode fromValue(int value) {
         return VALUES[clamp(value, 0, VALUES.length - 1)];
     }
 

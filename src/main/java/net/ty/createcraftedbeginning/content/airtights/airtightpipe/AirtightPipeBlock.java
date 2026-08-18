@@ -127,7 +127,7 @@ public class AirtightPipeBlock extends AxisGasPipeBlock implements IBE<AirtightP
     }
 
     @Override
-    public boolean isAirtight(BlockPos currentPos, BlockState currentState, Direction oppositeDirection) {
-        return currentState.getValue(AXIS) == oppositeDirection.getAxis();
+    public boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace) {
+        return currentState.getValue(AXIS) == localFace.getAxis();
     }
 }

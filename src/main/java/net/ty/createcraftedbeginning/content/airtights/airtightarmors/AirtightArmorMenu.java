@@ -22,7 +22,7 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class AirtightArmorMenu extends AirtightUpgradableMenu {
-    protected final UpgradeRegistryAccess upgradeRegistry;
+    private final UpgradeRegistryAccess upgradeRegistry;
 
     protected AirtightArmorMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData, UpgradeRegistryAccess upgradeRegistry) {
         super(type, id, inv, extraData);
@@ -36,13 +36,13 @@ public abstract class AirtightArmorMenu extends AirtightUpgradableMenu {
         updateStatus(contentHolder);
     }
 
+    protected static UpgradeRegistryAccess upgradeRegistry(Function<ResourceLocation, AirtightUpgrade> byId, Function<ItemStack, AirtightUpgrade> byStack, Supplier<List<AirtightUpgradeStatus>> defaultStatuses, Supplier<List<AirtightUpgrade>> upgrades) {
+        return new UpgradeRegistryAccess(byId, byStack, defaultStatuses, upgrades);
+    }
+
     @Override
     protected void initAndReadInventory(ItemStack stack) {
         menuInventory = getInventoryHandler(stack, getMaxSlots());
-    }
-
-    protected static UpgradeRegistryAccess upgradeRegistry(Function<ResourceLocation, AirtightUpgrade> byId, Function<ItemStack, AirtightUpgrade> byStack, Supplier<List<AirtightUpgradeStatus>> defaultStatuses, Supplier<List<AirtightUpgrade>> upgrades) {
-        return new UpgradeRegistryAccess(byId, byStack, defaultStatuses, upgrades);
     }
 
     @Override
@@ -62,7 +62,7 @@ public abstract class AirtightArmorMenu extends AirtightUpgradableMenu {
         currentStatusList = normalizeStatusList(stack.getOrDefault(CCBDataComponents.AIRTIGHT_UPGRADE_STATUS, upgradeRegistry.defaultStatuses().get()), upgrades);
     }
 
-    public void forEachUpgrade(Consumer<AirtightUpgrade> action) {
+    void forEachUpgrade(Consumer<AirtightUpgrade> action) {
         upgradeRegistry.upgrades().get().forEach(action);
     }
 

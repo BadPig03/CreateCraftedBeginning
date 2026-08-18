@@ -33,11 +33,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightChestplateArmorItem extends ArmorItem implements CustomRenderedArmorItem {
+class AirtightChestplateArmorItem extends ArmorItem implements CustomRenderedArmorItem {
     private static final ResourceLocation INNER_TEXTURE = CCBAPI.asResource("textures/models/armor/airtight_layer_2.png");
     private static final ResourceLocation OUTER_TEXTURE = CCBAPI.asResource("textures/models/armor/airtight_layer_1.png");
 
-    public AirtightChestplateArmorItem(Type type, Properties properties) {
+    AirtightChestplateArmorItem(Type type, Properties properties) {
         super(CCBArmorMaterials.AIRTIGHT, type, properties.stacksTo(1));
     }
 

@@ -22,6 +22,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID)
 public class AirtightHelmetEvents {
+    private AirtightHelmetEvents() {
+    }
+
     @SubscribeEvent
     public static void onMobEffectApplicable(Applicable event) {
         if (!(event.getEntity() instanceof Player player) || !EffectsProtectionUpgrade.INSTANCE.canApply(player, event.getEffectInstance())) {

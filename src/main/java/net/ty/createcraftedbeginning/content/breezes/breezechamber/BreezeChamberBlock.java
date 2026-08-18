@@ -349,7 +349,7 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     }
 
     @Override
-    public boolean isAirtight(BlockPos currentPos, BlockState currentState, Direction oppositeDirection) {
+    public boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace) {
         return true;
     }
 

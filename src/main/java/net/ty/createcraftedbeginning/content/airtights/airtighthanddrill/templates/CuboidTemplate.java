@@ -9,13 +9,7 @@ import java.util.stream.Stream;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CuboidTemplate extends BaseTemplate {
-    @Override
-    protected Stream<BlockPos> getBaseAreaStream(int @NotNull [] params) {
-        BlockPos endPos = new BlockPos(params[0] - 1, params[1] - 1, params[2] - 1);
-        return BlockPos.betweenClosedStream(BlockPos.ZERO, endPos);
-    }
-
+class CuboidTemplate extends BaseTemplate {
     @Override
     public int getMinValue(int index) {
         return 1;
@@ -24,5 +18,11 @@ public class CuboidTemplate extends BaseTemplate {
     @Override
     public int getMaxValue(int index) {
         return 8;
+    }
+
+    @Override
+    Stream<BlockPos> getBaseAreaStream(int @NotNull [] params) {
+        BlockPos endPos = new BlockPos(params[0] - 1, params[1] - 1, params[2] - 1);
+        return BlockPos.betweenClosedStream(BlockPos.ZERO, endPos);
     }
 }

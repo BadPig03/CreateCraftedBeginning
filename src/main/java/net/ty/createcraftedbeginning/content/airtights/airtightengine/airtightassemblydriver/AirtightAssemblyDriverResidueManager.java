@@ -14,6 +14,7 @@ import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe.ResidueOutpu
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -21,28 +22,30 @@ import static net.ty.createcraftedbeginning.content.airtights.airtightengine.air
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightAssemblyDriverResidueManager {
+class AirtightAssemblyDriverResidueManager {
     private static final int ITEM_GENERATION_DENOMINATOR = MAX_LEVEL * MAX_LEVEL;
-    private static final int GENERATION_MAX_COOLDOWN = 12;
-    private static final int FAILURE_MAX_COOLDOWN = 120;
+    private static final int GENERATION_INTERVAL_TICKS = 12;
+    private static final int FAILURE_PENALTY_TICKS = 120;
     private static final int CONSECUTIVE_SUCCESSES_COUNT = 20;
 
     private static final String COMPOUND_KEY_GENERATION_COOLDOWN = "GenerationCooldown";
-    private static final String COMPOUND_KEY_FAILURE_COOLDOWN = "FailureCooldown";
+    private static final String COMPOUND_KEY_CONSECUTIVE_FAILURE_TICKS = "ConsecutiveFailureTicks";
     private static final String COMPOUND_KEY_SUCCESS_COUNT = "SuccessCount";
     private static final String COMPOUND_KEY_ITEM_DISTRIBUTION_CURSOR = "ItemDistributionCursor";
     private static final String COMPOUND_KEY_FLUID_DISTRIBUTION_CURSOR = "FluidDistributionCursor";
+    private static final String COMPOUND_KEY_VERIFIED_OUTLET_POSITIONS = "VerifiedOutletPositions";
 
     private final AirtightAssemblyDriverCore driverCore;
     private List<BlockPos> outletsPositions = List.of();
+    private Set<BlockPos> verifiedOutletPositions = Set.of();
 
     private int successCount;
-    private int generationCooldown = GENERATION_MAX_COOLDOWN;
-    private int failureCooldown = FAILURE_MAX_COOLDOWN;
+    private int generationCooldown = GENERATION_INTERVAL_TICKS;
+    private int consecutiveFailureTicks;
     private int itemDistributionCursor;
     private int fluidDistributionCursor;
 
-    public AirtightAssemblyDriverResidueManager(AirtightAssemblyDriverCore driverCore) {
+    AirtightAssemblyDriverResidueManager(AirtightAssemblyDriverCore driverCore) {
         this.driverCore = driverCore;
     }
 
@@ -66,10 +69,20 @@ public class AirtightAssemblyDriverResidueManager {
         return compoundTag.contains(key) ? Mth.clamp(compoundTag.getInt(key), 0, max) : fallback;
     }
 
-    public void tick(Level level) {
-        if (failureCooldown > 0) {
-            failureCooldown--;
+    private static Set<BlockPos> readOutletPositions(CompoundTag compoundTag) {
+        long[] storedPositions = compoundTag.getLongArray(COMPOUND_KEY_VERIFIED_OUTLET_POSITIONS);
+        if (storedPositions.length == 0) {
+            return Set.of();
         }
+
+        Set<BlockPos> positions = new HashSet<>(storedPositions.length);
+        for (long storedPosition : storedPositions) {
+            positions.add(BlockPos.of(storedPosition));
+        }
+        return Set.copyOf(positions);
+    }
+
+    void tick(Level level) {
         if (outletsPositions.isEmpty() && driverCore.getLevelCalculator().getResidueLevel() > 0) {
             removeResidueLevel(true);
             return;
@@ -77,19 +90,22 @@ public class AirtightAssemblyDriverResidueManager {
 
         if (generationCooldown > 0) {
             generationCooldown--;
+        }
+        if (generationCooldown > 0) {
             return;
         }
 
         scanAndGenerateResidues(level);
-        generationCooldown = GENERATION_MAX_COOLDOWN;
+        generationCooldown = GENERATION_INTERVAL_TICKS;
     }
 
-    public void reset() {
-        boolean changed = successCount != 0 || generationCooldown != GENERATION_MAX_COOLDOWN || failureCooldown != FAILURE_MAX_COOLDOWN || itemDistributionCursor != 0 || fluidDistributionCursor != 0 || !outletsPositions.isEmpty();
+    void reset() {
+        boolean changed = successCount != 0 || generationCooldown != GENERATION_INTERVAL_TICKS || consecutiveFailureTicks != 0 || itemDistributionCursor != 0 || fluidDistributionCursor != 0 || !outletsPositions.isEmpty() || !verifiedOutletPositions.isEmpty();
         outletsPositions = List.of();
+        verifiedOutletPositions = Set.of();
         successCount = 0;
-        generationCooldown = GENERATION_MAX_COOLDOWN;
-        failureCooldown = FAILURE_MAX_COOLDOWN;
+        generationCooldown = GENERATION_INTERVAL_TICKS;
+        consecutiveFailureTicks = 0;
         itemDistributionCursor = 0;
         fluidDistributionCursor = 0;
         if (!changed) {
@@ -99,21 +115,25 @@ public class AirtightAssemblyDriverResidueManager {
         driverCore.markForSave();
     }
 
-    public void loadEmptyPersistentState() {
+    void loadEmptyPersistentState() {
         outletsPositions = List.of();
+        verifiedOutletPositions = Set.of();
         successCount = 0;
-        generationCooldown = GENERATION_MAX_COOLDOWN;
-        failureCooldown = FAILURE_MAX_COOLDOWN;
+        generationCooldown = GENERATION_INTERVAL_TICKS;
+        consecutiveFailureTicks = 0;
         itemDistributionCursor = 0;
         fluidDistributionCursor = 0;
     }
 
-    public void clearOutletsPositions() {
+    void clearOutletsPositions() {
         outletsPositions = List.of();
     }
 
-    public void updateOutletsPositions(Set<BlockPos> newPositions) {
-        List<BlockPos> sorted = new ArrayList<>(newPositions);
+    void updateOutletsPositions(Set<BlockPos> newPositions) {
+        Set<BlockPos> normalizedPositions = Set.copyOf(newPositions);
+        boolean topologyChanged = driverCore.getLevelCalculator().getResidueLevel() > 0 && !verifiedOutletPositions.equals(normalizedPositions);
+
+        List<BlockPos> sorted = new ArrayList<>(normalizedPositions);
         sorted.sort(Comparator.comparingLong(BlockPos::asLong));
         outletsPositions = List.copyOf(sorted);
         int previousItemCursor = itemDistributionCursor;
@@ -126,6 +146,12 @@ public class AirtightAssemblyDriverResidueManager {
             itemDistributionCursor = Math.floorMod(itemDistributionCursor, outletsPositions.size());
             fluidDistributionCursor = Math.floorMod(fluidDistributionCursor, outletsPositions.size());
         }
+
+        if (topologyChanged) {
+            removeResidueLevel(false);
+            verifiedOutletPositions = normalizedPositions;
+        }
+
         if (previousItemCursor == itemDistributionCursor && previousFluidCursor == fluidDistributionCursor) {
             return;
         }
@@ -133,24 +159,26 @@ public class AirtightAssemblyDriverResidueManager {
         driverCore.markForSave();
     }
 
-    public void applyRemovalPenalty(boolean clear) {
-        removeResidueLevel(clear);
+    void applyRemovalPenalty() {
+        removeResidueLevel(true);
     }
 
-    public CompoundTag writePersistent() {
+    CompoundTag writePersistent() {
         CompoundTag tag = new CompoundTag();
         tag.putInt(COMPOUND_KEY_GENERATION_COOLDOWN, generationCooldown);
-        tag.putInt(COMPOUND_KEY_FAILURE_COOLDOWN, failureCooldown);
+        tag.putInt(COMPOUND_KEY_CONSECUTIVE_FAILURE_TICKS, consecutiveFailureTicks);
         tag.putInt(COMPOUND_KEY_SUCCESS_COUNT, successCount);
         tag.putInt(COMPOUND_KEY_ITEM_DISTRIBUTION_CURSOR, itemDistributionCursor);
         tag.putInt(COMPOUND_KEY_FLUID_DISTRIBUTION_CURSOR, fluidDistributionCursor);
+        tag.putLongArray(COMPOUND_KEY_VERIFIED_OUTLET_POSITIONS, verifiedOutletPositions.stream().mapToLong(BlockPos::asLong).sorted().toArray());
         return tag;
     }
 
-    public void readPersistent(CompoundTag compoundTag) {
+    void readPersistent(CompoundTag compoundTag) {
         outletsPositions = List.of();
-        generationCooldown = readBoundedInt(compoundTag, COMPOUND_KEY_GENERATION_COOLDOWN, GENERATION_MAX_COOLDOWN, GENERATION_MAX_COOLDOWN);
-        failureCooldown = readBoundedInt(compoundTag, COMPOUND_KEY_FAILURE_COOLDOWN, FAILURE_MAX_COOLDOWN, FAILURE_MAX_COOLDOWN);
+        verifiedOutletPositions = readOutletPositions(compoundTag);
+        generationCooldown = readBoundedInt(compoundTag, COMPOUND_KEY_GENERATION_COOLDOWN, GENERATION_INTERVAL_TICKS, GENERATION_INTERVAL_TICKS);
+        consecutiveFailureTicks = readBoundedInt(compoundTag, COMPOUND_KEY_CONSECUTIVE_FAILURE_TICKS, 0, FAILURE_PENALTY_TICKS);
         successCount = readBoundedInt(compoundTag, COMPOUND_KEY_SUCCESS_COUNT, 0, CONSECUTIVE_SUCCESSES_COUNT);
         itemDistributionCursor = compoundTag.contains(COMPOUND_KEY_ITEM_DISTRIBUTION_CURSOR) ? Math.max(0, compoundTag.getInt(COMPOUND_KEY_ITEM_DISTRIBUTION_CURSOR)) : 0;
         fluidDistributionCursor = compoundTag.contains(COMPOUND_KEY_FLUID_DISTRIBUTION_CURSOR) ? Math.max(0, compoundTag.getInt(COMPOUND_KEY_FLUID_DISTRIBUTION_CURSOR)) : 0;
@@ -196,6 +224,11 @@ public class AirtightAssemblyDriverResidueManager {
 
     private void handleGenerationSuccess(boolean shouldAdvanceCursor, boolean fluidOutput, int lastOutletIndex, int outletCount) {
         boolean changed = shouldAdvanceCursor && advanceDistributionCursor(fluidOutput, lastOutletIndex, outletCount);
+        if (consecutiveFailureTicks != 0) {
+            consecutiveFailureTicks = 0;
+            changed = true;
+        }
+
         int residueLevel = driverCore.getLevelCalculator().getResidueLevel();
         if (residueLevel >= MAX_LEVEL) {
             if (successCount != 0) {
@@ -209,6 +242,7 @@ public class AirtightAssemblyDriverResidueManager {
         }
 
         if (residueLevel == 0) {
+            verifiedOutletPositions = Set.copyOf(outletsPositions);
             addResidueLevel(MAX_LEVEL / 2);
             return;
         }
@@ -223,15 +257,38 @@ public class AirtightAssemblyDriverResidueManager {
     }
 
     private void handleGenerationFailure() {
+        boolean changed = false;
         if (successCount != 0) {
             successCount = 0;
-            driverCore.markForSave();
+            changed = true;
         }
-        if (failureCooldown != 0) {
+
+        if (driverCore.getLevelCalculator().getResidueLevel() <= 0) {
+            if (consecutiveFailureTicks != 0) {
+                consecutiveFailureTicks = 0;
+                changed = true;
+            }
+            if (changed) {
+                driverCore.markForSave();
+            }
             return;
         }
 
-        removeResidueLevel(false);
+        int failureTicks = Math.min(FAILURE_PENALTY_TICKS, consecutiveFailureTicks + GENERATION_INTERVAL_TICKS);
+        if (failureTicks != consecutiveFailureTicks) {
+            consecutiveFailureTicks = failureTicks;
+            changed = true;
+        }
+        if (consecutiveFailureTicks == FAILURE_PENALTY_TICKS) {
+            removeResidueLevel(false);
+            return;
+        }
+
+        if (!changed) {
+            return;
+        }
+
+        driverCore.markForSave();
     }
 
     private void addResidueLevel(int level) {
@@ -249,10 +306,10 @@ public class AirtightAssemblyDriverResidueManager {
     }
 
     private void resetProgress() {
-        boolean changed = successCount != 0 || generationCooldown != GENERATION_MAX_COOLDOWN || failureCooldown != FAILURE_MAX_COOLDOWN;
+        boolean changed = successCount != 0 || generationCooldown != GENERATION_INTERVAL_TICKS || consecutiveFailureTicks != 0;
         successCount = 0;
-        generationCooldown = GENERATION_MAX_COOLDOWN;
-        failureCooldown = FAILURE_MAX_COOLDOWN;
+        generationCooldown = GENERATION_INTERVAL_TICKS;
+        consecutiveFailureTicks = 0;
         if (!changed) {
             return;
         }
@@ -295,5 +352,4 @@ public class AirtightAssemblyDriverResidueManager {
         itemDistributionCursor = newCursor;
         return true;
     }
-
 }

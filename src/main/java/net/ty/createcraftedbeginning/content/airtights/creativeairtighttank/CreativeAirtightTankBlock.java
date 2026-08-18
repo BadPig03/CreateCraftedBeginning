@@ -122,7 +122,7 @@ public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirt
     }
 
     @Override
-    public boolean isAirtight(BlockPos currentPos, BlockState currentState, Direction oppositeDirection) {
+    public boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace) {
         return true;
     }
 }

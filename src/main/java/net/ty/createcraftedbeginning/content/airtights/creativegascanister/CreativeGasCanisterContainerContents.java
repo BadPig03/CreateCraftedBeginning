@@ -23,6 +23,11 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
     }
 
     @Override
+    public HatchCanisterType getAirtightHatchType() {
+        return HatchCanisterType.CREATIVE;
+    }
+
+    @Override
     public MachineFillingMode getMachineFillingMode() {
         return MachineFillingMode.DENY;
     }

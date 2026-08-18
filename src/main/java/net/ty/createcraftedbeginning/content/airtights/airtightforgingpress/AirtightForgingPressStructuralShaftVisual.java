@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 @MethodsReturnNonnullByDefault
 public class AirtightForgingPressStructuralShaftVisual extends KineticBlockEntityVisual<AirtightForgingPressStructuralShaftBlockEntity> implements SimpleTickableVisual {
     @Nullable
-    protected final RotatingInstance rotatingModel;
+    private final RotatingInstance rotatingModel;
 
     public AirtightForgingPressStructuralShaftVisual(VisualizationContext context, AirtightForgingPressStructuralShaftBlockEntity blockEntity, float partialTick) {
         super(context, blockEntity, partialTick);

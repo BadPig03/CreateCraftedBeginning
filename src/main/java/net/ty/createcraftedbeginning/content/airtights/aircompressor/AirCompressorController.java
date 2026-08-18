@@ -9,20 +9,20 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirCompressorController {
+final class AirCompressorController {
     private final OperatingStateUpdater operatingStateUpdater;
 
     private boolean queuedPressurization;
 
-    public AirCompressorController(OperatingStateUpdater operatingStateUpdater) {
+    AirCompressorController(OperatingStateUpdater operatingStateUpdater) {
         this.operatingStateUpdater = operatingStateUpdater;
     }
 
-    public void queuePressurization() {
+    void queuePressurization() {
         queuedPressurization = true;
     }
 
-    public ServerTickResult tickServer(Level level, AirCompressorState compressorState, boolean overStressed, float speed, SmartGasTankBehaviour inputTankBehaviour, SmartGasTankBehaviour outputTankBehaviour) {
+    ServerTickResult tickServer(Level level, AirCompressorState compressorState, boolean overStressed, float speed, SmartGasTankBehaviour inputTankBehaviour, SmartGasTankBehaviour outputTankBehaviour) {
         boolean shouldPressurize = queuedPressurization;
         queuedPressurization = false;
 
@@ -54,12 +54,12 @@ public final class AirCompressorController {
     }
 
     @FunctionalInterface
-    public interface OperatingStateUpdater {
+    interface OperatingStateUpdater {
         void update(Level level, boolean operating);
     }
 
-    public record ServerTickResult(boolean initiallyMeltdown, boolean closeCall, boolean enteredMeltdown, int previousStoredHeat, OverheatState previousOverheatState) {
-        public boolean overheatStateChanged(AirCompressorState compressorState) {
+    record ServerTickResult(boolean initiallyMeltdown, boolean closeCall, boolean enteredMeltdown, int previousStoredHeat, OverheatState previousOverheatState) {
+        boolean overheatStateChanged(AirCompressorState compressorState) {
             return previousOverheatState != compressorState.getOverheatState();
         }
     }

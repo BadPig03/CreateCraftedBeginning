@@ -49,14 +49,14 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<AirCompressorBlockEntity>, SimpleWaterloggedBlock, IWrenchable, IAirtightComponent {
     public static final BooleanProperty ACTIVE = BooleanProperty.create("active");
-    public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
+    private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     public AirCompressorBlock(Properties properties) {
         super(properties);
         registerDefaultState(defaultBlockState().setValue(ACTIVE, false).setValue(WATERLOGGED, false));
     }
 
-    public static Direction getInputSide(BlockState state) {
+    static Direction getInputSide(BlockState state) {
         return state.getValue(HORIZONTAL_FACING).getClockWise();
     }
 
@@ -194,8 +194,8 @@ public class AirCompressorBlock extends HorizontalKineticBlock implements IBE<Ai
     }
 
     @Override
-    public boolean isAirtight(BlockPos currentPos, BlockState currentState, Direction oppositeDirection) {
-        return getInputSide(currentState).getAxis() == oppositeDirection.getAxis();
+    public boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace) {
+        return getInputSide(currentState).getAxis() == localFace.getAxis();
     }
 
     @Override

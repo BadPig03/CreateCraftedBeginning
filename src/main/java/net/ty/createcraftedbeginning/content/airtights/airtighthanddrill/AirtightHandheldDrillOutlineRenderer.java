@@ -22,7 +22,7 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
-public class AirtightHandheldDrillOutlineRenderer {
+public final class AirtightHandheldDrillOutlineRenderer {
     private static final int COLOR_WHITE = 0xBFBFBF;
     private static final int COLOR_ORANGE = 0xDBA149;
     private static final int COLOR_BLUE = 0x0091B9;
@@ -36,6 +36,9 @@ public class AirtightHandheldDrillOutlineRenderer {
     private static final String UNBREAKABLE_KEY = "handheldDrillUnbreakable";
     private static final String LIQUID_KEY = "handheldDrillLiquid";
     private static final Map<String, Set<BlockPos>> CACHED_POSITIONS = new HashMap<>();
+
+    private AirtightHandheldDrillOutlineRenderer() {
+    }
 
     public static void tick() {
         LocalPlayer player = Minecraft.getInstance().player;
@@ -64,7 +67,6 @@ public class AirtightHandheldDrillOutlineRenderer {
         hasSecondaryOutline |= showHighlightedCluster(outliner, INSTANT_KEY, context.instantDestructionPos(), COLOR_GREEN);
         hasSecondaryOutline |= showHighlightedCluster(outliner, UNBREAKABLE_KEY, context.unbreakablePos(), COLOR_RED);
         hasSecondaryOutline |= showHighlightedCluster(outliner, LIQUID_KEY, context.liquidPos(), COLOR_BLUE);
-
         if (totalPos.isEmpty()) {
             return;
         }

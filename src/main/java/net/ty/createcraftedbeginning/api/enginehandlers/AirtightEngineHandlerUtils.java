@@ -50,8 +50,8 @@ public final class AirtightEngineHandlerUtils {
             return;
         }
 
-        if (!GasConsumptions.isFinite(workFactor) || workFactor < 0 || workFactor > MAX_WORK_FACTOR) {
-            CCBAPI.LOGGER.error("Failed to register Airtight Engine Handler for gas '{}': work factor is out of range! Valid range is [0, {}].", location, MAX_WORK_FACTOR);
+        if (!GasConsumptions.isFinite(workFactor) || workFactor <= 0 || workFactor > MAX_WORK_FACTOR) {
+            CCBAPI.LOGGER.error("Failed to register Airtight Engine Handler for gas '{}': work factor is out of range! Valid range is (0, {}].", location, MAX_WORK_FACTOR);
             return;
         }
 

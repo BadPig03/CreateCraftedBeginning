@@ -21,11 +21,11 @@ public class AirtightChestplateMenu extends AirtightArmorMenu {
         this(CCBMenuTypes.AIRTIGHT_CHESTPLATE_MENU.get(), id, inv, extraData);
     }
 
-    public AirtightChestplateMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
+    private AirtightChestplateMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
         super(type, id, inv, extraData, UPGRADES);
     }
 
-    public AirtightChestplateMenu(MenuType<?> type, int id, Inventory inv, ItemStack contentHolder, InteractionHand sourceHand) {
+    AirtightChestplateMenu(MenuType<?> type, int id, Inventory inv, ItemStack contentHolder, InteractionHand sourceHand) {
         super(type, id, inv, contentHolder, sourceHand, UPGRADES);
     }
 }

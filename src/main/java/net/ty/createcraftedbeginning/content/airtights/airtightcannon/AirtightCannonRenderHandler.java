@@ -22,7 +22,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AirtightCannonRenderHandler extends ShootableGadgetRenderHandler {
     public static final AirtightCannonRenderHandler INSTANCE = new AirtightCannonRenderHandler();
 
-    protected float nextPitch;
+    private float nextPitch;
+
+    private AirtightCannonRenderHandler() {
+    }
 
     @Override
     protected void playSound(InteractionHand hand, Vec3 position) {
@@ -52,7 +55,7 @@ public class AirtightCannonRenderHandler extends ShootableGadgetRenderHandler {
         TransformStack.of(poseStack).rotateZDegrees(flip * -10);
     }
 
-    public void beforeShoot(float pitch, Vec3 location, Vec3 motion, ItemStack particleStack) {
+    void beforeShoot(float pitch, Vec3 location, Vec3 motion, ItemStack particleStack) {
         nextPitch = pitch;
         ClientLevel level = Minecraft.getInstance().level;
         if (particleStack.isEmpty() || level == null) {

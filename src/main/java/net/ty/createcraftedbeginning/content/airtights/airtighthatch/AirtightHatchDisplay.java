@@ -13,10 +13,10 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightHatchDisplay {
+final class AirtightHatchDisplay {
     private final AirtightHatchBlockEntity hatch;
 
-    public AirtightHatchDisplay(AirtightHatchBlockEntity hatch) {
+    AirtightHatchDisplay(AirtightHatchBlockEntity hatch) {
         this.hatch = hatch;
     }
 
@@ -40,7 +40,7 @@ public final class AirtightHatchDisplay {
         GasAmounts.precise(gas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmounts.precise(capacity).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
     }
 
-    public boolean addToGoggleTooltip(List<Component> tooltip) {
+    boolean addToGoggleTooltip(List<Component> tooltip) {
         if (hatch.isEmpty()) {
             return false;
         }
@@ -57,15 +57,15 @@ public final class AirtightHatchDisplay {
         return true;
     }
 
-    public int getMaxValue() {
+    int getMaxValue() {
         return hatch.isEmpty() ? 0 : GasAmounts.toWholeBucketsClamped(hatch.getHatchCapacity());
     }
 
-    public int getCurrentValue() {
+    int getCurrentValue() {
         return hatch.isEmpty() ? 0 : GasAmounts.toWholeBucketsClamped(hatch.getHatchGasContent().getAmount());
     }
 
-    public MutableComponent format(int value) {
+    MutableComponent format(int value) {
         return GasAmounts.formatWholeBuckets(value);
     }
 }

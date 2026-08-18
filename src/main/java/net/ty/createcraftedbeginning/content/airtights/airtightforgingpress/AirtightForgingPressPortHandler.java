@@ -9,7 +9,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public record AirtightForgingPressPortHandler(IItemHandlerModifiable input, IItemHandlerModifiable output) implements IItemHandler {
+record AirtightForgingPressPortHandler(IItemHandlerModifiable input, IItemHandlerModifiable output) implements IItemHandler {
     @Override
     public int getSlots() {
         return input.getSlots() + output.getSlots();
