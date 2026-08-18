@@ -20,6 +20,6 @@ public class PhotoStressBearingRenderer extends KineticBlockEntityRenderer<Photo
 
     @Override
     protected SuperByteBuffer getRotatedModel(PhotoStressBearingBlockEntity be, BlockState blockState) {
-        return CachedBuffers.partialFacing(AllPartialModels.SHAFT_HALF, blockState, Direction.UP);
+        return CachedBuffers.partialFacing(AllPartialModels.SHAFT_HALF, blockState, Direction.DOWN);
     }
 }

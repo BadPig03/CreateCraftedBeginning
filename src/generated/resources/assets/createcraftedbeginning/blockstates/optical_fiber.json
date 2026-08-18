@@ -1,0 +1,57 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/optical_fiber/core"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/optical_fiber/down"
+      },
+      "when": {
+        "down": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/optical_fiber/up"
+      },
+      "when": {
+        "up": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/optical_fiber/north"
+      },
+      "when": {
+        "north": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/optical_fiber/south"
+      },
+      "when": {
+        "south": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/optical_fiber/west"
+      },
+      "when": {
+        "west": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/optical_fiber/east"
+      },
+      "when": {
+        "east": "true"
+      }
+    }
+  ]
+}

@@ -2,7 +2,6 @@ package net.ty.createcraftedbeginning.content.photostresses.phohostressbearing;
 
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform.Sided;
 import net.createmod.catnip.math.AngleHelper;
-import net.createmod.catnip.math.Pointing;
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -19,25 +18,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class PhotoStressBearingValueBox extends Sided {
     @Override
     public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, BlockState state) {
-        Direction side = getSide();
-        Direction facing = Direction.UP;
-
-        float roll = 0;
-        for (Pointing p : Pointing.values()) {
-            if (p.getCombinedDirection(facing) == side) {
-                roll = p.getXRotation();
-            }
-        }
-        roll += 180;
-
-        float horizontalAngle = AngleHelper.horizontalAngle(facing);
-        float verticalAngle = AngleHelper.verticalAngle(facing);
         Vec3 local = VecHelper.voxelSpace(8, 15.5, 6);
-
-        local = VecHelper.rotateCentered(local, roll, Axis.Z);
-        local = VecHelper.rotateCentered(local, horizontalAngle, Axis.Y);
-        local = VecHelper.rotateCentered(local, verticalAngle, Axis.X);
-
+        local = VecHelper.rotateCentered(local, 180 + AngleHelper.horizontalAngle(getSide()), Axis.Z);
+        local = VecHelper.rotateCentered(local, AngleHelper.horizontalAngle(Direction.UP), Axis.Y);
+        local = VecHelper.rotateCentered(local, AngleHelper.verticalAngle(Direction.UP), Axis.X);
         return local;
     }
 
