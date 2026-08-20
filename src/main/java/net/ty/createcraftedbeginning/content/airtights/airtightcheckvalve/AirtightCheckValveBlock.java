@@ -46,8 +46,8 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
             return false;
         }
 
-        boolean isPositive = direction.getAxisDirection() == AxisDirection.POSITIVE;
-        return isPositive != state.getValue(INVERTED);
+        boolean isPositiveDirection = direction.getAxisDirection() == AxisDirection.POSITIVE;
+        return isPositiveDirection != state.getValue(INVERTED);
     }
 
     static boolean isOutputSide(BlockState state, Direction direction) {
@@ -97,8 +97,7 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
         }
 
         BlockPos pos = context.getClickedPos();
-        BlockState updatedState = state.setValue(INVERTED, !state.getValue(INVERTED));
-        level.setBlockAndUpdate(pos, updatedState);
+        level.setBlockAndUpdate(pos, state.setValue(INVERTED, !state.getValue(INVERTED)));
         level.scheduleTick(pos, this, 1, TickPriority.HIGH);
         IWrenchable.playRotateSound(level, pos);
         return InteractionResult.SUCCESS;
@@ -113,7 +112,6 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState state = super.getStateForPlacement(context);
-        Direction horizontalFacing = context.getHorizontalDirection();
         Axis axis = state.getValue(AXIS);
         Direction output = context.getNearestLookingDirection();
         for (Direction direction : context.getNearestLookingDirections()) {
@@ -126,7 +124,7 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
         }
 
         boolean isInverted = output.getAxisDirection() == AxisDirection.POSITIVE;
-        DirectionalFacing facing = DirectionalFacing.getFacingDirection(horizontalFacing);
+        DirectionalFacing facing = DirectionalFacing.getFacingDirection(context.getHorizontalDirection());
         return state.setValue(INVERTED, isInverted).setValue(DIRECTIONAL_FACING, facing);
     }
 

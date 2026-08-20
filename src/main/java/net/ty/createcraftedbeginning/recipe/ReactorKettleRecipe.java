@@ -28,7 +28,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,17 +67,19 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
                 break;
             }
 
-            if (!found) {
-                counts.put(ingredient, 1);
+            if (found) {
+                continue;
             }
+
+            counts.put(ingredient, 1);
         }
         return counts.entrySet().stream().map(entry -> Pair.of(entry.getKey(), entry.getValue())).toList();
     }
 
     private static boolean apply(ReactorKettleRecipeContext kettle, ReactorKettleRecipe recipe, boolean simulate) {
-        IItemHandler availableItems = kettle.getItemCapability();
-        IFluidHandler availableFluids = kettle.getFluidCapability();
-        IGasHandler availableGases = kettle.getGasCapability();
+        IItemHandler availableItems = kettle.getAvailableItems();
+        IFluidHandler availableFluids = kettle.getAvailableFluids();
+        IGasHandler availableGases = kettle.getAvailableGases();
         if (!recipe.temperatureCondition.test(kettle.getRecipeTemperature())) {
             return false;
         }
@@ -102,8 +103,8 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
     }
 
     private static boolean planInputConsumption(ReactorKettleRecipe recipe, IItemHandler availableItems, IFluidHandler availableFluids, IGasHandler availableGases, int[] itemAmounts, int[] fluidAmounts, long[] gasAmounts) {
-        List<ItemRequirement> itemRequirements = recipe.getIngredients().stream().filter(ingredient -> !ingredient.isEmpty()).map(ingredient -> createItemRequirement(availableItems, ingredient)).sorted(Comparator.comparingInt((ItemRequirement requirement) -> requirement.candidateSlots().length).thenComparingInt(ItemRequirement::matchingItemCount)).toList();
-        if (!planItemInputConsumption(itemRequirements, 0, availableItems, itemAmounts)) {
+        List<Ingredient> itemIngredients = recipe.getIngredients().stream().filter(ingredient -> !ingredient.isEmpty()).toList();
+        if (!planItemInputConsumption(itemIngredients, availableItems, itemAmounts)) {
             return false;
         }
 
@@ -131,11 +132,11 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
             SizedFluidIngredient ingredient = ingredients.get(ingredientIndex);
             requiredAmounts[ingredientIndex] = ingredient.amount();
             for (int tank = 0; tank < tankCount; tank++) {
-                matches[tank][ingredientIndex] = ingredient.test(fluids.getFluidInTank(tank));
+                matches[tank][ingredientIndex] = ingredient.ingredient().test(fluids.getFluidInTank(tank));
             }
         }
 
-        if (!planTankInputConsumption(tankAmounts, requiredAmounts, matches, plannedAmounts)) {
+        if (!planResourceInputConsumption(tankAmounts, requiredAmounts, matches, plannedAmounts)) {
             return false;
         }
 
@@ -161,32 +162,32 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
             SizedGasIngredient ingredient = ingredients.get(ingredientIndex);
             requiredAmounts[ingredientIndex] = ingredient.amount();
             for (int tank = 0; tank < tankCount; tank++) {
-                matches[tank][ingredientIndex] = ingredient.test(gases.getGasInTank(tank));
+                matches[tank][ingredientIndex] = ingredient.ingredient().test(gases.getGasInTank(tank));
             }
         }
 
-        return planTankInputConsumption(tankAmounts, requiredAmounts, matches, amounts);
+        return planResourceInputConsumption(tankAmounts, requiredAmounts, matches, amounts);
     }
 
-    private static boolean planTankInputConsumption(long[] tankAmounts, long[] requiredAmounts, boolean[][] matches, long[] plannedAmounts) {
-        int tankCount = tankAmounts.length;
+    private static boolean planResourceInputConsumption(long[] sourceAmounts, long[] requiredAmounts, boolean[][] matches, long[] plannedAmounts) {
+        int sourceCount = sourceAmounts.length;
         int ingredientCount = requiredAmounts.length;
         int source = 0;
-        int tankOffset = 1;
-        int ingredientOffset = tankOffset + tankCount;
+        int sourceOffset = 1;
+        int ingredientOffset = sourceOffset + sourceCount;
         int sink = ingredientOffset + ingredientCount;
         long[][] residualCapacity = new long[sink + 1][sink + 1];
-        long[] availableAmounts = new long[tankCount];
+        long[] availableAmounts = new long[sourceCount];
         long totalRequired = 0;
 
-        for (int tank = 0; tank < tankCount; tank++) {
-            long available = tankAmounts[tank] - plannedAmounts[tank];
+        for (int resourceSource = 0; resourceSource < sourceCount; resourceSource++) {
+            long available = sourceAmounts[resourceSource] - plannedAmounts[resourceSource];
             if (available <= 0) {
                 continue;
             }
 
-            availableAmounts[tank] = available;
-            residualCapacity[source][tankOffset + tank] = available;
+            availableAmounts[resourceSource] = available;
+            residualCapacity[source][sourceOffset + resourceSource] = available;
         }
 
         for (int ingredient = 0; ingredient < ingredientCount; ingredient++) {
@@ -197,10 +198,12 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
 
             totalRequired += required;
             residualCapacity[ingredientOffset + ingredient][sink] = required;
-            for (int tank = 0; tank < tankCount; tank++) {
-                if (matches[tank][ingredient] && availableAmounts[tank] > 0) {
-                    residualCapacity[tankOffset + tank][ingredientOffset + ingredient] = Math.min(availableAmounts[tank], required);
+            for (int resourceSource = 0; resourceSource < sourceCount; resourceSource++) {
+                if (!matches[resourceSource][ingredient] || availableAmounts[resourceSource] <= 0) {
+                    continue;
                 }
+
+                residualCapacity[sourceOffset + resourceSource][ingredientOffset + ingredient] = Math.min(availableAmounts[resourceSource], required);
             }
         }
 
@@ -239,8 +242,8 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
             totalFlow += pathFlow;
         }
 
-        for (int tank = 0; tank < tankCount; tank++) {
-            plannedAmounts[tank] += availableAmounts[tank] - residualCapacity[source][tankOffset + tank];
+        for (int resourceSource = 0; resourceSource < sourceCount; resourceSource++) {
+            plannedAmounts[resourceSource] += availableAmounts[resourceSource] - residualCapacity[source][sourceOffset + resourceSource];
         }
         return true;
     }
@@ -281,9 +284,11 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
     private static List<FluidStack> createRecipeOutputFluids(ReactorKettleRecipe recipe) {
         List<FluidStack> outputs = new ArrayList<>();
         for (FluidStack stack : recipe.getFluidResults()) {
-            if (!stack.isEmpty()) {
-                outputs.add(stack.copy());
+            if (stack.isEmpty()) {
+                continue;
             }
+
+            outputs.add(stack.copy());
         }
         return outputs;
     }
@@ -291,9 +296,11 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
     private static List<GasStack> createRecipeOutputGases(ReactorKettleRecipe recipe) {
         List<GasStack> outputs = new ArrayList<>();
         for (GasStack stack : recipe.getGasResults()) {
-            if (!stack.isEmpty()) {
-                outputs.add(stack.copy());
+            if (stack.isEmpty()) {
+                continue;
             }
+
+            outputs.add(stack.copy());
         }
         return outputs;
     }
@@ -356,9 +363,11 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
         }
         for (ItemStack outputItem : outputItems) {
             ItemStack remainder = ItemHandlerHelper.insertItemStacked(simulatedOutput, outputItem.copy(), false);
-            if (!remainder.isEmpty()) {
-                return false;
+            if (remainder.isEmpty()) {
+                continue;
             }
+
+            return false;
         }
         return true;
     }
@@ -379,9 +388,11 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
             simulatedTanks[tank] = fluidStack;
         }
         for (FluidStack outputFluid : outputFluids) {
-            if (!insertFluidIntoSimulatedTank(simulatedTanks, outputTank, outputFluid.copy())) {
-                return false;
+            if (insertFluidIntoSimulatedTank(simulatedTanks, outputTank, outputFluid.copy())) {
+                continue;
             }
+
+            return false;
         }
         return true;
     }
@@ -391,27 +402,20 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
             return true;
         }
 
-        int remaining = stack.getAmount();
         for (int tank = 0; tank < simulatedTanks.length; tank++) {
-            if (remaining <= 0) {
-                return true;
-            }
-
             FluidStack tankStack = simulatedTanks[tank];
             if (tankStack.isEmpty() || !FluidStack.isSameFluidSameComponents(tankStack, stack) || !targetTank.isFluidValid(tank, stack)) {
                 continue;
             }
 
-            int space = targetTank.getTankCapacity(tank) - tankStack.getAmount();
-            int inserted = Math.min(remaining, space);
-            if (inserted <= 0) {
-                continue;
+            int inserted = Math.min(stack.getAmount(), targetTank.getTankCapacity(tank) - tankStack.getAmount());
+            if (inserted > 0) {
+                tankStack.setAmount(tankStack.getAmount() + inserted);
             }
-
-            tankStack.setAmount(tankStack.getAmount() + inserted);
-            remaining -= inserted;
+            return inserted == stack.getAmount();
         }
 
+        int remaining = stack.getAmount();
         for (int tank = 0; tank < simulatedTanks.length; tank++) {
             if (remaining <= 0) {
                 return true;
@@ -452,9 +456,11 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
             simulatedTanks[tank] = gasStack;
         }
         for (GasStack outputGas : outputGases) {
-            if (!insertGasIntoSimulatedTank(simulatedTanks, outputTank, outputGas.copy())) {
-                return false;
+            if (insertGasIntoSimulatedTank(simulatedTanks, outputTank, outputGas.copy())) {
+                continue;
             }
+
+            return false;
         }
         return true;
     }
@@ -464,27 +470,20 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
             return true;
         }
 
-        long remaining = stack.getAmount();
         for (int tank = 0; tank < simulatedTanks.length; tank++) {
-            if (remaining <= 0) {
-                return true;
-            }
-
             GasStack tankStack = simulatedTanks[tank];
             if (tankStack.isEmpty() || !GasStack.isSameGasSameComponents(tankStack, stack) || !targetTank.isGasValid(tank, stack)) {
                 continue;
             }
 
-            long space = targetTank.getTankCapacity(tank) - tankStack.getAmount();
-            long inserted = Math.min(remaining, space);
-            if (inserted <= 0) {
-                continue;
+            long inserted = Math.min(stack.getAmount(), targetTank.getTankCapacity(tank) - tankStack.getAmount());
+            if (inserted > 0) {
+                tankStack.setAmount(tankStack.getAmount() + inserted);
             }
-
-            tankStack.setAmount(tankStack.getAmount() + inserted);
-            remaining -= inserted;
+            return inserted == stack.getAmount();
         }
 
+        long remaining = stack.getAmount();
         for (int tank = 0; tank < simulatedTanks.length; tank++) {
             if (remaining <= 0) {
                 return true;
@@ -509,48 +508,47 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
         return remaining <= 0;
     }
 
-    private static boolean planItemInputConsumption(List<ItemRequirement> requirements, int requirementIndex, IItemHandler availableItems, int[] itemAmounts) {
-        if (requirementIndex >= requirements.size()) {
+    private static boolean planItemInputConsumption(List<Ingredient> ingredients, IItemHandler availableItems, int[] itemAmounts) {
+        if (ingredients.isEmpty()) {
             return true;
         }
 
-        ItemRequirement requirement = requirements.get(requirementIndex);
-        for (int slot : requirement.candidateSlots()) {
-            ItemStack stackInSlot = availableItems.getStackInSlot(slot);
-            if (stackInSlot.isEmpty() || stackInSlot.getCount() <= itemAmounts[slot]) {
-                continue;
-            }
-
-            itemAmounts[slot]++;
-            if (planItemInputConsumption(requirements, requirementIndex + 1, availableItems, itemAmounts)) {
-                return true;
-            }
-
-            itemAmounts[slot]--;
-        }
-
-        return false;
-    }
-
-    private static ItemRequirement createItemRequirement(IItemHandler availableItems, Ingredient ingredient) {
-        int[] candidateSlots = new int[availableItems.getSlots()];
-        int candidateCount = 0;
-        int matchingCount = 0;
-        for (int slot = 0; slot < availableItems.getSlots(); slot++) {
+        int slotCount = availableItems.getSlots();
+        long[] slotAmounts = new long[slotCount];
+        long[] plannedAmounts = new long[slotCount];
+        ItemStack[] extractableStacks = new ItemStack[slotCount];
+        for (int slot = 0; slot < slotCount; slot++) {
+            plannedAmounts[slot] = itemAmounts[slot];
             ItemStack stack = availableItems.getStackInSlot(slot);
             if (stack.isEmpty()) {
+                extractableStacks[slot] = ItemStack.EMPTY;
                 continue;
             }
 
             ItemStack extractable = availableItems.extractItem(slot, stack.getCount(), true);
-            if (extractable.isEmpty() || !ingredient.test(extractable)) {
-                continue;
-            }
-
-            candidateSlots[candidateCount++] = slot;
-            matchingCount += extractable.getCount();
+            extractableStacks[slot] = extractable;
+            slotAmounts[slot] = extractable.getCount();
         }
-        return new ItemRequirement(Arrays.copyOf(candidateSlots, candidateCount), matchingCount);
+
+        long[] requiredAmounts = new long[ingredients.size()];
+        boolean[][] matches = new boolean[slotCount][ingredients.size()];
+        Arrays.fill(requiredAmounts, 1);
+        for (int ingredientIndex = 0; ingredientIndex < ingredients.size(); ingredientIndex++) {
+            Ingredient ingredient = ingredients.get(ingredientIndex);
+            for (int slot = 0; slot < slotCount; slot++) {
+                ItemStack extractable = extractableStacks[slot];
+                matches[slot][ingredientIndex] = !extractable.isEmpty() && ingredient.test(extractable);
+            }
+        }
+
+        if (!planResourceInputConsumption(slotAmounts, requiredAmounts, matches, plannedAmounts)) {
+            return false;
+        }
+
+        for (int slot = 0; slot < slotCount; slot++) {
+            itemAmounts[slot] = (int) plannedAmounts[slot];
+        }
+        return true;
     }
 
     @Override
@@ -597,6 +595,4 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
     public boolean matches(RecipeInput input, Level level) {
         return true;
     }
-
-    protected record ItemRequirement(int[] candidateSlots, int matchingItemCount) {}
 }

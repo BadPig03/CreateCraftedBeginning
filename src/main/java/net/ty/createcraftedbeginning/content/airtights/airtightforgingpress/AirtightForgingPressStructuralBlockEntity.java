@@ -37,7 +37,7 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL.get(), (structural, context) -> structural.getItemCapability());
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL.get(), (structural, ignoredContext) -> structural.getItemCapability());
     }
 
     public static boolean isLowerStore(BlockState blockState) {
@@ -46,8 +46,8 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        AirtightForgingPressStructuralPosition position = getBlockState().getValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION);
-        if (!position.isFilter()) {
+        AirtightForgingPressStructuralPosition structuralPosition = getBlockState().getValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION);
+        if (!structuralPosition.isFilter()) {
             return;
         }
 
@@ -62,31 +62,31 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
             return;
         }
 
-        AirtightForgingPressBlockEntity master = getMasterBlockEntity();
-        if (master == null) {
+        AirtightForgingPressBlockEntity press = getMasterBlockEntity();
+        if (press == null) {
             return;
         }
 
-        syncFilterFromMaster(master.getRecipeFilter());
+        syncFilterFromMaster(press.getRecipeFilter());
     }
 
     @Override
     public int getMaxValue() {
-        AirtightForgingPressBlockEntity master = getMasterBlockEntity();
-        if (master == null || !isLowerStore(getBlockState())) {
+        AirtightForgingPressBlockEntity press = getMasterBlockEntity();
+        if (press == null || !isLowerStore(getBlockState())) {
             return 0;
         }
 
-        IItemHandler items = getItemCapability();
-        if (items == null) {
+        IItemHandler itemHandler = getItemCapability();
+        if (itemHandler == null) {
             return 0;
         }
 
-        long maxValue = 0;
-        for (int i = 0; i < items.getSlots(); i++) {
-            maxValue += items.getSlotLimit(i);
+        long maxItemCount = 0;
+        for (int slot = 0; slot < itemHandler.getSlots(); slot++) {
+            maxItemCount += itemHandler.getSlotLimit(slot);
         }
-        return Math.clamp(maxValue, 0, Integer.MAX_VALUE);
+        return Math.clamp(maxItemCount, 0, Integer.MAX_VALUE);
     }
 
     @Override
@@ -96,21 +96,21 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
 
     @Override
     public int getCurrentValue() {
-        AirtightForgingPressBlockEntity master = getMasterBlockEntity();
-        if (master == null || !isLowerStore(getBlockState())) {
+        AirtightForgingPressBlockEntity press = getMasterBlockEntity();
+        if (press == null || !isLowerStore(getBlockState())) {
             return 0;
         }
 
-        IItemHandler items = getItemCapability();
-        if (items == null) {
+        IItemHandler itemHandler = getItemCapability();
+        if (itemHandler == null) {
             return 0;
         }
 
-        long currentValue = 0;
-        for (int i = 0; i < items.getSlots(); i++) {
-            currentValue += items.getStackInSlot(i).getCount();
+        long storedItemCount = 0;
+        for (int slot = 0; slot < itemHandler.getSlots(); slot++) {
+            storedItemCount += itemHandler.getStackInSlot(slot).getCount();
         }
-        return Math.clamp(currentValue, 0, Integer.MAX_VALUE);
+        return Math.clamp(storedItemCount, 0, Integer.MAX_VALUE);
     }
 
     @Override
@@ -118,14 +118,14 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
         return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.items")).component();
     }
 
-    void syncFilterFromMaster(ItemStack stack) {
-        if (filteringBehaviour == null || ItemStack.matches(filteringBehaviour.getFilter(), stack)) {
+    void syncFilterFromMaster(ItemStack filterStack) {
+        if (filteringBehaviour == null || ItemStack.matches(filteringBehaviour.getFilter(), filterStack)) {
             return;
         }
 
         syncingFilter = true;
         try {
-            filteringBehaviour.setFilter(stack);
+            filteringBehaviour.setFilter(filterStack);
         } finally {
             syncingFilter = false;
         }
@@ -133,26 +133,26 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
 
     @Nullable AirtightForgingPressBlockEntity getMasterBlockEntity() {
         BlockPos masterPos = AirtightForgingPressUtils.getMaster(getBlockPos(), getBlockState());
-        if (level == null || !(level.getBlockEntity(masterPos) instanceof AirtightForgingPressBlockEntity master)) {
+        if (level == null || !(level.getBlockEntity(masterPos) instanceof AirtightForgingPressBlockEntity press)) {
             return null;
         }
-        return master;
+        return press;
     }
 
     private @Nullable IItemHandler getItemCapability() {
-        AirtightForgingPressBlockEntity master = getMasterBlockEntity();
-        if (master == null || !isLowerStore(getBlockState())) {
+        AirtightForgingPressBlockEntity press = getMasterBlockEntity();
+        if (press == null || !isLowerStore(getBlockState())) {
             return null;
         }
-        return master.getInputOutputCapability();
+        return press.getInputOutputCapability();
     }
 
-    private void onFilterChanged(ItemStack stack) {
+    private void onFilterChanged(ItemStack filterStack) {
         if (syncingFilter) {
             return;
         }
 
-        AirtightForgingPressUtils.updateRecipeFilter(this, stack);
+        AirtightForgingPressUtils.updateRecipeFilter(this, filterStack);
     }
 
     private static class AirtightForgingPressValueBox extends Sided {
@@ -163,12 +163,12 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
 
         @Override
         protected boolean isSideActive(BlockState state, Direction direction) {
-            AirtightForgingPressStructuralPosition position = state.getValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION);
-            if (!position.isFilter()) {
+            AirtightForgingPressStructuralPosition structuralPosition = state.getValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION);
+            if (!structuralPosition.isFilter()) {
                 return false;
             }
 
-            Direction filterDirection = position.getDirection();
+            Direction filterDirection = structuralPosition.getDirection();
             return filterDirection.getAxis() != Axis.Y && direction == filterDirection;
         }
     }

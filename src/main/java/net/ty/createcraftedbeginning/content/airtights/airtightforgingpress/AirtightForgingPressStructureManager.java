@@ -39,21 +39,21 @@ class AirtightForgingPressStructureManager {
     }
 
     private static float getTheoreticalSpeed(BlockPos pressPos, Level level) {
-        float maxSpeed = 0;
-        for (AirtightForgingPressStructuralPosition position : AirtightForgingPressStructuralPosition.all()) {
-            if (!position.isShaft() || position == AirtightForgingPressStructuralPosition.TOP_CENTER) {
+        float maxTheoreticalSpeed = 0;
+        for (AirtightForgingPressStructuralPosition structuralPosition : AirtightForgingPressStructuralPosition.all()) {
+            if (!structuralPosition.isShaft() || structuralPosition == AirtightForgingPressStructuralPosition.TOP_CENTER) {
                 continue;
             }
 
-            BlockPos shaftPos = pressPos.offset(position.getStructureOffset());
+            BlockPos shaftPos = pressPos.offset(structuralPosition.getStructureOffset());
             if (!(level.getBlockEntity(shaftPos) instanceof AirtightForgingPressStructuralShaftBlockEntity shaft)) {
                 return 0;
             }
 
-            maxSpeed = Math.max(maxSpeed, Mth.abs(shaft.getTheoreticalSpeed()));
+            maxTheoreticalSpeed = Math.max(maxTheoreticalSpeed, Mth.abs(shaft.getTheoreticalSpeed()));
         }
 
-        return maxSpeed;
+        return maxTheoreticalSpeed;
     }
 
     private static boolean isOverstressed(BlockPos pressPos, Level level) {
@@ -71,14 +71,14 @@ class AirtightForgingPressStructureManager {
     }
 
     CompoundTag write() {
-        CompoundTag tag = new CompoundTag();
-        tag.putFloat(COMPOUND_KEY_SPEED, speed);
-        tag.putFloat(COMPOUND_KEY_PREVIOUS_SPEED, previousSpeed);
-        tag.putFloat(COMPOUND_KEY_THEORETICAL_SPEED, theoreticalSpeed);
-        tag.putFloat(COMPOUND_KEY_PREVIOUS_THEORETICAL_SPEED, previousTheoreticalSpeed);
-        tag.putBoolean(COMPOUND_KEY_OVERSTRESSED, overstressed);
-        tag.putBoolean(COMPOUND_KEY_PREVIOUS_OVERSTRESSED, previousOverstressed);
-        return tag;
+        CompoundTag structureTag = new CompoundTag();
+        structureTag.putFloat(COMPOUND_KEY_SPEED, speed);
+        structureTag.putFloat(COMPOUND_KEY_PREVIOUS_SPEED, previousSpeed);
+        structureTag.putFloat(COMPOUND_KEY_THEORETICAL_SPEED, theoreticalSpeed);
+        structureTag.putFloat(COMPOUND_KEY_PREVIOUS_THEORETICAL_SPEED, previousTheoreticalSpeed);
+        structureTag.putBoolean(COMPOUND_KEY_OVERSTRESSED, overstressed);
+        structureTag.putBoolean(COMPOUND_KEY_PREVIOUS_OVERSTRESSED, previousOverstressed);
+        return structureTag;
     }
 
     void read(CompoundTag compoundTag) {
@@ -141,7 +141,7 @@ class AirtightForgingPressStructureManager {
 
         boolean speedChanged = previousSpeed != speed;
         boolean theoreticalSpeedChanged = previousTheoreticalSpeed != theoreticalSpeed;
-        boolean stressChanged = previousOverstressed != overstressed;
-        return speedChanged || theoreticalSpeedChanged || stressChanged;
+        boolean overstressedChanged = previousOverstressed != overstressed;
+        return speedChanged || theoreticalSpeedChanged || overstressedChanged;
     }
 }

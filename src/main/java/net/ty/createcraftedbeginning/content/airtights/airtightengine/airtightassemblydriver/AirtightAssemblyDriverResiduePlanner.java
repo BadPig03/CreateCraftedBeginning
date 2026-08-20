@@ -3,8 +3,8 @@ package net.ty.createcraftedbeginning.content.airtights.airtightengine.airtighta
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletInsertionTarget;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueInsertionPlan;
+import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletInsertionTarget;
 import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
 import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe.ResidueOutput;
 import org.jetbrains.annotations.Nullable;
@@ -19,14 +19,14 @@ final class AirtightAssemblyDriverResiduePlanner {
     private AirtightAssemblyDriverResiduePlanner() {
     }
 
-    static @Nullable GenerationPlan create(Level level, List<BlockPos> outletPositions, ResidueOutput output, int requiredAmount, int startIndex) {
+    static @Nullable GenerationPlan create(Level level, List<BlockPos> outletPositions, ResidueOutput residueOutput, int requiredAmount, int startIndex) {
         int outletCount = outletPositions.size();
         int remainingAmount = requiredAmount;
         int lastOutletIndex = -1;
         List<ResidueInsertionPlan> insertions = new ArrayList<>();
         for (int offset = 0; offset < outletCount && remainingAmount > 0; offset++) {
             int outletIndex = (startIndex + offset) % outletCount;
-            ResidueInsertionPlan insertion = createOutletInsertionPlan(outletPositions.get(outletIndex), level, output, remainingAmount);
+            ResidueInsertionPlan insertion = createOutletInsertionPlan(outletPositions.get(outletIndex), level, residueOutput, remainingAmount);
             if (insertion == null) {
                 continue;
             }
@@ -47,11 +47,11 @@ final class AirtightAssemblyDriverResiduePlanner {
         return transaction.commit();
     }
 
-    private static @Nullable ResidueInsertionPlan createOutletInsertionPlan(BlockPos pos, Level level, ResidueOutput output, int maxAmount) {
-        if (!(level.getBlockEntity(pos) instanceof ResidueOutletInsertionTarget outlet)) {
+    private static @Nullable ResidueInsertionPlan createOutletInsertionPlan(BlockPos outletPos, Level level, ResidueOutput residueOutput, int maxAmount) {
+        if (!(level.getBlockEntity(outletPos) instanceof ResidueOutletInsertionTarget outlet)) {
             return null;
         }
-        return outlet.createResidueInsertionPlan(output.fluidStack(), output.itemStack(), maxAmount);
+        return outlet.createResidueInsertionPlan(residueOutput.fluidStack(), residueOutput.itemStack(), maxAmount);
     }
 
     record GenerationPlan(List<ResidueInsertionPlan> insertions, int lastOutletIndex) {}

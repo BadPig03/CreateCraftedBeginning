@@ -21,7 +21,17 @@ final class AirtightCheckValveTransportBehaviour extends AxisGasTransportBehavio
     }
 
     @Override
+    public boolean allowsInboundFlowWithoutLevel(BlockState state, Direction direction) {
+        return canHaveFlowTowardWithoutLevel(state, direction) && AirtightCheckValveBlock.isInputSide(state, direction);
+    }
+
+    @Override
     public boolean allowsOutboundFlow(BlockState state, Direction direction) {
         return canHaveFlowToward(state, direction) && AirtightCheckValveBlock.isOutputSide(state, direction);
+    }
+
+    @Override
+    public boolean allowsOutboundFlowWithoutLevel(BlockState state, Direction direction) {
+        return canHaveFlowTowardWithoutLevel(state, direction) && AirtightCheckValveBlock.isOutputSide(state, direction);
     }
 }

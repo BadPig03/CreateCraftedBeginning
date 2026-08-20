@@ -54,18 +54,18 @@ class AirtightAssemblyDriverFlowMeter {
         return gasStack.isEmpty() ? DefaultEngineHandler.INSTANCE : AirtightEngineHandlerUtils.of(gasStack);
     }
 
-    private static double getWorkFactor(AirtightEngineHandler handler) {
-        double workFactor = handler.getWorkFactor();
+    private static double getWorkFactor(AirtightEngineHandler engineHandler) {
+        double workFactor = engineHandler.getWorkFactor();
         return GasConsumptions.isFinite(workFactor) && workFactor > 0 ? workFactor : 0;
     }
 
-    private static int getMaxLevel(AirtightEngineHandler handler) {
-        return Math.clamp(handler.getMaxLevel(), 0, AirtightAssemblyDriverCore.MAX_LEVEL);
+    private static int getMaxLevel(AirtightEngineHandler engineHandler) {
+        return Math.clamp(engineHandler.getMaxLevel(), 0, AirtightAssemblyDriverCore.MAX_LEVEL);
     }
 
-    private static long getMaxInput(AirtightEngineHandler handler) {
-        double workFactor = getWorkFactor(handler);
-        int maxLevel = getMaxLevel(handler);
+    private static long getMaxInput(AirtightEngineHandler engineHandler) {
+        double workFactor = getWorkFactor(engineHandler);
+        int maxLevel = getMaxLevel(engineHandler);
         if (workFactor <= 0 || maxLevel <= 0) {
             return 0;
         }
@@ -91,8 +91,7 @@ class AirtightAssemblyDriverFlowMeter {
             return 0;
         }
 
-        long remainingInput = getRemainingInput(resource);
-        long acceptedAmount = Math.min(resource.getAmount(), remainingInput);
+        long acceptedAmount = Math.min(resource.getAmount(), getRemainingInput(resource));
         if (acceptedAmount <= 0) {
             return 0;
         }
@@ -218,18 +217,18 @@ class AirtightAssemblyDriverFlowMeter {
     private void readPersistent(CompoundTag compoundTag, Provider provider) {
         clearRuntimeState();
         gasType = readNormalizedGas(compoundTag, provider);
-        AirtightEngineHandler handler = getHandler(gasType);
-        if (gasType.isEmpty() || getWorkFactor(handler) <= 0 || getMaxLevel(handler) <= 0) {
+        AirtightEngineHandler engineHandler = getHandler(gasType);
+        if (gasType.isEmpty() || getWorkFactor(engineHandler) <= 0 || getMaxLevel(engineHandler) <= 0) {
             gasType = GasStack.EMPTY;
             driverCore.getLevelCalculator().loadSupplyLevel(0);
             return;
         }
 
-        long maxInput = getMaxInput(handler);
+        long maxInput = getMaxInput(engineHandler);
         currentIndex = Math.floorMod(compoundTag.getInt(COMPOUND_KEY_CURRENT_INDEX), SAMPLES_COUNT);
         ticksUntilNextSample = compoundTag.contains(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE) ? Math.clamp(compoundTag.getInt(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE), 1, SAMPLE_RATE) : SAMPLE_RATE;
-        long storedSupply = compoundTag.getLong(COMPOUND_KEY_GATHERED_SUPPLY);
-        gatheredSupply = Math.clamp(storedSupply, 0, maxInput);
+        long storedGatheredSupply = compoundTag.getLong(COMPOUND_KEY_GATHERED_SUPPLY);
+        gatheredSupply = Math.clamp(storedGatheredSupply, 0, maxInput);
         readSamples(compoundTag, maxInput);
         if (rollingSupply == 0 && gatheredSupply == 0) {
             gasType = GasStack.EMPTY;
@@ -241,8 +240,8 @@ class AirtightAssemblyDriverFlowMeter {
         Arrays.fill(suppliedPerSample, 0);
         if (compoundTag.contains(COMPOUND_KEY_SAMPLES)) {
             long[] storedSamples = compoundTag.getLongArray(COMPOUND_KEY_SAMPLES);
-            for (int i = 0; i < Math.min(SAMPLES_COUNT, storedSamples.length); i++) {
-                suppliedPerSample[i] = Math.clamp(storedSamples[i], 0, maxInput);
+            for (int sampleIndex = 0; sampleIndex < Math.min(SAMPLES_COUNT, storedSamples.length); sampleIndex++) {
+                suppliedPerSample[sampleIndex] = Math.clamp(storedSamples[sampleIndex], 0, maxInput);
             }
         }
 
@@ -263,9 +262,9 @@ class AirtightAssemblyDriverFlowMeter {
 
     private void updateDerivedSupply(boolean notifyChanges) {
         gasSupply = (float) rollingSupply / SAMPLE_WINDOW_TICKS;
-        AirtightEngineHandler handler = getHandler(gasType);
-        double workFactor = getWorkFactor(handler);
-        int maxLevel = getMaxLevel(handler);
+        AirtightEngineHandler engineHandler = getHandler(gasType);
+        double workFactor = getWorkFactor(engineHandler);
+        int maxLevel = getMaxLevel(engineHandler);
         int supplyLevel = workFactor <= 0 || maxLevel <= 0 ? 0 : (int) Math.min(maxLevel, Math.floor(rollingSupply * workFactor / (SAMPLE_WINDOW_TICKS * (double) SUPPLY_PER_LEVEL)));
         if (notifyChanges) {
             driverCore.getLevelCalculator().updateSupplyLevel(supplyLevel);
@@ -280,11 +279,11 @@ class AirtightAssemblyDriverFlowMeter {
     }
 
     private long getRemainingInput(GasStack gas) {
-        AirtightEngineHandler handler = getHandler(gas);
-        if (getWorkFactor(handler) <= 0 || getMaxLevel(handler) <= 0) {
+        AirtightEngineHandler engineHandler = getHandler(gas);
+        if (getWorkFactor(engineHandler) <= 0 || getMaxLevel(engineHandler) <= 0) {
             return 0;
         }
-        return Math.max(0, getMaxInput(handler) - gatheredSupply);
+        return Math.max(0, getMaxInput(engineHandler) - gatheredSupply);
     }
 
     private void clearRuntimeState() {

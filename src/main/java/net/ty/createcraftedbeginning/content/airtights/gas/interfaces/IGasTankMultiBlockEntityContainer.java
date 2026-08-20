@@ -24,9 +24,24 @@ public interface IGasTankMultiBlockEntityContainer extends IMultiBlockEntityCont
         }
 
         GasStack sourceGas = source.getGas(0);
-        if (!sourceGas.isEmpty()) {
-            getTank(0).fill(sourceGas, GasAction.EXECUTE);
+        if (sourceGas.isEmpty()) {
+            return;
         }
+
+        IGasTank targetTank = getTank(0);
+        long accepted = targetTank.fill(sourceGas, GasAction.SIMULATE);
+        if (accepted != sourceGas.getAmount()) {
+            return;
+        }
+
+        long transferred = targetTank.fill(sourceGas, GasAction.EXECUTE);
+        if (transferred != sourceGas.getAmount()) {
+            if (transferred > 0) {
+                targetTank.drain(transferred, GasAction.EXECUTE);
+            }
+            return;
+        }
+
         source.clearTankStateAfterMerge(0);
     }
 

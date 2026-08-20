@@ -22,8 +22,6 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.CreativeSmartGasTank;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IAirtightComponent;
 import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasConnectivityHandler;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
@@ -62,8 +60,8 @@ public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirt
             return;
         }
 
+        GasConnectivityHandler.splitMultiOnRemoval(tank);
         level.removeBlockEntity(pos);
-        GasConnectivityHandler.splitMulti(tank);
     }
 
     @Override
@@ -81,16 +79,11 @@ public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirt
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        if (!(level.getCapability(GasHandler.BLOCK, controller.getBlockPos(), null) instanceof CreativeSmartGasTank creativeTank)) {
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        }
-
         if (level.isClientSide) {
             return ItemInteractionResult.sidedSuccess(true);
         }
 
-        GasStack gas = canister.getGasInTank(0);
-        creativeTank.setContainedGas(gas.isEmpty() ? GasStack.EMPTY : gas);
+        controller.setContainedGas(canister.getGasInTank(0));
         return ItemInteractionResult.sidedSuccess(false);
     }
 

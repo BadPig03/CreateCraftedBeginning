@@ -36,8 +36,8 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
     }
 
     private static void renderPressHead(AirtightForgingPressBlockEntity press, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light) {
-        SuperByteBuffer head = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_FORGING_PRESS_PRESS_HEAD, press.getBlockState());
-        head.translate(0, -press.getPressHeadDistance(partialTicks), 0).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
+        SuperByteBuffer headBuffer = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_FORGING_PRESS_PRESS_HEAD, press.getBlockState());
+        headBuffer.translate(0, -press.getPressHeadDistance(partialTicks), 0).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
     }
 
     private static void renderItems(AirtightForgingPressBlockEntity press, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
@@ -48,27 +48,27 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
     }
 
     private static void renderPressHeadItem(AirtightForgingPressBlockEntity press, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay, Vec3 itemPosition) {
-        ItemStack stack = press.getPressHeadInventory().getStackInSlot(0);
-        if (stack.isEmpty()) {
+        ItemStack pressHeadStack = press.getPressHeadInventory().getStackInSlot(0);
+        if (pressHeadStack.isEmpty()) {
             return;
         }
 
         poseStack.pushPose();
         poseStack.translate(0.5, -0.1 - press.getPressHeadDistance(partialTicks), 0.5);
-        if (!Minecraft.getInstance().getItemRenderer().getModel(stack, null, null, 0).isGui3d()) {
+        if (!Minecraft.getInstance().getItemRenderer().getModel(pressHeadStack, null, null, 0).isGui3d()) {
             poseStack.translate(0, 0.1875, 0);
         }
         TransformStack.of(poseStack).nudge(0);
 
-        Random random = getRenderRandom(press.getBlockPos().asLong());
-        int angle = Mth.floor(360 * random.nextFloat());
-        DepotRenderer.renderItem(poseStack, buffer, light, overlay, stack, angle, random, itemPosition, false);
+        Random renderRandom = getRenderRandom(press.getBlockPos().asLong());
+        int itemAngle = Mth.floor(360 * renderRandom.nextFloat());
+        DepotRenderer.renderItem(poseStack, buffer, light, overlay, pressHeadStack, itemAngle, renderRandom, itemPosition, false);
         poseStack.popPose();
     }
 
     private static void renderInputItem(AirtightForgingPressBlockEntity press, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay, Vec3 itemPosition) {
-        ItemStack stack = press.getInputInventory().getStackInSlot(0);
-        if (stack.isEmpty()) {
+        ItemStack inputStack = press.getInputInventory().getStackInSlot(0);
+        if (inputStack.isEmpty()) {
             return;
         }
 
@@ -76,44 +76,44 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
         poseStack.translate(0.5, -0.0625, 0.5);
         TransformStack.of(poseStack).nudge(0);
 
-        Random random = getRenderRandom(press.getBlockPos().asLong());
-        int angle = Mth.floor(360 * random.nextFloat());
-        DepotRenderer.renderItem(poseStack, buffer, light, overlay, stack, angle, random, itemPosition, false);
+        Random renderRandom = getRenderRandom(press.getBlockPos().asLong());
+        int itemAngle = Mth.floor(360 * renderRandom.nextFloat());
+        DepotRenderer.renderItem(poseStack, buffer, light, overlay, inputStack, itemAngle, renderRandom, itemPosition, false);
         poseStack.popPose();
     }
 
     private static void renderOutputItems(AirtightForgingPressBlockEntity press, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay, Vec3 itemPosition) {
-        SmartInventory inventory = press.getOutputInventory();
-        int slots = inventory.getSlots();
-        if (slots <= 0) {
+        SmartInventory outputInventory = press.getOutputInventory();
+        int outputSlotCount = outputInventory.getSlots();
+        if (outputSlotCount <= 0) {
             return;
         }
 
         poseStack.pushPose();
         poseStack.translate(0.5, -0.0625, 0.5);
 
-        long posSeed = press.getBlockPos().asLong();
-        for (int slot = 0; slot < slots; slot++) {
-            ItemStack stack = inventory.getStackInSlot(slot);
-            if (stack.isEmpty()) {
+        long positionSeed = press.getBlockPos().asLong();
+        for (int slot = 0; slot < outputSlotCount; slot++) {
+            ItemStack outputStack = outputInventory.getStackInSlot(slot);
+            if (outputStack.isEmpty()) {
                 continue;
             }
 
             poseStack.pushPose();
-            OutputPlacement placement = OUTPUT_PLACEMENTS[slot];
-            TransformStack.of(poseStack).rotateYDegrees(placement.angle());
+            OutputPlacement outputPlacement = OUTPUT_PLACEMENTS[slot];
+            TransformStack.of(poseStack).rotateYDegrees(outputPlacement.angle());
             poseStack.translate(OUTPUT_RADIUS, 0, 0);
 
-            Random random = getRenderRandom(slot + posSeed);
-            Vec3 outputPosition = itemPosition.add(placement.offset());
-            int angle = Mth.floor(360 * random.nextFloat());
-            boolean isUpright = BeltHelper.isItemUpright(stack);
+            Random renderRandom = getRenderRandom(slot + positionSeed);
+            Vec3 outputPosition = itemPosition.add(outputPlacement.offset());
+            int itemAngle = Mth.floor(360 * renderRandom.nextFloat());
+            boolean isUpright = BeltHelper.isItemUpright(outputStack);
             if (isUpright) {
-                TransformStack.of(poseStack).rotateYDegrees(-placement.angle());
-                angle += 90;
+                TransformStack.of(poseStack).rotateYDegrees(-outputPlacement.angle());
+                itemAngle += 90;
             }
 
-            DepotRenderer.renderItem(poseStack, buffer, light, overlay, stack, angle, random, outputPosition, false);
+            DepotRenderer.renderItem(poseStack, buffer, light, overlay, outputStack, itemAngle, renderRandom, outputPosition, false);
             poseStack.popPose();
         }
 
@@ -121,9 +121,9 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
     }
 
     private static Random getRenderRandom(long seed) {
-        Random random = RENDER_RANDOM.get();
-        random.setSeed(seed);
-        return random;
+        Random renderRandom = RENDER_RANDOM.get();
+        renderRandom.setSeed(seed);
+        return renderRandom;
     }
 
     private static OutputPlacement[] createOutputPlacements() {

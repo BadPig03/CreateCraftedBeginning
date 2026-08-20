@@ -13,6 +13,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -20,7 +21,7 @@ import net.neoforged.neoforge.capabilities.Capabilities.FluidHandler;
 import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import net.neoforged.neoforge.items.IItemHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasInventoryIdentifierProvider;
@@ -35,9 +36,11 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity implements ThresholdSwitchObservable, IGasInventoryIdentifierProvider {
     private FilteringBehaviour filteringBehaviour;
+    private boolean syncingFilter;
 
     public AirtightReactorKettleStructuralBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
+        setLazyTickRate(10);
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
@@ -59,12 +62,12 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
         return masterBlockEntity;
     }
 
-    public @Nullable IItemHandlerModifiable getItemCapability() {
+    public @Nullable IItemHandler getItemCapability() {
         AirtightReactorKettleBlockEntity master = getMasterBlockEntity();
         if (master == null || !canStore(getBlockState())) {
             return null;
         }
-        return master.getItemCapability();
+        return master.getItemPortCapability();
     }
 
     public @Nullable IFluidHandler getFluidCapability() {
@@ -72,7 +75,7 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
         if (master == null || !canStore(getBlockState())) {
             return null;
         }
-        return master.getFluidCapability();
+        return master.getFluidPortCapability();
     }
 
     public @Nullable IGasHandler getGasCapability() {
@@ -80,11 +83,7 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
         if (master == null || !canStore(getBlockState())) {
             return null;
         }
-        return master.getGasCapability();
-    }
-
-    public FilteringBehaviour getFilteringBehaviour() {
-        return filteringBehaviour;
+        return master.getGasPortCapability();
     }
 
     @Override
@@ -94,8 +93,49 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
             return;
         }
 
-        filteringBehaviour = new FilteringBehaviour(this, new AirtightReactorKettleValueBox()).withCallback(stack -> AirtightReactorKettleUtils.updateRecipeFilter(this, stack)).onlyActiveWhen(() -> AirtightReactorKettleUtils.canModifyFilter(this)).forRecipes();
+        filteringBehaviour = new FilteringBehaviour(this, new AirtightReactorKettleValueBox()).withCallback(this::onFilterChanged).forRecipes();
         behaviours.add(filteringBehaviour);
+    }
+
+    @Override
+    public void lazyTick() {
+        super.lazyTick();
+        if (filteringBehaviour == null) {
+            return;
+        }
+
+        AirtightReactorKettleBlockEntity master = getMasterBlockEntity();
+        if (master == null) {
+            return;
+        }
+
+        if (!master.hasAuthoritativeRecipeFilter() && !filteringBehaviour.getFilter().isEmpty()) {
+            master.setRecipeFilter(filteringBehaviour.getFilter());
+            return;
+        }
+
+        syncFilterFromMaster(master.getRecipeFilter());
+    }
+
+    void syncFilterFromMaster(ItemStack stack) {
+        if (filteringBehaviour == null || ItemStack.matches(filteringBehaviour.getFilter(), stack)) {
+            return;
+        }
+
+        syncingFilter = true;
+        try {
+            filteringBehaviour.setFilter(stack);
+        } finally {
+            syncingFilter = false;
+        }
+    }
+
+    private void onFilterChanged(ItemStack stack) {
+        if (syncingFilter) {
+            return;
+        }
+
+        AirtightReactorKettleUtils.updateRecipeFilter(this, stack);
     }
 
     @Override
@@ -105,7 +145,7 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
             return 0;
         }
 
-        IItemHandlerModifiable items = getItemCapability();
+        IItemHandler items = getItemCapability();
         IFluidHandler fluids = getFluidCapability();
         IGasHandler gases = getGasCapability();
         if (items == null || fluids == null || gases == null) {
@@ -137,7 +177,7 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
             return 0;
         }
 
-        IItemHandlerModifiable items = getItemCapability();
+        IItemHandler items = getItemCapability();
         IFluidHandler fluids = getFluidCapability();
         IGasHandler gases = getGasCapability();
         if (items == null || fluids == null || gases == null) {

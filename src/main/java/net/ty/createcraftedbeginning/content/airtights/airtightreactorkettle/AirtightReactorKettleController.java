@@ -18,9 +18,8 @@ import java.util.Optional;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class AirtightReactorKettleController {
-    private static final int OPERATING_FINISHED = 40;
     public static final int PROCESSING_STARTED = 20;
-
+    private static final int OPERATING_FINISHED = 40;
     private final AirtightReactorKettleBlockEntity kettle;
     private final AirtightReactorKettleAnimationState animationState;
 
@@ -123,10 +122,6 @@ public final class AirtightReactorKettleController {
         filterChanged = true;
     }
 
-    public boolean isFilterChanged() {
-        return filterChanged;
-    }
-
     public boolean getWindowsOpenState() {
         return windowsOpenState;
     }
@@ -173,15 +168,15 @@ public final class AirtightReactorKettleController {
     }
 
     public void loadOperationState(boolean operating, int operatingTicks, int processingTicks, boolean windowsOpenState, boolean clientPacket) {
+        if (!clientPacket) {
+            resetTransientOperation();
+            return;
+        }
+
         this.operating = operating;
         this.operatingTicks = operatingTicks;
         this.processingTicks = processingTicks;
         this.windowsOpenState = windowsOpenState;
-        if (clientPacket) {
-            return;
-        }
-
-        resetTransientOperation();
     }
 
     private void tickOperation() {
@@ -297,10 +292,17 @@ public final class AirtightReactorKettleController {
     }
 
     private void startProcessing() {
-        float recipeSpeed = currentRecipe == null ? 0 : currentRecipe.getProcessingDuration() / 100.0f;
         float speed = getProcessingSpeed();
-        int baseProcessingTicks = Mth.clamp(Mth.log2((int) (256 / speed)) * Mth.ceil(recipeSpeed * 15) + 1, 1, 1000);
-        processingTicks = Mth.clamp(Mth.ceil(baseProcessingTicks), 1, 1_000_000);
+        if (currentRecipe == null) {
+            processingTicks = 1;
+        }
+        else {
+            int recipeDuration = currentRecipe.getProcessingDuration();
+            float minimumSpeed = SpeedLevel.FAST.getSpeedValue();
+            float speedMultiplier = Math.max(1.0f, speed / minimumSpeed);
+            processingTicks = recipeDuration <= 0 ? 1 : Mth.clamp(Mth.ceil(recipeDuration / speedMultiplier), 1, 1_000_000);
+        }
+
         Level level = kettle.getLevel();
         if (level == null || kettle.getInputFluidTank().isEmpty() && kettle.getOutputFluidTank().isEmpty()) {
             return;

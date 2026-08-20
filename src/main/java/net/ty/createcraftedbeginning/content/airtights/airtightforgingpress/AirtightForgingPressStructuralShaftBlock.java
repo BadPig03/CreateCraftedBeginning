@@ -60,8 +60,8 @@ public class AirtightForgingPressStructuralShaftBlock extends KineticBlock imple
         }
 
         BlockPos masterPos = AirtightForgingPressUtils.getMaster(clickedPos, state);
-        BlockHitResult masterHit = new BlockHitResult(context.getClickLocation(), context.getClickedFace(), masterPos, context.isInside());
-        UseOnContext masterContext = new UseOnContext(level, context.getPlayer(), context.getHand(), context.getItemInHand(), masterHit);
+        BlockHitResult masterHitResult = new BlockHitResult(context.getClickLocation(), context.getClickedFace(), masterPos, context.isInside());
+        UseOnContext masterContext = new UseOnContext(level, context.getPlayer(), context.getHand(), context.getItemInHand(), masterHitResult);
         BlockState masterState = level.getBlockState(masterPos);
         return super.onSneakWrenched(masterState, masterContext);
     }
@@ -127,13 +127,12 @@ public class AirtightForgingPressStructuralShaftBlock extends KineticBlock imple
         if (blockState.getValue(STRUCTURAL_POSITION) != AirtightForgingPressStructuralPosition.TOP_CENTER || hitResult.getDirection() == Direction.DOWN) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-        return onBlockEntityUseItemOn(level, blockPos, structural -> AirtightForgingPressUtils.getUseItemOnResult(structural, level, player, blockPos, hand, stack));
+        return onBlockEntityUseItemOn(level, blockPos, shaftPart -> AirtightForgingPressUtils.getUseItemOnResult(shaftPart, level, player, blockPos, hand, stack));
     }
 
     @Override
     protected VoxelShape getShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
-        AirtightForgingPressStructuralPosition position = blockState.getValue(STRUCTURAL_POSITION);
-        return AirtightForgingPressVoxelShapes.getShape(position);
+        return AirtightForgingPressVoxelShapes.getShape(blockState.getValue(STRUCTURAL_POSITION));
     }
 
     @Override
@@ -157,12 +156,12 @@ public class AirtightForgingPressStructuralShaftBlock extends KineticBlock imple
 
     @Override
     public boolean hasShaftTowards(LevelReader level, BlockPos pos, BlockState state, Direction direction) {
-        AirtightForgingPressStructuralPosition position = state.getValue(STRUCTURAL_POSITION);
-        Axis axis = direction.getAxis();
-        if (position == AirtightForgingPressStructuralPosition.TOP_CENTER) {
-            return axis != Axis.Y;
+        AirtightForgingPressStructuralPosition structuralPosition = state.getValue(STRUCTURAL_POSITION);
+        Axis connectionAxis = direction.getAxis();
+        if (structuralPosition == AirtightForgingPressStructuralPosition.TOP_CENTER) {
+            return connectionAxis != Axis.Y;
         }
-        return axis == position.getAxis();
+        return connectionAxis == structuralPosition.getAxis();
     }
 
     @Override
@@ -187,8 +186,7 @@ public class AirtightForgingPressStructuralShaftBlock extends KineticBlock imple
 
     @Override
     public Axis getRotationAxis(BlockState state) {
-        AirtightForgingPressStructuralPosition position = state.getValue(STRUCTURAL_POSITION);
-        return position.getAxis();
+        return state.getValue(STRUCTURAL_POSITION).getAxis();
     }
 
     @Override

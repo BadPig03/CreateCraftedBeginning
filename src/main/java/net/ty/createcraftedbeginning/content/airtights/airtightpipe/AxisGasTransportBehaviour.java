@@ -35,7 +35,7 @@ public abstract class AxisGasTransportBehaviour extends GasTransportBehaviour {
         }
 
         BlockPos otherPos = blockEntity.getBlockPos().relative(direction);
-        return isValidAirtightComponents(level, otherPos, level.getBlockState(otherPos), direction);
+        return level.isLoaded(otherPos) && isValidAirtightComponents(level, otherPos, level.getBlockState(otherPos), direction);
     }
 
     @Override

@@ -58,9 +58,9 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
     }
 
     static boolean hasPlacementConnection(Level level, BlockPos pos, Direction direction) {
-        BlockPos otherPos = pos.relative(direction);
-        BlockState otherState = level.getBlockState(otherPos);
-        return !otherState.isAir() && (!otherState.canBeReplaced() || CCBBlockTags.GAS_SOURCES.matches(otherState)) && GasTransportBehaviour.isValidAirtightComponents(level, otherPos, otherState, direction);
+        BlockPos adjacentPos = pos.relative(direction);
+        BlockState adjacentState = level.getBlockState(adjacentPos);
+        return !adjacentState.isAir() && (!adjacentState.canBeReplaced() || CCBBlockTags.GAS_SOURCES.matches(adjacentState)) && GasTransportBehaviour.isValidAirtightComponents(level, adjacentPos, adjacentState, direction);
     }
 
     private static void markConnectionsDirty(Level level, BlockPos pos) {
@@ -106,8 +106,8 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block otherBlock, BlockPos neighborPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, otherBlock, neighborPos, isMoving);
-        Direction direction = GasPropagator.getChangedNeighbourSide(level, pos, neighborPos);
-        if (direction == null || !isOpenAt(state, direction)) {
+        Direction changedSide = GasPropagator.getChangedNeighbourSide(level, pos, neighborPos);
+        if (changedSide == null || !isOpenAt(state, changedSide)) {
             return;
         }
 
@@ -156,12 +156,12 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
         }
 
         BlockPos pos = context.getClickedPos();
-        Property<Boolean> property = PROPERTY_BY_DIRECTION.get(context.getClickedFace());
-        boolean isOpen = state.getValue(property);
-        level.setBlockAndUpdate(pos, state.setValue(property, !isOpen));
+        Property<Boolean> connectionProperty = PROPERTY_BY_DIRECTION.get(context.getClickedFace());
+        boolean wasOpen = state.getValue(connectionProperty);
+        level.setBlockAndUpdate(pos, state.setValue(connectionProperty, !wasOpen));
         markConnectionsDirty(level, pos);
         level.scheduleTick(pos, this, 1, TickPriority.HIGH);
-        if (isOpen) {
+        if (wasOpen) {
             CCBSoundEvents.SHEET_ADDED.playOnServer(level, pos, 1, 1);
         }
         else {

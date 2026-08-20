@@ -73,8 +73,16 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         return canHaveFlowToward(state, direction);
     }
 
+    public boolean allowsInboundFlowWithoutLevel(BlockState state, Direction direction) {
+        return canHaveFlowTowardWithoutLevel(state, direction);
+    }
+
     public boolean allowsOutboundFlow(BlockState state, Direction direction) {
         return canHaveFlowToward(state, direction);
+    }
+
+    public boolean allowsOutboundFlowWithoutLevel(BlockState state, Direction direction) {
+        return canHaveFlowTowardWithoutLevel(state, direction);
     }
 
     public GasStack getProvidedOutwardGas(Direction side) {
@@ -137,8 +145,11 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
             flowRemoved |= connection.getFlow() != null;
             retireConnection(connection);
         }
-        if (topologyChanged && !connectionsDirty && !level.isClientSide) {
-            periodicTopologyRefreshPending = true;
+        if (topologyChanged && !connectionsDirty) {
+            GasPropagator.invalidatePressureTopology(level);
+            if (!level.isClientSide) {
+                periodicTopologyRefreshPending = true;
+            }
         }
         if (!flowRemoved || level.isClientSide && !blockEntity.isVirtual()) {
             return;
@@ -197,6 +208,10 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     }
 
     public void markConnectionsDirty() {
+        Level level = getWorld();
+        if (level != null) {
+            GasPropagator.invalidatePressureTopology(level);
+        }
         connectionsDirty = true;
     }
 
@@ -285,6 +300,10 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     @Override
     public void initialize() {
         super.initialize();
+        Level level = getWorld();
+        if (level != null) {
+            GasPropagator.invalidatePressureTopology(level);
+        }
         refreshConnections();
     }
 

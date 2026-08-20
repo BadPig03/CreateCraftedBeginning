@@ -100,7 +100,7 @@ class AirtightAssemblyDriverResidueManager {
     }
 
     void reset() {
-        boolean changed = successCount != 0 || generationCooldown != GENERATION_INTERVAL_TICKS || consecutiveFailureTicks != 0 || itemDistributionCursor != 0 || fluidDistributionCursor != 0 || !outletsPositions.isEmpty() || !verifiedOutletPositions.isEmpty();
+        boolean hadResidueState = successCount != 0 || generationCooldown != GENERATION_INTERVAL_TICKS || consecutiveFailureTicks != 0 || itemDistributionCursor != 0 || fluidDistributionCursor != 0 || !outletsPositions.isEmpty() || !verifiedOutletPositions.isEmpty();
         outletsPositions = List.of();
         verifiedOutletPositions = Set.of();
         successCount = 0;
@@ -108,7 +108,7 @@ class AirtightAssemblyDriverResidueManager {
         consecutiveFailureTicks = 0;
         itemDistributionCursor = 0;
         fluidDistributionCursor = 0;
-        if (!changed) {
+        if (!hadResidueState) {
             return;
         }
 
@@ -133,9 +133,9 @@ class AirtightAssemblyDriverResidueManager {
         Set<BlockPos> normalizedPositions = Set.copyOf(newPositions);
         boolean topologyChanged = driverCore.getLevelCalculator().getResidueLevel() > 0 && !verifiedOutletPositions.equals(normalizedPositions);
 
-        List<BlockPos> sorted = new ArrayList<>(normalizedPositions);
-        sorted.sort(Comparator.comparingLong(BlockPos::asLong));
-        outletsPositions = List.copyOf(sorted);
+        List<BlockPos> sortedPositions = new ArrayList<>(normalizedPositions);
+        sortedPositions.sort(Comparator.comparingLong(BlockPos::asLong));
+        outletsPositions = List.copyOf(sortedPositions);
         int previousItemCursor = itemDistributionCursor;
         int previousFluidCursor = fluidDistributionCursor;
         if (outletsPositions.isEmpty()) {
@@ -197,45 +197,45 @@ class AirtightAssemblyDriverResidueManager {
             return;
         }
 
-        ResidueOutput output = ResidueGenerationRecipe.findOutput(level, flowMeter.getGasType());
-        if (!output.hasFluid() && !output.hasItem()) {
+        ResidueOutput residueOutput = ResidueGenerationRecipe.findOutput(level, flowMeter.getGasType());
+        if (!residueOutput.hasFluid() && !residueOutput.hasItem()) {
             handleGenerationSuccess(false, false, -1, outletCount);
             return;
         }
 
-        int generatedAmount = output.hasFluid() ? getTotalFluidGenerationAmount() : getTotalItemGenerationUnits();
+        int generatedAmount = residueOutput.hasFluid() ? getTotalFluidGenerationAmount() : getTotalItemGenerationUnits();
         int requiredCapacity = Math.max(1, generatedAmount);
-        boolean roundRobin = output.hasFluid() ? useFluidResidueRoundRobin() : useItemResidueRoundRobin();
-        int distributionCursor = output.hasFluid() ? fluidDistributionCursor : itemDistributionCursor;
-        int startIndex = roundRobin ? Math.floorMod(distributionCursor, outletCount) : 0;
-        GenerationPlan plan = AirtightAssemblyDriverResiduePlanner.create(level, outletsPositions, output, requiredCapacity, startIndex);
-        if (plan == null) {
+        boolean useRoundRobin = residueOutput.hasFluid() ? useFluidResidueRoundRobin() : useItemResidueRoundRobin();
+        int distributionCursor = residueOutput.hasFluid() ? fluidDistributionCursor : itemDistributionCursor;
+        int startIndex = useRoundRobin ? Math.floorMod(distributionCursor, outletCount) : 0;
+        GenerationPlan generationPlan = AirtightAssemblyDriverResiduePlanner.create(level, outletsPositions, residueOutput, requiredCapacity, startIndex);
+        if (generationPlan == null) {
             handleGenerationFailure();
             return;
         }
 
-        if (generatedAmount > 0 && !AirtightAssemblyDriverResiduePlanner.commit(plan)) {
+        if (generatedAmount > 0 && !AirtightAssemblyDriverResiduePlanner.commit(generationPlan)) {
             handleGenerationFailure();
             return;
         }
 
-        handleGenerationSuccess(roundRobin && generatedAmount > 0, output.hasFluid(), plan.lastOutletIndex(), outletCount);
+        handleGenerationSuccess(useRoundRobin && generatedAmount > 0, residueOutput.hasFluid(), generationPlan.lastOutletIndex(), outletCount);
     }
 
-    private void handleGenerationSuccess(boolean shouldAdvanceCursor, boolean fluidOutput, int lastOutletIndex, int outletCount) {
-        boolean changed = shouldAdvanceCursor && advanceDistributionCursor(fluidOutput, lastOutletIndex, outletCount);
+    private void handleGenerationSuccess(boolean shouldAdvanceCursor, boolean isFluidOutput, int lastOutletIndex, int outletCount) {
+        boolean stateChanged = shouldAdvanceCursor && advanceDistributionCursor(isFluidOutput, lastOutletIndex, outletCount);
         if (consecutiveFailureTicks != 0) {
             consecutiveFailureTicks = 0;
-            changed = true;
+            stateChanged = true;
         }
 
         int residueLevel = driverCore.getLevelCalculator().getResidueLevel();
         if (residueLevel >= MAX_LEVEL) {
             if (successCount != 0) {
                 successCount = 0;
-                changed = true;
+                stateChanged = true;
             }
-            if (changed) {
+            if (stateChanged) {
                 driverCore.markForSave();
             }
             return;
@@ -257,60 +257,60 @@ class AirtightAssemblyDriverResidueManager {
     }
 
     private void handleGenerationFailure() {
-        boolean changed = false;
+        boolean stateChanged = false;
         if (successCount != 0) {
             successCount = 0;
-            changed = true;
+            stateChanged = true;
         }
 
         if (driverCore.getLevelCalculator().getResidueLevel() <= 0) {
             if (consecutiveFailureTicks != 0) {
                 consecutiveFailureTicks = 0;
-                changed = true;
+                stateChanged = true;
             }
-            if (changed) {
+            if (stateChanged) {
                 driverCore.markForSave();
             }
             return;
         }
 
-        int failureTicks = Math.min(FAILURE_PENALTY_TICKS, consecutiveFailureTicks + GENERATION_INTERVAL_TICKS);
-        if (failureTicks != consecutiveFailureTicks) {
-            consecutiveFailureTicks = failureTicks;
-            changed = true;
+        int updatedFailureTicks = Math.min(FAILURE_PENALTY_TICKS, consecutiveFailureTicks + GENERATION_INTERVAL_TICKS);
+        if (updatedFailureTicks != consecutiveFailureTicks) {
+            consecutiveFailureTicks = updatedFailureTicks;
+            stateChanged = true;
         }
         if (consecutiveFailureTicks == FAILURE_PENALTY_TICKS) {
             removeResidueLevel(false);
             return;
         }
 
-        if (!changed) {
+        if (!stateChanged) {
             return;
         }
 
         driverCore.markForSave();
     }
 
-    private void addResidueLevel(int level) {
+    private void addResidueLevel(int levelIncrease) {
         AirtightAssemblyDriverLevelCalculator levelCalculator = driverCore.getLevelCalculator();
-        int residueLevel = Mth.clamp(levelCalculator.getResidueLevel() + level, 0, MAX_LEVEL);
-        levelCalculator.updateResidueLevel(residueLevel);
+        int updatedResidueLevel = Mth.clamp(levelCalculator.getResidueLevel() + levelIncrease, 0, MAX_LEVEL);
+        levelCalculator.updateResidueLevel(updatedResidueLevel);
         resetProgress();
     }
 
-    private void removeResidueLevel(boolean clear) {
+    private void removeResidueLevel(boolean clearAll) {
         AirtightAssemblyDriverLevelCalculator levelCalculator = driverCore.getLevelCalculator();
-        int residueLevel = clear ? 0 : Mth.clamp(levelCalculator.getResidueLevel() - 1, 0, MAX_LEVEL);
-        levelCalculator.updateResidueLevel(residueLevel);
+        int updatedResidueLevel = clearAll ? 0 : Mth.clamp(levelCalculator.getResidueLevel() - 1, 0, MAX_LEVEL);
+        levelCalculator.updateResidueLevel(updatedResidueLevel);
         resetProgress();
     }
 
     private void resetProgress() {
-        boolean changed = successCount != 0 || generationCooldown != GENERATION_INTERVAL_TICKS || consecutiveFailureTicks != 0;
+        boolean hadProgress = successCount != 0 || generationCooldown != GENERATION_INTERVAL_TICKS || consecutiveFailureTicks != 0;
         successCount = 0;
         generationCooldown = GENERATION_INTERVAL_TICKS;
         consecutiveFailureTicks = 0;
-        if (!changed) {
+        if (!hadProgress) {
             return;
         }
 
@@ -330,26 +330,26 @@ class AirtightAssemblyDriverResidueManager {
         return currentLevel * getItemQuantityMultiplier() * ResidueOutletInsertionTarget.ITEM_PROGRESS_UNITS_PER_ITEM / ITEM_GENERATION_DENOMINATOR;
     }
 
-    private boolean advanceDistributionCursor(boolean fluidOutput, int lastOutletIndex, int outletCount) {
+    private boolean advanceDistributionCursor(boolean isFluidOutput, int lastOutletIndex, int outletCount) {
         if (lastOutletIndex < 0 || outletCount <= 0) {
             return false;
         }
 
-        int newCursor = (lastOutletIndex + 1) % outletCount;
-        if (fluidOutput) {
-            if (fluidDistributionCursor == newCursor) {
+        int nextCursor = (lastOutletIndex + 1) % outletCount;
+        if (isFluidOutput) {
+            if (fluidDistributionCursor == nextCursor) {
                 return false;
             }
 
-            fluidDistributionCursor = newCursor;
+            fluidDistributionCursor = nextCursor;
             return true;
         }
 
-        if (itemDistributionCursor == newCursor) {
+        if (itemDistributionCursor == nextCursor) {
             return false;
         }
 
-        itemDistributionCursor = newCursor;
+        itemDistributionCursor = nextCursor;
         return true;
     }
 }

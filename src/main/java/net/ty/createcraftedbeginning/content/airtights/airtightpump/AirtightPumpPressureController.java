@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightpump;
 
-import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.createmod.catnip.data.Couple;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -9,6 +8,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpPressureNetwork.PressureDistributionResult;
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPropagator;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -21,7 +21,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public final class AirtightPumpPressureController {
     private static final int RECOVERY_INITIAL_BACKOFF = 20;
     private static final int RECOVERY_MAX_BACKOFF = 640;
-    private static final float MIN_PUMP_SPEED = SpeedLevel.MEDIUM.getSpeedValue();
 
     private final AirtightPumpBlockEntity pump;
     private final Couple<MutableBoolean> sidesToUpdate = Couple.create(MutableBoolean::new);
@@ -50,7 +49,7 @@ public final class AirtightPumpPressureController {
     }
 
     private static boolean hasRequiredSpeed(float speed) {
-        return Mth.abs(speed) >= MIN_PUMP_SPEED;
+        return Mth.abs(speed) >= AirtightPumpBlock.MINIMUM_REQUIRED_SPEED_LEVEL.getSpeedValue();
     }
 
     public void beforeTick() {
@@ -76,19 +75,19 @@ public final class AirtightPumpPressureController {
             boolean recoveryAttempt = recoveryAttempts.get(frontSide).booleanValue();
             recoveryAttempts.get(frontSide).setFalse();
             Direction front = getFront();
-            boolean validPath = AirtightPumpPressureNetwork.distributePressureTo(pump, frontSide ? front : front.getOpposite());
+            PressureDistributionResult result = AirtightPumpPressureNetwork.distributePressureTo(pump, frontSide ? front : front.getOpposite());
             RecoveryState recovery = recoveryStates.get(frontSide);
             if (recoveryAttempt) {
-                recovery.recordRecoveryResult(validPath, level.getGameTime());
+                recovery.recordRecoveryResult(result, level.getGameTime());
                 return;
             }
 
-            recovery.recordRebuildResult(validPath);
+            recovery.recordRebuildResult(result);
         });
     }
 
     public boolean shouldHandleSpeedChange(float previousSpeed) {
-        return shouldRunServerLogic() && Mth.abs(previousSpeed) != Mth.abs(pump.getSpeed());
+        return shouldRunServerLogic() && !Mth.equal(Mth.abs(previousSpeed), Mth.abs(pump.getSpeed()));
     }
 
     public boolean hasRequiredSpeed() {
@@ -104,7 +103,7 @@ public final class AirtightPumpPressureController {
 
         float absSpeed = Mth.abs(pump.getSpeed());
         Direction front = getFront();
-        boolean stateChanged = !lazyStateInitialized || absSpeed != lastLazyAbsSpeed || front != lastLazyFacing;
+        boolean stateChanged = !lazyStateInitialized || !Mth.equal(absSpeed, lastLazyAbsSpeed) || front != lastLazyFacing;
         lazyStateInitialized = true;
         lastLazyAbsSpeed = absSpeed;
         lastLazyFacing = front;
@@ -156,7 +155,10 @@ public final class AirtightPumpPressureController {
     }
 
     public float getPumpPressure() {
-        return isPumpRunning() ? Mth.abs(pump.getSpeed()) : 0;
+        if (!isPumpRunning()) {
+            return 0;
+        }
+        return Mth.abs(pump.getSpeed());
     }
 
     public boolean isSideAccessible(Direction direction) {
@@ -230,21 +232,24 @@ public final class AirtightPumpPressureController {
 
     private static final class RecoveryState {
         private boolean hadValidPath;
+        private boolean topologyIncomplete;
         private int backoff = RECOVERY_INITIAL_BACKOFF;
         private long nextAttempt;
 
         private boolean shouldAttempt(boolean pressureMissing, long gameTime) {
-            return hadValidPath && pressureMissing && gameTime >= nextAttempt;
+            return (hadValidPath || topologyIncomplete) && pressureMissing && gameTime >= nextAttempt;
         }
 
-        private void recordRebuildResult(boolean validPath) {
-            hadValidPath = validPath;
+        private void recordRebuildResult(PressureDistributionResult result) {
+            hadValidPath = result.validPath();
+            topologyIncomplete = result.topologyIncomplete();
             backoff = RECOVERY_INITIAL_BACKOFF;
             nextAttempt = 0;
         }
 
-        private void recordRecoveryResult(boolean validPath, long gameTime) {
-            if (validPath) {
+        private void recordRecoveryResult(PressureDistributionResult result, long gameTime) {
+            topologyIncomplete = result.topologyIncomplete();
+            if (result.validPath()) {
                 hadValidPath = true;
                 backoff = RECOVERY_INITIAL_BACKOFF;
                 nextAttempt = gameTime + RECOVERY_INITIAL_BACKOFF;

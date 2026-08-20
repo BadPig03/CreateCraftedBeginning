@@ -52,22 +52,22 @@ class AirtightAssemblyDriverTooltipBuilder {
             return;
         }
 
-        for (int i = 0; i < labels.size(); i++) {
-            MutableComponent line = labels.get(i).copy().append(CCBLang.translateDirect("gui.airtight_assembly_driver.dots").withStyle(ChatFormatting.DARK_GRAY)).append(bars.get(i));
-            CCBLang.builder().add(line).forGoggles(tooltip, 1);
+        for (int barIndex = 0; barIndex < labels.size(); barIndex++) {
+            MutableComponent tooltipLine = labels.get(barIndex).copy().append(CCBLang.translateDirect("gui.airtight_assembly_driver.dots").withStyle(ChatFormatting.DARK_GRAY)).append(bars.get(barIndex));
+            CCBLang.builder().add(tooltipLine).forGoggles(tooltip, 1);
         }
     }
 
-    private static MutableComponent createLabel(String label) {
-        return CCBLang.translateDirect("gui.airtight_assembly_driver." + label).withStyle(ChatFormatting.GRAY);
+    private static MutableComponent createLabel(String labelKey) {
+        return CCBLang.translateDirect("gui.airtight_assembly_driver." + labelKey).withStyle(ChatFormatting.GRAY);
     }
 
-    private static MutableComponent createProgressBar(int level, int minValue, int maxValue) {
-        int lowerPadding = Math.max(0, minValue - 1);
-        int minimumMarker = minValue > 0 ? 1 : 0;
-        int filledBars = Math.max(0, level - minValue);
-        int emptyBars = Math.max(0, maxValue - level);
-        int upperPadding = Math.max(0, Math.min(AirtightAssemblyDriverCore.MAX_LEVEL - maxValue, (maxValue / 4 + 1) * 4 - maxValue));
+    private static MutableComponent createProgressBar(int currentLevel, int minLevel, int maxLevel) {
+        int lowerPadding = Math.max(0, minLevel - 1);
+        int minimumMarker = minLevel > 0 ? 1 : 0;
+        int filledBars = Math.max(0, currentLevel - minLevel);
+        int emptyBars = Math.max(0, maxLevel - currentLevel);
+        int upperPadding = Math.max(0, Math.min(AirtightAssemblyDriverCore.MAX_LEVEL - maxLevel, (maxLevel / 4 + 1) * 4 - maxLevel));
         return Component.empty().append(createBars(lowerPadding, ChatFormatting.DARK_GREEN)).append(createBars(minimumMarker, ChatFormatting.GREEN)).append(createBars(filledBars, ChatFormatting.DARK_GREEN)).append(createBars(emptyBars, ChatFormatting.DARK_RED)).append(createBars(upperPadding, ChatFormatting.DARK_GRAY));
     }
 
@@ -77,32 +77,32 @@ class AirtightAssemblyDriverTooltipBuilder {
 
     private static void addGasInfo(AirtightAssemblyDriverFlowMeter flowMeter, List<Component> tooltip) {
         tooltip.add(CommonComponents.EMPTY);
-        GasStack gas = flowMeter.hasDisplayableGasSupply() ? flowMeter.getGasType() : GasStack.EMPTY;
+        GasStack displayedGas = flowMeter.hasDisplayableGasSupply() ? flowMeter.getGasType() : GasStack.EMPTY;
         CCBLang.translate("gui.airtight_assembly_driver.gas_type").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        CCBLang.gasName(gas).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
+        CCBLang.gasName(displayedGas).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
     }
 
-    private static void addOutletInfo(int outlets, List<Component> tooltip) {
+    private static void addOutletInfo(int outletCount, List<Component> tooltip) {
         tooltip.add(CommonComponents.EMPTY);
-        if (outlets == 0) {
+        if (outletCount == 0) {
             CCBLang.translate("gui.airtight_assembly_driver.via_no_outlet").style(ChatFormatting.GRAY).forGoggles(tooltip);
             return;
         }
 
-        if (outlets == 1) {
+        if (outletCount == 1) {
             CCBLang.translate("gui.airtight_assembly_driver.via_one_outlet").style(ChatFormatting.GRAY).forGoggles(tooltip);
             return;
         }
 
-        CCBLang.translate("gui.airtight_assembly_driver.via_outlets", outlets).style(ChatFormatting.GRAY).forGoggles(tooltip);
+        CCBLang.translate("gui.airtight_assembly_driver.via_outlets", outletCount).style(ChatFormatting.GRAY).forGoggles(tooltip);
     }
 
-    private static void addStressInfo(int engines, int level, List<Component> tooltip) {
+    private static void addStressInfo(int engineCount, int currentLevel, List<Component> tooltip) {
         tooltip.add(CommonComponents.EMPTY);
         CCBLang.translate("gui.capacity_provided").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        double capacity = AirtightEngineBlockEntity.BASE_ROTATION_SPEED * level * BlockStressValues.getCapacity(CCBBlocks.AIRTIGHT_ENGINE_BLOCK.get());
-        MutableComponent stressText = CCBLang.number(capacity).translate("gui.unit.stress").style(ChatFormatting.AQUA).space().component();
-        MutableComponent engineText = engines == 1 ? CCBLang.translate("gui.airtight_assembly_driver.via_one_engine").style(ChatFormatting.DARK_GRAY).component() : CCBLang.translate("gui.airtight_assembly_driver.via_engines", engines).style(ChatFormatting.DARK_GRAY).component();
+        double stressCapacity = AirtightEngineBlockEntity.BASE_ROTATION_SPEED * currentLevel * BlockStressValues.getCapacity(CCBBlocks.AIRTIGHT_ENGINE_BLOCK.get());
+        MutableComponent stressText = CCBLang.number(stressCapacity).translate("gui.unit.stress").style(ChatFormatting.AQUA).space().component();
+        MutableComponent engineText = engineCount == 1 ? CCBLang.translate("gui.airtight_assembly_driver.via_one_engine").style(ChatFormatting.DARK_GRAY).component() : CCBLang.translate("gui.airtight_assembly_driver.via_engines", engineCount).style(ChatFormatting.DARK_GRAY).component();
         stressText.append(engineText);
         CCBLang.builder().add(stressText).forGoggles(tooltip, 1);
     }
@@ -115,16 +115,14 @@ class AirtightAssemblyDriverTooltipBuilder {
     }
 
     private void addDetailedInfo(List<Component> tooltip) {
-        AirtightAssemblyDriverFlowMeter flowMeter = driverCore.getFlowMeter();
         AirtightAssemblyDriverStructureManager structureManager = driverCore.getStructureManager();
-        AirtightAssemblyDriverLevelCalculator levelCalculator = driverCore.getLevelCalculator();
 
-        addGasInfo(flowMeter, tooltip);
+        addGasInfo(driverCore.getFlowMeter(), tooltip);
         addOutletInfo(structureManager.getAttachedOutlets(), tooltip);
         if (!StressImpact.isEnabled()) {
             return;
         }
 
-        addStressInfo(structureManager.getAttachedEngines(), levelCalculator.getCurrentLevel(), tooltip);
+        addStressInfo(structureManager.getAttachedEngines(), driverCore.getLevelCalculator().getCurrentLevel(), tooltip);
     }
 }

@@ -4,7 +4,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -39,8 +38,7 @@ final class AirtightExtendArmEvents {
     @SubscribeEvent
     private static void onPlayerTick(Post event) {
         Player player = event.getEntity();
-        Level level = player.level();
-        if (level.isClientSide) {
+        if (player.level().isClientSide) {
             return;
         }
 
@@ -69,13 +67,13 @@ final class AirtightExtendArmEvents {
             return;
         }
 
-        PowerUseResult result = AirtightExtendArmUtils.tryUseBlockPower(player, event.getPos());
-        if (result.allowed()) {
+        PowerUseResult powerUseResult = AirtightExtendArmUtils.tryUseBlockPower(player, event.getPos());
+        if (powerUseResult.allowed()) {
             return;
         }
 
         event.setCanceled(true);
-        displayInsufficientGasWarning(player, result);
+        displayInsufficientGasWarning(player, powerUseResult);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -85,19 +83,19 @@ final class AirtightExtendArmEvents {
             return;
         }
 
-        boolean interactionDenied = event.getUseBlock() == TriState.FALSE && event.getUseItem() == TriState.FALSE;
-        if (interactionDenied) {
+        boolean isInteractionDenied = event.getUseBlock() == TriState.FALSE && event.getUseItem() == TriState.FALSE;
+        if (isInteractionDenied) {
             return;
         }
 
-        ChargeAttempt attempt = consumeInteractionOnce(player, InteractionType.BLOCK, event.getPos().asLong(), () -> AirtightExtendArmUtils.tryUseBlockPower(player, event.getPos()));
-        if (attempt.result().allowed()) {
+        ChargeAttempt chargeAttempt = consumeInteractionOnce(player, InteractionType.BLOCK, event.getPos().asLong(), () -> AirtightExtendArmUtils.tryUseBlockPower(player, event.getPos()));
+        if (chargeAttempt.result().allowed()) {
             return;
         }
 
         event.setCancellationResult(InteractionResult.FAIL);
         event.setCanceled(true);
-        displayWarningOnFirstAttempt(player, attempt);
+        displayWarningOnFirstAttempt(player, chargeAttempt);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -107,13 +105,13 @@ final class AirtightExtendArmEvents {
             return;
         }
 
-        PowerUseResult result = AirtightExtendArmUtils.tryUseAttackPower(player, event.getTarget());
-        if (result.allowed()) {
+        PowerUseResult powerUseResult = AirtightExtendArmUtils.tryUseAttackPower(player, event.getTarget());
+        if (powerUseResult.allowed()) {
             return;
         }
 
         event.setCanceled(true);
-        displayInsufficientGasWarning(player, result);
+        displayInsufficientGasWarning(player, powerUseResult);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -123,15 +121,15 @@ final class AirtightExtendArmEvents {
             return;
         }
 
-        Entity target = event.getTarget();
-        ChargeAttempt attempt = consumeInteractionOnce(player, InteractionType.ENTITY, target.getId(), () -> AirtightExtendArmUtils.tryUseEntityPower(player, target));
-        if (attempt.result().allowed()) {
+        Entity targetEntity = event.getTarget();
+        ChargeAttempt chargeAttempt = consumeInteractionOnce(player, InteractionType.ENTITY, targetEntity.getId(), () -> AirtightExtendArmUtils.tryUseEntityPower(player, targetEntity));
+        if (chargeAttempt.result().allowed()) {
             return;
         }
 
         event.setCancellationResult(InteractionResult.FAIL);
         event.setCanceled(true);
-        displayWarningOnFirstAttempt(player, attempt);
+        displayWarningOnFirstAttempt(player, chargeAttempt);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -141,43 +139,43 @@ final class AirtightExtendArmEvents {
             return;
         }
 
-        Entity target = event.getTarget();
-        ChargeAttempt attempt = consumeInteractionOnce(player, InteractionType.ENTITY, target.getId(), () -> AirtightExtendArmUtils.tryUseEntityPower(player, target));
-        if (attempt.result().allowed()) {
+        Entity targetEntity = event.getTarget();
+        ChargeAttempt chargeAttempt = consumeInteractionOnce(player, InteractionType.ENTITY, targetEntity.getId(), () -> AirtightExtendArmUtils.tryUseEntityPower(player, targetEntity));
+        if (chargeAttempt.result().allowed()) {
             return;
         }
 
         event.setCancellationResult(InteractionResult.FAIL);
         event.setCanceled(true);
-        displayWarningOnFirstAttempt(player, attempt);
+        displayWarningOnFirstAttempt(player, chargeAttempt);
     }
 
-    private static ChargeAttempt consumeInteractionOnce(Player player, InteractionType type, long targetKey, PowerUseSupplier supplier) {
+    private static ChargeAttempt consumeInteractionOnce(Player player, InteractionType interactionType, long targetKey, PowerUseSupplier powerUseSupplier) {
         long gameTime = player.level().getGameTime();
-        InteractionCharge previous = LAST_INTERACTION_CHARGES.get(player);
-        if (previous != null && previous.gameTime() == gameTime && previous.type() == type && previous.targetKey() == targetKey) {
-            return new ChargeAttempt(previous.result(), false);
+        InteractionCharge previousCharge = LAST_INTERACTION_CHARGES.get(player);
+        if (previousCharge != null && previousCharge.gameTime() == gameTime && previousCharge.type() == interactionType && previousCharge.targetKey() == targetKey) {
+            return new ChargeAttempt(previousCharge.result(), false);
         }
 
-        PowerUseResult result = supplier.get();
-        LAST_INTERACTION_CHARGES.put(player, new InteractionCharge(gameTime, type, targetKey, result));
-        return new ChargeAttempt(result, true);
+        PowerUseResult powerUseResult = powerUseSupplier.get();
+        LAST_INTERACTION_CHARGES.put(player, new InteractionCharge(gameTime, interactionType, targetKey, powerUseResult));
+        return new ChargeAttempt(powerUseResult, true);
     }
 
-    private static void displayWarningOnFirstAttempt(Player player, ChargeAttempt attempt) {
-        if (!attempt.firstAttempt()) {
+    private static void displayWarningOnFirstAttempt(Player player, ChargeAttempt chargeAttempt) {
+        if (!chargeAttempt.firstAttempt()) {
             return;
         }
 
-        displayInsufficientGasWarning(player, attempt.result());
+        displayInsufficientGasWarning(player, chargeAttempt.result());
     }
 
-    private static void displayInsufficientGasWarning(Player player, PowerUseResult result) {
-        if (!result.shouldWarn()) {
+    private static void displayInsufficientGasWarning(Player player, PowerUseResult powerUseResult) {
+        if (!powerUseResult.shouldWarn()) {
             return;
         }
 
-        GasStack attemptedGas = result.attemptedGas();
+        GasStack attemptedGas = powerUseResult.attemptedGas();
         if (attemptedGas.isEmpty()) {
             GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.no_gas");
             return;

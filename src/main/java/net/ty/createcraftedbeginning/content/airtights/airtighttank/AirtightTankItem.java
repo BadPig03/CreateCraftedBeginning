@@ -103,7 +103,7 @@ public class AirtightTankItem extends BlockItem {
         }
 
         int width = controller.getWidth();
-        if (width == 1) {
+        if (width == 1 || controller.getHeight() >= controller.getMaxLength(controller.getMainConnectionAxis(), width)) {
             return;
         }
 

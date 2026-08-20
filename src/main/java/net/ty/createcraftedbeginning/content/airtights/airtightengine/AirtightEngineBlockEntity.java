@@ -45,9 +45,9 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
             return;
         }
 
-        BlockState state = getBlockState();
-        boolean isValid = state.getBlock() instanceof AirtightEngineBlock engine && engine.canSurvive(state, level, getBlockPos()) && AirtightEngineBlock.isStateValid(state);
-        if (isValid) {
+        BlockState engineState = getBlockState();
+        boolean isEngineValid = engineState.getBlock() instanceof AirtightEngineBlock engine && engine.canSurvive(engineState, level, getBlockPos()) && AirtightEngineBlock.isStateValid(engineState);
+        if (isEngineValid) {
             return;
         }
 
@@ -89,13 +89,13 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
             return;
         }
 
-        AirtightAssemblyDriverCore core = driveController.getDriverCore();
-        if (core == null || !core.isActive()) {
+        AirtightAssemblyDriverCore driverCore = driveController.getDriverCore();
+        if (driverCore == null || !driverCore.isActive()) {
             return;
         }
 
         advancementBehaviour.awardPlayer(CCBAdvancements.EMERGING_POWER);
-        if (core.getCurrentLevel() != AirtightAssemblyDriverCore.MAX_LEVEL) {
+        if (driverCore.getCurrentLevel() != AirtightAssemblyDriverCore.MAX_LEVEL) {
             return;
         }
 

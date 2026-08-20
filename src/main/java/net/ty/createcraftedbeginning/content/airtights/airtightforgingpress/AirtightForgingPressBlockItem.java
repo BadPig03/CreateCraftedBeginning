@@ -20,19 +20,19 @@ public class AirtightForgingPressBlockItem extends BlockItem {
 
     @Override
     public InteractionResult place(BlockPlaceContext context) {
-        InteractionResult result = super.place(context);
-        if (result != InteractionResult.FAIL || !(getBlock() instanceof AirtightForgingPressBlock)) {
-            return result;
+        InteractionResult placementResult = super.place(context);
+        if (placementResult != InteractionResult.FAIL || !(getBlock() instanceof AirtightForgingPressBlock)) {
+            return placementResult;
         }
 
-        Direction direction = context.getClickedFace();
-        result = super.place(BlockPlaceContext.at(context, context.getClickedPos().relative(direction), direction));
-        if (result != InteractionResult.FAIL || !context.getLevel().isClientSide()) {
-            return result;
+        Direction clickedFace = context.getClickedFace();
+        placementResult = super.place(BlockPlaceContext.at(context, context.getClickedPos().relative(clickedFace), clickedFace));
+        if (placementResult != InteractionResult.FAIL || !context.getLevel().isClientSide()) {
+            return placementResult;
         }
 
         CCBClientBridge.showAirtightForgingPressPlacementBounds(context);
-        return result;
+        return placementResult;
     }
 
 }

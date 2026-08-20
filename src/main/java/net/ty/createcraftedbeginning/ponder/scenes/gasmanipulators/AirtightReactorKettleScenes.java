@@ -249,7 +249,7 @@ public class AirtightReactorKettleScenes {
         scene.idle(13);
         scene.world().removeItemsFromBelt(andesiteBeltLeftPos);
         scene.world().flapFunnel(andesiteFunnelPos, false);
-        scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, be -> be.getItemCapability().insertItem(0, cobblestoneItem.copyWithCount(32), false));
+        scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, be -> be.getAvailableItems().insertItem(0, cobblestoneItem.copyWithCount(32), false));
 
         scene.idle(10);
         scene.world().createItemOnBeltLike(andesiteBeltRightPos, Direction.UP, quartzItem.copyWithCount(32));
@@ -257,7 +257,7 @@ public class AirtightReactorKettleScenes {
         scene.idle(13);
         scene.world().removeItemsFromBelt(andesiteBeltLeftPos);
         scene.world().flapFunnel(andesiteFunnelPos, false);
-        scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, be -> be.getItemCapability().insertItem(1, quartzItem.copyWithCount(32), false));
+        scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, be -> be.getAvailableItems().insertItem(1, quartzItem.copyWithCount(32), false));
 
         scene.idle(10);
         scene.world().createItemOnBeltLike(andesiteBeltRightPos, Direction.UP, ironNuggetItem.copyWithCount(32));
@@ -265,7 +265,7 @@ public class AirtightReactorKettleScenes {
         scene.idle(13);
         scene.world().removeItemsFromBelt(andesiteBeltLeftPos);
         scene.world().flapFunnel(andesiteFunnelPos, false);
-        scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, be -> be.getItemCapability().insertItem(2, ironNuggetItem.copyWithCount(32), false));
+        scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, be -> be.getAvailableItems().insertItem(2, ironNuggetItem.copyWithCount(32), false));
         scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, AirtightReactorKettleBlockEntity::startProcessInPonderLevel);
 
         scene.idle(20);
@@ -283,7 +283,7 @@ public class AirtightReactorKettleScenes {
         scene.world().setKineticSpeed(brassFunnelSelection, -mediumSpeed);
         scene.world().setKineticSpeed(brassMotorSelection, -mediumSpeed);
         scene.world().flapFunnel(brassFunnelPos, true);
-        scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, be -> be.getItemCapability().setStackInSlot(27, ItemStack.EMPTY));
+        scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, be -> be.getAvailableItems().setStackInSlot(27, ItemStack.EMPTY));
         scene.world().createItemOnBeltLike(brassFunnelPos.below(), Direction.UP, andesiteAlloyItem.copyWithCount(32));
 
         scene.idle(60);

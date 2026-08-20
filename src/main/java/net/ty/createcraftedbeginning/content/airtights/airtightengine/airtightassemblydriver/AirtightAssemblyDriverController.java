@@ -24,28 +24,28 @@ final class AirtightAssemblyDriverController {
         this.driverCore = driverCore;
     }
 
-    void tick(AirtightTankBlockEntity controller) {
-        Level level = controller.getLevel();
+    void tick(AirtightTankBlockEntity tankController) {
+        Level level = tankController.getLevel();
         if (level == null || level.isClientSide) {
             return;
         }
 
         AirtightAssemblyDriverStructureManager structureManager = driverCore.getStructureManager();
-        structureManager.tick(controller);
+        structureManager.tick(tankController);
         if (structureManager.isEvaluationRequired()) {
-            flushDirtyState(controller);
+            flushDirtyState(tankController);
             return;
         }
 
-        boolean active = structureManager.isActive();
-        updateActiveState(active);
-        if (active) {
-            consumeBufferedGas(controller.getTankInventory());
+        boolean isActive = structureManager.isActive();
+        updateActiveState(isActive);
+        if (isActive) {
+            consumeBufferedGas(tankController.getTankInventory());
             driverCore.getFlowMeter().tick(level);
             driverCore.getResidueManager().tick(level);
         }
 
-        flushDirtyState(controller);
+        flushDirtyState(tankController);
     }
 
     void markForSave() {
@@ -94,34 +94,34 @@ final class AirtightAssemblyDriverController {
         driverCore.getFlowMeter().reset();
     }
 
-    private void consumeBufferedGas(GasTank buffer) {
-        GasStack storedGas = buffer.getGasStack();
+    private void consumeBufferedGas(GasTank gasBuffer) {
+        GasStack storedGas = gasBuffer.getGasStack();
         if (storedGas.isEmpty()) {
             return;
         }
 
-        IGasHandler handler = driverCore.getGasHandler();
-        long acceptedAmount = handler.fill(storedGas, GasAction.SIMULATE);
+        IGasHandler gasHandler = driverCore.getGasHandler();
+        long acceptedAmount = gasHandler.fill(storedGas, GasAction.SIMULATE);
         if (acceptedAmount <= 0) {
             return;
         }
 
-        GasStack drainableGas = buffer.drain(acceptedAmount, GasAction.SIMULATE);
+        GasStack drainableGas = gasBuffer.drain(acceptedAmount, GasAction.SIMULATE);
         if (drainableGas.isEmpty()) {
             return;
         }
 
-        long consumedAmount = handler.fill(drainableGas, GasAction.EXECUTE);
+        long consumedAmount = gasHandler.fill(drainableGas, GasAction.EXECUTE);
         if (consumedAmount <= 0) {
             return;
         }
 
-        buffer.drain(consumedAmount, GasAction.EXECUTE);
+        gasBuffer.drain(consumedAmount, GasAction.EXECUTE);
     }
 
-    private void flushDirtyState(AirtightTankBlockEntity controller) {
+    private void flushDirtyState(AirtightTankBlockEntity tankController) {
         if (saveDirty) {
-            controller.setChanged();
+            tankController.setChanged();
             saveDirty = false;
         }
 
@@ -129,7 +129,7 @@ final class AirtightAssemblyDriverController {
             return;
         }
 
-        controller.sendData();
+        tankController.sendData();
         clientDirty = false;
     }
 }

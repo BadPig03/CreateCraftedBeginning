@@ -31,7 +31,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import net.neoforged.neoforge.items.IItemHandler;
 import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import org.jetbrains.annotations.Nullable;
 
@@ -104,7 +104,7 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
         TransformStack.of(poseStack).rotateYDegrees(kettle.getIngredientRotation().getValue(partialTicks) + blockRotation);
 
         float itemSurfaceY = fluidLevel <= 0 ? 0.05f : fluidLevel - 0.13f;
-        IItemHandlerModifiable inventory = kettle.getItemCapability();
+        IItemHandler inventory = kettle.getAvailableItems();
         Minecraft minecraft = Minecraft.getInstance();
         ItemRenderer renderer = minecraft.getItemRenderer();
         ClientLevel level = minecraft.level;

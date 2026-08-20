@@ -47,26 +47,26 @@ public final class AirtightEncasedPipeOutlineRenderer {
             return;
         }
 
-        BlockPos pos = hitResult.getBlockPos();
-        BlockState state = level.getBlockState(pos);
-        if (!(state.getBlock() instanceof AirtightEncasedPipeBlock)) {
+        BlockPos pipePos = hitResult.getBlockPos();
+        BlockState pipeState = level.getBlockState(pipePos);
+        if (!(pipeState.getBlock() instanceof AirtightEncasedPipeBlock)) {
             return;
         }
 
-        List<BlockPos> openList = new ArrayList<>();
-        List<BlockPos> closedList = new ArrayList<>();
+        List<BlockPos> openPositions = new ArrayList<>();
+        List<BlockPos> closedPositions = new ArrayList<>();
         for (Direction direction : Iterate.directions) {
-            BlockPos relativePos = pos.relative(direction);
-            if (AirtightEncasedPipeBlock.isOpenAt(state, direction)) {
-                openList.add(relativePos);
+            BlockPos connectionPos = pipePos.relative(direction);
+            if (AirtightEncasedPipeBlock.isOpenAt(pipeState, direction)) {
+                openPositions.add(connectionPos);
                 continue;
             }
 
-            closedList.add(relativePos);
+            closedPositions.add(connectionPos);
         }
         Outliner outliner = Outliner.getInstance();
-        outliner.showCluster("airtightEncasedPipeOpened", openList).colored(COLOR_OPEN).withFaceTexture(AllSpecialTextures.CHECKERED).lineWidth(0.0234375f);
-        outliner.showCluster("airtightEncasedPipeClosed", closedList).colored(COLOR_CLOSED).withFaceTexture(AllSpecialTextures.HIGHLIGHT_CHECKERED).lineWidth(0.0390625f);
+        outliner.showCluster("airtightEncasedPipeOpened", openPositions).colored(COLOR_OPEN).withFaceTexture(AllSpecialTextures.CHECKERED).lineWidth(0.0234375f);
+        outliner.showCluster("airtightEncasedPipeClosed", closedPositions).colored(COLOR_CLOSED).withFaceTexture(AllSpecialTextures.HIGHLIGHT_CHECKERED).lineWidth(0.0390625f);
     }
 
     private static boolean isHoldingWrench(LocalPlayer player) {

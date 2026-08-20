@@ -20,6 +20,10 @@ public final class CreativeAirtightTankStorageController {
         owner.getTankInventory().setCapacity(CreativeAirtightTankBlockEntity.getCapacityPerTank());
     }
 
+    public void setContainedGas(GasStack gasStack) {
+        tank().setContainedGas(gasStack);
+    }
+
     public void mergeTankStateFrom(IGasTankMultiBlockEntityContainer source) {
         if (!source.hasTank()) {
             return;

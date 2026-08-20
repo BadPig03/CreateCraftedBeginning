@@ -170,6 +170,10 @@ public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEn
         return true;
     }
 
+    public void setContainedGas(GasStack gasStack) {
+        storageController.setContainedGas(gasStack);
+    }
+
     public void updateClientStructureState() {
         if (level != null) {
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 16);

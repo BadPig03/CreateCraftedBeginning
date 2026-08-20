@@ -27,25 +27,25 @@ public class AirtightForgingPressStructuralShaftRenderer extends KineticBlockEnt
 
     @Override
     protected void renderSafe(AirtightForgingPressStructuralShaftBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
-        BlockState state = blockEntity.getBlockState();
-        BlockPos pos = blockEntity.getBlockPos();
-        AirtightForgingPressStructuralPosition position = state.getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION);
-        if (position == AirtightForgingPressStructuralPosition.TOP_CENTER) {
+        BlockState blockState = blockEntity.getBlockState();
+        BlockPos blockPos = blockEntity.getBlockPos();
+        AirtightForgingPressStructuralPosition structuralPosition = blockState.getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION);
+        if (structuralPosition == AirtightForgingPressStructuralPosition.TOP_CENTER) {
             return;
         }
 
-        Axis axis = position.getAxis();
-        AxisDirection axisDirection = position.getAxisDirection();
-        SuperByteBuffer shaft = getRotatedModel(blockEntity, state);
+        Axis axis = structuralPosition.getAxis();
+        AxisDirection axisDirection = structuralPosition.getAxisDirection();
+        SuperByteBuffer shaftBuffer = getRotatedModel(blockEntity, blockState);
         if (axis == Axis.X) {
-            shaft.rotateCentered(-Mth.HALF_PI, Direction.fromAxisAndDirection(Axis.Z, axisDirection));
+            shaftBuffer.rotateCentered(-Mth.HALF_PI, Direction.fromAxisAndDirection(Axis.Z, axisDirection));
         }
         else {
-            shaft.rotateCentered(Mth.HALF_PI, Direction.fromAxisAndDirection(Axis.X, axisDirection));
+            shaftBuffer.rotateCentered(Mth.HALF_PI, Direction.fromAxisAndDirection(Axis.X, axisDirection));
         }
 
-        float angle = getAngleForBe(blockEntity, pos, axis) * axisDirection.getStep();
-        kineticRotationTransform(shaft, blockEntity, Axis.Y, angle, light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
+        float rotationAngle = getAngleForBe(blockEntity, blockPos, axis) * axisDirection.getStep();
+        kineticRotationTransform(shaftBuffer, blockEntity, Axis.Y, rotationAngle, light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
     }
 
     @Override

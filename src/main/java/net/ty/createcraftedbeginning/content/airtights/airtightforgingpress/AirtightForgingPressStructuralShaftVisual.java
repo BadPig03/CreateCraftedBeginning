@@ -23,13 +23,13 @@ public class AirtightForgingPressStructuralShaftVisual extends KineticBlockEntit
 
     public AirtightForgingPressStructuralShaftVisual(VisualizationContext context, AirtightForgingPressStructuralShaftBlockEntity blockEntity, float partialTick) {
         super(context, blockEntity, partialTick);
-        AirtightForgingPressStructuralPosition position = blockEntity.getBlockState().getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION);
-        if (position == AirtightForgingPressStructuralPosition.TOP_CENTER) {
+        AirtightForgingPressStructuralPosition structuralPosition = blockEntity.getBlockState().getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION);
+        if (structuralPosition == AirtightForgingPressStructuralPosition.TOP_CENTER) {
             rotatingModel = null;
             return;
         }
 
-        Direction shaftDirection = Direction.fromAxisAndDirection(position.getAxis(), position.getAxisDirection());
+        Direction shaftDirection = Direction.fromAxisAndDirection(structuralPosition.getAxis(), structuralPosition.getAxisDirection());
         rotatingModel = instancerProvider().instancer(AllInstanceTypes.ROTATING, Models.partial(CCBPartialModels.SHAFT_HALF_UP)).createInstance().rotateToFace(Direction.UP, shaftDirection).setup(blockEntity).setPosition(getVisualPosition());
         rotatingModel.setChanged();
     }

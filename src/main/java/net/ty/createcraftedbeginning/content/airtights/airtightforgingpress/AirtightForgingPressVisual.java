@@ -50,12 +50,12 @@ public class AirtightForgingPressVisual extends AbstractBlockEntityVisual<Airtig
     }
 
     private void animate(float partialTick) {
-        float distance = blockEntity.getPressHeadDistance(partialTick);
-        if (distance == lastDistance) {
+        float pressHeadDistance = blockEntity.getPressHeadDistance(partialTick);
+        if (pressHeadDistance == lastDistance) {
             return;
         }
 
-        head.setIdentityTransform().translate(getVisualPosition()).translateY(-distance).setChanged();
-        lastDistance = distance;
+        head.setIdentityTransform().translate(getVisualPosition()).translateY(-pressHeadDistance).setChanged();
+        lastDistance = pressHeadDistance;
     }
 }

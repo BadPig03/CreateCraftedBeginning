@@ -19,11 +19,11 @@ import java.util.List;
 public interface ReactorKettleRecipeContext {
     @Nullable Level getLevel();
 
-    IItemHandler getItemCapability();
+    IItemHandler getAvailableItems();
 
-    IFluidHandler getFluidCapability();
+    IFluidHandler getAvailableFluids();
 
-    IGasHandler getGasCapability();
+    IGasHandler getAvailableGases();
 
     IItemHandler getOutputItemCapability();
 

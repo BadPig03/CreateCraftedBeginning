@@ -20,7 +20,7 @@ public class CreativeAirtightTankMountedStorageType extends MountedGasStorageTyp
     @Override
     @Nullable
     public CreativeAirtightTankMountedStorage mount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity be) {
-        if (!(be instanceof CreativeAirtightTankBlockEntity tank)) {
+        if (!(be instanceof CreativeAirtightTankBlockEntity tank) || !tank.isController()) {
             return null;
         }
         return CreativeAirtightTankMountedStorage.fromTank(tank);

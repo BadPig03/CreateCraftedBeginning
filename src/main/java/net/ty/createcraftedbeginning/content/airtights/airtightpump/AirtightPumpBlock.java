@@ -46,6 +46,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<AirtightPumpBlockEntity>, SimpleWaterloggedBlock, ICogWheel, IAirtightComponent {
+    static final SpeedLevel MINIMUM_REQUIRED_SPEED_LEVEL = SpeedLevel.MEDIUM;
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     public AirtightPumpBlock(Properties properties) {
@@ -91,7 +92,6 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
             bestDistance = distance;
             bestDirection = direction;
         }
-
         return bestDirection;
     }
 
@@ -107,7 +107,7 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
 
     @Override
     public SpeedLevel getMinimumRequiredSpeedLevel() {
-        return SpeedLevel.MEDIUM;
+        return MINIMUM_REQUIRED_SPEED_LEVEL;
     }
 
     @Override
@@ -147,11 +147,7 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
         if (state != oldState) {
             level.scheduleTick(pos, this, 1, TickPriority.HIGH);
         }
-        if (!isPump(state) || !isPump(oldState) || state.getValue(FACING) != oldState.getValue(FACING).getOpposite()) {
-            return;
-        }
-
-        if (!(level.getBlockEntity(pos) instanceof AirtightPumpBlockEntity pump)) {
+        if (!isPump(state) || !isPump(oldState) || state.getValue(FACING) != oldState.getValue(FACING).getOpposite() || !(level.getBlockEntity(pos) instanceof AirtightPumpBlockEntity pump)) {
             return;
         }
 

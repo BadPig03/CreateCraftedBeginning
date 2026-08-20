@@ -53,6 +53,10 @@ public final class AirtightTankMultiblockController {
             updateCapability = false;
             owner.refreshCapability();
         }
+        if (recoverOrphanedMember()) {
+            return false;
+        }
+
         if (updateConnectivity) {
             updateConnectivity();
         }
@@ -146,6 +150,25 @@ public final class AirtightTankMultiblockController {
         owner.notifyUpdate();
     }
 
+    private boolean recoverOrphanedMember() {
+        if (owner.getLevel() == null || owner.getLevel().isClientSide || owner.isController()) {
+            return false;
+        }
+
+        BlockPos controller = controllerPos;
+        if (controller == null || !owner.getLevel().isLoaded(controller)) {
+            return false;
+        }
+
+        AbstractAirtightTankBlockEntity controllerBE = owner.getControllerBE();
+        if (controllerBE != null && !controllerBE.isRemoved() && controllerBE.isController()) {
+            return false;
+        }
+
+        owner.removeController(true);
+        return true;
+    }
+
     private void tickSyncCooldown() {
         if (syncCooldown <= 0) {
             return;
@@ -159,7 +182,8 @@ public final class AirtightTankMultiblockController {
         sendData();
     }
 
-    @Nullable public BlockPos getLastKnownPos() {
+    @Nullable
+    public BlockPos getLastKnownPos() {
         return lastKnownPos;
     }
 
@@ -167,7 +191,8 @@ public final class AirtightTankMultiblockController {
         this.lastKnownPos = lastKnownPos;
     }
 
-    @Nullable public BlockPos getControllerPos() {
+    @Nullable
+    public BlockPos getControllerPos() {
         return controllerPos;
     }
 

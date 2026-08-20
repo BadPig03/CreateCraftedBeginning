@@ -69,8 +69,8 @@ final class AirtightEngineDriveController {
     }
 
     void readPersistent(CompoundTag tag) {
-        float storedSpeed = tag.contains(COMPOUND_KEY_GENERATED_SPEED) ? tag.getFloat(COMPOUND_KEY_GENERATED_SPEED) : 0;
-        restoredGeneratedSpeed = GasConsumptions.isFinite(storedSpeed) ? storedSpeed : 0;
+        float storedGeneratedSpeed = tag.contains(COMPOUND_KEY_GENERATED_SPEED) ? tag.getFloat(COMPOUND_KEY_GENERATED_SPEED) : 0;
+        restoredGeneratedSpeed = GasConsumptions.isFinite(storedGeneratedSpeed) ? storedGeneratedSpeed : 0;
         persistedGeneratedSpeed = restoredGeneratedSpeed;
     }
 
@@ -85,8 +85,8 @@ final class AirtightEngineDriveController {
     }
 
     @Nullable AirtightAssemblyDriverCore getDriverCore() {
-        AirtightTankBlockEntity controller = getTankController();
-        return controller == null ? null : controller.getCore();
+        AirtightTankBlockEntity tankController = getTankController();
+        return tankController == null ? null : tankController.getCore();
     }
 
     private void refreshGeneratedRotationIfNeeded() {
@@ -105,24 +105,30 @@ final class AirtightEngineDriveController {
     }
 
     private float getSpeedModifier() {
-        AirtightAssemblyDriverCore core = getDriverCore();
-        if (core == null) {
+        AirtightAssemblyDriverCore driverCore = getDriverCore();
+        if (driverCore == null) {
             return 0;
         }
 
-        int engines = core.getAttachedEngines();
-        return engines == 0 ? 0 : (float) core.getCurrentLevel() / engines;
+        int attachedEngines = driverCore.getAttachedEngines();
+        if (attachedEngines == 0) {
+            return 0;
+        }
+        return (float) driverCore.getCurrentLevel() / attachedEngines;
     }
 
     private boolean getRotationDirection() {
         BlockState state = engine.getBlockState();
-        boolean facesPositive = AirtightEngineBlock.getFacing(state).getAxisDirection() == AxisDirection.POSITIVE;
-        return facesPositive == state.getValue(AirtightEngineBlock.CLOCKWISE);
+        boolean facesPositiveDirection = AirtightEngineBlock.getFacing(state).getAxisDirection() == AxisDirection.POSITIVE;
+        return facesPositiveDirection == state.getValue(AirtightEngineBlock.CLOCKWISE);
     }
 
     private @Nullable AirtightTankBlockEntity getTankController() {
         AirtightTankBlockEntity tank = getTank();
-        return tank == null ? null : tank.getControllerBE();
+        if (tank == null) {
+            return null;
+        }
+        return tank.getControllerBE();
     }
 
     private @Nullable AirtightTankBlockEntity getTank() {
@@ -142,13 +148,16 @@ final class AirtightEngineDriveController {
     }
 
     private @Nullable AirtightTankBlockEntity findTank(Level level) {
-        Direction facing = AirtightEngineBlock.getFacing(engine.getBlockState());
-        BlockPos tankPos = engine.getBlockPos().relative(facing);
+        Direction tankDirection = AirtightEngineBlock.getFacing(engine.getBlockState());
+        BlockPos tankPos = engine.getBlockPos().relative(tankDirection);
         if (!level.isLoaded(tankPos)) {
             return null;
         }
 
         BlockEntity blockEntity = level.getBlockEntity(tankPos);
-        return blockEntity instanceof AirtightTankBlockEntity tank ? tank : null;
+        if (!(blockEntity instanceof AirtightTankBlockEntity tank)) {
+            return null;
+        }
+        return tank;
     }
 }

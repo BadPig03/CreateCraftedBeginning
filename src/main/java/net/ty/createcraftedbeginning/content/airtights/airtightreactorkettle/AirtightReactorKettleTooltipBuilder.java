@@ -12,7 +12,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import net.neoforged.neoforge.items.IItemHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
@@ -106,7 +106,7 @@ public class AirtightReactorKettleTooltipBuilder {
 
     private int addItemInfo(List<Component> tooltip, int maxDisplay) {
         int itemCount = 0;
-        IItemHandlerModifiable items = kettle.getItemCapability();
+        IItemHandler items = kettle.getAvailableItems();
         for (int slot = 0; slot < items.getSlots(); slot++) {
             ItemStack stack = items.getStackInSlot(slot);
             if (stack.isEmpty()) {
@@ -123,7 +123,7 @@ public class AirtightReactorKettleTooltipBuilder {
 
     private int addFluidInfo(List<Component> tooltip) {
         int fluidCount = 0;
-        IFluidHandler fluids = kettle.getFluidCapability();
+        IFluidHandler fluids = kettle.getAvailableFluids();
         for (int tank = 0; tank < fluids.getTanks(); tank++) {
             FluidStack stack = fluids.getFluidInTank(tank);
             LangBuilder unit = CCBLang.translate("gui.unit.milli_buckets");
@@ -139,7 +139,7 @@ public class AirtightReactorKettleTooltipBuilder {
 
     private int addGasInfo(List<Component> tooltip) {
         int gasCount = 0;
-        IGasHandler gases = kettle.getGasCapability();
+        IGasHandler gases = kettle.getAvailableGases();
         for (int tank = 0; tank < gases.getTanks(); tank++) {
             GasStack stack = gases.getGasInTank(tank);
             if (stack.isEmpty()) {

@@ -21,35 +21,35 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 final class AirtightAssemblyDriverStructureScanner {
-    private static void scanTankPosition(AirtightTankBlockEntity controller, Level level, Block controllerBlock, BlockPos controllerPos, BlockPos pos, Set<BlockPos> visitedPositions, ScanAccumulator accumulator) {
-        if (visitedPositions.contains(pos)) {
+    private static void scanTankPosition(AirtightTankBlockEntity tankController, Level level, Block controllerBlock, BlockPos controllerPos, BlockPos tankPos, Set<BlockPos> visitedPositions, ScanAccumulator accumulator) {
+        if (visitedPositions.contains(tankPos)) {
             return;
         }
 
-        if (!level.isLoaded(pos)) {
+        if (!level.isLoaded(tankPos)) {
             accumulator.complete = false;
             return;
         }
 
-        BlockState state = level.getBlockState(pos);
-        if (state.getBlock() != controllerBlock) {
+        BlockState tankState = level.getBlockState(tankPos);
+        if (tankState.getBlock() != controllerBlock) {
             accumulator.structureValid = false;
             return;
         }
 
-        if (!(level.getBlockEntity(pos) instanceof AirtightTankBlockEntity tank) || tank.getType() != controller.getType() || tank.isRemoved() || !tank.getController().equals(controllerPos)) {
+        if (!(level.getBlockEntity(tankPos) instanceof AirtightTankBlockEntity tank) || tank.getType() != tankController.getType() || tank.isRemoved() || !tank.getController().equals(controllerPos)) {
             accumulator.complete = false;
             return;
         }
 
-        visitedPositions.add(pos);
-        scanAttachedBlocks(pos, level, accumulator);
-        scanChamberBlock(pos, level, accumulator);
+        visitedPositions.add(tankPos);
+        scanAttachedBlocks(tankPos, level, accumulator);
+        scanChamberBlock(tankPos, level, accumulator);
     }
 
-    private static void scanAttachedBlocks(BlockPos pos, Level level, ScanAccumulator accumulator) {
-        for (Direction direction : Iterate.directions) {
-            BlockPos attachedPos = pos.relative(direction);
+    private static void scanAttachedBlocks(BlockPos tankPos, Level level, ScanAccumulator accumulator) {
+        for (Direction attachmentDirection : Iterate.directions) {
+            BlockPos attachedPos = tankPos.relative(attachmentDirection);
             if (!level.isLoaded(attachedPos)) {
                 accumulator.complete = false;
                 continue;
@@ -57,30 +57,30 @@ final class AirtightAssemblyDriverStructureScanner {
 
             BlockState attachedState = level.getBlockState(attachedPos);
             Block attachedBlock = attachedState.getBlock();
-            if (attachedBlock instanceof AirtightEngineBlock && AirtightEngineBlock.getFacing(attachedState).getOpposite() == direction) {
+            if (attachedBlock instanceof AirtightEngineBlock && AirtightEngineBlock.getFacing(attachedState).getOpposite() == attachmentDirection) {
                 accumulator.attachedEngines++;
             }
 
-            if (attachedBlock instanceof ResidueOutletBlock && ResidueOutletBlock.getFacing(attachedState).getOpposite() == direction) {
+            if (attachedBlock instanceof ResidueOutletBlock && ResidueOutletBlock.getFacing(attachedState).getOpposite() == attachmentDirection) {
                 accumulator.attachedOutlets++;
                 accumulator.outletPositions.add(attachedPos);
             }
         }
     }
 
-    private static void scanChamberBlock(BlockPos pos, Level level, ScanAccumulator accumulator) {
-        BlockPos attachedPos = pos.above();
-        if (!level.isLoaded(attachedPos)) {
+    private static void scanChamberBlock(BlockPos tankPos, Level level, ScanAccumulator accumulator) {
+        BlockPos chamberPos = tankPos.above();
+        if (!level.isLoaded(chamberPos)) {
             accumulator.complete = false;
             return;
         }
 
-        BlockState attachedState = level.getBlockState(attachedPos);
-        if (!(attachedState.getBlock() instanceof BreezeChamberBlock)) {
+        BlockState chamberState = level.getBlockState(chamberPos);
+        if (!(chamberState.getBlock() instanceof BreezeChamberBlock)) {
             return;
         }
 
-        if (!(level.getBlockEntity(attachedPos) instanceof BreezeChamberBlockEntity chamber)) {
+        if (!(level.getBlockEntity(chamberPos) instanceof BreezeChamberBlockEntity chamber)) {
             accumulator.complete = false;
             return;
         }
@@ -89,20 +89,20 @@ final class AirtightAssemblyDriverStructureScanner {
         accumulator.attachedWindChargingLevel += chamber.getWindRemainingLevel();
     }
 
-    ScanResult scan(AirtightTankBlockEntity controller, Level level) {
+    ScanResult scan(AirtightTankBlockEntity tankController, Level level) {
         ScanAccumulator accumulator = new ScanAccumulator();
         Set<BlockPos> visitedPositions = new HashSet<>();
-        BlockPos controllerPos = controller.getBlockPos();
-        Block controllerBlock = controller.getBlockState().getBlock();
-        Axis axis = controller.getMainConnectionAxis();
-        int width = controller.getWidth();
-        int length = controller.getHeight();
+        BlockPos controllerPos = tankController.getBlockPos();
+        Block controllerBlock = tankController.getBlockState().getBlock();
+        Axis tankAxis = tankController.getMainConnectionAxis();
+        int tankWidth = tankController.getWidth();
+        int tankLength = tankController.getHeight();
 
-        for (int lengthOffset = 0; lengthOffset < length; lengthOffset++) {
-            for (int uOffset = 0; uOffset < width; uOffset++) {
-                for (int vOffset = 0; vOffset < width; vOffset++) {
-                    BlockPos pos = AirtightTankBlockEntity.offsetInMulti(controllerPos, axis, lengthOffset, uOffset, vOffset);
-                    scanTankPosition(controller, level, controllerBlock, controllerPos, pos, visitedPositions, accumulator);
+        for (int lengthOffset = 0; lengthOffset < tankLength; lengthOffset++) {
+            for (int uOffset = 0; uOffset < tankWidth; uOffset++) {
+                for (int vOffset = 0; vOffset < tankWidth; vOffset++) {
+                    BlockPos tankPos = AirtightTankBlockEntity.offsetInMulti(controllerPos, tankAxis, lengthOffset, uOffset, vOffset);
+                    scanTankPosition(tankController, level, controllerBlock, controllerPos, tankPos, visitedPositions, accumulator);
                 }
             }
         }

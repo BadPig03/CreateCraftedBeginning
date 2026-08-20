@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.content.airtights.transaction;
+package net.ty.createcraftedbeginning.content.airtights.gas.transaction;
 
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour.TankSegment;

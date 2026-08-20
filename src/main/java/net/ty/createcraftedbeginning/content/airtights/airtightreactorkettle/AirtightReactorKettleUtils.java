@@ -5,15 +5,12 @@ import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.content.fluids.transfer.GenericItemEmptying;
 import com.simibubi.create.content.fluids.transfer.GenericItemFilling;
 import com.simibubi.create.content.kinetics.press.MechanicalPressBlockEntity;
-import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour.TankSegment;
 import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.simibubi.create.foundation.recipe.RecipeFinder;
-import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -81,18 +78,20 @@ public final class AirtightReactorKettleUtils {
             return Optional.empty();
         }
 
-        Optional<ReactorKettleRecipe> recipe = findMatchingTrieRecipe(kettle, level);
-        if (recipe.isPresent()) {
-            return recipe;
+        if (!AirtightWithGasRecipeTrieFinder.hasFailed(REACTOR_KETTLE_RECIPE_CACHE_KEY, level)) {
+            Optional<ReactorKettleRecipe> recipe = findMatchingTrieRecipe(kettle, level);
+            if (recipe.isPresent()) {
+                return recipe;
+            }
         }
         return findMatchingLinearRecipe(kettle, level);
     }
 
     private static Optional<ReactorKettleRecipe> findMatchingTrieRecipe(AirtightReactorKettleBlockEntity kettle, Level level) {
         try {
-            IItemHandler availableItems = kettle.getItemCapability();
-            IFluidHandler availableFluids = kettle.getFluidCapability();
-            IGasHandler availableGases = kettle.getGasCapability();
+            IItemHandler availableItems = kettle.getAvailableItems();
+            IFluidHandler availableFluids = kettle.getAvailableFluids();
+            IGasHandler availableGases = kettle.getAvailableGases();
             AirtightWithGasRecipeTrie<?> trie = AirtightWithGasRecipeTrieFinder.get(REACTOR_KETTLE_RECIPE_CACHE_KEY, level, holder -> holder.value() instanceof ReactorKettleRecipe);
             Set<AbstractVariant> availableVariants = AirtightWithGasRecipeTrie.getVariants(availableItems, availableFluids, availableGases);
             for (Recipe<?> candidate : trie.lookup(availableVariants)) {
@@ -228,7 +227,16 @@ public final class AirtightReactorKettleUtils {
             return;
         }
 
-        IItemHandlerModifiable inventory = master.getItemCapability();
+        boolean extractedInput = extractStoredItems(master.getInputInventory(), player);
+        boolean extractedOutput = extractStoredItems(master.getOutputInventory(), player);
+        if (!extractedInput && !extractedOutput) {
+            return;
+        }
+
+        level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
+    }
+
+    private static boolean extractStoredItems(IItemHandlerModifiable inventory, Player player) {
         boolean extractedAny = false;
         for (int slot = 0; slot < inventory.getSlots(); slot++) {
             ItemStack stack = inventory.getStackInSlot(slot);
@@ -240,44 +248,21 @@ public final class AirtightReactorKettleUtils {
             inventory.setStackInSlot(slot, ItemStack.EMPTY);
             extractedAny = true;
         }
-        if (!extractedAny) {
-            return;
-        }
-
-        level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
+        return extractedAny;
     }
 
     public static void updateRecipeFilter(AirtightReactorKettleStructuralBlockEntity structural, ItemStack stack) {
-        AirtightReactorKettleBlockEntity master = structural.getMasterBlockEntity();
-        if (master == null || master.isFilterChanged()) {
-            return;
-        }
-
         Level level = structural.getLevel();
         if (level == null || level.isClientSide) {
             return;
         }
 
-        master.notifyFiltersChanged();
-        master.notifyContentsChanged();
-        BlockPos centerPos = master.getBlockPos().below();
-        for (Direction direction : Iterate.horizontalDirections) {
-            BlockPos filterPos = centerPos.relative(direction);
-            if (filterPos.equals(structural.getBlockPos())) {
-                continue;
-            }
-
-            if (!(level.getBlockEntity(filterPos) instanceof AirtightReactorKettleStructuralBlockEntity otherFilter)) {
-                continue;
-            }
-
-            otherFilter.getFilteringBehaviour().setFilter(stack);
-        }
-    }
-
-    public static boolean canModifyFilter(AirtightReactorKettleStructuralBlockEntity structural) {
         AirtightReactorKettleBlockEntity master = structural.getMasterBlockEntity();
-        return master != null && !master.isFilterChanged();
+        if (master == null) {
+            return;
+        }
+
+        master.setRecipeFilter(stack);
     }
 
     public static Optional<RecipeHolder<CraftingRecipe>> getMatchingCraftingRecipe(AirtightReactorKettleBlockEntity kettle) {
@@ -323,9 +308,9 @@ public final class AirtightReactorKettleUtils {
             return false;
         }
 
-        int[] itemAmounts = new int[kettle.getItemCapability().getSlots()];
+        int[] itemAmounts = new int[kettle.getAvailableItems().getSlots()];
         System.arraycopy(extractedItemsFromSlot, 0, itemAmounts, 0, extractedItemsFromSlot.length);
-        CraftPlan craftPlan = kettle.createCraftPlan(itemAmounts, new int[kettle.getFluidCapability().getTanks()], new long[kettle.getGasCapability().getTanks()], outputs, List.of(), List.of());
+        CraftPlan craftPlan = kettle.createCraftPlan(itemAmounts, new int[kettle.getAvailableFluids().getTanks()], new long[kettle.getAvailableGases().getTanks()], outputs, List.of(), List.of());
         return kettle.commitCraft(craftPlan);
     }
 
@@ -353,12 +338,7 @@ public final class AirtightReactorKettleUtils {
 
     private static boolean canApplyCraftingRecipe(AirtightReactorKettleBlockEntity kettle, CraftingRecipe recipe, CraftingInput input, List<ItemStack> outputs) {
         Level level = kettle.getLevel();
-        if (level == null || !recipe.matches(input, level) || outputs.isEmpty()) {
-            return false;
-        }
-
-        FilteringBehaviour filter = kettle.getFilteringBehaviour();
-        return filter != null && filter.test(outputs.getFirst()) && kettle.acceptOutputs(outputs, new ArrayList<>(), new ArrayList<>(), true);
+        return level != null && recipe.matches(input, level) && !outputs.isEmpty() && kettle.testRecipeFilter(outputs.getFirst()) && kettle.acceptOutputs(outputs, new ArrayList<>(), new ArrayList<>(), true);
     }
 
     private static boolean planCraftingInputConsumption(CraftingRecipe recipe, IItemHandler inputInventory, int[] extractedItemsFromSlot, List<ItemStack> craftingStacks) {
@@ -464,12 +444,11 @@ public final class AirtightReactorKettleUtils {
 
     private static boolean canResultPassTest(AirtightReactorKettleBlockEntity kettle, CraftingRecipe recipe) {
         Level level = kettle.getLevel();
-        FilteringBehaviour filter = kettle.getFilteringBehaviour();
-        if (level == null || filter == null) {
+        if (level == null) {
             return false;
         }
 
         ItemStack previewResult = recipe.getResultItem(level.registryAccess());
-        return !previewResult.isEmpty() && filter.test(previewResult);
+        return !previewResult.isEmpty() && kettle.testRecipeFilter(previewResult);
     }
 }

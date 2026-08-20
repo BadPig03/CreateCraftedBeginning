@@ -93,9 +93,9 @@ public final class AirtightForgingPressUtils {
         }
 
         if (!AirtightWithGasRecipeTrieFinder.hasFailed(FORGING_PRESS_RECIPE_CACHE_KEY, level)) {
-            Optional<ForgingPressRecipe> recipe = findMatchingTrieRecipe(press, level);
-            if (recipe.isPresent()) {
-                return recipe;
+            Optional<ForgingPressRecipe> forgingRecipe = findMatchingTrieRecipe(press, level);
+            if (forgingRecipe.isPresent()) {
+                return forgingRecipe;
             }
         }
         return findMatchingLinearRecipe(press, level);
@@ -105,19 +105,19 @@ public final class AirtightForgingPressUtils {
         return RECIPE_CACHE_VERSION.get();
     }
 
-    static void insertItemEntity(AirtightForgingPressStructuralBlockEntity structural, ItemEntity itemEntity) {
-        AirtightForgingPressBlockEntity master = structural.getMasterBlockEntity();
-        if (master == null) {
+    static void insertItemEntity(AirtightForgingPressStructuralBlockEntity structuralPart, ItemEntity itemEntity) {
+        AirtightForgingPressBlockEntity press = structuralPart.getMasterBlockEntity();
+        if (press == null) {
             return;
         }
 
-        ItemStack remainder = ItemHandlerHelper.insertItemStacked(master.getInputInventory(), itemEntity.getItem().copy(), false);
-        if (remainder.isEmpty()) {
+        ItemStack remainingStack = ItemHandlerHelper.insertItemStacked(press.getInputInventory(), itemEntity.getItem().copy(), false);
+        if (remainingStack.isEmpty()) {
             itemEntity.discard();
             return;
         }
 
-        itemEntity.setItem(remainder);
+        itemEntity.setItem(remainingStack);
     }
 
     static ItemInteractionResult getUseItemOnResult(AirtightForgingPressBlockEntity press, Level level, Player player, BlockPos pos, InteractionHand hand, ItemStack stack) {
@@ -125,39 +125,39 @@ public final class AirtightForgingPressUtils {
             return ItemInteractionResult.SUCCESS;
         }
 
-        SmartInventory inventory = press.getPressHeadInventory();
+        SmartInventory pressHeadInventory = press.getPressHeadInventory();
         if (stack.isEmpty()) {
-            ItemStack item = inventory.getStackInSlot(0);
-            if (item.isEmpty()) {
+            ItemStack pressHeadStack = pressHeadInventory.getStackInSlot(0);
+            if (pressHeadStack.isEmpty()) {
                 return ItemInteractionResult.SUCCESS;
             }
 
-            ItemHandlerHelper.giveItemToPlayer(player, item);
-            inventory.setStackInSlot(0, ItemStack.EMPTY);
+            ItemHandlerHelper.giveItemToPlayer(player, pressHeadStack);
+            pressHeadInventory.setStackInSlot(0, ItemStack.EMPTY);
             level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
             return ItemInteractionResult.SUCCESS;
         }
 
-        if (!inventory.isItemValid(0, stack)) {
+        if (!pressHeadInventory.isItemValid(0, stack)) {
             return ItemInteractionResult.CONSUME;
         }
 
-        ItemStack remainder = inventory.insertItem(0, stack, false);
-        if (!ItemStack.matches(stack, remainder)) {
-            player.setItemInHand(hand, remainder);
+        ItemStack remainingStack = pressHeadInventory.insertItem(0, stack, false);
+        if (!ItemStack.matches(stack, remainingStack)) {
+            player.setItemInHand(hand, remainingStack);
             AllSoundEvents.DEPOT_SLIDE.playOnServer(level, pos);
             return ItemInteractionResult.SUCCESS;
         }
 
-        player.setItemInHand(hand, inventory.getStackInSlot(0));
-        inventory.setStackInSlot(0, remainder);
+        player.setItemInHand(hand, pressHeadInventory.getStackInSlot(0));
+        pressHeadInventory.setStackInSlot(0, remainingStack);
         level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
         return ItemInteractionResult.SUCCESS;
     }
 
-    static ItemInteractionResult getUseItemOnResult(AirtightForgingPressStructuralBlockEntity structural, Level level, Player player, BlockPos pos, InteractionHand hand, ItemStack stack) {
-        AirtightForgingPressBlockEntity master = structural.getMasterBlockEntity();
-        if (master == null) {
+    static ItemInteractionResult getUseItemOnResult(AirtightForgingPressStructuralBlockEntity structuralPart, Level level, Player player, BlockPos pos, InteractionHand hand, ItemStack stack) {
+        AirtightForgingPressBlockEntity press = structuralPart.getMasterBlockEntity();
+        if (press == null) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
@@ -166,7 +166,7 @@ public final class AirtightForgingPressUtils {
         }
 
         if (stack.isEmpty()) {
-            if (returnStoredItems(master, player)) {
+            if (returnStoredItems(press, player)) {
                 level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
             }
             return ItemInteractionResult.SUCCESS;
@@ -180,23 +180,23 @@ public final class AirtightForgingPressUtils {
             return ItemInteractionResult.CONSUME;
         }
 
-        SmartInventory inputInventory = master.getInputInventory();
-        ItemStack remainder = ItemHandlerHelper.insertItemStacked(inputInventory, stack, false);
-        if (ItemStack.matches(stack, remainder)) {
+        SmartInventory inputInventory = press.getInputInventory();
+        ItemStack remainingStack = ItemHandlerHelper.insertItemStacked(inputInventory, stack, false);
+        if (ItemStack.matches(stack, remainingStack)) {
             player.setItemInHand(hand, inputInventory.getStackInSlot(0));
-            inputInventory.setStackInSlot(0, remainder);
+            inputInventory.setStackInSlot(0, remainingStack);
             level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
             return ItemInteractionResult.SUCCESS;
         }
 
-        player.setItemInHand(hand, remainder);
+        player.setItemInHand(hand, remainingStack);
         AllSoundEvents.DEPOT_SLIDE.playOnServer(level, pos);
         return ItemInteractionResult.SUCCESS;
     }
 
-    static ItemInteractionResult getUseItemOnResult(AirtightForgingPressStructuralShaftBlockEntity structural, Level level, Player player, BlockPos pos, InteractionHand hand, ItemStack stack) {
-        AirtightForgingPressBlockEntity master = structural.getMasterBlockEntity();
-        if (master == null) {
+    static ItemInteractionResult getUseItemOnResult(AirtightForgingPressStructuralShaftBlockEntity shaftPart, Level level, Player player, BlockPos pos, InteractionHand hand, ItemStack stack) {
+        AirtightForgingPressBlockEntity press = shaftPart.getMasterBlockEntity();
+        if (press == null) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
@@ -205,14 +205,14 @@ public final class AirtightForgingPressUtils {
         }
 
         if (stack.isEmpty()) {
-            SmartInventory inventory = master.getAdditionInventory();
-            ItemStack stackInSlot = inventory.getStackInSlot(0);
-            if (stackInSlot.isEmpty()) {
+            SmartInventory processingInventory = press.getAdditionInventory();
+            ItemStack processingStack = processingInventory.getStackInSlot(0);
+            if (processingStack.isEmpty()) {
                 return ItemInteractionResult.SUCCESS;
             }
 
-            ItemHandlerHelper.giveItemToPlayer(player, stackInSlot);
-            inventory.setStackInSlot(0, ItemStack.EMPTY);
+            ItemHandlerHelper.giveItemToPlayer(player, processingStack);
+            processingInventory.setStackInSlot(0, ItemStack.EMPTY);
             level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
             return ItemInteractionResult.SUCCESS;
         }
@@ -225,32 +225,32 @@ public final class AirtightForgingPressUtils {
             return ItemInteractionResult.CONSUME;
         }
 
-        SmartInventory processingInventory = master.getAdditionInventory();
-        ItemStack remainder = ItemHandlerHelper.insertItemStacked(processingInventory, stack, false);
-        if (ItemStack.matches(stack, remainder)) {
+        SmartInventory processingInventory = press.getAdditionInventory();
+        ItemStack remainingStack = ItemHandlerHelper.insertItemStacked(processingInventory, stack, false);
+        if (ItemStack.matches(stack, remainingStack)) {
             player.setItemInHand(hand, processingInventory.getStackInSlot(0));
-            processingInventory.setStackInSlot(0, remainder);
+            processingInventory.setStackInSlot(0, remainingStack);
             level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + level.getRandom().nextFloat());
             return ItemInteractionResult.SUCCESS;
         }
 
-        player.setItemInHand(hand, remainder);
+        player.setItemInHand(hand, remainingStack);
         AllSoundEvents.DEPOT_SLIDE.playOnServer(level, pos);
         return ItemInteractionResult.SUCCESS;
     }
 
-    static void updateRecipeFilter(AirtightForgingPressStructuralBlockEntity structural, ItemStack stack) {
-        Level level = structural.getLevel();
+    static void updateRecipeFilter(AirtightForgingPressStructuralBlockEntity filterPart, ItemStack filterStack) {
+        Level level = filterPart.getLevel();
         if (level == null || level.isClientSide) {
             return;
         }
 
-        AirtightForgingPressBlockEntity master = structural.getMasterBlockEntity();
-        if (master == null) {
+        AirtightForgingPressBlockEntity press = filterPart.getMasterBlockEntity();
+        if (press == null) {
             return;
         }
 
-        master.setRecipeFilter(stack);
+        press.setRecipeFilter(filterStack);
     }
 
     static Optional<RecipeHolder<PressingRecipe>> getMatchingPressingRecipe(AirtightForgingPressBlockEntity press) {
@@ -288,8 +288,8 @@ public final class AirtightForgingPressUtils {
         }
 
         ItemStack batchInput = inputStack.copyWithCount(batchSize);
-        List<ItemStack> outputs = RecipeApplier.applyRecipeOn(level, batchInput, recipe, true);
-        Optional<OutputPlan> plannedOutput = press.planOutputs(outputs);
+        List<ItemStack> outputStacks = RecipeApplier.applyRecipeOn(level, batchInput, recipe, true);
+        Optional<OutputPlan> plannedOutput = press.planOutputs(outputStacks);
         if (plannedOutput.isEmpty()) {
             return false;
         }
@@ -306,13 +306,13 @@ public final class AirtightForgingPressUtils {
             return Optional.empty();
         }
 
-        SmithingRecipeInput input = createSmithingInput(press);
-        if (input.template().isEmpty() || input.base().isEmpty() || input.addition().isEmpty()) {
+        SmithingRecipeInput smithingInput = createSmithingInput(press);
+        if (smithingInput.template().isEmpty() || smithingInput.base().isEmpty() || smithingInput.addition().isEmpty()) {
             return Optional.empty();
         }
 
         for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(AUTOMATIC_SMITHING_RECIPE_CACHE_KEY, level, AirtightForgingPressUtils::isAllowedAutomaticSmithingRecipe)) {
-            if (!(holder.value() instanceof SmithingRecipe smithingRecipe) || !canApplySmithingRecipe(press, smithingRecipe, input)) {
+            if (!(holder.value() instanceof SmithingRecipe smithingRecipe) || !canApplySmithingRecipe(press, smithingRecipe, smithingInput)) {
                 continue;
             }
 
@@ -327,36 +327,36 @@ public final class AirtightForgingPressUtils {
             return false;
         }
 
-        SmithingRecipeInput input = createSmithingInput(press);
-        if (!canApplySmithingRecipe(press, recipe, input)) {
+        SmithingRecipeInput smithingInput = createSmithingInput(press);
+        if (!canApplySmithingRecipe(press, recipe, smithingInput)) {
             return false;
         }
 
-        List<ItemStack> outputs = getSmithingOutputs(recipe, input, level);
-        Optional<OutputPlan> plannedOutput = press.planOutputs(outputs);
+        List<ItemStack> outputStacks = getSmithingOutputs(recipe, smithingInput, level);
+        Optional<OutputPlan> plannedOutput = press.planOutputs(outputStacks);
         if (plannedOutput.isEmpty()) {
             return false;
         }
 
         IItemHandler processingInventory = press.getAdditionInventory();
         IItemHandler inputInventory = press.getInputInventory();
-        ItemStack simulatedProcessing = processingInventory.extractItem(0, 1, true);
-        ItemStack simulatedInput = inputInventory.extractItem(0, 1, true);
-        if (simulatedProcessing.getCount() != 1 || simulatedInput.getCount() != 1) {
+        ItemStack simulatedProcessingStack = processingInventory.extractItem(0, 1, true);
+        ItemStack simulatedInputStack = inputInventory.extractItem(0, 1, true);
+        if (simulatedProcessingStack.getCount() != 1 || simulatedInputStack.getCount() != 1) {
             return false;
         }
 
         int[] fluidAmounts = new int[press.getFluidCapability().getTanks()];
         long[] gasAmounts = new long[press.getGasCapability().getTanks()];
-        ConsumptionPlan consumptionPlan = press.createConsumptionPlan(simulatedProcessing, 1, simulatedInput, 1, fluidAmounts, gasAmounts);
+        ConsumptionPlan consumptionPlan = press.createConsumptionPlan(simulatedProcessingStack, 1, simulatedInputStack, 1, fluidAmounts, gasAmounts);
         return press.commitCraft(consumptionPlan, plannedOutput.get());
     }
 
     static SmithingRecipeInput createSmithingInput(AirtightForgingPressBlockEntity press) {
-        ItemStack template = press.getPressHeadInventory().getStackInSlot(0).copy();
-        ItemStack processing = press.getAdditionInventory().getStackInSlot(0).copy();
-        ItemStack input = press.getInputInventory().getStackInSlot(0).copy();
-        return new SmithingRecipeInput(template, input, processing);
+        ItemStack templateStack = press.getPressHeadInventory().getStackInSlot(0).copy();
+        ItemStack additionStack = press.getAdditionInventory().getStackInSlot(0).copy();
+        ItemStack baseStack = press.getInputInventory().getStackInSlot(0).copy();
+        return new SmithingRecipeInput(templateStack, baseStack, additionStack);
     }
 
     private static Optional<ForgingPressRecipe> findMatchingTrieRecipe(AirtightForgingPressBlockEntity press, Level level) {
@@ -364,45 +364,45 @@ public final class AirtightForgingPressUtils {
             IItemHandler availableItems = press.getRecipeInputCapability();
             IFluidHandler availableFluids = press.getFluidCapability();
             IGasHandler availableGases = press.getGasCapability();
-            AirtightWithGasRecipeTrie<?> trie = AirtightWithGasRecipeTrieFinder.get(FORGING_PRESS_RECIPE_CACHE_KEY, level, holder -> holder.value() instanceof ForgingPressRecipe);
+            AirtightWithGasRecipeTrie<?> recipeTrie = AirtightWithGasRecipeTrieFinder.get(FORGING_PRESS_RECIPE_CACHE_KEY, level, holder -> holder.value() instanceof ForgingPressRecipe);
             Set<AbstractVariant> availableVariants = AirtightWithGasRecipeTrie.getVariants(availableItems, availableFluids, availableGases);
-            for (Recipe<?> candidate : trie.lookup(availableVariants)) {
-                if (candidate instanceof ForgingPressRecipe recipe && ForgingPressRecipe.match(press, recipe)) {
-                    return Optional.of(recipe);
+            for (Recipe<?> candidateRecipe : recipeTrie.lookup(availableVariants)) {
+                if (candidateRecipe instanceof ForgingPressRecipe forgingRecipe && ForgingPressRecipe.match(press, forgingRecipe)) {
+                    return Optional.of(forgingRecipe);
                 }
             }
-        } catch (ExecutionException | UncheckedExecutionException e) {
+        } catch (ExecutionException | UncheckedExecutionException exception) {
             if (AirtightWithGasRecipeTrieFinder.recordFailure(FORGING_PRESS_RECIPE_CACHE_KEY, level)) {
-                CCBAPI.LOGGER.error("Failed to build the airtight forging press recipe trie; falling back to a linear recipe search until recipes are reloaded", e);
+                CCBAPI.LOGGER.error("Failed to build the airtight forging press recipe trie; falling back to a linear recipe search until recipes are reloaded", exception);
             }
         }
         return Optional.empty();
     }
 
     private static Optional<ForgingPressRecipe> findMatchingLinearRecipe(AirtightForgingPressBlockEntity press, Level level) {
-        for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(FORGING_PRESS_RECIPE_CACHE_KEY, level, recipe -> recipe.value() instanceof ForgingPressRecipe)) {
-            if (holder.value() instanceof ForgingPressRecipe recipe && ForgingPressRecipe.match(press, recipe)) {
-                return Optional.of(recipe);
+        for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(FORGING_PRESS_RECIPE_CACHE_KEY, level, recipeHolder -> recipeHolder.value() instanceof ForgingPressRecipe)) {
+            if (holder.value() instanceof ForgingPressRecipe forgingRecipe && ForgingPressRecipe.match(press, forgingRecipe)) {
+                return Optional.of(forgingRecipe);
             }
         }
         return Optional.empty();
     }
 
     private static boolean returnStoredItems(AirtightForgingPressBlockEntity press, Player player) {
-        boolean returnedAny = false;
+        boolean returnedAnyItems = false;
         for (SmartInventory inventory : List.of(press.getInputInventory(), press.getOutputInventory())) {
             for (int slot = 0; slot < inventory.getSlots(); slot++) {
-                ItemStack stack = inventory.getStackInSlot(slot);
-                if (stack.isEmpty()) {
+                ItemStack storedStack = inventory.getStackInSlot(slot);
+                if (storedStack.isEmpty()) {
                     continue;
                 }
 
-                ItemHandlerHelper.giveItemToPlayer(player, stack);
+                ItemHandlerHelper.giveItemToPlayer(player, storedStack);
                 inventory.setStackInSlot(slot, ItemStack.EMPTY);
-                returnedAny = true;
+                returnedAnyItems = true;
             }
         }
-        return returnedAny;
+        return returnedAnyItems;
     }
 
     private static boolean canApplyPressingRecipe(AirtightForgingPressBlockEntity press, PressingRecipe recipe, ItemStack inputStack) {
@@ -420,84 +420,84 @@ public final class AirtightForgingPressUtils {
             return 0;
         }
 
-        int low = 1;
-        int high = inputStack.getCount();
+        int lowerBound = 1;
+        int upperBound = inputStack.getCount();
         int largestBatch = 0;
-        while (low <= high) {
-            int batchSize = low + high >>> 1;
-            boolean outputsFit = press.acceptOutputs(getPotentialPressingOutputs(recipe, inputStack, batchSize), true);
-            if (!outputsFit) {
-                high = batchSize - 1;
+        while (lowerBound <= upperBound) {
+            int batchSize = lowerBound + upperBound >>> 1;
+            boolean canFitOutputs = press.acceptOutputs(getPotentialPressingOutputs(recipe, inputStack, batchSize), true);
+            if (!canFitOutputs) {
+                upperBound = batchSize - 1;
                 continue;
             }
 
             largestBatch = batchSize;
-            low = batchSize + 1;
+            lowerBound = batchSize + 1;
         }
         return largestBatch;
     }
 
-    private static List<ItemStack> getPotentialPressingOutputs(PressingRecipe recipe, ItemStack inputStack, int crafts) {
-        List<ItemStack> outputs = new ArrayList<>();
-        for (ProcessingOutput output : recipe.getRollableResults()) {
-            ItemStack stack = output.getStack();
-            if (stack.isEmpty()) {
+    private static List<ItemStack> getPotentialPressingOutputs(PressingRecipe recipe, ItemStack inputStack, int craftCount) {
+        List<ItemStack> outputStacks = new ArrayList<>();
+        for (ProcessingOutput processingOutput : recipe.getRollableResults()) {
+            ItemStack outputStack = processingOutput.getStack();
+            if (outputStack.isEmpty()) {
                 continue;
             }
 
-            for (int craft = 0; craft < crafts; craft++) {
-                outputs.add(stack.copy());
+            for (int craft = 0; craft < craftCount; craft++) {
+                outputStacks.add(outputStack.copy());
             }
         }
         if (!inputStack.hasCraftingRemainingItem()) {
-            return outputs;
+            return outputStacks;
         }
 
-        ItemStack remainder = inputStack.getCraftingRemainingItem();
-        if (remainder.isEmpty()) {
-            return outputs;
+        ItemStack craftingRemainder = inputStack.getCraftingRemainingItem();
+        if (craftingRemainder.isEmpty()) {
+            return outputStacks;
         }
 
-        for (int craft = 0; craft < crafts; craft++) {
-            outputs.add(remainder.copy());
+        for (int craft = 0; craft < craftCount; craft++) {
+            outputStacks.add(craftingRemainder.copy());
         }
-        return outputs;
+        return outputStacks;
     }
 
-    private static boolean canApplySmithingRecipe(AirtightForgingPressBlockEntity press, SmithingRecipe recipe, SmithingRecipeInput input) {
+    private static boolean canApplySmithingRecipe(AirtightForgingPressBlockEntity press, SmithingRecipe recipe, SmithingRecipeInput smithingInput) {
         Level level = press.getLevel();
-        if (level == null || !recipe.matches(input, level)) {
+        if (level == null || !recipe.matches(smithingInput, level)) {
             return false;
         }
 
-        List<ItemStack> outputs = getSmithingOutputs(recipe, input, level);
-        return !outputs.isEmpty() && press.testRecipeFilter(outputs.getFirst()) && press.acceptOutputs(outputs, true);
+        List<ItemStack> outputStacks = getSmithingOutputs(recipe, smithingInput, level);
+        return !outputStacks.isEmpty() && press.testRecipeFilter(outputStacks.getFirst()) && press.acceptOutputs(outputStacks, true);
     }
 
-    private static List<ItemStack> getSmithingOutputs(SmithingRecipe recipe, SmithingRecipeInput input, Level level) {
-        List<ItemStack> outputs = new ArrayList<>();
-        ItemStack result = recipe.assemble(input, level.registryAccess());
-        if (result.isEmpty()) {
-            return outputs;
+    private static List<ItemStack> getSmithingOutputs(SmithingRecipe recipe, SmithingRecipeInput smithingInput, Level level) {
+        List<ItemStack> outputStacks = new ArrayList<>();
+        ItemStack smithingResult = recipe.assemble(smithingInput, level.registryAccess());
+        if (smithingResult.isEmpty()) {
+            return outputStacks;
         }
 
-        outputs.add(result.copy());
-        NonNullList<ItemStack> remainingItems = recipe.getRemainingItems(input);
-        addConsumedSlotRemainder(outputs, remainingItems, SMITHING_BASE_SLOT);
-        addConsumedSlotRemainder(outputs, remainingItems, SMITHING_ADDITION_SLOT);
-        return outputs;
+        outputStacks.add(smithingResult.copy());
+        NonNullList<ItemStack> remainingItems = recipe.getRemainingItems(smithingInput);
+        addConsumedSlotRemainder(outputStacks, remainingItems, SMITHING_BASE_SLOT);
+        addConsumedSlotRemainder(outputStacks, remainingItems, SMITHING_ADDITION_SLOT);
+        return outputStacks;
     }
 
-    private static void addConsumedSlotRemainder(List<ItemStack> outputs, NonNullList<ItemStack> remainingItems, int slot) {
+    private static void addConsumedSlotRemainder(List<ItemStack> outputStacks, NonNullList<ItemStack> remainingItems, int slot) {
         if (slot < 0 || slot >= remainingItems.size()) {
             return;
         }
 
-        ItemStack remaining = remainingItems.get(slot);
-        if (remaining.isEmpty()) {
+        ItemStack remainingStack = remainingItems.get(slot);
+        if (remainingStack.isEmpty()) {
             return;
         }
 
-        outputs.add(remaining.copy());
+        outputStacks.add(remainingStack.copy());
     }
 }

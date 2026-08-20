@@ -33,6 +33,7 @@ import java.util.Set;
 @MethodsReturnNonnullByDefault
 public final class GasPropagator {
     private static final WorldAttached<PropagationBatch> CHANGED_PIPE_BATCHES = new WorldAttached<>($ -> new PropagationBatch());
+    private static final WorldAttached<PressureTopologyRevision> PRESSURE_TOPOLOGY_REVISIONS = new WorldAttached<>($ -> new PressureTopologyRevision());
 
     private GasPropagator() {
     }
@@ -128,6 +129,14 @@ public final class GasPropagator {
 
     public static int getAirtightPumpMaxRange() {
         return CCBConfig.server().airtights.maxPumpRange.get();
+    }
+
+    public static long getPressureTopologyRevision(Level level) {
+        return PRESSURE_TOPOLOGY_REVISIONS.get(level).revision;
+    }
+
+    public static void invalidatePressureTopology(Level level) {
+        PRESSURE_TOPOLOGY_REVISIONS.get(level).revision++;
     }
 
     public static void resetAffectedNetworks(Level level, BlockPos start, Direction side) {
@@ -266,5 +275,9 @@ public final class GasPropagator {
     private static final class PropagationBatch {
         private final Set<BlockPos> processed = new HashSet<>();
         private long gameTime = Long.MIN_VALUE;
+    }
+
+    private static final class PressureTopologyRevision {
+        private long revision;
     }
 }

@@ -68,13 +68,13 @@ final class AirtightExtendArmUtils {
             return;
         }
 
-        Optional<AffordableFuel> fuel = findAffordableFuel(player);
-        if (fuel.isEmpty()) {
+        Optional<AffordableFuel> affordableFuel = findAffordableFuel(player);
+        if (affordableFuel.isEmpty()) {
             removeArmModifiers(player);
             return;
         }
 
-        AffordableFuel selectedFuel = fuel.get();
+        AffordableFuel selectedFuel = affordableFuel.get();
         ACTIVE_FUELS.put(player, selectedFuel);
         applyArmModifiers(player, AirtightArmHandlerUtils.of(selectedFuel.gasType()));
     }
@@ -83,46 +83,45 @@ final class AirtightExtendArmUtils {
         return player.getMainHandItem().is(CCBItems.AIRTIGHT_EXTEND_ARM) || player.getOffhandItem().is(CCBItems.AIRTIGHT_EXTEND_ARM);
     }
 
-    static PowerUseResult tryUseBlockPower(Player player, BlockPos pos) {
-        return tryUsePower(player, () -> player.canInteractWithBlock(pos, 0), () -> requiresExtendedBlockRange(player, pos));
+    static PowerUseResult tryUseBlockPower(Player player, BlockPos blockPos) {
+        return tryUsePower(player, () -> player.canInteractWithBlock(blockPos, 0), () -> requiresExtendedBlockRange(player, blockPos));
     }
 
-    static PowerUseResult tryUseEntityPower(Player player, Entity target) {
-        return tryUsePower(player, () -> player.canInteractWithEntity(target, 0), () -> requiresExtendedEntityRange(player, target));
+    static PowerUseResult tryUseEntityPower(Player player, Entity targetEntity) {
+        return tryUsePower(player, () -> player.canInteractWithEntity(targetEntity, 0), () -> requiresExtendedEntityRange(player, targetEntity));
     }
 
-    static PowerUseResult tryUseAttackPower(Player player, Entity target) {
-        return tryUsePower(player, () -> player.canInteractWithEntity(target, 0), () -> requiresPoweredAttack(player, target));
+    static PowerUseResult tryUseAttackPower(Player player, Entity targetEntity) {
+        return tryUsePower(player, () -> player.canInteractWithEntity(targetEntity, 0), () -> requiresPoweredAttack(player, targetEntity));
     }
 
     private static Optional<AffordableFuel> findAffordableFuel(Player player) {
-        Gas selectedGas = getSelectedGasType(player);
-        return CanisterContainerConsumers.findAffordableFuel(player, selectedGas, gasType -> getRawGasConsumption(AirtightArmHandlerUtils.of(gasType)));
+        return CanisterContainerConsumers.findAffordableFuel(player, getSelectedGasType(player), gasType -> getRawGasConsumption(AirtightArmHandlerUtils.of(gasType)));
     }
 
-    private static boolean requiresExtendedBlockRange(Player player, BlockPos pos) {
-        AttributeInstance instance = player.getAttributes().getInstance(Attributes.BLOCK_INTERACTION_RANGE);
-        if (instance == null) {
+    private static boolean requiresExtendedBlockRange(Player player, BlockPos blockPos) {
+        AttributeInstance blockRangeAttribute = player.getAttributes().getInstance(Attributes.BLOCK_INTERACTION_RANGE);
+        if (blockRangeAttribute == null) {
             return false;
         }
 
-        double rangeAdjustment = getAdjustmentWithoutModifier(instance, BLOCK_RANGE_MODIFIER_ID);
-        return rangeAdjustment < 0 && !player.canInteractWithBlock(pos, rangeAdjustment);
+        double unpoweredRangeAdjustment = getAdjustmentWithoutModifier(blockRangeAttribute, BLOCK_RANGE_MODIFIER_ID);
+        return unpoweredRangeAdjustment < 0 && !player.canInteractWithBlock(blockPos, unpoweredRangeAdjustment);
     }
 
-    private static boolean requiresExtendedEntityRange(Player player, Entity target) {
-        AttributeInstance instance = player.getAttributes().getInstance(Attributes.ENTITY_INTERACTION_RANGE);
-        if (instance == null) {
+    private static boolean requiresExtendedEntityRange(Player player, Entity targetEntity) {
+        AttributeInstance entityRangeAttribute = player.getAttributes().getInstance(Attributes.ENTITY_INTERACTION_RANGE);
+        if (entityRangeAttribute == null) {
             return false;
         }
 
-        double rangeAdjustment = getAdjustmentWithoutModifier(instance, ENTITY_RANGE_MODIFIER_ID);
-        return rangeAdjustment < 0 && !player.canInteractWithEntity(target, rangeAdjustment);
+        double unpoweredRangeAdjustment = getAdjustmentWithoutModifier(entityRangeAttribute, ENTITY_RANGE_MODIFIER_ID);
+        return unpoweredRangeAdjustment < 0 && !player.canInteractWithEntity(targetEntity, unpoweredRangeAdjustment);
     }
 
-    private static boolean requiresPoweredAttack(Player player, Entity target) {
-        AttributeInstance knockback = player.getAttributes().getInstance(Attributes.ATTACK_KNOCKBACK);
-        return requiresExtendedEntityRange(player, target) || getModifierAmount(knockback) > 0;
+    private static boolean requiresPoweredAttack(Player player, Entity targetEntity) {
+        AttributeInstance knockbackAttribute = player.getAttributes().getInstance(Attributes.ATTACK_KNOCKBACK);
+        return requiresExtendedEntityRange(player, targetEntity) || getModifierAmount(knockbackAttribute) > 0;
     }
 
     private static PowerUseResult tryUsePower(Player player, BooleanSupplier canReachWithCurrentPower, BooleanSupplier requiresCurrentPower) {
@@ -139,8 +138,8 @@ final class AirtightExtendArmUtils {
             return PowerUseResult.pass();
         }
 
-        ConsumptionResult consumption = consumeCurrentFuelAndRefresh(player);
-        return consumption.success() ? PowerUseResult.consumed() : PowerUseResult.insufficient(consumption.attemptedGas());
+        ConsumptionResult consumptionResult = consumeCurrentFuelAndRefresh(player);
+        return consumptionResult.success() ? PowerUseResult.consumed() : PowerUseResult.insufficient(consumptionResult.attemptedGas());
     }
 
     private static ConsumptionResult consumeCurrentFuelAndRefresh(Player player) {
@@ -150,9 +149,9 @@ final class AirtightExtendArmUtils {
         }
 
         GasStack attemptedGas = selectedFuel.gasContent().copy();
-        boolean consumed = CanisterContainerConsumers.interactContainer(player, selectedFuel.gasType(), selectedFuel.amount(), () -> true, false);
+        boolean fuelConsumed = CanisterContainerConsumers.interactContainer(player, selectedFuel.gasType(), selectedFuel.amount(), () -> true, false);
         refreshArmModifiers(player);
-        return new ConsumptionResult(consumed, attemptedGas);
+        return new ConsumptionResult(fuelConsumed, attemptedGas);
     }
 
     private static Gas getSelectedGasType(Player player) {
@@ -182,52 +181,52 @@ final class AirtightExtendArmUtils {
         syncModifier(attributes.getInstance(Attributes.ATTACK_KNOCKBACK), KNOCKBACK_MODIFIER_ID, armHandler.getIncreasedKnockback());
     }
 
-    private static double getModifierAmount(@Nullable AttributeInstance instance) {
-        if (instance == null) {
+    private static double getModifierAmount(@Nullable AttributeInstance attribute) {
+        if (attribute == null) {
             return 0;
         }
 
-        AttributeModifier modifier = instance.getModifier(KNOCKBACK_MODIFIER_ID);
-        return modifier == null || modifier.operation() != Operation.ADD_VALUE ? 0 : modifier.amount();
+        AttributeModifier knockbackModifier = attribute.getModifier(KNOCKBACK_MODIFIER_ID);
+        return knockbackModifier == null || knockbackModifier.operation() != Operation.ADD_VALUE ? 0 : knockbackModifier.amount();
     }
 
-    private static double getAdjustmentWithoutModifier(AttributeInstance instance, ResourceLocation id) {
-        AttributeModifier modifier = instance.getModifier(id);
+    private static double getAdjustmentWithoutModifier(AttributeInstance attribute, ResourceLocation modifierId) {
+        AttributeModifier modifier = attribute.getModifier(modifierId);
         if (modifier == null || modifier.amount() <= 0) {
             return 0;
         }
 
-        double currentValue = instance.getValue();
-        AttributeInstance copy = new AttributeInstance(instance.getAttribute(), ignored -> {});
-        copy.replaceFrom(instance);
-        copy.removeModifier(id);
-        return copy.getValue() - currentValue;
+        double currentAttributeValue = attribute.getValue();
+        AttributeInstance attributeWithoutModifier = new AttributeInstance(attribute.getAttribute(), ignored -> {});
+        attributeWithoutModifier.replaceFrom(attribute);
+        attributeWithoutModifier.removeModifier(modifierId);
+        return attributeWithoutModifier.getValue() - currentAttributeValue;
     }
 
-    private static void removeModifier(@Nullable AttributeInstance instance, ResourceLocation id) {
-        if (instance == null) {
+    private static void removeModifier(@Nullable AttributeInstance attribute, ResourceLocation modifierId) {
+        if (attribute == null) {
             return;
         }
 
-        instance.removeModifier(id);
+        attribute.removeModifier(modifierId);
     }
 
-    private static void syncModifier(@Nullable AttributeInstance instance, ResourceLocation id, double amount) {
-        if (instance == null) {
+    private static void syncModifier(@Nullable AttributeInstance attribute, ResourceLocation modifierId, double modifierAmount) {
+        if (attribute == null) {
             return;
         }
 
-        if (!GasConsumptions.isFinite(amount) || amount <= 0) {
-            instance.removeModifier(id);
+        if (!GasConsumptions.isFinite(modifierAmount) || modifierAmount <= 0) {
+            attribute.removeModifier(modifierId);
             return;
         }
 
-        AttributeModifier currentModifier = instance.getModifier(id);
-        if (currentModifier != null && Double.compare(currentModifier.amount(), amount) == 0 && currentModifier.operation() == Operation.ADD_VALUE) {
+        AttributeModifier currentModifier = attribute.getModifier(modifierId);
+        if (currentModifier != null && Double.compare(currentModifier.amount(), modifierAmount) == 0 && currentModifier.operation() == Operation.ADD_VALUE) {
             return;
         }
 
-        instance.addOrUpdateTransientModifier(new AttributeModifier(id, amount, Operation.ADD_VALUE));
+        attribute.addOrUpdateTransientModifier(new AttributeModifier(modifierId, modifierAmount, Operation.ADD_VALUE));
     }
 
     private enum PowerUseOutcome {
@@ -250,12 +249,12 @@ final class AirtightExtendArmUtils {
             return new PowerUseResult(PowerUseOutcome.CONSUMED, GasStack.EMPTY);
         }
 
-        private static PowerUseResult insufficient(Gas gas) {
-            return new PowerUseResult(PowerUseOutcome.INSUFFICIENT_GAS, gas.isEmpty() ? GasStack.EMPTY : new GasStack(gas, 1));
+        private static PowerUseResult insufficient(Gas gasType) {
+            return new PowerUseResult(PowerUseOutcome.INSUFFICIENT_GAS, gasType.isEmpty() ? GasStack.EMPTY : new GasStack(gasType, 1));
         }
 
-        private static PowerUseResult insufficient(GasStack gas) {
-            return new PowerUseResult(PowerUseOutcome.INSUFFICIENT_GAS, gas);
+        private static PowerUseResult insufficient(GasStack attemptedGas) {
+            return new PowerUseResult(PowerUseOutcome.INSUFFICIENT_GAS, attemptedGas);
         }
 
         private static PowerUseResult outOfRange() {
@@ -276,8 +275,8 @@ final class AirtightExtendArmUtils {
             attemptedGas = attemptedGas.copy();
         }
 
-        private static ConsumptionResult failure(Gas gas) {
-            return new ConsumptionResult(false, gas.isEmpty() ? GasStack.EMPTY : new GasStack(gas, 1));
+        private static ConsumptionResult failure(Gas gasType) {
+            return new ConsumptionResult(false, gasType.isEmpty() ? GasStack.EMPTY : new GasStack(gasType, 1));
         }
     }
 }

@@ -28,9 +28,13 @@ final class AirtightEncasedPipeTransportBehaviour extends GasTransportBehaviour 
             return false;
         }
 
-        BlockPos otherPos = blockEntity.getBlockPos().relative(direction);
-        BlockState otherState = level.getBlockState(otherPos);
-        return isValidAirtightComponents(level, otherPos, otherState, direction);
+        BlockPos adjacentPos = blockEntity.getBlockPos().relative(direction);
+        if (!level.isLoaded(adjacentPos)) {
+            return false;
+        }
+
+        BlockState adjacentState = level.getBlockState(adjacentPos);
+        return isValidAirtightComponents(level, adjacentPos, adjacentState, direction);
     }
 
     @Override

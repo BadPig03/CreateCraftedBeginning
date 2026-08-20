@@ -76,14 +76,12 @@ class AirtightAssemblyDriverLevelCalculator {
     }
 
     Map<LevelKey, Integer> getLevels() {
-        int minLevel = getMinimumLevel();
-        int maxLevel = getMaximumLevel();
         Map<LevelKey, Integer> levels = new EnumMap<>(LevelKey.class);
         levels.put(LevelKey.SUPPLY, supplyLevel);
         levels.put(LevelKey.WIND_CHARGING, windChargingLevel);
         levels.put(LevelKey.RESIDUE, residueLevel);
-        levels.put(LevelKey.MIN_VALUE, minLevel);
-        levels.put(LevelKey.MAX_VALUE, maxLevel);
+        levels.put(LevelKey.MIN_VALUE, getMinimumLevel());
+        levels.put(LevelKey.MAX_VALUE, getMaximumLevel());
         return levels;
     }
 
@@ -92,11 +90,11 @@ class AirtightAssemblyDriverLevelCalculator {
     }
 
     void reset() {
-        boolean changed = windChargingLevel != 0 || residueLevel != 0 || supplyLevel != 0;
+        boolean hadLevels = windChargingLevel != 0 || residueLevel != 0 || supplyLevel != 0;
         windChargingLevel = 0;
         residueLevel = 0;
         supplyLevel = 0;
-        if (!changed) {
+        if (!hadLevels) {
             return;
         }
 

@@ -5,8 +5,8 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTank;
-import net.ty.createcraftedbeginning.content.airtights.transaction.MachineResourceSnapshots;
-import net.ty.createcraftedbeginning.content.airtights.transaction.MachineResourceSnapshots.GasTankSnapshot;
+import net.ty.createcraftedbeginning.content.airtights.gas.transaction.MachineResourceSnapshots;
+import net.ty.createcraftedbeginning.content.airtights.gas.transaction.MachineResourceSnapshots.GasTankSnapshot;
 import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
 import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction.Participant;
 

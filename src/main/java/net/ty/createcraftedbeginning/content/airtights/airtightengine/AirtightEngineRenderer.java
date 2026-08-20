@@ -31,13 +31,13 @@ public class AirtightEngineRenderer extends KineticBlockEntityRenderer<AirtightE
 
     @Override
     protected void renderSafe(AirtightEngineBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        BlockState state = be.getBlockState();
-        Axis axis = state.getValue(AirtightEngineBlock.AXIS);
-        Direction direction = AirtightEngineBlock.getFacing(state);
-        BlockPos pos = be.getBlockPos();
-        SuperByteBuffer cogs = getRotatedModel(be, state);
-        SuperByteBuffer piston = getPistonModel(state);
-        int rotationSign = direction.getAxisDirection() == AxisDirection.NEGATIVE ? 1 : -1;
+        BlockState engineState = be.getBlockState();
+        Axis axis = engineState.getValue(AirtightEngineBlock.AXIS);
+        Direction facing = AirtightEngineBlock.getFacing(engineState);
+        BlockPos enginePos = be.getBlockPos();
+        SuperByteBuffer cogs = getRotatedModel(be, engineState);
+        SuperByteBuffer piston = getPistonModel(engineState);
+        int rotationSign = facing.getAxisDirection() == AxisDirection.NEGATIVE ? 1 : -1;
         if (axis == Axis.X) {
             piston.rotateCentered(-Mth.HALF_PI * rotationSign, Axis.Z);
             cogs.rotateCentered(-Mth.HALF_PI * rotationSign, Axis.Z);
@@ -46,14 +46,14 @@ public class AirtightEngineRenderer extends KineticBlockEntityRenderer<AirtightE
             piston.rotateCentered(Mth.HALF_PI * rotationSign, Axis.X);
             cogs.rotateCentered(Mth.HALF_PI * rotationSign, Axis.X);
         }
-        else if (direction == Direction.UP) {
+        else if (facing == Direction.UP) {
             piston.rotateCentered(Mth.PI, Axis.X);
             cogs.rotateCentered(Mth.PI, Axis.X);
         }
 
-        float phase = be.getPistonPhase(partialTicks);
-        piston.translate(0, -0.2 * Mth.sin(phase) - 0.2, 0).light(light).renderInto(ms, buffer.getBuffer(RenderType.solid()));
-        kineticRotationTransform(cogs, be, Axis.Y, getAngleForBe(be, pos, axis) * rotationSign, light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
+        float pistonPhase = be.getPistonPhase(partialTicks);
+        piston.translate(0, -0.2 * Mth.sin(pistonPhase) - 0.2, 0).light(light).renderInto(ms, buffer.getBuffer(RenderType.solid()));
+        kineticRotationTransform(cogs, be, Axis.Y, getAngleForBe(be, enginePos, axis) * rotationSign, light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
     }
 
     @Override

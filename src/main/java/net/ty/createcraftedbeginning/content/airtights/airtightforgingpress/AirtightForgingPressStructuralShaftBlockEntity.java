@@ -27,46 +27,46 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlockEntity implements ThresholdSwitchObservable, IGasInventoryIdentifierProvider {
-    public AirtightForgingPressStructuralShaftBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
-        super(typeIn, pos, state);
+    public AirtightForgingPressStructuralShaftBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, context) -> shaft.getItemCapability());
-        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, direction) -> shaft.getFluidCapability());
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, direction) -> shaft.getGasCapability());
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, ignoredContext) -> shaft.getItemCapability());
+        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, ignoredDirection) -> shaft.getFluidCapability());
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, ignoredDirection) -> shaft.getGasCapability());
     }
 
     public static boolean isUpperStore(BlockState blockState) {
-        AirtightForgingPressStructuralPosition position = blockState.getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION);
-        return position.isUpperStore() && position == AirtightForgingPressStructuralPosition.TOP_CENTER;
+        AirtightForgingPressStructuralPosition structuralPosition = blockState.getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION);
+        return structuralPosition.isUpperStore() && structuralPosition == AirtightForgingPressStructuralPosition.TOP_CENTER;
     }
 
     @Override
     public int getMaxValue() {
-        AirtightForgingPressBlockEntity master = getMasterBlockEntity();
-        if (master == null || !isUpperStore(getBlockState())) {
+        AirtightForgingPressBlockEntity press = getMasterBlockEntity();
+        if (press == null || !isUpperStore(getBlockState())) {
             return 0;
         }
 
-        IItemHandlerModifiable items = getItemCapability();
-        IFluidHandler fluids = getFluidCapability();
-        IGasHandler gases = getGasCapability();
-        if (items == null || fluids == null || gases == null) {
+        IItemHandlerModifiable itemHandler = getItemCapability();
+        IFluidHandler fluidHandler = getFluidCapability();
+        IGasHandler gasHandler = getGasCapability();
+        if (itemHandler == null || fluidHandler == null || gasHandler == null) {
             return 0;
         }
 
-        long maxValue = 0;
-        for (int i = 0; i < items.getSlots(); i++) {
-            maxValue += items.getSlotLimit(i);
+        long totalCapacity = 0;
+        for (int slot = 0; slot < itemHandler.getSlots(); slot++) {
+            totalCapacity += itemHandler.getSlotLimit(slot);
         }
-        for (int i = 0; i < fluids.getTanks(); i++) {
-            maxValue += fluids.getTankCapacity(i);
+        for (int tank = 0; tank < fluidHandler.getTanks(); tank++) {
+            totalCapacity += fluidHandler.getTankCapacity(tank);
         }
-        for (int i = 0; i < gases.getTanks(); i++) {
-            maxValue += gases.getTankCapacity(i);
+        for (int tank = 0; tank < gasHandler.getTanks(); tank++) {
+            totalCapacity += gasHandler.getTankCapacity(tank);
         }
-        return Math.clamp(maxValue, 0, Integer.MAX_VALUE);
+        return Math.clamp(totalCapacity, 0, Integer.MAX_VALUE);
     }
 
     @Override
@@ -76,29 +76,29 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
 
     @Override
     public int getCurrentValue() {
-        AirtightForgingPressBlockEntity master = getMasterBlockEntity();
-        if (master == null || !isUpperStore(getBlockState())) {
+        AirtightForgingPressBlockEntity press = getMasterBlockEntity();
+        if (press == null || !isUpperStore(getBlockState())) {
             return 0;
         }
 
-        IItemHandlerModifiable items = getItemCapability();
-        IFluidHandler fluids = getFluidCapability();
-        IGasHandler gases = getGasCapability();
-        if (items == null || fluids == null || gases == null) {
+        IItemHandlerModifiable itemHandler = getItemCapability();
+        IFluidHandler fluidHandler = getFluidCapability();
+        IGasHandler gasHandler = getGasCapability();
+        if (itemHandler == null || fluidHandler == null || gasHandler == null) {
             return 0;
         }
 
-        long currentValue = 0;
-        for (int i = 0; i < items.getSlots(); i++) {
-            currentValue += items.getStackInSlot(i).getCount();
+        long storedAmount = 0;
+        for (int slot = 0; slot < itemHandler.getSlots(); slot++) {
+            storedAmount += itemHandler.getStackInSlot(slot).getCount();
         }
-        for (int i = 0; i < fluids.getTanks(); i++) {
-            currentValue += fluids.getFluidInTank(i).getAmount();
+        for (int tank = 0; tank < fluidHandler.getTanks(); tank++) {
+            storedAmount += fluidHandler.getFluidInTank(tank).getAmount();
         }
-        for (int i = 0; i < gases.getTanks(); i++) {
-            currentValue += gases.getGasInTank(i).getAmount();
+        for (int tank = 0; tank < gasHandler.getTanks(); tank++) {
+            storedAmount += gasHandler.getGasInTank(tank).getAmount();
         }
-        return Math.clamp(currentValue, 0, Integer.MAX_VALUE);
+        return Math.clamp(storedAmount, 0, Integer.MAX_VALUE);
     }
 
     @Override
@@ -107,44 +107,44 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
     }
 
     @Override
-    public @Nullable InventoryIdentifier getGasInventoryIdentifier(Direction direction) {
+    public @Nullable InventoryIdentifier getGasInventoryIdentifier(Direction ignoredDirection) {
         BlockPos masterPos = AirtightForgingPressUtils.getMaster(getBlockPos(), getBlockState());
         return new Single(masterPos);
     }
 
     @Nullable AirtightForgingPressBlockEntity getMasterBlockEntity() {
         BlockPos masterPos = AirtightForgingPressUtils.getMaster(getBlockPos(), getBlockState());
-        if (level == null || !(level.getBlockEntity(masterPos) instanceof AirtightForgingPressBlockEntity master)) {
+        if (level == null || !(level.getBlockEntity(masterPos) instanceof AirtightForgingPressBlockEntity press)) {
             return null;
         }
-        return master;
+        return press;
     }
-    
+
     boolean getOverstressed() {
         return overStressed;
     }
 
     private @Nullable IItemHandlerModifiable getItemCapability() {
-        AirtightForgingPressBlockEntity master = getMasterBlockEntity();
-        if (master == null || !isUpperStore(getBlockState())) {
+        AirtightForgingPressBlockEntity press = getMasterBlockEntity();
+        if (press == null || !isUpperStore(getBlockState())) {
             return null;
         }
-        return master.getAdditionInventory();
+        return press.getAdditionInventory();
     }
 
     private @Nullable IFluidHandler getFluidCapability() {
-        AirtightForgingPressBlockEntity master = getMasterBlockEntity();
-        if (master == null || !isUpperStore(getBlockState())) {
+        AirtightForgingPressBlockEntity press = getMasterBlockEntity();
+        if (press == null || !isUpperStore(getBlockState())) {
             return null;
         }
-        return master.getFluidCapability();
+        return press.getFluidCapability();
     }
 
     private @Nullable IGasHandler getGasCapability() {
-        AirtightForgingPressBlockEntity master = getMasterBlockEntity();
-        if (master == null || !isUpperStore(getBlockState())) {
+        AirtightForgingPressBlockEntity press = getMasterBlockEntity();
+        if (press == null || !isUpperStore(getBlockState())) {
             return null;
         }
-        return master.getGasCapability();
+        return press.getGasCapability();
     }
 }

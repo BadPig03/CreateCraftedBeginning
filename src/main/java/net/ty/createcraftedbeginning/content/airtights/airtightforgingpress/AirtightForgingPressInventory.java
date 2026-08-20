@@ -18,12 +18,12 @@ class AirtightForgingPressInventory extends SmartInventory {
 
     @Override
     public ItemStack extractItem(int slot, int amount, boolean simulate) {
-        ItemStack extracted = super.extractItem(slot, amount, simulate);
-        if (simulate || extracted.isEmpty()) {
-            return extracted;
+        ItemStack extractedStack = super.extractItem(slot, amount, simulate);
+        if (simulate || extractedStack.isEmpty()) {
+            return extractedStack;
         }
 
         blockEntity.notifyContentsChanged();
-        return extracted;
+        return extractedStack;
     }
 }

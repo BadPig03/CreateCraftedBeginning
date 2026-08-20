@@ -45,21 +45,21 @@ public class AirtightExtendArmItem extends Item {
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack arm, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
-        GasStack gas = CanisterContainerClients.getDisplayedGasContent();
-        if (gas.isEmpty()) {
+        GasStack displayedGas = CanisterContainerClients.getDisplayedGasContent();
+        if (displayedGas.isEmpty()) {
             return;
         }
 
-        AirtightArmHandler handler = AirtightArmHandlerUtils.of(gas.getGasType());
+        AirtightArmHandler armHandler = AirtightArmHandlerUtils.of(displayedGas.getGasType());
 
         tooltip.add(CommonComponents.EMPTY);
-        tooltip.add(CCBLang.gasName(gas).add(CCBLang.translate("gui.gas_tools.content")).style(ChatFormatting.GRAY).component());
+        tooltip.add(CCBLang.gasName(displayedGas).add(CCBLang.translate("gui.gas_tools.content")).style(ChatFormatting.GRAY).component());
 
-        float consumptionMultiplier = handler.getGasConsumptionMultiplier();
-        MutableComponent advancedConsumption = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptions.format(consumptionMultiplier) + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptions.formatPercent(consumptionMultiplier)).add(advancedConsumption.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
-        tooltip.add(CCBLang.translate("gui.airtight_extend_arm.block_interaction_range", GasConsumptions.format(handler.getIncreasedBlockInteractionRange())).style(ChatFormatting.DARK_GREEN).component());
-        tooltip.add(CCBLang.translate("gui.airtight_extend_arm.entity_interaction_range", GasConsumptions.format(handler.getIncreasedEntityInteractionRange())).style(ChatFormatting.DARK_GREEN).component());
-        tooltip.add(CCBLang.translate("gui.airtight_extend_arm.attack_knockback", GasConsumptions.format(handler.getIncreasedKnockback())).style(ChatFormatting.DARK_GREEN).component());
+        float consumptionMultiplier = armHandler.getGasConsumptionMultiplier();
+        MutableComponent advancedConsumptionText = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptions.format(consumptionMultiplier) + ']').component() : Component.empty();
+        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptions.formatPercent(consumptionMultiplier)).add(advancedConsumptionText.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        tooltip.add(CCBLang.translate("gui.airtight_extend_arm.block_interaction_range", GasConsumptions.format(armHandler.getIncreasedBlockInteractionRange())).style(ChatFormatting.DARK_GREEN).component());
+        tooltip.add(CCBLang.translate("gui.airtight_extend_arm.entity_interaction_range", GasConsumptions.format(armHandler.getIncreasedEntityInteractionRange())).style(ChatFormatting.DARK_GREEN).component());
+        tooltip.add(CCBLang.translate("gui.airtight_extend_arm.attack_knockback", GasConsumptions.format(armHandler.getIncreasedKnockback())).style(ChatFormatting.DARK_GREEN).component());
     }
 }

@@ -44,20 +44,20 @@ public class AirtightExtendArmRenderHandler {
     private AirtightExtendArmRenderHandler() {
     }
 
-    private static void renderPlayerArm(RenderHandEvent event, EntityRenderDispatcher renderDispatcher, LocalPlayer player, boolean rightHand, float flip) {
+    private static void renderPlayerArm(RenderHandEvent event, EntityRenderDispatcher renderDispatcher, LocalPlayer player, boolean isRightHand, float handSign) {
         PoseStack poseStack = event.getPoseStack();
         poseStack.pushPose();
 
         PoseTransformStack transformStack = TransformStack.of(poseStack);
-        transformStack.rotateYDegrees(flip * 75);
-        poseStack.translate(flip * -1, 3.6, 3.5);
-        transformStack.rotateZDegrees(flip * 120).rotateXDegrees(200).rotateYDegrees(flip * -135);
-        poseStack.translate(flip * 5.6, 0, 0);
-        transformStack.rotateYDegrees(flip * 40);
-        poseStack.translate(flip * 0.05, -0.3, -0.3);
+        transformStack.rotateYDegrees(handSign * 75);
+        poseStack.translate(handSign * -1, 3.6, 3.5);
+        transformStack.rotateZDegrees(handSign * 120).rotateXDegrees(200).rotateYDegrees(handSign * -135);
+        poseStack.translate(handSign * 5.6, 0, 0);
+        transformStack.rotateYDegrees(handSign * 40);
+        poseStack.translate(handSign * 0.05, -0.3, -0.3);
 
         if (renderDispatcher.getRenderer(player) instanceof PlayerRenderer playerRenderer) {
-            if (rightHand) {
+            if (isRightHand) {
                 playerRenderer.renderRightHand(poseStack, event.getMultiBufferSource(), event.getPackedLight(), player);
             }
             else {
@@ -119,8 +119,8 @@ public class AirtightExtendArmRenderHandler {
 
         ItemStack offhandItem = accessor.getOffHandItem();
         ItemStack heldItem = event.getItemStack();
-        boolean armInOffhand = offhandItem.is(CCBItems.AIRTIGHT_EXTEND_ARM);
-        if (!armInOffhand && !heldItem.is(CCBItems.AIRTIGHT_EXTEND_ARM)) {
+        boolean isArmInOffhand = offhandItem.is(CCBItems.AIRTIGHT_EXTEND_ARM);
+        if (!isArmInOffhand && !heldItem.is(CCBItems.AIRTIGHT_EXTEND_ARM)) {
             return;
         }
 
@@ -129,13 +129,13 @@ public class AirtightExtendArmRenderHandler {
             return;
         }
 
-        renderMainHand(event, minecraft, player, offhandItem, armInOffhand);
+        renderMainHand(event, minecraft, player, offhandItem, isArmInOffhand);
         event.setCanceled(true);
     }
 
-    private void renderMainHand(RenderHandEvent event, Minecraft minecraft, LocalPlayer player, ItemStack offhandItem, boolean armInOffhand) {
-        boolean rightHand = event.getHand() == InteractionHand.MAIN_HAND ^ player.getMainArm() == HumanoidArm.LEFT;
-        float flip = rightHand ? 1 : -1;
+    private void renderMainHand(RenderHandEvent event, Minecraft minecraft, LocalPlayer player, ItemStack offhandItem, boolean isArmInOffhand) {
+        boolean isRightHand = event.getHand() == InteractionHand.MAIN_HAND ^ player.getMainArm() == HumanoidArm.LEFT;
+        float handSign = isRightHand ? 1 : -1;
         float swingProgress = event.getSwingProgress();
         ItemStack heldItem = event.getItemStack();
         boolean isBlockItem = heldItem.getItem() instanceof BlockItem;
@@ -145,36 +145,35 @@ public class AirtightExtendArmRenderHandler {
             handAnimation = 0.95f;
         }
 
-        float animation = getAnimation(AnimationTickHolder.getPartialTicks());
+        float extensionProgress = getAnimation(AnimationTickHolder.getPartialTicks());
         PoseStack poseStack = event.getPoseStack();
         MultiBufferSource bufferSource = event.getMultiBufferSource();
         int packedLight = event.getPackedLight();
         EntityRenderDispatcher renderDispatcher = minecraft.getEntityRenderDispatcher();
 
         poseStack.pushPose();
-        poseStack.translate(flip * 0.54, -0.4 - 0.6 * equipProgress, -0.42);
-        renderPlayerArm(event, renderDispatcher, player, rightHand, flip);
+        poseStack.translate(handSign * 0.54, -0.4 - 0.6 * equipProgress, -0.42);
+        renderPlayerArm(event, renderDispatcher, player, isRightHand, handSign);
 
         poseStack.pushPose();
-        poseStack.translate(flip * -0.1, 0, -0.3);
+        poseStack.translate(handSign * -0.1, 0, -0.3);
 
         ItemInHandRenderer firstPersonRenderer = renderDispatcher.getItemInHandRenderer();
-        ItemDisplayContext displayContext = rightHand ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
-        ItemStack arm = armInOffhand ? offhandItem : heldItem;
-        firstPersonRenderer.renderItem(player, arm, displayContext, !rightHand, poseStack, bufferSource, packedLight);
+        ItemDisplayContext displayContext = isRightHand ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
+        firstPersonRenderer.renderItem(player, isArmInOffhand ? offhandItem : heldItem, displayContext, !isRightHand, poseStack, bufferSource, packedLight);
 
-        if (armInOffhand) {
+        if (isArmInOffhand) {
             ItemRenderer itemRenderer = minecraft.getItemRenderer();
-            ClientHooks.handleCameraTransforms(poseStack, itemRenderer.getModel(offhandItem, null, null, 0), displayContext, !rightHand);
-            poseStack.translate(flip * -0.05, 0.15, -1.2);
-            poseStack.translate(0, 0, -animation * 2.25);
+            ClientHooks.handleCameraTransforms(poseStack, itemRenderer.getModel(offhandItem, null, null, 0), displayContext, !isRightHand);
+            poseStack.translate(handSign * -0.05, 0.15, -1.2);
+            poseStack.translate(0, 0, -extensionProgress * 2.25);
             if (isBlockItem && itemRenderer.getModel(heldItem, null, null, 0).isGui3d()) {
-                TransformStack.of(poseStack).rotateYDegrees(flip * 45);
-                poseStack.translate(flip * 0.15, -0.15, -0.05);
+                TransformStack.of(poseStack).rotateYDegrees(handSign * 45);
+                poseStack.translate(handSign * 0.15, -0.15, -0.05);
                 poseStack.scale(1.25f, 1.25f, 1.25f);
             }
 
-            firstPersonRenderer.renderItem(player, heldItem, displayContext, !rightHand, poseStack, bufferSource, packedLight);
+            firstPersonRenderer.renderItem(player, heldItem, displayContext, !isRightHand, poseStack, bufferSource, packedLight);
         }
 
         poseStack.popPose();

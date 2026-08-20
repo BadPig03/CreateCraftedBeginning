@@ -99,8 +99,8 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
         if (!matchesNonConsumableSlot(pressHead, pressHeadIngredient)) {
             return false;
         }
-        boolean copyInputComponents = shouldCopyInputComponents(pressHead.getStackInSlot(0));
 
+        boolean copyInputComponents = shouldCopyInputComponents(pressHead.getStackInSlot(0));
         IItemHandler addition = press.getAdditionInventory();
         IItemHandler input = press.getInputInventory();
         Ingredient inputIngredient = getIngredient(recipe, 0);
@@ -211,7 +211,7 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
     }
 
     private static boolean shouldCopyInputComponents(ItemStack pressHead) {
-        return !CCBConfig.server().airtights.forgingPressCopyComponentsOnlyWithSmithingTemplates.get() || pressHead.getItem() instanceof SmithingTemplateItem;
+        return !CCBConfig.server().airtights.copyComponentsOnlyWithSmithingTemplates.get() || pressHead.getItem() instanceof SmithingTemplateItem;
     }
 
     private static List<ItemStack> createRecipeOutputItems(ForgingPressRecipe recipe, Level level, ItemStack input, boolean copyInputComponents, boolean rollRandomOutputs) {

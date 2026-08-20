@@ -103,21 +103,19 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        Level level = context.getLevel();
-        BlockPos pos = context.getClickedPos();
         Direction clickedFace = context.getClickedFace();
         Direction horizontalFacing = context.getHorizontalDirection();
-        BlockState state;
+        BlockState placementState;
         if (clickedFace == Direction.UP) {
-            state = defaultBlockState().setValue(FACE, AttachFace.FLOOR).setValue(FACING, horizontalFacing).setValue(AXIS, Axis.Y);
+            placementState = defaultBlockState().setValue(FACE, AttachFace.FLOOR).setValue(FACING, horizontalFacing).setValue(AXIS, Axis.Y);
         }
         else if (clickedFace == Direction.DOWN) {
-            state = defaultBlockState().setValue(FACE, AttachFace.CEILING).setValue(FACING, horizontalFacing).setValue(AXIS, Axis.Y);
+            placementState = defaultBlockState().setValue(FACE, AttachFace.CEILING).setValue(FACING, horizontalFacing).setValue(AXIS, Axis.Y);
         }
         else {
-            state = defaultBlockState().setValue(FACE, AttachFace.WALL).setValue(FACING, clickedFace.getOpposite()).setValue(AXIS, clickedFace.getAxis());
+            placementState = defaultBlockState().setValue(FACE, AttachFace.WALL).setValue(FACING, clickedFace.getOpposite()).setValue(AXIS, clickedFace.getAxis());
         }
-        return ProperWaterloggedBlock.withWater(level, state, pos);
+        return ProperWaterloggedBlock.withWater(context.getLevel(), placementState, context.getClickedPos());
     }
 
     @Override
@@ -158,8 +156,8 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
 
     @Override
     public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
-        Direction facing = getFacing(state);
-        return level.getBlockState(pos.relative(facing)).getBlock() instanceof AirtightTankBlock && CogWheelBlock.isValidCogwheelPosition(true, level, pos, facing.getAxis()) && isStateValid(state);
+        Direction tankDirection = getFacing(state);
+        return level.getBlockState(pos.relative(tankDirection)).getBlock() instanceof AirtightTankBlock && CogWheelBlock.isValidCogwheelPosition(true, level, pos, tankDirection.getAxis()) && isStateValid(state);
     }
 
     @Override

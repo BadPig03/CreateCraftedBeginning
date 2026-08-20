@@ -83,8 +83,8 @@ public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEnt
             return;
         }
 
+        GasConnectivityHandler.splitMultiOnRemoval(tank);
         level.removeBlockEntity(pos);
-        GasConnectivityHandler.splitMulti(tank);
     }
 
     @Override

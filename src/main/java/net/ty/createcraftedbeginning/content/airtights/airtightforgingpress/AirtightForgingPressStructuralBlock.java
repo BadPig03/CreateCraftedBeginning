@@ -61,8 +61,8 @@ public class AirtightForgingPressStructuralBlock extends Block implements IBE<Ai
         }
 
         BlockPos masterPos = AirtightForgingPressUtils.getMaster(clickedPos, state);
-        BlockHitResult masterHit = new BlockHitResult(context.getClickLocation(), context.getClickedFace(), masterPos, context.isInside());
-        UseOnContext masterContext = new UseOnContext(level, context.getPlayer(), context.getHand(), context.getItemInHand(), masterHit);
+        BlockHitResult masterHitResult = new BlockHitResult(context.getClickLocation(), context.getClickedFace(), masterPos, context.isInside());
+        UseOnContext masterContext = new UseOnContext(level, context.getPlayer(), context.getHand(), context.getItemInHand(), masterHitResult);
         BlockState masterState = level.getBlockState(masterPos);
         return IWrenchable.super.onSneakWrenched(masterState, masterContext);
     }
@@ -138,13 +138,12 @@ public class AirtightForgingPressStructuralBlock extends Block implements IBE<Ai
         if (!blockState.getValue(STRUCTURAL_POSITION).isLowerStore() || hitResult.getDirection() == Direction.DOWN) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-        return onBlockEntityUseItemOn(level, blockPos, structural -> AirtightForgingPressUtils.getUseItemOnResult(structural, level, player, blockPos, hand, stack));
+        return onBlockEntityUseItemOn(level, blockPos, structuralPart -> AirtightForgingPressUtils.getUseItemOnResult(structuralPart, level, player, blockPos, hand, stack));
     }
 
     @Override
     protected VoxelShape getShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
-        AirtightForgingPressStructuralPosition position = blockState.getValue(STRUCTURAL_POSITION);
-        return AirtightForgingPressVoxelShapes.getShape(position);
+        return AirtightForgingPressVoxelShapes.getShape(blockState.getValue(STRUCTURAL_POSITION));
     }
 
     @Override

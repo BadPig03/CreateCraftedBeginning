@@ -6,7 +6,6 @@ import com.simibubi.create.foundation.item.render.CustomRenderedItemModelRendere
 import com.simibubi.create.foundation.item.render.PartialItemModelRenderer;
 import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
-import dev.engine_room.flywheel.lib.transform.PoseTransformStack;
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -43,37 +42,36 @@ final class AirtightExtendArmItemRenderer extends CustomRenderedItemModelRendere
     @Override
     protected void render(ItemStack arm, CustomRenderedItemModel model, PartialItemModelRenderer renderer, ItemDisplayContext transformType, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         AirtightExtendArmRenderHandler renderHandler = AirtightExtendArmRenderHandler.INSTANCE;
-        boolean firstPerson = transformType == ItemDisplayContext.FIRST_PERSON_LEFT_HAND || transformType == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND;
-        float animation = firstPerson ? renderHandler.getAnimation(AnimationTickHolder.getPartialTicks()) : 0;
+        boolean isFirstPerson = transformType == ItemDisplayContext.FIRST_PERSON_LEFT_HAND || transformType == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND;
+        float extensionProgress = isFirstPerson ? renderHandler.getAnimation(AnimationTickHolder.getPartialTicks()) : 0;
         renderer.renderSolid(model.getOriginalModel(), light);
 
         ms.pushPose();
-        ms.translate(0, 0, -0.625 - animation * 1.125);
-        ms.scale(1 - animation * 0.125f, 1 - animation * 0.125f, 1 + animation * 9);
+        ms.translate(0, 0, -0.625 - extensionProgress * 1.125);
+        ms.scale(1 - extensionProgress * 0.125f, 1 - extensionProgress * 0.125f, 1 + extensionProgress * 9);
         renderer.renderSolid(SPRING.get(), light);
         ms.popPose();
 
-        for (int i = 0; i < 4; i++) {
+        for (int springIndex = 0; springIndex < 4; springIndex++) {
             ms.pushPose();
-            ms.translate(0, 0, -0.7375 + 0.075 * i - animation * 0.5625 * (3.5 - i));
-            ms.scale(1 - animation * 0.125f, 1 - animation * 0.125f, 1 + animation * 1.5f);
+            ms.translate(0, 0, -0.7375 + 0.075 * springIndex - extensionProgress * 0.5625 * (3.5 - springIndex));
+            ms.scale(1 - extensionProgress * 0.125f, 1 - extensionProgress * 0.125f, 1 + extensionProgress * 1.5f);
             renderer.renderSolid(SPRING_CAP.get(), light);
             ms.popPose();
         }
 
         ms.pushPose();
-        ms.translate(0, 0, -animation * 2.25);
-        renderer.renderSolid(firstPerson ? renderHandler.getPose().get() : POINTING.get(), light);
+        ms.translate(0, 0, -extensionProgress * 2.25);
+        renderer.renderSolid(isFirstPerson ? renderHandler.getPose().get() : POINTING.get(), light);
         ms.popPose();
 
         ms.pushPose();
-        float angle = AnimationTickHolder.getRenderTime() * -2;
-        if (firstPerson) {
-            angle += 360 * animation * animation * animation;
+        float cogAngle = AnimationTickHolder.getRenderTime() * -2;
+        if (isFirstPerson) {
+            cogAngle += 360 * extensionProgress * extensionProgress * extensionProgress;
         }
-        angle %= 360;
-        PoseTransformStack transformStack = TransformStack.of(ms);
-        transformStack.translate(0, 0.0625, 0).rotateZDegrees(angle).translateBack(0, 0.0625, 0);
+        cogAngle %= 360;
+        TransformStack.of(ms).translate(0, 0.0625, 0).rotateZDegrees(cogAngle).translateBack(0, 0.0625, 0);
         renderer.renderSolid(COGS.get(), light);
         ms.popPose();
     }

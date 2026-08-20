@@ -90,14 +90,14 @@ final class AirtightForgingPressController {
             return false;
         }
 
-        boolean inactiveClient = level.isClientSide && !press.isVirtual();
-        if (inactiveClient || operating || getOperationSpeed() <= 0) {
+        boolean isInactiveClient = level.isClientSide && !press.isVirtual();
+        if (isInactiveClient || operating || getOperationSpeed() <= 0) {
             return true;
         }
 
-        Optional<ForgingPressRecipe> recipe = AirtightForgingPressUtils.getMatchingRecipe(press);
-        if (recipe.isPresent()) {
-            currentRecipe = recipe.get();
+        Optional<ForgingPressRecipe> forgingRecipe = AirtightForgingPressUtils.getMatchingRecipe(press);
+        if (forgingRecipe.isPresent()) {
+            currentRecipe = forgingRecipe.get();
             currentPressingRecipe = null;
             currentSmithingRecipe = null;
             startOperation();
@@ -149,14 +149,14 @@ final class AirtightForgingPressController {
             return PRESS_HEAD_IDLE_OFFSET;
         }
 
-        float ticks = Mth.clamp(operatingTicks + partialTicks * getOperationSpeed(), 0, CYCLE_DURATION);
+        float cycleTicks = Mth.clamp(operatingTicks + partialTicks * getOperationSpeed(), 0, CYCLE_DURATION);
         float distance;
-        if (ticks < 20) {
-            float progress = ticks / CYCLE_DURATION * 2;
+        if (cycleTicks < 20) {
+            float progress = cycleTicks / CYCLE_DURATION * 2;
             distance = Mth.clamp(Mth.square(progress) * progress, 0, 1);
         }
         else {
-            distance = Mth.clamp((CYCLE_DURATION - ticks) / CYCLE_DURATION * 3, 0, 1);
+            distance = Mth.clamp((CYCLE_DURATION - cycleTicks) / CYCLE_DURATION * 3, 0, 1);
         }
         return PRESS_HEAD_IDLE_OFFSET + distance * PRESS_HEAD_TRAVEL;
     }
@@ -211,41 +211,41 @@ final class AirtightForgingPressController {
             return;
         }
 
-        float previousTicks = operatingTicks;
+        float previousOperatingTicks = operatingTicks;
         operatingTicks = Mth.clamp(operatingTicks + operationSpeed, 0, CYCLE_DURATION);
         Level level = press.getLevel();
         if (level == null || level.isClientSide) {
             return;
         }
 
-        float processingStart = CYCLE_DURATION / 2.0f;
-        boolean wasAlreadyProcessing = previousTicks >= processingStart;
-        boolean hasNotReachedProcessing = operatingTicks < processingStart;
+        float processingStartTick = CYCLE_DURATION / 2.0f;
+        boolean wasAlreadyProcessing = previousOperatingTicks >= processingStartTick;
+        boolean hasNotReachedProcessing = operatingTicks < processingStartTick;
         boolean hasNoRecipe = currentRecipe == null && currentPressingRecipe == null && currentSmithingRecipe == null;
         if (wasAlreadyProcessing || hasNotReachedProcessing || hasNoRecipe) {
             return;
         }
 
         ItemStack particleStack = press.getInputInventory().getStackInSlot(0).copy();
-        boolean success;
+        boolean craftSucceeded;
         if (currentRecipe != null) {
             if (particleStack.isEmpty()) {
                 particleStack = currentRecipe.getResultItem(level.registryAccess()).copy();
             }
-            success = ForgingPressRecipe.apply(press, currentRecipe);
+            craftSucceeded = ForgingPressRecipe.apply(press, currentRecipe);
         }
         else if (currentPressingRecipe != null) {
-            success = AirtightForgingPressUtils.applyPressingRecipe(press, currentPressingRecipe);
+            craftSucceeded = AirtightForgingPressUtils.applyPressingRecipe(press, currentPressingRecipe);
         }
         else {
-            SmithingRecipeInput input = AirtightForgingPressUtils.createSmithingInput(press);
-            ItemStack result = currentSmithingRecipe.assemble(input, level.registryAccess());
-            if (!result.isEmpty()) {
-                particleStack = result.copy();
+            SmithingRecipeInput smithingInput = AirtightForgingPressUtils.createSmithingInput(press);
+            ItemStack smithingResult = currentSmithingRecipe.assemble(smithingInput, level.registryAccess());
+            if (!smithingResult.isEmpty()) {
+                particleStack = smithingResult.copy();
             }
-            success = AirtightForgingPressUtils.applySmithingRecipe(press, currentSmithingRecipe);
+            craftSucceeded = AirtightForgingPressUtils.applySmithingRecipe(press, currentSmithingRecipe);
         }
-        if (!success) {
+        if (!craftSucceeded) {
             return;
         }
 
@@ -263,12 +263,12 @@ final class AirtightForgingPressController {
             return 1;
         }
 
-        float absSpeed = Mth.abs(press.getCore().getStructureManager().getRealSpeed());
-        float minSpeed = SpeedLevel.FAST.getSpeedValue();
-        if (absSpeed < minSpeed) {
+        float absoluteSpeed = Mth.abs(press.getCore().getStructureManager().getRealSpeed());
+        float minimumSpeed = SpeedLevel.FAST.getSpeedValue();
+        if (absoluteSpeed < minimumSpeed) {
             return 0;
         }
-        return Mth.clamp(absSpeed / minSpeed, 1, 16);
+        return Mth.clamp(absoluteSpeed / minimumSpeed, 1, 16);
     }
 
     private void startOperation() {
@@ -277,11 +277,11 @@ final class AirtightForgingPressController {
         press.sendData();
     }
 
-    private void update(boolean schedule) {
+    private void update(boolean scheduleUpdate) {
         resetTransientOperation();
         press.sendData();
         Level level = press.getLevel();
-        if (!schedule || level == null || level.isClientSide && !press.isVirtual()) {
+        if (!scheduleUpdate || level == null || level.isClientSide && !press.isVirtual()) {
             return;
         }
 
@@ -300,13 +300,13 @@ final class AirtightForgingPressController {
         currentSmithingRecipe = null;
     }
 
-    private void spawnParticles(ItemStack stack) {
+    private void spawnParticles(ItemStack particleStack) {
         Level level = press.getLevel();
-        if (!(level instanceof ServerLevel serverLevel) || press.isVirtual() || stack.isEmpty()) {
+        if (!(level instanceof ServerLevel serverLevel) || press.isVirtual() || particleStack.isEmpty()) {
             return;
         }
 
-        Vec3 pos = VecHelper.getCenterOf(press.getBlockPos()).add(0, -0.625, 0);
-        serverLevel.sendParticles(new ItemParticleOption(ParticleTypes.ITEM, stack), pos.x, pos.y, pos.z, 16, 0.15, 0.05, 0.15, 0.08);
+        Vec3 particlePosition = VecHelper.getCenterOf(press.getBlockPos()).add(0, -0.625, 0);
+        serverLevel.sendParticles(new ItemParticleOption(ParticleTypes.ITEM, particleStack), particlePosition.x, particlePosition.y, particlePosition.z, 16, 0.15, 0.05, 0.15, 0.08);
     }
 }

@@ -81,13 +81,13 @@ class AirtightAssemblyDriverStructureManager {
     }
 
     void reset() {
-        boolean changed = hasDerivedState();
+        boolean hadDerivedState = hasDerivedState();
         clearDerivedState();
         evaluationRequired = true;
         evaluationCooldown = 0;
         driverCore.getResidueManager().clearOutletsPositions();
         driverCore.getLevelCalculator().updateWindChargingLevel(0);
-        if (!changed) {
+        if (!hadDerivedState) {
             return;
         }
 
@@ -149,14 +149,14 @@ class AirtightAssemblyDriverStructureManager {
             return;
         }
 
-        DerivedState previous = captureDerivedState();
+        DerivedState previousDerivedState = captureDerivedState();
         evaluationRequired = false;
         evaluationCooldown = 0;
 
-        ScanResult result = scanner.scan(controller, level);
-        if (result.complete()) {
-            applyScanResult(result);
-            driverCore.getResidueManager().updateOutletsPositions(result.outletPositions());
+        ScanResult scanResult = scanner.scan(controller, level);
+        if (scanResult.complete()) {
+            applyScanResult(scanResult);
+            driverCore.getResidueManager().updateOutletsPositions(scanResult.outletPositions());
         }
         else {
             clearDerivedState();
@@ -165,19 +165,19 @@ class AirtightAssemblyDriverStructureManager {
         }
 
         driverCore.getLevelCalculator().updateWindChargingLevel(attachedWindChargingLevel);
-        if (previous.matches(this)) {
+        if (previousDerivedState.matches(this)) {
             return;
         }
 
         driverCore.markForClientSync();
     }
 
-    private void applyScanResult(ScanResult result) {
-        attachedEngines = result.attachedEngines();
-        attachedOutlets = result.attachedOutlets();
-        attachedChambers = result.attachedChambers();
-        attachedWindChargingLevel = result.attachedWindChargingLevel();
-        structureValid = result.structureValid();
+    private void applyScanResult(ScanResult scanResult) {
+        attachedEngines = scanResult.attachedEngines();
+        attachedOutlets = scanResult.attachedOutlets();
+        attachedChambers = scanResult.attachedChambers();
+        attachedWindChargingLevel = scanResult.attachedWindChargingLevel();
+        structureValid = scanResult.structureValid();
     }
 
     private boolean hasDerivedState() {

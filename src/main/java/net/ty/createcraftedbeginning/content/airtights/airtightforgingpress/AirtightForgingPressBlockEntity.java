@@ -72,7 +72,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         setLazyTickRate(LAZY_TICK_RATE);
         core = new AirtightForgingPressCore(this);
 
-        pressHeadInventory = new SmartInventory(MAX_INPUT_SLOT, this, 1, false, (slot, stack) -> stack.is(CCBItemTags.PRESS_HEAD_TOOLS.tag) || stack.getItem() instanceof SmithingTemplateItem).whenContentsChanged(ignored -> notifyContentsChanged());
+        pressHeadInventory = new SmartInventory(MAX_INPUT_SLOT, this, 1, false, (ignoredSlot, stack) -> stack.is(CCBItemTags.PRESS_HEAD_TOOLS.tag) || stack.getItem() instanceof SmithingTemplateItem).whenContentsChanged(ignored -> notifyContentsChanged());
         processingInventory = new AirtightForgingPressInventory(MAX_INPUT_SLOT, this).whenContentsChanged(ignored -> notifyContentsChanged());
         inputInventory = new AirtightForgingPressInventory(MAX_INPUT_SLOT, this).whenContentsChanged(ignored -> notifyContentsChanged());
         outputInventory = new AirtightForgingPressInventory(MAX_OUTPUT_SLOT, this).forbidInsertion().whenContentsChanged(ignored -> notifyContentsChanged());
@@ -85,7 +85,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS.get(), (press, direction) -> press.pressHeadInventory);
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS.get(), (press, ignoredDirection) -> press.pressHeadInventory);
     }
 
     private static int getFluidCapacity() {
@@ -167,7 +167,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     }
 
     @Override
-    public InventoryIdentifier getGasInventoryIdentifier(Direction direction) {
+    public InventoryIdentifier getGasInventoryIdentifier(Direction ignoredDirection) {
         return new Single(worldPosition);
     }
 
@@ -258,12 +258,12 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     }
 
     void setRecipeFilter(ItemStack stack) {
-        ItemStack normalized = stack.isEmpty() ? ItemStack.EMPTY : stack.copyWithCount(1);
-        if (ItemStack.matches(recipeFilter, normalized)) {
+        ItemStack normalizedFilter = stack.isEmpty() ? ItemStack.EMPTY : stack.copyWithCount(1);
+        if (ItemStack.matches(recipeFilter, normalizedFilter)) {
             return;
         }
 
-        recipeFilter = normalized;
+        recipeFilter = normalizedFilter;
         controller.notifyFilterChanged();
         syncRecipeFilterReplicas();
         setChanged();
@@ -299,17 +299,17 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
             return;
         }
 
-        for (AirtightForgingPressStructuralPosition position : AirtightForgingPressStructuralPosition.all()) {
-            if (!position.isFilter()) {
+        for (AirtightForgingPressStructuralPosition structuralPosition : AirtightForgingPressStructuralPosition.all()) {
+            if (!structuralPosition.isFilter()) {
                 continue;
             }
 
-            BlockPos filterPos = worldPosition.offset(position.getStructureOffset());
-            if (!(level.getBlockEntity(filterPos) instanceof AirtightForgingPressStructuralBlockEntity structural)) {
+            BlockPos filterPos = worldPosition.offset(structuralPosition.getStructureOffset());
+            if (!(level.getBlockEntity(filterPos) instanceof AirtightForgingPressStructuralBlockEntity filterPart)) {
                 continue;
             }
-            
-            structural.syncFilterFromMaster(recipeFilter);
+
+            filterPart.syncFilterFromMaster(recipeFilter);
         }
     }
 }

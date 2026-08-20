@@ -27,9 +27,9 @@ final class AirtightAssemblyDriverGasHandler implements IGasHandler {
             return false;
         }
 
-        AirtightEngineHandler handler = AirtightEngineHandlerUtils.of(gasStack);
-        double workFactor = handler.getWorkFactor();
-        return GasConsumptions.isFinite(workFactor) && workFactor > 0 && handler.getMaxLevel() > 0;
+        AirtightEngineHandler engineHandler = AirtightEngineHandlerUtils.of(gasStack);
+        double workFactor = engineHandler.getWorkFactor();
+        return GasConsumptions.isFinite(workFactor) && workFactor > 0 && engineHandler.getMaxLevel() > 0;
     }
 
     @Override

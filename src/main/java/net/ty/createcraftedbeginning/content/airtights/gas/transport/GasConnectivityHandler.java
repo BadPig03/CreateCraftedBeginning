@@ -29,7 +29,7 @@ import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class GasConnectivityHandler {
+public final class GasConnectivityHandler {
     public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> void formMulti(T be, Level level) {
         SearchCache cache = new SearchCache();
         Deque<IGasTankMultiBlockEntityContainer> frontier = new ArrayDeque<>();
@@ -141,7 +141,7 @@ public class GasConnectivityHandler {
             return bestAmount;
         }
 
-        splitMultiAndInvalidate(be, cache);
+        splitMultiAndInvalidate(be, cache, null);
         if (be.hasTank()) {
             be.setTankSize(0, bestAmount);
         }
@@ -164,9 +164,9 @@ public class GasConnectivityHandler {
         int height = 0;
         BlockEntityType<?> type = blockEntity(be).getType();
         BlockPos origin = blockEntity(be).getBlockPos();
-        GasStack gas = GasStack.EMPTY;
+        GasStack formationGas = GasStack.EMPTY;
         if (be.hasTank()) {
-            gas = be.getGas(0);
+            formationGas = be.getGas(0);
         }
 
         Axis axis = be.getMainConnectionAxis();
@@ -195,11 +195,20 @@ public class GasConnectivityHandler {
                         break Search;
                     }
 
-                    if (controller.hasTank()) {
-                        GasStack otherGas = controller.getGas(0);
-                        if (!gas.isEmpty() && !otherGas.isEmpty() && !GasStack.isSameGasSameComponents(gas, otherGas)) {
-                            break Search;
-                        }
+                    if (!controller.hasTank()) {
+                        continue;
+                    }
+
+                    GasStack otherGas = controller.getGas(0);
+                    if (otherGas.isEmpty()) {
+                        continue;
+                    }
+
+                    if (formationGas.isEmpty()) {
+                        formationGas = otherGas.copy();
+                    }
+                    else if (!GasStack.isSameGasSameComponents(formationGas, otherGas)) {
+                        break Search;
                     }
                 }
             }
@@ -222,9 +231,11 @@ public class GasConnectivityHandler {
                     }
 
                     extraData = be.modifyExtraData(extraData);
-                    be.mergeTankStateFrom(part);
 
-                    splitMultiAndInvalidate(part, cache);
+                    // Splitting can move gas from the old controller into this part.
+                    // Transfer that local gas before assigning the part to the new controller.
+                    splitMultiAndInvalidate(part, cache, null);
+                    be.mergeTankStateFrom(part);
                     part.setController(origin);
                     part.preventConnectivityUpdate();
                     cache.put(pos, be);
@@ -267,11 +278,11 @@ public class GasConnectivityHandler {
         return new PriorityQueue<>((one, two) -> two.getKey() - one.getKey());
     }
 
-    public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> void splitMulti(T be) {
-        splitMultiAndInvalidate(be, null);
+    public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> void splitMultiOnRemoval(T be) {
+        splitMultiAndInvalidate(be, null, be.getBlockPos());
     }
 
-    private static void splitMultiAndInvalidate(IGasTankMultiBlockEntityContainer be, @Nullable SearchCache cache) {
+    private static void splitMultiAndInvalidate(IGasTankMultiBlockEntityContainer be, @Nullable SearchCache cache, @Nullable BlockPos removedPos) {
         Level level = blockEntity(be).getLevel();
         if (level == null) {
             return;
@@ -290,9 +301,10 @@ public class GasConnectivityHandler {
 
         BlockPos origin = blockEntity(be).getBlockPos();
         Axis axis = be.getMainConnectionAxis();
+        boolean controllerRemoved = origin.equals(removedPos);
         GasStack toDistribute = GasStack.EMPTY;
         if (be.hasTank()) {
-            toDistribute = be.prepareTankStateForSplit(0, blockEntity(be).isRemoved());
+            toDistribute = be.prepareTankStateForSplit(0, controllerRemoved);
         }
 
         for (int yOffset = 0; yOffset < height; yOffset++) {
@@ -303,6 +315,13 @@ public class GasConnectivityHandler {
                         case Y -> origin.offset(xOffset, yOffset, zOffset);
                         case Z -> origin.offset(xOffset, zOffset, yOffset);
                     };
+
+                    if (pos.equals(removedPos)) {
+                        if (cache != null) {
+                            cache.putEmpty(pos);
+                        }
+                        continue;
+                    }
 
                     IGasTankMultiBlockEntityContainer part = tankAt(blockEntity(be).getType(), level, pos);
                     if (part == null || !part.getController().equals(origin)) {

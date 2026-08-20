@@ -7,7 +7,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
-import net.ty.createcraftedbeginning.content.airtights.transaction.MachineResourceSnapshots;
+import net.ty.createcraftedbeginning.content.airtights.gas.transaction.MachineResourceSnapshots;
 import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
 import org.jetbrains.annotations.Nullable;
 
