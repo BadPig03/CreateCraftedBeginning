@@ -108,8 +108,6 @@ public class PhotoStressBearingBlockEntity extends GeneratingKineticBlockEntity 
             return;
         }
 
-        // O(1) self-healing check only. The manager rebuilds a dirty topology once for
-        // the whole optical network instead of every bearing scanning it independently.
         PhotoStressNetworkManager.ensureBearing(level, worldPosition);
     }
 

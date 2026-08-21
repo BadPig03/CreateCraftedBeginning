@@ -11,8 +11,8 @@
 			"from": [0, 0, -0.003],
 			"to": [16, 16, 0.003],
 			"faces": {
-				"north": {"uv": [0, 0, 16, 16], "texture": "#0", "cullface": "north"},
-				"south": {"uv": [0, 0, 16, 16], "texture": "#0", "cullface": "north"}
+				"north": {"uv": [0, 0, 16, 16], "texture": "#0"},
+				"south": {"uv": [0, 0, 16, 16], "texture": "#0"}
 			}
 		}
 	]

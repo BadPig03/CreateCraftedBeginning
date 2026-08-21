@@ -24,7 +24,6 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
@@ -33,6 +32,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -47,12 +47,12 @@ import java.util.Map;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, SimpleWaterloggedBlock, IWrenchable {
-    public static final BooleanProperty NORTH = BooleanProperty.create("north");
-    public static final BooleanProperty EAST = BooleanProperty.create("east");
-    public static final BooleanProperty SOUTH = BooleanProperty.create("south");
-    public static final BooleanProperty WEST = BooleanProperty.create("west");
-    public static final BooleanProperty UP = BooleanProperty.create("up");
-    public static final BooleanProperty DOWN = BooleanProperty.create("down");
+    private static final BooleanProperty NORTH = BlockStateProperties.NORTH;
+    private static final BooleanProperty EAST = BlockStateProperties.EAST;
+    private static final BooleanProperty SOUTH = BlockStateProperties.SOUTH;
+    private static final BooleanProperty WEST = BlockStateProperties.WEST;
+    private static final BooleanProperty UP = BlockStateProperties.UP;
+    private static final BooleanProperty DOWN = BlockStateProperties.DOWN;
     public static final Map<Direction, BooleanProperty> PROPERTY_BY_DIRECTION = ImmutableMap.copyOf(Util.make(Maps.newEnumMap(Direction.class), properties -> {
         properties.put(Direction.NORTH, NORTH);
         properties.put(Direction.EAST, EAST);
@@ -68,10 +68,6 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(NORTH, false).setValue(EAST, false).setValue(SOUTH, false).setValue(WEST, false).setValue(UP, false).setValue(DOWN, false));
     }
 
-    private static VoxelShape getConnectedShape(BlockState state) {
-        return AirVentVoxelShapes.getShape(getConnectionMask(state));
-    }
-
     public static int getConnectionMask(BlockState state) {
         int mask = 0;
         for (Direction direction : Iterate.directions) {
@@ -84,13 +80,9 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
         return mask;
     }
 
-    private static VoxelShape getPassableShape(BlockState state, BlockGetter level, BlockPos pos) {
-        int mask = getConnectionMask(state);
-        AirVentBlockEntity airVent = getAirVentBlockEntity(level, pos);
-        if (airVent != null) {
-            mask |= airVent.getOpenedLouverMask();
-        }
-        return AirVentVoxelShapes.getShape(mask);
+    public static boolean canPassThrough(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
+        int mask = 1 << direction.get3DDataValue();
+        return (getPassableMask(state, level, pos) & mask) != 0;
     }
 
     public static boolean isConnected(BlockState state, Direction direction) {
@@ -110,35 +102,52 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
             return VentState.CONNECTED;
         }
 
-        AirVentBlockEntity airVent = getAirVentBlockEntity(level, pos);
-        return airVent == null ? VentState.EMPTY : airVent.getLouverState(direction);
+        if (!(level.getBlockEntity(pos) instanceof AirVentBlockEntity airVent)) {
+            return VentState.EMPTY;
+        }
+        return airVent.getLouverState(direction);
     }
 
-    private static @Nullable AirVentBlockEntity getAirVentBlockEntity(BlockGetter level, BlockPos pos) {
-        BlockEntity blockEntity = level.getBlockEntity(pos);
-        return blockEntity instanceof AirVentBlockEntity airVent ? airVent : null;
-    }
-
-    private static boolean isInsideAirVent(@Nullable Player player) {
+    public static boolean isInsideAirVent(@Nullable Player player) {
         return player != null && player.getInBlockState().getBlock() instanceof AirVentBlock;
+    }
+
+    private static Direction getTargetedFace(BlockPos pos, Vec3 hitLocation, Direction hitFace) {
+        double relativeCoordinate = switch (hitFace.getAxis()) {
+            case X -> hitLocation.x - pos.getX();
+            case Y -> hitLocation.y - pos.getY();
+            case Z -> hitLocation.z - pos.getZ();
+        };
+        return switch (hitFace.getAxis()) {
+            case X -> relativeCoordinate < 0.5 ? Direction.WEST : Direction.EAST;
+            case Y -> relativeCoordinate < 0.5 ? Direction.DOWN : Direction.UP;
+            case Z -> relativeCoordinate < 0.5 ? Direction.NORTH : Direction.SOUTH;
+        };
+    }
+
+    private static VoxelShape getConnectedShape(BlockState state) {
+        return AirVentVoxelShapes.getShape(getConnectionMask(state));
+    }
+
+    private static int getPassableMask(BlockState state, BlockGetter level, BlockPos pos) {
+        int mask = getConnectionMask(state);
+        if (!(level.getBlockEntity(pos) instanceof AirVentBlockEntity airVent)) {
+            return mask;
+        }
+
+        return mask | airVent.getOpenedLouverMask();
     }
 
     @Override
     public InteractionResult onWrenched(BlockState state, UseOnContext context) {
-        Player player = context.getPlayer();
-        if (isInsideAirVent(player)) {
-            return InteractionResult.FAIL;
-        }
-
-        Direction direction = context.getClickedFace();
+        BlockPos pos = context.getClickedPos();
+        Direction direction = getTargetedFace(pos, context.getClickLocation(), context.getClickedFace());
         if (isConnected(state, direction)) {
             return InteractionResult.PASS;
         }
 
         Level level = context.getLevel();
-        BlockPos pos = context.getClickedPos();
-        AirVentBlockEntity airVent = getAirVentBlockEntity(level, pos);
-        if (airVent == null) {
+        if (!(level.getBlockEntity(pos) instanceof AirVentBlockEntity airVent)) {
             return InteractionResult.PASS;
         }
 
@@ -159,16 +168,15 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
 
     @Override
     public InteractionResult onSneakWrenched(BlockState state, UseOnContext context) {
-        Player player = context.getPlayer();
-        if (isInsideAirVent(player)) {
-            return InteractionResult.FAIL;
+        if (isInsideAirVent(context.getPlayer())) {
+            return onWrenched(state, context);
         }
         return IWrenchable.super.onSneakWrenched(state, context);
     }
 
     @Override
     public boolean isLadder(BlockState state, LevelReader level, BlockPos pos, LivingEntity entity) {
-        return entity instanceof Player && (isConnected(state, Direction.UP) || isConnected(state, Direction.DOWN));
+        return entity instanceof Player;
     }
 
     @Override
@@ -189,17 +197,16 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
 
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        if (!stack.isEmpty() || isInsideAirVent(player)) {
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        if (!stack.isEmpty()) {
+            return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
         }
 
-        Direction direction = hitResult.getDirection();
+        Direction direction = getTargetedFace(pos, hitResult.getLocation(), hitResult.getDirection());
         if (isConnected(state, direction)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        AirVentBlockEntity airVent = getAirVentBlockEntity(level, pos);
-        if (airVent == null || !airVent.hasLouver(direction)) {
+        if (!(level.getBlockEntity(pos) instanceof AirVentBlockEntity airVent) || !airVent.hasLouver(direction)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
@@ -230,7 +237,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
 
     @Override
     protected VoxelShape getBlockSupportShape(BlockState state, BlockGetter level, BlockPos pos) {
-        return getPassableShape(state, level, pos);
+        return AirVentVoxelShapes.getShape(getPassableMask(state, level, pos));
     }
 
     @Override
@@ -240,7 +247,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
 
     @Override
     protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return getPassableShape(state, level, pos);
+        return AirVentVoxelShapes.getShape(getPassableMask(state, level, pos));
     }
 
     @Override
@@ -286,10 +293,6 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
 
         public boolean canHandInteract() {
             return this == OPENED || this == CLOSED;
-        }
-
-        public boolean canPassThrough() {
-            return this == OPENED || this == CONNECTED;
         }
 
         public boolean isConnected() {

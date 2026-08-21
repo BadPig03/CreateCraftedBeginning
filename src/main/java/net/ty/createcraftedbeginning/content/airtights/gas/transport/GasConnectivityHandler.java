@@ -231,9 +231,6 @@ public final class GasConnectivityHandler {
                     }
 
                     extraData = be.modifyExtraData(extraData);
-
-                    // Splitting can move gas from the old controller into this part.
-                    // Transfer that local gas before assigning the part to the new controller.
                     splitMultiAndInvalidate(part, cache, null);
                     be.mergeTankStateFrom(part);
                     part.setController(origin);
