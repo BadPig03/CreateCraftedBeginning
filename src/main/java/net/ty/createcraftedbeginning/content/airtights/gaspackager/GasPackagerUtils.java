@@ -55,8 +55,8 @@ public final class GasPackagerUtils {
             return false;
         }
 
-        for (int tank = 0; tank < tankCount; tank++) {
-            if (!GasStack.matches(snapshot.get(tank), handler.getGasInTank(tank))) {
+        for (int tankIndex = 0; tankIndex < tankCount; tankIndex++) {
+            if (!GasStack.matches(snapshot.get(tankIndex), handler.getGasInTank(tankIndex))) {
                 return false;
             }
         }
@@ -65,11 +65,11 @@ public final class GasPackagerUtils {
 
     public static @Unmodifiable List<GasStack> snapshotTanks(IGasHandler handler) {
         int tankCount = Math.max(0, handler.getTanks());
-        List<GasStack> snapshot = new ArrayList<>(tankCount);
-        for (int tank = 0; tank < tankCount; tank++) {
-            snapshot.add(handler.getGasInTank(tank).copy());
+        List<GasStack> tankSnapshot = new ArrayList<>(tankCount);
+        for (int tankIndex = 0; tankIndex < tankCount; tankIndex++) {
+            tankSnapshot.add(handler.getGasInTank(tankIndex).copy());
         }
-        return List.copyOf(snapshot);
+        return List.copyOf(tankSnapshot);
     }
 
     public static BalloonGasContents drainContents(IGasHandler handler, long maxAmount) {
@@ -78,37 +78,37 @@ public final class GasPackagerUtils {
         }
 
         List<GasStack> drainedGases = new ArrayList<>();
-        long remaining = maxAmount;
+        long remainingAmount = maxAmount;
         int tankCount = Math.max(0, handler.getTanks());
-        for (int tank = 0; tank < tankCount; tank++) {
-            if (remaining <= 0) {
+        for (int tankIndex = 0; tankIndex < tankCount; tankIndex++) {
+            if (remainingAmount <= 0) {
                 break;
             }
 
-            GasStack gas = handler.getGasInTank(tank);
-            if (gas.isEmpty()) {
+            GasStack tankGas = handler.getGasInTank(tankIndex);
+            if (tankGas.isEmpty()) {
                 continue;
             }
 
-            if (!containsMatchingGas(drainedGases, gas) && drainedGases.size() >= BalloonGasContents.MAX_GAS_TYPES) {
+            if (!containsMatchingGas(drainedGases, tankGas) && drainedGases.size() >= BalloonGasContents.MAX_GAS_TYPES) {
                 continue;
             }
 
-            long amount = Math.min(remaining, gas.getAmount());
-            GasStack requested = gas.copyWithAmount(amount);
-            GasStack simulated = handler.drain(requested, GasAction.SIMULATE);
-            if (simulated.isEmpty() || !GasStack.isSameGasSameComponents(simulated, requested)) {
+            long requestedAmount = Math.min(remainingAmount, tankGas.getAmount());
+            GasStack drainRequest = tankGas.copyWithAmount(requestedAmount);
+            GasStack simulatedDrain = handler.drain(drainRequest, GasAction.SIMULATE);
+            if (simulatedDrain.isEmpty() || !GasStack.isSameGasSameComponents(simulatedDrain, drainRequest)) {
                 continue;
             }
 
-            long drainAmount = Math.min(amount, simulated.getAmount());
-            GasStack drained = handler.drain(simulated.copyWithAmount(drainAmount), GasAction.EXECUTE);
-            if (drained.isEmpty() || !GasStack.isSameGasSameComponents(drained, requested)) {
+            long drainAmount = Math.min(requestedAmount, simulatedDrain.getAmount());
+            GasStack drainedGas = handler.drain(simulatedDrain.copyWithAmount(drainAmount), GasAction.EXECUTE);
+            if (drainedGas.isEmpty() || !GasStack.isSameGasSameComponents(drainedGas, drainRequest)) {
                 continue;
             }
 
-            addDrainedGas(drainedGases, drained);
-            remaining -= drained.getAmount();
+            addDrainedGas(drainedGases, drainedGas);
+            remainingAmount -= drainedGas.getAmount();
         }
         return new BalloonGasContents(drainedGases);
     }
@@ -118,13 +118,13 @@ public final class GasPackagerUtils {
     }
 
     private static void addDrainedGas(List<GasStack> gases, GasStack added) {
-        for (int i = 0; i < gases.size(); i++) {
-            GasStack existing = gases.get(i);
-            if (!GasStack.isSameGasSameComponents(existing, added)) {
+        for (int gasIndex = 0; gasIndex < gases.size(); gasIndex++) {
+            GasStack existingGas = gases.get(gasIndex);
+            if (!GasStack.isSameGasSameComponents(existingGas, added)) {
                 continue;
             }
 
-            gases.set(i, existing.copyWithAmount(existing.getAmount() + added.getAmount()));
+            gases.set(gasIndex, existingGas.copyWithAmount(existingGas.getAmount() + added.getAmount()));
             return;
         }
 
@@ -132,16 +132,16 @@ public final class GasPackagerUtils {
     }
 
     public static boolean canInsertAll(IGasHandler handler, BalloonGasContents contents) {
-        List<GasStack> gases = contents.copyGasStacks();
-        if (gases.isEmpty()) {
+        List<GasStack> gasStacks = contents.copyGasStacks();
+        if (gasStacks.isEmpty()) {
             return true;
         }
 
-        if (gases.size() > 1) {
-            return handler.tryFillAtomically(gases, GasAction.SIMULATE).isSuccess();
+        if (gasStacks.size() > 1) {
+            return handler.tryFillAtomically(gasStacks, GasAction.SIMULATE).isSuccess();
         }
 
-        GasStack gas = gases.getFirst();
+        GasStack gas = gasStacks.getFirst();
         return handler.fill(gas.copy(), GasAction.SIMULATE) >= gas.getAmount();
     }
 }

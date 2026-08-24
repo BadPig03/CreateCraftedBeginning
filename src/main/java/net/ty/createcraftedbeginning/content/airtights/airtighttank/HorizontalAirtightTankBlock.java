@@ -41,18 +41,18 @@ public class HorizontalAirtightTankBlock extends AirtightTankBlock {
         Player player = context.getPlayer();
         if (player == null || !player.isShiftKeyDown()) {
             BlockPos placedOnPos = context.getClickedPos().relative(context.getClickedFace().getOpposite());
-            BlockState placedOn = context.getLevel().getBlockState(placedOnPos);
-            if (placedOn.getBlock() == this && placedOn.hasProperty(HORIZONTAL_AXIS)) {
-                return defaultBlockState().setValue(HORIZONTAL_AXIS, placedOn.getValue(HORIZONTAL_AXIS)).setValue(TOP, true).setValue(BOTTOM, true);
+            BlockState placedOnState = context.getLevel().getBlockState(placedOnPos);
+            if (placedOnState.getBlock() == this && placedOnState.hasProperty(HORIZONTAL_AXIS)) {
+                return defaultBlockState().setValue(HORIZONTAL_AXIS, placedOnState.getValue(HORIZONTAL_AXIS)).setValue(TOP, true).setValue(BOTTOM, true);
             }
         }
 
-        Axis axis = context.getClickedFace().getAxis();
-        if (axis.isHorizontal()) {
-            return defaultBlockState().setValue(HORIZONTAL_AXIS, axis).setValue(TOP, true).setValue(BOTTOM, true);
+        Axis placementAxis = context.getClickedFace().getAxis();
+        if (placementAxis.isHorizontal()) {
+            return defaultBlockState().setValue(HORIZONTAL_AXIS, placementAxis).setValue(TOP, true).setValue(BOTTOM, true);
         }
 
-        axis = context.getHorizontalDirection().getAxis();
-        return defaultBlockState().setValue(HORIZONTAL_AXIS, axis).setValue(TOP, true).setValue(BOTTOM, true);
+        placementAxis = context.getHorizontalDirection().getAxis();
+        return defaultBlockState().setValue(HORIZONTAL_AXIS, placementAxis).setValue(TOP, true).setValue(BOTTOM, true);
     }
 }

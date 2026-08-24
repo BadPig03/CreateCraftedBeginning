@@ -188,10 +188,10 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
             return super.createRenderBoundingBox();
         }
 
-        Axis axis = getMainConnectionAxis();
-        int xSize = axis == Axis.X ? getHeight() : getWidth();
-        int ySize = axis == Axis.Y ? getHeight() : getWidth();
-        int zSize = axis == Axis.Z ? getHeight() : getWidth();
+        Axis connectionAxis = getMainConnectionAxis();
+        int xSize = connectionAxis == Axis.X ? getHeight() : getWidth();
+        int ySize = connectionAxis == Axis.Y ? getHeight() : getWidth();
+        int zSize = connectionAxis == Axis.Z ? getHeight() : getWidth();
         return super.createRenderBoundingBox().expandTowards(xSize - 1, ySize - 1, zSize - 1);
     }
 

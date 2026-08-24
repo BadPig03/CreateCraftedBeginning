@@ -38,12 +38,12 @@ public final class GasPackagerLogistics {
             return;
         }
 
-        ItemStackHandler contents = new ItemStackHandler(deductions.size());
-        for (int slot = 0; slot < deductions.size(); slot++) {
-            Deduction deduction = deductions.get(slot);
-            contents.setStackInSlot(slot, deduction.token().copyWithCount(deduction.amount()));
+        ItemStackHandler deductionInventory = new ItemStackHandler(deductions.size());
+        for (int deductionIndex = 0; deductionIndex < deductions.size(); deductionIndex++) {
+            Deduction deduction = deductions.get(deductionIndex);
+            deductionInventory.setStackInSlot(deductionIndex, deduction.token().copyWithCount(deduction.amount()));
         }
-        link.behaviour.deductFromAccurateSummary(contents);
+        link.behaviour.deductFromAccurateSummary(deductionInventory);
     }
 
     public static void submitNewGasArrivals(@Nullable Level level, BlockPos worldPosition, @Nullable InventorySummary previous, InventoryIdentifier identifier, InventorySummary current) {
@@ -73,8 +73,8 @@ public final class GasPackagerLogistics {
 
         for (Direction direction : Iterate.directions) {
             BlockPos linkPos = worldPosition.relative(direction);
-            BlockState adjacentState = level.getBlockState(linkPos);
-            if (!AllBlocks.STOCK_LINK.has(adjacentState) || PackagerLinkBlock.getConnectedDirection(adjacentState) != direction) {
+            BlockState linkState = level.getBlockState(linkPos);
+            if (!AllBlocks.STOCK_LINK.has(linkState) || PackagerLinkBlock.getConnectedDirection(linkState) != direction) {
                 continue;
             }
 
@@ -110,11 +110,11 @@ public final class GasPackagerLogistics {
             return;
         }
 
-        UUID network = link.behaviour.freqId;
-        if (!Create.LOGISTICS.hasQueuedPromises(network)) {
+        UUID networkId = link.behaviour.freqId;
+        if (!Create.LOGISTICS.hasQueuedPromises(networkId)) {
             return;
         }
 
-        promiseQueues.add(Create.LOGISTICS.getQueuedPromises(network));
+        promiseQueues.add(Create.LOGISTICS.getQueuedPromises(networkId));
     }
 }

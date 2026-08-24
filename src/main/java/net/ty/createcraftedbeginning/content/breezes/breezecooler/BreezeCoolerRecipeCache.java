@@ -26,8 +26,8 @@ public final class BreezeCoolerRecipeCache {
         }
 
         long gameTime = cooler.getLevel().getGameTime();
-        boolean sameFluid = !cachedFluid.isEmpty() && FluidStack.isSameFluidSameComponents(cachedFluid, fluidStack);
-        if (sameFluid && gameTime < expiry) {
+        boolean isSameFluid = !cachedFluid.isEmpty() && FluidStack.isSameFluidSameComponents(cachedFluid, fluidStack);
+        if (isSameFluid && gameTime < expiry) {
             return cachedData;
         }
 

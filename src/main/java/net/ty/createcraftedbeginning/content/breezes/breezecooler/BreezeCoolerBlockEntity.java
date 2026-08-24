@@ -15,6 +15,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.Capabilities.FluidHandler;
@@ -24,6 +25,7 @@ import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.FrostLevel;
+import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerController.CoolingSyncMode;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates.BaseCoolerState;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates.InactiveCoolerState;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe.CoolingData;
@@ -47,6 +49,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     protected CCBAdvancementBehaviour advancementBehaviour;
     protected SmartFluidTankBehaviour tankBehaviour;
     protected BaseCoolerState currentState;
+    private long clientCoolingSyncGameTime = Long.MIN_VALUE;
 
     public BreezeCoolerBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -77,7 +80,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     public static int getOverflowThreshold() {
-        return Math.max(1, getMaxCoolantCapacity() / 2);
+        return (int) Math.max(1, (long) getMaxCoolantCapacity() * 3 / 4);
     }
 
     public static int getMaxFluidCapacity() {
@@ -145,12 +148,8 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         return recipeCache.getFluidCoolingData(fluidStack);
     }
 
-    public void markCoolingChanged() {
-        controller.markCoolingChanged();
-    }
-
-    public void syncCoolingProgress() {
-        controller.syncCoolingProgress();
+    public void onCoolingTimeChanged(CoolingSyncMode syncMode) {
+        controller.onCoolingTimeChanged(syncMode);
     }
 
     public void playCoolingEffects() {
@@ -178,6 +177,11 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     public FrostLevel getFrostLevel() {
+        Level level = getLevel();
+        if (level != null && level.isClientSide && !isVirtual()) {
+            return getFrostLevelFromBlock();
+        }
+
         return currentState.getFrostLevel();
     }
 
@@ -190,7 +194,21 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     public int getCoolRemainingTime() {
-        return currentState.getRemainingTime();
+        int remainingTime = currentState.getRemainingTime();
+        Level level = getLevel();
+        if (level == null || !level.isClientSide || isVirtual()) {
+            return remainingTime;
+        }
+
+        if (!getFrostLevelFromBlock().isAtLeast(FrostLevel.CHILLED)) {
+            return 0;
+        }
+        if (remainingTime <= 0 || currentState.isCreative() || clientCoolingSyncGameTime == Long.MIN_VALUE) {
+            return remainingTime;
+        }
+
+        long elapsedTicks = Math.max(0L, level.getGameTime() - clientCoolingSyncGameTime);
+        return (int) Math.max(1L, (long) remainingTime - elapsedTicks);
     }
 
     public BaseCoolerState getCurrentState() {
@@ -218,6 +236,11 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     public void setCoolerState(BaseCoolerState newState) {
+        Level level = getLevel();
+        if (level != null && level.isClientSide && !isVirtual()) {
+            return;
+        }
+
         currentState = newState;
         controller.onStateChanged();
     }
@@ -248,6 +271,16 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
 
     public void setCoolerStateFromSerialization(BaseCoolerState state) {
         currentState = state;
+        refreshClientCoolingPredictionBase();
+    }
+
+    void refreshClientCoolingPredictionBase() {
+        Level level = getLevel();
+        if (level == null || !level.isClientSide || isVirtual()) {
+            return;
+        }
+
+        clientCoolingSyncGameTime = level.getGameTime();
     }
 
     public void setGogglesFromSerialization(boolean goggles) {

@@ -14,7 +14,7 @@ import java.util.Objects;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class CCBSubLevelBridge {
-    private static final Service VANILLA = new Service() {};
+    private static final Service VANILLA = createService();
     private static volatile Service service = VANILLA;
 
     private CCBSubLevelBridge() {
@@ -34,6 +34,10 @@ public final class CCBSubLevelBridge {
 
     public static EntityArea createEntityArea(Level level, BlockPos origin, AABB localBounds) {
         return service.createEntityArea(level, origin, localBounds);
+    }
+
+    public static Service createService() {
+        return new Service() {};
     }
 
     @FunctionalInterface

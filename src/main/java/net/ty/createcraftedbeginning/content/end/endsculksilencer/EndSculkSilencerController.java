@@ -11,42 +11,42 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class EndSculkSilencerController {
-    private final EndSculkSilencerBlockEntity blockEntity;
-    private boolean inSableSubLevel;
+    private final EndSculkSilencerBlockEntity silencer;
+    private boolean isInSubLevel;
 
-    public EndSculkSilencerController(EndSculkSilencerBlockEntity blockEntity) {
-        this.blockEntity = blockEntity;
+    public EndSculkSilencerController(EndSculkSilencerBlockEntity silencer) {
+        this.silencer = silencer;
     }
 
     public void refresh() {
-        if (!(blockEntity.getLevel() instanceof ServerLevel serverLevel)) {
+        if (!(silencer.getLevel() instanceof ServerLevel serverLevel)) {
             return;
         }
 
-        Projection projection = CCBSubLevelBridge.resolve(serverLevel, blockEntity.getBlockPos());
-        inSableSubLevel = projection.inSubLevel();
+        Projection projection = CCBSubLevelBridge.resolve(serverLevel, silencer.getBlockPos());
+        isInSubLevel = projection.inSubLevel();
         refresh(serverLevel, projection.blockPos());
     }
 
     public void tickServer(ServerLevel serverLevel) {
-        if (!inSableSubLevel) {
+        if (!isInSubLevel) {
             return;
         }
 
-        Projection projection = CCBSubLevelBridge.resolve(serverLevel, blockEntity.getBlockPos());
-        inSableSubLevel = projection.inSubLevel();
+        Projection projection = CCBSubLevelBridge.resolve(serverLevel, silencer.getBlockPos());
+        isInSubLevel = projection.inSubLevel();
         refresh(serverLevel, projection.blockPos());
     }
 
     public void remove() {
-        if (!(blockEntity.getLevel() instanceof ServerLevel serverLevel)) {
+        if (!(silencer.getLevel() instanceof ServerLevel serverLevel)) {
             return;
         }
 
-        GlobalEndSculkSilencerManager.remove(serverLevel, blockEntity.getBlockPos());
+        GlobalEndSculkSilencerManager.remove(serverLevel, silencer.getBlockPos());
     }
 
     private void refresh(ServerLevel serverLevel, BlockPos effectCenter) {
-        GlobalEndSculkSilencerManager.update(serverLevel, blockEntity.getBlockPos(), effectCenter, blockEntity.getActiveWorkingRange());
+        GlobalEndSculkSilencerManager.update(serverLevel, silencer.getBlockPos(), effectCenter, silencer.getActiveWorkingRange());
     }
 }

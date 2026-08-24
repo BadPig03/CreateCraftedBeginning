@@ -17,7 +17,6 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -62,15 +61,15 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
 
     public GasInjectionChamberBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState blockState) {
         super(type, pos, blockState);
-        GasInjectionChamberVisualState visual = new GasInjectionChamberVisualState();
+        GasInjectionChamberVisualState visualState = new GasInjectionChamberVisualState();
         operation = new GasInjectionChamberOperationState();
         filter = new GasInjectionChamberFilterState();
         display = new GasInjectionChamberDisplay(this, operation);
-        GasInjectionChamberOperationPlanner operationPlanner = new GasInjectionChamberOperationPlanner(this, operation, filter);
-        GasInjectionChamberBeltProcessor beltProcessor = new GasInjectionChamberBeltProcessor(this, operation, filter, visual, operationPlanner);
+        GasInjectionChamberOperationPlanner operationPlanner = new GasInjectionChamberOperationPlanner(this, filter);
+        GasInjectionChamberBeltProcessor beltProcessor = new GasInjectionChamberBeltProcessor(this, operation, filter, visualState, operationPlanner);
         GasInjectionChamberBasinProcessor basinProcessor = new GasInjectionChamberBasinProcessor(this, operation);
-        controller = new GasInjectionChamberController(this, operation, beltProcessor, basinProcessor, visual);
-        serialization = new GasInjectionChamberSerialization(this, operation, filter, visual, display);
+        controller = new GasInjectionChamberController(this, operation, beltProcessor, basinProcessor, visualState);
+        serialization = new GasInjectionChamberSerialization(this, operation, filter, visualState, display);
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
@@ -84,7 +83,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         tankBehaviour = SmartGasTankBehaviour.single(this, getMaxCapacity()).whenGasUpdates(this::scheduleBasinCheck);
-        exposedGasHandler = new GasInjectionChamberGasHandler(tankBehaviour.getCapability(), this::isOperationGasLocked, this::getOperationGas);
+        exposedGasHandler = tankBehaviour.getCapability();
         BeltProcessingBehaviour beltProcessing = new BeltProcessingBehaviour(this).whenItemEnters(this::onItemEntered).whileItemHeld(this::onItemHeld);
         behaviours.add(tankBehaviour);
         behaviours.add(beltProcessing);
@@ -94,6 +93,16 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     public void tick() {
         super.tick();
         controller.tick();
+    }
+
+    @Override
+    public void lazyTick() {
+        super.lazyTick();
+        if (GasInjectionChamberBasinCompat.isHookVerified()) {
+            return;
+        }
+
+        scheduleBasinCheck();
     }
 
     @Override
@@ -193,10 +202,10 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
             return ItemStack.EMPTY;
         }
 
-        ItemStack removed = filter.remove();
+        ItemStack removedFilter = filter.remove();
         setChanged();
         notifyUpdate();
-        return removed;
+        return removedFilter;
     }
 
     public void scheduleBasinCheck() {
@@ -229,26 +238,8 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     }
 
     public void clearOperationState() {
-        operation.clear();
+        operation.clearTransientOperation();
         filter.setClientLocked(false);
-    }
-
-    public void cancelOperationState() {
-        operation.setProcessingTicks(-1);
-        clearOperationState();
-        notifyUpdate();
-    }
-
-    public boolean isFanProcessingOperationStillValid(ResourceLocation typeId) {
-        return controller.isFanProcessingOperationStillValid(typeId);
-    }
-
-    protected boolean isOperationGasLocked() {
-        return operation.isGasLocked();
-    }
-
-    protected GasStack getOperationGas() {
-        return operation.gas;
     }
 
     protected ProcessingResult onItemEntered(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {

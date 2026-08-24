@@ -25,8 +25,8 @@ final class AirtightHandheldDrillClientEvents {
     private static void onPlayerPreTick(Pre event) {
         Player player = event.getEntity();
         AirtightHandheldDrillRenderHandler renderHandler = AirtightHandheldDrillRenderHandler.INSTANCE;
-        ItemStack drill = player.getMainHandItem();
-        if (!drill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
+        ItemStack mainHandDrill = player.getMainHandItem();
+        if (!mainHandDrill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
             if (renderHandler.hasHandAnimation()) {
                 renderHandler.stop();
             }
@@ -34,16 +34,16 @@ final class AirtightHandheldDrillClientEvents {
         }
 
         Minecraft minecraft = Minecraft.getInstance();
-        boolean hasAnimation = renderHandler.hasHandAnimation();
+        boolean hasHandAnimation = renderHandler.hasHandAnimation();
         boolean isUsingDrill = player.isUsingItem() && player.getUseItem().is(CCBItems.AIRTIGHT_HANDHELD_DRILL);
-        boolean isMiningBlock = minecraft.options.keyAttack.isDown() && minecraft.hitResult != null && minecraft.hitResult.getType() == Type.BLOCK;
-        boolean shouldRotate = isUsingDrill || isMiningBlock;
-        if (shouldRotate && !hasAnimation) {
+        boolean isTargetingBlock = minecraft.options.keyAttack.isDown() && minecraft.hitResult != null && minecraft.hitResult.getType() == Type.BLOCK;
+        boolean shouldRotate = isUsingDrill || isTargetingBlock;
+        if (shouldRotate && !hasHandAnimation) {
             renderHandler.start();
             return;
         }
 
-        if (shouldRotate || !hasAnimation) {
+        if (shouldRotate || !hasHandAnimation) {
             return;
         }
 

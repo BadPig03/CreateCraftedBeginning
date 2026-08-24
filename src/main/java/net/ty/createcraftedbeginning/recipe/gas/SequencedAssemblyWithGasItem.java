@@ -32,7 +32,7 @@ public class SequencedAssemblyWithGasItem extends Item {
     }
 
     public float getProgress(ItemStack stack) {
-        SequencedAssemblyWithGas data = stack.get(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS);
-        return data == null ? 0 : data.progress();
+        SequencedAssemblyWithGas assemblyData = stack.get(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS);
+        return assemblyData == null ? 0 : assemblyData.progress();
     }
 }

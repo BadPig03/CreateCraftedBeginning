@@ -50,13 +50,13 @@ public class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
             return stack;
         }
 
-        DiscardingCrateInsertionPlan plan = DiscardingCrateInsertionPlan.plan(content, count, stack, getMaxCount(), trackedItemPredicate);
+        DiscardingCrateInsertionPlan insertionPlan = DiscardingCrateInsertionPlan.plan(content, count, stack, getConfiguredCapacity(), trackedItemPredicate);
         if (simulate) {
             return ItemStack.EMPTY;
         }
 
-        setStoredItems(STORAGE_SLOT, plan.content(), plan.count());
-        if (!plan.trackedDiscard()) {
+        setStoredItems(STORAGE_SLOT, insertionPlan.content(), insertionPlan.count());
+        if (!insertionPlan.trackedDiscard()) {
             return ItemStack.EMPTY;
         }
 

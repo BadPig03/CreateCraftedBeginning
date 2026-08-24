@@ -4,8 +4,8 @@ import com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessingBehavio
 import com.simibubi.create.content.kinetics.belt.behaviour.TransportedItemStackHandlerBehaviour;
 import com.simibubi.create.content.kinetics.belt.transport.TransportedItemStack;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberOperationState.OperationType;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -46,14 +46,19 @@ public final class GasInjectionChamberController {
         }
 
         operation.decrementProcessingTicks();
-        if (!level.isClientSide && operation.type == BASIN_RECIPE && !operation.executed && operation.getProcessingTicks() <= GasInjectionChamberBlockEntity.INJECTION_EXECUTION_TICK) {
+        if (!level.isClientSide && operation.type == BASIN_RECIPE && !operation.hasAttemptedExecution() && operation.getProcessingTicks() <= GasInjectionChamberBlockEntity.INJECTION_EXECUTION_TICK) {
+            operation.markExecutionAttempted();
             executeBasinInjection();
         }
         if (operation.getProcessingTicks() >= 0) {
             return;
         }
 
+        OperationType completedOperationType = operation.type;
         chamber.clearOperationState();
+        if (!level.isClientSide && completedOperationType == BASIN_RECIPE) {
+            chamber.scheduleBasinCheck();
+        }
         chamber.setChanged();
     }
 
@@ -65,40 +70,28 @@ public final class GasInjectionChamberController {
         return beltProcessor.onItemHeld(transported, handler);
     }
 
-    public boolean isFanProcessingOperationStillValid(ResourceLocation typeId) {
-        return beltProcessor.isFanProcessingOperationStillValid(typeId);
-    }
-
     private void executeBasinInjection() {
         Level level = chamber.getLevel();
         if (level == null) {
             return;
         }
 
-        int color = operation.gas.getHint();
-        boolean executed;
+        int cloudColor = chamber.getGasInTank().getHint();
+        boolean injectionSucceeded;
         chamber.getGasTankBehaviour().beginMutation();
         try {
-            executed = basinProcessor.executeRecipeOperation();
+            injectionSucceeded = basinProcessor.executeCurrentState();
         } finally {
             chamber.getGasTankBehaviour().endMutation();
         }
 
-        if (executed) {
-            operation.executed = true;
-            visual.queueCloud(color);
-        }
-        else {
-            operation.setProcessingTicks(-1);
-            chamber.clearOperationState();
-            chamber.scheduleBasinCheck();
-        }
-
-        chamber.getGasTankBehaviour().sendDataImmediately();
-        if (!executed) {
+        if (!injectionSucceeded) {
+            chamber.getGasTankBehaviour().sendDataImmediately();
             return;
         }
 
+        visual.queueCloud(cloudColor);
+        chamber.getGasTankBehaviour().sendDataImmediately();
         CCBSoundEvents.INJECTING.playOnServer(level, chamber.getBlockPos(), 0.75f, 0.9f + 0.2f * level.random.nextFloat());
     }
 }

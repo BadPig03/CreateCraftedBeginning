@@ -38,17 +38,17 @@ import java.util.function.Supplier;
 public class CreativeGasCanisterItem extends Item implements IGasFilter {
     private final Supplier<CreativeGasCanisterBlockItem> blockItem;
 
-    public CreativeGasCanisterItem(Properties properties, Supplier<CreativeGasCanisterBlockItem> placeable) {
+    public CreativeGasCanisterItem(Properties properties, Supplier<CreativeGasCanisterBlockItem> blockItem) {
         super(properties);
-        blockItem = placeable;
+        this.blockItem = blockItem;
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerItem(GasHandler.ITEM, (stack, context) -> new CreativeGasCanisterContainerContents(stack), CCBItems.CREATIVE_GAS_CANISTER);
+        event.registerItem(GasHandler.ITEM, (canister, ignoredContext) -> new CreativeGasCanisterContainerContents(canister), CCBItems.CREATIVE_GAS_CANISTER);
     }
 
     private static boolean hasGas(ItemStack canister) {
-        return canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents && !contents.isEmpty();
+        return canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents canisterContents && !canisterContents.isEmpty();
     }
 
     @Override
@@ -87,8 +87,8 @@ public class CreativeGasCanisterItem extends Item implements IGasFilter {
     }
 
     @Override
-    public boolean overrideOtherStackedOnMe(ItemStack canister, ItemStack other, Slot slot, ClickAction action, Player player, SlotAccess access) {
-        if (!(other.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents sourceContents)) {
+    public boolean overrideOtherStackedOnMe(ItemStack canister, ItemStack sourceCanister, Slot slot, ClickAction action, Player player, SlotAccess access) {
+        if (!(sourceCanister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents sourceContents)) {
             return false;
         }
 
@@ -112,17 +112,17 @@ public class CreativeGasCanisterItem extends Item implements IGasFilter {
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack canister, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents)) {
+        if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents canisterContents)) {
             return;
         }
 
-        GasStack gas = contents.getGasInTank(0);
-        if (gas.isEmpty()) {
+        GasStack storedGas = canisterContents.getGasInTank(0);
+        if (storedGas.isEmpty()) {
             tooltip.add(CCBLang.translate("gui.gas_canister.content").add(CCBLang.translate("gui.creative_gas_canister.empty")).style(ChatFormatting.GRAY).component());
             return;
         }
 
-        tooltip.add(CCBLang.translate("gui.gas_canister.content").add(CCBLang.gasName(gas).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
+        tooltip.add(CCBLang.translate("gui.gas_canister.content").add(CCBLang.gasName(storedGas).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
     }
 
     @Override
@@ -136,25 +136,25 @@ public class CreativeGasCanisterItem extends Item implements IGasFilter {
 
     @Override
     public boolean test(ItemStack filterItem, GasStack filterGasStack) {
-        if (filterGasStack.isEmpty() || !(filterItem.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents)) {
+        if (filterGasStack.isEmpty() || !(filterItem.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents filterContents)) {
             return false;
         }
 
-        GasStack filterGas = contents.getGasInTank(0);
+        GasStack filterGas = filterContents.getGasInTank(0);
         return !filterGas.isEmpty() && GasStack.isSameGasSameComponents(filterGas, filterGasStack);
     }
 
     @Override
     public Predicate<GasStack> compile(ItemStack filterItem) {
-        if (!(filterItem.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents)) {
-            return gas -> false;
+        if (!(filterItem.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents filterContents)) {
+            return ignoredGas -> false;
         }
 
-        GasStack filterGas = contents.getGasInTank(0).copyWithAmount(1);
+        GasStack filterGas = filterContents.getGasInTank(0).copyWithAmount(1);
         if (filterGas.isEmpty()) {
-            return gas -> false;
+            return ignoredGas -> false;
         }
-        return gas -> !gas.isEmpty() && GasStack.isSameGasSameComponents(filterGas, gas);
+        return candidateGas -> !candidateGas.isEmpty() && GasStack.isSameGasSameComponents(filterGas, candidateGas);
     }
 
     public static class CreativeGasCanisterBlockItem extends BlockItem {

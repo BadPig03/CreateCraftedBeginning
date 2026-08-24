@@ -27,11 +27,11 @@ import java.util.Set;
 public final class AirtightReactorKettleStructuralClientExtensions implements IClientBlockExtensions, MultiPosDestructionHandler {
     @Override
     public boolean addHitEffects(BlockState state, Level level, HitResult target, ParticleEngine manager) {
-        if (!(target instanceof BlockHitResult result)) {
+        if (!(target instanceof BlockHitResult hitResult)) {
             return false;
         }
 
-        BlockPos targetPos = result.getBlockPos();
+        BlockPos targetPos = hitResult.getBlockPos();
         return level.getBlockState(targetPos).getBlock() instanceof IAirtightReactorKettleStructural structural && !structural.stillValid(level, targetPos, state);
     }
 
@@ -49,14 +49,14 @@ public final class AirtightReactorKettleStructuralClientExtensions implements IC
 
         BlockPos masterPos = AirtightReactorKettleUtils.getMaster(pos, blockState);
         HashSet<BlockPos> positions = new HashSet<>();
-        for (int x = -1; x <= 1; x++) {
-            for (int y = -1; y <= 1; y++) {
-                for (int z = -1; z <= 1; z++) {
-                    if (x == 0 && y == 0 && z == 0) {
+        for (int xOffset = -1; xOffset <= 1; xOffset++) {
+            for (int yOffset = -1; yOffset <= 1; yOffset++) {
+                for (int zOffset = -1; zOffset <= 1; zOffset++) {
+                    if (xOffset == 0 && yOffset == 0 && zOffset == 0) {
                         continue;
                     }
 
-                    positions.add(masterPos.offset(x, y, z));
+                    positions.add(masterPos.offset(xOffset, yOffset, zOffset));
                 }
             }
         }

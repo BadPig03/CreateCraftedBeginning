@@ -1,19 +1,12 @@
 package net.ty.createcraftedbeginning.content.airtights.boilersteamoutlet;
 
-import com.simibubi.create.AllBlocks;
-import com.simibubi.create.api.stress.BlockStressValues;
 import com.simibubi.create.content.fluids.tank.FluidTankBlockEntity;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.SmartGasTank;
 import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
-import net.ty.createcraftedbeginning.registry.gas.CCBGases;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -22,37 +15,35 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public final class BoilerSteamOutletProduction {
     private static final int STRESS_PER_STEAM_MB = 1024;
-    private static final int STEAM_ENGINE_BASE_SPEED = 16;
     private static final int TICKS_PER_SECOND = 20;
 
     private static final String COMPOUND_KEY_PRODUCTION_RATE = "ProductionRate";
+    private static final String COMPOUND_KEY_PRODUCTION_REMAINDER = "ProductionRemainder";
 
     private final BoilerSteamOutletBlockEntity outlet;
 
     private double productionRemainder;
     private double currentProductionRate;
     private long accountingTick = Long.MIN_VALUE;
-    private long productionThisTick;
 
     public BoilerSteamOutletProduction(BoilerSteamOutletBlockEntity outlet) {
         this.outlet = outlet;
     }
 
     public static long getMaximumOutputCapacity() {
-        double capacity = getFullLoadProductionRate();
-        if (!GasConsumptions.isFinite(capacity) || capacity <= 0) {
+        double fullLoadProductionRate = getFullLoadProductionRate();
+        if (!GasConsumptions.isFinite(fullLoadProductionRate) || fullLoadProductionRate <= 0) {
             return 1;
         }
 
-        if (capacity >= Long.MAX_VALUE) {
+        if (fullLoadProductionRate >= Long.MAX_VALUE) {
             return Long.MAX_VALUE;
         }
-        return Math.max(1, (long) Math.ceil(capacity));
+        return Math.max(1, (long) Math.ceil(fullLoadProductionRate));
     }
 
     private static double getFullLoadProductionRate() {
-        double fullLoadStress = STEAM_ENGINE_BASE_SPEED * BlockStressValues.getCapacity(AllBlocks.STEAM_ENGINE.get());
-        return fullLoadStress / STRESS_PER_STEAM_MB;
+        return BoilerSteamOutletCompat.getSteamEngineFullLoadStressCapacity() / STRESS_PER_STEAM_MB;
     }
 
     public boolean ensureCurrentTick() {
@@ -67,19 +58,18 @@ public final class BoilerSteamOutletProduction {
         }
 
         accountingTick = gameTime;
-        double idealProduction = getMaximumProductionRate();
-        boolean productionRateChanged = Double.compare(currentProductionRate, idealProduction) != 0;
-        currentProductionRate = idealProduction;
-        if (!GasConsumptions.isFinite(idealProduction) || idealProduction <= 0) {
-            productionThisTick = 0;
+        double maximumProductionRate = getMaximumProductionRate();
+        boolean productionRateChanged = Double.compare(currentProductionRate, maximumProductionRate) != 0;
+        currentProductionRate = maximumProductionRate;
+        if (!GasConsumptions.isFinite(maximumProductionRate) || maximumProductionRate <= 0) {
             setAvailableSteam(0);
             return productionRateChanged;
         }
 
-        double availableProduction = productionRemainder + idealProduction;
-        productionThisTick = availableProduction >= Long.MAX_VALUE ? Long.MAX_VALUE : Mth.lfloor(availableProduction);
-        productionRemainder = availableProduction >= Long.MAX_VALUE ? 0 : availableProduction - productionThisTick;
-        setAvailableSteam(productionThisTick);
+        double accumulatedProduction = productionRemainder + maximumProductionRate;
+        long steamProducedThisTick = accumulatedProduction >= Long.MAX_VALUE ? Long.MAX_VALUE : Mth.lfloor(accumulatedProduction);
+        productionRemainder = accumulatedProduction >= Long.MAX_VALUE ? 0 : accumulatedProduction - steamProducedThisTick;
+        setAvailableSteam(steamProducedThisTick);
         return productionRateChanged;
     }
 
@@ -87,43 +77,34 @@ public final class BoilerSteamOutletProduction {
         return currentProductionRate * TICKS_PER_SECOND;
     }
 
-    public void write(CompoundTag tag, boolean clientPacket) {
-        if (!clientPacket) {
+    public void write(CompoundTag compoundTag, boolean clientPacket) {
+        if (clientPacket) {
+            compoundTag.putDouble(COMPOUND_KEY_PRODUCTION_RATE, currentProductionRate);
             return;
         }
 
-        tag.putDouble(COMPOUND_KEY_PRODUCTION_RATE, currentProductionRate);
+        compoundTag.putDouble(COMPOUND_KEY_PRODUCTION_REMAINDER, productionRemainder);
     }
 
-    public void read(CompoundTag tag, boolean clientPacket) {
-        currentProductionRate = clientPacket ? Math.max(0, tag.getDouble(COMPOUND_KEY_PRODUCTION_RATE)) : 0;
+    public void read(CompoundTag compoundTag, boolean clientPacket) {
+        if (clientPacket) {
+            currentProductionRate = Math.max(0, compoundTag.getDouble(COMPOUND_KEY_PRODUCTION_RATE));
+        }
+        else {
+            currentProductionRate = 0;
+            double savedProductionRemainder = compoundTag.getDouble(COMPOUND_KEY_PRODUCTION_REMAINDER);
+            productionRemainder = GasConsumptions.isFinite(savedProductionRemainder) && savedProductionRemainder >= 0 && savedProductionRemainder < 1 ? savedProductionRemainder : 0;
+        }
         resetTickAccounting();
     }
 
     private void resetTickAccounting() {
         accountingTick = Long.MIN_VALUE;
-        productionThisTick = 0;
         setAvailableSteam(0);
     }
 
-    private void setAvailableSteam(long amount) {
-        SmartGasTankBehaviour steamTank = outlet.getSteamTankBehaviour();
-        if (steamTank == null) {
-            return;
-        }
-
-        long capacity = getMaximumOutputCapacity();
-        long clamped = Math.clamp(amount, 0, capacity);
-        SmartGasTank tank = steamTank.getPrimaryHandler();
-        tank.setCapacity(capacity);
-        GasStack replacement = clamped <= 0 ? GasStack.EMPTY : new GasStack(CCBGases.STEAM.get(), clamped);
-        GasStack current = tank.getGasStack();
-        boolean unchanged = replacement.isEmpty() && current.isEmpty() || replacement.getAmount() == current.getAmount() && GasStack.isSameGasSameComponents(replacement, current);
-        if (unchanged) {
-            return;
-        }
-
-        tank.setGasStack(replacement);
+    private void setAvailableSteam(long availableSteam) {
+        outlet.setAvailableSteamThisTick(availableSteam);
     }
 
     private double getMaximumProductionRate() {
@@ -131,14 +112,21 @@ public final class BoilerSteamOutletProduction {
             return 0;
         }
 
-        FluidTankBlockEntity controller = getControllerTank();
-        if (controller == null || !controller.boiler.isActive()) {
+        FluidTankBlockEntity controllerTank = getControllerTank();
+        if (controllerTank == null || !BoilerSteamOutletCompat.ensureVerified(controllerTank) || !controllerTank.boiler.isActive()) {
             return 0;
         }
 
-        double efficiency = controller.boiler.getEngineEfficiency(controller.getTotalTankSize());
-        double production = getFullLoadProductionRate() * efficiency;
-        return GasConsumptions.isFinite(production) && production > 0 ? production : 0;
+        double boilerEfficiency = controllerTank.boiler.getEngineEfficiency(controllerTank.getTotalTankSize());
+        if (!GasConsumptions.isFinite(boilerEfficiency)) {
+            return 0;
+        }
+
+        double productionRate = getFullLoadProductionRate() * Mth.clamp(boilerEfficiency, 0, 1);
+        if (!GasConsumptions.isFinite(productionRate) || productionRate <= 0) {
+            return 0;
+        }
+        return productionRate;
     }
 
     private @Nullable FluidTankBlockEntity getControllerTank() {
@@ -147,9 +135,8 @@ public final class BoilerSteamOutletProduction {
             return null;
         }
 
-        BlockPos tankPos = BoilerSteamOutletBlock.getAttachedTankPos(outlet.getBlockState(), outlet.getBlockPos());
-        BlockEntity blockEntity = level.getBlockEntity(tankPos);
-        if (!(blockEntity instanceof FluidTankBlockEntity tank)) {
+        BlockPos attachedTankPos = BoilerSteamOutletBlock.getAttachedTankPos(outlet.getBlockState(), outlet.getBlockPos());
+        if (!(level.getBlockEntity(attachedTankPos) instanceof FluidTankBlockEntity tank)) {
             return null;
         }
         return tank.getControllerBE();

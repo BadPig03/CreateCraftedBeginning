@@ -32,10 +32,10 @@ public class CreativeAirtightTankMountedStorage extends WrapperMountedGasStorage
 
     @Contract("_ -> new")
     public static CreativeAirtightTankMountedStorage fromTank(CreativeAirtightTankBlockEntity tank) {
-        GasTank inventory = tank.getTankInventory();
-        CreativeSmartGasTank copy = new CreativeSmartGasTank(inventory.getCapacity(), ignored -> {});
-        copy.setContainedGas(inventory.getGasStack());
-        return new CreativeAirtightTankMountedStorage(copy);
+        GasTank tankInventory = tank.getTankInventory();
+        CreativeSmartGasTank tankCopy = new CreativeSmartGasTank(tankInventory.getCapacity(), ignored -> {});
+        tankCopy.setContainedGas(tankInventory.getGasStack());
+        return new CreativeAirtightTankMountedStorage(tankCopy);
     }
 
     @Override

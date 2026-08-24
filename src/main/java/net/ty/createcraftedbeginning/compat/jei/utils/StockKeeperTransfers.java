@@ -87,11 +87,11 @@ public final class StockKeeperTransfers {
             }
         }
 
-        ItemStack result = recipe.getResultItem(player.level().registryAccess());
-        if (result.isEmpty()) {
+        ItemStack recipeResult = recipe.getResultItem(player.level().registryAccess());
+        if (recipeResult.isEmpty()) {
             return null;
         }
-        return new OutputTarget(result.copyWithCount(1), Math.max(1, result.getCount()), Math.max(1, result.getMaxStackSize()));
+        return new OutputTarget(recipeResult.copyWithCount(1), Math.max(1, recipeResult.getCount()), Math.max(1, recipeResult.getMaxStackSize()));
     }
 
     public static IRecipeTransferError throwError(String key) {
@@ -192,14 +192,14 @@ public final class StockKeeperTransfers {
                 return;
             }
 
-            int amount = GasRequestUtils.toLogisticsAmount(gas.getAmount());
-            if (amount <= 0) {
+            int requestAmount = GasRequestUtils.toLogisticsAmount(gas.getAmount());
+            if (requestAmount <= 0) {
                 return;
             }
 
             ItemStack virtualGas = GasVirtualUtils.createVirtualItem(gas.copyWithAmount(1));
             if (!virtualGas.isEmpty()) {
-                candidates.add(new BigItemStack(virtualGas.copyWithCount(1), amount));
+                candidates.add(new BigItemStack(virtualGas.copyWithCount(1), requestAmount));
             }
         });
     }

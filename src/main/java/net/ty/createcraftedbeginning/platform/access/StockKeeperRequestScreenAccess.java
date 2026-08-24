@@ -12,9 +12,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public interface StockKeeperRequestScreenAccess {
-    StockTickerBlockEntity getBlockEntity();
+    StockTickerBlockEntity ccb$getBlockEntity();
 
-    Couple<Integer> ccb$getHoveredSlot(int x, int y);
+    Couple<Integer> ccb$getHoveredSlot(int mouseX, int mouseY);
 
     @Nullable BigItemStack ccb$getOrderForItem(ItemStack stack);
 }

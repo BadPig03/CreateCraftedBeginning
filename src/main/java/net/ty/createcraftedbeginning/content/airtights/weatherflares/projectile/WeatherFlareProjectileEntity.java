@@ -63,10 +63,10 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
         itemStack = getDefaultItem();
     }
 
-    public WeatherFlareProjectileEntity(Level level, Item item, double startY) {
+    public WeatherFlareProjectileEntity(Level level, Item flareItem, double startY) {
         super(CCBEntityTypes.WEATHER_FLARE_PROJECTILE.get(), level);
         accelerationPower = 0;
-        itemStack = new ItemStack(item);
+        itemStack = new ItemStack(flareItem);
         this.startY = startY;
     }
 
@@ -194,19 +194,19 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
 
     @Override
     public void writeSpawnData(RegistryFriendlyByteBuf buffer) {
-        CompoundTag tag = new CompoundTag();
-        addAdditionalSaveData(tag);
-        buffer.writeNbt(tag);
+        CompoundTag spawnTag = new CompoundTag();
+        addAdditionalSaveData(spawnTag);
+        buffer.writeNbt(spawnTag);
     }
 
     @Override
     public void readSpawnData(RegistryFriendlyByteBuf buffer) {
-        CompoundTag tag = buffer.readNbt();
-        if (tag == null) {
+        CompoundTag spawnTag = buffer.readNbt();
+        if (spawnTag == null) {
             return;
         }
 
-        readAdditionalSaveData(tag);
+        readAdditionalSaveData(spawnTag);
     }
 
     @Override
@@ -215,20 +215,20 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
     }
 
     @Override
-    protected void onHitEntity(EntityHitResult result) {
-        super.onHitEntity(result);
+    protected void onHitEntity(EntityHitResult hitResult) {
+        super.onHitEntity(hitResult);
         destroy();
     }
 
     @Override
-    protected void onHitBlock(BlockHitResult result) {
-        super.onHitBlock(result);
+    protected void onHitBlock(BlockHitResult hitResult) {
+        super.onHitBlock(hitResult);
         destroy();
     }
 
     @Override
-    public DoubleDoubleImmutablePair calculateHorizontalHurtKnockbackDirection(LivingEntity entity, DamageSource damageSource) {
-        return DoubleDoubleImmutablePair.of(entity.position().x - position().x, entity.position().z - position().z);
+    public DoubleDoubleImmutablePair calculateHorizontalHurtKnockbackDirection(LivingEntity target, DamageSource damageSource) {
+        return DoubleDoubleImmutablePair.of(target.position().x - position().x, target.position().z - position().z);
     }
 
     protected void explode() {
@@ -236,11 +236,11 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
             return;
         }
 
-        Vec3 pos = position();
+        Vec3 flarePos = position();
         boolean wasStormy = level.isRaining() || level.isThundering();
-        level.explode(null, pos.x, pos.y, pos.z, 0, ExplosionInteraction.NONE);
-        double ratio = Mth.clamp((pos.y - startY) / DEFAULT_Y, MIN_WEATHER_DURATION_RATIO, 16);
-        flare.setWeather(level, ratio);
+        level.explode(null, flarePos.x, flarePos.y, flarePos.z, 0, ExplosionInteraction.NONE);
+        double weatherDurationRatio = Mth.clamp((flarePos.y - startY) / DEFAULT_Y, MIN_WEATHER_DURATION_RATIO, 16);
+        flare.setWeather(level, weatherDurationRatio);
         grantAdvancements(level, wasStormy);
         discard();
     }
@@ -269,12 +269,12 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
             return;
         }
 
-        Vec3 pos = position();
+        Vec3 projectilePos = position();
         if (copied) {
-            level.explode(null, pos.x, pos.y, pos.z, 0, ExplosionInteraction.NONE);
+            level.explode(null, projectilePos.x, projectilePos.y, projectilePos.z, 0, ExplosionInteraction.NONE);
         }
         else {
-            level.addFreshEntity(new ItemEntity(level, pos.x, pos.y, pos.z, itemStack.copy()));
+            level.addFreshEntity(new ItemEntity(level, projectilePos.x, projectilePos.y, projectilePos.z, itemStack.copy()));
         }
         discard();
     }

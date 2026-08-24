@@ -94,11 +94,11 @@ public class AirtightExtendArmRenderHandler {
         }
 
         pose = CCBPartialModels.AIRTIGHT_EXTEND_ARM_PUNCHING;
-        if (!accessor.getOffHandItem().is(CCBItems.AIRTIGHT_EXTEND_ARM)) {
+        if (!accessor.ccb$getOffHandItem().is(CCBItems.AIRTIGHT_EXTEND_ARM)) {
             return;
         }
 
-        ItemStack mainHandItem = accessor.getMainHandItem();
+        ItemStack mainHandItem = accessor.ccb$getMainHandItem();
         if (mainHandItem.isEmpty() || !(mainHandItem.getItem() instanceof BlockItem) || !minecraft.getItemRenderer().getModel(mainHandItem, null, null, 0).isGui3d()) {
             return;
         }
@@ -117,7 +117,7 @@ public class AirtightExtendArmRenderHandler {
             return;
         }
 
-        ItemStack offhandItem = accessor.getOffHandItem();
+        ItemStack offhandItem = accessor.ccb$getOffHandItem();
         ItemStack heldItem = event.getItemStack();
         boolean isArmInOffhand = offhandItem.is(CCBItems.AIRTIGHT_EXTEND_ARM);
         if (!isArmInOffhand && !heldItem.is(CCBItems.AIRTIGHT_EXTEND_ARM)) {

@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.content.breezes.breezecooler;
 
 import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
-import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import com.simibubi.create.content.contraptions.render.ContraptionMatrices;
 import com.simibubi.create.content.trains.entity.CarriageContraption;
@@ -56,34 +55,33 @@ public class BreezeCoolerMovementBehaviour implements MovementBehaviour {
             return carriage.getInitialOrientation().getAxis() == Axis.X ? angle + 180 : angle;
         }
 
-        Entity player = cameraEntityProvider.getCameraEntity(context);
-        if (player == null || player.isInvisible() || context.position == null) {
+        Entity cameraEntity = cameraEntityProvider.getCameraEntity(context);
+        if (cameraEntity == null || cameraEntity.isInvisible() || context.position == null) {
             return 0;
         }
 
-        Vec3 relativePosition = context.contraption.entity.reverseRotation(player.position().subtract(context.position), 1);
+        Vec3 relativePosition = context.contraption.entity.reverseRotation(cameraEntity.position().subtract(context.position), 1);
         return AngleHelper.deg(-Mth.atan2(relativePosition.z, relativePosition.x)) - 90;
     }
 
     private static boolean shouldRenderHat(MovementContext context) {
-        CompoundTag data = context.data;
-        if (data.contains(COMPOUND_KEY_CONDUCTOR)) {
-            return data.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
+        CompoundTag movementData = context.data;
+        if (movementData.contains(COMPOUND_KEY_CONDUCTOR)) {
+            return movementData.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
         }
 
-        data.putBoolean(COMPOUND_KEY_CONDUCTOR, determineIfConducting(context));
-        return data.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
+        movementData.putBoolean(COMPOUND_KEY_CONDUCTOR, determineIfConducting(context));
+        return movementData.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
     }
 
     private static boolean determineIfConducting(MovementContext context) {
-        Contraption contraption = context.contraption;
-        if (!(contraption instanceof CarriageContraption carriageContraption)) {
+        if (!(context.contraption instanceof CarriageContraption carriageContraption)) {
             return false;
         }
 
         Direction assemblyDirection = carriageContraption.getAssemblyDirection();
-        for (Direction direction : Iterate.directionsInAxis(assemblyDirection.getAxis())) {
-            if (!carriageContraption.inControl(context.localPos, direction)) {
+        for (Direction controlDirection : Iterate.directionsInAxis(assemblyDirection.getAxis())) {
+            if (!carriageContraption.inControl(context.localPos, controlDirection)) {
                 continue;
             }
 
@@ -101,15 +99,15 @@ public class BreezeCoolerMovementBehaviour implements MovementBehaviour {
 
         RandomSource random = level.getRandom();
         Vec3 position = context.position;
-        Vec3 added = position.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125f).multiply(1, 0, 1));
+        Vec3 particlePos = position.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125f).multiply(1, 0, 1));
         if (random.nextInt(3) == 0 && context.motion.length() < 0.015625f) {
-            level.addParticle(ParticleTypes.SNOWFLAKE, added.x, added.y, added.z, 0, 0, 0);
+            level.addParticle(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 0, 0, 0);
         }
         LerpedFloat headAngle = getHeadAngle(context);
-        boolean quickTurn = shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0);
+        boolean shouldTurnQuickly = shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0);
         float currentAngle = headAngle.getValue();
         float targetAngle = getTargetAngle(context);
-        headAngle.chase(currentAngle + AngleHelper.getShortestAngleDiff(currentAngle, targetAngle), 0.5f, quickTurn ? Chaser.EXP : Chaser.exp(5));
+        headAngle.chase(currentAngle + AngleHelper.getShortestAngleDiff(currentAngle, targetAngle), 0.5f, shouldTurnQuickly ? Chaser.EXP : Chaser.exp(5));
         headAngle.tickChaser();
     }
 

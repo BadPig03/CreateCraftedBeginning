@@ -30,25 +30,25 @@ public class VerticalIndicator extends AbstractSimiWidget {
         }
 
         if (!right) {
-            CCBGUITextures toDraw = switch (state) {
+            CCBGUITextures indicatorTexture = switch (state) {
                 case ON -> CCBGUITextures.INDICATOR_WHITE_LEFT;
                 case OFF -> CCBGUITextures.INDICATOR_LEFT;
                 case RED -> CCBGUITextures.INDICATOR_RED_LEFT;
                 case YELLOW -> CCBGUITextures.INDICATOR_YELLOW_LEFT;
                 case GREEN -> CCBGUITextures.INDICATOR_GREEN_LEFT;
             };
-            toDraw.render(graphics, getX(), getY());
+            indicatorTexture.render(graphics, getX(), getY());
             return;
         }
 
-        CCBGUITextures toDraw = switch (state) {
+        CCBGUITextures indicatorTexture = switch (state) {
             case ON -> CCBGUITextures.INDICATOR_WHITE_RIGHT;
             case OFF -> CCBGUITextures.INDICATOR_RIGHT;
             case RED -> CCBGUITextures.INDICATOR_RED_RIGHT;
             case YELLOW -> CCBGUITextures.INDICATOR_YELLOW_RIGHT;
             case GREEN -> CCBGUITextures.INDICATOR_GREEN_RIGHT;
         };
-        toDraw.render(graphics, getX(), getY());
+        indicatorTexture.render(graphics, getX(), getY());
     }
 
     public enum State {

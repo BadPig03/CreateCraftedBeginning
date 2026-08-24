@@ -43,22 +43,13 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
         return filter.getOrDefault(CCBDataComponents.GAS_FILTER_DATA, GasFilterData.EMPTY);
     }
 
-    public static void setFilterData(ItemStack filter, GasFilterData data) {
-        if (data.isDefault()) {
-            filter.remove(CCBDataComponents.GAS_FILTER_DATA);
-            return;
+    public static ItemStackHandler createFilterInventory(GasFilterData filterData) {
+        ItemStackHandler filterInventory = new ItemStackHandler(GasFilterData.MAX_ENTRIES);
+        List<GasStack> configuredGases = filterData.gases();
+        for (int slotIndex = 0; slotIndex < configuredGases.size(); slotIndex++) {
+            filterInventory.setStackInSlot(slotIndex, GasVirtualUtils.createVirtualItem(configuredGases.get(slotIndex)));
         }
-
-        filter.set(CCBDataComponents.GAS_FILTER_DATA, data);
-    }
-
-    public static ItemStackHandler createFilterInventory(GasFilterData data) {
-        ItemStackHandler inventory = new ItemStackHandler(GasFilterData.MAX_ENTRIES);
-        List<GasStack> gases = data.gases();
-        for (int i = 0; i < gases.size(); i++) {
-            inventory.setStackInSlot(i, GasVirtualUtils.createVirtualItem(gases.get(i)));
-        }
-        return inventory;
+        return filterInventory;
     }
 
     @Override
@@ -72,17 +63,17 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        ItemStack filter = player.getItemInHand(hand);
+        ItemStack heldFilter = player.getItemInHand(hand);
         if (player.isShiftKeyDown() || hand != InteractionHand.MAIN_HAND) {
-            return InteractionResultHolder.pass(filter);
+            return InteractionResultHolder.pass(heldFilter);
         }
 
         if (level.isClientSide) {
-            return InteractionResultHolder.success(filter);
+            return InteractionResultHolder.success(heldFilter);
         }
 
-        player.openMenu(this, buf -> ItemStack.STREAM_CODEC.encode(buf, filter));
-        return InteractionResultHolder.success(filter);
+        player.openMenu(this, buf -> ItemStack.STREAM_CODEC.encode(buf, heldFilter));
+        return InteractionResultHolder.success(heldFilter);
     }
 
     @Override
@@ -92,29 +83,30 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
             return;
         }
 
-        GasFilterData data = getFilterData(filter);
-        List<GasStack> gases = data.gases();
-        if (gases.isEmpty()) {
+        GasFilterData filterData = getFilterData(filter);
+        List<GasStack> configuredGases = filterData.gases();
+        if (configuredGases.isEmpty()) {
             return;
         }
 
         tooltips.add(CommonComponents.EMPTY);
-        if (data.blacklist()) {
+        if (filterData.blacklist()) {
             tooltips.add(CCBLang.translateDirect("gui.gas_filter.blacklist").withStyle(ChatFormatting.GOLD));
         }
         else {
             tooltips.add(CCBLang.translateDirect("gui.gas_filter.whitelist").withStyle(ChatFormatting.GOLD));
         }
+        tooltips.add(CCBLang.translateDirect(filterData.respectData() ? "gui.gas_filter.respect_data" : "gui.gas_filter.ignore_data").withStyle(ChatFormatting.DARK_GRAY));
 
-        int count = 0;
-        for (GasStack gas : gases) {
-            if (count > 3) {
+        int displayedEntryCount = 0;
+        for (GasStack configuredGas : configuredGases) {
+            if (displayedEntryCount > 3) {
                 tooltips.add(CCBLang.text("- ...").style(ChatFormatting.DARK_GRAY).component());
                 return;
             }
 
-            tooltips.add(CCBLang.text("- ").add(Component.translatable(gas.getGasType().getTranslationKey())).style(ChatFormatting.GRAY).component());
-            count++;
+            tooltips.add(CCBLang.text("- ").add(Component.translatable(configuredGas.getGasType().getTranslationKey())).style(ChatFormatting.GRAY).component());
+            displayedEntryCount++;
         }
     }
 

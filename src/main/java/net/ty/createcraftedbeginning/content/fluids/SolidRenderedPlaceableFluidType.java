@@ -27,7 +27,7 @@ public class SolidRenderedPlaceableFluidType extends TintedFluidType {
     }
 
     @Override
-    public int getTintColor(FluidState state, BlockAndTintGetter world, BlockPos pos) {
+    public int getTintColor(FluidState state, BlockAndTintGetter getter, BlockPos pos) {
         return 0x00FFFFFF;
     }
 

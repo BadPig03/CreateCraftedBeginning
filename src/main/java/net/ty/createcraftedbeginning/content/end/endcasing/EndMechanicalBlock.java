@@ -34,16 +34,15 @@ public abstract class EndMechanicalBlock extends KineticBlock {
 
     @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
-        BlockState state = super.getStateForPlacement(context);
-        if (state == null) {
+        BlockState placementState = super.getStateForPlacement(context);
+        if (placementState == null) {
             return null;
         }
 
-        BlockPos pos = context.getClickedPos();
-        if (!(context.getLevel().getBlockState(pos.below()).getBlock() instanceof EndCasingBlock)) {
+        if (!(context.getLevel().getBlockState(context.getClickedPos().below()).getBlock() instanceof EndCasingBlock)) {
             return null;
         }
-        return state;
+        return placementState;
     }
 
     @Override

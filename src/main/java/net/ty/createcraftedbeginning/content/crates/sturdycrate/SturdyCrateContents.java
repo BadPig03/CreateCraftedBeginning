@@ -21,9 +21,9 @@ public record SturdyCrateContents(ItemStack content, int count, ItemStack filter
     public static final StreamCodec<RegistryFriendlyByteBuf, SturdyCrateContents> STREAM_CODEC = StreamCodec.composite(ItemStack.OPTIONAL_STREAM_CODEC, SturdyCrateContents::content, ByteBufCodecs.VAR_INT, SturdyCrateContents::count, ItemStack.OPTIONAL_STREAM_CODEC, SturdyCrateContents::filterItem, SturdyCrateContents::new);
 
     public SturdyCrateContents {
-        CrateInventoryState normalized = CrateInventoryState.normalize(content, count, Integer.MAX_VALUE);
-        content = normalized.content();
-        count = normalized.count();
+        CrateInventoryState normalizedInventory = CrateInventoryState.normalize(content, count, Integer.MAX_VALUE);
+        content = normalizedInventory.content();
+        count = normalizedInventory.count();
         filterItem = filterItem.isEmpty() ? ItemStack.EMPTY : filterItem.copyWithCount(1);
     }
 

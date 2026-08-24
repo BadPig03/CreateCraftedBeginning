@@ -69,8 +69,8 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasT
         pressureController.lazyTick();
     }
 
-    public void updatePipesOnSide(Direction side) {
-        pressureController.updatePipesOnSide(side);
+    public void updatePipesOnSide(Direction direction) {
+        pressureController.updatePipesOnSide(direction);
     }
 
     public void markPressureUpdate() {

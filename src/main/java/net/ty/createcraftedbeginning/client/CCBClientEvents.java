@@ -153,8 +153,8 @@ public class CCBClientEvents {
         }
     }
 
-    private static void onTick(boolean isPreEvent) {
-        if (isPreEvent || Minecraft.getInstance().level == null || Minecraft.getInstance().player == null) {
+    private static void onTick(boolean isPreTick) {
+        if (isPreTick || Minecraft.getInstance().level == null || Minecraft.getInstance().player == null) {
             return;
         }
 
@@ -170,13 +170,13 @@ public class CCBClientEvents {
         CCBOutliner.INSTANCE.tickOutlines();
     }
 
-    private static void onRenderWorld(PoseStack ms) {
-        ms.pushPose();
+    private static void onRenderWorld(PoseStack poseStack) {
+        poseStack.pushPose();
 
         SuperRenderTypeBuffer buffer = DefaultSuperRenderTypeBuffer.getInstance();
-        CCBOutliner.INSTANCE.renderOutlines(ms, buffer, Minecraft.getInstance().gameRenderer.getMainCamera().getPosition(), AnimationTickHolder.getPartialTicks());
+        CCBOutliner.INSTANCE.renderOutlines(poseStack, buffer, Minecraft.getInstance().gameRenderer.getMainCamera().getPosition(), AnimationTickHolder.getPartialTicks());
         buffer.draw();
 
-        ms.popPose();
+        poseStack.popPose();
     }
 }

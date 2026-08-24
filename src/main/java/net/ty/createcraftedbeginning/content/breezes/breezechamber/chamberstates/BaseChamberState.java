@@ -46,9 +46,9 @@ public abstract class BaseChamberState {
         advancementBehaviour.awardPlayer(CCBAdvancements.BAD_APPLE);
     }
 
-    private static void applyRemainingTime(BreezeChamberBlockEntity chamber, long newTime) {
+    private static void applyRemainingTime(BreezeChamberBlockEntity chamber, long updatedTime) {
         int maxWindCapacity = BreezeChamberBlockEntity.getMaxWindCapacity();
-        int clampedTime = Math.clamp(newTime, -maxWindCapacity, maxWindCapacity);
+        int clampedTime = Math.clamp(updatedTime, -maxWindCapacity, maxWindCapacity);
         if (clampedTime > 0) {
             chamber.setChamberState(new GaleChamberState(clampedTime, false));
         }
@@ -58,6 +58,21 @@ public abstract class BaseChamberState {
         else {
             chamber.setChamberState(new InactiveChamberState());
         }
+    }
+
+    private static boolean shouldRejectAutomaticOverflow(int remainingTime, long updatedTime) {
+        long currentMagnitude = Math.abs((long) remainingTime);
+        long updatedMagnitude = Math.abs(updatedTime);
+        if (updatedMagnitude <= BreezeChamberBlockEntity.getOverflowThreshold()) {
+            return false;
+        }
+
+        if (updatedMagnitude < currentMagnitude) {
+            return false;
+        }
+
+        int effectiveThreshold = BreezeChamberBlockEntity.getMaxEffectiveThreshold();
+        return remainingTime < 0 || remainingTime >= effectiveThreshold || updatedTime < effectiveThreshold;
     }
 
     public int getRemainingTime() {
@@ -80,20 +95,20 @@ public abstract class BaseChamberState {
 
     public abstract ChargerType getChargerType();
 
-    public InteractionResult onItemInsert(BreezeChamberBlockEntity chamber, ItemStack stack, WindChargingData data, boolean forceOverflow, boolean simulate) {
-        return insertWindCharge(chamber, stack, data, forceOverflow, simulate);
+    public InteractionResult onItemInsert(BreezeChamberBlockEntity chamber, ItemStack stack, WindChargingData chargingData, boolean forceOverflow, boolean simulate) {
+        return insertWindCharge(chamber, stack, chargingData, forceOverflow, simulate);
     }
 
-    protected InteractionResult insertWindCharge(BreezeChamberBlockEntity chamber, ItemStack stack, WindChargingData data, boolean forceOverflow, boolean simulate) {
-        if (data.amount() <= 0) {
+    protected InteractionResult insertWindCharge(BreezeChamberBlockEntity chamber, ItemStack stack, WindChargingData chargingData, boolean forceOverflow, boolean simulate) {
+        if (chargingData.amount() <= 0) {
             return InteractionResult.FAIL;
         }
 
-        if (isCreative && data.action() != WindChargingAction.CYCLE_CREATIVE) {
+        if (isCreative && chargingData.action() != WindChargingAction.CYCLE_CREATIVE) {
             return InteractionResult.PASS;
         }
-        return switch (data.action()) {
-            case CHARGE -> insertCharge(chamber, stack, data.time(), forceOverflow, simulate);
+        return switch (chargingData.action()) {
+            case CHARGE -> insertCharge(chamber, stack, chargingData.time(), forceOverflow, simulate);
             case CLEAR_ILL -> clearIll(chamber, stack, simulate);
             case CYCLE_CREATIVE -> {
                 cycleCreative(chamber, simulate);
@@ -107,8 +122,8 @@ public abstract class BaseChamberState {
             return InteractionResult.FAIL;
         }
 
-        long newTime = (long) remainingTime + chargingTime;
-        if (remainingTime != 0 && !forceOverflow && Math.abs(newTime) > BreezeChamberBlockEntity.getOverflowThreshold()) {
+        long updatedTime = (long) remainingTime + chargingTime;
+        if (!forceOverflow && shouldRejectAutomaticOverflow(remainingTime, updatedTime)) {
             return InteractionResult.FAIL;
         }
 
@@ -117,10 +132,10 @@ public abstract class BaseChamberState {
         }
 
         awardFeedingAdvancements(chamber, stack, chargingTime);
-        applyRemainingTime(chamber, newTime);
-        boolean bad = chargingTime < 0;
-        chamber.playSound(bad);
-        chamber.spawnParticleBurst(bad);
+        applyRemainingTime(chamber, updatedTime);
+        boolean isIllCharge = chargingTime < 0;
+        chamber.playSound(isIllCharge);
+        chamber.spawnParticleBurst(isIllCharge);
         return InteractionResult.SUCCESS;
     }
 
@@ -150,10 +165,10 @@ public abstract class BaseChamberState {
             return;
         }
 
-        ChargerType chargerType = CreativeChamberState.getNextChargeType(getChargerType());
-        chamber.setChamberState(chargerType == ChargerType.NONE ? new InactiveChamberState() : new CreativeChamberState(chargerType));
-        boolean bad = chargerType == ChargerType.BAD;
-        chamber.spawnParticleBurst(bad);
-        chamber.playSound(bad);
+        ChargerType nextChargerType = CreativeChamberState.getNextChargeType(getChargerType());
+        chamber.setChamberState(nextChargerType == ChargerType.NONE ? new InactiveChamberState() : new CreativeChamberState(nextChargerType));
+        boolean isIllCharge = nextChargerType == ChargerType.BAD;
+        chamber.spawnParticleBurst(isIllCharge);
+        chamber.playSound(isIllCharge);
     }
 }

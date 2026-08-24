@@ -87,8 +87,7 @@ public class AirtightPipeBlock extends AxisGasPipeBlock implements IBE<AirtightP
             return ItemInteractionResult.sidedSuccess(true);
         }
 
-        BlockState casedState = state.setValue(CASED, true).setValue(WATERLOGGED, false);
-        level.setBlockAndUpdate(pos, casedState);
+        level.setBlockAndUpdate(pos, state.setValue(CASED, true).setValue(WATERLOGGED, false));
         CCBSoundEvents.SHEET_ADDED.playOnServer(level, pos, 1, 1);
         return ItemInteractionResult.sidedSuccess(false);
     }
@@ -113,8 +112,8 @@ public class AirtightPipeBlock extends AxisGasPipeBlock implements IBE<AirtightP
 
     @Override
     public boolean canBeReplaced(BlockState state, BlockPlaceContext context) {
-        boolean encasedPipeItem = context.getItemInHand().is(CCBBlocks.AIRTIGHT_ENCASED_PIPE_BLOCK.asItem());
-        if (state.getValue(CASED) && encasedPipeItem) {
+        boolean isEncasedPipeItem = context.getItemInHand().is(CCBBlocks.AIRTIGHT_ENCASED_PIPE_BLOCK.asItem());
+        if (state.getValue(CASED) && isEncasedPipeItem) {
             return false;
         }
 
@@ -123,7 +122,7 @@ public class AirtightPipeBlock extends AxisGasPipeBlock implements IBE<AirtightP
         if (player != null && player.isShiftKeyDown()) {
             return canReplace;
         }
-        return encasedPipeItem || canReplace;
+        return isEncasedPipeItem || canReplace;
     }
 
     @Override

@@ -6,6 +6,9 @@ import net.minecraft.world.item.crafting.RecipeManager;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.DataComponentGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.GasIngredient;
+import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SingleGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
 import net.ty.createcraftedbeginning.recipe.DissipationRecipe;
@@ -14,10 +17,10 @@ import net.ty.createcraftedbeginning.recipe.EnergizationRecipe;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
 
@@ -42,12 +45,12 @@ public final class BreezeChamberRecipeIndex {
         }
     }
 
-    public static Optional<GasConversion> findEnergization(RecipeManager recipeManager, GasStack input) {
-        return getOrBuild(recipeManager).findEnergization(input);
+    public static List<GasConversion> findEnergizationCandidates(RecipeManager recipeManager, GasStack inputStack) {
+        return getOrBuild(recipeManager).findEnergizationCandidates(inputStack);
     }
 
-    public static Optional<GasConversion> findDissipation(RecipeManager recipeManager, GasStack input) {
-        return getOrBuild(recipeManager).findDissipation(input);
+    public static List<GasConversion> findDissipationCandidates(RecipeManager recipeManager, GasStack inputStack) {
+        return getOrBuild(recipeManager).findDissipationCandidates(inputStack);
     }
 
     private static Index getOrBuild(RecipeManager recipeManager) {
@@ -70,10 +73,36 @@ public final class BreezeChamberRecipeIndex {
             return input.ingredient().test(inputStack);
         }
 
+        public boolean matchesIngredient(GasStack inputStack) {
+            return matches(inputStack);
+        }
+
+        public boolean hasRequiredInput(GasStack inputStack) {
+            return input.test(inputStack);
+        }
+
         public boolean matches(Gas inputGas) {
             return input.test(inputGas);
         }
+
+        public int specificity(GasStack inputStack) {
+            GasIngredient ingredient = input.ingredient();
+            if (!ingredient.test(inputStack)) {
+                return 0;
+            }
+
+            if (ingredient instanceof DataComponentGasIngredient) {
+                return 3;
+            }
+
+            if (ingredient instanceof SingleGasIngredient) {
+                return 2;
+            }
+            return 1;
+        }
     }
+
+    private record IndexedConversion(String recipeId, GasConversion conversion) {}
 
     private record Index(ConversionLookup energization, ConversionLookup dissipation) {
         private static Index create(RecipeManager recipeManager) {
@@ -114,43 +143,53 @@ public final class BreezeChamberRecipeIndex {
                 return;
             }
 
-            lookup.add(new GasConversion(input, output));
+            lookup.add(recipeId, new GasConversion(input, output));
         }
 
-        private Optional<GasConversion> findEnergization(GasStack input) {
-            return energization.find(input);
+        private List<GasConversion> findEnergizationCandidates(GasStack input) {
+            return energization.findCandidates(input);
         }
 
-        private Optional<GasConversion> findDissipation(GasStack input) {
-            return dissipation.find(input);
+        private List<GasConversion> findDissipationCandidates(GasStack input) {
+            return dissipation.findCandidates(input);
         }
-
     }
 
     private static final class ConversionLookup {
-        private Map<Gas, List<GasConversion>> byGas = new IdentityHashMap<>();
-        private List<GasConversion> fallback = new ArrayList<>();
+        private Map<Gas, List<IndexedConversion>> byGas = new IdentityHashMap<>();
+        private List<IndexedConversion> fallback = new ArrayList<>();
 
-        private void add(GasConversion conversion) {
+        private static void collectMatches(List<IndexedConversion> candidates, GasStack inputStack, Set<IndexedConversion> seen, List<IndexedConversion> matches) {
+            for (IndexedConversion indexedConversion : candidates) {
+                if (!seen.add(indexedConversion) || !indexedConversion.conversion().matchesIngredient(inputStack)) {
+                    continue;
+                }
+
+                matches.add(indexedConversion);
+            }
+        }
+
+        private void add(String recipeId, GasConversion conversion) {
+            IndexedConversion indexedConversion = new IndexedConversion(recipeId, conversion);
             Set<Gas> indexedGases = Collections.newSetFromMap(new IdentityHashMap<>());
-            for (GasStack candidate : conversion.input().getGases()) {
-                if (candidate.isEmpty()) {
+            for (GasStack candidateStack : conversion.input().getGases()) {
+                if (candidateStack.isEmpty()) {
                     continue;
                 }
 
-                Gas gas = candidate.getGasType();
-                if (!indexedGases.add(gas)) {
+                Gas candidateGas = candidateStack.getGasType();
+                if (!indexedGases.add(candidateGas)) {
                     continue;
                 }
 
-                byGas.computeIfAbsent(gas, ignored -> new ArrayList<>()).add(conversion);
+                byGas.computeIfAbsent(candidateGas, ignored -> new ArrayList<>()).add(indexedConversion);
             }
 
             if (!indexedGases.isEmpty() && conversion.input().ingredient().isSimple()) {
                 return;
             }
 
-            fallback.add(conversion);
+            fallback.add(indexedConversion);
         }
 
         private void freeze() {
@@ -159,26 +198,20 @@ public final class BreezeChamberRecipeIndex {
             fallback = List.copyOf(fallback);
         }
 
-        private Optional<GasConversion> find(GasStack input) {
-            if (input.isEmpty()) {
-                return Optional.empty();
+        private List<GasConversion> findCandidates(GasStack inputStack) {
+            if (inputStack.isEmpty()) {
+                return List.of();
             }
 
-            List<GasConversion> candidates = byGas.get(input.getGasType());
-            if (candidates != null) {
-                for (GasConversion conversion : candidates) {
-                    if (conversion.matches(input)) {
-                        return Optional.of(conversion);
-                    }
-                }
+            List<IndexedConversion> matches = new ArrayList<>();
+            Set<IndexedConversion> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+            List<IndexedConversion> indexedCandidates = byGas.get(inputStack.getGasType());
+            if (indexedCandidates != null) {
+                collectMatches(indexedCandidates, inputStack, seen, matches);
             }
-
-            for (GasConversion conversion : fallback) {
-                if (conversion.matches(input)) {
-                    return Optional.of(conversion);
-                }
-            }
-            return Optional.empty();
+            collectMatches(fallback, inputStack, seen, matches);
+            matches.sort(Comparator.comparingInt((IndexedConversion indexedConversion) -> indexedConversion.conversion().specificity(inputStack)).reversed().thenComparingLong(indexedConversion -> indexedConversion.conversion().input().amount()).thenComparing(IndexedConversion::recipeId));
+            return matches.stream().map(IndexedConversion::conversion).toList();
         }
     }
 }

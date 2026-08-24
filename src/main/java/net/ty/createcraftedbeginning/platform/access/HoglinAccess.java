@@ -7,7 +7,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public interface HoglinAccess {
-    int getTimeInOverworld();
+    int ccb$getTimeInOverworld();
 
-    void setTimeInOverworld(int time);
+    void ccb$setTimeInOverworld(int timeInOverworld);
 }

@@ -55,14 +55,14 @@ public class TeslaTurbineLevelCalculator {
 
     public Map<LevelKey, Integer> getLevels() {
         int rotorLevel = getRotorLevel();
-        int minLevel = Math.min(supplyLevel, Math.min(rotorLevel, typeLevel));
-        int maxLevel = Math.max(supplyLevel, Math.max(rotorLevel, typeLevel));
+        int minimumLevel = Math.min(supplyLevel, Math.min(rotorLevel, typeLevel));
+        int maximumLevel = Math.max(supplyLevel, Math.max(rotorLevel, typeLevel));
         Map<LevelKey, Integer> levels = new EnumMap<>(LevelKey.class);
         levels.put(LevelKey.SUPPLY, supplyLevel);
         levels.put(LevelKey.ROTOR, rotorLevel);
         levels.put(LevelKey.TYPE, typeLevel);
-        levels.put(LevelKey.MIN_VALUE, minLevel);
-        levels.put(LevelKey.MAX_VALUE, maxLevel);
+        levels.put(LevelKey.MIN_VALUE, minimumLevel);
+        levels.put(LevelKey.MAX_VALUE, maximumLevel);
         return levels;
     }
 
@@ -75,10 +75,10 @@ public class TeslaTurbineLevelCalculator {
     }
 
     public void reset() {
-        boolean changed = supplyLevel != 0 || typeLevel != 0;
+        boolean hadLevelState = supplyLevel != 0 || typeLevel != 0;
         supplyLevel = 0;
         typeLevel = 0;
-        if (!changed) {
+        if (!hadLevelState) {
             return;
         }
 
@@ -108,13 +108,13 @@ public class TeslaTurbineLevelCalculator {
     }
 
     private int getGasTypeLevel() {
-        GasStack gas = core.getFlowMeter().getGasType();
-        return gas.isEmpty() ? 0 : AirtightTurbineHandlerUtils.of(gas).getMaxLevel();
+        GasStack gasType = core.getFlowMeter().getGasType();
+        return gasType.isEmpty() ? 0 : AirtightTurbineHandlerUtils.of(gasType).getMaxLevel();
     }
 
     private int getRotorLevel() {
-        int rotors = turbine.getBlockState().getValue(TeslaTurbineBlock.ROTOR);
-        return clampLevel(rotors * LEVELS_PER_ROTOR);
+        int rotorCount = turbine.getBlockState().getValue(TeslaTurbineBlock.ROTOR);
+        return clampLevel(rotorCount * LEVELS_PER_ROTOR);
     }
 
     private boolean setSupplyLevel(int newLevel) {

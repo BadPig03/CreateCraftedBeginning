@@ -17,7 +17,6 @@ import net.neoforged.neoforge.items.SlotItemHandler;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.platform.CCBClientBridge;
-import net.ty.createcraftedbeginning.platform.CCBClientBridge.ScreenTarget;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
@@ -58,8 +57,7 @@ public class GasFactoryGaugeSetGasMenu extends GhostItemMenu<GasFactoryGaugeBeha
     @Override
     @OnlyIn(Dist.CLIENT)
     protected @Nullable GasFactoryGaugeBehaviour createOnClient(RegistryFriendlyByteBuf extraData) {
-        ScreenTarget target = CCBClientBridge.createGasFactoryGaugeBehaviour(extraData);
-        return target instanceof GasFactoryGaugeBehaviour behaviour ? behaviour : null;
+        return CCBClientBridge.createGasFactoryGaugeBehaviour(extraData) instanceof GasFactoryGaugeBehaviour behaviour ? behaviour : null;
     }
 
     @Override
@@ -70,16 +68,16 @@ public class GasFactoryGaugeSetGasMenu extends GhostItemMenu<GasFactoryGaugeBeha
 
     @Override
     protected void saveData(GasFactoryGaugeBehaviour behaviour) {
-        ItemStack source = ghostInventory.getStackInSlot(0);
-        if (source.isEmpty()) {
+        ItemStack gasSource = ghostInventory.getStackInSlot(0);
+        if (gasSource.isEmpty()) {
             behaviour.setFilter(ItemStack.EMPTY);
             return;
         }
 
-        List<ItemStack> gases = GasVirtualUtils.getVirtualItems(source);
-        if (gases.size() != 1) {
-            if (gases.isEmpty()) {
-                player.displayClientMessage(CCBLang.translateDirect("gui.warnings.empty_gas_source", source.getHoverName()).withStyle(ChatFormatting.RED), true);
+        List<ItemStack> gasTokens = GasVirtualUtils.getVirtualItems(gasSource);
+        if (gasTokens.size() != 1) {
+            if (gasTokens.isEmpty()) {
+                player.displayClientMessage(CCBLang.translateDirect("gui.warnings.empty_gas_source", gasSource.getHoverName()).withStyle(ChatFormatting.RED), true);
             }
             else {
                 player.displayClientMessage(CCBLang.translateDirect("gui.warnings.requires_single_gas").withStyle(ChatFormatting.RED), true);
@@ -88,7 +86,7 @@ public class GasFactoryGaugeSetGasMenu extends GhostItemMenu<GasFactoryGaugeBeha
             return;
         }
 
-        behaviour.setFilter(gases.getFirst());
+        behaviour.setFilter(gasTokens.getFirst());
         player.level().playSound(null, behaviour.getPos(), SoundEvents.ITEM_FRAME_ADD_ITEM, SoundSource.BLOCKS, 0.25f, 0.1f);
     }
 }

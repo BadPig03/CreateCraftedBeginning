@@ -35,12 +35,12 @@ public class SturdyCrateBlockItem extends BlockItem {
             return;
         }
 
-        ItemStack stack = itemEntity.getItem();
-        if (stack.isEmpty()) {
+        ItemStack crateStack = itemEntity.getItem();
+        if (crateStack.isEmpty()) {
             return;
         }
 
-        ItemEntity replacement = new ItemEntity(level, itemEntity.getX(), itemEntity.getY(), itemEntity.getZ(), stack.copy(), itemEntity.getDeltaMovement().x, itemEntity.getDeltaMovement().y, itemEntity.getDeltaMovement().z);
+        ItemEntity replacement = new ItemEntity(level, itemEntity.getX(), itemEntity.getY(), itemEntity.getZ(), crateStack.copy(), itemEntity.getDeltaMovement().x, itemEntity.getDeltaMovement().y, itemEntity.getDeltaMovement().z);
         replacement.setTarget(itemEntity.getTarget());
         replacement.setDefaultPickUpDelay();
         level.addFreshEntity(replacement);

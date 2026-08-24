@@ -13,13 +13,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class CreativeChamberState extends BaseChamberState {
     private final ChargerType creativeType;
 
-    public CreativeChamberState(ChargerType type) {
-        super(switch (type) {
+    public CreativeChamberState(ChargerType chargerType) {
+        super(switch (chargerType) {
             case BAD -> -BreezeChamberBlockEntity.getMaxWindCapacity();
             case NONE -> 0;
             case NORMAL -> BreezeChamberBlockEntity.getMaxWindCapacity();
         }, true);
-        creativeType = type;
+        creativeType = chargerType;
     }
 
     @Contract(pure = true)
@@ -33,7 +33,7 @@ public class CreativeChamberState extends BaseChamberState {
 
     @Override
     public void tick(BreezeChamberBlockEntity chamber) {
-        chamber.tickGasProcessing(creativeType);
+        chamber.tickGasProcessing(creativeType, remainingTime);
     }
 
     @Override

@@ -22,24 +22,25 @@ public final class BreezeChamberSerialization {
     private static final String STATE_DATA = "StateData";
     private static final String GOGGLES = "Goggles";
     private static final String TRAIN_HAT = "TrainHat";
+    private static final String GAS_PROCESSING = "GasProcessing";
     private static final String IS_CREATIVE = "isCreative";
     private static final String REMAINING_TIME = "RemainingTime";
 
-    public static BaseChamberState stateForItem(int time, boolean creative) {
-        return createState(chargerTypeForTime(time), time, creative);
+    public static BaseChamberState stateForItem(int remainingTime, boolean isCreative) {
+        return createState(chargerTypeForTime(remainingTime), remainingTime, isCreative);
     }
 
-    private static BaseChamberState readState(CompoundTag tag) {
-        CompoundTag stateData = tag.getCompound(STATE_DATA);
-        ChargerType stateType = ChargerType.fromTag(tag, STATE_TYPE, ChargerType.NONE);
-        boolean creative = stateData.contains(IS_CREATIVE, Tag.TAG_BYTE) && stateData.getBoolean(IS_CREATIVE);
+    private static BaseChamberState readState(CompoundTag compoundTag) {
+        CompoundTag stateData = compoundTag.getCompound(STATE_DATA);
+        ChargerType chargerType = ChargerType.fromTag(compoundTag, STATE_TYPE, ChargerType.NONE);
+        boolean isCreative = stateData.contains(IS_CREATIVE, Tag.TAG_BYTE) && stateData.getBoolean(IS_CREATIVE);
         int maxWindCapacity = BreezeChamberBlockEntity.getMaxWindCapacity();
         int remainingTime = stateData.contains(REMAINING_TIME, Tag.TAG_ANY_NUMERIC) ? Mth.clamp(stateData.getInt(REMAINING_TIME), -maxWindCapacity, maxWindCapacity) : 0;
-        return createState(stateType, remainingTime, creative);
+        return createState(chargerType, remainingTime, isCreative);
     }
 
-    private static BaseChamberState createState(ChargerType chargerType, int remainingTime, boolean creative) {
-        if (creative && chargerType != ChargerType.NONE) {
+    private static BaseChamberState createState(ChargerType chargerType, int remainingTime, boolean isCreative) {
+        if (isCreative && chargerType != ChargerType.NONE) {
             return new CreativeChamberState(chargerType);
         }
         return switch (chargerType) {
@@ -49,44 +50,48 @@ public final class BreezeChamberSerialization {
         };
     }
 
-    private static ChargerType chargerTypeForTime(int time) {
-        if (time > 0) {
+    private static ChargerType chargerTypeForTime(int remainingTime) {
+        if (remainingTime > 0) {
             return ChargerType.NORMAL;
         }
 
-        if (time < 0) {
+        if (remainingTime < 0) {
             return ChargerType.BAD;
         }
         return ChargerType.NONE;
     }
 
-    public void write(BreezeChamberBlockEntity chamber, CompoundTag tag) {
-        BaseChamberState state = chamber.getChamberStateInternal();
+    public void write(BreezeChamberBlockEntity chamber, CompoundTag compoundTag) {
+        BaseChamberState chamberState = chamber.getChamberStateInternal();
         CompoundTag stateTag = new CompoundTag();
-        state.save(stateTag);
-        tag.put(STATE_DATA, stateTag);
-        tag.putString(STATE_TYPE, state.getChargerType().name());
-        tag.putBoolean(GOGGLES, chamber.hasGoggles());
-        tag.putBoolean(TRAIN_HAT, chamber.hasTrainHat());
+        chamberState.save(stateTag);
+        compoundTag.put(STATE_DATA, stateTag);
+        compoundTag.putString(STATE_TYPE, chamberState.getChargerType().name());
+        compoundTag.putBoolean(GOGGLES, chamber.hasGoggles());
+        compoundTag.putBoolean(TRAIN_HAT, chamber.hasTrainHat());
+        CompoundTag gasProcessingTag = new CompoundTag();
+        chamber.getGasProcessorInternal().writePendingProcessing(gasProcessingTag);
+        compoundTag.put(GAS_PROCESSING, gasProcessingTag);
     }
 
-    public void read(BreezeChamberBlockEntity chamber, CompoundTag tag) {
-        if (tag.contains(STATE_DATA, Tag.TAG_COMPOUND)) {
-            chamber.setChamberStateFromSerialization(readState(tag));
+    public void read(BreezeChamberBlockEntity chamber, CompoundTag compoundTag) {
+        if (compoundTag.contains(STATE_DATA, Tag.TAG_COMPOUND)) {
+            chamber.setChamberStateFromSerialization(readState(compoundTag));
         }
-        if (tag.contains(GOGGLES, Tag.TAG_BYTE)) {
-            chamber.setGogglesFromSerialization(tag.getBoolean(GOGGLES));
+        chamber.getGasProcessorInternal().readPendingProcessing(compoundTag.contains(GAS_PROCESSING, Tag.TAG_COMPOUND) ? compoundTag.getCompound(GAS_PROCESSING) : new CompoundTag());
+        if (compoundTag.contains(GOGGLES, Tag.TAG_BYTE)) {
+            chamber.setGogglesFromSerialization(compoundTag.getBoolean(GOGGLES));
         }
-        if (!tag.contains(TRAIN_HAT, Tag.TAG_BYTE)) {
+        if (!compoundTag.contains(TRAIN_HAT, Tag.TAG_BYTE)) {
             return;
         }
 
-        chamber.setTrainHatFromSerialization(tag.getBoolean(TRAIN_HAT));
+        chamber.setTrainHatFromSerialization(compoundTag.getBoolean(TRAIN_HAT));
     }
 
     public void saveToItem(BreezeChamberBlockEntity chamber, ItemStack stack) {
-        BaseChamberState state = chamber.getChamberStateInternal();
-        stack.set(CCBDataComponents.BREEZE_TIME, state.getRemainingTime());
-        stack.set(CCBDataComponents.BREEZE_CREATIVE, state.isCreative());
+        BaseChamberState chamberState = chamber.getChamberStateInternal();
+        stack.set(CCBDataComponents.BREEZE_TIME, chamberState.getRemainingTime());
+        stack.set(CCBDataComponents.BREEZE_CREATIVE, chamberState.isCreative());
     }
 }

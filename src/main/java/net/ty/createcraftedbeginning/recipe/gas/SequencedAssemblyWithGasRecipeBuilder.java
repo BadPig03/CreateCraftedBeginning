@@ -43,10 +43,10 @@ public class SequencedAssemblyWithGasRecipeBuilder {
     }
 
     public <B extends ProcessingWithGasRecipeBuilder<?, ?, B>> SequencedAssemblyWithGasRecipeBuilder addStep(Function<ResourceLocation, B> factory, UnaryOperator<B> builder) {
-        B recipeBuilder = factory.apply(ResourceLocation.withDefaultNamespace("dummy"));
+        B stepBuilder = factory.apply(ResourceLocation.withDefaultNamespace("dummy"));
         Item placeholder = recipe.getTransitionalItem().getItem();
-        B configuredBuilder = recipeBuilder.require(placeholder).output(placeholder);
-        recipe.getSequence().add(new SequencedWithGasRecipe<>(builder.apply(configuredBuilder).build()));
+        B configuredStepBuilder = stepBuilder.require(placeholder).output(placeholder);
+        recipe.getSequence().add(new SequencedWithGasRecipe<>(builder.apply(configuredStepBuilder).build()));
         return this;
     }
 

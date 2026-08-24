@@ -28,10 +28,10 @@ public final class AdjacentPipeSource extends GasFlowSource {
 
     @Override
     public void manageSource(Level level, BlockEntity networkBE) {
-        GasTransportBehaviour behaviour;
+        GasTransportBehaviour targetBehaviour;
         if (cached != null) {
-            behaviour = cached.get();
-            if (behaviour != null && !behaviour.blockEntity.isRemoved()) {
+            targetBehaviour = cached.get();
+            if (targetBehaviour != null && !targetBehaviour.blockEntity.isRemoved()) {
                 return;
             }
         }
@@ -39,31 +39,31 @@ public final class AdjacentPipeSource extends GasFlowSource {
         cached = null;
         BlockEntity targetBlockEntity = level.getBlockEntity(location.getConnectedPos());
         if (targetBlockEntity != null) {
-            behaviour = BlockEntityBehaviour.get(targetBlockEntity, GasTransportBehaviour.TYPE);
+            targetBehaviour = BlockEntityBehaviour.get(targetBlockEntity, GasTransportBehaviour.TYPE);
         }
         else {
-            behaviour = BlockEntityBehaviour.get(level, location.getConnectedPos(), GasTransportBehaviour.TYPE);
+            targetBehaviour = BlockEntityBehaviour.get(level, location.getConnectedPos(), GasTransportBehaviour.TYPE);
         }
-        if (behaviour == null) {
+        if (targetBehaviour == null) {
             return;
         }
 
-        cached = new WeakReference<>(behaviour);
+        cached = new WeakReference<>(targetBehaviour);
     }
 
     @Override
-    public GasStack provideGas(Predicate<GasStack> predicate) {
+    public GasStack provideGas(Predicate<GasStack> gasPredicate) {
         if (cached == null || cached.get() == null) {
             return GasStack.EMPTY;
         }
 
-        GasTransportBehaviour behaviour = cached.get();
-        if (behaviour == null) {
+        GasTransportBehaviour targetBehaviour = cached.get();
+        if (targetBehaviour == null) {
             return GasStack.EMPTY;
         }
 
-        GasStack outwardGas = behaviour.getProvidedOutwardGas(location.getOppositeFace());
-        if (!predicate.test(outwardGas)) {
+        GasStack outwardGas = targetBehaviour.getProvidedOutwardGas(location.getOppositeFace());
+        if (!gasPredicate.test(outwardGas)) {
             return GasStack.EMPTY;
         }
         return outwardGas;

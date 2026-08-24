@@ -23,12 +23,12 @@ public class StockKeeperRequestGasGuiHandler implements IGuiContainerHandler<Sto
     @Override
     public Optional<IClickableIngredient<?>> getClickableIngredientUnderMouse(IClickableIngredientFactory factory, StockKeeperRequestScreen screen, double mouseX, double mouseY) {
         return screen.getHoveredIngredient((int) mouseX, (int) mouseY).flatMap(hovered -> {
-            ItemStack stack = hovered.getFirst();
-            Rect2i area = hovered.getSecond();
-            if (stack.isEmpty()) {
+            ItemStack hoveredStack = hovered.getFirst();
+            Rect2i hoveredArea = hovered.getSecond();
+            if (hoveredStack.isEmpty()) {
                 return Optional.empty();
             }
-            return factory.createBuilder(stack.copyWithCount(1)).buildWithArea(area);
+            return factory.createBuilder(hoveredStack.copyWithCount(1)).buildWithArea(hoveredArea);
         });
     }
 }

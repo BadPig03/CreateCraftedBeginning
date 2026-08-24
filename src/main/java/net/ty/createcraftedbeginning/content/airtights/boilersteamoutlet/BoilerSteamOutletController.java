@@ -30,13 +30,13 @@ public final class BoilerSteamOutletController {
         }
 
         boolean productionRateChanged = production.ensureCurrentTick();
-        TickResult sampleResult = extractionMeter.tick();
-        if (!productionRateChanged && sampleResult == TickResult.NONE) {
+        TickResult extractionTickResult = extractionMeter.tick();
+        if (!productionRateChanged && extractionTickResult == TickResult.NONE) {
             return;
         }
 
         outlet.setChanged();
-        if (!productionRateChanged && sampleResult != TickResult.AVERAGE_CHANGED) {
+        if (!productionRateChanged && extractionTickResult != TickResult.AVERAGE_CHANGED) {
             return;
         }
 
@@ -49,8 +49,8 @@ public final class BoilerSteamOutletController {
             return;
         }
 
-        BlockState state = outlet.getBlockState();
-        if (state.getBlock() instanceof BoilerSteamOutletBlock block && block.canSurvive(state, level, outlet.getBlockPos())) {
+        BlockState outletState = outlet.getBlockState();
+        if (outletState.getBlock() instanceof BoilerSteamOutletBlock outletBlock && outletBlock.canSurvive(outletState, level, outlet.getBlockPos())) {
             return;
         }
 

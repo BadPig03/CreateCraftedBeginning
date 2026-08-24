@@ -117,6 +117,9 @@ public class EndSculkSilencerScenes {
         scene.overlay().showControls(silencerSideVec, Pointing.DOWN, 60).showing(CCBIcons.I_5X5);
         scene.overlay().showText(60).text("\"5x5\": 5x5 chunks").pointAt(silencerTopVec).placeNearTarget().attachKeyFrame();
 
+        scene.idle(80);
+        scene.overlay().showText(60).text("When assembled into a Contraption, its working range is fixed to 1x1 chunk").colored(PonderPalette.BLUE).pointAt(silencerTopVec).placeNearTarget().attachKeyFrame();
+
         scene.idle(60);
         scene.markAsFinished();
     }

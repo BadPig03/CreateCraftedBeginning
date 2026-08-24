@@ -46,23 +46,23 @@ public final class CanisterContainerClients {
 
     @OnlyIn(Dist.CLIENT)
     public static boolean isBarVisible() {
-        DisplayedGasState state = getDisplayedGasState();
-        return !state.content().isEmpty() && (state.creative() || state.capacity() > 0);
+        DisplayedGasState displayedState = getDisplayedGasState();
+        return !displayedState.content().isEmpty() && (displayedState.creative() || displayedState.capacity() > 0);
     }
 
     @OnlyIn(Dist.CLIENT)
     public static int getBarColor() {
-        float ratio = getDisplayedGasRatio();
-        if (ratio == 0) {
+        float gasRatio = getDisplayedGasRatio();
+        if (gasRatio == 0) {
             return 0;
         }
-        return Color.mixColors(GasCanisterUtils.COLOR_CYAN, GasCanisterUtils.COLOR_WHITE, ratio);
+        return Color.mixColors(GasCanisterUtils.COLOR_CYAN, GasCanisterUtils.COLOR_WHITE, gasRatio);
     }
 
     @OnlyIn(Dist.CLIENT)
     public static int getBarWidth() {
-        float ratio = getDisplayedGasRatio();
-        return ratio == 0 ? 0 : Math.round(BAR_WIDTH * ratio);
+        float gasRatio = getDisplayedGasRatio();
+        return gasRatio == 0 ? 0 : Math.round(BAR_WIDTH * gasRatio);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -72,19 +72,19 @@ public final class CanisterContainerClients {
 
     @OnlyIn(Dist.CLIENT)
     private static float getDisplayedGasRatio() {
-        DisplayedGasState state = getDisplayedGasState();
-        if (state.content().isEmpty()) {
+        DisplayedGasState displayedState = getDisplayedGasState();
+        if (displayedState.content().isEmpty()) {
             return 0;
         }
 
-        if (state.creative()) {
+        if (displayedState.creative()) {
             return 1;
         }
 
-        if (state.capacity() <= 0) {
+        if (displayedState.capacity() <= 0) {
             return 0;
         }
-        return Mth.clamp((float) state.content().getAmount() / state.capacity(), 0, 1);
+        return Mth.clamp((float) displayedState.content().getAmount() / displayedState.capacity(), 0, 1);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -99,12 +99,12 @@ public final class CanisterContainerClients {
             return syncedState;
         }
 
-        var fallback = CanisterContainerSuppliers.getFirstCanisterSupplierPair(player);
-        GasStack content = fallback.getFirst();
-        if (content.isEmpty()) {
+        var fallbackGasInfo = CanisterContainerSuppliers.getFirstCanisterSupplierPair(player);
+        GasStack gasContent = fallbackGasInfo.getFirst();
+        if (gasContent.isEmpty()) {
             return DisplayedGasState.EMPTY;
         }
-        return DisplayedGasState.fallback(content, fallback.getSecond().getFirst(), fallback.getSecond().getSecond());
+        return DisplayedGasState.fallback(gasContent, fallbackGasInfo.getSecond().getFirst(), fallbackGasInfo.getSecond().getSecond());
     }
 
     public static int getBarColor(ItemStack canister) {
@@ -118,8 +118,8 @@ public final class CanisterContainerClients {
             return 0;
         }
 
-        float ratio = Mth.clamp((float) amount / capacity, 0, 1);
-        return Color.mixColors(GasCanisterUtils.COLOR_CYAN, GasCanisterUtils.COLOR_WHITE, ratio);
+        float gasRatio = Mth.clamp((float) amount / capacity, 0, 1);
+        return Color.mixColors(GasCanisterUtils.COLOR_CYAN, GasCanisterUtils.COLOR_WHITE, gasRatio);
     }
 
     public static int getBarWidth(ItemStack canister) {
@@ -133,8 +133,8 @@ public final class CanisterContainerClients {
             return 0;
         }
 
-        float ratio = Mth.clamp((float) amount / capacity, 0, 1);
-        return Math.round(BAR_WIDTH * ratio);
+        float gasRatio = Mth.clamp((float) amount / capacity, 0, 1);
+        return Math.round(BAR_WIDTH * gasRatio);
     }
 
     public static Gas getStoredGasType(Player player) {

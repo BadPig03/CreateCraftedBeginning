@@ -20,5 +20,6 @@
       "id": "create:cinder_flour"
     }
   ],
-  "temperature": "heated"
+  "temperature": "heated",
+  "temperature_matching": "compatible"
 }

@@ -49,10 +49,10 @@ public class EndCasingBlock extends CasingBlock {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        IPlacementHelper helper = PlacementHelpers.get(helperId);
-        if (!helper.matchesItem(stack)) {
+        IPlacementHelper placementHelper = PlacementHelpers.get(helperId);
+        if (!placementHelper.matchesItem(stack)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-        return helper.getOffset(player, level, state, pos, hitResult).placeInWorld(level, (BlockItem) stack.getItem(), player, hand, hitResult);
+        return placementHelper.getOffset(player, level, state, pos, hitResult).placeInWorld(level, (BlockItem) stack.getItem(), player, hand, hitResult);
     }
 }

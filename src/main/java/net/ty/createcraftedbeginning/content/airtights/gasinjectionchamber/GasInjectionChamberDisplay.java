@@ -75,8 +75,8 @@ public final class GasInjectionChamberDisplay {
         }
 
         Vec3 cloudPos = VecHelper.getCenterOf(chamber.getBlockPos()).subtract(0, 1.6875, 0);
-        int count = level.random.nextInt(3, 6);
-        for (int i = 0; i < count; i++) {
+        int particleCount = level.random.nextInt(3, 6);
+        for (int particleIndex = 0; particleIndex < particleCount; particleIndex++) {
             Vec3 velocity = VecHelper.offsetRandomly(Vec3.ZERO, level.random, 0.125f);
             velocity = new Vec3(velocity.x, Math.abs(velocity.y), velocity.z);
             level.addAlwaysVisibleParticle(new ColoredBreezeCloudParticleOptions(color), cloudPos.x, cloudPos.y, cloudPos.z, velocity.x, velocity.y, velocity.z);

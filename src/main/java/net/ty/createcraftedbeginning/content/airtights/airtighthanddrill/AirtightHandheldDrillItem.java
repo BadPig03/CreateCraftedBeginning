@@ -26,7 +26,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.api.drillhandlers.AirtightDrillHandler;
 import net.ty.createcraftedbeginning.api.drillhandlers.AirtightDrillHandlerUtils;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.HandheldDrillAttackModeButton;
@@ -192,8 +191,7 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
 
         tooltip.add(CommonComponents.EMPTY);
         tooltip.add(CCBLang.gasName(gasContent).add(CCBLang.translate("gui.gas_tools.content")).style(ChatFormatting.GRAY).component());
-        AirtightDrillHandler drillHandler = AirtightDrillHandlerUtils.of(gasContent.getGasType());
-        drillHandler.appendHoverText(drill, context, tooltip, tooltipFlag);
+        AirtightDrillHandlerUtils.of(gasContent.getGasType()).appendHoverText(drill, context, tooltip, tooltipFlag);
     }
 
     @Override

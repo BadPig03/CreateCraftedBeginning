@@ -30,109 +30,109 @@ public final class GasTransferPlanner {
     private int allocationCursor;
     private int targetProbeBudgetRemaining;
 
-    public GasTransferPlanner(GasNetworkTraversal traversal, BlockFace start) {
+    public GasTransferPlanner(GasNetworkTraversal traversal, BlockFace startFace) {
         this.traversal = traversal;
-        sourceFace = start.getOpposite();
+        sourceFace = startFace.getOpposite();
     }
 
-    private static boolean identifiesSameInventory(@Nullable InventoryIdentifier first, BlockFace firstFace, @Nullable InventoryIdentifier second, BlockFace secondFace) {
-        return first != null && first == second || first != null && first.contains(secondFace) || second != null && second.contains(firstFace);
+    private static boolean identifiesSameInventory(@Nullable InventoryIdentifier firstIdentifier, BlockFace firstFace, @Nullable InventoryIdentifier secondIdentifier, BlockFace secondFace) {
+        return firstIdentifier != null && firstIdentifier == secondIdentifier || firstIdentifier != null && firstIdentifier.contains(secondFace) || secondIdentifier != null && secondIdentifier.contains(firstFace);
     }
 
     public void beginTick() {
         targetProbeBudgetRemaining = TARGET_PROBE_WORK_BUDGET_PER_TICK;
     }
 
-    public List<PlannedTransfer> createTransferPlan(GasStack available, IGasHandler sourceCap) {
-        List<TransferTarget> availableTargets = collectAvailableTargets(sourceCap);
+    public List<PlannedTransfer> createTransferPlan(GasStack availableGas, IGasHandler sourceHandler) {
+        List<TransferTarget> availableTargets = collectAvailableTargets(sourceHandler);
         if (availableTargets.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<TargetCapacity> capacities = new ArrayList<>();
+        List<TargetCapacity> targetCapacities = new ArrayList<>();
         for (TransferTarget target : availableTargets) {
-            long capacity = Math.clamp(target.handler.fill(available.copy(), GasAction.SIMULATE), 0, available.getAmount());
-            if (capacity <= 0) {
+            long fillCapacity = Math.clamp(target.handler.fill(availableGas.copy(), GasAction.SIMULATE), 0, availableGas.getAmount());
+            if (fillCapacity <= 0) {
                 continue;
             }
 
-            capacities.add(new TargetCapacity(target.handler, capacity));
+            targetCapacities.add(new TargetCapacity(target.handler, fillCapacity));
         }
-        if (capacities.isEmpty()) {
+        if (targetCapacities.isEmpty()) {
             return Collections.emptyList();
         }
 
-        long[] capacityAmounts = new long[capacities.size()];
-        for (int i = 0; i < capacities.size(); i++) {
-            capacityAmounts[i] = capacities.get(i).capacity;
+        long[] capacityAmounts = new long[targetCapacities.size()];
+        for (int targetIndex = 0; targetIndex < targetCapacities.size(); targetIndex++) {
+            capacityAmounts[targetIndex] = targetCapacities.get(targetIndex).capacity;
         }
 
-        Result allocation = GasTransferAllocator.allocate(available.getAmount(), capacityAmounts, allocationCursor);
+        Result allocation = GasTransferAllocator.allocate(availableGas.getAmount(), capacityAmounts, allocationCursor);
         allocationCursor = allocation.nextCursor();
 
-        List<PlannedTransfer> plan = new ArrayList<>(capacities.size());
+        List<PlannedTransfer> transferPlan = new ArrayList<>(targetCapacities.size());
         long[] allocations = allocation.allocations();
-        for (int i = 0; i < capacities.size(); i++) {
-            long amount = allocations[i];
-            if (amount <= 0) {
+        for (int targetIndex = 0; targetIndex < targetCapacities.size(); targetIndex++) {
+            long allocatedAmount = allocations[targetIndex];
+            if (allocatedAmount <= 0) {
                 continue;
             }
 
-            plan.add(new PlannedTransfer(capacities.get(i).handler, amount));
+            transferPlan.add(new PlannedTransfer(targetCapacities.get(targetIndex).handler, allocatedAmount));
         }
-        return plan;
+        return transferPlan;
     }
 
     public boolean hasProbeBudget() {
         return targetProbeBudgetRemaining > 0;
     }
 
-    private List<TransferTarget> collectAvailableTargets(IGasHandler sourceCap) {
+    private List<TransferTarget> collectAvailableTargets(IGasHandler sourceHandler) {
         int probeBudget = Math.min(TARGET_PROBE_WORK_BUDGET_PER_PASS, targetProbeBudgetRemaining);
         if (probeBudget <= 0) {
             return Collections.emptyList();
         }
 
-        List<BlockFace> locations = traversal.claimTargetProbeWindow(probeBudget);
-        targetProbeBudgetRemaining -= locations.size();
-        if (locations.isEmpty()) {
+        List<BlockFace> targetLocations = traversal.claimTargetProbeWindow(probeBudget);
+        targetProbeBudgetRemaining -= targetLocations.size();
+        if (targetLocations.isEmpty()) {
             return Collections.emptyList();
         }
 
         List<TransferTarget> availableTargets = new ArrayList<>();
         List<IdentifiedInventory> identifiedInventories = new ArrayList<>();
-        Set<IGasHandler> handlers = Collections.newSetFromMap(new IdentityHashMap<>());
+        Set<IGasHandler> uniqueHandlers = Collections.newSetFromMap(new IdentityHashMap<>());
         InventoryIdentifier sourceIdentifier = traversal.getInventoryIdentifier(sourceFace);
-        for (BlockFace location : locations) {
-            GasFlowSource target = traversal.refreshTarget(location);
-            if (target == null) {
-                traversal.invalidateTarget(location);
+        for (BlockFace targetLocation : targetLocations) {
+            GasFlowSource targetSource = traversal.refreshTarget(targetLocation);
+            if (targetSource == null) {
+                traversal.invalidateTarget(targetLocation);
                 continue;
             }
 
-            ICapabilityProvider<IGasHandler> provider = target.getGasHandlerProvider();
-            if (provider == null) {
+            ICapabilityProvider<IGasHandler> targetProvider = targetSource.getGasHandlerProvider();
+            if (targetProvider == null) {
                 continue;
             }
 
-            IGasHandler targetHandler = provider.getCapability();
-            if (targetHandler == null || targetHandler == sourceCap || !handlers.add(targetHandler)) {
+            IGasHandler targetHandler = targetProvider.getCapability();
+            if (targetHandler == null || targetHandler == sourceHandler || !uniqueHandlers.add(targetHandler)) {
                 continue;
             }
 
-            BlockFace targetFace = location.getOpposite();
-            InventoryIdentifier identifier = traversal.getInventoryIdentifier(targetFace);
-            if (identifier != null) {
-                if (identifiesSameInventory(sourceIdentifier, sourceFace, identifier, targetFace)) {
+            BlockFace targetFace = targetLocation.getOpposite();
+            InventoryIdentifier targetIdentifier = traversal.getInventoryIdentifier(targetFace);
+            if (targetIdentifier != null) {
+                if (identifiesSameInventory(sourceIdentifier, sourceFace, targetIdentifier, targetFace)) {
                     continue;
                 }
 
-                boolean duplicate = identifiedInventories.stream().anyMatch(existing -> identifiesSameInventory(existing.identifier, existing.face, identifier, targetFace));
-                if (duplicate) {
+                boolean isDuplicateInventory = identifiedInventories.stream().anyMatch(identifiedInventory -> identifiesSameInventory(identifiedInventory.identifier, identifiedInventory.face, targetIdentifier, targetFace));
+                if (isDuplicateInventory) {
                     continue;
                 }
 
-                identifiedInventories.add(new IdentifiedInventory(identifier, targetFace));
+                identifiedInventories.add(new IdentifiedInventory(targetIdentifier, targetFace));
             }
 
             availableTargets.add(new TransferTarget(targetHandler));

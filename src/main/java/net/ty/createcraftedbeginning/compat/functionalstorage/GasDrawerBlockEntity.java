@@ -61,59 +61,59 @@ public final class GasDrawerBlockEntity extends ControllableDrawerTile<GasDrawer
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBFunctionalStorageBlockEntities.GAS_DRAWER_1.get(), (drawer, side) -> drawer.gasHandler);
-        event.registerBlockEntity(GasHandler.BLOCK, CCBFunctionalStorageBlockEntities.GAS_DRAWER_2.get(), (drawer, side) -> drawer.gasHandler);
-        event.registerBlockEntity(GasHandler.BLOCK, CCBFunctionalStorageBlockEntities.GAS_DRAWER_4.get(), (drawer, side) -> drawer.gasHandler);
+        event.registerBlockEntity(GasHandler.BLOCK, CCBFunctionalStorageBlockEntities.GAS_DRAWER_1.get(), (drawer, ignoredDirection) -> drawer.gasHandler);
+        event.registerBlockEntity(GasHandler.BLOCK, CCBFunctionalStorageBlockEntities.GAS_DRAWER_2.get(), (drawer, ignoredDirection) -> drawer.gasHandler);
+        event.registerBlockEntity(GasHandler.BLOCK, CCBFunctionalStorageBlockEntities.GAS_DRAWER_4.get(), (drawer, ignoredDirection) -> drawer.gasHandler);
     }
 
     private static long calculateTankCapacity(double storageMultiplier) {
-        double capacity = storageMultiplier / BASE_STORAGE_MULTIPLIER * BASE_TOTAL_GAS_CAPACITY;
-        if (Double.isNaN(capacity) || capacity <= 0) {
+        double scaledCapacity = storageMultiplier / BASE_STORAGE_MULTIPLIER * BASE_TOTAL_GAS_CAPACITY;
+        if (Double.isNaN(scaledCapacity) || scaledCapacity <= 0) {
             return 0;
         }
-        if (Double.isInfinite(capacity) || capacity >= Long.MAX_VALUE) {
+        if (Double.isInfinite(scaledCapacity) || scaledCapacity >= Long.MAX_VALUE) {
             return Long.MAX_VALUE;
         }
-        return (long) Math.floor(capacity);
+        return (long) Math.floor(scaledCapacity);
     }
 
-    private static void restoreRemainder(IGasCanisterContainer canister, int tank, GasStack drained, long inserted) {
-        if (inserted >= drained.getAmount()) {
+    private static void restoreRemainder(IGasCanisterContainer canister, int canisterTank, GasStack drainedGas, long insertedAmount) {
+        if (insertedAmount >= drainedGas.getAmount()) {
             return;
         }
 
-        canister.fill(tank, drained.copyWithAmount(drained.getAmount() - inserted), GasAction.EXECUTE);
+        canister.fill(canisterTank, drainedGas.copyWithAmount(drainedGas.getAmount() - insertedAmount), GasAction.EXECUTE);
     }
 
-    private static void restoreRemainder(GasDrawerTank tank, GasStack drained, long inserted) {
-        if (inserted >= drained.getAmount()) {
+    private static void restoreRemainder(GasDrawerTank drawerTank, GasStack drainedGas, long insertedAmount) {
+        if (insertedAmount >= drainedGas.getAmount()) {
             return;
         }
 
-        tank.fill(drained.copyWithAmount(drained.getAmount() - inserted), GasAction.EXECUTE);
+        drawerTank.fill(drainedGas.copyWithAmount(drainedGas.getAmount() - insertedAmount), GasAction.EXECUTE);
     }
 
-    private static boolean fillCanister(GasDrawerTank tank, IGasCanisterContainer canister) {
-        GasStack available = tank.drain(Long.MAX_VALUE, GasAction.SIMULATE);
-        if (available.isEmpty()) {
+    private static boolean fillCanister(GasDrawerTank drawerTank, IGasCanisterContainer canister) {
+        GasStack availableGas = drawerTank.drain(Long.MAX_VALUE, GasAction.SIMULATE);
+        if (availableGas.isEmpty()) {
             return false;
         }
 
         for (int targetTank = 0; targetTank < canister.getTanks(); targetTank++) {
-            long accepted = canister.fill(targetTank, available, GasAction.SIMULATE);
-            if (accepted <= 0) {
+            long acceptedAmount = canister.fill(targetTank, availableGas, GasAction.SIMULATE);
+            if (acceptedAmount <= 0) {
                 continue;
             }
 
-            GasStack drained = tank.drain(available.copyWithAmount(accepted), GasAction.EXECUTE);
-            if (drained.isEmpty()) {
+            GasStack drainedGas = drawerTank.drain(availableGas.copyWithAmount(acceptedAmount), GasAction.EXECUTE);
+            if (drainedGas.isEmpty()) {
                 continue;
             }
 
-            long inserted = canister.fill(targetTank, drained, GasAction.EXECUTE);
-            restoreRemainder(tank, drained, inserted);
+            long insertedAmount = canister.fill(targetTank, drainedGas, GasAction.EXECUTE);
+            restoreRemainder(drawerTank, drainedGas, insertedAmount);
             canister.save();
-            return inserted > 0;
+            return insertedAmount > 0;
         }
         return false;
     }
@@ -127,33 +127,33 @@ public final class GasDrawerBlockEntity extends ControllableDrawerTile<GasDrawer
     }
 
     public RenderGas getRenderGas(int slot) {
-        GasStack stored = gasHandler.getInternalTank(slot).getStoredStack();
-        if (!stored.isEmpty()) {
-            return new RenderGas(getVisibleStack(stored), false);
+        GasStack storedGas = gasHandler.getInternalTank(slot).getStoredStack();
+        if (!storedGas.isEmpty()) {
+            return new RenderGas(getVisibleStack(storedGas), false);
         }
 
-        GasStack filter = gasFilter.get(slot);
-        if (!isLocked() || filter.isEmpty()) {
+        GasStack filterGas = gasFilter.get(slot);
+        if (!isLocked() || filterGas.isEmpty()) {
             return RenderGas.EMPTY;
         }
 
-        return new RenderGas(filter, true);
+        return new RenderGas(filterGas, true);
     }
 
-    private GasStack getVisibleStack(GasStack stack) {
+    private GasStack getVisibleStack(GasStack storedGas) {
         if (!isCreative()) {
-            return stack;
+            return storedGas;
         }
-        return stack.copyWithAmount(Long.MAX_VALUE);
+        return storedGas.copyWithAmount(Long.MAX_VALUE);
     }
 
-    private boolean matchesLockedFilter(int slot, GasStack stack) {
+    private boolean matchesLockedFilter(int slot, GasStack gasStack) {
         if (!isLocked()) {
             return true;
         }
 
-        GasStack filter = gasFilter.get(slot);
-        return !filter.isEmpty() && GasStack.isSameGasSameComponents(filter, stack);
+        GasStack filterGas = gasFilter.get(slot);
+        return !filterGas.isEmpty() && GasStack.isSameGasSameComponents(filterGas, gasStack);
     }
 
     public long getPhysicalTankCapacity() {
@@ -161,16 +161,16 @@ public final class GasDrawerBlockEntity extends ControllableDrawerTile<GasDrawer
     }
 
     private void updateTankCapacities() {
-        long capacity = getPhysicalTankCapacity();
+        long tankCapacity = getPhysicalTankCapacity();
         for (GasDrawerTank tank : gasHandler.getInternalTanks()) {
-            tank.setCapacity(capacity);
+            tank.setCapacity(tankCapacity);
         }
     }
 
     private boolean canChangeMultiplier(double storageMultiplier) {
-        long capacity = calculateTankCapacity(storageMultiplier);
+        long tankCapacity = calculateTankCapacity(storageMultiplier);
         for (GasDrawerTank tank : gasHandler.getInternalTanks()) {
-            if (tank.getStoredStack().getAmount() <= capacity) {
+            if (tank.getStoredStack().getAmount() <= tankCapacity) {
                 continue;
             }
 
@@ -179,70 +179,70 @@ public final class GasDrawerBlockEntity extends ControllableDrawerTile<GasDrawer
         return true;
     }
 
-    private boolean storageUpgradeFits(int slot, ItemStack replacement) {
-        if (replacement.is(FunctionalStorage.CREATIVE_UPGRADE.get())) {
+    private boolean storageUpgradeFits(int slot, ItemStack replacementUpgrade) {
+        if (replacementUpgrade.is(FunctionalStorage.CREATIVE_UPGRADE.get())) {
             return true;
         }
-        if (!replacement.has(FSAttachments.FLUID_STORAGE_MODIFIER)) {
+        if (!replacementUpgrade.has(FSAttachments.FLUID_STORAGE_MODIFIER)) {
             return false;
         }
 
-        ItemStack[] replacements = new ItemStack[getStorageUpgrades().getSlots()];
-        ItemStack single = replacement.copy();
-        single.setCount(1);
-        replacements[slot] = single;
-        float newSize = SizeProvider.calculateAsFactor(getStorageUpgrades(), FSAttachments.FLUID_STORAGE_MODIFIER, baseSize, replacements);
-        return canChangeMultiplier(newSize);
+        ItemStack[] upgradeReplacements = new ItemStack[getStorageUpgrades().getSlots()];
+        ItemStack singleReplacement = replacementUpgrade.copy();
+        singleReplacement.setCount(1);
+        upgradeReplacements[slot] = singleReplacement;
+        float newStorageMultiplier = SizeProvider.calculateAsFactor(getStorageUpgrades(), FSAttachments.FLUID_STORAGE_MODIFIER, baseSize, upgradeReplacements);
+        return canChangeMultiplier(newStorageMultiplier);
     }
 
     private boolean interactWithCanister(int slot, IGasCanisterContainer canister) {
-        GasDrawerTank tank = gasHandler.getInternalTank(slot);
-        return fillFromCanister(slot, tank, canister) || fillCanister(tank, canister);
+        GasDrawerTank drawerTank = gasHandler.getInternalTank(slot);
+        return fillFromCanister(slot, drawerTank, canister) || fillCanister(drawerTank, canister);
     }
 
-    private boolean fillFromCanister(int slot, GasDrawerTank tank, IGasCanisterContainer canister) {
-        for (int sourceTank = 0; sourceTank < canister.getTanks(); sourceTank++) {
-            GasStack source = canister.getGasInTank(sourceTank);
-            if (source.isEmpty()) {
+    private boolean fillFromCanister(int slot, GasDrawerTank drawerTank, IGasCanisterContainer canister) {
+        for (int canisterTank = 0; canisterTank < canister.getTanks(); canisterTank++) {
+            GasStack canisterGas = canister.getGasInTank(canisterTank);
+            if (canisterGas.isEmpty()) {
                 continue;
             }
 
-            boolean claimedFilter = claimLockedFilter(slot, tank, source);
-            long accepted = tank.fill(source, GasAction.SIMULATE);
-            if (accepted <= 0) {
-                releaseLockedFilter(slot, claimedFilter);
+            boolean claimedLockedFilter = claimLockedFilter(slot, drawerTank, canisterGas);
+            long acceptedAmount = drawerTank.fill(canisterGas, GasAction.SIMULATE);
+            if (acceptedAmount <= 0) {
+                releaseLockedFilter(slot, claimedLockedFilter);
                 continue;
             }
 
-            GasStack drained = canister.drain(sourceTank, source.copyWithAmount(accepted), GasAction.EXECUTE);
-            if (drained.isEmpty()) {
-                releaseLockedFilter(slot, claimedFilter);
+            GasStack drainedGas = canister.drain(canisterTank, canisterGas.copyWithAmount(acceptedAmount), GasAction.EXECUTE);
+            if (drainedGas.isEmpty()) {
+                releaseLockedFilter(slot, claimedLockedFilter);
                 continue;
             }
 
-            long inserted = tank.fill(drained, GasAction.EXECUTE);
-            restoreRemainder(canister, sourceTank, drained, inserted);
-            if (inserted <= 0) {
-                releaseLockedFilter(slot, claimedFilter);
+            long insertedAmount = drawerTank.fill(drainedGas, GasAction.EXECUTE);
+            restoreRemainder(canister, canisterTank, drainedGas, insertedAmount);
+            if (insertedAmount <= 0) {
+                releaseLockedFilter(slot, claimedLockedFilter);
             }
             canister.save();
-            return inserted > 0;
+            return insertedAmount > 0;
         }
         return false;
     }
 
-    private boolean claimLockedFilter(int slot, GasDrawerTank tank, GasStack source) {
-        if (!isLocked() || !tank.getStoredStack().isEmpty() || !gasFilter.get(slot).isEmpty()) {
+    private boolean claimLockedFilter(int slot, GasDrawerTank drawerTank, GasStack sourceGas) {
+        if (!isLocked() || !drawerTank.getStoredStack().isEmpty() || !gasFilter.get(slot).isEmpty()) {
             return false;
         }
 
-        gasFilter.set(slot, source);
+        gasFilter.set(slot, sourceGas);
         syncGasFilter();
         return true;
     }
 
-    private void releaseLockedFilter(int slot, boolean claimedFilter) {
-        if (!claimedFilter) {
+    private void releaseLockedFilter(int slot, boolean claimedLockedFilter) {
+        if (!claimedLockedFilter) {
             return;
         }
 
@@ -280,13 +280,13 @@ public final class GasDrawerBlockEntity extends ControllableDrawerTile<GasDrawer
 
     @Override
     public InteractionResult onSlotActivated(Player player, InteractionHand hand, Direction facing, double hitX, double hitY, double hitZ, int slot) {
-        ItemStack held = player.getItemInHand(hand);
-        if (slot < 0 || held.isEmpty()) {
+        ItemStack heldStack = player.getItemInHand(hand);
+        if (slot < 0 || heldStack.isEmpty()) {
             return super.onSlotActivated(player, hand, facing, hitX, hitY, hitZ, slot);
         }
 
-        IGasCanisterContainer canister = held.getCapability(GasHandler.ITEM);
-        if (canister == null || !interactWithCanister(slot, canister)) {
+        IGasCanisterContainer gasCanister = heldStack.getCapability(GasHandler.ITEM);
+        if (gasCanister == null || !interactWithCanister(slot, gasCanister)) {
             return super.onSlotActivated(player, hand, facing, hitX, hitY, hitZ, slot);
         }
         return InteractionResult.SUCCESS;
@@ -333,22 +333,21 @@ public final class GasDrawerBlockEntity extends ControllableDrawerTile<GasDrawer
                     return false;
                 }
 
-                ItemStack current = upgrades.getStackInSlot(slot);
-                if (!current.has(FSAttachments.FLUID_STORAGE_MODIFIER)) {
+                if (!upgrades.getStackInSlot(slot).has(FSAttachments.FLUID_STORAGE_MODIFIER)) {
                     return true;
                 }
 
-                ItemStack[] replacements = new ItemStack[upgrades.getSlots()];
-                replacements[slot] = ItemStack.EMPTY;
-                float newSize = SizeProvider.calculateAsFactor(upgrades, FSAttachments.FLUID_STORAGE_MODIFIER, baseSize, replacements);
-                return canChangeMultiplier(newSize);
+                ItemStack[] upgradeReplacements = new ItemStack[upgrades.getSlots()];
+                upgradeReplacements[slot] = ItemStack.EMPTY;
+                float newStorageMultiplier = SizeProvider.calculateAsFactor(upgrades, FSAttachments.FLUID_STORAGE_MODIFIER, baseSize, upgradeReplacements);
+                return canChangeMultiplier(newStorageMultiplier);
             }
         }.setInputFilter((stack, slot) -> !isStorageUpgradeLocked() && storageUpgradeFits(slot, stack)).setOnSlotChanged((stack, slot) -> onStorageUpgradeChanged()).setSlotLimit(1);
     }
 
     private void processUtilityUpgrades(Level level) {
-        for (int slot = 0; slot < getUtilityUpgrades().getSlots(); slot++) {
-            ItemStack upgrade = getUtilityUpgrades().getStackInSlot(slot);
+        for (int upgradeSlot = 0; upgradeSlot < getUtilityUpgrades().getSlots(); upgradeSlot++) {
+            ItemStack upgrade = getUtilityUpgrades().getStackInSlot(upgradeSlot);
             if (upgrade.is(FunctionalStorage.PUSHING_UPGRADE.get())) {
                 GasDrawerTransfer.push(level, this, upgrade);
                 continue;
@@ -390,10 +389,10 @@ public final class GasDrawerBlockEntity extends ControllableDrawerTile<GasDrawer
     }
 
     public void endTransaction(boolean commit) {
-        boolean dirty = transactionDirty;
+        boolean hadChanges = transactionDirty;
         transactionActive = false;
         transactionDirty = false;
-        if (!commit || !dirty) {
+        if (!commit || !hadChanges) {
             return;
         }
 

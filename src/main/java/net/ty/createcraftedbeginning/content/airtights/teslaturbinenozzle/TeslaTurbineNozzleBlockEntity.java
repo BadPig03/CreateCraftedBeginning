@@ -56,7 +56,7 @@ public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements I
         connection.scheduleValidation();
     }
 
-    private @Nullable IGasHandler getGasCapability(@Nullable Direction direction) {
-        return connection.getGasCapability(direction);
+    private @Nullable IGasHandler getGasCapability(@Nullable Direction accessDirection) {
+        return connection.getGasCapability(accessDirection);
     }
 }

@@ -40,17 +40,16 @@ public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEnt
             return;
         }
 
-        BlockState state = level.getBlockState(tankPos);
-        if (!(state.getBlock() instanceof AirtightTankBlock tank)) {
+        if (!(level.getBlockState(tankPos).getBlock() instanceof AirtightTankBlock tankBlock)) {
             return;
         }
 
-        AirtightTankBlockEntity tankEntity = tank.getBlockEntity(level, tankPos);
-        if (tankEntity == null) {
+        AirtightTankBlockEntity tank = tankBlock.getBlockEntity(level, tankPos);
+        if (tank == null) {
             return;
         }
 
-        AirtightTankBlockEntity controller = tankEntity.getControllerBE();
+        AirtightTankBlockEntity controller = tank.getControllerBE();
         if (controller == null) {
             return;
         }
@@ -65,12 +64,12 @@ public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEnt
         }
 
         withBlockEntityDo(level, pos, AirtightTankBlockEntity::updateConnectivity);
-        BlockState newState = level.getBlockState(pos);
-        if (state == newState || newState.getBlock() != this) {
+        BlockState updatedState = level.getBlockState(pos);
+        if (state == updatedState || updatedState.getBlock() != this) {
             return;
         }
 
-        level.markAndNotifyBlock(pos, level.getChunkAt(pos), oldState, newState, UPDATE_ALL_IMMEDIATE, 512);
+        level.markAndNotifyBlock(pos, level.getChunkAt(pos), oldState, updatedState, UPDATE_ALL_IMMEDIATE, 512);
     }
 
     @Override

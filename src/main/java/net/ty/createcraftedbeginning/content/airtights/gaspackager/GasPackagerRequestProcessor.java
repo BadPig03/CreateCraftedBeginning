@@ -25,40 +25,40 @@ public final class GasPackagerRequestProcessor {
 
     public static @Nullable Result process(List<PackagingRequest> queuedRequests, IGasHandler handler, long capacity) {
         discardInvalidLeadingGasRequests(queuedRequests);
-        GasRequestPlan plan = planGasRequestBatch(queuedRequests, capacity);
-        if (plan.isEmpty()) {
+        GasRequestPlan requestPlan = planGasRequestBatch(queuedRequests, capacity);
+        if (requestPlan.isEmpty()) {
             return null;
         }
 
-        GasRequestExtraction extraction = extractGasRequestBatch(handler, plan);
-        if (extraction.isEmpty()) {
+        GasRequestExtraction requestExtraction = extractGasRequestBatch(handler, requestPlan);
+        if (requestExtraction.isEmpty()) {
             return null;
         }
 
-        GasRequestCommit committed = commitGasRequestBatch(queuedRequests, extraction);
-        ItemStack balloon = createRequestedBalloon(committed);
-        if (balloon.isEmpty()) {
+        GasRequestCommit commitResult = commitGasRequestBatch(queuedRequests, requestExtraction);
+        ItemStack packedBalloon = createRequestedBalloon(commitResult);
+        if (packedBalloon.isEmpty()) {
             return null;
         }
-        return new Result(balloon, committed.deductions());
+        return new Result(packedBalloon, commitResult.deductions());
     }
 
     private static boolean containsMatchingGas(List<GasStack> gases, GasStack target) {
         return gases.stream().anyMatch(gas -> GasStack.isSameGasSameComponents(gas, target));
     }
 
-    private static void addPackedGas(List<GasStack> gases, GasStack added) {
-        for (int i = 0; i < gases.size(); i++) {
-            GasStack existing = gases.get(i);
-            if (!GasStack.isSameGasSameComponents(existing, added)) {
+    private static void addPackedGas(List<GasStack> packedGases, GasStack gasToAdd) {
+        for (int gasIndex = 0; gasIndex < packedGases.size(); gasIndex++) {
+            GasStack existingGas = packedGases.get(gasIndex);
+            if (!GasStack.isSameGasSameComponents(existingGas, gasToAdd)) {
                 continue;
             }
 
-            gases.set(i, existing.copyWithAmount(existing.getAmount() + added.getAmount()));
+            packedGases.set(gasIndex, existingGas.copyWithAmount(existingGas.getAmount() + gasToAdd.getAmount()));
             return;
         }
 
-        gases.add(added.copy());
+        packedGases.add(gasToAdd.copy());
     }
 
     private static void discardInvalidLeadingGasRequests(List<PackagingRequest> queuedRequests) {
@@ -76,74 +76,74 @@ public final class GasPackagerRequestProcessor {
             return GasRequestPlan.EMPTY;
         }
 
-        PackagingRequest metadata = queuedRequests.getFirst();
-        List<PlannedGasRequest> planned = new ArrayList<>();
+        PackagingRequest packageMetadata = queuedRequests.getFirst();
+        List<PlannedGasRequest> plannedRequests = new ArrayList<>();
         List<GasStack> plannedGases = new ArrayList<>();
-        long remaining = capacity;
+        long remainingCapacity = capacity;
         for (PackagingRequest request : queuedRequests) {
-            if (!GasPackagerUtils.isSameLink(metadata, request)) {
+            if (!GasPackagerUtils.isSameLink(packageMetadata, request)) {
                 break;
             }
             if (!isValidGasRequest(request)) {
                 continue;
             }
 
-            ItemStack token = request.item().copyWithCount(1);
-            GasStack gasType = GasVirtualUtils.getGasType(token);
-            if (!containsMatchingGas(plannedGases, gasType) && plannedGases.size() >= BalloonGasContents.MAX_GAS_TYPES) {
+            ItemStack gasToken = request.item().copyWithCount(1);
+            GasStack requestedGas = GasVirtualUtils.getGasType(gasToken);
+            if (!containsMatchingGas(plannedGases, requestedGas) && plannedGases.size() >= BalloonGasContents.MAX_GAS_TYPES) {
                 break;
             }
 
-            long requested = Math.max(0, request.getCount());
-            long amount = Math.min(remaining, requested);
-            if (amount <= 0) {
+            long requestedAmount = Math.max(0, request.getCount());
+            long plannedAmount = Math.min(remainingCapacity, requestedAmount);
+            if (plannedAmount <= 0) {
                 break;
             }
 
-            planned.add(new PlannedGasRequest(request, token, gasType, amount));
-            addPackedGas(plannedGases, gasType.copyWithAmount(amount));
-            remaining -= amount;
-            if (remaining > 0) {
+            plannedRequests.add(new PlannedGasRequest(request, gasToken, requestedGas, plannedAmount));
+            addPackedGas(plannedGases, requestedGas.copyWithAmount(plannedAmount));
+            remainingCapacity -= plannedAmount;
+            if (remainingCapacity > 0) {
                 continue;
             }
 
             break;
         }
 
-        return planned.isEmpty() ? GasRequestPlan.EMPTY : new GasRequestPlan(List.copyOf(planned));
+        return plannedRequests.isEmpty() ? GasRequestPlan.EMPTY : new GasRequestPlan(List.copyOf(plannedRequests));
     }
 
     private static GasRequestExtraction extractGasRequestBatch(IGasHandler handler, GasRequestPlan plan) {
-        List<ExtractedGasRequest> transfers = new ArrayList<>(plan.requests().size());
+        List<ExtractedGasRequest> extractedRequests = new ArrayList<>(plan.requests().size());
         List<GasStack> packedGases = new ArrayList<>();
-        for (PlannedGasRequest planned : plan.requests()) {
-            GasStack simulated = handler.drain(planned.gasType().copyWithAmount(planned.amount()), GasAction.SIMULATE);
-            if (simulated.isEmpty() || !GasStack.isSameGasSameComponents(simulated, planned.gasType())) {
+        for (PlannedGasRequest plannedRequest : plan.requests()) {
+            GasStack simulatedDrain = handler.drain(plannedRequest.gasType().copyWithAmount(plannedRequest.amount()), GasAction.SIMULATE);
+            if (simulatedDrain.isEmpty() || !GasStack.isSameGasSameComponents(simulatedDrain, plannedRequest.gasType())) {
                 break;
             }
 
-            long executableAmount = Math.min(planned.amount(), simulated.getAmount());
-            GasStack drained = handler.drain(planned.gasType().copyWithAmount(executableAmount), GasAction.EXECUTE);
-            if (drained.isEmpty() || !GasStack.isSameGasSameComponents(drained, planned.gasType())) {
+            long executableAmount = Math.min(plannedRequest.amount(), simulatedDrain.getAmount());
+            GasStack drainedGas = handler.drain(plannedRequest.gasType().copyWithAmount(executableAmount), GasAction.EXECUTE);
+            if (drainedGas.isEmpty() || !GasStack.isSameGasSameComponents(drainedGas, plannedRequest.gasType())) {
                 break;
             }
 
-            int transferred = Math.min(GasRequestUtils.toLogisticsAmount(drained.getAmount()), GasRequestUtils.toLogisticsAmount(planned.amount()));
-            if (transferred <= 0) {
+            int transferredAmount = Math.min(GasRequestUtils.toLogisticsAmount(drainedGas.getAmount()), GasRequestUtils.toLogisticsAmount(plannedRequest.amount()));
+            if (transferredAmount <= 0) {
                 break;
             }
 
-            transfers.add(new ExtractedGasRequest(planned.request(), planned.token(), transferred));
-            addPackedGas(packedGases, drained.copyWithAmount(transferred));
-            if (transferred < planned.amount()) {
+            extractedRequests.add(new ExtractedGasRequest(plannedRequest.request(), plannedRequest.token(), transferredAmount));
+            addPackedGas(packedGases, drainedGas.copyWithAmount(transferredAmount));
+            if (transferredAmount < plannedRequest.amount()) {
                 break;
             }
         }
 
-        if (transfers.isEmpty()) {
+        if (extractedRequests.isEmpty()) {
             return GasRequestExtraction.EMPTY;
         }
-        return new GasRequestExtraction(List.copyOf(transfers), new BalloonGasContents(packedGases));
+        return new GasRequestExtraction(List.copyOf(extractedRequests), new BalloonGasContents(packedGases));
     }
 
     private static GasRequestCommit commitGasRequestBatch(List<PackagingRequest> queuedRequests, GasRequestExtraction extraction) {
@@ -180,14 +180,14 @@ public final class GasPackagerRequestProcessor {
     }
 
     private static void addGasDeduction(List<Deduction> deductions, ItemStack token, int amount) {
-        for (int i = 0; i < deductions.size(); i++) {
-            Deduction existing = deductions.get(i);
+        for (int deductionIndex = 0; deductionIndex < deductions.size(); deductionIndex++) {
+            Deduction existing = deductions.get(deductionIndex);
             if (!ItemStack.isSameItemSameComponents(existing.token(), token)) {
                 continue;
             }
 
             int mergedAmount = GasRequestUtils.toLogisticsAmount((long) existing.amount() + amount);
-            deductions.set(i, new Deduction(existing.token(), mergedAmount));
+            deductions.set(deductionIndex, new Deduction(existing.token(), mergedAmount));
             return;
         }
 
@@ -195,16 +195,16 @@ public final class GasPackagerRequestProcessor {
     }
 
     private static ItemStack createRequestedBalloon(GasRequestCommit committed) {
-        PackagingRequest metadata = committed.metadata();
-        ItemStack balloon = BalloonUtils.containing(committed.contents());
-        if (balloon.isEmpty()) {
+        PackagingRequest packageMetadata = committed.metadata();
+        ItemStack packedBalloon = BalloonUtils.containing(committed.contents());
+        if (packedBalloon.isEmpty()) {
             return ItemStack.EMPTY;
         }
 
-        PackageItem.clearAddress(balloon);
-        PackageItem.addAddress(balloon, metadata.address());
-        PackageItem.setOrder(balloon, metadata.orderId(), metadata.linkIndex(), metadata.finalLink().booleanValue(), committed.packageIndexAtLink(), committed.finalPackageAtLink(), committed.orderContext());
-        return balloon;
+        PackageItem.clearAddress(packedBalloon);
+        PackageItem.addAddress(packedBalloon, packageMetadata.address());
+        PackageItem.setOrder(packedBalloon, packageMetadata.orderId(), packageMetadata.linkIndex(), packageMetadata.finalLink().booleanValue(), committed.packageIndexAtLink(), committed.finalPackageAtLink(), committed.orderContext());
+        return packedBalloon;
     }
 
     public record Result(ItemStack balloon, List<Deduction> deductions) {}

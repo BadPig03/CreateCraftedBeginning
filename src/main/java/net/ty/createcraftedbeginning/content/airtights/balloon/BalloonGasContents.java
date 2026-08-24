@@ -32,13 +32,13 @@ public final class BalloonGasContents {
     public static final StreamCodec<RegistryFriendlyByteBuf, BalloonGasContents> STREAM_CODEC = new StreamCodec<>() {
         @Override
         public BalloonGasContents decode(RegistryFriendlyByteBuf buffer) {
-            int size = buffer.readVarInt();
-            if (size < 0 || size > MAX_GAS_TYPES) {
-                throw new DecoderException("Invalid balloon gas type count: " + size);
+            int gasTypeCount = buffer.readVarInt();
+            if (gasTypeCount < 0 || gasTypeCount > MAX_GAS_TYPES) {
+                throw new DecoderException("Invalid balloon gas type count: " + gasTypeCount);
             }
 
-            List<GasStack> gases = new ArrayList<>(size);
-            for (int i = 0; i < size; i++) {
+            List<GasStack> gases = new ArrayList<>(gasTypeCount);
+            for (int gasIndex = 0; gasIndex < gasTypeCount; gasIndex++) {
                 gases.add(GasStack.STREAM_CODEC.decode(buffer));
             }
             return new BalloonGasContents(gases);
@@ -46,12 +46,12 @@ public final class BalloonGasContents {
 
         @Override
         public void encode(RegistryFriendlyByteBuf buffer, BalloonGasContents contents) {
-            int size = contents.gases.size();
-            if (size > MAX_GAS_TYPES) {
-                throw new EncoderException("Too many gas types in balloon: " + size);
+            int gasTypeCount = contents.gases.size();
+            if (gasTypeCount > MAX_GAS_TYPES) {
+                throw new EncoderException("Too many gas types in balloon: " + gasTypeCount);
             }
 
-            buffer.writeVarInt(size);
+            buffer.writeVarInt(gasTypeCount);
             contents.gases.forEach(gas -> GasStack.STREAM_CODEC.encode(buffer, gas.toStack()));
         }
     };
@@ -79,26 +79,26 @@ public final class BalloonGasContents {
         return CODEC.parse(provider.createSerializationContext(NbtOps.INSTANCE), tag).resultOrPartial(error -> CCBAPI.LOGGER.error("Tried to parse invalid balloon gas contents: '{}'", error)).orElse(EMPTY);
     }
 
-    private static NormalizedContents normalize(List<GasStack> input) {
-        if (input.isEmpty()) {
+    private static NormalizedContents normalize(List<GasStack> inputGases) {
+        if (inputGases.isEmpty()) {
             return new NormalizedContents(List.of(), 0);
         }
 
         List<GasStack> merged = new ArrayList<>();
-        for (GasStack gas : input) {
+        for (GasStack gas : inputGases) {
             if (gas == null || gas.isEmpty()) {
                 continue;
             }
 
             GasStack copy = gas.copy();
-            int index = findMatching(merged, copy);
-            if (index < 0) {
+            int matchingIndex = findMatching(merged, copy);
+            if (matchingIndex < 0) {
                 merged.add(copy);
                 continue;
             }
 
-            GasStack existing = merged.get(index);
-            merged.set(index, existing.copyWithAmount(saturatedAdd(existing.getAmount(), copy.getAmount())));
+            GasStack existing = merged.get(matchingIndex);
+            merged.set(matchingIndex, existing.copyWithAmount(saturatedAdd(existing.getAmount(), copy.getAmount())));
         }
 
         if (merged.isEmpty()) {
@@ -106,33 +106,33 @@ public final class BalloonGasContents {
         }
 
         List<GasEntry> entries = new ArrayList<>(merged.size());
-        long total = 0;
+        long totalAmount = 0;
         for (GasStack gas : merged) {
             GasEntry entry = GasEntry.from(gas);
             entries.add(entry);
-            total = saturatedAdd(total, entry.getAmount());
+            totalAmount = saturatedAdd(totalAmount, entry.getAmount());
         }
-        return new NormalizedContents(List.copyOf(entries), total);
+        return new NormalizedContents(List.copyOf(entries), totalAmount);
     }
 
-    private static int findMatching(List<GasStack> gases, GasStack target) {
-        for (int i = 0; i < gases.size(); i++) {
-            if (GasStack.isSameGasSameComponents(gases.get(i), target)) {
-                return i;
+    private static int findMatching(List<GasStack> gases, GasStack targetGas) {
+        for (int gasIndex = 0; gasIndex < gases.size(); gasIndex++) {
+            if (GasStack.isSameGasSameComponents(gases.get(gasIndex), targetGas)) {
+                return gasIndex;
             }
         }
         return -1;
     }
 
-    private static long saturatedAdd(long current, long addition) {
-        if (current <= 0) {
-            return Math.max(0, addition);
+    private static long saturatedAdd(long currentAmount, long amountToAdd) {
+        if (currentAmount <= 0) {
+            return Math.max(0, amountToAdd);
         }
 
-        if (addition <= 0) {
-            return current;
+        if (amountToAdd <= 0) {
+            return currentAmount;
         }
-        return current > Long.MAX_VALUE - addition ? Long.MAX_VALUE : current + addition;
+        return currentAmount > Long.MAX_VALUE - amountToAdd ? Long.MAX_VALUE : currentAmount + amountToAdd;
     }
 
     public @Unmodifiable List<GasEntry> gases() {
@@ -158,29 +158,29 @@ public final class BalloonGasContents {
         return gases.size();
     }
 
-    public BalloonGasContents limitedTo(long maxAmount, int maxGasTypes) {
-        if (isEmpty() || maxAmount <= 0 || maxGasTypes <= 0) {
+    public BalloonGasContents limitedTo(long maxGasAmount, int maxGasTypes) {
+        if (isEmpty() || maxGasAmount <= 0 || maxGasTypes <= 0) {
             return EMPTY;
         }
 
-        List<GasEntry> limited = new ArrayList<>(Math.min(gases.size(), maxGasTypes));
-        long remaining = maxAmount;
-        long total = 0;
+        List<GasEntry> limitedGases = new ArrayList<>(Math.min(gases.size(), maxGasTypes));
+        long remainingAmount = maxGasAmount;
+        long totalAmount = 0;
         for (GasEntry gas : gases) {
-            if (remaining <= 0 || limited.size() >= maxGasTypes) {
+            if (remainingAmount <= 0 || limitedGases.size() >= maxGasTypes) {
                 break;
             }
 
-            long amount = Math.min(remaining, gas.getAmount());
-            if (amount <= 0) {
+            long amountToKeep = Math.min(remainingAmount, gas.getAmount());
+            if (amountToKeep <= 0) {
                 continue;
             }
 
-            limited.add(gas.withAmount(amount));
-            total += amount;
-            remaining -= amount;
+            limitedGases.add(gas.withAmount(amountToKeep));
+            totalAmount += amountToKeep;
+            remainingAmount -= amountToKeep;
         }
-        return limited.isEmpty() ? EMPTY : new BalloonGasContents(List.copyOf(limited), total);
+        return limitedGases.isEmpty() ? EMPTY : new BalloonGasContents(List.copyOf(limitedGases), totalAmount);
     }
 
     public BalloonGasContents normalized() {

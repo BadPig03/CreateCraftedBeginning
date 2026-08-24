@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.gascanister.container;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.NeoForge;
@@ -13,11 +14,13 @@ import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
 import net.ty.createcraftedbeginning.api.gascanisters.events.CanisterContainerEvent;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClientPacket.InventoryStackSync;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackMenu;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackMenuSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackUtils;
 import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
+import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -34,8 +37,6 @@ import java.util.function.ToDoubleFunction;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class CanisterContainerConsumers {
-    private static final String COMPOUND_KEY_CANISTER = "Canister";
-
     private CanisterContainerConsumers() {
     }
 
@@ -54,25 +55,26 @@ public final class CanisterContainerConsumers {
         }
 
         if (player.level().isClientSide) {
-            return canCoverCost(containers, gasType, amount, player);
+            return canCoverCost(containers, gasType, amount);
         }
 
         if (!executeSupplier.get()) {
             return true;
         }
 
-        CanisterContainerEvent event = new CanisterContainerEvent(player, gasType, amount, executeSupplier, simulate);
-        NeoForge.EVENT_BUS.post(event);
-        if (event.isCanceled()) {
+        CanisterContainerEvent containerEvent = new CanisterContainerEvent(player, gasType, amount, executeSupplier, simulate);
+        NeoForge.EVENT_BUS.post(containerEvent);
+        if (containerEvent.isCanceled()) {
             return true;
         }
 
-        long adjustedAmount = event.getAmount();
+        long adjustedAmount = containerEvent.getAmount();
         if (adjustedAmount <= 0) {
             return true;
         }
 
-        if (!drainContainer(containers, gasType, adjustedAmount, simulate, player)) {
+        Optional<List<InventoryStackSync>> drainResult = drainContainer(containers, gasType, adjustedAmount, simulate, player);
+        if (drainResult.isEmpty()) {
             return false;
         }
 
@@ -80,30 +82,33 @@ public final class CanisterContainerConsumers {
             return true;
         }
 
-        CatnipServices.NETWORK.sendToClient(serverPlayer, new CanisterContainerClientPacket(new GasStack(gasType, adjustedAmount)));
+        List<InventoryStackSync> inventoryUpdates = drainResult.get();
+        if (!inventoryUpdates.isEmpty()) {
+            CatnipServices.NETWORK.sendToClient(serverPlayer, new CanisterContainerClientPacket(inventoryUpdates));
+        }
         return true;
     }
 
     public static Optional<AffordableFuel> findAffordableFuel(Player player, ToDoubleFunction<Gas> rawCostFunction) {
         Set<Gas> checkedGases = Collections.newSetFromMap(new IdentityHashMap<>());
         for (IGasCanisterContainer container : CanisterContainerSuppliers.getAllSuppliers(player)) {
-            for (int tank = 0; tank < container.getTanks(); tank++) {
-                GasStack content = container.getGasInTank(tank);
-                if (content.isEmpty()) {
+            for (int tankIndex = 0; tankIndex < container.getTanks(); tankIndex++) {
+                GasStack storedGas = container.getGasInTank(tankIndex);
+                if (storedGas.isEmpty()) {
                     continue;
                 }
 
-                Gas gas = content.getGasType();
-                if (!checkedGases.add(gas)) {
+                Gas gasType = storedGas.getGasType();
+                if (!checkedGases.add(gasType)) {
                     continue;
                 }
 
-                long amount = GasConsumptions.roundUp(rawCostFunction.applyAsDouble(gas));
-                if (amount < 0 || !interactContainer(player, gas, amount, () -> true, true)) {
+                long requiredAmount = GasConsumptions.roundUp(rawCostFunction.applyAsDouble(gasType));
+                if (requiredAmount < 0 || !interactContainer(player, gasType, requiredAmount, () -> true, true)) {
                     continue;
                 }
 
-                return Optional.of(new AffordableFuel(content, amount));
+                return Optional.of(new AffordableFuel(storedGas, requiredAmount));
             }
         }
         return Optional.empty();
@@ -114,303 +119,342 @@ public final class CanisterContainerConsumers {
             return Optional.empty();
         }
 
-        GasStack selectedContent = GasStack.EMPTY;
+        GasStack selectedGasContent = GasStack.EMPTY;
         for (IGasCanisterContainer container : CanisterContainerSuppliers.getAllSuppliers(player)) {
-            for (int tank = 0; tank < container.getTanks(); tank++) {
-                GasStack content = container.getGasInTank(tank);
-                if (content.isEmpty() || !content.is(selectedGas)) {
+            for (int tankIndex = 0; tankIndex < container.getTanks(); tankIndex++) {
+                GasStack storedGas = container.getGasInTank(tankIndex);
+                if (storedGas.isEmpty() || !storedGas.is(selectedGas)) {
                     continue;
                 }
 
-                selectedContent = content;
+                selectedGasContent = storedGas;
                 break;
             }
 
-            if (!selectedContent.isEmpty()) {
-                break;
+            if (selectedGasContent.isEmpty()) {
+                continue;
             }
+
+            break;
         }
 
-        if (selectedContent.isEmpty()) {
+        if (selectedGasContent.isEmpty()) {
             return Optional.empty();
         }
 
-        long amount = GasConsumptions.roundUp(rawCostFunction.applyAsDouble(selectedGas));
-        if (amount < 0 || !interactContainer(player, selectedGas, amount, () -> true, true)) {
+        long requiredAmount = GasConsumptions.roundUp(rawCostFunction.applyAsDouble(selectedGas));
+        if (requiredAmount < 0 || !interactContainer(player, selectedGas, requiredAmount, () -> true, true)) {
             return Optional.empty();
         }
-        return Optional.of(new AffordableFuel(selectedContent, amount));
+        return Optional.of(new AffordableFuel(selectedGasContent, requiredAmount));
     }
 
-    public static void applyClientContainerSync(Player player, GasStack gasContent) {
-        if (!player.level().isClientSide || player.isCreative() || gasContent.isEmpty() || gasContent.getAmount() <= 0) {
-            return;
-        }
-
-        List<IGasCanisterContainer> containers = CanisterContainerSuppliers.getAllSuppliers(player);
-        if (containers.isEmpty()) {
-            return;
-        }
-
-        drainContainer(containers, gasContent.getGasType(), gasContent.getAmount(), false, player);
-    }
-
-    private static boolean drainContainer(List<IGasCanisterContainer> containers, Gas gasType, long amount, boolean simulate, Player player) {
+    private static Optional<List<InventoryStackSync>> drainContainer(List<IGasCanisterContainer> containers, Gas gasType, long amount, boolean simulate, Player player) {
         if (gasType.isEmpty() || amount <= 0) {
-            return true;
+            return Optional.of(List.of());
         }
 
         if (simulate) {
-            return canCoverCost(containers, gasType, amount, player);
+            return canCoverCost(containers, gasType, amount) ? Optional.of(List.of()) : Optional.empty();
         }
 
-        long remaining = amount;
+        long remainingAmount = amount;
         Map<IGasCanisterContainer, List<PlannedContainerDrain>> drainPlan = new LinkedHashMap<>();
         for (IGasCanisterContainer container : containers) {
-            if (container instanceof GasCanisterContainerContents canister) {
-                remaining = planCanisterDrain(canister, gasType, remaining, drainPlan);
+            if (container instanceof GasCanisterContainerContents canisterContents) {
+                remainingAmount = planCanisterDrain(canisterContents, gasType, remainingAmount, drainPlan);
             }
-            else if (container instanceof GasCanisterPackContainerContents pack) {
-                remaining = planPackDrain(pack, gasType, remaining, player, drainPlan);
+            else if (container instanceof GasCanisterPackContainerContents packContents) {
+                remainingAmount = planPackDrain(packContents, gasType, remainingAmount, drainPlan);
             }
             else {
-                remaining = planGenericDrain(container, gasType, remaining, drainPlan);
+                remainingAmount = planGenericDrain(container, gasType, remainingAmount, drainPlan);
             }
-
-            if (remaining <= 0) {
-                break;
-            }
-        }
-
-        return remaining <= 0 && executeDrainPlan(drainPlan, player);
-    }
-
-    private static long planCanisterDrain(GasCanisterContainerContents contents, Gas gasType, long remaining, Map<IGasCanisterContainer, List<PlannedContainerDrain>> drainPlan) {
-        if (contents.isEmpty() || !contents.getGasInTank(0).is(gasType)) {
-            return remaining;
-        }
-
-        ItemStack canister = contents.getContainer();
-        long requestedDrain = GasCanisterContainerContents.getEconomizedDrainAmount(remaining, canister);
-        GasStack drained = contents.drain(0, requestedDrain, GasAction.SIMULATE);
-        if (drained.isEmpty()) {
-            return remaining;
-        }
-
-        long covered = GasCanisterContainerContents.getLogicalAmountFromEconomizedDrain(drained.getAmount(), canister);
-        covered = Math.min(covered, remaining);
-        if (covered <= 0) {
-            return remaining;
-        }
-
-        drainPlan.put(contents, List.of(new PlannedContainerDrain(0, drained.copy())));
-        return remaining - covered;
-    }
-
-    private static long planPackDrain(GasCanisterPackContainerContents contents, Gas gasType, long remaining, Player player, Map<IGasCanisterContainer, List<PlannedContainerDrain>> drainPlan) {
-        if (contents.isEmpty()) {
-            return remaining;
-        }
-
-        List<PlannedContainerDrain> drains = new ArrayList<>();
-        for (int slot = 0; slot < GasCanisterPackContainerContents.MAX_COUNT; slot++) {
-            if (remaining <= 0) {
-                break;
-            }
-            if (contents.isEmpty(slot) || !contents.getGasInTank(slot).is(gasType)) {
+            if (remainingAmount > 0) {
                 continue;
             }
 
-            if (contents.getCreatives(slot)) {
-                remaining = 0;
+            break;
+        }
+
+        if (remainingAmount > 0) {
+            return Optional.empty();
+        }
+
+        Map<Integer, ItemStack> inventorySnapshot = snapshotPlannedInventory(player.getInventory(), drainPlan.keySet());
+        if (!executeDrainPlan(drainPlan, player)) {
+            return Optional.empty();
+        }
+        return Optional.of(collectInventoryUpdates(player.getInventory(), inventorySnapshot));
+    }
+
+    private static long planCanisterDrain(GasCanisterContainerContents canisterContents, Gas gasType, long remainingAmount, Map<IGasCanisterContainer, List<PlannedContainerDrain>> drainPlan) {
+        if (canisterContents.isEmpty() || !canisterContents.getGasInTank(0).is(gasType)) {
+            return remainingAmount;
+        }
+
+        ItemStack canisterStack = canisterContents.getContainer();
+        long requestedDrainAmount = GasCanisterContainerContents.getEconomizedDrainAmount(remainingAmount, canisterStack);
+        GasStack simulatedDrain = canisterContents.drain(0, requestedDrainAmount, GasAction.SIMULATE);
+        if (simulatedDrain.isEmpty()) {
+            return remainingAmount;
+        }
+
+        long coveredAmount = GasCanisterContainerContents.getLogicalAmountFromEconomizedDrain(simulatedDrain.getAmount(), canisterStack);
+        coveredAmount = Math.min(coveredAmount, remainingAmount);
+        if (coveredAmount <= 0) {
+            return remainingAmount;
+        }
+
+        drainPlan.put(canisterContents, List.of(new PlannedContainerDrain(0, simulatedDrain.copy())));
+        return remainingAmount - coveredAmount;
+    }
+
+    private static long planPackDrain(GasCanisterPackContainerContents packContents, Gas gasType, long remainingAmount, Map<IGasCanisterContainer, List<PlannedContainerDrain>> drainPlan) {
+        if (packContents.isEmpty()) {
+            return remainingAmount;
+        }
+
+        List<PlannedContainerDrain> plannedDrains = new ArrayList<>();
+        for (int canisterSlot = 0; canisterSlot < GasCanisterPackContainerContents.MAX_COUNT; canisterSlot++) {
+            if (remainingAmount <= 0) {
+                break;
+            }
+            if (packContents.isEmpty(canisterSlot) || !packContents.getGasInTank(canisterSlot).is(gasType)) {
+                continue;
+            }
+
+            if (packContents.isCreative(canisterSlot)) {
+                remainingAmount = 0;
                 break;
             }
 
-            ItemStack canister = ItemStack.parseOptional(player.level().registryAccess(), contents.getCompoundTag(slot).getCompound(COMPOUND_KEY_CANISTER));
-            long requestedDrain = GasCanisterContainerContents.getEconomizedDrainAmount(remaining, canister);
-            GasStack drained = contents.drain(slot, requestedDrain, GasAction.SIMULATE);
-            if (drained.isEmpty()) {
+            ItemStack canisterStack = packContents.getCanister(canisterSlot);
+            long requestedDrainAmount = GasCanisterContainerContents.getEconomizedDrainAmount(remainingAmount, canisterStack);
+            GasStack simulatedDrain = packContents.drain(canisterSlot, requestedDrainAmount, GasAction.SIMULATE);
+            if (simulatedDrain.isEmpty()) {
                 continue;
             }
 
-            long covered = GasCanisterContainerContents.getLogicalAmountFromEconomizedDrain(drained.getAmount(), canister);
-            covered = Math.min(covered, remaining);
-            if (covered <= 0) {
+            long coveredAmount = GasCanisterContainerContents.getLogicalAmountFromEconomizedDrain(simulatedDrain.getAmount(), canisterStack);
+            coveredAmount = Math.min(coveredAmount, remainingAmount);
+            if (coveredAmount <= 0) {
                 continue;
             }
 
-            remaining -= covered;
-            drains.add(new PlannedContainerDrain(slot, drained.copy()));
+            remainingAmount -= coveredAmount;
+            plannedDrains.add(new PlannedContainerDrain(canisterSlot, simulatedDrain.copy()));
         }
 
-        if (drains.isEmpty()) {
-            return remaining;
+        if (plannedDrains.isEmpty()) {
+            return remainingAmount;
         }
 
-        drainPlan.put(contents, List.copyOf(drains));
-        return remaining;
+        drainPlan.put(packContents, List.copyOf(plannedDrains));
+        return remainingAmount;
     }
 
-    private static long planGenericDrain(IGasCanisterContainer contents, Gas gasType, long remaining, Map<IGasCanisterContainer, List<PlannedContainerDrain>> drainPlan) {
-        List<PlannedContainerDrain> drains = new ArrayList<>();
-        for (int tank = 0; tank < contents.getTanks() && remaining > 0; tank++) {
-            GasStack storedGas = contents.getGasInTank(tank);
+    private static long planGenericDrain(IGasCanisterContainer container, Gas gasType, long remainingAmount, Map<IGasCanisterContainer, List<PlannedContainerDrain>> drainPlan) {
+        List<PlannedContainerDrain> plannedDrains = new ArrayList<>();
+        for (int tankIndex = 0; tankIndex < container.getTanks() && remainingAmount > 0; tankIndex++) {
+            GasStack storedGas = container.getGasInTank(tankIndex);
             if (storedGas.isEmpty() || !storedGas.is(gasType)) {
                 continue;
             }
 
-            GasStack drained = contents.drain(tank, remaining, GasAction.SIMULATE);
-            if (drained.isEmpty() || !drained.is(gasType)) {
+            GasStack simulatedDrain = container.drain(tankIndex, remainingAmount, GasAction.SIMULATE);
+            if (simulatedDrain.isEmpty() || !simulatedDrain.is(gasType)) {
                 continue;
             }
 
-            long covered = Math.min(drained.getAmount(), remaining);
-            if (covered <= 0) {
+            long coveredAmount = Math.min(simulatedDrain.getAmount(), remainingAmount);
+            if (coveredAmount <= 0) {
                 continue;
             }
 
-            remaining -= covered;
-            drains.add(new PlannedContainerDrain(tank, drained.copyWithAmount(covered)));
+            remainingAmount -= coveredAmount;
+            plannedDrains.add(new PlannedContainerDrain(tankIndex, simulatedDrain.copyWithAmount(coveredAmount)));
         }
 
-        if (!drains.isEmpty()) {
-            drainPlan.put(contents, List.copyOf(drains));
+        if (!plannedDrains.isEmpty()) {
+            drainPlan.put(container, List.copyOf(plannedDrains));
         }
-        return remaining;
+        return remainingAmount;
     }
 
     private static boolean executeDrainPlan(Map<IGasCanisterContainer, List<PlannedContainerDrain>> drainPlan, Player player) {
         ResourceTransaction transaction = new ResourceTransaction();
-        drainPlan.forEach((container, drains) -> drains.forEach(drain -> transaction.add(ResourceTransaction.participant(() -> GasStack.matches(container.drain(drain.tank(), drain.gas(), GasAction.SIMULATE), drain.gas()), () -> container.getGasInTank(drain.tank()).copy(), () -> executePlannedDrain(container, drain), snapshot -> restoreContainerTank(container, drain.tank(), snapshot)))));
+        drainPlan.forEach((container, plannedDrains) -> plannedDrains.forEach(plannedDrain -> transaction.add(ResourceTransaction.participant(() -> GasStack.matches(container.drain(plannedDrain.tankIndex(), plannedDrain.drainedGas(), GasAction.SIMULATE), plannedDrain.drainedGas()), () -> container.getGasInTank(plannedDrain.tankIndex()).copy(), () -> executePlannedDrain(container, plannedDrain), tankSnapshot -> restoreContainerTank(container, plannedDrain.tankIndex(), tankSnapshot)))));
         if (!transaction.commit()) {
             return false;
         }
 
-        drainPlan.forEach((container, drains) -> {
-            if (!(container instanceof GasCanisterPackContainerContents contents)) {
+        drainPlan.forEach((container, plannedDrains) -> {
+            if (!(container instanceof GasCanisterPackContainerContents packContents)) {
                 return;
             }
 
-            drains.forEach(drain -> syncPackMenu(player, contents, drain.tank(), drain.gas().getAmount()));
+            plannedDrains.forEach(plannedDrain -> syncPackMenu(player, packContents, plannedDrain.tankIndex()));
         });
         return true;
     }
 
     private static boolean executePlannedDrain(IGasCanisterContainer container, PlannedContainerDrain drain) {
-        if (!GasStack.matches(container.drain(drain.tank(), drain.gas(), GasAction.EXECUTE), drain.gas())) {
+        if (!GasStack.matches(container.drain(drain.tankIndex(), drain.drainedGas(), GasAction.EXECUTE), drain.drainedGas())) {
             return false;
         }
+
         if (isGenericContainer(container)) {
             container.save();
         }
         return true;
     }
 
-    private static void restoreContainerTank(IGasCanisterContainer container, int tank, GasStack snapshot) {
-        GasStack current = container.getGasInTank(tank).copy();
-        if (GasStack.matches(current, snapshot)) {
+    private static void restoreContainerTank(IGasCanisterContainer container, int tankIndex, GasStack tankSnapshot) {
+        GasStack currentGas = container.getGasInTank(tankIndex).copy();
+        if (GasStack.matches(currentGas, tankSnapshot)) {
             return;
         }
 
-        if (!current.isEmpty()) {
-            GasStack removed = container.drain(tank, current, GasAction.EXECUTE);
-            if (!GasStack.matches(removed, current)) {
+        if (!currentGas.isEmpty()) {
+            GasStack removedGas = container.drain(tankIndex, currentGas, GasAction.EXECUTE);
+            if (!GasStack.matches(removedGas, currentGas)) {
                 throw new IllegalStateException("Failed to clear gas canister container during transaction rollback");
             }
         }
-        if (!snapshot.isEmpty() && container.fill(tank, snapshot.copy(), GasAction.EXECUTE) != snapshot.getAmount()) {
+        if (!tankSnapshot.isEmpty() && container.fill(tankIndex, tankSnapshot.copy(), GasAction.EXECUTE) != tankSnapshot.getAmount()) {
             throw new IllegalStateException("Failed to restore gas canister container during transaction rollback");
         }
-        if (!GasStack.matches(container.getGasInTank(tank), snapshot)) {
+        if (!GasStack.matches(container.getGasInTank(tankIndex), tankSnapshot)) {
             throw new IllegalStateException("Gas canister container rollback produced an unexpected state");
         }
-        if (isGenericContainer(container)) {
-            container.save();
+        if (!isGenericContainer(container)) {
+            return;
         }
+
+        container.save();
     }
 
     private static boolean isGenericContainer(IGasCanisterContainer container) {
         return !(container instanceof GasCanisterContainerContents) && !(container instanceof GasCanisterPackContainerContents);
     }
 
-    private static void syncPackMenu(Player player, GasCanisterPackContainerContents contents, int slot, long amount) {
-        if (!(player instanceof ServerPlayer serverPlayer) || !GasCanisterPackUtils.isCanisterPackMenuOpened(serverPlayer, contents.getContainer()) || !(serverPlayer.containerMenu instanceof GasCanisterPackMenu menu)) {
+    private static void syncPackMenu(Player player, GasCanisterPackContainerContents packContents, int canisterSlot) {
+        if (!(player instanceof ServerPlayer serverPlayer) || !GasCanisterPackUtils.isCanisterPackMenuOpened(serverPlayer, packContents.getContainer()) || !(serverPlayer.containerMenu instanceof GasCanisterPackMenu menu)) {
             return;
         }
 
-        menu.updateCanister(slot, amount);
-        CatnipServices.NETWORK.sendToClient(serverPlayer, new GasCanisterPackMenuSyncPacket(slot, amount));
+        ItemStack canisterStack = packContents.getCanister(canisterSlot);
+        menu.updateCanister(canisterSlot, canisterStack);
+        CatnipServices.NETWORK.sendToClient(serverPlayer, new GasCanisterPackMenuSyncPacket(menu.containerId, canisterSlot, canisterStack));
     }
 
-    private static boolean canCoverCost(List<IGasCanisterContainer> containers, Gas gasType, long amount, Player player) {
-        long remaining = amount;
+    private static Map<Integer, ItemStack> snapshotPlannedInventory(Inventory inventory, Iterable<IGasCanisterContainer> containers) {
+        Map<Integer, ItemStack> inventorySnapshot = new LinkedHashMap<>();
+        for (IGasCanisterContainer container : containers) {
+            int inventorySlot = findInventorySlot(inventory, container.getContainer());
+            if (inventorySlot < 0 || inventorySnapshot.containsKey(inventorySlot)) {
+                continue;
+            }
+
+            inventorySnapshot.put(inventorySlot, inventory.getItem(inventorySlot).copy());
+        }
+        return inventorySnapshot;
+    }
+
+    private static int findInventorySlot(Inventory inventory, ItemStack targetStack) {
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            if (inventory.getItem(slot) != targetStack) {
+                continue;
+            }
+
+            return slot;
+        }
+        return -1;
+    }
+
+    private static @Unmodifiable List<InventoryStackSync> collectInventoryUpdates(Inventory inventory, Map<Integer, ItemStack> inventorySnapshot) {
+        List<InventoryStackSync> inventoryUpdates = new ArrayList<>();
+        inventorySnapshot.forEach((slot, expectedStack) -> {
+            ItemStack currentStack = inventory.getItem(slot);
+            if (ItemStack.matches(expectedStack, currentStack)) {
+                return;
+            }
+
+            inventoryUpdates.add(new InventoryStackSync(slot, expectedStack, currentStack));
+        });
+        return List.copyOf(inventoryUpdates);
+    }
+
+    private static boolean canCoverCost(List<IGasCanisterContainer> containers, Gas gasType, long amount) {
+        long remainingAmount = amount;
         for (IGasCanisterContainer container : containers) {
             if (container instanceof GasCanisterContainerContents contents) {
                 if (container.isEmpty() || !contents.getGasInTank(0).is(gasType)) {
                     continue;
                 }
 
-                ItemStack canister = contents.getContainer();
-                long requestedDrain = GasCanisterContainerContents.getEconomizedDrainAmount(remaining, canister);
-                long drained = contents.drain(0, requestedDrain, GasAction.SIMULATE).getAmount();
-                if (drained <= 0) {
+                ItemStack canisterStack = contents.getContainer();
+                long requestedDrainAmount = GasCanisterContainerContents.getEconomizedDrainAmount(remainingAmount, canisterStack);
+                long drainedAmount = contents.drain(0, requestedDrainAmount, GasAction.SIMULATE).getAmount();
+                if (drainedAmount <= 0) {
                     continue;
                 }
 
-                long covered = GasCanisterContainerContents.getLogicalAmountFromEconomizedDrain(drained, canister);
-                remaining -= Math.min(covered, remaining);
+                long coveredAmount = GasCanisterContainerContents.getLogicalAmountFromEconomizedDrain(drainedAmount, canisterStack);
+                remainingAmount -= Math.min(coveredAmount, remainingAmount);
             }
             else if (container instanceof GasCanisterPackContainerContents contents) {
                 if (contents.isEmpty()) {
                     continue;
                 }
 
-                for (int slot = 0; slot < GasCanisterPackContainerContents.MAX_COUNT && remaining > 0; slot++) {
-                    if (contents.isEmpty(slot) || !contents.getGasInTank(slot).is(gasType)) {
+                for (int canisterSlot = 0; canisterSlot < GasCanisterPackContainerContents.MAX_COUNT && remainingAmount > 0; canisterSlot++) {
+                    if (contents.isEmpty(canisterSlot) || !contents.getGasInTank(canisterSlot).is(gasType)) {
                         continue;
                     }
 
-                    if (contents.getCreatives(slot)) {
+                    if (contents.isCreative(canisterSlot)) {
                         return true;
                     }
 
-                    ItemStack canister = ItemStack.parseOptional(player.level().registryAccess(), contents.getCompoundTag(slot).getCompound(COMPOUND_KEY_CANISTER));
-                    long requestedDrain = GasCanisterContainerContents.getEconomizedDrainAmount(remaining, canister);
-                    long drained = contents.drain(slot, requestedDrain, GasAction.SIMULATE).getAmount();
-                    if (drained <= 0) {
+                    ItemStack canisterStack = contents.getCanister(canisterSlot);
+                    long requestedDrainAmount = GasCanisterContainerContents.getEconomizedDrainAmount(remainingAmount, canisterStack);
+                    long drainedAmount = contents.drain(canisterSlot, requestedDrainAmount, GasAction.SIMULATE).getAmount();
+                    if (drainedAmount <= 0) {
                         continue;
                     }
 
-                    long covered = GasCanisterContainerContents.getLogicalAmountFromEconomizedDrain(drained, canister);
-                    remaining -= Math.min(covered, remaining);
+                    long coveredAmount = GasCanisterContainerContents.getLogicalAmountFromEconomizedDrain(drainedAmount, canisterStack);
+                    remainingAmount -= Math.min(coveredAmount, remainingAmount);
                 }
             }
             else {
-                for (int tank = 0; tank < container.getTanks() && remaining > 0; tank++) {
-                    GasStack storedGas = container.getGasInTank(tank);
+                for (int tankIndex = 0; tankIndex < container.getTanks() && remainingAmount > 0; tankIndex++) {
+                    GasStack storedGas = container.getGasInTank(tankIndex);
                     if (storedGas.isEmpty() || !storedGas.is(gasType)) {
                         continue;
                     }
 
-                    GasStack drained = container.drain(tank, remaining, GasAction.SIMULATE);
-                    if (drained.isEmpty() || !drained.is(gasType)) {
+                    GasStack simulatedDrain = container.drain(tankIndex, remainingAmount, GasAction.SIMULATE);
+                    if (simulatedDrain.isEmpty() || !simulatedDrain.is(gasType)) {
                         continue;
                     }
 
-                    remaining -= Math.min(drained.getAmount(), remaining);
+                    remainingAmount -= Math.min(simulatedDrain.getAmount(), remainingAmount);
                 }
             }
 
-            if (remaining <= 0) {
+            if (remainingAmount <= 0) {
                 return true;
             }
         }
         return false;
     }
 
-    private record PlannedContainerDrain(int tank, GasStack gas) {
+    private record PlannedContainerDrain(int tankIndex, GasStack drainedGas) {
         private PlannedContainerDrain {
-            gas = gas.copy();
+            drainedGas = drainedGas.copy();
         }
     }
 

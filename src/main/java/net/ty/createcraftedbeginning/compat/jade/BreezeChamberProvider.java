@@ -38,18 +38,18 @@ public enum BreezeChamberProvider implements IBlockComponentProvider, IServerDat
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
-        CompoundTag data = accessor.getServerData();
-        if (!data.contains(COMPOUND_KEY_WIND_LEVEL) || !data.contains(COMPOUND_KEY_WIND_TIME_REMAINING) || !data.contains(COMPOUND_KEY_IS_CREATIVE)) {
+        CompoundTag serverData = accessor.getServerData();
+        if (!serverData.contains(COMPOUND_KEY_WIND_LEVEL) || !serverData.contains(COMPOUND_KEY_WIND_TIME_REMAINING) || !serverData.contains(COMPOUND_KEY_IS_CREATIVE)) {
             return;
         }
 
-        IElementHelper helper = IElementHelper.get();
+        IElementHelper elementHelper = IElementHelper.get();
         float tickRate = accessor.tickRate();
-        int remainingTicks = Mth.abs(data.getInt(COMPOUND_KEY_WIND_TIME_REMAINING));
-        WindLevel windLevel = WindLevel.values()[data.getInt(COMPOUND_KEY_WIND_LEVEL)];
-        boolean isCreative = data.getBoolean(COMPOUND_KEY_IS_CREATIVE);
+        int remainingTicks = Mth.abs(serverData.getInt(COMPOUND_KEY_WIND_TIME_REMAINING));
+        WindLevel windLevel = WindLevel.values()[serverData.getInt(COMPOUND_KEY_WIND_LEVEL)];
+        boolean isCreative = serverData.getBoolean(COMPOUND_KEY_IS_CREATIVE);
         if (windLevel == WindLevel.ILL) {
-            tooltip.add(helper.smallItem(ILL_ICON));
+            tooltip.add(elementHelper.smallItem(ILL_ICON));
             tooltip.append(isCreative ? IThemeHelper.get().info(Component.translatable("jade.gas.infinity_mark")) : IThemeHelper.get().seconds(remainingTicks, tickRate).withStyle(ChatFormatting.RED));
             return;
         }
@@ -58,7 +58,7 @@ public enum BreezeChamberProvider implements IBlockComponentProvider, IServerDat
             return;
         }
 
-        tooltip.add(helper.smallItem(GALE_ICON));
+        tooltip.add(elementHelper.smallItem(GALE_ICON));
         tooltip.append(isCreative ? IThemeHelper.get().info(Component.translatable("jade.gas.infinity_mark")) : IThemeHelper.get().seconds(remainingTicks, tickRate));
     }
 

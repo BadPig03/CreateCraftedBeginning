@@ -37,8 +37,8 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
         behaviourType = type;
     }
 
-    private static boolean matchesFilter(GasStack stack, @Nullable GasFilteringBehaviour gasFilter, @Nullable Predicate<GasStack> itemFilter) {
-        return gasFilter != null ? gasFilter.test(stack) : itemFilter == null || itemFilter.test(stack);
+    private static boolean matchesFilter(GasStack gasStack, @Nullable GasFilteringBehaviour gasFilter, @Nullable Predicate<GasStack> itemFilter) {
+        return gasFilter != null ? gasFilter.test(gasStack) : itemFilter == null || itemFilter.test(gasStack);
     }
 
     public GasStack extractAny() {
@@ -49,19 +49,18 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
 
         GasFilteringBehaviour gasFilter = blockEntity.getBehaviour(GasFilteringBehaviour.TYPE);
         Predicate<GasStack> itemFilter = gasFilter == null ? getItemFilterTest() : null;
-        for (int i = 0; i < gasHandler.getTanks(); i++) {
-            GasStack gasInTank = gasHandler.getGasInTank(i);
+        for (int tankIndex = 0; tankIndex < gasHandler.getTanks(); tankIndex++) {
+            GasStack gasInTank = gasHandler.getGasInTank(tankIndex);
             if (gasInTank.isEmpty() || !matchesFilter(gasInTank, gasFilter, itemFilter)) {
                 continue;
             }
 
-            GasAction action = simulateNext ? GasAction.SIMULATE : GasAction.EXECUTE;
-            GasStack drained = gasHandler.drain(gasInTank, action);
-            if (drained.isEmpty()) {
+            GasStack extractedGas = gasHandler.drain(gasInTank, simulateNext ? GasAction.SIMULATE : GasAction.EXECUTE);
+            if (extractedGas.isEmpty()) {
                 continue;
             }
 
-            return drained;
+            return extractedGas;
         }
         return GasStack.EMPTY;
     }

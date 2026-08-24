@@ -34,7 +34,7 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
         super(properties);
     }
 
-    private static boolean canPlaceStructure(Level level, BlockPos pos) {
+    private static boolean canPlaceStructure(Level level, BlockPos corePos) {
         for (int x = -1; x <= 1; x++) {
             for (int y = -1; y <= 1; y++) {
                 for (int z = -1; z <= 1; z++) {
@@ -42,7 +42,7 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
                         continue;
                     }
 
-                    if (!level.getBlockState(pos.offset(x, y, z)).canBeReplaced()) {
+                    if (!level.getBlockState(corePos.offset(x, y, z)).canBeReplaced()) {
                         return false;
                     }
                 }
@@ -51,15 +51,15 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
         return true;
     }
 
-    private static BlockState getStructuralState(AirtightReactorKettleStructuralPosition position) {
-        if (position.isCog()) {
-            return CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION, position);
+    private static BlockState getStructuralState(AirtightReactorKettleStructuralPosition structuralPosition) {
+        if (structuralPosition.isCog()) {
+            return CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION, structuralPosition);
         }
-        return CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION, position);
+        return CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION, structuralPosition);
     }
 
-    private static boolean isMatchingStructure(BlockState state, AirtightReactorKettleStructuralPosition position) {
-        return state.getBlock() instanceof IAirtightReactorKettleStructural structural && state.getValue(structural.getStructuralPosition()) == position;
+    private static boolean isMatchingStructure(BlockState state, AirtightReactorKettleStructuralPosition structuralPosition) {
+        return state.getBlock() instanceof IAirtightReactorKettleStructural structural && state.getValue(structural.getStructuralPosition()) == structuralPosition;
     }
 
     @Override
@@ -96,16 +96,16 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
                         continue;
                     }
 
-                    BlockPos structurePos = pos.offset(x, y, z);
-                    AirtightReactorKettleStructuralPosition structuralPos = AirtightReactorKettleStructuralPosition.fromOffset(x, y, z);
-                    BlockState structureState = getStructuralState(structuralPos);
-                    BlockState occupiedState = level.getBlockState(structurePos);
+                    BlockPos structureBlockPos = pos.offset(x, y, z);
+                    AirtightReactorKettleStructuralPosition structuralPosition = AirtightReactorKettleStructuralPosition.fromOffset(x, y, z);
+                    BlockState requiredState = getStructuralState(structuralPosition);
+                    BlockState occupiedState = level.getBlockState(structureBlockPos);
                     if (occupiedState.canBeReplaced()) {
-                        level.setBlockAndUpdate(structurePos, structureState);
+                        level.setBlockAndUpdate(structureBlockPos, requiredState);
                         continue;
                     }
 
-                    if (isMatchingStructure(occupiedState, structuralPos)) {
+                    if (isMatchingStructure(occupiedState, structuralPosition)) {
                         continue;
                     }
 
@@ -131,9 +131,9 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
     }
 
     @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
-        super.setPlacedBy(level, pos, state, entity, stack);
-        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+        CCBAdvancementBehaviour.setPlacedBy(level, pos, placer);
     }
 
     @Override

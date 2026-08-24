@@ -21,7 +21,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -37,8 +36,7 @@ import java.util.List;
 public final class GasFilteringRenderer {
     public static void tick() {
         Minecraft minecraft = Minecraft.getInstance();
-        HitResult target = minecraft.hitResult;
-        if (!(target instanceof BlockHitResult hitResult)) {
+        if (!(minecraft.hitResult instanceof BlockHitResult hitResult)) {
             return;
         }
 
@@ -47,8 +45,8 @@ public final class GasFilteringRenderer {
             return;
         }
 
-        BlockPos pos = hitResult.getBlockPos();
-        if (!(level.getBlockEntity(pos) instanceof SmartBlockEntity blockEntity)) {
+        BlockPos hitPos = hitResult.getBlockPos();
+        if (!(level.getBlockEntity(hitPos) instanceof SmartBlockEntity blockEntity)) {
             return;
         }
 
@@ -58,29 +56,29 @@ public final class GasFilteringRenderer {
         }
 
         ItemStack heldItem = player.getItemInHand(InteractionHand.MAIN_HAND);
-        for (BlockEntityBehaviour candidate : blockEntity.getAllBehaviours()) {
-            if (!(candidate instanceof GasFilteringBehaviour behaviour) || !behaviour.isActive()) {
+        for (BlockEntityBehaviour candidateBehaviour : blockEntity.getAllBehaviours()) {
+            if (!(candidateBehaviour instanceof GasFilteringBehaviour behaviour) || !behaviour.isActive()) {
                 continue;
             }
 
-            BlockState state = level.getBlockState(pos);
-            Vec3 localHit = target.getLocation().subtract(Vec3.atLowerCornerOf(pos));
-            ValueBoxTransform transform = behaviour.getSlotPositioning();
-            if (!transform.shouldRender(level, pos, state) || !behaviour.mayInteract(player)) {
+            BlockState blockState = level.getBlockState(hitPos);
+            Vec3 localHitPosition = hitResult.getLocation().subtract(Vec3.atLowerCornerOf(hitPos));
+            ValueBoxTransform slotTransform = behaviour.getSlotPositioning();
+            if (!slotTransform.shouldRender(level, hitPos, blockState) || !behaviour.mayInteract(player)) {
                 continue;
             }
 
-            Component label = behaviour.getLabel();
-            boolean hit = transform.testHit(level, pos, state, localHit);
-            ValueBox box = new ItemValueBox(label, new AABB(Vec3.ZERO, Vec3.ZERO).inflate(0.25), pos, behaviour.getFilter(), Component.empty());
-            box.passive(!hit || behaviour.bypassesInput(heldItem));
-            Outliner.getInstance().showOutline(Pair.of("filter" + behaviour.netId(), pos), box.transform(transform)).lineWidth(0.015625f).withFaceTexture(hit ? AllSpecialTextures.THIN_CHECKERED : null).highlightFace(hitResult.getDirection());
-            if (!hit) {
+            Component filterLabel = behaviour.getLabel();
+            boolean isSlotHit = slotTransform.testHit(level, hitPos, blockState, localHitPosition);
+            ValueBox filterBox = new ItemValueBox(filterLabel, new AABB(Vec3.ZERO, Vec3.ZERO).inflate(0.25), hitPos, behaviour.getFilter(), Component.empty());
+            filterBox.passive(!isSlotHit || behaviour.bypassesInput(heldItem));
+            Outliner.getInstance().showOutline(Pair.of("filter" + behaviour.netId(), hitPos), filterBox.transform(slotTransform)).lineWidth(0.015625f).withFaceTexture(isSlotHit ? AllSpecialTextures.THIN_CHECKERED : null).highlightFace(hitResult.getDirection());
+            if (!isSlotHit) {
                 continue;
             }
 
             List<MutableComponent> tooltip = new ArrayList<>();
-            tooltip.add(label.copy());
+            tooltip.add(filterLabel.copy());
             tooltip.add(behaviour.getTip());
             CreateClient.VALUE_SETTINGS_HANDLER.showHoverTip(tooltip);
         }

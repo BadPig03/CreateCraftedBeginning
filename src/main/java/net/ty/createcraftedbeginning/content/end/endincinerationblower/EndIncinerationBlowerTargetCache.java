@@ -32,14 +32,14 @@ public final class EndIncinerationBlowerTargetCache {
         this.origin = origin;
     }
 
-    public List<ItemEntity> getAffectedItems(ServerLevel level, AABB area, EntityArea entityArea) {
+    public List<ItemEntity> getAffectedItems(ServerLevel level, AABB effectArea, EntityArea entityArea) {
         long gameTime = level.getGameTime();
         if (gameTime < nextItemEntityScanTime) {
             return affectedItems;
         }
 
         affectedItems.clear();
-        for (ItemEntity itemEntity : level.getEntitiesOfClass(ItemEntity.class, area)) {
+        for (ItemEntity itemEntity : level.getEntitiesOfClass(ItemEntity.class, effectArea)) {
             if (entityArea.intersects(itemEntity)) {
                 affectedItems.add(itemEntity);
             }
@@ -56,12 +56,12 @@ public final class EndIncinerationBlowerTargetCache {
         }
 
         transportedHandlers.clear();
-        BlockPos min = origin.offset(-blockRadius, -blockRadius, -blockRadius);
-        BlockPos max = origin.offset(blockRadius, blockRadius, blockRadius);
-        for (BlockPos blockPos : BlockPos.betweenClosed(min, max)) {
-            TransportedItemStackHandlerBehaviour behaviour = BlockEntityBehaviour.get(level, blockPos, TransportedItemStackHandlerBehaviour.TYPE);
-            if (behaviour != null) {
-                transportedHandlers.add(behaviour);
+        BlockPos minPos = origin.offset(-blockRadius, -blockRadius, -blockRadius);
+        BlockPos maxPos = origin.offset(blockRadius, blockRadius, blockRadius);
+        for (BlockPos scanPos : BlockPos.betweenClosed(minPos, maxPos)) {
+            TransportedItemStackHandlerBehaviour handler = BlockEntityBehaviour.get(level, scanPos, TransportedItemStackHandlerBehaviour.TYPE);
+            if (handler != null) {
+                transportedHandlers.add(handler);
             }
         }
 

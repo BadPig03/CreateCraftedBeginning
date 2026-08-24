@@ -17,8 +17,7 @@ public final class PortableGasInterfaceDisplay {
     }
 
     public float getExtensionDistance(float partialTicks) {
-        float animation = gasInterface.getConnectionAnimationValue(partialTicks);
-        return Mth.square(animation) * gasInterface.getDistance() * 0.5f;
+        return Mth.square(gasInterface.getConnectionAnimationValue(partialTicks)) * gasInterface.getDistance() * 0.5f;
     }
 
     public int getMaxValue() {
@@ -29,7 +28,7 @@ public final class PortableGasInterfaceDisplay {
         return GasAmounts.toWholeBucketsClamped(gasInterface.getGasCapability().getGasInTank(0).getAmount());
     }
 
-    public MutableComponent format(int value) {
-        return GasAmounts.formatWholeBuckets(value);
+    public MutableComponent format(int bucketAmount) {
+        return GasAmounts.formatWholeBuckets(bucketAmount);
     }
 }

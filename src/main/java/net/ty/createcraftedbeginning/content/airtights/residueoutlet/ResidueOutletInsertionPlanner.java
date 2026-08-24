@@ -32,11 +32,11 @@ public final class ResidueOutletInsertionPlanner {
             return null;
         }
 
-        Provider provider = level.registryAccess();
-        return hasFluid ? createFluidInsertionPlan(fluidStack, maxAmount, provider) : createItemInsertionPlan(itemStack, maxAmount, provider);
+        Provider registryProvider = level.registryAccess();
+        return hasFluid ? createFluidInsertionPlan(fluidStack, maxAmount, registryProvider) : createItemInsertionPlan(itemStack, maxAmount, registryProvider);
     }
 
-    private @Nullable ResidueOutletBlockEntity.ResidueInsertionPlan createFluidInsertionPlan(FluidStack fluid, int maxAmount, Provider provider) {
+    private @Nullable ResidueOutletBlockEntity.ResidueInsertionPlan createFluidInsertionPlan(FluidStack fluid, int maxAmount, Provider registryProvider) {
         int plannedAmount = outlet.insertResidueFluid(fluid.copyWithAmount(maxAmount), FluidAction.SIMULATE);
         if (plannedAmount <= 0) {
             return null;
@@ -44,21 +44,21 @@ public final class ResidueOutletInsertionPlanner {
 
         SmartFluidTankBehaviour fluidTankBehaviour = outlet.getFluidTankBehaviour();
         FluidStack plannedFluid = fluid.copyWithAmount(plannedAmount);
-        return new ResidueOutletBlockEntity.ResidueInsertionPlan(plannedAmount, ResourceTransaction.participant(() -> outlet.insertResidueFluid(plannedFluid, FluidAction.SIMULATE) == plannedAmount, () -> MachineResourceSnapshots.snapshotFluidTanks(provider, fluidTankBehaviour), () -> outlet.insertResidueFluid(plannedFluid, FluidAction.EXECUTE) == plannedAmount, snapshot -> {
-            MachineResourceSnapshots.restoreFluidTanks(provider, snapshot, fluidTankBehaviour);
+        return new ResidueOutletBlockEntity.ResidueInsertionPlan(plannedAmount, ResourceTransaction.participant(() -> outlet.insertResidueFluid(plannedFluid, FluidAction.SIMULATE) == plannedAmount, () -> MachineResourceSnapshots.snapshotFluidTanks(registryProvider, fluidTankBehaviour), () -> outlet.insertResidueFluid(plannedFluid, FluidAction.EXECUTE) == plannedAmount, tankSnapshot -> {
+            MachineResourceSnapshots.restoreFluidTanks(registryProvider, tankSnapshot, fluidTankBehaviour);
             outlet.notifyUpdate();
         }));
     }
 
-    private @Nullable ResidueOutletBlockEntity.ResidueInsertionPlan createItemInsertionPlan(ItemStack item, int maxUnits, Provider provider) {
+    private @Nullable ResidueOutletBlockEntity.ResidueInsertionPlan createItemInsertionPlan(ItemStack item, int maxUnits, Provider registryProvider) {
         int plannedUnits = Math.min(maxUnits, inventory.getItemInsertionCapacityUnits(item));
         if (plannedUnits <= 0) {
             return null;
         }
 
         ItemStack plannedItem = item.copyWithCount(1);
-        return new ResidueOutletBlockEntity.ResidueInsertionPlan(plannedUnits, ResourceTransaction.participant(() -> inventory.getItemInsertionCapacityUnits(plannedItem) >= plannedUnits, () -> inventory.serializeNBT(provider).copy(), () -> inventory.addPartialItemUnits(plannedUnits, plannedItem) == plannedUnits, snapshot -> {
-            inventory.deserializeNBT(provider, snapshot.copy());
+        return new ResidueOutletBlockEntity.ResidueInsertionPlan(plannedUnits, ResourceTransaction.participant(() -> inventory.getItemInsertionCapacityUnits(plannedItem) >= plannedUnits, () -> inventory.serializeNBT(registryProvider).copy(), () -> inventory.addPartialItemUnits(plannedUnits, plannedItem) == plannedUnits, inventorySnapshot -> {
+            inventory.deserializeNBT(registryProvider, inventorySnapshot.copy());
             outlet.notifyUpdate();
         }));
     }

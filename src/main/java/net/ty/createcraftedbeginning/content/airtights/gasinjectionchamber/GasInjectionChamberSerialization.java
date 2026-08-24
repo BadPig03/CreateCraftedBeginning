@@ -24,31 +24,28 @@ public final class GasInjectionChamberSerialization {
         this.display = display;
     }
 
-    public void write(CompoundTag tag, Provider provider, boolean clientPacket) {
-        tag.putInt(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS, operation.getProcessingTicks());
-        filter.writeInstalledFilter(tag, provider);
+    public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        compoundTag.putInt(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS, operation.getProcessingTicks());
+        filter.writeInstalledFilter(compoundTag, provider);
         if (clientPacket) {
-            tag.putBoolean(GasInjectionChamberFilterState.COMPOUND_KEY_FILTER_LOCKED, operation.type == OperationType.FAN_PROCESSING);
+            compoundTag.putBoolean(GasInjectionChamberFilterState.COMPOUND_KEY_FILTER_LOCKED, operation.type == OperationType.FAN_PROCESSING);
         }
-        else {
-            operation.writeOperation(tag, provider);
-        }
-        visual.writeCloud(tag, clientPacket);
+        visual.writeCloud(compoundTag, clientPacket);
     }
 
-    public void read(CompoundTag tag, Provider provider, boolean clientPacket) {
-        if (tag.contains(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS)) {
-            operation.synchronizeProcessingTicks(tag.getInt(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS), clientPacket);
+    public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        if (compoundTag.contains(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS)) {
+            operation.synchronizeProcessingTicks(compoundTag.getInt(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS), clientPacket);
         }
 
-        filter.readInstalledFilter(tag, provider);
+        filter.readInstalledFilter(compoundTag, provider);
         if (clientPacket) {
-            filter.setClientLocked(tag.getBoolean(GasInjectionChamberFilterState.COMPOUND_KEY_FILTER_LOCKED));
+            filter.setClientLocked(compoundTag.getBoolean(GasInjectionChamberFilterState.COMPOUND_KEY_FILTER_LOCKED));
         }
-        else if (!operation.readOperation(tag, provider, chamber::isFanProcessingOperationStillValid)) {
-            chamber.clearOperationState();
+        else {
+            operation.clearTransientOperation();
+            chamber.scheduleBasinCheck();
         }
-
-        visual.readCloud(tag, clientPacket).ifPresent(display::spawnCloud);
+        visual.readCloud(compoundTag, clientPacket).ifPresent(display::spawnCloud);
     }
 }

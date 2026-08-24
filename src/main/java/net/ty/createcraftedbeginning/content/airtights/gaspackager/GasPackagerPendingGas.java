@@ -45,8 +45,8 @@ public final class GasPackagerPendingGas {
     }
 
     public InsertionResult insertInto(@Nullable IGasHandler handler, ItemStack previouslyUnwrapped) {
-        BalloonGasContents contents = pendingGases.copy();
-        if (contents.isEmpty()) {
+        BalloonGasContents pendingContents = pendingGases.copy();
+        if (pendingContents.isEmpty()) {
             return InsertionResult.NO_OP;
         }
 
@@ -54,30 +54,30 @@ public final class GasPackagerPendingGas {
             return new InsertionResult(copyOrEmpty(previouslyUnwrapped), false);
         }
 
-        List<GasStack> gases = contents.copyGasStacks();
-        if (gases.size() > 1) {
-            if (!handler.tryFillAtomically(gases, GasAction.EXECUTE).isSuccess()) {
+        List<GasStack> gasStacks = pendingContents.copyGasStacks();
+        if (gasStacks.size() > 1) {
+            if (!handler.tryFillAtomically(gasStacks, GasAction.EXECUTE).isSuccess()) {
                 return new InsertionResult(copyOrEmpty(previouslyUnwrapped), false);
             }
             return new InsertionResult(ItemStack.EMPTY, true);
         }
 
-        List<GasStack> remainders = new ArrayList<>();
-        for (GasStack gas : gases) {
-            long filled = handler.fill(gas.copy(), GasAction.EXECUTE);
-            if (filled < gas.getAmount()) {
-                remainders.add(gas.copyWithAmount(gas.getAmount() - filled));
+        List<GasStack> gasRemainders = new ArrayList<>();
+        for (GasStack gas : gasStacks) {
+            long filledAmount = handler.fill(gas.copy(), GasAction.EXECUTE);
+            if (filledAmount < gas.getAmount()) {
+                gasRemainders.add(gas.copyWithAmount(gas.getAmount() - filledAmount));
             }
         }
 
-        BalloonGasContents remainderContents = new BalloonGasContents(remainders);
-        ItemStack returned = ItemStack.EMPTY;
-        if (!remainderContents.isEmpty() && !previouslyUnwrapped.isEmpty()) {
-            returned = previouslyUnwrapped.copy();
-            BalloonUtils.setGasContents(returned, remainderContents);
+        BalloonGasContents remainingContents = new BalloonGasContents(gasRemainders);
+        ItemStack returnedPackage = ItemStack.EMPTY;
+        if (!remainingContents.isEmpty() && !previouslyUnwrapped.isEmpty()) {
+            returnedPackage = previouslyUnwrapped.copy();
+            BalloonUtils.setGasContents(returnedPackage, remainingContents);
         }
 
-        return new InsertionResult(returned, true);
+        return new InsertionResult(returnedPackage, true);
     }
 
     public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {

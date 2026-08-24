@@ -9,5 +9,5 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public interface ZombieAccess {
     boolean ccb$convertsInWater();
 
-    void ccb$startUnderWaterConversion(int time);
+    void ccb$startUnderWaterConversion(int conversionTime);
 }

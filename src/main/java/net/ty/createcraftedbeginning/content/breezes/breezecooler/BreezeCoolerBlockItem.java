@@ -21,7 +21,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.entity.TrialSpawnerBlockEntity;
 import net.minecraft.world.level.block.entity.trialspawner.TrialSpawner;
-import net.minecraft.world.level.block.entity.trialspawner.TrialSpawnerData;
 import net.minecraft.world.level.block.entity.trialspawner.TrialSpawnerState;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
@@ -39,23 +38,23 @@ public class BreezeCoolerBlockItem extends BlockItem {
     }
 
     private static void giveCoolerItemTo(Player player, ItemStack heldItem, InteractionHand hand) {
-        ItemStack cooler = new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK);
+        ItemStack coolerItem = new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK);
         if (!player.isCreative()) {
             heldItem.shrink(1);
         }
         if (heldItem.isEmpty()) {
-            player.setItemInHand(hand, cooler);
+            player.setItemInHand(hand, coolerItem);
             return;
         }
 
-        ItemHandlerHelper.giveItemToPlayer(player, cooler);
+        ItemHandlerHelper.giveItemToPlayer(player, coolerItem);
     }
 
     private static void spawnCaptureEffects(Level level, Vec3 position) {
         if (level.isClientSide) {
             for (int i = 0; i < 40; i++) {
-                Vec3 motion = VecHelper.offsetRandomly(Vec3.ZERO, level.random, 0.125f);
-                level.addParticle(ParticleTypes.GUST, position.x, position.y + 1, position.z, motion.x, motion.y, motion.z);
+                Vec3 velocity = VecHelper.offsetRandomly(Vec3.ZERO, level.random, 0.125f);
+                level.addParticle(ParticleTypes.GUST, position.x, position.y + 1, position.z, velocity.x, velocity.y, velocity.z);
             }
             return;
         }
@@ -72,14 +71,13 @@ public class BreezeCoolerBlockItem extends BlockItem {
             return InteractionResult.FAIL;
         }
 
-        TrialSpawnerState state = spawnerBlockEntity.getState();
-        if (!state.isCapableOfSpawning() || !state.hasSpinningMob()) {
+        TrialSpawnerState spawnerState = spawnerBlockEntity.getState();
+        if (!spawnerState.isCapableOfSpawning() || !spawnerState.hasSpinningMob()) {
             return InteractionResult.FAIL;
         }
 
-        TrialSpawner spawner = spawnerBlockEntity.getTrialSpawner();
-        TrialSpawnerData data = spawner.getData();
-        if (!(data.getOrCreateDisplayEntity(spawner, level, state) instanceof Breeze)) {
+        TrialSpawner trialSpawner = spawnerBlockEntity.getTrialSpawner();
+        if (!(trialSpawner.getData().getOrCreateDisplayEntity(trialSpawner, level, spawnerState) instanceof Breeze)) {
             return InteractionResult.FAIL;
         }
 
@@ -114,38 +112,38 @@ public class BreezeCoolerBlockItem extends BlockItem {
     }
 
     @Override
-    public InteractionResult interactLivingEntity(ItemStack heldItem, Player player, LivingEntity entity, InteractionHand hand) {
-        if (!CCBEntityFlags.BREEZE_CHAMBER_CAPTURABLE.matches(entity)) {
+    public InteractionResult interactLivingEntity(ItemStack heldItem, Player player, LivingEntity target, InteractionHand hand) {
+        if (!CCBEntityFlags.BREEZE_CHAMBER_CAPTURABLE.matches(target)) {
             return InteractionResult.PASS;
         }
 
         Level level = player.level();
-        spawnCaptureEffects(level, entity.position());
+        spawnCaptureEffects(level, target.position());
         if (level.isClientSide) {
             return InteractionResult.sidedSuccess(true);
         }
 
         giveCoolerItemTo(player, heldItem, hand);
-        entity.discard();
+        target.discard();
         return InteractionResult.sidedSuccess(false);
     }
 
     @Override
     public InteractionResult useOn(UseOnContext context) {
         Level level = context.getLevel();
-        BlockEntity blockEntity = level.getBlockEntity(context.getClickedPos());
+        BlockEntity clickedBlockEntity = level.getBlockEntity(context.getClickedPos());
         if (!CCBConfig.server().airtights.canCoolerGetFromSpawners.get()) {
             return super.useOn(context);
         }
 
-        if (blockEntity instanceof TrialSpawnerBlockEntity spawnerBlockEntity) {
-            InteractionResult result = tryCaptureFromTrialSpawner(spawnerBlockEntity, context);
-            return result == InteractionResult.FAIL ? super.useOn(context) : result;
+        if (clickedBlockEntity instanceof TrialSpawnerBlockEntity spawnerBlockEntity) {
+            InteractionResult captureResult = tryCaptureFromTrialSpawner(spawnerBlockEntity, context);
+            return captureResult == InteractionResult.FAIL ? super.useOn(context) : captureResult;
         }
 
-        if (blockEntity instanceof SpawnerBlockEntity spawnerBlockEntity) {
-            InteractionResult result = tryCaptureFromSpawner(spawnerBlockEntity, context);
-            return result == InteractionResult.FAIL ? super.useOn(context) : result;
+        if (clickedBlockEntity instanceof SpawnerBlockEntity spawnerBlockEntity) {
+            InteractionResult captureResult = tryCaptureFromSpawner(spawnerBlockEntity, context);
+            return captureResult == InteractionResult.FAIL ? super.useOn(context) : captureResult;
         }
 
         return super.useOn(context);

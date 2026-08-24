@@ -112,12 +112,12 @@ public class BoilerSteamOutletBlock extends FaceAttachedHorizontalDirectionalBlo
             return;
         }
 
-        boolean powered = level.hasNeighborSignal(pos);
-        if (powered == state.getValue(POWERED)) {
+        boolean isPowered = level.hasNeighborSignal(pos);
+        if (isPowered == state.getValue(POWERED)) {
             return;
         }
 
-        BlockState updatedState = state.setValue(POWERED, powered);
+        BlockState updatedState = state.setValue(POWERED, isPowered);
         level.setBlock(pos, updatedState, UPDATE_ALL);
         if (level.isClientSide) {
             return;

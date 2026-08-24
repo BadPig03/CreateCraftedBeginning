@@ -15,13 +15,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public interface SmithingTransformRecipeAccessor extends SmithingTransformRecipeAccess {
     @Override
     @Accessor("template")
-    Ingredient getTemplate();
+    Ingredient ccb$getTemplate();
 
     @Override
     @Accessor("base")
-    Ingredient getBase();
+    Ingredient ccb$getBase();
 
     @Override
     @Accessor("addition")
-    Ingredient getAddition();
+    Ingredient ccb$getAddition();
 }

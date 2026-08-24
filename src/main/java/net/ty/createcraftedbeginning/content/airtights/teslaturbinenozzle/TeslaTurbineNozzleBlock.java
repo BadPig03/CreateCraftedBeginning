@@ -85,8 +85,8 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
     }
 
     public static boolean hasOtherNozzle(BlockGetter level, BlockPos structurePos, BlockPos nozzlePos, Axis structureAxis, TeslaTurbineStructuralPosition structurePosition) {
-        for (Direction direction : TeslaTurbineStructuralPosition.getPossiblePosition(structurePosition, structureAxis)) {
-            BlockPos candidatePos = structurePos.relative(direction);
+        for (Direction candidateDirection : TeslaTurbineStructuralPosition.getPossiblePosition(structurePosition, structureAxis)) {
+            BlockPos candidatePos = structurePos.relative(candidateDirection);
             if (candidatePos.equals(nozzlePos)) {
                 continue;
             }
@@ -110,15 +110,15 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
 
     @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
-        BlockState state = super.getStateForPlacement(context);
-        if (state == null) {
+        BlockState placementState = super.getStateForPlacement(context);
+        if (placementState == null) {
             return null;
         }
 
         Level level = context.getLevel();
         Direction inwardDirection = context.getClickedFace().getOpposite();
-        BlockPos clickedPos = context.getClickedPos();
-        if (isInvalidPlacement(level, inwardDirection, clickedPos)) {
+        BlockPos nozzlePos = context.getClickedPos();
+        if (isInvalidPlacement(level, inwardDirection, nozzlePos)) {
             return null;
         }
 
@@ -126,7 +126,7 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
         if (player != null && player.isShiftKeyDown()) {
             return null;
         }
-        return ProperWaterloggedBlock.withWater(level, state.setValue(FACING, inwardDirection.getOpposite()).setValue(CLOCKWISE, isClockwise(level, inwardDirection, clickedPos)), clickedPos);
+        return ProperWaterloggedBlock.withWater(level, placementState.setValue(FACING, inwardDirection.getOpposite()).setValue(CLOCKWISE, isClockwise(level, inwardDirection, nozzlePos)), nozzlePos);
     }
 
     @Override
@@ -201,11 +201,11 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
         return null;
     }
 
-    protected void scheduleValidation(Level level, BlockPos pos) {
-        if (level.isClientSide || level.getBlockTicks().hasScheduledTick(pos, this)) {
+    protected void scheduleValidation(Level level, BlockPos nozzlePos) {
+        if (level.isClientSide || level.getBlockTicks().hasScheduledTick(nozzlePos, this)) {
             return;
         }
 
-        level.scheduleTick(pos, this, 1);
+        level.scheduleTick(nozzlePos, this, 1);
     }
 }

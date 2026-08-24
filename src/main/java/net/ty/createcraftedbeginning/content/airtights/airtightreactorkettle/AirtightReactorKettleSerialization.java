@@ -46,8 +46,8 @@ public final class AirtightReactorKettleSerialization {
         if (compoundTag.contains(COMPOUND_KEY_CORE)) {
             kettle.getCore().read(compoundTag.getCompound(COMPOUND_KEY_CORE));
         }
-        boolean hasStoredFilter = compoundTag.contains(COMPOUND_KEY_FILTER);
-        kettle.loadRecipeFilter(hasStoredFilter ? ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_FILTER)) : ItemStack.EMPTY, hasStoredFilter);
+        boolean hasSerializedFilter = compoundTag.contains(COMPOUND_KEY_FILTER);
+        kettle.loadRecipeFilter(hasSerializedFilter ? ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_FILTER)) : ItemStack.EMPTY, hasSerializedFilter);
         if (compoundTag.contains(COMPOUND_KEY_INPUT_ITEMS)) {
             kettle.getInputInventory().deserializeNBT(provider, compoundTag.getCompound(COMPOUND_KEY_INPUT_ITEMS));
         }
@@ -57,8 +57,8 @@ public final class AirtightReactorKettleSerialization {
 
         int operatingTicks = compoundTag.contains(COMPOUND_KEY_OPERATING_TICKS) ? compoundTag.getInt(COMPOUND_KEY_OPERATING_TICKS) : controller.getOperatingTicks();
         int processingTicks = compoundTag.contains(COMPOUND_KEY_PROCESSING_TICKS) ? compoundTag.getInt(COMPOUND_KEY_PROCESSING_TICKS) : controller.getProcessingTicks();
-        boolean operating = compoundTag.contains(COMPOUND_KEY_OPERATING) ? compoundTag.getBoolean(COMPOUND_KEY_OPERATING) : controller.isOperating();
+        boolean isOperating = compoundTag.contains(COMPOUND_KEY_OPERATING) ? compoundTag.getBoolean(COMPOUND_KEY_OPERATING) : controller.isOperating();
         boolean windowsOpen = compoundTag.contains(COMPOUND_KEY_OPEN_STATE) ? compoundTag.getBoolean(COMPOUND_KEY_OPEN_STATE) : controller.getWindowsOpenState();
-        controller.loadOperationState(operating, operatingTicks, processingTicks, windowsOpen, clientPacket);
+        controller.loadOperationState(isOperating, operatingTicks, processingTicks, windowsOpen, clientPacket);
     }
 }

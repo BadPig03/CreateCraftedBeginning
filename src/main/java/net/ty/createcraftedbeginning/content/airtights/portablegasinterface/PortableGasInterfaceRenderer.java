@@ -31,40 +31,40 @@ public class PortableGasInterfaceRenderer extends SafeBlockEntityRenderer<Portab
     }
 
     public static void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource bufferSource) {
-        LerpedFloat animation = PortableGasInterfaceMovement.getAnimation(context);
-        boolean lit = animation.settled();
-        float progress = animation.getValue(AnimationTickHolder.getPartialTicks());
+        LerpedFloat connectionAnimation = PortableGasInterfaceMovement.getAnimation(context);
+        boolean lit = connectionAnimation.settled();
+        float extensionProgress = connectionAnimation.getValue(AnimationTickHolder.getPartialTicks());
         PoseStack model = matrices.getModel();
         Consumer<SuperByteBuffer> draw = buffer -> buffer.light(LevelRenderer.getLightColor(renderWorld, context.localPos)).useLevelLight(context.world, matrices.getWorld()).renderInto(matrices.getViewProjection(), bufferSource.getBuffer(RenderType.solid()));
 
-        render(context.state, lit, progress, model, draw);
+        render(context.state, lit, extensionProgress, model, draw);
     }
 
-    private static void render(BlockState state, boolean lit, float progress, @Nullable PoseStack poseStack, Consumer<SuperByteBuffer> draw) {
-        SuperByteBuffer middle = CachedBuffers.partial(getMiddleForState(lit), state);
-        SuperByteBuffer top = CachedBuffers.partial(getTopForState(), state);
+    private static void render(BlockState blockState, boolean lit, float extensionProgress, @Nullable PoseStack poseStack, Consumer<SuperByteBuffer> draw) {
+        SuperByteBuffer middle = CachedBuffers.partial(getMiddleForState(lit), blockState);
+        SuperByteBuffer top = CachedBuffers.partial(getTopForState(), blockState);
         if (poseStack != null) {
             middle.transform(poseStack);
             top.transform(poseStack);
         }
 
-        Direction facing = state.getValue(PortableGasInterfaceBlock.FACING);
+        Direction facing = blockState.getValue(PortableGasInterfaceBlock.FACING);
         rotateToFacing(middle, facing);
         rotateToFacing(top, facing);
-        middle.translate(0, progress * 0.5 + 0.375, 0);
-        top.translate(0, progress, 0);
+        middle.translate(0, extensionProgress * 0.5 + 0.375, 0);
+        top.translate(0, extensionProgress, 0);
 
         draw.accept(middle);
         draw.accept(top);
     }
 
     private static void rotateToFacing(SuperByteBuffer buffer, Direction facing) {
-        float angleX = switch (facing) {
+        float xRotation = switch (facing) {
             case UP -> 0;
             case DOWN -> 180;
             default -> 90;
         };
-        buffer.center().rotateYDegrees(AngleHelper.horizontalAngle(facing)).rotateXDegrees(angleX).uncenter();
+        buffer.center().rotateYDegrees(AngleHelper.horizontalAngle(facing)).rotateXDegrees(xRotation).uncenter();
     }
 
     public static PartialModel getTopForState() {

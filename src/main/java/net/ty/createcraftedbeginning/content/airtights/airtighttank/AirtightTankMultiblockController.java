@@ -93,28 +93,28 @@ public final class AirtightTankMultiblockController {
             return (T) owner;
         }
 
-        BlockPos controller = controllerPos;
-        if (controller == null || !owner.getLevel().isLoaded(controller)) {
+        BlockPos controllerPosition = controllerPos;
+        if (controllerPosition == null || !owner.getLevel().isLoaded(controllerPosition)) {
             return null;
         }
 
-        BlockEntity blockEntity = owner.getLevel().getBlockEntity(controller);
-        if (blockEntity == null || blockEntity.getType() != owner.getType()) {
+        BlockEntity controllerEntity = owner.getLevel().getBlockEntity(controllerPosition);
+        if (controllerEntity == null || controllerEntity.getType() != owner.getType()) {
             return null;
         }
-        return blockEntity instanceof AbstractAirtightTankBlockEntity tank ? (T) tank : null;
+        return controllerEntity instanceof AbstractAirtightTankBlockEntity controllerTank ? (T) controllerTank : null;
     }
 
     public boolean isController() {
         return controllerPos == null || owner.getBlockPos().equals(controllerPos);
     }
 
-    public void setController(BlockPos controller) {
-        if (owner.getLevel() == null || owner.getLevel().isClientSide && !owner.isVirtual() || controller.equals(controllerPos)) {
+    public void setController(BlockPos newControllerPos) {
+        if (owner.getLevel() == null || owner.getLevel().isClientSide && !owner.isVirtual() || newControllerPos.equals(controllerPos)) {
             return;
         }
 
-        controllerPos = controller;
+        controllerPos = newControllerPos;
         owner.refreshCapability();
         owner.notifyUpdate();
     }
@@ -155,13 +155,13 @@ public final class AirtightTankMultiblockController {
             return false;
         }
 
-        BlockPos controller = controllerPos;
-        if (controller == null || !owner.getLevel().isLoaded(controller)) {
+        BlockPos controllerPosition = controllerPos;
+        if (controllerPosition == null || !owner.getLevel().isLoaded(controllerPosition)) {
             return false;
         }
 
-        AbstractAirtightTankBlockEntity controllerBE = owner.getControllerBE();
-        if (controllerBE != null && !controllerBE.isRemoved() && controllerBE.isController()) {
+        AbstractAirtightTankBlockEntity controllerTank = owner.getControllerBE();
+        if (controllerTank != null && !controllerTank.isRemoved() && controllerTank.isController()) {
             return false;
         }
 

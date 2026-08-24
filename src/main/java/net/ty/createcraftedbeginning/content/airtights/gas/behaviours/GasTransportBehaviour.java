@@ -254,9 +254,9 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
 
     public void addPressureUnits(Direction side, boolean inbound, long pressureUnits) {
         GasPipeConnection connection = getConnection(side);
-        BlockState state = blockEntity.getBlockState();
-        boolean flowAllowed = inbound ? allowsInboundFlow(state, side) : allowsOutboundFlow(state, side);
-        if (connection == null || !flowAllowed) {
+        BlockState blockState = blockEntity.getBlockState();
+        boolean isFlowAllowed = inbound ? allowsInboundFlow(blockState, side) : allowsOutboundFlow(blockState, side);
+        if (connection == null || !isFlowAllowed) {
             return;
         }
 
@@ -280,13 +280,13 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
             return AttachmentTypes.NONE;
         }
 
-        BlockPos offsetPos = pos.relative(direction);
-        BlockState facingState = level.getBlockState(offsetPos);
-        if (facingState.getBlock() instanceof AirtightPumpBlock && direction.getOpposite() == facingState.getValue(AirtightPumpBlock.FACING)) {
+        BlockPos adjacentPos = pos.relative(direction);
+        BlockState adjacentState = level.getBlockState(adjacentPos);
+        if (adjacentState.getBlock() instanceof AirtightPumpBlock && direction.getOpposite() == adjacentState.getValue(AirtightPumpBlock.FACING)) {
             return AttachmentTypes.NONE;
         }
 
-        if (GasCapabilities.hasGasCapability(level, offsetPos, direction.getOpposite())) {
+        if (GasCapabilities.hasGasCapability(level, adjacentPos, direction.getOpposite())) {
             return AttachmentTypes.DRAIN;
         }
         return AttachmentTypes.RIM;
@@ -387,8 +387,8 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         }
 
         ListTag retiredData = compoundTag.getList(COMPOUND_KEY_RETIRED_CONNECTIONS, Tag.TAG_COMPOUND);
-        for (int i = 0; i < retiredData.size(); i++) {
-            GasPipeConnection connection = GasPipeConnection.readRetiredData(retiredData.getCompound(i), provider);
+        for (int connectionIndex = 0; connectionIndex < retiredData.size(); connectionIndex++) {
+            GasPipeConnection connection = GasPipeConnection.readRetiredData(retiredData.getCompound(connectionIndex), provider);
             if (connection == null) {
                 continue;
             }
@@ -422,12 +422,12 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     }
 
     protected void updateSources(Level level, BlockPos pos, Collection<GasPipeConnection> connections) {
-        boolean sendUpdate = false;
+        boolean shouldNotify = false;
         for (GasPipeConnection connection : connections) {
-            sendUpdate |= connection.flipFlowsIfPressureReversed();
+            shouldNotify |= connection.flipFlowsIfPressureReversed();
             connection.manageSource(level, pos, blockEntity);
         }
-        if (!sendUpdate) {
+        if (!shouldNotify) {
             return;
         }
 
@@ -436,72 +436,72 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
 
     protected boolean updateFlows(Level level, BlockPos pos, Collection<GasPipeConnection> connections) {
         BlockState state = blockEntity.getBlockState();
-        boolean sendUpdate = false;
+        boolean shouldNotify = false;
         for (GasPipeConnection connection : connections) {
-            Direction side = connection.getSide();
-            boolean allowsInbound = allowsInboundFlow(state, side);
-            Predicate<GasStack> extractionPredicate = extracted -> allowsInbound && canPullGasFrom(extracted, state, side);
-            sendUpdate |= connection.validateExistingInboundFlow(level, pos, extractionPredicate);
+            Direction connectionSide = connection.getSide();
+            boolean isInboundAllowed = allowsInboundFlow(state, connectionSide);
+            Predicate<GasStack> extractionPredicate = extractedGas -> isInboundAllowed && canPullGasFrom(extractedGas, state, connectionSide);
+            shouldNotify |= connection.validateExistingInboundFlow(level, pos, extractionPredicate);
         }
 
         GasPipeConnection singleSource = null;
-        GasStack availableFlow = GasStack.EMPTY;
-        GasStack collidingFlow = GasStack.EMPTY;
+        GasStack availableGas = GasStack.EMPTY;
+        GasStack collidingGas = GasStack.EMPTY;
         for (GasPipeConnection connection : connections) {
-            Direction side = connection.getSide();
-            GasStack gasInFlow = connection.getProvidedGas();
-            if (gasInFlow.isEmpty() || !allowsInboundFlow(state, side) || !canPullGasFrom(gasInFlow, state, side)) {
+            Direction connectionSide = connection.getSide();
+            GasStack providedGas = connection.getProvidedGas();
+            if (providedGas.isEmpty() || !allowsInboundFlow(state, connectionSide) || !canPullGasFrom(providedGas, state, connectionSide)) {
                 continue;
             }
 
-            if (availableFlow.isEmpty()) {
+            if (availableGas.isEmpty()) {
                 singleSource = connection;
-                availableFlow = gasInFlow;
+                availableGas = providedGas;
                 continue;
             }
 
-            if (GasStack.isSameGasSameComponents(availableFlow, gasInFlow)) {
+            if (GasStack.isSameGasSameComponents(availableGas, providedGas)) {
                 singleSource = null;
-                availableFlow = gasInFlow;
+                availableGas = providedGas;
                 continue;
             }
 
-            collidingFlow = gasInFlow;
+            collidingGas = providedGas;
             break;
         }
 
-        if (!collidingFlow.isEmpty()) {
-            GasCollisionEvent.handleCollision(level, pos, availableFlow, collidingFlow);
+        if (!collidingGas.isEmpty()) {
+            GasCollisionEvent.handleCollision(level, pos, availableGas, collidingGas);
             return true;
         }
 
         for (GasPipeConnection connection : connections) {
-            Direction side = connection.getSide();
-            boolean allowsInbound = allowsInboundFlow(state, side);
-            boolean allowsOutbound = allowsOutboundFlow(state, side);
-            GasStack internalGas = singleSource == connection || !allowsOutbound ? GasStack.EMPTY : availableFlow;
-            Predicate<GasStack> extractionPredicate = extracted -> allowsInbound && canPullGasFrom(extracted, state, side);
-            sendUpdate |= connection.manageFlows(level, pos, internalGas, extractionPredicate);
+            Direction connectionSide = connection.getSide();
+            boolean isInboundAllowed = allowsInboundFlow(state, connectionSide);
+            boolean isOutboundAllowed = allowsOutboundFlow(state, connectionSide);
+            GasStack internalGas = singleSource == connection || !isOutboundAllowed ? GasStack.EMPTY : availableGas;
+            Predicate<GasStack> extractionPredicate = extractedGas -> isInboundAllowed && canPullGasFrom(extractedGas, state, connectionSide);
+            shouldNotify |= connection.manageFlows(level, pos, internalGas, extractionPredicate);
         }
 
-        GasStack updatedFlow = GasStack.EMPTY;
+        GasStack updatedGas = GasStack.EMPTY;
         for (GasPipeConnection connection : connections) {
-            Direction side = connection.getSide();
-            GasStack gasInFlow = connection.getProvidedGas();
-            if (gasInFlow.isEmpty() || !allowsInboundFlow(state, side) || !canPullGasFrom(gasInFlow, state, side)) {
+            Direction connectionSide = connection.getSide();
+            GasStack providedGas = connection.getProvidedGas();
+            if (providedGas.isEmpty() || !allowsInboundFlow(state, connectionSide) || !canPullGasFrom(providedGas, state, connectionSide)) {
                 continue;
             }
 
-            if (updatedFlow.isEmpty()) {
-                updatedFlow = gasInFlow;
+            if (updatedGas.isEmpty()) {
+                updatedGas = providedGas;
                 continue;
             }
 
-            if (GasStack.isSameGasSameComponents(updatedFlow, gasInFlow)) {
+            if (GasStack.isSameGasSameComponents(updatedGas, providedGas)) {
                 continue;
             }
 
-            GasCollisionEvent.handleCollision(level, pos, updatedFlow, gasInFlow);
+            GasCollisionEvent.handleCollision(level, pos, updatedGas, providedGas);
             return true;
         }
 
@@ -509,7 +509,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
             connection.tickNetwork();
         }
 
-        if (!sendUpdate) {
+        if (!shouldNotify) {
             return false;
         }
 

@@ -62,15 +62,15 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
 
         poseStack.pushPose();
         poseStack.translate(offsetX, offsetY, 0);
-        DrawerOptions options = drawer.getDrawerOptions();
-        if (options.isActive(ConfigurationAction.TOGGLE_RENDER)) {
-            AABB bounds = new AABB(0.0625, 0.078125, 0.0625, 0.0625 + width, 0.078125 + height, 0.9375);
-            renderGasSurface(poseStack, buffers, light, overlay, renderGas.stack(), renderGas.filterOnly(), bounds);
+        DrawerOptions drawerOptions = drawer.getDrawerOptions();
+        if (drawerOptions.isActive(ConfigurationAction.TOGGLE_RENDER)) {
+            AABB gasBounds = new AABB(0.0625, 0.078125, 0.0625, 0.0625 + width, 0.078125 + height, 0.9375);
+            renderGasSurface(poseStack, buffers, light, overlay, renderGas.stack(), renderGas.filterOnly(), gasBounds);
         }
-        if (options.isActive(ConfigurationAction.TOGGLE_NUMBERS)) {
+        if (drawerOptions.isActive(ConfigurationAction.TOGGLE_NUMBERS)) {
             renderAmount(drawer, renderGas, poseStack, buffers, overlay, compact);
         }
-        renderIndicator(drawer, renderGas, poseStack, buffers, light, overlay, options, compact);
+        renderIndicator(drawer, renderGas, poseStack, buffers, light, overlay, drawerOptions, compact);
         poseStack.popPose();
     }
 
@@ -81,8 +81,8 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
             poseStack.translate(-0.25, 0, 0);
         }
 
-        String amount = renderGas.filterOnly() ? "0" : drawer.isCreative() ? "∞" : GasAmounts.formatCompact(renderGas.stack().getAmount());
-        DrawerRenderer.renderText(poseStack, buffers, overlay, Component.literal(amount).withStyle(ChatFormatting.WHITE), Direction.NORTH, 0.007f);
+        String amountText = renderGas.filterOnly() ? "0" : drawer.isCreative() ? "∞" : GasAmounts.formatCompact(renderGas.stack().getAmount());
+        DrawerRenderer.renderText(poseStack, buffers, overlay, Component.literal(amountText).withStyle(ChatFormatting.WHITE), Direction.NORTH, 0.007f);
         poseStack.popPose();
     }
 
@@ -94,9 +94,9 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
             poseStack.translate(-0.5, -0.18, 0);
         }
 
-        long capacity = Math.max(1, drawer.getPhysicalTankCapacity());
-        float indicator = renderGas.filterOnly() ? 0 : drawer.isCreative() ? 1 : (float) Math.min(1, renderGas.stack().getAmount() / (double) capacity);
-        DrawerRenderer.renderIndicator(poseStack, buffers, light, overlay, indicator, options);
+        long tankCapacity = Math.max(1, drawer.getPhysicalTankCapacity());
+        float fillRatio = renderGas.filterOnly() ? 0 : drawer.isCreative() ? 1 : (float) Math.min(1, renderGas.stack().getAmount() / (double) tankCapacity);
+        DrawerRenderer.renderIndicator(poseStack, buffers, light, overlay, fillRatio, options);
         poseStack.popPose();
     }
 
@@ -114,8 +114,8 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
             if (compact) {
                 poseStack.translate(-0.25, 0, 0);
             }
-            String amount = creative ? "∞" : GasAmounts.formatCompact(stack.getAmount());
-            DrawerRenderer.renderText(poseStack, buffers, overlay, Component.literal(amount).withStyle(ChatFormatting.WHITE), Direction.NORTH, 0.007f);
+            String amountText = creative ? "∞" : GasAmounts.formatCompact(stack.getAmount());
+            DrawerRenderer.renderText(poseStack, buffers, overlay, Component.literal(amountText).withStyle(ChatFormatting.WHITE), Direction.NORTH, 0.007f);
             poseStack.popPose();
         }
 
@@ -137,32 +137,31 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
         float blue = ARGB32.blue(tint) / 255.0f;
         float sourceAlpha = ARGB32.alpha(tint) / 255.0f;
         float alpha = filterOnly ? 0.3f : sourceAlpha <= 0 ? 1 : sourceAlpha;
-        VertexConsumer builder = buffers.getBuffer(RenderType.translucent());
-        Matrix4f matrix = poseStack.last().pose();
+        VertexConsumer buffer = buffers.getBuffer(RenderType.translucent());
+        Matrix4f poseMatrix = poseStack.last().pose();
 
-        float x1 = (float) bounds.minX;
-        float x2 = (float) bounds.maxX;
-        float y1 = (float) bounds.minY;
-        float y2 = (float) bounds.maxY;
-        float z2 = (float) bounds.maxZ;
+        float minX = (float) bounds.minX;
+        float maxX = (float) bounds.maxX;
+        float minY = (float) bounds.minY;
+        float maxY = (float) bounds.maxY;
+        float maxZ = (float) bounds.maxZ;
         float u0 = sprite.getU0();
         float u1 = sprite.getU1();
         float v0 = sprite.getV0();
         float v1 = sprite.getV1();
-        float frontX1 = x1;
-        float frontX2 = x2;
-        float frontWidth = x2 - x1;
-        float frontHeight = y2 - y1;
-        if (frontWidth > frontHeight * 1.5f) {
-            float centerX = (x1 + x2) * 0.5f;
+        float frontMinX = minX;
+        float frontMaxX = maxX;
+        float frontHeight = maxY - minY;
+        if (maxX - minX > frontHeight * 1.5f) {
+            float centerX = (minX + maxX) * 0.5f;
             float halfSize = frontHeight * 0.5f;
-            frontX1 = centerX - halfSize;
-            frontX2 = centerX + halfSize;
+            frontMinX = centerX - halfSize;
+            frontMaxX = centerX + halfSize;
         }
-        builder.addVertex(matrix, frontX2, y1, z2).setColor(red, green, blue, alpha).setUv(u1, v1).setOverlay(overlay).setLight(light).setNormal(0, 0, 1);
-        builder.addVertex(matrix, frontX2, y2, z2).setColor(red, green, blue, alpha).setUv(u1, v0).setOverlay(overlay).setLight(light).setNormal(0, 0, 1);
-        builder.addVertex(matrix, frontX1, y2, z2).setColor(red, green, blue, alpha).setUv(u0, v0).setOverlay(overlay).setLight(light).setNormal(0, 0, 1);
-        builder.addVertex(matrix, frontX1, y1, z2).setColor(red, green, blue, alpha).setUv(u0, v1).setOverlay(overlay).setLight(light).setNormal(0, 0, 1);
+        buffer.addVertex(poseMatrix, frontMaxX, minY, maxZ).setColor(red, green, blue, alpha).setUv(u1, v1).setOverlay(overlay).setLight(light).setNormal(0, 0, 1);
+        buffer.addVertex(poseMatrix, frontMaxX, maxY, maxZ).setColor(red, green, blue, alpha).setUv(u1, v0).setOverlay(overlay).setLight(light).setNormal(0, 0, 1);
+        buffer.addVertex(poseMatrix, frontMinX, maxY, maxZ).setColor(red, green, blue, alpha).setUv(u0, v0).setOverlay(overlay).setLight(light).setNormal(0, 0, 1);
+        buffer.addVertex(poseMatrix, frontMinX, minY, maxZ).setColor(red, green, blue, alpha).setUv(u0, v1).setOverlay(overlay).setLight(light).setNormal(0, 0, 1);
     }
 
     private static void renderUpgrades(GasDrawerBlockEntity drawer, PoseStack poseStack, MultiBufferSource buffers, int light, int overlay) {
@@ -173,9 +172,9 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
     }
 
     private static void applyDrawerOrientation(GasDrawerBlockEntity drawer, PoseStack poseStack) {
-        Direction subFacing = drawer.getFacingDirection();
+        Direction drawerFacing = drawer.getFacingDirection();
         if (drawer.getBlockState().hasProperty(Drawer.FACING_ALL)) {
-            applyAllFacingOrientation(subFacing, drawer.getBlockState().getValue(Drawer.FACING_ALL), poseStack);
+            applyAllFacingOrientation(drawerFacing, drawer.getBlockState().getValue(Drawer.FACING_ALL), poseStack);
         }
 
         poseStack.mulPose(Axis.YP.rotationDegrees(-180));
@@ -195,26 +194,26 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
         }
     }
 
-    private static void applyAllFacingOrientation(Direction subFacing, Direction facing, PoseStack poseStack) {
-        if (subFacing == Direction.UP) {
+    private static void applyAllFacingOrientation(Direction drawerFacing, Direction blockFacing, PoseStack poseStack) {
+        if (drawerFacing == Direction.UP) {
             poseStack.mulPose(MathUtils.createTransformMatrix(new Vector3f(1, 0, 0), new Vector3f(90, 0, 0), 1));
-            if (facing == Direction.EAST) {
+            if (blockFacing == Direction.EAST) {
                 poseStack.mulPose(MathUtils.createTransformMatrix(new Vector3f(-1, 0, 0), new Vector3f(0, 0, -90), 1));
             }
-            else if (facing == Direction.WEST) {
+            else if (blockFacing == Direction.WEST) {
                 poseStack.mulPose(MathUtils.createTransformMatrix(new Vector3f(0, 1, 0), new Vector3f(0, 0, 90), 1));
             }
         }
-        else if (subFacing == Direction.DOWN) {
+        else if (drawerFacing == Direction.DOWN) {
             poseStack.mulPose(MathUtils.createTransformMatrix(new Vector3f(0, 1, 0), new Vector3f(-90, 0, -180), 1));
-            if (facing == Direction.WEST) {
+            if (blockFacing == Direction.WEST) {
                 poseStack.mulPose(MathUtils.createTransformMatrix(new Vector3f(-1, 0, 0), new Vector3f(0, 0, -90), 1));
             }
-            else if (facing == Direction.EAST) {
+            else if (blockFacing == Direction.EAST) {
                 poseStack.mulPose(MathUtils.createTransformMatrix(new Vector3f(0, 1, 0), new Vector3f(0, 0, 90), 1));
             }
         }
-        if (facing == Direction.NORTH) {
+        if (blockFacing == Direction.NORTH) {
             poseStack.mulPose(MathUtils.createTransformMatrix(new Vector3f(-1, 1, 0), new Vector3f(0, 0, 180), 1));
         }
     }
@@ -228,8 +227,8 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
 
         poseStack.pushPose();
         applyDrawerOrientation(drawer, poseStack);
-        Direction facing = drawer.getFacingDirection();
-        packedLight = LevelRenderer.getLightColor(level, drawer.getBlockPos().relative(facing));
+        Direction drawerFacing = drawer.getFacingDirection();
+        packedLight = LevelRenderer.getLightColor(level, drawer.getBlockPos().relative(drawerFacing));
         renderSlots(drawer, poseStack, buffers, packedLight, packedOverlay);
         renderUpgrades(drawer, poseStack, buffers, packedLight, packedOverlay);
         poseStack.popPose();

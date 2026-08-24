@@ -35,10 +35,10 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
     }
 
     public static float calculateStressCapacity(float generatedSpeed) {
-        float speed = Math.abs(generatedSpeed);
-        int maxSpeed = AllConfigs.server().kinetics.maxRotationSpeed.get();
-        double baseCapacity = BlockStressValues.getCapacity(CCBBlocks.TESLA_TURBINE_BLOCK.get());
-        return (float) (speed * baseCapacity / maxSpeed);
+        float absoluteSpeed = Math.abs(generatedSpeed);
+        int maxRotationSpeed = AllConfigs.server().kinetics.maxRotationSpeed.get();
+        double baseStressCapacity = BlockStressValues.getCapacity(CCBBlocks.TESLA_TURBINE_BLOCK.get());
+        return (float) (absoluteSpeed * baseStressCapacity / maxRotationSpeed);
     }
 
     @Override
@@ -66,9 +66,9 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
 
     @Override
     public float calculateAddedStressCapacity() {
-        float capacity = calculateStressCapacity(getGeneratedSpeed());
-        lastCapacityProvided = capacity;
-        return capacity;
+        float stressCapacity = calculateStressCapacity(getGeneratedSpeed());
+        lastCapacityProvided = stressCapacity;
+        return stressCapacity;
     }
 
     @Override

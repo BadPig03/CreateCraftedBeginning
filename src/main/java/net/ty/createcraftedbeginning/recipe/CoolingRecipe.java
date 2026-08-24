@@ -14,7 +14,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
-import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -24,9 +23,8 @@ public class CoolingRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
     }
 
     public static CoolingData getCoolingTime(Level level, @Nullable ItemStack itemStack, @Nullable FluidStack fluidStack) {
-        List<RecipeHolder<CoolingRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.COOLING.getType());
-        for (RecipeHolder<CoolingRecipe> holder : recipes) {
-            CoolingRecipe recipe = holder.value();
+        for (RecipeHolder<CoolingRecipe> recipeHolder : level.getRecipeManager().<SingleRecipeInput, CoolingRecipe>getAllRecipesFor(CCBRecipeTypes.COOLING.getType())) {
+            CoolingRecipe recipe = recipeHolder.value();
             boolean usesFluid = recipe.isFluidIngredients();
             if (usesFluid && (itemStack != null || fluidStack == null)) {
                 continue;
@@ -44,8 +42,7 @@ public class CoolingRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
                 continue;
             }
 
-            int amount = usesFluid ? recipe.fluidIngredients.getFirst().amount() : 1;
-            return new CoolingData(recipe.processingDuration, amount);
+            return new CoolingData(recipe.processingDuration, usesFluid ? recipe.fluidIngredients.getFirst().amount() : 1);
         }
         return new CoolingData(0, 0);
     }
@@ -67,13 +64,13 @@ public class CoolingRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
             return false;
         }
 
-        ItemStack[] items = getIngredient().getItems();
-        return items.length > 0 && Arrays.stream(items).allMatch(stack -> stack.getItem() instanceof CreativeCoolingSource);
+        ItemStack[] ingredientStacks = getIngredient().getItems();
+        return ingredientStacks.length > 0 && Arrays.stream(ingredientStacks).allMatch(itemStack -> itemStack.getItem() instanceof CreativeCoolingSource);
     }
 
     @Override
-    public boolean matches(SingleRecipeInput inv, Level level) {
-        return !isFluidIngredients() && !inv.isEmpty() && !ingredients.isEmpty() && ingredients.getFirst().test(inv.getItem(0));
+    public boolean matches(SingleRecipeInput input, Level level) {
+        return !isFluidIngredients() && !input.isEmpty() && !ingredients.isEmpty() && ingredients.getFirst().test(input.getItem(0));
     }
 
     @Override

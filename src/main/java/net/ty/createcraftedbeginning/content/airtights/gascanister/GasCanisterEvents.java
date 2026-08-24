@@ -39,15 +39,15 @@ public class GasCanisterEvents {
             return;
         }
 
-        OverlaySelection selection = findFirstAvailable(CanisterContainerSuppliers.getAllSuppliers(player));
-        Gas currentGasType = selection.content().getGasType();
+        OverlaySelection overlaySelection = findFirstAvailable(CanisterContainerSuppliers.getAllSuppliers(player));
+        Gas currentGasType = overlaySelection.content().getGasType();
         Gas storedGasType = CanisterContainerClients.getStoredGasType(player);
         if (currentGasType != storedGasType) {
             NBTHelper.writeResourceLocation(player.getPersistentData(), CanisterContainerClients.COMPOUND_KEY_STORED_GAS_TYPE, currentGasType.getResourceLocation());
             NeoForge.EVENT_BUS.post(new GasTypeChangedEvent(player, currentGasType, storedGasType));
         }
 
-        syncOverlay(serverPlayer, selection.content(), selection.capacity(), selection.packType(), selection.creative());
+        syncOverlay(serverPlayer, overlaySelection.content(), overlaySelection.capacity(), overlaySelection.packType(), overlaySelection.creative());
     }
 
     @SubscribeEvent
@@ -57,42 +57,42 @@ public class GasCanisterEvents {
 
     private static OverlaySelection findFirstAvailable(List<IGasCanisterContainer> containers) {
         for (IGasCanisterContainer container : containers) {
-            for (int tank = 0; tank < container.getTanks(); tank++) {
-                GasStack content = container.getGasInTank(tank);
-                long capacity = container.getTankCapacity(tank);
-                if (content.isEmpty() || capacity <= 0) {
+            for (int tankIndex = 0; tankIndex < container.getTanks(); tankIndex++) {
+                GasStack storedGas = container.getGasInTank(tankIndex);
+                long tankCapacity = container.getTankCapacity(tankIndex);
+                if (storedGas.isEmpty() || tankCapacity <= 0) {
                     continue;
                 }
 
-                return createSelection(container, tank, content, capacity);
+                return createSelection(container, tankIndex, storedGas, tankCapacity);
             }
         }
         return OverlaySelection.EMPTY;
     }
 
-    private static OverlaySelection createSelection(IGasCanisterContainer container, int tank, GasStack content, long capacity) {
+    private static OverlaySelection createSelection(IGasCanisterContainer container, int tankIndex, GasStack storedGas, long tankCapacity) {
         int packType = -1;
         boolean isCreative = container instanceof CreativeGasCanisterContainerContents;
         if (container instanceof GasCanisterPackContainerContents packContents) {
             packType = packContents.getContainer().getOrDefault(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, 0);
-            isCreative = packContents.getCreatives(tank);
+            isCreative = packContents.isCreative(tankIndex);
         }
         else if (isCreative) {
             packType = -2;
         }
 
-        return new OverlaySelection(content, capacity, packType, isCreative);
+        return new OverlaySelection(storedGas, tankCapacity, packType, isCreative);
     }
 
     private static void syncOverlay(ServerPlayer player, GasStack content, long capacity, int packType, boolean creative) {
-        OverlayState previous = LAST_OVERLAY_STATES.get(player);
-        if (previous != null && previous.matches(content, capacity, packType, creative)) {
+        OverlayState previousOverlayState = LAST_OVERLAY_STATES.get(player);
+        if (previousOverlayState != null && previousOverlayState.matches(content, capacity, packType, creative)) {
             return;
         }
 
-        OverlayState state = new OverlayState(content, capacity, packType, creative);
-        LAST_OVERLAY_STATES.put(player, state);
-        CatnipServices.NETWORK.sendToClient(player, new GasCanisterOverlayPacket(state.content().copy(), state.capacity(), state.packType(), state.creative()));
+        OverlayState overlayState = new OverlayState(content, capacity, packType, creative);
+        LAST_OVERLAY_STATES.put(player, overlayState);
+        CatnipServices.NETWORK.sendToClient(player, new GasCanisterOverlayPacket(overlayState.content().copy(), overlayState.capacity(), overlayState.packType(), overlayState.creative()));
     }
 
     private record OverlaySelection(GasStack content, long capacity, int packType, boolean creative) {

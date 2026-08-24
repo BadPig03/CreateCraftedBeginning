@@ -31,8 +31,7 @@ final class AirtightHatchSerialization {
             return;
         }
 
-        ItemStack canister = canisterManager.getStoredCanister();
-        compoundTag.put(COMPOUND_KEY_CANISTER, canister.saveOptional(provider));
+        compoundTag.put(COMPOUND_KEY_CANISTER, canisterManager.getStoredCanister().saveOptional(provider));
         compoundTag.putLong(COMPOUND_KEY_CAPACITY, hatch.getHatchCapacity());
     }
 
@@ -44,8 +43,8 @@ final class AirtightHatchSerialization {
             return;
         }
 
-        ItemStack canister = compoundTag.contains(COMPOUND_KEY_CANISTER) ? ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_CANISTER)) : ItemStack.EMPTY;
-        canisterManager.setStoredCanister(canister);
+        ItemStack storedCanister = compoundTag.contains(COMPOUND_KEY_CANISTER) ? ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_CANISTER)) : ItemStack.EMPTY;
+        canisterManager.setStoredCanister(storedCanister);
         if (!canisterManager.isEmpty() && compoundTag.contains(COMPOUND_KEY_CAPACITY)) {
             hatch.getGasTankBehaviour().getPrimaryHandler().setCapacity(Math.max(0, compoundTag.getLong(COMPOUND_KEY_CAPACITY)));
         }

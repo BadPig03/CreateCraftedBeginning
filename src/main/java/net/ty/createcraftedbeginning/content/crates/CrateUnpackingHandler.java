@@ -46,8 +46,7 @@ public final class CrateUnpackingHandler<B extends CratesBlockEntity> implements
             return CrateContainersUtils.defaultUnpack(level, pos, items, simulate);
         }
 
-        B crate = blockEntityClass.cast(blockEntity);
-        CrateItemStackHandler handler = crate.getHandler();
+        CrateItemStackHandler handler = blockEntityClass.cast(blockEntity).getHandler();
         return handler.runInBatch(() -> {
             for (ItemStack stack : items) {
                 if (!handler.insertItem(0, stack, simulate).isEmpty()) {

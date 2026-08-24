@@ -7,23 +7,23 @@ import com.simibubi.create.content.kinetics.belt.transport.TransportedItemStack;
 import com.simibubi.create.content.kinetics.fan.processing.FanProcessingType;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
-import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer.MachineFillingMode;
+import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer.InjectionMode;
+import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberOperationPlanner.BeltPlan;
 import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessingBehaviour.ProcessingResult.HOLD;
 import static com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessingBehaviour.ProcessingResult.PASS;
-import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberOperationState.OperationType.BASIN_RECIPE;
 import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberOperationState.OperationType.FAN_PROCESSING;
 import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberOperationState.OperationType.NONE;
 
@@ -44,6 +44,37 @@ public final class GasInjectionChamberBeltProcessor {
         this.planner = planner;
     }
 
+    private static boolean replaceTransportedStack(BeltPlan plan, List<ItemStack> resultStacks, TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
+        if (!matchesPlanInput(plan, transported.stack)) {
+            return false;
+        }
+
+        transported.stack.shrink(plan.batchSize());
+        FanProcessingType completedFanProcessing = plan.type() == FAN_PROCESSING && plan.fanProcessingTypeId() != null ? GasInjectionChamberUtils.getFanProcessingType(plan.fanProcessingTypeId()).orElse(null) : null;
+        TransportedItemStack heldRemainder = null;
+        List<TransportedItemStack> transportedResults = new ArrayList<>(resultStacks.size());
+        for (ItemStack resultStack : resultStacks) {
+            TransportedItemStack transportedResult = transported.copy();
+            transportedResult.stack = resultStack.copy();
+            transportedResult.clearFanProcessingData();
+            if (completedFanProcessing != null) {
+                transportedResult.processedBy = completedFanProcessing;
+                transportedResult.processingTime = -1;
+            }
+            transportedResults.add(transportedResult);
+        }
+        if (!transported.stack.isEmpty()) {
+            heldRemainder = transported.copy();
+            heldRemainder.clearFanProcessingData();
+        }
+        handler.handleProcessingOnItem(transported, TransportedResult.convertToAndLeaveHeld(transportedResults, heldRemainder));
+        return true;
+    }
+
+    private static boolean matchesPlanInput(BeltPlan plan, ItemStack stack) {
+        return ItemStack.isSameItemSameComponents(plan.input(), stack) && stack.getCount() >= plan.batchSize();
+    }
+
     public ProcessingResult onItemEntered(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
         if (handler.blockEntity.isVirtual()) {
             return PASS;
@@ -56,9 +87,7 @@ public final class GasInjectionChamberBeltProcessor {
         if (planner.wasProcessedByInstalledFilter(transported)) {
             return PASS;
         }
-
-        chamber.clearOperationState();
-        return planner.prepareOperation(transported.stack) ? HOLD : PASS;
+        return planner.createPlan(transported.stack).isPresent() ? HOLD : PASS;
     }
 
     public ProcessingResult onItemHeld(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
@@ -66,190 +95,116 @@ public final class GasInjectionChamberBeltProcessor {
             return PASS;
         }
 
-        if (operation.isRunning() && operation.type == NONE) {
-            return HOLD;
-        }
-
-        if (operation.executed || operation.type == BASIN_RECIPE) {
-            return HOLD;
-        }
-
-        if (operation.type == NONE && planner.wasProcessedByInstalledFilter(transported)) {
-            return PASS;
-        }
-
-        if (operation.type == NONE && !planner.prepareOperation(transported.stack)) {
-            return PASS;
-        }
-
-        if (!matchesOperationInput(transported.stack)) {
-            chamber.cancelOperationState();
-            return PASS;
-        }
-
-        if (!operation.isRunning()) {
-            return startProcessing(transported.stack);
-        }
-
-        if (operation.getProcessingTicks() > GasInjectionChamberBlockEntity.INJECTION_EXECUTION_TICK) {
-            return HOLD;
-        }
-        return executeInjection(transported, handler);
-    }
-
-    public boolean isFanProcessingOperationStillValid(ResourceLocation typeId) {
-        return planner.isFanProcessingOperationStillValid(typeId);
-    }
-
-    private ProcessingResult startProcessing(ItemStack itemStack) {
-        if (operation.type == FAN_PROCESSING && !planner.isFanProcessingOperationStillValid(operation.fanProcessingTypeId)) {
-            chamber.clearOperationState();
-            if (!planner.prepareOperation(itemStack)) {
-                return PASS;
-            }
-        }
-
-        if (operation.type.usesGas) {
-            GasStack tankGas = chamber.getGasInTank();
-            if (tankGas.isEmpty()) {
+        if (operation.isRunning()) {
+            if (operation.type == NONE || operation.hasAttemptedExecution() || operation.getProcessingTicks() > GasInjectionChamberBlockEntity.INJECTION_EXECUTION_TICK) {
                 return HOLD;
             }
 
-            if (!GasStack.isSameGasSameComponents(tankGas, operation.gas)) {
-                chamber.clearOperationState();
-                if (!planner.prepareOperation(itemStack)) {
-                    return PASS;
-                }
-
-                tankGas = chamber.getGasInTank();
-            }
-            if (tankGas.getAmount() < operation.gas.getAmount()) {
-                return HOLD;
-            }
+            operation.markExecutionAttempted();
+            return executeCurrentState(transported, handler);
         }
 
-        if (!planner.prepareOperationResultsIfNeeded(itemStack)) {
-            chamber.cancelOperationState();
+        if (planner.wasProcessedByInstalledFilter(transported)) {
             return PASS;
         }
 
-        operation.setProcessingTicks(GasInjectionChamberBlockEntity.PROCESSING_TIME + GasInjectionChamberBlockEntity.NOZZLE_IDLE_TIME);
+        Optional<BeltPlan> planOptional = planner.createPlan(transported.stack);
+        if (planOptional.isEmpty()) {
+            return PASS;
+        }
+
+        BeltPlan plan = planOptional.get();
+        if (!plan.hasRequiredGas()) {
+            return HOLD;
+        }
+
+        operation.startProcessing(plan.type(), GasInjectionChamberBlockEntity.PROCESSING_TIME + GasInjectionChamberBlockEntity.NOZZLE_IDLE_TIME);
+        chamber.setChanged();
         chamber.notifyUpdate();
         return HOLD;
     }
 
-    private ProcessingResult executeInjection(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
+    private ProcessingResult executeCurrentState(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
         if (chamber.getLevel() == null) {
-            return PASS;
+            return HOLD;
         }
 
-        int color = operation.type == FAN_PROCESSING ? GasInjectionChamberUtils.getColor(filter.getInstalledFilter()) : operation.gas.getHint();
-        boolean executed;
+        Optional<BeltPlan> planOptional = planner.createPlan(transported.stack);
+        if (planOptional.isEmpty()) {
+            return chamber.getGasInTank().isEmpty() ? HOLD : PASS;
+        }
+
+        BeltPlan plan = planOptional.get();
+        if (!plan.hasRequiredGas()) {
+            return HOLD;
+        }
+
+        int cloudColor = plan.type() == FAN_PROCESSING ? GasInjectionChamberUtils.getColor(filter.getInstalledFilter()) : plan.gas().getHint();
+        boolean executionSucceeded;
         chamber.getGasTankBehaviour().beginMutation();
         try {
-            executed = executeOperation(transported, handler);
+            executionSucceeded = executePlan(plan, transported, handler);
         } finally {
             chamber.getGasTankBehaviour().endMutation();
         }
 
-        if (executed) {
-            operation.executed = true;
-            visual.queueCloud(color);
-        }
-        else {
-            operation.setProcessingTicks(-1);
-            chamber.clearOperationState();
+        if (!executionSucceeded) {
+            chamber.getGasTankBehaviour().sendDataImmediately();
+            return HOLD;
         }
 
+        visual.queueCloud(cloudColor);
         chamber.getGasTankBehaviour().sendDataImmediately();
-        if (!executed) {
-            return PASS;
-        }
-
         CCBSoundEvents.INJECTING.playOnServer(chamber.getLevel(), chamber.getBlockPos(), 0.75f, 0.9f + 0.2f * chamber.getLevel().random.nextFloat());
         return HOLD;
     }
 
-    private boolean executeOperation(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
-        return switch (operation.type) {
-            case CANISTER -> executeCanisterOperation(transported);
-            case ITEM_RECIPE -> operation.resultPrepared && drainAndReplace(transported, handler);
-            case FAN_PROCESSING -> executeFanProcessingOperation(transported, handler);
+    private boolean executePlan(BeltPlan plan, TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
+        return switch (plan.type()) {
+            case CANISTER -> executeCanisterPlan(plan, transported);
+            case ITEM_RECIPE, FAN_PROCESSING -> executeItemPlan(plan, transported, handler);
             case BASIN_RECIPE, NONE -> false;
         };
     }
 
-    private boolean executeCanisterOperation(TransportedItemStack transported) {
-        if (chamber.getLevel() == null || operation.gas.isEmpty()) {
+    private boolean executeCanisterPlan(BeltPlan plan, TransportedItemStack transported) {
+        if (chamber.getLevel() == null) {
+            return false;
+        }
+
+        GasStack gasRequest = plan.gasRequest();
+        if (gasRequest.isEmpty()) {
             return false;
         }
 
         IGasCanisterContainer canisterContents = transported.stack.getCapability(GasHandler.ITEM);
-        if (canisterContents == null || canisterContents.getMachineFillingMode() == MachineFillingMode.DENY) {
+        if (canisterContents == null || canisterContents.getInjectionMode() == InjectionMode.DENY) {
             return false;
         }
 
-        Provider provider = chamber.getLevel().registryAccess();
-        ResourceTransaction transaction = new ResourceTransaction().add(GasInjectionChamberTransactions.operationGasParticipant(chamber, operation, provider)).add(ResourceTransaction.participant(() -> canisterContents.fill(0, operation.gas, GasAction.SIMULATE) == operation.gas.getAmount(), () -> transported.stack.copy(), () -> canisterContents.fill(0, operation.gas, GasAction.EXECUTE) == operation.gas.getAmount(), snapshot -> transported.stack = snapshot.copy()));
+        Provider registryProvider = chamber.getLevel().registryAccess();
+        ResourceTransaction transaction = new ResourceTransaction().add(GasInjectionChamberTransactions.gasParticipant(chamber, gasRequest, registryProvider)).add(ResourceTransaction.participant(() -> canisterContents.fill(0, gasRequest, GasAction.SIMULATE) == gasRequest.getAmount(), () -> transported.stack.copy(), () -> canisterContents.fill(0, gasRequest, GasAction.EXECUTE) == gasRequest.getAmount(), snapshot -> transported.stack = snapshot.copy()));
         return transaction.commit();
     }
 
-    private boolean executeFanProcessingOperation(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
-        if (!operation.resultPrepared || !planner.isFanProcessingOperationStillValid(operation.fanProcessingTypeId)) {
+    private boolean executeItemPlan(BeltPlan plan, TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
+        if (chamber.getLevel() == null || !matchesPlanInput(plan, transported.stack)) {
             return false;
         }
 
-        if (!GasInjectionChamberUtils.consumesFanProcessingGas(operation.gas)) {
-            return replaceTransportedStackWithPreparedResults(transported, handler);
-        }
-        return drainAndReplace(transported, handler);
-    }
-
-    private boolean drainAndReplace(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
-        if (chamber.getLevel() == null || !canReplaceTransportedStackWithPreparedResults(transported)) {
+        Optional<List<ItemStack>> resultStacksOptional = planner.createResults(plan);
+        if (resultStacksOptional.isEmpty()) {
             return false;
         }
 
-        Provider provider = chamber.getLevel().registryAccess();
-        ResourceTransaction transaction = new ResourceTransaction().add(GasInjectionChamberTransactions.operationGasParticipant(chamber, operation, provider)).add(ResourceTransaction.participant(() -> canReplaceTransportedStackWithPreparedResults(transported), () -> transported.stack.copy(), () -> replaceTransportedStackWithPreparedResults(transported, handler), snapshot -> transported.stack = snapshot.copy()));
+        List<ItemStack> resultStacks = resultStacksOptional.get();
+        Provider registryProvider = chamber.getLevel().registryAccess();
+        ResourceTransaction transaction = new ResourceTransaction();
+        GasStack gasRequest = plan.gasRequest();
+        if (!gasRequest.isEmpty()) {
+            transaction.add(GasInjectionChamberTransactions.gasParticipant(chamber, gasRequest, registryProvider));
+        }
+        transaction.add(ResourceTransaction.participant(() -> matchesPlanInput(plan, transported.stack), () -> transported.stack.copy(), () -> replaceTransportedStack(plan, resultStacks, transported, handler), snapshot -> transported.stack = snapshot.copy()));
         return transaction.commit();
-    }
-
-    private boolean canReplaceTransportedStackWithPreparedResults(TransportedItemStack transported) {
-        int batchSize = operation.input.getCount();
-        return batchSize > 0 && transported.stack.getCount() >= batchSize && matchesOperationInput(transported.stack);
-    }
-
-    private boolean replaceTransportedStackWithPreparedResults(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
-        if (!canReplaceTransportedStackWithPreparedResults(transported)) {
-            return false;
-        }
-
-        int batchSize = operation.input.getCount();
-        transported.stack.shrink(batchSize);
-        FanProcessingType completedFanProcessing = operation.type == FAN_PROCESSING && operation.fanProcessingTypeId != null ? GasInjectionChamberUtils.getFanProcessingType(operation.fanProcessingTypeId).orElse(null) : null;
-
-        TransportedItemStack held = null;
-        List<TransportedItemStack> results = new ArrayList<>(operation.results.size());
-        for (ItemStack resultStack : operation.results) {
-            TransportedItemStack result = transported.copy();
-            result.stack = resultStack.copy();
-            result.clearFanProcessingData();
-            if (completedFanProcessing != null) {
-                result.processedBy = completedFanProcessing;
-                result.processingTime = -1;
-            }
-            results.add(result);
-        }
-        if (!transported.stack.isEmpty()) {
-            held = transported.copy();
-            held.clearFanProcessingData();
-        }
-        handler.handleProcessingOnItem(transported, TransportedResult.convertToAndLeaveHeld(results, held));
-        return true;
-    }
-
-    private boolean matchesOperationInput(ItemStack stack) {
-        return ItemStack.isSameItemSameComponents(operation.input, stack) && stack.getCount() >= operation.input.getCount();
     }
 }

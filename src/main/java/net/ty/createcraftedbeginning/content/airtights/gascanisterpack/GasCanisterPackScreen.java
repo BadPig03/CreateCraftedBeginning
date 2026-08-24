@@ -88,22 +88,22 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
         renderPlayerInventory(graphics, getLeftOfCentered(PLAYER_INVENTORY.getWidth()), topPos + BACKGROUND.getHeight() + 4);
         BACKGROUND.render(graphics, leftPos, topPos);
 
-        Component name = pack.getHoverName();
-        graphics.drawString(font, name, leftPos + (BACKGROUND.getWidth() - 8) / 2 - font.width(name) / 2, topPos + 4, 0xFFFFFF, false);
+        Component packName = pack.getHoverName();
+        graphics.drawString(font, packName, leftPos + (BACKGROUND.getWidth() - 8) / 2 - font.width(packName) / 2, topPos + 4, 0xFFFFFF, false);
         GuiGameElement.of(pack).scale(4).at(leftPos + BACKGROUND.getWidth() + 11, topPos + BACKGROUND.getHeight() - 48, -200).render(graphics);
     }
 
     protected void initButtons() {
-        IconButton confirm = new IconButton(leftPos + BACKGROUND.getWidth() - 33, topPos + BACKGROUND.getHeight() - 24, AllIcons.I_CONFIRM).withCallback(() -> menu.player.closeContainer());
-        addRenderableWidget(confirm);
+        IconButton confirmButton = new IconButton(leftPos + BACKGROUND.getWidth() - 33, topPos + BACKGROUND.getHeight() - 24, AllIcons.I_CONFIRM).withCallback(() -> menu.player.closeContainer());
+        addRenderableWidget(confirmButton);
     }
 
     protected void drawGasCanisters(GuiGraphics graphics) {
-        int y = topPos + 27;
+        int canisterY = topPos + 27;
         PackItemHandler packInventory = menu.packInventory;
-        drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.I_SLOT_INDEX), leftPos + 23, y);
-        drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.II_SLOT_INDEX), leftPos + 65, y);
-        drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.III_SLOT_INDEX), leftPos + 107, y);
-        drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.IV_SLOT_INDEX), leftPos + 149, y);
+        drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.I_SLOT_INDEX), leftPos + 23, canisterY);
+        drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.II_SLOT_INDEX), leftPos + 65, canisterY);
+        drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.III_SLOT_INDEX), leftPos + 107, canisterY);
+        drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.IV_SLOT_INDEX), leftPos + 149, canisterY);
     }
 }

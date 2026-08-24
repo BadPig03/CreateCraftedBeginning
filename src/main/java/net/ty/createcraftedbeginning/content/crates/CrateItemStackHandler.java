@@ -82,28 +82,28 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
             return stack;
         }
 
-        int maxCount = getMaxCount();
+        int capacity = getConfiguredCapacity();
         if (content.isEmpty()) {
-            int toInsert = Math.min(stack.getCount(), maxCount);
+            int insertCount = Math.min(stack.getCount(), capacity);
             if (!simulate) {
-                applyStoredItems(stack, toInsert, true);
+                applyStoredItems(stack, insertCount, true);
             }
-            int remaining = stack.getCount() - toInsert;
-            return remaining > 0 ? stack.copyWithCount(remaining) : ItemStack.EMPTY;
+            int remainingCount = stack.getCount() - insertCount;
+            return remainingCount > 0 ? stack.copyWithCount(remainingCount) : ItemStack.EMPTY;
         }
 
-        int space = maxCount - count;
-        if (space <= 0) {
+        int remainingCapacity = getRemainingCapacity();
+        if (remainingCapacity <= 0) {
             return stack;
         }
 
-        int toInsert = Math.min(stack.getCount(), space);
+        int insertCount = Math.min(stack.getCount(), remainingCapacity);
         if (!simulate) {
-            applyStoredItems(content, count + toInsert, true);
+            applyStoredItems(content, count + insertCount, true);
         }
 
-        int remaining = stack.getCount() - toInsert;
-        return remaining > 0 ? stack.copyWithCount(remaining) : ItemStack.EMPTY;
+        int remainingCount = stack.getCount() - insertCount;
+        return remainingCount > 0 ? stack.copyWithCount(remainingCount) : ItemStack.EMPTY;
     }
 
     @Override
@@ -113,21 +113,21 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
             return ItemStack.EMPTY;
         }
 
-        int toExtract = Math.min(Math.min(amount, count), content.getMaxStackSize());
-        ItemStack result = content.copyWithCount(toExtract);
+        int extractCount = Math.min(Math.min(amount, count), content.getMaxStackSize());
+        ItemStack extractedStack = content.copyWithCount(extractCount);
 
         if (simulate) {
-            return result;
+            return extractedStack;
         }
 
-        applyStoredItems(content, count - toExtract, true);
-        return result;
+        applyStoredItems(content, count - extractCount, true);
+        return extractedStack;
     }
 
     @Override
     public int getSlotLimit(int slot) {
         validateSlotIndex(slot);
-        return Math.max(getMaxCount(), count);
+        return Math.max(getConfiguredCapacity(), count);
     }
 
     @Override
@@ -143,7 +143,7 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
 
     @Override
     public void setStackInSlot(int slot, ItemStack stack) {
-        setStoredItems(slot, stack, Math.min(stack.getCount(), getMaxCount()));
+        setStoredItems(slot, stack, Math.min(stack.getCount(), getConfiguredCapacity()));
     }
 
     public int getCountInSlot(int slot) {
@@ -168,8 +168,12 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
         return passesItemValidator(stack) && (content.isEmpty() || ItemStack.isSameItemSameComponents(content, stack));
     }
 
-    protected final int getMaxCount() {
+    public final int getConfiguredCapacity() {
         return Math.max(0, maxCountSupplier.getAsInt());
+    }
+
+    public final int getRemainingCapacity() {
+        return Math.max(0, getConfiguredCapacity() - count);
     }
 
     protected void validateSlotIndex(int slot) {
@@ -213,10 +217,10 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
             normalizedCount = newCount;
         }
 
-        boolean changed = count != normalizedCount || !ItemStack.matches(content, normalizedContent);
+        boolean contentsChanged = count != normalizedCount || !ItemStack.matches(content, normalizedContent);
         content = normalizedContent;
         count = normalizedCount;
-        if (!notify || !changed) {
+        if (!notify || !contentsChanged) {
             return;
         }
 

@@ -35,20 +35,20 @@ public class VirtualGasItemRecipeLookupPlugin implements IRecipeManagerPlugin {
     }
 
     private static boolean recipeMatches(Object recipeObject, GasFocus focus) {
-        Object recipe = recipeObject instanceof RecipeHolder<?> holder ? holder.value() : recipeObject;
-        if (recipe instanceof ProcessingWithGasRecipe<?, ?> gasRecipe) {
+        Object unwrappedRecipe = recipeObject instanceof RecipeHolder<?> holder ? holder.value() : recipeObject;
+        if (unwrappedRecipe instanceof ProcessingWithGasRecipe<?, ?> gasRecipe) {
             return processingRecipeMatches(gasRecipe, focus);
         }
-        return recipe instanceof SequencedAssemblyWithGasRecipe sequencedRecipe && sequencedRecipe.getSequence().stream().anyMatch(step -> processingRecipeMatches(step.getRecipe(), focus));
+        return unwrappedRecipe instanceof SequencedAssemblyWithGasRecipe sequencedRecipe && sequencedRecipe.getSequence().stream().anyMatch(step -> processingRecipeMatches(step.getRecipe(), focus));
     }
 
     private static boolean processingRecipeMatches(ProcessingWithGasRecipe<?, ?> recipe, GasFocus focus) {
-        boolean matchesInput = recipe.getGasIngredients().stream().anyMatch(ingredient -> ingredient.ingredient().test(focus.gas().copyWithAmount(Math.max(1, ingredient.amount()))));
-        boolean matchesOutput = recipe.getGasResults().stream().anyMatch(result -> GasStack.isSameGasSameComponents(result, focus.gas()));
+        boolean gasInputMatches = recipe.getGasIngredients().stream().anyMatch(ingredient -> ingredient.ingredient().test(focus.gas().copyWithAmount(Math.max(1, ingredient.amount()))));
+        boolean gasOutputMatches = recipe.getGasResults().stream().anyMatch(gasResult -> GasStack.isSameGasSameComponents(gasResult, focus.gas()));
         return switch (focus.role()) {
-            case INPUT -> matchesInput;
-            case OUTPUT -> matchesOutput;
-            default -> matchesInput || matchesOutput;
+            case INPUT -> gasInputMatches;
+            case OUTPUT -> gasOutputMatches;
+            default -> gasInputMatches || gasOutputMatches;
         };
     }
 
@@ -58,23 +58,23 @@ public class VirtualGasItemRecipeLookupPlugin implements IRecipeManagerPlugin {
             return null;
         }
 
-        ItemStack stack = focusedStack.get();
-        GasStack gas;
-        if (GasVirtualUtils.isVirtualItem(stack)) {
-            gas = GasVirtualUtils.getGasType(stack);
+        ItemStack itemStack = focusedStack.get();
+        GasStack gasStack;
+        if (GasVirtualUtils.isVirtualItem(itemStack)) {
+            gasStack = GasVirtualUtils.getGasType(itemStack);
         }
         else {
-            IGasCanisterContainer container = stack.getCapability(GasHandler.ITEM);
-            if (container == null || container.getTanks() != 1) {
+            IGasCanisterContainer canister = itemStack.getCapability(GasHandler.ITEM);
+            if (canister == null || canister.getTanks() != 1) {
                 return null;
             }
-            gas = container.getGasInTank(0);
+            gasStack = canister.getGasInTank(0);
         }
 
-        if (gas.isEmpty()) {
+        if (gasStack.isEmpty()) {
             return null;
         }
-        return new GasFocus(gas.copyWithAmount(FluidType.BUCKET_VOLUME), focus.getRole());
+        return new GasFocus(gasStack.copyWithAmount(FluidType.BUCKET_VOLUME), focus.getRole());
     }
 
     @Override
@@ -91,8 +91,8 @@ public class VirtualGasItemRecipeLookupPlugin implements IRecipeManagerPlugin {
 
         List<RecipeType<?>> matchingTypes = new ArrayList<>();
         runtime.getRecipeManager().createRecipeCategoryLookup().get().forEach(category -> {
-            boolean hasMatch = runtime.getRecipeManager().createRecipeLookup(category.getRecipeType()).get().anyMatch(recipe -> recipeMatches(recipe, gasFocus));
-            if (hasMatch) {
+            boolean hasMatchingRecipe = runtime.getRecipeManager().createRecipeLookup(category.getRecipeType()).get().anyMatch(recipe -> recipeMatches(recipe, gasFocus));
+            if (hasMatchingRecipe) {
                 matchingTypes.add(category.getRecipeType());
             }
         });

@@ -22,15 +22,24 @@ public final class EndIncinerationBlowerRange {
 
     public static float calculateRange(float speed) {
         float absSpeed = Mth.abs(speed);
+        float maxRange = getMaxRange();
+        if (absSpeed <= 0 || maxRange <= 0) {
+            return 0;
+        }
+
         float mediumSpeed = SpeedLevel.MEDIUM.getSpeedValue();
+        if (mediumSpeed <= 0) {
+            return maxRange;
+        }
+
         if (absSpeed < mediumSpeed) {
             return 0;
         }
-        return Mth.clamp(absSpeed / mediumSpeed - 0.5f, 0, getMaxRange());
+        return Mth.clamp(absSpeed / mediumSpeed - 0.5f, 0, maxRange);
     }
 
     public static int calculateBlockRadius(float speed) {
-        return Mth.floor(calculateRange(speed));
+        return Mth.ceil(calculateRange(speed));
     }
 
     public static AABB calculateArea(BlockPos pos, float speed) {

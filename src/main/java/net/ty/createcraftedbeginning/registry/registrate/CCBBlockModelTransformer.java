@@ -526,7 +526,7 @@ public final class CCBBlockModelTransformer {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> creativeGasCanister() {
-        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/creative_gas_canister"))).build(), BlockStateProperties.WATERLOGGED)).loot((loot, block) -> loot.add(block, LootTable.lootTable().withPool(LootPool.lootPool().when(ExplosionCondition.survivesExplosion()).setRolls(ConstantValue.exactly(1)).add(LootItem.lootTableItem(CCBItems.CREATIVE_GAS_CANISTER.get()).apply(CopyComponentsFunction.copyComponents(Source.BLOCK_ENTITY).include(CCBDataComponents.CANISTER_CONTAINER_CONTENTS).include(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES)))))).item().build();
+        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/creative_gas_canister"))).build(), BlockStateProperties.WATERLOGGED)).loot((loot, block) -> loot.add(block, LootTable.lootTable().withPool(LootPool.lootPool().when(ExplosionCondition.survivesExplosion()).setRolls(ConstantValue.exactly(1)).add(LootItem.lootTableItem(CCBItems.CREATIVE_GAS_CANISTER.get()).apply(CopyComponentsFunction.copyComponents(Source.BLOCK_ENTITY).include(CCBDataComponents.CANISTER_CONTAINER_CONTENTS)))))).item().build();
     }
 
     @Contract(pure = true)

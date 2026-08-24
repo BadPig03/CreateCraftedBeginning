@@ -45,8 +45,8 @@ public final class CCBKubeJSHandlerUtils {
     }
 
     public static void registerFill(BlockStatePredicate predicate, FillHandler handler) {
-        AirtightFillHandler adaptedHandler = createFillHandler(handler);
-        AirtightFillHandler.REGISTRY.registerProvider(block -> predicate.testBlock(block) ? adaptedHandler : null);
+        AirtightFillHandler fillHandler = createFillHandler(handler);
+        AirtightFillHandler.REGISTRY.registerProvider(block -> predicate.testBlock(block) ? fillHandler : null);
     }
 
     public static void registerCoolant(Block block, EfficiencyCoolantHandler efficiency, MeltCoolantHandler melt) {
@@ -54,8 +54,8 @@ public final class CCBKubeJSHandlerUtils {
     }
 
     public static void registerCoolant(BlockStatePredicate predicate, EfficiencyCoolantHandler efficiency, MeltCoolantHandler melt) {
-        AirtightCoolantHandler adaptedHandler = createCoolantHandler(efficiency, melt);
-        AirtightCoolantHandler.REGISTRY.registerProvider(block -> predicate.testBlock(block) ? adaptedHandler : null);
+        AirtightCoolantHandler coolantHandler = createCoolantHandler(efficiency, melt);
+        AirtightCoolantHandler.REGISTRY.registerProvider(block -> predicate.testBlock(block) ? coolantHandler : null);
     }
 
     public static void registerThermoregulator(Block block, ThermoregulatorHandler handler) {
@@ -63,8 +63,8 @@ public final class CCBKubeJSHandlerUtils {
     }
 
     public static void registerThermoregulator(BlockStatePredicate predicate, ThermoregulatorHandler handler) {
-        AirtightThermoregulatorHandler adaptedHandler = handler::apply;
-        AirtightThermoregulatorHandler.REGISTRY.registerProvider(block -> predicate.testBlock(block) ? adaptedHandler : null);
+        AirtightThermoregulatorHandler thermoregulatorHandler = handler::apply;
+        AirtightThermoregulatorHandler.REGISTRY.registerProvider(block -> predicate.testBlock(block) ? thermoregulatorHandler : null);
     }
 
     public static void registerArmors(ResourceLocation location, ArmorsHandler handler, float helmet, float chestplate, float leggings, float boots, float elytra) {

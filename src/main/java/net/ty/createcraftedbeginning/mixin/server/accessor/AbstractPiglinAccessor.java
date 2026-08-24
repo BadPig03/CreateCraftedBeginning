@@ -14,9 +14,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public interface AbstractPiglinAccessor extends AbstractPiglinAccess {
     @Override
     @Accessor("timeInOverworld")
-    int getTimeInOverworld();
+    int ccb$getTimeInOverworld();
 
     @Override
     @Accessor("timeInOverworld")
-    void setTimeInOverworld(int time);
+    void ccb$setTimeInOverworld(int time);
 }

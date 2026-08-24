@@ -54,11 +54,11 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
 
     protected void animate(float partialTicks) {
         float animation = blockEntity.getHeadAnimation().getValue(partialTicks) * 0.175f;
-        boolean active = animation > 0.125f;
+        boolean isActive = animation > 0.125f;
         FrostLevel currentFrostLevel = blockEntity.getFrostLevelForRender();
-        if (active != validBlockAbove || currentFrostLevel != frostLevel) {
-            validBlockAbove = active;
-            instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(BreezeCoolerRenderer.getBreezeModel(currentFrostLevel, active))).stealInstance(head);
+        if (isActive != validBlockAbove || currentFrostLevel != frostLevel) {
+            validBlockAbove = isActive;
+            instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(BreezeCoolerRenderer.getBreezeModel(currentFrostLevel, isActive))).stealInstance(head);
             frostLevel = currentFrostLevel;
         }
 
@@ -93,7 +93,7 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
             hatModel = null;
         }
 
-        boolean hasWind = blockEntity.getFrostLevel().isAtLeast(FrostLevel.CHILLED);
+        boolean hasWind = blockEntity.getFrostLevelFromBlock().isAtLeast(FrostLevel.CHILLED);
         if (hasWind && wind == null) {
             wind = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.BREEZE_COOLER_WIND)).createInstance();
         }

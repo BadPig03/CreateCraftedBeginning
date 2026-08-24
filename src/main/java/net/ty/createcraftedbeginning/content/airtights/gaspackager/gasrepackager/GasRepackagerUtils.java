@@ -33,9 +33,9 @@ public final class GasRepackagerUtils {
     }
 
     private static @Nullable PackageOrderWithCrafts findOrderContext(List<Candidate> candidates) {
-        List<Candidate> sorted = new ArrayList<>(candidates);
-        sorted.sort(ORDER_POSITION.reversed());
-        return sorted.stream().map(candidate -> PackageItem.getOrderContext(candidate.box())).filter(context -> context != null && !context.isEmpty()).findFirst().orElse(null);
+        List<Candidate> sortedCandidates = new ArrayList<>(candidates);
+        sortedCandidates.sort(ORDER_POSITION.reversed());
+        return sortedCandidates.stream().map(candidate -> PackageItem.getOrderContext(candidate.box())).filter(context -> context != null && !context.isEmpty()).findFirst().orElse(null);
     }
 
     private static boolean isAlreadyCanonical(GasGroupCandidates group, List<BigItemStack> canonical) {
@@ -43,10 +43,10 @@ public final class GasRepackagerUtils {
             return false;
         }
 
-        for (int i = 0; i < canonical.size(); i++) {
-            Candidate candidate = group.candidates().get(i);
-            ItemStack expected = canonical.get(i).stack;
-            BalloonGasContents expectedContents = BalloonUtils.getGasContents(expected);
+        for (int packageIndex = 0; packageIndex < canonical.size(); packageIndex++) {
+            Candidate candidate = group.candidates().get(packageIndex);
+            ItemStack expectedPackage = canonical.get(packageIndex).stack;
+            BalloonGasContents expectedContents = BalloonUtils.getGasContents(expectedPackage);
             if (!candidate.box().is(group.outputTemplate().getItem()) || !candidate.contents().equals(expectedContents)) {
                 return false;
             }
@@ -70,17 +70,17 @@ public final class GasRepackagerUtils {
             return;
         }
 
-        ItemStack balloon = BalloonUtils.containingLike(outputTemplate, normalized);
-        if (balloon.isEmpty()) {
+        ItemStack outputBalloon = BalloonUtils.containingLike(outputTemplate, normalized);
+        if (outputBalloon.isEmpty()) {
             return;
         }
 
-        PackageItem.clearAddress(balloon);
+        PackageItem.clearAddress(outputBalloon);
         if (!address.isBlank()) {
-            PackageItem.addAddress(balloon, address);
+            PackageItem.addAddress(outputBalloon, address);
         }
 
-        output.add(new BigItemStack(balloon, 1));
+        output.add(new BigItemStack(outputBalloon, 1));
     }
 
     private static void addToGroup(List<GasGroupCandidates> groups, Candidate candidate, String address) {
@@ -103,21 +103,21 @@ public final class GasRepackagerUtils {
                 return ExtractionResult.failed(List.of());
             }
 
-            ItemStack simulated = targetInv.extractItem(candidate.slot(), 1, true);
-            if (!isSamePackage(simulated, candidate.box())) {
+            ItemStack simulatedExtraction = targetInv.extractItem(candidate.slot(), 1, true);
+            if (!isSamePackage(simulatedExtraction, candidate.box())) {
                 return ExtractionResult.failed(List.of());
             }
         }
 
-        List<Candidate> sorted = new ArrayList<>(candidates);
-        sorted.sort(Comparator.comparingInt(Candidate::slot).reversed());
-        List<ExtractedItem> extractedItems = new ArrayList<>(sorted.size());
-        for (Candidate candidate : sorted) {
-            ItemStack extracted = targetInv.extractItem(candidate.slot(), 1, false);
-            if (!extracted.isEmpty()) {
-                extractedItems.add(new ExtractedItem(candidate.slot(), extracted.copy()));
+        List<Candidate> sortedCandidates = new ArrayList<>(candidates);
+        sortedCandidates.sort(Comparator.comparingInt(Candidate::slot).reversed());
+        List<ExtractedItem> extractedItems = new ArrayList<>(sortedCandidates.size());
+        for (Candidate candidate : sortedCandidates) {
+            ItemStack extractedStack = targetInv.extractItem(candidate.slot(), 1, false);
+            if (!extractedStack.isEmpty()) {
+                extractedItems.add(new ExtractedItem(candidate.slot(), extractedStack.copy()));
             }
-            if (!isSamePackage(extracted, candidate.box())) {
+            if (!isSamePackage(extractedStack, candidate.box())) {
                 return rollbackExtraction(targetInv, extractedItems);
             }
         }
@@ -126,18 +126,18 @@ public final class GasRepackagerUtils {
 
     private static ExtractionResult rollbackExtraction(IItemHandler targetInv, List<ExtractedItem> extractedItems) {
         List<ItemStack> rollbackRemainders = new ArrayList<>();
-        for (int i = extractedItems.size() - 1; i >= 0; i--) {
-            ExtractedItem extracted = extractedItems.get(i);
-            ItemStack remainder = targetInv.insertItem(extracted.slot(), extracted.stack().copy(), false);
-            for (int slot = 0; slot < targetInv.getSlots() && !remainder.isEmpty(); slot++) {
-                if (slot == extracted.slot()) {
+        for (int extractedIndex = extractedItems.size() - 1; extractedIndex >= 0; extractedIndex--) {
+            ExtractedItem extractedItem = extractedItems.get(extractedIndex);
+            ItemStack rollbackRemainder = targetInv.insertItem(extractedItem.slot(), extractedItem.stack().copy(), false);
+            for (int targetSlot = 0; targetSlot < targetInv.getSlots() && !rollbackRemainder.isEmpty(); targetSlot++) {
+                if (targetSlot == extractedItem.slot()) {
                     continue;
                 }
 
-                remainder = targetInv.insertItem(slot, remainder, false);
+                rollbackRemainder = targetInv.insertItem(targetSlot, rollbackRemainder, false);
             }
-            if (!remainder.isEmpty()) {
-                rollbackRemainders.add(remainder.copy());
+            if (!rollbackRemainder.isEmpty()) {
+                rollbackRemainders.add(rollbackRemainder.copy());
             }
         }
         return ExtractionResult.failed(rollbackRemainders);
@@ -148,10 +148,10 @@ public final class GasRepackagerUtils {
             return false;
         }
 
-        List<Candidate> sorted = new ArrayList<>(candidates);
-        sorted.sort(ORDER_POSITION);
-        ItemStack firstBox = sorted.getFirst().box();
-        if (!PackageItem.hasOrderData(firstBox)) {
+        List<Candidate> sortedCandidates = new ArrayList<>(candidates);
+        sortedCandidates.sort(ORDER_POSITION);
+        ItemStack firstPackage = sortedCandidates.getFirst().box();
+        if (!PackageItem.hasOrderData(firstPackage)) {
             return false;
         }
 
@@ -159,29 +159,29 @@ public final class GasRepackagerUtils {
         int expectedPackageIndex = 0;
         boolean firstPackageInLink = true;
         boolean currentLinkIsFinal = false;
-        int orderId = PackageItem.getOrderId(firstBox);
-        for (int i = 0; i < sorted.size(); i++) {
-            ItemStack box = sorted.get(i).box();
-            if (!PackageItem.hasOrderData(box) || PackageItem.getOrderId(box) != orderId || PackageItem.getLinkIndex(box) != expectedLinkIndex || PackageItem.getIndex(box) != expectedPackageIndex) {
+        int orderId = PackageItem.getOrderId(firstPackage);
+        for (int packagePosition = 0; packagePosition < sortedCandidates.size(); packagePosition++) {
+            ItemStack packageStack = sortedCandidates.get(packagePosition).box();
+            if (!PackageItem.hasOrderData(packageStack) || PackageItem.getOrderId(packageStack) != orderId || PackageItem.getLinkIndex(packageStack) != expectedLinkIndex || PackageItem.getIndex(packageStack) != expectedPackageIndex) {
                 return false;
             }
 
-            boolean finalLink = PackageItem.isFinalLink(box);
+            boolean isFinalLink = PackageItem.isFinalLink(packageStack);
             if (firstPackageInLink) {
-                currentLinkIsFinal = finalLink;
+                currentLinkIsFinal = isFinalLink;
                 firstPackageInLink = false;
             }
-            else if (finalLink != currentLinkIsFinal) {
+            else if (isFinalLink != currentLinkIsFinal) {
                 return false;
             }
 
-            if (!PackageItem.isFinal(box)) {
+            if (!PackageItem.isFinal(packageStack)) {
                 expectedPackageIndex++;
                 continue;
             }
 
             if (currentLinkIsFinal) {
-                return i == sorted.size() - 1;
+                return packagePosition == sortedCandidates.size() - 1;
             }
 
             expectedLinkIndex++;
@@ -206,49 +206,49 @@ public final class GasRepackagerUtils {
     }
 
     public static List<BigItemStack> createBalloons(ItemStack outputTemplate, BalloonGasContents inputContents, String address) {
-        List<BigItemStack> output = new ArrayList<>();
+        List<BigItemStack> outputPackages = new ArrayList<>();
         long capacity = BalloonUtils.getCapacity();
-        BalloonGasContents contents = inputContents.normalized();
-        if (!BalloonUtils.isBalloon(outputTemplate) || contents.isEmpty() || capacity <= 0) {
+        BalloonGasContents normalizedContents = inputContents.normalized();
+        if (!BalloonUtils.isBalloon(outputTemplate) || normalizedContents.isEmpty() || capacity <= 0) {
             return List.of();
         }
 
         List<GasStack> currentGases = new ArrayList<>();
         long currentAmount = 0;
-        for (GasEntry sourceGas : contents.gases()) {
-            long remaining = sourceGas.getAmount();
-            while (remaining > 0) {
+        for (GasEntry sourceGas : normalizedContents.gases()) {
+            long remainingAmount = sourceGas.getAmount();
+            while (remainingAmount > 0) {
                 if (currentGases.size() >= BalloonGasContents.MAX_GAS_TYPES) {
-                    addOutputBalloon(output, outputTemplate, new BalloonGasContents(List.copyOf(currentGases)), address);
+                    addOutputBalloon(outputPackages, outputTemplate, new BalloonGasContents(List.copyOf(currentGases)), address);
                     currentGases.clear();
                     currentAmount = 0;
                 }
 
                 long availableSpace = capacity - currentAmount;
-                long inserted = Math.min(remaining, availableSpace);
-                if (inserted <= 0) {
+                long insertedAmount = Math.min(remainingAmount, availableSpace);
+                if (insertedAmount <= 0) {
                     break;
                 }
 
-                currentGases.add(sourceGas.toStack(inserted));
-                currentAmount += inserted;
-                remaining -= inserted;
+                currentGases.add(sourceGas.toStack(insertedAmount));
+                currentAmount += insertedAmount;
+                remainingAmount -= insertedAmount;
                 if (currentAmount < capacity) {
                     continue;
                 }
 
-                addOutputBalloon(output, outputTemplate, new BalloonGasContents(List.copyOf(currentGases)), address);
+                addOutputBalloon(outputPackages, outputTemplate, new BalloonGasContents(List.copyOf(currentGases)), address);
                 currentGases.clear();
                 currentAmount = 0;
             }
         }
 
         if (currentGases.isEmpty()) {
-            return List.copyOf(output);
+            return List.copyOf(outputPackages);
         }
 
-        addOutputBalloon(output, outputTemplate, new BalloonGasContents(List.copyOf(currentGases)), address);
-        return List.copyOf(output);
+        addOutputBalloon(outputPackages, outputTemplate, new BalloonGasContents(List.copyOf(currentGases)), address);
+        return List.copyOf(outputPackages);
     }
 
     public static List<BigItemStack> createItemOrderPassThroughOutput(List<Candidate> candidates) {
@@ -256,15 +256,15 @@ public final class GasRepackagerUtils {
             return List.of();
         }
 
-        List<Candidate> sorted = new ArrayList<>(candidates);
-        sorted.sort(ORDER_POSITION);
-        return sorted.stream().map(candidate -> new BigItemStack(candidate.box().copyWithCount(1), 1)).toList();
+        List<Candidate> sortedCandidates = new ArrayList<>(candidates);
+        sortedCandidates.sort(ORDER_POSITION);
+        return sortedCandidates.stream().map(candidate -> new BigItemStack(candidate.box().copyWithCount(1), 1)).toList();
     }
 
     public static List<BigItemStack> createMixedOrderOutput(int orderId, List<Candidate> candidates) {
-        List<Candidate> sorted = new ArrayList<>(candidates);
-        sorted.sort(ORDER_POSITION);
-        List<Candidate> gasCandidates = sorted.stream().filter(Candidate::isGasPackage).toList();
+        List<Candidate> sortedCandidates = new ArrayList<>(candidates);
+        sortedCandidates.sort(ORDER_POSITION);
+        List<Candidate> gasCandidates = sortedCandidates.stream().filter(Candidate::isGasPackage).toList();
         if (gasCandidates.isEmpty()) {
             return List.of();
         }
@@ -272,42 +272,42 @@ public final class GasRepackagerUtils {
         Map<Integer, List<BigItemStack>> generatedByAnchorSlot = new LinkedHashMap<>();
         Set<Integer> gasSlots = new HashSet<>();
         for (GasGroupCandidates group : groupCandidates(gasCandidates)) {
-            List<BigItemStack> generated = createBalloons(group.outputTemplate(), group.contents(), group.address());
-            if (generated.isEmpty() || generated.size() > group.candidates().size()) {
+            List<BigItemStack> generatedPackages = createBalloons(group.outputTemplate(), group.contents(), group.address());
+            if (generatedPackages.isEmpty() || generatedPackages.size() > group.candidates().size()) {
                 return List.of();
             }
 
-            Candidate anchor = group.candidates().stream().min(ORDER_POSITION).orElseThrow();
-            generatedByAnchorSlot.put(anchor.slot(), generated);
+            Candidate anchorCandidate = group.candidates().stream().min(ORDER_POSITION).orElseThrow();
+            generatedByAnchorSlot.put(anchorCandidate.slot(), generatedPackages);
             group.candidates().forEach(candidate -> gasSlots.add(candidate.slot()));
         }
 
-        List<BigItemStack> output = new ArrayList<>();
-        for (Candidate candidate : sorted) {
+        List<BigItemStack> outputPackages = new ArrayList<>();
+        for (Candidate candidate : sortedCandidates) {
             if (!gasSlots.contains(candidate.slot())) {
-                output.add(new BigItemStack(candidate.box().copyWithCount(1), 1));
+                outputPackages.add(new BigItemStack(candidate.box().copyWithCount(1), 1));
                 continue;
             }
 
-            List<BigItemStack> generated = generatedByAnchorSlot.get(candidate.slot());
-            if (generated == null) {
+            List<BigItemStack> generatedPackages = generatedByAnchorSlot.get(candidate.slot());
+            if (generatedPackages == null) {
                 continue;
             }
 
-            output.addAll(generated);
+            outputPackages.addAll(generatedPackages);
         }
 
-        if (output.isEmpty()) {
+        if (outputPackages.isEmpty()) {
             return List.of();
         }
 
         PackageOrderWithCrafts orderContext = findOrderContext(candidates);
-        for (int packageIndex = 0; packageIndex < output.size(); packageIndex++) {
-            boolean finalPackage = packageIndex == output.size() - 1;
+        for (int packageIndex = 0; packageIndex < outputPackages.size(); packageIndex++) {
+            boolean finalPackage = packageIndex == outputPackages.size() - 1;
             PackageOrderWithCrafts context = finalPackage ? orderContext : null;
-            PackageItem.setOrder(output.get(packageIndex).stack, orderId, 0, true, packageIndex, finalPackage, context);
+            PackageItem.setOrder(outputPackages.get(packageIndex).stack, orderId, 0, true, packageIndex, finalPackage, context);
         }
-        return List.copyOf(output);
+        return List.copyOf(outputPackages);
     }
 
     public static ScanResult scanPackages(IItemHandler targetInv) {
@@ -315,31 +315,31 @@ public final class GasRepackagerUtils {
         Map<Integer, List<Candidate>> orderedPackagesByOrder = new LinkedHashMap<>();
         Candidate firstPassThroughPackage = null;
         for (int slot = 0; slot < targetInv.getSlots(); slot++) {
-            ItemStack extracted = targetInv.extractItem(slot, 1, true);
-            if (extracted.isEmpty()) {
+            ItemStack simulatedExtraction = targetInv.extractItem(slot, 1, true);
+            if (simulatedExtraction.isEmpty()) {
                 continue;
             }
 
-            ItemStack box = extracted.copyWithCount(1);
-            BalloonGasContents contents = BalloonUtils.getGasContents(box);
-            boolean gasBalloon = !contents.isEmpty();
-            Candidate candidate = new Candidate(slot, box, contents);
-            if (PackageItem.isPackage(box) && PackageItem.hasOrderData(box)) {
-                orderedPackagesByOrder.computeIfAbsent(PackageItem.getOrderId(box), ignored -> new ArrayList<>()).add(candidate);
-                if (gasBalloon && firstPassThroughPackage == null && isStandaloneFinalOrderPackage(box)) {
+            ItemStack packageStack = simulatedExtraction.copyWithCount(1);
+            BalloonGasContents gasContents = BalloonUtils.getGasContents(packageStack);
+            boolean isGasBalloon = !gasContents.isEmpty();
+            Candidate candidate = new Candidate(slot, packageStack, gasContents);
+            if (PackageItem.isPackage(packageStack) && PackageItem.hasOrderData(packageStack)) {
+                orderedPackagesByOrder.computeIfAbsent(PackageItem.getOrderId(packageStack), ignored -> new ArrayList<>()).add(candidate);
+                if (isGasBalloon && firstPassThroughPackage == null && isStandaloneFinalOrderPackage(packageStack)) {
                     firstPassThroughPackage = candidate;
                 }
                 continue;
             }
 
             if (!candidate.isGasPackage()) {
-                if (PackageItem.isPackage(box) && firstPassThroughPackage == null) {
+                if (PackageItem.isPackage(packageStack) && firstPassThroughPackage == null) {
                     firstPassThroughPackage = candidate;
                 }
                 continue;
             }
 
-            addToGroup(simpleGroups, candidate, PackageItem.getAddress(box));
+            addToGroup(simpleGroups, candidate, PackageItem.getAddress(packageStack));
             if (firstPassThroughPackage == null) {
                 firstPassThroughPackage = candidate;
             }
@@ -386,30 +386,30 @@ public final class GasRepackagerUtils {
         @Nullable
         private BalloonGasContents cachedContents;
 
-        private GasGroupCandidates(Candidate first, String address) {
-            outputTemplate = first.box().copyWithCount(1);
-            rare = BalloonStyleUtils.isRareBalloon(first.box());
+        private GasGroupCandidates(Candidate firstCandidate, String address) {
+            outputTemplate = firstCandidate.box().copyWithCount(1);
+            rare = BalloonStyleUtils.isRareBalloon(firstCandidate.box());
             this.address = address;
-            add(first);
+            add(firstCandidate);
         }
 
         private void add(Candidate candidate) {
             candidates.add(candidate);
-            BalloonGasContents contents = candidate.contents();
-            contents.gases().stream().map(GasEntry::toStack).forEach(gases::add);
+            BalloonGasContents candidateContents = candidate.contents();
+            candidateContents.gases().stream().map(GasEntry::toStack).forEach(gases::add);
             cachedContents = null;
         }
 
         private boolean accepts(Candidate candidate, String address) {
-            ItemStack box = candidate.box();
+            ItemStack candidateBox = candidate.box();
             if (!this.address.equals(address)) {
                 return false;
             }
 
             if (rare) {
-                return BalloonStyleUtils.isRareBalloon(box) && box.is(outputTemplate.getItem());
+                return BalloonStyleUtils.isRareBalloon(candidateBox) && candidateBox.is(outputTemplate.getItem());
             }
-            return BalloonStyleUtils.isRegularBalloon(box);
+            return BalloonStyleUtils.isRegularBalloon(candidateBox);
         }
 
         public BalloonGasContents contents() {

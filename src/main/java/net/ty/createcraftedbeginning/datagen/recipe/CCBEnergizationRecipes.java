@@ -18,9 +18,9 @@ public class CCBEnergizationRecipes extends EnergizationRecipeGen {
     private final GeneratedRecipe ENERGIZED_ULTRAWARM = create("energized_ultrawarm", builder -> builder.require(CCBGases.ULTRAWARM_AIR.get(), 1).output(CCBGases.ENERGIZED_ULTRAWARM_AIR.get(), 1));
     private final GeneratedRecipe ENERGIZED_ETHEREAL = create("energized_ethereal", builder -> builder.require(CCBGases.ETHEREAL_AIR.get(), 1).output(CCBGases.ENERGIZED_ETHEREAL_AIR.get(), 1));
 
-    public GeneratedRecipe PRESSURIZED_ENERGIZED_NATURAL = create("pressurized_energized_natural", builder -> builder.require(CCBGases.PRESSURIZED_NATURAL_AIR.get(), 1).output(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get(), 1));
-    public GeneratedRecipe PRESSURIZED_ENERGIZED_ULTRAWARM = create("pressurized_energized_ultrawarm", builder -> builder.require(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get(), 1).output(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get(), 1));
-    public GeneratedRecipe PRESSURIZED_ENERGIZED_ETHEREAL = create("pressurized_energized_ethereal", builder -> builder.require(CCBGases.PRESSURIZED_ETHEREAL_AIR.get(), 1).output(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR.get(), 1));
+    private final GeneratedRecipe PRESSURIZED_ENERGIZED_NATURAL = create("pressurized_energized_natural", builder -> builder.require(CCBGases.PRESSURIZED_NATURAL_AIR.get(), 1).output(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get(), 1));
+    private final GeneratedRecipe PRESSURIZED_ENERGIZED_ULTRAWARM = create("pressurized_energized_ultrawarm", builder -> builder.require(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get(), 1).output(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get(), 1));
+    private final GeneratedRecipe PRESSURIZED_ENERGIZED_ETHEREAL = create("pressurized_energized_ethereal", builder -> builder.require(CCBGases.PRESSURIZED_ETHEREAL_AIR.get(), 1).output(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR.get(), 1));
 
     public CCBEnergizationRecipes(PackOutput output, CompletableFuture<Provider> registries) {
         super(output, registries, CCBAPI.MOD_ID);

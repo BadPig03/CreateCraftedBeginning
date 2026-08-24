@@ -48,8 +48,8 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
     }
 
     public static boolean meetsRequiredSpeed(float speed, short range) {
-        float multiplier = Math.max(0, CCBConfig.server().endDevices.speedRequirementMultiplier.getF());
-        return range > 0 && Mth.abs(speed) >= SpeedLevel.MEDIUM.getSpeedValue() * range * Mth.sqrt(range) * multiplier;
+        float speedRequirementMultiplier = Math.max(0, CCBConfig.server().endDevices.speedRequirementMultiplier.getF());
+        return range > 0 && Mth.abs(speed) >= SpeedLevel.MEDIUM.getSpeedValue() * range * Mth.sqrt(range) * speedRequirementMultiplier;
     }
 
     public static float calculateAnimationTargetSpeed(float kineticSpeed) {
@@ -181,7 +181,7 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
             return 0;
         }
 
-        short range = structural.getWorkingRange();
-        return meetsRequiredSpeed(getSpeed(), range) ? range : 0;
+        short workingRange = structural.getWorkingRange();
+        return meetsRequiredSpeed(getSpeed(), workingRange) ? workingRange : 0;
     }
 }

@@ -132,18 +132,18 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
             return false;
         }
 
-        InventoryIdentifier identifier = inventory.identifier();
+        InventoryIdentifier targetIdentifier = inventory.identifier();
         InventoryIdentifier ownIdentifier = getGasInventoryIdentifier();
-        if (ownIdentifier != null && ownIdentifier.equals(identifier)) {
+        if (ownIdentifier != null && ownIdentifier.equals(targetIdentifier)) {
             return true;
         }
 
-        if (identifier == null || gasInventory == null || !gasInventory.hasInventory()) {
+        if (targetIdentifier == null || gasInventory == null || !gasInventory.hasInventory()) {
             return super.isTargetingSameInventory(inventory);
         }
 
         BlockFace targetFace = gasInventory.getTarget().getOpposite();
-        return identifier.contains(targetFace) || super.isTargetingSameInventory(inventory);
+        return targetIdentifier.contains(targetFace) || super.isTargetingSameInventory(inventory);
     }
 
     @Nullable
@@ -153,8 +153,8 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         }
 
         BlockFace targetFace = gasInventory.getTarget().getOpposite();
-        BlockEntity target = level.getBlockEntity(targetFace.getPos());
-        if (!(target instanceof IGasInventoryIdentifierProvider provider)) {
+        BlockEntity targetBlockEntity = level.getBlockEntity(targetFace.getPos());
+        if (!(targetBlockEntity instanceof IGasInventoryIdentifierProvider provider)) {
             return null;
         }
         return provider.getGasInventoryIdentifier(targetFace.getFace());

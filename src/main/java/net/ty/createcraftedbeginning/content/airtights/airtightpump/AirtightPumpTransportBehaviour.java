@@ -49,9 +49,9 @@ public final class AirtightPumpTransportBehaviour extends GasTransportBehaviour 
 
     @Override
     public AttachmentTypes getRenderedRimAttachment(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction direction) {
-        BlockPos otherPos = pos.relative(direction);
-        BlockState otherState = level.getBlockState(otherPos);
-        if (!(otherState.getBlock() instanceof IAirtightPipeDrain drain) || !drain.shouldRenderDrain(level, otherPos, otherState, direction.getOpposite())) {
+        BlockPos adjacentPos = pos.relative(direction);
+        BlockState adjacentState = level.getBlockState(adjacentPos);
+        if (!(adjacentState.getBlock() instanceof IAirtightPipeDrain drain) || !drain.shouldRenderDrain(level, adjacentPos, adjacentState, direction.getOpposite())) {
             return AttachmentTypes.NONE;
         }
         return AttachmentTypes.DRAIN;

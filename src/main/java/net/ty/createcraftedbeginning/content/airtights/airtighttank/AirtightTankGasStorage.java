@@ -99,11 +99,11 @@ public final class AirtightTankGasStorage {
                 return tankInventory != null ? tankInventory : EmptyGasHandler.INSTANCE;
             }
 
-            AbstractAirtightTankBlockEntity controller = owner.getControllerBE();
-            if (controller == null || controller.isRemoved() || !controller.isController()) {
+            AbstractAirtightTankBlockEntity controllerTank = owner.getControllerBE();
+            if (controllerTank == null || controllerTank.isRemoved() || !controllerTank.isController()) {
                 return EmptyGasHandler.INSTANCE;
             }
-            return controller.getTankInventory();
+            return controllerTank.getTankInventory();
         }
     }
 }

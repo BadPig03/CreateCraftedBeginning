@@ -20,7 +20,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public interface StockKeeperRequestScreenAccessor extends StockKeeperRequestScreenAccess {
     @Override
     @Accessor("blockEntity")
-    StockTickerBlockEntity getBlockEntity();
+    StockTickerBlockEntity ccb$getBlockEntity();
 
     @Override
     @Invoker("getHoveredSlot")

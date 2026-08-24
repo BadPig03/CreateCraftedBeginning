@@ -167,8 +167,15 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     public int getWindRemainingLevel() {
-        int time = getWindRemainingTime();
-        return time <= 0 ? 0 : time < getMaxEffectiveThreshold() ? 1 : 2;
+        int remainingTime = getWindRemainingTime();
+        if (remainingTime <= 0) {
+            return 0;
+        }
+
+        if (remainingTime < getMaxEffectiveThreshold()) {
+            return 1;
+        }
+        return 2;
     }
 
     public int getWindRemainingTime() {
@@ -191,16 +198,16 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         controller.syncWindProgress();
     }
 
-    public void tickGasProcessing(ChargerType chargerType) {
-        gasProcessor.tickGasProcessing(chargerType);
+    public void tickGasProcessing(ChargerType chargerType, int windTime) {
+        gasProcessor.tickGasProcessing(chargerType, windTime);
     }
 
     public void loadFromItem(ItemStack stack) {
         controller.loadFromItem(stack);
     }
 
-    public void playSound(boolean bad) {
-        display.playSound(bad);
+    public void playSound(boolean isIllCharge) {
+        display.playSound(isIllCharge);
     }
 
     public void saveToItem(ItemStack stack) {
@@ -208,16 +215,19 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     public void setChamberState(BaseChamberState newState) {
+        if (currentState.getChargerType() != newState.getChargerType()) {
+            gasProcessor.flushPendingProcessing();
+        }
         currentState = newState;
         controller.onStateChanged();
     }
 
-    public void setGoggles(boolean newGoggles) {
-        display.setGoggles(newGoggles);
+    public void setGoggles(boolean hasGoggles) {
+        display.setGoggles(hasGoggles);
     }
 
-    public void spawnParticleBurst(boolean bad) {
-        display.spawnParticleBurst(bad);
+    public void spawnParticleBurst(boolean isIllCharge) {
+        display.spawnParticleBurst(isIllCharge);
     }
 
     public void SwitchToGaleState() {
@@ -268,16 +278,16 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         clientTicker.accept(this);
     }
 
-    public void setChamberStateFromSerialization(BaseChamberState state) {
-        currentState = state;
+    public void setChamberStateFromSerialization(BaseChamberState chamberState) {
+        currentState = chamberState;
     }
 
-    public void setGogglesFromSerialization(boolean goggles) {
-        display.setGoggles(goggles);
+    public void setGogglesFromSerialization(boolean hasGoggles) {
+        display.setGoggles(hasGoggles);
     }
 
-    public void setTrainHatFromSerialization(boolean trainHat) {
-        display.setTrainHat(trainHat);
+    public void setTrainHatFromSerialization(boolean hasTrainHat) {
+        display.setTrainHat(hasTrainHat);
     }
 
     public enum ChargerType {
@@ -297,8 +307,11 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
                 return fallback;
             }
 
-            int ordinal = compoundTag.getInt(key);
-            return ordinal >= 0 && ordinal < values().length ? values()[ordinal] : fallback;
+            int chargerTypeOrdinal = compoundTag.getInt(key);
+            if (chargerTypeOrdinal < 0 || chargerTypeOrdinal >= values().length) {
+                return fallback;
+            }
+            return values()[chargerTypeOrdinal];
         }
     }
 }

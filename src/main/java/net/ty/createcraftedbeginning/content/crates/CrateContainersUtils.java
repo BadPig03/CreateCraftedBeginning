@@ -26,25 +26,25 @@ public final class CrateContainersUtils {
             return;
         }
 
-        int limit = content.getMaxStackSize();
+        int maxStackSize = content.getMaxStackSize();
         while (count > 0) {
-            int dropCount = Math.min(count, limit);
+            int dropCount = Math.min(count, maxStackSize);
             Containers.dropItemStack(level, x, y, z, content.copyWithCount(dropCount));
             count -= dropCount;
         }
     }
 
     public static int calculateRedstoneSignal(CrateItemStackHandler handler) {
-        int count = handler.getCountInSlot(0);
-        if (count <= 0) {
+        int storedCount = handler.getCountInSlot(0);
+        if (storedCount <= 0) {
             return 0;
         }
 
-        int limit = handler.getSlotLimit(0);
-        if (limit <= 0) {
+        int capacity = handler.getConfiguredCapacity();
+        if (capacity <= 0) {
             return 0;
         }
-        return Mth.clamp(Mth.floor((double) count / limit * 14) + 1, 0, 15);
+        return Mth.clamp(Mth.floor((double) storedCount / capacity * 14) + 1, 0, 15);
     }
 
     public static boolean defaultUnpack(Level level, BlockPos pos, List<ItemStack> items, boolean simulate) {
@@ -55,7 +55,7 @@ public final class CrateContainersUtils {
         CrateItemStackHandler handler = crate.getHandler();
         ItemStack originalContent = handler.getStoredItem(0);
         int originalCount = handler.getCountInSlot(0);
-        int available = handler.getSlotLimit(0) - originalCount;
+        int remainingCapacity = handler.getRemainingCapacity();
         int addedCount = 0;
         ItemStack expectedContent = originalContent;
         for (ItemStack stack : items) {
@@ -71,7 +71,7 @@ public final class CrateContainersUtils {
             }
 
             int stackCount = stack.getCount();
-            if (stackCount > available - addedCount) {
+            if (stackCount > remainingCapacity - addedCount) {
                 return false;
             }
 
@@ -82,8 +82,8 @@ public final class CrateContainersUtils {
             return true;
         }
 
-        ItemStack validatedContent = expectedContent.copy();
-        int expectedCount = originalCount + addedCount;
+        ItemStack expectedStoredContent = expectedContent.copy();
+        int expectedStoredCount = originalCount + addedCount;
         return handler.runInBatch(() -> new ResourceTransaction().add(ResourceTransaction.participant(() -> matchesCrateState(handler, originalContent, originalCount), () -> new CrateSnapshot(handler.getStoredItem(0).copy(), handler.getCountInSlot(0)), () -> {
             for (ItemStack stack : items) {
                 if (stack.isEmpty()) {
@@ -94,7 +94,7 @@ public final class CrateContainersUtils {
                     return false;
                 }
             }
-            return matchesCrateState(handler, validatedContent, expectedCount);
+            return matchesCrateState(handler, expectedStoredContent, expectedStoredCount);
         }, snapshot -> handler.setStoredItems(0, snapshot.content().copy(), snapshot.count()))).commit());
     }
 

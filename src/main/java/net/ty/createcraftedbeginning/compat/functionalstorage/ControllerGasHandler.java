@@ -34,7 +34,7 @@ public final class ControllerGasHandler implements IGasHandler {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static void registerControllerCapability(RegisterCapabilitiesEvent event, BlockEntityType<?> type) {
-        event.registerBlockEntity(GasHandler.BLOCK, (BlockEntityType) type, (blockEntity, side) -> ((GasControllerAccess) blockEntity).ccb$getGasHandler());
+        event.registerBlockEntity(GasHandler.BLOCK, (BlockEntityType) type, (blockEntity, ignoredDirection) -> ((GasControllerAccess) blockEntity).ccb$getGasHandler());
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -42,28 +42,28 @@ public final class ControllerGasHandler implements IGasHandler {
         event.registerBlockEntity(GasHandler.BLOCK, (BlockEntityType) type, (blockEntity, side) -> ccb$getExtensionGasHandler((StorageControllerExtensionTile<?>) blockEntity, side));
     }
 
-    private static @Nullable IGasHandler ccb$getExtensionGasHandler(StorageControllerExtensionTile<?> extension, @Nullable Direction side) {
+    private static @Nullable IGasHandler ccb$getExtensionGasHandler(StorageControllerExtensionTile<?> extension, @Nullable Direction capabilitySide) {
         BlockPos controllerPos = extension.getControllerPos();
         Level level = extension.getLevel();
         if (controllerPos == null || level == null || !level.isLoaded(controllerPos)) {
             return null;
         }
-        return level.getCapability(GasHandler.BLOCK, controllerPos, side);
+        return level.getCapability(GasHandler.BLOCK, controllerPos, capabilitySide);
     }
 
-    private static long fillTank(IGasHandler handler, int tank, GasStack resource, GasAction action) {
-        long accepted = fillTankDirect(handler, tank, resource, GasAction.SIMULATE);
-        if (accepted <= 0 || !action.execute()) {
-            return accepted;
+    private static long fillTank(IGasHandler handler, int tankIndex, GasStack gasStack, GasAction action) {
+        long acceptedAmount = fillTankDirect(handler, tankIndex, gasStack, GasAction.SIMULATE);
+        if (acceptedAmount <= 0 || !action.execute()) {
+            return acceptedAmount;
         }
-        return fillTankDirect(handler, tank, resource, GasAction.EXECUTE);
+        return fillTankDirect(handler, tankIndex, gasStack, GasAction.EXECUTE);
     }
 
-    private static long fillTankDirect(IGasHandler handler, int tank, GasStack resource, GasAction action) {
+    private static long fillTankDirect(IGasHandler handler, int tankIndex, GasStack gasStack, GasAction action) {
         if (handler instanceof GasDrawerHandler drawer) {
-            return drawer.getInternalTank(tank).fill(resource, action);
+            return drawer.getInternalTank(tankIndex).fill(gasStack, action);
         }
-        return handler.fill(resource, action);
+        return handler.fill(gasStack, action);
     }
 
     private static List<GasStack[]> snapshotContents(List<GasDrawerHandler> drawers) {
@@ -75,14 +75,14 @@ public final class ControllerGasHandler implements IGasHandler {
     }
 
     private static void restoreContents(List<GasDrawerHandler> drawers, List<GasStack[]> snapshots) {
-        for (int drawer = 0; drawer < drawers.size(); drawer++) {
-            drawers.get(drawer).restoreContents(snapshots.get(drawer));
+        for (int drawerIndex = 0; drawerIndex < drawers.size(); drawerIndex++) {
+            drawers.get(drawerIndex).restoreContents(snapshots.get(drawerIndex));
         }
     }
 
     private static void endTransactions(List<GasDrawerHandler> drawers, int begunTransactions, boolean commit) {
-        for (int drawer = 0; drawer < begunTransactions; drawer++) {
-            drawers.get(drawer).endTransaction(commit);
+        for (int drawerIndex = 0; drawerIndex < begunTransactions; drawerIndex++) {
+            drawers.get(drawerIndex).endTransaction(commit);
         }
     }
 
@@ -122,9 +122,9 @@ public final class ControllerGasHandler implements IGasHandler {
             return 0;
         }
 
-        long accepted = fillExisting(resource, action);
-        if (accepted > 0) {
-            return accepted;
+        long acceptedAmount = fillExisting(resource, action);
+        if (acceptedAmount > 0) {
+            return acceptedAmount;
         }
         return fillEmpty(resource, action);
     }
@@ -144,21 +144,21 @@ public final class ControllerGasHandler implements IGasHandler {
         }
 
         List<GasStack[]> snapshots = snapshotContents(drawers);
-        boolean commit = false;
-        int begunTransactions = 0;
+        boolean shouldCommit = false;
+        int transactionCount = 0;
         try {
             for (GasDrawerHandler drawer : drawers) {
                 drawer.beginTransaction();
-                begunTransactions++;
+                transactionCount++;
             }
-            boolean success = fillAll(resources);
-            commit = success && action.execute();
-            return success ? AtomicFillResult.SUCCESS : AtomicFillResult.REJECTED;
+            boolean filledAllResources = fillAll(resources);
+            shouldCommit = filledAllResources && action.execute();
+            return filledAllResources ? AtomicFillResult.SUCCESS : AtomicFillResult.REJECTED;
         } finally {
-            if (!commit) {
+            if (!shouldCommit) {
                 restoreContents(drawers, snapshots);
             }
-            endTransactions(drawers, begunTransactions, commit);
+            endTransactions(drawers, transactionCount, shouldCommit);
         }
     }
 
@@ -169,18 +169,18 @@ public final class ControllerGasHandler implements IGasHandler {
 
     private long fillExisting(GasStack resource, GasAction action) {
         for (IGasHandler handler : handlers) {
-            for (int tank = 0; tank < handler.getTanks(); tank++) {
-                GasStack stored = handler.getGasInTank(tank);
-                if (stored.isEmpty() || !GasStack.isSameGasSameComponents(stored, resource)) {
+            for (int tankIndex = 0; tankIndex < handler.getTanks(); tankIndex++) {
+                GasStack storedGas = handler.getGasInTank(tankIndex);
+                if (storedGas.isEmpty() || !GasStack.isSameGasSameComponents(storedGas, resource)) {
                     continue;
                 }
 
-                long accepted = fillTank(handler, tank, resource, action);
-                if (accepted <= 0) {
+                long acceptedAmount = fillTank(handler, tankIndex, resource, action);
+                if (acceptedAmount <= 0) {
                     continue;
                 }
 
-                return accepted;
+                return acceptedAmount;
             }
         }
         return 0;
@@ -188,17 +188,17 @@ public final class ControllerGasHandler implements IGasHandler {
 
     private long fillEmpty(GasStack resource, GasAction action) {
         for (IGasHandler handler : handlers) {
-            for (int tank = 0; tank < handler.getTanks(); tank++) {
-                if (!handler.getGasInTank(tank).isEmpty() || !handler.isGasValid(tank, resource)) {
+            for (int tankIndex = 0; tankIndex < handler.getTanks(); tankIndex++) {
+                if (!handler.getGasInTank(tankIndex).isEmpty() || !handler.isGasValid(tankIndex, resource)) {
                     continue;
                 }
 
-                long accepted = fillTank(handler, tank, resource, action);
-                if (accepted <= 0) {
+                long acceptedAmount = fillTank(handler, tankIndex, resource, action);
+                if (acceptedAmount <= 0) {
                     continue;
                 }
 
-                return accepted;
+                return acceptedAmount;
             }
         }
         return 0;

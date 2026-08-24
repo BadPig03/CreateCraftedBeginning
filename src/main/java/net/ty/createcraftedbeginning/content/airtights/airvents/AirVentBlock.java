@@ -69,20 +69,20 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
     }
 
     public static int getConnectionMask(BlockState state) {
-        int mask = 0;
+        int connectionMask = 0;
         for (Direction direction : Iterate.directions) {
             if (!isConnected(state, direction)) {
                 continue;
             }
 
-            mask |= 1 << direction.get3DDataValue();
+            connectionMask |= 1 << direction.get3DDataValue();
         }
-        return mask;
+        return connectionMask;
     }
 
     public static boolean canPassThrough(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
-        int mask = 1 << direction.get3DDataValue();
-        return (getPassableMask(state, level, pos) & mask) != 0;
+        int directionMask = 1 << direction.get3DDataValue();
+        return (getPassableMask(state, level, pos) & directionMask) != 0;
     }
 
     public static boolean isConnected(BlockState state, Direction direction) {
@@ -130,19 +130,19 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
     }
 
     private static int getPassableMask(BlockState state, BlockGetter level, BlockPos pos) {
-        int mask = getConnectionMask(state);
+        int connectionMask = getConnectionMask(state);
         if (!(level.getBlockEntity(pos) instanceof AirVentBlockEntity airVent)) {
-            return mask;
+            return connectionMask;
         }
 
-        return mask | airVent.getOpenedLouverMask();
+        return connectionMask | airVent.getOpenedLouverMask();
     }
 
     @Override
     public InteractionResult onWrenched(BlockState state, UseOnContext context) {
         BlockPos pos = context.getClickedPos();
-        Direction direction = getTargetedFace(pos, context.getClickLocation(), context.getClickedFace());
-        if (isConnected(state, direction)) {
+        Direction targetedFace = getTargetedFace(pos, context.getClickLocation(), context.getClickedFace());
+        if (isConnected(state, targetedFace)) {
             return InteractionResult.PASS;
         }
 
@@ -155,8 +155,8 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
             return InteractionResult.SUCCESS;
         }
 
-        boolean hadLouver = airVent.hasLouver(direction);
-        airVent.toggleLouver(direction);
+        boolean hadLouver = airVent.hasLouver(targetedFace);
+        airVent.toggleLouver(targetedFace);
         if (hadLouver) {
             CCBSoundEvents.AIR_VENT_OUTLET_REMOVED.playOnServer(level, pos, 1, 1);
         }
@@ -185,9 +185,9 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
             level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
 
-        BooleanProperty property = PROPERTY_BY_DIRECTION.get(direction);
-        boolean connected = neighbourState.getBlock() instanceof AirVentBlock;
-        return state.getValue(property) == connected ? state : state.setValue(property, connected);
+        BooleanProperty connectionProperty = PROPERTY_BY_DIRECTION.get(direction);
+        boolean shouldConnect = neighbourState.getBlock() instanceof AirVentBlock;
+        return state.getValue(connectionProperty) == shouldConnect ? state : state.setValue(connectionProperty, shouldConnect);
     }
 
     @Override
@@ -201,12 +201,12 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
             return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
         }
 
-        Direction direction = getTargetedFace(pos, hitResult.getLocation(), hitResult.getDirection());
-        if (isConnected(state, direction)) {
+        Direction targetedFace = getTargetedFace(pos, hitResult.getLocation(), hitResult.getDirection());
+        if (isConnected(state, targetedFace)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        if (!(level.getBlockEntity(pos) instanceof AirVentBlockEntity airVent) || !airVent.hasLouver(direction)) {
+        if (!(level.getBlockEntity(pos) instanceof AirVentBlockEntity airVent) || !airVent.hasLouver(targetedFace)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
@@ -214,9 +214,9 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
             return ItemInteractionResult.sidedSuccess(true);
         }
 
-        boolean wasOpen = airVent.isLouverOpen(direction);
-        airVent.toggleLouverOpen(direction);
-        if (wasOpen) {
+        boolean wasLouverOpen = airVent.isLouverOpen(targetedFace);
+        airVent.toggleLouverOpen(targetedFace);
+        if (wasLouverOpen) {
             CCBSoundEvents.AIR_VENT_OUTLET_CLOSED.playOnServer(level, pos, 1, 1);
         }
         else {
@@ -259,8 +259,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
-        BlockState state = ProperWaterloggedBlock.withWater(level, defaultBlockState(), pos);
-        return withConnections(state, level, pos);
+        return withConnections(ProperWaterloggedBlock.withWater(level, defaultBlockState(), pos), level, pos);
     }
 
     @Override

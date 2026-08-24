@@ -51,27 +51,27 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
     @SuppressWarnings("SuspiciousNameCombination")
     private static float getTargetAngle(MovementContext context) {
         if (shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0) && context.contraption.entity instanceof CarriageContraptionEntity carriage) {
-            float angle = AngleHelper.deg(-Mth.atan2(context.relativeMotion.x, context.relativeMotion.z));
-            return carriage.getInitialOrientation().getAxis() == Axis.X ? angle + 180 : angle;
+            float movementAngle = AngleHelper.deg(-Mth.atan2(context.relativeMotion.x, context.relativeMotion.z));
+            return carriage.getInitialOrientation().getAxis() == Axis.X ? movementAngle + 180 : movementAngle;
         }
 
-        Entity player = cameraEntityProvider.getCameraEntity(context);
-        if (player == null || player.isInvisible() || context.position == null) {
+        Entity cameraEntity = cameraEntityProvider.getCameraEntity(context);
+        if (cameraEntity == null || cameraEntity.isInvisible() || context.position == null) {
             return 0;
         }
 
-        Vec3 relativePosition = context.contraption.entity.reverseRotation(player.position().subtract(context.position), 1);
-        return AngleHelper.deg(-Mth.atan2(relativePosition.z, relativePosition.x)) - 90;
+        Vec3 cameraRelativePosition = context.contraption.entity.reverseRotation(cameraEntity.position().subtract(context.position), 1);
+        return AngleHelper.deg(-Mth.atan2(cameraRelativePosition.z, cameraRelativePosition.x)) - 90;
     }
 
     private static boolean shouldRenderHat(MovementContext context) {
-        CompoundTag data = context.data;
-        if (data.contains(COMPOUND_KEY_CONDUCTOR)) {
-            return data.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
+        CompoundTag movementData = context.data;
+        if (movementData.contains(COMPOUND_KEY_CONDUCTOR)) {
+            return movementData.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
         }
 
-        data.putBoolean(COMPOUND_KEY_CONDUCTOR, determineIfConducting(context));
-        return data.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
+        movementData.putBoolean(COMPOUND_KEY_CONDUCTOR, determineIfConducting(context));
+        return movementData.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
     }
 
     private static boolean determineIfConducting(MovementContext context) {
@@ -81,8 +81,8 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
         }
 
         Direction assemblyDirection = carriageContraption.getAssemblyDirection();
-        for (Direction direction : Iterate.directionsInAxis(assemblyDirection.getAxis())) {
-            if (!carriageContraption.inControl(context.localPos, direction)) {
+        for (Direction controlDirection : Iterate.directionsInAxis(assemblyDirection.getAxis())) {
+            if (!carriageContraption.inControl(context.localPos, controlDirection)) {
                 continue;
             }
 
@@ -98,16 +98,15 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
         }
 
         RandomSource random = context.world.getRandom();
-        Vec3 position = context.position;
-        Vec3 added = position.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125f).multiply(1, 0, 1));
+        Vec3 particlePos = context.position.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125f).multiply(1, 0, 1));
         if (random.nextInt(3) == 0 && context.motion.length() < 0.015625f) {
-            context.world.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), added.x, added.y, added.z, 0, 0, 0);
+            context.world.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), particlePos.x, particlePos.y, particlePos.z, 0, 0, 0);
         }
         LerpedFloat headAngle = getHeadAngle(context);
-        boolean quickTurn = shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0);
+        boolean shouldTurnQuickly = shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0);
         float currentAngle = headAngle.getValue();
         float targetAngle = getTargetAngle(context);
-        headAngle.chase(currentAngle + AngleHelper.getShortestAngleDiff(currentAngle, targetAngle), 0.5f, quickTurn ? Chaser.EXP : Chaser.exp(5));
+        headAngle.chase(currentAngle + AngleHelper.getShortestAngleDiff(currentAngle, targetAngle), 0.5f, shouldTurnQuickly ? Chaser.EXP : Chaser.exp(5));
         headAngle.tickChaser();
     }
 

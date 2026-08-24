@@ -40,17 +40,17 @@ public final class CCBTooltipBarAlignment {
         int minimumLeaderWidth = font.width(BASE_LEADER);
         int dotWidth = Math.max(1, font.width("."));
         int targetBarStart = maximumLabelWidth + minimumLeaderWidth;
-        for (int i = 0; i < labels.size(); i++) {
-            Component label = labels.get(i);
+        for (int labelIndex = 0; labelIndex < labels.size(); labelIndex++) {
+            Component label = labels.get(labelIndex);
             int leaderWidth = Math.max(trailingGapWidth, targetBarStart - font.width(label));
             int dotCount = Math.max(0, leaderWidth - trailingGapWidth) / dotWidth;
-            MutableComponent line = label.copy();
+            MutableComponent tooltipLine = label.copy();
             if (dotCount > 0) {
-                line.append(Component.literal(".".repeat(dotCount)).withStyle(ChatFormatting.DARK_GRAY));
+                tooltipLine.append(Component.literal(".".repeat(dotCount)).withStyle(ChatFormatting.DARK_GRAY));
             }
-            line.append(createPixelSpacing(leaderWidth - dotCount * dotWidth));
-            line.append(bars.get(i));
-            CCBLang.builder().add(line).forGoggles(tooltip, indent);
+            tooltipLine.append(createPixelSpacing(leaderWidth - dotCount * dotWidth));
+            tooltipLine.append(bars.get(labelIndex));
+            CCBLang.builder().add(tooltipLine).forGoggles(tooltip, indent);
         }
     }
 

@@ -45,11 +45,11 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
 
     @Override
     public void startTransferringTo(Contraption contraption, float distance) {
-        if (connectedEntity == contraption.entity || !(contraption.getStorage() instanceof IMountedStorageManagerWithGas withGas)) {
+        if (connectedEntity == contraption.entity || !(contraption.getStorage() instanceof IMountedStorageManagerWithGas mountedStorage)) {
             return;
         }
 
-        capability = new InterfaceGasHandler(withGas.ccb$getGases());
+        capability = new InterfaceGasHandler(mountedStorage.ccb$getGases());
         invalidateCapability();
         super.startTransferringTo(contraption, distance);
     }
@@ -87,8 +87,8 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
     }
 
     public boolean isConnected() {
-        int timeout = getTransferTimeout();
-        return transferTimer >= ANIMATION && transferTimer <= timeout + ANIMATION;
+        int transferTimeout = getTransferTimeout();
+        return transferTimer >= ANIMATION && transferTimer <= transferTimeout + ANIMATION;
     }
 
     public float getExtensionDistance(float partialTicks) {
@@ -136,8 +136,8 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
         return connectionAnimation.getValue(partialTicks);
     }
 
-    public boolean canAccessGasStorage(IGasHandler handler) {
-        return capability == handler && canTransfer();
+    public boolean canAccessGasStorage(IGasHandler gasHandler) {
+        return capability == gasHandler && canTransfer();
     }
 
     public void onGasContentTransferred() {

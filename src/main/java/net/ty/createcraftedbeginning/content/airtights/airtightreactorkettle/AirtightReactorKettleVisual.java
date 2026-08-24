@@ -33,9 +33,9 @@ public class AirtightReactorKettleVisual extends AbstractBlockEntityVisual<Airti
         super(context, blockEntity, partialTick);
 
         mixer = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_MIXER)).createInstance();
-        for (int i = 0; i < Iterate.horizontalDirections.length; i++) {
-            leftWindows[i] = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_LEFT_WINDOW)).createInstance();
-            rightWindows[i] = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_RIGHT_WINDOW)).createInstance();
+        for (int windowIndex = 0; windowIndex < Iterate.horizontalDirections.length; windowIndex++) {
+            leftWindows[windowIndex] = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_LEFT_WINDOW)).createInstance();
+            rightWindows[windowIndex] = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_RIGHT_WINDOW)).createInstance();
         }
         animate(partialTick);
     }
@@ -54,14 +54,14 @@ public class AirtightReactorKettleVisual extends AbstractBlockEntityVisual<Airti
             return;
         }
 
-        for (int i = 0; i < Iterate.horizontalDirections.length; i++) {
-            Direction direction = Iterate.horizontalDirections[i];
-            Vec3i normal = direction.getNormal();
-            Vec3i leftDistance = direction.getClockWise().getNormal();
-            Vec3i rightDistance = direction.getCounterClockWise().getNormal();
+        for (int windowIndex = 0; windowIndex < Iterate.horizontalDirections.length; windowIndex++) {
+            Direction direction = Iterate.horizontalDirections[windowIndex];
+            Vec3i directionNormal = direction.getNormal();
+            Vec3i leftOffset = direction.getClockWise().getNormal();
+            Vec3i rightOffset = direction.getCounterClockWise().getNormal();
 
-            leftWindows[i].setIdentityTransform().translate(getVisualPosition()).translate(normal.getX(), normal.getY(), normal.getZ()).translate(leftDistance.getX() * windowDistance, leftDistance.getY() * windowDistance, leftDistance.getZ() * windowDistance).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).setChanged();
-            rightWindows[i].setIdentityTransform().translate(getVisualPosition()).translate(normal.getX(), normal.getY(), normal.getZ()).translate(rightDistance.getX() * windowDistance, rightDistance.getY() * windowDistance, rightDistance.getZ() * windowDistance).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).setChanged();
+            leftWindows[windowIndex].setIdentityTransform().translate(getVisualPosition()).translate(directionNormal.getX(), directionNormal.getY(), directionNormal.getZ()).translate(leftOffset.getX() * windowDistance, leftOffset.getY() * windowDistance, leftOffset.getZ() * windowDistance).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).setChanged();
+            rightWindows[windowIndex].setIdentityTransform().translate(getVisualPosition()).translate(directionNormal.getX(), directionNormal.getY(), directionNormal.getZ()).translate(rightOffset.getX() * windowDistance, rightOffset.getY() * windowDistance, rightOffset.getZ() * windowDistance).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).setChanged();
         }
         lastWindowDistance = windowDistance;
     }
@@ -78,26 +78,26 @@ public class AirtightReactorKettleVisual extends AbstractBlockEntityVisual<Airti
     @Override
     public void updateLight(float partialTick) {
         relight(mixer);
-        for (int i = 0; i < leftWindows.length; i++) {
-            relight(leftWindows[i], rightWindows[i]);
+        for (int windowIndex = 0; windowIndex < leftWindows.length; windowIndex++) {
+            relight(leftWindows[windowIndex], rightWindows[windowIndex]);
         }
     }
 
     @Override
     protected void _delete() {
         mixer.delete();
-        for (int i = 0; i < leftWindows.length; i++) {
-            leftWindows[i].delete();
-            rightWindows[i].delete();
+        for (int windowIndex = 0; windowIndex < leftWindows.length; windowIndex++) {
+            leftWindows[windowIndex].delete();
+            rightWindows[windowIndex].delete();
         }
     }
 
     @Override
     public void collectCrumblingInstances(Consumer<Instance> consumer) {
         consumer.accept(mixer);
-        for (int i = 0; i < leftWindows.length; i++) {
-            consumer.accept(leftWindows[i]);
-            consumer.accept(rightWindows[i]);
+        for (int windowIndex = 0; windowIndex < leftWindows.length; windowIndex++) {
+            consumer.accept(leftWindows[windowIndex]);
+            consumer.accept(rightWindows[windowIndex]);
         }
     }
 }

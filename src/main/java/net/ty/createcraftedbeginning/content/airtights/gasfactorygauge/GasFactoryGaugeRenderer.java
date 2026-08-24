@@ -33,16 +33,15 @@ public class GasFactoryGaugeRenderer extends SmartBlockEntityRenderer<GasFactory
         float xRot = FactoryPanelBlock.getXRot(blockState) + Mth.PI / 2;
         float yRot = FactoryPanelBlock.getYRot(blockState);
         float glow = behaviour.bulb.getValue(partialTicks);
-        boolean missingAddress = behaviour.isMissingAddress();
-        PartialModel bulb = behaviour.redstonePowered || missingAddress ? CCBPartialModels.GAS_FACTORY_GAUGE_BULB_RED : CCBPartialModels.GAS_FACTORY_GAUGE_BULB_LIGHT;
-        CachedBuffers.partial(bulb, blockState).rotateCentered(yRot, Direction.UP).rotateCentered(xRot, Direction.EAST).rotateCentered(Mth.PI, Direction.UP).translate(behaviour.slot.xOffset * 0.5, 0, behaviour.slot.yOffset * 0.5).light(glow > 0.125f ? LightTexture.FULL_BRIGHT : light).overlay(overlay).renderInto(poseStack, buffer.getBuffer(RenderType.translucent()));
+        PartialModel bulbModel = behaviour.redstonePowered || behaviour.isMissingAddress() ? CCBPartialModels.GAS_FACTORY_GAUGE_BULB_RED : CCBPartialModels.GAS_FACTORY_GAUGE_BULB_LIGHT;
+        CachedBuffers.partial(bulbModel, blockState).rotateCentered(yRot, Direction.UP).rotateCentered(xRot, Direction.EAST).rotateCentered(Mth.PI, Direction.UP).translate(behaviour.slot.xOffset * 0.5, 0, behaviour.slot.yOffset * 0.5).light(glow > 0.125f ? LightTexture.FULL_BRIGHT : light).overlay(overlay).renderInto(poseStack, buffer.getBuffer(RenderType.translucent()));
         if (glow < 0.125f) {
             return;
         }
 
         glow = Mth.clamp(1 - 2 * Mth.square(glow - 0.75f), -1, 1);
-        int color = (int) (200 * glow);
-        CachedBuffers.partial(bulb, blockState).rotateCentered(yRot, Direction.UP).rotateCentered(xRot, Direction.EAST).rotateCentered(Mth.PI, Direction.UP).translate(behaviour.slot.xOffset * 0.5, 0, behaviour.slot.yOffset * 0.5).light(LightTexture.FULL_BRIGHT).color(color, color, color, 255).overlay(overlay).renderInto(poseStack, buffer.getBuffer(RenderTypes.additive()));
+        int glowColor = (int) (200 * glow);
+        CachedBuffers.partial(bulbModel, blockState).rotateCentered(yRot, Direction.UP).rotateCentered(xRot, Direction.EAST).rotateCentered(Mth.PI, Direction.UP).translate(behaviour.slot.xOffset * 0.5, 0, behaviour.slot.yOffset * 0.5).light(LightTexture.FULL_BRIGHT).color(glowColor, glowColor, glowColor, 255).overlay(overlay).renderInto(poseStack, buffer.getBuffer(RenderTypes.additive()));
     }
 
     @Override

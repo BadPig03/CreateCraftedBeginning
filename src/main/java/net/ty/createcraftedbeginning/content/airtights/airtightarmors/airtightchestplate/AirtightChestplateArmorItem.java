@@ -68,19 +68,19 @@ class AirtightChestplateArmorItem extends ArmorItem implements CustomRenderedArm
         HumanoidArmorLayerAccess accessor = (HumanoidArmorLayerAccess) layer;
         HumanoidModel<?> parentModel = layer.getParentModel();
 
-        HumanoidModel<?> innerModel = accessor.getInnerModel();
+        HumanoidModel<?> innerModel = accessor.ccb$getInnerModel();
         parentModel.copyPropertiesTo((HumanoidModel) innerModel);
         accessor.ccb$setPartVisibility(innerModel, slot);
         renderModel(poseStack, bufferSource, light, innerModel, INNER_TEXTURE);
 
-        HumanoidModel<?> outerModel = accessor.getOuterModel();
+        HumanoidModel<?> outerModel = accessor.ccv$getOuterModel();
         parentModel.copyPropertiesTo((HumanoidModel) outerModel);
         accessor.ccb$setPartVisibility(outerModel, slot);
         renderModel(poseStack, bufferSource, light, outerModel, OUTER_TEXTURE);
 
         ArmorTrim trim = stack.get(DataComponents.TRIM);
         if (trim != null) {
-            TextureAtlas trimAtlas = accessor.getArmorTrimAtlas();
+            TextureAtlas trimAtlas = accessor.ccb$getArmorTrimAtlas();
             renderTrim(trimAtlas, poseStack, bufferSource, light, trim, outerModel, false);
             renderTrim(trimAtlas, poseStack, bufferSource, light, trim, innerModel, true);
         }

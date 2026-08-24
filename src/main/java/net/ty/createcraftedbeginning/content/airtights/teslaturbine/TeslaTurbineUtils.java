@@ -33,11 +33,11 @@ public final class TeslaTurbineUtils {
     private TeslaTurbineUtils() {
     }
 
-    public static BlockPos calculateStructurePos(BlockPos pos, Axis axis, int u, int v) {
+    public static BlockPos calculateStructurePos(BlockPos turbinePos, Axis axis, int u, int v) {
         return switch (axis) {
-            case X -> new BlockPos(pos.getX(), pos.getY() + v, pos.getZ() + u);
-            case Z -> new BlockPos(pos.getX() + u, pos.getY() + v, pos.getZ());
-            default -> new BlockPos(pos.getX() + u, pos.getY(), pos.getZ() + v);
+            case X -> new BlockPos(turbinePos.getX(), turbinePos.getY() + v, turbinePos.getZ() + u);
+            case Z -> new BlockPos(turbinePos.getX() + u, turbinePos.getY() + v, turbinePos.getZ());
+            default -> new BlockPos(turbinePos.getX() + u, turbinePos.getY(), turbinePos.getZ() + v);
         };
     }
 

@@ -24,24 +24,24 @@ public final class BreezeCoolerSerialization {
 
     private static BaseCoolerState readState(CompoundTag tag) {
         CompoundTag stateData = tag.getCompound(STATE_DATA);
-        CoolantType type = CoolantType.fromTag(tag, STATE_TYPE, CoolantType.NONE);
-        boolean creative = stateData.contains(IS_CREATIVE, Tag.TAG_BYTE) && stateData.getBoolean(IS_CREATIVE);
+        CoolantType coolantType = CoolantType.fromTag(tag, STATE_TYPE, CoolantType.NONE);
+        boolean isCreative = stateData.contains(IS_CREATIVE, Tag.TAG_BYTE) && stateData.getBoolean(IS_CREATIVE);
         int remainingTime = stateData.contains(REMAINING_TIME, Tag.TAG_ANY_NUMERIC) ? Mth.clamp(stateData.getInt(REMAINING_TIME), 0, BreezeCoolerBlockEntity.getMaxCoolantCapacity()) : 0;
-        if (creative && type != CoolantType.NONE) {
-            return new CreativeCoolerState(type);
+        if (isCreative && coolantType != CoolantType.NONE) {
+            return new CreativeCoolerState(coolantType);
         }
-        return switch (type) {
+        return switch (coolantType) {
             case NORMAL -> remainingTime > 0 ? new ChilledCoolerState(remainingTime, false) : new InactiveCoolerState();
             case NONE -> new InactiveCoolerState();
         };
     }
 
     public void write(BreezeCoolerBlockEntity cooler, CompoundTag tag) {
-        BaseCoolerState state = cooler.getCurrentState();
-        CompoundTag stateTag = new CompoundTag();
-        state.save(stateTag);
-        tag.put(STATE_DATA, stateTag);
-        tag.putString(STATE_TYPE, state.getCoolantType().name());
+        BaseCoolerState coolerState = cooler.getCurrentState();
+        CompoundTag stateData = new CompoundTag();
+        coolerState.save(stateData);
+        tag.put(STATE_DATA, stateData);
+        tag.putString(STATE_TYPE, coolerState.getCoolantType().name());
         tag.putBoolean(GOGGLES, cooler.hasGoggles());
         tag.putBoolean(TRAIN_HAT, cooler.hasTrainHat());
     }

@@ -32,11 +32,16 @@ public final class BreezeCoolerController {
 
     public void tick() {
         Level level = cooler.getLevel();
-        if (level == null || !cooler.getCurrentState().tick(cooler)) {
+        if (level == null) {
             return;
         }
 
-        if (!level.isClientSide) {
+        if (level.isClientSide && !cooler.isVirtual()) {
+            cooler.runClientTicker();
+            return;
+        }
+
+        if (!cooler.getCurrentState().tick(cooler) || !level.isClientSide) {
             return;
         }
 
@@ -49,7 +54,11 @@ public final class BreezeCoolerController {
 
     public void onLoad() {
         Level level = cooler.getLevel();
-        if (level == null || level.isClientSide) {
+        if (level == null) {
+            return;
+        }
+        if (level.isClientSide) {
+            cooler.refreshClientCoolingPredictionBase();
             return;
         }
 
@@ -68,47 +77,54 @@ public final class BreezeCoolerController {
     }
 
     public boolean tryUpdateCoolantByItem(ItemStack stack, boolean forceOverflow, boolean simulate) {
+        Level level = cooler.getLevel();
+        boolean isClientPrediction = level != null && level.isClientSide && !cooler.isVirtual();
         if (stack.is(CCBItems.CREATIVE_ICE_CREAM)) {
-            if (simulate) {
+            if (simulate || isClientPrediction) {
                 return true;
             }
 
-            CoolantType type = CreativeCoolerState.getNextCoolantType(cooler.getCurrentState().getCoolantType());
-            cooler.setCoolerState(type == CoolantType.NONE ? new InactiveCoolerState() : new CreativeCoolerState(type));
+            CoolantType nextCoolantType = CreativeCoolerState.getNextCoolantType(cooler.getCurrentState().getCoolantType());
+            cooler.setCoolerState(nextCoolantType == CoolantType.NONE ? new InactiveCoolerState() : new CreativeCoolerState(nextCoolantType));
             cooler.spawnParticleBurst();
             cooler.playSound();
             return true;
         }
 
-        InteractionResult result = cooler.getCurrentState().onItemInsert(cooler, stack, forceOverflow, simulate);
-        if (result != InteractionResult.SUCCESS) {
+        InteractionResult insertResult = cooler.getCurrentState().onItemInsert(cooler, stack, forceOverflow, simulate || isClientPrediction);
+        if (insertResult != InteractionResult.SUCCESS) {
             return false;
         }
 
-        if (simulate) {
+        if (simulate || isClientPrediction) {
             return true;
         }
 
-        if (cooler.getLevel() != null && !cooler.getLevel().isClientSide && stack.is(CCBItemTags.ICE_CREAMS.tag)) {
+        if (level != null && !level.isClientSide && stack.is(CCBItemTags.ICE_CREAMS.tag)) {
             cooler.getAdvancementBehaviour().awardPlayer(CCBAdvancements.FROZEN_AMBROSIA);
         }
-        cooler.notifyUpdate();
         return true;
     }
 
-    public void markCoolingChanged() {
-        cooler.setChanged();
+    public void onCoolingTimeChanged(CoolingSyncMode syncMode) {
+        if (syncMode == CoolingSyncMode.IMMEDIATE) {
+            cooler.setChanged();
+            cooler.notifyUpdate();
+            return;
+        }
+
+        syncCoolingProgress();
     }
 
-    public void syncCoolingProgress() {
+    private void syncCoolingProgress() {
         Level level = cooler.getLevel();
         if (level == null || level.isClientSide) {
             return;
         }
 
         cooler.setChanged();
-        long phase = level.getGameTime() + cooler.getBlockPos().asLong();
-        if (Math.floorMod(phase, COOLING_STATE_SYNC_INTERVAL) != 0) {
+        long syncPhase = level.getGameTime() + cooler.getBlockPos().asLong();
+        if (Math.floorMod(syncPhase, COOLING_STATE_SYNC_INTERVAL) != 0) {
             return;
         }
 
@@ -150,12 +166,17 @@ public final class BreezeCoolerController {
             return;
         }
 
-        BlockState state = cooler.getBlockState();
+        BlockState currentBlockState = cooler.getBlockState();
         FrostLevel frostLevel = cooler.getCurrentState().getFrostLevel();
-        if (state.getValue(BreezeCoolerBlock.FROST_LEVEL) == frostLevel) {
+        if (currentBlockState.getValue(BreezeCoolerBlock.FROST_LEVEL) == frostLevel) {
             return;
         }
 
-        level.setBlockAndUpdate(cooler.getBlockPos(), state.setValue(BreezeCoolerBlock.FROST_LEVEL, frostLevel));
+        level.setBlockAndUpdate(cooler.getBlockPos(), currentBlockState.setValue(BreezeCoolerBlock.FROST_LEVEL, frostLevel));
+    }
+
+    public enum CoolingSyncMode {
+        IMMEDIATE,
+        PERIODIC
     }
 }

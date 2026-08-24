@@ -67,10 +67,12 @@ public abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour
     }
 
     public boolean isEmpty() {
-        for (int tank = 0; tank < capability.getTanks(); tank++) {
-            if (!capability.getGasInTank(tank).isEmpty()) {
-                return false;
+        for (int tankIndex = 0; tankIndex < capability.getTanks(); tankIndex++) {
+            if (capability.getGasInTank(tankIndex).isEmpty()) {
+                continue;
             }
+
+            return false;
         }
         return true;
     }
@@ -114,16 +116,16 @@ public abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour
     @Override
     public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        TankSegmentBase[] tanks = getTankSegmentsForLifecycle();
-        MutableInt index = new MutableInt(0);
+        TankSegmentBase[] tankSegments = getTankSegmentsForLifecycle();
+        MutableInt tankIndex = new MutableInt(0);
         ListTag tankData = compoundTag.getList(getType().getName() + "Tanks", Tag.TAG_COMPOUND);
         NBTHelper.iterateCompoundList(tankData, tankTag -> {
-            if (index.intValue() >= tanks.length) {
+            if (tankIndex.intValue() >= tankSegments.length) {
                 return;
             }
 
-            tanks[index.intValue()].read(tankTag, provider);
-            index.increment();
+            tankSegments[tankIndex.intValue()].read(tankTag, provider);
+            tankIndex.increment();
         });
     }
 
@@ -131,8 +133,8 @@ public abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour
     public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
         ListTag tankData = new ListTag();
-        for (TankSegmentBase tank : getTankSegmentsForLifecycle()) {
-            tankData.add(tank.write(provider));
+        for (TankSegmentBase tankSegment : getTankSegmentsForLifecycle()) {
+            tankData.add(tankSegment.write(provider));
         }
         compoundTag.put(getType().getName() + "Tanks", tankData);
     }
@@ -163,9 +165,9 @@ public abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour
         }
 
         public CompoundTag write(Provider provider) {
-            CompoundTag tag = new CompoundTag();
-            tag.put(COMPOUND_KEY_TANK_CONTENT, getTank().write(provider, new CompoundTag()));
-            return tag;
+            CompoundTag tankTag = new CompoundTag();
+            tankTag.put(COMPOUND_KEY_TANK_CONTENT, getTank().write(provider, new CompoundTag()));
+            return tankTag;
         }
 
         public void read(CompoundTag compoundTag, Provider provider) {

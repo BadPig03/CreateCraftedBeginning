@@ -53,27 +53,28 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
         return new AirtightPipeAttachmentModel(template, true);
     }
 
-    private static void addQuads(List<BakedQuad> quads, @Nullable BlockState state, @Nullable Direction side, RandomSource rand, ModelData data, PipeModelData pipeData, @Nullable RenderType renderType) {
-        BakedModel bracket = pipeData.getBracket();
-        if (bracket != null) {
-            quads.addAll(bracket.getQuads(state, side, rand, data, renderType));
+    private static void addQuads(List<BakedQuad> quads, @Nullable BlockState state, @Nullable Direction side, RandomSource random, ModelData modelData, PipeModelData pipeData, @Nullable RenderType renderType) {
+        BakedModel bracketModel = pipeData.getBracket();
+        if (bracketModel != null) {
+            quads.addAll(bracketModel.getQuads(state, side, random, modelData, renderType));
         }
 
         for (Direction direction : Iterate.directions) {
-            AttachmentTypes type = pipeData.getAttachment(direction);
-            for (AirtightPipeAttachmentPartial partial : getPartials(type)) {
-                BakedModel model = CCBPartialModels.AIRTIGHT_PIPE_ATTACHMENTS.get(partial).get(direction).get();
-                quads.addAll(model.getQuads(state, side, rand, data, renderType));
+            AttachmentTypes attachmentType = pipeData.getAttachment(direction);
+            for (AirtightPipeAttachmentPartial partial : getPartials(attachmentType)) {
+                BakedModel attachmentModel = CCBPartialModels.AIRTIGHT_PIPE_ATTACHMENTS.get(partial).get(direction).get();
+                quads.addAll(attachmentModel.getQuads(state, side, random, modelData, renderType));
             }
         }
     }
 
     private static AttachmentTypes getFallbackAttachment(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction direction) {
-        BlockState adjacentState = level.getBlockState(pos.relative(direction));
+        BlockPos adjacentPos = pos.relative(direction);
+        BlockState adjacentState = level.getBlockState(adjacentPos);
         Block adjacentBlock = adjacentState.getBlock();
 
         if (state.getBlock() instanceof AirtightPumpBlock) {
-            if (adjacentBlock instanceof IAirtightPipeDrain drain && drain.shouldRenderDrain(level, pos.relative(direction), adjacentState, direction.getOpposite())) {
+            if (adjacentBlock instanceof IAirtightPipeDrain drain && drain.shouldRenderDrain(level, adjacentPos, adjacentState, direction.getOpposite())) {
                 return AttachmentTypes.DRAIN;
             }
             return AttachmentTypes.NONE;
@@ -92,14 +93,14 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
             return AttachmentTypes.NONE;
         }
 
-        if (adjacentBlock instanceof IAirtightPipeDrain drain && drain.shouldRenderDrain(level, pos.relative(direction), adjacentState, direction.getOpposite())) {
+        if (adjacentBlock instanceof IAirtightPipeDrain drain && drain.shouldRenderDrain(level, adjacentPos, adjacentState, direction.getOpposite())) {
             return AttachmentTypes.DRAIN;
         }
         return AttachmentTypes.RIM;
     }
 
-    private static AirtightPipeAttachmentPartial[] getPartials(AttachmentTypes type) {
-        return switch (type) {
+    private static AirtightPipeAttachmentPartial[] getPartials(AttachmentTypes attachmentType) {
+        return switch (attachmentType) {
             case NONE -> new AirtightPipeAttachmentPartial[0];
             case RIM -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.RIM};
             case DRAIN -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.DRAIN};
@@ -116,8 +117,8 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
         GasTransportBehaviour transport = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
         BracketedBlockEntityBehaviour bracket = BlockEntityBehaviour.get(level, pos, BracketedBlockEntityBehaviour.TYPE);
         for (Direction direction : Iterate.directions) {
-            AttachmentTypes attachment = transport == null ? getFallbackAttachment(level, pos, state, direction) : transport.getRenderedRimAttachment(level, pos, state, direction);
-            pipeData.putAttachment(direction, attachment);
+            AttachmentTypes attachmentType = transport == null ? getFallbackAttachment(level, pos, state, direction) : transport.getRenderedRimAttachment(level, pos, state, direction);
+            pipeData.putAttachment(direction, attachmentType);
         }
         if (bracket != null) {
             pipeData.putBracket(bracket.getBracket());
@@ -136,40 +137,40 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
     }
 
     @Override
-    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, RandomSource rand, ModelData data, @Nullable RenderType renderType) {
-        List<BakedQuad> quads = super.getQuads(state, side, rand, data, renderType);
-        if (!data.has(PIPE_PROPERTY)) {
+    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, RandomSource random, ModelData modelData, @Nullable RenderType renderType) {
+        List<BakedQuad> quads = super.getQuads(state, side, random, modelData, renderType);
+        if (!modelData.has(PIPE_PROPERTY)) {
             return quads;
         }
 
-        PipeModelData pipeData = data.get(PIPE_PROPERTY);
+        PipeModelData pipeData = modelData.get(PIPE_PROPERTY);
         quads = new ArrayList<>(quads);
         if (pipeData == null) {
             return quads;
         }
 
-        addQuads(quads, state, side, rand, data, pipeData, renderType);
+        addQuads(quads, state, side, random, modelData, pipeData, renderType);
         return quads;
     }
 
     @Override
-    public ChunkRenderTypeSet getRenderTypes(BlockState state, RandomSource rand, ModelData data) {
+    public ChunkRenderTypeSet getRenderTypes(BlockState state, RandomSource random, ModelData modelData) {
         List<ChunkRenderTypeSet> renderTypes = new ArrayList<>();
-        renderTypes.add(super.getRenderTypes(state, rand, data));
-        if (!data.has(PIPE_PROPERTY)) {
+        renderTypes.add(super.getRenderTypes(state, random, modelData));
+        if (!modelData.has(PIPE_PROPERTY)) {
             return ChunkRenderTypeSet.union(renderTypes);
         }
 
-        PipeModelData pipeData = data.get(PIPE_PROPERTY);
+        PipeModelData pipeData = modelData.get(PIPE_PROPERTY);
         if (pipeData == null) {
             return ChunkRenderTypeSet.union(renderTypes);
         }
 
         for (Direction direction : Iterate.directions) {
-            AttachmentTypes type = pipeData.getAttachment(direction);
-            for (AirtightPipeAttachmentPartial partial : getPartials(type)) {
-                BakedModel model = CCBPartialModels.AIRTIGHT_PIPE_ATTACHMENTS.get(partial).get(direction).get();
-                renderTypes.add(model.getRenderTypes(state, rand, data));
+            AttachmentTypes attachmentType = pipeData.getAttachment(direction);
+            for (AirtightPipeAttachmentPartial partial : getPartials(attachmentType)) {
+                BakedModel attachmentModel = CCBPartialModels.AIRTIGHT_PIPE_ATTACHMENTS.get(partial).get(direction).get();
+                renderTypes.add(attachmentModel.getRenderTypes(state, random, modelData));
             }
         }
         return ChunkRenderTypeSet.union(renderTypes);
@@ -189,12 +190,12 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
             attachments[direction.get3DDataValue()] = attachment;
         }
 
-        private void putBracket(@Nullable BlockState state) {
-            if (state == null) {
+        private void putBracket(@Nullable BlockState bracketState) {
+            if (bracketState == null) {
                 return;
             }
 
-            bracket = Minecraft.getInstance().getBlockRenderer().getBlockModel(state);
+            bracket = Minecraft.getInstance().getBlockRenderer().getBlockModel(bracketState);
         }
 
         @Nullable

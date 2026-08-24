@@ -59,7 +59,7 @@ public final class AirtightTankSerializationSupport {
 
     public static boolean readMultiblock(AbstractAirtightTankBlockEntity tank, CompoundTag tag, boolean clientPacket) {
         AirtightTankMultiblockController multiblock = tank.multiblockController();
-        BlockPos previousController = multiblock.getControllerPos();
+        BlockPos previousControllerPos = multiblock.getControllerPos();
         int previousWidth = multiblock.getWidth();
         int previousHeight = multiblock.getHeight();
 
@@ -75,14 +75,14 @@ public final class AirtightTankSerializationSupport {
         }
         multiblock.requestCapabilityRefresh();
 
-        return clientPacket && (!Objects.equals(previousController, multiblock.getControllerPos()) || previousWidth != multiblock.getWidth() || previousHeight != multiblock.getHeight());
+        return clientPacket && (!Objects.equals(previousControllerPos, multiblock.getControllerPos()) || previousWidth != multiblock.getWidth() || previousHeight != multiblock.getHeight());
     }
 
     private static @Nullable BlockPos readOptionalBlockPos(CompoundTag tag, String key) {
         return tag.contains(key) ? NBTHelper.readBlockPos(tag, key) : null;
     }
 
-    private static int readDimension(CompoundTag tag, String key, int maxValue) {
-        return tag.contains(key) ? Mth.clamp(tag.getInt(key), 1, maxValue) : 1;
+    private static int readDimension(CompoundTag tag, String key, int maxDimension) {
+        return tag.contains(key) ? Mth.clamp(tag.getInt(key), 1, maxDimension) : 1;
     }
 }

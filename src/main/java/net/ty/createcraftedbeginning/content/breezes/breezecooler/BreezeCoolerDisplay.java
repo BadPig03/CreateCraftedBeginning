@@ -44,28 +44,28 @@ public final class BreezeCoolerDisplay {
         CCBLang.translate("gui.breeze_cooler").forGoggles(tooltip);
         CCBLang.translate("gui.breeze_cooler.current_state").style(ChatFormatting.GRAY).forGoggles(tooltip);
         CCBLang.translate(frostLevel.getTranslatable()).style(frostLevel.getChatFormatting()).forGoggles(tooltip, 1);
-        int time = cooler.getCoolRemainingTime();
-        if (time > 0) {
+        int remainingCoolingTime = cooler.getCoolRemainingTime();
+        if (remainingCoolingTime > 0) {
             CCBLang.translate("gui.breeze_cooler.remaining_time").style(ChatFormatting.GRAY).forGoggles(tooltip);
             if (cooler.isCreative()) {
                 CCBLang.translate("gui.fluid_container.infinity").style(ChatFormatting.GREEN).forGoggles(tooltip, 1);
             }
             else {
-                CCBLang.seconds(time, cooler.getLevel().tickRateManager().tickrate()).style(ChatFormatting.GREEN).forGoggles(tooltip, 1);
+                CCBLang.seconds(remainingCoolingTime, cooler.getLevel().tickRateManager().tickrate()).style(ChatFormatting.GREEN).forGoggles(tooltip, 1);
             }
         }
 
-        IFluidHandler tank = cooler.getTankInventory();
-        FluidStack fluid = tank.getFluidInTank(0);
+        IFluidHandler fluidTank = cooler.getTankInventory();
+        FluidStack storedFluid = fluidTank.getFluidInTank(0);
         tooltip.add(CommonComponents.EMPTY);
         LangBuilder millibuckets = CCBLang.translate("gui.unit.milli_buckets");
         CCBLang.translate("gui.fluid_container.capacity").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        if (fluid.isEmpty()) {
-            CCBLang.number(tank.getTankCapacity(0)).add(millibuckets).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
+        if (storedFluid.isEmpty()) {
+            CCBLang.number(fluidTank.getTankCapacity(0)).add(millibuckets).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
         }
         else {
-            CCBLang.fluidName(fluid).style(ChatFormatting.WHITE).forGoggles(tooltip, 1);
-            CCBLang.number(fluid.getAmount()).add(millibuckets).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(tank.getTankCapacity(0)).add(millibuckets).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+            CCBLang.fluidName(storedFluid).style(ChatFormatting.WHITE).forGoggles(tooltip, 1);
+            CCBLang.number(storedFluid.getAmount()).add(millibuckets).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(fluidTank.getTankCapacity(0)).add(millibuckets).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
         }
         if (!isLiquidInvalid()) {
             return true;
@@ -83,8 +83,8 @@ public final class BreezeCoolerDisplay {
             return false;
         }
 
-        CoolingData data = cooler.getFluidCoolingData(fluid);
-        return data.time() <= 0 || data.amount() <= 0;
+        CoolingData coolingData = cooler.getFluidCoolingData(fluid);
+        return coolingData.time() <= 0 || coolingData.amount() <= 0;
     }
 
     public void spawnParticles() {
@@ -99,16 +99,16 @@ public final class BreezeCoolerDisplay {
 
         Vec3 center = VecHelper.getCenterOf(cooler.getBlockPos());
         Vec3 particlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125f).multiply(1, 0, 1));
-        boolean openTop = cooler.getLevel().getBlockState(cooler.getBlockPos().above()).getCollisionShape(cooler.getLevel(), cooler.getBlockPos().above()).isEmpty();
-        if (openTop || random.nextInt(4) == 0) {
+        boolean isTopOpen = cooler.getLevel().getBlockState(cooler.getBlockPos().above()).getCollisionShape(cooler.getLevel(), cooler.getBlockPos().above()).isEmpty();
+        if (isTopOpen || random.nextInt(4) == 0) {
             cooler.getLevel().addParticle(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 0, 0, 0);
         }
-        Vec3 chilledParticlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25, 1).normalize().scale((openTop ? 0.25 : 0.5) + random.nextDouble() * 0.125)).add(0, 0.5, 0);
+        Vec3 chilledParticlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25, 1).normalize().scale((isTopOpen ? 0.25 : 0.5) + random.nextDouble() * 0.125)).add(0, 0.5, 0);
         if (!cooler.getFrostLevelFromBlock().isAtLeast(FrostLevel.CHILLED)) {
             return;
         }
 
-        cooler.getLevel().addParticle(ParticleTypes.SNOWFLAKE, chilledParticlePos.x, chilledParticlePos.y, chilledParticlePos.z, 0, openTop ? 0.0625 : random.nextDouble() * 0.0125, 0);
+        cooler.getLevel().addParticle(ParticleTypes.SNOWFLAKE, chilledParticlePos.x, chilledParticlePos.y, chilledParticlePos.z, 0, isTopOpen ? 0.0625 : random.nextDouble() * 0.0125, 0);
     }
 
     public void playSound() {
@@ -130,14 +130,14 @@ public final class BreezeCoolerDisplay {
         for (int i = 0; i < 20; i++) {
             Vec3 offset = VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25, 1).normalize();
             Vec3 particlePos = center.add(offset.scale(0.5 + random.nextDouble() * 0.125)).add(0, 0.125, 0);
-            Vec3 motion = offset.scale(0.03125);
-            level.addParticle(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, motion.x, motion.y, motion.z);
+            Vec3 velocity = offset.scale(0.03125);
+            level.addParticle(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, velocity.x, velocity.y, velocity.z);
         }
     }
 
     public void tickAnimation(float targetAngle) {
-        boolean active = cooler.getBlockState().getValue(BreezeCoolerBlock.ATTACHED);
-        if (active) {
+        boolean isAttached = cooler.getBlockState().getValue(BreezeCoolerBlock.ATTACHED);
+        if (isAttached) {
             float facingAngle = (AngleHelper.horizontalAngle(cooler.getBlockState().getOptionalValue(BreezeCoolerBlock.FACING).orElse(Direction.SOUTH)) + 180) % 360;
             cooler.headAngle.chase(facingAngle, 0.125f, Chaser.EXP);
         }
@@ -145,7 +145,7 @@ public final class BreezeCoolerDisplay {
             cooler.headAngle.chase(targetAngle, 0.25f, Chaser.exp(5));
         }
         cooler.headAngle.tickChaser();
-        cooler.getHeadAnimationInternal().chase(active ? 1 : 0, 0.25f, Chaser.exp(0.25f));
+        cooler.getHeadAnimationInternal().chase(isAttached ? 1 : 0, 0.25f, Chaser.exp(0.25f));
         cooler.getHeadAnimationInternal().tickChaser();
     }
 

@@ -13,7 +13,6 @@ import net.ty.createcraftedbeginning.recipe.trie.AirtightWithGasRecipeTrie.Build
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -30,9 +29,8 @@ public class AirtightWithGasRecipeTrieFinder {
         CacheKey scopedKey = new CacheKey(cacheKey, level.getRecipeManager());
         return CACHED_TRIES.get(scopedKey, () -> {
             Builder<Recipe<?>> builder = AirtightWithGasRecipeTrie.builder();
-            List<RecipeHolder<? extends Recipe<?>>> recipes = RecipeFinder.get(scopedKey, level, conditions);
-            for (RecipeHolder<? extends Recipe<?>> holder : recipes) {
-                builder.insert(holder.value());
+            for (RecipeHolder<? extends Recipe<?>> recipeHolder : RecipeFinder.get(scopedKey, level, conditions)) {
+                builder.insert(recipeHolder.value());
             }
             return builder.build();
         });
@@ -55,12 +53,12 @@ public class AirtightWithGasRecipeTrieFinder {
 
     public static void invalidateFailures(Object cacheKey) {
         synchronized (FAILED_TRIES) {
-            Iterator<Set<Object>> iterator = FAILED_TRIES.values().iterator();
-            while (iterator.hasNext()) {
-                Set<Object> failedScopes = iterator.next();
+            Iterator<Set<Object>> failedScopeIterator = FAILED_TRIES.values().iterator();
+            while (failedScopeIterator.hasNext()) {
+                Set<Object> failedScopes = failedScopeIterator.next();
                 failedScopes.remove(cacheKey);
                 if (failedScopes.isEmpty()) {
-                    iterator.remove();
+                    failedScopeIterator.remove();
                 }
             }
         }

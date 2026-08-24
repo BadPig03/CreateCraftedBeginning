@@ -43,10 +43,10 @@ public class AirtightReactorKettleStructureManager {
         float totalTemperature = 0;
         for (int x = -1; x <= 1; x++) {
             for (int z = -1; z <= 1; z++) {
-                BlockPos pos = corePos.offset(x, -2, z);
-                BlockState state = level.getBlockState(pos);
-                AirtightThermoregulatorHandler thermoregulator = AirtightThermoregulatorHandlerUtils.of(state.getBlock());
-                totalTemperature += thermoregulator.getHeat(level, pos, state);
+                BlockPos thermoregulatorPos = corePos.offset(x, -2, z);
+                BlockState thermoregulatorState = level.getBlockState(thermoregulatorPos);
+                AirtightThermoregulatorHandler thermoregulatorHandler = AirtightThermoregulatorHandlerUtils.of(thermoregulatorState.getBlock());
+                totalTemperature += thermoregulatorHandler.getHeat(level, thermoregulatorPos, thermoregulatorState);
             }
         }
         return totalTemperature;
@@ -60,7 +60,7 @@ public class AirtightReactorKettleStructureManager {
     }
 
     private static float getTheoreticalSpeed(BlockPos corePos, Level level) {
-        float maxSpeed = 0;
+        float maxTheoreticalSpeed = 0;
         for (Direction direction : Iterate.horizontalDirections) {
             BlockPos cogPos = corePos.above().relative(direction);
             if (!(level.getBlockEntity(cogPos) instanceof AirtightReactorKettleStructuralCogBlockEntity cog)) {
@@ -68,12 +68,12 @@ public class AirtightReactorKettleStructureManager {
             }
 
             float candidateSpeed = Mth.abs(cog.getTheoreticalSpeed());
-            if (candidateSpeed > maxSpeed) {
-                maxSpeed = candidateSpeed;
+            if (candidateSpeed > maxTheoreticalSpeed) {
+                maxTheoreticalSpeed = candidateSpeed;
             }
         }
 
-        return maxSpeed;
+        return maxTheoreticalSpeed;
     }
 
     private static boolean isOverstressed(BlockPos corePos, Level level) {

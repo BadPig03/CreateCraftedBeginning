@@ -27,11 +27,11 @@ import java.util.Set;
 public final class AirtightForgingPressStructuralClientExtensions implements IClientBlockExtensions, MultiPosDestructionHandler {
     @Override
     public boolean addHitEffects(BlockState state, Level level, HitResult target, ParticleEngine manager) {
-        if (!(target instanceof BlockHitResult result)) {
+        if (!(target instanceof BlockHitResult hitResult)) {
             return false;
         }
 
-        BlockPos targetPos = result.getBlockPos();
+        BlockPos targetPos = hitResult.getBlockPos();
         BlockState targetState = level.getBlockState(targetPos);
         return targetState.getBlock() instanceof IAirtightForgingPressStructural structural && !structural.stillValid(level, targetPos, state);
     }
@@ -44,21 +44,21 @@ public final class AirtightForgingPressStructuralClientExtensions implements ICl
 
     @Override
     public @Nullable Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
-        BlockState currentState = level.getBlockState(pos);
-        if (currentState.getBlock() instanceof IAirtightForgingPressStructural structural && !structural.stillValid(level, pos, blockState)) {
+        BlockState currentBlockState = level.getBlockState(pos);
+        if (currentBlockState.getBlock() instanceof IAirtightForgingPressStructural structural && !structural.stillValid(level, pos, blockState)) {
             return null;
         }
 
         BlockPos masterPos = AirtightForgingPressUtils.getMaster(pos, blockState);
         HashSet<BlockPos> positions = new HashSet<>();
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                for (int k = -1; k <= 1; k++) {
-                    if (i == 0 && j == 0 && k == 0) {
+        for (int xOffset = -1; xOffset <= 1; xOffset++) {
+            for (int yOffset = -1; yOffset <= 1; yOffset++) {
+                for (int zOffset = -1; zOffset <= 1; zOffset++) {
+                    if (xOffset == 0 && yOffset == 0 && zOffset == 0) {
                         continue;
                     }
 
-                    positions.add(masterPos.offset(i, j, k));
+                    positions.add(masterPos.offset(xOffset, yOffset, zOffset));
                 }
             }
         }

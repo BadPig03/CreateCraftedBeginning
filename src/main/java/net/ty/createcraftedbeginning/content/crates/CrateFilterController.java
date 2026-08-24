@@ -19,8 +19,8 @@ public final class CrateFilterController {
             return ItemStack.EMPTY;
         }
 
-        ItemStack filter = filteringBehaviour.getFilter();
-        return filter.isEmpty() ? ItemStack.EMPTY : filter.copyWithCount(1);
+        ItemStack filterItem = filteringBehaviour.getFilter();
+        return filterItem.isEmpty() ? ItemStack.EMPTY : filterItem.copyWithCount(1);
     }
 
     public void setFilterItem(ItemStack filterItem) {

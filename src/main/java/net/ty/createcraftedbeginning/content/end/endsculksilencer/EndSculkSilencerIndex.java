@@ -17,28 +17,28 @@ public final class EndSculkSilencerIndex {
     private final Map<ResourceLocation, Map<BlockPos, EndSculkSilencerInstance>> instancesByDimension = new HashMap<>();
     private final Map<ResourceLocation, Long2IntOpenHashMap> coveredChunksByDimension = new HashMap<>();
 
-    private static void decrementCoverage(Long2IntOpenHashMap coveredChunks, long chunkKey) {
-        int count = coveredChunks.get(chunkKey);
-        if (count <= 0) {
+    private static void decrementCoverage(Long2IntOpenHashMap coverageCounts, long chunkKey) {
+        int coverageCount = coverageCounts.get(chunkKey);
+        if (coverageCount <= 0) {
             return;
         }
 
-        if (count == 1) {
-            coveredChunks.remove(chunkKey);
+        if (coverageCount == 1) {
+            coverageCounts.remove(chunkKey);
             return;
         }
 
-        coveredChunks.put(chunkKey, count - 1);
+        coverageCounts.put(chunkKey, coverageCount - 1);
     }
 
     public synchronized boolean hasCoverage(ResourceLocation dimension) {
-        Long2IntOpenHashMap coveredChunks = coveredChunksByDimension.get(dimension);
-        return coveredChunks != null && !coveredChunks.isEmpty();
+        Long2IntOpenHashMap coverageCounts = coveredChunksByDimension.get(dimension);
+        return coverageCounts != null && !coverageCounts.isEmpty();
     }
 
     public synchronized boolean isCovered(BlockPos blockPos, ResourceLocation dimension) {
-        Long2IntOpenHashMap coveredChunks = coveredChunksByDimension.get(dimension);
-        return coveredChunks != null && coveredChunks.containsKey(EndSculkSilencerInstance.chunkKey(blockPos));
+        Long2IntOpenHashMap coverageCounts = coveredChunksByDimension.get(dimension);
+        return coverageCounts != null && coverageCounts.containsKey(EndSculkSilencerInstance.chunkKey(blockPos));
     }
 
     public synchronized @Nullable EndSculkSilencerInstance get(BlockPos registrationPos, ResourceLocation dimension) {
@@ -52,19 +52,19 @@ public final class EndSculkSilencerIndex {
         }
 
         BlockPos immutableRegistrationPos = registrationPos.immutable();
-        Map<BlockPos, EndSculkSilencerInstance> instances = instancesByDimension.computeIfAbsent(dimension, $ -> new HashMap<>());
-        EndSculkSilencerInstance previous = instances.get(immutableRegistrationPos);
-        if (previous != null && previous.hasSameCoverage(effectCenter, range)) {
+        Map<BlockPos, EndSculkSilencerInstance> instances = instancesByDimension.computeIfAbsent(dimension, ignored -> new HashMap<>());
+        EndSculkSilencerInstance previousInstance = instances.get(immutableRegistrationPos);
+        if (previousInstance != null && previousInstance.hasSameCoverage(effectCenter, range)) {
             return false;
         }
 
-        if (previous != null) {
-            unindex(previous);
+        if (previousInstance != null) {
+            unindex(previousInstance);
         }
 
-        EndSculkSilencerInstance updated = new EndSculkSilencerInstance(immutableRegistrationPos, effectCenter, dimension, range);
-        instances.put(immutableRegistrationPos, updated);
-        index(updated);
+        EndSculkSilencerInstance updatedInstance = new EndSculkSilencerInstance(immutableRegistrationPos, effectCenter, dimension, range);
+        instances.put(immutableRegistrationPos, updatedInstance);
+        index(updatedInstance);
         return true;
     }
 
@@ -74,12 +74,12 @@ public final class EndSculkSilencerIndex {
             return false;
         }
 
-        EndSculkSilencerInstance removed = instances.remove(registrationPos);
-        if (removed == null) {
+        EndSculkSilencerInstance removedInstance = instances.remove(registrationPos);
+        if (removedInstance == null) {
             return false;
         }
 
-        unindex(removed);
+        unindex(removedInstance);
         if (!instances.isEmpty()) {
             return true;
         }
@@ -89,9 +89,9 @@ public final class EndSculkSilencerIndex {
     }
 
     public synchronized List<EndSculkSilencerInstance> removeDimension(ResourceLocation dimension) {
-        Map<BlockPos, EndSculkSilencerInstance> removed = instancesByDimension.remove(dimension);
+        Map<BlockPos, EndSculkSilencerInstance> removedInstances = instancesByDimension.remove(dimension);
         coveredChunksByDimension.remove(dimension);
-        return removed == null ? List.of() : List.copyOf(removed.values());
+        return removedInstances == null ? List.of() : List.copyOf(removedInstances.values());
     }
 
     public synchronized List<EndSculkSilencerInstance> getInstances(ResourceLocation dimension) {
@@ -105,18 +105,18 @@ public final class EndSculkSilencerIndex {
     }
 
     private void index(EndSculkSilencerInstance instance) {
-        Long2IntOpenHashMap coveredChunks = coveredChunksByDimension.computeIfAbsent(instance.dimension(), $ -> new Long2IntOpenHashMap());
-        instance.forEachCoveredChunk(chunkKey -> coveredChunks.addTo(chunkKey, 1));
+        Long2IntOpenHashMap coverageCounts = coveredChunksByDimension.computeIfAbsent(instance.dimension(), ignored -> new Long2IntOpenHashMap());
+        instance.forEachCoveredChunk(chunkKey -> coverageCounts.addTo(chunkKey, 1));
     }
 
     private void unindex(EndSculkSilencerInstance instance) {
-        Long2IntOpenHashMap coveredChunks = coveredChunksByDimension.get(instance.dimension());
-        if (coveredChunks == null) {
+        Long2IntOpenHashMap coverageCounts = coveredChunksByDimension.get(instance.dimension());
+        if (coverageCounts == null) {
             return;
         }
 
-        instance.forEachCoveredChunk(chunkKey -> decrementCoverage(coveredChunks, chunkKey));
-        if (!coveredChunks.isEmpty()) {
+        instance.forEachCoveredChunk(chunkKey -> decrementCoverage(coverageCounts, chunkKey));
+        if (!coverageCounts.isEmpty()) {
             return;
         }
 

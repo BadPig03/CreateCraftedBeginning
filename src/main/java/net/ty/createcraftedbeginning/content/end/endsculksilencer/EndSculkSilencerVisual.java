@@ -33,10 +33,6 @@ public class EndSculkSilencerVisual extends AbstractBlockEntityVisual<EndSculkSi
 
     @Override
     public void beginFrame(Context context) {
-        if (!isVisible(context.frustum()) || doDistanceLimitThisFrame(context)) {
-            return;
-        }
-
         animate(context.partialTick());
     }
 

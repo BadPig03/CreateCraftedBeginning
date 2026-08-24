@@ -18,41 +18,46 @@ import java.util.UUID;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class EndIncinerationBlowerOwner {
-    private static final String COMPOUND_KEY_OWNER = "Owner";
+    private static final String COMPOUND_KEY_OWNER = "IncinerationOwner";
     private static final String FAKE_PLAYER_NAME = "[CCB_EIB]";
     private static final String FAKE_PLAYER_UUID_PREFIX = "createcraftedbeginning:end_incineration_blower:";
 
     private GameProfile fakePlayerProfile;
-    private UUID owner;
+    private UUID ownerId;
 
-    public boolean setOwner(UUID owner) {
-        if (Objects.equals(this.owner, owner)) {
+    public boolean setOwner(UUID ownerId) {
+        if (Objects.equals(this.ownerId, ownerId)) {
             return false;
         }
 
-        this.owner = owner;
+        this.ownerId = ownerId;
         fakePlayerProfile = null;
         return true;
     }
 
     public void write(CompoundTag compoundTag) {
-        if (owner == null) {
+        if (ownerId == null) {
             return;
         }
 
-        compoundTag.putUUID(COMPOUND_KEY_OWNER, owner);
+        compoundTag.putUUID(COMPOUND_KEY_OWNER, ownerId);
     }
 
     public void read(CompoundTag compoundTag) {
-        owner = compoundTag.contains(COMPOUND_KEY_OWNER) ? compoundTag.getUUID(COMPOUND_KEY_OWNER) : null;
+        if (compoundTag.contains(COMPOUND_KEY_OWNER)) {
+            ownerId = compoundTag.getUUID(COMPOUND_KEY_OWNER);
+        }
+        else {
+            ownerId = null;
+        }
         fakePlayerProfile = null;
     }
 
     public FakePlayer getFakePlayer(ServerLevel level, BlockPos pos) {
         if (fakePlayerProfile == null) {
-            String identity = owner == null ? "unowned" : owner.toString();
-            UUID profileId = UUID.nameUUIDFromBytes((FAKE_PLAYER_UUID_PREFIX + identity).getBytes(StandardCharsets.UTF_8));
-            fakePlayerProfile = new GameProfile(profileId, FAKE_PLAYER_NAME);
+            String ownerIdentity = ownerId == null ? "unowned" : ownerId.toString();
+            UUID fakePlayerId = UUID.nameUUIDFromBytes((FAKE_PLAYER_UUID_PREFIX + ownerIdentity).getBytes(StandardCharsets.UTF_8));
+            fakePlayerProfile = new GameProfile(fakePlayerId, FAKE_PLAYER_NAME);
         }
 
         FakePlayer fakePlayer = FakePlayerFactory.get(level, fakePlayerProfile);

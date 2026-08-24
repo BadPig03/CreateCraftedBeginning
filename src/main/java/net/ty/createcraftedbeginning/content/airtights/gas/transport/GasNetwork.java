@@ -94,9 +94,9 @@ public final class GasNetwork {
             return;
         }
 
-        GasStack gas = traversal.getGas();
+        GasStack networkGas = traversal.getGas();
         long transferRateUnits = traversal.getTransferRateUnits();
-        if (gas.isEmpty() || transferRateUnits <= 0) {
+        if (networkGas.isEmpty() || transferRateUnits <= 0) {
             return;
         }
 
@@ -110,44 +110,44 @@ public final class GasNetwork {
             return;
         }
 
-        IGasHandler sourceCap = sourceProvider.getCapability();
-        if (sourceCap == null || !traversal.hasTransferTargets()) {
+        IGasHandler sourceHandler = sourceProvider.getCapability();
+        if (sourceHandler == null || !traversal.hasTransferTargets()) {
             return;
         }
 
-        GasStack available = GasTransferExecutor.simulateSourceDrain(sourceCap, gas, transferBudget);
-        if (available.isEmpty()) {
+        GasStack availableGas = GasTransferExecutor.simulateSourceDrain(sourceHandler, networkGas, transferBudget);
+        if (availableGas.isEmpty()) {
             return;
         }
 
-        List<PlannedTransfer> transferPlan = planner.createTransferPlan(available, sourceCap);
+        List<PlannedTransfer> transferPlan = planner.createTransferPlan(availableGas, sourceHandler);
         if (transferPlan.isEmpty()) {
             return;
         }
 
-        GasStack remainder = GasTransferExecutor.executeTransferPlan(sourceCap, available, transferPlan);
-        if (remainder.isEmpty()) {
+        GasStack remainingGas = GasTransferExecutor.executeTransferPlan(sourceHandler, availableGas, transferPlan);
+        if (remainingGas.isEmpty()) {
             return;
         }
 
-        remainder = redistributeRemainder(sourceCap, remainder);
-        if (remainder.isEmpty()) {
+        remainingGas = redistributeRemainder(sourceHandler, remainingGas);
+        if (remainingGas.isEmpty()) {
             return;
         }
 
-        setPendingTransfer(sourceProvider, remainder);
+        setPendingTransfer(sourceProvider, remainingGas);
         recoverPendingTransferInternal();
     }
 
     private long consumeTransferBudget(long transferRateUnits) {
-        Step step = GasTransferBudget.consume(transferRateUnits, transferCreditUnits);
-        transferCreditUnits = step.creditUnits();
-        return step.budget();
+        Step budgetStep = GasTransferBudget.consume(transferRateUnits, transferCreditUnits);
+        transferCreditUnits = budgetStep.creditUnits();
+        return budgetStep.budget();
     }
 
     private void recoverPendingTransferToTargets() {
-        GasStack gas = traversal.getGas();
-        if (pendingTransfer.isEmpty() || gas.isEmpty() || !GasStack.isSameGasSameComponents(pendingTransfer, gas) || !traversal.hasTransferTargets()) {
+        GasStack networkGas = traversal.getGas();
+        if (pendingTransfer.isEmpty() || networkGas.isEmpty() || !GasStack.isSameGasSameComponents(pendingTransfer, networkGas) || !traversal.hasTransferTargets()) {
             pendingTransfer.isEmpty();
             return;
         }
@@ -160,39 +160,39 @@ public final class GasNetwork {
             return;
         }
 
-        IGasHandler sourceCap = sourceProvider.getCapability();
-        if (sourceCap == null) {
+        IGasHandler sourceHandler = sourceProvider.getCapability();
+        if (sourceHandler == null) {
             return;
         }
 
-        GasStack remainder = distributeToTargets(sourceCap, pendingTransfer.copy(), 2);
-        setPendingTransfer(sourceProvider, remainder);
+        GasStack remainingGas = distributeToTargets(sourceHandler, pendingTransfer.copy(), 2);
+        setPendingTransfer(sourceProvider, remainingGas);
         pendingTransfer.isEmpty();
     }
 
-    private GasStack redistributeRemainder(IGasHandler sourceCap, GasStack remainder) {
-        GasStack gas = traversal.getGas();
-        if (remainder.isEmpty() || gas.isEmpty() || !GasStack.isSameGasSameComponents(remainder, gas)) {
-            return remainder;
+    private GasStack redistributeRemainder(IGasHandler sourceHandler, GasStack remainingGas) {
+        GasStack networkGas = traversal.getGas();
+        if (remainingGas.isEmpty() || networkGas.isEmpty() || !GasStack.isSameGasSameComponents(remainingGas, networkGas)) {
+            return remainingGas;
         }
-        return distributeToTargets(sourceCap, remainder, 1);
+        return distributeToTargets(sourceHandler, remainingGas, 1);
     }
 
-    private GasStack distributeToTargets(IGasHandler sourceCap, GasStack available, int maxPasses) {
-        if (available.isEmpty() || maxPasses <= 0) {
-            return available;
+    private GasStack distributeToTargets(IGasHandler sourceHandler, GasStack availableGas, int maxPasses) {
+        if (availableGas.isEmpty() || maxPasses <= 0) {
+            return availableGas;
         }
 
-        GasStack remainder = available.copy();
-        for (int pass = 0; pass < maxPasses && !remainder.isEmpty() && planner.hasProbeBudget(); pass++) {
-            List<PlannedTransfer> transferPlan = planner.createTransferPlan(remainder, sourceCap);
+        GasStack remainingGas = availableGas.copy();
+        for (int pass = 0; pass < maxPasses && !remainingGas.isEmpty() && planner.hasProbeBudget(); pass++) {
+            List<PlannedTransfer> transferPlan = planner.createTransferPlan(remainingGas, sourceHandler);
             if (transferPlan.isEmpty()) {
                 continue;
             }
 
-            remainder = GasTransferExecutor.executeTargetPlan(remainder, transferPlan);
+            remainingGas = GasTransferExecutor.executeTargetPlan(remainingGas, transferPlan);
         }
-        return remainder;
+        return remainingGas;
     }
 
     private boolean recoverPendingTransferInternal() {
@@ -201,47 +201,47 @@ public final class GasNetwork {
         }
 
         ICapabilityProvider<IGasHandler> sourceProvider = pendingSourceProvider;
-        IGasHandler sourceCap = sourceProvider == null ? null : sourceProvider.getCapability();
-        if (sourceCap == null) {
+        IGasHandler sourceHandler = sourceProvider == null ? null : sourceProvider.getCapability();
+        if (sourceHandler == null) {
             sourceProvider = sourceSupplier.get();
             if (sourceProvider == null) {
                 return false;
             }
 
-            sourceCap = sourceProvider.getCapability();
-            if (sourceCap == null) {
+            sourceHandler = sourceProvider.getCapability();
+            if (sourceHandler == null) {
                 return false;
             }
         }
 
-        if (sourceCap instanceof IVentingGasSource) {
+        if (sourceHandler instanceof IVentingGasSource) {
             setPendingTransfer(null, GasStack.EMPTY);
             return true;
         }
 
-        long returned = sourceCap.fill(pendingTransfer.copy(), GasAction.EXECUTE);
-        returned = Math.clamp(returned, 0, pendingTransfer.getAmount());
-        if (returned <= 0) {
+        long returnedAmount = sourceHandler.fill(pendingTransfer.copy(), GasAction.EXECUTE);
+        returnedAmount = Math.clamp(returnedAmount, 0, pendingTransfer.getAmount());
+        if (returnedAmount <= 0) {
             pendingSourceProvider = sourceProvider;
             return false;
         }
 
-        GasStack remainder = pendingTransfer.copy();
-        remainder.shrink(returned);
-        setPendingTransfer(remainder.isEmpty() ? null : sourceProvider, remainder);
+        GasStack remainingTransfer = pendingTransfer.copy();
+        remainingTransfer.shrink(returnedAmount);
+        setPendingTransfer(remainingTransfer.isEmpty() ? null : sourceProvider, remainingTransfer);
         return pendingTransfer.isEmpty();
     }
 
-    private void setPendingTransfer(@Nullable ICapabilityProvider<IGasHandler> sourceProvider, GasStack remainder) {
-        GasStack normalized = remainder.isEmpty() ? GasStack.EMPTY : remainder.copy();
-        boolean changed = !GasStack.matches(pendingTransfer, normalized);
-        pendingTransfer = normalized;
-        pendingSourceProvider = normalized.isEmpty() ? null : sourceProvider;
-        if (!changed) {
+    private void setPendingTransfer(@Nullable ICapabilityProvider<IGasHandler> sourceProvider, GasStack remainingTransfer) {
+        GasStack normalizedTransfer = remainingTransfer.isEmpty() ? GasStack.EMPTY : remainingTransfer.copy();
+        boolean pendingTransferChanged = !GasStack.matches(pendingTransfer, normalizedTransfer);
+        pendingTransfer = normalizedTransfer;
+        pendingSourceProvider = normalizedTransfer.isEmpty() ? null : sourceProvider;
+        if (!pendingTransferChanged) {
             return;
         }
 
-        pendingTransferSink.accept(normalized.isEmpty() ? GasStack.EMPTY : normalized.copy());
+        pendingTransferSink.accept(normalizedTransfer.isEmpty() ? GasStack.EMPTY : normalizedTransfer.copy());
         BlockEntity blockEntity = level.getBlockEntity(start.getPos());
         if (blockEntity == null) {
             return;

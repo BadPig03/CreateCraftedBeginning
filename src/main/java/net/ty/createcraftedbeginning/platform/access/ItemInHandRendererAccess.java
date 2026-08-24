@@ -8,7 +8,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public interface ItemInHandRendererAccess {
-    ItemStack getMainHandItem();
+    ItemStack ccb$getMainHandItem();
 
-    ItemStack getOffHandItem();
+    ItemStack ccb$getOffHandItem();
 }

@@ -32,22 +32,22 @@ public final class GasLogisticsUtils {
     }
 
     public static int getUniqueStockOf(UUID network, ItemStack stack, @Nullable IdentifiedInventory ignoredInventory) {
-        long total = 0;
+        long totalStock = 0;
         Set<InventoryIdentifier> processedInventories = new HashSet<>();
         for (LogisticallyLinkedBehaviour link : LogisticallyLinkedBehaviour.getAllPresent(network, false)) {
-            InventoryIdentifier identifier = getGasInventoryIdentifier(link);
-            if (identifier != null && !processedInventories.add(identifier)) {
+            InventoryIdentifier gasInventoryIdentifier = getGasInventoryIdentifier(link);
+            if (gasInventoryIdentifier != null && !processedInventories.add(gasInventoryIdentifier)) {
                 continue;
             }
 
-            total += Math.max(0, link.getSummary(ignoredInventory).getCountOf(stack));
-            if (total < BigItemStack.INF) {
+            totalStock += Math.max(0, link.getSummary(ignoredInventory).getCountOf(stack));
+            if (totalStock < BigItemStack.INF) {
                 continue;
             }
 
             return BigItemStack.INF;
         }
-        return (int) total;
+        return (int) totalStock;
     }
 
     public static void submitNewArrivals(Collection<RequestPromiseQueue> queues, InventoryIdentifier inventory, @Nullable InventorySummary localPrevious, InventorySummary current) {
@@ -60,18 +60,18 @@ public final class GasLogisticsUtils {
         synchronized (ARRIVAL_SNAPSHOTS) {
             Map<InventorySummary, List<BigItemStack>> increasesByPrevious = new IdentityHashMap<>();
             for (RequestPromiseQueue queue : queues) {
-                Map<InventoryIdentifier, InventorySummary> snapshots = ARRIVAL_SNAPSHOTS.computeIfAbsent(queue, $ -> new HashMap<>());
-                InventorySummary previous = snapshots.get(inventory);
-                if (previous == null) {
-                    previous = localPrevious;
+                Map<InventoryIdentifier, InventorySummary> inventorySnapshots = ARRIVAL_SNAPSHOTS.computeIfAbsent(queue, ignoredQueue -> new HashMap<>());
+                InventorySummary previousSnapshot = inventorySnapshots.get(inventory);
+                if (previousSnapshot == null) {
+                    previousSnapshot = localPrevious;
                 }
 
-                snapshots.put(inventory, currentSnapshot);
-                if (previous == null) {
+                inventorySnapshots.put(inventory, currentSnapshot);
+                if (previousSnapshot == null) {
                     continue;
                 }
 
-                List<BigItemStack> arrivals = increasesByPrevious.computeIfAbsent(previous, key -> findIncreases(key, currentSnapshot));
+                List<BigItemStack> arrivals = increasesByPrevious.computeIfAbsent(previousSnapshot, snapshot -> findIncreases(snapshot, currentSnapshot));
                 if (!arrivals.isEmpty()) {
                     deliveries.add(new ArrivalDelivery(queue, arrivals));
                 }
@@ -94,24 +94,24 @@ public final class GasLogisticsUtils {
     }
 
     private static InventorySummary copySummary(InventorySummary source) {
-        InventorySummary copy = new InventorySummary();
+        InventorySummary snapshotCopy = new InventorySummary();
         for (BigItemStack entry : source.getStacks()) {
-            copy.add(entry.stack.copy(), entry.count);
+            snapshotCopy.add(entry.stack.copy(), entry.count);
         }
-        return copy;
+        return snapshotCopy;
     }
 
     private static List<BigItemStack> findIncreases(InventorySummary previous, InventorySummary current) {
-        List<BigItemStack> increases = new ArrayList<>();
+        List<BigItemStack> stockIncreases = new ArrayList<>();
         for (BigItemStack entry : current.getStacks()) {
-            int increase = entry.count - previous.getCountOf(entry.stack);
-            if (increase <= 0) {
+            int increasedCount = entry.count - previous.getCountOf(entry.stack);
+            if (increasedCount <= 0) {
                 continue;
             }
 
-            increases.add(new BigItemStack(entry.stack.copyWithCount(1), increase));
+            stockIncreases.add(new BigItemStack(entry.stack.copyWithCount(1), increasedCount));
         }
-        return increases;
+        return stockIncreases;
     }
 
     private record ArrivalDelivery(RequestPromiseQueue queue, List<BigItemStack> arrivals) {}

@@ -101,19 +101,19 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
             return InteractionResultHolder.success(ItemStack.EMPTY);
         }
 
-        ItemStack container;
+        ItemStack returnedContainer;
         if (stack.getItem() instanceof DispensibleContainerItem) {
-            container = new ItemStack(Items.BUCKET);
+            returnedContainer = new ItemStack(Items.BUCKET);
         }
         else {
-            container = stack.hasCraftingRemainingItem() ? stack.getCraftingRemainingItem() : ItemStack.EMPTY;
+            returnedContainer = stack.hasCraftingRemainingItem() ? stack.getCraftingRemainingItem() : ItemStack.EMPTY;
         }
         if (simulate || level.isClientSide) {
-            return InteractionResultHolder.success(container);
+            return InteractionResultHolder.success(returnedContainer);
         }
 
         stack.shrink(1);
-        return InteractionResultHolder.success(container);
+        return InteractionResultHolder.success(returnedContainer);
     }
 
     @Override
@@ -150,14 +150,14 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
         }
 
         if (stack.isEmpty()) {
-            return onBlockEntityUseItemOn(level, pos, blockEntity -> setGoggles(blockEntity, false));
+            return onBlockEntityUseItemOn(level, pos, be -> setGoggles(be, false));
         }
 
         boolean doNotConsume = player.isCreative();
         boolean forceOverflow = !(player instanceof FakePlayer);
-        InteractionResultHolder<ItemStack> resultHolder = tryInsert(state, level, pos, stack, doNotConsume, forceOverflow, false);
-        ItemInteractionResult interactionResult = resultHolder.getResult() == InteractionResult.SUCCESS ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        ItemStack leftover = resultHolder.getObject();
+        InteractionResultHolder<ItemStack> insertResult = tryInsert(state, level, pos, stack, doNotConsume, forceOverflow, false);
+        ItemInteractionResult interactionResult = insertResult.getResult() == InteractionResult.SUCCESS ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        ItemStack leftover = insertResult.getObject();
         if (level.isClientSide || doNotConsume || leftover.isEmpty()) {
             return interactionResult;
         }

@@ -20,13 +20,13 @@ public final class AirVentVoxelShapes {
     private static final VoxelShape[] SHAPES = new VoxelShape[64];
 
     static {
-        for (int mask = 0; mask < SHAPES.length; mask++) {
-            SHAPES[mask] = createShape(hasOpening(mask, Direction.NORTH), hasOpening(mask, Direction.SOUTH), hasOpening(mask, Direction.EAST), hasOpening(mask, Direction.WEST), hasOpening(mask, Direction.UP), hasOpening(mask, Direction.DOWN));
+        for (int openingMask = 0; openingMask < SHAPES.length; openingMask++) {
+            SHAPES[openingMask] = createShape(hasOpening(openingMask, Direction.NORTH), hasOpening(openingMask, Direction.SOUTH), hasOpening(openingMask, Direction.EAST), hasOpening(openingMask, Direction.WEST), hasOpening(openingMask, Direction.UP), hasOpening(openingMask, Direction.DOWN));
         }
     }
 
-    private static boolean hasOpening(int mask, Direction direction) {
-        return (mask & 1 << direction.get3DDataValue()) != 0;
+    private static boolean hasOpening(int openingMask, Direction direction) {
+        return (openingMask & 1 << direction.get3DDataValue()) != 0;
     }
 
     private static VoxelShape createShape(boolean northOpen, boolean southOpen, boolean eastOpen, boolean westOpen, boolean upOpen, boolean downOpen) {

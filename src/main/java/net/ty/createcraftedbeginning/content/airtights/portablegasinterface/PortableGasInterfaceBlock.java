@@ -57,12 +57,12 @@ public class PortableGasInterfaceBlock extends WrenchableDirectionalBlock implem
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
         Direction previousFacing = state.getValue(FACING);
-        InteractionResult result = super.onWrenched(state, context);
+        InteractionResult wrenchResult = super.onWrenched(state, context);
         BlockState updatedState = level.getBlockState(pos);
         if (!level.isClientSide && updatedState.getBlock() == this && updatedState.getValue(FACING) != previousFacing) {
             withBlockEntityDo(level, pos, PortableGasInterfaceBlockEntity::onFacingChanged);
         }
-        return result;
+        return wrenchResult;
     }
 
     @Override
@@ -73,19 +73,18 @@ public class PortableGasInterfaceBlock extends WrenchableDirectionalBlock implem
 
     @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
-        BlockState state = super.getStateForPlacement(context);
-        if (state == null) {
+        BlockState placementState = super.getStateForPlacement(context);
+        if (placementState == null) {
             return null;
         }
 
-        Direction facing = context.getNearestLookingDirection();
+        Direction placementFacing = context.getNearestLookingDirection();
         Player player = context.getPlayer();
         if (player != null && player.isShiftKeyDown()) {
-            return state.setValue(FACING, facing);
+            return placementState.setValue(FACING, placementFacing);
         }
 
-        facing = facing.getOpposite();
-        return state.setValue(FACING, facing);
+        return placementState.setValue(FACING, placementFacing.getOpposite());
     }
 
     @Override

@@ -63,11 +63,11 @@ public class CreativeGasCanisterBlock extends Block implements IBE<CreativeGasCa
 
     @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
-        BlockState state = super.getStateForPlacement(context);
-        if (state == null) {
+        BlockState placementState = super.getStateForPlacement(context);
+        if (placementState == null) {
             return null;
         }
-        return ProperWaterloggedBlock.withWater(context.getLevel(), state, context.getClickedPos());
+        return ProperWaterloggedBlock.withWater(context.getLevel(), placementState, context.getClickedPos());
     }
 
     @Override
@@ -78,7 +78,7 @@ public class CreativeGasCanisterBlock extends Block implements IBE<CreativeGasCa
             return;
         }
 
-        withBlockEntityDo(level, pos, be -> be.setCanisterContent(stack));
+        withBlockEntityDo(level, pos, canister -> canister.setCanisterContent(stack));
     }
 
     @Override
@@ -121,25 +121,24 @@ public class CreativeGasCanisterBlock extends Block implements IBE<CreativeGasCa
             return drops;
         }
 
-        BlockEntity blockEntity = builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
-        if (!(blockEntity instanceof CreativeGasCanisterBlockEntity canister)) {
+        if (!(builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof CreativeGasCanisterBlockEntity canister)) {
             return drops;
         }
 
         ItemStack storedCanister = canister.getCanister();
-        List<ItemStack> result = new ArrayList<>(drops);
-        for (int i = 0; i < result.size(); i++) {
-            ItemStack drop = result.get(i);
+        List<ItemStack> updatedDrops = new ArrayList<>(drops);
+        for (int dropIndex = 0; dropIndex < updatedDrops.size(); dropIndex++) {
+            ItemStack drop = updatedDrops.get(dropIndex);
             if (!drop.is(storedCanister.getItem())) {
                 continue;
             }
 
-            ItemStack copiedCanister = storedCanister.copy();
-            copiedCanister.setCount(drop.getCount());
-            result.set(i, copiedCanister);
+            ItemStack canisterDrop = storedCanister.copy();
+            canisterDrop.setCount(drop.getCount());
+            updatedDrops.set(dropIndex, canisterDrop);
             break;
         }
-        return result;
+        return updatedDrops;
     }
 
     @Override
@@ -150,11 +149,11 @@ public class CreativeGasCanisterBlock extends Block implements IBE<CreativeGasCa
     @Override
     public ItemRequirement getRequiredItems(BlockState state, @Nullable BlockEntity blockEntity) {
         Item item = asItem();
-        if (!(item instanceof CreativeGasCanisterBlockItem placeable)) {
+        if (!(item instanceof CreativeGasCanisterBlockItem blockItem)) {
             return new ItemRequirement(ItemUseType.CONSUME, item);
         }
 
-        item = placeable.getActualItem();
+        item = blockItem.getActualItem();
         return new ItemRequirement(ItemUseType.CONSUME, item);
     }
 

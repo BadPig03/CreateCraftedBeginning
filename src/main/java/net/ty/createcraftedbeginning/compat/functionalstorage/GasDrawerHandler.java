@@ -18,14 +18,14 @@ public final class GasDrawerHandler implements IGasHandler {
     public GasDrawerHandler(GasDrawerBlockEntity owner, int size, IntFunction<GasDrawerTank> tankFactory) {
         this.owner = owner;
         tanks = new GasDrawerTank[size];
-        for (int tank = 0; tank < size; tank++) {
-            tanks[tank] = tankFactory.apply(tank);
+        for (int tankIndex = 0; tankIndex < size; tankIndex++) {
+            tanks[tankIndex] = tankFactory.apply(tankIndex);
         }
     }
 
     public static boolean hasResources(List<GasStack> resources) {
-        for (GasStack resource : resources) {
-            if (resource == null || resource.isEmpty()) {
+        for (GasStack gasStack : resources) {
+            if (gasStack == null || gasStack.isEmpty()) {
                 continue;
             }
 
@@ -65,12 +65,12 @@ public final class GasDrawerHandler implements IGasHandler {
         }
 
         for (GasDrawerTank tank : tanks) {
-            GasStack drained = tank.drain(resource, action);
-            if (drained.isEmpty()) {
+            GasStack drainedGas = tank.drain(resource, action);
+            if (drainedGas.isEmpty()) {
                 continue;
             }
 
-            return drained;
+            return drainedGas;
         }
         return GasStack.EMPTY;
     }
@@ -82,12 +82,12 @@ public final class GasDrawerHandler implements IGasHandler {
         }
 
         for (GasDrawerTank tank : tanks) {
-            GasStack drained = tank.drain(maxDrain, action);
-            if (drained.isEmpty()) {
+            GasStack drainedGas = tank.drain(maxDrain, action);
+            if (drainedGas.isEmpty()) {
                 continue;
             }
 
-            return drained;
+            return drainedGas;
         }
         return GasStack.EMPTY;
     }
@@ -108,26 +108,26 @@ public final class GasDrawerHandler implements IGasHandler {
             return 0;
         }
 
-        long accepted = fillExisting(resource, action);
-        if (accepted > 0) {
-            return accepted;
+        long acceptedAmount = fillExisting(resource, action);
+        if (acceptedAmount > 0) {
+            return acceptedAmount;
         }
         return fillEmpty(resource, action);
     }
 
     private long fillExisting(GasStack resource, GasAction action) {
         for (GasDrawerTank tank : tanks) {
-            GasStack stored = tank.getStoredStack();
-            if (stored.isEmpty() || !GasStack.isSameGasSameComponents(stored, resource)) {
+            GasStack storedGas = tank.getStoredStack();
+            if (storedGas.isEmpty() || !GasStack.isSameGasSameComponents(storedGas, resource)) {
                 continue;
             }
 
-            long accepted = fillTank(tank, resource, action);
-            if (accepted <= 0) {
+            long acceptedAmount = fillTank(tank, resource, action);
+            if (acceptedAmount <= 0) {
                 continue;
             }
 
-            return accepted;
+            return acceptedAmount;
         }
         return 0;
     }
@@ -138,20 +138,20 @@ public final class GasDrawerHandler implements IGasHandler {
                 continue;
             }
 
-            long accepted = fillTank(tank, resource, action);
-            if (accepted <= 0) {
+            long acceptedAmount = fillTank(tank, resource, action);
+            if (acceptedAmount <= 0) {
                 continue;
             }
 
-            return accepted;
+            return acceptedAmount;
         }
         return 0;
     }
 
     private static long fillTank(GasDrawerTank tank, GasStack resource, GasAction action) {
-        long accepted = tank.fill(resource, GasAction.SIMULATE);
-        if (accepted <= 0 || !action.execute()) {
-            return accepted;
+        long acceptedAmount = tank.fill(resource, GasAction.SIMULATE);
+        if (acceptedAmount <= 0 || !action.execute()) {
+            return acceptedAmount;
         }
         return tank.fill(resource, GasAction.EXECUTE);
     }
@@ -162,19 +162,19 @@ public final class GasDrawerHandler implements IGasHandler {
             return AtomicFillResult.SUCCESS;
         }
 
-        GasStack[] snapshot = snapshotContents();
+        GasStack[] contentSnapshot = snapshotContents();
         owner.beginTransaction();
-        boolean success;
-        boolean commit = false;
+        boolean filledAllResources;
+        boolean shouldCommit = false;
         try {
-            success = fillAll(resources);
-            commit = success && action.execute();
-            return success ? AtomicFillResult.SUCCESS : AtomicFillResult.REJECTED;
+            filledAllResources = fillAll(resources);
+            shouldCommit = filledAllResources && action.execute();
+            return filledAllResources ? AtomicFillResult.SUCCESS : AtomicFillResult.REJECTED;
         } finally {
-            if (!commit) {
-                restoreContents(snapshot);
+            if (!shouldCommit) {
+                restoreContents(contentSnapshot);
             }
-            owner.endTransaction(commit);
+            owner.endTransaction(shouldCommit);
         }
     }
 
@@ -184,8 +184,8 @@ public final class GasDrawerHandler implements IGasHandler {
     }
 
     private boolean fillAll(List<GasStack> resources) {
-        for (GasStack resource : resources) {
-            if (resource == null || resource.isEmpty() || fill(resource, GasAction.EXECUTE) == resource.getAmount()) {
+        for (GasStack gasStack : resources) {
+            if (gasStack == null || gasStack.isEmpty() || fill(gasStack, GasAction.EXECUTE) == gasStack.getAmount()) {
                 continue;
             }
 
@@ -199,16 +199,16 @@ public final class GasDrawerHandler implements IGasHandler {
     }
 
     public GasStack[] snapshotContents() {
-        GasStack[] snapshot = new GasStack[tanks.length];
-        for (int tank = 0; tank < tanks.length; tank++) {
-            snapshot[tank] = tanks[tank].getStoredStack().copy();
+        GasStack[] contentSnapshot = new GasStack[tanks.length];
+        for (int tankIndex = 0; tankIndex < tanks.length; tankIndex++) {
+            contentSnapshot[tankIndex] = tanks[tankIndex].getStoredStack().copy();
         }
-        return snapshot;
+        return contentSnapshot;
     }
 
-    public void restoreContents(GasStack[] snapshot) {
-        for (int tank = 0; tank < tanks.length; tank++) {
-            tanks[tank].setGasStack(snapshot[tank].copy());
+    public void restoreContents(GasStack[] contentSnapshot) {
+        for (int tankIndex = 0; tankIndex < tanks.length; tankIndex++) {
+            tanks[tankIndex].setGasStack(contentSnapshot[tankIndex].copy());
         }
     }
 

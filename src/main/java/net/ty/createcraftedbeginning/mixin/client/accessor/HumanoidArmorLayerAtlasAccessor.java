@@ -19,21 +19,21 @@ import java.util.Map;
 @Mixin(HumanoidArmorLayer.class)
 public interface HumanoidArmorLayerAtlasAccessor extends HumanoidArmorLayerAccess {
     @Accessor("ARMOR_LOCATION_CACHE")
-    static Map<String, ResourceLocation> getArmorLocationCache() {
+    static Map<String, ResourceLocation> ccb$getArmorLocationCache() {
         throw new RuntimeException();
     }
 
     @Override
     @Accessor("innerModel")
-    HumanoidModel<?> getInnerModel();
+    HumanoidModel<?> ccb$getInnerModel();
 
     @Override
     @Accessor("outerModel")
-    HumanoidModel<?> getOuterModel();
+    HumanoidModel<?> ccv$getOuterModel();
 
     @Override
     @Accessor("armorTrimAtlas")
-    TextureAtlas getArmorTrimAtlas();
+    TextureAtlas ccb$getArmorTrimAtlas();
 
     @Override
     @Invoker("setPartVisibility")

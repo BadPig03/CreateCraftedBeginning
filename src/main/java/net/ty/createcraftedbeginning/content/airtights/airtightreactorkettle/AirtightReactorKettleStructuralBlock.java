@@ -65,9 +65,9 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
         BlockPos masterPos = AirtightReactorKettleUtils.getMaster(clickedPos, state);
         Player player = context.getPlayer();
         InteractionHand hand = context.getHand();
-        ItemStack stack = context.getItemInHand();
+        ItemStack heldStack = context.getItemInHand();
         BlockHitResult masterHit = new BlockHitResult(context.getClickLocation(), context.getClickedFace(), masterPos, context.isInside());
-        UseOnContext masterContext = new UseOnContext(level, player, hand, stack, masterHit);
+        UseOnContext masterContext = new UseOnContext(level, player, hand, heldStack, masterHit);
         BlockState masterState = level.getBlockState(masterPos);
         return IWrenchable.super.onSneakWrenched(masterState, masterContext);
     }
@@ -151,17 +151,17 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
 
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        AirtightReactorKettleStructuralPosition position = state.getValue(STRUCTURAL_POSITION);
-        VoxelShape shape = AirtightReactorKettleVoxelShapes.getShape(position);
+        AirtightReactorKettleStructuralPosition structuralPosition = state.getValue(STRUCTURAL_POSITION);
+        VoxelShape baseShape = AirtightReactorKettleVoxelShapes.getShape(structuralPosition);
         BlockPos masterPos = AirtightReactorKettleUtils.getMaster(pos, state);
-        if (!(level.getBlockEntity(masterPos) instanceof AirtightReactorKettleBlockEntity master) || master.getWindowsOpenState()) {
-            return shape;
+        if (!(level.getBlockEntity(masterPos) instanceof AirtightReactorKettleBlockEntity kettle) || kettle.getWindowsOpenState()) {
+            return baseShape;
         }
 
-        if (!position.isWindow(0)) {
-            return shape;
+        if (!structuralPosition.isWindow(0)) {
+            return baseShape;
         }
-        return CCBShapes.AIRTIGHT_REACTOR_KETTLE_MID_MID_CLOSED.get(position.getDirection());
+        return CCBShapes.AIRTIGHT_REACTOR_KETTLE_MID_MID_CLOSED.get(structuralPosition.getDirection());
     }
 
     @Override
@@ -180,7 +180,7 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
         }
 
         if (entity instanceof ItemEntity itemEntity && itemEntity.isAlive() && itemEntity.onGround()) {
-            withBlockEntityDo(level, blockPos, be -> AirtightReactorKettleUtils.insertItemEntity(be, itemEntity));
+            withBlockEntityDo(level, blockPos, structuralEntity -> AirtightReactorKettleUtils.insertItemEntity(structuralEntity, itemEntity));
             return;
         }
 
@@ -188,7 +188,7 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
             return;
         }
 
-        withBlockEntityDo(level, blockPos, be -> AirtightReactorKettleUtils.hurtInsideLivingEntities(be, livingEntity));
+        withBlockEntityDo(level, blockPos, structuralEntity -> AirtightReactorKettleUtils.hurtInsideLivingEntities(structuralEntity, livingEntity));
     }
 
     @Override

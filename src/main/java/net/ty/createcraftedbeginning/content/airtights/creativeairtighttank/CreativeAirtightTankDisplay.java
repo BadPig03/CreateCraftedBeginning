@@ -6,7 +6,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -31,15 +30,14 @@ public final class CreativeAirtightTankDisplay {
             return false;
         }
 
-        IGasHandler handler = controller.getCapability();
         CCBLang.translate("gui.gas_container").forGoggles(tooltip);
-        GasStack gas = handler.getGasInTank(0);
-        if (gas.isEmpty()) {
+        GasStack gasStack = controller.getCapability().getGasInTank(0);
+        if (gasStack.isEmpty()) {
             CCBLang.translate("gui.gas_container.empty").style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
             return true;
         }
 
-        CCBLang.gasName(gas).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+        CCBLang.gasName(gasStack).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
         CCBLang.translate("gui.gas_container.infinity").style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
         return true;
     }
@@ -54,8 +52,8 @@ public final class CreativeAirtightTankDisplay {
             return 0;
         }
 
-        GasStack gas = controller.getCapability().getGasInTank(0);
-        return gas.isEmpty() ? 0 : GasAmounts.toWholeBucketsClamped(CreativeAirtightTankBlockEntity.getCapacityPerTank());
+        GasStack gasStack = controller.getCapability().getGasInTank(0);
+        return gasStack.isEmpty() ? 0 : GasAmounts.toWholeBucketsClamped(CreativeAirtightTankBlockEntity.getCapacityPerTank());
     }
 
     public MutableComponent format(int value) {

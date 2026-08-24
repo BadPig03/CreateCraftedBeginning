@@ -29,22 +29,22 @@ public final class GasFactoryGaugeRestockController {
             return Result.NONE;
         }
 
-        int available = GasLogisticsUtils.getUniqueStockOf(network, gasToken, excludedInventory);
-        if (available <= 0) {
+        int availableAmount = GasLogisticsUtils.getUniqueStockOf(network, gasToken, excludedInventory);
+        if (availableAmount <= 0) {
             return Result.failed();
         }
 
-        int missing = Math.max(0, targetAmount - promisedAmount - storedAmount);
+        int missingAmount = Math.max(0, targetAmount - promisedAmount - storedAmount);
         int cycleLimit = GasRequestUtils.toLogisticsAmount(Math.max(1, BalloonUtils.getCapacity()) * 9);
-        int orderAmount = Math.min(Math.min(missing, available), cycleLimit);
+        int orderAmount = Math.min(Math.min(missingAmount, availableAmount), cycleLimit);
         if (orderAmount <= 0) {
             return Result.NONE;
         }
 
         BigItemStack orderedGas = new BigItemStack(gasToken, orderAmount);
-        PackageOrderWithCrafts order = PackageOrderWithCrafts.simple(List.of(orderedGas));
-        boolean accepted = LogisticsManager.broadcastPackageRequest(network, RequestType.RESTOCK, order, excludedInventory, recipeAddress);
-        return accepted ? Result.accepted(orderedGas) : Result.failed();
+        PackageOrderWithCrafts packageOrder = PackageOrderWithCrafts.simple(List.of(orderedGas));
+        boolean requestAccepted = LogisticsManager.broadcastPackageRequest(network, RequestType.RESTOCK, packageOrder, excludedInventory, recipeAddress);
+        return requestAccepted ? Result.accepted(orderedGas) : Result.failed();
     }
 
     public enum Effect {

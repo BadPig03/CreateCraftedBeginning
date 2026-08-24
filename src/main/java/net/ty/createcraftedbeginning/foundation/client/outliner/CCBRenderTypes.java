@@ -23,7 +23,7 @@ public class CCBRenderTypes {
 
     @Contract(" -> new")
     private static RenderType createSolidNoDepthTest() {
-        CompositeState state = CompositeState.builder().setShaderState(RenderStateShard.RENDERTYPE_ENTITY_SOLID_SHADER).setTextureState(new TextureStateShard(PonderSpecialTextures.BLANK.getLocation(), false, false)).setCullState(RenderStateShard.NO_CULL).setLightmapState(RenderStateShard.LIGHTMAP).setOverlayState(RenderStateShard.OVERLAY).setDepthTestState(RenderStateShard.NO_DEPTH_TEST).createCompositeState(false);
-        return RenderType.create(RENDER_TYPE_NAME, DefaultVertexFormat.NEW_ENTITY, Mode.QUADS, 256, false, false, state);
+        CompositeState compositeState = CompositeState.builder().setShaderState(RenderStateShard.RENDERTYPE_ENTITY_SOLID_SHADER).setTextureState(new TextureStateShard(PonderSpecialTextures.BLANK.getLocation(), false, false)).setCullState(RenderStateShard.NO_CULL).setLightmapState(RenderStateShard.LIGHTMAP).setOverlayState(RenderStateShard.OVERLAY).setDepthTestState(RenderStateShard.NO_DEPTH_TEST).createCompositeState(false);
+        return RenderType.create(RENDER_TYPE_NAME, DefaultVertexFormat.NEW_ENTITY, Mode.QUADS, 256, false, false, compositeState);
     }
 }

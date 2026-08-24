@@ -55,7 +55,7 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
         filter = FilterItemStack.empty();
         compiledFilter = GasFilterUtils.compile(ItemStack.EMPTY);
         slotPositioning = slot;
-        callback = $ -> {};
+        callback = ignoredStack -> {};
     }
 
     public GasFilteringBehaviour withCallback(Consumer<ItemStack> filterCallback) {
@@ -63,8 +63,8 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
         return this;
     }
 
-    public boolean test(GasStack stack) {
-        return compiledFilter.test(stack);
+    public boolean test(GasStack gasStack) {
+        return compiledFilter.test(gasStack);
     }
 
     protected void rebuildCompiledFilter() {
@@ -173,13 +173,13 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
     @Override
     public void onShortInteract(Player player, InteractionHand hand, Direction side, BlockHitResult hitResult) {
         Level level = getWorld();
-        ItemStack toApply = player.getItemInHand(hand).copy();
-        if (AllBlocks.MECHANICAL_ARM.isIn(toApply) || toApply.is(Items.TOOLS_WRENCH) || level.isClientSide) {
+        ItemStack heldItem = player.getItemInHand(hand).copy();
+        if (AllBlocks.MECHANICAL_ARM.isIn(heldItem) || heldItem.is(Items.TOOLS_WRENCH) || level.isClientSide) {
             return;
         }
 
-        if (!setFilter(side, toApply)) {
-            GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_item", toApply.getHoverName());
+        if (!setFilter(side, heldItem)) {
+            GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_item", heldItem.getHoverName());
             return;
         }
 
@@ -191,16 +191,16 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
         return 2;
     }
 
-    public ItemStack getFilter(Direction ignored) {
+    public ItemStack getFilter(Direction ignoredSide) {
         return getFilter();
     }
 
-    public boolean setFilter(Direction ignored, ItemStack stack) {
-        return setFilter(stack);
+    public boolean setFilter(Direction ignoredSide, ItemStack filterStack) {
+        return setFilter(filterStack);
     }
 
-    public boolean setFilter(ItemStack stack) {
-        ItemStack filterItem = GasFilterUtils.normalizeStack(stack);
+    public boolean setFilter(ItemStack filterStack) {
+        ItemStack filterItem = GasFilterUtils.normalizeStack(filterStack);
         if (!filterItem.isEmpty() && !predicate.test(filterItem)) {
             return false;
         }

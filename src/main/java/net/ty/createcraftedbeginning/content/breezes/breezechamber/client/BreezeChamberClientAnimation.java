@@ -45,16 +45,16 @@ public final class BreezeChamberClientAnimation {
     }
 
     private static float getTargetAngle(BreezeChamberBlockEntity chamber) {
-        float target = 0;
+        float targetAngle = 0;
         LocalPlayer player = Minecraft.getInstance().player;
         if (player != null && !player.isInvisible()) {
             double playerX = chamber.isVirtual() ? -4 : player.getX();
             double playerZ = chamber.isVirtual() ? -10 : player.getZ();
             double deltaX = playerX - (chamber.getBlockPos().getX() + 0.5);
             double deltaZ = playerZ - (chamber.getBlockPos().getZ() + 0.5);
-            target = AngleHelper.deg(-Mth.atan2(deltaZ, deltaX)) - 90;
+            targetAngle = AngleHelper.deg(-Mth.atan2(deltaZ, deltaX)) - 90;
         }
         float currentAngle = chamber.getHeadAngle().getValue();
-        return currentAngle + AngleHelper.getShortestAngleDiff(currentAngle, target);
+        return currentAngle + AngleHelper.getShortestAngleDiff(currentAngle, targetAngle);
     }
 }

@@ -36,8 +36,8 @@ public final class BalloonUtils {
         return stack.getItem() instanceof BalloonItem;
     }
 
-    public static boolean isBalloonPackage(PackageEntity entity) {
-        return isBalloon(entity.getBox());
+    public static boolean isBalloonPackage(PackageEntity balloon) {
+        return isBalloon(balloon.getBox());
     }
 
     public static boolean isInWater(BlockState state) {
@@ -102,70 +102,70 @@ public final class BalloonUtils {
         return contents.normalized().limitedTo(Math.max(0, getCapacity()), BalloonGasContents.MAX_GAS_TYPES);
     }
 
-    public static void tickInWater(PackageEntity entity) {
-        if (!isBalloonPackage(entity) || entity.isPassenger()) {
+    public static void tickInWater(PackageEntity balloon) {
+        if (!isBalloonPackage(balloon) || balloon.isPassenger()) {
             return;
         }
 
-        double waterHeight = entity.getFluidTypeHeight(Fluids.WATER.getFluidType());
+        double waterHeight = balloon.getFluidTypeHeight(Fluids.WATER.getFluidType());
         if (waterHeight <= 0) {
             return;
         }
 
-        BalloonGasContents contents = getGasContents(entity.getBox());
+        BalloonGasContents contents = getGasContents(balloon.getBox());
         long capacity = getCapacity();
         double fillRatio = capacity <= 0 ? 0 : Mth.clamp(contents.totalAmount() / (double) capacity, 0, 1);
-        Vec3 motion = entity.getDeltaMovement();
-        entity.setDeltaMovement(motion.x * 0.85, motion.y + 0.003 + 0.007 * Math.sqrt(fillRatio), motion.z * 0.85);
-        entity.setOnGround(false);
-        entity.hasImpulse = true;
+        Vec3 currentMovement = balloon.getDeltaMovement();
+        balloon.setDeltaMovement(currentMovement.x * 0.85, currentMovement.y + 0.003 + 0.007 * Math.sqrt(fillRatio), currentMovement.z * 0.85);
+        balloon.setOnGround(false);
+        balloon.hasImpulse = true;
     }
 
-    public static void renderGasEffects(PackageEntity entity) {
-        if (!entity.level().isClientSide) {
+    public static void renderGasEffects(PackageEntity balloon) {
+        if (!balloon.level().isClientSide) {
             return;
         }
 
-        if (!containsGasContents(entity.getBox())) {
+        if (!containsGasContents(balloon.getBox())) {
             return;
         }
 
-        if (entity.getDeltaMovement().lengthSqr() < 1.0E-4 || (entity.tickCount & 1) != 0) {
+        if (balloon.getDeltaMovement().lengthSqr() < 1.0E-4 || (balloon.tickCount & 1) != 0) {
             return;
         }
 
-        List<GasEntry> gases = getGasContents(entity.getBox()).gases();
+        List<GasEntry> gases = getGasContents(balloon.getBox()).gases();
         if (gases.isEmpty()) {
             return;
         }
 
-        int index = Math.floorMod(entity.tickCount / 2 + entity.getId(), gases.size());
-        AirtightCannonVisualHandlerUtils.of(gases.get(index).getGasType()).renderTrailParticles(entity.level(), entity.position().add(0, 0.25, 0));
+        int gasIndex = Math.floorMod(balloon.tickCount / 2 + balloon.getId(), gases.size());
+        AirtightCannonVisualHandlerUtils.of(gases.get(gasIndex).getGasType()).renderTrailParticles(balloon.level(), balloon.position().add(0, 0.25, 0));
     }
 
-    public static void windBurst(PackageEntity entity) {
-        BalloonGasContents contents = getGasContents(entity.getBox());
+    public static void windBurst(PackageEntity balloon) {
+        BalloonGasContents contents = getGasContents(balloon.getBox());
         if (contents.isEmpty()) {
             return;
         }
 
-        long total = contents.totalAmount();
+        long totalAmount = contents.totalAmount();
         long capacity = getCapacity();
-        if (total <= 0 || capacity <= 0) {
+        if (totalAmount <= 0 || capacity <= 0) {
             return;
         }
 
-        float burstMultiplier = Mth.clamp((float) total / capacity, 0, 1) * 2;
-        Level level = entity.level();
-        Vec3 position = entity.position();
+        float burstMultiplier = Mth.clamp((float) totalAmount / capacity, 0, 1) * 2;
+        Level level = balloon.level();
+        Vec3 burstPosition = balloon.position();
         for (GasEntry gas : contents.gases()) {
-            float gasMultiplier = burstMultiplier * ((float) gas.getAmount() / total);
-            if (gasMultiplier <= 0) {
+            float gasBurstMultiplier = burstMultiplier * ((float) gas.getAmount() / totalAmount);
+            if (gasBurstMultiplier <= 0) {
                 continue;
             }
 
-            AirtightCannonHandler handler = AirtightCannonHandlerUtils.of(gas.getGasType());
-            handler.explode(level, position, AirtightCannonShotContext.external(entity, gas.getGasHolder(), gasMultiplier));
+            AirtightCannonHandler gasHandler = AirtightCannonHandlerUtils.of(gas.getGasType());
+            gasHandler.explode(level, burstPosition, AirtightCannonShotContext.external(balloon, gas.getGasHolder(), gasBurstMultiplier));
         }
     }
 }

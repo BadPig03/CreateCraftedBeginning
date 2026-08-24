@@ -113,8 +113,8 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         return showOutline;
     }
 
-    public void setOwner(UUID owner) {
-        if (!ownerState.setOwner(owner)) {
+    public void setOwner(UUID ownerId) {
+        if (!ownerState.setOwner(ownerId)) {
             return;
         }
 

@@ -20,40 +20,40 @@ public final class GasDrawerStorage implements INBTSerializable<CompoundTag> {
         this.handler = handler;
     }
 
-    public static GasStack readStoredGas(CompoundTag storage, int slot, Provider provider) {
-        CompoundTag tank = storage.getCompound(Integer.toString(slot));
-        if (!tank.contains(COMPOUND_KEY_GAS)) {
+    public static GasStack readStoredGas(CompoundTag storageTag, int slot, Provider provider) {
+        CompoundTag tankTag = storageTag.getCompound(Integer.toString(slot));
+        if (!tankTag.contains(COMPOUND_KEY_GAS)) {
             return GasStack.EMPTY;
         }
-        return GasStack.parseOptional(provider, tank.getCompound(COMPOUND_KEY_GAS));
+        return GasStack.parseOptional(provider, tankTag.getCompound(COMPOUND_KEY_GAS));
     }
 
     @Override
     public CompoundTag serializeNBT(Provider provider) {
-        CompoundTag tag = new CompoundTag();
-        GasDrawerTank[] tanks = handler.getInternalTanks();
-        for (int slot = 0; slot < tanks.length; slot++) {
-            GasDrawerTank tank = tanks[slot];
-            if (tank.getStoredStack().isEmpty()) {
+        CompoundTag storageTag = new CompoundTag();
+        GasDrawerTank[] drawerTanks = handler.getInternalTanks();
+        for (int tankIndex = 0; tankIndex < drawerTanks.length; tankIndex++) {
+            GasDrawerTank drawerTank = drawerTanks[tankIndex];
+            if (drawerTank.getStoredStack().isEmpty()) {
                 continue;
             }
 
-            tag.put(Integer.toString(slot), tank.write(provider, new CompoundTag()));
+            storageTag.put(Integer.toString(tankIndex), drawerTank.write(provider, new CompoundTag()));
         }
-        return tag;
+        return storageTag;
     }
 
     @Override
     public void deserializeNBT(Provider provider, CompoundTag nbt) {
-        GasDrawerTank[] tanks = handler.getInternalTanks();
-        for (int slot = 0; slot < tanks.length; slot++) {
-            String key = Integer.toString(slot);
-            if (nbt.contains(key)) {
-                tanks[slot].read(provider, nbt.getCompound(key));
+        GasDrawerTank[] drawerTanks = handler.getInternalTanks();
+        for (int tankIndex = 0; tankIndex < drawerTanks.length; tankIndex++) {
+            String tankKey = Integer.toString(tankIndex);
+            if (nbt.contains(tankKey)) {
+                drawerTanks[tankIndex].read(provider, nbt.getCompound(tankKey));
                 continue;
             }
 
-            tanks[slot].setGasStack(GasStack.EMPTY);
+            drawerTanks[tankIndex].setGasStack(GasStack.EMPTY);
         }
     }
 }

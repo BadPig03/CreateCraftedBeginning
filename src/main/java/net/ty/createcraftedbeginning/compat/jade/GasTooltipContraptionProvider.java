@@ -41,15 +41,15 @@ public enum GasTooltipContraptionProvider implements IServerDataProvider<EntityA
 
     @Override
     public void appendTooltip(ITooltip tooltip, EntityAccessor accessor, IPluginConfig config) {
-        CompoundTag data = accessor.getServerData();
-        if (!data.contains(GasDataProvider.STORAGE_KEY) || !data.contains(GasDataProvider.STORAGE_UID_KEY)) {
+        CompoundTag serverData = accessor.getServerData();
+        if (!serverData.contains(GasDataProvider.STORAGE_KEY) || !serverData.contains(GasDataProvider.STORAGE_UID_KEY)) {
             return;
         }
 
-        if (!JadePlugin.GAS_CONTRAPTION_TOOLTIP.toString().equals(data.getString(GasDataProvider.STORAGE_UID_KEY))) {
+        if (!JadePlugin.GAS_CONTRAPTION_TOOLTIP.toString().equals(serverData.getString(GasDataProvider.STORAGE_UID_KEY))) {
             return;
         }
 
-        GasDataProvider.appendData(tooltip, data, accessor.showDetails());
+        GasDataProvider.appendData(tooltip, serverData, accessor.showDetails());
     }
 }

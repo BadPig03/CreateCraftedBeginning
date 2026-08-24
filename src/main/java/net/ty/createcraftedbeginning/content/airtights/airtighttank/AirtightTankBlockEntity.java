@@ -41,7 +41,7 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_TANK.get(), (be, context) -> be.getCapability());
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_TANK.get(), (tank, ignoredDirection) -> tank.getCapability());
     }
 
     public static long getCapacityPerTank() {
@@ -104,17 +104,17 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
             return;
         }
 
-        BlockState state = getBlockState();
-        if (!(state.getBlock() instanceof AirtightTankBlock)) {
+        BlockState tankState = getBlockState();
+        if (!(tankState.getBlock() instanceof AirtightTankBlock)) {
             return;
         }
 
-        Axis axis = getMainConnectionAxis();
-        int controllerCoords = calculateCoords(getController(), axis);
-        int posCoords = calculateCoords(getBlockPos(), axis);
-        state = state.setValue(AirtightTankBlock.BOTTOM, controllerCoords == posCoords);
-        state = state.setValue(AirtightTankBlock.TOP, controllerCoords + getHeight() - 1 == posCoords);
-        level.setBlock(worldPosition, state, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE);
+        Axis connectionAxis = getMainConnectionAxis();
+        int controllerCoordinate = calculateCoords(getController(), connectionAxis);
+        int blockCoordinate = calculateCoords(getBlockPos(), connectionAxis);
+        tankState = tankState.setValue(AirtightTankBlock.BOTTOM, controllerCoordinate == blockCoordinate);
+        tankState = tankState.setValue(AirtightTankBlock.TOP, controllerCoordinate + getHeight() - 1 == blockCoordinate);
+        level.setBlock(worldPosition, tankState, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE);
     }
 
     @Override
@@ -138,13 +138,13 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
             return;
         }
 
-        BlockState state = getBlockState();
-        if (!(state.getBlock() instanceof AirtightTankBlock)) {
+        BlockState tankState = getBlockState();
+        if (!(tankState.getBlock() instanceof AirtightTankBlock)) {
             return;
         }
 
-        state = state.setValue(AirtightTankBlock.TOP, true).setValue(AirtightTankBlock.BOTTOM, true);
-        level.setBlock(worldPosition, state, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE | Block.UPDATE_KNOWN_SHAPE);
+        tankState = tankState.setValue(AirtightTankBlock.TOP, true).setValue(AirtightTankBlock.BOTTOM, true);
+        level.setBlock(worldPosition, tankState, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE | Block.UPDATE_KNOWN_SHAPE);
     }
 
     @Override

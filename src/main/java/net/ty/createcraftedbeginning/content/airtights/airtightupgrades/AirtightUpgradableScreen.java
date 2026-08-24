@@ -85,10 +85,10 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
             player.closeContainer();
         }
         super.containerTick();
-        int revision = menu.getServerStateRevision();
-        if (revision != lastServerStateRevision) {
+        int serverStateRevision = menu.getServerStateRevision();
+        if (serverStateRevision != lastServerStateRevision) {
             pendingUpgradeRequests.clear();
-            lastServerStateRevision = revision;
+            lastServerStateRevision = serverStateRevision;
         }
         updateStates();
     }
@@ -96,12 +96,12 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
     @Override
     protected void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         super.renderForeground(guiGraphics, mouseX, mouseY, partialTicks);
-        for (ScreenButtonConfig config : buttonConfigsMap.values()) {
-            if (!config.getIconButton().isHovered()) {
+        for (ScreenButtonConfig buttonConfig : buttonConfigsMap.values()) {
+            if (!buttonConfig.getIconButton().isHovered()) {
                 continue;
             }
 
-            renderButtonTooltip(guiGraphics, config, mouseX, mouseY);
+            renderButtonTooltip(guiGraphics, buttonConfig, mouseX, mouseY);
         }
         renderForeground(guiGraphics, mouseX, mouseY);
     }
@@ -111,41 +111,40 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
         return ImmutableList.of(new Rect2i(leftPos + 2 + background.getWidth(), topPos + background.getHeight() - 48, 48, 48));
     }
 
-    protected void renderButtonTooltip(GuiGraphics guiGraphics, ScreenButtonConfig config, int mouseX, int mouseY) {
-        IconButton button = config.getIconButton();
-        List<Component> tooltips = new ArrayList<>(List.of(config.getTitle()));
-        Item upgradeItem = config.getUpgradeItem();
-        if (!button.isActive() && upgradeItem != null) {
-            Component notInstalled = UPGRADE_NOT_INSTALLED.plainCopy().append(upgradeItem.getDescription()).withStyle(ChatFormatting.RED);
-            tooltips.add(notInstalled);
+    protected void renderButtonTooltip(GuiGraphics guiGraphics, ScreenButtonConfig buttonConfig, int mouseX, int mouseY) {
+        IconButton upgradeButton = buttonConfig.getIconButton();
+        List<Component> tooltipLines = new ArrayList<>(List.of(buttonConfig.getTitle()));
+        Item upgradeItem = buttonConfig.getUpgradeItem();
+        if (!upgradeButton.isActive() && upgradeItem != null) {
+            tooltipLines.add(UPGRADE_NOT_INSTALLED.plainCopy().append(upgradeItem.getDescription()).withStyle(ChatFormatting.RED));
         }
 
-        if (config.canBeInstalled()) {
-            tooltips.add(UPGRADE_CAN_BE_INSTALLED.plainCopy().withStyle(ChatFormatting.GOLD));
+        if (buttonConfig.canBeInstalled()) {
+            tooltipLines.add(UPGRADE_CAN_BE_INSTALLED.plainCopy().withStyle(ChatFormatting.GOLD));
         }
-        else if (button.isActive()) {
-            boolean isEnabled = config.isEnabled();
-            Component option = isEnabled ? OPTION_ENABLED : OPTION_DISABLED;
-            ChatFormatting color = isEnabled ? ChatFormatting.DARK_GREEN : ChatFormatting.RED;
-            tooltips.add(option.plainCopy().withStyle(color));
+        else if (upgradeButton.isActive()) {
+            boolean isEnabled = buttonConfig.isEnabled();
+            Component statusLabel = isEnabled ? OPTION_ENABLED : OPTION_DISABLED;
+            ChatFormatting statusColor = isEnabled ? ChatFormatting.DARK_GREEN : ChatFormatting.RED;
+            tooltipLines.add(statusLabel.plainCopy().withStyle(statusColor));
         }
 
         boolean isShiftDown = hasShiftDown();
         Component shiftKey = CCBLang.translateDirect("gui.key.shift").withStyle(isShiftDown ? ChatFormatting.WHITE : ChatFormatting.GRAY);
-        tooltips.add(CCBLang.translateDirect("gui.hold_for_description", shiftKey).withStyle(ChatFormatting.DARK_GRAY));
+        tooltipLines.add(CCBLang.translateDirect("gui.hold_for_description", shiftKey).withStyle(ChatFormatting.DARK_GRAY));
         if (isShiftDown) {
-            tooltips.addAll(TooltipHelper.cutTextComponent(config.getDescription(), Palette.ALL_GRAY));
-            List<Component> components = config.getComponents();
-            if (!components.isEmpty()) {
-                tooltips.add(CommonComponents.EMPTY);
-                tooltips.add(CCBLang.translateDirect("gui.gas_consumption").withStyle(ChatFormatting.GRAY));
-                for (Component component : components) {
-                    tooltips.add(component.plainCopy().withStyle(ChatFormatting.GRAY));
+            tooltipLines.addAll(TooltipHelper.cutTextComponent(buttonConfig.getDescription(), Palette.ALL_GRAY));
+            List<Component> gasConsumptionLines = buttonConfig.getComponents();
+            if (!gasConsumptionLines.isEmpty()) {
+                tooltipLines.add(CommonComponents.EMPTY);
+                tooltipLines.add(CCBLang.translateDirect("gui.gas_consumption").withStyle(ChatFormatting.GRAY));
+                for (Component gasConsumptionLine : gasConsumptionLines) {
+                    tooltipLines.add(gasConsumptionLine.plainCopy().withStyle(ChatFormatting.GRAY));
                 }
             }
         }
 
-        guiGraphics.renderTooltip(font, tooltips, Optional.empty(), mouseX, mouseY);
+        guiGraphics.renderTooltip(font, tooltipLines, Optional.empty(), mouseX, mouseY);
     }
 
     @Override
@@ -155,9 +154,9 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
         renderPlayerInventory(guiGraphics, inventoryX, inventoryY);
         background.render(guiGraphics, leftPos + 2, topPos);
 
-        Component hoverName = menu.contentHolder.getHoverName();
-        int titleX = leftPos + (background.getWidth() - 8) / 2 - font.width(hoverName) / 2 + 2;
-        guiGraphics.drawString(font, hoverName, titleX, topPos + 4, 0xFFFFFF, false);
+        Component itemName = menu.contentHolder.getHoverName();
+        int titleX = leftPos + (background.getWidth() - 8) / 2 - font.width(itemName) / 2 + 2;
+        guiGraphics.drawString(font, itemName, titleX, topPos + 4, 0xFFFFFF, false);
 
         GuiGameElement.of(menu.contentHolder).scale(4).at(leftPos + background.getWidth() + 2, topPos + background.getHeight() - 48, -200).render(guiGraphics);
     }
@@ -167,13 +166,12 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
             return;
         }
 
-        int slot = hoveredSlot.getSlotIndex();
-        if (slot != AirtightUpgradableMenu.UPGRADE_SLOT_INDEX) {
+        if (hoveredSlot.getSlotIndex() != AirtightUpgradableMenu.UPGRADE_SLOT_INDEX) {
             return;
         }
 
-        Component title = disableUpgradeButton.visible ? UPGRADE_FULL : UPGRADE_SLOT_TITLE;
-        guiGraphics.renderTooltip(font, title.plainCopy().withStyle(ChatFormatting.GRAY), mouseX, mouseY);
+        Component slotTitle = disableUpgradeButton.visible ? UPGRADE_FULL : UPGRADE_SLOT_TITLE;
+        guiGraphics.renderTooltip(font, slotTitle.plainCopy().withStyle(ChatFormatting.GRAY), mouseX, mouseY);
     }
 
     protected void initWidgets() {
@@ -193,24 +191,23 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
     }
 
     protected void onUpgradeButtonPressed(AirtightUpgrade upgrade) {
-        ResourceLocation id = upgrade.getID();
-        if (!pendingUpgradeRequests.add(id)) {
+        ResourceLocation upgradeId = upgrade.getID();
+        if (!pendingUpgradeRequests.add(upgradeId)) {
             return;
         }
 
-        AirtightUpgradeStatus status = menu.getStatus(upgrade);
-        if (status.isInstalled()) {
-            CatnipServices.NETWORK.sendToServer(new AirtightUpgradePacket(id, false));
+        if (menu.getStatus(upgrade).isInstalled()) {
+            CatnipServices.NETWORK.sendToServer(new AirtightUpgradePacket(upgradeId, false));
             return;
         }
 
-        ItemStack stack = menu.getMenuInventory().getStackInSlot(AirtightUpgradableMenu.UPGRADE_SLOT_INDEX);
-        if (upgrade.testUpgradeItem(stack)) {
-            CatnipServices.NETWORK.sendToServer(new AirtightUpgradePacket(id, true));
+        ItemStack upgradeStack = menu.getMenuInventory().getStackInSlot(AirtightUpgradableMenu.UPGRADE_SLOT_INDEX);
+        if (upgrade.testUpgradeItem(upgradeStack)) {
+            CatnipServices.NETWORK.sendToServer(new AirtightUpgradePacket(upgradeId, true));
             return;
         }
 
-        pendingUpgradeRequests.remove(id);
+        pendingUpgradeRequests.remove(upgradeId);
     }
 
     protected abstract void updateStates();

@@ -42,9 +42,9 @@ public class SequencedWithGasRecipe<T extends ProcessingWithGasRecipe<?, ?>> {
             return;
         }
 
-        Ingredient transit = Ingredient.of(parent.getTransitionalItem());
-        Ingredient input = isFirst ? CompoundIngredient.of(transit, parent.getIngredient()) : transit;
-        wrapped.getIngredients().set(0, input);
+        Ingredient transitionalIngredient = Ingredient.of(parent.getTransitionalItem());
+        Ingredient stepInput = isFirst ? CompoundIngredient.of(transitionalIngredient, parent.getIngredient()) : transitionalIngredient;
+        wrapped.getIngredients().set(0, stepInput);
     }
 
     public IAssemblyRecipeWithGas getAsAssemblyRecipe() {

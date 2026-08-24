@@ -21,7 +21,7 @@ public final class TeslaTurbineGasHandler implements IGasHandler {
 
     @Override
     public boolean isGasValid(int tank, GasStack stack) {
-        return !stack.isEmpty() && AirtightTurbineHandlerUtils.of(stack).getMaxLevel() > 0;
+        return tank == 0 && !stack.isEmpty() && AirtightTurbineHandlerUtils.of(stack).getMaxLevel() > 0;
     }
 
     @Override
@@ -46,11 +46,17 @@ public final class TeslaTurbineGasHandler implements IGasHandler {
 
     @Override
     public long fill(GasStack resource, GasAction action) {
-        return isGasValid(0, resource) ? flowMeter.fill(resource, action, clockwise) : 0;
+        if (!isGasValid(0, resource)) {
+            return 0;
+        }
+        return flowMeter.fill(resource, action, clockwise);
     }
 
     @Override
     public long getTankCapacity(int tank) {
-        return Integer.MAX_VALUE;
+        if (tank != 0) {
+            return 0;
+        }
+        return Long.MAX_VALUE;
     }
 }

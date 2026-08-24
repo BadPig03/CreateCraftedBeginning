@@ -60,40 +60,40 @@ public class AirVentVisual extends AbstractBlockEntityVisual<AirVentBlockEntity>
         }
 
         for (Direction direction : Iterate.directions) {
-            int index = direction.get3DDataValue();
-            int mask = 1 << index;
-            TransformedInstance louver = louvers[index];
-            TransformedInstance innerLouver = innerLouvers[index];
-            if ((nextVisibleMask & mask) == 0) {
+            int directionIndex = direction.get3DDataValue();
+            int directionMask = 1 << directionIndex;
+            TransformedInstance louver = louvers[directionIndex];
+            TransformedInstance innerLouver = innerLouvers[directionIndex];
+            if ((nextVisibleMask & directionMask) == 0) {
                 if (louver != null) {
                     louver.delete();
-                    louvers[index] = null;
+                    louvers[directionIndex] = null;
                 }
                 if (innerLouver != null) {
                     innerLouver.delete();
-                    innerLouvers[index] = null;
+                    innerLouvers[directionIndex] = null;
                 }
                 continue;
             }
 
-            boolean opened = (nextOpenedMask & mask) != 0;
-            boolean modelChanged = ((openedMask & mask) == 0) == opened;
-            PartialModel model = opened ? CCBPartialModels.AIR_VENT_OPENED : CCBPartialModels.AIR_VENT_CLOSED;
+            boolean isOpen = (nextOpenedMask & directionMask) != 0;
+            boolean modelChanged = ((openedMask & directionMask) == 0) == isOpen;
+            PartialModel louverModel = isOpen ? CCBPartialModels.AIR_VENT_OPENED : CCBPartialModels.AIR_VENT_CLOSED;
             if (louver == null) {
-                louver = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(model)).createInstance();
-                louvers[index] = louver;
+                louver = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(louverModel)).createInstance();
+                louvers[directionIndex] = louver;
                 relight(louver);
             }
             else if (modelChanged) {
-                instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(model)).stealInstance(louver);
+                instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(louverModel)).stealInstance(louver);
             }
             if (innerLouver == null) {
-                innerLouver = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(model)).createInstance();
-                innerLouvers[index] = innerLouver;
+                innerLouver = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(louverModel)).createInstance();
+                innerLouvers[directionIndex] = innerLouver;
                 relight(innerLouver);
             }
             else if (modelChanged) {
-                instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(model)).stealInstance(innerLouver);
+                instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(louverModel)).stealInstance(innerLouver);
             }
 
             orientLouver(louver, direction, LOUVER_SURFACE_OFFSET);
@@ -105,8 +105,8 @@ public class AirVentVisual extends AbstractBlockEntityVisual<AirVentBlockEntity>
     }
 
     protected void orientLouver(TransformedInstance louver, Direction direction, float surfaceOffset) {
-        Direction facing = direction.getOpposite();
-        louver.setIdentityTransform().translate(getVisualPosition()).translate(direction.getStepX() * surfaceOffset, direction.getStepY() * surfaceOffset, direction.getStepZ() * surfaceOffset).rotateYCentered(AngleHelper.rad(AngleHelper.horizontalAngle(facing))).rotateXCentered(AngleHelper.rad(AngleHelper.verticalAngle(facing))).setChanged();
+        Direction louverFacing = direction.getOpposite();
+        louver.setIdentityTransform().translate(getVisualPosition()).translate(direction.getStepX() * surfaceOffset, direction.getStepY() * surfaceOffset, direction.getStepZ() * surfaceOffset).rotateYCentered(AngleHelper.rad(AngleHelper.horizontalAngle(louverFacing))).rotateXCentered(AngleHelper.rad(AngleHelper.verticalAngle(louverFacing))).setChanged();
     }
 
     @Override

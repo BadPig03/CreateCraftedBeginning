@@ -79,8 +79,8 @@ public class CCBIcons extends AllIcons {
         iconY = y * 16;
     }
 
-    public static CCBIcons get(AirtightUpgradeIcon icon) {
-        return switch (icon) {
+    public static CCBIcons get(AirtightUpgradeIcon upgradeIcon) {
+        return switch (upgradeIcon) {
             case MAGNET -> I_MAGNET;
             case EXPERIENCE_CONVERSION -> I_EXPERIENCE_CONVERSION;
             case ATTACK_MODE -> I_ATTACK_MODE;
@@ -124,8 +124,8 @@ public class CCBIcons extends AllIcons {
     }
 
     @OnlyIn(Dist.CLIENT)
-    private static void vertex(VertexConsumer consumer, Matrix4f matrix, Vec3 position, Color color, float u, float v, int light) {
-        consumer.addVertex(matrix, (float) position.x, (float) position.y, (float) position.z).setColor(color.getRed(), color.getGreen(), color.getBlue(), 255).setUv(u, v).setLight(light);
+    private static void vertex(VertexConsumer vertexConsumer, Matrix4f poseMatrix, Vec3 vertexPosition, Color tint, float u, float v, int packedLight) {
+        vertexConsumer.addVertex(poseMatrix, (float) vertexPosition.x, (float) vertexPosition.y, (float) vertexPosition.z).setColor(tint.getRed(), tint.getGreen(), tint.getBlue(), 255).setUv(u, v).setLight(packedLight);
     }
 
     @Override
@@ -143,8 +143,8 @@ public class CCBIcons extends AllIcons {
     @Override
     @OnlyIn(Dist.CLIENT)
     public void render(PoseStack ms, MultiBufferSource buffer, int color) {
-        VertexConsumer consumer = buffer.getBuffer(RenderType.text(CCB_ICON_ATLAS));
-        Matrix4f matrix = ms.last().pose();
+        VertexConsumer vertexConsumer = buffer.getBuffer(RenderType.text(CCB_ICON_ATLAS));
+        Matrix4f poseMatrix = ms.last().pose();
         Color tint = new Color(color);
 
         Vec3 bottomLeft = new Vec3(0, 0, 0);
@@ -157,9 +157,9 @@ public class CCBIcons extends AllIcons {
         float v1 = iconY * 1.0f / CCB_ICON_ATLAS_SIZE;
         float v2 = (iconY + 16) * 1.0f / CCB_ICON_ATLAS_SIZE;
 
-        vertex(consumer, matrix, bottomLeft, tint, u1, v1, LightTexture.FULL_BRIGHT);
-        vertex(consumer, matrix, topLeft, tint, u1, v2, LightTexture.FULL_BRIGHT);
-        vertex(consumer, matrix, topRight, tint, u2, v2, LightTexture.FULL_BRIGHT);
-        vertex(consumer, matrix, bottomRight, tint, u2, v1, LightTexture.FULL_BRIGHT);
+        vertex(vertexConsumer, poseMatrix, bottomLeft, tint, u1, v1, LightTexture.FULL_BRIGHT);
+        vertex(vertexConsumer, poseMatrix, topLeft, tint, u1, v2, LightTexture.FULL_BRIGHT);
+        vertex(vertexConsumer, poseMatrix, topRight, tint, u2, v2, LightTexture.FULL_BRIGHT);
+        vertex(vertexConsumer, poseMatrix, bottomRight, tint, u2, v1, LightTexture.FULL_BRIGHT);
     }
 }

@@ -19,16 +19,16 @@ public class PortableGasInterfaceActorVisual extends ActorVisual {
         super(context, world, movementContext);
         instance = new PortableGasInterfaceInstance(context.instancerProvider(), movementContext.state, movementContext.localPos, false);
 
-        int light = localBlockLight();
-        instance.middle.light(light, 0);
-        instance.top.light(light, 0);
+        int blockLight = localBlockLight();
+        instance.middle.light(blockLight, 0);
+        instance.top.light(blockLight, 0);
     }
 
     @Override
     public void beginFrame() {
-        LerpedFloat animation = PortableGasInterfaceMovement.getAnimation(context);
-        instance.tick(animation.settled());
-        instance.beginFrame(animation.getValue(AnimationTickHolder.getPartialTicks()));
+        LerpedFloat connectionAnimation = PortableGasInterfaceMovement.getAnimation(context);
+        instance.tick(connectionAnimation.settled());
+        instance.beginFrame(connectionAnimation.getValue(AnimationTickHolder.getPartialTicks()));
     }
 
     @Override

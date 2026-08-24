@@ -48,8 +48,8 @@ public class SequencedAssemblyWithGasRecipeSerializer implements RecipeSerialize
         recipe.resultPool.addAll(ProcessingOutput.STREAM_CODEC.apply(ByteBufCodecs.list()).decode(buffer));
         recipe.transitionalItem = ProcessingOutput.STREAM_CODEC.decode(buffer);
         recipe.loops = buffer.readInt();
-        for (int i = 0; i < recipe.getSequence().size(); i++) {
-            recipe.getSequence().get(i).initFromSequencedAssembly(recipe, i == 0);
+        for (int stepIndex = 0; stepIndex < recipe.getSequence().size(); stepIndex++) {
+            recipe.getSequence().get(stepIndex).initFromSequencedAssembly(recipe, stepIndex == 0);
         }
         return recipe;
     }

@@ -365,12 +365,12 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     }
 
     void setRecipeFilter(ItemStack stack) {
-        ItemStack normalized = stack.isEmpty() ? ItemStack.EMPTY : stack.copyWithCount(1);
-        if (ItemStack.matches(recipeFilter, normalized)) {
+        ItemStack normalizedFilter = stack.isEmpty() ? ItemStack.EMPTY : stack.copyWithCount(1);
+        if (ItemStack.matches(recipeFilter, normalizedFilter)) {
             return;
         }
 
-        recipeFilter = normalized;
+        recipeFilter = normalizedFilter;
         recipeFilterAuthoritative = true;
         notifyFiltersChanged();
         syncRecipeFilterReplicas();
@@ -418,14 +418,14 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
             return;
         }
 
-        BlockPos centerPos = worldPosition.below();
+        BlockPos filterCenterPos = worldPosition.below();
         for (Direction direction : Iterate.horizontalDirections) {
-            BlockPos filterPos = centerPos.relative(direction);
-            if (!(level.getBlockEntity(filterPos) instanceof AirtightReactorKettleStructuralBlockEntity structural)) {
+            BlockPos filterPos = filterCenterPos.relative(direction);
+            if (!(level.getBlockEntity(filterPos) instanceof AirtightReactorKettleStructuralBlockEntity filterBlockEntity)) {
                 continue;
             }
 
-            structural.syncFilterFromMaster(recipeFilter);
+            filterBlockEntity.syncFilterFromMaster(recipeFilter);
         }
     }
 

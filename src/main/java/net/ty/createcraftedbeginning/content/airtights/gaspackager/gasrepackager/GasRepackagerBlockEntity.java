@@ -48,27 +48,27 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
     }
 
     public void acceptPassThroughPackage(ItemStack packageStack) {
-        ItemStack box = packageStack.copy();
-        if (PackageItem.hasOrderData(box)) {
-            queuedExitingPackages.add(new BigItemStack(box, 1));
+        ItemStack packageCopy = packageStack.copy();
+        if (PackageItem.hasOrderData(packageCopy)) {
+            queuedExitingPackages.add(new BigItemStack(packageCopy, 1));
             notifyUpdate();
             return;
         }
 
-        heldBox = box;
+        heldBox = packageCopy;
         animationInward = false;
         animationTicks = CYCLE;
         notifyUpdate();
     }
 
     public void restoreRollbackRemainders(List<ItemStack> remainders) {
-        boolean changed = false;
+        boolean restoredAnyRemainder = false;
         for (ItemStack remainder : remainders) {
             if (remainder.isEmpty()) {
                 continue;
             }
 
-            changed = true;
+            restoredAnyRemainder = true;
             if (PackageItem.isPackage(remainder)) {
                 queuedExitingPackages.addFirst(new BigItemStack(remainder.copyWithCount(1), remainder.getCount()));
                 continue;
@@ -78,7 +78,7 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
                 Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), remainder.copy());
             }
         }
-        if (!changed) {
+        if (!restoredAnyRemainder) {
             return;
         }
 

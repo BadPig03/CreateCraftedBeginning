@@ -22,8 +22,8 @@ class AirtightHatchValueBox extends Sided {
 
     @Override
     public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, BlockState state) {
-        Vec3 location = VecHelper.rotateCentered(getSouthLocation(), -90, Axis.X);
-        return VecHelper.rotateCentered(location, AngleHelper.horizontalAngle(state.getValue(AirtightHatchBlock.FACING)), Axis.Y);
+        Vec3 localOffset = VecHelper.rotateCentered(getSouthLocation(), -90, Axis.X);
+        return VecHelper.rotateCentered(localOffset, AngleHelper.horizontalAngle(state.getValue(AirtightHatchBlock.FACING)), Axis.Y);
     }
 
     @Override

@@ -8,7 +8,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponentType.Builder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.component.ItemContainerContents;
@@ -34,10 +33,8 @@ public class CCBDataComponents {
 
     public static final DataComponentType<SturdyCrateContents> STURDY_CRATE_CONTENTS = register("sturdy_crate_contents", builder -> builder.persistent(SturdyCrateContents.CODEC).networkSynchronized(SturdyCrateContents.STREAM_CODEC));
 
-    public static final DataComponentType<List<GasStack>> CANISTER_CONTAINER_CONTENTS = register("canister_container_contents", builder -> builder.persistent(GasStack.OPTIONAL_CODEC.listOf()).networkSynchronized(CatnipStreamCodecBuilders.list(GasStack.OPTIONAL_STREAM_CODEC)));
-    public static final DataComponentType<List<Long>> CANISTER_CONTAINER_CAPACITIES = register("canister_container_capacities", builder -> builder.persistent(Codec.LONG.listOf()).networkSynchronized(CatnipStreamCodecBuilders.list(ByteBufCodecs.VAR_LONG)));
-    public static final DataComponentType<List<CompoundTag>> CANISTER_PACK_CONTAINER_COMPOUNDS = register("canister_pack_container_compounds", builder -> builder.persistent(CompoundTag.CODEC.listOf()).networkSynchronized(CatnipStreamCodecBuilders.list(ByteBufCodecs.COMPOUND_TAG)));
-    public static final DataComponentType<List<Boolean>> CANISTER_PACK_CONTAINER_CREATIVES = register("canister_pack_container_creatives", builder -> builder.persistent(Codec.BOOL.listOf()).networkSynchronized(CatnipStreamCodecBuilders.list(ByteBufCodecs.BOOL)));
+    public static final DataComponentType<GasStack> CANISTER_CONTAINER_CONTENTS = register("canister_container_contents", builder -> builder.persistent(GasStack.OPTIONAL_CODEC).networkSynchronized(GasStack.OPTIONAL_STREAM_CODEC));
+    public static final DataComponentType<ItemContainerContents> GAS_CANISTER_PACK_CONTENTS = register("gas_canister_pack_contents", builder -> builder.persistent(ItemContainerContents.CODEC).networkSynchronized(ItemContainerContents.STREAM_CODEC));
 
     public static final DataComponentType<Integer> GAS_CANISTER_PACK_FLAGS = register("gas_canister_pack_flags", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
 

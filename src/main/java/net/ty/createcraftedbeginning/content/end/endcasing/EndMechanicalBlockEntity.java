@@ -47,9 +47,9 @@ public abstract class EndMechanicalBlockEntity<T extends EndMechanicalStructural
             return null;
         }
 
-        BlockEntity blockEntity = level.getBlockEntity(worldPosition.below());
+        BlockEntity candidateStructural = level.getBlockEntity(worldPosition.below());
         Class<T> structuralClass = getStructuralClass();
-        return structuralClass.isInstance(blockEntity) ? structuralClass.cast(blockEntity) : null;
+        return structuralClass.isInstance(candidateStructural) ? structuralClass.cast(candidateStructural) : null;
     }
 
     protected @Nullable T getStructuralForUse() {

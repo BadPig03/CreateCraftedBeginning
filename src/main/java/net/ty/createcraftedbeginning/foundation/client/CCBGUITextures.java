@@ -56,12 +56,12 @@ public enum CCBGUITextures implements ScreenElement, TextureSheetSegment {
     private final int startX;
     private final int startY;
 
-    CCBGUITextures(String location, int startX, int startY, int width, int height) {
-        this(CCBAPI.MOD_ID, location, startX, startY, width, height);
+    CCBGUITextures(String texturePath, int startX, int startY, int width, int height) {
+        this(CCBAPI.MOD_ID, texturePath, startX, startY, width, height);
     }
 
-    CCBGUITextures(String namespace, String location, int startX, int startY, int width, int height) {
-        this.location = ResourceLocation.fromNamespaceAndPath(namespace, "textures/gui/" + location + ".png");
+    CCBGUITextures(String namespace, String texturePath, int startX, int startY, int width, int height) {
+        location = ResourceLocation.fromNamespaceAndPath(namespace, "textures/gui/" + texturePath + ".png");
         this.width = width;
         this.height = height;
         this.startX = startX;
@@ -80,9 +80,9 @@ public enum CCBGUITextures implements ScreenElement, TextureSheetSegment {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public void render(GuiGraphics graphics, int x, int y, Color c) {
+    public void render(GuiGraphics graphics, int x, int y, Color color) {
         bind();
-        UIRenderHelper.drawColoredTexture(graphics, c, x, y, startX, startY, width, height);
+        UIRenderHelper.drawColoredTexture(graphics, color, x, y, startX, startY, width, height);
     }
 
     @Override

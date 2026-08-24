@@ -221,22 +221,22 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
     }
 
     protected void renderPromises(GuiGraphics graphics, int mouseX, int mouseY, int x, int y) {
-        int state = promiseExpiration.getState();
-        MutableComponent text = CCBLang.text(state == -1 ? " /" : state == 0 ? "30s" : state + "m").component();
-        graphics.drawString(font, text, promiseExpiration.getX() + 3, promiseExpiration.getY() + 4, 0xFFEEEEEE, true);
+        int expirationState = promiseExpiration.getState();
+        MutableComponent expirationText = CCBLang.text(expirationState == -1 ? " /" : expirationState == 0 ? "30s" : expirationState + "m").component();
+        graphics.drawString(font, expirationText, promiseExpiration.getX() + 3, promiseExpiration.getY() + 4, 0xFFEEEEEE, true);
 
         ItemStack balloon = BalloonStyleUtils.getDefaultBalloon();
         int itemX = x + 68;
         int itemY = y + windowHeight - 8;
-        int promised = behaviour.getPromised();
+        int promisedAmount = behaviour.getPromised();
         graphics.renderItem(balloon, itemX, itemY);
-        graphics.renderItemDecorations(font, balloon, itemX, itemY, GasRequestUtils.format(promised, false));
+        graphics.renderItemDecorations(font, balloon, itemX, itemY, GasRequestUtils.format(promisedAmount, false));
         if (mouseX < itemX || mouseX >= itemX + 16 || mouseY < itemY || mouseY >= itemY + 16) {
             return;
         }
 
         List<Component> tooltips = new ArrayList<>();
-        if (promised == 0) {
+        if (promisedAmount == 0) {
             tooltips.add(CCBLang.translate("gui.gas_factory_gauge.no_open_promises").color(ScrollInput.HEADER_RGB).component());
             tooltips.add(CCBLang.translate(restocker ? "gui.gas_factory_gauge.restocker_promises_tip" : "gui.gas_factory_gauge.recipe_promises_tip").style(ChatFormatting.GRAY).component());
             tooltips.add(CCBLang.translate(restocker ? "gui.gas_factory_gauge.restocker_promises_tip_1" : "gui.gas_factory_gauge.recipe_promises_tip_1").style(ChatFormatting.GRAY).component());
@@ -244,10 +244,9 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         }
         else {
             tooltips.add(CCBLang.translate("gui.gas_factory_gauge.promised_items").color(ScrollInput.HEADER_RGB).component());
-            ItemStack filter = behaviour.getFilter();
-            String filterName = filter.getHoverName().getString();
-            BigItemStack promisedGas = new BigItemStack(filter, promised);
-            tooltips.add(CCBLang.text(filterName + ' ' + GasFactoryGaugeClientUtils.formatPrecise(promisedGas)).component());
+            ItemStack gasToken = behaviour.getFilter();
+            BigItemStack promisedGas = new BigItemStack(gasToken, promisedAmount);
+            tooltips.add(CCBLang.text(gasToken.getHoverName().getString() + ' ' + GasFactoryGaugeClientUtils.formatPrecise(promisedGas)).component());
             addActionTooltip(tooltips, "gui.gas_factory_gauge.left_click_reset");
         }
         graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
@@ -268,9 +267,9 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
     }
 
-    protected void renderOutputs(GuiGraphics graphics, int mouseX, int mouseY, int slot, int x, int y) {
+    protected void renderOutputs(GuiGraphics graphics, int mouseX, int mouseY, int inputSlot, int x, int y) {
         if (restocker) {
-            renderInputItem(graphics, slot, new BigItemStack(behaviour.getFilter(), 1), mouseX, mouseY);
+            renderInputItem(graphics, inputSlot, new BigItemStack(behaviour.getFilter(), 1), mouseX, mouseY);
             return;
         }
 
@@ -291,18 +290,18 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
     }
 
     protected int renderInputs(GuiGraphics graphics, int mouseX, int mouseY) {
-        int slot = 0;
-        for (BigItemStack itemStack : inputConfig) {
-            renderInputItem(graphics, slot++, itemStack, mouseX, mouseY);
+        int inputSlot = 0;
+        for (BigItemStack inputEntry : inputConfig) {
+            renderInputItem(graphics, inputSlot++, inputEntry, mouseX, mouseY);
         }
         if (!inputConfig.isEmpty()) {
-            return slot;
+            return inputSlot;
         }
 
-        int inputX = guiLeft + (restocker ? 88 : 68 + slot % 3 * 20);
-        int inputY = guiTop + (restocker ? 12 : 28) + slot / 3 * 20;
+        int inputX = guiLeft + (restocker ? 88 : 68 + inputSlot % 3 * 20);
+        int inputY = guiTop + (restocker ? 12 : 28) + inputSlot / 3 * 20;
         if (restocker || mouseY <= inputY || mouseY >= inputY + 60 || mouseX <= inputX || mouseX >= inputX + 60) {
-            return slot;
+            return inputSlot;
         }
 
         List<Component> tooltips = new ArrayList<>();
@@ -310,22 +309,22 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         tooltips.add(CCBLang.translate("gui.gas_factory_gauge.unconfigured_input_tip").style(ChatFormatting.GRAY).component());
         tooltips.add(CCBLang.translate("gui.gas_factory_gauge.unconfigured_input_tip_1").style(ChatFormatting.GRAY).component());
         graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
-        return slot;
+        return inputSlot;
     }
 
-    protected void renderInputItem(GuiGraphics graphics, int slot, BigItemStack entry, int mouseX, int mouseY) {
-        int inputX = guiLeft + (restocker ? 88 : 68 + slot % 3 * 20);
-        int inputY = guiTop + (restocker ? 33 : 28) + slot / 3 * 20;
-        graphics.renderItem(entry.stack, inputX, inputY);
-        if (!restocker && !entry.stack.isEmpty()) {
-            graphics.renderItemDecorations(font, entry.stack, inputX, inputY, GasFactoryGaugeClientUtils.format(entry, false));
+    protected void renderInputItem(GuiGraphics graphics, int slotIndex, BigItemStack inputEntry, int mouseX, int mouseY) {
+        int inputX = guiLeft + (restocker ? 88 : 68 + slotIndex % 3 * 20);
+        int inputY = guiTop + (restocker ? 33 : 28) + slotIndex / 3 * 20;
+        graphics.renderItem(inputEntry.stack, inputX, inputY);
+        if (!restocker && !inputEntry.stack.isEmpty()) {
+            graphics.renderItemDecorations(font, inputEntry.stack, inputX, inputY, GasFactoryGaugeClientUtils.format(inputEntry, false));
         }
         if (mouseX < inputX - 2 || mouseX >= inputX - 2 + 20 || mouseY < inputY - 2 || mouseY >= inputY - 2 + 20) {
             return;
         }
 
         List<Component> tooltips = new ArrayList<>();
-        if (entry.stack.isEmpty()) {
+        if (inputEntry.stack.isEmpty()) {
             tooltips.add(CCBLang.translate("gui.gas_factory_gauge.empty_panel").color(ScrollInput.HEADER_RGB).component());
             addActionTooltip(tooltips, "gui.gas_factory_gauge.left_click_disconnect");
             graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
@@ -333,14 +332,14 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         }
 
         if (restocker) {
-            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.sending_item", CCBLang.itemName(entry.stack)).color(ScrollInput.HEADER_RGB).component());
+            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.sending_item", CCBLang.itemName(inputEntry.stack)).color(ScrollInput.HEADER_RGB).component());
             tooltips.add(CCBLang.translate("gui.gas_factory_gauge.sending_item_tip").style(ChatFormatting.GRAY).component());
             tooltips.add(CCBLang.translate("gui.gas_factory_gauge.sending_item_tip_1").style(ChatFormatting.GRAY).component());
             graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
             return;
         }
 
-        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.sending_item", CCBLang.itemName(entry.stack).add(CCBLang.text(' ' + GasFactoryGaugeClientUtils.format(entry, true)))).color(ScrollInput.HEADER_RGB).component());
+        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.sending_item", CCBLang.itemName(inputEntry.stack).add(CCBLang.text(' ' + GasFactoryGaugeClientUtils.format(inputEntry, true)))).color(ScrollInput.HEADER_RGB).component());
         addItemScrollTooltips(tooltips);
         addActionTooltip(tooltips, "gui.gas_factory_gauge.left_click_disconnect");
         graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
@@ -374,22 +373,22 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
     @SuppressWarnings("ConstantValue")
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        GuiEventListener focused = getFocused();
-        if (focused != null && !focused.isMouseOver(mouseX, mouseY)) {
+        GuiEventListener focusedListener = getFocused();
+        if (focusedListener != null && !focusedListener.isMouseOver(mouseX, mouseY)) {
             setFocused(null);
         }
 
         int x = guiLeft;
         int y = guiTop;
         if (!restocker) {
-            for (int i = 0; i < connections.size(); i++) {
-                int inputX = x + 68 + i % 3 * 20;
-                int inputY = y + 28 + i / 3 * 20;
+            for (int connectionIndex = 0; connectionIndex < connections.size(); connectionIndex++) {
+                int inputX = x + 68 + connectionIndex % 3 * 20;
+                int inputY = y + 28 + connectionIndex / 3 * 20;
                 if (mouseX < inputX || mouseX >= inputX + 16 || mouseY < inputY || mouseY >= inputY + 16) {
                     continue;
                 }
 
-                sendIt(connections.get(i).from, false);
+                sendIt(connections.get(connectionIndex).from, false);
                 playButtonSound();
                 return true;
             }
@@ -424,19 +423,19 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
             return true;
         }
 
-        for (int i = 0; i < inputConfig.size(); i++) {
-            int inputX = x + 68 + i % 3 * 20;
-            int inputY = y + 26 + i / 3 * 20;
+        for (int inputIndex = 0; inputIndex < inputConfig.size(); inputIndex++) {
+            int inputX = x + 68 + inputIndex % 3 * 20;
+            int inputY = y + 26 + inputIndex / 3 * 20;
             if (mouseX < inputX || mouseX >= inputX + 16 || mouseY < inputY || mouseY >= inputY + 16) {
                 continue;
             }
 
-            BigItemStack itemStack = inputConfig.get(i);
-            if (itemStack.stack.isEmpty()) {
+            BigItemStack inputEntry = inputConfig.get(inputIndex);
+            if (inputEntry.stack.isEmpty()) {
                 return true;
             }
 
-            GasFactoryGaugeClientUtils.adjustAmount(itemStack, scrollY);
+            GasFactoryGaugeClientUtils.adjustAmount(inputEntry, scrollY);
             return true;
         }
 
@@ -469,19 +468,19 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
     }
 
     protected void sendIt(@Nullable FactoryPanelPosition removeConnection, boolean clearPromises) {
-        FactoryPanelConfigurationPacket packet = new FactoryPanelConfigurationPacket(behaviour.getPanelPosition(), addressBox.getValue(), collectInputAmounts(), List.of(), outputConfig.count, promiseExpiration.getState(), removeConnection, clearPromises, sendReset, sendRedstoneReset);
-        CatnipServices.NETWORK.sendToServer(packet);
+        FactoryPanelConfigurationPacket configurationPacket = new FactoryPanelConfigurationPacket(behaviour.getPanelPosition(), addressBox.getValue(), collectInputAmounts(), List.of(), outputConfig.count, promiseExpiration.getState(), removeConnection, clearPromises, sendReset, sendRedstoneReset);
+        CatnipServices.NETWORK.sendToServer(configurationPacket);
     }
 
     protected Map<FactoryPanelPosition, Integer> collectInputAmounts() {
-        Map<FactoryPanelPosition, Integer> inputs = new HashMap<>();
+        Map<FactoryPanelPosition, Integer> inputAmounts = new HashMap<>();
         if (inputConfig.size() != connections.size()) {
-            return inputs;
+            return inputAmounts;
         }
 
-        for (int i = 0; i < inputConfig.size(); i++) {
-            inputs.put(connections.get(i).from, inputConfig.get(i).count);
+        for (int inputIndex = 0; inputIndex < inputConfig.size(); inputIndex++) {
+            inputAmounts.put(connections.get(inputIndex).from, inputConfig.get(inputIndex).count);
         }
-        return inputs;
+        return inputAmounts;
     }
 }

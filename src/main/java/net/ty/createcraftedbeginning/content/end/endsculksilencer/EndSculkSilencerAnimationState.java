@@ -16,13 +16,13 @@ public final class EndSculkSilencerAnimationState {
     private final LerpedFloat animation = LerpedFloat.angular().startWithValue(0);
 
     public static float calculateTargetSpeed(float kineticSpeed) {
-        float absSpeed = Mth.abs(kineticSpeed);
-        if (absSpeed == 0) {
+        float absoluteSpeed = Mth.abs(kineticSpeed);
+        if (absoluteSpeed == 0) {
             return 0;
         }
 
-        float rawTargetSpeed = Math.signum(kineticSpeed) * 2 * Mth.ceil(Math.log10(absSpeed) + Math.sqrt(absSpeed));
-        return Mth.clamp(rawTargetSpeed, -MAX_ANIMATION_SPEED, MAX_ANIMATION_SPEED);
+        float unclampedTargetSpeed = Math.signum(kineticSpeed) * 2 * Mth.ceil(Math.log10(absoluteSpeed) + Math.sqrt(absoluteSpeed));
+        return Mth.clamp(unclampedTargetSpeed, -MAX_ANIMATION_SPEED, MAX_ANIMATION_SPEED);
     }
 
     public LerpedFloat getAnimation() {

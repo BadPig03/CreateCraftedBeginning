@@ -45,27 +45,27 @@ public class GasInjectionChamberVisual extends AbstractBlockEntityVisual<GasInje
         ItemStack installedFilter = blockEntity.getInstalledFilter();
         boolean filterInstancesChanged = updateFilterInstances(installedFilter);
 
-        float ticks = blockEntity.getRenderedProcessingTicks(partialTick);
-        float nozzleOffset = GasInjectionChamberRenderer.getNozzleSqueeze(ticks);
-        float partOffset = GasInjectionChamberRenderer.getNozzleSqueezePart(ticks);
-        if (filterInstancesChanged || nozzleOffset != lastNozzleOffset || partOffset != lastPartOffset) {
-            updateTransforms(nozzleOffset, partOffset);
+        float processingTicks = blockEntity.getRenderedProcessingTicks(partialTick);
+        float nozzleOffset = GasInjectionChamberRenderer.getNozzleSqueeze(processingTicks);
+        float nozzlePartOffset = GasInjectionChamberRenderer.getNozzleSqueezePart(processingTicks);
+        if (filterInstancesChanged || nozzleOffset != lastNozzleOffset || nozzlePartOffset != lastPartOffset) {
+            updateTransforms(nozzleOffset, nozzlePartOffset);
             lastNozzleOffset = nozzleOffset;
-            lastPartOffset = partOffset;
+            lastPartOffset = nozzlePartOffset;
         }
 
         if (filterInner == null) {
             return;
         }
 
-        int color = installedFilter.getOrDefault(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_COLOR, 0xFFFFFFFF);
-        if (color == lastFilterColor) {
+        int filterColor = installedFilter.getOrDefault(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_COLOR, 0xFFFFFFFF);
+        if (filterColor == lastFilterColor) {
             return;
         }
 
-        filterInner.color(color >> 16 & 0xFF, color >> 8 & 0xFF, color & 0xFF, 0xFF);
+        filterInner.color(filterColor >> 16 & 0xFF, filterColor >> 8 & 0xFF, filterColor & 0xFF, 0xFF);
         filterInner.setChanged();
-        lastFilterColor = color;
+        lastFilterColor = filterColor;
     }
 
     protected boolean updateFilterInstances(ItemStack installedFilter) {

@@ -28,12 +28,12 @@ public class SturdyCrateBlockEntity extends FilteredCrateBlockEntity {
         return SturdyCratePortableStorage.hasStoredData(this);
     }
 
-    public void saveToItem(ItemStack crate) {
-        SturdyCratePortableStorage.saveToItem(this, crate);
+    public void saveToItem(ItemStack crateItem) {
+        SturdyCratePortableStorage.saveToItem(this, crateItem);
     }
 
-    public void loadFromItem(ItemStack crate) {
-        SturdyCratePortableStorage.loadFromItem(this, crate);
+    public void loadFromItem(ItemStack crateItem) {
+        SturdyCratePortableStorage.loadFromItem(this, crateItem);
     }
 
     @Override

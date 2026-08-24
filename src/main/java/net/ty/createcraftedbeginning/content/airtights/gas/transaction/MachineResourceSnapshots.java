@@ -26,84 +26,88 @@ public final class MachineResourceSnapshots {
     private MachineResourceSnapshots() {
     }
 
-    public static @Unmodifiable List<ItemStack> copyItems(IItemHandler inventory) {
-        List<ItemStack> contents = new ArrayList<>(inventory.getSlots());
-        for (int slot = 0; slot < inventory.getSlots(); slot++) {
-            contents.add(inventory.getStackInSlot(slot).copy());
+    public static @Unmodifiable List<ItemStack> copyItems(IItemHandler itemHandler) {
+        List<ItemStack> items = new ArrayList<>(itemHandler.getSlots());
+        for (int slot = 0; slot < itemHandler.getSlots(); slot++) {
+            items.add(itemHandler.getStackInSlot(slot).copy());
         }
-        return List.copyOf(contents);
+        return List.copyOf(items);
     }
 
-    public static boolean matchesItems(IItemHandler inventory, List<ItemStack> expected) {
-        if (inventory.getSlots() != expected.size()) {
+    public static boolean matchesItems(IItemHandler itemHandler, List<ItemStack> expectedItems) {
+        if (itemHandler.getSlots() != expectedItems.size()) {
             return false;
         }
 
-        for (int slot = 0; slot < inventory.getSlots(); slot++) {
-            if (!ItemStack.matches(inventory.getStackInSlot(slot), expected.get(slot))) {
-                return false;
+        for (int slot = 0; slot < itemHandler.getSlots(); slot++) {
+            if (ItemStack.matches(itemHandler.getStackInSlot(slot), expectedItems.get(slot))) {
+                continue;
             }
+
+            return false;
         }
         return true;
     }
 
-    public static void restoreItems(IItemHandlerModifiable inventory, List<ItemStack> snapshot) {
-        if (inventory.getSlots() != snapshot.size()) {
+    public static void restoreItems(IItemHandlerModifiable itemHandler, List<ItemStack> itemSnapshot) {
+        if (itemHandler.getSlots() != itemSnapshot.size()) {
             throw new IllegalArgumentException("Item snapshot slot count does not match inventory");
         }
-        for (int slot = 0; slot < inventory.getSlots(); slot++) {
-            inventory.setStackInSlot(slot, snapshot.get(slot).copy());
+        for (int slot = 0; slot < itemHandler.getSlots(); slot++) {
+            itemHandler.setStackInSlot(slot, itemSnapshot.get(slot).copy());
         }
     }
 
-    public static @Unmodifiable List<FluidStack> copyFluids(IFluidHandler handler) {
-        List<FluidStack> contents = new ArrayList<>(handler.getTanks());
-        for (int tank = 0; tank < handler.getTanks(); tank++) {
-            contents.add(handler.getFluidInTank(tank).copy());
+    public static @Unmodifiable List<FluidStack> copyFluids(IFluidHandler fluidHandler) {
+        List<FluidStack> fluids = new ArrayList<>(fluidHandler.getTanks());
+        for (int tankIndex = 0; tankIndex < fluidHandler.getTanks(); tankIndex++) {
+            fluids.add(fluidHandler.getFluidInTank(tankIndex).copy());
         }
-        return List.copyOf(contents);
+        return List.copyOf(fluids);
     }
 
-    public static boolean matchesFluids(IFluidHandler handler, List<FluidStack> expected) {
-        if (handler.getTanks() != expected.size()) {
+    public static boolean matchesFluids(IFluidHandler fluidHandler, List<FluidStack> expectedFluids) {
+        if (fluidHandler.getTanks() != expectedFluids.size()) {
             return false;
         }
 
-        for (int tank = 0; tank < handler.getTanks(); tank++) {
-            FluidStack current = handler.getFluidInTank(tank);
-            FluidStack expectedStack = expected.get(tank);
-            if (current.isEmpty() || expectedStack.isEmpty()) {
-                if (current.isEmpty() != expectedStack.isEmpty()) {
+        for (int tankIndex = 0; tankIndex < fluidHandler.getTanks(); tankIndex++) {
+            FluidStack currentFluid = fluidHandler.getFluidInTank(tankIndex);
+            FluidStack expectedFluid = expectedFluids.get(tankIndex);
+            if (currentFluid.isEmpty() || expectedFluid.isEmpty()) {
+                if (currentFluid.isEmpty() != expectedFluid.isEmpty()) {
                     return false;
                 }
 
                 continue;
             }
 
-            if (current.getAmount() != expectedStack.getAmount() || !FluidStack.isSameFluidSameComponents(current, expectedStack)) {
+            if (currentFluid.getAmount() != expectedFluid.getAmount() || !FluidStack.isSameFluidSameComponents(currentFluid, expectedFluid)) {
                 return false;
             }
         }
         return true;
     }
 
-    public static @Unmodifiable List<GasStack> copyGases(IGasHandler handler) {
-        List<GasStack> contents = new ArrayList<>(handler.getTanks());
-        for (int tank = 0; tank < handler.getTanks(); tank++) {
-            contents.add(handler.getGasInTank(tank).copy());
+    public static @Unmodifiable List<GasStack> copyGases(IGasHandler gasHandler) {
+        List<GasStack> gases = new ArrayList<>(gasHandler.getTanks());
+        for (int tankIndex = 0; tankIndex < gasHandler.getTanks(); tankIndex++) {
+            gases.add(gasHandler.getGasInTank(tankIndex).copy());
         }
-        return List.copyOf(contents);
+        return List.copyOf(gases);
     }
 
-    public static boolean matchesGases(IGasHandler handler, List<GasStack> expected) {
-        if (handler.getTanks() != expected.size()) {
+    public static boolean matchesGases(IGasHandler gasHandler, List<GasStack> expectedGases) {
+        if (gasHandler.getTanks() != expectedGases.size()) {
             return false;
         }
 
-        for (int tank = 0; tank < handler.getTanks(); tank++) {
-            if (!GasStack.matches(handler.getGasInTank(tank), expected.get(tank))) {
-                return false;
+        for (int tankIndex = 0; tankIndex < gasHandler.getTanks(); tankIndex++) {
+            if (GasStack.matches(gasHandler.getGasInTank(tankIndex), expectedGases.get(tankIndex))) {
+                continue;
             }
+
+            return false;
         }
         return true;
     }
@@ -117,16 +121,16 @@ public final class MachineResourceSnapshots {
     }
 
     public static GasContentsSnapshot snapshotGasContents(SmartGasTankBehaviour... behaviours) {
-        List<List<GasStack>> snapshots = new ArrayList<>(behaviours.length);
+        List<List<GasStack>> behaviourSnapshots = new ArrayList<>(behaviours.length);
         for (SmartGasTankBehaviour behaviour : behaviours) {
             List<GasStack> tankSnapshots = new ArrayList<>(behaviour.getTanks().length);
-            IGasHandler handler = behaviour.getCapability();
-            for (int tank = 0; tank < behaviour.getTanks().length; tank++) {
-                tankSnapshots.add(handler.getGasInTank(tank).copy());
+            IGasHandler gasHandler = behaviour.getCapability();
+            for (int tankIndex = 0; tankIndex < behaviour.getTanks().length; tankIndex++) {
+                tankSnapshots.add(gasHandler.getGasInTank(tankIndex).copy());
             }
-            snapshots.add(List.copyOf(tankSnapshots));
+            behaviourSnapshots.add(List.copyOf(tankSnapshots));
         }
-        return new GasContentsSnapshot(List.copyOf(snapshots));
+        return new GasContentsSnapshot(List.copyOf(behaviourSnapshots));
     }
 
     public static void restoreGasContents(GasContentsSnapshot snapshot, SmartGasTankBehaviour... behaviours) {
@@ -140,34 +144,36 @@ public final class MachineResourceSnapshots {
                 throw new IllegalArgumentException("Gas snapshot tank count does not match target");
             }
 
-            GasStack[] replacement = new GasStack[tankSnapshots.size()];
-            for (int tank = 0; tank < tankSnapshots.size(); tank++) {
-                replacement[tank] = tankSnapshots.get(tank).copy();
+            GasStack[] restoredContents = new GasStack[tankSnapshots.size()];
+            for (int tankIndex = 0; tankIndex < tankSnapshots.size(); tankIndex++) {
+                restoredContents[tankIndex] = tankSnapshots.get(tankIndex).copy();
             }
 
             behaviour.beginMutation();
-            boolean changed;
+            boolean contentsChanged;
             try {
-                behaviour.replaceContents(replacement, 0);
+                behaviour.replaceContents(restoredContents, 0);
             } finally {
-                changed = behaviour.endMutation();
+                contentsChanged = behaviour.endMutation();
             }
-            if (changed) {
-                behaviour.sendDataImmediately();
+            if (!contentsChanged) {
+                continue;
             }
+
+            behaviour.sendDataImmediately();
         }
     }
 
     public static FluidTankSnapshot snapshotFluidTanks(Provider provider, SmartFluidTankBehaviour... behaviours) {
-        List<List<CompoundTag>> snapshots = new ArrayList<>(behaviours.length);
+        List<List<CompoundTag>> behaviourSnapshots = new ArrayList<>(behaviours.length);
         for (SmartFluidTankBehaviour behaviour : behaviours) {
             List<CompoundTag> tankSnapshots = new ArrayList<>(behaviour.getTanks().length);
-            for (TankSegment tank : behaviour.getTanks()) {
-                tankSnapshots.add(tank.writeNBT(provider).copy());
+            for (TankSegment tankSegment : behaviour.getTanks()) {
+                tankSnapshots.add(tankSegment.writeNBT(provider).copy());
             }
-            snapshots.add(List.copyOf(tankSnapshots));
+            behaviourSnapshots.add(List.copyOf(tankSnapshots));
         }
-        return new FluidTankSnapshot(List.copyOf(snapshots));
+        return new FluidTankSnapshot(List.copyOf(behaviourSnapshots));
     }
 
     public static void restoreFluidTanks(Provider provider, FluidTankSnapshot snapshot, SmartFluidTankBehaviour... behaviours) {
@@ -180,22 +186,22 @@ public final class MachineResourceSnapshots {
             if (tankSnapshots.size() != behaviour.getTanks().length) {
                 throw new IllegalArgumentException("Fluid snapshot tank count does not match target");
             }
-            for (int tank = 0; tank < behaviour.getTanks().length; tank++) {
-                behaviour.getTanks()[tank].readNBT(tankSnapshots.get(tank).copy(), provider, false);
+            for (int tankIndex = 0; tankIndex < behaviour.getTanks().length; tankIndex++) {
+                behaviour.getTanks()[tankIndex].readNBT(tankSnapshots.get(tankIndex).copy(), provider, false);
             }
         }
     }
 
     public static GasTankSnapshot snapshotGasTanks(Provider provider, SmartGasTankBehaviour... behaviours) {
-        List<List<CompoundTag>> snapshots = new ArrayList<>(behaviours.length);
+        List<List<CompoundTag>> behaviourSnapshots = new ArrayList<>(behaviours.length);
         for (SmartGasTankBehaviour behaviour : behaviours) {
             List<CompoundTag> tankSnapshots = new ArrayList<>(behaviour.getTanks().length);
-            for (SmartGasTankBehaviour.TankSegment tank : behaviour.getTanks()) {
-                tankSnapshots.add(tank.write(provider).copy());
+            for (SmartGasTankBehaviour.TankSegment tankSegment : behaviour.getTanks()) {
+                tankSnapshots.add(tankSegment.write(provider).copy());
             }
-            snapshots.add(List.copyOf(tankSnapshots));
+            behaviourSnapshots.add(List.copyOf(tankSnapshots));
         }
-        return new GasTankSnapshot(List.copyOf(snapshots));
+        return new GasTankSnapshot(List.copyOf(behaviourSnapshots));
     }
 
     public static void restoreGasTanks(Provider provider, GasTankSnapshot snapshot, SmartGasTankBehaviour... behaviours) {
@@ -208,8 +214,8 @@ public final class MachineResourceSnapshots {
             if (tankSnapshots.size() != behaviour.getTanks().length) {
                 throw new IllegalArgumentException("Gas snapshot tank count does not match target");
             }
-            for (int tank = 0; tank < behaviour.getTanks().length; tank++) {
-                behaviour.getTanks()[tank].read(tankSnapshots.get(tank).copy(), provider);
+            for (int tankIndex = 0; tankIndex < behaviour.getTanks().length; tankIndex++) {
+                behaviour.getTanks()[tankIndex].read(tankSnapshots.get(tankIndex).copy(), provider);
             }
         }
     }

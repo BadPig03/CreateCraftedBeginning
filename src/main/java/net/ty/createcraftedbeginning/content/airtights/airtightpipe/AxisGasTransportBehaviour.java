@@ -34,8 +34,8 @@ public abstract class AxisGasTransportBehaviour extends GasTransportBehaviour {
             return false;
         }
 
-        BlockPos otherPos = blockEntity.getBlockPos().relative(direction);
-        return level.isLoaded(otherPos) && isValidAirtightComponents(level, otherPos, level.getBlockState(otherPos), direction);
+        BlockPos adjacentPos = blockEntity.getBlockPos().relative(direction);
+        return level.isLoaded(adjacentPos) && isValidAirtightComponents(level, adjacentPos, level.getBlockState(adjacentPos), direction);
     }
 
     @Override
@@ -49,15 +49,15 @@ public abstract class AxisGasTransportBehaviour extends GasTransportBehaviour {
             return AttachmentTypes.NONE;
         }
 
-        BlockPos otherPos = pos.relative(direction);
-        BlockState otherState = level.getBlockState(otherPos);
-        Block otherBlock = otherState.getBlock();
+        BlockPos adjacentPos = pos.relative(direction);
+        BlockState adjacentState = level.getBlockState(adjacentPos);
+        Block adjacentBlock = adjacentState.getBlock();
         Axis pipeAxis = state.getValue(BlockStateProperties.AXIS);
-        if (otherBlock instanceof IAxisPipe axisPipe && axisPipe.getAxis(otherState) == pipeAxis) {
+        if (adjacentBlock instanceof IAxisPipe axisPipe && axisPipe.getAxis(adjacentState) == pipeAxis) {
             return AttachmentTypes.NONE;
         }
 
-        if (otherBlock instanceof IAirtightPipeDrain drain && drain.shouldRenderDrain(level, otherPos, otherState, direction.getOpposite())) {
+        if (adjacentBlock instanceof IAirtightPipeDrain drain && drain.shouldRenderDrain(level, adjacentPos, adjacentState, direction.getOpposite())) {
             return AttachmentTypes.DRAIN;
         }
         return AttachmentTypes.RIM;

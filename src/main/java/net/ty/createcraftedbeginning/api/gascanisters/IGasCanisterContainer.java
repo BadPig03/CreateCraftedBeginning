@@ -37,8 +37,8 @@ public interface IGasCanisterContainer {
 
     List<ItemStack> getVirtualItems();
 
-    default MachineFillingMode getMachineFillingMode() {
-        return MachineFillingMode.ALLOW;
+    default InjectionMode getInjectionMode() {
+        return InjectionMode.ALLOW;
     }
 
     long fill(int tank, GasStack resource, GasAction action);
@@ -47,9 +47,7 @@ public interface IGasCanisterContainer {
 
     void save();
 
-    void setCapacity(int tank, long capacity);
-
-    enum MachineFillingMode {
+    enum InjectionMode {
         ALLOW,
         DENY
     }

@@ -32,18 +32,18 @@ public final class CCBParticles {
         }
 
         RandomSource random = level.getRandom();
-        BlockParticleOption option = new BlockParticleOption(ParticleTypes.BLOCK, state);
+        BlockParticleOption particleOption = new BlockParticleOption(ParticleTypes.BLOCK, state);
         double centerX = pos.getX() + 0.5;
         double centerY = pos.getY() + 0.5;
         double centerZ = pos.getZ() + 0.5;
         for (int i = 0; i < REDUCED_DESTROY_PARTICLE_COUNT; i++) {
-            double x = pos.getX() + PARTICLE_POSITION_MARGIN + random.nextDouble() * PARTICLE_POSITION_RANGE;
-            double y = pos.getY() + PARTICLE_POSITION_MARGIN + random.nextDouble() * PARTICLE_POSITION_RANGE;
-            double z = pos.getZ() + PARTICLE_POSITION_MARGIN + random.nextDouble() * PARTICLE_POSITION_RANGE;
-            double velocityX = (x - centerX) * PARTICLE_OUTWARD_SPEED;
-            double velocityY = (y - centerY) * PARTICLE_OUTWARD_SPEED + PARTICLE_UPWARD_SPEED;
-            double velocityZ = (z - centerZ) * PARTICLE_OUTWARD_SPEED;
-            manager.createParticle(option, x, y, z, velocityX, velocityY, velocityZ);
+            double particleX = pos.getX() + PARTICLE_POSITION_MARGIN + random.nextDouble() * PARTICLE_POSITION_RANGE;
+            double particleY = pos.getY() + PARTICLE_POSITION_MARGIN + random.nextDouble() * PARTICLE_POSITION_RANGE;
+            double particleZ = pos.getZ() + PARTICLE_POSITION_MARGIN + random.nextDouble() * PARTICLE_POSITION_RANGE;
+            double velocityX = (particleX - centerX) * PARTICLE_OUTWARD_SPEED;
+            double velocityY = (particleY - centerY) * PARTICLE_OUTWARD_SPEED + PARTICLE_UPWARD_SPEED;
+            double velocityZ = (particleZ - centerZ) * PARTICLE_OUTWARD_SPEED;
+            manager.createParticle(particleOption, particleX, particleY, particleZ, velocityX, velocityY, velocityZ);
         }
     }
 }

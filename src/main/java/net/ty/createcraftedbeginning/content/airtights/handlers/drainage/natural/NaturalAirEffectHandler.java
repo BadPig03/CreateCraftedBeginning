@@ -50,10 +50,10 @@ public class NaturalAirEffectHandler implements AirtightDrainageHandler {
             }
 
             if (entity instanceof AbstractPiglinAccess piglinAccessor) {
-                piglinAccessor.setTimeInOverworld(piglinAccessor.getTimeInOverworld() + scale);
+                piglinAccessor.ccb$setTimeInOverworld(piglinAccessor.ccb$getTimeInOverworld() + scale);
             }
             else if (entity instanceof HoglinAccess hoglinAccessor) {
-                hoglinAccessor.setTimeInOverworld(hoglinAccessor.getTimeInOverworld() + scale);
+                hoglinAccessor.ccb$setTimeInOverworld(hoglinAccessor.ccb$getTimeInOverworld() + scale);
             }
         }
     }

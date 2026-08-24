@@ -76,40 +76,40 @@ public final class AirtightUpgradeRegistry {
             throw new IllegalStateException("Airtight upgrade registry '" + name + "' has already been registered");
         }
 
-        List<AirtightUpgrade> ordered = List.copyOf(Arrays.asList(upgrades.clone()));
-        Map<ResourceLocation, AirtightUpgrade> localById = new HashMap<>();
-        Set<ResourceLocation> ids = new HashSet<>();
-        for (AirtightUpgrade upgrade : ordered) {
-            ResourceLocation id = upgrade.getID();
-            if (!ids.add(id)) {
-                throw new IllegalArgumentException("Duplicate airtight upgrade id '" + id + "' in registry '" + name + '\'');
+        List<AirtightUpgrade> registeredUpgrades = List.copyOf(Arrays.asList(upgrades.clone()));
+        Map<ResourceLocation, AirtightUpgrade> newUpgradesById = new HashMap<>();
+        Set<ResourceLocation> upgradeIds = new HashSet<>();
+        for (AirtightUpgrade upgrade : registeredUpgrades) {
+            ResourceLocation upgradeId = upgrade.getID();
+            if (!upgradeIds.add(upgradeId)) {
+                throw new IllegalArgumentException("Duplicate airtight upgrade id '" + upgradeId + "' in registry '" + name + '\'');
             }
-            if (GLOBAL_REGISTRY.containsKey(id)) {
-                throw new IllegalArgumentException("Airtight upgrade id '" + id + "' is already registered");
+            if (GLOBAL_REGISTRY.containsKey(upgradeId)) {
+                throw new IllegalArgumentException("Airtight upgrade id '" + upgradeId + "' is already registered");
             }
             if (upgrade.startsEnabled() && !upgrade.startsInstalled()) {
-                throw new IllegalArgumentException("Airtight upgrade '" + id + "' cannot start enabled before it is installed");
+                throw new IllegalArgumentException("Airtight upgrade '" + upgradeId + "' cannot start enabled before it is installed");
             }
 
-            localById.put(id, upgrade);
+            newUpgradesById.put(upgradeId, upgrade);
         }
 
-        List<AirtightUpgradeStatus> statuses = new ArrayList<>(ordered.size());
-        List<TickingAirtightUpgrade> ticking = new ArrayList<>();
-        for (AirtightUpgrade upgrade : ordered) {
-            statuses.add(new AirtightUpgradeStatus(upgrade.getID(), upgrade.startsEnabled(), upgrade.startsInstalled()));
+        List<AirtightUpgradeStatus> newDefaultStatuses = new ArrayList<>(registeredUpgrades.size());
+        List<TickingAirtightUpgrade> newTickingUpgrades = new ArrayList<>();
+        for (AirtightUpgrade upgrade : registeredUpgrades) {
+            newDefaultStatuses.add(new AirtightUpgradeStatus(upgrade.getID(), upgrade.startsEnabled(), upgrade.startsInstalled()));
             if (!(upgrade instanceof TickingAirtightUpgrade tickingUpgrade)) {
                 continue;
             }
 
-            ticking.add(tickingUpgrade);
+            newTickingUpgrades.add(tickingUpgrade);
         }
 
-        GLOBAL_REGISTRY.putAll(localById);
-        upgradesById = Map.copyOf(localById);
-        orderedUpgrades = ordered;
-        defaultStatuses = List.copyOf(statuses);
-        tickingUpgrades = List.copyOf(ticking);
+        GLOBAL_REGISTRY.putAll(newUpgradesById);
+        upgradesById = Map.copyOf(newUpgradesById);
+        orderedUpgrades = registeredUpgrades;
+        defaultStatuses = List.copyOf(newDefaultStatuses);
+        tickingUpgrades = List.copyOf(newTickingUpgrades);
         registered = true;
     }
 }

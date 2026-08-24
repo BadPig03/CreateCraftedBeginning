@@ -21,23 +21,23 @@ public class TeslaTurbineBlockItem extends BlockItem {
 
     @Override
     public InteractionResult place(BlockPlaceContext context) {
-        InteractionResult result = super.place(context);
-        if (result != InteractionResult.FAIL || !(getBlock() instanceof TeslaTurbineBlock turbine)) {
-            return result;
+        InteractionResult placementResult = super.place(context);
+        if (placementResult != InteractionResult.FAIL || !(getBlock() instanceof TeslaTurbineBlock turbineBlock)) {
+            return placementResult;
         }
 
-        Axis axis = turbine.getAxisForPlacement(context);
-        Direction direction = context.getClickedFace();
-        if (direction.getAxis() != axis) {
-            BlockPlaceContext offsetContext = BlockPlaceContext.at(context, context.getClickedPos().relative(direction), direction);
-            result = super.place(offsetContext);
+        Axis turbineAxis = turbineBlock.getAxisForPlacement(context);
+        Direction clickedFace = context.getClickedFace();
+        if (clickedFace.getAxis() != turbineAxis) {
+            BlockPlaceContext offsetContext = BlockPlaceContext.at(context, context.getClickedPos().relative(clickedFace), clickedFace);
+            placementResult = super.place(offsetContext);
         }
-        if (result != InteractionResult.FAIL || !context.getLevel().isClientSide()) {
-            return result;
+        if (placementResult != InteractionResult.FAIL || !context.getLevel().isClientSide()) {
+            return placementResult;
         }
 
         CCBClientBridge.showTeslaTurbinePlacementBounds(context);
-        return result;
+        return placementResult;
     }
 
 }

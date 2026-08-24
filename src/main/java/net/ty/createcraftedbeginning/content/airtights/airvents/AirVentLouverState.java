@@ -43,8 +43,8 @@ public final class AirVentLouverState {
     }
 
     public boolean isLouverOpen(Direction direction) {
-        int mask = directionMask(direction);
-        return (louverMask & mask) != 0 && (openedMask & mask) != 0;
+        int directionBit = directionMask(direction);
+        return (louverMask & directionBit) != 0 && (openedMask & directionBit) != 0;
     }
 
     public int getVisibleLouverMask(int connectionMask) {
@@ -66,22 +66,22 @@ public final class AirVentLouverState {
         return hasLouver(direction) && setLouverState(direction, isLouverOpen(direction) ? VentState.CLOSED : VentState.OPENED);
     }
 
-    public boolean setLouverState(Direction direction, VentState state) {
-        int mask = directionMask(direction);
+    public boolean setLouverState(Direction direction, VentState louverState) {
+        int directionBit = directionMask(direction);
         int nextLouverMask = louverMask;
         int nextOpenedMask = openedMask;
-        switch (state) {
+        switch (louverState) {
             case EMPTY -> {
-                nextLouverMask &= ~mask;
-                nextOpenedMask &= ~mask;
+                nextLouverMask &= ~directionBit;
+                nextOpenedMask &= ~directionBit;
             }
             case CLOSED -> {
-                nextLouverMask |= mask;
-                nextOpenedMask &= ~mask;
+                nextLouverMask |= directionBit;
+                nextOpenedMask &= ~directionBit;
             }
             case OPENED -> {
-                nextLouverMask |= mask;
-                nextOpenedMask |= mask;
+                nextLouverMask |= directionBit;
+                nextOpenedMask |= directionBit;
             }
             case CONNECTED -> {
                 return false;

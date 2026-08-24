@@ -32,15 +32,15 @@ final class AirtightHatchCanisterManager {
         return Math.max(normalizedCapacity, normalizedGasAmount);
     }
 
-    private static CanisterType toBlockCanisterType(HatchCanisterType type) {
-        return type == HatchCanisterType.CREATIVE ? CanisterType.CREATIVE : CanisterType.NORMAL;
+    private static CanisterType toBlockCanisterType(HatchCanisterType canisterType) {
+        return canisterType == HatchCanisterType.CREATIVE ? CanisterType.CREATIVE : CanisterType.NORMAL;
     }
 
-    private static boolean isSameSnapshot(GasStack first, GasStack second) {
-        if (first.isEmpty() || second.isEmpty()) {
-            return first.isEmpty() && second.isEmpty();
+    private static boolean isSameSnapshot(GasStack expectedGas, GasStack actualGas) {
+        if (expectedGas.isEmpty() || actualGas.isEmpty()) {
+            return expectedGas.isEmpty() && actualGas.isEmpty();
         }
-        return first.getAmount() == second.getAmount() && GasStack.isSameGasSameComponents(first, second);
+        return expectedGas.getAmount() == actualGas.getAmount() && GasStack.isSameGasSameComponents(expectedGas, actualGas);
     }
 
     ItemStack getStoredCanister() {
@@ -70,49 +70,49 @@ final class AirtightHatchCanisterManager {
             return;
         }
 
-        BlockState state = hatch.getBlockState();
-        if (!(state.getBlock() instanceof AirtightHatchBlock)) {
+        BlockState hatchState = hatch.getBlockState();
+        if (!(hatchState.getBlock() instanceof AirtightHatchBlock)) {
             return;
         }
 
-        CanisterType expectedType = getStoredCanisterType();
-        SmartGasTank tank = hatch.getGasTankBehaviour().getPrimaryHandler();
-        boolean canisterChanged = false;
-        boolean stateChanged = false;
-        boolean tankStateChanged = false;
+        CanisterType expectedCanisterType = getStoredCanisterType();
+        SmartGasTank gasTank = hatch.getGasTankBehaviour().getPrimaryHandler();
+        boolean canisterStackChanged = false;
+        boolean blockStateChanged = false;
+        boolean gasTankChanged = false;
 
         hatch.getGasTankBehaviour().beginMutation();
         try {
-            if (expectedType == CanisterType.EMPTY) {
+            if (expectedCanisterType == CanisterType.EMPTY) {
                 if (!canister.isEmpty()) {
                     canister = ItemStack.EMPTY;
-                    canisterChanged = true;
+                    canisterStackChanged = true;
                 }
-                if (!tank.getGasStack().isEmpty()) {
-                    tank.setGasStack(GasStack.EMPTY);
-                    tankStateChanged = true;
+                if (!gasTank.getGasStack().isEmpty()) {
+                    gasTank.setGasStack(GasStack.EMPTY);
+                    gasTankChanged = true;
                 }
-                if (tank.getCapacity() != 0) {
-                    tank.setCapacity(0);
-                    tankStateChanged = true;
+                if (gasTank.getCapacity() != 0) {
+                    gasTank.setCapacity(0);
+                    gasTankChanged = true;
                 }
             }
             else if (canister.getCount() != 1) {
                 canister = canister.copyWithCount(1);
-                canisterChanged = true;
+                canisterStackChanged = true;
             }
 
-            if (state.getValue(AirtightHatchBlock.CANISTER_TYPE) != expectedType) {
-                stateChanged = updateCanisterBlockState(level, state, expectedType);
+            if (hatchState.getValue(AirtightHatchBlock.CANISTER_TYPE) != expectedCanisterType) {
+                blockStateChanged = updateCanisterBlockState(level, hatchState, expectedCanisterType);
             }
         } finally {
-            tankStateChanged |= hatch.getGasTankBehaviour().endMutation();
+            gasTankChanged |= hatch.getGasTankBehaviour().endMutation();
         }
 
-        if (canisterChanged || stateChanged || tankStateChanged) {
+        if (canisterStackChanged || blockStateChanged || gasTankChanged) {
             hatch.setChanged();
         }
-        if (!tankStateChanged) {
+        if (!gasTankChanged) {
             return;
         }
 
@@ -120,20 +120,20 @@ final class AirtightHatchCanisterManager {
     }
 
     ItemStack createCanisterItemStack() {
-        ItemStack stack = canister.copyWithCount(1);
-        IAirtightHatchCanister hatchCanister = AirtightHatchCanisters.get(stack);
+        ItemStack canisterStack = canister.copyWithCount(1);
+        IAirtightHatchCanister hatchCanister = AirtightHatchCanisters.get(canisterStack);
         if (hatchCanister == null) {
             return ItemStack.EMPTY;
         }
 
-        GasStack snapshot = hatch.getHatchGasContent();
-        if (!hatchCanister.setAirtightHatchContents(snapshot)) {
+        GasStack gasSnapshot = hatch.getHatchGasContent();
+        if (!hatchCanister.setAirtightHatchContents(gasSnapshot)) {
             return ItemStack.EMPTY;
         }
 
         hatchCanister.save();
-        IAirtightHatchCanister savedCanister = AirtightHatchCanisters.get(stack);
-        return savedCanister != null && isSameSnapshot(snapshot, savedCanister.getAirtightHatchContents()) ? stack : ItemStack.EMPTY;
+        IAirtightHatchCanister savedCanister = AirtightHatchCanisters.get(canisterStack);
+        return savedCanister != null && isSameSnapshot(gasSnapshot, savedCanister.getAirtightHatchContents()) ? canisterStack : ItemStack.EMPTY;
     }
 
     boolean giveCanisterToPlayer(Player player) {
@@ -152,50 +152,50 @@ final class AirtightHatchCanisterManager {
             return false;
         }
 
-        BlockState state = hatch.getBlockState();
-        if (!(state.getBlock() instanceof AirtightHatchBlock)) {
+        BlockState hatchState = hatch.getBlockState();
+        if (!(hatchState.getBlock() instanceof AirtightHatchBlock)) {
             return false;
         }
 
-        ItemStack newCanister = sourceStack.copyWithCount(1);
-        IAirtightHatchCanister hatchCanister = AirtightHatchCanisters.get(newCanister);
+        ItemStack installedCanister = sourceStack.copyWithCount(1);
+        IAirtightHatchCanister hatchCanister = AirtightHatchCanisters.get(installedCanister);
         if (hatchCanister == null) {
             return false;
         }
 
-        CanisterType type = toBlockCanisterType(hatchCanister.getAirtightHatchType());
-        GasStack gas = hatchCanister.getAirtightHatchContents().copy();
-        long capacity = getEffectiveCapacity(hatchCanister.getAirtightHatchCapacity(gas), gas.getAmount());
+        CanisterType canisterType = toBlockCanisterType(hatchCanister.getAirtightHatchType());
+        GasStack canisterGas = hatchCanister.getAirtightHatchContents().copy();
+        long canisterCapacity = getEffectiveCapacity(hatchCanister.getAirtightHatchCapacity(canisterGas), canisterGas.getAmount());
 
-        ItemStack oldCanister = canister;
-        long oldCapacity = hatch.getHatchCapacity();
-        GasStack oldGas = getInternalGasContent().copy();
-        SmartGasTank tank = hatch.getGasTankBehaviour().getPrimaryHandler();
-        boolean updated = false;
+        ItemStack previousCanister = canister;
+        long previousCapacity = hatch.getHatchCapacity();
+        GasStack previousGas = getInternalGasContent().copy();
+        SmartGasTank gasTank = hatch.getGasTankBehaviour().getPrimaryHandler();
+        boolean blockStateUpdated = false;
 
         hatch.getGasTankBehaviour().beginMutation();
         try {
-            canister = newCanister;
-            tank.setCapacity(capacity);
-            tank.setGasStack(gas);
-            updated = updateCanisterBlockState(level, state, type);
-            if (!updated) {
-                canister = oldCanister;
-                tank.setCapacity(oldCapacity);
-                tank.setGasStack(oldGas);
+            canister = installedCanister;
+            gasTank.setCapacity(canisterCapacity);
+            gasTank.setGasStack(canisterGas);
+            blockStateUpdated = updateCanisterBlockState(level, hatchState, canisterType);
+            if (!blockStateUpdated) {
+                canister = previousCanister;
+                gasTank.setCapacity(previousCapacity);
+                gasTank.setGasStack(previousGas);
                 return false;
             }
 
             sourceStack.shrink(1);
-            if (type == CanisterType.CREATIVE && AirtightHatchTransferMode.fromValue(hatch.getTransferModeValue()) == AirtightHatchTransferMode.STAY_HALF) {
+            if (canisterType == CanisterType.CREATIVE && AirtightHatchTransferMode.fromValue(hatch.getTransferModeValue()) == AirtightHatchTransferMode.STAY_HALF) {
                 hatch.resetTransferMode();
             }
             hatch.resetTransferQuota();
             hatch.setChanged();
             return true;
         } finally {
-            boolean tankChanged = hatch.getGasTankBehaviour().endMutation();
-            if (updated && tankChanged) {
+            boolean gasTankChanged = hatch.getGasTankBehaviour().endMutation();
+            if (blockStateUpdated && gasTankChanged) {
                 hatch.getGasTankBehaviour().sendDataImmediately();
             }
         }
@@ -207,14 +207,14 @@ final class AirtightHatchCanisterManager {
             return;
         }
 
-        SmartGasTank tank = hatch.getGasTankBehaviour().getPrimaryHandler();
-        GasStack gas = tank.getGasStack().copy();
-        long capacity = getEffectiveCapacity(hatchCanister.getAirtightHatchCapacity(gas), gas.getAmount());
-        if (tank.getCapacity() == capacity) {
+        SmartGasTank gasTank = hatch.getGasTankBehaviour().getPrimaryHandler();
+        GasStack gasContent = gasTank.getGasStack().copy();
+        long effectiveCapacity = getEffectiveCapacity(hatchCanister.getAirtightHatchCapacity(gasContent), gasContent.getAmount());
+        if (gasTank.getCapacity() == effectiveCapacity) {
             return;
         }
 
-        tank.setCapacity(capacity);
+        gasTank.setCapacity(effectiveCapacity);
         Level level = hatch.getLevel();
         if (!syncImmediately || level == null || level.isClientSide) {
             return;
@@ -223,8 +223,8 @@ final class AirtightHatchCanisterManager {
         hatch.getGasTankBehaviour().sendDataImmediately();
     }
 
-    private boolean updateCanisterBlockState(Level level, BlockState state, CanisterType type) {
-        return state.getValue(AirtightHatchBlock.CANISTER_TYPE) == type || level.setBlockAndUpdate(hatch.getBlockPos(), state.setValue(AirtightHatchBlock.CANISTER_TYPE, type));
+    private boolean updateCanisterBlockState(Level level, BlockState hatchState, CanisterType canisterType) {
+        return hatchState.getValue(AirtightHatchBlock.CANISTER_TYPE) == canisterType || level.setBlockAndUpdate(hatch.getBlockPos(), hatchState.setValue(AirtightHatchBlock.CANISTER_TYPE, canisterType));
     }
 
     private ItemStack removeCanister() {
@@ -233,41 +233,41 @@ final class AirtightHatchCanisterManager {
             return ItemStack.EMPTY;
         }
 
-        BlockState state = hatch.getBlockState();
-        if (!(state.getBlock() instanceof AirtightHatchBlock)) {
+        BlockState hatchState = hatch.getBlockState();
+        if (!(hatchState.getBlock() instanceof AirtightHatchBlock)) {
             return ItemStack.EMPTY;
         }
 
-        ItemStack removed = createCanisterItemStack();
-        if (removed.isEmpty()) {
+        ItemStack removedCanister = createCanisterItemStack();
+        if (removedCanister.isEmpty()) {
             return ItemStack.EMPTY;
         }
 
-        ItemStack oldCanister = canister;
-        long oldCapacity = hatch.getHatchCapacity();
-        GasStack oldGas = getInternalGasContent().copy();
-        SmartGasTank tank = hatch.getGasTankBehaviour().getPrimaryHandler();
-        boolean updated = false;
+        ItemStack previousCanister = canister;
+        long previousCapacity = hatch.getHatchCapacity();
+        GasStack previousGas = getInternalGasContent().copy();
+        SmartGasTank gasTank = hatch.getGasTankBehaviour().getPrimaryHandler();
+        boolean blockStateUpdated = false;
 
         hatch.getGasTankBehaviour().beginMutation();
         try {
             canister = ItemStack.EMPTY;
-            tank.setGasStack(GasStack.EMPTY);
-            tank.setCapacity(0);
-            updated = updateCanisterBlockState(level, state, CanisterType.EMPTY);
-            if (!updated) {
-                canister = oldCanister;
-                tank.setCapacity(oldCapacity);
-                tank.setGasStack(oldGas);
+            gasTank.setGasStack(GasStack.EMPTY);
+            gasTank.setCapacity(0);
+            blockStateUpdated = updateCanisterBlockState(level, hatchState, CanisterType.EMPTY);
+            if (!blockStateUpdated) {
+                canister = previousCanister;
+                gasTank.setCapacity(previousCapacity);
+                gasTank.setGasStack(previousGas);
                 return ItemStack.EMPTY;
             }
 
             hatch.resetTransferQuota();
             hatch.setChanged();
-            return removed;
+            return removedCanister;
         } finally {
-            boolean tankChanged = hatch.getGasTankBehaviour().endMutation();
-            if (updated && tankChanged) {
+            boolean gasTankChanged = hatch.getGasTankBehaviour().endMutation();
+            if (blockStateUpdated && gasTankChanged) {
                 hatch.getGasTankBehaviour().sendDataImmediately();
             }
         }

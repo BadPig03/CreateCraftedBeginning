@@ -25,20 +25,20 @@ public enum CCBOutliner {
     private final Map<Object, CCBOutlineEntry> outlines = Collections.synchronizedMap(new HashMap<>());
     private final Map<Object, CCBOutlineEntry> outlinesView = Collections.unmodifiableMap(outlines);
 
-    private static float getFadeAlpha(CCBOutlineEntry entry, float partialTicks) {
-        int previousTicks = entry.ticksTillRemoval + 1;
-        float previousAlpha = previousTicks >= 0 ? 1 : 1 + previousTicks / (float) CCBOutlineEntry.FADE_TICKS;
-        float currentAlpha = 1 + entry.ticksTillRemoval / (float) CCBOutlineEntry.FADE_TICKS;
-        float alpha = Mth.lerp(partialTicks, previousAlpha, currentAlpha);
-        return Mth.square(alpha) * alpha;
+    private static float getFadeAlpha(CCBOutlineEntry outlineEntry, float partialTicks) {
+        int previousTicksTillRemoval = outlineEntry.ticksTillRemoval + 1;
+        float previousAlpha = previousTicksTillRemoval >= 0 ? 1 : 1 + previousTicksTillRemoval / (float) CCBOutlineEntry.FADE_TICKS;
+        float currentAlpha = 1 + outlineEntry.ticksTillRemoval / (float) CCBOutlineEntry.FADE_TICKS;
+        float interpolatedAlpha = Mth.lerp(partialTicks, previousAlpha, currentAlpha);
+        return Mth.square(interpolatedAlpha) * interpolatedAlpha;
     }
 
-    private static void renderOutline(CCBOutlineEntry entry, PoseStack poseStack, SuperRenderTypeBuffer buffer, Vec3 camera, float partialTicks) {
-        CCBOutline outline = entry.getOutline();
+    private static void renderOutline(CCBOutlineEntry outlineEntry, PoseStack poseStack, SuperRenderTypeBuffer buffer, Vec3 camera, float partialTicks) {
+        CCBOutline outline = outlineEntry.getOutline();
         CCBOutlineParams params = outline.getParams();
         params.alpha = 1;
-        if (entry.isFading()) {
-            params.alpha = getFadeAlpha(entry, partialTicks);
+        if (outlineEntry.isFading()) {
+            params.alpha = getFadeAlpha(outlineEntry, partialTicks);
             if (params.alpha < 0.125f) {
                 return;
             }
@@ -47,8 +47,8 @@ public enum CCBOutliner {
         outline.render(poseStack, buffer, camera, partialTicks);
     }
 
-    public CCBOutlineParams showCluster(Object slot, Iterable<BlockPos> selection) {
-        XRayBlockClusterOutline outline = new XRayBlockClusterOutline(selection);
+    public CCBOutlineParams showCluster(Object slot, Iterable<BlockPos> positions) {
+        XRayBlockClusterOutline outline = new XRayBlockClusterOutline(positions);
         addOutline(slot, outline);
         return outline.getParams();
     }
@@ -75,15 +75,15 @@ public enum CCBOutliner {
     }
 
     public void tickOutlines() {
-        Iterator<CCBOutlineEntry> iterator = outlines.values().iterator();
-        while (iterator.hasNext()) {
-            CCBOutlineEntry entry = iterator.next();
-            entry.tick();
-            if (entry.isAlive()) {
+        Iterator<CCBOutlineEntry> outlineIterator = outlines.values().iterator();
+        while (outlineIterator.hasNext()) {
+            CCBOutlineEntry outlineEntry = outlineIterator.next();
+            outlineEntry.tick();
+            if (outlineEntry.isAlive()) {
                 continue;
             }
 
-            iterator.remove();
+            outlineIterator.remove();
         }
     }
 

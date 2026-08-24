@@ -25,111 +25,111 @@ final class AirtightHatchController {
         this.canisterManager = canisterManager;
     }
 
-    private static void inputOnly(IGasHandler hatch, IGasHandler target, long limit, boolean creative) {
-        GasStack hatchGas = hatch.getGasInTank(0);
-        GasStack available = creative || hatchGas.isEmpty() ? target.drain(limit, GasAction.SIMULATE) : target.drain(hatchGas.copyWithAmount(limit), GasAction.SIMULATE);
-        if (available.isEmpty()) {
+    private static void inputOnly(IGasHandler hatchHandler, IGasHandler targetHandler, long transferLimit, boolean isCreative) {
+        GasStack hatchGas = hatchHandler.getGasInTank(0);
+        GasStack availableGas = isCreative || hatchGas.isEmpty() ? targetHandler.drain(transferLimit, GasAction.SIMULATE) : targetHandler.drain(hatchGas.copyWithAmount(transferLimit), GasAction.SIMULATE);
+        if (availableGas.isEmpty()) {
             return;
         }
 
-        long amount = Math.min(limit, available.getAmount());
-        transferGas(target, hatch, available.copyWithAmount(amount), false, creative);
+        long transferAmount = Math.min(transferLimit, availableGas.getAmount());
+        transferGas(targetHandler, hatchHandler, availableGas.copyWithAmount(transferAmount), false, isCreative);
     }
 
-    private static void outputOnly(IGasHandler hatch, IGasHandler target, long limit, boolean creative) {
-        GasStack hatchGas = hatch.getGasInTank(0);
+    private static void outputOnly(IGasHandler hatchHandler, IGasHandler targetHandler, long transferLimit, boolean isCreative) {
+        GasStack hatchGas = hatchHandler.getGasInTank(0);
         if (hatchGas.isEmpty()) {
             return;
         }
 
-        long amount = creative ? limit : Math.min(limit, hatchGas.getAmount());
-        transferGas(hatch, target, hatchGas.copyWithAmount(amount), creative, false);
+        long transferAmount = isCreative ? transferLimit : Math.min(transferLimit, hatchGas.getAmount());
+        transferGas(hatchHandler, targetHandler, hatchGas.copyWithAmount(transferAmount), isCreative, false);
     }
 
-    private static void stayHalf(IGasHandler hatch, IGasHandler target, long limit) {
-        GasStack hatchGas = hatch.getGasInTank(0);
-        long delta = hatchGas.getAmount() - hatch.getTankCapacity(0) / 2;
-        if (delta == 0) {
+    private static void stayHalf(IGasHandler hatchHandler, IGasHandler targetHandler, long transferLimit) {
+        GasStack hatchGas = hatchHandler.getGasInTank(0);
+        long gasDelta = hatchGas.getAmount() - hatchHandler.getTankCapacity(0) / 2;
+        if (gasDelta == 0) {
             return;
         }
 
-        long amount = Math.min(limit, Math.abs(delta));
-        if (delta > 0) {
-            outputOnly(hatch, target, amount, false);
+        long transferAmount = Math.min(transferLimit, Math.abs(gasDelta));
+        if (gasDelta > 0) {
+            outputOnly(hatchHandler, targetHandler, transferAmount, false);
             return;
         }
 
-        inputOnly(hatch, target, amount, false);
+        inputOnly(hatchHandler, targetHandler, transferAmount, false);
     }
 
-    private static void transferGas(IGasHandler source, IGasHandler target, GasStack offered, boolean infiniteSource, boolean voidTarget) {
-        if (offered.isEmpty()) {
+    private static void transferGas(IGasHandler source, IGasHandler target, GasStack offeredGas, boolean isInfiniteSource, boolean shouldVoidTarget) {
+        if (offeredGas.isEmpty()) {
             return;
         }
 
-        long accepted = voidTarget ? offered.getAmount() : target.fill(offered, GasAction.SIMULATE);
-        accepted = Math.clamp(accepted, 0, offered.getAmount());
-        if (accepted == 0) {
+        long acceptedAmount = shouldVoidTarget ? offeredGas.getAmount() : target.fill(offeredGas, GasAction.SIMULATE);
+        acceptedAmount = Math.clamp(acceptedAmount, 0, offeredGas.getAmount());
+        if (acceptedAmount == 0) {
             return;
         }
 
-        GasStack request = offered.copyWithAmount(accepted);
-        GasStack drained = infiniteSource ? request : executeMatchingDrain(source, request);
-        if (drained.isEmpty()) {
+        GasStack drainRequest = offeredGas.copyWithAmount(acceptedAmount);
+        GasStack drainedGas = isInfiniteSource ? drainRequest : executeMatchingDrain(source, drainRequest);
+        if (drainedGas.isEmpty()) {
             return;
         }
 
-        if (voidTarget) {
+        if (shouldVoidTarget) {
             return;
         }
 
-        long filled = target.fill(drained, GasAction.EXECUTE);
-        filled = Math.clamp(filled, 0, drained.getAmount());
-        if (infiniteSource || filled >= drained.getAmount()) {
+        long filledAmount = target.fill(drainedGas, GasAction.EXECUTE);
+        filledAmount = Math.clamp(filledAmount, 0, drainedGas.getAmount());
+        if (isInfiniteSource || filledAmount >= drainedGas.getAmount()) {
             return;
         }
 
-        GasStack remainder = drained.copyWithAmount(drained.getAmount() - filled);
-        source.fill(remainder, GasAction.EXECUTE);
+        GasStack remainderGas = drainedGas.copyWithAmount(drainedGas.getAmount() - filledAmount);
+        source.fill(remainderGas, GasAction.EXECUTE);
     }
 
-    private static GasStack executeMatchingDrain(IGasHandler source, GasStack request) {
-        if (request.isEmpty()) {
+    private static GasStack executeMatchingDrain(IGasHandler source, GasStack requestedGas) {
+        if (requestedGas.isEmpty()) {
             return GasStack.EMPTY;
         }
 
-        GasStack drained = source.drain(request, GasAction.EXECUTE);
-        if (!drained.isEmpty()) {
-            return validateDrainedGas(source, request, drained);
+        GasStack drainedGas = source.drain(requestedGas, GasAction.EXECUTE);
+        if (!drainedGas.isEmpty()) {
+            return validateDrainedGas(source, requestedGas, drainedGas);
         }
 
-        GasStack genericPreview = source.drain(request.getAmount(), GasAction.SIMULATE);
-        if (genericPreview.isEmpty() || !GasStack.isSameGasSameComponents(genericPreview, request)) {
+        GasStack simulatedDrain = source.drain(requestedGas.getAmount(), GasAction.SIMULATE);
+        if (simulatedDrain.isEmpty() || !GasStack.isSameGasSameComponents(simulatedDrain, requestedGas)) {
             return GasStack.EMPTY;
         }
 
-        drained = source.drain(request.getAmount(), GasAction.EXECUTE);
-        return validateDrainedGas(source, request, drained);
+        drainedGas = source.drain(requestedGas.getAmount(), GasAction.EXECUTE);
+        return validateDrainedGas(source, requestedGas, drainedGas);
     }
 
-    private static GasStack validateDrainedGas(IGasHandler source, GasStack request, GasStack drained) {
-        if (drained.isEmpty()) {
+    private static GasStack validateDrainedGas(IGasHandler source, GasStack requestedGas, GasStack drainedGas) {
+        if (drainedGas.isEmpty()) {
             return GasStack.EMPTY;
         }
 
-        if (!GasStack.isSameGasSameComponents(drained, request)) {
-            source.fill(drained, GasAction.EXECUTE);
+        if (!GasStack.isSameGasSameComponents(drainedGas, requestedGas)) {
+            source.fill(drainedGas, GasAction.EXECUTE);
             return GasStack.EMPTY;
         }
 
-        long requestedAmount = request.getAmount();
-        if (drained.getAmount() <= requestedAmount) {
-            return drained;
+        long requestedAmount = requestedGas.getAmount();
+        if (drainedGas.getAmount() <= requestedAmount) {
+            return drainedGas;
         }
 
-        GasStack excess = drained.copyWithAmount(drained.getAmount() - requestedAmount);
-        source.fill(excess, GasAction.EXECUTE);
-        return drained.copyWithAmount(requestedAmount);
+        GasStack excessGas = drainedGas.copyWithAmount(drainedGas.getAmount() - requestedAmount);
+        source.fill(excessGas, GasAction.EXECUTE);
+        return drainedGas.copyWithAmount(requestedAmount);
     }
 
     void tick() {
@@ -138,8 +138,8 @@ final class AirtightHatchController {
             return;
         }
 
-        AirtightHatchTransferMode mode = AirtightHatchTransferMode.fromValue(hatch.getTransferModeValue());
-        if (hatch.isCreative() && mode == AirtightHatchTransferMode.STAY_HALF) {
+        AirtightHatchTransferMode transferMode = AirtightHatchTransferMode.fromValue(hatch.getTransferModeValue());
+        if (hatch.isCreative() && transferMode == AirtightHatchTransferMode.STAY_HALF) {
             hatch.resetTransferMode();
             hatch.resetTransferQuota();
             hatch.setChanged();
@@ -152,7 +152,7 @@ final class AirtightHatchController {
             return;
         }
 
-        tryTransferGas(level, transferQuota, mode);
+        tryTransferGas(level, transferQuota, transferMode);
     }
 
     void lazyTick() {
@@ -161,12 +161,12 @@ final class AirtightHatchController {
             return;
         }
 
-        BlockState state = hatch.getBlockState();
-        if (!(state.getBlock() instanceof AirtightHatchBlock hatchBlock)) {
+        BlockState hatchState = hatch.getBlockState();
+        if (!(hatchState.getBlock() instanceof AirtightHatchBlock hatchBlock)) {
             return;
         }
 
-        if (!hatchBlock.canSurvive(state, level, hatch.getBlockPos())) {
+        if (!hatchBlock.canSurvive(hatchState, level, hatch.getBlockPos())) {
             level.destroyBlock(hatch.getBlockPos(), true);
             return;
         }
@@ -185,27 +185,27 @@ final class AirtightHatchController {
 
     private long getTransferQuota() {
         transferRemainder += CCBConfig.server().airtights.maxTransferRate.get();
-        long quota = transferRemainder / TICKS_PER_SECOND;
+        long transferQuota = transferRemainder / TICKS_PER_SECOND;
         transferRemainder %= TICKS_PER_SECOND;
-        return quota;
+        return transferQuota;
     }
 
-    private void tryTransferGas(Level level, long quota, AirtightHatchTransferMode mode) {
-        if (mode == AirtightHatchTransferMode.NO_TRANSFER) {
+    private void tryTransferGas(Level level, long transferQuota, AirtightHatchTransferMode transferMode) {
+        if (transferMode == AirtightHatchTransferMode.NO_TRANSFER) {
             return;
         }
 
-        IGasHandler target = hatch.getTargetGasHandler(level);
-        if (target == null) {
+        IGasHandler targetHandler = hatch.getTargetGasHandler(level);
+        if (targetHandler == null) {
             return;
         }
 
         IGasHandler hatchHandler = hatch.getGasTankBehaviour().getPrimaryHandler();
-        boolean creative = hatch.isCreative();
-        switch (mode) {
-            case INPUT_ONLY -> inputOnly(hatchHandler, target, quota, creative);
-            case OUTPUT_ONLY -> outputOnly(hatchHandler, target, quota, creative);
-            case STAY_HALF -> stayHalf(hatchHandler, target, quota);
+        boolean isCreative = hatch.isCreative();
+        switch (transferMode) {
+            case INPUT_ONLY -> inputOnly(hatchHandler, targetHandler, transferQuota, isCreative);
+            case OUTPUT_ONLY -> outputOnly(hatchHandler, targetHandler, transferQuota, isCreative);
+            case STAY_HALF -> stayHalf(hatchHandler, targetHandler, transferQuota);
         }
     }
 }

@@ -63,10 +63,10 @@ public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
     }
 
     CCBRecipeTypes(Supplier<RecipeSerializer<?>> serializerSupplier) {
-        String name = Lang.asId(name());
-        id = CCBAPI.asResource(name);
-        serializerObject = Registers.SERIALIZER_REGISTER.register(name, serializerSupplier);
-        type = Registers.TYPE_REGISTER.register(name, () -> RecipeType.simple(id));
+        String recipeName = Lang.asId(name());
+        id = CCBAPI.asResource(recipeName);
+        serializerObject = Registers.SERIALIZER_REGISTER.register(recipeName, serializerSupplier);
+        type = Registers.TYPE_REGISTER.register(recipeName, () -> RecipeType.simple(id));
     }
 
     CCBRecipeTypes(StandardProcessingWithGasRecipe.Factory<?> processingFactory) {

@@ -34,9 +34,9 @@ public final class EndSculkSilencerClient {
             return;
         }
 
-        short range = silencer.getActiveWorkingRange();
+        short activeRange = silencer.getActiveWorkingRange();
         Level silencerLevel = silencer.getLevel();
-        if (range <= 0 || silencerLevel == null) {
+        if (activeRange <= 0 || silencerLevel == null) {
             return;
         }
 
@@ -46,6 +46,6 @@ public final class EndSculkSilencerClient {
             return;
         }
 
-        Outliner.getInstance().chaseAABB(silencer, EndSculkSilencerBlockEntity.calculateArea(player.level(), projection.blockPos(), range)).colored(PonderPalette.INPUT.getColor()).withFaceTexture(AllSpecialTextures.CHECKERED).lineWidth(0.0625f);
+        Outliner.getInstance().chaseAABB(silencer, EndSculkSilencerBlockEntity.calculateArea(player.level(), projection.blockPos(), activeRange)).colored(PonderPalette.INPUT.getColor()).withFaceTexture(AllSpecialTextures.CHECKERED).lineWidth(0.0625f);
     }
 }

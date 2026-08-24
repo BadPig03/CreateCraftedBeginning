@@ -18,8 +18,8 @@ public final class GasInjectionChamberTransactions {
     private GasInjectionChamberTransactions() {
     }
 
-    public static Participant<GasTankSnapshot> operationGasParticipant(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation, Provider provider) {
-        IGasTank tank = chamber.getGasTank();
-        return ResourceTransaction.participant(() -> !operation.gas.isEmpty() && GasStack.matches(tank.drain(operation.gas, GasAction.SIMULATE), operation.gas), () -> MachineResourceSnapshots.snapshotGasTanks(provider, chamber.getGasTankBehaviour()), () -> !operation.gas.isEmpty() && GasStack.matches(tank.drain(operation.gas, GasAction.EXECUTE), operation.gas), snapshot -> MachineResourceSnapshots.restoreGasTanks(provider, snapshot, chamber.getGasTankBehaviour()));
+    public static Participant<GasTankSnapshot> gasParticipant(GasInjectionChamberBlockEntity chamber, GasStack request, Provider provider) {
+        IGasTank gasTank = chamber.getGasTank();
+        return ResourceTransaction.participant(() -> !request.isEmpty() && GasStack.matches(gasTank.drain(request, GasAction.SIMULATE), request), () -> MachineResourceSnapshots.snapshotGasTanks(provider, chamber.getGasTankBehaviour()), () -> !request.isEmpty() && GasStack.matches(gasTank.drain(request, GasAction.EXECUTE), request), snapshot -> MachineResourceSnapshots.restoreGasTanks(provider, snapshot, chamber.getGasTankBehaviour()));
     }
 }

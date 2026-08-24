@@ -29,24 +29,24 @@ public class CCBLang extends Lang {
         return new LangBuilder(CCBAPI.MOD_ID);
     }
 
-    public static LangBuilder itemName(ItemStack stack) {
-        return builder().add(stack.getHoverName().copy());
+    public static LangBuilder itemName(ItemStack itemStack) {
+        return builder().add(itemStack.getHoverName().copy());
     }
 
-    public static LangBuilder fluidName(FluidStack stack) {
-        return builder().add(stack.getHoverName().copy());
+    public static LangBuilder fluidName(FluidStack fluidStack) {
+        return builder().add(fluidStack.getHoverName().copy());
     }
 
-    public static LangBuilder gasName(GasStack stack) {
-        return builder().add(stack.getHoverName().copy());
+    public static LangBuilder gasName(GasStack gasStack) {
+        return builder().add(gasStack.getHoverName().copy());
     }
 
-    public static LangBuilder gasName(Gas gasType) {
-        return builder().add(Component.translatable(gasType.getTranslationKey()).copy());
+    public static LangBuilder gasName(Gas gas) {
+        return builder().add(Component.translatable(gas.getTranslationKey()).copy());
     }
 
-    public static LangBuilder number(double d) {
-        return builder().text(LangNumberFormat.format(d));
+    public static LangBuilder number(double number) {
+        return builder().text(LangNumberFormat.format(number));
     }
 
     public static LangBuilder translate(String langKey, Object... args) {
@@ -58,8 +58,7 @@ public class CCBLang extends Lang {
     }
 
     public static LangBuilder seconds(int ticks, float tickRate) {
-        int totalSeconds = Mth.floor(Mth.abs(ticks) / tickRate);
-        return formatSeconds(totalSeconds);
+        return formatSeconds(Mth.floor(Mth.abs(ticks) / tickRate));
     }
 
     public static LangBuilder secondsWithGameTicks(int ticks, float tickRate) {
@@ -83,23 +82,21 @@ public class CCBLang extends Lang {
         return builder().translate("gui.minutes_seconds", minutes, seconds);
     }
 
-    public static MutableComponent translateDirect(String key, Object... args) {
-        return Component.translatable(CCBAPI.MOD_ID + '.' + key, LangBuilder.resolveBuilders(args));
+    public static MutableComponent translateDirect(String translationKey, Object... args) {
+        return Component.translatable(CCBAPI.MOD_ID + '.' + translationKey, LangBuilder.resolveBuilders(args));
     }
 
-    public static List<Component> translatedOptions(String prefix, String @NotNull ... keys) {
-        List<Component> result = new ArrayList<>(keys.length);
-        for (String key : keys) {
-            result.add(translateDirect(prefix + '.' + key));
+    public static List<Component> translatedOptions(String translationPrefix, String @NotNull ... optionKeys) {
+        List<Component> options = new ArrayList<>(optionKeys.length);
+        for (String optionKey : optionKeys) {
+            options.add(translateDirect(translationPrefix + '.' + optionKey));
         }
-        return result;
+        return options;
     }
 
-    public static void addToGoggles(List<Component> tooltip, String text, Object... args) {
-        MutableComponent hint = translateDirect(text, args);
-        List<Component> lines = TooltipHelper.cutTextComponent(hint, Palette.GRAY_AND_WHITE);
-        for (Component component : lines) {
-            builder().add(component.copy()).forGoggles(tooltip);
+    public static void addToGoggles(List<Component> tooltip, String translationKey, Object... args) {
+        for (Component tooltipLine : TooltipHelper.cutTextComponent(translateDirect(translationKey, args), Palette.GRAY_AND_WHITE)) {
+            builder().add(tooltipLine.copy()).forGoggles(tooltip);
         }
     }
 }

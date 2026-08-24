@@ -27,23 +27,23 @@ public final class ResidueOutletTooltip {
     }
 
     private static void addFluidTooltip(List<Component> tooltip, FluidStack fluid) {
-        LangBuilder unit = CCBLang.translate("gui.unit.milli_buckets");
-        CCBLang.fluidName(fluid).add(CCBLang.text(" ")).style(ChatFormatting.GRAY).add(CCBLang.number(fluid.getAmount()).add(unit).style(ChatFormatting.BLUE)).forGoggles(tooltip, 1);
+        LangBuilder unitLabel = CCBLang.translate("gui.unit.milli_buckets");
+        CCBLang.fluidName(fluid).add(CCBLang.text(" ")).style(ChatFormatting.GRAY).add(CCBLang.number(fluid.getAmount()).add(unitLabel).style(ChatFormatting.BLUE)).forGoggles(tooltip, 1);
     }
 
     public boolean addToGoggleTooltip(List<Component> tooltip) {
-        ItemStack item = inventory.getStackInSlot(0);
-        FluidStack fluid = outlet.getStoredFluid();
-        if (item.isEmpty() && fluid.isEmpty()) {
+        ItemStack storedItem = inventory.getStackInSlot(0);
+        FluidStack storedFluid = outlet.getStoredFluid();
+        if (storedItem.isEmpty() && storedFluid.isEmpty()) {
             return false;
         }
 
         CCBLang.translate("gui.residue_outlet.header").forGoggles(tooltip);
-        if (!item.isEmpty()) {
-            addItemTooltip(tooltip, item);
+        if (!storedItem.isEmpty()) {
+            addItemTooltip(tooltip, storedItem);
         }
-        if (!fluid.isEmpty()) {
-            addFluidTooltip(tooltip, fluid);
+        if (!storedFluid.isEmpty()) {
+            addFluidTooltip(tooltip, storedFluid);
         }
         return true;
     }

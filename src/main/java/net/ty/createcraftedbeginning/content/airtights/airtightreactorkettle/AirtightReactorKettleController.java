@@ -79,14 +79,14 @@ public final class AirtightReactorKettleController {
             return false;
         }
 
-        float speed = getProcessingSpeed();
-        if (level.isClientSide && !kettle.isVirtual() || operating || speed < SpeedLevel.FAST.getSpeedValue()) {
+        float processingSpeed = getProcessingSpeed();
+        if (level.isClientSide && !kettle.isVirtual() || operating || processingSpeed < SpeedLevel.FAST.getSpeedValue()) {
             return true;
         }
 
-        Optional<ReactorKettleRecipe> recipe = AirtightReactorKettleUtils.getMatchingRecipe(kettle);
-        if (recipe.isPresent()) {
-            currentRecipe = recipe.get();
+        Optional<ReactorKettleRecipe> reactorRecipe = AirtightReactorKettleUtils.getMatchingRecipe(kettle);
+        if (reactorRecipe.isPresent()) {
+            currentRecipe = reactorRecipe.get();
             currentCraftingRecipe = null;
             startOperation();
             return true;
@@ -97,14 +97,14 @@ public final class AirtightReactorKettleController {
             return true;
         }
 
-        Optional<RecipeHolder<CraftingRecipe>> craftingRecipe = AirtightReactorKettleUtils.getMatchingCraftingRecipe(kettle);
-        if (craftingRecipe.isEmpty()) {
+        Optional<RecipeHolder<CraftingRecipe>> craftingRecipeHolder = AirtightReactorKettleUtils.getMatchingCraftingRecipe(kettle);
+        if (craftingRecipeHolder.isEmpty()) {
             clearRecipes();
             return true;
         }
 
         currentRecipe = null;
-        currentCraftingRecipe = craftingRecipe.get().value();
+        currentCraftingRecipe = craftingRecipeHolder.get().value();
         startOperation();
         return true;
     }
@@ -143,11 +143,11 @@ public final class AirtightReactorKettleController {
             return 0;
         }
 
-        float absSpeed = Mth.abs(kettle.getCore().getStructureManager().getSpeed());
-        if (absSpeed == 0) {
+        float absoluteSpeed = Mth.abs(kettle.getCore().getStructureManager().getSpeed());
+        if (absoluteSpeed == 0) {
             return 0;
         }
-        return absSpeed / 32 * Math.max(0, CCBConfig.server().airtights.reactorKettleMixerDamageMultiplier.getF());
+        return absoluteSpeed / 32 * Math.max(0, CCBConfig.server().airtights.reactorKettleMixerDamageMultiplier.getF());
     }
 
     public float getMixerOffset(float partialTicks) {
@@ -159,12 +159,12 @@ public final class AirtightReactorKettleController {
             return 0.72f;
         }
 
-        boolean starting = operatingTicks < PROCESSING_STARTED;
-        int localTick = starting ? operatingTicks : OPERATING_FINISHED - operatingTicks;
-        float adjustedTick = starting ? localTick + partialTicks : localTick - partialTicks;
-        float progress = adjustedTick / PROCESSING_STARTED;
-        progress = (2 - Mth.cos(progress * Mth.PI)) / 2;
-        return (progress - 0.5f) * 0.72f;
+        boolean isStarting = operatingTicks < PROCESSING_STARTED;
+        int animationTick = isStarting ? operatingTicks : OPERATING_FINISHED - operatingTicks;
+        float interpolatedTick = isStarting ? animationTick + partialTicks : animationTick - partialTicks;
+        float mixerProgress = interpolatedTick / PROCESSING_STARTED;
+        mixerProgress = (2 - Mth.cos(mixerProgress * Mth.PI)) / 2;
+        return (mixerProgress - 0.5f) * 0.72f;
     }
 
     public void loadOperationState(boolean operating, int operatingTicks, int processingTicks, boolean windowsOpenState, boolean clientPacket) {
@@ -185,8 +185,8 @@ public final class AirtightReactorKettleController {
             return;
         }
 
-        boolean clientSide = level.isClientSide && !kettle.isVirtual();
-        if (handleFilterChange(clientSide)) {
+        boolean isClientSide = level.isClientSide && !kettle.isVirtual();
+        if (handleFilterChange(isClientSide)) {
             return;
         }
 
@@ -197,18 +197,18 @@ public final class AirtightReactorKettleController {
         }
 
         if (operatingTicks >= OPERATING_FINISHED) {
-            if (!clientSide) {
+            if (!isClientSide) {
                 update(true);
             }
             return;
         }
 
-        if (!clientSide && !hasRequiredSpeed()) {
+        if (!isClientSide && !hasRequiredSpeed()) {
             update(false);
             return;
         }
 
-        if (!clientSide && currentRecipe == null && currentCraftingRecipe != null && !CCBConfig.server().airtights.enableAutomaticMixingRecipes.get()) {
+        if (!isClientSide && currentRecipe == null && currentCraftingRecipe != null && !CCBConfig.server().airtights.enableAutomaticMixingRecipes.get()) {
             update(false);
             return;
         }
@@ -218,7 +218,7 @@ public final class AirtightReactorKettleController {
             return;
         }
 
-        if (clientSide) {
+        if (isClientSide) {
             return;
         }
 
@@ -235,13 +235,13 @@ public final class AirtightReactorKettleController {
         finishProcessing();
     }
 
-    private boolean handleFilterChange(boolean clientSide) {
+    private boolean handleFilterChange(boolean isClientSide) {
         if (!filterChanged) {
             return false;
         }
 
         filterChanged = false;
-        if (clientSide) {
+        if (isClientSide) {
             return true;
         }
 
@@ -255,34 +255,34 @@ public final class AirtightReactorKettleController {
             return;
         }
 
-        boolean shouldOpen = shouldKeepWindowsOpen();
-        if (shouldOpen == windowsOpenState) {
+        boolean shouldOpenWindows = shouldKeepWindowsOpen();
+        if (shouldOpenWindows == windowsOpenState) {
             return;
         }
 
-        windowsOpenState = shouldOpen;
+        windowsOpenState = shouldOpenWindows;
         kettle.sendData();
     }
 
     private boolean shouldKeepWindowsOpen() {
-        boolean hasNoGas = kettle.getInputGasTank().isEmpty() && kettle.getOutputGasTank().isEmpty();
+        boolean hasNoStoredGas = kettle.getInputGasTank().isEmpty() && kettle.getOutputGasTank().isEmpty();
         if (currentRecipe == null) {
-            return hasNoGas;
+            return hasNoStoredGas;
         }
-        return hasNoGas && currentRecipe.getGasIngredients().isEmpty() && currentRecipe.getGasResults().isEmpty();
+        return hasNoStoredGas && currentRecipe.getGasIngredients().isEmpty() && currentRecipe.getGasResults().isEmpty();
     }
 
     private float getProcessingSpeed() {
-        float speed = Mth.abs(kettle.getCore().getStructureManager().getSpeed());
+        float kineticSpeed = Mth.abs(kettle.getCore().getStructureManager().getSpeed());
         if (kettle.getLevel() instanceof PonderLevel) {
             return SpeedLevel.FAST.getSpeedValue();
         }
-        return speed;
+        return kineticSpeed;
     }
 
     private boolean hasRequiredSpeed() {
-        float speed = kettle.getLevel() instanceof PonderLevel ? SpeedLevel.FAST.getSpeedValue() : Mth.abs(kettle.getCore().getStructureManager().getSpeed());
-        return speed >= SpeedLevel.FAST.getSpeedValue();
+        float processingSpeed = kettle.getLevel() instanceof PonderLevel ? SpeedLevel.FAST.getSpeedValue() : Mth.abs(kettle.getCore().getStructureManager().getSpeed());
+        return processingSpeed >= SpeedLevel.FAST.getSpeedValue();
     }
 
     private void startOperation() {
@@ -292,14 +292,14 @@ public final class AirtightReactorKettleController {
     }
 
     private void startProcessing() {
-        float speed = getProcessingSpeed();
+        float processingSpeed = getProcessingSpeed();
         if (currentRecipe == null) {
             processingTicks = 1;
         }
         else {
             int recipeDuration = currentRecipe.getProcessingDuration();
             float minimumSpeed = SpeedLevel.FAST.getSpeedValue();
-            float speedMultiplier = Math.max(1.0f, speed / minimumSpeed);
+            float speedMultiplier = Math.max(1.0f, processingSpeed / minimumSpeed);
             processingTicks = recipeDuration <= 0 ? 1 : Mth.clamp(Mth.ceil(recipeDuration / speedMultiplier), 1, 1_000_000);
         }
 
@@ -308,7 +308,7 @@ public final class AirtightReactorKettleController {
             return;
         }
 
-        level.playSound(null, kettle.getBlockPos(), SoundEvents.BUBBLE_COLUMN_WHIRLPOOL_AMBIENT, SoundSource.BLOCKS, 0.75f, speed < 64 ? 0.75f : 1.5f);
+        level.playSound(null, kettle.getBlockPos(), SoundEvents.BUBBLE_COLUMN_WHIRLPOOL_AMBIENT, SoundSource.BLOCKS, 0.75f, processingSpeed < 64 ? 0.75f : 1.5f);
     }
 
     private void finishProcessing() {
@@ -347,11 +347,11 @@ public final class AirtightReactorKettleController {
         return currentCraftingRecipe != null && CCBConfig.server().airtights.enableAutomaticMixingRecipes.get() && AirtightReactorKettleUtils.matchCraftingRecipe(kettle, currentCraftingRecipe);
     }
 
-    private void update(boolean schedule) {
+    private void update(boolean scheduleUpdate) {
         resetTransientOperation();
         kettle.sendData();
         Level level = kettle.getLevel();
-        if (!schedule || level == null || level.isClientSide && !kettle.isVirtual()) {
+        if (!scheduleUpdate || level == null || level.isClientSide && !kettle.isVirtual()) {
             return;
         }
 

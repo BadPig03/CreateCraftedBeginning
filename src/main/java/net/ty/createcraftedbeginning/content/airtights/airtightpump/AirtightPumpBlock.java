@@ -54,14 +54,14 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false));
     }
 
-    public static boolean canConnectTo(Level level, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
-        Direction opposite = direction.getOpposite();
-        if (GasCapabilities.hasGasCapability(level, neighbourPos, opposite)) {
+    public static boolean canConnectTo(Level level, BlockPos neighbourPos, BlockState neighbourState, Direction direction) {
+        Direction oppositeDirection = direction.getOpposite();
+        if (GasCapabilities.hasGasCapability(level, neighbourPos, oppositeDirection)) {
             return true;
         }
 
-        GasTransportBehaviour transport = BlockEntityBehaviour.get(level, neighbourPos, GasTransportBehaviour.TYPE);
-        return transport != null && transport.canHaveFlowToward(neighbour, opposite);
+        GasTransportBehaviour transportBehaviour = BlockEntityBehaviour.get(level, neighbourPos, GasTransportBehaviour.TYPE);
+        return transportBehaviour != null && transportBehaviour.canHaveFlowToward(neighbourState, oppositeDirection);
     }
 
     public static boolean isPump(BlockState state) {
@@ -75,16 +75,14 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
     private static @Nullable Direction findBestConnection(Level level, BlockPos pos, Direction targetDirection) {
         Direction bestDirection = null;
         double bestDistance = Double.MAX_VALUE;
-        Vec3 targetVector = Vec3.atLowerCornerOf(targetDirection.getNormal());
+        Vec3 targetDirectionVector = Vec3.atLowerCornerOf(targetDirection.getNormal());
         for (Direction direction : Iterate.directions) {
             BlockPos neighbourPos = pos.relative(direction);
-            BlockState neighbour = level.getBlockState(neighbourPos);
-            if (!canConnectTo(level, neighbourPos, neighbour, direction)) {
+            if (!canConnectTo(level, neighbourPos, level.getBlockState(neighbourPos), direction)) {
                 continue;
             }
 
-            Vec3 directionVector = Vec3.atLowerCornerOf(direction.getNormal());
-            double distance = directionVector.distanceTo(targetVector);
+            double distance = Vec3.atLowerCornerOf(direction.getNormal()).distanceTo(targetDirectionVector);
             if (distance > bestDistance) {
                 continue;
             }
@@ -163,9 +161,9 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
     }
 
     @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity entity, ItemStack stack) {
-        super.setPlacedBy(level, pos, state, entity, stack);
-        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+        CCBAdvancementBehaviour.setPlacedBy(level, pos, placer);
     }
 
     @Override
@@ -186,8 +184,8 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block otherBlock, BlockPos neighborPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, otherBlock, neighborPos, isMoving);
-        Direction direction = GasPropagator.getChangedNeighbourSide(level, pos, neighborPos);
-        if (direction == null || !isOpenAt(state, direction)) {
+        Direction changedDirection = GasPropagator.getChangedNeighbourSide(level, pos, neighborPos);
+        if (changedDirection == null || !isOpenAt(state, changedDirection)) {
             return;
         }
 

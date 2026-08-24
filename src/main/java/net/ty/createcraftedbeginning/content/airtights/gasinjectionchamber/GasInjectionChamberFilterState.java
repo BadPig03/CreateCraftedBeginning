@@ -40,9 +40,9 @@ public final class GasInjectionChamberFilterState {
     }
 
     public ItemStack remove() {
-        ItemStack removed = installedFilter;
+        ItemStack removedFilter = installedFilter;
         installedFilter = ItemStack.EMPTY;
-        return removed;
+        return removedFilter;
     }
 
     public boolean isClientLocked() {

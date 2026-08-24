@@ -42,13 +42,13 @@ public class GasPackagerBlock extends PackagerBlock {
     private static Direction findConnectedGasDirection(BlockPlaceContext context, Level level, BlockPos clickedPos) {
         for (Direction direction : context.getNearestLookingDirections()) {
             BlockPos targetPos = clickedPos.relative(direction);
-            BlockEntity target = level.getBlockEntity(targetPos);
-            if (target instanceof GasPackagerBlockEntity) {
+            BlockEntity targetBlockEntity = level.getBlockEntity(targetPos);
+            if (targetBlockEntity instanceof GasPackagerBlockEntity) {
                 continue;
             }
 
             Direction targetSide = direction.getOpposite();
-            if (target == null || level.getCapability(GasHandler.BLOCK, targetPos, targetSide) == null) {
+            if (targetBlockEntity == null || level.getCapability(GasHandler.BLOCK, targetPos, targetSide) == null) {
                 continue;
             }
 
@@ -76,8 +76,7 @@ public class GasPackagerBlock extends PackagerBlock {
             return;
         }
 
-        ItemStack inserted = stack.copyWithCount(1);
-        if (!blockEntity.unwrapBox(inserted, false)) {
+        if (!blockEntity.unwrapBox(stack.copyWithCount(1), false)) {
             return;
         }
 
@@ -98,27 +97,27 @@ public class GasPackagerBlock extends PackagerBlock {
 
     @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
-        BlockState state = super.getStateForPlacement(context);
-        if (state == null) {
+        BlockState placementState = super.getStateForPlacement(context);
+        if (placementState == null) {
             return null;
         }
 
         Level level = context.getLevel();
         BlockPos clickedPos = context.getClickedPos();
-        Direction preferred = findConnectedGasDirection(context, level, clickedPos);
+        Direction preferredFacing = findConnectedGasDirection(context, level, clickedPos);
         Player player = context.getPlayer();
-        if (preferred == null) {
-            Direction direction = context.getNearestLookingDirection();
-            preferred = player != null && player.isShiftKeyDown() ? direction : direction.getOpposite();
+        if (preferredFacing == null) {
+            Direction lookDirection = context.getNearestLookingDirection();
+            preferredFacing = player != null && player.isShiftKeyDown() ? lookDirection : lookDirection.getOpposite();
         }
 
-        BlockPos targetPos = clickedPos.relative(preferred.getOpposite());
+        BlockPos targetPos = clickedPos.relative(preferredFacing.getOpposite());
         if (player != null && !(player instanceof FakePlayer) && level.getBlockState(targetPos).getBlock() instanceof PortableGasInterfaceBlock) {
             CCBLang.translate("gui.warnings.no_gas_portable_interface").sendStatus(player);
             return null;
         }
 
-        return state.setValue(POWERED, level.hasNeighborSignal(clickedPos)).setValue(FACING, preferred);
+        return placementState.setValue(POWERED, level.hasNeighborSignal(clickedPos)).setValue(FACING, preferredFacing);
     }
 
     @Override

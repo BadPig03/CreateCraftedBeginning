@@ -8,7 +8,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.gas.flowsources.GasFlowSource;
@@ -60,18 +59,18 @@ public final class GasNetworkTraversal {
     private static int compareBlockFaces(BlockFace first, BlockFace second) {
         BlockPos firstPos = first.getPos();
         BlockPos secondPos = second.getPos();
-        int x = Integer.compare(firstPos.getX(), secondPos.getX());
-        if (x != 0) {
-            return x;
+        int xComparison = Integer.compare(firstPos.getX(), secondPos.getX());
+        if (xComparison != 0) {
+            return xComparison;
         }
 
-        int y = Integer.compare(firstPos.getY(), secondPos.getY());
-        if (y != 0) {
-            return y;
+        int yComparison = Integer.compare(firstPos.getY(), secondPos.getY());
+        if (yComparison != 0) {
+            return yComparison;
         }
 
-        int z = Integer.compare(firstPos.getZ(), secondPos.getZ());
-        return z != 0 ? z : Integer.compare(first.getFace().ordinal(), second.getFace().ordinal());
+        int zComparison = Integer.compare(firstPos.getZ(), secondPos.getZ());
+        return zComparison != 0 ? zComparison : Integer.compare(first.getFace().ordinal(), second.getFace().ordinal());
     }
 
     public void reset() {
@@ -104,14 +103,14 @@ public final class GasNetworkTraversal {
             }
 
             if (!frontier.isEmpty() && remainingWork >= FRONTIER_ENTRY_WORK) {
-                BlockFace blockFace = frontier.removeFirst();
+                BlockFace frontierFace = frontier.removeFirst();
                 remainingWork -= FRONTIER_ENTRY_WORK;
                 performedWork = true;
-                if (processFrontierEntry(blockFace)) {
-                    deferredFrontier.addLast(blockFace);
+                if (processFrontierEntry(frontierFace)) {
+                    deferredFrontier.addLast(frontierFace);
                 }
                 else {
-                    frontierMembership.remove(blockFace);
+                    frontierMembership.remove(frontierFace);
                 }
             }
 
@@ -144,26 +143,26 @@ public final class GasNetworkTraversal {
         }
 
         if (sharedTopology != null) {
-            ProbeWindow window = sharedTopology.claim(targetProbeCursor, maxTargets);
-            targetProbeCursor = window.nextCursor;
-            return window.locations;
+            ProbeWindow probeWindow = sharedTopology.claim(targetProbeCursor, maxTargets);
+            targetProbeCursor = probeWindow.nextCursor;
+            return probeWindow.locations;
         }
 
         if (targets.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<BlockFace> locations = new ArrayList<>(targets.keySet());
-        int size = locations.size();
-        int count = Math.min(maxTargets, size);
-        int cursor = Math.floorMod(targetProbeCursor, size);
-        List<BlockFace> claimed = new ArrayList<>(count);
-        for (int i = 0; i < count; i++) {
-            claimed.add(locations.get((cursor + i) % size));
+        List<BlockFace> targetLocations = new ArrayList<>(targets.keySet());
+        int targetCount = targetLocations.size();
+        int claimCount = Math.min(maxTargets, targetCount);
+        int startIndex = Math.floorMod(targetProbeCursor, targetCount);
+        List<BlockFace> claimedTargets = new ArrayList<>(claimCount);
+        for (int offset = 0; offset < claimCount; offset++) {
+            claimedTargets.add(targetLocations.get((startIndex + offset) % targetCount));
         }
 
-        targetProbeCursor = (cursor + count) % size;
-        return claimed;
+        targetProbeCursor = (startIndex + claimCount) % targetCount;
+        return claimedTargets;
     }
 
     public void invalidateTarget(BlockFace location) {
@@ -176,8 +175,7 @@ public final class GasNetworkTraversal {
     }
 
     @Nullable public InventoryIdentifier getInventoryIdentifier(BlockFace inventoryFace) {
-        BlockEntity blockEntity = level.getBlockEntity(inventoryFace.getPos());
-        if (!(blockEntity instanceof IGasInventoryIdentifierProvider provider)) {
+        if (!(level.getBlockEntity(inventoryFace.getPos()) instanceof IGasInventoryIdentifierProvider provider)) {
             return null;
         }
         return provider.getGasInventoryIdentifier(inventoryFace.getFace());
@@ -193,8 +191,8 @@ public final class GasNetworkTraversal {
             return null;
         }
 
-        GasFlow flow = connection.getFlow();
-        if (flow == null || flow.inbound || !GasStack.isSameGasSameComponents(flow.gas, gas)) {
+        GasFlow targetFlow = connection.getFlow();
+        if (targetFlow == null || targetFlow.inbound || !GasStack.isSameGasSameComponents(targetFlow.gas, gas)) {
             return null;
         }
 
@@ -202,11 +200,11 @@ public final class GasNetworkTraversal {
             return null;
         }
 
-        GasFlowSource source = connection.getSource();
-        if (source == null || !source.isEndpoint()) {
+        GasFlowSource targetSource = connection.getSource();
+        if (targetSource == null || !targetSource.isEndpoint()) {
             return null;
         }
-        return source;
+        return targetSource;
     }
 
     private void processQueuedEntry(BlockFace blockFace) {
@@ -262,34 +260,34 @@ public final class GasNetworkTraversal {
             }
 
             BlockFace adjacentLocation = new BlockFace(blockFace.getPos(), side);
-            GasPipeConnection adjacent = get(adjacentLocation);
-            if (adjacent == null) {
+            GasPipeConnection adjacentConnection = get(adjacentLocation);
+            if (adjacentConnection == null) {
                 continue;
             }
 
-            GasFlow outFlow = adjacent.getFlow();
-            if (outFlow == null) {
-                if (adjacent.hasPressure() && adjacent.getOutwardPressureUnits() > 0) {
+            GasFlow adjacentFlow = adjacentConnection.getFlow();
+            if (adjacentFlow == null) {
+                if (adjacentConnection.hasPressure() && adjacentConnection.getOutwardPressureUnits() > 0) {
                     keepInFrontier = true;
                 }
                 continue;
             }
 
-            if (outFlow.inbound) {
-                if (adjacent.getPressureDirection() > 0) {
+            if (adjacentFlow.inbound) {
+                if (adjacentConnection.getPressureDirection() > 0) {
                     keepInFrontier = true;
                 }
                 continue;
             }
 
-            if (adjacent.getSource() == null && !adjacent.determineSource(level, blockFace.getPos())) {
+            if (adjacentConnection.getSource() == null && !adjacentConnection.determineSource(level, blockFace.getPos())) {
                 keepInFrontier = true;
                 continue;
             }
 
-            GasFlowSource adjacentSource = adjacent.getSource();
-            if (adjacentSource != null && adjacentSource.isEndpoint()) {
-                targets.put(adjacentLocation, adjacentSource);
+            GasFlowSource targetSource = adjacentConnection.getSource();
+            if (targetSource != null && targetSource.isEndpoint()) {
+                targets.put(adjacentLocation, targetSource);
                 continue;
             }
 
@@ -307,15 +305,15 @@ public final class GasNetworkTraversal {
             return;
         }
 
-        List<BlockFace> locations = List.copyOf(targets.keySet());
-        TopologyKey key = new TopologyKey(gas.copyWithAmount(1), locations);
+        List<BlockFace> targetLocations = List.copyOf(targets.keySet());
+        TopologyKey key = new TopologyKey(gas.copyWithAmount(1), targetLocations);
         synchronized (SHARED_TOPOLOGIES) {
             Map<TopologyKey, WeakReference<SharedTopology>> levelTopologies = SHARED_TOPOLOGIES.computeIfAbsent(level, ignored -> new HashMap<>());
             levelTopologies.entrySet().removeIf(entry -> entry.getValue().get() == null);
             WeakReference<SharedTopology> reference = levelTopologies.get(key);
             SharedTopology topology = reference == null ? null : reference.get();
             if (topology == null) {
-                topology = new SharedTopology(locations);
+                topology = new SharedTopology(targetLocations);
                 levelTopologies.put(key, new WeakReference<>(topology));
             }
             sharedTopology = topology;
@@ -328,17 +326,17 @@ public final class GasNetworkTraversal {
 
     @Nullable
     private GasPipeConnection get(BlockFace location) {
-        GasTransportBehaviour transfer = getGasTransfer(location.getPos());
-        if (transfer == null) {
+        GasTransportBehaviour transport = getGasTransfer(location.getPos());
+        if (transport == null) {
             return null;
         }
-        return transfer.getConnection(location.getFace());
+        return transport.getConnection(location.getFace());
     }
 
     @Nullable
     private GasTransportBehaviour getGasTransfer(BlockPos pos) {
-        WeakReference<GasTransportBehaviour> reference = cache.get(pos);
-        GasTransportBehaviour cachedBehaviour = reference == null ? null : reference.get();
+        WeakReference<GasTransportBehaviour> cachedReference = cache.get(pos);
+        GasTransportBehaviour cachedBehaviour = cachedReference == null ? null : cachedReference.get();
         if (cachedBehaviour != null && !cachedBehaviour.blockEntity.isRemoved()) {
             return cachedBehaviour;
         }
@@ -378,14 +376,14 @@ public final class GasNetworkTraversal {
                 return new ProbeWindow(Collections.emptyList(), 0);
             }
 
-            int size = locations.size();
-            int count = Math.min(maxTargets, size);
-            int cursor = Math.floorMod(requestedCursor, size);
-            List<BlockFace> claimed = new ArrayList<>(count);
-            for (int i = 0; i < count; i++) {
-                claimed.add(locations.get((cursor + i) % size));
+            int targetCount = locations.size();
+            int claimCount = Math.min(maxTargets, targetCount);
+            int startIndex = Math.floorMod(requestedCursor, targetCount);
+            List<BlockFace> claimedTargets = new ArrayList<>(claimCount);
+            for (int offset = 0; offset < claimCount; offset++) {
+                claimedTargets.add(locations.get((startIndex + offset) % targetCount));
             }
-            return new ProbeWindow(claimed, (cursor + count) % size);
+            return new ProbeWindow(claimedTargets, (startIndex + claimCount) % targetCount);
         }
 
         private void invalidate(BlockFace location) {

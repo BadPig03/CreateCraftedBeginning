@@ -14,13 +14,13 @@ public final class AirtightTankStorageController {
         this.owner = owner;
     }
 
-    public void resizeToBlocks(int blocks) {
-        setCapacityForBlocks(blocks);
+    public void resizeToBlocks(int blockCount) {
+        setCapacityForBlocks(blockCount);
         drainOverflow();
     }
 
-    private void setCapacityForBlocks(int blocks) {
-        owner.getTankInventory().setCapacity((long) blocks * AirtightTankBlockEntity.getCapacityPerTank());
+    private void setCapacityForBlocks(int blockCount) {
+        owner.getTankInventory().setCapacity((long) blockCount * AirtightTankBlockEntity.getCapacityPerTank());
     }
 
     public void setCapacityForStructure() {
@@ -28,11 +28,11 @@ public final class AirtightTankStorageController {
     }
 
     public void drainOverflow() {
-        long overflow = owner.getTankInventory().getGasAmount() - owner.getTankInventory().getCapacity();
-        if (overflow <= 0) {
+        long overflowAmount = owner.getTankInventory().getGasAmount() - owner.getTankInventory().getCapacity();
+        if (overflowAmount <= 0) {
             return;
         }
 
-        owner.getTankInventory().drain(overflow, GasAction.EXECUTE);
+        owner.getTankInventory().drain(overflowAmount, GasAction.EXECUTE);
     }
 }

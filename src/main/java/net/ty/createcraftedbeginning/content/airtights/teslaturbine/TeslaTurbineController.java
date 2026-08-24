@@ -13,8 +13,8 @@ public final class TeslaTurbineController {
     private final TeslaTurbineCore core;
     private final TeslaTurbineBlockEntity turbine;
 
-    private boolean saveDirty;
-    private boolean clientDirty;
+    private boolean needsSave;
+    private boolean needsClientSync;
     private float lastGeneratedSpeed = Float.NaN;
 
     public TeslaTurbineController(TeslaTurbineCore core, TeslaTurbineBlockEntity turbine) {
@@ -30,11 +30,6 @@ public final class TeslaTurbineController {
 
         core.getFlowMeter().tick();
         flushDirtyState();
-        if (turbine.isOverStressed()) {
-            lastGeneratedSpeed = Float.NaN;
-            return;
-        }
-
         refreshGeneratedRotationIfNeeded();
     }
 
@@ -71,27 +66,27 @@ public final class TeslaTurbineController {
     }
 
     public float getGeneratedSpeed() {
-        int direction = core.getFlowMeter().isClockwiseFlow() ? -1 : 1;
-        int modifier = turbine.getBlockState().getValue(TeslaTurbineBlock.AXIS) == Axis.Z ? -1 : 1;
-        return TeslaTurbineUtils.BASE_ROTATION_SPEED * core.getLevelCalculator().getCurrentLevel() * direction * modifier;
+        int flowDirectionMultiplier = core.getFlowMeter().isClockwiseFlow() ? -1 : 1;
+        int axisDirectionMultiplier = turbine.getBlockState().getValue(TeslaTurbineBlock.AXIS) == Axis.Z ? -1 : 1;
+        return TeslaTurbineUtils.BASE_ROTATION_SPEED * core.getLevelCalculator().getCurrentLevel() * flowDirectionMultiplier * axisDirectionMultiplier;
     }
 
     public void markForSave() {
-        saveDirty = true;
+        needsSave = true;
     }
 
     public void markForClientSync() {
-        clientDirty = true;
+        needsClientSync = true;
     }
 
     public void markForSaveAndClientSync() {
-        saveDirty = true;
-        clientDirty = true;
+        needsSave = true;
+        needsClientSync = true;
     }
 
     public void onReadComplete() {
-        saveDirty = false;
-        clientDirty = false;
+        needsSave = false;
+        needsClientSync = false;
         lastGeneratedSpeed = Float.NaN;
     }
 
@@ -111,15 +106,15 @@ public final class TeslaTurbineController {
     }
 
     private void flushDirtyState() {
-        if (saveDirty) {
+        if (needsSave) {
             turbine.setChanged();
-            saveDirty = false;
+            needsSave = false;
         }
-        if (!clientDirty) {
+        if (!needsClientSync) {
             return;
         }
 
         turbine.sendData();
-        clientDirty = false;
+        needsClientSync = false;
     }
 }

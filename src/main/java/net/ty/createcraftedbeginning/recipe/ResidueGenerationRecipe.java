@@ -32,16 +32,13 @@ public class ResidueGenerationRecipe extends StandardProcessingWithGasRecipe<Sin
             return ResidueOutput.EMPTY;
         }
 
-        RecipeManager manager = level.getRecipeManager();
-        Map<GasStack, ResidueOutput> cache = OUTPUT_CACHES.computeIfAbsent(manager, ignored -> new HashMap<>());
-        GasStack cacheKey = gasStack.copyWithAmount(1);
-        return cache.computeIfAbsent(cacheKey, key -> findOutputUncached(level, key));
+        Map<GasStack, ResidueOutput> outputCache = OUTPUT_CACHES.computeIfAbsent(level.getRecipeManager(), ignored -> new HashMap<>());
+        return outputCache.computeIfAbsent(gasStack.copyWithAmount(1), normalizedGas -> findOutputUncached(level, normalizedGas));
     }
 
     private static ResidueOutput findOutputUncached(Level level, GasStack gasStack) {
-        List<RecipeHolder<ResidueGenerationRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.RESIDUE_GENERATION.getType());
-        for (RecipeHolder<ResidueGenerationRecipe> holder : recipes) {
-            ResidueGenerationRecipe recipe = holder.value();
+        for (RecipeHolder<ResidueGenerationRecipe> recipeHolder : level.getRecipeManager().<SingleRecipeInput, ResidueGenerationRecipe>getAllRecipesFor(CCBRecipeTypes.RESIDUE_GENERATION.getType())) {
+            ResidueGenerationRecipe recipe = recipeHolder.value();
             if (recipe.isIngredientEmpty() || !recipe.getIngredientsGas().ingredient().test(gasStack)) {
                 continue;
             }
@@ -74,8 +71,8 @@ public class ResidueGenerationRecipe extends StandardProcessingWithGasRecipe<Sin
             errors.add("Residue generation recipes must have exactly one gas input.");
         }
 
-        int outputTypes = (results.isEmpty() ? 0 : 1) + (fluidResults.isEmpty() ? 0 : 1);
-        if (outputTypes <= 1) {
+        int outputTypeCount = (results.isEmpty() ? 0 : 1) + (fluidResults.isEmpty() ? 0 : 1);
+        if (outputTypeCount <= 1) {
             return errors;
         }
 

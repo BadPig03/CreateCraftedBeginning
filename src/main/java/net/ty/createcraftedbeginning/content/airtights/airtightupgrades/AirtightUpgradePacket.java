@@ -28,11 +28,10 @@ public record AirtightUpgradePacket(ResourceLocation id, boolean install) implem
             return;
         }
 
-        boolean changed = install ? menu.tryInstallUpgrade(id) : menu.tryToggleUpgrade(id);
-        if (changed) {
+        boolean upgradeChanged = install ? menu.tryInstallUpgrade(id) : menu.tryToggleUpgrade(id);
+        if (upgradeChanged) {
             menu.saveData(menu.contentHolder);
-            int upgradeSlot = AirtightUpgradableMenu.UPGRADE_SLOT_INDEX + Inventory.INVENTORY_SIZE;
-            menu.slots.get(upgradeSlot).setChanged();
+            menu.slots.get(AirtightUpgradableMenu.UPGRADE_SLOT_INDEX + Inventory.INVENTORY_SIZE).setChanged();
             menu.broadcastChanges();
         }
         menu.syncToClient(player);

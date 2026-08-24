@@ -51,12 +51,12 @@ public class EndSculkSilencerStructuralBlockEntity extends EndMechanicalStructur
             return;
         }
 
-        EndSculkSilencerBlockEntity master = getMasterForUse();
-        if (master == null) {
+        EndSculkSilencerBlockEntity silencer = getMasterForUse();
+        if (silencer == null) {
             return;
         }
 
-        master.refreshSilencerState();
+        silencer.refreshSilencerState();
     }
 
     protected enum SilencerWorkingRange implements INamedIconOptions {

@@ -42,7 +42,7 @@ public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEn
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.CREATIVE_AIRTIGHT_TANK.get(), (be, context) -> be.getCapability());
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.CREATIVE_AIRTIGHT_TANK.get(), (tank, ignoredDirection) -> tank.getCapability());
     }
 
     public static long getCapacityPerTank() {
@@ -77,17 +77,17 @@ public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEn
             return;
         }
 
-        BlockState state = getBlockState();
-        if (!(state.getBlock() instanceof CreativeAirtightTankBlock)) {
+        BlockState tankState = getBlockState();
+        if (!(tankState.getBlock() instanceof CreativeAirtightTankBlock)) {
             return;
         }
 
-        Axis axis = getMainConnectionAxis();
-        int controllerCoords = calculateCoords(getController(), axis);
-        int posCoords = calculateCoords(getBlockPos(), axis);
-        state = state.setValue(CreativeAirtightTankBlock.BOTTOM, controllerCoords == posCoords);
-        state = state.setValue(CreativeAirtightTankBlock.TOP, controllerCoords + getHeight() - 1 == posCoords);
-        level.setBlock(worldPosition, state, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE);
+        Axis connectionAxis = getMainConnectionAxis();
+        int controllerCoordinate = calculateCoords(getController(), connectionAxis);
+        int blockCoordinate = calculateCoords(getBlockPos(), connectionAxis);
+        tankState = tankState.setValue(CreativeAirtightTankBlock.BOTTOM, controllerCoordinate == blockCoordinate);
+        tankState = tankState.setValue(CreativeAirtightTankBlock.TOP, controllerCoordinate + getHeight() - 1 == blockCoordinate);
+        level.setBlock(worldPosition, tankState, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE);
     }
 
     @Override
@@ -101,13 +101,13 @@ public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEn
             return;
         }
 
-        BlockState state = getBlockState();
-        if (!(state.getBlock() instanceof CreativeAirtightTankBlock)) {
+        BlockState tankState = getBlockState();
+        if (!(tankState.getBlock() instanceof CreativeAirtightTankBlock)) {
             return;
         }
 
-        state = state.setValue(CreativeAirtightTankBlock.TOP, true).setValue(CreativeAirtightTankBlock.BOTTOM, true);
-        level.setBlock(worldPosition, state, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE | Block.UPDATE_KNOWN_SHAPE);
+        tankState = tankState.setValue(CreativeAirtightTankBlock.TOP, true).setValue(CreativeAirtightTankBlock.BOTTOM, true);
+        level.setBlock(worldPosition, tankState, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE | Block.UPDATE_KNOWN_SHAPE);
     }
 
     @Override

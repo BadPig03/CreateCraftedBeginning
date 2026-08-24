@@ -12,7 +12,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities;
 import net.ty.createcraftedbeginning.config.CCBConfig;
@@ -44,16 +43,16 @@ public final class GasPropagator {
 
     public static void propagateChangedPipe(Level level, BlockPos pipePos) {
         long gameTime = level.getGameTime();
-        PropagationBatch batch = CHANGED_PIPE_BATCHES.get(level);
-        if (batch.gameTime != gameTime) {
-            batch.gameTime = gameTime;
-            batch.processed.clear();
+        PropagationBatch propagationBatch = CHANGED_PIPE_BATCHES.get(level);
+        if (propagationBatch.gameTime != gameTime) {
+            propagationBatch.gameTime = gameTime;
+            propagationBatch.processed.clear();
         }
-        if (batch.processed.contains(pipePos)) {
+        if (propagationBatch.processed.contains(pipePos)) {
             return;
         }
 
-        batch.processed.addAll(propagatePipeInternal(level, pipePos));
+        propagationBatch.processed.addAll(propagatePipeInternal(level, pipePos));
     }
 
     private static Set<BlockPos> propagatePipeInternal(Level level, BlockPos pipePos) {
@@ -64,15 +63,15 @@ public final class GasPropagator {
         visited.add(pipePos);
         int pumpRange = getAirtightPumpMaxRange();
         while (!frontier.isEmpty()) {
-            Pair<Integer, BlockPos> pair = frontier.poll();
-            BlockPos currentPos = pair.getSecond();
+            Pair<Integer, BlockPos> frontierEntry = frontier.poll();
+            BlockPos currentPos = frontierEntry.getSecond();
             GasTransportBehaviour behaviour = getBehaviour(level, currentPos);
             if (behaviour == null) {
                 continue;
             }
 
             behaviour.wipePressure();
-            int distance = pair.getFirst();
+            int distance = frontierEntry.getFirst();
             for (Direction direction : Iterate.directions) {
                 if (behaviour.getConnection(direction) == null) {
                     continue;
@@ -97,8 +96,8 @@ public final class GasPropagator {
                     continue;
                 }
 
-                int newDistance = distance + 1;
-                if (newDistance > pumpRange && !targetBehaviour.hasAnyPressureContribution()) {
+                int targetDistance = distance + 1;
+                if (targetDistance > pumpRange && !targetBehaviour.hasAnyPressureContribution()) {
                     continue;
                 }
 
@@ -107,13 +106,13 @@ public final class GasPropagator {
                 }
 
                 visited.add(targetPos);
-                frontier.add(Pair.of(newDistance, targetPos));
+                frontier.add(Pair.of(targetDistance, targetPos));
             }
         }
 
-        for (Pair<AirtightPumpBlockEntity, Direction> pump : discoveredPumps) {
-            visited.add(pump.getFirst().getBlockPos());
-            pump.getFirst().updatePipesOnSide(pump.getSecond());
+        for (Pair<AirtightPumpBlockEntity, Direction> discoveredPump : discoveredPumps) {
+            visited.add(discoveredPump.getFirst().getBlockPos());
+            discoveredPump.getFirst().updatePipesOnSide(discoveredPump.getSecond());
         }
         return visited;
     }
@@ -167,8 +166,7 @@ public final class GasPropagator {
             return null;
         }
 
-        Block otherBlock = level.getBlockState(neighborPos).getBlock();
-        if (otherBlock instanceof AirtightPumpBlock) {
+        if (level.getBlockState(neighborPos).getBlock() instanceof AirtightPumpBlock) {
             return null;
         }
 
@@ -215,7 +213,7 @@ public final class GasPropagator {
         private final Direction connectedFace;
         @Nullable
         private GasTransportBehaviour behaviour;
-        private boolean behaviourResolved;
+        private boolean isBehaviourResolved;
         private byte canFlowToward = UNKNOWN;
         private byte gasCapability = UNKNOWN;
 
@@ -241,9 +239,9 @@ public final class GasPropagator {
 
         @Nullable
         public GasTransportBehaviour behaviour() {
-            if (!behaviourResolved) {
+            if (!isBehaviourResolved) {
                 behaviour = getBehaviour(level, pos);
-                behaviourResolved = true;
+                isBehaviourResolved = true;
             }
             return behaviour;
         }

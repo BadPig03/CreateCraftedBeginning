@@ -12,8 +12,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public record GasFilterScreenPacket(boolean blacklist) implements ServerboundPacketPayload {
-    public static final StreamCodec<ByteBuf, GasFilterScreenPacket> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.BOOL, GasFilterScreenPacket::blacklist, GasFilterScreenPacket::new);
+public record GasFilterScreenPacket(boolean blacklist, boolean respectData) implements ServerboundPacketPayload {
+    public static final StreamCodec<ByteBuf, GasFilterScreenPacket> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.BOOL, GasFilterScreenPacket::blacklist, ByteBufCodecs.BOOL, GasFilterScreenPacket::respectData, GasFilterScreenPacket::new);
 
     @Override
     public void handle(ServerPlayer player) {
@@ -22,6 +22,7 @@ public record GasFilterScreenPacket(boolean blacklist) implements ServerboundPac
         }
 
         menu.blacklist = blacklist;
+        menu.respectData = respectData;
     }
 
     @Override

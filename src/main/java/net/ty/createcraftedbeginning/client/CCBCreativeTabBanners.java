@@ -30,29 +30,29 @@ public final class CCBCreativeTabBanners {
     }
 
     public static void render(GuiGraphics graphics, BannerLayout banner, int visibleRow) {
-        int y = 17 + visibleRow * 18;
+        int bannerY = 17 + visibleRow * 18;
         Minecraft minecraft = Minecraft.getInstance();
         Font font = minecraft.font;
         Window window = minecraft.getWindow();
-        Component text = banner.text();
+        Component title = banner.text();
 
-        graphics.blitSprite(banner.sprite(), 8, y, 162, 18);
-        graphics.fill(10, y + 2, Math.min(168, 16 + font.width(text)), y + 16, banner.background());
-        graphics.drawString(font, text, 13, y + 5, banner.secondaryColor(), true);
+        graphics.blitSprite(banner.sprite(), 8, bannerY, 162, 18);
+        graphics.fill(10, bannerY + 2, Math.min(168, 16 + font.width(title)), bannerY + 16, banner.background());
+        graphics.drawString(font, title, 13, bannerY + 5, banner.secondaryColor(), true);
 
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
         poseStack.translate(0, 0, 1);
 
-        Matrix4f pose = poseStack.last().pose();
-        Vector3f topLeft = pose.transformPosition(new Vector3f(13, y + 5, 0));
-        Vector3f bottomRight = pose.transformPosition(new Vector3f(13 + font.width(text), y + 5 + font.lineHeight / 1.8f, 0));
+        Matrix4f poseMatrix = poseStack.last().pose();
+        Vector3f topLeft = poseMatrix.transformPosition(new Vector3f(13, bannerY + 5, 0));
+        Vector3f bottomRight = poseMatrix.transformPosition(new Vector3f(13 + font.width(title), bannerY + 5 + font.lineHeight / 1.8f, 0));
         float guiScale = (float) window.getGuiScale();
         topLeft.mul(guiScale);
         bottomRight.mul(guiScale);
 
         RenderSystem.enableScissor((int) topLeft.x, window.getHeight() - (int) topLeft.y - Math.max(1, (int) (bottomRight.y - topLeft.y)), Math.max(1, (int) (bottomRight.x - topLeft.x)), Math.max(1, (int) (bottomRight.y - topLeft.y)));
-        graphics.drawString(font, text, 13, y + 5, banner.color(), false);
+        graphics.drawString(font, title, 13, bannerY + 5, banner.color(), false);
         RenderSystem.disableScissor();
 
         poseStack.popPose();

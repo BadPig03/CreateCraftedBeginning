@@ -117,9 +117,11 @@ public final class ResourceTransaction {
         try {
             for (CapturedParticipant participant : captured) {
                 attemptedParticipants++;
-                if (!participant.execute()) {
-                    return false;
+                if (participant.execute()) {
+                    continue;
                 }
+
+                return false;
             }
 
             committed = true;

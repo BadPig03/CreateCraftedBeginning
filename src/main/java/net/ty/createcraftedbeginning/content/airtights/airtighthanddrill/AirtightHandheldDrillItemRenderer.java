@@ -49,16 +49,16 @@ final class AirtightHandheldDrillItemRenderer extends CustomRenderedItemModelRen
         }
 
         BakedModel drillFront = CCBPartialModels.AIRTIGHT_HANDHELD_DRILL_FRONT.get();
-        float angle = rotationAngles.getOrDefault(drill, 0.0f);
-        boolean isHeld = player.getMainHandItem() == drill || player.getOffhandItem() == drill;
-        if (isHeld) {
-            float speed = AirtightHandheldDrillRenderHandler.INSTANCE.getAnimation(AnimationTickHolder.getPartialTicks());
-            angle = (angle + speed) % 360;
-            rotationAngles.put(drill, angle);
+        float rotationAngle = rotationAngles.getOrDefault(drill, 0.0f);
+        boolean isDrillHeld = player.getMainHandItem() == drill || player.getOffhandItem() == drill;
+        if (isDrillHeld) {
+            float rotationSpeed = AirtightHandheldDrillRenderHandler.INSTANCE.getAnimation(AnimationTickHolder.getPartialTicks());
+            rotationAngle = (rotationAngle + rotationSpeed) % 360;
+            rotationAngles.put(drill, rotationAngle);
         }
 
         ms.pushPose();
-        ms.mulPose(Axis.ZP.rotationDegrees(angle));
+        ms.mulPose(Axis.ZP.rotationDegrees(rotationAngle));
         renderer.render(drillFront, light);
         ms.popPose();
     }

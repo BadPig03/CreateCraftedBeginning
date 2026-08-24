@@ -42,8 +42,8 @@ public final class GlobalEndSculkSilencerManager {
 
         ResourceLocation dimension = dimension(level);
         Map<BlockPos, Long> movingRegistrations = MOVING_LAST_SEEN_BY_DIMENSION.get(dimension);
-        for (EndSculkSilencerInstance instance : INDEX.getInstances(dimension)) {
-            BlockPos registrationPos = instance.registrationPos();
+        for (EndSculkSilencerInstance silencer : INDEX.getInstances(dimension)) {
+            BlockPos registrationPos = silencer.registrationPos();
             if (movingRegistrations != null && movingRegistrations.containsKey(registrationPos)) {
                 continue;
             }
@@ -104,9 +104,8 @@ public final class GlobalEndSculkSilencerManager {
     public static void removeDimension(ServerLevel level) {
         ResourceLocation dimension = dimension(level);
         MOVING_LAST_SEEN_BY_DIMENSION.remove(dimension);
-        List<EndSculkSilencerInstance> removed = INDEX.removeDimension(dimension);
-        for (EndSculkSilencerInstance instance : removed) {
-            sendToDimension(level, new EndSculkSilencerUpdatePacket(instance.registrationPos(), instance.effectCenter(), dimension, (short) 0, false));
+        for (EndSculkSilencerInstance silencer : INDEX.removeDimension(dimension)) {
+            sendToDimension(level, new EndSculkSilencerUpdatePacket(silencer.registrationPos(), silencer.effectCenter(), dimension, (short) 0, false));
         }
     }
 
@@ -118,8 +117,8 @@ public final class GlobalEndSculkSilencerManager {
     public static void sendToClient(ServerPlayer serverPlayer) {
         CatnipServices.NETWORK.sendToClient(serverPlayer, EndSculkSilencerResetPacket.INSTANCE);
         ResourceLocation dimension = dimension(serverPlayer.level());
-        for (EndSculkSilencerInstance instance : INDEX.getInstances(dimension)) {
-            CatnipServices.NETWORK.sendToClient(serverPlayer, new EndSculkSilencerUpdatePacket(instance.registrationPos(), instance.effectCenter(), dimension, instance.range(), true));
+        for (EndSculkSilencerInstance silencer : INDEX.getInstances(dimension)) {
+            CatnipServices.NETWORK.sendToClient(serverPlayer, new EndSculkSilencerUpdatePacket(silencer.registrationPos(), silencer.effectCenter(), dimension, silencer.range(), true));
         }
     }
 
@@ -130,7 +129,7 @@ public final class GlobalEndSculkSilencerManager {
             return;
         }
 
-        List<BlockPos> staleRegistrations = movingRegistrations.entrySet().stream().filter(entry -> gameTime - entry.getValue() > MOVING_REGISTRATION_TIMEOUT_TICKS).map(Entry::getKey).toList();
+        List<BlockPos> staleRegistrations = movingRegistrations.entrySet().stream().filter(registrationEntry -> gameTime - registrationEntry.getValue() > MOVING_REGISTRATION_TIMEOUT_TICKS).map(Entry::getKey).toList();
         for (BlockPos registrationPos : staleRegistrations) {
             removeMoving(level, registrationPos);
         }

@@ -53,14 +53,14 @@ public class AirtightReactorKettleTooltipBuilder {
             return true;
         }
 
-        float speed = structureManager.getSpeed();
-        if (speed == 0 || Mth.abs(speed) >= SpeedLevel.FAST.getSpeedValue()) {
+        float currentSpeed = structureManager.getSpeed();
+        if (currentSpeed == 0 || Mth.abs(currentSpeed) >= SpeedLevel.FAST.getSpeedValue()) {
             return false;
         }
 
         CCBLang.translate("gui.speed_requirement").style(ChatFormatting.GOLD).forGoggles(tooltip);
-        String blockName = Component.translatable(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK.getDefaultState().getBlock().getDescriptionId()).getString();
-        CCBLang.addToGoggles(tooltip, "gui.not_fast_enough", blockName);
+        String structuralBlockName = Component.translatable(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK.getDefaultState().getBlock().getDescriptionId()).getString();
+        CCBLang.addToGoggles(tooltip, "gui.not_fast_enough", structuralBlockName);
         return true;
     }
 
@@ -78,43 +78,43 @@ public class AirtightReactorKettleTooltipBuilder {
 
         tooltip.add(CommonComponents.EMPTY);
         CCBLang.translate("gui.stress_impact").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        float speed = Mth.abs(core.getStructureManager().getTheoreticalSpeed());
+        float theoreticalSpeed = Mth.abs(core.getStructureManager().getTheoreticalSpeed());
         double stressImpact = BlockStressValues.getImpact(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG_BLOCK.get());
-        CCBLang.number(speed * stressImpact).translate("gui.unit.stress").style(ChatFormatting.AQUA).space().add(CCBLang.translate("gui.at_current_speed").style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+        CCBLang.number(theoreticalSpeed * stressImpact).translate("gui.unit.stress").style(ChatFormatting.AQUA).space().add(CCBLang.translate("gui.at_current_speed").style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
     }
 
     private boolean addStoredInfo(List<Component> tooltip) {
-        int startIndex = tooltip.size();
+        int contentsStartIndex = tooltip.size();
         CCBLang.translate("gui.airtight_reactor_kettle.contents").style(ChatFormatting.GRAY).forGoggles(tooltip);
 
-        int maxDisplay = CCBClientBridge.getMaxItemStackDisplay();
-        int itemCount = addItemInfo(tooltip, maxDisplay);
-        if (itemCount > maxDisplay) {
-            CCBLang.translate("gui.airtight_reactor_kettle.more", itemCount - maxDisplay).style(ChatFormatting.DARK_GRAY).forGoggles(tooltip, 1);
+        int maxItemDisplay = CCBClientBridge.getMaxItemStackDisplay();
+        int itemCount = addItemInfo(tooltip, maxItemDisplay);
+        if (itemCount > maxItemDisplay) {
+            CCBLang.translate("gui.airtight_reactor_kettle.more", itemCount - maxItemDisplay).style(ChatFormatting.DARK_GRAY).forGoggles(tooltip, 1);
         }
 
-        int storedCount = itemCount + addFluidInfo(tooltip) + addGasInfo(tooltip);
-        if (storedCount > 0) {
+        int storedEntryCount = itemCount + addFluidInfo(tooltip) + addGasInfo(tooltip);
+        if (storedEntryCount > 0) {
             return true;
         }
 
-        while (tooltip.size() > startIndex) {
+        while (tooltip.size() > contentsStartIndex) {
             tooltip.removeLast();
         }
         return false;
     }
 
-    private int addItemInfo(List<Component> tooltip, int maxDisplay) {
+    private int addItemInfo(List<Component> tooltip, int maxItemDisplay) {
         int itemCount = 0;
         IItemHandler items = kettle.getAvailableItems();
         for (int slot = 0; slot < items.getSlots(); slot++) {
-            ItemStack stack = items.getStackInSlot(slot);
-            if (stack.isEmpty()) {
+            ItemStack itemStack = items.getStackInSlot(slot);
+            if (itemStack.isEmpty()) {
                 continue;
             }
 
-            if (itemCount < maxDisplay) {
-                CCBLang.text("").add(Component.translatable(stack.getDescriptionId()).withStyle(ChatFormatting.GRAY)).add(CCBLang.text(" x" + stack.getCount()).style(ChatFormatting.GREEN)).forGoggles(tooltip, 1);
+            if (itemCount < maxItemDisplay) {
+                CCBLang.text("").add(Component.translatable(itemStack.getDescriptionId()).withStyle(ChatFormatting.GRAY)).add(CCBLang.text(" x" + itemStack.getCount()).style(ChatFormatting.GREEN)).forGoggles(tooltip, 1);
             }
             itemCount++;
         }
@@ -125,13 +125,13 @@ public class AirtightReactorKettleTooltipBuilder {
         int fluidCount = 0;
         IFluidHandler fluids = kettle.getAvailableFluids();
         for (int tank = 0; tank < fluids.getTanks(); tank++) {
-            FluidStack stack = fluids.getFluidInTank(tank);
+            FluidStack fluidStack = fluids.getFluidInTank(tank);
             LangBuilder unit = CCBLang.translate("gui.unit.milli_buckets");
-            if (stack.isEmpty()) {
+            if (fluidStack.isEmpty()) {
                 continue;
             }
 
-            CCBLang.fluidName(stack).add(CCBLang.text(" ")).style(ChatFormatting.GRAY).add(CCBLang.number(stack.getAmount()).add(unit).style(ChatFormatting.BLUE)).forGoggles(tooltip, 1);
+            CCBLang.fluidName(fluidStack).add(CCBLang.text(" ")).style(ChatFormatting.GRAY).add(CCBLang.number(fluidStack.getAmount()).add(unit).style(ChatFormatting.BLUE)).forGoggles(tooltip, 1);
             fluidCount++;
         }
         return fluidCount;
@@ -141,12 +141,12 @@ public class AirtightReactorKettleTooltipBuilder {
         int gasCount = 0;
         IGasHandler gases = kettle.getAvailableGases();
         for (int tank = 0; tank < gases.getTanks(); tank++) {
-            GasStack stack = gases.getGasInTank(tank);
-            if (stack.isEmpty()) {
+            GasStack gasStack = gases.getGasInTank(tank);
+            if (gasStack.isEmpty()) {
                 continue;
             }
 
-            CCBLang.gasName(stack).add(CCBLang.text(" ")).style(ChatFormatting.GRAY).add(GasAmounts.precise(stack.getAmount()).style(ChatFormatting.AQUA)).forGoggles(tooltip, 1);
+            CCBLang.gasName(gasStack).add(CCBLang.text(" ")).style(ChatFormatting.GRAY).add(GasAmounts.precise(gasStack.getAmount()).style(ChatFormatting.AQUA)).forGoggles(tooltip, 1);
             gasCount++;
         }
         return gasCount;

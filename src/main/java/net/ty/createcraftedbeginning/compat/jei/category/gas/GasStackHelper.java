@@ -113,14 +113,14 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
     @Override
     public String getErrorInfo(@Nullable GasStack ingredient) {
         GasStack stack = ingredient == null ? GasStack.EMPTY : ingredient;
-        ToStringHelper helper = MoreObjects.toStringHelper(GasStack.class);
+        ToStringHelper stringHelper = MoreObjects.toStringHelper(GasStack.class);
         Holder<Gas> gasHolder = stack.getGasHolder();
-        helper.add("Gas", gasHolder.value().isEmpty() ? "none" : stack.getTranslationKey());
+        stringHelper.add("Gas", gasHolder.value().isEmpty() ? "none" : stack.getTranslationKey());
         if (stack.isEmpty()) {
-            return helper.toString();
+            return stringHelper.toString();
         }
 
-        helper.add("Amount", stack.getAmount());
-        return helper.toString();
+        stringHelper.add("Amount", stack.getAmount());
+        return stringHelper.toString();
     }
 }

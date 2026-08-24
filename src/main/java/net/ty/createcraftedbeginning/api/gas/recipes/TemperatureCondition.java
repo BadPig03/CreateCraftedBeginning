@@ -50,6 +50,10 @@ public enum TemperatureCondition implements StringRepresentable {
         return color;
     }
 
+    public boolean supportsCompatibleMatching() {
+        return this != SUPERHEATED && this != SUPERCHILLED;
+    }
+
     public boolean test(float temperature) {
         return function.apply(temperature);
     }

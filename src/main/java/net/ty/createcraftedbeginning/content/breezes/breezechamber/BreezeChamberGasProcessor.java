@@ -1,13 +1,14 @@
 package net.ty.createcraftedbeginning.content.breezes.breezechamber;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.util.Mth;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverCore;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.IChamberGasTank;
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
@@ -20,35 +21,37 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.ref.WeakReference;
+import java.util.List;
 import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class BreezeChamberGasProcessor {
     private static final int GAS_PROCESSING_INTERVAL = 20;
+    private static final String PENDING_WORK = "PendingWork";
+    private static final String PENDING_TICKS = "PendingTicks";
+    private static final String PENDING_CHARGER_TYPE = "PendingChargerType";
     private final BreezeChamberBlockEntity chamber;
+    private long pendingProcessingWork;
+    private int pendingProcessingTicks;
+    private ChargerType pendingChargerType = ChargerType.NONE;
 
     public BreezeChamberGasProcessor(BreezeChamberBlockEntity chamber) {
         this.chamber = chamber;
     }
 
-    private static boolean isControllerActive(IChamberGasTank tank) {
-        if (!(tank instanceof AirtightTankBlockEntity controller)) {
-            return false;
-        }
-
-        AirtightAssemblyDriverCore driverCore = controller.getCore();
-        return driverCore.isActive();
+    private static boolean isControllerActive(IChamberGasTank chamberTank) {
+        return chamberTank instanceof AirtightTankBlockEntity tankController && tankController.getCore().isActive();
     }
 
-    private static int getProcessingAmount(int time) {
-        if (time == 0) {
+    private static int getProcessingAmount(int windTime) {
+        if (windTime == 0) {
             return 0;
         }
 
-        int maxAmount = CCBConfig.server().airtights.maxProcessingRate.get();
-        float ratio = Mth.clamp((float) Mth.abs(time) / BreezeChamberBlockEntity.getMaxEffectiveThreshold(), 0, 1);
-        return Mth.clamp((int) (maxAmount * ratio), 1, maxAmount);
+        int maxProcessingRate = CCBConfig.server().airtights.maxProcessingRate.get();
+        float windStrength = Mth.clamp((float) Mth.abs(windTime) / BreezeChamberBlockEntity.getMaxEffectiveThreshold(), 0, 1);
+        return Mth.clamp((int) (maxProcessingRate * windStrength), 1, maxProcessingRate);
     }
 
     private static ChargerType chargerTypeFor(WindLevel windLevel) {
@@ -60,8 +63,8 @@ public final class BreezeChamberGasProcessor {
     }
 
     public boolean isControllerActive() {
-        IChamberGasTank tank = getTank();
-        return tank != null && isControllerActive(tank);
+        IChamberGasTank chamberTank = getTank();
+        return chamberTank != null && isControllerActive(chamberTank);
     }
 
     public Gas getTankGasType() {
@@ -74,13 +77,14 @@ public final class BreezeChamberGasProcessor {
 
     public boolean isOutputMismatched() {
         GasStack inputStack = getTankGasStack();
-        GasTank output = outputTank();
-        if (inputStack.isEmpty() || output.isEmpty()) {
+        GasTank outputTank = outputTank();
+        if (inputStack.isEmpty() || outputTank.isEmpty()) {
             return false;
         }
 
-        ChargerType type = chargerTypeFor(chamber.getWindLevel());
-        return getConversion(type, inputStack).map(conversion -> !GasStack.isSameGasSameComponents(output.getGasStack(), conversion.output())).orElse(false);
+        ChargerType chargerType = chargerTypeFor(chamber.getWindLevel());
+        List<GasConversion> conversions = getConversions(chargerType, inputStack);
+        return !conversions.isEmpty() && conversions.stream().noneMatch(conversion -> GasStack.isSameGasSameComponents(outputTank.getGasStack(), conversion.output()));
     }
 
     public boolean isInputInvalid() {
@@ -89,65 +93,114 @@ public final class BreezeChamberGasProcessor {
             return false;
         }
 
-        ChargerType type = chargerTypeFor(chamber.getWindLevel());
-        return type != ChargerType.NONE && getConversion(type, inputStack).isEmpty();
+        ChargerType chargerType = chargerTypeFor(chamber.getWindLevel());
+        return chargerType != ChargerType.NONE && getConversions(chargerType, inputStack).isEmpty();
     }
 
-    public void tickGasProcessing(ChargerType chargerType) {
-        if (chamber.getLevel() == null || chamber.getLevel().isClientSide || chargerType == ChargerType.NONE) {
+    public void tickGasProcessing(ChargerType chargerType, int windTime) {
+        if (chamber.getLevel() == null || chamber.getLevel().isClientSide || chargerType == ChargerType.NONE || windTime == 0) {
             return;
         }
 
-        long phase = chamber.getLevel().getGameTime() + chamber.getBlockPos().asLong();
-        if (Math.floorMod(phase, GAS_PROCESSING_INTERVAL) != 0) {
+        if (pendingProcessingTicks > 0 && pendingChargerType != chargerType) {
+            flushPendingProcessing();
+        }
+
+        pendingChargerType = chargerType;
+        pendingProcessingWork += getProcessingAmount(windTime);
+        pendingProcessingTicks++;
+        if (pendingProcessingTicks < GAS_PROCESSING_INTERVAL) {
             return;
         }
 
-        IChamberGasTank tank = getTank();
-        if (tank == null || isControllerActive(tank)) {
-            return;
-        }
-
-        processGas(chargerType, tank);
+        flushPendingProcessing();
     }
 
-    private void processGas(ChargerType chargerType, IChamberGasTank tank) {
-        GasTank inventory = tank.getTankInventory();
-        GasTank output = outputTank();
-        if (inventory.isEmpty() || output.getSpace() <= 0) {
+    public void flushPendingProcessing() {
+        if (pendingProcessingTicks <= 0 || pendingChargerType == ChargerType.NONE) {
+            resetPendingProcessing();
             return;
         }
 
-        GasStack inputStack = inventory.getGasStack();
-        Optional<GasConversion> conversionResult = getConversion(chargerType, inputStack);
-        if (conversionResult.isEmpty()) {
+        ChargerType chargerType = pendingChargerType;
+        long processingBudget = pendingProcessingWork / GAS_PROCESSING_INTERVAL;
+        resetPendingProcessing();
+        if (processingBudget <= 0 || chamber.getLevel() == null || chamber.getLevel().isClientSide) {
             return;
         }
 
-        GasConversion conversion = conversionResult.get();
+        IChamberGasTank chamberTank = getTank();
+        if (chamberTank == null || isControllerActive(chamberTank)) {
+            return;
+        }
+
+        processGas(chargerType, chamberTank, processingBudget);
+    }
+
+    public void writePendingProcessing(CompoundTag compoundTag) {
+        if (pendingProcessingTicks <= 0 || pendingChargerType == ChargerType.NONE) {
+            return;
+        }
+
+        compoundTag.putLong(PENDING_WORK, pendingProcessingWork);
+        compoundTag.putInt(PENDING_TICKS, pendingProcessingTicks);
+        compoundTag.putString(PENDING_CHARGER_TYPE, pendingChargerType.name());
+    }
+
+    public void readPendingProcessing(CompoundTag compoundTag) {
+        resetPendingProcessing();
+        ChargerType chargerType = ChargerType.fromTag(compoundTag, PENDING_CHARGER_TYPE, ChargerType.NONE);
+        if (chargerType == ChargerType.NONE || chargerType != chamber.getChamberStateInternal().getChargerType()) {
+            return;
+        }
+
+        int pendingTicks = compoundTag.contains(PENDING_TICKS, Tag.TAG_ANY_NUMERIC) ? Mth.clamp(compoundTag.getInt(PENDING_TICKS), 0, GAS_PROCESSING_INTERVAL - 1) : 0;
+        long pendingWork = compoundTag.contains(PENDING_WORK, Tag.TAG_ANY_NUMERIC) ? Math.max(0, compoundTag.getLong(PENDING_WORK)) : 0;
+        if (pendingTicks <= 0 || pendingWork <= 0) {
+            return;
+        }
+
+        long maxPendingWork = (long) Math.max(1, CCBConfig.server().airtights.maxProcessingRate.get()) * pendingTicks;
+        pendingProcessingTicks = pendingTicks;
+        pendingProcessingWork = Math.min(pendingWork, maxPendingWork);
+        pendingChargerType = chargerType;
+    }
+
+    private void resetPendingProcessing() {
+        pendingProcessingWork = 0;
+        pendingProcessingTicks = 0;
+        pendingChargerType = ChargerType.NONE;
+    }
+
+    private void processGas(ChargerType chargerType, IChamberGasTank chamberTank, long processingBudget) {
+        GasTank inputTank = chamberTank.getTankInventory();
+        GasTank outputTank = outputTank();
+        if (inputTank.isEmpty() || outputTank.getSpace() <= 0) {
+            return;
+        }
+
+        GasStack inputStack = inputTank.getGasStack();
+        Optional<GasConversion> executableConversion = findExecutableConversion(chargerType, inputStack, outputTank, processingBudget);
+        if (executableConversion.isEmpty()) {
+            return;
+        }
+
+        GasConversion conversion = executableConversion.get();
         GasStack outputPerBatch = conversion.output();
-        if (!output.isEmpty() && !GasStack.isSameGasSameComponents(output.getGasStack(), outputPerBatch)) {
-            return;
-        }
-
         long inputAmount = conversion.input().amount();
         long outputAmount = outputPerBatch.getAmount();
-        long processingBudget = getProcessingAmount(chamber.getWindRemainingTime());
-        long batches = Math.min(inputStack.getAmount() / inputAmount, processingBudget / inputAmount);
-        batches = Math.min(batches, output.getSpace() / outputAmount);
-        if (batches <= 0) {
-            return;
-        }
+        long batchCount = Math.min(inputStack.getAmount() / inputAmount, processingBudget / inputAmount);
+        batchCount = Math.min(batchCount, outputTank.getSpace() / outputAmount);
 
-        GasStack inputRequest = inputStack.copyWithAmount(batches * inputAmount);
-        GasStack outputRequest = outputPerBatch.copyWithAmount(batches * outputAmount);
-        executeGasConversionTransaction(inventory, inputRequest, outputRequest);
+        GasStack inputRequest = inputStack.copyWithAmount(batchCount * inputAmount);
+        GasStack outputRequest = outputPerBatch.copyWithAmount(batchCount * outputAmount);
+        executeGasConversionTransaction(inputTank, inputRequest, outputRequest);
     }
 
     private void executeGasConversionTransaction(GasTank sourceTank, GasStack inputRequest, GasStack outputRequest) {
         SmartGasTankBehaviour outputBehaviour = chamber.getTankBehaviourInternal();
-        ResourceTransaction transaction = new ResourceTransaction().add(ResourceTransaction.participant(() -> GasStack.matches(sourceTank.drain(inputRequest, GasAction.SIMULATE), inputRequest), () -> MachineResourceSnapshots.copyGas(sourceTank), () -> GasStack.matches(sourceTank.drain(inputRequest, GasAction.EXECUTE), inputRequest), snapshot -> MachineResourceSnapshots.restoreGas(sourceTank, snapshot))).add(ResourceTransaction.participant(() -> outputBehaviour.getInternalGasHandler().forceFill(outputRequest, GasAction.SIMULATE) == outputRequest.getAmount(), () -> MachineResourceSnapshots.snapshotGasContents(outputBehaviour), () -> outputBehaviour.getInternalGasHandler().forceFill(outputRequest, GasAction.EXECUTE) == outputRequest.getAmount(), snapshot -> MachineResourceSnapshots.restoreGasContents(snapshot, outputBehaviour)));
-        transaction.commit();
+        ResourceTransaction conversionTransaction = new ResourceTransaction().add(ResourceTransaction.participant(() -> GasStack.matches(sourceTank.drain(inputRequest, GasAction.SIMULATE), inputRequest), () -> MachineResourceSnapshots.copyGas(sourceTank), () -> GasStack.matches(sourceTank.drain(inputRequest, GasAction.EXECUTE), inputRequest), sourceSnapshot -> MachineResourceSnapshots.restoreGas(sourceTank, sourceSnapshot))).add(ResourceTransaction.participant(() -> outputBehaviour.getInternalGasHandler().forceFill(outputRequest, GasAction.SIMULATE) == outputRequest.getAmount(), () -> MachineResourceSnapshots.snapshotGasContents(outputBehaviour), () -> outputBehaviour.getInternalGasHandler().forceFill(outputRequest, GasAction.EXECUTE) == outputRequest.getAmount(), outputSnapshot -> MachineResourceSnapshots.restoreGasContents(outputSnapshot, outputBehaviour)));
+        conversionTransaction.commit();
     }
 
     private GasTank outputTank() {
@@ -155,23 +208,51 @@ public final class BreezeChamberGasProcessor {
     }
 
     private GasStack getTankGasStack() {
-        IChamberGasTank tank = getTank();
-        if (tank == null) {
+        IChamberGasTank chamberTank = getTank();
+        if (chamberTank == null) {
             return GasStack.EMPTY;
         }
 
-        GasTank inventory = tank.getTankInventory();
-        return inventory.isEmpty() ? GasStack.EMPTY : inventory.getGasStack();
+        GasTank inputTank = chamberTank.getTankInventory();
+        if (inputTank.isEmpty()) {
+            return GasStack.EMPTY;
+        }
+        return inputTank.getGasStack();
     }
 
-    private Optional<GasConversion> getConversion(ChargerType chargerType, GasStack inputStack) {
+    private Optional<GasConversion> findExecutableConversion(ChargerType chargerType, GasStack inputStack, GasTank outputTank, long processingBudget) {
+        for (GasConversion conversion : getConversions(chargerType, inputStack)) {
+            if (!conversion.hasRequiredInput(inputStack)) {
+                continue;
+            }
+
+            long inputAmount = conversion.input().amount();
+            if (processingBudget < inputAmount) {
+                continue;
+            }
+
+            GasStack outputPerBatch = conversion.output();
+            if (!outputTank.isEmpty() && !GasStack.isSameGasSameComponents(outputTank.getGasStack(), outputPerBatch)) {
+                continue;
+            }
+
+            if (outputTank.getSpace() < outputPerBatch.getAmount()) {
+                continue;
+            }
+
+            return Optional.of(conversion);
+        }
+        return Optional.empty();
+    }
+
+    private List<GasConversion> getConversions(ChargerType chargerType, GasStack inputStack) {
         if (chamber.getLevel() == null || inputStack.isEmpty()) {
-            return Optional.empty();
+            return List.of();
         }
         return switch (chargerType) {
-            case NORMAL -> BreezeChamberRecipeIndex.findEnergization(chamber.getLevel().getRecipeManager(), inputStack);
-            case BAD -> BreezeChamberRecipeIndex.findDissipation(chamber.getLevel().getRecipeManager(), inputStack);
-            case NONE -> Optional.empty();
+            case NORMAL -> BreezeChamberRecipeIndex.findEnergizationCandidates(chamber.getLevel().getRecipeManager(), inputStack);
+            case BAD -> BreezeChamberRecipeIndex.findDissipationCandidates(chamber.getLevel().getRecipeManager(), inputStack);
+            case NONE -> List.of();
         };
     }
 
@@ -180,14 +261,17 @@ public final class BreezeChamberGasProcessor {
             return null;
         }
 
-        IChamberGasTank tank = chamber.source.get();
-        if (tank != null && !tank.isRemoved()) {
-            return tank.getControllerBE();
+        IChamberGasTank chamberTank = chamber.source.get();
+        if (chamberTank != null && !chamberTank.isRemoved()) {
+            return chamberTank.getControllerBE();
         }
 
         chamber.source = new WeakReference<>(null);
-        tank = chamber.getLevel().getBlockEntity(chamber.getBlockPos().below()) instanceof IChamberGasTank tankBe ? tankBe : null;
-        chamber.source = new WeakReference<>(tank);
-        return tank == null ? null : tank.getControllerBE();
+        chamberTank = chamber.getLevel().getBlockEntity(chamber.getBlockPos().below()) instanceof IChamberGasTank tankBelow ? tankBelow : null;
+        chamber.source = new WeakReference<>(chamberTank);
+        if (chamberTank == null) {
+            return null;
+        }
+        return chamberTank.getControllerBE();
     }
 }

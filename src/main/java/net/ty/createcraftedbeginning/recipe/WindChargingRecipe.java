@@ -54,9 +54,8 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
     }
 
     private static @Nullable WindChargingRecipe findRecipe(Level level, ItemStack itemStack) {
-        List<RecipeHolder<WindChargingRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.WIND_CHARGING.getType());
-        for (RecipeHolder<WindChargingRecipe> holder : recipes) {
-            WindChargingRecipe recipe = holder.value();
+        for (RecipeHolder<WindChargingRecipe> recipeHolder : level.getRecipeManager().<SingleRecipeInput, WindChargingRecipe>getAllRecipesFor(CCBRecipeTypes.WIND_CHARGING.getType())) {
+            WindChargingRecipe recipe = recipeHolder.value();
             if (!recipe.getIngredient().test(itemStack)) {
                 continue;
             }
@@ -77,27 +76,26 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
         return getAutomaticWindChargingTime(itemStack);
     }
 
-    public static WindChargingData getAutomaticWindChargingTime(ItemStack stack) {
-        Item item = stack.getItem();
-        FoodProperties properties = item.getFoodProperties(stack, null);
-        if (properties == null || stack.is(WIND_CHARGING_EXCLUDED)) {
+    public static WindChargingData getAutomaticWindChargingTime(ItemStack itemStack) {
+        FoodProperties foodProperties = itemStack.getItem().getFoodProperties(itemStack, null);
+        if (foodProperties == null || itemStack.is(WIND_CHARGING_EXCLUDED)) {
             return EMPTY;
         }
 
-        double foodValue = 0.5 * properties.nutrition() + properties.saturation();
+        double foodValue = 0.5 * foodProperties.nutrition() + foodProperties.saturation();
         if (foodValue <= 0) {
             return EMPTY;
         }
 
-        double effectScore = getEffectScore(properties.effects());
-        double multiplier = getChargeMultiplier(effectScore);
-        double calculatedTime = Math.pow(foodValue, 1.39858) * 100 * Math.abs(multiplier);
-        int magnitude = !GasConsumptions.isFinite(calculatedTime) || calculatedTime >= Integer.MAX_VALUE ? Integer.MAX_VALUE : Mth.ceil(calculatedTime);
-        if (magnitude <= 0) {
+        double effectScore = getEffectScore(foodProperties.effects());
+        double chargeMultiplier = getChargeMultiplier(effectScore);
+        double calculatedTime = Math.pow(foodValue, 1.39858) * 100 * Math.abs(chargeMultiplier);
+        int chargingMagnitude = !GasConsumptions.isFinite(calculatedTime) || calculatedTime >= Integer.MAX_VALUE ? Integer.MAX_VALUE : Mth.ceil(calculatedTime);
+        if (chargingMagnitude <= 0) {
             return EMPTY;
         }
 
-        int chargingTime = multiplier < 0 ? -magnitude : magnitude;
+        int chargingTime = chargeMultiplier < 0 ? -chargingMagnitude : chargingMagnitude;
         return new WindChargingData(WindChargingAction.CHARGE, chargingTime, 1, ItemStack.EMPTY);
     }
 
@@ -105,13 +103,13 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
         double score = 0;
         for (PossibleEffect possibleEffect : effects) {
             MobEffectInstance instance = possibleEffect.effect();
-            MobEffectCategory category = instance.getEffect().value().getCategory();
-            double sign = switch (category) {
+            MobEffectCategory effectCategory = instance.getEffect().value().getCategory();
+            double effectSign = switch (effectCategory) {
                 case BENEFICIAL -> 1;
                 case HARMFUL -> -1;
                 default -> 0;
             };
-            if (sign == 0) {
+            if (effectSign == 0) {
                 continue;
             }
 
@@ -120,8 +118,8 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
                 continue;
             }
 
-            double level = instance.getAmplifier() + 1;
-            score += sign * level * probability * getDurationFactor(instance);
+            double amplifierLevel = instance.getAmplifier() + 1;
+            score += effectSign * amplifierLevel * probability * getDurationFactor(instance);
         }
         return Math.abs(score) < 1.0E-9 ? 0 : score;
     }
@@ -135,8 +133,8 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
             return 2;
         }
 
-        double seconds = Math.max(1, instance.getDuration() / 20.0);
-        return Math.min(2, Math.log1p(seconds) / Math.log1p(30));
+        double durationSeconds = Math.max(1, instance.getDuration() / 20.0);
+        return Math.min(2, Math.log1p(durationSeconds) / Math.log1p(30));
     }
 
     private static double getChargeMultiplier(double effectScore) {

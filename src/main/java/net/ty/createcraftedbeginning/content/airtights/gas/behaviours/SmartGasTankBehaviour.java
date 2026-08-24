@@ -24,14 +24,14 @@ public class SmartGasTankBehaviour extends AbstractSmartGasTankBehaviour {
     protected int mutationDepth;
     protected boolean mutationDirty;
 
-    public SmartGasTankBehaviour(BehaviourType<SmartGasTankBehaviour> type, SmartBlockEntity be, int tanks, long tankCapacity, boolean enforceVariety) {
+    public SmartGasTankBehaviour(BehaviourType<SmartGasTankBehaviour> type, SmartBlockEntity be, int tankCount, long tankCapacity, boolean enforceVariety) {
         super(type, be);
-        this.tanks = new TankSegment[tanks];
-        IGasHandler[] handlers = new IGasHandler[tanks];
-        for (int i = 0; i < tanks; i++) {
+        tanks = new TankSegment[tankCount];
+        IGasHandler[] handlers = new IGasHandler[tankCount];
+        for (int tankIndex = 0; tankIndex < tankCount; tankIndex++) {
             TankSegment tankSegment = new TankSegment(tankCapacity);
-            this.tanks[i] = tankSegment;
-            handlers[i] = tankSegment.tank;
+            tanks[tankIndex] = tankSegment;
+            handlers[tankIndex] = tankSegment.tank;
         }
         capability = new InternalGasHandler(handlers, enforceVariety);
     }
@@ -109,29 +109,29 @@ public class SmartGasTankBehaviour extends AbstractSmartGasTankBehaviour {
             return false;
         }
 
-        boolean changed = mutationDirty;
+        boolean contentsChanged = mutationDirty;
         mutationDirty = false;
-        return changed;
+        return contentsChanged;
     }
 
-    public void replaceContents(GasStack[] contents, int offset) {
-        if (offset < 0 || offset + tanks.length > contents.length) {
+    public void replaceContents(GasStack[] replacementContents, int contentsOffset) {
+        if (contentsOffset < 0 || contentsOffset + tanks.length > replacementContents.length) {
             throw new IllegalArgumentException("Invalid gas tank snapshot");
         }
-        for (int index = 0; index < tanks.length; index++) {
-            SmartGasTank tank = tanks[index].tank;
-            GasStack replacement = contents[offset + index].copy();
-            GasStack current = tank.getGasStack();
-            if (replacement.getAmount() > tank.getCapacity()) {
+        for (int tankIndex = 0; tankIndex < tanks.length; tankIndex++) {
+            SmartGasTank tank = tanks[tankIndex].tank;
+            GasStack replacementGas = replacementContents[contentsOffset + tankIndex].copy();
+            GasStack currentGas = tank.getGasStack();
+            if (replacementGas.getAmount() > tank.getCapacity()) {
                 throw new IllegalArgumentException("Gas snapshot exceeds tank capacity");
             }
 
-            boolean unchanged = replacement.isEmpty() && current.isEmpty() || replacement.getAmount() == current.getAmount() && GasStack.isSameGasSameComponents(replacement, current);
-            if (unchanged) {
+            boolean isUnchanged = replacementGas.isEmpty() && currentGas.isEmpty() || replacementGas.getAmount() == currentGas.getAmount() && GasStack.isSameGasSameComponents(replacementGas, currentGas);
+            if (isUnchanged) {
                 continue;
             }
 
-            tank.setGasStack(replacement);
+            tank.setGasStack(replacementGas);
         }
     }
 
@@ -164,8 +164,8 @@ public class SmartGasTankBehaviour extends AbstractSmartGasTankBehaviour {
 
         @Override
         public AtomicFillResult tryFillAtomically(List<GasStack> resources, GasAction action) {
-            boolean hasResource = resources.stream().anyMatch(resource -> resource != null && !resource.isEmpty());
-            if (!hasResource) {
+            boolean hasGasToFill = resources.stream().anyMatch(gasStack -> gasStack != null && !gasStack.isEmpty());
+            if (!hasGasToFill) {
                 return AtomicFillResult.SUCCESS;
             }
 
@@ -173,50 +173,50 @@ public class SmartGasTankBehaviour extends AbstractSmartGasTankBehaviour {
                 return AtomicFillResult.REJECTED;
             }
 
-            GasStack[] snapshot = copyContents();
-            boolean dirtyBefore = mutationDirty;
-            boolean successful;
-            boolean keepChanges = false;
+            GasStack[] contentsSnapshot = copyContents();
+            boolean wasMutationDirty = mutationDirty;
+            boolean fillSucceeded;
+            boolean shouldKeepChanges = false;
             beginMutation();
             try {
-                successful = fillAll(resources);
-                keepChanges = successful && action.execute();
-                return successful ? AtomicFillResult.SUCCESS : AtomicFillResult.REJECTED;
+                fillSucceeded = fillAll(resources);
+                shouldKeepChanges = fillSucceeded && action.execute();
+                return fillSucceeded ? AtomicFillResult.SUCCESS : AtomicFillResult.REJECTED;
             } finally {
-                boolean changed;
+                boolean contentsChanged;
                 try {
-                    if (!keepChanges) {
-                        replaceContents(snapshot, 0);
+                    if (!shouldKeepChanges) {
+                        replaceContents(contentsSnapshot, 0);
                     }
                 } finally {
-                    changed = endMutation();
+                    contentsChanged = endMutation();
                 }
 
-                if (!keepChanges) {
-                    mutationDirty = dirtyBefore;
+                if (!shouldKeepChanges) {
+                    mutationDirty = wasMutationDirty;
                 }
-                else if (changed) {
+                else if (contentsChanged) {
                     sendDataImmediately();
                 }
             }
         }
 
         private GasStack[] copyContents() {
-            GasStack[] contents = new GasStack[getTanks()];
-            for (int tank = 0; tank < contents.length; tank++) {
-                contents[tank] = getGasInTank(tank).copy();
+            GasStack[] contentsSnapshot = new GasStack[getTanks()];
+            for (int tankIndex = 0; tankIndex < contentsSnapshot.length; tankIndex++) {
+                contentsSnapshot[tankIndex] = getGasInTank(tankIndex).copy();
             }
-            return contents;
+            return contentsSnapshot;
         }
 
         private boolean fillAll(List<GasStack> resources) {
-            for (GasStack resource : resources) {
-                if (resource == null || resource.isEmpty()) {
+            for (GasStack gasStack : resources) {
+                if (gasStack == null || gasStack.isEmpty()) {
                     continue;
                 }
 
-                long filled = forceFill(resource.copy(), GasAction.EXECUTE);
-                if (filled != resource.getAmount()) {
+                long filledAmount = forceFill(gasStack.copy(), GasAction.EXECUTE);
+                if (filledAmount != gasStack.getAmount()) {
                     return false;
                 }
             }
@@ -228,7 +228,7 @@ public class SmartGasTankBehaviour extends AbstractSmartGasTankBehaviour {
         protected SmartGasTank tank;
 
         public TankSegment(long capacity) {
-            tank = new SmartGasTank(capacity, f -> onGasStackChanged());
+            tank = new SmartGasTank(capacity, ignoredGas -> onGasStackChanged());
         }
 
         @Override

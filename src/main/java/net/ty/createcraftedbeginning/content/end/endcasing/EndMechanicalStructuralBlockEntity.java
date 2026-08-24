@@ -38,9 +38,9 @@ public abstract class EndMechanicalStructuralBlockEntity<T extends EndMechanical
             return null;
         }
 
-        BlockEntity blockEntity = level.getBlockEntity(worldPosition.above());
+        BlockEntity candidateMaster = level.getBlockEntity(worldPosition.above());
         Class<T> masterClass = getMasterClass();
-        return masterClass.isInstance(blockEntity) ? masterClass.cast(blockEntity) : null;
+        return masterClass.isInstance(candidateMaster) ? masterClass.cast(candidateMaster) : null;
     }
 
     protected @Nullable T getMasterForUse() {

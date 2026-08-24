@@ -63,9 +63,9 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
         BlockPos masterPos = AirtightReactorKettleUtils.getMaster(clickedPos, state);
         Player player = context.getPlayer();
         InteractionHand hand = context.getHand();
-        ItemStack stack = context.getItemInHand();
+        ItemStack heldStack = context.getItemInHand();
         BlockHitResult masterHit = new BlockHitResult(context.getClickLocation(), context.getClickedFace(), masterPos, context.isInside());
-        UseOnContext masterContext = new UseOnContext(level, player, hand, stack, masterHit);
+        UseOnContext masterContext = new UseOnContext(level, player, hand, heldStack, masterHit);
         BlockState masterState = level.getBlockState(masterPos);
         return super.onSneakWrenched(masterState, masterContext);
     }
@@ -131,17 +131,17 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
 
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        AirtightReactorKettleStructuralPosition position = state.getValue(STRUCTURAL_POSITION);
-        VoxelShape shape = AirtightReactorKettleVoxelShapes.getShape(position);
+        AirtightReactorKettleStructuralPosition structuralPosition = state.getValue(STRUCTURAL_POSITION);
+        VoxelShape baseShape = AirtightReactorKettleVoxelShapes.getShape(structuralPosition);
         BlockPos masterPos = AirtightReactorKettleUtils.getMaster(pos, state);
-        if (!(level.getBlockEntity(masterPos) instanceof AirtightReactorKettleBlockEntity master) || master.getWindowsOpenState()) {
-            return shape;
+        if (!(level.getBlockEntity(masterPos) instanceof AirtightReactorKettleBlockEntity kettle) || kettle.getWindowsOpenState()) {
+            return baseShape;
         }
 
-        if (!position.isWindow(-1)) {
-            return shape;
+        if (!structuralPosition.isWindow(-1)) {
+            return baseShape;
         }
-        return CCBShapes.AIRTIGHT_REACTOR_KETTLE_TOP_MID_CLOSED.get(position.getDirection());
+        return CCBShapes.AIRTIGHT_REACTOR_KETTLE_TOP_MID_CLOSED.get(structuralPosition.getDirection());
     }
 
     @Override

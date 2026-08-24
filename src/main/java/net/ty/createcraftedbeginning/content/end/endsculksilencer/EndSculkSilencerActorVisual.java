@@ -39,6 +39,6 @@ public final class EndSculkSilencerActorVisual extends ActorVisual {
 
     private void animate() {
         float angle = EndSculkSilencerMovementBehaviour.getAnimationAngle(context, AnimationTickHolder.getPartialTicks(context.world)) * Mth.DEG_TO_RAD;
-        core.setIdentityTransform().translate(context.localPos).translateY(0.5f).translate(Translate.CENTER).rotateX(angle).rotateY(angle).rotateZ(Mth.sin(Mth.PI / 4)).translateBack(Translate.CENTER).setChanged();
+        core.setIdentityTransform().translate(context.localPos).translateY(0.5f).translate(Translate.CENTER).rotateX(angle).rotateY(angle).rotateZ(Mth.PI / 4).translateBack(Translate.CENTER).setChanged();
     }
 }

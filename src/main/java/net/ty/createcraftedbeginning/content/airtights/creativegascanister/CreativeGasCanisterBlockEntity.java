@@ -39,7 +39,7 @@ public class CreativeGasCanisterBlockEntity extends SmartBlockEntity implements 
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.CREATIVE_GAS_CANISTER.get(), (be, context) -> be.tankBehaviour.getCapability());
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.CREATIVE_GAS_CANISTER.get(), (canister, ignoredDirection) -> canister.tankBehaviour.getCapability());
     }
 
     @Override
@@ -71,15 +71,14 @@ public class CreativeGasCanisterBlockEntity extends SmartBlockEntity implements 
         invalidateCapabilities();
     }
 
-    public void setCanisterContent(ItemStack stack) {
-        canister = stack.copy();
-        if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents)) {
+    public void setCanisterContent(ItemStack placedCanister) {
+        canister = placedCanister.copy();
+        if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents canisterContents)) {
             return;
         }
 
-        SmartGasTank tank = tankBehaviour.getPrimaryHandler();
-        tank.setCapacity(contents.getTankCapacity(0));
-        tankBehaviour.getInternalGasHandler().forceFill(contents.getGasInTank(0), GasAction.EXECUTE);
+        tankBehaviour.getPrimaryHandler().setCapacity(canisterContents.getTankCapacity(0));
+        tankBehaviour.getInternalGasHandler().forceFill(canisterContents.getGasInTank(0), GasAction.EXECUTE);
         notifyUpdate();
     }
 
@@ -89,15 +88,15 @@ public class CreativeGasCanisterBlockEntity extends SmartBlockEntity implements 
             return false;
         }
 
-        SmartGasTank tank = tankBehaviour.getPrimaryHandler();
+        SmartGasTank gasTank = tankBehaviour.getPrimaryHandler();
         CCBLang.translate("gui.gas_container").forGoggles(tooltip);
-        GasStack gas = tank.getGasStack();
-        if (gas.isEmpty()) {
+        GasStack storedGas = gasTank.getGasStack();
+        if (storedGas.isEmpty()) {
             CCBLang.translate("gui.creative_gas_canister.empty").style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
             return true;
         }
 
-        CCBLang.gasName(gas).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+        CCBLang.gasName(storedGas).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
         CCBLang.translate("gui.gas_container.infinity").style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
         return true;
     }
@@ -107,17 +106,17 @@ public class CreativeGasCanisterBlockEntity extends SmartBlockEntity implements 
     }
 
     protected void updateCapacity() {
-        if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents)) {
+        if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents canisterContents)) {
             return;
         }
 
-        SmartGasTank tank = tankBehaviour.getPrimaryHandler();
-        long capacity = contents.getTankCapacity(0);
-        if (tank.getCapacity() == capacity) {
+        SmartGasTank gasTank = tankBehaviour.getPrimaryHandler();
+        long canisterCapacity = canisterContents.getTankCapacity(0);
+        if (gasTank.getCapacity() == canisterCapacity) {
             return;
         }
 
-        tank.setCapacity(capacity);
+        gasTank.setCapacity(canisterCapacity);
     }
 
     @Override

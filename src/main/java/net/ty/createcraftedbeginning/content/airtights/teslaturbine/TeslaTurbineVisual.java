@@ -61,10 +61,10 @@ public class TeslaTurbineVisual extends KineticBlockEntityVisual<TeslaTurbineBlo
         }
 
         Direction positiveAxis = Direction.get(AxisDirection.POSITIVE, axis);
-        float spacing = 14.0f / (rotorCount + 1);
-        for (int i = 0; i < rotorCount; i++) {
-            float offset = (spacing * (i + 1) - 7) / 16;
-            RotatingInstance rotor = createRotatingInstance(CCBPartialModels.TESLA_TURBINE_ROTOR).nudge(positiveAxis.getStepX() * offset, positiveAxis.getStepY() * offset, positiveAxis.getStepZ() * offset);
+        float rotorSpacing = 14.0f / (rotorCount + 1);
+        for (int rotorIndex = 0; rotorIndex < rotorCount; rotorIndex++) {
+            float rotorOffset = (rotorSpacing * (rotorIndex + 1) - 7) / 16;
+            RotatingInstance rotor = createRotatingInstance(CCBPartialModels.TESLA_TURBINE_ROTOR).nudge(positiveAxis.getStepX() * rotorOffset, positiveAxis.getStepY() * rotorOffset, positiveAxis.getStepZ() * rotorOffset);
             rotor.setChanged();
             rotors.add(rotor);
         }

@@ -32,8 +32,7 @@ public class BalloonItem extends PackageItem {
         PackageStyles.STANDARD_BOXES.remove(this);
         PackageStyles.RARE_BOXES.remove(this);
 
-        List<PackageItem> balloons = rare ? BalloonStyleUtils.RARE_BALLOONS : BalloonStyleUtils.REGULAR_BALLOONS;
-        balloons.add(this);
+        (rare ? BalloonStyleUtils.RARE_BALLOONS : BalloonStyleUtils.REGULAR_BALLOONS).add(this);
     }
 
     public boolean isRare() {
@@ -60,9 +59,9 @@ public class BalloonItem extends PackageItem {
 
     @Override
     public InteractionResultHolder<ItemStack> open(Level level, Player player, InteractionHand hand) {
-        ItemStack stack = player.getItemInHand(hand);
-        if (BalloonUtils.isBalloon(stack)) {
-            return InteractionResultHolder.fail(stack);
+        ItemStack heldStack = player.getItemInHand(hand);
+        if (BalloonUtils.isBalloon(heldStack)) {
+            return InteractionResultHolder.fail(heldStack);
         }
         return super.open(level, player, hand);
     }

@@ -15,12 +15,8 @@ import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import net.ty.createcraftedbeginning.registry.gas.CCBGases;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -31,13 +27,12 @@ public class BoilerSteamOutletBlockEntity extends SmartBlockEntity implements IH
     private static final int LAZY_TICK_RATE = 20;
 
     protected final BoilerSteamOutletController controller;
-
-    protected SmartGasTankBehaviour steamTank;
-    protected IGasHandler exposedGasHandler;
+    protected final SteamOutletGasHandler exposedGasHandler;
 
     public BoilerSteamOutletBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
         controller = new BoilerSteamOutletController(this);
+        exposedGasHandler = new SteamOutletGasHandler(this);
         setLazyTickRate(LAZY_TICK_RATE);
     }
 
@@ -52,10 +47,6 @@ public class BoilerSteamOutletBlockEntity extends SmartBlockEntity implements IH
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        steamTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.OUTPUT, this, 1, BoilerSteamOutletProduction.getMaximumOutputCapacity(), false).forbidInsertion().allowExtraction();
-        steamTank.getPrimaryHandler().setValidator(stack -> !stack.isEmpty() && stack.is(CCBGases.STEAM));
-        exposedGasHandler = new SteamOutletGasHandler(this, steamTank.getCapability());
-        behaviours.add(steamTank);
     }
 
     @Override
@@ -83,6 +74,12 @@ public class BoilerSteamOutletBlockEntity extends SmartBlockEntity implements IH
     }
 
     @Override
+    public void invalidate() {
+        super.invalidate();
+        invalidateCapabilities();
+    }
+
+    @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         CCBLang.translate("gui.boiler_steam_outlet.header").forGoggles(tooltip);
         CCBLang.translate("gui.boiler_steam_outlet.steam_generation").style(ChatFormatting.GRAY).forGoggles(tooltip);
@@ -100,7 +97,7 @@ public class BoilerSteamOutletBlockEntity extends SmartBlockEntity implements IH
         controller.ensureCurrentTick();
     }
 
-    @Nullable public SmartGasTankBehaviour getSteamTankBehaviour() {
-        return steamTank;
+    void setAvailableSteamThisTick(long amount) {
+        exposedGasHandler.setAvailableSteamThisTick(amount);
     }
 }

@@ -76,8 +76,8 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
             return;
         }
 
-        BlockState state = getBlockState();
-        if (state.getBlock() instanceof ResidueOutletBlock outlet && outlet.canSurvive(state, level, getBlockPos())) {
+        BlockState outletState = getBlockState();
+        if (outletState.getBlock() instanceof ResidueOutletBlock outlet && outlet.canSurvive(outletState, level, getBlockPos())) {
             return;
         }
 

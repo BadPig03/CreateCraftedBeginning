@@ -21,8 +21,8 @@ class CuboidTemplate extends BaseTemplate {
     }
 
     @Override
-    Stream<BlockPos> getBaseAreaStream(int @NotNull [] params) {
-        BlockPos endPos = new BlockPos(params[0] - 1, params[1] - 1, params[2] - 1);
-        return BlockPos.betweenClosedStream(BlockPos.ZERO, endPos);
+    Stream<BlockPos> getBaseAreaStream(int @NotNull [] miningSize) {
+        BlockPos maxPos = new BlockPos(miningSize[0] - 1, miningSize[1] - 1, miningSize[2] - 1);
+        return BlockPos.betweenClosedStream(BlockPos.ZERO, maxPos);
     }
 }
