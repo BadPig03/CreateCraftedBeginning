@@ -19,5 +19,6 @@
       "id": "minecraft:nether_wart"
     }
   ],
-  "temperature": "heated"
+  "temperature": "heated",
+  "temperature_matching": "compatible"
 }

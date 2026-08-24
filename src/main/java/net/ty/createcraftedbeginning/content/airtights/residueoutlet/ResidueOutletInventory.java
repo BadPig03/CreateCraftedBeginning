@@ -15,8 +15,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class ResidueOutletInventory extends ItemHandlerContainer implements IItemHandlerModifiable, INBTSerializable<CompoundTag> {
-    public static final int ITEM_PROGRESS_UNITS_PER_ITEM = ResidueOutletInsertionTarget.ITEM_PROGRESS_UNITS_PER_ITEM;
+class ResidueOutletInventory extends ItemHandlerContainer implements IItemHandlerModifiable, INBTSerializable<CompoundTag> {
+    private static final int ITEM_PROGRESS_UNITS_PER_ITEM = ResidueOutletInsertionTarget.ITEM_PROGRESS_UNITS_PER_ITEM;
 
     private static final int MAX_SIZE = 1;
     private static final String COMPOUND_KEY_PARTIAL_ITEM_UNITS = "PartialItemUnits";
@@ -27,7 +27,7 @@ public class ResidueOutletInventory extends ItemHandlerContainer implements IIte
     private ItemStack partialItem = ItemStack.EMPTY;
     private int partialItemUnits;
 
-    public ResidueOutletInventory(ResidueOutletBlockEntity outlet) {
+    ResidueOutletInventory(ResidueOutletBlockEntity outlet) {
         super(new InternalStackHandler(outlet));
         this.outlet = outlet;
         extractionCapability = new IItemHandler() {
@@ -100,14 +100,14 @@ public class ResidueOutletInventory extends ItemHandlerContainer implements IIte
 
     @Override
     public CompoundTag serializeNBT(Provider provider) {
-        CompoundTag tag = ((InternalStackHandler) inv).serializeNBT(provider);
-        tag.putInt(COMPOUND_KEY_PARTIAL_ITEM_UNITS, partialItemUnits);
+        CompoundTag inventoryTag = ((InternalStackHandler) inv).serializeNBT(provider);
+        inventoryTag.putInt(COMPOUND_KEY_PARTIAL_ITEM_UNITS, partialItemUnits);
         if (partialItem.isEmpty()) {
-            return tag;
+            return inventoryTag;
         }
 
-        tag.put(COMPOUND_KEY_PARTIAL_ITEM, partialItem.saveOptional(provider));
-        return tag;
+        inventoryTag.put(COMPOUND_KEY_PARTIAL_ITEM, partialItem.saveOptional(provider));
+        return inventoryTag;
     }
 
     @Override
@@ -119,23 +119,20 @@ public class ResidueOutletInventory extends ItemHandlerContainer implements IIte
             return;
         }
 
-        ItemStack storedItem = ItemStack.EMPTY;
-        if (compoundTag.contains(COMPOUND_KEY_PARTIAL_ITEM)) {
-            storedItem = ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_PARTIAL_ITEM));
-        }
-        if (storedItem.isEmpty()) {
+        ItemStack storedPartialItem = compoundTag.contains(COMPOUND_KEY_PARTIAL_ITEM) ? ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_PARTIAL_ITEM)) : ItemStack.EMPTY;
+        if (storedPartialItem.isEmpty()) {
             partialItemUnits = 0;
             return;
         }
 
-        partialItem = storedItem.copyWithCount(1);
+        partialItem = storedPartialItem.copyWithCount(1);
     }
 
-    public IItemHandler getExtractionCapability() {
+    IItemHandler getExtractionCapability() {
         return extractionCapability;
     }
 
-    public int getItemInsertionCapacityUnits(ItemStack itemStack) {
+    int getItemInsertionCapacityUnits(ItemStack itemStack) {
         if (itemStack.isEmpty() || hasMismatchedPartialItem(itemStack)) {
             return 0;
         }
@@ -145,42 +142,42 @@ public class ResidueOutletInventory extends ItemHandlerContainer implements IIte
             return 0;
         }
 
-        int limit = Math.min(getSlotLimit(0), itemStack.getMaxStackSize());
-        int storedCount = storedItem.isEmpty() ? 0 : storedItem.getCount();
-        int wholeItems = Math.max(0, limit - storedCount);
-        int capacity = wholeItems * ITEM_PROGRESS_UNITS_PER_ITEM + ITEM_PROGRESS_UNITS_PER_ITEM - 1 - partialItemUnits;
-        return Math.clamp(capacity, 0, Integer.MAX_VALUE);
+        int slotLimit = Math.min(getSlotLimit(0), itemStack.getMaxStackSize());
+        int storedItemCount = storedItem.isEmpty() ? 0 : storedItem.getCount();
+        int availableWholeItems = Math.max(0, slotLimit - storedItemCount);
+        int capacityUnits = availableWholeItems * ITEM_PROGRESS_UNITS_PER_ITEM + ITEM_PROGRESS_UNITS_PER_ITEM - 1 - partialItemUnits;
+        return Math.clamp(capacityUnits, 0, Integer.MAX_VALUE);
     }
 
-    public int addPartialItemUnits(int units, ItemStack itemStack) {
-        if (units <= 0 || itemStack.isEmpty()) {
+    int addPartialItemUnits(int requestedUnits, ItemStack itemStack) {
+        if (requestedUnits <= 0 || itemStack.isEmpty()) {
             return 0;
         }
 
-        int acceptedUnits = Math.min(units, getItemInsertionCapacityUnits(itemStack));
-        if (acceptedUnits <= 0) {
+        int insertableUnits = Math.min(requestedUnits, getItemInsertionCapacityUnits(itemStack));
+        if (insertableUnits <= 0) {
             return 0;
         }
 
-        int previousUnits = hasMatchingPartialItem(itemStack) ? partialItemUnits : 0;
-        int totalUnits = previousUnits + acceptedUnits;
-        int requestedItems = totalUnits / ITEM_PROGRESS_UNITS_PER_ITEM;
-        int insertedItems = insertWholeItems(itemStack, requestedItems);
+        int previousPartialUnits = hasMatchingPartialItem(itemStack) ? partialItemUnits : 0;
+        int totalUnits = previousPartialUnits + insertableUnits;
+        int wholeItemsToInsert = totalUnits / ITEM_PROGRESS_UNITS_PER_ITEM;
+        int insertedItems = insertWholeItems(itemStack, wholeItemsToInsert);
 
-        int maximumAccepted = insertedItems * ITEM_PROGRESS_UNITS_PER_ITEM + ITEM_PROGRESS_UNITS_PER_ITEM - 1 - previousUnits;
-        int actualAccepted = Math.clamp(maximumAccepted, 0, acceptedUnits);
-        int remainingUnits = previousUnits + actualAccepted - insertedItems * ITEM_PROGRESS_UNITS_PER_ITEM;
-        setPartialItemProgress(itemStack, remainingUnits);
-        return actualAccepted;
+        int maxAcceptedUnits = insertedItems * ITEM_PROGRESS_UNITS_PER_ITEM + ITEM_PROGRESS_UNITS_PER_ITEM - 1 - previousPartialUnits;
+        int acceptedUnits = Math.clamp(maxAcceptedUnits, 0, insertableUnits);
+        int remainingPartialUnits = previousPartialUnits + acceptedUnits - insertedItems * ITEM_PROGRESS_UNITS_PER_ITEM;
+        setPartialItemProgress(itemStack, remainingPartialUnits);
+        return acceptedUnits;
     }
 
-    private int insertWholeItems(ItemStack item, int amount) {
-        if (amount <= 0) {
+    private int insertWholeItems(ItemStack itemStack, int itemCount) {
+        if (itemCount <= 0) {
             return 0;
         }
 
-        ItemStack remainder = inv.insertItem(0, item.copyWithCount(amount), false);
-        return amount - remainder.getCount();
+        ItemStack remainingStack = inv.insertItem(0, itemStack.copyWithCount(itemCount), false);
+        return itemCount - remainingStack.getCount();
     }
 
     private boolean hasMismatchedPartialItem(ItemStack itemStack) {
@@ -195,13 +192,13 @@ public class ResidueOutletInventory extends ItemHandlerContainer implements IIte
         return !partialItem.isEmpty() && ItemStack.isSameItemSameComponents(partialItem, itemStack);
     }
 
-    private void setPartialItemProgress(ItemStack itemStack, int units) {
-        int newUnits = Mth.clamp(units, 0, ITEM_PROGRESS_UNITS_PER_ITEM - 1);
-        ItemStack newItem = newUnits > 0 ? itemStack.copyWithCount(1) : ItemStack.EMPTY;
-        boolean changed = partialItemUnits != newUnits || !ItemStack.isSameItemSameComponents(partialItem, newItem);
-        partialItemUnits = newUnits;
-        partialItem = newItem;
-        if (!changed) {
+    private void setPartialItemProgress(ItemStack itemStack, int partialUnits) {
+        int clampedUnits = Mth.clamp(partialUnits, 0, ITEM_PROGRESS_UNITS_PER_ITEM - 1);
+        ItemStack newPartialItem = clampedUnits > 0 ? itemStack.copyWithCount(1) : ItemStack.EMPTY;
+        boolean partialProgressChanged = partialItemUnits != clampedUnits || !ItemStack.isSameItemSameComponents(partialItem, newPartialItem);
+        partialItemUnits = clampedUnits;
+        partialItem = newPartialItem;
+        if (!partialProgressChanged) {
             return;
         }
 
@@ -209,9 +206,9 @@ public class ResidueOutletInventory extends ItemHandlerContainer implements IIte
     }
 
     private static class InternalStackHandler extends ItemStackHandler {
-        protected final ResidueOutletBlockEntity outlet;
+        private final ResidueOutletBlockEntity outlet;
 
-        public InternalStackHandler(ResidueOutletBlockEntity outlet) {
+        private InternalStackHandler(ResidueOutletBlockEntity outlet) {
             super(MAX_SIZE);
             this.outlet = outlet;
         }

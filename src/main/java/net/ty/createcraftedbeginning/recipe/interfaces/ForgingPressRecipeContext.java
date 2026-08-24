@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.recipe;
+package net.ty.createcraftedbeginning.recipe.interfaces;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;

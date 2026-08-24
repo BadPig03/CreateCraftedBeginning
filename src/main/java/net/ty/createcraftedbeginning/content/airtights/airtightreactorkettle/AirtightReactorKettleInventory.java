@@ -11,15 +11,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightReactorKettleInventory extends SmartInventory {
+class AirtightReactorKettleInventory extends SmartInventory {
     private final AirtightReactorKettleBlockEntity blockEntity;
 
-    public AirtightReactorKettleInventory(int slots, AirtightReactorKettleBlockEntity blockEntity) {
+    AirtightReactorKettleInventory(int slots, AirtightReactorKettleBlockEntity blockEntity) {
         super(slots, blockEntity, 64, true);
         this.blockEntity = blockEntity;
     }
 
-    public static IItemHandlerModifiable createSimulation(int slots) {
+    static IItemHandlerModifiable createSimulation(int slots) {
         return new ItemStackHandler(slots) {
             @Override
             public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
@@ -38,9 +38,9 @@ public class AirtightReactorKettleInventory extends SmartInventory {
 
     private static boolean isInsertionAllowed(IItemHandler inventory, int slot, ItemStack stack) {
         int firstFreeSlot = -1;
-        for (int i = 0; i < inventory.getSlots(); i++) {
-            ItemStack storedStack = inventory.getStackInSlot(i);
-            if (i != slot && ItemStack.isSameItemSameComponents(stack, storedStack)) {
+        for (int candidateSlot = 0; candidateSlot < inventory.getSlots(); candidateSlot++) {
+            ItemStack storedStack = inventory.getStackInSlot(candidateSlot);
+            if (candidateSlot != slot && ItemStack.isSameItemSameComponents(stack, storedStack)) {
                 return false;
             }
 
@@ -48,7 +48,7 @@ public class AirtightReactorKettleInventory extends SmartInventory {
                 continue;
             }
 
-            firstFreeSlot = i;
+            firstFreeSlot = candidateSlot;
         }
         return !inventory.getStackInSlot(slot).isEmpty() || firstFreeSlot == slot;
     }
@@ -63,12 +63,12 @@ public class AirtightReactorKettleInventory extends SmartInventory {
 
     @Override
     public ItemStack extractItem(int slot, int amount, boolean simulate) {
-        ItemStack extracted = super.extractItem(slot, amount, simulate);
-        if (simulate || extracted.isEmpty()) {
-            return extracted;
+        ItemStack extractedStack = super.extractItem(slot, amount, simulate);
+        if (simulate || extractedStack.isEmpty()) {
+            return extractedStack;
         }
 
         blockEntity.notifyContentsChanged();
-        return extracted;
+        return extractedStack;
     }
 }

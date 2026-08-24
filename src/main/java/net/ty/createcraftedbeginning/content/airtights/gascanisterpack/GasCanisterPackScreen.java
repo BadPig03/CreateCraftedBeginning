@@ -16,7 +16,6 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
-import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackMenu.PackItemHandler;
 import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -30,7 +29,7 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
     private static final CCBGUITextures CANISTER = CCBGUITextures.GAS_CANISTER_PACK_CANISTER;
     private static final CCBGUITextures CREATIVE_CANISTER = CCBGUITextures.GAS_CANISTER_PACK_CREATIVE_CANISTER;
     private static final AllGuiTextures PLAYER_INVENTORY = AllGuiTextures.PLAYER_INVENTORY;
-    protected ItemStack pack;
+    private ItemStack pack;
 
     public GasCanisterPackScreen(GasCanisterPackMenu container, Inventory inv, Component title) {
         super(container, inv, title);
@@ -88,22 +87,22 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
         renderPlayerInventory(graphics, getLeftOfCentered(PLAYER_INVENTORY.getWidth()), topPos + BACKGROUND.getHeight() + 4);
         BACKGROUND.render(graphics, leftPos, topPos);
 
-        Component name = pack.getHoverName();
-        graphics.drawString(font, name, leftPos + (BACKGROUND.getWidth() - 8) / 2 - font.width(name) / 2, topPos + 4, 0xFFFFFF, false);
+        Component packName = pack.getHoverName();
+        graphics.drawString(font, packName, leftPos + (BACKGROUND.getWidth() - 8) / 2 - font.width(packName) / 2, topPos + 4, 0xFFFFFF, false);
         GuiGameElement.of(pack).scale(4).at(leftPos + BACKGROUND.getWidth() + 11, topPos + BACKGROUND.getHeight() - 48, -200).render(graphics);
     }
 
-    protected void initButtons() {
-        IconButton confirm = new IconButton(leftPos + BACKGROUND.getWidth() - 33, topPos + BACKGROUND.getHeight() - 24, AllIcons.I_CONFIRM).withCallback(() -> menu.player.closeContainer());
-        addRenderableWidget(confirm);
+    private void initButtons() {
+        IconButton confirmButton = new IconButton(leftPos + BACKGROUND.getWidth() - 33, topPos + BACKGROUND.getHeight() - 24, AllIcons.I_CONFIRM).withCallback(() -> menu.player.closeContainer());
+        addRenderableWidget(confirmButton);
     }
 
-    protected void drawGasCanisters(GuiGraphics graphics) {
-        int y = topPos + 27;
-        PackItemHandler packInventory = menu.packInventory;
-        drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.I_SLOT_INDEX), leftPos + 23, y);
-        drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.II_SLOT_INDEX), leftPos + 65, y);
-        drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.III_SLOT_INDEX), leftPos + 107, y);
-        drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.IV_SLOT_INDEX), leftPos + 149, y);
+    private void drawGasCanisters(GuiGraphics graphics) {
+        int canisterY = topPos + 27;
+        var packInventory = menu.getPackInventory();
+        drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.I_SLOT_INDEX), leftPos + 23, canisterY);
+        drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.II_SLOT_INDEX), leftPos + 65, canisterY);
+        drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.III_SLOT_INDEX), leftPos + 107, canisterY);
+        drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.IV_SLOT_INDEX), leftPos + 149, canisterY);
     }
 }

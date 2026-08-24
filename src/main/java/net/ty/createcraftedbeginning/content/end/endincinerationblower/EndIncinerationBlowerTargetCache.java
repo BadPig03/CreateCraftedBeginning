@@ -16,7 +16,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class EndIncinerationBlowerTargetCache {
+final class EndIncinerationBlowerTargetCache {
     private static final int ITEM_ENTITY_CACHE_INTERVAL = 5;
     private static final int TRANSPORTED_HANDLER_CACHE_INTERVAL = 20;
 
@@ -28,18 +28,18 @@ public final class EndIncinerationBlowerTargetCache {
     private long nextItemEntityScanTime = Long.MIN_VALUE;
     private long nextTransportedHandlerScanTime = Long.MIN_VALUE;
 
-    public EndIncinerationBlowerTargetCache(BlockPos origin) {
+    EndIncinerationBlowerTargetCache(BlockPos origin) {
         this.origin = origin;
     }
 
-    public List<ItemEntity> getAffectedItems(ServerLevel level, AABB area, EntityArea entityArea) {
+    List<ItemEntity> getAffectedItems(ServerLevel level, AABB effectArea, EntityArea entityArea) {
         long gameTime = level.getGameTime();
         if (gameTime < nextItemEntityScanTime) {
             return affectedItems;
         }
 
         affectedItems.clear();
-        for (ItemEntity itemEntity : level.getEntitiesOfClass(ItemEntity.class, area)) {
+        for (ItemEntity itemEntity : level.getEntitiesOfClass(ItemEntity.class, effectArea)) {
             if (entityArea.intersects(itemEntity)) {
                 affectedItems.add(itemEntity);
             }
@@ -48,7 +48,7 @@ public final class EndIncinerationBlowerTargetCache {
         return affectedItems;
     }
 
-    public List<TransportedItemStackHandlerBehaviour> getTransportedHandlers(Level level, float speed) {
+    List<TransportedItemStackHandlerBehaviour> getTransportedHandlers(Level level, float speed) {
         int blockRadius = EndIncinerationBlowerRange.calculateBlockRadius(speed);
         long gameTime = level.getGameTime();
         if (cachedBlockRadius == blockRadius && gameTime < nextTransportedHandlerScanTime) {
@@ -56,12 +56,12 @@ public final class EndIncinerationBlowerTargetCache {
         }
 
         transportedHandlers.clear();
-        BlockPos min = origin.offset(-blockRadius, -blockRadius, -blockRadius);
-        BlockPos max = origin.offset(blockRadius, blockRadius, blockRadius);
-        for (BlockPos blockPos : BlockPos.betweenClosed(min, max)) {
-            TransportedItemStackHandlerBehaviour behaviour = BlockEntityBehaviour.get(level, blockPos, TransportedItemStackHandlerBehaviour.TYPE);
-            if (behaviour != null) {
-                transportedHandlers.add(behaviour);
+        BlockPos minPos = origin.offset(-blockRadius, -blockRadius, -blockRadius);
+        BlockPos maxPos = origin.offset(blockRadius, blockRadius, blockRadius);
+        for (BlockPos scanPos : BlockPos.betweenClosed(minPos, maxPos)) {
+            TransportedItemStackHandlerBehaviour handler = BlockEntityBehaviour.get(level, scanPos, TransportedItemStackHandlerBehaviour.TYPE);
+            if (handler != null) {
+                transportedHandlers.add(handler);
             }
         }
 

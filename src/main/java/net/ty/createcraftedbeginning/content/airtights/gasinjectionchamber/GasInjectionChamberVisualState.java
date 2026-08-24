@@ -4,36 +4,39 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.OptionalInt;
+import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasInjectionChamberVisualState {
+final class GasInjectionChamberVisualState {
     private static final String COMPOUND_KEY_CLOUD = "Cloud";
     private static final String COMPOUND_KEY_CLOUD_COLOR = "CloudColor";
 
     private int cloudColor = 0xFFFFFFFF;
     private boolean sendCloud;
 
-    public void queueCloud(int color) {
+    void queueCloud(int color) {
         cloudColor = color;
         sendCloud = true;
     }
 
-    public void writeCloud(CompoundTag tag, boolean clientPacket) {
+    void writeCloud(CompoundTag compoundTag, boolean clientPacket) {
         if (!sendCloud || !clientPacket) {
             return;
         }
 
-        tag.putBoolean(COMPOUND_KEY_CLOUD, true);
-        tag.putInt(COMPOUND_KEY_CLOUD_COLOR, cloudColor);
+        compoundTag.putBoolean(COMPOUND_KEY_CLOUD, true);
+        compoundTag.putInt(COMPOUND_KEY_CLOUD_COLOR, cloudColor);
         sendCloud = false;
     }
 
-    public OptionalInt readCloud(CompoundTag tag, boolean clientPacket) {
-        if (!clientPacket || !tag.contains(COMPOUND_KEY_CLOUD)) {
-            return OptionalInt.empty();
+    Optional<Integer> readCloud(CompoundTag compoundTag, boolean clientPacket) {
+        if (!clientPacket || !compoundTag.contains(COMPOUND_KEY_CLOUD)) {
+            return Optional.empty();
         }
-        return OptionalInt.of(tag.contains(COMPOUND_KEY_CLOUD_COLOR) ? tag.getInt(COMPOUND_KEY_CLOUD_COLOR) : 0xFFFFFFFF);
+        if (!compoundTag.contains(COMPOUND_KEY_CLOUD_COLOR)) {
+            return Optional.of(0xFFFFFFFF);
+        }
+        return Optional.of(compoundTag.getInt(COMPOUND_KEY_CLOUD_COLOR));
     }
 }

@@ -40,9 +40,9 @@ import java.util.List;
 public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clearable {
     private static final ItemStackHandler EMPTY_GAS_INVENTORY_HANDLER = new ItemStackHandler(0);
 
-    protected final GasPackagerPendingGas pendingGas;
-    protected final GasPackagerController controller;
-    protected GasManipulationBehaviour gasInventory;
+    private final GasPackagerPendingGas pendingGas;
+    private final GasPackagerController controller;
+    private GasManipulationBehaviour gasInventory;
 
     public GasPackagerBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
@@ -132,18 +132,18 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
             return false;
         }
 
-        InventoryIdentifier identifier = inventory.identifier();
+        InventoryIdentifier targetIdentifier = inventory.identifier();
         InventoryIdentifier ownIdentifier = getGasInventoryIdentifier();
-        if (ownIdentifier != null && ownIdentifier.equals(identifier)) {
+        if (ownIdentifier != null && ownIdentifier.equals(targetIdentifier)) {
             return true;
         }
 
-        if (identifier == null || gasInventory == null || !gasInventory.hasInventory()) {
+        if (targetIdentifier == null || gasInventory == null || !gasInventory.hasInventory()) {
             return super.isTargetingSameInventory(inventory);
         }
 
         BlockFace targetFace = gasInventory.getTarget().getOpposite();
-        return identifier.contains(targetFace) || super.isTargetingSameInventory(inventory);
+        return targetIdentifier.contains(targetFace) || super.isTargetingSameInventory(inventory);
     }
 
     @Nullable
@@ -153,8 +153,8 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         }
 
         BlockFace targetFace = gasInventory.getTarget().getOpposite();
-        BlockEntity target = level.getBlockEntity(targetFace.getPos());
-        if (!(target instanceof IGasInventoryIdentifierProvider provider)) {
+        BlockEntity targetBlockEntity = level.getBlockEntity(targetFace.getPos());
+        if (!(targetBlockEntity instanceof IGasInventoryIdentifierProvider provider)) {
             return null;
         }
         return provider.getGasInventoryIdentifier(targetFace.getFace());
@@ -166,25 +166,25 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         return identifier == null ? null : new IdentifiedInventory(identifier, EMPTY_GAS_INVENTORY_HANDLER);
     }
 
-    @Nullable public IGasHandler gasHandlerForController() {
+    @Nullable IGasHandler gasHandlerForController() {
         return gasInventory == null ? null : gasInventory.getInventory();
     }
 
-    public boolean isGasPackageAnimationActive() {
+    boolean isGasPackageAnimationActive() {
         return animationTicks > 0;
     }
 
-    public boolean canStartGasPackage() {
+    boolean canStartGasPackage() {
         return heldBox.isEmpty() && animationTicks == 0 && buttonCooldown <= 0;
     }
 
-    public void beginGasPackageInsertion(ItemStack box) {
+    void beginGasPackageInsertion(ItemStack box) {
         previouslyUnwrapped = box.copy();
         animationInward = true;
         animationTicks = CYCLE;
     }
 
-    public void emitGasPackageReceivedEvent(ItemStack box) {
+    void emitGasPackageReceivedEvent(ItemStack box) {
         if (computerBehaviour == null) {
             return;
         }
@@ -192,7 +192,7 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         computerBehaviour.prepareComputerEvent(new PackageEvent(box, "package_received"));
     }
 
-    public void enqueueCreatedGasBalloon(ItemStack balloon) {
+    void enqueueCreatedGasBalloon(ItemStack balloon) {
         if (balloon.isEmpty()) {
             return;
         }
@@ -210,7 +210,7 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         animationTicks = CYCLE;
     }
 
-    public void enqueueReturnedGasBalloon(ItemStack balloon) {
+    void enqueueReturnedGasBalloon(ItemStack balloon) {
         if (balloon.isEmpty()) {
             return;
         }
@@ -218,24 +218,24 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         queuedExitingPackages.addFirst(new BigItemStack(balloon, 1));
     }
 
-    public ItemStack pendingUnwrappedPackage() {
+    ItemStack pendingUnwrappedPackage() {
         return previouslyUnwrapped;
     }
 
-    public String signAddressForGasPackage() {
+    String signAddressForGasPackage() {
         return signBasedAddress;
     }
 
-    public void markGasInventoryChanged() {
+    void markGasInventoryChanged() {
         controller.invalidateInventoryCache();
         triggerStockCheck();
     }
 
-    public void requestGasStockCheck() {
+    void requestGasStockCheck() {
         triggerStockCheck();
     }
 
-    public void notifyGasPackageUpdate() {
+    void notifyGasPackageUpdate() {
         notifyUpdate();
     }
 }

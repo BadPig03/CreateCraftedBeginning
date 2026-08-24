@@ -16,24 +16,24 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlockEntity.CraftPlan;
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gas.transaction.MachineResourceSnapshots;
-import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
+import net.ty.createcraftedbeginning.core.MachineResourceSnapshots;
+import net.ty.createcraftedbeginning.core.ResourceTransaction;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightReactorKettleCrafting {
+final class AirtightReactorKettleCrafting {
     private final AirtightReactorKettleBlockEntity kettle;
 
-    public AirtightReactorKettleCrafting(AirtightReactorKettleBlockEntity kettle) {
+    AirtightReactorKettleCrafting(AirtightReactorKettleBlockEntity kettle) {
         this.kettle = kettle;
     }
 
-    private static boolean insertFluidOutputs(IFluidHandler target, List<FluidStack> outputs) {
-        for (FluidStack stack : outputs) {
-            if (stack.isEmpty() || target.fill(stack.copy(), FluidAction.EXECUTE) == stack.getAmount()) {
+    private static boolean insertFluidOutputs(IFluidHandler outputHandler, List<FluidStack> outputFluids) {
+        for (FluidStack outputFluid : outputFluids) {
+            if (outputFluid.isEmpty() || outputHandler.fill(outputFluid.copy(), FluidAction.EXECUTE) == outputFluid.getAmount()) {
                 continue;
             }
 
@@ -42,9 +42,9 @@ public final class AirtightReactorKettleCrafting {
         return true;
     }
 
-    private static boolean insertGasOutputs(IGasHandler target, List<GasStack> outputs) {
-        for (GasStack stack : outputs) {
-            if (stack.isEmpty() || target.fill(stack.copy(), GasAction.EXECUTE) == stack.getAmount()) {
+    private static boolean insertGasOutputs(IGasHandler outputHandler, List<GasStack> outputGases) {
+        for (GasStack outputGas : outputGases) {
+            if (outputGas.isEmpty() || outputHandler.fill(outputGas.copy(), GasAction.EXECUTE) == outputGas.getAmount()) {
                 continue;
             }
 
@@ -55,139 +55,140 @@ public final class AirtightReactorKettleCrafting {
 
     private static boolean consumeItems(IItemHandler items, List<ItemStack> expectedItems, int[] amounts) {
         for (int slot = 0; slot < amounts.length; slot++) {
-            int amount = amounts[slot];
-            if (amount <= 0) {
+            int consumptionAmount = amounts[slot];
+            if (consumptionAmount <= 0) {
                 continue;
             }
 
-            ItemStack expected = expectedItems.get(slot);
-            ItemStack extracted = items.extractItem(slot, amount, false);
-            if (extracted.getCount() != amount || expected.isEmpty() || !ItemStack.isSameItemSameComponents(extracted, expected)) {
-                return false;
+            ItemStack expectedStack = expectedItems.get(slot);
+            ItemStack extractedStack = items.extractItem(slot, consumptionAmount, false);
+            if (extractedStack.getCount() == consumptionAmount && !expectedStack.isEmpty() && ItemStack.isSameItemSameComponents(extractedStack, expectedStack)) {
+                continue;
             }
+
+            return false;
         }
         return true;
     }
 
     private static boolean consumeFluids(IFluidHandler fluids, List<FluidStack> expectedFluids, int[] amounts) {
         for (int tank = 0; tank < amounts.length; tank++) {
-            int amount = amounts[tank];
-            if (amount <= 0) {
+            int consumptionAmount = amounts[tank];
+            if (consumptionAmount <= 0) {
                 continue;
             }
 
-            FluidStack expected = expectedFluids.get(tank);
-            if (expected.isEmpty()) {
+            FluidStack expectedFluid = expectedFluids.get(tank);
+            if (expectedFluid.isEmpty()) {
                 return false;
             }
 
-            FluidStack drained = fluids.drain(expected.copyWithAmount(amount), FluidAction.EXECUTE);
-            if (drained.getAmount() != amount || !FluidStack.isSameFluidSameComponents(drained, expected)) {
-                return false;
+            FluidStack drainedFluid = fluids.drain(expectedFluid.copyWithAmount(consumptionAmount), FluidAction.EXECUTE);
+            if (drainedFluid.getAmount() == consumptionAmount && FluidStack.isSameFluidSameComponents(drainedFluid, expectedFluid)) {
+                continue;
             }
+
+            return false;
         }
         return true;
     }
 
     private static boolean consumeGases(IGasHandler gases, List<GasStack> expectedGases, long[] amounts) {
         for (int tank = 0; tank < amounts.length; tank++) {
-            long amount = amounts[tank];
-            if (amount <= 0) {
+            long consumptionAmount = amounts[tank];
+            if (consumptionAmount <= 0) {
                 continue;
             }
 
-            GasStack expected = expectedGases.get(tank);
-            if (expected.isEmpty()) {
+            GasStack expectedGas = expectedGases.get(tank);
+            if (expectedGas.isEmpty()) {
                 return false;
             }
 
-            GasStack drained = gases.drain(expected.copyWithAmount(amount), GasAction.EXECUTE);
-            if (drained.getAmount() != amount || !GasStack.isSameGasSameComponents(drained, expected)) {
-                return false;
+            GasStack drainedGas = gases.drain(expectedGas.copyWithAmount(consumptionAmount), GasAction.EXECUTE);
+            if (drainedGas.getAmount() == consumptionAmount && GasStack.isSameGasSameComponents(drainedGas, expectedGas)) {
+                continue;
             }
+
+            return false;
         }
         return true;
     }
 
-    private static boolean insertItemOutputs(IItemHandler target, List<ItemStack> outputs) {
-        for (ItemStack stack : outputs) {
-            if (stack.isEmpty()) {
+    private static boolean insertItemOutputs(IItemHandler outputHandler, List<ItemStack> outputItems) {
+        for (ItemStack outputItem : outputItems) {
+            if (outputItem.isEmpty() || ItemHandlerHelper.insertItemStacked(outputHandler, outputItem.copy(), false).isEmpty()) {
                 continue;
             }
 
-            ItemStack remainder = ItemHandlerHelper.insertItemStacked(target, stack.copy(), false);
-            if (!remainder.isEmpty()) {
-                return false;
-            }
+            return false;
         }
         return true;
     }
 
-    public CraftPlan createCraftPlan(int[] itemAmounts, int[] fluidAmounts, long[] gasAmounts, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
+    CraftPlan createCraftPlan(int[] itemAmounts, int[] fluidAmounts, long[] gasAmounts, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
         IItemHandlerModifiable availableItems = kettle.getAvailableItems();
         IFluidHandler availableFluids = kettle.getAvailableFluids();
         IGasHandler availableGases = kettle.getAvailableGases();
         if (itemAmounts.length != availableItems.getSlots() || fluidAmounts.length != availableFluids.getTanks() || gasAmounts.length != availableGases.getTanks()) {
             throw new IllegalArgumentException("Craft plan resource counts do not match the reactor kettle");
         }
+
         for (int amount : itemAmounts) {
-            if (amount < 0) {
-                throw new IllegalArgumentException("Item consumption amounts must not be negative");
+            if (amount >= 0) {
+                continue;
             }
+
+            throw new IllegalArgumentException("Item consumption amounts must not be negative");
         }
         for (int amount : fluidAmounts) {
-            if (amount < 0) {
-                throw new IllegalArgumentException("Fluid consumption amounts must not be negative");
+            if (amount >= 0) {
+                continue;
             }
+
+            throw new IllegalArgumentException("Fluid consumption amounts must not be negative");
         }
         for (long amount : gasAmounts) {
-            if (amount < 0) {
-                throw new IllegalArgumentException("Gas consumption amounts must not be negative");
+            if (amount >= 0) {
+                continue;
             }
+
+            throw new IllegalArgumentException("Gas consumption amounts must not be negative");
         }
 
         return new CraftPlan(MachineResourceSnapshots.copyItems(availableItems), MachineResourceSnapshots.copyFluids(availableFluids), MachineResourceSnapshots.copyGases(availableGases), itemAmounts, fluidAmounts, gasAmounts, outputItems, outputFluids, outputGases);
     }
 
-    public boolean commitCraft(CraftPlan plan) {
+    boolean commitCraft(CraftPlan plan) {
         if (kettle.getLevel() == null) {
             return false;
         }
 
-        Provider provider = kettle.getLevel().registryAccess();
-        ResourceTransaction transaction = new ResourceTransaction().add(ResourceTransaction.participant(() -> MachineResourceSnapshots.matchesItems(kettle.getAvailableItems(), plan.expectedItems()), this::snapshotItemInventories, () -> executeItemPlan(plan), this::restoreItemInventories)).add(ResourceTransaction.participant(() -> MachineResourceSnapshots.matchesFluids(kettle.getAvailableFluids(), plan.expectedFluids()), () -> MachineResourceSnapshots.snapshotFluidTanks(provider, kettle.getInputFluidTank(), kettle.getOutputFluidTank()), () -> executeFluidPlan(plan), snapshot -> MachineResourceSnapshots.restoreFluidTanks(provider, snapshot, kettle.getInputFluidTank(), kettle.getOutputFluidTank()))).add(ResourceTransaction.participant(() -> MachineResourceSnapshots.matchesGases(kettle.getAvailableGases(), plan.expectedGases()), () -> MachineResourceSnapshots.snapshotGasTanks(provider, kettle.getInputGasTank(), kettle.getOutputGasTank()), () -> executeGasPlan(plan), snapshot -> MachineResourceSnapshots.restoreGasTanks(provider, snapshot, kettle.getInputGasTank(), kettle.getOutputGasTank())));
+        Provider registryProvider = kettle.getLevel().registryAccess();
+        ResourceTransaction craftTransaction = new ResourceTransaction().add(ResourceTransaction.participant(() -> MachineResourceSnapshots.matchesItems(kettle.getAvailableItems(), plan.expectedItems()), this::snapshotItemInventories, () -> executeItemPlan(plan), this::restoreItemInventories)).add(ResourceTransaction.participant(() -> MachineResourceSnapshots.matchesFluids(kettle.getAvailableFluids(), plan.expectedFluids()), () -> MachineResourceSnapshots.snapshotFluidTanks(registryProvider, kettle.getInputFluidTank(), kettle.getOutputFluidTank()), () -> executeFluidPlan(plan), snapshot -> MachineResourceSnapshots.restoreFluidTanks(registryProvider, snapshot, kettle.getInputFluidTank(), kettle.getOutputFluidTank()))).add(ResourceTransaction.participant(() -> MachineResourceSnapshots.matchesGases(kettle.getAvailableGases(), plan.expectedGases()), () -> MachineResourceSnapshots.snapshotGasTanks(kettle.getInputGasTank(), kettle.getOutputGasTank()), () -> executeGasPlan(plan), snapshot -> MachineResourceSnapshots.restoreGasTanks(snapshot, kettle.getInputGasTank(), kettle.getOutputGasTank())));
 
-        boolean committed = transaction.commit();
-        if (committed && plan.outputItems().stream().anyMatch(stack -> stack.is(AllItems.ANDESITE_ALLOY))) {
+        boolean craftSucceeded = craftTransaction.commit();
+        if (craftSucceeded && plan.outputItems().stream().anyMatch(outputItem -> outputItem.is(AllItems.ANDESITE_ALLOY))) {
             kettle.awardBackToBasics();
         }
-        return committed;
+        return craftSucceeded;
     }
 
-    public boolean acceptOutputs(List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases, boolean simulate) {
-        IFluidHandler targetFluidTank = kettle.getOutputFluidTank().getCapability();
-        IGasHandler targetGasTank = kettle.getOutputGasTank().getCapability();
-        boolean hasItemOutputs = outputItems.stream().anyMatch(stack -> !stack.isEmpty());
+    boolean acceptOutputs(List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
+        IFluidHandler outputFluidHandler = kettle.getOutputFluidTank().getCapability();
+        IGasHandler outputGasHandler = kettle.getOutputGasTank().getCapability();
+        boolean hasItemOutputs = outputItems.stream().anyMatch(outputItem -> !outputItem.isEmpty());
         if (hasItemOutputs && !canAcceptItemOutputs(outputItems)) {
             return false;
         }
 
-        boolean hasFluidOutputs = outputFluids.stream().anyMatch(stack -> !stack.isEmpty());
-        if (hasFluidOutputs && (targetFluidTank == null || !canAcceptFluidOutputs(targetFluidTank, outputFluids))) {
+        boolean hasFluidOutputs = outputFluids.stream().anyMatch(outputFluid -> !outputFluid.isEmpty());
+        if (hasFluidOutputs && (outputFluidHandler == null || !canAcceptFluidOutputs(outputFluidHandler, outputFluids))) {
             return false;
         }
 
-        boolean hasGasOutputs = outputGases.stream().anyMatch(stack -> !stack.isEmpty());
-        if (hasGasOutputs && !canAcceptGasOutputs(targetGasTank, outputGases)) {
-            return false;
-        }
-
-        if (simulate) {
-            return true;
-        }
-
-        CraftPlan craftPlan = createCraftPlan(new int[kettle.getAvailableItems().getSlots()], new int[kettle.getAvailableFluids().getTanks()], new long[kettle.getAvailableGases().getTanks()], outputItems, outputFluids, outputGases);
-        return kettle.commitCraft(craftPlan);
+        boolean hasGasOutputs = outputGases.stream().anyMatch(outputGas -> !outputGas.isEmpty());
+        return !hasGasOutputs || canAcceptGasOutputs(outputGasHandler, outputGases);
     }
 
     private ItemTransactionSnapshot snapshotItemInventories() {
@@ -238,39 +239,14 @@ public final class AirtightReactorKettleCrafting {
         }
     }
 
-    private boolean canAcceptItemOutputs(List<ItemStack> outputs) {
-        IItemHandlerModifiable simulation = AirtightReactorKettleInventory.createSimulation(kettle.getOutputInventory().getSlots());
+    private boolean canAcceptItemOutputs(List<ItemStack> outputItems) {
+        IItemHandlerModifiable simulatedInventory = AirtightReactorKettleInventory.createSimulation(kettle.getOutputInventory().getSlots());
         for (int slot = 0; slot < kettle.getOutputInventory().getSlots(); slot++) {
-            simulation.setStackInSlot(slot, kettle.getOutputInventory().getStackInSlot(slot).copy());
+            simulatedInventory.setStackInSlot(slot, kettle.getOutputInventory().getStackInSlot(slot).copy());
         }
 
-        for (ItemStack stack : outputs) {
-            if (stack.isEmpty()) {
-                continue;
-            }
-
-            ItemStack remainder = ItemHandlerHelper.insertItemStacked(simulation, stack.copy(), false);
-            if (!remainder.isEmpty()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean canAcceptFluidOutputs(IFluidHandler target, List<FluidStack> outputs) {
-        SmartFluidTankBehaviour simulatedTank = new SmartFluidTankBehaviour(SmartFluidTankBehaviour.OUTPUT, kettle, target.getTanks(), AirtightReactorKettleBlockEntity.getFluidCapacity(), true);
-        IFluidHandler simulation = simulatedTank.getCapability();
-        for (int tank = 0; tank < target.getTanks(); tank++) {
-            FluidStack existing = target.getFluidInTank(tank).copy();
-            if (existing.isEmpty() || simulation.fill(existing.copy(), FluidAction.EXECUTE) == existing.getAmount()) {
-                continue;
-            }
-
-            return false;
-        }
-
-        for (FluidStack stack : outputs) {
-            if (stack.isEmpty() || simulation.fill(stack.copy(), FluidAction.EXECUTE) == stack.getAmount()) {
+        for (ItemStack outputItem : outputItems) {
+            if (outputItem.isEmpty() || ItemHandlerHelper.insertItemStacked(simulatedInventory, outputItem.copy(), false).isEmpty()) {
                 continue;
             }
 
@@ -279,20 +255,42 @@ public final class AirtightReactorKettleCrafting {
         return true;
     }
 
-    private boolean canAcceptGasOutputs(IGasHandler target, List<GasStack> outputs) {
-        SmartGasTankBehaviour simulatedTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.OUTPUT, kettle, target.getTanks(), AirtightReactorKettleBlockEntity.getGasCapacity(), true);
-        IGasHandler simulation = simulatedTank.getCapability();
-        for (int tank = 0; tank < target.getTanks(); tank++) {
-            GasStack existing = target.getGasInTank(tank).copy();
-            if (existing.isEmpty() || simulation.fill(existing.copy(), GasAction.EXECUTE) == existing.getAmount()) {
+    private boolean canAcceptFluidOutputs(IFluidHandler outputHandler, List<FluidStack> outputFluids) {
+        SmartFluidTankBehaviour simulatedTank = new SmartFluidTankBehaviour(SmartFluidTankBehaviour.OUTPUT, kettle, outputHandler.getTanks(), AirtightReactorKettleBlockEntity.getFluidCapacity(), true);
+        IFluidHandler simulatedHandler = simulatedTank.getCapability();
+        for (int tank = 0; tank < outputHandler.getTanks(); tank++) {
+            FluidStack storedFluid = outputHandler.getFluidInTank(tank).copy();
+            if (storedFluid.isEmpty() || simulatedHandler.fill(storedFluid.copy(), FluidAction.EXECUTE) == storedFluid.getAmount()) {
                 continue;
             }
 
             return false;
         }
 
-        for (GasStack stack : outputs) {
-            if (stack.isEmpty() || simulation.fill(stack.copy(), GasAction.EXECUTE) == stack.getAmount()) {
+        for (FluidStack outputFluid : outputFluids) {
+            if (outputFluid.isEmpty() || simulatedHandler.fill(outputFluid.copy(), FluidAction.EXECUTE) == outputFluid.getAmount()) {
+                continue;
+            }
+
+            return false;
+        }
+        return true;
+    }
+
+    private boolean canAcceptGasOutputs(IGasHandler outputHandler, List<GasStack> outputGases) {
+        SmartGasTankBehaviour simulatedTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.OUTPUT, kettle, outputHandler.getTanks(), AirtightReactorKettleBlockEntity.getGasCapacity(), true);
+        IGasHandler simulatedHandler = simulatedTank.getCapability();
+        for (int tank = 0; tank < outputHandler.getTanks(); tank++) {
+            GasStack storedGas = outputHandler.getGasInTank(tank).copy();
+            if (storedGas.isEmpty() || simulatedHandler.fill(storedGas.copy(), GasAction.EXECUTE) == storedGas.getAmount()) {
+                continue;
+            }
+
+            return false;
+        }
+
+        for (GasStack outputGas : outputGases) {
+            if (outputGas.isEmpty() || simulatedHandler.fill(outputGas.copy(), GasAction.EXECUTE) == outputGas.getAmount()) {
                 continue;
             }
 

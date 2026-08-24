@@ -15,7 +15,7 @@ public class AirtightReactorKettleStructuralCogBlockEntity extends KineticBlockE
         super(type, pos, state);
     }
 
-    public boolean getOverstressed() {
+    boolean getOverstressed() {
         return overStressed;
     }
 }

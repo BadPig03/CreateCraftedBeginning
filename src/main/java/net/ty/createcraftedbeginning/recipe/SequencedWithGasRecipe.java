@@ -18,7 +18,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class SequencedWithGasRecipe<T extends ProcessingWithGasRecipe<?, ?>> {
     public static final Codec<SequencedWithGasRecipe<?>> CODEC = Recipe.CODEC.comapFlatMap(recipe -> recipe instanceof ProcessingWithGasRecipe<?, ?> processing && recipe instanceof IAssemblyRecipeWithGas ? DataResult.success(new SequencedWithGasRecipe<>(processing)) : DataResult.error(() -> recipe.getClass().getSimpleName() + " is not supported in Sequenced Assembly with Gas"), SequencedWithGasRecipe::getRecipe);
-
     public static final StreamCodec<RegistryFriendlyByteBuf, SequencedWithGasRecipe<?>> STREAM_CODEC = Recipe.STREAM_CODEC.map(recipe -> {
         if (recipe instanceof ProcessingWithGasRecipe<?, ?> processing && recipe instanceof IAssemblyRecipeWithGas) {
             return new SequencedWithGasRecipe<>(processing);
@@ -42,9 +41,9 @@ public class SequencedWithGasRecipe<T extends ProcessingWithGasRecipe<?, ?>> {
             return;
         }
 
-        Ingredient transit = Ingredient.of(parent.getTransitionalItem());
-        Ingredient input = isFirst ? CompoundIngredient.of(transit, parent.getIngredient()) : transit;
-        wrapped.getIngredients().set(0, input);
+        Ingredient transitionalIngredient = Ingredient.of(parent.getTransitionalItem());
+        Ingredient stepInput = isFirst ? CompoundIngredient.of(transitionalIngredient, parent.getIngredient()) : transitionalIngredient;
+        wrapped.getIngredients().set(0, stepInput);
     }
 
     public IAssemblyRecipeWithGas getAsAssemblyRecipe() {

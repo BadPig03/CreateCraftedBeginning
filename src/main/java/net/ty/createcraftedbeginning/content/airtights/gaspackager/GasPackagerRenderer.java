@@ -31,18 +31,18 @@ public class GasPackagerRenderer extends SmartBlockEntityRenderer<GasPackagerBlo
         super(context);
     }
 
-    public static PartialModel getTrayModel(BlockState state) {
+    static PartialModel getTrayModel(BlockState state) {
         if (state.getBlock() instanceof GasPackagerBlock) {
             return CCBPartialModels.GAS_PACKAGER_TRAY_REGULAR;
         }
         return CCBPartialModels.GAS_PACKAGER_TRAY_DEFRAG;
     }
 
-    public static PartialModel getHatchModel(GasPackagerBlockEntity be) {
+    static PartialModel getHatchModel(GasPackagerBlockEntity be) {
         return isHatchOpen(be) ? CCBPartialModels.GAS_PACKAGER_HATCH_OPEN : CCBPartialModels.GAS_PACKAGER_HATCH_CLOSED;
     }
 
-    public static boolean isHatchOpen(GasPackagerBlockEntity be) {
+    private static boolean isHatchOpen(GasPackagerBlockEntity be) {
         return be.animationTicks > (be.animationInward ? 1 : 5) && be.animationTicks < PackagerBlockEntity.CYCLE - (be.animationInward ? 5 : 1);
     }
 

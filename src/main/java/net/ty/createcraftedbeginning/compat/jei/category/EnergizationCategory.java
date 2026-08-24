@@ -38,9 +38,9 @@ public class EnergizationCategory extends CCBRecipeCategory<EnergizationRecipe> 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, EnergizationRecipe recipe, IFocusGroup focuses) {
         SizedGasIngredient gasIngredient = recipe.getGasIngredient();
-        List<GasStack> gases = Arrays.stream(gasIngredient.getGases()).map(GasStack::copy).toList();
+        List<GasStack> gasStacks = Arrays.stream(gasIngredient.getGases()).map(GasStack::copy).toList();
         GasStack outputGas = recipe.getGasResult();
-        builder.addSlot(RecipeIngredientRole.INPUT, 27, 51).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gases).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmounts.precise(gasIngredient.amount()).style(ChatFormatting.GRAY).component()));
+        builder.addSlot(RecipeIngredientRole.INPUT, 27, 51).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gasStacks).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmounts.precise(gasIngredient.amount()).style(ChatFormatting.GRAY).component()));
         builder.addSlot(RecipeIngredientRole.OUTPUT, 131, 50).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEIPlugin.GAS_STACK, outputGas.copy()).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmounts.precise(outputGas.getAmount()).style(ChatFormatting.GRAY).component()));
     }
 }

@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.content.breezes.breezecooler;
 
-import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
@@ -70,21 +69,11 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(FROST_LEVEL, FrostLevel.RIMING).setValue(ATTACHED, false));
     }
 
-    public static FrostLevel getFrostLevelOf(BlockState blockState) {
+    static FrostLevel getFrostLevelOf(BlockState blockState) {
         return blockState.getValue(FROST_LEVEL);
     }
 
-    private static ItemInteractionResult setGoggles(BreezeCoolerBlockEntity cooler, boolean goggles) {
-        if (cooler.hasGoggles() == goggles) {
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        }
-
-        cooler.setGoggles(goggles);
-        cooler.notifyUpdate();
-        return ItemInteractionResult.SUCCESS;
-    }
-
-    public static InteractionResultHolder<ItemStack> tryInsert(BlockState state, Level level, BlockPos pos, ItemStack stack, boolean doNotConsume, boolean forceOverflow, boolean simulate) {
+    static InteractionResultHolder<ItemStack> tryInsert(BlockState state, Level level, BlockPos pos, ItemStack stack, boolean doNotConsume, boolean forceOverflow, boolean simulate) {
         if (!state.hasBlockEntity()) {
             return InteractionResultHolder.fail(ItemStack.EMPTY);
         }
@@ -101,19 +90,29 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
             return InteractionResultHolder.success(ItemStack.EMPTY);
         }
 
-        ItemStack container;
+        ItemStack returnedContainer;
         if (stack.getItem() instanceof DispensibleContainerItem) {
-            container = new ItemStack(Items.BUCKET);
+            returnedContainer = new ItemStack(Items.BUCKET);
         }
         else {
-            container = stack.hasCraftingRemainingItem() ? stack.getCraftingRemainingItem() : ItemStack.EMPTY;
+            returnedContainer = stack.hasCraftingRemainingItem() ? stack.getCraftingRemainingItem() : ItemStack.EMPTY;
         }
         if (simulate || level.isClientSide) {
-            return InteractionResultHolder.success(container);
+            return InteractionResultHolder.success(returnedContainer);
         }
 
         stack.shrink(1);
-        return InteractionResultHolder.success(container);
+        return InteractionResultHolder.success(returnedContainer);
+    }
+
+    private static ItemInteractionResult setGoggles(BreezeCoolerBlockEntity cooler, boolean goggles) {
+        if (cooler.hasGoggles() == goggles) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        cooler.setGoggles(goggles);
+        cooler.notifyUpdate();
+        return ItemInteractionResult.SUCCESS;
     }
 
     @Override
@@ -150,14 +149,14 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
         }
 
         if (stack.isEmpty()) {
-            return onBlockEntityUseItemOn(level, pos, blockEntity -> setGoggles(blockEntity, false));
+            return onBlockEntityUseItemOn(level, pos, be -> setGoggles(be, false));
         }
 
         boolean doNotConsume = player.isCreative();
         boolean forceOverflow = !(player instanceof FakePlayer);
-        InteractionResultHolder<ItemStack> resultHolder = tryInsert(state, level, pos, stack, doNotConsume, forceOverflow, false);
-        ItemInteractionResult interactionResult = resultHolder.getResult() == InteractionResult.SUCCESS ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        ItemStack leftover = resultHolder.getObject();
+        InteractionResultHolder<ItemStack> insertResult = tryInsert(state, level, pos, stack, doNotConsume, forceOverflow, false);
+        ItemInteractionResult interactionResult = insertResult.getResult() == InteractionResult.SUCCESS ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        ItemStack leftover = insertResult.getObject();
         if (level.isClientSide || doNotConsume || leftover.isEmpty()) {
             return interactionResult;
         }
@@ -249,8 +248,6 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
         RIMING,
         CHILLED;
 
-        public static final Codec<FrostLevel> CODEC = StringRepresentable.fromEnum(FrostLevel::values);
-
         public boolean isAtLeast(FrostLevel frostLevel) {
             return ordinal() >= frostLevel.ordinal();
         }
@@ -261,14 +258,14 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
         }
 
         @Contract(pure = true)
-        public String getTranslatable() {
+        String getTranslatable() {
             return switch (this) {
                 case RIMING -> "gui.breeze_cooler.riming";
                 case CHILLED -> "gui.breeze_cooler.chilled";
             };
         }
 
-        public ChatFormatting getChatFormatting() {
+        ChatFormatting getChatFormatting() {
             return switch (this) {
                 case RIMING -> ChatFormatting.GRAY;
                 case CHILLED -> ChatFormatting.AQUA;

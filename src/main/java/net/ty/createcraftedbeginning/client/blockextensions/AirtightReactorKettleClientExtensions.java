@@ -20,14 +20,14 @@ public final class AirtightReactorKettleClientExtensions implements IClientBlock
     @Override
     public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
         HashSet<BlockPos> positions = new HashSet<>();
-        for (int x = -1; x <= 1; x++) {
-            for (int y = -1; y <= 1; y++) {
-                for (int z = -1; z <= 1; z++) {
-                    if (x == 0 && y == 0 && z == 0) {
+        for (int xOffset = -1; xOffset <= 1; xOffset++) {
+            for (int yOffset = -1; yOffset <= 1; yOffset++) {
+                for (int zOffset = -1; zOffset <= 1; zOffset++) {
+                    if (xOffset == 0 && yOffset == 0 && zOffset == 0) {
                         continue;
                     }
 
-                    positions.add(pos.offset(x, y, z));
+                    positions.add(pos.offset(xOffset, yOffset, zOffset));
                 }
             }
         }

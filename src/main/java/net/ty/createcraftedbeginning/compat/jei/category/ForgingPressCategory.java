@@ -53,8 +53,8 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
         super(info);
     }
 
-    private static int getInputX(int index) {
-        return 42 - index * 19;
+    private static int getInputX(int inputIndex) {
+        return 42 - inputIndex * 19;
     }
 
     private static int getOutputX(int size) {
@@ -86,13 +86,13 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
         List<ItemStack> outputs = new ArrayList<>();
         for (ItemStack template : templates) {
             for (ItemStack base : bases) {
-                SmithingRecipeInput input = new SmithingRecipeInput(template.copyWithCount(1), base.copyWithCount(1), addition.copyWithCount(1));
-                ItemStack result = smithingRecipe.assemble(input, level.registryAccess());
-                if (result.isEmpty()) {
+                SmithingRecipeInput smithingInput = new SmithingRecipeInput(template.copyWithCount(1), base.copyWithCount(1), addition.copyWithCount(1));
+                ItemStack smithingResult = smithingRecipe.assemble(smithingInput, level.registryAccess());
+                if (smithingResult.isEmpty()) {
                     continue;
                 }
 
-                ItemStack lookupResult = result.copyWithCount(1);
+                ItemStack lookupResult = smithingResult.copyWithCount(1);
                 if (outputs.stream().noneMatch(existing -> ItemStack.isSameItemSameComponents(existing, lookupResult))) {
                     outputs.add(lookupResult);
                 }
@@ -108,8 +108,8 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
             return;
         }
 
-        Level level = Minecraft.getInstance().level;
-        if (level == null) {
+        Level clientLevel = Minecraft.getInstance().level;
+        if (clientLevel == null) {
             return;
         }
 
@@ -146,17 +146,17 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
             base = displayedBase.get().copyWithCount(1);
         }
 
-        SmithingRecipeInput input = new SmithingRecipeInput(template.get().copyWithCount(1), base, addition.get().copyWithCount(1));
-        if (!smithingRecipe.matches(input, level)) {
+        SmithingRecipeInput smithingInput = new SmithingRecipeInput(template.get().copyWithCount(1), base, addition.get().copyWithCount(1));
+        if (!smithingRecipe.matches(smithingInput, clientLevel)) {
             return;
         }
 
-        ItemStack result = smithingRecipe.assemble(input, level.registryAccess());
-        if (result.isEmpty()) {
+        ItemStack smithingResult = smithingRecipe.assemble(smithingInput, clientLevel.registryAccess());
+        if (smithingResult.isEmpty()) {
             return;
         }
 
-        outputSlot.get().createDisplayOverrides().addItemStack(result.copyWithCount(1));
+        outputSlot.get().createDisplayOverrides().addItemStack(smithingResult.copyWithCount(1));
     }
 
     @Override
@@ -201,8 +201,8 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
         }
         if (!gasIngredients.isEmpty()) {
             SizedGasIngredient gasIngredient = gasIngredients.getFirst();
-            List<GasStack> gases = Arrays.stream(gasIngredient.getGases()).map(GasStack::copy).toList();
-            builder.addSlot(RecipeIngredientRole.INPUT, getInputX(inputIndex), 6).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gases).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmounts.precise(gasIngredient.amount()).style(ChatFormatting.GRAY).component()));
+            List<GasStack> gasStacks = Arrays.stream(gasIngredient.getGases()).map(GasStack::copy).toList();
+            builder.addSlot(RecipeIngredientRole.INPUT, getInputX(inputIndex), 6).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gasStacks).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmounts.precise(gasIngredient.amount()).style(ChatFormatting.GRAY).component()));
         }
         SmithingRecipe smithingRecipe = recipe.getSmithingRecipe();
         if (smithingRecipe != null) {
@@ -217,8 +217,8 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
             return;
         }
 
-        for (ProcessingOutput result : results) {
-            builder.addSlot(RecipeIngredientRole.OUTPUT, getOutputX(results.size()), 82).setBackground(getRenderedSlot(result), -1, -1).addItemStack(result.getStack()).addRichTooltipCallback(addStochasticTooltip(result));
+        for (ProcessingOutput output : results) {
+            builder.addSlot(RecipeIngredientRole.OUTPUT, getOutputX(results.size()), 82).setBackground(getRenderedSlot(output), -1, -1).addItemStack(output.getStack()).addRichTooltipCallback(addStochasticTooltip(output));
         }
     }
 }

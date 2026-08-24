@@ -7,7 +7,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -16,10 +15,9 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class EndMechanicalBlockEntity<T extends EndMechanicalStructuralBlockEntity<?>> extends KineticBlockEntity {
-    protected T structural;
-    protected CCBAdvancementBehaviour advancementBehaviour;
+    private T structural;
 
-    public EndMechanicalBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
+    protected EndMechanicalBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
     }
 
@@ -42,15 +40,7 @@ public abstract class EndMechanicalBlockEntity<T extends EndMechanicalStructural
 
     protected abstract Class<T> getStructuralClass();
 
-    protected @Nullable T getStructural() {
-        if (level == null) {
-            return null;
-        }
-
-        BlockEntity blockEntity = level.getBlockEntity(worldPosition.below());
-        Class<T> structuralClass = getStructuralClass();
-        return structuralClass.isInstance(blockEntity) ? structuralClass.cast(blockEntity) : null;
-    }
+    protected abstract void updateStructural();
 
     protected @Nullable T getStructuralForUse() {
         if (structural != null && !structural.isRemoved()) {
@@ -79,7 +69,7 @@ public abstract class EndMechanicalBlockEntity<T extends EndMechanicalStructural
         return true;
     }
 
-    public void verifyStructural() {
+    void verifyStructural() {
         if (level == null || level.isClientSide) {
             return;
         }
@@ -92,5 +82,13 @@ public abstract class EndMechanicalBlockEntity<T extends EndMechanicalStructural
         level.destroyBlock(worldPosition, true);
     }
 
-    public abstract void updateStructural();
+    private @Nullable T getStructural() {
+        if (level == null) {
+            return null;
+        }
+
+        BlockEntity candidateStructural = level.getBlockEntity(worldPosition.below());
+        Class<T> structuralClass = getStructuralClass();
+        return structuralClass.isInstance(candidateStructural) ? structuralClass.cast(candidateStructural) : null;
+    }
 }

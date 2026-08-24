@@ -14,6 +14,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.NonNullList;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.neoforged.neoforge.fluids.FluidStack;
@@ -22,6 +23,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.api.gas.recipes.TemperatureCondition;
+import net.ty.createcraftedbeginning.api.gas.recipes.TemperatureMatching;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightReactorKettle;
 import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
@@ -47,37 +49,82 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
         super(info);
     }
 
-    private static int getInputX(int index, int xOffset) {
-        return 14 + xOffset + index % 3 * 19;
+    private static int getInputX(int inputIndex, int xOffset) {
+        return 14 + xOffset + inputIndex % 3 * 19;
     }
 
-    private static int getInputY(int index) {
-        return 59 - index / 3 * 19;
+    private static int getInputY(int inputIndex) {
+        return 59 - inputIndex / 3 * 19;
     }
 
-    private static int getOutputX(int index, int size) {
-        if (size % 2 != 0 && index == size - 1) {
+    private static int getOutputX(int outputIndex, int outputCount) {
+        if (outputCount % 2 != 0 && outputIndex == outputCount - 1) {
             return 142;
         }
-        return index % 2 == 0 ? 132 : 151;
+        if (outputIndex % 2 != 0) {
+            return 151;
+        }
+        return 132;
     }
 
-    private static int getOutputY(int index) {
-        return -19 * (index / 2) + 59;
+    private static int getOutputY(int outputIndex) {
+        return -19 * (outputIndex / 2) + 59;
+    }
+
+    private static Component getTemperatureDisplay(ReactorKettleRecipe recipe) {
+        TemperatureCondition condition = recipe.getTemperatureCondition();
+        if (recipe.getTemperatureMatching() != TemperatureMatching.COMPATIBLE) {
+            return CCBLang.translateDirect(condition.getTranslationKey());
+        }
+
+        return switch (condition) {
+            case NONE -> CCBLang.translateDirect("recipe.temperature_matching.compatible.none");
+            case HEATED -> CCBLang.translateDirect("recipe.temperature_matching.compatible.heated");
+            case CHILLED -> CCBLang.translateDirect("recipe.temperature_matching.compatible.chilled");
+            default -> CCBLang.translateDirect(condition.getTranslationKey());
+        };
+    }
+
+    @Override
+    protected List<Component> getTooltipStrings(ReactorKettleRecipe recipe, IRecipeSlotsView recipeSlotsView, double mouseX, double mouseY) {
+        if (mouseX < 4 || mouseX >= 129 || mouseY < 80 || mouseY >= 99) {
+            return List.of();
+        }
+
+        TemperatureMatching matching = recipe.getTemperatureMatching();
+        List<Component> tooltip = new ArrayList<>();
+        tooltip.add(CCBLang.translateDirect("recipe.temperature_matching." + matching.getSerializedName()));
+        if (matching == TemperatureMatching.EXACT) {
+            tooltip.add(CCBLang.translateDirect("recipe.temperature_matching.exact.description").withStyle(ChatFormatting.GRAY));
+            return tooltip;
+        }
+
+        TemperatureCondition condition = recipe.getTemperatureCondition();
+        if (!condition.supportsCompatibleMatching()) {
+            return tooltip;
+        }
+
+        if (condition == TemperatureCondition.NONE) {
+            tooltip.add(CCBLang.translateDirect("recipe.temperature_matching.compatible.none.description").withStyle(ChatFormatting.GRAY));
+        }
+        else {
+            tooltip.add(CCBLang.translateDirect("recipe.temperature_matching.compatible.description").withStyle(ChatFormatting.GRAY));
+        }
+        return tooltip;
     }
 
     @Override
     protected void draw(ReactorKettleRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
-        int size = recipe.getFluidResults().size() + recipe.getGasResults().size() + recipe.getRollableResults().size();
-        if (size <= 3) {
-            CCBGUITextures.JEI_DOWN_ARROW.render(graphics, 136, -19 * ((1 + size) / 2 - 1) + 32);
+        int outputCount = recipe.getFluidResults().size() + recipe.getGasResults().size() + recipe.getRollableResults().size();
+        if (outputCount <= 3) {
+            CCBGUITextures.JEI_DOWN_ARROW.render(graphics, 136, -19 * ((1 + outputCount) / 2 - 1) + 32);
         }
         CCBGUITextures.JEI_SHADOW.render(graphics, 76, 66);
 
         TemperatureCondition condition = recipe.getTemperatureCondition();
         int color = condition.getColor();
         CCBGUITextures.JEI_HEAT_BAR.render(graphics, 4, 80, new Color(color));
-        graphics.drawString(Minecraft.getInstance().font, CCBLang.translateDirect(condition.getTranslationKey()), 9, 86, color, false);
+        graphics.drawString(Minecraft.getInstance().font, getTemperatureDisplay(recipe), 9, 86, color, false);
 
         if (recipe.getGasIngredients().isEmpty() && recipe.getGasResults().isEmpty()) {
             reactorKettleOpened.draw(graphics, background.getWidth() / 2 + 6, 58);
@@ -99,47 +146,47 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
         int xOffset = inputCount < 3 ? (3 - inputCount) * 19 / 2 : 0;
         int inputIndex = 0;
         for (Pair<Ingredient, Integer> pair : condensedIngredients) {
-            List<ItemStack> stacks = new ArrayList<>();
-            for (ItemStack stack : pair.getFirst().getItems()) {
-                stacks.add(stack.copyWithCount(pair.getSecond()));
+            List<ItemStack> itemStacks = new ArrayList<>();
+            for (ItemStack itemStack : pair.getFirst().getItems()) {
+                itemStacks.add(itemStack.copyWithCount(pair.getSecond()));
             }
-            int x = getInputX(inputIndex, xOffset);
-            int y = getInputY(inputIndex);
-            builder.addSlot(RecipeIngredientRole.INPUT, x, y).setBackground(getRenderedSlot(), -1, -1).addItemStacks(stacks);
+            int slotX = getInputX(inputIndex, xOffset);
+            int slotY = getInputY(inputIndex);
+            builder.addSlot(RecipeIngredientRole.INPUT, slotX, slotY).setBackground(getRenderedSlot(), -1, -1).addItemStacks(itemStacks);
             inputIndex++;
         }
         for (SizedFluidIngredient fluidIngredient : fluidIngredients) {
-            int x = getInputX(inputIndex, xOffset);
-            int y = getInputY(inputIndex);
-            addFluidSlot(builder, x, y, fluidIngredient);
+            int slotX = getInputX(inputIndex, xOffset);
+            int slotY = getInputY(inputIndex);
+            addFluidSlot(builder, slotX, slotY, fluidIngredient);
             inputIndex++;
         }
         for (SizedGasIngredient gasIngredient : gasIngredients) {
-            int x = getInputX(inputIndex, xOffset);
-            int y = getInputY(inputIndex);
-            List<GasStack> gases = Arrays.stream(gasIngredient.getGases()).map(GasStack::copy).toList();
-            builder.addSlot(RecipeIngredientRole.INPUT, x, y).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gases).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmounts.precise(gasIngredient.amount()).style(ChatFormatting.GRAY).component()));
+            int slotX = getInputX(inputIndex, xOffset);
+            int slotY = getInputY(inputIndex);
+            List<GasStack> gasStacks = Arrays.stream(gasIngredient.getGases()).map(GasStack::copy).toList();
+            builder.addSlot(RecipeIngredientRole.INPUT, slotX, slotY).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gasStacks).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmounts.precise(gasIngredient.amount()).style(ChatFormatting.GRAY).component()));
             inputIndex++;
         }
 
         int outputCount = results.size() + fluidResults.size() + gasResults.size();
         int outputIndex = 0;
-        for (ProcessingOutput result : results) {
-            int x = getOutputX(outputIndex, outputCount);
-            int y = getOutputY(outputIndex);
-            builder.addSlot(RecipeIngredientRole.OUTPUT, x, y).setBackground(getRenderedSlot(result), -1, -1).addItemStack(result.getStack()).addRichTooltipCallback(addStochasticTooltip(result));
+        for (ProcessingOutput itemResult : results) {
+            int slotX = getOutputX(outputIndex, outputCount);
+            int slotY = getOutputY(outputIndex);
+            builder.addSlot(RecipeIngredientRole.OUTPUT, slotX, slotY).setBackground(getRenderedSlot(itemResult), -1, -1).addItemStack(itemResult.getStack()).addRichTooltipCallback(addStochasticTooltip(itemResult));
             outputIndex++;
         }
         for (FluidStack fluidResult : fluidResults) {
-            int x = getOutputX(outputIndex, outputCount);
-            int y = getOutputY(outputIndex);
-            addFluidSlot(builder, x, y, fluidResult);
+            int slotX = getOutputX(outputIndex, outputCount);
+            int slotY = getOutputY(outputIndex);
+            addFluidSlot(builder, slotX, slotY, fluidResult);
             outputIndex++;
         }
         for (GasStack gasResult : gasResults) {
-            int x = getOutputX(outputIndex, outputCount);
-            int y = getOutputY(outputIndex);
-            builder.addSlot(RecipeIngredientRole.OUTPUT, x, y).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEIPlugin.GAS_STACK, gasResult.copy()).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmounts.precise(gasResult.getAmount()).style(ChatFormatting.GRAY).component()));
+            int slotX = getOutputX(outputIndex, outputCount);
+            int slotY = getOutputY(outputIndex);
+            builder.addSlot(RecipeIngredientRole.OUTPUT, slotX, slotY).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEIPlugin.GAS_STACK, gasResult.copy()).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmounts.precise(gasResult.getAmount()).style(ChatFormatting.GRAY).component()));
             outputIndex++;
         }
 

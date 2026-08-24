@@ -37,13 +37,13 @@ public class AirtightTankItem extends BlockItem {
 
     @Override
     public InteractionResult place(BlockPlaceContext context) {
-        InteractionResult result = placeSingleBlock(context);
-        if (!result.consumesAction()) {
-            return result;
+        InteractionResult placementResult = placeSingleBlock(context);
+        if (!placementResult.consumesAction()) {
+            return placementResult;
         }
 
         tryMultiPlace(context);
-        return result;
+        return placementResult;
     }
 
     @Override
@@ -52,52 +52,51 @@ public class AirtightTankItem extends BlockItem {
             return false;
         }
 
-        CustomData data = itemStack.get(DataComponents.BLOCK_ENTITY_DATA);
-        if (data == null) {
+        CustomData blockEntityData = itemStack.get(DataComponents.BLOCK_ENTITY_DATA);
+        if (blockEntityData == null) {
             return super.updateCustomBlockEntityTag(blockPos, level, player, itemStack, blockState);
         }
 
-        CompoundTag tag = data.copyTag();
-        tag.remove(COMPOUND_KEY_WIDTH);
-        tag.remove(COMPOUND_KEY_HEIGHT);
-        tag.remove(COMPOUND_KEY_CONTROLLER_POS);
-        tag.remove(COMPOUND_KEY_LAST_KNOWN_POS);
-        tag.remove(COMPOUND_KEY_CORE);
-        tag.remove(COMPOUND_KEY_TANK_CONTENT);
-        itemStack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(tag));
+        CompoundTag blockEntityTag = blockEntityData.copyTag();
+        blockEntityTag.remove(COMPOUND_KEY_WIDTH);
+        blockEntityTag.remove(COMPOUND_KEY_HEIGHT);
+        blockEntityTag.remove(COMPOUND_KEY_CONTROLLER_POS);
+        blockEntityTag.remove(COMPOUND_KEY_LAST_KNOWN_POS);
+        blockEntityTag.remove(COMPOUND_KEY_CORE);
+        blockEntityTag.remove(COMPOUND_KEY_TANK_CONTENT);
+        itemStack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(blockEntityTag));
         return super.updateCustomBlockEntityTag(blockPos, level, player, itemStack, blockState);
     }
 
-    protected InteractionResult placeSingleBlock(BlockPlaceContext context) {
+    InteractionResult placeSingleBlock(BlockPlaceContext context) {
         return super.place(context);
     }
 
-    protected void tryMultiPlace(BlockPlaceContext context) {
+    void tryMultiPlace(BlockPlaceContext context) {
         Player player = context.getPlayer();
         if (player == null || player.isShiftKeyDown()) {
             return;
         }
 
-        Direction face = context.getClickedFace();
-        if (!face.getAxis().isVertical()) {
+        Direction clickedFace = context.getClickedFace();
+        if (!clickedFace.getAxis().isVertical()) {
             return;
         }
 
-        ItemStack stack = context.getItemInHand();
+        ItemStack tankStack = context.getItemInHand();
         Level level = context.getLevel();
-        BlockPos pos = context.getClickedPos();
-        BlockPos placedOnPos = pos.relative(face.getOpposite());
-        BlockState placedOnState = level.getBlockState(placedOnPos);
-        if (placedOnState.getBlock() != getBlock()) {
+        BlockPos placementPos = context.getClickedPos();
+        BlockPos placedOnPos = placementPos.relative(clickedFace.getOpposite());
+        if (level.getBlockState(placedOnPos).getBlock() != getBlock()) {
             return;
         }
 
-        AirtightTankBlockEntity tank = GasConnectivityHandler.partAt(CCBBlockEntities.AIRTIGHT_TANK.get(), level, placedOnPos);
-        if (tank == null) {
+        AirtightTankBlockEntity placedOnTank = GasConnectivityHandler.partAt(CCBBlockEntities.AIRTIGHT_TANK.get(), level, placedOnPos);
+        if (placedOnTank == null) {
             return;
         }
 
-        AirtightTankBlockEntity controller = tank.getControllerBE();
+        AirtightTankBlockEntity controller = placedOnTank.getControllerBE();
         if (controller == null) {
             return;
         }
@@ -108,30 +107,30 @@ public class AirtightTankItem extends BlockItem {
         }
 
         BlockPos controllerPos = controller.getBlockPos();
-        BlockPos startPos = face == Direction.DOWN ? controllerPos.below() : controllerPos.above(controller.getHeight());
-        if (startPos.getY() != pos.getY()) {
+        BlockPos layerStartPos = clickedFace == Direction.DOWN ? controllerPos.below() : controllerPos.above(controller.getHeight());
+        if (layerStartPos.getY() != placementPos.getY()) {
             return;
         }
 
-        int tanksToPlace = countTanksToPlace(level, startPos, width);
-        if (tanksToPlace == INVALID_PLACEMENT || !player.isCreative() && stack.getCount() < tanksToPlace) {
+        int tanksToPlace = countTanksToPlace(level, layerStartPos, width);
+        if (tanksToPlace == INVALID_PLACEMENT || !player.isCreative() && tankStack.getCount() < tanksToPlace) {
             return;
         }
 
-        placeTankLayer(context, level, startPos, face, width);
+        placeTankLayer(context, level, layerStartPos, clickedFace, width);
     }
 
     private int countTanksToPlace(Level level, BlockPos startPos, int width) {
         int tanksToPlace = 0;
         for (int xOffset = 0; xOffset < width; xOffset++) {
             for (int zOffset = 0; zOffset < width; zOffset++) {
-                BlockPos offsetPos = startPos.offset(xOffset, 0, zOffset);
-                BlockState state = level.getBlockState(offsetPos);
-                if (state.getBlock() == getBlock()) {
+                BlockPos targetPos = startPos.offset(xOffset, 0, zOffset);
+                BlockState targetState = level.getBlockState(targetPos);
+                if (targetState.getBlock() == getBlock()) {
                     continue;
                 }
 
-                if (!state.canBeReplaced()) {
+                if (!targetState.canBeReplaced()) {
                     return INVALID_PLACEMENT;
                 }
 
@@ -144,13 +143,13 @@ public class AirtightTankItem extends BlockItem {
     private void placeTankLayer(BlockPlaceContext context, Level level, BlockPos startPos, Direction face, int width) {
         for (int xOffset = 0; xOffset < width; xOffset++) {
             for (int zOffset = 0; zOffset < width; zOffset++) {
-                BlockPos offsetPos = startPos.offset(xOffset, 0, zOffset);
-                BlockState state = level.getBlockState(offsetPos);
-                if (state.getBlock() == getBlock()) {
+                BlockPos targetPos = startPos.offset(xOffset, 0, zOffset);
+                BlockState targetState = level.getBlockState(targetPos);
+                if (targetState.getBlock() == getBlock()) {
                     continue;
                 }
 
-                super.place(BlockPlaceContext.at(context, offsetPos, face));
+                super.place(BlockPlaceContext.at(context, targetPos, face));
             }
         }
     }

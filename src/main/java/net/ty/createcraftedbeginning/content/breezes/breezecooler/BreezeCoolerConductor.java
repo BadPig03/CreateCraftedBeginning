@@ -9,6 +9,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class BreezeCoolerConductor {
+    private BreezeCoolerConductor() {
+    }
+
     public static class BreezeChamber extends ConductorBlockInteractionBehavior {
         @Override
         public boolean isValidConductor(BlockState state) {

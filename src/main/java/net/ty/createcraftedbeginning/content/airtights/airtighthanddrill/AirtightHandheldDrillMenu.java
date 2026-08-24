@@ -107,7 +107,7 @@ public class AirtightHandheldDrillMenu extends AirtightUpgradableMenu {
             return ItemStack.EMPTY;
         }
 
-        ItemStack stack = slot.getItem();
+        ItemStack movedStack = slot.getItem();
         if (slotIndex >= PLAYER_INVENTORY_SLOTS) {
             int menuSlotIndex = slotIndex - PLAYER_INVENTORY_SLOTS;
             if (menuSlotIndex == FILTER_SLOT_INDEX) {
@@ -116,35 +116,35 @@ public class AirtightHandheldDrillMenu extends AirtightUpgradableMenu {
                 return ItemStack.EMPTY;
             }
 
-            if (!moveItemStackTo(stack, 0, PLAYER_INVENTORY_SLOTS, true)) {
+            if (!moveItemStackTo(movedStack, 0, PLAYER_INVENTORY_SLOTS, true)) {
                 slot.setChanged();
             }
             return ItemStack.EMPTY;
         }
 
-        if (menuInventory.getStackInSlot(FILTER_SLOT_INDEX).isEmpty() && AirtightHandheldDrillUtils.isValidFilter(stack)) {
-            menuInventory.setStackInSlot(FILTER_SLOT_INDEX, stack.copyWithCount(1));
+        if (menuInventory.getStackInSlot(FILTER_SLOT_INDEX).isEmpty() && AirtightHandheldDrillUtils.isValidFilter(movedStack)) {
+            menuInventory.setStackInSlot(FILTER_SLOT_INDEX, movedStack.copyWithCount(1));
             slot.setChanged();
             return ItemStack.EMPTY;
         }
 
-        if (!menuInventory.getStackInSlot(UPGRADE_SLOT_INDEX).isEmpty() || !isValidUpgrade(stack)) {
+        if (!menuInventory.getStackInSlot(UPGRADE_SLOT_INDEX).isEmpty() || !isValidUpgrade(movedStack)) {
             return ItemStack.EMPTY;
         }
 
-        int upgradeSlot = PLAYER_INVENTORY_SLOTS + UPGRADE_SLOT_INDEX;
-        if (!moveItemStackTo(stack, upgradeSlot, upgradeSlot + 1, false)) {
+        int upgradeSlotIndex = PLAYER_INVENTORY_SLOTS + UPGRADE_SLOT_INDEX;
+        if (!moveItemStackTo(movedStack, upgradeSlotIndex, upgradeSlotIndex + 1, false)) {
             return ItemStack.EMPTY;
         }
 
         slot.setChanged();
-        return stack;
+        return movedStack;
     }
 
     @Override
     public void clicked(int slotIndex, int dragType, ClickType clickType, Player player) {
-        int selectedSlot = playerInventory.selected + PLAYER_INVENTORY_SLOTS - 9;
-        if (slotIndex == selectedSlot && clickType != ClickType.THROW) {
+        int selectedHotbarSlot = playerInventory.selected + PLAYER_INVENTORY_SLOTS - 9;
+        if (slotIndex == selectedHotbarSlot && clickType != ClickType.THROW) {
             return;
         }
 
@@ -153,25 +153,25 @@ public class AirtightHandheldDrillMenu extends AirtightUpgradableMenu {
             return;
         }
 
-        ItemStack carried = getCarried();
-        ItemStack filterItem = menuInventory.getStackInSlot(FILTER_SLOT_INDEX);
+        ItemStack carriedStack = getCarried();
+        ItemStack filterStack = menuInventory.getStackInSlot(FILTER_SLOT_INDEX);
         switch (clickType) {
             case CLONE -> {
-                if (!player.hasInfiniteMaterials() || !carried.isEmpty() || filterItem.isEmpty()) {
+                if (!player.hasInfiniteMaterials() || !carriedStack.isEmpty() || filterStack.isEmpty()) {
                     return;
                 }
 
-                setCarried(filterItem.copyWithCount(filterItem.getOrDefault(DataComponents.MAX_STACK_SIZE, 64)));
+                setCarried(filterStack.copyWithCount(filterStack.getOrDefault(DataComponents.MAX_STACK_SIZE, 64)));
             }
             case PICKUP -> {
                 Slot filterSlot = getSlot(slotIndex);
-                if (!carried.isEmpty() && filterSlot.mayPlace(carried)) {
-                    menuInventory.setStackInSlot(FILTER_SLOT_INDEX, carried.copyWithCount(1));
+                if (!carriedStack.isEmpty() && filterSlot.mayPlace(carriedStack)) {
+                    menuInventory.setStackInSlot(FILTER_SLOT_INDEX, carriedStack.copyWithCount(1));
                     filterSlot.setChanged();
                     return;
                 }
 
-                if (!carried.isEmpty()) {
+                if (!carriedStack.isEmpty()) {
                     return;
                 }
 
@@ -179,7 +179,7 @@ public class AirtightHandheldDrillMenu extends AirtightUpgradableMenu {
                 filterSlot.setChanged();
             }
             case QUICK_MOVE -> {
-                if (filterItem.isEmpty()) {
+                if (filterStack.isEmpty()) {
                     return;
                 }
 

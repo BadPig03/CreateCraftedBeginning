@@ -27,12 +27,12 @@ public class WeatherFlareProjectileRenderer extends EntityRenderer<WeatherFlareP
     }
 
     @Override
-    public void render(WeatherFlareProjectileEntity entity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int light) {
+    public void render(WeatherFlareProjectileEntity flare, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int light) {
         poseStack.pushPose();
         poseStack.mulPose(entityRenderDispatcher.cameraOrientation());
-        itemRenderer.renderStatic(entity.getItem(), ItemDisplayContext.GROUND, light, OverlayTexture.NO_OVERLAY, poseStack, bufferSource, entity.level(), entity.getId());
+        itemRenderer.renderStatic(flare.getItem(), ItemDisplayContext.GROUND, light, OverlayTexture.NO_OVERLAY, poseStack, bufferSource, flare.level(), flare.getId());
         poseStack.popPose();
-        super.render(entity, entityYaw, partialTicks, poseStack, bufferSource, light);
+        super.render(flare, entityYaw, partialTicks, poseStack, bufferSource, light);
     }
 
     @Override

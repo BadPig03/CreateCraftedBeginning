@@ -28,26 +28,26 @@ import java.util.UUID;
 public final class EndSculkSilencerMovementBehaviour implements MovementBehaviour {
     private static final short MOVING_RANGE = 1;
 
-    public static float getAnimationAngle(MovementContext context, float partialTicks) {
+    static float getAnimationAngle(MovementContext context, float partialTicks) {
         return getAnimationState(context).angle.getValue(partialTicks);
     }
 
     private static AnimationState getAnimationState(MovementContext context) {
-        if (context.temporaryData instanceof AnimationState state) {
-            return state;
+        if (context.temporaryData instanceof AnimationState animationState) {
+            return animationState;
         }
 
-        AnimationState state = new AnimationState();
-        context.temporaryData = state;
-        return state;
+        AnimationState animationState = new AnimationState();
+        context.temporaryData = animationState;
+        return animationState;
     }
 
     private static void tickAnimation(MovementContext context) {
-        AnimationState state = getAnimationState(context);
-        float targetSpeed = context.disabled ? 0 : EndSculkSilencerBlockEntity.calculateAnimationTargetSpeed(SpeedLevel.FAST.getSpeedValue());
-        state.speed.chase(targetSpeed, context.disabled ? 0.2 : 0.1, Chaser.EXP);
-        state.speed.tickChaser();
-        state.angle.setValue(state.angle.getValue() + state.speed.getValue());
+        AnimationState animationState = getAnimationState(context);
+        float targetAnimationSpeed = context.disabled ? 0 : EndSculkSilencerBlockEntity.calculateAnimationTargetSpeed(SpeedLevel.FAST.getSpeedValue());
+        animationState.speed.chase(targetAnimationSpeed, context.disabled ? 0.2 : 0.1, Chaser.EXP);
+        animationState.speed.tickChaser();
+        animationState.angle.setValue(animationState.angle.getValue() + animationState.speed.getValue());
     }
 
     private static void removeRegistration(MovementContext context) {
@@ -69,17 +69,15 @@ public final class EndSculkSilencerMovementBehaviour implements MovementBehaviou
         }
 
         UUID contraptionId = context.contraption.entity.getUUID();
-        long seed = contraptionId.getMostSignificantBits();
-        seed ^= Long.rotateLeft(contraptionId.getLeastSignificantBits(), 23);
-        seed ^= Long.rotateLeft(context.localPos.asLong(), 41);
-        long hash = mix64(seed);
-        int x = unpackSignedCoordinate(hash);
-        int z = unpackSignedCoordinate(hash >>> 26);
-        return new BlockPos(x, -2048, z);
+        long registrationSeed = contraptionId.getMostSignificantBits();
+        registrationSeed ^= Long.rotateLeft(contraptionId.getLeastSignificantBits(), 23);
+        registrationSeed ^= Long.rotateLeft(context.localPos.asLong(), 41);
+        long registrationHash = mix64(registrationSeed);
+        return new BlockPos(unpackSignedCoordinate(registrationHash), -2048, unpackSignedCoordinate(registrationHash >>> 26));
     }
 
-    private static int unpackSignedCoordinate(long value) {
-        int coordinate = (int) (value & 0x3FFFFFFL);
+    private static int unpackSignedCoordinate(long packedCoordinate) {
+        int coordinate = (int) (packedCoordinate & 0x3FFFFFFL);
         return coordinate >= 0x2000000 ? coordinate - 0x4000000 : coordinate;
     }
 

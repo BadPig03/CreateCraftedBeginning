@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.recipe;
 
-import com.mojang.serialization.Codec;
 import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
 import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
 import net.createmod.catnip.lang.Lang;
@@ -53,8 +52,7 @@ public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
     PRESSING_WITH_GAS(PressingWithGasRecipe::new),
     SEQUENCED_ASSEMBLY_WITH_GAS(SequencedAssemblyWithGasRecipeSerializer::new);
 
-    public static final Codec<CCBRecipeTypes> CODEC = StringRepresentable.fromEnum(CCBRecipeTypes::values);
-    public final ResourceLocation id;
+    private final ResourceLocation id;
     private final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<?>> serializerObject;
     private final Supplier<RecipeType<?>> type;
 
@@ -63,10 +61,10 @@ public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
     }
 
     CCBRecipeTypes(Supplier<RecipeSerializer<?>> serializerSupplier) {
-        String name = Lang.asId(name());
-        id = CCBAPI.asResource(name);
-        serializerObject = Registers.SERIALIZER_REGISTER.register(name, serializerSupplier);
-        type = Registers.TYPE_REGISTER.register(name, () -> RecipeType.simple(id));
+        String recipeName = Lang.asId(name());
+        id = CCBAPI.asResource(recipeName);
+        serializerObject = Registers.SERIALIZER_REGISTER.register(recipeName, serializerSupplier);
+        type = Registers.TYPE_REGISTER.register(recipeName, () -> RecipeType.simple(id));
     }
 
     CCBRecipeTypes(StandardProcessingWithGasRecipe.Factory<?> processingFactory) {

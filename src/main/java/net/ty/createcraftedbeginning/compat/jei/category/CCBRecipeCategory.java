@@ -79,11 +79,11 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
     }
 
     public static ItemStack getResultItem(Recipe<?> recipe) {
-        ClientLevel level = Minecraft.getInstance().level;
-        if (level == null) {
+        ClientLevel clientLevel = Minecraft.getInstance().level;
+        if (clientLevel == null) {
             return ItemStack.EMPTY;
         }
-        return recipe.getResultItem(level.registryAccess());
+        return recipe.getResultItem(clientLevel.registryAccess());
     }
 
     @Contract(value = "_ -> new", pure = true)
@@ -258,10 +258,9 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
         }
 
         public CCBRecipeCategory<T> build(ResourceLocation id, Factory<T> factory) {
-            Supplier<List<RecipeHolder<T>>> recipes = config.get() ? this::collectRecipes : Collections::emptyList;
-            Component title = Component.translatable(id.getNamespace() + ".recipe." + id.getPath());
-            Info<T> info = new Info<>(createRecipeHolderType(id), title, background, icon, recipes, catalysts);
-            return factory.create(info);
+            Supplier<List<RecipeHolder<T>>> recipeSupplier = config.get() ? this::collectRecipes : Collections::emptyList;
+            Component categoryTitle = Component.translatable(id.getNamespace() + ".recipe." + id.getPath());
+            return factory.create(new Info<>(createRecipeHolderType(id), categoryTitle, background, icon, recipeSupplier, catalysts));
         }
 
         private List<RecipeHolder<T>> collectRecipes() {

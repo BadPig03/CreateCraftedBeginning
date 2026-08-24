@@ -16,9 +16,9 @@ import java.util.function.Predicate;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class GasFlowSource {
-    protected BlockFace location;
+    BlockFace location;
 
-    protected GasFlowSource(BlockFace location) {
+    GasFlowSource(BlockFace location) {
         this.location = location;
     }
 
@@ -26,29 +26,29 @@ public abstract class GasFlowSource {
 
     public abstract void manageSource(Level level, BlockEntity networkBE);
 
-    public GasStack provideGas(Predicate<GasStack> predicate) {
-        ICapabilityProvider<IGasHandler> provider = getGasHandlerProvider();
-        if (provider == null) {
+    public GasStack provideGas(Predicate<GasStack> gasPredicate) {
+        ICapabilityProvider<IGasHandler> sourceProvider = getGasHandlerProvider();
+        if (sourceProvider == null) {
             return GasStack.EMPTY;
         }
 
-        IGasHandler handler = provider.getCapability();
-        if (handler == null) {
+        IGasHandler sourceHandler = sourceProvider.getCapability();
+        if (sourceHandler == null) {
             return GasStack.EMPTY;
         }
 
-        GasStack simulated = handler.drain(1, GasAction.SIMULATE);
-        if (predicate.test(simulated)) {
-            return simulated;
+        GasStack simulatedGas = sourceHandler.drain(1, GasAction.SIMULATE);
+        if (gasPredicate.test(simulatedGas)) {
+            return simulatedGas;
         }
 
-        for (int i = 0; i < handler.getTanks(); i++) {
-            GasStack contained = handler.getGasInTank(i);
-            if (contained.isEmpty() || !predicate.test(contained)) {
+        for (int tankIndex = 0; tankIndex < sourceHandler.getTanks(); tankIndex++) {
+            GasStack tankGas = sourceHandler.getGasInTank(tankIndex);
+            if (tankGas.isEmpty() || !gasPredicate.test(tankGas)) {
                 continue;
             }
 
-            return handler.drain(contained.copyWithAmount(1), GasAction.SIMULATE);
+            return sourceHandler.drain(tankGas.copyWithAmount(1), GasAction.SIMULATE);
         }
         return GasStack.EMPTY;
     }

@@ -45,16 +45,16 @@ public final class BreezeCoolerClientAnimation {
     }
 
     private static float getTargetAngle(BreezeCoolerBlockEntity cooler) {
-        float target = 0;
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player != null && !player.isInvisible()) {
-            double playerX = cooler.isVirtual() ? -4 : player.getX();
-            double playerZ = cooler.isVirtual() ? -10 : player.getZ();
+        float targetAngle = 0;
+        LocalPlayer localPlayer = Minecraft.getInstance().player;
+        if (localPlayer != null && !localPlayer.isInvisible()) {
+            double playerX = cooler.isVirtual() ? -4 : localPlayer.getX();
+            double playerZ = cooler.isVirtual() ? -10 : localPlayer.getZ();
             double deltaX = playerX - (cooler.getBlockPos().getX() + 0.5);
             double deltaZ = playerZ - (cooler.getBlockPos().getZ() + 0.5);
-            target = AngleHelper.deg(-Mth.atan2(deltaZ, deltaX)) - 90;
+            targetAngle = AngleHelper.deg(-Mth.atan2(deltaZ, deltaX)) - 90;
         }
         float currentAngle = cooler.getHeadAngle().getValue();
-        return currentAngle + AngleHelper.getShortestAngleDiff(currentAngle, target);
+        return currentAngle + AngleHelper.getShortestAngleDiff(currentAngle, targetAngle);
     }
 }

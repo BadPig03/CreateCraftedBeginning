@@ -17,7 +17,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class EndSculkSilencerValueBox extends Sided {
+class EndSculkSilencerValueBox extends Sided {
     @Override
     protected Vec3 getSouthLocation() {
         return VecHelper.voxelSpace(8, 8, 15.5);

@@ -48,13 +48,13 @@ final class AirtightHandheldDrillEvents {
             return;
         }
 
-        BlockPos pos = event.getPos();
-        float newSpeed = AirtightHandheldDrillUtils.calculateFinalBreakSpeed(1, player, drill, pos);
-        if (newSpeed >= 0) {
+        BlockPos blockPos = event.getPos();
+        float drillBreakSpeed = AirtightHandheldDrillUtils.calculateFinalBreakSpeed(1, player, drill, blockPos);
+        if (drillBreakSpeed >= 0) {
             return;
         }
 
-        if (newSpeed == -1) {
+        if (drillBreakSpeed == -1) {
             GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
             if (gasContent.isEmpty()) {
                 GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas");
@@ -65,7 +65,7 @@ final class AirtightHandheldDrillEvents {
             return;
         }
 
-        if (newSpeed != -2) {
+        if (drillBreakSpeed != -2) {
             return;
         }
 
@@ -84,19 +84,19 @@ final class AirtightHandheldDrillEvents {
         }
 
         ServerLevel level = event.getLevel();
-        BlockPos pos = event.getPos();
-        BlockState state = event.getState();
-        ItemStack usedTool = AirtightHandheldDrillUtils.createDrillUsedTool(drill, level);
+        BlockPos blockPos = event.getPos();
+        BlockState blockState = event.getState();
+        ItemStack silkTouchTool = AirtightHandheldDrillUtils.createDrillUsedTool(drill, level);
         event.getDrops().clear();
-        for (ItemStack stack : Block.getDrops(state, level, pos, event.getBlockEntity(), player, usedTool)) {
-            if (stack.isEmpty()) {
+        for (ItemStack dropStack : Block.getDrops(blockState, level, blockPos, event.getBlockEntity(), player, silkTouchTool)) {
+            if (dropStack.isEmpty()) {
                 continue;
             }
 
-            event.getDrops().add(new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, stack));
+            event.getDrops().add(new ItemEntity(level, blockPos.getX() + 0.5, blockPos.getY() + 0.5, blockPos.getZ() + 0.5, dropStack));
         }
 
-        int experience = EnchantmentHelper.processBlockExperience(level, usedTool, state.getExpDrop(level, pos, event.getBlockEntity(), player, usedTool));
+        int experience = EnchantmentHelper.processBlockExperience(level, silkTouchTool, blockState.getExpDrop(level, blockPos, event.getBlockEntity(), player, silkTouchTool));
         event.setDroppedExperience(experience);
     }
 
@@ -108,11 +108,10 @@ final class AirtightHandheldDrillEvents {
         }
 
         if (ExperienceConversionUpgrade.INSTANCE.canApply(drill)) {
-            BlockState state = event.getState();
-            Block block = state.getBlock();
-            if (new ItemStack(block.asItem()).canFitInsideContainerItems()) {
+            BlockState blockState = event.getState();
+            if (new ItemStack(blockState.getBlock().asItem()).canFitInsideContainerItems()) {
                 event.getDrops().clear();
-                event.setDroppedExperience(Mth.ceil(state.getDestroySpeed(event.getLevel(), event.getPos()) / 10));
+                event.setDroppedExperience(Mth.ceil(blockState.getDestroySpeed(event.getLevel(), event.getPos()) / 10));
             }
         }
 
@@ -121,12 +120,12 @@ final class AirtightHandheldDrillEvents {
         }
 
         for (ItemEntity dropEntity : event.getDrops()) {
-            ItemStack drop = dropEntity.getItem();
-            if (drop.isEmpty()) {
+            ItemStack dropStack = dropEntity.getItem();
+            if (dropStack.isEmpty()) {
                 continue;
             }
 
-            ItemHandlerHelper.giveItemToPlayer(player, drop);
+            ItemHandlerHelper.giveItemToPlayer(player, dropStack);
         }
         event.getDrops().clear();
 
@@ -147,17 +146,17 @@ final class AirtightHandheldDrillEvents {
             return;
         }
 
-        BlockPos pos = event.getPosition().orElse(null);
-        if (pos == null) {
+        BlockPos blockPos = event.getPosition().orElse(null);
+        if (blockPos == null) {
             return;
         }
 
-        float oldSpeed = event.getNewSpeed();
-        float newSpeed = Math.max(0, AirtightHandheldDrillUtils.calculateFinalBreakSpeed(oldSpeed, player, drill, pos));
-        if (oldSpeed == newSpeed) {
+        float currentBreakSpeed = event.getNewSpeed();
+        float drillBreakSpeed = Math.max(0, AirtightHandheldDrillUtils.calculateFinalBreakSpeed(currentBreakSpeed, player, drill, blockPos));
+        if (currentBreakSpeed == drillBreakSpeed) {
             return;
         }
 
-        event.setNewSpeed(newSpeed);
+        event.setNewSpeed(drillBreakSpeed);
     }
 }

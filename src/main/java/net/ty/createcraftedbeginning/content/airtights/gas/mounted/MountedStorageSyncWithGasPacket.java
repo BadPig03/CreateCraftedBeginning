@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.airtights.gas.mounted;
 import com.simibubi.create.api.contraption.storage.fluid.MountedFluidStorage;
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorage;
 import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
-import com.simibubi.create.content.contraptions.MountedStorageManager;
 import net.createmod.catnip.net.base.ClientboundPacketPayload;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.player.LocalPlayer;
@@ -11,7 +10,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IMountedStorageManagerWithGas;
@@ -34,16 +32,10 @@ public record MountedStorageSyncWithGasPacket(int contraptionId, Map<BlockPos, M
     @Override
     @OnlyIn(Dist.CLIENT)
     public void handle(LocalPlayer player) {
-        Level level = player.level();
-        if (!(level.getEntity(contraptionId) instanceof AbstractContraptionEntity contraption)) {
+        if (!(player.level().getEntity(contraptionId) instanceof AbstractContraptionEntity contraption) || !(contraption.getContraption().getStorage() instanceof IMountedStorageManagerWithGas gasStorageManager)) {
             return;
         }
 
-        MountedStorageManager storageManager = contraption.getContraption().getStorage();
-        if (!(storageManager instanceof IMountedStorageManagerWithGas withGas)) {
-            return;
-        }
-
-        withGas.ccb$handleSyncWithGas(this, contraption);
+        gasStorageManager.ccb$handleSyncWithGas(this, contraption);
     }
 }

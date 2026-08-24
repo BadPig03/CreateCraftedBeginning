@@ -12,11 +12,11 @@ import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.content.airtights.gas.transaction.MachineResourceSnapshots;
-import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
-import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction.Participant;
-import net.ty.createcraftedbeginning.recipe.ForgingPressRecipeContext.ConsumptionPlan;
-import net.ty.createcraftedbeginning.recipe.ForgingPressRecipeContext.OutputPlan;
+import net.ty.createcraftedbeginning.core.MachineResourceSnapshots;
+import net.ty.createcraftedbeginning.core.ResourceTransaction;
+import net.ty.createcraftedbeginning.core.Participant;
+import net.ty.createcraftedbeginning.recipe.interfaces.ForgingPressRecipeContext.ConsumptionPlan;
+import net.ty.createcraftedbeginning.recipe.interfaces.ForgingPressRecipeContext.OutputPlan;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;

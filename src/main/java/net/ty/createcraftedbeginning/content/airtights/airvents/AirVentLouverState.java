@@ -9,7 +9,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirVentLouverState {
+final class AirVentLouverState {
     private static final String COMPOUND_KEY_LOUVER_MASK = "LouverMask";
     private static final String COMPOUND_KEY_OPENED_MASK = "OpenedMask";
     private static final int VALID_DIRECTION_MASK = (1 << Direction.values().length) - 1;
@@ -21,67 +21,67 @@ public final class AirVentLouverState {
         return 1 << direction.get3DDataValue();
     }
 
-    public void load(CompoundTag tag) {
+    void load(CompoundTag tag) {
         louverMask = tag.getInt(COMPOUND_KEY_LOUVER_MASK) & VALID_DIRECTION_MASK;
         openedMask = tag.getInt(COMPOUND_KEY_OPENED_MASK) & louverMask;
     }
 
-    public void save(CompoundTag tag) {
+    void save(CompoundTag tag) {
         tag.putInt(COMPOUND_KEY_LOUVER_MASK, louverMask);
         tag.putInt(COMPOUND_KEY_OPENED_MASK, openedMask);
     }
 
-    public VentState getLouverState(Direction direction) {
+    VentState getLouverState(Direction direction) {
         if (!hasLouver(direction)) {
             return VentState.EMPTY;
         }
         return isLouverOpen(direction) ? VentState.OPENED : VentState.CLOSED;
     }
 
-    public boolean hasLouver(Direction direction) {
+    boolean hasLouver(Direction direction) {
         return (louverMask & directionMask(direction)) != 0;
     }
 
-    public boolean isLouverOpen(Direction direction) {
-        int mask = directionMask(direction);
-        return (louverMask & mask) != 0 && (openedMask & mask) != 0;
+    boolean isLouverOpen(Direction direction) {
+        int directionBit = directionMask(direction);
+        return (louverMask & directionBit) != 0 && (openedMask & directionBit) != 0;
     }
 
-    public int getVisibleLouverMask(int connectionMask) {
+    int getVisibleLouverMask(int connectionMask) {
         if (louverMask == 0) {
             return 0;
         }
         return louverMask & ~connectionMask & VALID_DIRECTION_MASK;
     }
 
-    public int getOpenedLouverMask() {
+    int getOpenedLouverMask() {
         return openedMask;
     }
 
-    public boolean toggleLouver(Direction direction) {
+    boolean toggleLouver(Direction direction) {
         return setLouverState(direction, hasLouver(direction) ? VentState.EMPTY : VentState.CLOSED);
     }
 
-    public boolean toggleLouverOpen(Direction direction) {
+    boolean toggleLouverOpen(Direction direction) {
         return hasLouver(direction) && setLouverState(direction, isLouverOpen(direction) ? VentState.CLOSED : VentState.OPENED);
     }
 
-    public boolean setLouverState(Direction direction, VentState state) {
-        int mask = directionMask(direction);
+    boolean setLouverState(Direction direction, VentState louverState) {
+        int directionBit = directionMask(direction);
         int nextLouverMask = louverMask;
         int nextOpenedMask = openedMask;
-        switch (state) {
+        switch (louverState) {
             case EMPTY -> {
-                nextLouverMask &= ~mask;
-                nextOpenedMask &= ~mask;
+                nextLouverMask &= ~directionBit;
+                nextOpenedMask &= ~directionBit;
             }
             case CLOSED -> {
-                nextLouverMask |= mask;
-                nextOpenedMask &= ~mask;
+                nextLouverMask |= directionBit;
+                nextOpenedMask &= ~directionBit;
             }
             case OPENED -> {
-                nextLouverMask |= mask;
-                nextOpenedMask |= mask;
+                nextLouverMask |= directionBit;
+                nextOpenedMask |= directionBit;
             }
             case CONNECTED -> {
                 return false;

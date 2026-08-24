@@ -17,28 +17,28 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class BreezeChamberInteractionPoint extends DepositOnlyArmInteractionPoint {
-    public BreezeChamberInteractionPoint(ArmInteractionPointType type, Level level, BlockPos pos, BlockState state) {
+    private BreezeChamberInteractionPoint(ArmInteractionPointType type, Level level, BlockPos pos, BlockState state) {
         super(type, level, pos, state);
     }
 
     @Override
     public ItemStack insert(ArmBlockEntity armBlockEntity, ItemStack stack, boolean simulate) {
-        ItemStack input = stack.copy();
-        InteractionResultHolder<ItemStack> result = BreezeChamberBlock.tryInsert(level, pos, input, false, false, simulate);
-        ItemStack remainder = result.getObject();
-        if (simulate && result.getResult().consumesAction()) {
-            input.shrink(1);
+        ItemStack inputStack = stack.copy();
+        InteractionResultHolder<ItemStack> insertionResult = BreezeChamberBlock.tryInsert(level, pos, inputStack, false, false, simulate);
+        ItemStack remainder = insertionResult.getObject();
+        if (simulate && insertionResult.getResult().consumesAction()) {
+            inputStack.shrink(1);
         }
-        if (input.isEmpty()) {
+        if (inputStack.isEmpty()) {
             return remainder;
         }
 
         if (simulate) {
-            return input;
+            return inputStack;
         }
 
         Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), remainder);
-        return input;
+        return inputStack;
     }
 
     public static class BreezeChamberType extends ArmInteractionPointType {

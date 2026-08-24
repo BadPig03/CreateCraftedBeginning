@@ -9,22 +9,22 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class CreativeAirtightTankStorageController {
+final class CreativeAirtightTankStorageController {
     private final CreativeAirtightTankBlockEntity owner;
 
-    public CreativeAirtightTankStorageController(CreativeAirtightTankBlockEntity owner) {
+    CreativeAirtightTankStorageController(CreativeAirtightTankBlockEntity owner) {
         this.owner = owner;
     }
 
-    public void resetCapacity() {
+    void resetCapacity() {
         owner.getTankInventory().setCapacity(CreativeAirtightTankBlockEntity.getCapacityPerTank());
     }
 
-    public void setContainedGas(GasStack gasStack) {
+    void setContainedGas(GasStack gasStack) {
         tank().setContainedGas(gasStack);
     }
 
-    public void mergeTankStateFrom(IGasTankMultiBlockEntityContainer source) {
+    void mergeTankStateFrom(IGasTankMultiBlockEntityContainer source) {
         if (!source.hasTank()) {
             return;
         }
@@ -37,17 +37,17 @@ public final class CreativeAirtightTankStorageController {
         source.clearTankStateAfterMerge(0);
     }
 
-    public void clearTankState() {
+    void clearTankState() {
         tank().setContainedGas(GasStack.EMPTY);
     }
 
-    public GasStack prepareTankStateForSplit() {
-        resetCapacity();
-        return owner.getGas(0);
+    void applySplitTankState(GasStack state) {
+        tank().setContainedGas(state);
     }
 
-    public void applySplitTankState(GasStack state) {
-        tank().setContainedGas(state);
+    GasStack prepareTankStateForSplit() {
+        resetCapacity();
+        return owner.getGas(0);
     }
 
     private CreativeSmartGasTank tank() {

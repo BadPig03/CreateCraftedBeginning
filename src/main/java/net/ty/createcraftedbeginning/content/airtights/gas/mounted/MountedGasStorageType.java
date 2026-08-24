@@ -23,10 +23,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class MountedGasStorageType<T extends MountedGasStorage> {
-    public static final Codec<MountedGasStorageType<?>> CODEC = Codec.lazyInitialized(() -> CCBBuiltInRegistries.mountedGasStorageType().byNameCodec());
+    static final Codec<MountedGasStorageType<?>> CODEC = Codec.lazyInitialized(() -> CCBBuiltInRegistries.mountedGasStorageType().byNameCodec());
     public static final SimpleRegistry<Block, MountedGasStorageType<?>> REGISTRY = SimpleRegistry.create();
 
-    public final MapCodec<? extends T> codec;
+    final MapCodec<? extends T> codec;
 
     protected MountedGasStorageType(MapCodec<? extends T> codec) {
         this.codec = codec;

@@ -17,8 +17,8 @@ import java.util.function.Predicate;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CrateMountedItemStorage<B extends CratesBlockEntity> extends MountedItemStorage {
-    protected final Class<B> blockEntityClass;
-    protected final CrateItemStackHandler handler;
+    private final Class<B> blockEntityClass;
+    private final CrateItemStackHandler handler;
 
     protected CrateMountedItemStorage(MountedItemStorageType<?> type, Class<B> blockEntityClass, ItemStack content, int count, IntSupplier maxCountSupplier) {
         this(type, blockEntityClass, content, count, maxCountSupplier, null);
@@ -45,19 +45,6 @@ public class CrateMountedItemStorage<B extends CratesBlockEntity> extends Mounte
         B crate = blockEntityClass.cast(be);
         crate.setStoredItems(getStoredItem(), getStoredCount());
         afterUnmount(crate);
-    }
-
-    protected void afterUnmount(B crate) {
-    }
-
-    protected boolean canStoreItem(ItemStack stack) {
-        return true;
-    }
-
-    protected void onContentsChanged() {
-    }
-
-    protected void onTrackedItemDiscarded() {
     }
 
     @Override
@@ -95,11 +82,24 @@ public class CrateMountedItemStorage<B extends CratesBlockEntity> extends Mounte
         handler.setStackInSlot(slot, stack);
     }
 
-    public final ItemStack getStoredItem() {
+    protected void afterUnmount(B crate) {
+    }
+
+    protected boolean canStoreItem(ItemStack stack) {
+        return true;
+    }
+
+    protected void onTrackedItemDiscarded() {
+    }
+
+    protected final ItemStack getStoredItem() {
         return handler.getStoredItem(0);
     }
 
-    public final int getStoredCount() {
+    protected final int getStoredCount() {
         return handler.getCountInSlot(0);
+    }
+
+    private void onContentsChanged() {
     }
 }

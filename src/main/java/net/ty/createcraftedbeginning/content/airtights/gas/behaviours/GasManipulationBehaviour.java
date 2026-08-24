@@ -21,69 +21,24 @@ import java.util.function.Predicate;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasHandler, GasManipulationBehaviour> {
-    protected static final BehaviourType<GasManipulationBehaviour> OBSERVE = new BehaviourType<>();
+    private static final BehaviourType<GasManipulationBehaviour> OBSERVE = new BehaviourType<>();
 
-    protected final BehaviourType<GasManipulationBehaviour> behaviourType;
+    private final BehaviourType<GasManipulationBehaviour> behaviourType;
 
-    protected ItemStack compiledFilterStack = ItemStack.EMPTY;
-    protected Predicate<GasStack> compiledFilter = GasFilterUtils.compile(ItemStack.EMPTY);
+    private ItemStack compiledFilterStack = ItemStack.EMPTY;
+    private Predicate<GasStack> compiledFilter = GasFilterUtils.compile(ItemStack.EMPTY);
 
     public GasManipulationBehaviour(SmartBlockEntity be, InterfaceProvider target) {
         this(OBSERVE, be, target);
     }
 
-    protected GasManipulationBehaviour(BehaviourType<GasManipulationBehaviour> type, SmartBlockEntity be, InterfaceProvider target) {
+    private GasManipulationBehaviour(BehaviourType<GasManipulationBehaviour> type, SmartBlockEntity be, InterfaceProvider target) {
         super(be, target);
         behaviourType = type;
     }
 
-    private static boolean matchesFilter(GasStack stack, @Nullable GasFilteringBehaviour gasFilter, @Nullable Predicate<GasStack> itemFilter) {
-        return gasFilter != null ? gasFilter.test(stack) : itemFilter == null || itemFilter.test(stack);
-    }
-
-    public GasStack extractAny() {
-        IGasHandler gasHandler = getInventory();
-        if (gasHandler == null) {
-            return GasStack.EMPTY;
-        }
-
-        GasFilteringBehaviour gasFilter = blockEntity.getBehaviour(GasFilteringBehaviour.TYPE);
-        Predicate<GasStack> itemFilter = gasFilter == null ? getItemFilterTest() : null;
-        for (int i = 0; i < gasHandler.getTanks(); i++) {
-            GasStack gasInTank = gasHandler.getGasInTank(i);
-            if (gasInTank.isEmpty() || !matchesFilter(gasInTank, gasFilter, itemFilter)) {
-                continue;
-            }
-
-            GasAction action = simulateNext ? GasAction.SIMULATE : GasAction.EXECUTE;
-            GasStack drained = gasHandler.drain(gasInTank, action);
-            if (drained.isEmpty()) {
-                continue;
-            }
-
-            return drained;
-        }
-        return GasStack.EMPTY;
-    }
-
-    protected @Nullable Predicate<GasStack> getItemFilterTest() {
-        FilteringBehaviour itemFilter = blockEntity.getBehaviour(FilteringBehaviour.TYPE);
-        if (itemFilter == null) {
-            return null;
-        }
-
-        ItemStack filterStack = itemFilter.getFilter();
-        return filterStack.isEmpty() ? null : getCompiledFilter(filterStack);
-    }
-
-    protected Predicate<GasStack> getCompiledFilter(ItemStack filterStack) {
-        if (ItemStack.isSameItemSameComponents(compiledFilterStack, filterStack)) {
-            return compiledFilter;
-        }
-
-        compiledFilterStack = GasFilterUtils.normalizeStack(filterStack);
-        compiledFilter = GasFilterUtils.compile(compiledFilterStack);
-        return compiledFilter;
+    private static boolean matchesFilter(GasStack gasStack, @Nullable GasFilteringBehaviour gasFilter, @Nullable Predicate<GasStack> itemFilter) {
+        return gasFilter != null ? gasFilter.test(gasStack) : itemFilter == null || itemFilter.test(gasStack);
     }
 
     @Override
@@ -94,5 +49,49 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
     @Override
     public BehaviourType<?> getType() {
         return behaviourType;
+    }
+
+    public GasStack extractAny() {
+        IGasHandler gasHandler = getInventory();
+        if (gasHandler == null) {
+            return GasStack.EMPTY;
+        }
+
+        GasFilteringBehaviour gasFilter = blockEntity.getBehaviour(GasFilteringBehaviour.TYPE);
+        Predicate<GasStack> itemFilter = gasFilter == null ? getItemFilterTest() : null;
+        for (int tankIndex = 0; tankIndex < gasHandler.getTanks(); tankIndex++) {
+            GasStack gasInTank = gasHandler.getGasInTank(tankIndex);
+            if (gasInTank.isEmpty() || !matchesFilter(gasInTank, gasFilter, itemFilter)) {
+                continue;
+            }
+
+            GasStack extractedGas = gasHandler.drain(gasInTank, simulateNext ? GasAction.SIMULATE : GasAction.EXECUTE);
+            if (extractedGas.isEmpty()) {
+                continue;
+            }
+
+            return extractedGas;
+        }
+        return GasStack.EMPTY;
+    }
+
+    private @Nullable Predicate<GasStack> getItemFilterTest() {
+        FilteringBehaviour itemFilter = blockEntity.getBehaviour(FilteringBehaviour.TYPE);
+        if (itemFilter == null) {
+            return null;
+        }
+
+        ItemStack filterStack = itemFilter.getFilter();
+        return filterStack.isEmpty() ? null : getCompiledFilter(filterStack);
+    }
+
+    private Predicate<GasStack> getCompiledFilter(ItemStack filterStack) {
+        if (ItemStack.isSameItemSameComponents(compiledFilterStack, filterStack)) {
+            return compiledFilter;
+        }
+
+        compiledFilterStack = GasFilterUtils.normalizeStack(filterStack);
+        compiledFilter = GasFilterUtils.compile(compiledFilterStack);
+        return compiledFilter;
     }
 }

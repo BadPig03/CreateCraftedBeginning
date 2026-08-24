@@ -12,23 +12,23 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class PortableGasInterfaceActorVisual extends ActorVisual {
-    protected final PortableGasInterfaceInstance instance;
+class PortableGasInterfaceActorVisual extends ActorVisual {
+    private final PortableGasInterfaceInstance instance;
 
-    public PortableGasInterfaceActorVisual(VisualizationContext context, VirtualRenderWorld world, MovementContext movementContext) {
+    PortableGasInterfaceActorVisual(VisualizationContext context, VirtualRenderWorld world, MovementContext movementContext) {
         super(context, world, movementContext);
         instance = new PortableGasInterfaceInstance(context.instancerProvider(), movementContext.state, movementContext.localPos, false);
 
-        int light = localBlockLight();
-        instance.middle.light(light, 0);
-        instance.top.light(light, 0);
+        int blockLight = localBlockLight();
+        instance.middle.light(blockLight, 0);
+        instance.top.light(blockLight, 0);
     }
 
     @Override
     public void beginFrame() {
-        LerpedFloat animation = PortableGasInterfaceMovement.getAnimation(context);
-        instance.tick(animation.settled());
-        instance.beginFrame(animation.getValue(AnimationTickHolder.getPartialTicks()));
+        LerpedFloat connectionAnimation = PortableGasInterfaceMovement.getAnimation(context);
+        instance.tick(connectionAnimation.settled());
+        instance.beginFrame(connectionAnimation.getValue(AnimationTickHolder.getPartialTicks()));
     }
 
     @Override

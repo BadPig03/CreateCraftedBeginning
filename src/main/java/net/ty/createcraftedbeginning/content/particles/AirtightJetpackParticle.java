@@ -21,9 +21,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class AirtightJetpackParticle extends TextureSheetParticle {
-    protected final SpriteSet sprites;
+    private final SpriteSet sprites;
 
-    protected AirtightJetpackParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, SpriteSet sprites) {
+    private AirtightJetpackParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, SpriteSet sprites) {
         super(level, x, y, z);
         friction = 1;
         this.sprites = sprites;

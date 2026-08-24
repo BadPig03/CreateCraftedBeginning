@@ -51,14 +51,14 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour implements S
 
     public static final int MAX_TARGET_AMOUNT = BOARD_MAX_VALUE * ROW_MULTIPLIERS[ROW_MULTIPLIERS.length - 1];
 
-    public GasFactoryGaugeBehaviour(GasFactoryGaugeBlockEntity blockEntity, PanelSlot slot) {
+    GasFactoryGaugeBehaviour(GasFactoryGaugeBlockEntity blockEntity, PanelSlot slot) {
         super(blockEntity, slot);
     }
 
     private static int toGasAmount(ValueSettings settings) {
         int row = Mth.clamp(settings.row(), 0, ROW_MULTIPLIERS.length - 1);
-        int value = Mth.clamp(settings.value(), 0, BOARD_MAX_VALUE);
-        return Math.min(value * ROW_MULTIPLIERS[row], MAX_TARGET_AMOUNT);
+        int settingValue = Mth.clamp(settings.value(), 0, BOARD_MAX_VALUE);
+        return Math.min(settingValue * ROW_MULTIPLIERS[row], MAX_TARGET_AMOUNT);
     }
 
     @Override
@@ -69,16 +69,16 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour implements S
         }
 
         Level level = getWorld();
-        ItemStack held = player.getItemInHand(hand);
-        if (!getFilter().isEmpty() || held.isEmpty()) {
+        ItemStack heldStack = player.getItemInHand(hand);
+        if (!getFilter().isEmpty() || heldStack.isEmpty()) {
             super.onShortInteract(player, hand, side, hitResult);
             return;
         }
 
-        List<ItemStack> virtualItems = GasVirtualUtils.getVirtualItems(held);
-        if (virtualItems.size() != 1) {
-            if (virtualItems.isEmpty()) {
-                player.displayClientMessage(CCBLang.translateDirect("gui.warnings.empty_gas_source", held.getHoverName()).withStyle(ChatFormatting.RED), true);
+        List<ItemStack> gasTokens = GasVirtualUtils.getVirtualItems(heldStack);
+        if (gasTokens.size() != 1) {
+            if (gasTokens.isEmpty()) {
+                player.displayClientMessage(CCBLang.translateDirect("gui.warnings.empty_gas_source", heldStack.getHoverName()).withStyle(ChatFormatting.RED), true);
             }
             else {
                 player.displayClientMessage(CCBLang.translateDirect("gui.warnings.requires_single_gas").withStyle(ChatFormatting.RED), true);
@@ -91,7 +91,7 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour implements S
             return;
         }
 
-        setFilter(virtualItems.getFirst());
+        setFilter(gasTokens.getFirst());
         resetTimerSlightly();
     }
 
@@ -101,8 +101,8 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour implements S
         activeCraftingArrangement = List.of();
         upTo = true;
         count = Mth.clamp(count, 0, MAX_TARGET_AMOUNT);
-        ItemStack filter = getFilter();
-        if (filter.isEmpty() || GasVirtualUtils.isVirtualItem(filter)) {
+        ItemStack gasFilter = getFilter();
+        if (gasFilter.isEmpty() || GasVirtualUtils.isVirtualItem(gasFilter)) {
             return;
         }
 
@@ -127,12 +127,12 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour implements S
 
     @Override
     public void setValueSettings(Player player, ValueSettings settings, boolean ctrlDown) {
-        int newAmount = toGasAmount(settings);
-        if (count == newAmount && upTo) {
+        int targetAmount = toGasAmount(settings);
+        if (count == targetAmount && upTo) {
             return;
         }
 
-        count = newAmount;
+        count = targetAmount;
         upTo = true;
         panelBE().redraw = true;
         blockEntity.setChanged();
@@ -144,25 +144,25 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour implements S
 
     @Override
     public ValueSettingsBoard createBoard(Player player, BlockHitResult hitResult) {
-        List<Component> rows = List.of(CCBLang.text("×1mB").component(), CCBLang.text("×10mB").component(), CCBLang.text("×100mB").component(), CCBLang.text("×1B").component(), CCBLang.text("×10B").component());
-        return new ValueSettingsBoard(CCBLang.translateDirect("gui.gas_factory_gauge.target_amount"), BOARD_MAX_VALUE, 10, rows, new ValueSettingsFormatter(this::formatValue));
+        List<Component> rowLabels = List.of(CCBLang.text("×1mB").component(), CCBLang.text("×10mB").component(), CCBLang.text("×100mB").component(), CCBLang.text("×1B").component(), CCBLang.text("×10B").component());
+        return new ValueSettingsBoard(CCBLang.translateDirect("gui.gas_factory_gauge.target_amount"), BOARD_MAX_VALUE, 10, rowLabels, new ValueSettingsFormatter(this::formatValue));
     }
 
     @Override
     public ValueSettings getValueSettings() {
-        int amount = Mth.clamp(count, 0, MAX_TARGET_AMOUNT);
-        if (amount == 0) {
+        int targetAmount = Mth.clamp(count, 0, MAX_TARGET_AMOUNT);
+        if (targetAmount == 0) {
             return new ValueSettings(0, 0);
         }
 
         for (int row = 0; row < ROW_MULTIPLIERS.length; row++) {
             int multiplier = ROW_MULTIPLIERS[row];
-            if (amount > multiplier * BOARD_MAX_VALUE) {
+            if (targetAmount > multiplier * BOARD_MAX_VALUE) {
                 continue;
             }
 
-            int displayed = Math.max(1, (amount + multiplier / 2) / multiplier);
-            return new ValueSettings(row, Mth.clamp(displayed, 1, BOARD_MAX_VALUE));
+            int displayedValue = Math.max(1, (targetAmount + multiplier / 2) / multiplier);
+            return new ValueSettings(row, Mth.clamp(displayedValue, 1, BOARD_MAX_VALUE));
         }
         return new ValueSettings(ROW_MULTIPLIERS.length - 1, BOARD_MAX_VALUE);
     }
@@ -182,15 +182,15 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour implements S
             return CCBLang.text("?").component();
         }
 
-        int inStorage = getLevelInStorage();
-        int promised = getPromised();
-        String storedText = GasRequestUtils.format(inStorage, false);
+        int storedAmount = getLevelInStorage();
+        int promisedAmount = getPromised();
+        String storedText = GasRequestUtils.format(storedAmount, false);
         if (count == 0) {
             return CCBLang.text(storedText).color(0xF1EFE8).component();
         }
 
         int color = satisfied ? 0xD7FFA8 : promisedSatisfied ? 0xFFCD75 : 0xFFBFA8;
-        return CCBLang.text(storedText).color(color).add(CCBLang.text(promised == 0 ? "" : "⏶")).add(CCBLang.text("/").style(ChatFormatting.WHITE)).add(CCBLang.text(GasRequestUtils.format(count, false)).color(0xF1EFE8)).component();
+        return CCBLang.text(storedText).color(color).add(CCBLang.text(promisedAmount == 0 ? "" : "⏶")).add(CCBLang.text("/").style(ChatFormatting.WHITE)).add(CCBLang.text(GasRequestUtils.format(count, false)).color(0xF1EFE8)).component();
     }
 
     @Override
@@ -219,15 +219,15 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour implements S
             return;
         }
 
-        Result result = GasFactoryGaugeRestockController.request(network, gasToken, packager, count, getPromised(), getLevelInStorage(), recipeAddress);
-        if (result.effect() != Effect.NONE) {
-            sendGasEffect(result.effect() == Effect.SUCCESS);
+        Result restockResult = GasFactoryGaugeRestockController.request(network, gasToken, packager, count, getPromised(), getLevelInStorage(), recipeAddress);
+        if (restockResult.effect() != Effect.NONE) {
+            sendGasEffect(restockResult.effect() == Effect.SUCCESS);
         }
-        if (result.promisedGas() == null) {
+        if (restockResult.promisedGas() == null) {
             return;
         }
 
-        restockerPromises.add(new RequestPromise(result.promisedGas()));
+        restockerPromises.add(new RequestPromise(restockResult.promisedGas()));
     }
 
     private void notifyLinkedRedstoneOutputs() {
@@ -254,7 +254,7 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour implements S
             return;
         }
 
-        FactoryPanelEffectPacket packet = new FactoryPanelEffectPacket(getPanelPosition(), getPanelPosition(), success);
-        CatnipServices.NETWORK.sendToClientsAround(serverLevel, getPos(), 64, packet);
+        FactoryPanelEffectPacket effectPacket = new FactoryPanelEffectPacket(getPanelPosition(), getPanelPosition(), success);
+        CatnipServices.NETWORK.sendToClientsAround(serverLevel, getPos(), 64, effectPacket);
     }
 }

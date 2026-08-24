@@ -53,8 +53,7 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
         return state.getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION).canStore();
     }
 
-    @Nullable
-    public AirtightReactorKettleBlockEntity getMasterBlockEntity() {
+    @Nullable AirtightReactorKettleBlockEntity getMasterBlockEntity() {
         BlockPos masterPos = AirtightReactorKettleUtils.getMaster(getBlockPos(), getBlockState());
         if (level == null || !(level.getBlockEntity(masterPos) instanceof AirtightReactorKettleBlockEntity masterBlockEntity)) {
             return null;
@@ -62,34 +61,34 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
         return masterBlockEntity;
     }
 
-    public @Nullable IItemHandler getItemCapability() {
-        AirtightReactorKettleBlockEntity master = getMasterBlockEntity();
-        if (master == null || !canStore(getBlockState())) {
+    private @Nullable IItemHandler getItemCapability() {
+        AirtightReactorKettleBlockEntity kettle = getMasterBlockEntity();
+        if (kettle == null || !canStore(getBlockState())) {
             return null;
         }
-        return master.getItemPortCapability();
+        return kettle.getItemPortCapability();
     }
 
-    public @Nullable IFluidHandler getFluidCapability() {
-        AirtightReactorKettleBlockEntity master = getMasterBlockEntity();
-        if (master == null || !canStore(getBlockState())) {
+    private @Nullable IFluidHandler getFluidCapability() {
+        AirtightReactorKettleBlockEntity kettle = getMasterBlockEntity();
+        if (kettle == null || !canStore(getBlockState())) {
             return null;
         }
-        return master.getFluidPortCapability();
+        return kettle.getFluidPortCapability();
     }
 
-    public @Nullable IGasHandler getGasCapability() {
-        AirtightReactorKettleBlockEntity master = getMasterBlockEntity();
-        if (master == null || !canStore(getBlockState())) {
+    private @Nullable IGasHandler getGasCapability() {
+        AirtightReactorKettleBlockEntity kettle = getMasterBlockEntity();
+        if (kettle == null || !canStore(getBlockState())) {
             return null;
         }
-        return master.getGasPortCapability();
+        return kettle.getGasPortCapability();
     }
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        AirtightReactorKettleStructuralPosition position = getBlockState().getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION);
-        if (!position.isFilter()) {
+        AirtightReactorKettleStructuralPosition structuralPosition = getBlockState().getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION);
+        if (!structuralPosition.isFilter()) {
             return;
         }
 
@@ -104,44 +103,44 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
             return;
         }
 
-        AirtightReactorKettleBlockEntity master = getMasterBlockEntity();
-        if (master == null) {
+        AirtightReactorKettleBlockEntity kettle = getMasterBlockEntity();
+        if (kettle == null) {
             return;
         }
 
-        if (!master.hasAuthoritativeRecipeFilter() && !filteringBehaviour.getFilter().isEmpty()) {
-            master.setRecipeFilter(filteringBehaviour.getFilter());
+        if (!kettle.hasAuthoritativeRecipeFilter() && !filteringBehaviour.getFilter().isEmpty()) {
+            kettle.setRecipeFilter(filteringBehaviour.getFilter());
             return;
         }
 
-        syncFilterFromMaster(master.getRecipeFilter());
+        syncFilterFromMaster(kettle.getRecipeFilter());
     }
 
-    void syncFilterFromMaster(ItemStack stack) {
-        if (filteringBehaviour == null || ItemStack.matches(filteringBehaviour.getFilter(), stack)) {
+    void syncFilterFromMaster(ItemStack filterStack) {
+        if (filteringBehaviour == null || ItemStack.matches(filteringBehaviour.getFilter(), filterStack)) {
             return;
         }
 
         syncingFilter = true;
         try {
-            filteringBehaviour.setFilter(stack);
+            filteringBehaviour.setFilter(filterStack);
         } finally {
             syncingFilter = false;
         }
     }
 
-    private void onFilterChanged(ItemStack stack) {
+    private void onFilterChanged(ItemStack filterStack) {
         if (syncingFilter) {
             return;
         }
 
-        AirtightReactorKettleUtils.updateRecipeFilter(this, stack);
+        AirtightReactorKettleUtils.updateRecipeFilter(this, filterStack);
     }
 
     @Override
     public int getMaxValue() {
-        AirtightReactorKettleBlockEntity master = getMasterBlockEntity();
-        if (master == null || !canStore(getBlockState())) {
+        AirtightReactorKettleBlockEntity kettle = getMasterBlockEntity();
+        if (kettle == null || !canStore(getBlockState())) {
             return 0;
         }
 
@@ -152,17 +151,17 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
             return 0;
         }
 
-        long capacity = 0;
+        long totalCapacity = 0;
         for (int slot = 0; slot < items.getSlots(); slot++) {
-            capacity += items.getSlotLimit(slot);
+            totalCapacity += items.getSlotLimit(slot);
         }
         for (int tank = 0; tank < fluids.getTanks(); tank++) {
-            capacity += fluids.getTankCapacity(tank);
+            totalCapacity += fluids.getTankCapacity(tank);
         }
         for (int tank = 0; tank < gases.getTanks(); tank++) {
-            capacity += gases.getTankCapacity(tank);
+            totalCapacity += gases.getTankCapacity(tank);
         }
-        return Math.clamp(capacity, 0, Integer.MAX_VALUE);
+        return Math.clamp(totalCapacity, 0, Integer.MAX_VALUE);
     }
 
     @Override
@@ -172,8 +171,8 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
 
     @Override
     public int getCurrentValue() {
-        AirtightReactorKettleBlockEntity master = getMasterBlockEntity();
-        if (master == null || !canStore(getBlockState())) {
+        AirtightReactorKettleBlockEntity kettle = getMasterBlockEntity();
+        if (kettle == null || !canStore(getBlockState())) {
             return 0;
         }
 
@@ -184,17 +183,17 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
             return 0;
         }
 
-        long stored = 0;
+        long storedAmount = 0;
         for (int slot = 0; slot < items.getSlots(); slot++) {
-            stored += items.getStackInSlot(slot).getCount();
+            storedAmount += items.getStackInSlot(slot).getCount();
         }
         for (int tank = 0; tank < fluids.getTanks(); tank++) {
-            stored += fluids.getFluidInTank(tank).getAmount();
+            storedAmount += fluids.getFluidInTank(tank).getAmount();
         }
         for (int tank = 0; tank < gases.getTanks(); tank++) {
-            stored += gases.getGasInTank(tank).getAmount();
+            storedAmount += gases.getGasInTank(tank).getAmount();
         }
-        return Math.clamp(stored, 0, Integer.MAX_VALUE);
+        return Math.clamp(storedAmount, 0, Integer.MAX_VALUE);
     }
 
     @Override
@@ -216,12 +215,12 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
 
         @Override
         protected boolean isSideActive(BlockState state, Direction direction) {
-            AirtightReactorKettleStructuralPosition position = state.getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION);
-            if (!position.isFilter()) {
+            AirtightReactorKettleStructuralPosition structuralPosition = state.getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION);
+            if (!structuralPosition.isFilter()) {
                 return false;
             }
 
-            Direction filterDirection = position.getDirection();
+            Direction filterDirection = structuralPosition.getDirection();
             return filterDirection.getAxis() != Axis.Y && direction == filterDirection;
         }
     }

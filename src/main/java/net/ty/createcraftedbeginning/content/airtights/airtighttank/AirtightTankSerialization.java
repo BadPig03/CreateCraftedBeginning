@@ -3,49 +3,50 @@ package net.ty.createcraftedbeginning.content.airtights.airtighttank;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightTankSerialization {
+final class AirtightTankSerialization {
     private static final String CORE = "Core";
 
     private final AirtightTankBlockEntity owner;
     private final AirtightTankStorageController storage;
 
-    public AirtightTankSerialization(AirtightTankBlockEntity owner, AirtightTankStorageController storage) {
+    AirtightTankSerialization(AirtightTankBlockEntity owner, AirtightTankStorageController storage) {
         this.owner = owner;
         this.storage = storage;
     }
 
-    public void write(CompoundTag tag, Provider provider, boolean clientPacket) {
-        AirtightTankSerializationSupport.writeMultiblock(owner, tag, clientPacket);
+    void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        AirtightTankSerializationSupport.writeMultiblock(owner, compoundTag, clientPacket);
         if (!owner.isController()) {
             return;
         }
 
-        tag.put(CORE, owner.getCore().write(provider, clientPacket));
-        tag.put(AirtightTankSerializationSupport.TANK_CONTENT, owner.getTankInventory().write(provider, new CompoundTag()));
+        compoundTag.put(CORE, owner.getCore().write(provider, clientPacket));
+        compoundTag.put(AirtightTankSerializationSupport.TANK_CONTENT, owner.getTankInventory().write(provider, new CompoundTag()));
     }
 
-    public void writeSafe(CompoundTag tag) {
-        AirtightTankSerializationSupport.writeSafeMultiblock(owner, tag);
+    void writeSafe(CompoundTag compoundTag) {
+        AirtightTankSerializationSupport.writeSafeMultiblock(owner, compoundTag);
     }
 
-    public void read(CompoundTag tag, Provider provider, boolean clientPacket) {
-        boolean clientStructureChanged = AirtightTankSerializationSupport.readMultiblock(owner, tag, clientPacket);
+    void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        boolean clientStructureChanged = AirtightTankSerializationSupport.readMultiblock(owner, compoundTag, clientPacket);
         if (owner.isController()) {
             storage.setCapacityForStructure();
-            if (tag.contains(AirtightTankSerializationSupport.TANK_CONTENT)) {
-                owner.getTankInventory().read(provider, tag.getCompound(AirtightTankSerializationSupport.TANK_CONTENT));
+            if (compoundTag.contains(AirtightTankSerializationSupport.TANK_CONTENT)) {
+                owner.getTankInventory().read(provider, compoundTag.getCompound(AirtightTankSerializationSupport.TANK_CONTENT));
                 storage.drainOverflow();
             }
         }
 
-        if (tag.contains(CORE)) {
-            owner.getCore().read(tag.getCompound(CORE), provider, clientPacket);
+        if (compoundTag.contains(CORE)) {
+            owner.getCore().read(compoundTag.getCompound(CORE), provider, clientPacket);
         }
         if (!clientStructureChanged) {
             return;
@@ -55,8 +56,9 @@ public final class AirtightTankSerialization {
     }
 
     private void updateClientState() {
-        if (owner.getLevel() != null) {
-            owner.getLevel().sendBlockUpdated(owner.getBlockPos(), owner.getBlockState(), owner.getBlockState(), Block.UPDATE_KNOWN_SHAPE);
+        Level level = owner.getLevel();
+        if (level != null) {
+            level.sendBlockUpdated(owner.getBlockPos(), owner.getBlockState(), owner.getBlockState(), Block.UPDATE_KNOWN_SHAPE);
         }
         if (owner.isController()) {
             storage.setCapacityForStructure();

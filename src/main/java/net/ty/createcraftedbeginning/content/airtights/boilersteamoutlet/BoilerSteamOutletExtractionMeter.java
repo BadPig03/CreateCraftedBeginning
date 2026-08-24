@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class BoilerSteamOutletExtractionMeter {
+final class BoilerSteamOutletExtractionMeter {
     private static final int SAMPLE_RATE = 5;
     private static final int SAMPLE_COUNT = 10;
     private static final int SAMPLE_WINDOW_TICKS = SAMPLE_RATE * SAMPLE_COUNT;
@@ -23,20 +23,24 @@ public final class BoilerSteamOutletExtractionMeter {
     private static final String COMPOUND_KEY_AVERAGE_EXTRACTION_RATE = "AverageExtractionRate";
 
     private final long[] extractedPerSample = new long[SAMPLE_COUNT];
+
     private int currentIndex;
     private int ticksUntilNextSample = SAMPLE_RATE;
     private long gatheredExtraction;
     private long rollingExtraction;
     private double averageExtractionRate;
 
-    public static long saturatedAdd(long current, long amount) {
-        if (amount <= 0) {
-            return current;
+    private static long saturatedAdd(long currentTotal, long amountToAdd) {
+        if (amountToAdd <= 0) {
+            return currentTotal;
         }
-        return Long.MAX_VALUE - current < amount ? Long.MAX_VALUE : current + amount;
+        if (Long.MAX_VALUE - currentTotal < amountToAdd) {
+            return Long.MAX_VALUE;
+        }
+        return currentTotal + amountToAdd;
     }
 
-    public TickResult tick() {
+    TickResult tick() {
         if (!hasSampleState()) {
             ticksUntilNextSample = SAMPLE_RATE;
             return TickResult.NONE;
@@ -48,49 +52,49 @@ public final class BoilerSteamOutletExtractionMeter {
         }
 
         ticksUntilNextSample = SAMPLE_RATE;
-        double previousAverage = averageExtractionRate;
+        double previousAverageExtractionRate = averageExtractionRate;
         recordSample();
-        return Double.compare(previousAverage, averageExtractionRate) == 0 ? TickResult.RECORDED : TickResult.AVERAGE_CHANGED;
+        return Double.compare(previousAverageExtractionRate, averageExtractionRate) == 0 ? TickResult.RECORDED : TickResult.AVERAGE_CHANGED;
     }
 
-    public double getAverageExtractionRatePerSecond() {
+    double getAverageExtractionRatePerSecond() {
         return averageExtractionRate * TICKS_PER_SECOND;
     }
 
-    public boolean recordExtraction(GasStack drained, GasAction action) {
-        if (action.simulate() || drained.isEmpty()) {
+    boolean recordExtraction(GasStack drainedSteam, GasAction action) {
+        if (action.simulate() || drainedSteam.isEmpty()) {
             return false;
         }
 
-        gatheredExtraction = saturatedAdd(gatheredExtraction, drained.getAmount());
+        gatheredExtraction = saturatedAdd(gatheredExtraction, drainedSteam.getAmount());
         return true;
     }
 
-    public void write(CompoundTag tag, boolean clientPacket) {
-        tag.putDouble(COMPOUND_KEY_AVERAGE_EXTRACTION_RATE, averageExtractionRate);
+    void write(CompoundTag compoundTag, boolean clientPacket) {
+        compoundTag.putDouble(COMPOUND_KEY_AVERAGE_EXTRACTION_RATE, averageExtractionRate);
         if (clientPacket) {
             return;
         }
 
-        tag.putInt(COMPOUND_KEY_CURRENT_INDEX, currentIndex);
-        tag.putInt(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE, ticksUntilNextSample);
-        tag.putLong(COMPOUND_KEY_GATHERED_EXTRACTION, gatheredExtraction);
-        tag.putLongArray(COMPOUND_KEY_SAMPLES, extractedPerSample);
+        compoundTag.putInt(COMPOUND_KEY_CURRENT_INDEX, currentIndex);
+        compoundTag.putInt(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE, ticksUntilNextSample);
+        compoundTag.putLong(COMPOUND_KEY_GATHERED_EXTRACTION, gatheredExtraction);
+        compoundTag.putLongArray(COMPOUND_KEY_SAMPLES, extractedPerSample);
     }
 
-    public void read(CompoundTag tag, boolean clientPacket) {
-        averageExtractionRate = Math.max(0, tag.getDouble(COMPOUND_KEY_AVERAGE_EXTRACTION_RATE));
+    void read(CompoundTag compoundTag, boolean clientPacket) {
+        averageExtractionRate = Math.max(0, compoundTag.getDouble(COMPOUND_KEY_AVERAGE_EXTRACTION_RATE));
         if (clientPacket) {
             return;
         }
 
         clearSamplingState();
-        currentIndex = Math.floorMod(tag.getInt(COMPOUND_KEY_CURRENT_INDEX), SAMPLE_COUNT);
-        ticksUntilNextSample = tag.contains(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE) ? Math.clamp(tag.getInt(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE), 1, SAMPLE_RATE) : SAMPLE_RATE;
-        gatheredExtraction = Math.max(0, tag.getLong(COMPOUND_KEY_GATHERED_EXTRACTION));
-        long[] storedSamples = tag.getLongArray(COMPOUND_KEY_SAMPLES);
-        for (int i = 0; i < Math.min(storedSamples.length, SAMPLE_COUNT); i++) {
-            extractedPerSample[i] = Math.max(0, storedSamples[i]);
+        currentIndex = Math.floorMod(compoundTag.getInt(COMPOUND_KEY_CURRENT_INDEX), SAMPLE_COUNT);
+        ticksUntilNextSample = compoundTag.contains(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE) ? Math.clamp(compoundTag.getInt(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE), 1, SAMPLE_RATE) : SAMPLE_RATE;
+        gatheredExtraction = Math.max(0, compoundTag.getLong(COMPOUND_KEY_GATHERED_EXTRACTION));
+        long[] storedSamples = compoundTag.getLongArray(COMPOUND_KEY_SAMPLES);
+        for (int sampleIndex = 0; sampleIndex < Math.min(storedSamples.length, SAMPLE_COUNT); sampleIndex++) {
+            extractedPerSample[sampleIndex] = Math.max(0, storedSamples[sampleIndex]);
         }
         recalculateRollingExtraction();
     }
@@ -125,7 +129,7 @@ public final class BoilerSteamOutletExtractionMeter {
         Arrays.fill(extractedPerSample, 0);
     }
 
-    public enum TickResult {
+    enum TickResult {
         NONE,
         RECORDED,
         AVERAGE_CHANGED

@@ -21,6 +21,8 @@ import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredien
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
 import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
+import net.ty.createcraftedbeginning.api.gas.recipes.TemperatureMatching;
+import net.ty.createcraftedbeginning.recipe.interfaces.ReactorKettleRecipeContext;
 import net.ty.createcraftedbeginning.recipe.trie.IAirtightWithGasRecipe;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -48,39 +50,47 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
         return apply(kettle, recipe, false);
     }
 
+    public static boolean isExactTemperatureMatch(ReactorKettleRecipeContext kettle, ReactorKettleRecipe recipe) {
+        return recipe.temperatureCondition.test(kettle.getRecipeTemperature());
+    }
+
+    public static int getTemperatureMatchPriority(ReactorKettleRecipeContext kettle, ReactorKettleRecipe recipe) {
+        return TemperatureMatching.getMatchPriority(recipe.temperatureMatching, recipe.temperatureCondition, kettle.getRecipeTemperature());
+    }
+
     public static @Unmodifiable List<Pair<Ingredient, Integer>> getCondensedIngredients(NonNullList<Ingredient> recipeIngredients) {
-        Map<Ingredient, Integer> counts = new LinkedHashMap<>();
+        Map<Ingredient, Integer> ingredientCounts = new LinkedHashMap<>();
         for (Ingredient ingredient : recipeIngredients) {
             if (ingredient.isEmpty()) {
                 continue;
             }
 
-            boolean found = false;
-            for (Entry<Ingredient, Integer> entry : counts.entrySet()) {
-                Ingredient existing = entry.getKey();
-                if (!existing.equals(ingredient)) {
+            boolean foundMatch = false;
+            for (Entry<Ingredient, Integer> countEntry : ingredientCounts.entrySet()) {
+                Ingredient existingIngredient = countEntry.getKey();
+                if (!existingIngredient.equals(ingredient)) {
                     continue;
                 }
 
-                counts.put(existing, entry.getValue() + 1);
-                found = true;
+                ingredientCounts.put(existingIngredient, countEntry.getValue() + 1);
+                foundMatch = true;
                 break;
             }
 
-            if (found) {
+            if (foundMatch) {
                 continue;
             }
 
-            counts.put(ingredient, 1);
+            ingredientCounts.put(ingredient, 1);
         }
-        return counts.entrySet().stream().map(entry -> Pair.of(entry.getKey(), entry.getValue())).toList();
+        return ingredientCounts.entrySet().stream().map(countEntry -> Pair.of(countEntry.getKey(), countEntry.getValue())).toList();
     }
 
     private static boolean apply(ReactorKettleRecipeContext kettle, ReactorKettleRecipe recipe, boolean simulate) {
         IItemHandler availableItems = kettle.getAvailableItems();
         IFluidHandler availableFluids = kettle.getAvailableFluids();
         IGasHandler availableGases = kettle.getAvailableGases();
-        if (!recipe.temperatureCondition.test(kettle.getRecipeTemperature())) {
+        if (!recipe.temperatureMatching.test(recipe.temperatureCondition, kettle.getRecipeTemperature())) {
             return false;
         }
 
@@ -89,22 +99,21 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
             return false;
         }
 
-        int[] itemAmounts = new int[availableItems.getSlots()];
-        int[] fluidAmounts = new int[availableFluids.getTanks()];
-        long[] gasAmounts = new long[availableGases.getTanks()];
-        if (!planInputConsumption(recipe, availableItems, availableFluids, availableGases, itemAmounts, fluidAmounts, gasAmounts)) {
+        int[] plannedItemAmounts = new int[availableItems.getSlots()];
+        int[] plannedFluidAmounts = new int[availableFluids.getTanks()];
+        long[] plannedGasAmounts = new long[availableGases.getTanks()];
+        if (!planInputConsumption(recipe, availableItems, availableFluids, availableGases, plannedItemAmounts, plannedFluidAmounts, plannedGasAmounts)) {
             return false;
         }
 
-        List<ItemStack> outputItems = createRecipeOutputItems(recipe, level, availableItems, itemAmounts, !simulate);
+        List<ItemStack> outputItems = createRecipeOutputItems(recipe, level, availableItems, plannedItemAmounts, !simulate);
         List<FluidStack> outputFluids = createRecipeOutputFluids(recipe);
         List<GasStack> outputGases = createRecipeOutputGases(recipe);
-        return canAcceptOutputsAfterInputsAreConsumed(kettle, availableItems, availableFluids, availableGases, outputItems, outputFluids, outputGases, itemAmounts, fluidAmounts, gasAmounts) && (simulate || kettle.commitRecipeCraft(itemAmounts, fluidAmounts, gasAmounts, outputItems, outputFluids, outputGases));
+        return canAcceptOutputsAfterInputsAreConsumed(kettle, availableItems, availableFluids, availableGases, outputItems, outputFluids, outputGases, plannedItemAmounts, plannedFluidAmounts, plannedGasAmounts) && (simulate || kettle.commitRecipeCraft(plannedItemAmounts, plannedFluidAmounts, plannedGasAmounts, outputItems, outputFluids, outputGases));
     }
 
     private static boolean planInputConsumption(ReactorKettleRecipe recipe, IItemHandler availableItems, IFluidHandler availableFluids, IGasHandler availableGases, int[] itemAmounts, int[] fluidAmounts, long[] gasAmounts) {
-        List<Ingredient> itemIngredients = recipe.getIngredients().stream().filter(ingredient -> !ingredient.isEmpty()).toList();
-        if (!planItemInputConsumption(itemIngredients, availableItems, itemAmounts)) {
+        if (!planItemInputConsumption(recipe.getIngredients().stream().filter(ingredient -> !ingredient.isEmpty()).toList(), availableItems, itemAmounts)) {
             return false;
         }
 
@@ -113,97 +122,97 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
         return planFluidInputConsumption(fluidIngredients, availableFluids, fluidAmounts) && planGasInputConsumption(gasIngredients, availableGases, gasAmounts);
     }
 
-    private static boolean planFluidInputConsumption(List<SizedFluidIngredient> ingredients, IFluidHandler fluids, int[] amounts) {
-        if (ingredients.isEmpty()) {
+    private static boolean planFluidInputConsumption(List<SizedFluidIngredient> fluidIngredients, IFluidHandler fluidHandler, int[] fluidAmounts) {
+        if (fluidIngredients.isEmpty()) {
             return true;
         }
 
-        int tankCount = fluids.getTanks();
-        long[] tankAmounts = new long[tankCount];
-        long[] plannedAmounts = new long[tankCount];
-        for (int tank = 0; tank < tankCount; tank++) {
-            tankAmounts[tank] = fluids.getFluidInTank(tank).getAmount();
-            plannedAmounts[tank] = amounts[tank];
+        int tankCount = fluidHandler.getTanks();
+        long[] availableTankAmounts = new long[tankCount];
+        long[] plannedTankAmounts = new long[tankCount];
+        for (int tankIndex = 0; tankIndex < tankCount; tankIndex++) {
+            availableTankAmounts[tankIndex] = fluidHandler.getFluidInTank(tankIndex).getAmount();
+            plannedTankAmounts[tankIndex] = fluidAmounts[tankIndex];
         }
 
-        long[] requiredAmounts = new long[ingredients.size()];
-        boolean[][] matches = new boolean[tankCount][ingredients.size()];
-        for (int ingredientIndex = 0; ingredientIndex < ingredients.size(); ingredientIndex++) {
-            SizedFluidIngredient ingredient = ingredients.get(ingredientIndex);
+        long[] requiredAmounts = new long[fluidIngredients.size()];
+        boolean[][] ingredientMatches = new boolean[tankCount][fluidIngredients.size()];
+        for (int ingredientIndex = 0; ingredientIndex < fluidIngredients.size(); ingredientIndex++) {
+            SizedFluidIngredient ingredient = fluidIngredients.get(ingredientIndex);
             requiredAmounts[ingredientIndex] = ingredient.amount();
-            for (int tank = 0; tank < tankCount; tank++) {
-                matches[tank][ingredientIndex] = ingredient.ingredient().test(fluids.getFluidInTank(tank));
+            for (int tankIndex = 0; tankIndex < tankCount; tankIndex++) {
+                ingredientMatches[tankIndex][ingredientIndex] = ingredient.ingredient().test(fluidHandler.getFluidInTank(tankIndex));
             }
         }
 
-        if (!planResourceInputConsumption(tankAmounts, requiredAmounts, matches, plannedAmounts)) {
+        if (!planResourceInputConsumption(availableTankAmounts, requiredAmounts, ingredientMatches, plannedTankAmounts)) {
             return false;
         }
 
-        for (int tank = 0; tank < tankCount; tank++) {
-            amounts[tank] = (int) plannedAmounts[tank];
+        for (int tankIndex = 0; tankIndex < tankCount; tankIndex++) {
+            fluidAmounts[tankIndex] = (int) plannedTankAmounts[tankIndex];
         }
         return true;
     }
 
-    private static boolean planGasInputConsumption(List<SizedGasIngredient> ingredients, IGasHandler gases, long[] amounts) {
-        if (ingredients.isEmpty()) {
+    private static boolean planGasInputConsumption(List<SizedGasIngredient> gasIngredients, IGasHandler gasHandler, long[] gasAmounts) {
+        if (gasIngredients.isEmpty()) {
             return true;
         }
 
-        int tankCount = gases.getTanks();
-        long[] tankAmounts = new long[tankCount];
-        long[] requiredAmounts = new long[ingredients.size()];
-        boolean[][] matches = new boolean[tankCount][ingredients.size()];
-        for (int tank = 0; tank < tankCount; tank++) {
-            tankAmounts[tank] = gases.getGasInTank(tank).getAmount();
+        int tankCount = gasHandler.getTanks();
+        long[] availableTankAmounts = new long[tankCount];
+        long[] requiredAmounts = new long[gasIngredients.size()];
+        boolean[][] ingredientMatches = new boolean[tankCount][gasIngredients.size()];
+        for (int tankIndex = 0; tankIndex < tankCount; tankIndex++) {
+            availableTankAmounts[tankIndex] = gasHandler.getGasInTank(tankIndex).getAmount();
         }
-        for (int ingredientIndex = 0; ingredientIndex < ingredients.size(); ingredientIndex++) {
-            SizedGasIngredient ingredient = ingredients.get(ingredientIndex);
+        for (int ingredientIndex = 0; ingredientIndex < gasIngredients.size(); ingredientIndex++) {
+            SizedGasIngredient ingredient = gasIngredients.get(ingredientIndex);
             requiredAmounts[ingredientIndex] = ingredient.amount();
-            for (int tank = 0; tank < tankCount; tank++) {
-                matches[tank][ingredientIndex] = ingredient.ingredient().test(gases.getGasInTank(tank));
+            for (int tankIndex = 0; tankIndex < tankCount; tankIndex++) {
+                ingredientMatches[tankIndex][ingredientIndex] = ingredient.ingredient().test(gasHandler.getGasInTank(tankIndex));
             }
         }
 
-        return planResourceInputConsumption(tankAmounts, requiredAmounts, matches, amounts);
+        return planResourceInputConsumption(availableTankAmounts, requiredAmounts, ingredientMatches, gasAmounts);
     }
 
-    private static boolean planResourceInputConsumption(long[] sourceAmounts, long[] requiredAmounts, boolean[][] matches, long[] plannedAmounts) {
+    private static boolean planResourceInputConsumption(long[] sourceAmounts, long[] requiredAmounts, boolean[][] ingredientMatches, long[] plannedAmounts) {
         int sourceCount = sourceAmounts.length;
         int ingredientCount = requiredAmounts.length;
-        int source = 0;
-        int sourceOffset = 1;
-        int ingredientOffset = sourceOffset + sourceCount;
-        int sink = ingredientOffset + ingredientCount;
-        long[][] residualCapacity = new long[sink + 1][sink + 1];
+        int sourceNode = 0;
+        int resourceOffset = 1;
+        int ingredientOffset = resourceOffset + sourceCount;
+        int sinkNode = ingredientOffset + ingredientCount;
+        long[][] residualCapacity = new long[sinkNode + 1][sinkNode + 1];
         long[] availableAmounts = new long[sourceCount];
         long totalRequired = 0;
 
         for (int resourceSource = 0; resourceSource < sourceCount; resourceSource++) {
-            long available = sourceAmounts[resourceSource] - plannedAmounts[resourceSource];
-            if (available <= 0) {
+            long availableAmount = sourceAmounts[resourceSource] - plannedAmounts[resourceSource];
+            if (availableAmount <= 0) {
                 continue;
             }
 
-            availableAmounts[resourceSource] = available;
-            residualCapacity[source][sourceOffset + resourceSource] = available;
+            availableAmounts[resourceSource] = availableAmount;
+            residualCapacity[sourceNode][resourceOffset + resourceSource] = availableAmount;
         }
 
-        for (int ingredient = 0; ingredient < ingredientCount; ingredient++) {
-            long required = requiredAmounts[ingredient];
-            if (required < 0 || Long.MAX_VALUE - totalRequired < required) {
+        for (int ingredientIndex = 0; ingredientIndex < ingredientCount; ingredientIndex++) {
+            long requiredAmount = requiredAmounts[ingredientIndex];
+            if (requiredAmount < 0 || Long.MAX_VALUE - totalRequired < requiredAmount) {
                 return false;
             }
 
-            totalRequired += required;
-            residualCapacity[ingredientOffset + ingredient][sink] = required;
+            totalRequired += requiredAmount;
+            residualCapacity[ingredientOffset + ingredientIndex][sinkNode] = requiredAmount;
             for (int resourceSource = 0; resourceSource < sourceCount; resourceSource++) {
-                if (!matches[resourceSource][ingredient] || availableAmounts[resourceSource] <= 0) {
+                if (!ingredientMatches[resourceSource][ingredientIndex] || availableAmounts[resourceSource] <= 0) {
                     continue;
                 }
 
-                residualCapacity[sourceOffset + resourceSource][ingredientOffset + ingredient] = Math.min(availableAmounts[resourceSource], required);
+                residualCapacity[resourceOffset + resourceSource][ingredientOffset + ingredientIndex] = Math.min(availableAmounts[resourceSource], requiredAmount);
             }
         }
 
@@ -211,39 +220,39 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
         int[] parent = new int[residualCapacity.length];
         while (totalFlow < totalRequired) {
             Arrays.fill(parent, -1);
-            parent[source] = source;
-            ArrayDeque<Integer> pending = new ArrayDeque<>();
-            pending.add(source);
-            while (!pending.isEmpty() && parent[sink] == -1) {
-                int current = pending.removeFirst();
-                for (int next = 0; next < residualCapacity.length; next++) {
-                    if (parent[next] != -1 || residualCapacity[current][next] <= 0) {
+            parent[sourceNode] = sourceNode;
+            ArrayDeque<Integer> pendingNodes = new ArrayDeque<>();
+            pendingNodes.add(sourceNode);
+            while (!pendingNodes.isEmpty() && parent[sinkNode] == -1) {
+                int currentNode = pendingNodes.removeFirst();
+                for (int nextNode = 0; nextNode < residualCapacity.length; nextNode++) {
+                    if (parent[nextNode] != -1 || residualCapacity[currentNode][nextNode] <= 0) {
                         continue;
                     }
 
-                    parent[next] = current;
-                    pending.addLast(next);
+                    parent[nextNode] = currentNode;
+                    pendingNodes.addLast(nextNode);
                 }
             }
 
-            if (parent[sink] == -1) {
+            if (parent[sinkNode] == -1) {
                 return false;
             }
 
             long pathFlow = totalRequired - totalFlow;
-            for (int node = sink; node != source; node = parent[node]) {
+            for (int node = sinkNode; node != sourceNode; node = parent[node]) {
                 pathFlow = Math.min(pathFlow, residualCapacity[parent[node]][node]);
             }
-            for (int node = sink; node != source; node = parent[node]) {
-                int previous = parent[node];
-                residualCapacity[previous][node] -= pathFlow;
-                residualCapacity[node][previous] += pathFlow;
+            for (int node = sinkNode; node != sourceNode; node = parent[node]) {
+                int previousNode = parent[node];
+                residualCapacity[previousNode][node] -= pathFlow;
+                residualCapacity[node][previousNode] += pathFlow;
             }
             totalFlow += pathFlow;
         }
 
         for (int resourceSource = 0; resourceSource < sourceCount; resourceSource++) {
-            plannedAmounts[resourceSource] += availableAmounts[resourceSource] - residualCapacity[source][sourceOffset + resourceSource];
+            plannedAmounts[resourceSource] += availableAmounts[resourceSource] - residualCapacity[sourceNode][resourceOffset + resourceSource];
         }
         return true;
     }
@@ -251,56 +260,56 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
     private static List<ItemStack> createRecipeOutputItems(ReactorKettleRecipe recipe, Level level, IItemHandler availableItems, int[] itemAmounts, boolean rollRandomOutputs) {
         List<ItemStack> outputs = new ArrayList<>();
         if (rollRandomOutputs) {
-            for (ItemStack stack : recipe.rollResults(level.random)) {
-                if (stack.isEmpty()) {
+            for (ItemStack itemStack : recipe.rollResults(level.random)) {
+                if (itemStack.isEmpty()) {
                     continue;
                 }
 
-                outputs.add(stack.copy());
+                outputs.add(itemStack.copy());
             }
         }
         else {
             for (ProcessingOutput output : recipe.getRollableResults()) {
-                ItemStack stack = output.getStack();
-                if (stack.isEmpty()) {
+                ItemStack itemStack = output.getStack();
+                if (itemStack.isEmpty()) {
                     continue;
                 }
 
-                outputs.add(stack.copy());
+                outputs.add(itemStack.copy());
             }
         }
 
-        DummyCraftingContainer container = new DummyCraftingContainer(availableItems, itemAmounts);
-        for (ItemStack stack : recipe.getRemainingItems(container.asCraftInput())) {
-            if (stack.isEmpty()) {
+        DummyCraftingContainer craftingContainer = new DummyCraftingContainer(availableItems, itemAmounts);
+        for (ItemStack remainingItem : recipe.getRemainingItems(craftingContainer.asCraftInput())) {
+            if (remainingItem.isEmpty()) {
                 continue;
             }
 
-            outputs.add(stack.copy());
+            outputs.add(remainingItem.copy());
         }
         return outputs;
     }
 
     private static List<FluidStack> createRecipeOutputFluids(ReactorKettleRecipe recipe) {
         List<FluidStack> outputs = new ArrayList<>();
-        for (FluidStack stack : recipe.getFluidResults()) {
-            if (stack.isEmpty()) {
+        for (FluidStack fluidStack : recipe.getFluidResults()) {
+            if (fluidStack.isEmpty()) {
                 continue;
             }
 
-            outputs.add(stack.copy());
+            outputs.add(fluidStack.copy());
         }
         return outputs;
     }
 
     private static List<GasStack> createRecipeOutputGases(ReactorKettleRecipe recipe) {
         List<GasStack> outputs = new ArrayList<>();
-        for (GasStack stack : recipe.getGasResults()) {
-            if (stack.isEmpty()) {
+        for (GasStack gasStack : recipe.getGasResults()) {
+            if (gasStack.isEmpty()) {
                 continue;
             }
 
-            outputs.add(stack.copy());
+            outputs.add(gasStack.copy());
         }
         return outputs;
     }
@@ -312,13 +321,13 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
         return canAcceptItemOutputsAfterInputsAreConsumed(availableItems, outputInventory, outputItems, itemAmounts) && canAcceptFluidOutputsAfterInputsAreConsumed(availableFluids, outputFluidTank, outputFluids, fluidAmounts) && canAcceptGasOutputsAfterInputsAreConsumed(availableGases, outputGasTank, outputGases, gasAmounts);
     }
 
-    private static IItemHandlerModifiable createItemOutputSimulation(int slots) {
-        return new ItemStackHandler(slots) {
-            private static boolean isInsertionAllowed(IItemHandler inventory, int slot, ItemStack stack) {
+    private static IItemHandlerModifiable createItemOutputSimulation(int slotCount) {
+        return new ItemStackHandler(slotCount) {
+            private static boolean isInsertionAllowed(IItemHandler inventory, int targetSlot, ItemStack itemStack) {
                 int firstFreeSlot = -1;
-                for (int i = 0; i < inventory.getSlots(); i++) {
-                    ItemStack storedStack = inventory.getStackInSlot(i);
-                    if (i != slot && ItemStack.isSameItemSameComponents(stack, storedStack)) {
+                for (int candidateSlot = 0; candidateSlot < inventory.getSlots(); candidateSlot++) {
+                    ItemStack storedStack = inventory.getStackInSlot(candidateSlot);
+                    if (candidateSlot != targetSlot && ItemStack.isSameItemSameComponents(itemStack, storedStack)) {
                         return false;
                     }
 
@@ -326,9 +335,9 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
                         continue;
                     }
 
-                    firstFreeSlot = i;
+                    firstFreeSlot = candidateSlot;
                 }
-                return !inventory.getStackInSlot(slot).isEmpty() || firstFreeSlot == slot;
+                return !inventory.getStackInSlot(targetSlot).isEmpty() || firstFreeSlot == targetSlot;
             }
 
             @Override
@@ -351,18 +360,18 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
             return true;
         }
 
-        IItemHandlerModifiable simulatedOutput = createItemOutputSimulation(outputInventory.getSlots());
+        IItemHandlerModifiable simulatedInventory = createItemOutputSimulation(outputInventory.getSlots());
         int outputOffset = availableItems.getSlots() - outputInventory.getSlots();
         for (int slot = 0; slot < outputInventory.getSlots(); slot++) {
-            ItemStack stack = outputInventory.getStackInSlot(slot).copy();
+            ItemStack simulatedStack = outputInventory.getStackInSlot(slot).copy();
             int combinedSlot = outputOffset + slot;
             if (combinedSlot >= 0 && combinedSlot < extractedItemsFromSlot.length && extractedItemsFromSlot[combinedSlot] > 0) {
-                stack.shrink(extractedItemsFromSlot[combinedSlot]);
+                simulatedStack.shrink(extractedItemsFromSlot[combinedSlot]);
             }
-            simulatedOutput.setStackInSlot(slot, stack);
+            simulatedInventory.setStackInSlot(slot, simulatedStack);
         }
         for (ItemStack outputItem : outputItems) {
-            ItemStack remainder = ItemHandlerHelper.insertItemStacked(simulatedOutput, outputItem.copy(), false);
+            ItemStack remainder = ItemHandlerHelper.insertItemStacked(simulatedInventory, outputItem.copy(), false);
             if (remainder.isEmpty()) {
                 continue;
             }
@@ -377,18 +386,18 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
             return true;
         }
 
-        FluidStack[] simulatedTanks = new FluidStack[outputTank.getTanks()];
+        FluidStack[] simulatedFluidTanks = new FluidStack[outputTank.getTanks()];
         int outputOffset = availableFluids.getTanks() - outputTank.getTanks();
-        for (int tank = 0; tank < outputTank.getTanks(); tank++) {
-            FluidStack fluidStack = outputTank.getFluidInTank(tank).copy();
-            int combinedTank = outputOffset + tank;
-            if (combinedTank >= 0 && combinedTank < extractedFluidsFromTank.length && extractedFluidsFromTank[combinedTank] > 0) {
-                fluidStack.shrink(extractedFluidsFromTank[combinedTank]);
+        for (int tankIndex = 0; tankIndex < outputTank.getTanks(); tankIndex++) {
+            FluidStack simulatedFluid = outputTank.getFluidInTank(tankIndex).copy();
+            int combinedTankIndex = outputOffset + tankIndex;
+            if (combinedTankIndex >= 0 && combinedTankIndex < extractedFluidsFromTank.length && extractedFluidsFromTank[combinedTankIndex] > 0) {
+                simulatedFluid.shrink(extractedFluidsFromTank[combinedTankIndex]);
             }
-            simulatedTanks[tank] = fluidStack;
+            simulatedFluidTanks[tankIndex] = simulatedFluid;
         }
         for (FluidStack outputFluid : outputFluids) {
-            if (insertFluidIntoSimulatedTank(simulatedTanks, outputTank, outputFluid.copy())) {
+            if (insertFluidIntoSimulatedTank(simulatedFluidTanks, outputTank, outputFluid.copy())) {
                 continue;
             }
 
@@ -397,47 +406,46 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
         return true;
     }
 
-    private static boolean insertFluidIntoSimulatedTank(FluidStack[] simulatedTanks, IFluidHandler targetTank, FluidStack stack) {
-        if (stack.isEmpty()) {
+    private static boolean insertFluidIntoSimulatedTank(FluidStack[] simulatedTanks, IFluidHandler targetTank, FluidStack fluidStack) {
+        if (fluidStack.isEmpty()) {
             return true;
         }
 
-        for (int tank = 0; tank < simulatedTanks.length; tank++) {
-            FluidStack tankStack = simulatedTanks[tank];
-            if (tankStack.isEmpty() || !FluidStack.isSameFluidSameComponents(tankStack, stack) || !targetTank.isFluidValid(tank, stack)) {
+        for (int tankIndex = 0; tankIndex < simulatedTanks.length; tankIndex++) {
+            FluidStack tankStack = simulatedTanks[tankIndex];
+            if (tankStack.isEmpty() || !FluidStack.isSameFluidSameComponents(tankStack, fluidStack) || !targetTank.isFluidValid(tankIndex, fluidStack)) {
                 continue;
             }
 
-            int inserted = Math.min(stack.getAmount(), targetTank.getTankCapacity(tank) - tankStack.getAmount());
-            if (inserted > 0) {
-                tankStack.setAmount(tankStack.getAmount() + inserted);
+            int insertedAmount = Math.min(fluidStack.getAmount(), targetTank.getTankCapacity(tankIndex) - tankStack.getAmount());
+            if (insertedAmount > 0) {
+                tankStack.setAmount(tankStack.getAmount() + insertedAmount);
             }
-            return inserted == stack.getAmount();
+            return insertedAmount == fluidStack.getAmount();
         }
 
-        int remaining = stack.getAmount();
-        for (int tank = 0; tank < simulatedTanks.length; tank++) {
-            if (remaining <= 0) {
+        int remainingAmount = fluidStack.getAmount();
+        for (int tankIndex = 0; tankIndex < simulatedTanks.length; tankIndex++) {
+            if (remainingAmount <= 0) {
                 return true;
             }
 
-            FluidStack tankStack = simulatedTanks[tank];
-            if (!tankStack.isEmpty() || !targetTank.isFluidValid(tank, stack)) {
+            FluidStack tankStack = simulatedTanks[tankIndex];
+            if (!tankStack.isEmpty() || !targetTank.isFluidValid(tankIndex, fluidStack)) {
                 continue;
             }
 
-            int inserted = Math.min(remaining, targetTank.getTankCapacity(tank));
-            if (inserted <= 0) {
+            int insertedAmount = Math.min(remainingAmount, targetTank.getTankCapacity(tankIndex));
+            if (insertedAmount <= 0) {
                 continue;
             }
 
-            FluidStack insertedStack = stack.copy();
-            insertedStack.setAmount(inserted);
-            simulatedTanks[tank] = insertedStack;
-            remaining -= inserted;
+            FluidStack insertedStack = fluidStack.copy();
+            insertedStack.setAmount(insertedAmount);
+            simulatedTanks[tankIndex] = insertedStack;
+            remainingAmount -= insertedAmount;
         }
-
-        return remaining <= 0;
+        return remainingAmount <= 0;
     }
 
     private static boolean canAcceptGasOutputsAfterInputsAreConsumed(IGasHandler availableGases, IGasHandler outputTank, List<GasStack> outputGases, long[] extractedGasesFromTank) {
@@ -445,18 +453,18 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
             return true;
         }
 
-        GasStack[] simulatedTanks = new GasStack[outputTank.getTanks()];
+        GasStack[] simulatedGasTanks = new GasStack[outputTank.getTanks()];
         int outputOffset = availableGases.getTanks() - outputTank.getTanks();
-        for (int tank = 0; tank < outputTank.getTanks(); tank++) {
-            GasStack gasStack = outputTank.getGasInTank(tank).copy();
-            int combinedTank = outputOffset + tank;
-            if (combinedTank >= 0 && combinedTank < extractedGasesFromTank.length && extractedGasesFromTank[combinedTank] > 0) {
-                gasStack.shrink(extractedGasesFromTank[combinedTank]);
+        for (int tankIndex = 0; tankIndex < outputTank.getTanks(); tankIndex++) {
+            GasStack simulatedGas = outputTank.getGasInTank(tankIndex).copy();
+            int combinedTankIndex = outputOffset + tankIndex;
+            if (combinedTankIndex >= 0 && combinedTankIndex < extractedGasesFromTank.length && extractedGasesFromTank[combinedTankIndex] > 0) {
+                simulatedGas.shrink(extractedGasesFromTank[combinedTankIndex]);
             }
-            simulatedTanks[tank] = gasStack;
+            simulatedGasTanks[tankIndex] = simulatedGas;
         }
         for (GasStack outputGas : outputGases) {
-            if (insertGasIntoSimulatedTank(simulatedTanks, outputTank, outputGas.copy())) {
+            if (insertGasIntoSimulatedTank(simulatedGasTanks, outputTank, outputGas.copy())) {
                 continue;
             }
 
@@ -465,47 +473,47 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
         return true;
     }
 
-    private static boolean insertGasIntoSimulatedTank(GasStack[] simulatedTanks, IGasHandler targetTank, GasStack stack) {
-        if (stack.isEmpty()) {
+    private static boolean insertGasIntoSimulatedTank(GasStack[] simulatedTanks, IGasHandler targetTank, GasStack gasStack) {
+        if (gasStack.isEmpty()) {
             return true;
         }
 
-        for (int tank = 0; tank < simulatedTanks.length; tank++) {
-            GasStack tankStack = simulatedTanks[tank];
-            if (tankStack.isEmpty() || !GasStack.isSameGasSameComponents(tankStack, stack) || !targetTank.isGasValid(tank, stack)) {
+        for (int tankIndex = 0; tankIndex < simulatedTanks.length; tankIndex++) {
+            GasStack tankStack = simulatedTanks[tankIndex];
+            if (tankStack.isEmpty() || !GasStack.isSameGasSameComponents(tankStack, gasStack) || !targetTank.isGasValid(tankIndex, gasStack)) {
                 continue;
             }
 
-            long inserted = Math.min(stack.getAmount(), targetTank.getTankCapacity(tank) - tankStack.getAmount());
-            if (inserted > 0) {
-                tankStack.setAmount(tankStack.getAmount() + inserted);
+            long insertedAmount = Math.min(gasStack.getAmount(), targetTank.getTankCapacity(tankIndex) - tankStack.getAmount());
+            if (insertedAmount > 0) {
+                tankStack.setAmount(tankStack.getAmount() + insertedAmount);
             }
-            return inserted == stack.getAmount();
+            return insertedAmount == gasStack.getAmount();
         }
 
-        long remaining = stack.getAmount();
-        for (int tank = 0; tank < simulatedTanks.length; tank++) {
-            if (remaining <= 0) {
+        long remainingAmount = gasStack.getAmount();
+        for (int tankIndex = 0; tankIndex < simulatedTanks.length; tankIndex++) {
+            if (remainingAmount <= 0) {
                 return true;
             }
 
-            GasStack tankStack = simulatedTanks[tank];
-            if (!tankStack.isEmpty() || !targetTank.isGasValid(tank, stack)) {
+            GasStack tankStack = simulatedTanks[tankIndex];
+            if (!tankStack.isEmpty() || !targetTank.isGasValid(tankIndex, gasStack)) {
                 continue;
             }
 
-            long inserted = Math.min(remaining, targetTank.getTankCapacity(tank));
-            if (inserted <= 0) {
+            long insertedAmount = Math.min(remainingAmount, targetTank.getTankCapacity(tankIndex));
+            if (insertedAmount <= 0) {
                 continue;
             }
 
-            GasStack insertedStack = stack.copy();
-            insertedStack.setAmount(inserted);
-            simulatedTanks[tank] = insertedStack;
-            remaining -= inserted;
+            GasStack insertedStack = gasStack.copy();
+            insertedStack.setAmount(insertedAmount);
+            simulatedTanks[tankIndex] = insertedStack;
+            remainingAmount -= insertedAmount;
         }
 
-        return remaining <= 0;
+        return remainingAmount <= 0;
     }
 
     private static boolean planItemInputConsumption(List<Ingredient> ingredients, IItemHandler availableItems, int[] itemAmounts) {
@@ -514,39 +522,39 @@ public class ReactorKettleRecipe extends StandardProcessingWithGasRecipe<RecipeI
         }
 
         int slotCount = availableItems.getSlots();
-        long[] slotAmounts = new long[slotCount];
-        long[] plannedAmounts = new long[slotCount];
+        long[] availableSlotAmounts = new long[slotCount];
+        long[] plannedSlotAmounts = new long[slotCount];
         ItemStack[] extractableStacks = new ItemStack[slotCount];
         for (int slot = 0; slot < slotCount; slot++) {
-            plannedAmounts[slot] = itemAmounts[slot];
-            ItemStack stack = availableItems.getStackInSlot(slot);
-            if (stack.isEmpty()) {
+            plannedSlotAmounts[slot] = itemAmounts[slot];
+            ItemStack storedStack = availableItems.getStackInSlot(slot);
+            if (storedStack.isEmpty()) {
                 extractableStacks[slot] = ItemStack.EMPTY;
                 continue;
             }
 
-            ItemStack extractable = availableItems.extractItem(slot, stack.getCount(), true);
-            extractableStacks[slot] = extractable;
-            slotAmounts[slot] = extractable.getCount();
+            ItemStack extractableStack = availableItems.extractItem(slot, storedStack.getCount(), true);
+            extractableStacks[slot] = extractableStack;
+            availableSlotAmounts[slot] = extractableStack.getCount();
         }
 
         long[] requiredAmounts = new long[ingredients.size()];
-        boolean[][] matches = new boolean[slotCount][ingredients.size()];
+        boolean[][] ingredientMatches = new boolean[slotCount][ingredients.size()];
         Arrays.fill(requiredAmounts, 1);
         for (int ingredientIndex = 0; ingredientIndex < ingredients.size(); ingredientIndex++) {
             Ingredient ingredient = ingredients.get(ingredientIndex);
             for (int slot = 0; slot < slotCount; slot++) {
-                ItemStack extractable = extractableStacks[slot];
-                matches[slot][ingredientIndex] = !extractable.isEmpty() && ingredient.test(extractable);
+                ItemStack extractableStack = extractableStacks[slot];
+                ingredientMatches[slot][ingredientIndex] = !extractableStack.isEmpty() && ingredient.test(extractableStack);
             }
         }
 
-        if (!planResourceInputConsumption(slotAmounts, requiredAmounts, matches, plannedAmounts)) {
+        if (!planResourceInputConsumption(availableSlotAmounts, requiredAmounts, ingredientMatches, plannedSlotAmounts)) {
             return false;
         }
 
         for (int slot = 0; slot < slotCount; slot++) {
-            itemAmounts[slot] = (int) plannedAmounts[slot];
+            itemAmounts[slot] = (int) plannedSlotAmounts[slot];
         }
         return true;
     }

@@ -21,15 +21,15 @@ class HollowCuboidTemplate extends BaseTemplate {
     }
 
     @Override
-    Stream<BlockPos> getBaseAreaStream(int @NotNull [] params) {
-        int sizeX = params[0];
-        int sizeY = params[1];
-        int sizeZ = params[2];
-        BlockPos endPos = new BlockPos(sizeX - 1, sizeY - 1, sizeZ - 1);
-        return BlockPos.betweenClosedStream(BlockPos.ZERO, endPos).filter(pos -> {
-            int x = pos.getX();
-            int y = pos.getY();
-            int z = pos.getZ();
+    Stream<BlockPos> getBaseAreaStream(int @NotNull [] miningSize) {
+        int sizeX = miningSize[0];
+        int sizeY = miningSize[1];
+        int sizeZ = miningSize[2];
+        BlockPos maxPos = new BlockPos(sizeX - 1, sizeY - 1, sizeZ - 1);
+        return BlockPos.betweenClosedStream(BlockPos.ZERO, maxPos).filter(blockPos -> {
+            int x = blockPos.getX();
+            int y = blockPos.getY();
+            int z = blockPos.getZ();
             return x == 0 || x == sizeX - 1 || y == 0 || y == sizeY - 1 || z == 0 || z == sizeZ - 1;
         });
     }

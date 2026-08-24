@@ -32,11 +32,11 @@ public final class FluidLogisticsStockKeeperCompat {
         }
 
         try {
-            Object value = CREATE_FLUID_KEY.invoke(null, fluid);
-            if (!(value instanceof ItemStack stack) || stack.isEmpty()) {
+            Object fluidKeyResult = CREATE_FLUID_KEY.invoke(null, fluid);
+            if (!(fluidKeyResult instanceof ItemStack fluidKey) || fluidKey.isEmpty()) {
                 return ItemStack.EMPTY;
             }
-            return stack.copyWithCount(1);
+            return fluidKey.copyWithCount(1);
         } catch (IllegalAccessException | InvocationTargetException exception) {
             CCBAPI.LOGGER.warn("Failed to create a CreateFluidLogistic stock-keeper fluid key", exception);
             return ItemStack.EMPTY;
@@ -49,8 +49,8 @@ public final class FluidLogisticsStockKeeperCompat {
         }
 
         try {
-            Object value = GET_FLUID_PER_PACKAGE.invoke(null);
-            if (value instanceof Number number) {
+            Object capacityResult = GET_FLUID_PER_PACKAGE.invoke(null);
+            if (capacityResult instanceof Number number) {
                 return Math.max(1, number.intValue());
             }
         } catch (IllegalAccessException | InvocationTargetException exception) {
@@ -72,15 +72,15 @@ public final class FluidLogisticsStockKeeperCompat {
         }
     }
 
-    private static @Nullable Method findMethod(String name, Class<?>... parameterTypes) {
+    private static @Nullable Method findMethod(String methodName, Class<?>... parameterTypes) {
         if (RESOURCE_TYPES_CLASS == null) {
             return null;
         }
 
         try {
-            return RESOURCE_TYPES_CLASS.getMethod(name, parameterTypes);
+            return RESOURCE_TYPES_CLASS.getMethod(methodName, parameterTypes);
         } catch (NoSuchMethodException | SecurityException exception) {
-            CCBAPI.LOGGER.warn("CreateFluidLogistic package-resource API method '{}' is unavailable", name, exception);
+            CCBAPI.LOGGER.warn("CreateFluidLogistic package-resource API method '{}' is unavailable", methodName, exception);
             return null;
         }
     }

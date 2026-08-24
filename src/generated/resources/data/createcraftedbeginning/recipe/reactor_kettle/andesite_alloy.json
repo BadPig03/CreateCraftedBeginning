@@ -15,5 +15,6 @@
     {
       "id": "create:andesite_alloy"
     }
-  ]
+  ],
+  "temperature_matching": "compatible"
 }

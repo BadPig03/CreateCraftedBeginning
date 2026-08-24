@@ -23,72 +23,71 @@ public final class GasDrawerTransfer {
     }
 
     public static void push(Level level, GasDrawerBlockEntity drawer, ItemStack upgrade) {
-        IGasHandler target = getAdjacentHandler(level, drawer, upgrade);
-        if (target == null) {
+        IGasHandler targetHandler = getAdjacentHandler(level, drawer, upgrade);
+        if (targetHandler == null) {
             return;
         }
 
-        for (GasDrawerTank tank : drawer.getGasHandler().getInternalTanks()) {
-            GasStack preview = tank.drain(TRANSFER_PER_OPERATION, GasAction.SIMULATE);
-            if (preview.isEmpty()) {
+        for (GasDrawerTank drawerTank : drawer.getGasHandler().getInternalTanks()) {
+            GasStack simulatedDrain = drawerTank.drain(TRANSFER_PER_OPERATION, GasAction.SIMULATE);
+            if (simulatedDrain.isEmpty()) {
                 continue;
             }
 
-            long accepted = target.fill(preview, GasAction.SIMULATE);
-            if (accepted <= 0) {
+            long acceptedAmount = targetHandler.fill(simulatedDrain, GasAction.SIMULATE);
+            if (acceptedAmount <= 0) {
                 continue;
             }
 
-            long transfer = Math.min(accepted, preview.getAmount());
-            GasStack drained = tank.drain(preview.copyWithAmount(transfer), GasAction.EXECUTE);
-            if (drained.isEmpty()) {
+            GasStack drainedGas = drawerTank.drain(simulatedDrain.copyWithAmount(Math.min(acceptedAmount, simulatedDrain.getAmount())), GasAction.EXECUTE);
+            if (drainedGas.isEmpty()) {
                 continue;
             }
 
-            long inserted = target.fill(drained, GasAction.EXECUTE);
-            restoreRemainder(tank, drained, inserted);
+            long insertedAmount = targetHandler.fill(drainedGas, GasAction.EXECUTE);
+            restoreRemainder(drawerTank, drainedGas, insertedAmount);
             return;
         }
     }
 
     public static void pull(Level level, GasDrawerBlockEntity drawer, ItemStack upgrade) {
-        IGasHandler source = getAdjacentHandler(level, drawer, upgrade);
-        if (source == null) {
+        IGasHandler sourceHandler = getAdjacentHandler(level, drawer, upgrade);
+        if (sourceHandler == null) {
             return;
         }
 
-        GasStack preview = source.drain(TRANSFER_PER_OPERATION, GasAction.SIMULATE);
-        if (preview.isEmpty()) {
+        GasStack simulatedDrain = sourceHandler.drain(TRANSFER_PER_OPERATION, GasAction.SIMULATE);
+        if (simulatedDrain.isEmpty()) {
             return;
         }
 
-        GasDrawerHandler target = drawer.getGasHandler();
-        long accepted = target.fill(preview, GasAction.SIMULATE);
-        if (accepted <= 0) {
+        GasDrawerHandler targetHandler = drawer.getGasHandler();
+        long acceptedAmount = targetHandler.fill(simulatedDrain, GasAction.SIMULATE);
+        if (acceptedAmount <= 0) {
             return;
         }
 
-        GasStack drained = source.drain(preview.copyWithAmount(accepted), GasAction.EXECUTE);
-        if (drained.isEmpty()) {
+        GasStack drainedGas = sourceHandler.drain(simulatedDrain.copyWithAmount(acceptedAmount), GasAction.EXECUTE);
+        if (drainedGas.isEmpty()) {
             return;
         }
 
-        long inserted = target.fill(drained, GasAction.EXECUTE);
-        if (inserted >= drained.getAmount()) {
+        long insertedAmount = targetHandler.fill(drainedGas, GasAction.EXECUTE);
+        if (insertedAmount >= drainedGas.getAmount()) {
             return;
         }
-        source.fill(drained.copyWithAmount(drained.getAmount() - inserted), GasAction.EXECUTE);
+        sourceHandler.fill(drainedGas.copyWithAmount(drainedGas.getAmount() - insertedAmount), GasAction.EXECUTE);
     }
 
-    private static void restoreRemainder(GasDrawerTank tank, GasStack drained, long inserted) {
-        if (inserted >= drained.getAmount()) {
+    private static void restoreRemainder(GasDrawerTank drawerTank, GasStack drainedGas, long insertedAmount) {
+        if (insertedAmount >= drainedGas.getAmount()) {
             return;
         }
-        tank.fill(drained.copyWithAmount(drained.getAmount() - inserted), GasAction.EXECUTE);
+        drawerTank.fill(drainedGas.copyWithAmount(drainedGas.getAmount() - insertedAmount), GasAction.EXECUTE);
     }
 
     private static @Nullable IGasHandler getAdjacentHandler(Level level, GasDrawerBlockEntity drawer, ItemStack upgrade) {
-        Direction direction = UpgradeItem.getDirection(upgrade);
-        return level.getCapability(GasHandler.BLOCK, drawer.getBlockPos().relative(direction), direction.getOpposite());
+        Direction transferDirection = UpgradeItem.getDirection(upgrade);
+        return level.getCapability(GasHandler.BLOCK, drawer.getBlockPos().relative(transferDirection), transferDirection.getOpposite());
     }
 }

@@ -51,19 +51,19 @@ public class GasFactoryGaugeBlock extends FactoryPanelBlock {
             return InteractionResult.PASS;
         }
 
-        PanelSlot slot = getTargetedSlot(pos, state, context.getClickLocation());
+        PanelSlot targetedSlot = getTargetedSlot(pos, state, context.getClickLocation());
         if (level.isClientSide) {
             return InteractionResult.SUCCESS;
         }
-        return onBlockEntityUse(level, pos, be -> {
-            FactoryPanelBehaviour behaviour = be.panels.get(slot);
-            if (behaviour == null || !behaviour.isActive()) {
+        return onBlockEntityUse(level, pos, blockEntity -> {
+            FactoryPanelBehaviour panelBehaviour = blockEntity.panels.get(targetedSlot);
+            if (panelBehaviour == null || !panelBehaviour.isActive()) {
                 return InteractionResult.SUCCESS;
             }
 
-            BreakEvent event = new BreakEvent(level, pos, level.getBlockState(pos), player);
-            NeoForge.EVENT_BUS.post(event);
-            if (event.isCanceled() || !be.removePanel(slot)) {
+            BreakEvent breakEvent = new BreakEvent(level, pos, level.getBlockState(pos), player);
+            NeoForge.EVENT_BUS.post(breakEvent);
+            if (breakEvent.isCanceled() || !blockEntity.removePanel(targetedSlot)) {
                 return InteractionResult.SUCCESS;
             }
 
@@ -71,7 +71,7 @@ public class GasFactoryGaugeBlock extends FactoryPanelBlock {
                 player.getInventory().placeItemBackInInventory(new ItemStack(CCBBlocks.GAS_FACTORY_GAUGE_BLOCK.asItem()));
             }
             IWrenchable.playRemoveSound(level, pos);
-            if (be.activePanels() == 0) {
+            if (blockEntity.activePanels() == 0) {
                 level.destroyBlock(pos, false);
             }
             return InteractionResult.SUCCESS;
@@ -84,17 +84,16 @@ public class GasFactoryGaugeBlock extends FactoryPanelBlock {
             return ItemInteractionResult.SUCCESS;
         }
 
-        Vec3 location = hitResult.getLocation();
         if (!FactoryPanelBlockItem.isTuned(stack)) {
             AllSoundEvents.DENY.playOnServer(level, pos);
             player.displayClientMessage(CCBLang.translate("gui.gas_factory_gauge.tune_before_placing").style(ChatFormatting.RED).component(), true);
             return ItemInteractionResult.FAIL;
         }
 
-        PanelSlot slot = getTargetedSlot(pos, state, location);
+        PanelSlot targetedSlot = getTargetedSlot(pos, state, hitResult.getLocation());
         withBlockEntityDo(level, pos, blockEntity -> {
             ItemStack panelStack = FactoryPanelBlockItem.fixCtrlCopiedStack(stack);
-            if (!blockEntity.addPanel(slot, LogisticallyLinkedBlockItem.networkFromStack(panelStack))) {
+            if (!blockEntity.addPanel(targetedSlot, LogisticallyLinkedBlockItem.networkFromStack(panelStack))) {
                 return;
             }
 
@@ -124,8 +123,8 @@ public class GasFactoryGaugeBlock extends FactoryPanelBlock {
         }
 
         FactoryPanelBlockEntity blockEntity = getBlockEntity(context.getLevel(), context.getClickedPos());
-        PanelSlot slot = getTargetedSlot(context.getClickedPos(), state, context.getClickLocation());
-        return blockEntity != null && !blockEntity.panels.get(slot).isActive();
+        PanelSlot targetedSlot = getTargetedSlot(context.getClickedPos(), state, context.getClickLocation());
+        return blockEntity != null && !blockEntity.panels.get(targetedSlot).isActive();
     }
 
     @Override
@@ -138,11 +137,11 @@ public class GasFactoryGaugeBlock extends FactoryPanelBlock {
         return simpleCodec(GasFactoryGaugeBlock::new);
     }
 
-    protected boolean tryDestroyGasSubPanelFirst(BlockState state, Level level, BlockPos pos, Player player) {
-        double range = player.getAttributeValue(Attributes.BLOCK_INTERACTION_RANGE) + 1;
-        Vec3 location = player.pick(range, 1, false).getLocation();
-        PanelSlot destroyedSlot = getTargetedSlot(pos, state, location);
-        InteractionResult result = onBlockEntityUse(level, pos, blockEntity -> {
+    private boolean tryDestroyGasSubPanelFirst(BlockState state, Level level, BlockPos pos, Player player) {
+        double interactionRange = player.getAttributeValue(Attributes.BLOCK_INTERACTION_RANGE) + 1;
+        Vec3 hitLocation = player.pick(interactionRange, 1, false).getLocation();
+        PanelSlot destroyedSlot = getTargetedSlot(pos, state, hitLocation);
+        InteractionResult interactionResult = onBlockEntityUse(level, pos, blockEntity -> {
             if (blockEntity.activePanels() < 2 || !blockEntity.removePanel(destroyedSlot)) {
                 return InteractionResult.FAIL;
             }
@@ -152,6 +151,6 @@ public class GasFactoryGaugeBlock extends FactoryPanelBlock {
             }
             return InteractionResult.SUCCESS;
         });
-        return result == InteractionResult.SUCCESS;
+        return interactionResult == InteractionResult.SUCCESS;
     }
 }

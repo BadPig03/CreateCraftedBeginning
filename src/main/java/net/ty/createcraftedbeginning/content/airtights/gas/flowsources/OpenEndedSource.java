@@ -55,33 +55,22 @@ public final class OpenEndedSource extends GasFlowSource {
         effectGas = GasStack.EMPTY;
     }
 
-    public static OpenEndedSource read(CompoundTag compoundTag, Provider provider, BlockFace location) {
-        OpenEndedSource pipe = new OpenEndedSource(location);
-        if (compoundTag.contains(COMPOUND_KEY_EFFECT_PROGRESS, Tag.TAG_LONG)) {
-            pipe.effectProgress = Math.clamp(compoundTag.getLong(COMPOUND_KEY_EFFECT_PROGRESS), 0, EFFECT_INTERVAL - 1);
+    public static OpenEndedSource read(CompoundTag sourceTag, Provider provider, BlockFace location) {
+        OpenEndedSource source = new OpenEndedSource(location);
+        if (sourceTag.contains(COMPOUND_KEY_EFFECT_PROGRESS, Tag.TAG_LONG)) {
+            source.effectProgress = Math.clamp(sourceTag.getLong(COMPOUND_KEY_EFFECT_PROGRESS), 0, EFFECT_INTERVAL - 1);
         }
-        if (!compoundTag.contains(COMPOUND_KEY_EFFECT_GAS, Tag.TAG_COMPOUND)) {
-            return pipe;
-        }
-
-        pipe.effectGas = GasStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_EFFECT_GAS));
-        if (pipe.effectGas.isEmpty()) {
-            return pipe;
+        if (!sourceTag.contains(COMPOUND_KEY_EFFECT_GAS, Tag.TAG_COMPOUND)) {
+            return source;
         }
 
-        pipe.effectGas = pipe.effectGas.copyWithAmount(1);
-        return pipe;
-    }
-
-    public CompoundTag write(Provider provider) {
-        CompoundTag compound = new CompoundTag();
-        if (effectProgress <= 0 || effectGas.isEmpty()) {
-            return compound;
+        source.effectGas = GasStack.parseOptional(provider, sourceTag.getCompound(COMPOUND_KEY_EFFECT_GAS));
+        if (source.effectGas.isEmpty()) {
+            return source;
         }
 
-        compound.putLong(COMPOUND_KEY_EFFECT_PROGRESS, effectProgress);
-        compound.put(COMPOUND_KEY_EFFECT_GAS, effectGas.saveOptional(provider));
-        return compound;
+        source.effectGas = source.effectGas.copyWithAmount(1);
+        return source;
     }
 
     @Override
@@ -97,6 +86,17 @@ public final class OpenEndedSource extends GasFlowSource {
     @Override
     public ICapabilityProvider<IGasHandler> getGasHandlerProvider() {
         return gasHandlerProvider;
+    }
+
+    public CompoundTag write(Provider provider) {
+        CompoundTag sourceTag = new CompoundTag();
+        if (effectProgress <= 0 || effectGas.isEmpty()) {
+            return sourceTag;
+        }
+
+        sourceTag.putLong(COMPOUND_KEY_EFFECT_PROGRESS, effectProgress);
+        sourceTag.put(COMPOUND_KEY_EFFECT_GAS, effectGas.saveOptional(provider));
+        return sourceTag;
     }
 
     private class OpenEndGasHandler implements IGasHandler {
@@ -134,15 +134,15 @@ public final class OpenEndedSource extends GasFlowSource {
                 return 0;
             }
 
-            long accepted = Math.min(EFFECT_INTERVAL, resource.getAmount());
-            if (accepted <= 0 || action.simulate()) {
-                return accepted;
+            long acceptedAmount = Math.min(EFFECT_INTERVAL, resource.getAmount());
+            if (acceptedAmount <= 0 || action.simulate()) {
+                return acceptedAmount;
             }
 
             AirtightDrainageHandler drainageHandler = AirtightDrainageHandlerUtils.of(resource.getGasType());
             showOutputFeedback(resource, drainageHandler);
-            recordOutput(resource, accepted, drainageHandler);
-            return accepted;
+            recordOutput(resource, acceptedAmount, drainageHandler);
+            return acceptedAmount;
         }
 
         @Override
@@ -150,28 +150,28 @@ public final class OpenEndedSource extends GasFlowSource {
             return tank == 0 ? EFFECT_INTERVAL : 0;
         }
 
-        private GasStack drainWorld(long amount, @Nullable GasStack requested, GasAction action) {
-            if (amount <= 0) {
+        private GasStack drainWorld(long maxDrainAmount, @Nullable GasStack requestedGas, GasAction action) {
+            if (maxDrainAmount <= 0) {
                 return GasStack.EMPTY;
             }
 
             GasStack worldGas = getWorldGas();
-            if (worldGas.isEmpty() || requested != null && !GasStack.isSameGasSameComponents(worldGas, requested)) {
+            if (worldGas.isEmpty() || requestedGas != null && !GasStack.isSameGasSameComponents(worldGas, requestedGas)) {
                 return GasStack.EMPTY;
             }
 
-            long drainedAmount = Math.min(Math.min(amount, EFFECT_INTERVAL), worldGas.getAmount());
+            long drainedAmount = Math.min(Math.min(maxDrainAmount, EFFECT_INTERVAL), worldGas.getAmount());
             if (drainedAmount <= 0) {
                 return GasStack.EMPTY;
             }
 
-            GasStack drained = worldGas.copyWithAmount(drainedAmount);
-            if (!action.execute() || !drained.is(CCBGases.SPORE_AIR) || !(level.getBlockEntity(pos) instanceof IGasTransporter transporter)) {
-                return drained;
+            GasStack drainedGas = worldGas.copyWithAmount(drainedAmount);
+            if (!action.execute() || !drainedGas.is(CCBGases.SPORE_AIR) || !(level.getBlockEntity(pos) instanceof IGasTransporter transporter)) {
+                return drainedGas;
             }
 
             transporter.getAdvancementBehaviour().awardPlayer(CCBAdvancements.GASEOUS_VARIATIONS);
-            return drained;
+            return drainedGas;
         }
 
         private GasStack getWorldGas() {
@@ -179,26 +179,25 @@ public final class OpenEndedSource extends GasFlowSource {
                 return GasStack.EMPTY;
             }
 
-            BlockState currentState = level.getBlockState(pos);
-            if (!(level.getBlockEntity(pos) instanceof IGasTransporter transporter) || !transporter.canTransport(level, currentState, pos, direction)) {
+            BlockState sourceState = level.getBlockState(pos);
+            if (!(level.getBlockEntity(pos) instanceof IGasTransporter transporter) || !transporter.canTransport(level, sourceState, pos, direction)) {
                 return GasStack.EMPTY;
             }
 
-            BlockState targetState = level.getBlockState(outputPos);
-            AirtightFillHandler fillHandler = AirtightFillHandlerUtils.of(targetState.getBlock());
-            return new GasStack(fillHandler.apply(level, outputPos, targetState), EFFECT_INTERVAL);
+            BlockState outputState = level.getBlockState(outputPos);
+            AirtightFillHandler fillHandler = AirtightFillHandlerUtils.of(outputState.getBlock());
+            return new GasStack(fillHandler.apply(level, outputPos, outputState), EFFECT_INTERVAL);
         }
 
-        private void showOutputFeedback(GasStack resource, AirtightDrainageHandler drainageHandler) {
+        private void showOutputFeedback(GasStack outputGas, AirtightDrainageHandler drainageHandler) {
             long gameTime = level.getGameTime();
             if (lastFeedbackTick == gameTime) {
                 return;
             }
 
             lastFeedbackTick = gameTime;
-
             if (drainageHandler.shouldShowOutline()) {
-                drainageHandler.showOutline(level, pos, direction, drainageHandler.getInflation(), resource.getGasType().getTint());
+                drainageHandler.showOutline(level, pos, direction, drainageHandler.getInflation(), outputGas.getGasType().getTint());
             }
             if (gameTime % 20 != 10) {
                 return;
@@ -207,19 +206,19 @@ public final class OpenEndedSource extends GasFlowSource {
             CCBSoundEvents.GAS_DRAINAGE.playOnServer(level, pos, 1, 1);
         }
 
-        private void recordOutput(GasStack resource, long amount, AirtightDrainageHandler drainageHandler) {
-            if (effectGas.isEmpty() || !GasStack.isSameGasSameComponents(effectGas, resource)) {
-                effectGas = resource.copyWithAmount(1);
+        private void recordOutput(GasStack outputGas, long outputAmount, AirtightDrainageHandler drainageHandler) {
+            if (effectGas.isEmpty() || !GasStack.isSameGasSameComponents(effectGas, outputGas)) {
+                effectGas = outputGas.copyWithAmount(1);
                 effectProgress = 0;
             }
-            effectProgress += amount;
+            effectProgress += outputAmount;
             if (effectProgress < EFFECT_INTERVAL) {
                 return;
             }
 
             effectProgress -= EFFECT_INTERVAL;
-            drainageHandler.apply(level, pos, direction, resource.getGasType());
-            if (!resource.is(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR) || !(level.getBlockEntity(pos) instanceof IGasTransporter extractor)) {
+            drainageHandler.apply(level, pos, direction, outputGas.getGasType());
+            if (!outputGas.is(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR) || !(level.getBlockEntity(pos) instanceof IGasTransporter extractor)) {
                 return;
             }
 

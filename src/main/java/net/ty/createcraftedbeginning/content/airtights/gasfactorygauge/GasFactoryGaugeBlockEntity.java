@@ -87,15 +87,15 @@ public class GasFactoryGaugeBlockEntity extends FactoryPanelBlockEntity {
 
     @Override
     public boolean addPanel(PanelSlot slot, UUID frequency) {
-        FactoryPanelBehaviour current = panels.get(slot);
-        if (current == null || current.isActive() || current instanceof GasFactoryGaugeBehaviour) {
+        FactoryPanelBehaviour currentBehaviour = panels.get(slot);
+        if (currentBehaviour == null || currentBehaviour.isActive() || currentBehaviour instanceof GasFactoryGaugeBehaviour) {
             return super.addPanel(slot, frequency);
         }
 
-        GasFactoryGaugeBehaviour replacement = new GasFactoryGaugeBehaviour(this, slot);
-        removeBehaviour(current.getType());
-        attachBehaviourLate(replacement);
-        panels.put(slot, replacement);
+        GasFactoryGaugeBehaviour replacementBehaviour = new GasFactoryGaugeBehaviour(this, slot);
+        removeBehaviour(currentBehaviour.getType());
+        attachBehaviourLate(replacementBehaviour);
+        panels.put(slot, replacementBehaviour);
         return super.addPanel(slot, frequency);
     }
 }

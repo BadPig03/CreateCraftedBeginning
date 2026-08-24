@@ -17,11 +17,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AndesiteCrateMountedStorage extends CrateMountedItemStorage<AndesiteCrateBlockEntity> {
     public static final MapCodec<AndesiteCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(ItemStack.OPTIONAL_CODEC.fieldOf("content").forGetter(AndesiteCrateMountedStorage::getStoredItem), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("count").forGetter(AndesiteCrateMountedStorage::getStoredCount)).apply(instance, AndesiteCrateMountedStorage::new));
 
-    public AndesiteCrateMountedStorage(ItemStack content, int count) {
+    private AndesiteCrateMountedStorage(ItemStack content, int count) {
         this(CCBMountedStorage.ANDESITE_CRATE.get(), content, count);
     }
 
-    protected AndesiteCrateMountedStorage(MountedItemStorageType<?> type, ItemStack content, int count) {
+    private AndesiteCrateMountedStorage(MountedItemStorageType<?> type, ItemStack content, int count) {
         super(type, AndesiteCrateBlockEntity.class, content, count, () -> CCBConfig.server().crates.maxAndesiteCapacity.get());
     }
 

@@ -23,24 +23,24 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightTankMountedStorage extends WrapperMountedGasStorage<Handler> implements SyncedMountedStorage {
-    public static final MapCodec<AirtightTankMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(Codec.LONG.fieldOf("capacity").forGetter(AirtightTankMountedStorage::getCapacity), GasStack.OPTIONAL_CODEC.fieldOf("gas").forGetter(AirtightTankMountedStorage::getGasStack)).apply(instance, AirtightTankMountedStorage::new));
+class AirtightTankMountedStorage extends WrapperMountedGasStorage<Handler> implements SyncedMountedStorage {
+    static final MapCodec<AirtightTankMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(Codec.LONG.fieldOf("capacity").forGetter(AirtightTankMountedStorage::getCapacity), GasStack.OPTIONAL_CODEC.fieldOf("gas").forGetter(AirtightTankMountedStorage::getGasStack)).apply(instance, AirtightTankMountedStorage::new));
 
-    protected boolean dirty;
+    private boolean dirty;
 
-    protected AirtightTankMountedStorage(long capacity, GasStack stack) {
-        this(CCBMountedStorage.AIRTIGHT_TANK.get(), capacity, stack);
+    private AirtightTankMountedStorage(long capacity, GasStack gasStack) {
+        this(CCBMountedStorage.AIRTIGHT_TANK.get(), capacity, gasStack);
     }
 
-    protected AirtightTankMountedStorage(MountedGasStorageType<?> type, long capacity, GasStack stack) {
-        super(type, new Handler(capacity, stack));
+    private AirtightTankMountedStorage(MountedGasStorageType<?> type, long capacity, GasStack gasStack) {
+        super(type, new Handler(capacity, gasStack));
         wrapped.onChange = () -> dirty = true;
     }
 
     @Contract("_ -> new")
-    public static AirtightTankMountedStorage fromTank(AirtightTankBlockEntity tank) {
-        GasTank inventory = tank.getTankInventory();
-        return new AirtightTankMountedStorage(inventory.getCapacity(), inventory.getGasStack().copy());
+    static AirtightTankMountedStorage fromTank(AirtightTankBlockEntity tank) {
+        GasTank tankInventory = tank.getTankInventory();
+        return new AirtightTankMountedStorage(tankInventory.getCapacity(), tankInventory.getGasStack().copy());
     }
 
     @Override
@@ -49,11 +49,10 @@ public class AirtightTankMountedStorage extends WrapperMountedGasStorage<Handler
             return;
         }
 
-        GasTank inventory = tank.getTankInventory();
-        inventory.setGasStack(wrapped.getGasStack());
+        tank.getTankInventory().setGasStack(wrapped.getGasStack());
     }
 
-    public long getCapacity() {
+    private long getCapacity() {
         return wrapped.getCapacity();
     }
 
@@ -76,17 +75,17 @@ public class AirtightTankMountedStorage extends WrapperMountedGasStorage<Handler
         tank.getTankInventory().setGasStack(getGasStack());
     }
 
-    public GasStack getGasStack() {
+    private GasStack getGasStack() {
         return wrapped.getGasStack();
     }
 
-    public static final class Handler extends GasTank {
+    static final class Handler extends GasTank {
         private Runnable onChange = () -> {
         };
 
-        public Handler(long capacity, GasStack stack) {
+        private Handler(long capacity, GasStack gasStack) {
             super(capacity);
-            setGasStack(stack);
+            setGasStack(gasStack);
         }
 
         @Override

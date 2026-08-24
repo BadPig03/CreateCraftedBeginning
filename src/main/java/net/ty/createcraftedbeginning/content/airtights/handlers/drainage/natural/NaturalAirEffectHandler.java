@@ -11,8 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.ty.createcraftedbeginning.api.drainagehandlers.AirtightDrainageHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.platform.access.AbstractPiglinAccess;
-import net.ty.createcraftedbeginning.platform.access.HoglinAccess;
+import net.ty.createcraftedbeginning.platform.access.OverworldConversionAccess;
 import net.ty.createcraftedbeginning.registry.CCBMobEffects;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -49,11 +48,8 @@ public class NaturalAirEffectHandler implements AirtightDrainageHandler {
                 entity.addEffect(new MobEffectInstance(CCBMobEffects.ZOMBIFICATION, 20, 0, true, true), null);
             }
 
-            if (entity instanceof AbstractPiglinAccess piglinAccessor) {
-                piglinAccessor.setTimeInOverworld(piglinAccessor.getTimeInOverworld() + scale);
-            }
-            else if (entity instanceof HoglinAccess hoglinAccessor) {
-                hoglinAccessor.setTimeInOverworld(hoglinAccessor.getTimeInOverworld() + scale);
+            if (entity instanceof OverworldConversionAccess conversionAccess) {
+                conversionAccess.ccb$setTimeInOverworld(conversionAccess.ccb$getTimeInOverworld() + scale);
             }
         }
     }

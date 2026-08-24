@@ -27,10 +27,10 @@ import java.util.function.Consumer;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class TeslaTurbineVisual extends KineticBlockEntityVisual<TeslaTurbineBlockEntity> implements SimpleDynamicVisual, SimpleTickableVisual {
-    protected final Axis axis;
-    protected final RotatingInstance shaft;
-    protected final List<RotatingInstance> rotors = new ArrayList<>();
-    protected int rotorCount = -1;
+    private final Axis axis;
+    private final RotatingInstance shaft;
+    private final List<RotatingInstance> rotors = new ArrayList<>();
+    private int rotorCount = -1;
 
     public TeslaTurbineVisual(VisualizationContext context, TeslaTurbineBlockEntity blockEntity, float partialTick) {
         super(context, blockEntity, partialTick);
@@ -39,13 +39,13 @@ public class TeslaTurbineVisual extends KineticBlockEntityVisual<TeslaTurbineBlo
         syncRotors();
     }
 
-    protected RotatingInstance createRotatingInstance(PartialModel partialModel) {
+    private RotatingInstance createRotatingInstance(PartialModel partialModel) {
         RotatingInstance instance = instancerProvider().instancer(AllInstanceTypes.ROTATING, Models.partial(partialModel)).createInstance().rotateToFace(Direction.UP, axis).setup(blockEntity).setPosition(getVisualPosition());
         instance.setChanged();
         return instance;
     }
 
-    protected void syncRotors() {
+    private void syncRotors() {
         int desiredRotorCount = blockEntity.getBlockState().getValue(TeslaTurbineBlock.ROTOR);
         if (desiredRotorCount == rotorCount) {
             return;
@@ -61,10 +61,10 @@ public class TeslaTurbineVisual extends KineticBlockEntityVisual<TeslaTurbineBlo
         }
 
         Direction positiveAxis = Direction.get(AxisDirection.POSITIVE, axis);
-        float spacing = 14.0f / (rotorCount + 1);
-        for (int i = 0; i < rotorCount; i++) {
-            float offset = (spacing * (i + 1) - 7) / 16;
-            RotatingInstance rotor = createRotatingInstance(CCBPartialModels.TESLA_TURBINE_ROTOR).nudge(positiveAxis.getStepX() * offset, positiveAxis.getStepY() * offset, positiveAxis.getStepZ() * offset);
+        float rotorSpacing = 14.0f / (rotorCount + 1);
+        for (int rotorIndex = 0; rotorIndex < rotorCount; rotorIndex++) {
+            float rotorOffset = (rotorSpacing * (rotorIndex + 1) - 7) / 16;
+            RotatingInstance rotor = createRotatingInstance(CCBPartialModels.TESLA_TURBINE_ROTOR).nudge(positiveAxis.getStepX() * rotorOffset, positiveAxis.getStepY() * rotorOffset, positiveAxis.getStepZ() * rotorOffset);
             rotor.setChanged();
             rotors.add(rotor);
         }

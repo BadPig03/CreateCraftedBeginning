@@ -40,78 +40,82 @@ public final class GasFilterUtils {
             return ALLOW_ALL;
         }
 
-        if (!(filterStack.getItem() instanceof IGasFilter filter)) {
+        if (!(filterStack.getItem() instanceof IGasFilter gasFilter)) {
             return DENY_ALL;
         }
 
-        Predicate<GasStack> compiled = filter.compile(normalizeStack(filterStack));
-        return gas -> !gas.isEmpty() && compiled.test(gas);
+        Predicate<GasStack> compiledFilter = gasFilter.compile(normalizeStack(filterStack));
+        return gasStack -> !gasStack.isEmpty() && compiledFilter.test(gasStack);
     }
 
     public static boolean matches(ItemStack filterStack, GasStack gasStack) {
         return !gasStack.isEmpty() && (filterStack.isEmpty() || filterStack.getItem() instanceof IGasFilter filter && filter.test(filterStack, gasStack));
     }
 
-    public record GasFilterData(boolean blacklist, List<GasStack> gases) {
-        public static final int MAX_ENTRIES = 18;
-        public static final GasFilterData EMPTY = new GasFilterData(false, List.of());
-        public static final Codec<GasFilterData> CODEC = RecordCodecBuilder.create(instance -> instance.group(Codec.BOOL.fieldOf("blacklist").forGetter(GasFilterData::blacklist), GasStack.CODEC.listOf(0, MAX_ENTRIES).fieldOf("gases").forGetter(data -> data.gases)).apply(instance, GasFilterData::new));
+    public record GasFilterData(boolean blacklist, boolean respectData, List<GasStack> gases) {
+        static final int MAX_ENTRIES = 18;
+        public static final Codec<GasFilterData> CODEC = RecordCodecBuilder.create(instance -> instance.group(Codec.BOOL.fieldOf("blacklist").forGetter(GasFilterData::blacklist), Codec.BOOL.optionalFieldOf("respect_data", true).forGetter(GasFilterData::respectData), GasStack.CODEC.listOf(0, MAX_ENTRIES).fieldOf("gases").forGetter(filterData -> filterData.gases)).apply(instance, GasFilterData::new));
         public static final StreamCodec<RegistryFriendlyByteBuf, GasFilterData> STREAM_CODEC = new StreamCodec<>() {
             @Override
             public GasFilterData decode(RegistryFriendlyByteBuf buffer) {
                 boolean blacklist = buffer.readBoolean();
-                int size = buffer.readVarInt();
-                if (size < 0 || size > MAX_ENTRIES) {
-                    throw new DecoderException("Invalid gas filter entry count: " + size);
+                boolean respectData = buffer.readBoolean();
+                int entryCount = buffer.readVarInt();
+                if (entryCount < 0 || entryCount > MAX_ENTRIES) {
+                    throw new DecoderException("Invalid gas filter entry count: " + entryCount);
                 }
 
-                List<GasStack> gases = new ArrayList<>(size);
-                for (int i = 0; i < size; i++) {
-                    gases.add(GasStack.STREAM_CODEC.decode(buffer));
+                List<GasStack> configuredGases = new ArrayList<>(entryCount);
+                for (int entryIndex = 0; entryIndex < entryCount; entryIndex++) {
+                    configuredGases.add(GasStack.STREAM_CODEC.decode(buffer));
                 }
-                return new GasFilterData(blacklist, gases);
+                return new GasFilterData(blacklist, respectData, configuredGases);
             }
 
             @Override
-            public void encode(RegistryFriendlyByteBuf buffer, GasFilterData data) {
-                int size = data.gases.size();
-                if (size > MAX_ENTRIES) {
-                    throw new EncoderException("Too many gas filter entries: " + size);
+            public void encode(RegistryFriendlyByteBuf buffer, GasFilterData filterData) {
+                int entryCount = filterData.gases.size();
+                if (entryCount > MAX_ENTRIES) {
+                    throw new EncoderException("Too many gas filter entries: " + entryCount);
                 }
 
-                buffer.writeBoolean(data.blacklist);
-                buffer.writeVarInt(size);
-                data.gases.forEach(gas -> GasStack.STREAM_CODEC.encode(buffer, gas));
+                buffer.writeBoolean(filterData.blacklist);
+                buffer.writeBoolean(filterData.respectData);
+                buffer.writeVarInt(entryCount);
+                filterData.gases.forEach(gas -> GasStack.STREAM_CODEC.encode(buffer, gas));
             }
         };
+        static final GasFilterData EMPTY = new GasFilterData(false, false, List.of());
 
         public GasFilterData {
-            gases = normalize(gases);
+            gases = normalize(gases, respectData);
         }
 
-        private static List<GasStack> normalize(List<GasStack> input) {
-            if (input.isEmpty()) {
+        private static List<GasStack> normalize(List<GasStack> inputGases, boolean respectData) {
+            if (inputGases.isEmpty()) {
                 return List.of();
             }
 
-            Set<GasStack> seen = GasStackLinkedSet.createTypeAndComponentsSet();
-            List<GasStack> normalized = new ArrayList<>(Math.min(input.size(), MAX_ENTRIES));
-            for (GasStack candidate : input) {
-                if (candidate == null || candidate.isEmpty()) {
+            Set<GasStack> seenGases = respectData ? GasStackLinkedSet.createTypeAndComponentsSet() : GasStackLinkedSet.createTypeSet();
+            List<GasStack> normalizedGases = new ArrayList<>(Math.min(inputGases.size(), MAX_ENTRIES));
+            for (GasStack candidateGas : inputGases) {
+                if (candidateGas == null || candidateGas.isEmpty()) {
                     continue;
                 }
 
-                GasStack gas = candidate.copyWithAmount(1);
-                if (!seen.add(gas)) {
+                GasStack normalizedGas = candidateGas.copyWithAmount(1);
+                if (!seenGases.add(normalizedGas)) {
                     continue;
                 }
 
-                normalized.add(gas);
-                if (normalized.size() == MAX_ENTRIES) {
-                    break;
+                normalizedGases.add(normalizedGas);
+                if (normalizedGases.size() != MAX_ENTRIES) {
+                    continue;
                 }
+
+                break;
             }
-            return List.copyOf(normalized);
+            return List.copyOf(normalizedGases);
         }
 
         @Override
@@ -119,17 +123,18 @@ public final class GasFilterUtils {
             return gases.stream().map(GasStack::copy).toList();
         }
 
-        public boolean isDefault() {
-            return !blacklist && gases.isEmpty();
+        boolean isDefault() {
+            return !blacklist && !respectData && gases.isEmpty();
         }
 
-        public boolean test(GasStack gas) {
-            if (gas.isEmpty()) {
+        boolean test(GasStack gasStack) {
+            if (gasStack.isEmpty()) {
                 return false;
             }
 
-            for (GasStack entry : gases) {
-                if (!GasStack.isSameGasSameComponents(entry, gas)) {
+            for (GasStack configuredGas : gases) {
+                boolean matches = respectData ? GasStack.isSameGasSameComponents(configuredGas, gasStack) : GasStack.isSameGas(configuredGas, gasStack);
+                if (!matches) {
                     continue;
                 }
 
@@ -138,10 +143,10 @@ public final class GasFilterUtils {
             return blacklist;
         }
 
-        public Predicate<GasStack> compile() {
-            Set<GasStack> configuredGases = GasStackLinkedSet.createTypeAndComponentsSet();
+        Predicate<GasStack> compile() {
+            Set<GasStack> configuredGases = respectData ? GasStackLinkedSet.createTypeAndComponentsSet() : GasStackLinkedSet.createTypeSet();
             configuredGases.addAll(gases);
-            return gas -> !gas.isEmpty() && blacklist != configuredGases.contains(gas);
+            return gasStack -> !gasStack.isEmpty() && blacklist != configuredGases.contains(gasStack);
         }
     }
 }

@@ -12,52 +12,52 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class BoilerSteamOutletController {
+final class BoilerSteamOutletController {
     private final BoilerSteamOutletBlockEntity outlet;
     private final BoilerSteamOutletProduction production;
     private final BoilerSteamOutletExtractionMeter extractionMeter;
 
-    public BoilerSteamOutletController(BoilerSteamOutletBlockEntity outlet) {
+    BoilerSteamOutletController(BoilerSteamOutletBlockEntity outlet) {
         this.outlet = outlet;
         production = new BoilerSteamOutletProduction(outlet);
         extractionMeter = new BoilerSteamOutletExtractionMeter();
     }
 
-    public void tickServer() {
+    void tickServer() {
         Level level = outlet.getLevel();
         if (level == null || level.isClientSide) {
             return;
         }
 
         boolean productionRateChanged = production.ensureCurrentTick();
-        TickResult sampleResult = extractionMeter.tick();
-        if (!productionRateChanged && sampleResult == TickResult.NONE) {
+        TickResult extractionTickResult = extractionMeter.tick();
+        if (!productionRateChanged && extractionTickResult == TickResult.NONE) {
             return;
         }
 
         outlet.setChanged();
-        if (!productionRateChanged && sampleResult != TickResult.AVERAGE_CHANGED) {
+        if (!productionRateChanged && extractionTickResult != TickResult.AVERAGE_CHANGED) {
             return;
         }
 
         outlet.sendData();
     }
 
-    public void lazyTickServer() {
+    void lazyTickServer() {
         Level level = outlet.getLevel();
         if (level == null || level.isClientSide) {
             return;
         }
 
-        BlockState state = outlet.getBlockState();
-        if (state.getBlock() instanceof BoilerSteamOutletBlock block && block.canSurvive(state, level, outlet.getBlockPos())) {
+        BlockState outletState = outlet.getBlockState();
+        if (outletState.getBlock() instanceof BoilerSteamOutletBlock outletBlock && outletBlock.canSurvive(outletState, level, outlet.getBlockPos())) {
             return;
         }
 
         level.destroyBlock(outlet.getBlockPos(), true);
     }
 
-    public void ensureCurrentTick() {
+    void ensureCurrentTick() {
         if (!production.ensureCurrentTick()) {
             return;
         }
@@ -66,15 +66,15 @@ public final class BoilerSteamOutletController {
         outlet.sendData();
     }
 
-    public double getSteamGenerationRate() {
+    double getSteamGenerationRate() {
         return production.getProductionRatePerSecond();
     }
 
-    public double getSteamOutputRate() {
+    double getSteamOutputRate() {
         return extractionMeter.getAverageExtractionRatePerSecond();
     }
 
-    public void recordExtraction(GasStack drained, GasAction action) {
+    void recordExtraction(GasStack drained, GasAction action) {
         if (!extractionMeter.recordExtraction(drained, action)) {
             return;
         }
@@ -82,13 +82,13 @@ public final class BoilerSteamOutletController {
         outlet.setChanged();
     }
 
-    public void write(CompoundTag tag, boolean clientPacket) {
-        production.write(tag, clientPacket);
-        extractionMeter.write(tag, clientPacket);
+    void write(CompoundTag compoundTag, boolean clientPacket) {
+        production.write(compoundTag, clientPacket);
+        extractionMeter.write(compoundTag, clientPacket);
     }
 
-    public void read(CompoundTag tag, boolean clientPacket) {
-        production.read(tag, clientPacket);
-        extractionMeter.read(tag, clientPacket);
+    void read(CompoundTag compoundTag, boolean clientPacket) {
+        production.read(compoundTag, clientPacket);
+        extractionMeter.read(compoundTag, clientPacket);
     }
 }

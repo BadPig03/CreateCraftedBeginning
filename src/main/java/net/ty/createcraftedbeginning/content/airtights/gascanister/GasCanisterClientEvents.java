@@ -13,12 +13,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID, value = Dist.CLIENT)
-public final class GasCanisterClientEvents {
+final class GasCanisterClientEvents {
     private GasCanisterClientEvents() {
     }
 
     @SubscribeEvent
-    public static void onClientLoggingOut(LoggingOut event) {
+    private static void onClientLoggingOut(LoggingOut event) {
         CanisterContainerClients.clearDisplayedGasState();
     }
 }

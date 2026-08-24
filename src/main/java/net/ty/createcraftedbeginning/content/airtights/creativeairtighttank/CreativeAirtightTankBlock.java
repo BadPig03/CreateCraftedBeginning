@@ -33,8 +33,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirtightTankBlockEntity>, IWrenchable, IAirtightComponent {
-    public static final BooleanProperty TOP = BooleanProperty.create("top");
-    public static final BooleanProperty BOTTOM = BooleanProperty.create("bottom");
+    static final BooleanProperty TOP = BooleanProperty.create("top");
+    static final BooleanProperty BOTTOM = BooleanProperty.create("bottom");
 
     public CreativeAirtightTankBlock(Properties properties) {
         super(properties);
@@ -47,7 +47,7 @@ public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirt
             return;
         }
 
-        withBlockEntityDo(level, pos, CreativeAirtightTankBlockEntity::updateConnectivity);
+        withBlockEntityDo(level, pos, CreativeAirtightTankBlockEntity::updateTankConnectivity);
     }
 
     @Override

@@ -14,7 +14,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasPackagerInventoryTracker {
+final class GasPackagerInventoryTracker {
     private InventorySummary availableItems = new InventorySummary();
     @Nullable
     private InventoryIdentifier availableItemsIdentifier;
@@ -23,54 +23,54 @@ public final class GasPackagerInventoryTracker {
     private List<GasStack> availableTankSnapshot = List.of();
     private long availableItemsScanTick = Long.MIN_VALUE;
 
-    private static InventorySummary createGasInventorySummary(List<GasStack> snapshot) {
-        InventorySummary summary = new InventorySummary();
-        for (GasStack gas : snapshot) {
-            int amount = GasRequestUtils.toLogisticsAmount(gas.getAmount());
+    private static InventorySummary createGasInventorySummary(List<GasStack> tankSnapshot) {
+        InventorySummary inventorySummary = new InventorySummary();
+        for (GasStack tankGas : tankSnapshot) {
+            int amount = GasRequestUtils.toLogisticsAmount(tankGas.getAmount());
             if (amount <= 0) {
                 continue;
             }
 
-            ItemStack virtualItem = GasVirtualUtils.createVirtualItem(gas.copyWithAmount(1));
+            ItemStack virtualItem = GasVirtualUtils.createVirtualItem(tankGas.copyWithAmount(1));
             if (virtualItem.isEmpty()) {
                 continue;
             }
 
-            summary.add(virtualItem, amount);
+            inventorySummary.add(virtualItem, amount);
         }
-        return summary;
+        return inventorySummary;
     }
 
-    public ScanResult scan(@Nullable InventoryIdentifier identifier, @Nullable IGasHandler handler, long currentTick) {
+    ScanResult scan(@Nullable InventoryIdentifier identifier, @Nullable IGasHandler handler, long currentTick) {
         if (identifier == null || handler == null) {
             return new ScanResult(clear(), null, false);
         }
 
-        boolean sameSource = handler == availableItemsHandler && identifier.equals(availableItemsIdentifier);
-        if (sameSource && availableItemsScanTick == currentTick) {
+        boolean isSameSource = handler == availableItemsHandler && identifier.equals(availableItemsIdentifier);
+        if (isSameSource && availableItemsScanTick == currentTick) {
             return new ScanResult(availableItems, null, false);
         }
 
         availableItemsScanTick = currentTick;
-        if (sameSource && GasPackagerUtils.matchesTankSnapshot(handler, availableTankSnapshot)) {
+        if (isSameSource && GasPackagerUtils.matchesTankSnapshot(handler, availableTankSnapshot)) {
             return new ScanResult(availableItems, null, false);
         }
 
-        InventorySummary previous = sameSource ? availableItems : null;
-        List<GasStack> snapshot = GasPackagerUtils.snapshotTanks(handler);
-        InventorySummary summary = createGasInventorySummary(snapshot);
-        availableItems = summary;
+        InventorySummary previousSummary = isSameSource ? availableItems : null;
+        List<GasStack> tankSnapshot = GasPackagerUtils.snapshotTanks(handler);
+        InventorySummary currentSummary = createGasInventorySummary(tankSnapshot);
+        availableItems = currentSummary;
         availableItemsIdentifier = identifier;
         availableItemsHandler = handler;
-        availableTankSnapshot = snapshot;
-        return new ScanResult(summary, previous, true);
+        availableTankSnapshot = tankSnapshot;
+        return new ScanResult(currentSummary, previousSummary, true);
     }
 
-    public void invalidate() {
+    void invalidate() {
         availableItemsScanTick = Long.MIN_VALUE;
     }
 
-    public InventorySummary clearAvailableItems() {
+    InventorySummary clearAvailableItems() {
         return clear();
     }
 
@@ -85,5 +85,5 @@ public final class GasPackagerInventoryTracker {
         return availableItems;
     }
 
-    public record ScanResult(InventorySummary summary, @Nullable InventorySummary previous, boolean changed) {}
+    record ScanResult(InventorySummary summary, @Nullable InventorySummary previous, boolean changed) {}
 }

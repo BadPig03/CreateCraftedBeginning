@@ -18,7 +18,7 @@ public class AnchorFlareItem extends Item implements IWeatherFlare {
 
     @Override
     public void setWeather(ServerLevel level, double ignoredRatio) {
-        BooleanValue weatherCycle = level.getGameRules().getRule(GameRules.RULE_WEATHER_CYCLE);
-        weatherCycle.set(!weatherCycle.get(), level.getServer());
+        BooleanValue weatherCycleRule = level.getGameRules().getRule(GameRules.RULE_WEATHER_CYCLE);
+        weatherCycleRule.set(!weatherCycleRule.get(), level.getServer());
     }
 }

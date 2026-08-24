@@ -25,8 +25,8 @@ public class CCBEndDevices extends ConfigBase {
 
     private static class Comments {
         private static final String maxRange = "The maximum radius of the End Incineration Blower's cubic area of effect. Higher values can significantly increase scanning overhead.";
-        private static final String ignitionDamage = "The damage dealt to living entities other than Snow Golems by each ignition pulse from the End Incineration Blower.";
-        private static final String ignitionAffectsPlayers = "Whether the End Incineration Blower ignition mode can damage players.";
+        private static final String ignitionDamage = "The direct damage dealt to living entities other than Snow Golems by each ignition pulse from the End Incineration Blower. Ignition is applied independently of this damage.";
+        private static final String ignitionAffectsPlayers = "Whether the End Incineration Blower ignition mode can affect players.";
         private static final String speedRequirementMultiplier = "The multiplier applied to the rotational speed required for each End Sculk Silencer range setting.";
     }
 }

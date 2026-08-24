@@ -37,15 +37,17 @@ public final class ExternalHandlerSource extends GasFlowSource {
         }
 
         BlockPos targetPos = location.getConnectedPos();
-        if (level instanceof ServerLevel serverLevel) {
-            gasHandlerCache = ICapabilityProvider.of(invalidate -> BlockCapabilityCache.create(GasHandler.BLOCK, serverLevel, targetPos, location.getOppositeFace(), () -> !networkBE.isRemoved(), () -> {
-                gasHandlerCache = null;
-                invalidate.run();
-            }));
-        }
-        else if (level instanceof PonderLevel) {
+        if (level instanceof PonderLevel) {
             gasHandlerCache = ICapabilityProvider.of(() -> level.getCapability(GasHandler.BLOCK, targetPos, location.getOppositeFace()));
         }
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        gasHandlerCache = ICapabilityProvider.of(invalidate -> BlockCapabilityCache.create(GasHandler.BLOCK, serverLevel, targetPos, location.getOppositeFace(), () -> !networkBE.isRemoved(), () -> {
+            gasHandlerCache = null;
+            invalidate.run();
+        }));
     }
 
     @Override

@@ -17,7 +17,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class BubbleWithoutWaterParticle extends TextureSheetParticle {
-    protected BubbleWithoutWaterParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+    private BubbleWithoutWaterParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
         super(level, x, y, z);
         setSize(0.02f, 0.02f);
         quadSize *= random.nextFloat() * 0.6f + 0.2f;

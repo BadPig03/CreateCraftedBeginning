@@ -17,7 +17,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class EndIncinerationBlowerValueBox extends Sided {
+class EndIncinerationBlowerValueBox extends Sided {
     @Override
     protected Vec3 getSouthLocation() {
         return VecHelper.voxelSpace(8, 8, 15.5);

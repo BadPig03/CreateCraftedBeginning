@@ -172,8 +172,8 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
 
         long tankCapacity = AirCompressorProcessing.getTankCapacity();
         inputTankBehaviour = new SmartGasTankBehaviour(SmartGasTankBehaviour.INPUT, this, 1, tankCapacity, false);
-        outputTankBehaviour = new SmartGasTankBehaviour(SmartGasTankBehaviour.OUTPUT, this, 1, tankCapacity, false).forbidInsertion();
         behaviours.add(inputTankBehaviour);
+        outputTankBehaviour = new SmartGasTankBehaviour(SmartGasTankBehaviour.OUTPUT, this, 1, tankCapacity, false).forbidInsertion();
         behaviours.add(outputTankBehaviour);
     }
 
@@ -284,7 +284,7 @@ public class AirCompressorBlockEntity extends KineticBlockEntity implements IHav
         if (tickResult.enteredMeltdown()) {
             updateOperatingBlockState(level, false);
         }
-        boolean workStateChanged = !previousWorkState.equals(state.getWorkState());
+        boolean workStateChanged = !state.getWorkState().equals(previousWorkState);
         markDirty(tickResult.previousStoredHeat(), overheatStateChanged || workStateChanged);
     }
 

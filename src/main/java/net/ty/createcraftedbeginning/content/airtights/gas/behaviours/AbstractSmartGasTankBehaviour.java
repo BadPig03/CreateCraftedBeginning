@@ -21,62 +21,25 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour {
-    protected static final String COMPOUND_KEY_TANK_CONTENT = "TankContent";
+abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour {
+    private static final String COMPOUND_KEY_TANK_CONTENT = "TankContent";
 
     private static final int SYNC_RATE = 8;
 
-    protected final BehaviourType<?> behaviourType;
+    private final BehaviourType<?> behaviourType;
+    IGasHandler capability;
+    boolean extractionAllowed;
+    boolean insertionAllowed;
+    Runnable gasUpdateCallback;
+    private int syncCooldown;
+    private boolean queuedSync;
 
-    protected int syncCooldown;
-    protected boolean queuedSync;
-    protected IGasHandler capability;
-    protected boolean extractionAllowed;
-    protected boolean insertionAllowed;
-    protected Runnable gasUpdateCallback;
-
-    protected AbstractSmartGasTankBehaviour(BehaviourType<?> type, SmartBlockEntity be) {
+    AbstractSmartGasTankBehaviour(BehaviourType<?> type, SmartBlockEntity be) {
         super(be);
         insertionAllowed = true;
         extractionAllowed = true;
         behaviourType = type;
         gasUpdateCallback = () -> {};
-    }
-
-    public void sendDataImmediately() {
-        syncCooldown = 0;
-        queuedSync = false;
-        updateGases();
-    }
-
-    protected void updateGases() {
-        gasUpdateCallback.run();
-        blockEntity.sendData();
-        blockEntity.setChanged();
-    }
-
-    public void sendDataLazily() {
-        if (syncCooldown > 0) {
-            queuedSync = true;
-            return;
-        }
-
-        updateGases();
-        queuedSync = false;
-        syncCooldown = SYNC_RATE;
-    }
-
-    public boolean isEmpty() {
-        for (int tank = 0; tank < capability.getTanks(); tank++) {
-            if (!capability.getGasInTank(tank).isEmpty()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public IGasHandler getCapability() {
-        return capability;
     }
 
     @Override
@@ -114,16 +77,16 @@ public abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour
     @Override
     public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        TankSegmentBase[] tanks = getTankSegmentsForLifecycle();
-        MutableInt index = new MutableInt(0);
+        TankSegmentBase[] tankSegments = getTankSegmentsForLifecycle();
+        MutableInt tankIndex = new MutableInt(0);
         ListTag tankData = compoundTag.getList(getType().getName() + "Tanks", Tag.TAG_COMPOUND);
         NBTHelper.iterateCompoundList(tankData, tankTag -> {
-            if (index.intValue() >= tanks.length) {
+            if (tankIndex.intValue() >= tankSegments.length) {
                 return;
             }
 
-            tanks[index.intValue()].read(tankTag, provider);
-            index.increment();
+            tankSegments[tankIndex.intValue()].read(tankTag, provider);
+            tankIndex.increment();
         });
     }
 
@@ -131,8 +94,8 @@ public abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour
     public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
         ListTag tankData = new ListTag();
-        for (TankSegmentBase tank : getTankSegmentsForLifecycle()) {
-            tankData.add(tank.write(provider));
+        for (TankSegmentBase tankSegment : getTankSegmentsForLifecycle()) {
+            tankData.add(tankSegment.write(provider));
         }
         compoundTag.put(getType().getName() + "Tanks", tankData);
     }
@@ -148,12 +111,50 @@ public abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour
         level.invalidateCapabilities(getPos());
     }
 
-    protected abstract TankSegmentBase[] getTankSegmentsForLifecycle();
+    public void sendDataImmediately() {
+        syncCooldown = 0;
+        queuedSync = false;
+        updateGases();
+    }
 
-    protected abstract class TankSegmentBase {
-        protected abstract SmartGasTank getTank();
+    public boolean isEmpty() {
+        for (int tankIndex = 0; tankIndex < capability.getTanks(); tankIndex++) {
+            if (capability.getGasInTank(tankIndex).isEmpty()) {
+                continue;
+            }
 
-        public void onGasStackChanged() {
+            return false;
+        }
+        return true;
+    }
+
+    public IGasHandler getCapability() {
+        return capability;
+    }
+
+    abstract TankSegmentBase[] getTankSegmentsForLifecycle();
+
+    void sendDataLazily() {
+        if (syncCooldown > 0) {
+            queuedSync = true;
+            return;
+        }
+
+        updateGases();
+        queuedSync = false;
+        syncCooldown = SYNC_RATE;
+    }
+
+    private void updateGases() {
+        gasUpdateCallback.run();
+        blockEntity.sendData();
+        blockEntity.setChanged();
+    }
+
+    abstract class TankSegmentBase {
+        abstract SmartGasTank getTank();
+
+        void onGasStackChanged() {
             Level level = getWorld();
             if (level == null || level.isClientSide) {
                 return;
@@ -162,13 +163,13 @@ public abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour
             sendDataLazily();
         }
 
-        public CompoundTag write(Provider provider) {
-            CompoundTag tag = new CompoundTag();
-            tag.put(COMPOUND_KEY_TANK_CONTENT, getTank().write(provider, new CompoundTag()));
-            return tag;
+        private CompoundTag write(Provider provider) {
+            CompoundTag tankTag = new CompoundTag();
+            tankTag.put(COMPOUND_KEY_TANK_CONTENT, getTank().write(provider, new CompoundTag()));
+            return tankTag;
         }
 
-        public void read(CompoundTag compoundTag, Provider provider) {
+        private void read(CompoundTag compoundTag, Provider provider) {
             if (!compoundTag.contains(COMPOUND_KEY_TANK_CONTENT)) {
                 return;
             }
@@ -177,8 +178,8 @@ public abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour
         }
     }
 
-    protected class InternalGasHandlerBase extends CombinedGasTankWrapper {
-        protected InternalGasHandlerBase(IGasHandler[] handlers, boolean enforceVariety) {
+    class InternalGasHandlerBase extends CombinedGasTankWrapper {
+        InternalGasHandlerBase(IGasHandler[] handlers, boolean enforceVariety) {
             super(handlers);
             if (!enforceVariety) {
                 return;
@@ -189,29 +190,26 @@ public abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour
 
         @Override
         public GasStack drain(GasStack resource, GasAction action) {
-            return extractionAllowed ? drainAllowed(resource, action) : GasStack.EMPTY;
+            if (!extractionAllowed) {
+                return GasStack.EMPTY;
+            }
+            return drainAllowed(resource, action);
         }
 
         @Override
         public GasStack drain(long maxDrain, GasAction action) {
-            return extractionAllowed ? drainAllowed(maxDrain, action) : GasStack.EMPTY;
+            if (!extractionAllowed) {
+                return GasStack.EMPTY;
+            }
+            return drainAllowed(maxDrain, action);
         }
 
         @Override
         public long fill(GasStack resource, GasAction action) {
-            return insertionAllowed ? fillAllowed(resource, action) : 0;
-        }
-
-        protected GasStack drainAllowed(GasStack resource, GasAction action) {
-            return super.drain(resource, action);
-        }
-
-        protected GasStack drainAllowed(long maxDrain, GasAction action) {
-            return super.drain(maxDrain, action);
-        }
-
-        protected long fillAllowed(GasStack resource, GasAction action) {
-            return super.fill(resource, action);
+            if (!insertionAllowed) {
+                return 0;
+            }
+            return fillAllowed(resource, action);
         }
 
         public long forceFill(GasStack resource, GasAction action) {
@@ -225,6 +223,18 @@ public abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour
 
         public GasStack forceDrain(long maxDrain, GasAction action) {
             return drainAllowed(maxDrain, action);
+        }
+
+        private GasStack drainAllowed(GasStack resource, GasAction action) {
+            return super.drain(resource, action);
+        }
+
+        private GasStack drainAllowed(long maxDrain, GasAction action) {
+            return super.drain(maxDrain, action);
+        }
+
+        private long fillAllowed(GasStack resource, GasAction action) {
+            return super.fill(resource, action);
         }
     }
 }

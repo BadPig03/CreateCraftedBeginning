@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class PortableGasInterfaceVisual extends AbstractBlockEntityVisual<PortableGasInterfaceBlockEntity> implements SimpleDynamicVisual, SimpleTickableVisual {
-    protected final PortableGasInterfaceInstance instance;
+    private final PortableGasInterfaceInstance instance;
 
     public PortableGasInterfaceVisual(VisualizationContext visualizationContext, PortableGasInterfaceBlockEntity blockEntity, float partialTick) {
         super(visualizationContext, blockEntity, partialTick);
@@ -25,7 +25,7 @@ public class PortableGasInterfaceVisual extends AbstractBlockEntityVisual<Portab
         instance.beginFrame(blockEntity.getExtensionDistance(partialTick));
     }
 
-    protected boolean isLit() {
+    private boolean isLit() {
         return blockEntity.isConnected();
     }
 

@@ -18,7 +18,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightPumpPressureController {
+final class AirtightPumpPressureController {
     private static final int RECOVERY_INITIAL_BACKOFF = 20;
     private static final int RECOVERY_MAX_BACKOFF = 640;
 
@@ -32,19 +32,19 @@ public final class AirtightPumpPressureController {
     private float lastLazyAbsSpeed;
     private Direction lastLazyFacing;
 
-    public AirtightPumpPressureController(AirtightPumpBlockEntity pump) {
+    AirtightPumpPressureController(AirtightPumpBlockEntity pump) {
         this.pump = pump;
     }
 
-    public static boolean isPullingOnSide(boolean frontSide) {
+    static boolean isPullingOnSide(boolean frontSide) {
         return !frontSide;
     }
 
-    public static boolean isSideAccessible(BlockState state, Direction direction) {
+    private static boolean isSideAccessible(BlockState state, Direction direction) {
         return state.getBlock() instanceof AirtightPumpBlock && state.getValue(AirtightPumpBlock.FACING).getAxis() == direction.getAxis();
     }
 
-    public static boolean isFront(BlockState state, Direction direction) {
+    private static boolean isFront(BlockState state, Direction direction) {
         return state.getBlock() instanceof AirtightPumpBlock && direction == state.getValue(AirtightPumpBlock.FACING);
     }
 
@@ -52,7 +52,7 @@ public final class AirtightPumpPressureController {
         return Mth.abs(speed) >= AirtightPumpBlock.MINIMUM_REQUIRED_SPEED_LEVEL.getSpeedValue();
     }
 
-    public void beforeTick() {
+    void beforeTick() {
         if (!shouldRunServerLogic() || !pressureUpdate) {
             return;
         }
@@ -60,80 +60,80 @@ public final class AirtightPumpPressureController {
         rebuildPressure();
     }
 
-    public void afterTick() {
+    void afterTick() {
         Level level = pump.getLevel();
         if (!shouldRunServerLogic() || level == null) {
             return;
         }
 
-        sidesToUpdate.forEachWithContext((update, frontSide) -> {
-            if (update.isFalse()) {
+        sidesToUpdate.forEachWithContext((shouldUpdate, isFrontSide) -> {
+            if (shouldUpdate.isFalse()) {
                 return;
             }
 
-            update.setFalse();
-            boolean recoveryAttempt = recoveryAttempts.get(frontSide).booleanValue();
-            recoveryAttempts.get(frontSide).setFalse();
-            Direction front = getFront();
-            PressureDistributionResult result = AirtightPumpPressureNetwork.distributePressureTo(pump, frontSide ? front : front.getOpposite());
-            RecoveryState recovery = recoveryStates.get(frontSide);
-            if (recoveryAttempt) {
-                recovery.recordRecoveryResult(result, level.getGameTime());
+            shouldUpdate.setFalse();
+            boolean isRecoveryAttempt = recoveryAttempts.get(isFrontSide).booleanValue();
+            recoveryAttempts.get(isFrontSide).setFalse();
+            Direction frontDirection = getFront();
+            PressureDistributionResult distributionResult = AirtightPumpPressureNetwork.distributePressureTo(pump, isFrontSide ? frontDirection : frontDirection.getOpposite());
+            RecoveryState recoveryState = recoveryStates.get(isFrontSide);
+            if (isRecoveryAttempt) {
+                recoveryState.recordRecoveryResult(distributionResult, level.getGameTime());
                 return;
             }
 
-            recovery.recordRebuildResult(result);
+            recoveryState.recordRebuildResult(distributionResult);
         });
     }
 
-    public boolean shouldHandleSpeedChange(float previousSpeed) {
+    boolean shouldHandleSpeedChange(float previousSpeed) {
         return shouldRunServerLogic() && !Mth.equal(Mth.abs(previousSpeed), Mth.abs(pump.getSpeed()));
     }
 
-    public boolean hasRequiredSpeed() {
+    boolean hasRequiredSpeed() {
         return hasRequiredSpeed(pump.getSpeed());
     }
 
-    public void lazyTick() {
+    void lazyTick() {
         Level level = pump.getLevel();
-        GasTransportBehaviour transportBehaviour = getTransportBehaviour();
-        if (!shouldRunServerLogic() || transportBehaviour == null || level == null) {
+        GasTransportBehaviour pumpTransport = getTransportBehaviour();
+        if (!shouldRunServerLogic() || pumpTransport == null || level == null) {
             return;
         }
 
-        float absSpeed = Mth.abs(pump.getSpeed());
-        Direction front = getFront();
-        boolean stateChanged = !lazyStateInitialized || !Mth.equal(absSpeed, lastLazyAbsSpeed) || front != lastLazyFacing;
+        float absoluteSpeed = Mth.abs(pump.getSpeed());
+        Direction frontDirection = getFront();
+        boolean pumpStateChanged = !lazyStateInitialized || !Mth.equal(absoluteSpeed, lastLazyAbsSpeed) || frontDirection != lastLazyFacing;
         lazyStateInitialized = true;
-        lastLazyAbsSpeed = absSpeed;
-        lastLazyFacing = front;
+        lastLazyAbsSpeed = absoluteSpeed;
+        lastLazyFacing = frontDirection;
         if (!isPumpRunning()) {
             return;
         }
 
-        if (stateChanged) {
+        if (pumpStateChanged) {
             rebuildPressure();
             return;
         }
 
         long gameTime = level.getGameTime();
-        BlockPos frontPos = pump.getBlockPos().relative(front);
-        BlockPos backPos = pump.getBlockPos().relative(front.getOpposite());
-        GasTransportBehaviour frontPipe = GasPropagator.getBehaviour(level, frontPos);
-        GasTransportBehaviour backPipe = GasPropagator.getBehaviour(level, backPos);
-        boolean frontPressureMissing = frontPipe != null && !frontPipe.hasAnyPressureContribution();
-        boolean backPressureMissing = backPipe != null && !backPipe.hasAnyPressureContribution();
-        boolean recoverFront = recoveryStates.getFirst().shouldAttempt(frontPressureMissing, gameTime);
-        boolean recoverBack = recoveryStates.getSecond().shouldAttempt(backPressureMissing, gameTime);
-        recoverMissingPressure(recoverFront, recoverBack);
+        BlockPos frontPipePos = pump.getBlockPos().relative(frontDirection);
+        BlockPos backPipePos = pump.getBlockPos().relative(frontDirection.getOpposite());
+        GasTransportBehaviour frontTransport = GasPropagator.getBehaviour(level, frontPipePos);
+        GasTransportBehaviour backTransport = GasPropagator.getBehaviour(level, backPipePos);
+        boolean frontPressureMissing = frontTransport != null && !frontTransport.hasAnyPressureContribution();
+        boolean backPressureMissing = backTransport != null && !backTransport.hasAnyPressureContribution();
+        boolean shouldRecoverFront = recoveryStates.getFirst().shouldAttempt(frontPressureMissing, gameTime);
+        boolean shouldRecoverBack = recoveryStates.getSecond().shouldAttempt(backPressureMissing, gameTime);
+        recoverMissingPressure(shouldRecoverFront, shouldRecoverBack);
     }
 
-    public void updatePipesOnSide(Direction side) {
-        if (!isSideAccessible(side)) {
+    void updatePipesOnSide(Direction direction) {
+        if (!isSideAccessible(direction)) {
             return;
         }
 
-        queueNetworkUpdate(isFront(side));
+        queueNetworkUpdate(isFront(direction));
         GasTransportBehaviour transportBehaviour = getTransportBehaviour();
         if (transportBehaviour == null) {
             return;
@@ -142,31 +142,49 @@ public final class AirtightPumpPressureController {
         transportBehaviour.wipePressure();
     }
 
-    public void markPressureUpdate() {
+    void markPressureUpdate() {
         pressureUpdate = true;
     }
 
-    public boolean canTransport(BlockState state, Direction direction) {
+    boolean canTransport(BlockState state, Direction direction) {
         return isPumpRunning() && isSideAccessible(state, direction) && isPullingOnSide(isFront(state, direction));
     }
 
-    public boolean isPumpRunning() {
+    boolean isPumpRunning() {
         return pump.getLevel() != null && !pump.isRemoved() && hasRequiredSpeed(pump.getSpeed());
     }
 
-    public float getPumpPressure() {
+    float getPumpPressure() {
         if (!isPumpRunning()) {
             return 0;
         }
         return Mth.abs(pump.getSpeed());
     }
 
-    public boolean isSideAccessible(Direction direction) {
+    boolean isSideAccessible(Direction direction) {
         return isSideAccessible(pump.getBlockState(), direction);
     }
 
-    public boolean isFront(Direction direction) {
+    boolean isFront(Direction direction) {
         return isFront(pump.getBlockState(), direction);
+    }
+
+    void rebuildPressure() {
+        Level level = pump.getLevel();
+        if (level == null) {
+            return;
+        }
+
+        GasTransportBehaviour transportBehaviour = getTransportBehaviour();
+        if (transportBehaviour != null) {
+            transportBehaviour.wipePressure();
+        }
+        Direction frontDirection = getFront();
+        GasPropagator.propagatePipe(level, pump.getBlockPos().relative(frontDirection));
+        GasPropagator.propagatePipe(level, pump.getBlockPos().relative(frontDirection.getOpposite()));
+        recoveryAttempts.forEach(MutableBoolean::setFalse);
+        sidesToUpdate.forEach(MutableBoolean::setTrue);
+        pressureUpdate = false;
     }
 
     private boolean shouldRunServerLogic() {
@@ -178,9 +196,9 @@ public final class AirtightPumpPressureController {
         return pump.getBlockState().getValue(AirtightPumpBlock.FACING);
     }
 
-    public void rebuildPressure() {
+    private void recoverMissingPressure(boolean shouldRecoverFront, boolean shouldRecoverBack) {
         Level level = pump.getLevel();
-        if (level == null) {
+        if (level == null || !shouldRecoverFront && !shouldRecoverBack) {
             return;
         }
 
@@ -188,42 +206,24 @@ public final class AirtightPumpPressureController {
         if (transportBehaviour != null) {
             transportBehaviour.wipePressure();
         }
-        Direction front = getFront();
-        GasPropagator.propagatePipe(level, pump.getBlockPos().relative(front));
-        GasPropagator.propagatePipe(level, pump.getBlockPos().relative(front.getOpposite()));
-        recoveryAttempts.forEach(MutableBoolean::setFalse);
-        sidesToUpdate.forEach(MutableBoolean::setTrue);
-        pressureUpdate = false;
-    }
-
-    private void recoverMissingPressure(boolean recoverFront, boolean recoverBack) {
-        Level level = pump.getLevel();
-        if (level == null || !recoverFront && !recoverBack) {
-            return;
-        }
-
-        GasTransportBehaviour transportBehaviour = getTransportBehaviour();
-        if (transportBehaviour != null) {
-            transportBehaviour.wipePressure();
-        }
-        Direction front = getFront();
-        if (recoverFront) {
-            GasPropagator.propagatePipe(level, pump.getBlockPos().relative(front));
+        Direction frontDirection = getFront();
+        if (shouldRecoverFront) {
+            GasPropagator.propagatePipe(level, pump.getBlockPos().relative(frontDirection));
             recoveryAttempts.getFirst().setTrue();
             sidesToUpdate.getFirst().setTrue();
         }
-        if (!recoverBack) {
+        if (!shouldRecoverBack) {
             return;
         }
 
-        GasPropagator.propagatePipe(level, pump.getBlockPos().relative(front.getOpposite()));
+        GasPropagator.propagatePipe(level, pump.getBlockPos().relative(frontDirection.getOpposite()));
         recoveryAttempts.getSecond().setTrue();
         sidesToUpdate.getSecond().setTrue();
     }
 
-    private void queueNetworkUpdate(boolean front) {
-        recoveryAttempts.get(front).setFalse();
-        sidesToUpdate.get(front).setTrue();
+    private void queueNetworkUpdate(boolean isFrontSide) {
+        recoveryAttempts.get(isFrontSide).setFalse();
+        sidesToUpdate.get(isFrontSide).setTrue();
     }
 
     private @Nullable GasTransportBehaviour getTransportBehaviour() {
@@ -233,31 +233,31 @@ public final class AirtightPumpPressureController {
     private static final class RecoveryState {
         private boolean hadValidPath;
         private boolean topologyIncomplete;
-        private int backoff = RECOVERY_INITIAL_BACKOFF;
-        private long nextAttempt;
+        private int backoffTicks = RECOVERY_INITIAL_BACKOFF;
+        private long nextAttemptGameTime;
 
         private boolean shouldAttempt(boolean pressureMissing, long gameTime) {
-            return (hadValidPath || topologyIncomplete) && pressureMissing && gameTime >= nextAttempt;
+            return (hadValidPath || topologyIncomplete) && pressureMissing && gameTime >= nextAttemptGameTime;
         }
 
-        private void recordRebuildResult(PressureDistributionResult result) {
-            hadValidPath = result.validPath();
-            topologyIncomplete = result.topologyIncomplete();
-            backoff = RECOVERY_INITIAL_BACKOFF;
-            nextAttempt = 0;
+        private void recordRebuildResult(PressureDistributionResult distributionResult) {
+            hadValidPath = distributionResult.validPath();
+            topologyIncomplete = distributionResult.topologyIncomplete();
+            backoffTicks = RECOVERY_INITIAL_BACKOFF;
+            nextAttemptGameTime = 0;
         }
 
-        private void recordRecoveryResult(PressureDistributionResult result, long gameTime) {
-            topologyIncomplete = result.topologyIncomplete();
-            if (result.validPath()) {
+        private void recordRecoveryResult(PressureDistributionResult distributionResult, long gameTime) {
+            topologyIncomplete = distributionResult.topologyIncomplete();
+            if (distributionResult.validPath()) {
                 hadValidPath = true;
-                backoff = RECOVERY_INITIAL_BACKOFF;
-                nextAttempt = gameTime + RECOVERY_INITIAL_BACKOFF;
+                backoffTicks = RECOVERY_INITIAL_BACKOFF;
+                nextAttemptGameTime = gameTime + RECOVERY_INITIAL_BACKOFF;
                 return;
             }
 
-            nextAttempt = gameTime + backoff;
-            backoff = Math.min(RECOVERY_MAX_BACKOFF, backoff * 2);
+            nextAttemptGameTime = gameTime + backoffTicks;
+            backoffTicks = Math.min(RECOVERY_MAX_BACKOFF, backoffTicks * 2);
         }
     }
 }

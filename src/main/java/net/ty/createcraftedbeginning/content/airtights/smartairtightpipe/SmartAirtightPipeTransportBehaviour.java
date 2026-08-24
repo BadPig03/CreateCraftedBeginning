@@ -11,10 +11,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class SmartAirtightPipeTransportBehaviour extends AxisGasTransportBehaviour {
+final class SmartAirtightPipeTransportBehaviour extends AxisGasTransportBehaviour {
     private final SmartAirtightPipeBlockEntity pipe;
 
-    public SmartAirtightPipeTransportBehaviour(SmartAirtightPipeBlockEntity pipe) {
+    SmartAirtightPipeTransportBehaviour(SmartAirtightPipeBlockEntity pipe) {
         super(pipe);
         this.pipe = pipe;
     }

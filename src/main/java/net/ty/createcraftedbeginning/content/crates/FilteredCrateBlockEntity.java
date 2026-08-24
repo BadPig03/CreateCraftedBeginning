@@ -14,10 +14,22 @@ import java.util.function.IntSupplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class FilteredCrateBlockEntity extends CratesBlockEntity {
-    protected CrateFilterController filterController;
+    private CrateFilterController filterController;
 
     protected FilteredCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, IntSupplier maxCountSupplier) {
         super(type, pos, state, maxCountSupplier);
+    }
+
+    @Override
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+        super.addBehaviours(behaviours);
+        filterController = new CrateFilterController();
+        filterController.addBehaviour(this, behaviours);
+    }
+
+    @Override
+    protected boolean canStoreItem(ItemStack stack) {
+        return filterController == null || filterController.canStoreItem(stack);
     }
 
     public final ItemStack getFilterItem() {
@@ -30,17 +42,5 @@ public abstract class FilteredCrateBlockEntity extends CratesBlockEntity {
         }
 
         filterController.setFilterItem(filterItem);
-    }
-
-    @Override
-    protected boolean canStoreItem(ItemStack stack) {
-        return filterController == null || filterController.canStoreItem(stack);
-    }
-
-    @Override
-    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        super.addBehaviours(behaviours);
-        filterController = new CrateFilterController();
-        filterController.addBehaviour(this, behaviours);
     }
 }

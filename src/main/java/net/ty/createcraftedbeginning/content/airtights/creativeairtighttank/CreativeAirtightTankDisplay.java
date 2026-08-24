@@ -6,7 +6,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -14,14 +13,14 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class CreativeAirtightTankDisplay {
+final class CreativeAirtightTankDisplay {
     private final CreativeAirtightTankBlockEntity owner;
 
-    public CreativeAirtightTankDisplay(CreativeAirtightTankBlockEntity owner) {
+    CreativeAirtightTankDisplay(CreativeAirtightTankBlockEntity owner) {
         this.owner = owner;
     }
 
-    public boolean addToGoggleTooltip(List<Component> tooltip) {
+    boolean addToGoggleTooltip(List<Component> tooltip) {
         if (owner.getLevel() == null) {
             return false;
         }
@@ -31,34 +30,36 @@ public final class CreativeAirtightTankDisplay {
             return false;
         }
 
-        IGasHandler handler = controller.getCapability();
         CCBLang.translate("gui.gas_container").forGoggles(tooltip);
-        GasStack gas = handler.getGasInTank(0);
-        if (gas.isEmpty()) {
+        GasStack gasStack = controller.getCapability().getGasInTank(0);
+        if (gasStack.isEmpty()) {
             CCBLang.translate("gui.gas_container.empty").style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
             return true;
         }
 
-        CCBLang.gasName(gas).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+        CCBLang.gasName(gasStack).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
         CCBLang.translate("gui.gas_container.infinity").style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
         return true;
     }
 
-    public int getMaxValue() {
+    int getMaxValue() {
         return owner.getControllerBE() == null ? 0 : GasAmounts.toWholeBucketsClamped(CreativeAirtightTankBlockEntity.getCapacityPerTank());
     }
 
-    public int getCurrentValue() {
+    int getCurrentValue() {
         CreativeAirtightTankBlockEntity controller = owner.getControllerBE();
         if (controller == null) {
             return 0;
         }
 
-        GasStack gas = controller.getCapability().getGasInTank(0);
-        return gas.isEmpty() ? 0 : GasAmounts.toWholeBucketsClamped(CreativeAirtightTankBlockEntity.getCapacityPerTank());
+        GasStack gasStack = controller.getCapability().getGasInTank(0);
+        if (gasStack.isEmpty()) {
+            return 0;
+        }
+        return GasAmounts.toWholeBucketsClamped(CreativeAirtightTankBlockEntity.getCapacityPerTank());
     }
 
-    public MutableComponent format(int value) {
+    MutableComponent format(int value) {
         return GasAmounts.formatWholeBuckets(value);
     }
 }

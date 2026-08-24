@@ -103,13 +103,13 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
             return;
         }
 
-        int slot = hoveredSlot.getSlotIndex();
-        if (slot == AirtightHandheldDrillMenu.FILTER_SLOT_INDEX) {
+        int slotIndex = hoveredSlot.getSlotIndex();
+        if (slotIndex == AirtightHandheldDrillMenu.FILTER_SLOT_INDEX) {
             guiGraphics.renderTooltip(font, FILTER_SLOT_TITLE.plainCopy().withStyle(ChatFormatting.GRAY), mouseX, mouseY);
         }
-        else if (slot == AirtightHandheldDrillMenu.UPGRADE_SLOT_INDEX) {
-            Component tooltip = disableUpgradeButton.visible ? UPGRADE_FULL.plainCopy().withStyle(ChatFormatting.GRAY) : UPGRADE_SLOT_TITLE.plainCopy().withStyle(ChatFormatting.GRAY);
-            guiGraphics.renderTooltip(font, tooltip, mouseX, mouseY);
+        else if (slotIndex == AirtightHandheldDrillMenu.UPGRADE_SLOT_INDEX) {
+            Component slotTooltip = disableUpgradeButton.visible ? UPGRADE_FULL.plainCopy().withStyle(ChatFormatting.GRAY) : UPGRADE_SLOT_TITLE.plainCopy().withStyle(ChatFormatting.GRAY);
+            guiGraphics.renderTooltip(font, slotTooltip, mouseX, mouseY);
         }
     }
 
@@ -139,7 +139,7 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
 
     @Override
     protected void updateStates() {
-        ItemStack stack = menu.getMenuInventory().getStackInSlot(AirtightUpgradableMenu.UPGRADE_SLOT_INDEX);
+        ItemStack upgradeStack = menu.getMenuInventory().getStackInSlot(AirtightUpgradableMenu.UPGRADE_SLOT_INDEX);
         AirtightHandheldDrillUpgradeRegistry.forEach(upgrade -> {
             IconButton button = upgradeButtons.get(upgrade);
             AirtightUpgradeStatus status = menu.getStatus(upgrade);
@@ -148,7 +148,7 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
                 return;
             }
 
-            button.active = status.isInstalled() || upgrade.testUpgradeItem(stack);
+            button.active = status.isInstalled() || upgrade.testUpgradeItem(upgradeStack);
             button.green = status.isInstalled() && status.isEnabled();
             Indicator indicator = (Indicator) upgradeIndicators.get(upgrade);
             indicator.state = getIndicatorState(status, button.active);
@@ -177,10 +177,10 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
     @Override
     public void removed() {
         if (!AirtightHandheldDrillUtils.isRelativePositionValid(miningTemplate, miningSize, miningDirection, relativePosition)) {
-            int[] defaultPositions = miningTemplate.getTemplate().getDefaultRelativePosition();
-            relativePosition[0] = defaultPositions[0];
-            relativePosition[1] = defaultPositions[1];
-            relativePosition[2] = defaultPositions[2];
+            int[] defaultRelativePosition = miningTemplate.getTemplate().getDefaultRelativePosition();
+            relativePosition[0] = defaultRelativePosition[0];
+            relativePosition[1] = defaultRelativePosition[1];
+            relativePosition[2] = defaultRelativePosition[2];
         }
         CatnipServices.NETWORK.sendToServer(new AirtightHandheldDrillParametersPacket(miningTemplate, new BlockPos(miningSize[0], miningSize[1], miningSize[2]), miningDirection, new BlockPos(relativePosition[0], relativePosition[1], relativePosition[2])));
         super.removed();
@@ -193,8 +193,8 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
         miningTemplateLabel = new Label(leftPos + 45, topPos + 30, CommonComponents.EMPTY).withShadow();
         addRenderableWidget(miningTemplateLabel);
 
-        miningTemplateInput = new SelectionScrollInput(leftPos + 40, topPos + 25, 58, 18).forOptions(AirtightHandheldDrillMiningTemplates.TEMPLATE_OPTIONS).withShiftStep(1).titled(TEMPLATE_TITLE.plainCopy()).writingTo(miningTemplateLabel).calling(state -> {
-            miningTemplate = AirtightHandheldDrillMiningTemplates.values()[state];
+        miningTemplateInput = new SelectionScrollInput(leftPos + 40, topPos + 25, 58, 18).forOptions(AirtightHandheldDrillMiningTemplates.TEMPLATE_OPTIONS).withShiftStep(1).titled(TEMPLATE_TITLE.plainCopy()).writingTo(miningTemplateLabel).calling(templateIndex -> {
+            miningTemplate = AirtightHandheldDrillMiningTemplates.values()[templateIndex];
             initMiningSize();
             initMiningDirection();
         });
@@ -214,8 +214,8 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
             miningSizeLabels.add(label);
 
             int parameterIndex = index;
-            ScrollInput input = new ScrollInput(leftPos + 40 + 20 * index, topPos + 45, 18, 18).withRange(miningTemplate.getTemplate().getMinValue(index), miningTemplate.getTemplate().getMaxValue(index) + 1).withShiftStep(3).writingTo(label).titled(miningTemplate.getSizeLabel(index, miningDirection).plainCopy()).calling(state -> {
-                miningSize[parameterIndex] = state;
+            ScrollInput input = new ScrollInput(leftPos + 40 + 20 * index, topPos + 45, 18, 18).withRange(miningTemplate.getTemplate().getMinValue(index), miningTemplate.getTemplate().getMaxValue(index) + 1).withShiftStep(3).writingTo(label).titled(miningTemplate.getSizeLabel(index, miningDirection).plainCopy()).calling(sizeValue -> {
+                miningSize[parameterIndex] = sizeValue;
                 label.setX(leftPos + 49 + 20 * parameterIndex - font.width(label.text) / 2);
                 initMiningRelativePosition();
             });
@@ -242,11 +242,11 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
             relativePositionLabels.add(label);
 
             int parameterIndex = index;
-            ScrollInput input = new ScrollInput(leftPos + 40 + 20 * index, topPos + 65, 18, 18).withRange(0, miningSize[index]).withShiftStep(3).writingTo(label).titled(miningTemplate.getRelativeLabel(index, miningDirection).plainCopy()).calling(state -> {
-                relativePosition[parameterIndex] = state;
+            ScrollInput input = new ScrollInput(leftPos + 40 + 20 * index, topPos + 65, 18, 18).withRange(0, miningSize[index]).withShiftStep(3).writingTo(label).titled(miningTemplate.getRelativeLabel(index, miningDirection).plainCopy()).calling(relativePositionValue -> {
+                relativePosition[parameterIndex] = relativePositionValue;
                 label.setX(leftPos + 49 + 20 * parameterIndex - font.width(label.text) / 2);
-                boolean isValidPosition = AirtightHandheldDrillUtils.isRelativePositionValid(miningTemplate, miningSize, miningDirection, relativePosition);
-                relativePositionLabels.forEach(positionLabel -> positionLabel.colored(isValidPosition ? COLOR_VALID : COLOR_INVALID));
+                boolean isRelativePositionValid = AirtightHandheldDrillUtils.isRelativePositionValid(miningTemplate, miningSize, miningDirection, relativePosition);
+                relativePositionLabels.forEach(positionLabel -> positionLabel.colored(isRelativePositionValid ? COLOR_VALID : COLOR_INVALID));
             });
             input.setState(relativePosition[index]);
             input.onChanged();
@@ -268,8 +268,8 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
         addRenderableWidget(miningDirectionLabel);
 
         List<Component> directionOptions = CCBLang.translatedOptions("gui.airtight_handheld_drill.direction", Arrays.stream(Direction.values()).map(Direction::getSerializedName).toArray(String[]::new));
-        miningDirectionInput = new SelectionScrollInput(leftPos + 40, topPos + 85, 58, 18).forOptions(directionOptions).withShiftStep(1).titled(DIRECTION_TITLE.plainCopy()).writingTo(miningDirectionLabel).calling(index -> {
-            miningDirection = Direction.values()[index];
+        miningDirectionInput = new SelectionScrollInput(leftPos + 40, topPos + 85, 58, 18).forOptions(directionOptions).withShiftStep(1).titled(DIRECTION_TITLE.plainCopy()).writingTo(miningDirectionLabel).calling(directionIndex -> {
+            miningDirection = Direction.values()[directionIndex];
             initMiningRelativePosition();
             initMiningSize();
         });

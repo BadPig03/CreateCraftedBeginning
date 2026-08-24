@@ -11,19 +11,19 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class CrateFilterController {
+final class CrateFilterController {
     private FilteringBehaviour filteringBehaviour;
 
-    public ItemStack getFilterItem() {
+    ItemStack getFilterItem() {
         if (filteringBehaviour == null) {
             return ItemStack.EMPTY;
         }
 
-        ItemStack filter = filteringBehaviour.getFilter();
-        return filter.isEmpty() ? ItemStack.EMPTY : filter.copyWithCount(1);
+        ItemStack filterItem = filteringBehaviour.getFilter();
+        return filterItem.isEmpty() ? ItemStack.EMPTY : filterItem.copyWithCount(1);
     }
 
-    public void setFilterItem(ItemStack filterItem) {
+    void setFilterItem(ItemStack filterItem) {
         if (filteringBehaviour == null) {
             return;
         }
@@ -31,7 +31,7 @@ public final class CrateFilterController {
         filteringBehaviour.setFilter(filterItem.isEmpty() ? ItemStack.EMPTY : filterItem.copyWithCount(1));
     }
 
-    public boolean canStoreItem(ItemStack stack) {
+    boolean canStoreItem(ItemStack stack) {
         if (filteringBehaviour == null) {
             return true;
         }
@@ -40,7 +40,7 @@ public final class CrateFilterController {
         return filterItem.isEmpty() || FilterItem.testDirect(filterItem, stack, false);
     }
 
-    public void addBehaviour(FilteredCrateBlockEntity blockEntity, List<BlockEntityBehaviour> behaviours) {
+    void addBehaviour(FilteredCrateBlockEntity blockEntity, List<BlockEntityBehaviour> behaviours) {
         filteringBehaviour = new FilteringBehaviour(blockEntity, new CrateFilterSlot());
         behaviours.add(filteringBehaviour);
     }

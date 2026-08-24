@@ -17,7 +17,7 @@ import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsE
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.content.fluids.CCBFluidClientExtensionRegistry;
-import net.ty.createcraftedbeginning.content.fluids.CCBFluidClientExtensionRegistry.Registration;
+import net.ty.createcraftedbeginning.content.fluids.CCBFluidClientExtensionRegistry.FluidRegistration;
 import net.ty.createcraftedbeginning.content.fluids.CCBFluidClientExtensionRegistry.SimpleRegistration;
 import net.ty.createcraftedbeginning.content.fluids.CCBFluidClientExtensionRegistry.TintedRegistration;
 import net.ty.createcraftedbeginning.content.fluids.TintedFluidType;
@@ -35,10 +35,10 @@ public final class CCBFluidClientExtensions {
     }
 
     public static void register(RegisterClientExtensionsEvent event) {
-        for (Registration registration : CCBFluidClientExtensionRegistry.registrations()) {
+        for (FluidRegistration registration : CCBFluidClientExtensionRegistry.registrations()) {
             switch (registration) {
-                case SimpleRegistration(FluidType type, ResourceLocation texture, ResourceLocation flowingTexture) -> event.registerFluidType(createSimple(texture, flowingTexture), type);
-                case TintedRegistration(TintedFluidType type) -> event.registerFluidType(createTinted(type), type);
+                case SimpleRegistration(FluidType fluidType, ResourceLocation stillTexture, ResourceLocation flowingTexture) -> event.registerFluidType(createSimple(stillTexture, flowingTexture), fluidType);
+                case TintedRegistration(TintedFluidType fluidType) -> event.registerFluidType(createTinted(fluidType), fluidType);
                 default -> {
                 }
             }
@@ -73,20 +73,20 @@ public final class CCBFluidClientExtensions {
 
             @Override
             public Vector3f modifyFogColor(Camera camera, float partialTick, ClientLevel level, int renderDistance, float darkenWorldAmount, Vector3f fogColor) {
-                Vector3f customColor = fluidType.clientCustomFogColor();
-                return customColor == null ? fogColor : customColor;
+                Vector3f customFogColor = fluidType.clientCustomFogColor();
+                return customFogColor == null ? fogColor : customFogColor;
             }
 
             @Override
             public void modifyFogRender(Camera camera, FogMode mode, float renderDistance, float partialTick, float nearDistance, float farDistance, FogShape shape) {
-                float modifier = fluidType.clientFogDistanceModifier();
-                if (modifier == 1) {
+                float fogDistanceModifier = fluidType.clientFogDistanceModifier();
+                if (fogDistanceModifier == 1) {
                     return;
                 }
 
                 RenderSystem.setShaderFogShape(FogShape.CYLINDER);
                 RenderSystem.setShaderFogStart(-8);
-                RenderSystem.setShaderFogEnd(96 * modifier);
+                RenderSystem.setShaderFogEnd(96 * fogDistanceModifier);
             }
 
             @Override

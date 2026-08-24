@@ -18,27 +18,23 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class CardboardCrateMountedStorage extends CrateMountedItemStorage<CardboardCrateBlockEntity> {
     public static final MapCodec<CardboardCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(ItemStack.OPTIONAL_CODEC.fieldOf("content").forGetter(CardboardCrateMountedStorage::getStoredItem), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("count").forGetter(CardboardCrateMountedStorage::getStoredCount), Codec.BOOL.optionalFieldOf("discardedPackage", false).forGetter(CardboardCrateMountedStorage::hasDiscardedPackage)).apply(instance, CardboardCrateMountedStorage::new));
 
-    protected boolean discardedPackage;
+    private boolean discardedPackage;
 
-    public CardboardCrateMountedStorage(ItemStack content, int count) {
+    private CardboardCrateMountedStorage(ItemStack content, int count) {
         this(content, count, false);
     }
 
-    public CardboardCrateMountedStorage(ItemStack content, int count, boolean discardedPackage) {
+    private CardboardCrateMountedStorage(ItemStack content, int count, boolean discardedPackage) {
         this(CCBMountedStorage.CARDBOARD_CRATE.get(), content, count, discardedPackage);
     }
 
-    protected CardboardCrateMountedStorage(MountedItemStorageType<?> type, ItemStack content, int count, boolean discardedPackage) {
+    private CardboardCrateMountedStorage(MountedItemStorageType<?> type, ItemStack content, int count, boolean discardedPackage) {
         super(type, CardboardCrateBlockEntity.class, content, count, () -> CCBConfig.server().crates.maxCardboardCapacity.get(), CardboardCrateBlockEntity::isPackage);
         this.discardedPackage = discardedPackage;
     }
 
     public static CardboardCrateMountedStorage fromBlockEntity(CardboardCrateBlockEntity crate) {
         return new CardboardCrateMountedStorage(crate.getStoredItem(), crate.getStoredCount());
-    }
-
-    public boolean hasDiscardedPackage() {
-        return discardedPackage;
     }
 
     @Override
@@ -53,5 +49,9 @@ public class CardboardCrateMountedStorage extends CrateMountedItemStorage<Cardbo
     @Override
     protected void onTrackedItemDiscarded() {
         discardedPackage = true;
+    }
+
+    private boolean hasDiscardedPackage() {
+        return discardedPackage;
     }
 }

@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.core.transaction;
+package net.ty.createcraftedbeginning.core;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import org.jetbrains.annotations.Nullable;
@@ -6,7 +6,6 @@ import org.jetbrains.annotations.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -17,10 +16,6 @@ public final class ResourceTransaction {
     private final List<Participant<?>> participants = new ArrayList<>();
 
     public static <S> Participant<S> participant(BooleanSupplier validator, Supplier<S> snapshotter, BooleanSupplier executor, Consumer<S> restorer) {
-        Objects.requireNonNull(validator, "validator");
-        Objects.requireNonNull(snapshotter, "snapshotter");
-        Objects.requireNonNull(executor, "executor");
-        Objects.requireNonNull(restorer, "restorer");
         return new Participant<>() {
             @Override
             public boolean validate() {
@@ -88,12 +83,11 @@ public final class ResourceTransaction {
     }
 
     public ResourceTransaction require(BooleanSupplier requirement) {
-        Objects.requireNonNull(requirement, "requirement");
         return add(participant(requirement, () -> Boolean.TRUE, () -> true, ignored -> {}));
     }
 
     public <S> ResourceTransaction add(Participant<S> participant) {
-        participants.add(Objects.requireNonNull(participant, "participant"));
+        participants.add(participant);
         return this;
     }
 
@@ -117,9 +111,11 @@ public final class ResourceTransaction {
         try {
             for (CapturedParticipant participant : captured) {
                 attemptedParticipants++;
-                if (!participant.execute()) {
-                    return false;
+                if (participant.execute()) {
+                    continue;
                 }
+
+                return false;
             }
 
             committed = true;
@@ -132,16 +128,6 @@ public final class ResourceTransaction {
                 rollback(captured, attemptedParticipants, failure);
             }
         }
-    }
-
-    public interface Participant<S> {
-        boolean validate();
-
-        S snapshot();
-
-        boolean execute();
-
-        void restore(S snapshot);
     }
 
     private interface CapturedParticipant {

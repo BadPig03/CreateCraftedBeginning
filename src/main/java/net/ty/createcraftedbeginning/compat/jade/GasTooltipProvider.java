@@ -31,28 +31,28 @@ public enum GasTooltipProvider implements IServerDataProvider<BlockAccessor>, IC
     private static Set<IGasHandler> getGasHandlers(Level level, BlockPos pos) {
         Set<IGasHandler> gasHandlers = new HashSet<>();
         for (Direction direction : Iterate.directions) {
-            IGasHandler handler = level.getCapability(GasHandler.BLOCK, pos, direction);
-            if (handler == null) {
+            IGasHandler gasHandler = level.getCapability(GasHandler.BLOCK, pos, direction);
+            if (gasHandler == null) {
                 continue;
             }
 
-            gasHandlers.add(handler);
+            gasHandlers.add(gasHandler);
         }
         return gasHandlers;
     }
 
     @Override
     public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
-        CompoundTag data = accessor.getServerData();
-        if (!data.contains(GasDataProvider.STORAGE_KEY) || !data.contains(GasDataProvider.STORAGE_UID_KEY)) {
+        CompoundTag serverData = accessor.getServerData();
+        if (!serverData.contains(GasDataProvider.STORAGE_KEY) || !serverData.contains(GasDataProvider.STORAGE_UID_KEY)) {
             return;
         }
 
-        if (!JadePlugin.GAS_BLOCK_TOOLTIP.toString().equals(data.getString(GasDataProvider.STORAGE_UID_KEY))) {
+        if (!JadePlugin.GAS_BLOCK_TOOLTIP.toString().equals(serverData.getString(GasDataProvider.STORAGE_UID_KEY))) {
             return;
         }
 
-        GasDataProvider.appendData(tooltip, data, accessor.showDetails());
+        GasDataProvider.appendData(tooltip, serverData, accessor.showDetails());
     }
 
     @Override

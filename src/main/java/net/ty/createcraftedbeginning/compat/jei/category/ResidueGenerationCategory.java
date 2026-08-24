@@ -48,8 +48,8 @@ public class ResidueGenerationCategory extends CCBRecipeCategory<ResidueGenerati
 
     @Override
     protected void setRecipe(IRecipeLayoutBuilder builder, ResidueGenerationRecipe recipe, IFocusGroup focuses) {
-        List<GasStack> gases = Arrays.stream(recipe.getIngredientsGas().getGases()).map(GasStack::copy).toList();
-        builder.addSlot(RecipeIngredientRole.INPUT, 27, 74).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gases);
+        List<GasStack> gasStacks = Arrays.stream(recipe.getIngredientsGas().getGases()).map(GasStack::copy).toList();
+        builder.addSlot(RecipeIngredientRole.INPUT, 27, 74).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gasStacks);
         IRecipeSlotBuilder outputSlot = builder.addSlot(RecipeIngredientRole.OUTPUT, 132, 74).setBackground(getRenderedSlot(), -1, -1);
         if (!recipe.hasResidueOutput()) {
             return;

@@ -67,12 +67,6 @@ public final class GasInjectionChamberUtils {
         return stack.is(CCBItems.GAS_INJECTION_CHAMBER_FILTER.get());
     }
 
-    private static int sampleColor(FanProcessingType type, RandomSource random) {
-        ColorCapture capture = new ColorCapture();
-        type.morphAirFlow(capture, random);
-        return capture.hasColor ? 0xFF000000 | capture.color : DEFAULT_COLOR;
-    }
-
     public static Optional<ResourceLocation> getFanProcessingTypeId(ItemStack stack) {
         if (!isFilter(stack)) {
             return Optional.empty();
@@ -84,78 +78,90 @@ public final class GasInjectionChamberUtils {
         return Optional.ofNullable(CreateBuiltInRegistries.FAN_PROCESSING_TYPE.get(typeId));
     }
 
-    public static int getColor(ItemStack stack) {
+    public static ItemStack create(ItemStack input, FanProcessingType type) {
+        ItemStack filterStack = input.copy();
+        ResourceLocation typeId = CreateBuiltInRegistries.FAN_PROCESSING_TYPE.getKey(type);
+        if (typeId == null) {
+            filterStack.remove(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_FAN_PROCESSING_TYPE);
+            return filterStack;
+        }
+
+        filterStack.set(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_FAN_PROCESSING_TYPE, typeId);
+        Integer presetColor = COLORS.get(typeId);
+        int filterColor = presetColor != null ? presetColor : sampleColor(type, RandomSource.create(typeId.hashCode()));
+        filterStack.set(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_COLOR, filterColor);
+        return filterStack;
+    }
+
+    static int getColor(ItemStack stack) {
         if (!isFilter(stack)) {
             return DEFAULT_COLOR;
         }
         return stack.getOrDefault(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_COLOR, DEFAULT_COLOR);
     }
 
-    public static long getFanProcessingGasCost(GasStack gas, int itemCount) {
+    static long getFanProcessingGasCost(GasStack gas, int itemCount) {
         if (gas.isEmpty() || itemCount <= 0 || GasTags.isTag(gas, CCBGasTags.CREATIVE.tag)) {
             return 0;
         }
 
-        int divisor = 1;
+        int efficiencyDivisor = 1;
         if (GasTags.isTag(gas, CCBGasTags.ENERGIZED.tag)) {
-            divisor *= 5;
+            efficiencyDivisor *= 5;
         }
         if (GasTags.isTag(gas, CCBGasTags.PRESSURIZED.tag)) {
-            divisor *= 20;
+            efficiencyDivisor *= 20;
         }
-
-        int baseCost = CCBConfig.server().airtights.baseFanProcessingGasPerItem.get() * itemCount;
-        return baseCost / divisor + (baseCost % divisor == 0 ? 0 : 1);
+        long baseCost = (long) CCBConfig.server().airtights.baseFanProcessingGasPerItem.get() * itemCount;
+        return baseCost / efficiencyDivisor + (baseCost % efficiencyDivisor == 0 ? 0 : 1);
     }
 
-    public static int getMaxFanProcessingBatchSize(GasStack gas, int desiredCount) {
+    static int getMaxFanProcessingBatchSize(GasStack gas, int desiredCount, long gasBudget) {
         if (gas.isEmpty() || desiredCount <= 0) {
             return 0;
         }
 
-        if (GasTags.isTag(gas, CCBGasTags.CREATIVE.tag)) {
+        if (GasTags.isTag(gas, CCBGasTags.CREATIVE.tag) || !consumesFanProcessingGas(gas)) {
             return desiredCount;
         }
 
-        int low = 0;
-        int high = desiredCount;
-        while (low < high) {
-            int candidate = low + (high - low + 1) / 2;
-            if (getFanProcessingGasCost(gas, candidate) > gas.getAmount()) {
-                high = candidate - 1;
+        if (gasBudget <= 0) {
+            return 0;
+        }
+
+        int minimumBatchSize = 0;
+        int maximumBatchSize = desiredCount;
+        while (minimumBatchSize < maximumBatchSize) {
+            int candidateBatchSize = minimumBatchSize + (maximumBatchSize - minimumBatchSize + 1) / 2;
+            if (getFanProcessingGasCost(gas, candidateBatchSize) > gasBudget) {
+                maximumBatchSize = candidateBatchSize - 1;
                 continue;
             }
 
-            low = candidate;
+            minimumBatchSize = candidateBatchSize;
         }
-        return low;
+        return minimumBatchSize;
     }
 
-    public static boolean consumesFanProcessingGas(GasStack gas) {
+    static boolean consumesFanProcessingGas(GasStack gas) {
         return CCBConfig.server().airtights.baseFanProcessingGasPerItem.get() > 0 && !gas.isEmpty() && !GasTags.isTag(gas, CCBGasTags.CREATIVE.tag);
     }
 
-    public static ItemStack create(ItemStack input, FanProcessingType type) {
-        ItemStack result = input.copy();
-        ResourceLocation typeId = CreateBuiltInRegistries.FAN_PROCESSING_TYPE.getKey(type);
-        if (typeId == null) {
-            result.remove(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_FAN_PROCESSING_TYPE);
-            return result;
-        }
-
-        result.set(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_FAN_PROCESSING_TYPE, typeId);
-        Integer presetColor = COLORS.get(typeId);
-        int color = presetColor != null ? presetColor : sampleColor(type, RandomSource.create(typeId.hashCode()));
-        result.set(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_COLOR, color);
-        return result;
+    static Component getFanProcessingTypeName(ResourceLocation typeId) {
+        return Component.translatableWithFallback(getFanProcessingTypeTranslationKey(typeId), typeId.toString());
     }
 
     private static String getFanProcessingTypeTranslationKey(ResourceLocation typeId) {
         return "fan_processing_type." + typeId.getNamespace() + '.' + typeId.getPath().replace('/', '.');
     }
 
-    public static Component getFanProcessingTypeName(ResourceLocation typeId) {
-        return Component.translatableWithFallback(getFanProcessingTypeTranslationKey(typeId), typeId.toString());
+    private static int sampleColor(FanProcessingType processingType, RandomSource random) {
+        ColorCapture colorCapture = new ColorCapture();
+        processingType.morphAirFlow(colorCapture, random);
+        if (!colorCapture.hasColor) {
+            return DEFAULT_COLOR;
+        }
+        return 0xFF000000 | colorCapture.color;
     }
 
     private static final class ColorCapture implements AirFlowParticleAccess {

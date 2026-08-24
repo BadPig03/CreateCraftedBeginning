@@ -35,9 +35,9 @@ public class ChillingCategory extends CCBRecipeCategory<ChillingRecipe> {
     }
 
     public static Supplier<ItemStack> getCatalystStack() {
-        ItemStack stack = new ItemStack(AllBlocks.ENCASED_FAN);
-        stack.set(DataComponents.CUSTOM_NAME, CCBLang.translateDirect("recipe.fan_chilling.fan").withStyle(style -> style.withItalic(false)));
-        return () -> stack;
+        ItemStack fanStack = new ItemStack(AllBlocks.ENCASED_FAN);
+        fanStack.set(DataComponents.CUSTOM_NAME, CCBLang.translateDirect("recipe.fan_chilling.fan").withStyle(style -> style.withItalic(false)));
+        return () -> fanStack;
     }
 
     @Override
@@ -64,18 +64,18 @@ public class ChillingCategory extends CCBRecipeCategory<ChillingRecipe> {
 
     @Override
     protected void setRecipe(IRecipeLayoutBuilder builder, ChillingRecipe recipe, IFocusGroup focuses) {
-        List<ProcessingOutput> results = recipe.getRollableResults();
-        boolean hasManyResults = results.size() > 9;
-        int xOffset = 1 - Math.min(3, results.size());
+        List<ProcessingOutput> outputs = recipe.getRollableResults();
+        boolean hasManyOutputs = outputs.size() > 9;
+        int xOffset = 1 - Math.min(3, outputs.size());
 
         builder.addSlot(RecipeIngredientRole.INPUT, 5 * xOffset + 21, 48).setBackground(getRenderedSlot(), -1, -1).addIngredients(recipe.getIngredients().getFirst());
 
-        int index = 0;
-        for (ProcessingOutput output : results) {
-            int x = 141 + index % 3 * 19 + 9 * xOffset;
-            int y = 48 - index / 3 * 19 + (hasManyResults ? 8 : 0);
-            builder.addSlot(RecipeIngredientRole.OUTPUT, x, y).setBackground(getRenderedSlot(output), -1, -1).addItemStack(output.getStack()).addRichTooltipCallback(CreateRecipeCategory.addStochasticTooltip(output));
-            index++;
+        int outputIndex = 0;
+        for (ProcessingOutput output : outputs) {
+            int slotX = 141 + outputIndex % 3 * 19 + 9 * xOffset;
+            int slotY = 48 - outputIndex / 3 * 19 + (hasManyOutputs ? 8 : 0);
+            builder.addSlot(RecipeIngredientRole.OUTPUT, slotX, slotY).setBackground(getRenderedSlot(output), -1, -1).addItemStack(output.getStack()).addRichTooltipCallback(CreateRecipeCategory.addStochasticTooltip(output));
+            outputIndex++;
         }
     }
 }

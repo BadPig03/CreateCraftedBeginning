@@ -33,21 +33,17 @@ import java.util.Map;
 public abstract class AirtightUpgradableMenu extends MenuBase<ItemStack> {
     public static final int UPGRADE_SLOT_INDEX = 0;
     protected static final int PLAYER_INVENTORY_SLOTS = Inventory.INVENTORY_SIZE;
-    protected final InteractionHand sourceHand;
+    private final InteractionHand sourceHand;
     protected InventoryHandler menuInventory;
     protected List<AirtightUpgradeStatus> currentStatusList;
-    protected int serverStateRevision;
+    private int serverStateRevision;
 
-    public AirtightUpgradableMenu(MenuType<?> type, int id, Inventory inventory, RegistryFriendlyByteBuf extraData) {
+    protected AirtightUpgradableMenu(MenuType<?> type, int id, Inventory inventory, RegistryFriendlyByteBuf extraData) {
         super(type, id, inventory, extraData);
         sourceHand = extraData.readEnum(InteractionHand.class);
     }
 
-    public AirtightUpgradableMenu(MenuType<?> type, int id, Inventory inventory, ItemStack contentHolder) {
-        this(type, id, inventory, contentHolder, InteractionHand.MAIN_HAND);
-    }
-
-    public AirtightUpgradableMenu(MenuType<?> type, int id, Inventory inventory, ItemStack contentHolder, InteractionHand sourceHand) {
+    protected AirtightUpgradableMenu(MenuType<?> type, int id, Inventory inventory, ItemStack contentHolder, InteractionHand sourceHand) {
         super(type, id, inventory, contentHolder);
         this.sourceHand = sourceHand;
     }
@@ -57,57 +53,57 @@ public abstract class AirtightUpgradableMenu extends MenuBase<ItemStack> {
         buffer.writeEnum(sourceHand);
     }
 
-    public static InventoryHandler getInventoryHandler(ItemStack stack, int slotCount) {
-        ItemContainerContents contents = stack.get(CCBDataComponents.AIRTIGHT_UPGRADABLE_INVENTORY);
-        InventoryHandler handler = new InventoryHandler(slotCount);
-        if (contents == null) {
-            return handler;
+    protected static InventoryHandler getInventoryHandler(ItemStack stack, int slotCount) {
+        ItemContainerContents inventoryContents = stack.get(CCBDataComponents.AIRTIGHT_UPGRADABLE_INVENTORY);
+        InventoryHandler inventoryHandler = new InventoryHandler(slotCount);
+        if (inventoryContents == null) {
+            return inventoryHandler;
         }
 
-        ItemHelper.fillItemStackHandler(contents, handler);
-        return handler;
+        ItemHelper.fillItemStackHandler(inventoryContents, inventoryHandler);
+        return inventoryHandler;
     }
 
-    protected static List<AirtightUpgradeStatus> normalizeStatusList(List<AirtightUpgradeStatus> saved, List<AirtightUpgrade> upgrades) {
-        Map<ResourceLocation, AirtightUpgradeStatus> byId = new HashMap<>();
-        for (AirtightUpgradeStatus status : saved) {
-            byId.put(status.id(), status);
+    protected static List<AirtightUpgradeStatus> normalizeStatusList(List<AirtightUpgradeStatus> savedStatuses, List<AirtightUpgrade> upgrades) {
+        Map<ResourceLocation, AirtightUpgradeStatus> statusesById = new HashMap<>();
+        for (AirtightUpgradeStatus status : savedStatuses) {
+            statusesById.put(status.id(), status);
         }
 
-        List<AirtightUpgradeStatus> normalized = new ArrayList<>(upgrades.size());
+        List<AirtightUpgradeStatus> normalizedStatuses = new ArrayList<>(upgrades.size());
         for (AirtightUpgrade upgrade : upgrades) {
-            AirtightUpgradeStatus status = byId.get(upgrade.getID());
+            AirtightUpgradeStatus status = statusesById.get(upgrade.getID());
             if (status == null) {
-                normalized.add(new AirtightUpgradeStatus(upgrade.getID(), upgrade.startsEnabled(), upgrade.startsInstalled()));
+                normalizedStatuses.add(new AirtightUpgradeStatus(upgrade.getID(), upgrade.startsEnabled(), upgrade.startsInstalled()));
                 continue;
             }
 
-            boolean installed = status.isInstalled();
-            boolean enabled = installed && status.isEnabled();
-            normalized.add(new AirtightUpgradeStatus(upgrade.getID(), enabled, installed));
+            boolean isInstalled = status.isInstalled();
+            boolean isEnabled = isInstalled && status.isEnabled();
+            normalizedStatuses.add(new AirtightUpgradeStatus(upgrade.getID(), isEnabled, isInstalled));
         }
 
-        return normalized;
+        return normalizedStatuses;
     }
 
-    protected int findStatusIndex(ResourceLocation id) {
-        for (int i = 0; i < currentStatusList.size(); i++) {
-            if (!currentStatusList.get(i).id().equals(id)) {
+    private int findStatusIndex(ResourceLocation upgradeId) {
+        for (int statusIndex = 0; statusIndex < currentStatusList.size(); statusIndex++) {
+            if (!currentStatusList.get(statusIndex).id().equals(upgradeId)) {
                 continue;
             }
 
-            return i;
+            return statusIndex;
         }
         return -1;
     }
 
-    protected boolean setStatus(AirtightUpgradeStatus status) {
-        int index = findStatusIndex(status.id());
-        if (index < 0) {
+    private boolean setStatus(AirtightUpgradeStatus status) {
+        int statusIndex = findStatusIndex(status.id());
+        if (statusIndex < 0) {
             return false;
         }
 
-        currentStatusList.set(index, status);
+        currentStatusList.set(statusIndex, status);
         return true;
     }
 
@@ -163,59 +159,58 @@ public abstract class AirtightUpgradableMenu extends MenuBase<ItemStack> {
         return 1;
     }
 
-    public abstract void updateStatus(ItemStack stack);
+    protected abstract void updateStatus(ItemStack stack);
 
     public AirtightUpgradeStatus getStatus(AirtightUpgrade upgrade) {
-        int index = findStatusIndex(upgrade.getID());
-        if (index < 0) {
+        int statusIndex = findStatusIndex(upgrade.getID());
+        if (statusIndex < 0) {
             return new AirtightUpgradeStatus(upgrade.getID(), upgrade.startsEnabled(), upgrade.startsInstalled());
         }
-        return currentStatusList.get(index);
+        return currentStatusList.get(statusIndex);
     }
 
-    public boolean tryInstallUpgrade(ResourceLocation id) {
-        AirtightUpgrade upgrade = getUpgradeById(id);
+    boolean tryInstallUpgrade(ResourceLocation upgradeId) {
+        AirtightUpgrade upgrade = getUpgradeById(upgradeId);
         if (upgrade == null) {
             return false;
         }
 
         AirtightUpgradeStatus status = getStatus(upgrade);
-        if (status.isInstalled() || findStatusIndex(id) < 0) {
+        if (status.isInstalled() || findStatusIndex(upgradeId) < 0) {
             return false;
         }
 
-        ItemStack stackInSlot = menuInventory.getStackInSlot(UPGRADE_SLOT_INDEX);
-        if (stackInSlot.isEmpty() || !upgrade.testUpgradeItem(stackInSlot)) {
+        ItemStack upgradeStack = menuInventory.getStackInSlot(UPGRADE_SLOT_INDEX);
+        if (upgradeStack.isEmpty() || !upgrade.testUpgradeItem(upgradeStack)) {
             return false;
         }
 
         menuInventory.extractItem(UPGRADE_SLOT_INDEX, 1, false);
-        return setStatus(new AirtightUpgradeStatus(id, upgrade.startsEnabled(), true));
+        return setStatus(new AirtightUpgradeStatus(upgradeId, upgrade.startsEnabled(), true));
     }
 
-    public boolean tryToggleUpgrade(ResourceLocation id) {
-        AirtightUpgrade upgrade = getUpgradeById(id);
+    boolean tryToggleUpgrade(ResourceLocation upgradeId) {
+        AirtightUpgrade upgrade = getUpgradeById(upgradeId);
         if (upgrade == null) {
             return false;
         }
 
         AirtightUpgradeStatus status = getStatus(upgrade);
-        return status.isInstalled() && findStatusIndex(id) >= 0 && setStatus(new AirtightUpgradeStatus(id, !status.isEnabled(), true));
+        return status.isInstalled() && findStatusIndex(upgradeId) >= 0 && setStatus(new AirtightUpgradeStatus(upgradeId, !status.isEnabled(), true));
     }
 
-    public void syncToClient(ServerPlayer player) {
+    void syncToClient(ServerPlayer player) {
         ItemStack upgradeStack = menuInventory.getStackInSlot(UPGRADE_SLOT_INDEX).copy();
-        AirtightUpgradeMenuSyncPacket packet = new AirtightUpgradeMenuSyncPacket(containerId, List.copyOf(currentStatusList), upgradeStack);
-        CatnipServices.NETWORK.sendToClient(player, packet);
+        CatnipServices.NETWORK.sendToClient(player, new AirtightUpgradeMenuSyncPacket(containerId, List.copyOf(currentStatusList), upgradeStack));
     }
 
-    public void applyServerState(List<AirtightUpgradeStatus> statuses, ItemStack upgradeStack) {
+    void applyServerState(List<AirtightUpgradeStatus> statuses, ItemStack upgradeStack) {
         currentStatusList = new ArrayList<>(statuses);
         menuInventory.setStackInSlot(UPGRADE_SLOT_INDEX, upgradeStack.copy());
         serverStateRevision++;
     }
 
-    public int getServerStateRevision() {
+    int getServerStateRevision() {
         return serverStateRevision;
     }
 
@@ -242,8 +237,8 @@ public abstract class AirtightUpgradableMenu extends MenuBase<ItemStack> {
                 return ItemStack.EMPTY;
             }
 
-            int upgradeSlot = PLAYER_INVENTORY_SLOTS + UPGRADE_SLOT_INDEX;
-            if (!moveItemStackTo(slotStack, upgradeSlot, upgradeSlot + 1, false)) {
+            int upgradeSlotIndex = PLAYER_INVENTORY_SLOTS + UPGRADE_SLOT_INDEX;
+            if (!moveItemStackTo(slotStack, upgradeSlotIndex, upgradeSlotIndex + 1, false)) {
                 return ItemStack.EMPTY;
             }
         }
@@ -265,8 +260,8 @@ public abstract class AirtightUpgradableMenu extends MenuBase<ItemStack> {
 
     @Override
     public void clicked(int slotIndex, int dragType, ClickType clickType, Player player) {
-        int selectedSlot = playerInventory.selected + PLAYER_INVENTORY_SLOTS - 9;
-        if (slotIndex == selectedSlot && clickType != ClickType.THROW) {
+        int selectedHotbarSlotIndex = playerInventory.selected + PLAYER_INVENTORY_SLOTS - 9;
+        if (slotIndex == selectedHotbarSlotIndex && clickType != ClickType.THROW) {
             return;
         }
 

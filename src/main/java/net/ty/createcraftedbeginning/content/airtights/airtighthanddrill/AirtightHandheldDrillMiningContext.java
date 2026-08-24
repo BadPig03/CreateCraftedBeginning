@@ -40,49 +40,49 @@ record AirtightHandheldDrillMiningContext(Level level, BlockPos basePos, Set<Blo
         Set<BlockPos> breakSpeedPos = new LinkedHashSet<>();
         FilterItemStack filter = getFilter(drill);
         Map<Item, Boolean> filterMatches = filter == null ? null : new HashMap<>();
-        boolean breakContainers = HandheldDrillContainerProtectionButton.INSTANCE.canApply(drill);
+        boolean shouldBreakContainers = HandheldDrillContainerProtectionButton.INSTANCE.canApply(drill);
         float baseHardness = 0;
         float totalBreakHardness = 0;
-        for (BlockPos pos : totalPos) {
-            BlockState state = level.getBlockState(pos);
-            if (state.isAir()) {
+        for (BlockPos targetPos : totalPos) {
+            BlockState blockState = level.getBlockState(targetPos);
+            if (blockState.isAir()) {
                 continue;
             }
 
-            boolean isProtected = isProtected(level, pos, state, filter, filterMatches, breakContainers);
-            if (isProtected) {
-                protectedPos.add(pos);
+            boolean isProtectedTarget = isProtected(level, targetPos, blockState, filter, filterMatches, shouldBreakContainers);
+            if (isProtectedTarget) {
+                protectedPos.add(targetPos);
             }
 
-            float destroySpeed = state.getDestroySpeed(level, pos);
-            if (pos.equals(basePos)) {
-                baseHardness = destroySpeed;
+            float blockHardness = blockState.getDestroySpeed(level, targetPos);
+            if (targetPos.equals(basePos)) {
+                baseHardness = blockHardness;
             }
 
-            boolean isUnbreakable = destroySpeed == -1;
-            boolean isLiquid = state.getBlock() instanceof LiquidBlock;
-            boolean isInstantDestruction = destroySpeed == 0;
+            boolean isUnbreakable = blockHardness == -1;
+            boolean isLiquid = blockState.getBlock() instanceof LiquidBlock;
+            boolean isInstantDestruction = blockHardness == 0;
             if (isUnbreakable) {
-                unbreakablePos.add(pos);
+                unbreakablePos.add(targetPos);
             }
             if (isLiquid) {
-                liquidPos.add(pos);
+                liquidPos.add(targetPos);
             }
             if (isInstantDestruction) {
-                instantDestructionPos.add(pos);
+                instantDestructionPos.add(targetPos);
             }
 
-            if (isProtected || isUnbreakable) {
+            if (isProtectedTarget || isUnbreakable) {
                 continue;
             }
 
-            destructionPos.add(pos);
+            destructionPos.add(targetPos);
             if (isLiquid || isInstantDestruction) {
                 continue;
             }
 
-            breakSpeedPos.add(pos);
-            totalBreakHardness += Math.max(0, destroySpeed);
+            breakSpeedPos.add(targetPos);
+            totalBreakHardness += Math.max(0, blockHardness);
         }
         return new AirtightHandheldDrillMiningContext(level, basePos, immutableView(totalPos), immutableView(protectedPos), immutableView(unbreakablePos), immutableView(liquidPos), immutableView(instantDestructionPos), immutableView(destructionPos), immutableView(breakSpeedPos), baseHardness, totalBreakHardness);
     }
@@ -92,22 +92,22 @@ record AirtightHandheldDrillMiningContext(Level level, BlockPos basePos, Set<Blo
             return null;
         }
 
-        ItemContainerContents contents = drill.get(CCBDataComponents.AIRTIGHT_UPGRADABLE_INVENTORY);
-        if (contents == null || contents.getSlots() <= AirtightHandheldDrillMenu.FILTER_SLOT_INDEX) {
+        ItemContainerContents upgradeInventory = drill.get(CCBDataComponents.AIRTIGHT_UPGRADABLE_INVENTORY);
+        if (upgradeInventory == null || upgradeInventory.getSlots() <= AirtightHandheldDrillMenu.FILTER_SLOT_INDEX) {
             return null;
         }
 
-        ItemStack filterStack = contents.getStackInSlot(AirtightHandheldDrillMenu.FILTER_SLOT_INDEX);
+        ItemStack filterStack = upgradeInventory.getStackInSlot(AirtightHandheldDrillMenu.FILTER_SLOT_INDEX);
         return filterStack.isEmpty() ? null : FilterItemStack.of(filterStack);
     }
 
-    private static boolean isProtected(Level level, BlockPos pos, BlockState state, @Nullable FilterItemStack filter, @Nullable Map<Item, Boolean> filterMatches, boolean breakContainers) {
+    private static boolean isProtected(Level level, BlockPos blockPos, BlockState blockState, @Nullable FilterItemStack filter, @Nullable Map<Item, Boolean> filterMatches, boolean shouldBreakContainers) {
         boolean matchesFilter = false;
         if (filter != null && filterMatches != null) {
-            Item item = state.getBlock().asItem();
-            matchesFilter = filterMatches.computeIfAbsent(item, key -> filter.test(level, new ItemStack(key)));
+            Item blockItem = blockState.getBlock().asItem();
+            matchesFilter = filterMatches.computeIfAbsent(blockItem, filterItem -> filter.test(level, new ItemStack(filterItem)));
         }
-        return matchesFilter || !breakContainers && level.getCapability(ItemHandler.BLOCK, pos, null) != null;
+        return matchesFilter || !shouldBreakContainers && level.getCapability(ItemHandler.BLOCK, blockPos, null) != null;
     }
 
     private static Set<BlockPos> getTotalPos(ItemStack drill, BlockPos basePos, Level level, BlockState baseState) {

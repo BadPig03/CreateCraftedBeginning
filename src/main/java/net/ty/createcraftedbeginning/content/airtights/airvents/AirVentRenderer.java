@@ -33,23 +33,23 @@ public class AirVentRenderer extends SafeBlockEntityRenderer<AirVentBlockEntity>
 
     @Override
     protected void renderSafe(AirVentBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource buffers, int light, int overlay) {
-        int visibleMask = blockEntity.getVisibleLouverMask();
-        if (visibleMask == 0) {
+        int visibleLouverMask = blockEntity.getVisibleLouverMask();
+        if (visibleLouverMask == 0) {
             return;
         }
 
-        int openedMask = blockEntity.getOpenedLouverMask();
-        BlockState state = blockEntity.getBlockState();
-        VertexConsumer consumer = buffers.getBuffer(RenderType.solid());
+        int openedLouverMask = blockEntity.getOpenedLouverMask();
+        BlockState blockState = blockEntity.getBlockState();
+        VertexConsumer solidBuffer = buffers.getBuffer(RenderType.solid());
         for (Direction direction : Iterate.directions) {
-            int mask = 1 << direction.get3DDataValue();
-            if ((visibleMask & mask) == 0) {
+            int directionMask = 1 << direction.get3DDataValue();
+            if ((visibleLouverMask & directionMask) == 0) {
                 continue;
             }
 
-            PartialModel model = (openedMask & mask) == 0 ? CCBPartialModels.AIR_VENT_CLOSED : CCBPartialModels.AIR_VENT_OPENED;
-            renderLouver(model, state, direction, LOUVER_SURFACE_OFFSET, poseStack, consumer, light, overlay);
-            renderLouver(model, state, direction, -LOUVER_SURFACE_OFFSET, poseStack, consumer, light, overlay);
+            PartialModel louverModel = (openedLouverMask & directionMask) == 0 ? CCBPartialModels.AIR_VENT_CLOSED : CCBPartialModels.AIR_VENT_OPENED;
+            renderLouver(louverModel, blockState, direction, LOUVER_SURFACE_OFFSET, poseStack, solidBuffer, light, overlay);
+            renderLouver(louverModel, blockState, direction, -LOUVER_SURFACE_OFFSET, poseStack, solidBuffer, light, overlay);
         }
     }
 }

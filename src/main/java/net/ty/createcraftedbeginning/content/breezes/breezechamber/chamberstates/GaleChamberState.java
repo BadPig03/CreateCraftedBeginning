@@ -22,7 +22,12 @@ public class GaleChamberState extends BaseChamberState {
             return;
         }
 
+        int processingWindTime = remainingTime;
         remainingTime--;
+        if (!level.isClientSide) {
+            chamber.tickGasProcessing(ChargerType.NORMAL, processingWindTime);
+        }
+
         if (remainingTime <= 0) {
             chamber.setChamberState(new InactiveChamberState());
             return;
@@ -33,7 +38,6 @@ public class GaleChamberState extends BaseChamberState {
         }
 
         chamber.syncWindProgress();
-        chamber.tickGasProcessing(ChargerType.NORMAL);
     }
 
     @Override

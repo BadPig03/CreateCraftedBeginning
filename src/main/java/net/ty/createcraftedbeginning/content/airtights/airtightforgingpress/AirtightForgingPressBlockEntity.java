@@ -34,7 +34,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasInventoryIdentifierProvider;
-import net.ty.createcraftedbeginning.recipe.ForgingPressRecipeContext;
+import net.ty.createcraftedbeginning.recipe.interfaces.ForgingPressRecipeContext;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
 

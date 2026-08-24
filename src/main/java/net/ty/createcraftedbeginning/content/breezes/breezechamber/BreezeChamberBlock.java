@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.content.breezes.breezechamber;
 
-import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
@@ -82,27 +81,17 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(WIND_LEVEL, WindLevel.CALM));
     }
 
-    public static WindLevel getWindLevelOf(BlockState blockState) {
+    static WindLevel getWindLevelOf(BlockState blockState) {
         return blockState.getValue(WIND_LEVEL);
     }
 
-    private static ItemInteractionResult setGoggles(BreezeChamberBlockEntity chamber, boolean goggles) {
-        if (chamber.hasGoggles() == goggles) {
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        }
-
-        chamber.setGoggles(goggles);
-        chamber.notifyUpdate();
-        return ItemInteractionResult.SUCCESS;
-    }
-
-    public static InteractionResultHolder<ItemStack> tryInsert(Level level, BlockPos pos, ItemStack stack, boolean doNotConsume, boolean forceOverflow, boolean simulate) {
-        if (!(level.getBlockEntity(pos) instanceof BreezeChamberBlockEntity chamber)) {
+    static InteractionResultHolder<ItemStack> tryInsert(Level level, BlockPos chamberPos, ItemStack inputStack, boolean doNotConsume, boolean forceOverflow, boolean simulate) {
+        if (!(level.getBlockEntity(chamberPos) instanceof BreezeChamberBlockEntity chamber)) {
             return InteractionResultHolder.fail(ItemStack.EMPTY);
         }
 
-        InteractionResultHolder<ItemStack> updateResult = chamber.tryUpdateChargerByItem(stack, forceOverflow, simulate);
-        if (updateResult.getResult() != InteractionResult.SUCCESS) {
+        InteractionResultHolder<ItemStack> insertionResult = chamber.tryUpdateChargerByItem(inputStack, forceOverflow, simulate);
+        if (insertionResult.getResult() != InteractionResult.SUCCESS) {
             return InteractionResultHolder.fail(ItemStack.EMPTY);
         }
 
@@ -110,22 +99,32 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
             return InteractionResultHolder.success(ItemStack.EMPTY);
         }
 
-        ItemStack container = updateResult.getObject();
-        if (container.isEmpty()) {
-            FoodProperties food = stack.getItem().getFoodProperties(stack, null);
-            if (food != null) {
-                container = food.usingConvertsTo().orElse(ItemStack.EMPTY);
+        ItemStack remainder = insertionResult.getObject();
+        if (remainder.isEmpty()) {
+            FoodProperties foodProperties = inputStack.getItem().getFoodProperties(inputStack, null);
+            if (foodProperties != null) {
+                remainder = foodProperties.usingConvertsTo().orElse(ItemStack.EMPTY);
             }
-            if (container.isEmpty()) {
-                container = stack.hasCraftingRemainingItem() ? stack.getCraftingRemainingItem() : ItemStack.EMPTY;
+            if (remainder.isEmpty()) {
+                remainder = inputStack.hasCraftingRemainingItem() ? inputStack.getCraftingRemainingItem() : ItemStack.EMPTY;
             }
         }
         if (simulate || level.isClientSide) {
-            return InteractionResultHolder.success(container);
+            return InteractionResultHolder.success(remainder);
         }
 
-        stack.shrink(1);
-        return InteractionResultHolder.success(container);
+        inputStack.shrink(1);
+        return InteractionResultHolder.success(remainder);
+    }
+
+    private static ItemInteractionResult setGoggles(BreezeChamberBlockEntity chamber, boolean hasGoggles) {
+        if (chamber.hasGoggles() == hasGoggles) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        chamber.setGoggles(hasGoggles);
+        chamber.notifyUpdate();
+        return ItemInteractionResult.SUCCESS;
     }
 
     @Override
@@ -185,18 +184,18 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
 
         boolean doNotConsume = player.isCreative();
         boolean forceOverflow = !(player instanceof FakePlayer);
-        InteractionResultHolder<ItemStack> resultHolder = tryInsert(level, pos, stack, doNotConsume, forceOverflow, false);
-        ItemInteractionResult interactionResult = resultHolder.getResult() == InteractionResult.SUCCESS ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        ItemStack leftover = resultHolder.getObject();
-        if (level.isClientSide || doNotConsume || leftover.isEmpty()) {
+        InteractionResultHolder<ItemStack> insertionResult = tryInsert(level, pos, stack, doNotConsume, forceOverflow, false);
+        ItemInteractionResult interactionResult = insertionResult.getResult() == InteractionResult.SUCCESS ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        ItemStack remainder = insertionResult.getObject();
+        if (level.isClientSide || doNotConsume || remainder.isEmpty()) {
             return interactionResult;
         }
 
         if (stack.isEmpty()) {
-            player.setItemInHand(hand, leftover);
+            player.setItemInHand(hand, remainder);
         }
-        else if (!player.getInventory().add(leftover)) {
-            player.drop(leftover, false);
+        else if (!player.getInventory().add(remainder)) {
+            player.drop(remainder, false);
         }
         return interactionResult;
     }
@@ -266,13 +265,12 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
 
     @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
-        BlockState state = super.getStateForPlacement(context);
-        if (state == null) {
+        BlockState placementState = super.getStateForPlacement(context);
+        if (placementState == null) {
             return null;
         }
 
-        state = state.setValue(WIND_LEVEL, WindLevel.CALM).setValue(FACING, context.getHorizontalDirection().getOpposite());
-        return ProperWaterloggedBlock.withWater(context.getLevel(), state, context.getClickedPos());
+        return ProperWaterloggedBlock.withWater(context.getLevel(), placementState.setValue(WIND_LEVEL, WindLevel.CALM).setValue(FACING, context.getHorizontalDirection().getOpposite()), context.getClickedPos());
     }
 
     @Override
@@ -304,27 +302,27 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     }
 
     @Override
-    public void appendHoverText(ItemStack chamber, TooltipContext context, List<Component> tooltips, TooltipFlag flag) {
-        int time = chamber.getOrDefault(CCBDataComponents.BREEZE_TIME, 0);
+    public void appendHoverText(ItemStack chamberStack, TooltipContext context, List<Component> tooltips, TooltipFlag flag) {
+        int remainingTime = chamberStack.getOrDefault(CCBDataComponents.BREEZE_TIME, 0);
         WindLevel windLevel = WindLevel.CALM;
-        if (time > 0) {
+        if (remainingTime > 0) {
             windLevel = WindLevel.GALE;
         }
-        else if (time < 0) {
+        else if (remainingTime < 0) {
             windLevel = WindLevel.ILL;
         }
         tooltips.add(CCBLang.translate("gui.breeze_chamber.state").style(ChatFormatting.GRAY).add(CCBLang.translate(windLevel.getTranslatable()).style(windLevel.getChatFormatting())).component());
-        if (time == 0) {
+        if (remainingTime == 0) {
             return;
         }
 
-        boolean creative = chamber.getOrDefault(CCBDataComponents.BREEZE_CREATIVE, false);
-        if (creative) {
+        boolean isCreative = chamberStack.getOrDefault(CCBDataComponents.BREEZE_CREATIVE, false);
+        if (isCreative) {
             tooltips.add(CCBLang.translate("gui.breeze_chamber.time").style(ChatFormatting.GRAY).add(CCBLang.translate("gui.gas_container.infinity").style(ChatFormatting.GOLD)).component());
             return;
         }
 
-        tooltips.add(CCBLang.translate("gui.breeze_chamber.time").style(ChatFormatting.GRAY).add(CCBLang.seconds(Mth.abs(time), context.tickRate()).style(ChatFormatting.GOLD)).component());
+        tooltips.add(CCBLang.translate("gui.breeze_chamber.time").style(ChatFormatting.GRAY).add(CCBLang.seconds(Mth.abs(remainingTime), context.tickRate()).style(ChatFormatting.GOLD)).component());
     }
 
     @Override
@@ -358,10 +356,8 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
         CALM,
         GALE;
 
-        public static final Codec<WindLevel> CODEC = StringRepresentable.fromEnum(WindLevel::values);
-
-        public boolean isAtLeast(WindLevel windLevel) {
-            return ordinal() >= windLevel.ordinal();
+        boolean isActive() {
+            return ordinal() > CALM.ordinal();
         }
 
         @Override
@@ -370,7 +366,7 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
         }
 
         @Contract(pure = true)
-        public String getTranslatable() {
+        String getTranslatable() {
             return switch (this) {
                 case ILL -> "gui.breeze_chamber.ill";
                 case CALM -> "gui.breeze_chamber.calm";
@@ -378,7 +374,7 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
             };
         }
 
-        public ChatFormatting getChatFormatting() {
+        ChatFormatting getChatFormatting() {
             return switch (this) {
                 case ILL -> ChatFormatting.RED;
                 case CALM -> ChatFormatting.GRAY;

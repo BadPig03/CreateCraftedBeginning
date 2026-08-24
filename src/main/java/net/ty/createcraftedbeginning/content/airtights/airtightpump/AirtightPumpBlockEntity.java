@@ -69,14 +69,6 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasT
         pressureController.lazyTick();
     }
 
-    public void updatePipesOnSide(Direction side) {
-        pressureController.updatePipesOnSide(side);
-    }
-
-    public void markPressureUpdate() {
-        pressureController.markPressureUpdate();
-    }
-
     @Override
     public boolean canTransport(Level level, BlockState state, BlockPos pos, Direction direction) {
         return pressureController.canTransport(state, direction);
@@ -87,19 +79,27 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasT
         return advancementBehaviour;
     }
 
-    public boolean isPumpRunning() {
+    public void updatePipesOnSide(Direction direction) {
+        pressureController.updatePipesOnSide(direction);
+    }
+
+    void markPressureUpdate() {
+        pressureController.markPressureUpdate();
+    }
+
+    boolean isPumpRunning() {
         return pressureController.isPumpRunning();
     }
 
-    public boolean isSideAccessible(Direction direction) {
+    boolean isSideAccessible(Direction direction) {
         return pressureController.isSideAccessible(direction);
     }
 
-    public boolean isFront(Direction direction) {
+    boolean isFront(Direction direction) {
         return pressureController.isFront(direction);
     }
 
-    public float getPumpPressure() {
+    float getPumpPressure() {
         return pressureController.getPumpPressure();
     }
 }

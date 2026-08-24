@@ -35,15 +35,15 @@ public enum BreezeCoolerProvider implements IBlockComponentProvider, IServerData
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
-        CompoundTag data = accessor.getServerData();
-        FrostLevel frostLevel = FrostLevel.values()[data.getInt(COMPOUND_KEY_FROST_LEVEL)];
-        int remainingTicks = data.getInt(COMPOUND_KEY_COOL_TIME_REMAINING);
+        CompoundTag serverData = accessor.getServerData();
+        FrostLevel frostLevel = FrostLevel.values()[serverData.getInt(COMPOUND_KEY_FROST_LEVEL)];
+        int remainingTicks = serverData.getInt(COMPOUND_KEY_COOL_TIME_REMAINING);
         if (!frostLevel.isAtLeast(FrostLevel.CHILLED) || remainingTicks == 0) {
             return;
         }
 
         tooltip.add(IElementHelper.get().smallItem(ICON));
-        boolean isCreative = data.getBoolean(COMPOUND_KEY_IS_CREATIVE);
+        boolean isCreative = serverData.getBoolean(COMPOUND_KEY_IS_CREATIVE);
         tooltip.append(isCreative ? IThemeHelper.get().info(Component.translatable("jade.gas.infinity_mark")) : IThemeHelper.get().seconds(remainingTicks, accessor.tickRate()));
     }
 

@@ -24,7 +24,7 @@ public class SmartAirtightPipeRenderer extends SmartBlockEntityRenderer<SmartAir
         super(context);
     }
 
-    private static boolean isBeyondRenderDistance(SmartAirtightPipeBlockEntity pipe, Level level, BlockPos pos, GasFilteringBehaviour behaviour) {
+    private static boolean isBeyondRenderDistance(SmartAirtightPipeBlockEntity pipe, Level level, BlockPos pos, GasFilteringBehaviour gasFilter) {
         if (pipe.isVirtual()) {
             return false;
         }
@@ -34,8 +34,8 @@ public class SmartAirtightPipeRenderer extends SmartBlockEntityRenderer<SmartAir
             return false;
         }
 
-        float maxDistance = behaviour.getRenderDistance();
-        return camera.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) > maxDistance * maxDistance;
+        float renderDistance = gasFilter.getRenderDistance();
+        return camera.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) > renderDistance * renderDistance;
     }
 
     @Override
@@ -50,30 +50,30 @@ public class SmartAirtightPipeRenderer extends SmartBlockEntityRenderer<SmartAir
         }
 
         BlockPos pos = be.getBlockPos();
-        GasFilteringBehaviour behaviour = be.getFilter();
-        if (!behaviour.isActive()) {
+        GasFilteringBehaviour gasFilter = be.getFilter();
+        if (gasFilter == null || !gasFilter.isActive()) {
             return;
         }
 
-        ItemStack filter = behaviour.getFilter();
-        if (filter.isEmpty()) {
+        ItemStack filterStack = gasFilter.getFilter();
+        if (filterStack.isEmpty()) {
             return;
         }
 
-        if (isBeyondRenderDistance(be, level, pos, behaviour)) {
+        if (isBeyondRenderDistance(be, level, pos, gasFilter)) {
             return;
         }
 
-        ValueBoxTransform slot = behaviour.getSlotPositioning();
+        ValueBoxTransform filterSlot = gasFilter.getSlotPositioning();
         BlockState state = be.getBlockState();
-        if (!slot.shouldRender(level, pos, state)) {
+        if (!filterSlot.shouldRender(level, pos, state)) {
             return;
         }
 
         ms.pushPose();
 
-        slot.transform(level, pos, state, ms);
-        ValueBoxRenderer.renderItemIntoValueBox(filter, ms, buffer, light, overlay);
+        filterSlot.transform(level, pos, state, ms);
+        ValueBoxRenderer.renderItemIntoValueBox(filterStack, ms, buffer, light, overlay);
 
         ms.popPose();
     }

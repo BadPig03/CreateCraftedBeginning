@@ -14,9 +14,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class EndMechanicalStructuralBlockEntity<T extends EndMechanicalBlockEntity<?>> extends KineticBlockEntity {
-    protected T master;
+    private T master;
 
-    public EndMechanicalStructuralBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
+    protected EndMechanicalStructuralBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
     }
 
@@ -33,16 +33,6 @@ public abstract class EndMechanicalStructuralBlockEntity<T extends EndMechanical
 
     protected abstract Class<T> getMasterClass();
 
-    protected @Nullable T getMaster() {
-        if (level == null) {
-            return null;
-        }
-
-        BlockEntity blockEntity = level.getBlockEntity(worldPosition.above());
-        Class<T> masterClass = getMasterClass();
-        return masterClass.isInstance(blockEntity) ? masterClass.cast(blockEntity) : null;
-    }
-
     protected @Nullable T getMasterForUse() {
         if (master != null && !master.isRemoved()) {
             return master;
@@ -52,7 +42,7 @@ public abstract class EndMechanicalStructuralBlockEntity<T extends EndMechanical
         return master;
     }
 
-    public void verifyMaster() {
+    void verifyMaster() {
         if (level == null || level.isClientSide) {
             return;
         }
@@ -63,5 +53,15 @@ public abstract class EndMechanicalStructuralBlockEntity<T extends EndMechanical
         }
 
         level.setBlockAndUpdate(worldPosition, CCBBlocks.END_CASING_BLOCK.get().defaultBlockState());
+    }
+
+    private @Nullable T getMaster() {
+        if (level == null) {
+            return null;
+        }
+
+        BlockEntity candidateMaster = level.getBlockEntity(worldPosition.above());
+        Class<T> masterClass = getMasterClass();
+        return masterClass.isInstance(candidateMaster) ? masterClass.cast(candidateMaster) : null;
     }
 }

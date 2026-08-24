@@ -42,10 +42,10 @@ public abstract class SequencedAssemblyWithGasSubCategory {
         return width;
     }
 
-    public void setRecipe(IRecipeLayoutBuilder builder, SequencedWithGasRecipe<?> recipe, IFocusGroup focuses, int x) {
+    public void setRecipe(IRecipeLayoutBuilder builder, SequencedWithGasRecipe<?> recipe, IFocusGroup focuses, int slotX) {
     }
 
-    public abstract void draw(SequencedWithGasRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int index);
+    public abstract void draw(SequencedWithGasRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int stepIndex);
 
     public static class AssemblyPressing extends SequencedAssemblyWithGasSubCategory {
         private final AnimatedPress press;
@@ -56,9 +56,9 @@ public abstract class SequencedAssemblyWithGasSubCategory {
         }
 
         @Override
-        public void draw(SequencedWithGasRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int index) {
+        public void draw(SequencedWithGasRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int stepIndex) {
             PoseStack poseStack = graphics.pose();
-            press.offset = index;
+            press.offset = stepIndex;
             poseStack.pushPose();
             poseStack.translate(-5, 50, 0);
             poseStack.scale(0.6f, 0.6f, 0.6f);
@@ -76,19 +76,19 @@ public abstract class SequencedAssemblyWithGasSubCategory {
         }
 
         @Override
-        public void setRecipe(IRecipeLayoutBuilder builder, SequencedWithGasRecipe<?> recipe, IFocusGroup focuses, int x) {
-            CreateRecipeCategory.addFluidSlot(builder, x + 4, 15, recipe.getRecipe().getFluidIngredients().getFirst());
+        public void setRecipe(IRecipeLayoutBuilder builder, SequencedWithGasRecipe<?> recipe, IFocusGroup focuses, int slotX) {
+            CreateRecipeCategory.addFluidSlot(builder, slotX + 4, 15, recipe.getRecipe().getFluidIngredients().getFirst());
         }
 
         @Override
-        public void draw(SequencedWithGasRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int index) {
+        public void draw(SequencedWithGasRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int stepIndex) {
             PoseStack poseStack = graphics.pose();
-            spout.offset = index;
+            spout.offset = stepIndex;
             poseStack.pushPose();
             poseStack.translate(-7, 50, 0);
             poseStack.scale(0.75f, 0.75f, 0.75f);
-            List<FluidStack> fluids = Arrays.asList(recipe.getRecipe().getFluidIngredients().getFirst().getFluids());
-            spout.withFluids(fluids).draw(graphics, getWidth() / 2, 0);
+            List<FluidStack> fluidStacks = Arrays.asList(recipe.getRecipe().getFluidIngredients().getFirst().getFluids());
+            spout.withFluids(fluidStacks).draw(graphics, getWidth() / 2, 0);
             poseStack.popPose();
         }
     }
@@ -102,20 +102,20 @@ public abstract class SequencedAssemblyWithGasSubCategory {
         }
 
         @Override
-        public void setRecipe(IRecipeLayoutBuilder builder, SequencedWithGasRecipe<?> recipe, IFocusGroup focuses, int x) {
+        public void setRecipe(IRecipeLayoutBuilder builder, SequencedWithGasRecipe<?> recipe, IFocusGroup focuses, int slotX) {
             DeployerApplicationWithGasRecipe deployerRecipe = (DeployerApplicationWithGasRecipe) recipe.getRecipe();
-            IRecipeSlotBuilder slot = builder.addSlot(RecipeIngredientRole.INPUT, x + 4, 15).setBackground(CreateRecipeCategory.getRenderedSlot(), -1, -1).addIngredients(deployerRecipe.getRequiredHeldItem());
+            IRecipeSlotBuilder ingredientSlot = builder.addSlot(RecipeIngredientRole.INPUT, slotX + 4, 15).setBackground(CreateRecipeCategory.getRenderedSlot(), -1, -1).addIngredients(deployerRecipe.getRequiredHeldItem());
             if (!deployerRecipe.shouldKeepHeldItem()) {
                 return;
             }
 
-            slot.addRichTooltipCallback((view, tooltip) -> tooltip.add(CCBLang.translate("recipe.deploying.not_consumed").style(ChatFormatting.GOLD).component()));
+            ingredientSlot.addRichTooltipCallback((view, tooltip) -> tooltip.add(CCBLang.translate("recipe.deploying.not_consumed").style(ChatFormatting.GOLD).component()));
         }
 
         @Override
-        public void draw(SequencedWithGasRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int index) {
+        public void draw(SequencedWithGasRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int stepIndex) {
             PoseStack poseStack = graphics.pose();
-            deployer.offset = index;
+            deployer.offset = stepIndex;
             poseStack.pushPose();
             poseStack.translate(-7, 50, 0);
             poseStack.scale(0.75f, 0.75f, 0.75f);
@@ -133,16 +133,16 @@ public abstract class SequencedAssemblyWithGasSubCategory {
         }
 
         @Override
-        public void setRecipe(IRecipeLayoutBuilder builder, SequencedWithGasRecipe<?> recipe, IFocusGroup focuses, int x) {
+        public void setRecipe(IRecipeLayoutBuilder builder, SequencedWithGasRecipe<?> recipe, IFocusGroup focuses, int slotX) {
             SizedGasIngredient gasIngredient = recipe.getRecipe().getGasIngredients().getFirst();
-            List<GasStack> stacks = Arrays.stream(gasIngredient.getGases()).map(GasStack::copy).toList();
-            builder.addSlot(RecipeIngredientRole.INPUT, x + 4, 15).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, stacks).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmounts.precise(gasIngredient.amount()).style(ChatFormatting.GRAY).component()));
+            List<GasStack> gasStacks = Arrays.stream(gasIngredient.getGases()).map(GasStack::copy).toList();
+            builder.addSlot(RecipeIngredientRole.INPUT, slotX + 4, 15).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gasStacks).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmounts.precise(gasIngredient.amount()).style(ChatFormatting.GRAY).component()));
         }
 
         @Override
-        public void draw(SequencedWithGasRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int index) {
+        public void draw(SequencedWithGasRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int stepIndex) {
             PoseStack poseStack = graphics.pose();
-            chamber.offset = index;
+            chamber.offset = stepIndex;
             poseStack.pushPose();
             poseStack.translate(-7, 50, 0);
             poseStack.scale(0.75f, 0.75f, 0.75f);
@@ -160,7 +160,7 @@ public abstract class SequencedAssemblyWithGasSubCategory {
         }
 
         @Override
-        public void draw(SequencedWithGasRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int index) {
+        public void draw(SequencedWithGasRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int stepIndex) {
             PoseStack poseStack = graphics.pose();
             poseStack.pushPose();
             poseStack.translate(0, 51.5, 0);

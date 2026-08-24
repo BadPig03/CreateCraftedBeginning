@@ -109,14 +109,13 @@ public class CCBJEIPlugin implements IModPlugin {
         connection.getRecipeManager().getRecipes().forEach(consumer);
     }
 
-    public static <I extends RecipeInput, R extends Recipe<I>> void consumeTypedRecipes(Consumer<? super RecipeHolder<R>> consumer, RecipeType<R> type) {
+    public static <I extends RecipeInput, R extends Recipe<I>> void consumeTypedRecipes(Consumer<? super RecipeHolder<R>> consumer, RecipeType<R> recipeType) {
         ClientPacketListener connection = Minecraft.getInstance().getConnection();
         if (connection == null) {
             return;
         }
 
-        List<RecipeHolder<R>> recipes = connection.getRecipeManager().getAllRecipesFor(type);
-        recipes.forEach(consumer);
+        connection.getRecipeManager().getAllRecipesFor(recipeType).forEach(consumer);
     }
 
     private static void registerGasStackIngredients(IModIngredientRegistration registry) {
@@ -131,22 +130,22 @@ public class CCBJEIPlugin implements IModPlugin {
     }
 
     private static void addAutomaticWindChargingRecipes(List<RecipeHolder<WindChargingRecipe>> recipes) {
-        List<WindChargingRecipe> overrides = recipes.stream().map(RecipeHolder::value).toList();
+        List<WindChargingRecipe> overrideRecipes = recipes.stream().map(RecipeHolder::value).toList();
         for (Item item : BuiltInRegistries.ITEM) {
-            ItemStack stack = item.getDefaultInstance();
-            if (stack.isEmpty() || overrides.stream().anyMatch(recipe -> recipe.getIngredient().test(stack))) {
+            ItemStack itemStack = item.getDefaultInstance();
+            if (itemStack.isEmpty() || overrideRecipes.stream().anyMatch(overrideRecipe -> overrideRecipe.getIngredient().test(itemStack))) {
                 continue;
             }
 
-            WindChargingData data = WindChargingRecipe.getAutomaticWindChargingTime(stack);
-            if (data.amount() <= 0) {
+            WindChargingData chargingData = WindChargingRecipe.getAutomaticWindChargingTime(itemStack);
+            if (chargingData.amount() <= 0) {
                 continue;
             }
 
             ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
             ResourceLocation recipeId = CCBAPI.asResource("jei/wind_charging/" + itemId.getNamespace() + '/' + itemId.getPath());
-            WindChargingRecipe recipe = new StandardProcessingRecipe.Builder<>(WindChargingRecipe::new, recipeId).withItemIngredients(Ingredient.of(item)).duration(data.time()).build();
-            recipes.add(new RecipeHolder<>(recipeId, recipe));
+            WindChargingRecipe chargingRecipe = new StandardProcessingRecipe.Builder<>(WindChargingRecipe::new, recipeId).withItemIngredients(Ingredient.of(item)).duration(chargingData.time()).build();
+            recipes.add(new RecipeHolder<>(recipeId, chargingRecipe));
         }
     }
 

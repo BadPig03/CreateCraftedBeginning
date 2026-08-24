@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.platform.access;
+package net.ty.createcraftedbeginning.recipe.interfaces;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 
@@ -6,8 +6,4 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface AbstractPiglinAccess {
-    int getTimeInOverworld();
-
-    void setTimeInOverworld(int time);
-}
+public interface CreativeCoolingSource {}

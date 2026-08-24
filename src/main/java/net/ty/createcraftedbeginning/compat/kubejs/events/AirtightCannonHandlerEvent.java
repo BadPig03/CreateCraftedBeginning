@@ -5,7 +5,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -74,8 +73,7 @@ public class AirtightCannonHandlerEvent implements KubeEvent {
              */
             @Override
             public ItemStack getRenderIcon(Level level) {
-                Item item = BuiltInRegistries.ITEM.getOptional(icon.apply(level)).orElse(Items.BARRIER);
-                return new ItemStack(item);
+                return new ItemStack(BuiltInRegistries.ITEM.getOptional(icon.apply(level)).orElse(Items.BARRIER));
             }
 
             /**
@@ -160,8 +158,7 @@ public class AirtightCannonHandlerEvent implements KubeEvent {
      * @see DefaultCannonHandler
      */
     public void add(ResourceLocation location, IconCannonHandler icon, ParticlesCannonHandler particles, ExplodeCannonHandler explode, ResourceLocation texture, float speed, float consumption, TextCannonHandler text) {
-        AirtightCannonHandler handler = createHandler(icon, particles, explode, texture, speed, consumption, text);
-        AirtightCannonHandlerUtils.register(location, handler);
+        AirtightCannonHandlerUtils.register(location, createHandler(icon, particles, explode, texture, speed, consumption, text));
     }
 
     /**

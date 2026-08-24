@@ -18,7 +18,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasPackagerPendingGas {
+final class GasPackagerPendingGas {
     private static final String COMPOUND_KEY_PENDING_GASES = "PendingGases";
 
     private BalloonGasContents pendingGases = BalloonGasContents.EMPTY;
@@ -27,11 +27,11 @@ public final class GasPackagerPendingGas {
         return stack.isEmpty() ? ItemStack.EMPTY : stack.copy();
     }
 
-    public boolean isEmpty() {
+    boolean isEmpty() {
         return pendingGases.isEmpty();
     }
 
-    public boolean canStage(ItemStack box, IGasHandler handler) {
+    boolean canStage(ItemStack box, IGasHandler handler) {
         if (!BalloonUtils.containsGasContents(box)) {
             return false;
         }
@@ -40,13 +40,13 @@ public final class GasPackagerPendingGas {
         return !contents.isEmpty() && BalloonUtils.fitsInBalloon(contents) && GasPackagerUtils.canInsertAll(handler, contents);
     }
 
-    public void stage(ItemStack box) {
+    void stage(ItemStack box) {
         pendingGases = BalloonUtils.getGasContents(box).copy();
     }
 
-    public InsertionResult insertInto(@Nullable IGasHandler handler, ItemStack previouslyUnwrapped) {
-        BalloonGasContents contents = pendingGases.copy();
-        if (contents.isEmpty()) {
+    InsertionResult insertInto(@Nullable IGasHandler handler, ItemStack previouslyUnwrapped) {
+        BalloonGasContents pendingContents = pendingGases.copy();
+        if (pendingContents.isEmpty()) {
             return InsertionResult.NO_OP;
         }
 
@@ -54,33 +54,33 @@ public final class GasPackagerPendingGas {
             return new InsertionResult(copyOrEmpty(previouslyUnwrapped), false);
         }
 
-        List<GasStack> gases = contents.copyGasStacks();
-        if (gases.size() > 1) {
-            if (!handler.tryFillAtomically(gases, GasAction.EXECUTE).isSuccess()) {
+        List<GasStack> gasStacks = pendingContents.copyGasStacks();
+        if (gasStacks.size() > 1) {
+            if (!handler.tryFillAtomically(gasStacks, GasAction.EXECUTE).isSuccess()) {
                 return new InsertionResult(copyOrEmpty(previouslyUnwrapped), false);
             }
             return new InsertionResult(ItemStack.EMPTY, true);
         }
 
-        List<GasStack> remainders = new ArrayList<>();
-        for (GasStack gas : gases) {
-            long filled = handler.fill(gas.copy(), GasAction.EXECUTE);
-            if (filled < gas.getAmount()) {
-                remainders.add(gas.copyWithAmount(gas.getAmount() - filled));
+        List<GasStack> gasRemainders = new ArrayList<>();
+        for (GasStack gas : gasStacks) {
+            long filledAmount = handler.fill(gas.copy(), GasAction.EXECUTE);
+            if (filledAmount < gas.getAmount()) {
+                gasRemainders.add(gas.copyWithAmount(gas.getAmount() - filledAmount));
             }
         }
 
-        BalloonGasContents remainderContents = new BalloonGasContents(remainders);
-        ItemStack returned = ItemStack.EMPTY;
-        if (!remainderContents.isEmpty() && !previouslyUnwrapped.isEmpty()) {
-            returned = previouslyUnwrapped.copy();
-            BalloonUtils.setGasContents(returned, remainderContents);
+        BalloonGasContents remainingContents = new BalloonGasContents(gasRemainders);
+        ItemStack returnedPackage = ItemStack.EMPTY;
+        if (!remainingContents.isEmpty() && !previouslyUnwrapped.isEmpty()) {
+            returnedPackage = previouslyUnwrapped.copy();
+            BalloonUtils.setGasContents(returnedPackage, remainingContents);
         }
 
-        return new InsertionResult(returned, true);
+        return new InsertionResult(returnedPackage, true);
     }
 
-    public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+    void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         if (!compoundTag.contains(COMPOUND_KEY_PENDING_GASES) || clientPacket) {
             return;
         }
@@ -89,7 +89,7 @@ public final class GasPackagerPendingGas {
         pendingGases = pendingTag == null ? BalloonGasContents.EMPTY : BalloonGasContents.parseOptional(provider, pendingTag);
     }
 
-    public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+    void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         if (clientPacket) {
             return;
         }
@@ -97,11 +97,11 @@ public final class GasPackagerPendingGas {
         compoundTag.put(COMPOUND_KEY_PENDING_GASES, pendingGases.saveOptional(provider));
     }
 
-    public void clear() {
+    void clear() {
         pendingGases = BalloonGasContents.EMPTY;
     }
 
-    public record InsertionResult(ItemStack returnedPackage, boolean inventoryChanged) {
+    record InsertionResult(ItemStack returnedPackage, boolean inventoryChanged) {
         private static final InsertionResult NO_OP = new InsertionResult(ItemStack.EMPTY, false);
     }
 }

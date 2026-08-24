@@ -10,34 +10,34 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasTransferExecutor {
+final class GasTransferExecutor {
     private GasTransferExecutor() {
     }
 
-    public static GasStack simulateSourceDrain(IGasHandler sourceCap, GasStack gas, long maxAmount) {
-        if (maxAmount <= 0 || gas.isEmpty()) {
+    static GasStack simulateSourceDrain(IGasHandler sourceHandler, GasStack gasType, long maxAmount) {
+        if (maxAmount <= 0 || gasType.isEmpty()) {
             return GasStack.EMPTY;
         }
 
-        for (int i = 0; i < sourceCap.getTanks(); i++) {
-            GasStack contained = sourceCap.getGasInTank(i);
-            if (contained.isEmpty() || !GasStack.isSameGasSameComponents(contained, gas)) {
+        for (int tankIndex = 0; tankIndex < sourceHandler.getTanks(); tankIndex++) {
+            GasStack tankGas = sourceHandler.getGasInTank(tankIndex);
+            if (tankGas.isEmpty() || !GasStack.isSameGasSameComponents(tankGas, gasType)) {
                 continue;
             }
 
-            GasStack drained = sourceCap.drain(contained.copyWithAmount(maxAmount), GasAction.SIMULATE);
-            if (drained.isEmpty()) {
+            GasStack simulatedDrain = sourceHandler.drain(tankGas.copyWithAmount(maxAmount), GasAction.SIMULATE);
+            if (simulatedDrain.isEmpty()) {
                 break;
             }
 
-            return GasStack.isSameGasSameComponents(drained, gas) ? drained : GasStack.EMPTY;
+            return GasStack.isSameGasSameComponents(simulatedDrain, gasType) ? simulatedDrain : GasStack.EMPTY;
         }
 
-        GasStack drained = sourceCap.drain(maxAmount, GasAction.SIMULATE);
-        return !drained.isEmpty() && GasStack.isSameGasSameComponents(drained, gas) ? drained : GasStack.EMPTY;
+        GasStack simulatedDrain = sourceHandler.drain(maxAmount, GasAction.SIMULATE);
+        return !simulatedDrain.isEmpty() && GasStack.isSameGasSameComponents(simulatedDrain, gasType) ? simulatedDrain : GasStack.EMPTY;
     }
 
-    public static GasStack executeTransferPlan(IGasHandler sourceCap, GasStack gasType, List<PlannedTransfer> transferPlan) {
+    static GasStack executeTransferPlan(IGasHandler sourceHandler, GasStack gasType, List<PlannedTransfer> transferPlan) {
         long plannedAmount = 0;
         for (PlannedTransfer plannedTransfer : transferPlan) {
             plannedAmount = Math.min(gasType.getAmount(), plannedAmount + plannedTransfer.amount);
@@ -46,55 +46,54 @@ public final class GasTransferExecutor {
             return GasStack.EMPTY;
         }
 
-        GasStack drained = executeSourceDrain(sourceCap, gasType.copyWithAmount(plannedAmount));
-        if (drained.isEmpty() || !GasStack.isSameGasSameComponents(drained, gasType)) {
-            return drained;
+        GasStack drainedGas = executeSourceDrain(sourceHandler, gasType.copyWithAmount(plannedAmount));
+        if (drainedGas.isEmpty() || !GasStack.isSameGasSameComponents(drainedGas, gasType)) {
+            return drainedGas;
         }
-        return executeTargetPlan(drained, transferPlan);
+        return executeTargetPlan(drainedGas, transferPlan);
     }
 
-    public static GasStack executeTargetPlan(GasStack available, List<PlannedTransfer> transferPlan) {
-        if (available.isEmpty()) {
+    static GasStack executeTargetPlan(GasStack availableGas, List<PlannedTransfer> transferPlan) {
+        if (availableGas.isEmpty()) {
             return GasStack.EMPTY;
         }
 
-        GasStack remainder = available.copy();
-        long remainingBudget = remainder.getAmount();
+        GasStack remainingGas = availableGas.copy();
+        long remainingBudget = remainingGas.getAmount();
         for (PlannedTransfer plannedTransfer : transferPlan) {
-            if (remainingBudget <= 0 || remainder.isEmpty()) {
+            if (remainingBudget <= 0 || remainingGas.isEmpty()) {
                 break;
             }
 
-            long offeredAmount = Math.min(plannedTransfer.amount, Math.min(remainingBudget, remainder.getAmount()));
+            long offeredAmount = Math.min(plannedTransfer.amount, Math.min(remainingBudget, remainingGas.getAmount()));
             if (offeredAmount <= 0) {
                 continue;
             }
 
-            GasStack offered = remainder.copyWithAmount(offeredAmount);
-            long filled = plannedTransfer.handler.fill(offered, GasAction.EXECUTE);
-            filled = Math.clamp(filled, 0, offeredAmount);
-            remainder.shrink(filled);
-            remainingBudget -= filled;
+            long filledAmount = plannedTransfer.handler.fill(remainingGas.copyWithAmount(offeredAmount), GasAction.EXECUTE);
+            filledAmount = Math.clamp(filledAmount, 0, offeredAmount);
+            remainingGas.shrink(filledAmount);
+            remainingBudget -= filledAmount;
         }
-        return remainder;
+        return remainingGas;
     }
 
-    private static GasStack executeSourceDrain(IGasHandler sourceCap, GasStack request) {
-        if (request.isEmpty()) {
+    private static GasStack executeSourceDrain(IGasHandler sourceHandler, GasStack drainRequest) {
+        if (drainRequest.isEmpty()) {
             return GasStack.EMPTY;
         }
 
-        GasStack drained = sourceCap.drain(request, GasAction.EXECUTE);
-        if (!drained.isEmpty()) {
-            return drained;
+        GasStack drainedGas = sourceHandler.drain(drainRequest, GasAction.EXECUTE);
+        if (!drainedGas.isEmpty()) {
+            return drainedGas;
         }
 
-        GasStack genericPreview = sourceCap.drain(request.getAmount(), GasAction.SIMULATE);
-        if (genericPreview.isEmpty() || !GasStack.isSameGasSameComponents(genericPreview, request)) {
+        GasStack genericDrainPreview = sourceHandler.drain(drainRequest.getAmount(), GasAction.SIMULATE);
+        if (genericDrainPreview.isEmpty() || !GasStack.isSameGasSameComponents(genericDrainPreview, drainRequest)) {
             return GasStack.EMPTY;
         }
-        return sourceCap.drain(request.getAmount(), GasAction.EXECUTE);
+        return sourceHandler.drain(drainRequest.getAmount(), GasAction.EXECUTE);
     }
 
-    public record PlannedTransfer(IGasHandler handler, long amount) {}
+    record PlannedTransfer(IGasHandler handler, long amount) {}
 }

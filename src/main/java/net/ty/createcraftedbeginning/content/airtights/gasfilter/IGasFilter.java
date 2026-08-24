@@ -14,7 +14,7 @@ public interface IGasFilter {
     boolean test(ItemStack filterItem, GasStack filterGasStack);
 
     default Predicate<GasStack> compile(ItemStack filterItem) {
-        ItemStack snapshot = filterItem.copyWithCount(1);
-        return gasStack -> test(snapshot, gasStack);
+        ItemStack filterSnapshot = filterItem.copyWithCount(1);
+        return gasStack -> test(filterSnapshot, gasStack);
     }
 }

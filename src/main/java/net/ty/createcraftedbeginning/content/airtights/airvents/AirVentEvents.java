@@ -23,9 +23,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID)
-public class AirVentEvents {
+final class AirVentEvents {
+    private AirVentEvents() {
+    }
+
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void onRightClickBlock(RightClickBlock event) {
+    private static void onRightClickBlock(RightClickBlock event) {
         if (!(event.getItemStack().getItem() instanceof BlockItem) || !AirVentBlock.isInsideAirVent(event.getEntity())) {
             return;
         }
@@ -35,7 +38,7 @@ public class AirVentEvents {
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void onBlockPlaced(EntityPlaceEvent event) {
+    private static void onBlockPlaced(EntityPlaceEvent event) {
         if (!(event.getEntity() instanceof Player player) || !AirVentBlock.isInsideAirVent(player)) {
             return;
         }
@@ -44,7 +47,7 @@ public class AirVentEvents {
     }
 
     @SubscribeEvent
-    public static void onPlayerTick(Post event) {
+    private static void onPlayerTick(Post event) {
         Player player = event.getEntity();
         if (player.isSpectator()) {
             return;
@@ -60,23 +63,23 @@ public class AirVentEvents {
         }
 
         Vec3 lookAngle = player.getLookAngle();
-        Direction direction = Direction.getNearest(lookAngle.x, lookAngle.y, lookAngle.z);
+        Direction lookDirection = Direction.getNearest(lookAngle.x, lookAngle.y, lookAngle.z);
         Level level = player.level();
-        BlockPos pos = player.blockPosition();
-        if (canEnterFrom(level, pos.relative(direction), direction)) {
+        BlockPos playerPos = player.blockPosition();
+        if (canEnterFrom(level, playerPos.relative(lookDirection), lookDirection)) {
             player.setPose(Pose.SWIMMING);
             return;
         }
 
-        if (direction != Direction.UP || !canEnterFrom(level, pos.above(2), direction)) {
+        if (lookDirection != Direction.UP || !canEnterFrom(level, playerPos.above(2), lookDirection)) {
             return;
         }
 
         player.setPose(Pose.SWIMMING);
     }
 
-    private static boolean canEnterFrom(Level level, BlockPos pos, Direction direction) {
-        BlockState state = level.getBlockState(pos);
-        return state.getBlock() instanceof AirVentBlock && AirVentBlock.canPassThrough(state, level, pos, direction.getOpposite());
+    private static boolean canEnterFrom(Level level, BlockPos ventPos, Direction entryDirection) {
+        BlockState ventState = level.getBlockState(ventPos);
+        return ventState.getBlock() instanceof AirVentBlock && AirVentBlock.canPassThrough(ventState, level, ventPos, entryDirection.getOpposite());
     }
 }

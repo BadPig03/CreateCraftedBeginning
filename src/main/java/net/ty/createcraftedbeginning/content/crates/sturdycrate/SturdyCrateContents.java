@@ -21,37 +21,31 @@ public record SturdyCrateContents(ItemStack content, int count, ItemStack filter
     public static final StreamCodec<RegistryFriendlyByteBuf, SturdyCrateContents> STREAM_CODEC = StreamCodec.composite(ItemStack.OPTIONAL_STREAM_CODEC, SturdyCrateContents::content, ByteBufCodecs.VAR_INT, SturdyCrateContents::count, ItemStack.OPTIONAL_STREAM_CODEC, SturdyCrateContents::filterItem, SturdyCrateContents::new);
 
     public SturdyCrateContents {
-        CrateInventoryState normalized = CrateInventoryState.normalize(content, count, Integer.MAX_VALUE);
-        content = normalized.content();
-        count = normalized.count();
+        CrateInventoryState normalizedInventory = CrateInventoryState.normalize(content, count, Integer.MAX_VALUE);
+        content = normalizedInventory.content();
+        count = normalizedInventory.count();
         filterItem = filterItem.isEmpty() ? ItemStack.EMPTY : filterItem.copyWithCount(1);
     }
 
     @Contract(" -> new")
-    public static SturdyCrateContents empty() {
+    static SturdyCrateContents empty() {
         return new SturdyCrateContents(ItemStack.EMPTY, 0, ItemStack.EMPTY);
     }
 
     @Override
     public ItemStack content() {
-        return content.isEmpty() ? ItemStack.EMPTY : content.copy();
+        if (content.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+        return content.copy();
     }
 
     @Override
     public ItemStack filterItem() {
-        return filterItem.isEmpty() ? ItemStack.EMPTY : filterItem.copy();
-    }
-
-    public boolean hasInventory() {
-        return !content.isEmpty() && count > 0;
-    }
-
-    private boolean hasFilter() {
-        return !filterItem.isEmpty();
-    }
-
-    public boolean hasData() {
-        return hasInventory() || hasFilter();
+        if (filterItem.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+        return filterItem.copy();
     }
 
     @Override
@@ -62,5 +56,17 @@ public record SturdyCrateContents(ItemStack content, int count, ItemStack filter
     @Override
     public int hashCode() {
         return Objects.hash(ItemStack.hashItemAndComponents(content), count, ItemStack.hashItemAndComponents(filterItem));
+    }
+
+    private boolean hasInventory() {
+        return !content.isEmpty() && count > 0;
+    }
+
+    private boolean hasFilter() {
+        return !filterItem.isEmpty();
+    }
+
+    boolean hasData() {
+        return hasInventory() || hasFilter();
     }
 }

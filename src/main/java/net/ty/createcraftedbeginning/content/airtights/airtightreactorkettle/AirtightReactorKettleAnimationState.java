@@ -19,7 +19,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightReactorKettleAnimationState {
+final class AirtightReactorKettleAnimationState {
     private final AirtightReactorKettleBlockEntity kettle;
     private final LerpedFloat ingredientRotation = LerpedFloat.angular().startWithValue(0);
     private final LerpedFloat ingredientRotationSpeed = LerpedFloat.linear().startWithValue(0);
@@ -27,11 +27,11 @@ public final class AirtightReactorKettleAnimationState {
     private final LerpedFloat mixerRotationSpeed = LerpedFloat.linear().startWithValue(0);
     private final LerpedFloat windowDistance = LerpedFloat.linear().startWithValue(0.5);
 
-    public AirtightReactorKettleAnimationState(AirtightReactorKettleBlockEntity kettle) {
+    AirtightReactorKettleAnimationState(AirtightReactorKettleBlockEntity kettle) {
         this.kettle = kettle;
     }
 
-    public void tickClient() {
+    void tickClient() {
         CatnipServices.PLATFORM.executeOnClientOnly(() -> this::tickAudio);
         ingredientRotationSpeed.tickChaser();
         ingredientRotation.setValue(ingredientRotation.getValue() + ingredientRotationSpeed.getValue());
@@ -39,40 +39,40 @@ public final class AirtightReactorKettleAnimationState {
         mixerRotation.setValue(mixerRotation.getValue() + mixerRotationSpeed.getValue());
     }
 
-    public void updateTargets(boolean moving, int operatingTicks, boolean windowsOpen) {
-        float speed = Mth.clamp(kettle.getCore().getStructureManager().getSpeed() * 0.5f, -64, 64);
+    void updateTargets(boolean moving, int operatingTicks, boolean windowsOpen) {
+        float rotationSpeed = Mth.clamp(kettle.getCore().getStructureManager().getSpeed() * 0.5f, -64, 64);
         if (kettle.getLevel() instanceof PonderLevel) {
-            speed = SpeedLevel.FAST.getSpeedValue() * 0.5f;
+            rotationSpeed = SpeedLevel.FAST.getSpeedValue() * 0.5f;
         }
 
-        boolean processing = operatingTicks > 15 && operatingTicks <= AirtightReactorKettleController.PROCESSING_STARTED;
-        float ingredientSpeed = 0;
-        float mixerSpeed = 0;
+        boolean isProcessing = operatingTicks > 15 && operatingTicks <= AirtightReactorKettleController.PROCESSING_STARTED;
+        float targetIngredientSpeed = 0;
+        float targetMixerSpeed = 0;
         if (moving) {
-            mixerSpeed = processing ? speed * 2 : speed / 2;
-            if (processing) {
-                ingredientSpeed = speed * 0.5f;
+            targetMixerSpeed = isProcessing ? rotationSpeed * 2 : rotationSpeed / 2;
+            if (isProcessing) {
+                targetIngredientSpeed = rotationSpeed * 0.5f;
             }
         }
 
-        ingredientRotationSpeed.chase(ingredientSpeed, 0.15, Chaser.EXP);
-        mixerRotationSpeed.chase(mixerSpeed, 0.1, Chaser.EXP);
+        ingredientRotationSpeed.chase(targetIngredientSpeed, 0.15, Chaser.EXP);
+        mixerRotationSpeed.chase(targetMixerSpeed, 0.1, Chaser.EXP);
 
-        double target = windowsOpen ? 0.5 : 0;
-        double chaseSpeed = windowsOpen ? 0.2 : 0.3;
-        windowDistance.chase(target, chaseSpeed, Chaser.EXP);
+        double targetWindowDistance = windowsOpen ? 0.5 : 0;
+        double windowChaseSpeed = windowsOpen ? 0.2 : 0.3;
+        windowDistance.chase(targetWindowDistance, windowChaseSpeed, Chaser.EXP);
         windowDistance.tickChaser();
     }
 
-    public LerpedFloat getIngredientRotation() {
+    LerpedFloat getIngredientRotation() {
         return ingredientRotation;
     }
 
-    public LerpedFloat getMixerRotation() {
+    LerpedFloat getMixerRotation() {
         return mixerRotation;
     }
 
-    public LerpedFloat getWindowDistance() {
+    LerpedFloat getWindowDistance() {
         return windowDistance;
     }
 
@@ -83,14 +83,14 @@ public final class AirtightReactorKettleAnimationState {
             return;
         }
 
-        float absSpeed = Mth.abs(kettle.getCore().getStructureManager().getSpeed());
-        if (absSpeed == 0) {
+        float absoluteSpeed = Mth.abs(kettle.getCore().getStructureManager().getSpeed());
+        if (absoluteSpeed == 0) {
             return;
         }
 
-        float pitch = Mth.clamp(absSpeed / 256 + 0.45f, 0.85f, 1);
+        float pitch = Mth.clamp(absoluteSpeed / 256 + 0.45f, 0.85f, 1);
         SoundScapes.play(AmbienceGroup.KINETIC, kettle.getBlockPos(), pitch);
-        if (absSpeed <= 64 && AnimationTickHolder.getTicks() % 2 == 0 || kettle.getController().getOperatingTicks() != AirtightReactorKettleController.PROCESSING_STARTED) {
+        if (absoluteSpeed <= 64 && AnimationTickHolder.getTicks() % 2 == 0 || kettle.getController().getOperatingTicks() != AirtightReactorKettleController.PROCESSING_STARTED) {
             return;
         }
 

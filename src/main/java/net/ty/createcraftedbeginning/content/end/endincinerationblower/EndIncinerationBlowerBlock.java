@@ -49,7 +49,7 @@ public class EndIncinerationBlowerBlock extends EndMechanicalBlock implements IB
             return;
         }
 
-        withBlockEntityDo(level, pos, be -> be.setOwner(player.getUUID()));
+        withBlockEntityDo(level, pos, blower -> blower.setOwner(player.getUUID()));
     }
 
     @Override

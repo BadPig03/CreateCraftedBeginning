@@ -11,7 +11,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class TeslaTurbineCore {
+class TeslaTurbineCore {
     private final TeslaTurbineBlockEntity turbine;
     private final TeslaTurbineStructureManager structureManager;
     private final TeslaTurbineTooltipBuilder tooltipBuilder;
@@ -22,7 +22,7 @@ public class TeslaTurbineCore {
     private final IGasHandler clockwiseHandler;
     private final IGasHandler counterClockwiseHandler;
 
-    public TeslaTurbineCore(TeslaTurbineBlockEntity turbine) {
+    TeslaTurbineCore(TeslaTurbineBlockEntity turbine) {
         this.turbine = turbine;
         structureManager = new TeslaTurbineStructureManager(this, turbine);
         levelCalculator = new TeslaTurbineLevelCalculator(this, turbine);
@@ -34,27 +34,27 @@ public class TeslaTurbineCore {
         counterClockwiseHandler = new TeslaTurbineGasHandler(flowMeter, false);
     }
 
-    public void tick() {
+    void tick() {
         controller.tick();
     }
 
-    public void lazyTick() {
+    void lazyTick() {
         controller.lazyTick();
     }
 
-    public void initialize() {
+    void initialize() {
         controller.initialize();
     }
 
-    public void onSpeedChanged() {
+    void onSpeedChanged() {
         controller.onSpeedChanged();
     }
 
-    public float getGeneratedSpeed() {
+    float getGeneratedSpeed() {
         return controller.getGeneratedSpeed();
     }
 
-    public boolean addToGoggleTooltip(List<Component> tooltip) {
+    boolean addToGoggleTooltip(List<Component> tooltip) {
         if (!structureManager.isActive()) {
             return false;
         }
@@ -63,47 +63,50 @@ public class TeslaTurbineCore {
         return true;
     }
 
-    public TeslaTurbineStructureManager getStructureManager() {
+    TeslaTurbineStructureManager getStructureManager() {
         return structureManager;
     }
 
-    public TeslaTurbineLevelCalculator getLevelCalculator() {
+    TeslaTurbineLevelCalculator getLevelCalculator() {
         return levelCalculator;
     }
 
-    public TeslaTurbineFlowMeter getFlowMeter() {
+    TeslaTurbineFlowMeter getFlowMeter() {
         return flowMeter;
     }
 
-    public void markForSave() {
+    void markForSave() {
         controller.markForSave();
     }
 
-    public void markForClientSync() {
+    void markForClientSync() {
         controller.markForClientSync();
     }
 
-    public void markForSaveAndClientSync() {
+    void markForSaveAndClientSync() {
         controller.markForSaveAndClientSync();
     }
 
-    public CompoundTag write(Provider provider, boolean clientPacket) {
+    CompoundTag write(Provider provider, boolean clientPacket) {
         return serialization.write(provider, clientPacket);
     }
 
-    public void read(CompoundTag tag, Provider provider, boolean clientPacket) {
-        serialization.read(tag, provider, clientPacket);
+    void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        serialization.read(compoundTag, provider, clientPacket);
     }
 
-    public IGasHandler createGasHandler(boolean clockwise) {
-        return clockwise ? clockwiseHandler : counterClockwiseHandler;
+    IGasHandler createGasHandler(boolean clockwise) {
+        if (!clockwise) {
+            return counterClockwiseHandler;
+        }
+        return clockwiseHandler;
     }
 
-    public TeslaTurbineBlockEntity getTurbine() {
+    TeslaTurbineBlockEntity getTurbine() {
         return turbine;
     }
 
-    public TeslaTurbineController getController() {
+    TeslaTurbineController getController() {
         return controller;
     }
 }

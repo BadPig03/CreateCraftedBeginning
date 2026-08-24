@@ -17,9 +17,12 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID)
-public class AirtightReactorKettleEvents {
+final class AirtightReactorKettleEvents {
+    private AirtightReactorKettleEvents() {
+    }
+
     @SubscribeEvent
-    public static void onItemTooltip(ItemTooltipEvent event) {
+    private static void onItemTooltip(ItemTooltipEvent event) {
         Player player = event.getEntity();
         if (player == null || !CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK.isIn(event.getItemStack())) {
             return;

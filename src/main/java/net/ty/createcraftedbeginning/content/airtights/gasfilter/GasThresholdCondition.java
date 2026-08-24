@@ -33,21 +33,21 @@ import java.util.function.Predicate;
 public class GasThresholdCondition extends CargoThresholdCondition {
     private static final String COMPOUND_KEY_GAS_FILTER = "GasFilter";
 
-    protected ItemStack filterItem = ItemStack.EMPTY;
-    protected Predicate<GasStack> compiledFilter = GasFilterUtils.compile(ItemStack.EMPTY);
+    private ItemStack filterItem = ItemStack.EMPTY;
+    private Predicate<GasStack> compiledFilter = GasFilterUtils.compile(ItemStack.EMPTY);
 
-    private static long saturatedAdd(long current, long addition) {
-        if (addition <= 0) {
-            return current;
+    private static long saturatedAdd(long currentAmount, long addedAmount) {
+        if (addedAmount <= 0) {
+            return currentAmount;
         }
-        return current > Long.MAX_VALUE - addition ? Long.MAX_VALUE : current + addition;
+        return currentAmount > Long.MAX_VALUE - addedAmount ? Long.MAX_VALUE : currentAmount + addedAmount;
     }
 
-    private static boolean testLong(Ops operator, long current, long target) {
+    private static boolean testLong(Ops operator, long currentAmount, long targetAmount) {
         return switch (operator) {
-            case GREATER -> current > target;
-            case EQUAL -> current == target;
-            case LESS -> current < target;
+            case GREATER -> currentAmount > targetAmount;
+            case EQUAL -> currentAmount == targetAmount;
+            case LESS -> currentAmount < targetAmount;
         };
     }
 
@@ -57,18 +57,18 @@ public class GasThresholdCondition extends CargoThresholdCondition {
         long targetAmount = Math.max(0, (long) getThreshold() * GasAmounts.MILLIBUCKETS_PER_BUCKET);
         long totalAmount = 0;
         for (Carriage carriage : train.carriages) {
-            if (!(carriage.storage instanceof IMountedStorageManagerWithGas withGas)) {
+            if (!(carriage.storage instanceof IMountedStorageManagerWithGas gasStorageManager)) {
                 continue;
             }
 
-            MountedGasStorageWrapper gases = withGas.ccb$getGases();
-            for (int i = 0; i < gases.getTanks(); i++) {
-                GasStack gas = gases.getGasInTank(i);
-                if (gas.isEmpty() || !compiledFilter.test(gas)) {
+            MountedGasStorageWrapper gasStorage = gasStorageManager.ccb$getGases();
+            for (int tankIndex = 0; tankIndex < gasStorage.getTanks(); tankIndex++) {
+                GasStack storedGas = gasStorage.getGasInTank(tankIndex);
+                if (storedGas.isEmpty() || !compiledFilter.test(storedGas)) {
                     continue;
                 }
 
-                totalAmount = saturatedAdd(totalAmount, gas.getAmount());
+                totalAmount = saturatedAdd(totalAmount, storedGas.getAmount());
             }
         }
 
@@ -116,12 +116,12 @@ public class GasThresholdCondition extends CargoThresholdCondition {
             return Component.empty();
         }
 
-        int offset = switch (getOperator()) {
+        int thresholdOffset = switch (getOperator()) {
             case LESS -> -1;
             case GREATER -> 1;
             case EQUAL -> 0;
         };
-        return CCBLang.translateDirect("schedule.condition.threshold.status", lastDisplaySnapshot, Math.max(0, getThreshold() + offset), CCBLang.translateDirect("gui.threshold.buckets"));
+        return CCBLang.translateDirect("schedule.condition.threshold.status", lastDisplaySnapshot, Math.max(0, getThreshold() + thresholdOffset), CCBLang.translateDirect("gui.threshold.buckets"));
     }
 
     @Override
@@ -131,21 +131,21 @@ public class GasThresholdCondition extends CargoThresholdCondition {
 
     @Override
     public List<Component> getTitleAs(String type) {
-        List<Component> lines = new ArrayList<>();
+        List<Component> titleLines = new ArrayList<>();
         Component operatorName = CCBLang.translateDirect("schedule.condition.threshold." + Lang.asId(getOperator().name()));
-        lines.add(CCBLang.translateDirect("schedule.condition.threshold.train_holds", operatorName));
-        Component content;
+        titleLines.add(CCBLang.translateDirect("schedule.condition.threshold.train_holds", operatorName));
+        Component filterDescription;
         if (filterItem.isEmpty()) {
-            content = CCBLang.translateDirect("schedule.condition.threshold.anything");
+            filterDescription = CCBLang.translateDirect("schedule.condition.threshold.anything");
         }
         else if (GasFilterUtils.isFilter(filterItem)) {
-            content = CCBLang.translateDirect("schedule.condition.threshold.matching_gas_content");
+            filterDescription = CCBLang.translateDirect("schedule.condition.threshold.matching_gas_content");
         }
         else {
-            content = GasStack.EMPTY.getHoverName();
+            filterDescription = CCBLang.translateDirect("schedule.condition.threshold.invalid_gas_filter");
         }
-        lines.add(CCBLang.translateDirect("schedule.condition.threshold.x_units_of_item", getThreshold(), CCBLang.translateDirect("gui.threshold.buckets"), content).withStyle(ChatFormatting.DARK_AQUA));
-        return lines;
+        titleLines.add(CCBLang.translateDirect("schedule.condition.threshold.x_units_of_item", getThreshold(), CCBLang.translateDirect("gui.threshold.buckets"), filterDescription).withStyle(ChatFormatting.DARK_AQUA));
+        return titleLines;
     }
 
     @Override
@@ -158,8 +158,8 @@ public class GasThresholdCondition extends CargoThresholdCondition {
         return filterItem.copy();
     }
 
-    protected void updateFilter(ItemStack stack) {
-        filterItem = stack.isEmpty() || GasFilterUtils.isFilter(stack) ? GasFilterUtils.normalizeStack(stack) : ItemStack.EMPTY;
+    private void updateFilter(ItemStack filterStack) {
+        filterItem = GasFilterUtils.normalizeStack(filterStack);
         compiledFilter = GasFilterUtils.compile(filterItem);
     }
 }

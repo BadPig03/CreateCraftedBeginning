@@ -18,7 +18,7 @@ import java.util.Arrays;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class TeslaTurbineFlowMeter {
+class TeslaTurbineFlowMeter {
     private static final String COMPOUND_KEY_GAS = "Gas";
     private static final String COMPOUND_KEY_NET_FLOW = "NetFlow";
     private static final String COMPOUND_KEY_ABSOLUTE_FLOW = "AbsoluteFlow";
@@ -39,25 +39,14 @@ public class TeslaTurbineFlowMeter {
     private float absoluteFlow;
     private float netFlow;
     private GasStack gasType = GasStack.EMPTY;
-    private int currentIndex;
+    private int currentSampleIndex;
     private int ticksUntilNextSample = TeslaTurbineUtils.FLOW_SAMPLE_RATE;
     private long gatheredClockwise;
     private long gatheredCounterClockwise;
 
-    public TeslaTurbineFlowMeter(TeslaTurbineCore core, TeslaTurbineBlockEntity turbine) {
+    TeslaTurbineFlowMeter(TeslaTurbineCore core, TeslaTurbineBlockEntity turbine) {
         this.core = core;
         this.turbine = turbine;
-    }
-
-    private static long saturatedAdd(long current, long amount) {
-        if (amount <= 0) {
-            return current;
-        }
-
-        if (Long.MAX_VALUE - current < amount) {
-            return Long.MAX_VALUE;
-        }
-        return current + amount;
     }
 
     private static GasStack readNormalizedGas(CompoundTag compoundTag, Provider provider) {
@@ -65,8 +54,11 @@ public class TeslaTurbineFlowMeter {
             return GasStack.EMPTY;
         }
 
-        GasStack gas = GasStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_GAS));
-        return gas.isEmpty() ? GasStack.EMPTY : gas.copyWithAmount(1);
+        GasStack parsedGas = GasStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_GAS));
+        if (parsedGas.isEmpty()) {
+            return GasStack.EMPTY;
+        }
+        return parsedGas.copyWithAmount(1);
     }
 
     private static float readFiniteFloat(CompoundTag compoundTag, String key) {
@@ -74,50 +66,50 @@ public class TeslaTurbineFlowMeter {
             return 0;
         }
 
-        float value = compoundTag.getFloat(key);
-        return GasConsumptions.isFinite(value) ? value : 0;
+        float storedValue = compoundTag.getFloat(key);
+        return GasConsumptions.isFinite(storedValue) ? storedValue : 0;
     }
 
-    private static void readSamples(CompoundTag compoundTag, String key, float[] samples, boolean nonNegative) {
+    private static void readSamples(CompoundTag compoundTag, String key, float[] samples, boolean clampNonNegative) {
         Arrays.fill(samples, 0);
         if (!compoundTag.contains(key, Tag.TAG_LIST)) {
             return;
         }
 
         ListTag samplesTag = compoundTag.getList(key, Tag.TAG_FLOAT);
-        for (int i = 0; i < Math.min(TeslaTurbineUtils.FLOW_SAMPLE_COUNT, samplesTag.size()); i++) {
-            float sample = samplesTag.getFloat(i);
+        for (int sampleIndex = 0; sampleIndex < Math.min(TeslaTurbineUtils.FLOW_SAMPLE_COUNT, samplesTag.size()); sampleIndex++) {
+            float sample = samplesTag.getFloat(sampleIndex);
             if (!GasConsumptions.isFinite(sample)) {
                 continue;
             }
 
-            samples[i] = nonNegative ? Math.max(0, sample) : sample;
+            samples[sampleIndex] = clampNonNegative ? Math.max(0, sample) : sample;
         }
     }
 
     private static void sanitizeSamplePairs(float[] netSamples, float[] absoluteSamples) {
-        for (int i = 0; i < TeslaTurbineUtils.FLOW_SAMPLE_COUNT; i++) {
-            float absoluteSample = absoluteSamples[i];
-            netSamples[i] = Mth.clamp(netSamples[i], -absoluteSample, absoluteSample);
+        for (int sampleIndex = 0; sampleIndex < TeslaTurbineUtils.FLOW_SAMPLE_COUNT; sampleIndex++) {
+            float absoluteSample = absoluteSamples[sampleIndex];
+            netSamples[sampleIndex] = Mth.clamp(netSamples[sampleIndex], -absoluteSample, absoluteSample);
         }
     }
 
     private static ListTag createSampleTag(float[] samples) {
-        ListTag tag = new ListTag();
+        ListTag samplesTag = new ListTag();
         for (float sample : samples) {
-            tag.add(FloatTag.valueOf(sample));
+            samplesTag.add(FloatTag.valueOf(sample));
         }
-        return tag;
+        return samplesTag;
     }
 
-    private static int readSampleDelay(CompoundTag tag) {
-        if (!tag.contains(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE)) {
+    private static int readSampleDelay(CompoundTag compoundTag) {
+        if (!compoundTag.contains(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE)) {
             return TeslaTurbineUtils.FLOW_SAMPLE_RATE;
         }
-        return Mth.clamp(tag.getInt(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE), 1, TeslaTurbineUtils.FLOW_SAMPLE_RATE);
+        return Mth.clamp(compoundTag.getInt(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE), 1, TeslaTurbineUtils.FLOW_SAMPLE_RATE);
     }
 
-    public long fill(GasStack resource, GasAction action, boolean clockwise) {
+    long fill(GasStack resource, GasAction action, boolean isClockwise) {
         if (resource.isEmpty()) {
             return 0;
         }
@@ -126,33 +118,38 @@ public class TeslaTurbineFlowMeter {
             return 0;
         }
 
-        long amount = resource.getAmount();
+        long requestedAmount = resource.getAmount();
         GasStack normalizedGas = resource.copyWithAmount(1);
         boolean mixesWithStoredGas = !gasType.isEmpty() && !GasStack.isSameGasSameComponents(gasType, normalizedGas);
-        if (!action.execute()) {
-            return amount;
+        if (mixesWithStoredGas) {
+            if (action.execute()) {
+                hasMixedGases = true;
+                core.markForSave();
+            }
+            return requestedAmount;
         }
 
-        if (mixesWithStoredGas) {
-            hasMixedGases = true;
-            core.markForSave();
-            return amount;
+        long gatheredAmount = isClockwise ? gatheredClockwise : gatheredCounterClockwise;
+        long acceptedAmount = Math.min(requestedAmount, Long.MAX_VALUE - gatheredAmount);
+        if (acceptedAmount <= 0 || !action.execute()) {
+            return acceptedAmount;
         }
 
         if (gasType.isEmpty()) {
             setGasType(normalizedGas);
         }
 
-        if (clockwise) {
-            gatheredClockwise = saturatedAdd(gatheredClockwise, amount);
+        if (isClockwise) {
+            gatheredClockwise += acceptedAmount;
         }
         else {
-            gatheredCounterClockwise = saturatedAdd(gatheredCounterClockwise, amount);
+            gatheredCounterClockwise += acceptedAmount;
         }
-        return amount;
+        core.markForSave();
+        return acceptedAmount;
     }
 
-    public void tick() {
+    void tick() {
         Level level = turbine.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -162,7 +159,7 @@ public class TeslaTurbineFlowMeter {
             if (CCBConfig.server().airtights.teslaTurbineExplodesOnMixedGases.get()) {
                 core.getStructureManager().triggerExplosion();
             }
-            reset(true);
+            reset();
             return;
         }
 
@@ -174,10 +171,10 @@ public class TeslaTurbineFlowMeter {
         ticksUntilNextSample = TeslaTurbineUtils.FLOW_SAMPLE_RATE;
         float previousNetFlow = netFlow;
         float previousAbsoluteFlow = absoluteFlow;
-        boolean persistentStateChanged = hasPersistentSampleState();
+        boolean hadPersistentSampleState = hasPersistentSampleState();
         recordSample();
         updateDerivedFlow(true);
-        if (persistentStateChanged) {
+        if (hadPersistentSampleState) {
             core.markForSave();
         }
         if (Float.compare(previousNetFlow, netFlow) == 0 && Float.compare(previousAbsoluteFlow, absoluteFlow) == 0) {
@@ -187,11 +184,11 @@ public class TeslaTurbineFlowMeter {
         core.markForClientSync();
     }
 
-    public boolean isClockwiseFlow() {
+    boolean isClockwiseFlow() {
         return netFlow > 0;
     }
 
-    public CompoundTag write(Provider provider, boolean clientPacket) {
+    CompoundTag write(Provider provider, boolean clientPacket) {
         CompoundTag compoundTag = new CompoundTag();
         compoundTag.put(COMPOUND_KEY_GAS, gasType.saveOptional(provider));
         if (clientPacket) {
@@ -201,7 +198,7 @@ public class TeslaTurbineFlowMeter {
         }
 
         compoundTag.putBoolean(COMPOUND_KEY_HAS_MIXED_GASES, hasMixedGases);
-        compoundTag.putInt(COMPOUND_KEY_CURRENT_INDEX, currentIndex);
+        compoundTag.putInt(COMPOUND_KEY_CURRENT_INDEX, currentSampleIndex);
         compoundTag.putInt(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE, ticksUntilNextSample);
         compoundTag.putLong(COMPOUND_KEY_GATHERED_CLOCKWISE, gatheredClockwise);
         compoundTag.putLong(COMPOUND_KEY_GATHERED_COUNTER_CLOCKWISE, gatheredCounterClockwise);
@@ -211,28 +208,28 @@ public class TeslaTurbineFlowMeter {
         return compoundTag;
     }
 
-    public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+    void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         if (clientPacket) {
             readClient(compoundTag, provider);
+            return;
         }
-        else {
-            readPersistent(compoundTag, provider);
-        }
+
+        readPersistent(compoundTag, provider);
     }
 
-    public void loadEmptyState() {
-        clearRuntimeState(true);
-        TeslaTurbineLevelCalculator calculator = core.getLevelCalculator();
-        calculator.loadSupplyLevel(0);
-        calculator.loadTypeLevel();
+    void loadEmptyState() {
+        clearRuntimeState();
+        TeslaTurbineLevelCalculator levelCalculator = core.getLevelCalculator();
+        levelCalculator.loadSupplyLevel(0);
+        levelCalculator.loadTypeLevel();
     }
 
-    public GasStack getGasType() {
+    GasStack getGasType() {
         return gasType;
     }
 
-    private void setGasType(GasStack gas) {
-        GasStack normalizedGas = gas.isEmpty() ? GasStack.EMPTY : gas.copyWithAmount(1);
+    private void setGasType(GasStack newGasType) {
+        GasStack normalizedGas = newGasType.isEmpty() ? GasStack.EMPTY : newGasType.copyWithAmount(1);
         if (GasStack.isSameGasSameComponents(gasType, normalizedGas)) {
             return;
         }
@@ -245,14 +242,14 @@ public class TeslaTurbineFlowMeter {
         core.markForSaveAndClientSync();
     }
 
-    public void reset(boolean resetGasType) {
-        boolean changed = hasRuntimeState(resetGasType);
-        clearRuntimeState(resetGasType);
+    private void reset() {
+        boolean hadRuntimeState = hasRuntimeState();
+        clearRuntimeState();
 
-        TeslaTurbineLevelCalculator calculator = core.getLevelCalculator();
-        calculator.loadSupplyLevel(0);
-        calculator.loadTypeLevel();
-        if (!changed) {
+        TeslaTurbineLevelCalculator levelCalculator = core.getLevelCalculator();
+        levelCalculator.loadSupplyLevel(0);
+        levelCalculator.loadTypeLevel();
+        if (!hadRuntimeState) {
             return;
         }
 
@@ -272,10 +269,10 @@ public class TeslaTurbineFlowMeter {
     }
 
     private void readPersistent(CompoundTag compoundTag, Provider provider) {
-        clearRuntimeState(true);
+        clearRuntimeState();
         gasType = readNormalizedGas(compoundTag, provider);
         hasMixedGases = !gasType.isEmpty() && compoundTag.getBoolean(COMPOUND_KEY_HAS_MIXED_GASES);
-        currentIndex = Math.floorMod(compoundTag.getInt(COMPOUND_KEY_CURRENT_INDEX), TeslaTurbineUtils.FLOW_SAMPLE_COUNT);
+        currentSampleIndex = Math.floorMod(compoundTag.getInt(COMPOUND_KEY_CURRENT_INDEX), TeslaTurbineUtils.FLOW_SAMPLE_COUNT);
         ticksUntilNextSample = readSampleDelay(compoundTag);
         gatheredClockwise = Math.max(0, compoundTag.getLong(COMPOUND_KEY_GATHERED_CLOCKWISE));
         gatheredCounterClockwise = Math.max(0, compoundTag.getLong(COMPOUND_KEY_GATHERED_COUNTER_CLOCKWISE));
@@ -294,19 +291,19 @@ public class TeslaTurbineFlowMeter {
         updateDerivedFlow(false);
     }
 
-    private void updateDerivedFlow(boolean notify) {
+    private void updateDerivedFlow(boolean shouldNotify) {
         float totalNetFlow = 0;
         float totalAbsoluteFlow = 0;
-        for (int i = 0; i < TeslaTurbineUtils.FLOW_SAMPLE_COUNT; i++) {
-            totalNetFlow += netFlowOverTime[i];
-            totalAbsoluteFlow += absoluteFlowOverTime[i];
+        for (int sampleIndex = 0; sampleIndex < TeslaTurbineUtils.FLOW_SAMPLE_COUNT; sampleIndex++) {
+            totalNetFlow += netFlowOverTime[sampleIndex];
+            totalAbsoluteFlow += absoluteFlowOverTime[sampleIndex];
         }
 
         netFlow = GasConsumptions.isFinite(totalNetFlow) ? totalNetFlow / TeslaTurbineUtils.FLOW_SAMPLE_COUNT : 0;
         absoluteFlow = GasConsumptions.isFinite(totalAbsoluteFlow) ? Math.max(0, totalAbsoluteFlow / TeslaTurbineUtils.FLOW_SAMPLE_COUNT) : 0;
         boolean gasSupplyEnded = absoluteFlow < TeslaTurbineUtils.MIN_GAS_SUPPLY_THRESHOLD && gatheredClockwise == 0 && gatheredCounterClockwise == 0 && !gasType.isEmpty();
         if (gasSupplyEnded) {
-            if (notify) {
+            if (shouldNotify) {
                 setGasType(GasStack.EMPTY);
             }
             else {
@@ -318,39 +315,35 @@ public class TeslaTurbineFlowMeter {
         }
 
         int supplyLevel = gasType.isEmpty() ? 0 : (int) Math.min(TeslaTurbineUtils.MAX_LEVEL, Math.abs(netFlow) / TeslaTurbineUtils.BASE_ROTATION_SPEED);
-        if (notify) {
-            core.getLevelCalculator().updateSupplyLevel(supplyLevel);
-        }
-        else {
+        if (!shouldNotify) {
             core.getLevelCalculator().loadSupplyLevel(supplyLevel);
+            return;
         }
+
+        core.getLevelCalculator().updateSupplyLevel(supplyLevel);
     }
 
     private boolean hasPersistentSampleState() {
-        return !gasType.isEmpty() || gatheredClockwise != 0 || gatheredCounterClockwise != 0 || netFlowOverTime[currentIndex] != 0 || absoluteFlowOverTime[currentIndex] != 0;
+        return !gasType.isEmpty() || gatheredClockwise != 0 || gatheredCounterClockwise != 0 || netFlowOverTime[currentSampleIndex] != 0 || absoluteFlowOverTime[currentSampleIndex] != 0;
     }
 
-    private boolean hasRuntimeState(boolean resetGasType) {
-        return netFlow != 0 || absoluteFlow != 0 || gatheredClockwise != 0 || gatheredCounterClockwise != 0 || currentIndex != 0 || ticksUntilNextSample != TeslaTurbineUtils.FLOW_SAMPLE_RATE || hasMixedGases || resetGasType && !gasType.isEmpty();
+    private boolean hasRuntimeState() {
+        return netFlow != 0 || absoluteFlow != 0 || gatheredClockwise != 0 || gatheredCounterClockwise != 0 || currentSampleIndex != 0 || ticksUntilNextSample != TeslaTurbineUtils.FLOW_SAMPLE_RATE || hasMixedGases || !gasType.isEmpty();
     }
 
     private void recordSample() {
         float clockwiseRate = gatheredClockwise > 0 ? (float) gatheredClockwise / TeslaTurbineUtils.FLOW_SAMPLE_RATE : 0;
         float counterClockwiseRate = gatheredCounterClockwise > 0 ? (float) gatheredCounterClockwise / TeslaTurbineUtils.FLOW_SAMPLE_RATE : 0;
-        netFlowOverTime[currentIndex] = clockwiseRate - counterClockwiseRate;
-        absoluteFlowOverTime[currentIndex] = clockwiseRate + counterClockwiseRate;
-        currentIndex = (currentIndex + 1) % TeslaTurbineUtils.FLOW_SAMPLE_COUNT;
+        netFlowOverTime[currentSampleIndex] = clockwiseRate - counterClockwiseRate;
+        absoluteFlowOverTime[currentSampleIndex] = clockwiseRate + counterClockwiseRate;
+        currentSampleIndex = (currentSampleIndex + 1) % TeslaTurbineUtils.FLOW_SAMPLE_COUNT;
         gatheredClockwise = 0;
         gatheredCounterClockwise = 0;
     }
 
-    private void clearRuntimeState(boolean resetGasType) {
+    private void clearRuntimeState() {
         clearFlowSamples();
         hasMixedGases = false;
-        if (!resetGasType) {
-            return;
-        }
-
         gasType = GasStack.EMPTY;
     }
 
@@ -360,7 +353,7 @@ public class TeslaTurbineFlowMeter {
         gatheredClockwise = 0;
         gatheredCounterClockwise = 0;
         ticksUntilNextSample = TeslaTurbineUtils.FLOW_SAMPLE_RATE;
-        currentIndex = 0;
+        currentSampleIndex = 0;
         Arrays.fill(netFlowOverTime, 0);
         Arrays.fill(absoluteFlowOverTime, 0);
     }

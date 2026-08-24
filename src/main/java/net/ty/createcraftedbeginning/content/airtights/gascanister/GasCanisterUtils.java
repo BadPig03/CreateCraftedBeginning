@@ -11,7 +11,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
-import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer.MachineFillingMode;
+import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer.InjectionMode;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterContainerContents;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
@@ -29,7 +29,7 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasCanisterUtils {
-    public static final int COLOR_RED = 0xFFFF5D6C;
+    static final int COLOR_RED = 0xFFFF5D6C;
     public static final int COLOR_CYAN = 0xFF71C7D5;
     public static final int COLOR_WHITE = 0xFFEFEFEF;
 
@@ -48,7 +48,7 @@ public final class GasCanisterUtils {
         DataComponentMap newComponents = newStack.getComponents();
         DataComponentMap oldComponents = oldStack.getComponents();
         if (newComponents.isEmpty() || oldComponents.isEmpty()) {
-            return !(newComponents.isEmpty() && oldComponents.isEmpty());
+            return !newComponents.isEmpty() || !oldComponents.isEmpty();
         }
 
         Set<DataComponentType<?>> newKeys = getRelevantKeys(newComponents);
@@ -61,7 +61,7 @@ public final class GasCanisterUtils {
             return 0;
         }
 
-        if (canisterContents.getMachineFillingMode() == MachineFillingMode.DENY) {
+        if (canisterContents.getInjectionMode() == InjectionMode.DENY) {
             return 0;
         }
         return canisterContents.fill(0, resource.copyWithAmount(maxAmount), GasAction.SIMULATE);
@@ -78,31 +78,30 @@ public final class GasCanisterUtils {
     }
 
     public static List<ItemStack> getAllCanisters() {
-        List<ItemStack> items = new ArrayList<>(List.of(new ItemStack(CCBItems.GAS_CANISTER.asItem())));
-        CCBGases.GAS_REGISTER.getEntries().forEach(entry -> {
+        List<ItemStack> canisters = new ArrayList<>(List.of(new ItemStack(CCBItems.GAS_CANISTER.asItem())));
+        CCBGases.GAS_REGISTER.getEntries().forEach(gasEntry -> {
             ItemStack canister = new ItemStack(CCBItems.GAS_CANISTER.asItem());
             if (canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents contents) {
-                contents.fill(0, new GasStack(entry, contents.getTankCapacity(0)), GasAction.EXECUTE);
+                contents.fill(0, new GasStack(gasEntry, contents.getTankCapacity(0)), GasAction.EXECUTE);
             }
-            items.add(canister);
+            canisters.add(canister);
         });
 
-        items.add(new ItemStack(CCBItems.CREATIVE_GAS_CANISTER.asItem()));
-        CCBGases.GAS_REGISTER.getEntries().forEach(entry -> {
+        canisters.add(new ItemStack(CCBItems.CREATIVE_GAS_CANISTER.asItem()));
+        CCBGases.GAS_REGISTER.getEntries().forEach(gasEntry -> {
             ItemStack canister = new ItemStack(CCBItems.CREATIVE_GAS_CANISTER.asItem());
             if (canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents) {
-                contents.setGasInTank(0, new GasStack(entry, contents.getTankCapacity(0)));
+                contents.setGasInTank(0, new GasStack(gasEntry, contents.getTankCapacity(0)));
             }
-            items.add(canister);
+            canisters.add(canister);
         });
 
-        return items;
+        return canisters;
     }
 
     private static Set<DataComponentType<?>> getRelevantKeys(DataComponentMap components) {
-        Set<DataComponentType<?>> keys = new HashSet<>(components.keySet());
-        keys.remove(CCBDataComponents.CANISTER_CONTAINER_CONTENTS);
-        keys.remove(CCBDataComponents.CANISTER_CONTAINER_CAPACITIES);
-        return keys;
+        Set<DataComponentType<?>> relevantKeys = new HashSet<>(components.keySet());
+        relevantKeys.remove(CCBDataComponents.CANISTER_CONTAINER_CONTENTS);
+        return relevantKeys;
     }
 }

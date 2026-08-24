@@ -51,9 +51,9 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterloggedBlock, IWrenchableWithBracket, IAxisPipe {
-    public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
+    static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
-    public AxisGasPipeBlock(Properties properties) {
+    protected AxisGasPipeBlock(Properties properties) {
         super(properties);
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false));
     }
@@ -64,17 +64,17 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
 
     private static Set<Axis> getAvailableAxes(Level level, BlockPos pos) {
         Set<Axis> availableAxes = new HashSet<>();
-        for (Direction side : Iterate.directions) {
-            BlockPos otherPos = pos.relative(side);
-            BlockState otherState = level.getBlockState(otherPos);
-            Direction opposite = side.getOpposite();
-            GasTransportBehaviour transport = BlockEntityBehaviour.get(level, otherPos, GasTransportBehaviour.TYPE);
-            boolean canConnect = transport != null && transport.canHaveFlowToward(otherState, opposite);
-            if (!canConnect && !GasCapabilities.hasGasCapability(level, otherPos, opposite)) {
+        for (Direction direction : Iterate.directions) {
+            BlockPos adjacentPos = pos.relative(direction);
+            BlockState adjacentState = level.getBlockState(adjacentPos);
+            Direction oppositeDirection = direction.getOpposite();
+            GasTransportBehaviour transport = BlockEntityBehaviour.get(level, adjacentPos, GasTransportBehaviour.TYPE);
+            boolean hasTransportConnection = transport != null && transport.canHaveFlowToward(adjacentState, oppositeDirection);
+            if (!hasTransportConnection && !GasCapabilities.hasGasCapability(level, adjacentPos, oppositeDirection)) {
                 continue;
             }
 
-            availableAxes.add(side.getAxis());
+            availableAxes.add(direction.getAxis());
         }
         return availableAxes;
     }
@@ -105,16 +105,16 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
 
     @Override
     public Optional<ItemStack> removeBracket(BlockGetter level, BlockPos pos, boolean inOnReplacedContext) {
-        BracketedBlockEntityBehaviour behaviour = BlockEntityBehaviour.get(level, pos, BracketedBlockEntityBehaviour.TYPE);
-        if (behaviour == null) {
+        BracketedBlockEntityBehaviour bracketBehaviour = BlockEntityBehaviour.get(level, pos, BracketedBlockEntityBehaviour.TYPE);
+        if (bracketBehaviour == null) {
             return Optional.empty();
         }
 
-        BlockState bracket = behaviour.removeBracket(inOnReplacedContext);
-        if (bracket == null) {
+        BlockState bracketState = bracketBehaviour.removeBracket(inOnReplacedContext);
+        if (bracketState == null) {
             return Optional.empty();
         }
-        return Optional.of(new ItemStack(bracket.getBlock()));
+        return Optional.of(new ItemStack(bracketState.getBlock()));
     }
 
     @Override
@@ -126,9 +126,9 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
     }
 
     @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
-        super.setPlacedBy(level, pos, state, entity, stack);
-        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+        CCBAdvancementBehaviour.setPlacedBy(level, pos, placer);
     }
 
     @Override
@@ -155,8 +155,7 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
         }
 
         Set<Axis> availableAxes = getAvailableAxes(level, pos);
-        Axis placementAxis = getPlacementAxis(availableAxes, preferredAxis);
-        state = state.setValue(AXIS, placementAxis);
+        state = state.setValue(AXIS, getPlacementAxis(availableAxes, preferredAxis));
         return ProperWaterloggedBlock.withWater(level, state, pos);
     }
 
@@ -173,8 +172,8 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block otherBlock, BlockPos neighborPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, otherBlock, neighborPos, isMoving);
-        Direction direction = GasPropagator.getChangedNeighbourSide(level, pos, neighborPos);
-        if (direction == null || !isOpenAt(state, direction)) {
+        Direction changedSide = GasPropagator.getChangedNeighbourSide(level, pos, neighborPos);
+        if (changedSide == null || !isOpenAt(state, changedSide)) {
             return;
         }
 
@@ -199,7 +198,7 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
             GasPropagator.propagatePipe(level, pos);
         }
         if (state != newState && !isMoving) {
-            removeBracket(level, pos, true).ifPresent(stack -> popResource(level, pos, stack));
+            removeBracket(level, pos, true).ifPresent(bracketStack -> popResource(level, pos, bracketStack));
         }
         super.onRemove(state, level, pos, newState, isMoving);
     }

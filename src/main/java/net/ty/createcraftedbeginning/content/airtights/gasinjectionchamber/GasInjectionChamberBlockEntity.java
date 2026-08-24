@@ -17,7 +17,6 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -44,47 +43,47 @@ import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchambe
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ThresholdSwitchObservable, IGasInventoryIdentifierProvider {
-    public static final int NOZZLE_TIME = 15;
-    public static final int NOZZLE_PART_TIME = 15;
-    public static final int NOZZLE_IDLE_TIME = 5;
-    public static final int PROCESSING_TIME = 60;
-    public static final int INJECTION_EXECUTION_TICK = PROCESSING_TIME - NOZZLE_TIME - NOZZLE_PART_TIME - NOZZLE_IDLE_TIME;
+    static final int NOZZLE_TIME = 15;
+    static final int NOZZLE_PART_TIME = 15;
+    static final int NOZZLE_IDLE_TIME = 5;
+    static final int PROCESSING_TIME = 60;
+    static final int INJECTION_EXECUTION_TICK = PROCESSING_TIME - NOZZLE_TIME - NOZZLE_PART_TIME - NOZZLE_IDLE_TIME;
 
-    protected final GasInjectionChamberOperationState operation;
-    protected final GasInjectionChamberFilterState filter;
-    protected final GasInjectionChamberDisplay display;
-    protected final GasInjectionChamberController controller;
-    protected final GasInjectionChamberSerialization serialization;
+    private final GasInjectionChamberOperationState operation;
+    private final GasInjectionChamberFilterState filter;
+    private final GasInjectionChamberDisplay display;
+    private final GasInjectionChamberController controller;
+    private final GasInjectionChamberSerialization serialization;
 
-    protected SmartGasTankBehaviour tankBehaviour;
-    protected IGasHandler exposedGasHandler;
-    protected boolean basinCheckScheduled = true;
+    private SmartGasTankBehaviour tankBehaviour;
+    private IGasHandler exposedGasHandler;
+    private boolean basinCheckScheduled = true;
 
     public GasInjectionChamberBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState blockState) {
         super(type, pos, blockState);
-        GasInjectionChamberVisualState visual = new GasInjectionChamberVisualState();
+        GasInjectionChamberVisualState visualState = new GasInjectionChamberVisualState();
         operation = new GasInjectionChamberOperationState();
         filter = new GasInjectionChamberFilterState();
         display = new GasInjectionChamberDisplay(this, operation);
-        GasInjectionChamberOperationPlanner operationPlanner = new GasInjectionChamberOperationPlanner(this, operation, filter);
-        GasInjectionChamberBeltProcessor beltProcessor = new GasInjectionChamberBeltProcessor(this, operation, filter, visual, operationPlanner);
+        GasInjectionChamberOperationPlanner operationPlanner = new GasInjectionChamberOperationPlanner(this, filter);
+        GasInjectionChamberBeltProcessor beltProcessor = new GasInjectionChamberBeltProcessor(this, operation, filter, visualState, operationPlanner);
         GasInjectionChamberBasinProcessor basinProcessor = new GasInjectionChamberBasinProcessor(this, operation);
-        controller = new GasInjectionChamberController(this, operation, beltProcessor, basinProcessor, visual);
-        serialization = new GasInjectionChamberSerialization(this, operation, filter, visual, display);
+        controller = new GasInjectionChamberController(this, operation, beltProcessor, basinProcessor, visualState);
+        serialization = new GasInjectionChamberSerialization(this, operation, filter, visualState, display);
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.GAS_INJECTION_CHAMBER.get(), (blockEntity, direction) -> direction == Direction.UP ? blockEntity.exposedGasHandler : null);
     }
 
-    public static long getMaxCapacity() {
+    private static long getMaxCapacity() {
         return CCBConfig.server().airtights.maxGasInjectionChamberCapacity.get() * GasAmounts.MILLIBUCKETS_PER_BUCKET;
     }
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         tankBehaviour = SmartGasTankBehaviour.single(this, getMaxCapacity()).whenGasUpdates(this::scheduleBasinCheck);
-        exposedGasHandler = new GasInjectionChamberGasHandler(tankBehaviour.getCapability(), this::isOperationGasLocked, this::getOperationGas);
+        exposedGasHandler = tankBehaviour.getCapability();
         BeltProcessingBehaviour beltProcessing = new BeltProcessingBehaviour(this).whenItemEnters(this::onItemEntered).whileItemHeld(this::onItemHeld);
         behaviours.add(tankBehaviour);
         behaviours.add(beltProcessing);
@@ -94,6 +93,16 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     public void tick() {
         super.tick();
         controller.tick();
+    }
+
+    @Override
+    public void lazyTick() {
+        super.lazyTick();
+        if (GasInjectionChamberBasinCompat.isHookVerified()) {
+            return;
+        }
+
+        scheduleBasinCheck();
     }
 
     @Override
@@ -162,23 +171,23 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         return new MultiFace(worldPosition, Set.of(Direction.UP));
     }
 
-    public float getRenderedProcessingTicks(float partialTicks) {
+    float getRenderedProcessingTicks(float partialTicks) {
         return display.getRenderedProcessingTicks(partialTicks);
     }
 
-    public boolean hasInstalledFilter() {
+    boolean hasInstalledFilter() {
         return filter.hasInstalledFilter();
     }
 
-    public ItemStack getInstalledFilter() {
+    ItemStack getInstalledFilter() {
         return filter.getInstalledFilter();
     }
 
-    public boolean isFilterLocked() {
+    boolean isFilterLocked() {
         return level != null && level.isClientSide ? filter.isClientLocked() : operation.type == FAN_PROCESSING;
     }
 
-    public boolean installFilter(ItemStack stack) {
+    boolean installFilter(ItemStack stack) {
         if (!filter.install(stack)) {
             return false;
         }
@@ -188,18 +197,18 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         return true;
     }
 
-    public ItemStack removeInstalledFilter() {
+    ItemStack removeInstalledFilter() {
         if (!filter.hasInstalledFilter() || isFilterLocked()) {
             return ItemStack.EMPTY;
         }
 
-        ItemStack removed = filter.remove();
+        ItemStack removedFilter = filter.remove();
         setChanged();
         notifyUpdate();
-        return removed;
+        return removedFilter;
     }
 
-    public void scheduleBasinCheck() {
+    void scheduleBasinCheck() {
         if (level != null && level.isClientSide) {
             return;
         }
@@ -207,7 +216,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         basinCheckScheduled = true;
     }
 
-    public boolean consumeBasinCheckScheduled() {
+    boolean consumeBasinCheckScheduled() {
         if (!basinCheckScheduled) {
             return false;
         }
@@ -216,46 +225,28 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         return true;
     }
 
-    public SmartGasTankBehaviour getGasTankBehaviour() {
+    SmartGasTankBehaviour getGasTankBehaviour() {
         return tankBehaviour;
     }
 
-    public IGasTank getGasTank() {
+    IGasTank getGasTank() {
         return tankBehaviour.getPrimaryHandler();
     }
 
-    public GasStack getGasInTank() {
+    GasStack getGasInTank() {
         return getGasTank().getGasStack();
     }
 
-    public void clearOperationState() {
-        operation.clear();
+    void clearOperationState() {
+        operation.clearTransientOperation();
         filter.setClientLocked(false);
     }
 
-    public void cancelOperationState() {
-        operation.setProcessingTicks(-1);
-        clearOperationState();
-        notifyUpdate();
-    }
-
-    public boolean isFanProcessingOperationStillValid(ResourceLocation typeId) {
-        return controller.isFanProcessingOperationStillValid(typeId);
-    }
-
-    protected boolean isOperationGasLocked() {
-        return operation.isGasLocked();
-    }
-
-    protected GasStack getOperationGas() {
-        return operation.gas;
-    }
-
-    protected ProcessingResult onItemEntered(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
+    private ProcessingResult onItemEntered(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
         return controller.onItemEntered(transported, handler);
     }
 
-    protected ProcessingResult onItemHeld(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
+    private ProcessingResult onItemHeld(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
         return controller.onItemHeld(transported, handler);
     }
 }

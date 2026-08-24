@@ -19,6 +19,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
 import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
+import net.ty.createcraftedbeginning.foundation.gui.CCBIcons;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
@@ -37,11 +38,17 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
     private static final Component BLACKLIST_DESCRIPTION = CCBLang.translateDirect("gui.gas_filter.blacklist.description");
     private static final Component WHITELIST_TITLE = CCBLang.translateDirect("gui.gas_filter.whitelist");
     private static final Component WHITELIST_DESCRIPTION = CCBLang.translateDirect("gui.gas_filter.whitelist.description");
+    private static final Component RESPECT_DATA_TITLE = CCBLang.translateDirect("gui.gas_filter.respect_data");
+    private static final Component RESPECT_DATA_DESCRIPTION = CCBLang.translateDirect("gui.gas_filter.respect_data.description");
+    private static final Component IGNORE_DATA_TITLE = CCBLang.translateDirect("gui.gas_filter.ignore_data");
+    private static final Component IGNORE_DATA_DESCRIPTION = CCBLang.translateDirect("gui.gas_filter.ignore_data.description");
     private static final Component OPTION_ENABLED = CCBLang.translateDirect("gui.option_enabled");
     private static final Component OPTION_DISABLED = CCBLang.translateDirect("gui.option_disabled");
 
-    protected IconButton whitelistButton;
-    protected IconButton blacklistButton;
+    private IconButton whitelistButton;
+    private IconButton blacklistButton;
+    private IconButton respectDataButton;
+    private IconButton ignoreDataButton;
 
     public GasFilterScreen(GasFilterMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -78,6 +85,18 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
     }
 
     @Override
+    protected List<Component> getTooltipFromContainerItem(ItemStack stack) {
+        if (hoveredSlot == null || hoveredSlot.container == menu.playerInventory || !GasVirtualUtils.isVirtualItem(stack)) {
+            return super.getTooltipFromContainerItem(stack);
+        }
+
+        List<Component> tooltips = new ArrayList<>();
+        tooltips.add(CCBLang.gasName(GasVirtualUtils.getGasType(stack)).component());
+        tooltips.addAll(GasRequestClientUtils.getExtraTooltips(stack));
+        return tooltips;
+    }
+
+    @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         renderPlayerInventory(graphics, getLeftOfCentered(PLAYER_INVENTORY.getWidth()), topPos + BACKGROUND.getHeight() - 1);
         BACKGROUND.render(graphics, leftPos, topPos - 5);
@@ -86,20 +105,31 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
         GuiGameElement.of(FILTER).scale(4).at(leftPos + BACKGROUND.getWidth() + 8, topPos + BACKGROUND.getHeight() - 53, -200).render(graphics);
     }
 
-    protected void initButtons() {
+    private void initButtons() {
         IconButton confirmButton = new IconButton(leftPos + BACKGROUND.getWidth() - 33, topPos + BACKGROUND.getHeight() - 29, AllIcons.I_CONFIRM).withCallback(() -> menu.player.closeContainer());
         addRenderableWidget(confirmButton);
 
-        blacklistButton = new IconButton(leftPos + 18, topPos + 75, AllIcons.I_BLACKLIST).withCallback(() -> {
+        blacklistButton = new IconButton(leftPos + 18, topPos + 75, CCBIcons.I_BLACKLIST).withCallback(() -> {
             menu.blacklist = true;
-            CatnipServices.NETWORK.sendToServer(new GasFilterScreenPacket(true));
+            CatnipServices.NETWORK.sendToServer(new GasFilterScreenPacket(true, menu.respectData));
         });
         addRenderableWidget(blacklistButton);
-        whitelistButton = new IconButton(leftPos + 36, topPos + 75, AllIcons.I_WHITELIST).withCallback(() -> {
+        whitelistButton = new IconButton(leftPos + 36, topPos + 75, CCBIcons.I_WHITELIST).withCallback(() -> {
             menu.blacklist = false;
-            CatnipServices.NETWORK.sendToServer(new GasFilterScreenPacket(false));
+            CatnipServices.NETWORK.sendToServer(new GasFilterScreenPacket(false, menu.respectData));
         });
         addRenderableWidget(whitelistButton);
+
+        respectDataButton = new IconButton(leftPos + 60, topPos + 75, CCBIcons.I_RESPECT_NBT).withCallback(() -> {
+            menu.respectData = true;
+            CatnipServices.NETWORK.sendToServer(new GasFilterScreenPacket(menu.blacklist, true));
+        });
+        addRenderableWidget(respectDataButton);
+        ignoreDataButton = new IconButton(leftPos + 78, topPos + 75, CCBIcons.I_IGNORE_NBT).withCallback(() -> {
+            menu.respectData = false;
+            CatnipServices.NETWORK.sendToServer(new GasFilterScreenPacket(menu.blacklist, false));
+        });
+        addRenderableWidget(ignoreDataButton);
 
         IconButton resetButton = new IconButton(leftPos + BACKGROUND.getWidth() - 62, topPos + BACKGROUND.getHeight() - 29, AllIcons.I_TRASH).withCallback(() -> {
             menu.clearContents();
@@ -108,32 +138,22 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
         addRenderableWidget(resetButton);
     }
 
-    protected void updateStates() {
+    private void updateStates() {
         blacklistButton.green = menu.blacklist;
         whitelistButton.green = !menu.blacklist;
+        respectDataButton.green = menu.respectData;
+        ignoreDataButton.green = !menu.respectData;
     }
 
-    protected void renderTooltips(GuiGraphics graphics, int mouseX, int mouseY) {
+    private void renderTooltips(GuiGraphics graphics, int mouseX, int mouseY) {
         boolean isShiftDown = hasShiftDown();
         renderModeTooltip(graphics, blacklistButton, BLACKLIST_TITLE, BLACKLIST_DESCRIPTION, isShiftDown, mouseX, mouseY);
         renderModeTooltip(graphics, whitelistButton, WHITELIST_TITLE, WHITELIST_DESCRIPTION, isShiftDown, mouseX, mouseY);
-
-        if (hoveredSlot == null || hoveredSlot.container == menu.playerInventory) {
-            return;
-        }
-
-        ItemStack virtualItem = hoveredSlot.getItem();
-        if (!GasVirtualUtils.isVirtualItem(virtualItem)) {
-            return;
-        }
-
-        List<Component> tooltips = new ArrayList<>();
-        tooltips.add(CCBLang.gasName(GasVirtualUtils.getGasType(virtualItem)).component());
-        tooltips.addAll(GasRequestClientUtils.getExtraTooltips(virtualItem));
-        graphics.renderTooltip(font, tooltips, Optional.empty(), mouseX, mouseY);
+        renderModeTooltip(graphics, respectDataButton, RESPECT_DATA_TITLE, RESPECT_DATA_DESCRIPTION, isShiftDown, mouseX, mouseY);
+        renderModeTooltip(graphics, ignoreDataButton, IGNORE_DATA_TITLE, IGNORE_DATA_DESCRIPTION, isShiftDown, mouseX, mouseY);
     }
 
-    protected void renderModeTooltip(GuiGraphics graphics, IconButton button, Component title, Component description, boolean isShiftDown, int mouseX, int mouseY) {
+    private void renderModeTooltip(GuiGraphics graphics, IconButton button, Component title, Component description, boolean isShiftDown, int mouseX, int mouseY) {
         if (!button.isHovered()) {
             return;
         }
@@ -148,7 +168,6 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
         if (isShiftDown) {
             tooltips.addAll(TooltipHelper.cutTextComponent(description, Palette.ALL_GRAY));
         }
-
         graphics.renderTooltip(font, tooltips, Optional.empty(), mouseX, mouseY);
     }
 }

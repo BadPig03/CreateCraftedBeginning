@@ -8,7 +8,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasPressure {
-    public static final long UNITS_PER_PRESSURE = 1048576L;
+    static final long UNITS_PER_PRESSURE = 1048576L;
     private static final long ZERO_EPSILON_UNITS = 8;
 
     private GasPressure() {
@@ -25,18 +25,10 @@ public final class GasPressure {
         }
 
         long units = Math.round(scaled);
-        return isZero(units) ? 0 : units;
-    }
-
-    public static float toPressure(long units) {
-        if (units <= 0) {
+        if (isZero(units)) {
             return 0;
         }
-        return (float) units / UNITS_PER_PRESSURE;
-    }
-
-    public static boolean isZero(long units) {
-        return units >= -ZERO_EPSILON_UNITS && units <= ZERO_EPSILON_UNITS;
+        return units;
     }
 
     public static long addSaturated(long first, long second) {
@@ -57,6 +49,13 @@ public final class GasPressure {
 
         long equalShare = totalUnits / partCount;
         long remainder = totalUnits % partCount;
-        return equalShare + (partIndex < remainder ? 1 : 0);
+        if (partIndex >= remainder) {
+            return equalShare;
+        }
+        return equalShare + 1;
+    }
+
+    static boolean isZero(long units) {
+        return units >= -ZERO_EPSILON_UNITS && units <= ZERO_EPSILON_UNITS;
     }
 }

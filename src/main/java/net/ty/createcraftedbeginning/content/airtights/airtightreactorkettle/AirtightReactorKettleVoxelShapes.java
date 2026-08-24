@@ -11,7 +11,7 @@ import java.util.EnumMap;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightReactorKettleVoxelShapes {
+final class AirtightReactorKettleVoxelShapes {
     private static final EnumMap<AirtightReactorKettleStructuralPosition, VoxelShape> SHAPES_MAP = new EnumMap<>(AirtightReactorKettleStructuralPosition.class);
 
     static {
@@ -43,11 +43,14 @@ public final class AirtightReactorKettleVoxelShapes {
         put(AirtightReactorKettleStructuralPosition.BOTTOM_RIGHT_DOWN, CCBShapes.AIRTIGHT_REACTOR_KETTLE_BOTTOM_CORNER.get(Direction.SOUTH));
     }
 
+    private AirtightReactorKettleVoxelShapes() {
+    }
+
     private static void put(AirtightReactorKettleStructuralPosition position, VoxelShape shape) {
         SHAPES_MAP.put(position, shape);
     }
 
-    public static VoxelShape getShape(AirtightReactorKettleStructuralPosition structuralPosition) {
+    static VoxelShape getShape(AirtightReactorKettleStructuralPosition structuralPosition) {
         return SHAPES_MAP.getOrDefault(structuralPosition, Shapes.block());
     }
 }

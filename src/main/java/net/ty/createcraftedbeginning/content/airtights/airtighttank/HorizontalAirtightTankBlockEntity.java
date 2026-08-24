@@ -19,14 +19,14 @@ public class HorizontalAirtightTankBlockEntity extends AirtightTankBlockEntity {
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.HORIZONTAL_AIRTIGHT_TANK.get(), (be, context) -> be.getCapability());
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.HORIZONTAL_AIRTIGHT_TANK.get(), (tank, ignoredDirection) -> tank.getCapability());
     }
 
     @Override
     public Axis getMainConnectionAxis() {
-        BlockState state = getBlockState();
-        if (state.hasProperty(HorizontalAirtightTankBlock.HORIZONTAL_AXIS)) {
-            return state.getValue(HorizontalAirtightTankBlock.HORIZONTAL_AXIS);
+        BlockState tankState = getBlockState();
+        if (tankState.hasProperty(HorizontalAirtightTankBlock.HORIZONTAL_AXIS)) {
+            return tankState.getValue(HorizontalAirtightTankBlock.HORIZONTAL_AXIS);
         }
         return Axis.X;
     }

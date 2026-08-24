@@ -13,9 +13,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AmethystSuspensionVirtualFluid extends BaseFlowingFluid {
-    protected final boolean isSource;
+    private final boolean isSource;
 
-    public AmethystSuspensionVirtualFluid(Properties properties, boolean isSource) {
+    private AmethystSuspensionVirtualFluid(Properties properties, boolean isSource) {
         super(properties);
         this.isSource = isSource;
     }

@@ -12,12 +12,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID, value = Dist.CLIENT)
-public final class AirtightUpgradeClientEvents {
+final class AirtightUpgradeClientEvents {
     private AirtightUpgradeClientEvents() {
     }
 
     @SubscribeEvent
-    public static void onClientLoggingOut(LoggingOut event) {
+    private static void onClientLoggingOut(LoggingOut event) {
         GlobalAirtightUpgradesConsumptionManager.clearClientTracking();
     }
 }

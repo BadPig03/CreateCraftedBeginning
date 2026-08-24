@@ -32,8 +32,8 @@ public class ColoredBreezeCloudParticleType extends ParticleType<ColoredBreezeCl
     }
 
     public record ColoredBreezeCloudParticleOptions(int color) implements ParticleOptions {
-        public static final MapCodec<ColoredBreezeCloudParticleOptions> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(Codec.INT.fieldOf("color").forGetter(ColoredBreezeCloudParticleOptions::color)).apply(instance, ColoredBreezeCloudParticleOptions::new));
-        public static final StreamCodec<RegistryFriendlyByteBuf, ColoredBreezeCloudParticleOptions> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.INT, ColoredBreezeCloudParticleOptions::color, ColoredBreezeCloudParticleOptions::new);
+        private static final MapCodec<ColoredBreezeCloudParticleOptions> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(Codec.INT.fieldOf("color").forGetter(ColoredBreezeCloudParticleOptions::color)).apply(instance, ColoredBreezeCloudParticleOptions::new));
+        private static final StreamCodec<RegistryFriendlyByteBuf, ColoredBreezeCloudParticleOptions> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.INT, ColoredBreezeCloudParticleOptions::color, ColoredBreezeCloudParticleOptions::new);
 
         @Override
         public ParticleType<?> getType() {

@@ -18,6 +18,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
@@ -118,7 +119,7 @@ public class AirtightPipeScenes {
         }
 
         scene.idle(5);
-        scene.world().modifyBlocks(frontPipeSelection, state -> state.setValue(AirtightPipeBlock.CASED, true).setValue(AirtightPipeBlock.WATERLOGGED, false), false);
+        scene.world().modifyBlocks(frontPipeSelection, state -> state.setValue(AirtightPipeBlock.CASED, true).setValue(BlockStateProperties.WATERLOGGED, false), false);
         scene.overlay().showText(60).text("Airtight Sheets can encase Airtight Pipes without being consumed").colored(PonderPalette.BLUE).pointAt(rightPipeVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);

@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.content.end.endincinerationblower;
 
-import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
 import com.simibubi.create.content.kinetics.belt.behaviour.TransportedItemStackHandlerBehaviour;
 import com.simibubi.create.content.kinetics.belt.behaviour.TransportedItemStackHandlerBehaviour.TransportedResult;
 import com.simibubi.create.content.kinetics.fan.processing.AllFanProcessingTypes;
@@ -29,111 +28,109 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class EndIncinerationBlowerEffectProcessor {
-    private final EndIncinerationBlowerBlockEntity blockEntity;
+final class EndIncinerationBlowerEffectProcessor {
+    private final EndIncinerationBlowerBlockEntity blower;
     private final EndIncinerationBlowerTargetCache targetCache;
 
-    public EndIncinerationBlowerEffectProcessor(EndIncinerationBlowerBlockEntity blockEntity) {
-        this.blockEntity = blockEntity;
-        targetCache = new EndIncinerationBlowerTargetCache(blockEntity.getBlockPos());
+    EndIncinerationBlowerEffectProcessor(EndIncinerationBlowerBlockEntity blower) {
+        this.blower = blower;
+        targetCache = new EndIncinerationBlowerTargetCache(blower.getBlockPos());
     }
 
-    private static boolean applyFanProcessing(ServerLevel level, FanProcessingType processingType, EntityArea entityArea, List<ItemEntity> affectedItems, List<TransportedItemStackHandlerBehaviour> transportedHandlers) {
-        AtomicBoolean applied = new AtomicBoolean(false);
-        for (Iterator<ItemEntity> iterator = affectedItems.iterator(); iterator.hasNext(); ) {
-            ItemEntity itemEntity = iterator.next();
+    private static boolean applyFanProcessing(ServerLevel level, FanProcessingType processingType, AABB effectArea, EntityArea entityArea, List<ItemEntity> affectedItems, List<TransportedItemStackHandlerBehaviour> transportedHandlers) {
+        AtomicBoolean hasProcessedItem = new AtomicBoolean(false);
+        for (Iterator<ItemEntity> itemIterator = affectedItems.iterator(); itemIterator.hasNext(); ) {
+            ItemEntity itemEntity = itemIterator.next();
             if (!itemEntity.isAlive() || itemEntity.isRemoved()) {
-                iterator.remove();
+                itemIterator.remove();
                 continue;
             }
 
-            if (!entityArea.intersects(itemEntity) || !FanProcessing.canProcess(itemEntity, processingType)) {
+            if (!entityArea.intersects(itemEntity) || !FanProcessing.canProcess(itemEntity, processingType) || !FanProcessing.applyProcessing(itemEntity, processingType)) {
                 continue;
             }
 
-            if (FanProcessing.applyProcessing(itemEntity, processingType)) {
-                applied.set(true);
-            }
+            hasProcessedItem.set(true);
         }
 
-        for (Iterator<TransportedItemStackHandlerBehaviour> iterator = transportedHandlers.iterator(); iterator.hasNext(); ) {
-            TransportedItemStackHandlerBehaviour behaviour = iterator.next();
-            if (behaviour.blockEntity.isRemoved() || behaviour.blockEntity.getLevel() != level) {
-                iterator.remove();
+        for (Iterator<TransportedItemStackHandlerBehaviour> handlerIterator = transportedHandlers.iterator(); handlerIterator.hasNext(); ) {
+            TransportedItemStackHandlerBehaviour handler = handlerIterator.next();
+            if (handler.blockEntity.isRemoved() || handler.blockEntity.getLevel() != level) {
+                handlerIterator.remove();
                 continue;
             }
 
-            behaviour.handleProcessingOnAllItems(transported -> {
-                TransportedResult result = FanProcessing.applyProcessing(transported, level, processingType);
-                if (!result.doesNothing()) {
-                    applied.set(true);
+            handler.handleProcessingOnAllItems(transportedItem -> {
+                if (!effectArea.contains(handler.getWorldPositionOf(transportedItem))) {
+                    return TransportedResult.doNothing();
                 }
-                return result;
+
+                TransportedResult processingResult = FanProcessing.applyProcessing(transportedItem, level, processingType);
+                if (!processingResult.doesNothing()) {
+                    hasProcessedItem.set(true);
+                }
+                return processingResult;
             });
         }
 
-        return applied.get();
+        return hasProcessedItem.get();
     }
 
-    public void tick(ServerLevel level) {
-        float absSpeed = Mth.abs(blockEntity.getSpeed());
-        EndIncinerationBlowerStructuralBlockEntity structural = blockEntity.getStructuralForEffect();
-        if (absSpeed < SpeedLevel.MEDIUM.getSpeedValue() || structural == null) {
+    void tick(ServerLevel level) {
+        float absSpeed = Mth.abs(blower.getSpeed());
+        EndIncinerationBlowerStructuralBlockEntity structural = blower.getStructuralForEffect();
+        if (EndIncinerationBlowerRange.calculateRange(absSpeed) <= 0 || structural == null) {
             return;
         }
 
-        AABB area = EndIncinerationBlowerRange.calculateArea(blockEntity.getBlockPos(), absSpeed);
-        boolean applied = switch (structural.getBlowerWorkingMode().get()) {
-            case SMOKING -> applyFanProcessing(level, AllFanProcessingTypes.SMOKING, area);
-            case BLASTING -> applyFanProcessing(level, AllFanProcessingTypes.BLASTING, area);
-            case IGNITION -> shouldApplyIgnition(level) && applyIgnition(level, area);
+        AABB effectArea = EndIncinerationBlowerRange.calculateArea(blower.getBlockPos(), absSpeed);
+        boolean effectApplied = switch (structural.getBlowerWorkingMode().get()) {
+            case SMOKING -> applyFanProcessing(level, AllFanProcessingTypes.SMOKING, effectArea);
+            case BLASTING -> applyFanProcessing(level, AllFanProcessingTypes.BLASTING, effectArea);
+            case IGNITION -> shouldApplyIgnition(level) && applyIgnition(level, effectArea);
         };
-        if (!applied) {
+        if (!effectApplied) {
             return;
         }
 
-        blockEntity.awardPrimaryEffectAdvancement();
+        blower.awardPrimaryEffectAdvancement();
     }
 
-    private boolean applyFanProcessing(ServerLevel level, FanProcessingType processingType, AABB area) {
-        EntityArea entityArea = CCBSubLevelBridge.createEntityArea(level, blockEntity.getBlockPos(), area);
-        return applyFanProcessing(level, processingType, entityArea, targetCache.getAffectedItems(level, area, entityArea), targetCache.getTransportedHandlers(level, blockEntity.getSpeed()));
+    private boolean applyFanProcessing(ServerLevel level, FanProcessingType processingType, AABB effectArea) {
+        EntityArea entityArea = CCBSubLevelBridge.createEntityArea(level, blower.getBlockPos(), effectArea);
+        return applyFanProcessing(level, processingType, effectArea, entityArea, targetCache.getAffectedItems(level, effectArea, entityArea), targetCache.getTransportedHandlers(level, blower.getSpeed()));
     }
 
-    private boolean applyIgnition(ServerLevel level, AABB area) {
-        EntityArea entityArea = CCBSubLevelBridge.createEntityArea(level, blockEntity.getBlockPos(), area);
-        FakePlayer fakePlayer = blockEntity.getFakePlayer(level);
-        boolean applied = false;
-        boolean affectsPlayers = CCBConfig.server().endDevices.ignitionAffectsPlayers.get();
+    private boolean applyIgnition(ServerLevel level, AABB effectArea) {
+        EntityArea entityArea = CCBSubLevelBridge.createEntityArea(level, blower.getBlockPos(), effectArea);
+        FakePlayer fakePlayer = blower.getFakePlayer(level);
+        boolean effectApplied = false;
+        boolean shouldAffectPlayers = CCBConfig.server().endDevices.ignitionAffectsPlayers.get();
         float configuredDamage = Math.max(0, CCBConfig.server().endDevices.ignitionDamage.getF());
         DamageSource damageSource = CCBDamageTypes.source(DamageTypes.IN_FIRE, level, fakePlayer);
-        for (LivingEntity livingEntity : level.getEntitiesOfClass(LivingEntity.class, area)) {
-            if (!entityArea.intersects(livingEntity) || !livingEntity.isAlive() || livingEntity.fireImmune() || livingEntity instanceof Player && !affectsPlayers) {
+        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, effectArea)) {
+            if (!entityArea.intersects(target) || !target.isAlive() || target.fireImmune() || target instanceof Player && !shouldAffectPlayers) {
                 continue;
             }
 
-            boolean snowGolem = livingEntity instanceof SnowGolem;
-            float damage = snowGolem ? livingEntity.getHealth() + livingEntity.getAbsorptionAmount() + 1 : configuredDamage;
-            if (damage <= 0) {
-                continue;
-            }
+            int previousFireTicks = target.getRemainingFireTicks();
+            target.igniteForSeconds(2);
+            boolean targetAffected = target.getRemainingFireTicks() > previousFireTicks;
 
-            int previousFireTicks = livingEntity.getRemainingFireTicks();
-            livingEntity.igniteForSeconds(2);
-            if (!livingEntity.hurt(damageSource, damage)) {
-                livingEntity.setRemainingFireTicks(previousFireTicks);
-                continue;
+            boolean isSnowGolem = target instanceof SnowGolem;
+            float damageAmount = isSnowGolem ? target.getHealth() + target.getAbsorptionAmount() + 1 : configuredDamage;
+            if (damageAmount > 0 && target.hurt(damageSource, damageAmount)) {
+                targetAffected = true;
+                if (isSnowGolem && !target.isAlive()) {
+                    blower.awardWarmHeartedAdvancement();
+                }
             }
-
-            applied = true;
-            if (snowGolem && !livingEntity.isAlive()) {
-                blockEntity.awardWarmHeartedAdvancement();
-            }
+            effectApplied |= targetAffected;
         }
-        return applied;
+        return effectApplied;
     }
 
     private boolean shouldApplyIgnition(ServerLevel level) {
-        return Math.floorMod(level.getGameTime(), 20) == Math.floorMod(blockEntity.getBlockPos().hashCode(), 20);
+        return Math.floorMod(level.getGameTime(), 20) == Math.floorMod(blower.getBlockPos().hashCode(), 20);
     }
 }

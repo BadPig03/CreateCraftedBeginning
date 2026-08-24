@@ -22,7 +22,7 @@ import java.util.List;
 public class GasFactoryGaugeSetGasScreen extends AbstractSimiContainerScreen<GasFactoryGaugeSetGasMenu> {
     private static final CCBGUITextures BACKGROUND = CCBGUITextures.GAS_FACTORY_GAUGE_SET_GAS;
 
-    protected List<Rect2i> extraAreas = Collections.emptyList();
+    private List<Rect2i> extraAreas = Collections.emptyList();
 
     public GasFactoryGaugeSetGasScreen(GasFactoryGaugeSetGasMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);

@@ -24,13 +24,13 @@ public final class TeslaTurbineClientExtensions implements IClientBlockExtension
     public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
         Axis axis = blockState.getValue(BlockStateProperties.AXIS);
         HashSet<BlockPos> positions = new HashSet<>();
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                if (i == 0 && j == 0) {
+        for (int u = -1; u <= 1; u++) {
+            for (int v = -1; v <= 1; v++) {
+                if (u == 0 && v == 0) {
                     continue;
                 }
 
-                positions.add(TeslaTurbineUtils.calculateStructurePos(pos, axis, i, j));
+                positions.add(TeslaTurbineUtils.calculateStructurePos(pos, axis, u, v));
             }
         }
         return positions;

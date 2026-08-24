@@ -17,11 +17,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class SturdyCrateMountedStorage extends FilteredCrateMountedItemStorage<SturdyCrateBlockEntity> {
     public static final MapCodec<SturdyCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(ItemStack.OPTIONAL_CODEC.fieldOf("content").forGetter(SturdyCrateMountedStorage::getStoredItem), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("count").forGetter(SturdyCrateMountedStorage::getStoredCount), ItemStack.OPTIONAL_CODEC.fieldOf("filterItem").forGetter(SturdyCrateMountedStorage::getFilterItem)).apply(instance, SturdyCrateMountedStorage::new));
 
-    public SturdyCrateMountedStorage(ItemStack content, int count, ItemStack filterItem) {
+    private SturdyCrateMountedStorage(ItemStack content, int count, ItemStack filterItem) {
         this(CCBMountedStorage.STURDY_CRATE.get(), content, count, filterItem);
     }
 
-    protected SturdyCrateMountedStorage(MountedItemStorageType<?> type, ItemStack content, int count, ItemStack filterItem) {
+    private SturdyCrateMountedStorage(MountedItemStorageType<?> type, ItemStack content, int count, ItemStack filterItem) {
         super(type, SturdyCrateBlockEntity.class, content, count, filterItem, () -> CCBConfig.server().crates.maxSturdyCapacity.get());
     }
 

@@ -15,7 +15,7 @@
       "gas": "createcraftedbeginning:ultrawarm_air"
     }
   ],
-  "processing_time": 200,
+  "processing_time": 100,
   "results": [
     {
       "id": "minecraft:obsidian"

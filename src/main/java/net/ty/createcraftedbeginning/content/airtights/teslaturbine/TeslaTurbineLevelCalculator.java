@@ -15,7 +15,7 @@ import static net.ty.createcraftedbeginning.content.airtights.teslaturbine.Tesla
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class TeslaTurbineLevelCalculator {
+class TeslaTurbineLevelCalculator {
     private static final String COMPOUND_KEY_SUPPLY_LEVEL = "SupplyLevel";
     private static final String COMPOUND_KEY_TYPE_LEVEL = "TypeLevel";
     private final TeslaTurbineCore core;
@@ -24,7 +24,7 @@ public class TeslaTurbineLevelCalculator {
     private int supplyLevel;
     private int typeLevel;
 
-    public TeslaTurbineLevelCalculator(TeslaTurbineCore core, TeslaTurbineBlockEntity turbine) {
+    TeslaTurbineLevelCalculator(TeslaTurbineCore core, TeslaTurbineBlockEntity turbine) {
         this.core = core;
         this.turbine = turbine;
     }
@@ -37,7 +37,7 @@ public class TeslaTurbineLevelCalculator {
         return Mth.clamp(level, 0, MAX_LEVEL);
     }
 
-    public void updateSupplyLevel(int newLevel) {
+    void updateSupplyLevel(int newLevel) {
         if (!setSupplyLevel(newLevel)) {
             return;
         }
@@ -45,58 +45,43 @@ public class TeslaTurbineLevelCalculator {
         core.markForClientSync();
     }
 
-    public void loadSupplyLevel(int newLevel) {
+    void loadSupplyLevel(int newLevel) {
         setSupplyLevel(newLevel);
     }
 
-    public void loadTypeLevel() {
+    void loadTypeLevel() {
         setTypeLevel(getGasTypeLevel());
     }
 
-    public Map<LevelKey, Integer> getLevels() {
+    Map<LevelKey, Integer> getLevels() {
         int rotorLevel = getRotorLevel();
-        int minLevel = Math.min(supplyLevel, Math.min(rotorLevel, typeLevel));
-        int maxLevel = Math.max(supplyLevel, Math.max(rotorLevel, typeLevel));
+        int minimumLevel = Math.min(supplyLevel, Math.min(rotorLevel, typeLevel));
+        int maximumLevel = Math.max(supplyLevel, Math.max(rotorLevel, typeLevel));
         Map<LevelKey, Integer> levels = new EnumMap<>(LevelKey.class);
         levels.put(LevelKey.SUPPLY, supplyLevel);
         levels.put(LevelKey.ROTOR, rotorLevel);
         levels.put(LevelKey.TYPE, typeLevel);
-        levels.put(LevelKey.MIN_VALUE, minLevel);
-        levels.put(LevelKey.MAX_VALUE, maxLevel);
+        levels.put(LevelKey.MIN_VALUE, minimumLevel);
+        levels.put(LevelKey.MAX_VALUE, maximumLevel);
         return levels;
     }
 
-    public float getSpeed() {
+    float getSpeed() {
         return turbine.getGeneratedSpeed();
     }
 
-    public int getCurrentLevel() {
+    int getCurrentLevel() {
         return Math.min(supplyLevel, Math.min(getRotorLevel(), typeLevel));
     }
 
-    public void reset() {
-        boolean changed = supplyLevel != 0 || typeLevel != 0;
-        supplyLevel = 0;
-        typeLevel = 0;
-        if (!changed) {
-            return;
-        }
-
-        core.markForClientSync();
-    }
-
-    public CompoundTag write(boolean clientPacket) {
+    CompoundTag write() {
         CompoundTag compoundTag = new CompoundTag();
-        if (!clientPacket) {
-            return compoundTag;
-        }
-
         compoundTag.putInt(COMPOUND_KEY_SUPPLY_LEVEL, supplyLevel);
         compoundTag.putInt(COMPOUND_KEY_TYPE_LEVEL, typeLevel);
         return compoundTag;
     }
 
-    public void read(CompoundTag compoundTag, boolean clientPacket) {
+    void read(CompoundTag compoundTag, boolean clientPacket) {
         if (!clientPacket) {
             supplyLevel = 0;
             typeLevel = 0;
@@ -108,13 +93,16 @@ public class TeslaTurbineLevelCalculator {
     }
 
     private int getGasTypeLevel() {
-        GasStack gas = core.getFlowMeter().getGasType();
-        return gas.isEmpty() ? 0 : AirtightTurbineHandlerUtils.of(gas).getMaxLevel();
+        GasStack gasType = core.getFlowMeter().getGasType();
+        if (gasType.isEmpty()) {
+            return 0;
+        }
+        return AirtightTurbineHandlerUtils.of(gasType).getMaxLevel();
     }
 
     private int getRotorLevel() {
-        int rotors = turbine.getBlockState().getValue(TeslaTurbineBlock.ROTOR);
-        return clampLevel(rotors * LEVELS_PER_ROTOR);
+        int rotorCount = turbine.getBlockState().getValue(TeslaTurbineBlock.ROTOR);
+        return clampLevel(rotorCount * LEVELS_PER_ROTOR);
     }
 
     private boolean setSupplyLevel(int newLevel) {
@@ -136,7 +124,7 @@ public class TeslaTurbineLevelCalculator {
         typeLevel = clampedLevel;
     }
 
-    public enum LevelKey {
+    enum LevelKey {
         SUPPLY,
         ROTOR,
         TYPE,

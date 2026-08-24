@@ -8,11 +8,11 @@ import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AbstractIngredient {
-    public final Set<AbstractVariant> variants;
-    public final int hashCode;
+class AbstractIngredient {
+    final Set<AbstractVariant> variants;
+    private final int hashCode;
 
-    public AbstractIngredient(Set<AbstractVariant> variants) {
+    AbstractIngredient(Set<AbstractVariant> variants) {
         this.variants = ImmutableSet.copyOf(variants);
         hashCode = variants.hashCode();
     }
@@ -27,8 +27,8 @@ public class AbstractIngredient {
         return obj instanceof AbstractIngredient other && (this == other || hashCode == other.hashCode && variants.equals(other.variants));
     }
 
-    public static class Universal extends AbstractIngredient {
-        public static final Universal INSTANCE = new Universal();
+    static class Universal extends AbstractIngredient {
+        static final Universal INSTANCE = new Universal();
         private static final int hashCode = Universal.class.hashCode();
 
         private Universal() {

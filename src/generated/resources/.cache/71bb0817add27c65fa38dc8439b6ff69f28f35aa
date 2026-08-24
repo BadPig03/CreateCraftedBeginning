@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-14T09:38:35.6695254	Registrate Provider for createcraftedbeginning [Registries, Data Maps, Recipes, Advancements, Loot Tables, Tags (enchantments), Tags (blocks), Tags (items), Tags (fluids), Tags (entity_types), generic_server_provider, Blockstates, Item models, Lang (en_us/en_ud), generic_client_provider]
+// 1.21.1	2026-08-22T10:41:30.4811082	Registrate Provider for createcraftedbeginning [Registries, Data Maps, Recipes, Advancements, Loot Tables, Tags (enchantments), Tags (blocks), Tags (items), Tags (fluids), Tags (entity_types), generic_server_provider, Blockstates, Item models, Lang (en_us/en_ud), generic_client_provider]
 89cbcebfdf0a539cf4a9c69419bd236fa050d53a assets/createcraftedbeginning/blockstates/airtight_check_valve.json
 d3d0810d6708e3662fe5192674cf577476cca23f assets/createcraftedbeginning/blockstates/airtight_encased_pipe.json
 cb5e887d5bfa4f2fa210775d0ff7bc61f5d2b2e6 assets/createcraftedbeginning/blockstates/airtight_engine.json
@@ -506,7 +506,7 @@ ddd4c21404d71f715e01e697b90ec119da151422 data/createcraftedbeginning/loot_table/
 f043223faefdae4d92e0a177c58591cf73f982ef data/createcraftedbeginning/loot_table/blocks/chiseled_crying_obsidian_bricks.json
 a6f9d08cee13e63792d5fb30605bc4b2ce1b0f25 data/createcraftedbeginning/loot_table/blocks/chiseled_obsidian_bricks.json
 ed56ccaa2a85279dac570d8daedfb52db4f167bb data/createcraftedbeginning/loot_table/blocks/creative_airtight_tank.json
-8bff93c95a19a19849a4138a257e505cb2287cc9 data/createcraftedbeginning/loot_table/blocks/creative_gas_canister.json
+37dcad45de2d9fe42919769bac9ab38dac0e2e1b data/createcraftedbeginning/loot_table/blocks/creative_gas_canister.json
 1f06128148dfe05f1cafd024b2b980c0ccf030f2 data/createcraftedbeginning/loot_table/blocks/crying_obsidian_bricks.json
 7d09fdd8687221cf2c586dddb58efd8d223afd77 data/createcraftedbeginning/loot_table/blocks/crying_obsidian_bricks_a.json
 771964ddf7efc925fa5c099707666827679fe4c1 data/createcraftedbeginning/loot_table/blocks/crying_obsidian_bricks_b.json

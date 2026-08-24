@@ -17,7 +17,6 @@ import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IMountedStorageManagerWithGas;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -25,8 +24,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlockEntity implements ThresholdSwitchObservable {
-    protected final PortableGasInterfaceDisplay display;
-    protected IGasHandler capability;
+    private final PortableGasInterfaceDisplay display;
+    private IGasHandler capability;
 
     public PortableGasInterfaceBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -38,18 +37,13 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
         event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.PORTABLE_GAS_INTERFACE.get(), (blockEntity, context) -> blockEntity.capability);
     }
 
-    @Contract(" -> new")
-    private IGasHandler createEmptyHandler() {
-        return new InterfaceGasHandler(new GasTank(0));
-    }
-
     @Override
     public void startTransferringTo(Contraption contraption, float distance) {
-        if (connectedEntity == contraption.entity || !(contraption.getStorage() instanceof IMountedStorageManagerWithGas withGas)) {
+        if (connectedEntity == contraption.entity || !(contraption.getStorage() instanceof IMountedStorageManagerWithGas mountedStorage)) {
             return;
         }
 
-        capability = new InterfaceGasHandler(withGas.ccb$getGases());
+        capability = new InterfaceGasHandler(mountedStorage.ccb$getGases());
         invalidateCapability();
         super.startTransferringTo(contraption, distance);
     }
@@ -72,42 +66,6 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
         invalidateCapabilities();
     }
 
-    public void onFacingChanged() {
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
-        if (connectedEntity != null || keepAlive > 0) {
-            keepAlive = 0;
-            stopTransferring();
-            transferTimer = ANIMATION - 1;
-            sendData();
-        }
-        level.getEntitiesOfClass(AbstractContraptionEntity.class, new AABB(worldPosition).inflate(3)).forEach(AbstractContraptionEntity::refreshPSIs);
-    }
-
-    public boolean isConnected() {
-        int timeout = getTransferTimeout();
-        return transferTimer >= ANIMATION && transferTimer <= timeout + ANIMATION;
-    }
-
-    public float getExtensionDistance(float partialTicks) {
-        return display.getExtensionDistance(partialTicks);
-    }
-
-    @Nullable
-    public Entity getConnectedEntity() {
-        return connectedEntity;
-    }
-
-    public float getDistance() {
-        return distance;
-    }
-
-    public int getTransferTimer() {
-        return transferTimer;
-    }
-
     @Override
     public int getMaxValue() {
         return display.getMaxValue();
@@ -128,24 +86,63 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
         return display.format(value);
     }
 
-    public IGasHandler getGasCapability() {
+    IGasHandler getGasCapability() {
         return capability;
     }
 
-    public float getConnectionAnimationValue(float partialTicks) {
+    boolean canAccessGasStorage(IGasHandler gasHandler) {
+        return capability == gasHandler && canTransfer();
+    }
+
+    boolean isConnected() {
+        int transferTimeout = getTransferTimeout();
+        return transferTimer >= ANIMATION && transferTimer <= transferTimeout + ANIMATION;
+    }
+
+    void onFacingChanged() {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+
+        if (connectedEntity != null || keepAlive > 0) {
+            keepAlive = 0;
+            stopTransferring();
+            transferTimer = ANIMATION - 1;
+            sendData();
+        }
+        level.getEntitiesOfClass(AbstractContraptionEntity.class, new AABB(worldPosition).inflate(3)).forEach(AbstractContraptionEntity::refreshPSIs);
+    }
+
+    float getConnectionAnimationValue(float partialTicks) {
         return connectionAnimation.getValue(partialTicks);
     }
 
-    public boolean canAccessGasStorage(IGasHandler handler) {
-        return capability == handler && canTransfer();
+    float getExtensionDistance(float partialTicks) {
+        return display.getExtensionDistance(partialTicks);
     }
 
-    public void onGasContentTransferred() {
+    float getDistance() {
+        return distance;
+    }
+
+    @Nullable Entity getConnectedEntity() {
+        return connectedEntity;
+    }
+
+    int getTransferTimer() {
+        return transferTimer;
+    }
+
+    void onGasContentTransferred() {
         onContentTransferred();
     }
 
-    protected class InterfaceGasHandler extends PortableGasInterfaceGasHandler {
-        public InterfaceGasHandler(IGasHandler wrapped) {
+    private IGasHandler createEmptyHandler() {
+        return new InterfaceGasHandler(new GasTank(0));
+    }
+
+    private class InterfaceGasHandler extends PortableGasInterfaceGasHandler {
+        private InterfaceGasHandler(IGasHandler wrapped) {
             super(PortableGasInterfaceBlockEntity.this, wrapped);
         }
     }

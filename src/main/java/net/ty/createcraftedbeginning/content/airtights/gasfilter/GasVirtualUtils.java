@@ -40,11 +40,11 @@ public final class GasVirtualUtils {
     }
 
     public static GasStack getGasType(ItemStack stack) {
-        GasStack gas = stack.getOrDefault(CCBDataComponents.GAS_VIRTUAL_ITEM_TYPE, GasStack.EMPTY);
-        if (gas.isEmpty()) {
+        GasStack virtualGas = stack.getOrDefault(CCBDataComponents.GAS_VIRTUAL_ITEM_TYPE, GasStack.EMPTY);
+        if (virtualGas.isEmpty()) {
             return GasStack.EMPTY;
         }
-        return gas.copyWithAmount(1);
+        return virtualGas.copyWithAmount(1);
     }
 
     public static @Unmodifiable List<ItemStack> getVirtualItems(ItemStack stack) {
@@ -57,13 +57,13 @@ public final class GasVirtualUtils {
         }
 
         if (BalloonUtils.containsGasContents(stack)) {
-            return BalloonUtils.getGasContents(stack).gases().stream().map(gas -> createVirtualItem(gas.toStack(1))).filter(item -> !item.isEmpty()).map(item -> item.copyWithCount(1)).toList();
+            return BalloonUtils.getGasContents(stack).gases().stream().map(gasType -> createVirtualItem(gasType.toStack(1))).filter(virtualItem -> !virtualItem.isEmpty()).map(virtualItem -> virtualItem.copyWithCount(1)).toList();
         }
 
-        IGasCanisterContainer container = stack.getCapability(GasHandler.ITEM);
-        if (container == null || container.isEmpty()) {
+        IGasCanisterContainer canisterContainer = stack.getCapability(GasHandler.ITEM);
+        if (canisterContainer == null || canisterContainer.isEmpty()) {
             return List.of();
         }
-        return container.getVirtualItems().stream().map(item -> item.copyWithCount(1)).toList();
+        return canisterContainer.getVirtualItems().stream().map(virtualItem -> virtualItem.copyWithCount(1)).toList();
     }
 }

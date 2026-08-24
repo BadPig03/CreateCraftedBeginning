@@ -11,19 +11,19 @@ import java.util.function.IntSupplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class FilteredCrateMountedItemStorage<B extends FilteredCrateBlockEntity> extends CrateMountedItemStorage<B> {
-    protected final ItemStack filterItem;
+    private final ItemStack filterItem;
 
     protected FilteredCrateMountedItemStorage(MountedItemStorageType<?> type, Class<B> blockEntityClass, ItemStack content, int count, ItemStack filterItem, IntSupplier maxCountSupplier) {
         super(type, blockEntityClass, content, count, maxCountSupplier);
         this.filterItem = filterItem.isEmpty() ? ItemStack.EMPTY : filterItem.copyWithCount(1);
     }
 
-    public final ItemStack getFilterItem() {
-        return filterItem.isEmpty() ? ItemStack.EMPTY : filterItem.copy();
-    }
-
     @Override
     protected boolean canStoreItem(ItemStack stack) {
         return (filterItem.isEmpty() || FilterItem.testDirect(filterItem, stack, false)) && super.canStoreItem(stack);
+    }
+
+    protected final ItemStack getFilterItem() {
+        return filterItem.isEmpty() ? ItemStack.EMPTY : filterItem.copy();
     }
 }

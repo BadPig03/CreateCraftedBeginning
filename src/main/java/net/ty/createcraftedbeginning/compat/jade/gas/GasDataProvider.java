@@ -39,40 +39,40 @@ public class GasDataProvider {
     private static final ResourceLocation ICON = CCBAPI.asResource("icon");
 
     public static @Unmodifiable List<ViewGroup<CompoundTag>> fromGasHandler(IGasHandler gasHandler, boolean creative) {
-        GasCollectingResult result = fromGasHandlerStream(gasHandler);
-        if (result.tanks == 0) {
+        GasCollectingResult collectedGases = fromGasHandlerStream(gasHandler);
+        if (collectedGases.tankCount == 0) {
             return List.of();
         }
 
-        List<Tuple<GasObject, Long>> entries = new ArrayList<>();
-        int maxEntries = result.emptyTanks == 0 ? 5 : 4;
-        if (result.tanks - result.emptyTanks <= maxEntries) {
-            entries.addAll(result.stream.toList());
+        List<Tuple<GasObject, Long>> displayedEntries = new ArrayList<>();
+        int maxDisplayedEntries = collectedGases.emptyTankCount == 0 ? 5 : 4;
+        if (collectedGases.tankCount - collectedGases.emptyTankCount <= maxDisplayedEntries) {
+            displayedEntries.addAll(collectedGases.entries.toList());
         }
         else {
-            result.stream.takeWhile(entry -> entries.size() < maxEntries).forEach(candidate -> {
-                for (Tuple<GasObject, Long> entry : entries) {
-                    if (GasObject.isSameGasSameComponents(candidate.getA(), entry.getA())) {
+            collectedGases.entries.takeWhile(entry -> displayedEntries.size() < maxDisplayedEntries).forEach(candidate -> {
+                for (Tuple<GasObject, Long> displayedEntry : displayedEntries) {
+                    if (GasObject.isSameGasSameComponents(candidate.getA(), displayedEntry.getA())) {
                         return;
                     }
                 }
 
-                entries.add(candidate);
+                displayedEntries.add(candidate);
             });
         }
 
-        int remaining = result.tanks - result.emptyTanks - entries.size();
-        if (result.emptyTanks > 0) {
-            entries.add(new Tuple<>(GasObject.empty(), result.emptyCapacity));
+        int hiddenTankCount = collectedGases.tankCount - collectedGases.emptyTankCount - displayedEntries.size();
+        if (collectedGases.emptyTankCount > 0) {
+            displayedEntries.add(new Tuple<>(GasObject.empty(), collectedGases.emptyCapacity));
         }
 
-        List<CompoundTag> views = entries.stream().map(entry -> GasView.writeDefault(entry.getA(), entry.getB(), creative)).toList();
-        ViewGroup<CompoundTag> group = new ViewGroup<>(views);
-        if (remaining <= 0) {
+        List<CompoundTag> serializedViews = displayedEntries.stream().map(entry -> GasView.writeDefault(entry.getA(), entry.getB(), creative)).toList();
+        ViewGroup<CompoundTag> group = new ViewGroup<>(serializedViews);
+        if (hiddenTankCount <= 0) {
             return List.of(group);
         }
 
-        group.getExtraData().putInt("+", remaining);
+        group.getExtraData().putInt("+", hiddenTankCount);
         return List.of(group);
     }
 
@@ -111,61 +111,61 @@ public class GasDataProvider {
             return;
         }
 
-        IElementHelper helper = IElementHelper.get();
+        IElementHelper elementHelper = IElementHelper.get();
         boolean renderGroup = clientGroups.size() > 1 || clientGroups.getFirst().shouldRenderGroup();
         ClientViewGroup.tooltip(tooltip, clientGroups, renderGroup, (groupTooltip, group) -> {
             if (renderGroup && group.shouldRenderGroup()) {
                 group.renderHeader(groupTooltip);
             }
             for (GasView view : group.views) {
-                appendView(tooltip, view, showDetails, helper);
+                appendView(tooltip, view, showDetails, elementHelper);
             }
         });
     }
 
     @Contract(pure = true)
     private static GasCollectingResult fromGasHandlerStream(IGasHandler gasHandler) {
-        GasCollectingResult result = new GasCollectingResult();
-        for (int i = 0; i < gasHandler.getTanks(); i++) {
-            long capacity = gasHandler.getTankCapacity(i);
+        GasCollectingResult collectedGases = new GasCollectingResult();
+        for (int tankIndex = 0; tankIndex < gasHandler.getTanks(); tankIndex++) {
+            long capacity = gasHandler.getTankCapacity(tankIndex);
             if (capacity <= 0) {
                 continue;
             }
 
-            result.tanks++;
-            if (!gasHandler.getGasInTank(i).isEmpty()) {
+            collectedGases.tankCount++;
+            if (!gasHandler.getGasInTank(tankIndex).isEmpty()) {
                 continue;
             }
 
-            result.emptyTanks++;
-            result.emptyCapacity = LongMath.saturatedAdd(result.emptyCapacity, capacity);
+            collectedGases.emptyTankCount++;
+            collectedGases.emptyCapacity = LongMath.saturatedAdd(collectedGases.emptyCapacity, capacity);
         }
 
-        if (result.tanks == 0) {
-            result.stream = Stream.empty();
-            return result;
+        if (collectedGases.tankCount == 0) {
+            collectedGases.entries = Stream.empty();
+            return collectedGases;
         }
 
-        result.stream = IntStream.range(0, gasHandler.getTanks()).mapToObj(i -> {
-            long capacity = gasHandler.getTankCapacity(i);
+        collectedGases.entries = IntStream.range(0, gasHandler.getTanks()).mapToObj(tankIndex -> {
+            long capacity = gasHandler.getTankCapacity(tankIndex);
             if (capacity <= 0) {
                 return null;
             }
 
-            GasStack gas = gasHandler.getGasInTank(i);
-            if (gas.isEmpty()) {
+            GasStack gasStack = gasHandler.getGasInTank(tankIndex);
+            if (gasStack.isEmpty()) {
                 return null;
             }
-            return new Tuple<>(GasObject.of(gas.getGasType(), gas.getAmount(), gas.getComponentsPatch()), capacity);
+            return new Tuple<>(GasObject.of(gasStack.getGasType(), gasStack.getAmount(), gasStack.getComponentsPatch()), capacity);
         }).filter(Objects::nonNull);
-        return result;
+        return collectedGases;
     }
 
-    private static void appendView(ITooltip tooltip, GasView view, boolean showDetails, IElementHelper helper) {
-        Component text = getText(view, showDetails);
-        ProgressStyle style = helper.progressStyle().overlay(view.overlay);
-        tooltip.add(helper.sprite(ICON, 16, 16));
-        tooltip.append(helper.progress(view.ratio, text, style, BoxStyle.getNestedBox(), true));
+    private static void appendView(ITooltip tooltip, GasView view, boolean showDetails, IElementHelper elementHelper) {
+        Component progressText = getText(view, showDetails);
+        ProgressStyle progressStyle = elementHelper.progressStyle().overlay(view.overlay);
+        tooltip.add(elementHelper.sprite(ICON, 16, 16));
+        tooltip.append(elementHelper.progress(view.ratio, progressText, progressStyle, BoxStyle.getNestedBox(), true));
     }
 
     private static Component getText(GasView view, boolean showDetails) {
@@ -173,24 +173,24 @@ public class GasDataProvider {
             return view.overrideText;
         }
 
-        Component name = IThemeHelper.get().info(view.gasName);
+        Component gasName = IThemeHelper.get().info(view.gasName);
         if (view.creative) {
-            return Component.translatable("jade.gas.creative", name).withStyle(ChatFormatting.WHITE);
+            return Component.translatable("jade.gas.creative", gasName).withStyle(ChatFormatting.WHITE);
         }
 
-        Component current = Component.literal(view.current).withStyle(ChatFormatting.WHITE);
+        Component currentAmount = Component.literal(view.current).withStyle(ChatFormatting.WHITE);
         if (showDetails) {
-            Component max = Component.literal(view.max).withStyle(ChatFormatting.GRAY);
-            return Component.translatable("jade.gas.detailed", name, current, max);
+            Component capacity = Component.literal(view.max).withStyle(ChatFormatting.GRAY);
+            return Component.translatable("jade.gas.detailed", gasName, currentAmount, capacity);
         }
 
-        return Component.translatable("jade.gas", name, current);
+        return Component.translatable("jade.gas", gasName, currentAmount);
     }
 
     private static class GasCollectingResult {
-        public Stream<Tuple<GasObject, Long>> stream;
-        public int tanks;
+        public Stream<Tuple<GasObject, Long>> entries;
+        public int tankCount;
         private long emptyCapacity;
-        private int emptyTanks;
+        private int emptyTankCount;
     }
 }

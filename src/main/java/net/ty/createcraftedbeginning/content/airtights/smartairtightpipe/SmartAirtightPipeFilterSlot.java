@@ -18,7 +18,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class SmartAirtightPipeFilterSlot extends ValueBoxTransform {
+final class SmartAirtightPipeFilterSlot extends ValueBoxTransform {
     @Override
     public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, BlockState state) {
         Axis axis = state.getValue(SmartAirtightPipeBlock.AXIS);

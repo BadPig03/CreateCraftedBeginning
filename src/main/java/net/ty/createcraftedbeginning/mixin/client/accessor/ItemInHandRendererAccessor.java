@@ -15,9 +15,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public interface ItemInHandRendererAccessor extends ItemInHandRendererAccess {
     @Override
     @Accessor("mainHandItem")
-    ItemStack getMainHandItem();
+    ItemStack ccb$getMainHandItem();
 
     @Override
     @Accessor("offHandItem")
-    ItemStack getOffHandItem();
+    ItemStack ccb$getOffHandItem();
 }

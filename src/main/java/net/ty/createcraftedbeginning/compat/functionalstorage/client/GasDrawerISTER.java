@@ -32,16 +32,16 @@ public final class GasDrawerISTER extends FunctionalStorageISTER {
         this.drawerType = drawerType;
     }
 
-    private static void renderSlot(Provider access, CompoundTag tileTag, int slot, PoseStack poseStack, MultiBufferSource buffers, int light, int overlay, DrawerOptions options, boolean creative, double offsetX, double offsetY, double width, double height, boolean compact) {
-        GasStack gas = GasDrawerBlock.readStoredGas(tileTag, slot, access);
-        if (gas.isEmpty()) {
+    private static void renderSlot(Provider registryAccess, CompoundTag tileTag, int slot, PoseStack poseStack, MultiBufferSource buffers, int light, int overlay, DrawerOptions options, boolean creative, double offsetX, double offsetY, double width, double height, boolean compact) {
+        GasStack storedGas = GasDrawerBlock.readStoredGas(tileTag, slot, registryAccess);
+        if (storedGas.isEmpty()) {
             return;
         }
 
         poseStack.pushPose();
         poseStack.translate(offsetX, offsetY, 0);
-        AABB bounds = new AABB(0.0625, 0.078125, 0.0625, 0.0625 + width, 0.078125 + height, 0.9375);
-        GasDrawerRenderer.renderItemGas(poseStack, buffers, light, overlay, gas, options, bounds, compact, creative);
+        AABB gasBounds = new AABB(0.0625, 0.078125, 0.0625, 0.0625 + width, 0.078125 + height, 0.9375);
+        GasDrawerRenderer.renderItemGas(poseStack, buffers, light, overlay, storedGas, options, gasBounds, compact, creative);
         poseStack.popPose();
     }
 
@@ -51,10 +51,10 @@ public final class GasDrawerISTER extends FunctionalStorageISTER {
 
     @Override
     public void renderByItem(Provider access, ItemStack stack, ItemDisplayContext displayContext, PoseStack poseStack, MultiBufferSource buffers, int light, int overlay) {
-        renderBlockItem(stack, displayContext, poseStack, buffers, light, overlay, getData(stack), matrix -> {
-            matrix.mulPose(Axis.YP.rotationDegrees(180));
-            matrix.mulPose(Axis.XN.rotationDegrees(90));
-            matrix.mulPose(Axis.YP.rotationDegrees(90));
+        renderBlockItem(stack, displayContext, poseStack, buffers, light, overlay, getData(stack), itemPoseStack -> {
+            itemPoseStack.mulPose(Axis.YP.rotationDegrees(180));
+            itemPoseStack.mulPose(Axis.XN.rotationDegrees(90));
+            itemPoseStack.mulPose(Axis.YP.rotationDegrees(90));
         });
         if (!stack.has(FSAttachments.TILE)) {
             return;
@@ -65,23 +65,23 @@ public final class GasDrawerISTER extends FunctionalStorageISTER {
             return;
         }
 
-        DrawerOptions options = new DrawerOptions();
-        options.deserializeNBT(access, tileTag.getCompound("drawerOptions"));
-        boolean creative = tileTag.getBoolean("isCreative");
+        DrawerOptions drawerOptions = new DrawerOptions();
+        drawerOptions.deserializeNBT(access, tileTag.getCompound("drawerOptions"));
+        boolean isCreative = tileTag.getBoolean("isCreative");
         poseStack.mulPose(Axis.YP.rotationDegrees(-90));
         poseStack.mulPose(Axis.XP.rotationDegrees(90));
         poseStack.translate(0, -1, -1);
         switch (drawerType) {
-            case X_1 -> renderSlot(access, tileTag, 0, poseStack, buffers, light, overlay, options, creative, 0, 0, 0.875, 0.78125, false);
+            case X_1 -> renderSlot(access, tileTag, 0, poseStack, buffers, light, overlay, drawerOptions, isCreative, 0, 0, 0.875, 0.78125, false);
             case X_2 -> {
-                renderSlot(access, tileTag, 0, poseStack, buffers, light, overlay, options, creative, 0, 0, 0.875, 0.34375, false);
-                renderSlot(access, tileTag, 1, poseStack, buffers, light, overlay, options, creative, 0, 0.5, 0.875, 0.34375, false);
+                renderSlot(access, tileTag, 0, poseStack, buffers, light, overlay, drawerOptions, isCreative, 0, 0, 0.875, 0.34375, false);
+                renderSlot(access, tileTag, 1, poseStack, buffers, light, overlay, drawerOptions, isCreative, 0, 0.5, 0.875, 0.34375, false);
             }
             case X_4 -> {
-                renderSlot(access, tileTag, 0, poseStack, buffers, light, overlay, options, creative, 0.5, 0, 0.4375, 0.34375, true);
-                renderSlot(access, tileTag, 1, poseStack, buffers, light, overlay, options, creative, 0, 0, 0.4375, 0.34375, true);
-                renderSlot(access, tileTag, 2, poseStack, buffers, light, overlay, options, creative, 0.5, 0.5, 0.4375, 0.34375, true);
-                renderSlot(access, tileTag, 3, poseStack, buffers, light, overlay, options, creative, 0, 0.5, 0.4375, 0.34375, true);
+                renderSlot(access, tileTag, 0, poseStack, buffers, light, overlay, drawerOptions, isCreative, 0.5, 0, 0.4375, 0.34375, true);
+                renderSlot(access, tileTag, 1, poseStack, buffers, light, overlay, drawerOptions, isCreative, 0, 0, 0.4375, 0.34375, true);
+                renderSlot(access, tileTag, 2, poseStack, buffers, light, overlay, drawerOptions, isCreative, 0.5, 0.5, 0.4375, 0.34375, true);
+                renderSlot(access, tileTag, 3, poseStack, buffers, light, overlay, drawerOptions, isCreative, 0, 0.5, 0.4375, 0.34375, true);
             }
         }
     }

@@ -8,11 +8,11 @@ import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AbstractRecipe<R extends Recipe<?>> {
-    public final R recipe;
-    public final Set<AbstractIngredient> ingredients;
+class AbstractRecipe<R extends Recipe<?>> {
+    final R recipe;
+    final Set<AbstractIngredient> ingredients;
 
-    public AbstractRecipe(R recipe, Set<AbstractIngredient> ingredients) {
+    AbstractRecipe(R recipe, Set<AbstractIngredient> ingredients) {
         this.recipe = recipe;
         this.ingredients = ingredients;
     }

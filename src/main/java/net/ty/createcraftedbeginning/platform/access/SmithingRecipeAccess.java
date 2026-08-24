@@ -7,10 +7,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface SmithingTrimRecipeAccess {
-    Ingredient getTemplate();
+public interface SmithingRecipeAccess {
+    Ingredient ccb$getTemplate();
 
-    Ingredient getBase();
+    Ingredient ccb$getBase();
 
-    Ingredient getAddition();
+    Ingredient ccb$getAddition();
 }

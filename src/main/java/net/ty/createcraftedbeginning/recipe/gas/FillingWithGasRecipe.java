@@ -45,11 +45,11 @@ public class FillingWithGasRecipe extends StandardProcessingWithGasRecipe<Single
     @Override
     @OnlyIn(Dist.CLIENT)
     public Component getDescriptionForAssembly() {
-        FluidStack[] stacks = fluidIngredients.getFirst().getFluids();
-        if (stacks.length == 0) {
+        FluidStack[] fluidStacks = fluidIngredients.getFirst().getFluids();
+        if (fluidStacks.length == 0) {
             return Component.literal("Invalid");
         }
-        return CreateLang.translateDirect("recipe.assembly.spout_filling_fluid", stacks[0].getHoverName().getString());
+        return CreateLang.translateDirect("recipe.assembly.spout_filling_fluid", fluidStacks[0].getHoverName().getString());
     }
 
     public SizedFluidIngredient getRequiredFluid() {

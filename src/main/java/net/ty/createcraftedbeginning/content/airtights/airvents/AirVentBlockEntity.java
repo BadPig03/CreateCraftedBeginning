@@ -15,7 +15,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirVentBlockEntity extends SyncedBlockEntity {
-    protected final AirVentLouverState louvers = new AirVentLouverState();
+    private final AirVentLouverState louvers = new AirVentLouverState();
 
     public AirVentBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -38,38 +38,46 @@ public class AirVentBlockEntity extends SyncedBlockEntity {
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, Provider provider) {
-        super.loadAdditional(tag, provider);
-        louvers.load(tag);
+    protected void loadAdditional(CompoundTag compoundTag, Provider provider) {
+        super.loadAdditional(compoundTag, provider);
+        louvers.load(compoundTag);
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, Provider provider) {
-        super.saveAdditional(tag, provider);
-        louvers.save(tag);
+    protected void saveAdditional(CompoundTag compoundTag, Provider provider) {
+        super.saveAdditional(compoundTag, provider);
+        louvers.save(compoundTag);
     }
 
-    public VentState getLouverState(Direction direction) {
+    public void setLouverState(Direction direction, VentState state) {
+        if (!louvers.setLouverState(direction, state)) {
+            return;
+        }
+
+        notifyUpdate();
+    }
+
+    VentState getLouverState(Direction direction) {
         return louvers.getLouverState(direction);
     }
 
-    public boolean hasLouver(Direction direction) {
+    boolean hasLouver(Direction direction) {
         return louvers.hasLouver(direction);
     }
 
-    public boolean isLouverOpen(Direction direction) {
+    boolean isLouverOpen(Direction direction) {
         return louvers.isLouverOpen(direction);
     }
 
-    public int getVisibleLouverMask() {
+    int getVisibleLouverMask() {
         return louvers.getVisibleLouverMask(AirVentBlock.getConnectionMask(getBlockState()));
     }
 
-    public int getOpenedLouverMask() {
+    int getOpenedLouverMask() {
         return louvers.getOpenedLouverMask();
     }
 
-    public void toggleLouver(Direction direction) {
+    void toggleLouver(Direction direction) {
         if (!louvers.toggleLouver(direction)) {
             return;
         }
@@ -77,16 +85,8 @@ public class AirVentBlockEntity extends SyncedBlockEntity {
         notifyUpdate();
     }
 
-    public void toggleLouverOpen(Direction direction) {
+    void toggleLouverOpen(Direction direction) {
         if (!louvers.toggleLouverOpen(direction)) {
-            return;
-        }
-
-        notifyUpdate();
-    }
-
-    public void setLouverState(Direction direction, VentState state) {
-        if (!louvers.setLouverState(direction, state)) {
             return;
         }
 

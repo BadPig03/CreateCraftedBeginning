@@ -19,9 +19,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class ItemApplicationWithGasRecipe extends ProcessingWithGasRecipe<RecipeWrapper, ItemApplicationWithGasRecipeParams> {
-    protected final boolean keepHeldItem;
+    private final boolean keepHeldItem;
 
-    public ItemApplicationWithGasRecipe(CCBRecipeTypes type, ItemApplicationWithGasRecipeParams params) {
+    ItemApplicationWithGasRecipe(CCBRecipeTypes type, ItemApplicationWithGasRecipeParams params) {
         super(type, params);
         keepHeldItem = params.keepHeldItem;
     }
@@ -29,22 +29,6 @@ public class ItemApplicationWithGasRecipe extends ProcessingWithGasRecipe<Recipe
     @Override
     public boolean matches(RecipeWrapper input, Level level) {
         return getProcessedItem().test(input.getItem(0)) && getRequiredHeldItem().test(input.getItem(1));
-    }
-
-    public Ingredient getRequiredHeldItem() {
-        if (ingredients.size() < 2) {
-            throw new IllegalStateException("Item Application Recipe has no tool!");
-        }
-
-        return ingredients.get(1);
-    }
-
-    public Ingredient getProcessedItem() {
-        if (ingredients.isEmpty()) {
-            throw new IllegalStateException("Item Application Recipe has no ingredient!");
-        }
-
-        return ingredients.getFirst();
     }
 
     @Override
@@ -61,6 +45,22 @@ public class ItemApplicationWithGasRecipe extends ProcessingWithGasRecipe<Recipe
         return keepHeldItem;
     }
 
+    public Ingredient getRequiredHeldItem() {
+        if (ingredients.size() < 2) {
+            throw new IllegalStateException("Item Application Recipe has no tool!");
+        }
+
+        return ingredients.get(1);
+    }
+
+    private Ingredient getProcessedItem() {
+        if (ingredients.isEmpty()) {
+            throw new IllegalStateException("Item Application Recipe has no ingredient!");
+        }
+
+        return ingredients.getFirst();
+    }
+
     @FunctionalInterface
     public interface Factory<R extends ItemApplicationWithGasRecipe> extends ProcessingWithGasRecipe.Factory<ItemApplicationWithGasRecipeParams, R> {
         @Override
@@ -68,7 +68,7 @@ public class ItemApplicationWithGasRecipe extends ProcessingWithGasRecipe<Recipe
     }
 
     public static class Builder<R extends ItemApplicationWithGasRecipe> extends ProcessingWithGasRecipeBuilder<ItemApplicationWithGasRecipeParams, R, Builder<R>> {
-        public Builder(Factory<R> factory, ResourceLocation recipeId) {
+        Builder(Factory<R> factory, ResourceLocation recipeId) {
             super(factory, recipeId);
         }
 
@@ -83,7 +83,7 @@ public class ItemApplicationWithGasRecipe extends ProcessingWithGasRecipe<Recipe
         }
 
         @SuppressWarnings("unused")
-        public Builder<R> toolNotConsumed() {
+        private Builder<R> toolNotConsumed() {
             params.keepHeldItem = true;
             return this;
         }

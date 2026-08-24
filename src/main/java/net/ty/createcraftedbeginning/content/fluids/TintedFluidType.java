@@ -15,10 +15,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class TintedFluidType extends FluidType {
-    protected final ResourceLocation stillTexture;
-    protected final ResourceLocation flowingTexture;
+    private final ResourceLocation stillTexture;
+    private final ResourceLocation flowingTexture;
 
-    public TintedFluidType(Properties properties, ResourceLocation stillTexture, ResourceLocation flowingTexture) {
+    TintedFluidType(Properties properties, ResourceLocation stillTexture, ResourceLocation flowingTexture) {
         super(properties);
         this.stillTexture = stillTexture;
         this.flowingTexture = flowingTexture;
@@ -49,15 +49,15 @@ public abstract class TintedFluidType extends FluidType {
         return getFogDistanceModifier();
     }
 
-    protected abstract int getTintColor(FluidStack stack);
+    abstract int getTintColor(FluidStack stack);
 
-    protected abstract int getTintColor(FluidState state, BlockAndTintGetter getter, BlockPos pos);
+    abstract int getTintColor(FluidState state, BlockAndTintGetter getter, BlockPos pos);
 
-    protected @Nullable Vector3f getCustomFogColor() {
+    @Nullable Vector3f getCustomFogColor() {
         return null;
     }
 
-    protected float getFogDistanceModifier() {
+    float getFogDistanceModifier() {
         return 1;
     }
 }

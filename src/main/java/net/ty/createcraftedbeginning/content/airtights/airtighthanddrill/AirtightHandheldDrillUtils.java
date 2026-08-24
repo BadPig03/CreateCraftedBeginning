@@ -22,9 +22,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.ClipContext.Block;
 import net.minecraft.world.level.ClipContext.Fluid;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -71,13 +71,13 @@ public final class AirtightHandheldDrillUtils {
     }
 
     public static int @NotNull [] getMiningSizeParams(ItemStack drill) {
-        BlockPos pos = drill.getOrDefault(CCBDataComponents.DRILL_MINING_SIZE, new BlockPos(1, 1, 1));
-        return new int[]{pos.getX(), pos.getY(), pos.getZ()};
+        BlockPos miningSize = drill.getOrDefault(CCBDataComponents.DRILL_MINING_SIZE, new BlockPos(1, 1, 1));
+        return new int[]{miningSize.getX(), miningSize.getY(), miningSize.getZ()};
     }
 
     public static int @NotNull [] getRelativePositionParams(ItemStack drill) {
-        BlockPos pos = drill.getOrDefault(CCBDataComponents.DRILL_MINING_RELATIVE_POSITION, new BlockPos(0, 0, 0));
-        return new int[]{pos.getX(), pos.getY(), pos.getZ()};
+        BlockPos relativePosition = drill.getOrDefault(CCBDataComponents.DRILL_MINING_RELATIVE_POSITION, new BlockPos(0, 0, 0));
+        return new int[]{relativePosition.getX(), relativePosition.getY(), relativePosition.getZ()};
     }
 
     public static Direction getMiningDirection(ItemStack drill) {
@@ -85,47 +85,45 @@ public final class AirtightHandheldDrillUtils {
     }
 
     static ItemStack createDrillUsedTool(ItemStack drill, ServerLevel level) {
-        ItemStack tool = new ItemStack(Items.NETHERITE_PICKAXE);
-        tool.set(DataComponents.ENCHANTMENTS, drill.getTagEnchantments());
+        ItemStack usedTool = new ItemStack(Items.NETHERITE_PICKAXE);
+        usedTool.set(DataComponents.ENCHANTMENTS, drill.getTagEnchantments());
         if (SilkTouchUpgrade.INSTANCE.canApply(drill)) {
-            tool.enchant(level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.SILK_TOUCH), 1);
+            usedTool.enchant(level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.SILK_TOUCH), 1);
         }
-        return tool;
+        return usedTool;
     }
 
     static @Nullable BlockPos getHitResult(Player player) {
         Vec3 eyePosition = player.getEyePosition();
-        Vec3 end = eyePosition.add(player.calculateViewVector(player.getXRot(), player.getYRot()).scale(player.blockInteractionRange()));
-        Level level = player.level();
-        BlockHitResult hit = level.clip(new ClipContext(eyePosition, end, ClipContext.Block.OUTLINE, Fluid.NONE, player));
-        if (hit.getType() == Type.MISS) {
+        Vec3 rayEnd = eyePosition.add(player.calculateViewVector(player.getXRot(), player.getYRot()).scale(player.blockInteractionRange()));
+        BlockHitResult blockHit = player.level().clip(new ClipContext(eyePosition, rayEnd, Block.OUTLINE, Fluid.NONE, player));
+        if (blockHit.getType() == Type.MISS) {
             return null;
         }
-        return hit.getBlockPos();
+        return blockHit.getBlockPos();
     }
 
     static AirtightHandheldDrillMiningTemplates getMiningTemplate(ItemStack drill) {
         return drill.getOrDefault(CCBDataComponents.DRILL_MINING_TEMPLATE, AirtightHandheldDrillMiningTemplates.CUBOID);
     }
 
-    static boolean isRelativePositionValid(AirtightHandheldDrillMiningTemplates template, int[] size, Direction dir, int[] relPos) {
-        return !template.getTemplate().usesSpatialParameters() || template.getTemplate().getOffset(size, dir, relPos).contains(BlockPos.ZERO);
+    static boolean isRelativePositionValid(AirtightHandheldDrillMiningTemplates template, int[] miningSize, Direction miningDirection, int[] relativePosition) {
+        return !template.getTemplate().usesSpatialParameters() || template.getTemplate().getOffset(miningSize, miningDirection, relativePosition).contains(BlockPos.ZERO);
     }
 
-    static boolean isValidFilter(ItemStack stack) {
-        Item item = stack.getItem();
-        return item instanceof FilterItem || item instanceof BlockItem;
+    static boolean isValidFilter(ItemStack filterStack) {
+        Item filterItem = filterStack.getItem();
+        return filterItem instanceof FilterItem || filterItem instanceof BlockItem;
     }
 
-    static float calculateFinalBreakSpeed(float speed, Player player, ItemStack drill, BlockPos basePos) {
+    static float calculateFinalBreakSpeed(float breakSpeed, Player player, ItemStack drill, BlockPos basePos) {
         Level level = player.level();
         AirtightHandheldDrillMiningContext context = AirtightHandheldDrillMiningContext.of(drill, basePos, level);
         if (!context.isValidBaseTarget()) {
             return -2;
         }
 
-        Optional<AffordableFuel> fuel = findAffordableDrillFuel(player, drill, context);
-        if (fuel.isEmpty()) {
+        if (findAffordableDrillFuel(player, drill, context).isEmpty()) {
             return -1;
         }
 
@@ -133,36 +131,36 @@ public final class AirtightHandheldDrillUtils {
             return 1;
         }
 
-        speed *= calculateMiningSizeMultiplier(context);
-        speed *= calculateMiningHardnessMultiplier(context);
+        breakSpeed *= calculateMiningSizeMultiplier(context);
+        breakSpeed *= calculateMiningHardnessMultiplier(context);
         if (!player.getOffhandItem().is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
-            return speed;
+            return breakSpeed;
         }
-        return speed * 2;
+        return breakSpeed * 2;
     }
 
     static void doDrillAttack(Player player, Level level) {
-        double range = player.blockInteractionRange();
+        double attackRange = player.blockInteractionRange();
         Vec3 eyePosition = player.getEyePosition();
         Vec3 viewVector = player.calculateViewVector(player.getXRot(), player.getYRot());
-        int perEntityHit = CCBConfig.server().equipments.perEntityHitConsumption.get();
+        int perEntityHitConsumption = CCBConfig.server().equipments.perEntityHitConsumption.get();
         DamageSource damageSource = CCBDamageTypes.source(DamageTypes.THORNS, level, player);
-        List<LivingEntity> vulnerableEntities = getVulnerableEntities(player, level, damageSource, range, eyePosition, viewVector);
+        List<LivingEntity> vulnerableEntities = getVulnerableEntities(player, level, damageSource, attackRange, eyePosition, viewVector);
         if (vulnerableEntities.isEmpty()) {
             return;
         }
 
-        vulnerableEntities.sort(Comparator.comparingDouble(e -> e.distanceToSqr(player)));
-        Optional<AffordableFuel> fuel = CanisterContainerConsumers.findAffordableFuel(player, gasType -> {
+        vulnerableEntities.sort(Comparator.comparingDouble(entity -> entity.distanceToSqr(player)));
+        Optional<AffordableFuel> affordableFuel = CanisterContainerConsumers.findAffordableFuel(player, gasType -> {
             AirtightDrillHandler drillHandler = AirtightDrillHandlerUtils.of(gasType);
-            return (double) perEntityHit * drillHandler.getConsumptionMultiplier() * vulnerableEntities.size();
+            return (double) perEntityHitConsumption * drillHandler.getConsumptionMultiplier() * vulnerableEntities.size();
         });
-        if (fuel.isEmpty()) {
+        if (affordableFuel.isEmpty()) {
             displayInsufficientGasWarning(player);
             return;
         }
 
-        AffordableFuel selectedFuel = fuel.get();
+        AffordableFuel selectedFuel = affordableFuel.get();
         AirtightDrillHandler drillHandler = AirtightDrillHandlerUtils.of(selectedFuel.gasType());
         int successfulHits = 0;
         for (LivingEntity entity : vulnerableEntities) {
@@ -183,8 +181,8 @@ public final class AirtightHandheldDrillUtils {
             return;
         }
 
-        long actualAmount = GasConsumptions.roundUp((double) perEntityHit * drillHandler.getConsumptionMultiplier() * successfulHits);
-        if (CanisterContainerConsumers.interactContainer(player, selectedFuel.gasType(), actualAmount, () -> true, false)) {
+        long gasConsumption = GasConsumptions.roundUp((double) perEntityHitConsumption * drillHandler.getConsumptionMultiplier() * successfulHits);
+        if (CanisterContainerConsumers.interactContainer(player, selectedFuel.gasType(), gasConsumption, () -> true, false)) {
             return;
         }
 
@@ -201,13 +199,13 @@ public final class AirtightHandheldDrillUtils {
             return;
         }
 
-        Optional<AffordableFuel> fuel = findAffordableDrillFuel(player, drill, context);
-        if (fuel.isEmpty()) {
+        Optional<AffordableFuel> affordableFuel = findAffordableDrillFuel(player, drill, context);
+        if (affordableFuel.isEmpty()) {
             displayInsufficientGasWarning(player);
             return;
         }
 
-        AffordableFuel selectedFuel = fuel.get();
+        AffordableFuel selectedFuel = affordableFuel.get();
         if (isInstantBreakable(baseState, basePos, level) && context.destructionPos().stream().anyMatch(pos -> !isInstantBreakable(pos, level))) {
             return;
         }
@@ -216,7 +214,7 @@ public final class AirtightHandheldDrillUtils {
         boolean magnet = MagnetUpgrade.INSTANCE.canApply(drill);
         boolean experienceConversion = ExperienceConversionUpgrade.INSTANCE.canApply(drill);
         boolean liquidReplacement = LiquidReplacementUpgrade.INSTANCE.canApply(drill);
-        double successfulConsumption = calculateGasConsumptionForBlock(level, basePos, silkTouch, magnet, experienceConversion, liquidReplacement);
+        double successfulBlockConsumption = calculateGasConsumptionForBlock(level, basePos, silkTouch, magnet, experienceConversion, liquidReplacement);
         int successfulBreakCount = 1;
         int additionalTargetCount = Math.max(0, context.destructionPos().size() - 1);
         int additionalTargetIndex = 0;
@@ -227,18 +225,18 @@ public final class AirtightHandheldDrillUtils {
 
             boolean showBreakParticles = shouldSpawnAdditionalBreakParticles(additionalTargetIndex, additionalTargetCount);
             additionalTargetIndex++;
-            float targetConsumption = calculateGasConsumptionForBlock(level, targetPos, silkTouch, magnet, experienceConversion, liquidReplacement);
+            float targetBlockConsumption = calculateGasConsumptionForBlock(level, targetPos, silkTouch, magnet, experienceConversion, liquidReplacement);
             if (!destroyAdditionalBlock(level, targetPos, serverPlayer, liquidReplacement, showBreakParticles)) {
                 continue;
             }
 
-            successfulConsumption += targetConsumption;
+            successfulBlockConsumption += targetBlockConsumption;
             successfulBreakCount++;
         }
 
-        double baseGasConsumption = calculateBaseGasConsumption(successfulConsumption);
-        long actualAmount = GasConsumptions.roundUp(calculateRawGasConsumption(baseGasConsumption, selectedFuel.gasType()));
-        if (!CanisterContainerConsumers.interactContainer(player, selectedFuel.gasType(), actualAmount, () -> true, false)) {
+        double baseGasConsumption = calculateBaseGasConsumption(successfulBlockConsumption);
+        long gasConsumption = GasConsumptions.roundUp(calculateRawGasConsumption(baseGasConsumption, selectedFuel.gasType()));
+        if (!CanisterContainerConsumers.interactContainer(player, selectedFuel.gasType(), gasConsumption, () -> true, false)) {
             GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", selectedFuel.gasContent().getHoverName());
         }
         if (successfulBreakCount < 64) {
@@ -252,37 +250,36 @@ public final class AirtightHandheldDrillUtils {
         return level.getBlockState(basePos).getDestroySpeed(level, basePos) == 0;
     }
 
-    private static float calculateGasConsumptionForBlock(Level level, BlockPos pos, boolean silkTouch, boolean magnet, boolean conversion, boolean liquidReplacement) {
-        BlockState state = level.getBlockState(pos);
-        Block block = state.getBlock();
-        if (isInstantBreakable(state, pos, level)) {
+    private static float calculateGasConsumptionForBlock(Level level, BlockPos blockPos, boolean silkTouch, boolean magnet, boolean experienceConversion, boolean liquidReplacement) {
+        BlockState blockState = level.getBlockState(blockPos);
+        if (isInstantBreakable(blockState, blockPos, level)) {
             return 0;
         }
 
-        float consumption = 0;
-        int blockCost = CCBConfig.server().equipments.perBlockConsumption.get();
-        float liquidCost = CCBConfig.server().equipments.liquidReplacementMultiplier.getF() * blockCost;
-        if (block instanceof LiquidBlock) {
-            return liquidReplacement ? liquidCost : consumption;
+        float blockConsumption = 0;
+        int perBlockConsumption = CCBConfig.server().equipments.perBlockConsumption.get();
+        float liquidReplacementConsumption = CCBConfig.server().equipments.liquidReplacementMultiplier.getF() * perBlockConsumption;
+        if (blockState.getBlock() instanceof LiquidBlock) {
+            return liquidReplacement ? liquidReplacementConsumption : blockConsumption;
         }
 
-        if (liquidReplacement && !state.getFluidState().is(Fluids.EMPTY)) {
-            consumption += liquidCost;
+        if (liquidReplacement && !blockState.getFluidState().is(Fluids.EMPTY)) {
+            blockConsumption += liquidReplacementConsumption;
         }
 
-        consumption += blockCost;
-        if (silkTouch && !conversion) {
-            consumption *= CCBConfig.server().equipments.silkTouchMultiplier.getF();
+        blockConsumption += perBlockConsumption;
+        if (silkTouch && !experienceConversion) {
+            blockConsumption *= CCBConfig.server().equipments.silkTouchMultiplier.getF();
         }
         if (magnet) {
-            consumption *= CCBConfig.server().equipments.magnetMultiplier.getF();
+            blockConsumption *= CCBConfig.server().equipments.magnetMultiplier.getF();
         }
-        if (!conversion) {
-            return consumption;
+        if (!experienceConversion) {
+            return blockConsumption;
         }
 
-        consumption *= CCBConfig.server().equipments.experienceConversionMultiplier.getF();
-        return consumption;
+        blockConsumption *= CCBConfig.server().equipments.experienceConversionMultiplier.getF();
+        return blockConsumption;
     }
 
     private static float calculateMiningHardnessMultiplier(AirtightHandheldDrillMiningContext context) {
@@ -300,13 +297,13 @@ public final class AirtightHandheldDrillUtils {
     }
 
     private static float calculateMiningSizeMultiplier(AirtightHandheldDrillMiningContext context) {
-        int size = context.breakSpeedPos().size();
-        if (size == 0) {
+        int blockCount = context.breakSpeedPos().size();
+        if (blockCount == 0) {
             return 1;
         }
 
-        double logSize = Math.log10(size + 9);
-        return Mth.clamp(1 / (float) (Mth.square(logSize) * logSize), 0.01f, 1);
+        double logarithmicSize = Math.log10(blockCount + 9);
+        return Mth.clamp(1 / (float) (Mth.square(logarithmicSize) * logarithmicSize), 0.01f, 1);
     }
 
     private static boolean isInstantBreakable(BlockState state, BlockPos pos, Level level) {
@@ -352,61 +349,61 @@ public final class AirtightHandheldDrillUtils {
         }
 
         AirtightDrillHandler drillHandler = AirtightDrillHandlerUtils.of(gasType);
-        double rawConsumption = baseGasConsumption * drillHandler.getConsumptionMultiplier();
-        return GasConsumptions.isNonNegativeFinite(rawConsumption) ? rawConsumption : -1;
+        double rawGasConsumption = baseGasConsumption * drillHandler.getConsumptionMultiplier();
+        return GasConsumptions.isNonNegativeFinite(rawGasConsumption) ? rawGasConsumption : -1;
     }
 
     private static boolean destroyAdditionalBlockAsPlayer(ServerPlayer player, BlockPos pos) {
-        int previousDepth = ADDITIONAL_BLOCK_BREAK_DEPTH.get();
-        ADDITIONAL_BLOCK_BREAK_DEPTH.set(previousDepth + 1);
+        int previousBreakDepth = ADDITIONAL_BLOCK_BREAK_DEPTH.get();
+        ADDITIONAL_BLOCK_BREAK_DEPTH.set(previousBreakDepth + 1);
         try {
             return player.gameMode.destroyBlock(pos);
         } finally {
-            if (previousDepth == 0) {
+            if (previousBreakDepth == 0) {
                 ADDITIONAL_BLOCK_BREAK_DEPTH.remove();
             }
             else {
-                ADDITIONAL_BLOCK_BREAK_DEPTH.set(previousDepth);
+                ADDITIONAL_BLOCK_BREAK_DEPTH.set(previousBreakDepth);
             }
         }
     }
 
     private static boolean destroyAdditionalBlock(ServerLevel level, BlockPos pos, ServerPlayer player, boolean liquidReplacement, boolean showBreakParticles) {
-        BlockState originalState = level.getBlockState(pos);
-        if (originalState.getBlock() instanceof LiquidBlock) {
+        BlockState originalBlockState = level.getBlockState(pos);
+        if (originalBlockState.getBlock() instanceof LiquidBlock) {
             if (!liquidReplacement) {
                 return false;
             }
 
-            boolean removed = level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
-            if (removed && showBreakParticles) {
-                spawnBreakParticles(level, pos, originalState);
+            boolean wasRemoved = level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+            if (wasRemoved && showBreakParticles) {
+                spawnBreakParticles(level, pos, originalBlockState);
             }
-            return removed;
+            return wasRemoved;
         }
 
         if (!destroyAdditionalBlockAsPlayer(player, pos)) {
             return false;
         }
 
-        if (liquidReplacement && !originalState.getFluidState().isEmpty()) {
-            BlockState remainingState = level.getBlockState(pos);
-            if (remainingState.getBlock() instanceof LiquidBlock) {
+        if (liquidReplacement && !originalBlockState.getFluidState().isEmpty()) {
+            BlockState remainingBlockState = level.getBlockState(pos);
+            if (remainingBlockState.getBlock() instanceof LiquidBlock) {
                 level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
             }
         }
 
-        if (originalState.is(Blocks.REINFORCED_DEEPSLATE)) {
+        if (originalBlockState.is(Blocks.REINFORCED_DEEPSLATE)) {
             CCBAdvancements.EVEN_HARDER_THAN_OBSIDIAN.awardTo(player);
         }
         if (showBreakParticles) {
-            spawnBreakParticles(level, pos, originalState);
+            spawnBreakParticles(level, pos, originalBlockState);
         }
         return true;
     }
 
     private static List<LivingEntity> getVulnerableEntities(Player player, Level level, DamageSource damageSource, double range, Vec3 eyePosition, Vec3 viewVector) {
-        List<LivingEntity> entities = new ArrayList<>();
+        List<LivingEntity> vulnerableEntities = new ArrayList<>();
         for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(range, range, range))) {
             if (entity.is(player)) {
                 continue;
@@ -416,12 +413,12 @@ public final class AirtightHandheldDrillUtils {
                 continue;
             }
 
-            Vec3 toEntity = entity.position().subtract(eyePosition);
-            if (toEntity.length() > range) {
+            Vec3 directionToEntity = entity.position().subtract(eyePosition);
+            if (directionToEntity.length() > range) {
                 continue;
             }
 
-            if (viewVector.dot(toEntity.normalize()) < 0.5) {
+            if (viewVector.dot(directionToEntity.normalize()) < 0.5) {
                 continue;
             }
 
@@ -429,16 +426,16 @@ public final class AirtightHandheldDrillUtils {
                 continue;
             }
 
-            entities.add(entity);
+            vulnerableEntities.add(entity);
         }
-        return entities;
+        return vulnerableEntities;
     }
 
     private static boolean hasClearAttackLine(Player player, LivingEntity entity, Level level) {
-        Vec3 from = player.getEyePosition();
-        Vec3 to = entity.getBoundingBox().getCenter();
-        BlockHitResult hit = level.clip(new ClipContext(from, to, ClipContext.Block.COLLIDER, Fluid.NONE, player));
-        return hit.getType() == Type.MISS || hit.getLocation().distanceToSqr(from) >= to.distanceToSqr(from) - 0.25;
+        Vec3 eyePosition = player.getEyePosition();
+        Vec3 targetCenter = entity.getBoundingBox().getCenter();
+        BlockHitResult blockHit = level.clip(new ClipContext(eyePosition, targetCenter, Block.COLLIDER, Fluid.NONE, player));
+        return blockHit.getType() == Type.MISS || blockHit.getLocation().distanceToSqr(eyePosition) >= targetCenter.distanceToSqr(eyePosition) - 0.25;
     }
 
     private static void displayInsufficientGasWarning(Player player) {
@@ -452,17 +449,17 @@ public final class AirtightHandheldDrillUtils {
     }
 
     private static void spawnBreakParticles(ServerLevel level, BlockPos pos, BlockState state) {
-        Vec3 center = VecHelper.getCenterOf(pos);
-        level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, state), center.x, center.y, center.z, 16, 0, 0, 0, 0);
+        Vec3 blockCenter = VecHelper.getCenterOf(pos);
+        level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, state), blockCenter.x, blockCenter.y, blockCenter.z, 16, 0, 0, 0, 0);
     }
 
-    private static boolean shouldSpawnAdditionalBreakParticles(int index, int total) {
-        if (total <= MAX_ADDITIONAL_BREAK_PARTICLE_BLOCKS) {
+    private static boolean shouldSpawnAdditionalBreakParticles(int targetIndex, int targetCount) {
+        if (targetCount <= MAX_ADDITIONAL_BREAK_PARTICLE_BLOCKS) {
             return true;
         }
 
-        long previousBucket = (long) index * MAX_ADDITIONAL_BREAK_PARTICLE_BLOCKS / total;
-        long currentBucket = (long) (index + 1) * MAX_ADDITIONAL_BREAK_PARTICLE_BLOCKS / total;
-        return currentBucket > previousBucket;
+        long previousParticleBucket = (long) targetIndex * MAX_ADDITIONAL_BREAK_PARTICLE_BLOCKS / targetCount;
+        long currentParticleBucket = (long) (targetIndex + 1) * MAX_ADDITIONAL_BREAK_PARTICLE_BLOCKS / targetCount;
+        return currentParticleBucket > previousParticleBucket;
     }
 }

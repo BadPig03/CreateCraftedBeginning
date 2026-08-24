@@ -30,17 +30,17 @@ import java.util.Set;
 public final class TeslaTurbineStructuralClientExtensions implements IClientBlockExtensions, MultiPosDestructionHandler {
     @Override
     public boolean addHitEffects(BlockState state, Level level, HitResult target, ParticleEngine manager) {
-        if (!(target instanceof BlockHitResult result)) {
+        if (!(target instanceof BlockHitResult hitResult)) {
             return IClientBlockExtensions.super.addHitEffects(state, level, target, manager);
         }
 
-        BlockPos targetPos = result.getBlockPos();
-        TeslaTurbineStructuralBlock block = CCBBlocks.TESLA_TURBINE_STRUCTURAL_BLOCK.get();
-        if (!block.stillValid(level, targetPos, state, false)) {
+        BlockPos targetPos = hitResult.getBlockPos();
+        TeslaTurbineStructuralBlock structuralBlock = CCBBlocks.TESLA_TURBINE_STRUCTURAL_BLOCK.get();
+        if (!structuralBlock.stillValid(level, targetPos, state, false)) {
             return true;
         }
 
-        manager.crack(TeslaTurbineStructuralBlock.getMaster(targetPos, state), result.getDirection());
+        manager.crack(TeslaTurbineStructuralBlock.getMaster(targetPos, state), hitResult.getDirection());
         return true;
     }
 
@@ -52,21 +52,21 @@ public final class TeslaTurbineStructuralClientExtensions implements IClientBloc
 
     @Override
     public @Nullable Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
-        TeslaTurbineStructuralBlock block = CCBBlocks.TESLA_TURBINE_STRUCTURAL_BLOCK.get();
-        if (!block.stillValid(level, pos, blockState, false)) {
+        TeslaTurbineStructuralBlock structuralBlock = CCBBlocks.TESLA_TURBINE_STRUCTURAL_BLOCK.get();
+        if (!structuralBlock.stillValid(level, pos, blockState, false)) {
             return null;
         }
 
         BlockPos masterPos = TeslaTurbineStructuralBlock.getMaster(pos, blockState);
         Axis axis = blockState.getValue(BlockStateProperties.AXIS);
         Set<BlockPos> positions = new HashSet<>();
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                if (i == 0 && j == 0) {
+        for (int u = -1; u <= 1; u++) {
+            for (int v = -1; v <= 1; v++) {
+                if (u == 0 && v == 0) {
                     continue;
                 }
 
-                positions.add(TeslaTurbineUtils.calculateStructurePos(masterPos, axis, i, j));
+                positions.add(TeslaTurbineUtils.calculateStructurePos(masterPos, axis, u, v));
             }
         }
         positions.add(masterPos);

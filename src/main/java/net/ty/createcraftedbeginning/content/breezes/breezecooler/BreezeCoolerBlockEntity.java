@@ -15,6 +15,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.Capabilities.FluidHandler;
@@ -24,6 +25,7 @@ import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.FrostLevel;
+import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerController.CoolingSyncMode;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates.BaseCoolerState;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates.InactiveCoolerState;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe.CoolingData;
@@ -38,15 +40,17 @@ import java.util.function.Consumer;
 @MethodsReturnNonnullByDefault
 public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
     private static Consumer<BreezeCoolerBlockEntity> clientTicker = cooler -> {};
-    protected final LerpedFloat headAnimation;
-    protected final BreezeCoolerSerialization serialization;
-    protected final BreezeCoolerRecipeCache recipeCache;
-    protected final BreezeCoolerController controller;
-    protected final BreezeCoolerDisplay display;
-    protected LerpedFloat headAngle;
-    protected CCBAdvancementBehaviour advancementBehaviour;
-    protected SmartFluidTankBehaviour tankBehaviour;
-    protected BaseCoolerState currentState;
+    private final LerpedFloat headAnimation;
+    private final BreezeCoolerSerialization serialization;
+    private final BreezeCoolerRecipeCache recipeCache;
+    private final BreezeCoolerController controller;
+    private final BreezeCoolerDisplay display;
+    private final LerpedFloat headAngle;
+
+    private CCBAdvancementBehaviour advancementBehaviour;
+    private SmartFluidTankBehaviour tankBehaviour;
+    private BaseCoolerState currentState;
+    private long clientCoolingSyncGameTime = Long.MIN_VALUE;
 
     public BreezeCoolerBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -77,15 +81,15 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     public static int getOverflowThreshold() {
-        return Math.max(1, getMaxCoolantCapacity() / 2);
-    }
-
-    public static int getMaxFluidCapacity() {
-        return Math.max(1, CCBConfig.server().airtights.breezeCoolerFluidCapacity.get()) * FluidType.BUCKET_VOLUME;
+        return (int) Math.max(1, (long) getMaxCoolantCapacity() * 3 / 4);
     }
 
     public static void setClientTicker(Consumer<BreezeCoolerBlockEntity> ticker) {
         clientTicker = ticker;
+    }
+
+    private static int getMaxFluidCapacity() {
+        return Math.max(1, CCBConfig.server().airtights.breezeCoolerFluidCapacity.get()) * FluidType.BUCKET_VOLUME;
     }
 
     @Override
@@ -145,12 +149,8 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         return recipeCache.getFluidCoolingData(fluidStack);
     }
 
-    public void markCoolingChanged() {
-        controller.markCoolingChanged();
-    }
-
-    public void syncCoolingProgress() {
-        controller.syncCoolingProgress();
+    public void onCoolingTimeChanged(CoolingSyncMode syncMode) {
+        controller.onCoolingTimeChanged(syncMode);
     }
 
     public void playCoolingEffects() {
@@ -173,11 +173,12 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         return currentState.isCreative();
     }
 
-    public boolean tryUpdateCoolantByItem(ItemStack itemStack, boolean forceOverflow, boolean simulate) {
-        return controller.tryUpdateCoolantByItem(itemStack, forceOverflow, simulate);
-    }
-
     public FrostLevel getFrostLevel() {
+        Level level = getLevel();
+        if (level != null && level.isClientSide && !isVirtual()) {
+            return getFrostLevelFromBlock();
+        }
+
         return currentState.getFrostLevel();
     }
 
@@ -190,11 +191,21 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     public int getCoolRemainingTime() {
-        return currentState.getRemainingTime();
-    }
+        int remainingTime = currentState.getRemainingTime();
+        Level level = getLevel();
+        if (level == null || !level.isClientSide || isVirtual()) {
+            return remainingTime;
+        }
 
-    public BaseCoolerState getCurrentState() {
-        return currentState;
+        if (!getFrostLevelFromBlock().isAtLeast(FrostLevel.CHILLED)) {
+            return 0;
+        }
+        if (remainingTime <= 0 || currentState.isCreative() || clientCoolingSyncGameTime == Long.MIN_VALUE) {
+            return remainingTime;
+        }
+
+        long elapsedTicks = Math.max(0L, level.getGameTime() - clientCoolingSyncGameTime);
+        return (int) Math.max(1L, (long) remainingTime - elapsedTicks);
     }
 
     public LerpedFloat getHeadAnimation() {
@@ -218,12 +229,13 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     public void setCoolerState(BaseCoolerState newState) {
+        Level level = getLevel();
+        if (level != null && level.isClientSide && !isVirtual()) {
+            return;
+        }
+
         currentState = newState;
         controller.onStateChanged();
-    }
-
-    public void setGoggles(boolean newGoggles) {
-        display.setGoggles(newGoggles);
     }
 
     public void spawnParticleBurst() {
@@ -238,23 +250,45 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         display.tickAnimation(targetAngle);
     }
 
-    public LerpedFloat getHeadAnimationInternal() {
+    boolean tryUpdateCoolantByItem(ItemStack itemStack, boolean forceOverflow, boolean simulate) {
+        return controller.tryUpdateCoolantByItem(itemStack, forceOverflow, simulate);
+    }
+
+    void setGoggles(boolean newGoggles) {
+        display.setGoggles(newGoggles);
+    }
+
+    BaseCoolerState getCurrentState() {
+        return currentState;
+    }
+
+    LerpedFloat getHeadAnimationInternal() {
         return headAnimation;
     }
 
-    public void runClientTicker() {
+    void runClientTicker() {
         clientTicker.accept(this);
     }
 
-    public void setCoolerStateFromSerialization(BaseCoolerState state) {
+    void setCoolerStateFromSerialization(BaseCoolerState state) {
         currentState = state;
+        refreshClientCoolingPredictionBase();
     }
 
-    public void setGogglesFromSerialization(boolean goggles) {
+    void refreshClientCoolingPredictionBase() {
+        Level level = getLevel();
+        if (level == null || !level.isClientSide || isVirtual()) {
+            return;
+        }
+
+        clientCoolingSyncGameTime = level.getGameTime();
+    }
+
+    void setGogglesFromSerialization(boolean goggles) {
         display.setGoggles(goggles);
     }
 
-    public void setTrainHatFromSerialization(boolean trainHat) {
+    void setTrainHatFromSerialization(boolean trainHat) {
         display.setTrainHat(trainHat);
     }
 
@@ -262,7 +296,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         NONE,
         NORMAL;
 
-        public static CoolantType fromTag(CompoundTag compoundTag, String key, CoolantType fallback) {
+        static CoolantType fromTag(CompoundTag compoundTag, String key, CoolantType fallback) {
             if (!compoundTag.contains(key, Tag.TAG_STRING)) {
                 return fallback;
             }

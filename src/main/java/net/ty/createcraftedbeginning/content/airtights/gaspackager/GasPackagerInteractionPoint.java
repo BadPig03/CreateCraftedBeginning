@@ -13,7 +13,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasPackagerInteractionPoint extends ArmInteractionPoint {
-    public GasPackagerInteractionPoint(ArmInteractionPointType type, Level level, BlockPos pos, BlockState state) {
+    private GasPackagerInteractionPoint(ArmInteractionPointType type, Level level, BlockPos pos, BlockState state) {
         super(type, level, pos, state);
     }
 

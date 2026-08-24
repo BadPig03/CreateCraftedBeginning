@@ -29,9 +29,9 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEntity implements IHaveGoggleInformation, IChamberGasTank, ICreativeGasContainer, ThresholdSwitchObservable {
-    protected final CreativeAirtightTankStorageController storageController;
-    protected final CreativeAirtightTankDisplay display;
-    protected final CreativeAirtightTankSerialization serialization;
+    private final CreativeAirtightTankStorageController storageController;
+    private final CreativeAirtightTankDisplay display;
+    private final CreativeAirtightTankSerialization serialization;
 
     public CreativeAirtightTankBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -42,15 +42,15 @@ public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEn
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.CREATIVE_AIRTIGHT_TANK.get(), (be, context) -> be.getCapability());
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.CREATIVE_AIRTIGHT_TANK.get(), (tank, ignoredDirection) -> tank.getCapability());
     }
 
-    public static long getCapacityPerTank() {
+    static long getCapacityPerTank() {
         return Integer.MAX_VALUE * GasAmounts.MILLIBUCKETS_PER_BUCKET;
     }
 
     @Override
-    public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
         serialization.write(compoundTag, provider, clientPacket);
     }
@@ -77,17 +77,17 @@ public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEn
             return;
         }
 
-        BlockState state = getBlockState();
-        if (!(state.getBlock() instanceof CreativeAirtightTankBlock)) {
+        BlockState tankState = getBlockState();
+        if (!(tankState.getBlock() instanceof CreativeAirtightTankBlock)) {
             return;
         }
 
-        Axis axis = getMainConnectionAxis();
-        int controllerCoords = calculateCoords(getController(), axis);
-        int posCoords = calculateCoords(getBlockPos(), axis);
-        state = state.setValue(CreativeAirtightTankBlock.BOTTOM, controllerCoords == posCoords);
-        state = state.setValue(CreativeAirtightTankBlock.TOP, controllerCoords + getHeight() - 1 == posCoords);
-        level.setBlock(worldPosition, state, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE);
+        Axis connectionAxis = getMainConnectionAxis();
+        int controllerCoordinate = calculateCoords(getController(), connectionAxis);
+        int blockCoordinate = calculateCoords(getBlockPos(), connectionAxis);
+        tankState = tankState.setValue(CreativeAirtightTankBlock.BOTTOM, controllerCoordinate == blockCoordinate);
+        tankState = tankState.setValue(CreativeAirtightTankBlock.TOP, controllerCoordinate + getHeight() - 1 == blockCoordinate);
+        level.setBlock(worldPosition, tankState, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE);
     }
 
     @Override
@@ -101,13 +101,13 @@ public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEn
             return;
         }
 
-        BlockState state = getBlockState();
-        if (!(state.getBlock() instanceof CreativeAirtightTankBlock)) {
+        BlockState tankState = getBlockState();
+        if (!(tankState.getBlock() instanceof CreativeAirtightTankBlock)) {
             return;
         }
 
-        state = state.setValue(CreativeAirtightTankBlock.TOP, true).setValue(CreativeAirtightTankBlock.BOTTOM, true);
-        level.setBlock(worldPosition, state, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE | Block.UPDATE_KNOWN_SHAPE);
+        tankState = tankState.setValue(CreativeAirtightTankBlock.TOP, true).setValue(CreativeAirtightTankBlock.BOTTOM, true);
+        level.setBlock(worldPosition, tankState, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE | Block.UPDATE_KNOWN_SHAPE);
     }
 
     @Override
@@ -170,11 +170,15 @@ public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEn
         return true;
     }
 
-    public void setContainedGas(GasStack gasStack) {
+    void updateTankConnectivity() {
+        updateConnectivity();
+    }
+
+    void setContainedGas(GasStack gasStack) {
         storageController.setContainedGas(gasStack);
     }
 
-    public void updateClientStructureState() {
+    void updateClientStructureState() {
         if (level != null) {
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 16);
         }

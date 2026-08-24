@@ -21,11 +21,11 @@ import java.util.function.Consumer;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasPackagerVisual extends AbstractBlockEntityVisual<GasPackagerBlockEntity> implements SimpleDynamicVisual {
-    public final TransformedInstance hatch;
-    public final TransformedInstance tray;
+    private final TransformedInstance hatch;
+    private final TransformedInstance tray;
 
-    public float lastTrayOffset = Float.NaN;
-    public PartialModel lastHatchPartial;
+    private float lastTrayOffset = Float.NaN;
+    private PartialModel lastHatchPartial;
 
     public GasPackagerVisual(VisualizationContext ctx, GasPackagerBlockEntity blockEntity, float partialTick) {
         super(ctx, blockEntity, partialTick);
@@ -39,7 +39,7 @@ public class GasPackagerVisual extends AbstractBlockEntityVisual<GasPackagerBloc
         animate(partialTick);
     }
 
-    public void animate(float partialTick) {
+    private void animate(float partialTick) {
         PartialModel hatchPartial = GasPackagerRenderer.getHatchModel(blockEntity);
         if (hatchPartial != lastHatchPartial) {
             instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(hatchPartial)).stealInstance(hatch);

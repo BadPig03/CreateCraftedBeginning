@@ -40,8 +40,8 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
     private static final TagKey<Item> WIND_CHARGING_EXCLUDED = ItemTags.create(CCBAPI.asResource("wind_charging_excluded"));
     private static final WindChargingData EMPTY = new WindChargingData(WindChargingAction.CHARGE, 0, 0, ItemStack.EMPTY);
 
-    protected final ProcessingRecipeParams recipeParams;
-    protected final WindChargingAction action;
+    private final ProcessingRecipeParams recipeParams;
+    private final WindChargingAction action;
 
     public WindChargingRecipe(ProcessingRecipeParams params) {
         this(params, WindChargingAction.CHARGE);
@@ -51,19 +51,6 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
         super(CCBRecipeTypes.WIND_CHARGING, params);
         recipeParams = params;
         this.action = action;
-    }
-
-    private static @Nullable WindChargingRecipe findRecipe(Level level, ItemStack itemStack) {
-        List<RecipeHolder<WindChargingRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.WIND_CHARGING.getType());
-        for (RecipeHolder<WindChargingRecipe> holder : recipes) {
-            WindChargingRecipe recipe = holder.value();
-            if (!recipe.getIngredient().test(itemStack)) {
-                continue;
-            }
-
-            return recipe;
-        }
-        return null;
     }
 
     public static WindChargingData getWindChargingData(Level level, ItemStack itemStack) {
@@ -77,41 +64,52 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
         return getAutomaticWindChargingTime(itemStack);
     }
 
-    public static WindChargingData getAutomaticWindChargingTime(ItemStack stack) {
-        Item item = stack.getItem();
-        FoodProperties properties = item.getFoodProperties(stack, null);
-        if (properties == null || stack.is(WIND_CHARGING_EXCLUDED)) {
+    public static WindChargingData getAutomaticWindChargingTime(ItemStack itemStack) {
+        FoodProperties foodProperties = itemStack.getItem().getFoodProperties(itemStack, null);
+        if (foodProperties == null || itemStack.is(WIND_CHARGING_EXCLUDED)) {
             return EMPTY;
         }
 
-        double foodValue = 0.5 * properties.nutrition() + properties.saturation();
+        double foodValue = 0.5 * foodProperties.nutrition() + foodProperties.saturation();
         if (foodValue <= 0) {
             return EMPTY;
         }
 
-        double effectScore = getEffectScore(properties.effects());
-        double multiplier = getChargeMultiplier(effectScore);
-        double calculatedTime = Math.pow(foodValue, 1.39858) * 100 * Math.abs(multiplier);
-        int magnitude = !GasConsumptions.isFinite(calculatedTime) || calculatedTime >= Integer.MAX_VALUE ? Integer.MAX_VALUE : Mth.ceil(calculatedTime);
-        if (magnitude <= 0) {
+        double effectScore = getEffectScore(foodProperties.effects());
+        double chargeMultiplier = getChargeMultiplier(effectScore);
+        double calculatedTime = Math.pow(foodValue, 1.39858) * 100 * Math.abs(chargeMultiplier);
+        int chargingMagnitude = !GasConsumptions.isFinite(calculatedTime) || calculatedTime >= Integer.MAX_VALUE ? Integer.MAX_VALUE : Mth.ceil(calculatedTime);
+        if (chargingMagnitude <= 0) {
             return EMPTY;
         }
 
-        int chargingTime = multiplier < 0 ? -magnitude : magnitude;
+        int chargingTime = chargeMultiplier < 0 ? -chargingMagnitude : chargingMagnitude;
         return new WindChargingData(WindChargingAction.CHARGE, chargingTime, 1, ItemStack.EMPTY);
+    }
+
+    private static @Nullable WindChargingRecipe findRecipe(Level level, ItemStack itemStack) {
+        for (RecipeHolder<WindChargingRecipe> recipeHolder : level.getRecipeManager().<SingleRecipeInput, WindChargingRecipe>getAllRecipesFor(CCBRecipeTypes.WIND_CHARGING.getType())) {
+            WindChargingRecipe recipe = recipeHolder.value();
+            if (!recipe.getIngredient().test(itemStack)) {
+                continue;
+            }
+
+            return recipe;
+        }
+        return null;
     }
 
     private static double getEffectScore(List<PossibleEffect> effects) {
         double score = 0;
         for (PossibleEffect possibleEffect : effects) {
             MobEffectInstance instance = possibleEffect.effect();
-            MobEffectCategory category = instance.getEffect().value().getCategory();
-            double sign = switch (category) {
+            MobEffectCategory effectCategory = instance.getEffect().value().getCategory();
+            double effectSign = switch (effectCategory) {
                 case BENEFICIAL -> 1;
                 case HARMFUL -> -1;
                 default -> 0;
             };
-            if (sign == 0) {
+            if (effectSign == 0) {
                 continue;
             }
 
@@ -120,8 +118,8 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
                 continue;
             }
 
-            double level = instance.getAmplifier() + 1;
-            score += sign * level * probability * getDurationFactor(instance);
+            double amplifierLevel = instance.getAmplifier() + 1;
+            score += effectSign * amplifierLevel * probability * getDurationFactor(instance);
         }
         return Math.abs(score) < 1.0E-9 ? 0 : score;
     }
@@ -135,8 +133,8 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
             return 2;
         }
 
-        double seconds = Math.max(1, instance.getDuration() / 20.0);
-        return Math.min(2, Math.log1p(seconds) / Math.log1p(30));
+        double durationSeconds = Math.max(1, instance.getDuration() / 20.0);
+        return Math.min(2, Math.log1p(durationSeconds) / Math.log1p(30));
     }
 
     private static double getChargeMultiplier(double effectScore) {
@@ -144,22 +142,6 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
             return 1 + effectScore;
         }
         return -2 * Math.min(1, -effectScore) * (1 - effectScore);
-    }
-
-    public Ingredient getIngredient() {
-        return ingredients.getFirst();
-    }
-
-    public WindChargingAction getAction() {
-        return action;
-    }
-
-    public boolean isBadFood() {
-        return action == WindChargingAction.CHARGE && processingDuration < 0;
-    }
-
-    protected ProcessingRecipeParams getRecipeParams() {
-        return recipeParams;
     }
 
     @Override
@@ -194,13 +176,25 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
         return errors;
     }
 
+    public Ingredient getIngredient() {
+        return ingredients.getFirst();
+    }
+
+    public WindChargingAction getAction() {
+        return action;
+    }
+
+    public boolean isBadFood() {
+        return action == WindChargingAction.CHARGE && processingDuration < 0;
+    }
+
     public enum WindChargingAction implements StringRepresentable {
         CHARGE,
         CLEAR_ILL,
         CYCLE_CREATIVE;
 
-        public static final Codec<WindChargingAction> CODEC = StringRepresentable.fromEnum(WindChargingAction::values);
-        public static final StreamCodec<RegistryFriendlyByteBuf, WindChargingAction> STREAM_CODEC = StreamCodec.of(FriendlyByteBuf::writeEnum, buffer -> buffer.readEnum(WindChargingAction.class));
+        private static final Codec<WindChargingAction> CODEC = StringRepresentable.fromEnum(WindChargingAction::values);
+        private static final StreamCodec<RegistryFriendlyByteBuf, WindChargingAction> STREAM_CODEC = StreamCodec.of(FriendlyByteBuf::writeEnum, buffer -> buffer.readEnum(WindChargingAction.class));
 
         @Override
         public String getSerializedName() {
@@ -208,9 +202,9 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
         }
     }
 
-    public static class Serializer implements RecipeSerializer<WindChargingRecipe> {
-        private static final MapCodec<WindChargingRecipe> CODEC = RecordCodecBuilder.<WindChargingRecipe>mapCodec(instance -> instance.group(ProcessingRecipeParams.CODEC.forGetter(WindChargingRecipe::getRecipeParams), WindChargingAction.CODEC.fieldOf("action").forGetter(WindChargingRecipe::getAction)).apply(instance, WindChargingRecipe::new)).validate(Serializer::validateRecipe);
-        private static final StreamCodec<RegistryFriendlyByteBuf, WindChargingRecipe> STREAM_CODEC = StreamCodec.composite(ProcessingRecipeParams.STREAM_CODEC, WindChargingRecipe::getRecipeParams, WindChargingAction.STREAM_CODEC, WindChargingRecipe::getAction, WindChargingRecipe::new);
+    static class Serializer implements RecipeSerializer<WindChargingRecipe> {
+        private static final MapCodec<WindChargingRecipe> CODEC = RecordCodecBuilder.<WindChargingRecipe>mapCodec(instance -> instance.group(ProcessingRecipeParams.CODEC.forGetter(recipe -> recipe.recipeParams), WindChargingAction.CODEC.fieldOf("action").forGetter(WindChargingRecipe::getAction)).apply(instance, WindChargingRecipe::new)).validate(Serializer::validateRecipe);
+        private static final StreamCodec<RegistryFriendlyByteBuf, WindChargingRecipe> STREAM_CODEC = StreamCodec.composite(ProcessingRecipeParams.STREAM_CODEC, recipe -> recipe.recipeParams, WindChargingAction.STREAM_CODEC, WindChargingRecipe::getAction, WindChargingRecipe::new);
 
         private static DataResult<WindChargingRecipe> validateRecipe(WindChargingRecipe recipe) {
             List<String> errors = recipe.validate();

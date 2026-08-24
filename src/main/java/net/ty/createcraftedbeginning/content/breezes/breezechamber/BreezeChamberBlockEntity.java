@@ -43,16 +43,17 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     private static final int LAZY_TICK_RATE = 20;
     private static Consumer<BreezeChamberBlockEntity> clientTicker = chamber -> {};
 
-    protected final LerpedFloat headAnimation;
-    protected final BreezeChamberSerialization serialization;
-    protected final BreezeChamberGasProcessor gasProcessor;
-    protected final BreezeChamberController controller;
-    protected final BreezeChamberDisplay display;
-    protected LerpedFloat headAngle;
-    protected WeakReference<IChamberGasTank> source;
-    protected CCBAdvancementBehaviour advancementBehaviour;
-    protected SmartGasTankBehaviour tankBehaviour;
-    protected BaseChamberState currentState;
+    private final LerpedFloat headAnimation;
+    private final BreezeChamberSerialization serialization;
+    private final BreezeChamberGasProcessor gasProcessor;
+    private final BreezeChamberController controller;
+    private final BreezeChamberDisplay display;
+    private final LerpedFloat headAngle;
+
+    WeakReference<IChamberGasTank> source;
+    private CCBAdvancementBehaviour advancementBehaviour;
+    private SmartGasTankBehaviour tankBehaviour;
+    private BaseChamberState currentState;
 
     public BreezeChamberBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -72,10 +73,6 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.BREEZE_CHAMBER.get(), (chamber, context) -> chamber.isControllerActive() ? null : chamber.tankBehaviour.getCapability());
     }
 
-    public static long getMaxCapacity() {
-        return CCBConfig.server().airtights.maxBreezeChamberCapacity.get() * GasAmounts.MILLIBUCKETS_PER_BUCKET;
-    }
-
     public static int getMaxWindCapacity() {
         return Math.max(1, CCBConfig.server().airtights.maxWindCapacity.get());
     }
@@ -90,6 +87,10 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
 
     public static void setClientTicker(Consumer<BreezeChamberBlockEntity> ticker) {
         clientTicker = ticker;
+    }
+
+    private static long getMaxCapacity() {
+        return CCBConfig.server().airtights.maxBreezeChamberCapacity.get() * GasAmounts.MILLIBUCKETS_PER_BUCKET;
     }
 
     @Override
@@ -146,78 +147,48 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         return new Single(worldPosition);
     }
 
-    public boolean hasGoggles() {
-        return display.hasGoggles();
-    }
-
-    public boolean hasTrainHat() {
-        return display.hasTrainHat();
-    }
-
-    public boolean isControllerActive() {
-        return gasProcessor.isControllerActive();
-    }
-
     public boolean isCreative() {
         return currentState.isCreative();
     }
 
-    public InteractionResultHolder<ItemStack> tryUpdateChargerByItem(ItemStack stack, boolean forceOverflow, boolean simulate) {
-        return controller.tryUpdateChargerByItem(stack, forceOverflow, simulate);
-    }
-
     public int getWindRemainingLevel() {
-        int time = getWindRemainingTime();
-        return time <= 0 ? 0 : time < getMaxEffectiveThreshold() ? 1 : 2;
+        int remainingTime = getWindRemainingTime();
+        if (remainingTime <= 0) {
+            return 0;
+        }
+
+        if (remainingTime < getMaxEffectiveThreshold()) {
+            return 1;
+        }
+        return 2;
     }
 
     public int getWindRemainingTime() {
         return currentState.getRemainingTime();
     }
 
-    public CCBAdvancementBehaviour getAdvancementBehaviour() {
-        return advancementBehaviour;
-    }
-
-    public LerpedFloat getHeadAnimation() {
-        return headAnimation;
-    }
-
-    public LerpedFloat getHeadAngle() {
-        return headAngle;
-    }
-
     public void syncWindProgress() {
         controller.syncWindProgress();
     }
 
-    public void tickGasProcessing(ChargerType chargerType) {
-        gasProcessor.tickGasProcessing(chargerType);
+    public void tickGasProcessing(ChargerType chargerType, int windTime) {
+        gasProcessor.tickGasProcessing(chargerType, windTime);
     }
 
-    public void loadFromItem(ItemStack stack) {
-        controller.loadFromItem(stack);
-    }
-
-    public void playSound(boolean bad) {
-        display.playSound(bad);
-    }
-
-    public void saveToItem(ItemStack stack) {
-        serialization.saveToItem(this, stack);
+    public void playSound(boolean isIllCharge) {
+        display.playSound(isIllCharge);
     }
 
     public void setChamberState(BaseChamberState newState) {
+        if (currentState.getChargerType() != newState.getChargerType()) {
+            gasProcessor.flushPendingProcessing();
+        }
         currentState = newState;
         controller.onStateChanged();
     }
 
-    public void setGoggles(boolean newGoggles) {
-        display.setGoggles(newGoggles);
-    }
-
-    public void spawnParticleBurst(boolean bad) {
-        display.spawnParticleBurst(bad);
+    public void spawnParticleBurst(boolean isIllCharge) {
+        display.spawnParticleBurst(isIllCharge);
     }
 
     public void SwitchToGaleState() {
@@ -232,52 +203,92 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         display.tickAnimation(targetAngle);
     }
 
-    public WindLevel getWindLevel() {
-        return currentState.getWindLevel();
-    }
-
-    public WindLevel getWindLevelForRender() {
-        return getWindLevelFromBlock();
+    public void spawnParticles() {
+        display.spawnParticles();
     }
 
     public WindLevel getWindLevelFromBlock() {
         return BreezeChamberBlock.getWindLevelOf(getBlockState());
     }
 
-    public void spawnParticles() {
-        display.spawnParticles();
+    public CCBAdvancementBehaviour getAdvancementBehaviour() {
+        return advancementBehaviour;
     }
 
-    public BaseChamberState getChamberStateInternal() {
-        return currentState;
+    public LerpedFloat getHeadAngle() {
+        return headAngle;
     }
 
-    public SmartGasTankBehaviour getTankBehaviourInternal() {
-        return tankBehaviour;
+    boolean hasGoggles() {
+        return display.hasGoggles();
     }
 
-    public BreezeChamberGasProcessor getGasProcessorInternal() {
-        return gasProcessor;
+    boolean hasTrainHat() {
+        return display.hasTrainHat();
     }
 
-    public LerpedFloat getHeadAnimationInternal() {
+    boolean isControllerActive() {
+        return gasProcessor.isControllerActive();
+    }
+
+    InteractionResultHolder<ItemStack> tryUpdateChargerByItem(ItemStack stack, boolean forceOverflow, boolean simulate) {
+        return controller.tryUpdateChargerByItem(stack, forceOverflow, simulate);
+    }
+
+    LerpedFloat getHeadAnimation() {
         return headAnimation;
     }
 
-    public void runClientTicker() {
+    void saveToItem(ItemStack stack) {
+        serialization.saveToItem(this, stack);
+    }
+
+    void loadFromItem(ItemStack stack) {
+        controller.loadFromItem(stack);
+    }
+
+    void setGoggles(boolean hasGoggles) {
+        display.setGoggles(hasGoggles);
+    }
+
+    WindLevel getWindLevel() {
+        return currentState.getWindLevel();
+    }
+
+    WindLevel getWindLevelForRender() {
+        return getWindLevelFromBlock();
+    }
+
+    BaseChamberState getChamberStateInternal() {
+        return currentState;
+    }
+
+    SmartGasTankBehaviour getTankBehaviourInternal() {
+        return tankBehaviour;
+    }
+
+    BreezeChamberGasProcessor getGasProcessorInternal() {
+        return gasProcessor;
+    }
+
+    LerpedFloat getHeadAnimationInternal() {
+        return headAnimation;
+    }
+
+    void runClientTicker() {
         clientTicker.accept(this);
     }
 
-    public void setChamberStateFromSerialization(BaseChamberState state) {
-        currentState = state;
+    void setChamberStateFromSerialization(BaseChamberState chamberState) {
+        currentState = chamberState;
     }
 
-    public void setGogglesFromSerialization(boolean goggles) {
-        display.setGoggles(goggles);
+    void setGogglesFromSerialization(boolean hasGoggles) {
+        display.setGoggles(hasGoggles);
     }
 
-    public void setTrainHatFromSerialization(boolean trainHat) {
-        display.setTrainHat(trainHat);
+    void setTrainHatFromSerialization(boolean hasTrainHat) {
+        display.setTrainHat(hasTrainHat);
     }
 
     public enum ChargerType {
@@ -285,20 +296,23 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         NONE,
         NORMAL;
 
-        public static ChargerType fromTag(CompoundTag compoundTag, String key, ChargerType fallback) {
+        static ChargerType fromTag(CompoundTag compoundTag, String key) {
             if (compoundTag.contains(key, Tag.TAG_STRING)) {
                 try {
                     return valueOf(compoundTag.getString(key));
                 } catch (IllegalArgumentException ignored) {
-                    return fallback;
+                    return NONE;
                 }
             }
             if (!compoundTag.contains(key, Tag.TAG_ANY_NUMERIC)) {
-                return fallback;
+                return NONE;
             }
 
-            int ordinal = compoundTag.getInt(key);
-            return ordinal >= 0 && ordinal < values().length ? values()[ordinal] : fallback;
+            int chargerTypeOrdinal = compoundTag.getInt(key);
+            if (chargerTypeOrdinal < 0 || chargerTypeOrdinal >= values().length) {
+                return NONE;
+            }
+            return values()[chargerTypeOrdinal];
         }
     }
 }

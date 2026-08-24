@@ -61,51 +61,51 @@ public final class AirtightHandheldDrillOutlineRenderer {
 
     private static void renderOutline(Level level, ItemStack drill, BlockPos basePos) {
         CCBOutliner outliner = CCBOutliner.INSTANCE;
-        AirtightHandheldDrillMiningContext context = AirtightHandheldDrillMiningContext.of(drill, basePos, level);
-        Set<BlockPos> totalPos = context.totalPos();
-        boolean hasSecondaryOutline = showHighlightedCluster(outliner, PROTECTED_KEY, context.protectedPos(), COLOR_ORANGE);
-        hasSecondaryOutline |= showHighlightedCluster(outliner, INSTANT_KEY, context.instantDestructionPos(), COLOR_GREEN);
-        hasSecondaryOutline |= showHighlightedCluster(outliner, UNBREAKABLE_KEY, context.unbreakablePos(), COLOR_RED);
-        hasSecondaryOutline |= showHighlightedCluster(outliner, LIQUID_KEY, context.liquidPos(), COLOR_BLUE);
-        if (totalPos.isEmpty()) {
+        AirtightHandheldDrillMiningContext miningContext = AirtightHandheldDrillMiningContext.of(drill, basePos, level);
+        Set<BlockPos> targetPositions = miningContext.totalPos();
+        boolean hasHighlightedOutline = showHighlightedCluster(outliner, PROTECTED_KEY, miningContext.protectedPos(), COLOR_ORANGE);
+        hasHighlightedOutline |= showHighlightedCluster(outliner, INSTANT_KEY, miningContext.instantDestructionPos(), COLOR_GREEN);
+        hasHighlightedOutline |= showHighlightedCluster(outliner, UNBREAKABLE_KEY, miningContext.unbreakablePos(), COLOR_RED);
+        hasHighlightedOutline |= showHighlightedCluster(outliner, LIQUID_KEY, miningContext.liquidPos(), COLOR_BLUE);
+        if (targetPositions.isEmpty()) {
             return;
         }
 
-        if (!keepCachedCluster(outliner, TOTAL_FIRST_KEY, totalPos)) {
-            outliner.showCluster(TOTAL_FIRST_KEY, totalPos).colored(COLOR_WHITE).disableLineNormals().disableCull().lineWidth(0.015625f).withFaceTexture(CCBSpecialTextures.LOW_TRANSLUCENT);
-            CACHED_POSITIONS.put(TOTAL_FIRST_KEY, totalPos);
+        if (!keepCachedCluster(outliner, TOTAL_FIRST_KEY, targetPositions)) {
+            outliner.showCluster(TOTAL_FIRST_KEY, targetPositions).colored(COLOR_WHITE).disableLineNormals().disableCull().lineWidth(0.015625f).withFaceTexture(CCBSpecialTextures.LOW_TRANSLUCENT);
+            CACHED_POSITIONS.put(TOTAL_FIRST_KEY, targetPositions);
         }
-        if (hasSecondaryOutline) {
+        if (hasHighlightedOutline) {
             return;
         }
 
-        if (keepCachedCluster(outliner, TOTAL_SECOND_KEY, totalPos)) {
+        if (keepCachedCluster(outliner, TOTAL_SECOND_KEY, targetPositions)) {
             return;
         }
 
-        outliner.showCluster(TOTAL_SECOND_KEY, totalPos).colored(COLOR_WHITE).disableLineNormals().disableCull().lineWidth(0.015625f).withFaceTexture(CCBSpecialTextures.LOW_TRANSLUCENT_HIGHLIGHTED);
-        CACHED_POSITIONS.put(TOTAL_SECOND_KEY, totalPos);
+        outliner.showCluster(TOTAL_SECOND_KEY, targetPositions).colored(COLOR_WHITE).disableLineNormals().disableCull().lineWidth(0.015625f).withFaceTexture(CCBSpecialTextures.LOW_TRANSLUCENT_HIGHLIGHTED);
+        CACHED_POSITIONS.put(TOTAL_SECOND_KEY, targetPositions);
     }
 
-    private static boolean showHighlightedCluster(CCBOutliner outliner, String key, Set<BlockPos> positions, int color) {
+    private static boolean showHighlightedCluster(CCBOutliner outliner, String outlineKey, Set<BlockPos> positions, int color) {
         if (positions.isEmpty()) {
             return false;
         }
 
-        if (!keepCachedCluster(outliner, key, positions)) {
-            outliner.showCluster(key, positions).colored(color).disableLineNormals().disableCull().lineWidth(0.03125f).withFaceTexture(AllSpecialTextures.HIGHLIGHT_CHECKERED);
-            CACHED_POSITIONS.put(key, positions);
+        if (!keepCachedCluster(outliner, outlineKey, positions)) {
+            outliner.showCluster(outlineKey, positions).colored(color).disableLineNormals().disableCull().lineWidth(0.03125f).withFaceTexture(AllSpecialTextures.HIGHLIGHT_CHECKERED);
+            CACHED_POSITIONS.put(outlineKey, positions);
         }
         return true;
     }
 
-    private static boolean keepCachedCluster(CCBOutliner outliner, String key, Set<BlockPos> positions) {
-        Set<BlockPos> cachedPositions = CACHED_POSITIONS.get(key);
-        if (cachedPositions == null || !cachedPositions.equals(positions) || !outliner.getOutlines().containsKey(key)) {
+    private static boolean keepCachedCluster(CCBOutliner outliner, String outlineKey, Set<BlockPos> positions) {
+        Set<BlockPos> cachedPositions = CACHED_POSITIONS.get(outlineKey);
+        if (cachedPositions == null || !cachedPositions.equals(positions) || !outliner.getOutlines().containsKey(outlineKey)) {
             return false;
         }
 
-        outliner.keep(key);
+        outliner.keep(outlineKey);
         return true;
     }
 }

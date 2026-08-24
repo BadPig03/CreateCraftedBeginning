@@ -34,18 +34,18 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
     private static final String COMPOUND_KEY_CLIENT_PREVIOUS_POSITION = "ClientPreviousPosition";
 
     public static LerpedFloat getAnimation(MovementContext context) {
-        if (context.temporaryData instanceof LerpedFloat animation) {
-            return animation;
+        if (context.temporaryData instanceof LerpedFloat connectionAnimation) {
+            return connectionAnimation;
         }
 
-        LerpedFloat animation = LerpedFloat.linear();
-        context.temporaryData = animation;
-        return animation;
+        LerpedFloat connectionAnimation = LerpedFloat.linear();
+        context.temporaryData = connectionAnimation;
+        return connectionAnimation;
     }
 
-    private static @Nullable PortableGasInterfaceBlockEntity findStationaryInterface(Level level, BlockPos pos, BlockState state, Direction facing) {
-        for (int offset = 0; offset < 2; offset++) {
-            PortableGasInterfaceBlockEntity stationary = getStationaryInterfaceAt(level, pos.relative(facing, offset), state, facing);
+    private static @Nullable PortableGasInterfaceBlockEntity findStationaryInterface(Level level, BlockPos searchPos, BlockState movingState, Direction facing) {
+        for (int interfaceOffset = 0; interfaceOffset < 2; interfaceOffset++) {
+            PortableGasInterfaceBlockEntity stationary = getStationaryInterfaceAt(level, searchPos.relative(facing, interfaceOffset), movingState, facing);
             if (stationary == null) {
                 continue;
             }
@@ -55,13 +55,13 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
         return null;
     }
 
-    private static @Nullable PortableGasInterfaceBlockEntity getStationaryInterfaceAt(Level level, BlockPos pos, BlockState state, Direction facing) {
-        if (!(level.getBlockEntity(pos) instanceof PortableGasInterfaceBlockEntity stationary)) {
+    private static @Nullable PortableGasInterfaceBlockEntity getStationaryInterfaceAt(Level level, BlockPos interfacePos, BlockState movingState, Direction facing) {
+        if (!(level.getBlockEntity(interfacePos) instanceof PortableGasInterfaceBlockEntity stationary)) {
             return null;
         }
 
-        BlockState stationaryState = level.getBlockState(pos);
-        if (stationaryState.getBlock() != state.getBlock() || stationaryState.getValue(PortableGasInterfaceBlock.FACING) != facing.getOpposite()) {
+        BlockState stationaryState = level.getBlockState(interfacePos);
+        if (stationaryState.getBlock() != movingState.getBlock() || stationaryState.getValue(PortableGasInterfaceBlock.FACING) != facing.getOpposite()) {
             return null;
         }
 
@@ -72,30 +72,28 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
     }
 
     private static Optional<Direction> getValidFacing(MovementContext context) {
-        Vec3 facingVector = Vec3.atLowerCornerOf(context.state.getValue(PortableGasInterfaceBlock.FACING).getNormal());
-        Vec3 rotated = context.rotation.apply(facingVector);
-        Direction facing = Direction.getNearest(rotated.x, rotated.y, rotated.z);
-        Vec3 nearest = Vec3.atLowerCornerOf(facing.getNormal());
-        if (rotated.distanceTo(nearest) > 0.5f) {
+        Vec3 localFacing = Vec3.atLowerCornerOf(context.state.getValue(PortableGasInterfaceBlock.FACING).getNormal());
+        Vec3 rotatedFacing = context.rotation.apply(localFacing);
+        Direction worldFacing = Direction.getNearest(rotatedFacing.x, rotatedFacing.y, rotatedFacing.z);
+        if (rotatedFacing.distanceTo(Vec3.atLowerCornerOf(worldFacing.getNormal())) > 0.5f) {
             return Optional.empty();
         }
-        return Optional.of(facing);
+        return Optional.of(worldFacing);
     }
 
-    private static boolean shouldStall(MovementContext context, Vec3 target, boolean isOnCarriage) {
+    private static boolean shouldStall(MovementContext context, Vec3 targetPosition, boolean isOnCarriage) {
         if (context.stall || isOnCarriage) {
             return false;
         }
 
-        Vec3 nextPos = context.position.add(context.motion);
-        return context.position.closerThan(target, target.distanceTo(nextPos));
+        Vec3 nextPosition = context.position.add(context.motion);
+        return context.position.closerThan(targetPosition, targetPosition.distanceTo(nextPosition));
     }
 
-    private static void updateClientConnection(MovementContext context, BlockPos pos, PortableGasInterfaceBlockEntity stationary) {
-        context.data.put(COMPOUND_KEY_CLIENT_PREVIOUS_POSITION, NbtUtils.writeBlockPos(pos));
-
-        boolean shouldAnimate = context.contraption instanceof CarriageContraption || context.contraption.entity.isStalled() || context.motion.lengthSqr() == 0;
-        if (!shouldAnimate) {
+    private static void updateClientConnection(MovementContext context, BlockPos movingPos, PortableGasInterfaceBlockEntity stationary) {
+        context.data.put(COMPOUND_KEY_CLIENT_PREVIOUS_POSITION, NbtUtils.writeBlockPos(movingPos));
+        boolean shouldAnimateConnection = context.contraption instanceof CarriageContraption || context.contraption.entity.isStalled() || context.motion.lengthSqr() == 0;
+        if (!shouldAnimateConnection) {
             return;
         }
 
@@ -103,9 +101,9 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
     }
 
     private static void startTransfer(MovementContext context, PortableGasInterfaceBlockEntity stationary, Direction facing) {
-        Vec3 offset = VecHelper.getCenterOf(stationary.getBlockPos()).subtract(context.position);
-        Vec3 projected = VecHelper.project(offset, Vec3.atLowerCornerOf(facing.getNormal()));
-        stationary.startTransferringTo(context.contraption, (float) (projected.length() + 1.85f - 1));
+        Vec3 connectionOffset = VecHelper.getCenterOf(stationary.getBlockPos()).subtract(context.position);
+        Vec3 projectedOffset = VecHelper.project(connectionOffset, Vec3.atLowerCornerOf(facing.getNormal()));
+        stationary.startTransferringTo(context.contraption, (float) (projectedOffset.length() + 1.85f - 1));
     }
 
     @Override
@@ -121,21 +119,17 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void renderInContraption(MovementContext context, VirtualRenderWorld virtualLevel, ContraptionMatrices matrices, MultiBufferSource buffer) {
+    public void renderInContraption(MovementContext context, VirtualRenderWorld virtualLevel, ContraptionMatrices matrices, MultiBufferSource bufferSource) {
         if (VisualizationManager.supportsVisualization(context.world)) {
             return;
         }
 
-        PortableGasInterfaceRenderer.renderInContraption(context, virtualLevel, matrices, buffer);
+        PortableGasInterfaceRenderer.renderInContraption(context, virtualLevel, matrices, bufferSource);
     }
 
     @Override
     public void visitNewPosition(MovementContext context, BlockPos pos) {
-        if (context.contraption instanceof CarriageContraption && context.motion.length() > 0.25f) {
-            return;
-        }
-
-        if (findInterface(context, pos)) {
+        if (context.contraption instanceof CarriageContraption && context.motion.length() > 0.25f || findInterface(context, pos)) {
             return;
         }
 
@@ -197,7 +191,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
         getAnimation(context).chase(0, 0.25f, Chaser.LINEAR);
     }
 
-    protected void tickClient(MovementContext context) {
+    private void tickClient(MovementContext context) {
         if (findInterface(context, BlockPos.containing(context.position))) {
             return;
         }
@@ -205,7 +199,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
         reset(context);
     }
 
-    protected void tickServer(MovementContext context, boolean isOnCarriage) {
+    private void tickServer(MovementContext context, boolean isOnCarriage) {
         if (!context.data.contains(COMPOUND_KEY_WORKING_POSITION)) {
             if (context.stall) {
                 cancelStall(context);
@@ -213,19 +207,17 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
             return;
         }
 
-        BlockPos pos = NBTHelper.readBlockPos(context.data, COMPOUND_KEY_WORKING_POSITION);
-        Vec3 target = VecHelper.getCenterOf(pos);
-        if (shouldStall(context, target, isOnCarriage)) {
+        BlockPos stationaryPos = NBTHelper.readBlockPos(context.data, COMPOUND_KEY_WORKING_POSITION);
+        if (shouldStall(context, VecHelper.getCenterOf(stationaryPos), isOnCarriage)) {
             context.stall = true;
         }
-
         Optional<Direction> facing = getValidFacing(context);
         if (facing.isEmpty()) {
             reset(context);
             return;
         }
 
-        PortableGasInterfaceBlockEntity stationary = getStationaryInterfaceAt(context.world, pos, context.state, facing.get());
+        PortableGasInterfaceBlockEntity stationary = getStationaryInterfaceAt(context.world, stationaryPos, context.state, facing.get());
         if (stationary == null) {
             reset(context);
             return;

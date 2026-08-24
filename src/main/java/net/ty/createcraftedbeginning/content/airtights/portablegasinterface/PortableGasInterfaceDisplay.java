@@ -9,27 +9,26 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class PortableGasInterfaceDisplay {
+final class PortableGasInterfaceDisplay {
     private final PortableGasInterfaceBlockEntity gasInterface;
 
-    public PortableGasInterfaceDisplay(PortableGasInterfaceBlockEntity gasInterface) {
+    PortableGasInterfaceDisplay(PortableGasInterfaceBlockEntity gasInterface) {
         this.gasInterface = gasInterface;
     }
 
-    public float getExtensionDistance(float partialTicks) {
-        float animation = gasInterface.getConnectionAnimationValue(partialTicks);
-        return Mth.square(animation) * gasInterface.getDistance() * 0.5f;
+    float getExtensionDistance(float partialTicks) {
+        return Mth.square(gasInterface.getConnectionAnimationValue(partialTicks)) * gasInterface.getDistance() * 0.5f;
     }
 
-    public int getMaxValue() {
+    int getMaxValue() {
         return GasAmounts.toWholeBucketsClamped(gasInterface.getGasCapability().getTankCapacity(0));
     }
 
-    public int getCurrentValue() {
+    int getCurrentValue() {
         return GasAmounts.toWholeBucketsClamped(gasInterface.getGasCapability().getGasInTank(0).getAmount());
     }
 
-    public MutableComponent format(int value) {
-        return GasAmounts.formatWholeBuckets(value);
+    MutableComponent format(int bucketAmount) {
+        return GasAmounts.formatWholeBuckets(bucketAmount);
     }
 }

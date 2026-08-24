@@ -12,36 +12,36 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class CrateDisplay {
+final class CrateDisplay {
     private final CrateBlockEntityStorage storage;
 
-    public CrateDisplay(CrateBlockEntityStorage storage) {
+    CrateDisplay(CrateBlockEntityStorage storage) {
         this.storage = storage;
     }
 
-    public int maxValue() {
-        return storage.handler().getSlotLimit(0);
+    int maxValue() {
+        return storage.handler().getConfiguredCapacity();
     }
 
-    public int currentValue() {
-        return storage.storedCount();
+    int currentValue() {
+        return Math.min(storage.storedCount(), maxValue());
     }
 
-    public MutableComponent format(int value) {
+    MutableComponent format(int value) {
         return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.items")).component();
     }
 
-    public void addToGoggleTooltip(List<Component> tooltip) {
+    void addToGoggleTooltip(List<Component> tooltip) {
         CCBLang.translate("gui.crates.header").forGoggles(tooltip);
-        ItemStack content = storage.storedItem();
-        int count = storage.storedCount();
-        int maxCount = maxValue();
-        if (content.isEmpty() || count == 0) {
-            CCBLang.translate("gui.crates.capacity").style(ChatFormatting.GRAY).add(CCBLang.number(maxCount).style(ChatFormatting.GOLD)).forGoggles(tooltip, 1);
+        ItemStack storedItem = storage.storedItem();
+        int storedCount = storage.storedCount();
+        int capacity = maxValue();
+        if (storedItem.isEmpty() || storedCount == 0) {
+            CCBLang.translate("gui.crates.capacity").style(ChatFormatting.GRAY).add(CCBLang.number(capacity).style(ChatFormatting.GOLD)).forGoggles(tooltip, 1);
             return;
         }
 
-        CCBLang.itemName(content).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-        CCBLang.number(count).style(ChatFormatting.GOLD).add(CCBLang.text(" / ").style(ChatFormatting.GRAY)).add(CCBLang.number(maxCount).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+        CCBLang.itemName(storedItem).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+        CCBLang.number(storedCount).style(ChatFormatting.GOLD).add(CCBLang.text(" / ").style(ChatFormatting.GRAY)).add(CCBLang.number(capacity).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
     }
 }

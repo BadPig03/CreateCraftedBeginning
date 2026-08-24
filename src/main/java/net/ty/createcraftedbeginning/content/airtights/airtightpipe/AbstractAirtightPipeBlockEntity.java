@@ -17,7 +17,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class AbstractAirtightPipeBlockEntity extends SmartBlockEntity implements IGasTransporter {
-    protected CCBAdvancementBehaviour advancementBehaviour;
+    private CCBAdvancementBehaviour advancementBehaviour;
 
     protected AbstractAirtightPipeBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -32,13 +32,13 @@ public abstract class AbstractAirtightPipeBlockEntity extends SmartBlockEntity i
         behaviours.add(createTransportBehaviour());
     }
 
-    protected void addPipeBehaviours(List<BlockEntityBehaviour> behaviours) {
-    }
-
-    protected abstract GasTransportBehaviour createTransportBehaviour();
-
     @Override
     public CCBAdvancementBehaviour getAdvancementBehaviour() {
         return advancementBehaviour;
     }
+
+    protected void addPipeBehaviours(List<BlockEntityBehaviour> behaviours) {
+    }
+
+    protected abstract GasTransportBehaviour createTransportBehaviour();
 }

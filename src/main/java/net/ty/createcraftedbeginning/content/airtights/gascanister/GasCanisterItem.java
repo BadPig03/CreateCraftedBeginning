@@ -31,13 +31,13 @@ import java.util.function.Supplier;
 public class GasCanisterItem extends Item implements IGasFilter {
     private final Supplier<GasCanisterBlockItem> blockItem;
 
-    public GasCanisterItem(Properties properties, Supplier<GasCanisterBlockItem> placeable) {
+    public GasCanisterItem(Properties properties, Supplier<GasCanisterBlockItem> blockItem) {
         super(properties);
-        blockItem = placeable;
+        this.blockItem = blockItem;
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerItem(GasHandler.ITEM, (itemStack, context) -> new GasCanisterContainerContents(itemStack), CCBItems.GAS_CANISTER);
+        event.registerItem(GasHandler.ITEM, (canister, ignoredContext) -> new GasCanisterContainerContents(canister), CCBItems.GAS_CANISTER);
     }
 
     @Override
@@ -51,8 +51,8 @@ public class GasCanisterItem extends Item implements IGasFilter {
     }
 
     @Override
-    public InteractionResult useOn(UseOnContext ctx) {
-        return blockItem.get().useOn(ctx);
+    public InteractionResult useOn(UseOnContext context) {
+        return blockItem.get().useOn(context);
     }
 
     @Override
@@ -78,19 +78,19 @@ public class GasCanisterItem extends Item implements IGasFilter {
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack canister, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents contents)) {
+        if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
             return;
         }
 
-        GasStack content = contents.getGasInTank(0);
-        long capacity = contents.getTankCapacity(0);
-        if (content.isEmpty()) {
+        GasStack storedGas = canisterContents.getGasInTank(0);
+        long capacity = canisterContents.getTankCapacity(0);
+        if (storedGas.isEmpty()) {
             tooltip.add(CCBLang.translate("gui.gas_canister.capacity").add(GasAmounts.precise(capacity).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
             return;
         }
 
-        tooltip.add(CCBLang.translate("gui.gas_canister.content").add(CCBLang.gasName(content).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
-        tooltip.add(CCBLang.translate("gui.gas_canister.capacity").add(GasAmounts.precise(content.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmounts.precise(capacity).style(ChatFormatting.DARK_GRAY))).style(ChatFormatting.GRAY).component());
+        tooltip.add(CCBLang.translate("gui.gas_canister.content").add(CCBLang.gasName(storedGas).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
+        tooltip.add(CCBLang.translate("gui.gas_canister.capacity").add(GasAmounts.precise(storedGas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmounts.precise(capacity).style(ChatFormatting.DARK_GRAY))).style(ChatFormatting.GRAY).component());
     }
 
     @Override
@@ -98,31 +98,27 @@ public class GasCanisterItem extends Item implements IGasFilter {
         return true;
     }
 
-    public Block getBlock() {
-        return blockItem.get().getBlock();
-    }
-
     @Override
     public boolean test(ItemStack filterItem, GasStack filterGasStack) {
-        if (filterGasStack.isEmpty() || !(filterItem.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents contents)) {
+        if (filterGasStack.isEmpty() || !(filterItem.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents filterContents)) {
             return false;
         }
 
-        GasStack content = contents.getGasInTank(0);
-        return !content.isEmpty() && GasStack.isSameGasSameComponents(content, filterGasStack);
+        GasStack filterGas = filterContents.getGasInTank(0);
+        return !filterGas.isEmpty() && GasStack.isSameGasSameComponents(filterGas, filterGasStack);
     }
 
     @Override
     public Predicate<GasStack> compile(ItemStack filterItem) {
-        if (!(filterItem.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents contents)) {
-            return gas -> false;
+        if (!(filterItem.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents filterContents)) {
+            return ignoredGas -> false;
         }
 
-        GasStack content = contents.getGasInTank(0).copyWithAmount(1);
-        if (content.isEmpty()) {
-            return gas -> false;
+        GasStack filterGas = filterContents.getGasInTank(0).copyWithAmount(1);
+        if (filterGas.isEmpty()) {
+            return ignoredGas -> false;
         }
-        return gas -> !gas.isEmpty() && GasStack.isSameGasSameComponents(content, gas);
+        return candidateGas -> !candidateGas.isEmpty() && GasStack.isSameGasSameComponents(filterGas, candidateGas);
     }
 
     public static class GasCanisterBlockItem extends BlockItem {
@@ -138,7 +134,7 @@ public class GasCanisterItem extends Item implements IGasFilter {
             return getOrCreateDescriptionId();
         }
 
-        public Item getActualItem() {
+        Item getActualItem() {
             return actualItem.get();
         }
     }

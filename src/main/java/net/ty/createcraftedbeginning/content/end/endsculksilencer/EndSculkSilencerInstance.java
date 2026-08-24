@@ -9,8 +9,8 @@ import java.util.function.LongConsumer;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public record EndSculkSilencerInstance(BlockPos registrationPos, BlockPos effectCenter, ResourceLocation dimension, short range) {
-    public EndSculkSilencerInstance {
+record EndSculkSilencerInstance(BlockPos registrationPos, BlockPos effectCenter, ResourceLocation dimension, short range) {
+    EndSculkSilencerInstance {
         registrationPos = registrationPos.immutable();
         effectCenter = effectCenter.immutable();
         if (range <= 0) {
@@ -18,7 +18,7 @@ public record EndSculkSilencerInstance(BlockPos registrationPos, BlockPos effect
         }
     }
 
-    public static long chunkKey(BlockPos blockPos) {
+    static long chunkKey(BlockPos blockPos) {
         return chunkKey(blockPos.getX() >> 4, blockPos.getZ() >> 4);
     }
 
@@ -26,11 +26,11 @@ public record EndSculkSilencerInstance(BlockPos registrationPos, BlockPos effect
         return chunkX & 0xFFFFFFFFL | (long) chunkZ << 32;
     }
 
-    public boolean hasSameCoverage(BlockPos otherEffectCenter, short otherRange) {
+    boolean hasSameCoverage(BlockPos otherEffectCenter, short otherRange) {
         return range == otherRange && chunkKey(effectCenter) == chunkKey(otherEffectCenter);
     }
 
-    public void forEachCoveredChunk(LongConsumer consumer) {
+    void forEachCoveredChunk(LongConsumer consumer) {
         int centerChunkX = effectCenter.getX() >> 4;
         int centerChunkZ = effectCenter.getZ() >> 4;
         int chunkRadius = range - 1;

@@ -53,8 +53,8 @@ public class AirtightHandheldDrillGhostIngredientHandler implements IGhostIngred
         public GhostTarget(AirtightHandheldDrillScreen gui, int slotIndex) {
             this.gui = gui;
             this.slotIndex = slotIndex;
-            Slot slot = gui.getMenu().slots.get(slotIndex + PLAYER_INVENTORY_SLOTS);
-            area = new Rect2i(gui.getGuiLeft() + slot.x, gui.getGuiTop() + slot.y, 16, 16);
+            Slot menuSlot = gui.getMenu().slots.get(slotIndex + PLAYER_INVENTORY_SLOTS);
+            area = new Rect2i(gui.getGuiLeft() + menuSlot.x, gui.getGuiTop() + menuSlot.y, 16, 16);
         }
 
         @Override
@@ -68,9 +68,9 @@ public class AirtightHandheldDrillGhostIngredientHandler implements IGhostIngred
                 return;
             }
 
-            ItemStack stack = itemStack.copyWithCount(1);
-            gui.getMenu().getMenuInventory().setStackInSlot(slotIndex, stack);
-            CatnipServices.NETWORK.sendToServer(new AirtightHandheldDrillGhostItemSubmitPacket(stack));
+            ItemStack submittedStack = itemStack.copyWithCount(1);
+            gui.getMenu().getMenuInventory().setStackInSlot(slotIndex, submittedStack);
+            CatnipServices.NETWORK.sendToServer(new AirtightHandheldDrillGhostItemSubmitPacket(submittedStack));
         }
     }
 }

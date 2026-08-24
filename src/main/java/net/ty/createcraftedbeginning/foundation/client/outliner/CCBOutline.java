@@ -253,8 +253,8 @@ public abstract class CCBOutline {
             return fadeLineWidth ? alpha * lineWidth : lineWidth;
         }
 
-        public void loadColor(Vector4f target) {
-            target.set(rgb.getRedAsFloat(), rgb.getGreenAsFloat(), rgb.getBlueAsFloat(), rgb.getAlphaAsFloat() * alpha);
+        public void loadColor(Vector4f targetColor) {
+            targetColor.set(rgb.getRedAsFloat(), rgb.getGreenAsFloat(), rgb.getBlueAsFloat(), rgb.getAlphaAsFloat() * alpha);
         }
     }
 }

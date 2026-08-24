@@ -9,25 +9,25 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class BreezeCoolerRecipeCache {
+final class BreezeCoolerRecipeCache {
     private static final int CACHE_INTERVAL = 100;
     private final BreezeCoolerBlockEntity cooler;
     private FluidStack cachedFluid = FluidStack.EMPTY;
     private CoolingData cachedData = CoolingData.EMPTY;
     private long expiry = Long.MIN_VALUE;
 
-    public BreezeCoolerRecipeCache(BreezeCoolerBlockEntity cooler) {
+    BreezeCoolerRecipeCache(BreezeCoolerBlockEntity cooler) {
         this.cooler = cooler;
     }
 
-    public CoolingData getFluidCoolingData(FluidStack fluidStack) {
+    CoolingData getFluidCoolingData(FluidStack fluidStack) {
         if (cooler.getLevel() == null || fluidStack.isEmpty()) {
             return CoolingData.EMPTY;
         }
 
         long gameTime = cooler.getLevel().getGameTime();
-        boolean sameFluid = !cachedFluid.isEmpty() && FluidStack.isSameFluidSameComponents(cachedFluid, fluidStack);
-        if (sameFluid && gameTime < expiry) {
+        boolean isSameFluid = !cachedFluid.isEmpty() && FluidStack.isSameFluidSameComponents(cachedFluid, fluidStack);
+        if (isSameFluid && gameTime < expiry) {
             return cachedData;
         }
 

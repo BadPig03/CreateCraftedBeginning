@@ -131,6 +131,11 @@ public abstract class ProcessingWithGasRecipeBuilder<P extends ProcessingWithGas
         return self();
     }
 
+    public S temperatureMatching(TemperatureMatching temperatureMatching) {
+        params.temperatureMatching = temperatureMatching;
+        return self();
+    }
+
     public void build(RecipeOutput consumer) {
         R recipe = build();
         IRecipeTypeInfo recipeType = recipe.getTypeInfo();

@@ -25,7 +25,7 @@ import java.util.Map.Entry;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID, value = Dist.CLIENT)
-public final class EndSculkSilencerClientEvents {
+final class EndSculkSilencerClientEvents {
     private static final int INACTIVE_SOUND_GRACE_TICKS = 3;
     private static final Map<SoundInstance, Integer> TRACKED_LOOPING_SOUNDS = new IdentityHashMap<>();
 
@@ -33,7 +33,7 @@ public final class EndSculkSilencerClientEvents {
     }
 
     @SubscribeEvent
-    public static void onPlaySound(PlaySoundEvent event) {
+    private static void onPlaySound(PlaySoundEvent event) {
         SoundInstance sound = event.getSound();
         if (sound == null) {
             return;
@@ -58,7 +58,7 @@ public final class EndSculkSilencerClientEvents {
     }
 
     @SubscribeEvent
-    public static void onClientTick(Post event) {
+    private static void onClientTick(Post event) {
         Minecraft minecraft = Minecraft.getInstance();
         ClientLevel level = minecraft.level;
         if (level == null) {
@@ -72,45 +72,45 @@ public final class EndSculkSilencerClientEvents {
 
         ResourceLocation dimension = level.dimension().location();
         boolean hasCoverage = ClientEndSculkSilencerCache.INSTANCE.hasCoverage(dimension);
-        boolean listenerChecked = false;
-        boolean listenerMuted = false;
+        boolean hasCheckedListener = false;
+        boolean isListenerMuted = false;
         SoundManager soundManager = minecraft.getSoundManager();
-        Iterator<Entry<SoundInstance, Integer>> iterator = TRACKED_LOOPING_SOUNDS.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Entry<SoundInstance, Integer> entry = iterator.next();
-            SoundInstance sound = entry.getKey();
+        Iterator<Entry<SoundInstance, Integer>> soundIterator = TRACKED_LOOPING_SOUNDS.entrySet().iterator();
+        while (soundIterator.hasNext()) {
+            Entry<SoundInstance, Integer> soundEntry = soundIterator.next();
+            SoundInstance sound = soundEntry.getKey();
             if (!soundManager.isActive(sound)) {
-                int inactiveTicks = entry.getValue() + 1;
+                int inactiveTicks = soundEntry.getValue() + 1;
                 if (inactiveTicks > INACTIVE_SOUND_GRACE_TICKS) {
-                    iterator.remove();
+                    soundIterator.remove();
                 }
                 else {
-                    entry.setValue(inactiveTicks);
+                    soundEntry.setValue(inactiveTicks);
                 }
                 continue;
             }
 
-            entry.setValue(0);
+            soundEntry.setValue(0);
             if (!hasCoverage) {
                 continue;
             }
 
-            if (!listenerChecked) {
-                listenerMuted = isWithinRange(level, minecraft.gameRenderer.getMainCamera().getPosition(), dimension);
-                listenerChecked = true;
+            if (!hasCheckedListener) {
+                isListenerMuted = isWithinRange(level, minecraft.gameRenderer.getMainCamera().getPosition(), dimension);
+                hasCheckedListener = true;
             }
 
-            if (!listenerMuted && !isSoundWithinRange(level, sound, dimension)) {
+            if (!isListenerMuted && !isSoundWithinRange(level, sound, dimension)) {
                 continue;
             }
 
             soundManager.stop(sound);
-            iterator.remove();
+            soundIterator.remove();
         }
     }
 
     @SubscribeEvent
-    public static void onClientLoggingOut(LoggingOut event) {
+    private static void onClientLoggingOut(LoggingOut event) {
         TRACKED_LOOPING_SOUNDS.clear();
         ClientEndSculkSilencerCache.INSTANCE.clear();
     }
@@ -130,11 +130,10 @@ public final class EndSculkSilencerClientEvents {
     }
 
     private static boolean isSoundWithinRange(ClientLevel level, SoundInstance sound, ResourceLocation dimension) {
-        Vec3 soundPosition = new Vec3(sound.getX(), sound.getY(), sound.getZ());
-        return isWithinRange(level, soundPosition, dimension);
+        return isWithinRange(level, new Vec3(sound.getX(), sound.getY(), sound.getZ()), dimension);
     }
 
-    private static boolean isWithinRange(ClientLevel level, Vec3 position, ResourceLocation dimension) {
-        return ClientEndSculkSilencerCache.INSTANCE.checkWithinRange(CCBSubLevelBridge.resolve(level, position).blockPos(), dimension);
+    private static boolean isWithinRange(ClientLevel level, Vec3 worldPosition, ResourceLocation dimension) {
+        return ClientEndSculkSilencerCache.INSTANCE.checkWithinRange(CCBSubLevelBridge.resolve(level, worldPosition).blockPos(), dimension);
     }
 }

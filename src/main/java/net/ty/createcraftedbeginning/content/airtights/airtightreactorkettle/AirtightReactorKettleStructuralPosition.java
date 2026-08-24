@@ -93,24 +93,24 @@ public enum AirtightReactorKettleStructuralPosition implements StringRepresentab
         return isCog;
     }
 
-    public boolean canStore() {
+    boolean canStore() {
         return y == 1;
     }
 
-    public boolean isWindow(int y) {
+    boolean isWindow(int y) {
         return this.y == y && direction != Direction.UP;
     }
 
-    public boolean isFilter() {
+    boolean isFilter() {
         return y == 1 && direction != Direction.UP;
     }
 
-    public Direction getDirection() {
+    Direction getDirection() {
         return direction;
     }
 
     @Contract(value = " -> new", pure = true)
-    public Vec3i getPosition() {
+    Vec3i getPosition() {
         return new Vec3i(x, y, z);
     }
 

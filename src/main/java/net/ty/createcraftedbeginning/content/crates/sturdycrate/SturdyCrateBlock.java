@@ -37,7 +37,7 @@ public class SturdyCrateBlock extends CrateBlock<SturdyCrateBlockEntity> {
         super(properties);
     }
 
-    public static int getMaxCount() {
+    private static int getMaxCount() {
         return CCBConfig.server().crates.maxSturdyCapacity.get();
     }
 
@@ -93,15 +93,15 @@ public class SturdyCrateBlock extends CrateBlock<SturdyCrateBlockEntity> {
     }
 
     @Override
-    public void appendHoverText(ItemStack crate, TooltipContext context, List<Component> tooltips, TooltipFlag flag) {
-        SturdyCrateContents contents = crate.getOrDefault(CCBDataComponents.STURDY_CRATE_CONTENTS, SturdyCrateContents.empty());
-        ItemStack content = contents.content();
-        int count = contents.count();
-        if (!content.isEmpty()) {
-            tooltips.add(CCBLang.translate("gui.sturdy_crate.item").add(CCBLang.itemName(content)).style(ChatFormatting.GRAY).component());
+    public void appendHoverText(ItemStack crateStack, TooltipContext context, List<Component> tooltips, TooltipFlag flag) {
+        SturdyCrateContents storedContents = crateStack.getOrDefault(CCBDataComponents.STURDY_CRATE_CONTENTS, SturdyCrateContents.empty());
+        ItemStack storedItem = storedContents.content();
+        int storedCount = storedContents.count();
+        if (!storedItem.isEmpty()) {
+            tooltips.add(CCBLang.translate("gui.sturdy_crate.item").add(CCBLang.itemName(storedItem)).style(ChatFormatting.GRAY).component());
         }
 
-        tooltips.add(CCBLang.translate("gui.sturdy_crate.capacity").style(ChatFormatting.GRAY).add(CCBLang.number(count).style(ChatFormatting.GOLD)).add(CCBLang.text(" / ").style(ChatFormatting.GRAY)).add(CCBLang.number(getMaxCount()).style(ChatFormatting.DARK_GRAY)).component());
+        tooltips.add(CCBLang.translate("gui.sturdy_crate.capacity").style(ChatFormatting.GRAY).add(CCBLang.number(storedCount).style(ChatFormatting.GOLD)).add(CCBLang.text(" / ").style(ChatFormatting.GRAY)).add(CCBLang.number(getMaxCount()).style(ChatFormatting.DARK_GRAY)).component());
     }
 
     @Override

@@ -15,7 +15,8 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.FrostLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity.CoolantType;
-import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
+import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerController.CoolingSyncMode;
+import net.ty.createcraftedbeginning.core.ResourceTransaction;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe.CoolingData;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -25,8 +26,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class BaseCoolerState {
-    protected static final String COMPOUND_KEY_REMAINING_TIME = "RemainingTime";
-    protected static final String COMPOUND_KEY_IS_CREATIVE = "isCreative";
+    private static final String COMPOUND_KEY_REMAINING_TIME = "RemainingTime";
+    private static final String COMPOUND_KEY_IS_CREATIVE = "isCreative";
 
     protected int remainingTime;
     protected boolean isCreative;
@@ -34,6 +35,12 @@ public abstract class BaseCoolerState {
     protected BaseCoolerState(int remainingTime, boolean isCreative) {
         this.remainingTime = remainingTime;
         this.isCreative = isCreative;
+    }
+
+    protected static boolean shouldRejectAutomaticOverflow(int remainingTime, long newTime) {
+        long currentTimeMagnitude = Math.abs((long) remainingTime);
+        long newTimeMagnitude = Math.abs(newTime);
+        return newTimeMagnitude > BreezeCoolerBlockEntity.getOverflowThreshold() && newTimeMagnitude >= currentTimeMagnitude;
     }
 
     public int getRemainingTime() {
@@ -53,15 +60,15 @@ public abstract class BaseCoolerState {
         return tickFluid(cooler);
     }
 
-    protected boolean tickFluid(BreezeCoolerBlockEntity cooler) {
+    private boolean tickFluid(BreezeCoolerBlockEntity cooler) {
         Level level = cooler.getLevel();
         if (level == null || level.isClientSide) {
             return true;
         }
 
-        SmartFluidTank tank = cooler.getTankInventory();
-        FluidStack fluid = tank.getFluid();
-        if (fluid.isEmpty()) {
+        SmartFluidTank fluidTank = cooler.getTankInventory();
+        FluidStack storedFluid = fluidTank.getFluid();
+        if (storedFluid.isEmpty()) {
             return true;
         }
 
@@ -69,56 +76,76 @@ public abstract class BaseCoolerState {
             return true;
         }
 
-        BlockPos pos = cooler.getBlockPos();
-        if (fluid.getFluidType().getTemperature() >= BreezeCoolerBlockEntity.getDangerousFluidTemperature()) {
+        BlockPos coolerPos = cooler.getBlockPos();
+        if (storedFluid.getFluidType().getTemperature() >= BreezeCoolerBlockEntity.getDangerousFluidTemperature()) {
             ItemStack emptyCooler = new ItemStack(CCBBlocks.EMPTY_BREEZE_COOLER_BLOCK.get());
-            Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, emptyCooler);
-            level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.25f, 1);
-            level.playSound(null, pos, SoundEvents.BREEZE_DEATH, SoundSource.BLOCKS, 0.25f, 1);
+            Containers.dropItemStack(level, coolerPos.getX() + 0.5, coolerPos.getY() + 0.5, coolerPos.getZ() + 0.5, emptyCooler);
+            level.playSound(null, coolerPos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.25f, 1);
+            level.playSound(null, coolerPos, SoundEvents.BREEZE_DEATH, SoundSource.BLOCKS, 0.25f, 1);
             cooler.getAdvancementBehaviour().awardPlayer(CCBAdvancements.A_MURDER);
-            level.destroyBlock(pos, false);
+            level.destroyBlock(coolerPos, false);
             return false;
         }
 
-        CoolingData data = cooler.getFluidCoolingData(fluid);
-        int time = data.time();
-        int amount = data.amount();
-        if (time <= 0 || amount <= 0) {
+        CoolingData coolingData = cooler.getFluidCoolingData(storedFluid);
+        int coolingTime = coolingData.time();
+        int fluidAmount = coolingData.amount();
+        if (coolingTime <= 0 || fluidAmount <= 0) {
             return true;
         }
 
-        int maxCapacity = BreezeCoolerBlockEntity.getMaxCoolantCapacity();
-        int creditedTime = Math.min(time, maxCapacity);
-        int availableCapacity = Math.max(0, maxCapacity - remainingTime);
-        int batchesByFluid = fluid.getAmount() / amount;
+        int maxCoolantCapacity = BreezeCoolerBlockEntity.getMaxCoolantCapacity();
+        int creditedTime = Math.min(coolingTime, maxCoolantCapacity);
+        int availableCapacity = Math.max(0, maxCoolantCapacity - remainingTime);
+        int batchesByFluid = storedFluid.getAmount() / fluidAmount;
         int batchesByCapacity = availableCapacity / creditedTime;
         int batches = Math.min(batchesByFluid, batchesByCapacity);
         if (batches <= 0) {
             return true;
         }
 
-        int consumedAmount = batches * amount;
-        FluidStack request = fluid.copyWithAmount(consumedAmount);
-        ResourceTransaction transaction = new ResourceTransaction().add(ResourceTransaction.participant(() -> {
-            FluidStack simulated = tank.drain(request, FluidAction.SIMULATE);
-            return simulated.getAmount() == consumedAmount && FluidStack.isSameFluidSameComponents(simulated, request);
-        }, () -> tank.getFluid().copy(), () -> {
-            FluidStack drained = tank.drain(request, FluidAction.EXECUTE);
-            return drained.getAmount() == consumedAmount && FluidStack.isSameFluidSameComponents(drained, request);
-        }, snapshot -> tank.setFluid(snapshot.copy())));
-        if (!transaction.commit()) {
+        int consumedFluidAmount = batches * fluidAmount;
+        FluidStack drainRequest = storedFluid.copyWithAmount(consumedFluidAmount);
+        ResourceTransaction drainTransaction = new ResourceTransaction().add(ResourceTransaction.participant(() -> {
+            FluidStack simulatedDrain = fluidTank.drain(drainRequest, FluidAction.SIMULATE);
+            return simulatedDrain.getAmount() == consumedFluidAmount && FluidStack.isSameFluidSameComponents(simulatedDrain, drainRequest);
+        }, () -> fluidTank.getFluid().copy(), () -> {
+            FluidStack executedDrain = fluidTank.drain(drainRequest, FluidAction.EXECUTE);
+            return executedDrain.getAmount() == consumedFluidAmount && FluidStack.isSameFluidSameComponents(executedDrain, drainRequest);
+        }, tankSnapshot -> fluidTank.setFluid(tankSnapshot.copy())));
+        if (!drainTransaction.commit()) {
             return true;
         }
 
-        remainingTime += batches * creditedTime;
-        if (getFrostLevel() == FrostLevel.RIMING) {
-            cooler.setCoolerState(new ChilledCoolerState(remainingTime, false));
-        }
-        else {
-            cooler.markCoolingChanged();
-        }
+        updateRemainingTime(cooler, remainingTime + (long) batches * creditedTime, CoolingSyncMode.IMMEDIATE);
         cooler.playCoolingEffects();
         return true;
+    }
+
+    protected final void updateRemainingTime(BreezeCoolerBlockEntity cooler, long newRemainingTime, CoolingSyncMode syncMode) {
+        Level level = cooler.getLevel();
+        if (isCreative || level != null && level.isClientSide && !cooler.isVirtual()) {
+            return;
+        }
+
+        int maxCoolantCapacity = BreezeCoolerBlockEntity.getMaxCoolantCapacity();
+        int clampedRemainingTime = Math.clamp(newRemainingTime, 0, maxCoolantCapacity);
+        if (clampedRemainingTime <= 0 && getFrostLevel() == FrostLevel.CHILLED) {
+            cooler.setCoolerState(new InactiveCoolerState());
+            return;
+        }
+
+        if (clampedRemainingTime > 0 && getFrostLevel() == FrostLevel.RIMING) {
+            cooler.setCoolerState(new ChilledCoolerState(clampedRemainingTime, false));
+            return;
+        }
+
+        if (clampedRemainingTime == remainingTime) {
+            return;
+        }
+
+        remainingTime = clampedRemainingTime;
+        cooler.onCoolingTimeChanged(syncMode);
     }
 
     public abstract FrostLevel getFrostLevel();

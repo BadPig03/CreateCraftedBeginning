@@ -24,8 +24,8 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity implements IGasTankMultiBlockEntityContainer {
-    protected final AirtightTankMultiblockController multiblockController;
-    protected final AirtightTankGasStorage gasStorage;
+    private final AirtightTankMultiblockController multiblockController;
+    private final AirtightTankGasStorage gasStorage;
 
     protected AbstractAirtightTankBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -33,20 +33,16 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
         gasStorage = new AirtightTankGasStorage(this);
     }
 
-    protected static int configuredMaxLength() {
+    static int configuredMaxLength() {
         return Math.max(1, CCBConfig.server().airtights.maxAirtightTankLength.get());
     }
 
-    protected static int configuredMaxWidth() {
+    static int configuredMaxWidth() {
         return Math.max(1, CCBConfig.server().airtights.maxAirtightTankWidth.get());
     }
 
     protected static int calculateCoords(BlockPos pos, Axis axis) {
         return axis.choose(pos.getX(), pos.getY(), pos.getZ());
-    }
-
-    protected final void initializeTank(GasTank tankInventory) {
-        gasStorage.initialize(tankInventory);
     }
 
     @Override
@@ -75,24 +71,9 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
         gasStorage.invalidate();
     }
 
-    protected void tickController() {
-    }
-
     @Override
     public void sendData() {
         multiblockController.sendData();
-    }
-
-    public void updateConnectivity() {
-        multiblockController.updateConnectivity();
-    }
-
-    protected final void refreshCapability() {
-        gasStorage.refreshCapability();
-    }
-
-    protected final void onGasStackChanged(GasStack ignored) {
-        gasStorage.onGasStackChanged(ignored);
     }
 
     @Override
@@ -170,37 +151,17 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
         multiblockController.setWidth(width);
     }
 
-    protected abstract void updateMultiBlockState();
-
-    protected void afterMultiUpdated() {
-    }
-
-    protected abstract void resetTankBeforeControllerRemoval(boolean keepFluids);
-
-    protected void afterControllerStateCleared(boolean keepFluids) {
-    }
-
-    protected abstract void resetStandaloneBlockState();
-
     @Override
     protected AABB createRenderBoundingBox() {
         if (!isController()) {
             return super.createRenderBoundingBox();
         }
 
-        Axis axis = getMainConnectionAxis();
-        int xSize = axis == Axis.X ? getHeight() : getWidth();
-        int ySize = axis == Axis.Y ? getHeight() : getWidth();
-        int zSize = axis == Axis.Z ? getHeight() : getWidth();
+        Axis connectionAxis = getMainConnectionAxis();
+        int xSize = connectionAxis == Axis.X ? getHeight() : getWidth();
+        int ySize = connectionAxis == Axis.Y ? getHeight() : getWidth();
+        int zSize = connectionAxis == Axis.Z ? getHeight() : getWidth();
         return super.createRenderBoundingBox().expandTowards(xSize - 1, ySize - 1, zSize - 1);
-    }
-
-    public GasTank getTankInventory() {
-        return gasStorage.getTankInventory();
-    }
-
-    public IGasHandler getCapability() {
-        return gasStorage.getCapability();
     }
 
     @Override
@@ -223,21 +184,60 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
         return capacityPerBlock();
     }
 
-    protected abstract long capacityPerBlock();
-
-    public final AirtightTankMultiblockController multiblockController() {
-        return multiblockController;
+    public GasTank getTankInventory() {
+        return gasStorage.getTankInventory();
     }
 
-    public final void sendDataImmediately() {
-        super.sendData();
+    public IGasHandler getCapability() {
+        return gasStorage.getCapability();
+    }
+
+    protected abstract void updateMultiBlockState();
+
+    protected final void initializeTank(GasTank tankInventory) {
+        gasStorage.initialize(tankInventory);
+    }
+
+    protected final void updateConnectivity() {
+        multiblockController.updateConnectivity();
+    }
+
+    protected final void onGasStackChanged(GasStack ignored) {
+        gasStorage.onGasStackChanged(ignored);
     }
 
     protected final void invalidateRenderBounds() {
         invalidateRenderBoundingBox();
     }
 
-    public final void invalidateGasCapabilities() {
+    protected abstract void resetTankBeforeControllerRemoval(boolean keepFluids);
+
+    protected abstract void resetStandaloneBlockState();
+
+    protected abstract long capacityPerBlock();
+
+    void tickController() {
+    }
+
+    void afterMultiUpdated() {
+    }
+
+    void afterControllerStateCleared(boolean keepFluids) {
+    }
+
+    final AirtightTankMultiblockController multiblockController() {
+        return multiblockController;
+    }
+
+    final void refreshCapability() {
+        gasStorage.refreshCapability();
+    }
+
+    final void sendDataImmediately() {
+        super.sendData();
+    }
+
+    final void invalidateGasCapabilities() {
         invalidateCapabilities();
     }
 }

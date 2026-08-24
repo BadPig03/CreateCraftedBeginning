@@ -16,7 +16,7 @@ import java.util.Map.Entry;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GlobalEndSculkSilencerManager {
+final class GlobalEndSculkSilencerManager {
     private static final int STATIC_PRUNE_INTERVAL_TICKS = 100;
     private static final int MOVING_PRUNE_INTERVAL_TICKS = 20;
     private static final int MOVING_REGISTRATION_TIMEOUT_TICKS = 50;
@@ -26,7 +26,7 @@ public final class GlobalEndSculkSilencerManager {
     private GlobalEndSculkSilencerManager() {
     }
 
-    public static void tick(Level level) {
+    static void tick(Level level) {
         if (!(level instanceof ServerLevel serverLevel)) {
             return;
         }
@@ -42,8 +42,8 @@ public final class GlobalEndSculkSilencerManager {
 
         ResourceLocation dimension = dimension(level);
         Map<BlockPos, Long> movingRegistrations = MOVING_LAST_SEEN_BY_DIMENSION.get(dimension);
-        for (EndSculkSilencerInstance instance : INDEX.getInstances(dimension)) {
-            BlockPos registrationPos = instance.registrationPos();
+        for (EndSculkSilencerInstance silencer : INDEX.getInstances(dimension)) {
+            BlockPos registrationPos = silencer.registrationPos();
             if (movingRegistrations != null && movingRegistrations.containsKey(registrationPos)) {
                 continue;
             }
@@ -56,15 +56,15 @@ public final class GlobalEndSculkSilencerManager {
         }
     }
 
-    public static boolean hasCoverage(ResourceLocation dimension) {
+    static boolean hasCoverage(ResourceLocation dimension) {
         return INDEX.hasCoverage(dimension);
     }
 
-    public static boolean checkWithinRange(BlockPos soundPos, ResourceLocation dimension) {
+    static boolean checkWithinRange(BlockPos soundPos, ResourceLocation dimension) {
         return INDEX.isCovered(soundPos, dimension);
     }
 
-    public static void update(ServerLevel level, BlockPos registrationPos, BlockPos effectCenter, short range) {
+    static void update(ServerLevel level, BlockPos registrationPos, BlockPos effectCenter, short range) {
         ResourceLocation dimension = dimension(level);
         if (!INDEX.update(registrationPos, effectCenter, dimension, range)) {
             return;
@@ -73,23 +73,22 @@ public final class GlobalEndSculkSilencerManager {
         sendToDimension(level, new EndSculkSilencerUpdatePacket(registrationPos, effectCenter, dimension, range, range > 0));
     }
 
-    public static void updateMoving(ServerLevel level, BlockPos registrationPos, BlockPos effectCenter, short range) {
+    static void updateMoving(ServerLevel level, BlockPos registrationPos, BlockPos effectCenter, short range) {
         ResourceLocation dimension = dimension(level);
         MOVING_LAST_SEEN_BY_DIMENSION.computeIfAbsent(dimension, ignored -> new HashMap<>()).put(registrationPos.immutable(), level.getGameTime());
         update(level, registrationPos, effectCenter, range);
     }
 
-    public static boolean remove(ServerLevel level, BlockPos registrationPos) {
+    static void remove(ServerLevel level, BlockPos registrationPos) {
         ResourceLocation dimension = dimension(level);
         if (!INDEX.remove(registrationPos, dimension)) {
-            return false;
+            return;
         }
 
         sendToDimension(level, new EndSculkSilencerUpdatePacket(registrationPos, registrationPos, dimension, (short) 0, false));
-        return true;
     }
 
-    public static void removeMoving(ServerLevel level, BlockPos registrationPos) {
+    static void removeMoving(ServerLevel level, BlockPos registrationPos) {
         ResourceLocation dimension = dimension(level);
         Map<BlockPos, Long> movingRegistrations = MOVING_LAST_SEEN_BY_DIMENSION.get(dimension);
         if (movingRegistrations != null) {
@@ -101,25 +100,24 @@ public final class GlobalEndSculkSilencerManager {
         remove(level, registrationPos);
     }
 
-    public static void removeDimension(ServerLevel level) {
+    static void removeDimension(ServerLevel level) {
         ResourceLocation dimension = dimension(level);
         MOVING_LAST_SEEN_BY_DIMENSION.remove(dimension);
-        List<EndSculkSilencerInstance> removed = INDEX.removeDimension(dimension);
-        for (EndSculkSilencerInstance instance : removed) {
-            sendToDimension(level, new EndSculkSilencerUpdatePacket(instance.registrationPos(), instance.effectCenter(), dimension, (short) 0, false));
+        for (EndSculkSilencerInstance silencer : INDEX.removeDimension(dimension)) {
+            sendToDimension(level, new EndSculkSilencerUpdatePacket(silencer.registrationPos(), silencer.effectCenter(), dimension, (short) 0, false));
         }
     }
 
-    public static void clear() {
+    static void clear() {
         MOVING_LAST_SEEN_BY_DIMENSION.clear();
         INDEX.clear();
     }
 
-    public static void sendToClient(ServerPlayer serverPlayer) {
+    static void sendToClient(ServerPlayer serverPlayer) {
         CatnipServices.NETWORK.sendToClient(serverPlayer, EndSculkSilencerResetPacket.INSTANCE);
         ResourceLocation dimension = dimension(serverPlayer.level());
-        for (EndSculkSilencerInstance instance : INDEX.getInstances(dimension)) {
-            CatnipServices.NETWORK.sendToClient(serverPlayer, new EndSculkSilencerUpdatePacket(instance.registrationPos(), instance.effectCenter(), dimension, instance.range(), true));
+        for (EndSculkSilencerInstance silencer : INDEX.getInstances(dimension)) {
+            CatnipServices.NETWORK.sendToClient(serverPlayer, new EndSculkSilencerUpdatePacket(silencer.registrationPos(), silencer.effectCenter(), dimension, silencer.range(), true));
         }
     }
 
@@ -130,7 +128,7 @@ public final class GlobalEndSculkSilencerManager {
             return;
         }
 
-        List<BlockPos> staleRegistrations = movingRegistrations.entrySet().stream().filter(entry -> gameTime - entry.getValue() > MOVING_REGISTRATION_TIMEOUT_TICKS).map(Entry::getKey).toList();
+        List<BlockPos> staleRegistrations = movingRegistrations.entrySet().stream().filter(registrationEntry -> gameTime - registrationEntry.getValue() > MOVING_REGISTRATION_TIMEOUT_TICKS).map(Entry::getKey).toList();
         for (BlockPos registrationPos : staleRegistrations) {
             removeMoving(level, registrationPos);
         }

@@ -11,26 +11,26 @@ import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasInjectionChamberFilterState {
-    public static final String COMPOUND_KEY_FILTER_LOCKED = "FilterLocked";
+final class GasInjectionChamberFilterState {
+    static final String COMPOUND_KEY_FILTER_LOCKED = "FilterLocked";
     private static final String COMPOUND_KEY_INSTALLED_FILTER = "InstalledFilter";
 
     private ItemStack installedFilter = ItemStack.EMPTY;
     private boolean clientLocked;
 
-    public boolean hasInstalledFilter() {
+    boolean hasInstalledFilter() {
         return !installedFilter.isEmpty();
     }
 
-    public ItemStack getInstalledFilter() {
+    ItemStack getInstalledFilter() {
         return installedFilter;
     }
 
-    public Optional<ResourceLocation> getFanProcessingType() {
+    Optional<ResourceLocation> getFanProcessingType() {
         return GasInjectionChamberUtils.getFanProcessingTypeId(installedFilter);
     }
 
-    public boolean install(ItemStack stack) {
+    boolean install(ItemStack stack) {
         if (hasInstalledFilter() || !GasInjectionChamberUtils.isFilter(stack)) {
             return false;
         }
@@ -39,21 +39,21 @@ public final class GasInjectionChamberFilterState {
         return true;
     }
 
-    public ItemStack remove() {
-        ItemStack removed = installedFilter;
+    ItemStack remove() {
+        ItemStack removedFilter = installedFilter;
         installedFilter = ItemStack.EMPTY;
-        return removed;
+        return removedFilter;
     }
 
-    public boolean isClientLocked() {
+    boolean isClientLocked() {
         return clientLocked;
     }
 
-    public void setClientLocked(boolean clientLocked) {
+    void setClientLocked(boolean clientLocked) {
         this.clientLocked = clientLocked;
     }
 
-    public void writeInstalledFilter(CompoundTag tag, Provider provider) {
+    void writeInstalledFilter(CompoundTag tag, Provider provider) {
         if (installedFilter.isEmpty()) {
             return;
         }
@@ -61,7 +61,7 @@ public final class GasInjectionChamberFilterState {
         tag.put(COMPOUND_KEY_INSTALLED_FILTER, installedFilter.saveOptional(provider));
     }
 
-    public void readInstalledFilter(CompoundTag tag, Provider provider) {
+    void readInstalledFilter(CompoundTag tag, Provider provider) {
         installedFilter = tag.contains(COMPOUND_KEY_INSTALLED_FILTER) ? ItemStack.parseOptional(provider, tag.getCompound(COMPOUND_KEY_INSTALLED_FILTER)) : ItemStack.EMPTY;
         if (GasInjectionChamberUtils.isFilter(installedFilter)) {
             return;

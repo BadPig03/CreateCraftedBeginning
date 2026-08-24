@@ -16,17 +16,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class TeslaTurbineNozzleConnection {
+final class TeslaTurbineNozzleConnection {
     private final TeslaTurbineNozzleBlockEntity nozzle;
     private TeslaTurbineBlockEntity turbine;
 
-    public TeslaTurbineNozzleConnection(TeslaTurbineNozzleBlockEntity nozzle) {
+    TeslaTurbineNozzleConnection(TeslaTurbineNozzleBlockEntity nozzle) {
         this.nozzle = nozzle;
     }
 
-    @Nullable public IGasHandler getGasCapability(@Nullable Direction direction) {
-        BlockState state = nozzle.getBlockState();
-        if (direction != state.getValue(TeslaTurbineNozzleBlock.FACING)) {
+    @Nullable IGasHandler getGasCapability(@Nullable Direction accessDirection) {
+        BlockState nozzleState = nozzle.getBlockState();
+        if (accessDirection != nozzleState.getValue(TeslaTurbineNozzleBlock.FACING)) {
             return null;
         }
 
@@ -37,31 +37,29 @@ public final class TeslaTurbineNozzleConnection {
             return null;
         }
 
-        boolean clockwise = state.getValue(TeslaTurbineNozzleBlock.CLOCKWISE);
-        return turbine.createGasHandler(clockwise);
+        return turbine.createGasHandler(nozzleState.getValue(TeslaTurbineNozzleBlock.CLOCKWISE));
     }
 
-    public void invalidate() {
+    void invalidate() {
         turbine = null;
     }
 
-    public void scheduleValidation() {
+    void scheduleValidation() {
         Level level = nozzle.getLevel();
         if (level == null || level.isClientSide) {
             return;
         }
 
-        BlockState state = nozzle.getBlockState();
-        if (!(state.getBlock() instanceof TeslaTurbineNozzleBlock nozzleBlock)) {
+        if (!(nozzle.getBlockState().getBlock() instanceof TeslaTurbineNozzleBlock nozzleBlock)) {
             return;
         }
 
-        BlockPos pos = nozzle.getBlockPos();
-        if (level.getBlockTicks().hasScheduledTick(pos, nozzleBlock)) {
+        BlockPos nozzlePos = nozzle.getBlockPos();
+        if (level.getBlockTicks().hasScheduledTick(nozzlePos, nozzleBlock)) {
             return;
         }
 
-        level.scheduleTick(pos, nozzleBlock, 1);
+        level.scheduleTick(nozzlePos, nozzleBlock, 1);
     }
 
     private @Nullable TeslaTurbineBlockEntity findTurbine() {

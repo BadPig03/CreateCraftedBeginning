@@ -36,10 +36,10 @@ public class EndIncinerationBlowerPlacementHelper implements IPlacementHelper {
             return PlacementOffset.fail();
         }
 
-        BlockPos newPos = pos.above();
-        if (!level.getBlockState(newPos).canBeReplaced()) {
+        BlockPos placementPos = pos.above();
+        if (!level.getBlockState(placementPos).canBeReplaced()) {
             return PlacementOffset.fail();
         }
-        return PlacementOffset.success(newPos, placedState -> CCBBlocks.END_INCINERATION_BLOWER_BLOCK.get().defaultBlockState());
+        return PlacementOffset.success(placementPos, ignoredState -> CCBBlocks.END_INCINERATION_BLOWER_BLOCK.get().defaultBlockState());
     }
 }

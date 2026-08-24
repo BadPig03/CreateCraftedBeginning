@@ -16,17 +16,12 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class BrimstoneFluidType extends SolidRenderedPlaceableFluidType {
-    private BrimstoneFluidType(Properties properties, ResourceLocation stillTexture, ResourceLocation flowingTexture) {
-        super(properties, stillTexture, flowingTexture);
+    private BrimstoneFluidType(Properties properties, ResourceLocation stillTexture, ResourceLocation flowingTexture, int fogColor, Supplier<Float> fogDistance) {
+        super(properties, stillTexture, flowingTexture, new Color(fogColor, false).asVectorF(), fogDistance);
     }
 
     public static FluidTypeFactory create(int fogColor, Supplier<Float> fogDistance) {
-        return (properties, stillTexture, flowingTexture) -> {
-            BrimstoneFluidType fluidType = new BrimstoneFluidType(properties, stillTexture, flowingTexture);
-            fluidType.fogColor = new Color(fogColor, false).asVectorF();
-            fluidType.fogDistance = fogDistance;
-            return fluidType;
-        };
+        return (properties, stillTexture, flowingTexture) -> new BrimstoneFluidType(properties, stillTexture, flowingTexture, fogColor, fogDistance);
     }
 
     @Override

@@ -5,7 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueInsertionPlan;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletInsertionTarget;
-import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
+import net.ty.createcraftedbeginning.core.ResourceTransaction;
 import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe.ResidueOutput;
 import org.jetbrains.annotations.Nullable;
 

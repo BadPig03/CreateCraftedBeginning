@@ -26,14 +26,14 @@ import java.util.function.Consumer;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndSculkSilencerStructuralBlockEntity> {
-    public static final int LAZY_TICK_RATE = 20;
+    private static final int LAZY_TICK_RATE = 20;
 
     private static final String COMPOUND_KEY_SHOW_OUTLINE = "ShowOutline";
     private static Consumer<EndSculkSilencerBlockEntity> clientTicker = silencer -> {};
 
-    protected final EndSculkSilencerAnimationState animationState;
-    protected final EndSculkSilencerController controller;
-    protected boolean showOutline;
+    private final EndSculkSilencerAnimationState animationState;
+    private final EndSculkSilencerController controller;
+    private boolean showOutline;
 
     public EndSculkSilencerBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
@@ -43,20 +43,20 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
         showOutline = true;
     }
 
-    public static void setClientTicker(Consumer<EndSculkSilencerBlockEntity> ticker) {
+    static void setClientTicker(Consumer<EndSculkSilencerBlockEntity> ticker) {
         clientTicker = ticker;
     }
 
-    public static boolean meetsRequiredSpeed(float speed, short range) {
-        float multiplier = Math.max(0, CCBConfig.server().endDevices.speedRequirementMultiplier.getF());
-        return range > 0 && Mth.abs(speed) >= SpeedLevel.MEDIUM.getSpeedValue() * range * Mth.sqrt(range) * multiplier;
+    static boolean meetsRequiredSpeed(float speed, short range) {
+        float speedRequirementMultiplier = Math.max(0, CCBConfig.server().endDevices.speedRequirementMultiplier.getF());
+        return range > 0 && Mth.abs(speed) >= SpeedLevel.MEDIUM.getSpeedValue() * range * Mth.sqrt(range) * speedRequirementMultiplier;
     }
 
-    public static float calculateAnimationTargetSpeed(float kineticSpeed) {
+    static float calculateAnimationTargetSpeed(float kineticSpeed) {
         return EndSculkSilencerAnimationState.calculateTargetSpeed(kineticSpeed);
     }
 
-    public static AABB calculateArea(Level level, BlockPos pos, short range) {
+    static AABB calculateArea(Level level, BlockPos pos, short range) {
         int chunkRadius = Math.max(0, range - 1);
         int centerChunkX = pos.getX() >> 4;
         int centerChunkZ = pos.getZ() >> 4;
@@ -69,7 +69,7 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.STEVES_REDEMPTION);
+        CCBAdvancementBehaviour advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.STEVES_REDEMPTION);
         behaviours.add(advancementBehaviour);
     }
 
@@ -85,7 +85,7 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
     }
 
     @Override
-    public void updateStructural() {
+    protected void updateStructural() {
         if (!convertCasingToStructural(CCBBlocks.END_SCULK_SILENCER_STRUCTURAL_BLOCK.getDefaultState())) {
             return;
         }
@@ -157,31 +157,31 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
         super.invalidate();
     }
 
-    public LerpedFloat getAnimation() {
+    LerpedFloat getAnimation() {
         return animationState.getAnimation();
     }
 
-    public void refreshSilencerState() {
+    void refreshSilencerState() {
         controller.refresh();
     }
 
-    public void toggleShowOutline() {
+    void toggleShowOutline() {
         showOutline = !showOutline;
         setChanged();
         notifyUpdate();
     }
 
-    public boolean isShowingOutline() {
+    boolean isShowingOutline() {
         return showOutline;
     }
 
-    public short getActiveWorkingRange() {
+    short getActiveWorkingRange() {
         EndSculkSilencerStructuralBlockEntity structural = getStructuralForUse();
         if (structural == null) {
             return 0;
         }
 
-        short range = structural.getWorkingRange();
-        return meetsRequiredSpeed(getSpeed(), range) ? range : 0;
+        short workingRange = structural.getWorkingRange();
+        return meetsRequiredSpeed(getSpeed(), workingRange) ? workingRange : 0;
     }
 }

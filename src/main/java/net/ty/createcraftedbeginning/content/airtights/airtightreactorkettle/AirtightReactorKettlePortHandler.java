@@ -53,7 +53,11 @@ record AirtightReactorKettlePortHandler(IItemHandlerModifiable input, IItemHandl
         if (slot < 0 || slot >= getSlots()) {
             throw new IndexOutOfBoundsException("Slot " + slot + " not in valid range [0," + getSlots() + ')');
         }
-        return slot < input.getSlots() ? input : output;
+
+        if (slot < input.getSlots()) {
+            return input;
+        }
+        return output;
     }
 
     private int getLocalSlot(int slot) {

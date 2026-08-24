@@ -64,12 +64,12 @@ public final class AirtightChestplateClientEvents {
             return;
         }
 
-        double x = player.getX();
-        double y = player.getY();
-        double z = player.getZ();
-        double angle = Math.toRadians(-player.yBodyRot);
-        double yOffset = player.getEyeHeight() * 0.4;
-        level.addParticle(CCBParticleTypes.AIRTIGHT_JETPACK.getParticleOptions(), x + -0.48 * Math.sin(angle) - Math.cos(angle) * 0.24, y + yOffset, z + -0.48 * Math.cos(angle) + Math.sin(angle) * 0.24, 0, -0.24, 0);
-        level.addParticle(CCBParticleTypes.AIRTIGHT_JETPACK.getParticleOptions(), x + -0.48 * Math.sin(angle) + Math.cos(angle) * 0.24, y + yOffset, z + -0.48 * Math.cos(angle) - Math.sin(angle) * 0.24, 0, -0.24, 0);
+        double playerX = player.getX();
+        double playerY = player.getY();
+        double playerZ = player.getZ();
+        double bodyYawRadians = Math.toRadians(-player.yBodyRot);
+        double particleYOffset = player.getEyeHeight() * 0.4;
+        level.addParticle(CCBParticleTypes.AIRTIGHT_JETPACK.getParticleOptions(), playerX + -0.48 * Math.sin(bodyYawRadians) - Math.cos(bodyYawRadians) * 0.24, playerY + particleYOffset, playerZ + -0.48 * Math.cos(bodyYawRadians) + Math.sin(bodyYawRadians) * 0.24, 0, -0.24, 0);
+        level.addParticle(CCBParticleTypes.AIRTIGHT_JETPACK.getParticleOptions(), playerX + -0.48 * Math.sin(bodyYawRadians) + Math.cos(bodyYawRadians) * 0.24, playerY + particleYOffset, playerZ + -0.48 * Math.cos(bodyYawRadians) - Math.sin(bodyYawRadians) * 0.24, 0, -0.24, 0);
     }
 }

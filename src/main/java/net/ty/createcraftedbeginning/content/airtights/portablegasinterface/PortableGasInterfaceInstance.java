@@ -16,49 +16,49 @@ import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class PortableGasInterfaceInstance {
+class PortableGasInterfaceInstance {
     private final InstancerProvider instancerProvider;
     private final BlockPos pos;
-    private final float angleX;
-    private final float angleY;
+    private final float xRotation;
+    private final float yRotation;
 
-    public TransformedInstance middle;
-    public TransformedInstance top;
+    TransformedInstance middle;
+    TransformedInstance top;
 
     private boolean lit;
 
-    public PortableGasInterfaceInstance(InstancerProvider instancerProvider, BlockState blockState, BlockPos instancePos, boolean lit) {
+    PortableGasInterfaceInstance(InstancerProvider instancerProvider, BlockState blockState, BlockPos instancePos, boolean lit) {
         this.instancerProvider = instancerProvider;
         pos = instancePos;
         this.lit = lit;
 
         Direction facing = blockState.getValue(PortableGasInterfaceBlock.FACING);
-        angleX = switch (facing) {
+        xRotation = switch (facing) {
             case UP -> 0;
             case DOWN -> 180;
             default -> 90;
         };
-        angleY = AngleHelper.horizontalAngle(facing);
+        yRotation = AngleHelper.horizontalAngle(facing);
 
         middle = instancerProvider.instancer(InstanceTypes.TRANSFORMED, Models.partial(PortableGasInterfaceRenderer.getMiddleForState(lit))).createInstance();
         top = instancerProvider.instancer(InstanceTypes.TRANSFORMED, Models.partial(PortableGasInterfaceRenderer.getTopForState())).createInstance();
     }
 
-    public void beginFrame(float progress) {
+    void beginFrame(float extensionProgress) {
         applyBaseTransform(middle);
-        middle.translate(0, progress * 0.5 + 0.375, 0);
+        middle.translate(0, extensionProgress * 0.5 + 0.375, 0);
         middle.setChanged();
 
         applyBaseTransform(top);
-        top.translate(0, progress, 0);
+        top.translate(0, extensionProgress, 0);
         top.setChanged();
     }
 
     private void applyBaseTransform(TransformedInstance instance) {
-        instance.setIdentityTransform().translate(pos).center().rotateYDegrees(angleY).rotateXDegrees(angleX).uncenter();
+        instance.setIdentityTransform().translate(pos).center().rotateYDegrees(yRotation).rotateXDegrees(xRotation).uncenter();
     }
 
-    public void tick(boolean lit) {
+    void tick(boolean lit) {
         if (this.lit == lit) {
             return;
         }
@@ -67,12 +67,12 @@ public class PortableGasInterfaceInstance {
         instancerProvider.instancer(InstanceTypes.TRANSFORMED, Models.partial(PortableGasInterfaceRenderer.getMiddleForState(lit))).stealInstance(middle);
     }
 
-    public void remove() {
+    void remove() {
         middle.delete();
         top.delete();
     }
 
-    public void collectCrumblingInstances(Consumer<Instance> consumer) {
+    void collectCrumblingInstances(Consumer<Instance> consumer) {
         consumer.accept(middle);
         consumer.accept(top);
     }

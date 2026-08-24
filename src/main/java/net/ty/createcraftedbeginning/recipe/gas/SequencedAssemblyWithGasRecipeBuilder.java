@@ -10,7 +10,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.ItemLike;
-import net.neoforged.neoforge.common.conditions.ICondition;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeBuilder;
 import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
 import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
@@ -20,21 +19,17 @@ import net.ty.createcraftedbeginning.recipe.gas.ItemApplicationWithGasRecipe.Bui
 import net.ty.createcraftedbeginning.recipe.gas.ItemApplicationWithGasRecipe.Factory;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class SequencedAssemblyWithGasRecipeBuilder {
-    protected final ResourceLocation id;
-    protected final SequencedAssemblyWithGasRecipe recipe;
-    protected List<ICondition> recipeConditions;
+    private final ResourceLocation id;
+    private final SequencedAssemblyWithGasRecipe recipe;
 
     public SequencedAssemblyWithGasRecipeBuilder(ResourceLocation id) {
         this.id = id;
-        recipeConditions = new ArrayList<>();
         recipe = new SequencedAssemblyWithGasRecipe(CCBRecipeTypes.SEQUENCED_ASSEMBLY_WITH_GAS.getSerializer());
     }
 
@@ -43,10 +38,10 @@ public class SequencedAssemblyWithGasRecipeBuilder {
     }
 
     public <B extends ProcessingWithGasRecipeBuilder<?, ?, B>> SequencedAssemblyWithGasRecipeBuilder addStep(Function<ResourceLocation, B> factory, UnaryOperator<B> builder) {
-        B recipeBuilder = factory.apply(ResourceLocation.withDefaultNamespace("dummy"));
+        B stepBuilder = factory.apply(ResourceLocation.withDefaultNamespace("dummy"));
         Item placeholder = recipe.getTransitionalItem().getItem();
-        B configuredBuilder = recipeBuilder.require(placeholder).output(placeholder);
-        recipe.getSequence().add(new SequencedWithGasRecipe<>(builder.apply(configuredBuilder).build()));
+        B configuredStepBuilder = stepBuilder.require(placeholder).output(placeholder);
+        recipe.getSequence().add(new SequencedWithGasRecipe<>(builder.apply(configuredStepBuilder).build()));
         return this;
     }
 
@@ -100,10 +95,10 @@ public class SequencedAssemblyWithGasRecipeBuilder {
         ResourceLocation holderId = holder.id();
         String path = CCBRecipeTypes.SEQUENCED_ASSEMBLY_WITH_GAS.getId().getPath() + '/' + holderId.getPath();
         ResourceLocation outputId = ResourceLocation.fromNamespaceAndPath(holderId.getNamespace(), path);
-        consumer.accept(outputId, holder.value(), null, recipeConditions.toArray(new ICondition[0]));
+        consumer.accept(outputId, holder.value(), null);
     }
 
-    public RecipeHolder<SequencedAssemblyWithGasRecipe> build() {
+    private RecipeHolder<SequencedAssemblyWithGasRecipe> build() {
         return new RecipeHolder<>(id, recipe);
     }
 }

@@ -25,7 +25,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class EndMechanicalStructuralBlock extends KineticBlock {
-    public EndMechanicalStructuralBlock(Properties properties) {
+    protected EndMechanicalStructuralBlock(Properties properties) {
         super(properties);
     }
 

@@ -22,7 +22,12 @@ public class IllChamberState extends BaseChamberState {
             return;
         }
 
+        int processingWindTime = remainingTime;
         remainingTime++;
+        if (!level.isClientSide) {
+            chamber.tickGasProcessing(ChargerType.BAD, processingWindTime);
+        }
+
         if (remainingTime >= 0) {
             chamber.setChamberState(new InactiveChamberState());
             return;
@@ -33,7 +38,6 @@ public class IllChamberState extends BaseChamberState {
         }
 
         chamber.syncWindProgress();
-        chamber.tickGasProcessing(ChargerType.BAD);
     }
 
     @Override

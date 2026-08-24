@@ -65,12 +65,12 @@ public class GasInjectionChamberBlock extends HorizontalDirectionalBlock impleme
             return ItemInteractionResult.SUCCESS;
         }
 
-        ItemStack removed = chamber.removeInstalledFilter();
-        if (removed.isEmpty()) {
+        ItemStack removedFilter = chamber.removeInstalledFilter();
+        if (removedFilter.isEmpty()) {
             return ItemInteractionResult.SUCCESS;
         }
 
-        player.setItemInHand(hand, removed);
+        player.setItemInHand(hand, removedFilter);
         level.playSound(null, pos, state.getSoundType(level, pos, player).getBreakSound(), SoundSource.BLOCKS, 0.75f, 1.1f);
         return ItemInteractionResult.SUCCESS;
     }

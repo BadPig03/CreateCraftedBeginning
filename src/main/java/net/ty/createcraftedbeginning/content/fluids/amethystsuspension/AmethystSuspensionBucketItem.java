@@ -27,20 +27,19 @@ public class AmethystSuspensionBucketItem extends BucketItem {
     }
 
     @Override
-    public boolean emptyContents(@Nullable Player player, Level level, BlockPos pos, @Nullable BlockHitResult result, @Nullable ItemStack container) {
-        boolean emptied = super.emptyContents(player, level, pos, result, container);
-        if (!emptied) {
+    public boolean emptyContents(@Nullable Player player, Level level, BlockPos pos, @Nullable BlockHitResult hitResult, @Nullable ItemStack containerStack) {
+        if (!super.emptyContents(player, level, pos, hitResult, containerStack)) {
             return false;
         }
 
-        boolean isUltrawarm = level.dimensionType().ultraWarm();
+        boolean isUltraWarm = level.dimensionType().ultraWarm();
         for (Direction direction : Iterate.horizontalDirections) {
             BlockPos adjacentPos = pos.relative(direction);
             if (!level.getBlockState(adjacentPos).isAir()) {
                 continue;
             }
 
-            if (!isUltrawarm) {
+            if (!isUltraWarm) {
                 if (!level.isClientSide) {
                     level.setBlockAndUpdate(adjacentPos, Blocks.WATER.defaultBlockState().setValue(LiquidBlock.LEVEL, 1));
                 }

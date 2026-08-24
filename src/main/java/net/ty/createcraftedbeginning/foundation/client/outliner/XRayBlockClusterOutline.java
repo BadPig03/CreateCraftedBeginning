@@ -99,10 +99,10 @@ public class XRayBlockClusterOutline extends CCBOutline {
     @Override
     public void render(PoseStack poseStack, SuperRenderTypeBuffer buffer, Vec3 camera, float partialTicks) {
         params.loadColor(colorTemp);
-        Vector4f color = colorTemp;
+        Vector4f outlineColor = colorTemp;
         int lightmap = params.lightmap;
-        renderFaces(poseStack, buffer, camera, color, lightmap);
-        renderEdges(poseStack, buffer, camera, color, lightmap, params.disableLineNormals);
+        renderFaces(poseStack, buffer, camera, outlineColor, lightmap);
+        renderEdges(poseStack, buffer, camera, outlineColor, lightmap, params.disableLineNormals);
     }
 
     protected void renderFaces(PoseStack poseStack, SuperRenderTypeBuffer buffer, Vec3 camera, Vector4f color, int lightmap) {
@@ -117,16 +117,16 @@ public class XRayBlockClusterOutline extends CCBOutline {
         Pose pose = poseStack.last();
         RenderType renderType = PonderRenderTypes.outlineTranslucent(faceTexture.getLocation(), false);
         VertexConsumer consumer = buffer.getLateBuffer(renderType);
-        cluster.visibleFaces.forEach((face, axisDirection) -> {
-            Direction direction = Direction.get(axisDirection, face.axis);
-            BlockPos pos = axisDirection == AxisDirection.POSITIVE ? face.pos.relative(direction.getOpposite()) : face.pos;
-            bufferBlockFace(pose, consumer, pos, direction, color, lightmap);
+        cluster.visibleFaces.forEach((faceEntry, axisDirection) -> {
+            Direction faceDirection = Direction.get(axisDirection, faceEntry.axis);
+            BlockPos blockPos = axisDirection == AxisDirection.POSITIVE ? faceEntry.pos.relative(faceDirection.getOpposite()) : faceEntry.pos;
+            bufferBlockFace(pose, consumer, blockPos, faceDirection, color, lightmap);
         });
 
         poseStack.popPose();
     }
 
-    protected void renderEdges(PoseStack poseStack, SuperRenderTypeBuffer buffer, Vec3 camera, Vector4f color, int lightmap, boolean disableNormals) {
+    protected void renderEdges(PoseStack poseStack, SuperRenderTypeBuffer buffer, Vec3 camera, Vector4f color, int lightmap, boolean disableLineNormals) {
         float lineWidth = params.getLineWidth();
         if (lineWidth == 0 || cluster.isEmpty()) {
             return;
@@ -137,25 +137,25 @@ public class XRayBlockClusterOutline extends CCBOutline {
 
         Pose pose = poseStack.last();
         VertexConsumer consumer = buffer.getBuffer(CCBRenderTypes.SOLID_NO_DEPTH_TEST);
-        cluster.visibleEdges.forEach(edge -> {
-            BlockPos pos = edge.pos;
+        cluster.visibleEdges.forEach(edgeEntry -> {
+            BlockPos blockPos = edgeEntry.pos;
             Vector3f origin = originTemp;
-            origin.set(pos.getX(), pos.getY(), pos.getZ());
-            Direction direction = Direction.get(AxisDirection.POSITIVE, edge.axis);
-            bufferCuboidLine(pose, consumer, origin, direction, 1, lineWidth, color, lightmap, disableNormals);
+            origin.set(blockPos.getX(), blockPos.getY(), blockPos.getZ());
+            Direction edgeDirection = Direction.get(AxisDirection.POSITIVE, edgeEntry.axis);
+            bufferCuboidLine(pose, consumer, origin, edgeDirection, 1, lineWidth, color, lightmap, disableLineNormals);
         });
 
         poseStack.popPose();
     }
 
-    protected void bufferBlockFace(Pose pose, VertexConsumer consumer, BlockPos pos, Direction face, Vector4f color, int lightmap) {
+    protected void bufferBlockFace(Pose pose, VertexConsumer consumer, BlockPos blockPos, Direction face, Vector4f color, int lightmap) {
         Vector3f pos0 = pos0Temp;
         Vector3f pos1 = pos1Temp;
         Vector3f pos2 = pos2Temp;
         Vector3f pos3 = pos3Temp;
         Vector3f normal = normalTemp;
         loadFaceData(face, pos0, pos1, pos2, pos3, normal);
-        addPos(pos.getX() + face.getStepX() / 128.0f, pos.getY() + face.getStepY() / 128.0f, pos.getZ() + face.getStepZ() / 128.0f, pos0, pos1, pos2, pos3);
+        addPos(blockPos.getX() + face.getStepX() / 128.0f, blockPos.getY() + face.getStepY() / 128.0f, blockPos.getZ() + face.getStepZ() / 128.0f, pos0, pos1, pos2, pos3);
         bufferQuad(pose, consumer, pos0, pos1, pos2, pos3, color, lightmap, normal);
     }
 
@@ -168,32 +168,32 @@ public class XRayBlockClusterOutline extends CCBOutline {
             return anchor == null;
         }
 
-        public void include(BlockPos pos) {
+        public void include(BlockPos blockPos) {
             if (anchor == null) {
-                anchor = pos;
+                anchor = blockPos;
             }
 
-            BlockPos relativePos = pos.subtract(anchor);
+            BlockPos relativePos = blockPos.subtract(anchor);
             includeFaces(relativePos);
             includeEdges(relativePos);
         }
 
-        private void includeFaces(BlockPos pos) {
+        private void includeFaces(BlockPos relativePos) {
             for (Axis axis : Iterate.axes) {
-                Direction direction = Direction.get(AxisDirection.POSITIVE, axis);
-                for (int offset : Iterate.zeroAndOne) {
-                    MergeEntry entry = new MergeEntry(axis, pos.relative(direction, offset));
-                    if (visibleFaces.remove(entry) != null) {
+                Direction positiveDirection = Direction.get(AxisDirection.POSITIVE, axis);
+                for (int faceOffset : Iterate.zeroAndOne) {
+                    MergeEntry faceEntry = new MergeEntry(axis, relativePos.relative(positiveDirection, faceOffset));
+                    if (visibleFaces.remove(faceEntry) != null) {
                         continue;
                     }
 
-                    AxisDirection axisDirection = offset == 0 ? AxisDirection.NEGATIVE : AxisDirection.POSITIVE;
-                    visibleFaces.put(entry, axisDirection);
+                    AxisDirection axisDirection = faceOffset == 0 ? AxisDirection.NEGATIVE : AxisDirection.POSITIVE;
+                    visibleFaces.put(faceEntry, axisDirection);
                 }
             }
         }
 
-        private void includeEdges(BlockPos pos) {
+        private void includeEdges(BlockPos relativePos) {
             for (Axis edgeAxis : Iterate.axes) {
                 for (Axis firstAxis : Iterate.axes) {
                     if (edgeAxis == firstAxis) {
@@ -207,24 +207,24 @@ public class XRayBlockClusterOutline extends CCBOutline {
 
                         Direction firstDirection = Direction.get(AxisDirection.POSITIVE, firstAxis);
                         Direction secondDirection = Direction.get(AxisDirection.POSITIVE, secondAxis);
-                        includeEdgeOffsets(pos, edgeAxis, firstDirection, secondDirection);
+                        includeEdgeOffsets(relativePos, edgeAxis, firstDirection, secondDirection);
                     }
                     break;
                 }
             }
         }
 
-        private void includeEdgeOffsets(BlockPos pos, Axis edgeAxis, Direction firstDirection, Direction secondDirection) {
+        private void includeEdgeOffsets(BlockPos relativePos, Axis edgeAxis, Direction firstDirection, Direction secondDirection) {
             for (int firstOffset : Iterate.zeroAndOne) {
-                BlockPos entryPos = pos.relative(firstDirection, firstOffset);
+                BlockPos edgePos = relativePos.relative(firstDirection, firstOffset);
                 for (int secondOffset : Iterate.zeroAndOne) {
-                    entryPos = entryPos.relative(secondDirection, secondOffset);
-                    MergeEntry entry = new MergeEntry(edgeAxis, entryPos);
-                    if (visibleEdges.remove(entry)) {
+                    edgePos = edgePos.relative(secondDirection, secondOffset);
+                    MergeEntry edgeEntry = new MergeEntry(edgeAxis, edgePos);
+                    if (visibleEdges.remove(edgeEntry)) {
                         continue;
                     }
 
-                    visibleEdges.add(entry);
+                    visibleEdges.add(edgeEntry);
                 }
             }
         }
@@ -233,7 +233,7 @@ public class XRayBlockClusterOutline extends CCBOutline {
     protected record MergeEntry(Axis axis, BlockPos pos) {
         @Override
         public boolean equals(Object object) {
-            return this == object || object instanceof MergeEntry(Axis axis1, BlockPos pos1) && axis == axis1 && pos.equals(pos1);
+            return this == object || object instanceof MergeEntry(Axis otherAxis, BlockPos otherPos) && axis == otherAxis && pos.equals(otherPos);
         }
 
         @Override

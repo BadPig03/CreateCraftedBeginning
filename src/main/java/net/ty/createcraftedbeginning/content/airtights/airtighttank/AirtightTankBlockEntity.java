@@ -26,10 +26,10 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity implements IHaveGoggleInformation, IChamberGasTank, ThresholdSwitchObservable {
-    protected final AirtightAssemblyDriverCore driverCore;
-    protected final AirtightTankStorageController storageController;
-    protected final AirtightTankDisplay display;
-    protected final AirtightTankSerialization serialization;
+    private final AirtightAssemblyDriverCore driverCore;
+    private final AirtightTankStorageController storageController;
+    private final AirtightTankDisplay display;
+    private final AirtightTankSerialization serialization;
 
     public AirtightTankBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -41,11 +41,7 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_TANK.get(), (be, context) -> be.getCapability());
-    }
-
-    public static long getCapacityPerTank() {
-        return CCBConfig.server().airtights.maxAirtightTankCapacityPerBlock.get() * GasAmounts.MILLIBUCKETS_PER_BUCKET;
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_TANK.get(), (tank, ignoredDirection) -> tank.getCapability());
     }
 
     public static int getConfiguredMaxLength() {
@@ -64,8 +60,12 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
         };
     }
 
+    static long getCapacityPerTank() {
+        return CCBConfig.server().airtights.maxAirtightTankCapacityPerBlock.get() * GasAmounts.MILLIBUCKETS_PER_BUCKET;
+    }
+
     @Override
-    public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
         serialization.write(compoundTag, provider, clientPacket);
     }
@@ -81,21 +81,9 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
         serialization.read(compoundTag, provider, clientPacket);
     }
 
-    public int getTotalTankSize() {
-        return getWidth() * getWidth() * getHeight();
-    }
-
-    public void updateTankState() {
-        if (level == null || level.isClientSide || !isController()) {
-            return;
-        }
-
-        driverCore.requestStructureEvaluation();
-    }
-
     @Override
-    protected void tickController() {
-        driverCore.tick(this);
+    public void removeController(boolean keepFluids) {
+        super.removeController(keepFluids);
     }
 
     @Override
@@ -104,22 +92,17 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
             return;
         }
 
-        BlockState state = getBlockState();
-        if (!(state.getBlock() instanceof AirtightTankBlock)) {
+        BlockState tankState = getBlockState();
+        if (!(tankState.getBlock() instanceof AirtightTankBlock)) {
             return;
         }
 
-        Axis axis = getMainConnectionAxis();
-        int controllerCoords = calculateCoords(getController(), axis);
-        int posCoords = calculateCoords(getBlockPos(), axis);
-        state = state.setValue(AirtightTankBlock.BOTTOM, controllerCoords == posCoords);
-        state = state.setValue(AirtightTankBlock.TOP, controllerCoords + getHeight() - 1 == posCoords);
-        level.setBlock(worldPosition, state, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE);
-    }
-
-    @Override
-    protected void afterMultiUpdated() {
-        updateTankState();
+        Axis connectionAxis = getMainConnectionAxis();
+        int controllerCoordinate = calculateCoords(getController(), connectionAxis);
+        int blockCoordinate = calculateCoords(getBlockPos(), connectionAxis);
+        tankState = tankState.setValue(AirtightTankBlock.BOTTOM, controllerCoordinate == blockCoordinate);
+        tankState = tankState.setValue(AirtightTankBlock.TOP, controllerCoordinate + getHeight() - 1 == blockCoordinate);
+        level.setBlock(worldPosition, tankState, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE);
     }
 
     @Override
@@ -128,23 +111,18 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
     }
 
     @Override
-    protected void afterControllerStateCleared(boolean keepFluids) {
-        driverCore.reset();
-    }
-
-    @Override
     protected void resetStandaloneBlockState() {
         if (level == null) {
             return;
         }
 
-        BlockState state = getBlockState();
-        if (!(state.getBlock() instanceof AirtightTankBlock)) {
+        BlockState tankState = getBlockState();
+        if (!(tankState.getBlock() instanceof AirtightTankBlock)) {
             return;
         }
 
-        state = state.setValue(AirtightTankBlock.TOP, true).setValue(AirtightTankBlock.BOTTOM, true);
-        level.setBlock(worldPosition, state, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE | Block.UPDATE_KNOWN_SHAPE);
+        tankState = tankState.setValue(AirtightTankBlock.TOP, true).setValue(AirtightTankBlock.BOTTOM, true);
+        level.setBlock(worldPosition, tankState, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE | Block.UPDATE_KNOWN_SHAPE);
     }
 
     @Override
@@ -152,13 +130,19 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
         return getCapacityPerTank();
     }
 
-    public AirtightAssemblyDriverCore getCore() {
-        return driverCore;
+    @Override
+    protected void tickController() {
+        driverCore.tick(this);
     }
 
     @Override
-    public void removeController(boolean keepFluids) {
-        super.removeController(keepFluids);
+    void afterMultiUpdated() {
+        updateTankState();
+    }
+
+    @Override
+    void afterControllerStateCleared(boolean keepFluids) {
+        driverCore.reset();
     }
 
     @Override
@@ -171,7 +155,7 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
         applyGasTankSize(blocks);
     }
 
-    public void applyGasTankSize(int blocks) {
+    private void applyGasTankSize(int blocks) {
         storageController.resizeToBlocks(blocks);
     }
 
@@ -193,5 +177,21 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
     @Override
     public MutableComponent format(int value) {
         return display.format(value);
+    }
+
+    public int getTotalTankSize() {
+        return getWidth() * getWidth() * getHeight();
+    }
+
+    public AirtightAssemblyDriverCore getCore() {
+        return driverCore;
+    }
+
+    void updateTankState() {
+        if (level == null || level.isClientSide || !isController()) {
+            return;
+        }
+
+        driverCore.requestStructureEvaluation();
     }
 }

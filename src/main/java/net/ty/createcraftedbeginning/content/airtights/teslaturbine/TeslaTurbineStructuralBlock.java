@@ -65,15 +65,15 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
     }
 
     public static BlockPos getMaster(BlockPos pos, BlockState state) {
-        TeslaTurbineStructuralPosition position = state.getValue(STRUCTURAL_POSITION);
-        int u = position.u;
-        int v = position.v;
-        BlockPos offset = switch (state.getValue(AXIS)) {
+        TeslaTurbineStructuralPosition structuralPosition = state.getValue(STRUCTURAL_POSITION);
+        int u = structuralPosition.u;
+        int v = structuralPosition.v;
+        BlockPos structureOffset = switch (state.getValue(AXIS)) {
             case X -> new BlockPos(0, v, u);
             case Z -> new BlockPos(u, v, 0);
             default -> new BlockPos(u, 0, v);
         };
-        return pos.subtract(offset);
+        return pos.subtract(structureOffset);
     }
 
     @Override
@@ -90,8 +90,8 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         }
 
         BlockPos masterPos = getMaster(clickedPos, state);
-        BlockHitResult masterHit = new BlockHitResult(context.getClickLocation(), context.getClickedFace(), masterPos, context.isInside());
-        UseOnContext masterContext = new UseOnContext(level, context.getPlayer(), context.getHand(), context.getItemInHand(), masterHit);
+        BlockHitResult masterHitResult = new BlockHitResult(context.getClickLocation(), context.getClickedFace(), masterPos, context.isInside());
+        UseOnContext masterContext = new UseOnContext(level, context.getPlayer(), context.getHand(), context.getItemInHand(), masterHitResult);
         BlockState masterState = level.getBlockState(masterPos);
         return IWrenchable.super.onSneakWrenched(masterState, masterContext);
     }
@@ -230,11 +230,11 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         }
 
         @Contract(pure = true)
-        public static boolean isMid(TeslaTurbineStructuralPosition pos) {
-            return pos.u == 0 || pos.v == 0;
+        public static boolean isMid(TeslaTurbineStructuralPosition position) {
+            return position.u == 0 || position.v == 0;
         }
 
-        public static TeslaTurbineStructuralPosition fromOffset(int u, int v) {
+        static TeslaTurbineStructuralPosition fromOffset(int u, int v) {
             for (TeslaTurbineStructuralPosition position : values()) {
                 if (position.u == u && position.v == v) {
                     return position;
@@ -243,10 +243,10 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
             return TOP_MID;
         }
 
-        public static Set<Direction> getPossiblePosition(TeslaTurbineStructuralPosition pos, Axis axis) {
+        public static Set<Direction> getPossiblePosition(TeslaTurbineStructuralPosition position, Axis axis) {
             Set<Direction> directions = new HashSet<>();
-            int u = pos.u;
-            int v = pos.v;
+            int u = position.u;
+            int v = position.v;
             if (axis == Axis.X) {
                 directions.add(u > 0 ? Direction.SOUTH : Direction.NORTH);
                 directions.add(v > 0 ? Direction.UP : Direction.DOWN);
@@ -268,7 +268,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         }
     }
 
-    protected static class NozzlePlacementHelper implements IPlacementHelper {
+    private static class NozzlePlacementHelper implements IPlacementHelper {
 
         @Contract(pure = true)
         @Override
@@ -286,36 +286,36 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         public PlacementOffset getOffset(Player player, Level level, BlockState state, BlockPos pos, BlockHitResult ray) {
             BlockPos masterPos = getMaster(pos, state);
             Axis axis = state.getValue(BlockStateProperties.AXIS);
-            BlockPos bestPos = null;
-            NozzlePort bestPort = null;
-            double minDistance = Double.MAX_VALUE;
-            Vec3 hitPos = ray.getLocation();
+            BlockPos nearestNozzlePos = null;
+            NozzlePort nearestPort = null;
+            double nearestDistanceSqr = Double.MAX_VALUE;
+            Vec3 hitLocation = ray.getLocation();
             for (NozzlePort port : TeslaTurbineUtils.getNozzlePorts()) {
-                BlockPos candidate = port.getWorldPosition(masterPos, axis);
-                if (!level.getBlockState(candidate).canBeReplaced()) {
+                BlockPos candidatePos = port.getWorldPosition(masterPos, axis);
+                if (!level.getBlockState(candidatePos).canBeReplaced()) {
                     continue;
                 }
 
-                double distance = candidate.distToCenterSqr(hitPos);
-                if (!(distance < minDistance)) {
+                double distanceSqr = candidatePos.distToCenterSqr(hitLocation);
+                if (!(distanceSqr < nearestDistanceSqr)) {
                     continue;
                 }
 
-                minDistance = distance;
-                bestPos = candidate;
-                bestPort = port;
+                nearestDistanceSqr = distanceSqr;
+                nearestNozzlePos = candidatePos;
+                nearestPort = port;
             }
-            if (bestPos == null) {
+            if (nearestNozzlePos == null) {
                 return PlacementOffset.fail();
             }
 
-            Direction facing = bestPort.getOutwardDirection(axis);
-            if (TeslaTurbineNozzleBlock.isInvalidPlacement(level, facing.getOpposite(), bestPos)) {
+            Direction nozzleFacing = nearestPort.getOutwardDirection(axis);
+            if (TeslaTurbineNozzleBlock.isInvalidPlacement(level, nozzleFacing.getOpposite(), nearestNozzlePos)) {
                 return PlacementOffset.fail();
             }
 
-            boolean clockwise = bestPort.clockwise();
-            return PlacementOffset.success(bestPos, placedState -> CCBBlocks.TESLA_TURBINE_NOZZLE_BLOCK.get().defaultBlockState().setValue(TeslaTurbineNozzleBlock.FACING, facing).setValue(TeslaTurbineNozzleBlock.CLOCKWISE, clockwise));
+            boolean isClockwise = nearestPort.clockwise();
+            return PlacementOffset.success(nearestNozzlePos, ignoredState -> CCBBlocks.TESLA_TURBINE_NOZZLE_BLOCK.get().defaultBlockState().setValue(TeslaTurbineNozzleBlock.FACING, nozzleFacing).setValue(TeslaTurbineNozzleBlock.CLOCKWISE, isClockwise));
         }
     }
 }

@@ -27,45 +27,45 @@ class ChainMiningTemplate extends BaseTemplate {
             return Set.of();
         }
 
-        int limit = Math.max(1, requestedLimit);
+        int blockLimit = Math.max(1, requestedLimit);
         Block targetBlock = originState.getBlock();
-        LongOpenHashSet inspected = new LongOpenHashSet();
-        LongArrayList accepted = new LongArrayList(Math.min(limit, 256));
+        LongOpenHashSet inspectedPositions = new LongOpenHashSet();
+        LongArrayList acceptedPositions = new LongArrayList(Math.min(blockLimit, 256));
         LongArrayList currentLayer = new LongArrayList(1);
         LongArrayList nextLayer = new LongArrayList();
 
-        long originKey = origin.asLong();
-        inspected.add(originKey);
-        accepted.add(originKey);
-        currentLayer.add(originKey);
-        MutableBlockPos probe = new MutableBlockPos();
+        long originPosition = origin.asLong();
+        inspectedPositions.add(originPosition);
+        acceptedPositions.add(originPosition);
+        currentLayer.add(originPosition);
+        MutableBlockPos neighborPos = new MutableBlockPos();
 
-        while (!currentLayer.isEmpty() && accepted.size() < limit) {
+        while (!currentLayer.isEmpty() && acceptedPositions.size() < blockLimit) {
             nextLayer.clear();
-            for (int index = 0; index < currentLayer.size() && accepted.size() < limit; index++) {
-                BlockPos current = BlockPos.of(currentLayer.getLong(index));
-                for (Direction face : Iterate.directions) {
-                    probe.set(current.getX() + face.getStepX(), current.getY() + face.getStepY(), current.getZ() + face.getStepZ());
-                    long candidateKey = probe.asLong();
-                    if (!inspected.add(candidateKey)) {
+            for (int layerIndex = 0; layerIndex < currentLayer.size() && acceptedPositions.size() < blockLimit; layerIndex++) {
+                BlockPos currentPos = BlockPos.of(currentLayer.getLong(layerIndex));
+                for (Direction direction : Iterate.directions) {
+                    neighborPos.set(currentPos.getX() + direction.getStepX(), currentPos.getY() + direction.getStepY(), currentPos.getZ() + direction.getStepZ());
+                    long neighborPosition = neighborPos.asLong();
+                    if (!inspectedPositions.add(neighborPosition)) {
                         continue;
                     }
 
-                    int y = probe.getY();
-                    if (y < level.getMinBuildHeight() || y >= level.getMaxBuildHeight() || !level.isLoaded(probe)) {
+                    int neighborY = neighborPos.getY();
+                    if (neighborY < level.getMinBuildHeight() || neighborY >= level.getMaxBuildHeight() || !level.isLoaded(neighborPos)) {
                         continue;
                     }
 
-                    if (level.getBlockState(probe).getBlock() != targetBlock) {
+                    if (level.getBlockState(neighborPos).getBlock() != targetBlock) {
                         continue;
                     }
 
-                    accepted.add(candidateKey);
-                    if (accepted.size() >= limit) {
-                        return toPositions(accepted);
+                    acceptedPositions.add(neighborPosition);
+                    if (acceptedPositions.size() >= blockLimit) {
+                        return toPositions(acceptedPositions);
                     }
 
-                    nextLayer.add(candidateKey);
+                    nextLayer.add(neighborPosition);
                 }
             }
 
@@ -74,7 +74,7 @@ class ChainMiningTemplate extends BaseTemplate {
             nextLayer = previousLayer;
         }
 
-        return toPositions(accepted);
+        return toPositions(acceptedPositions);
     }
 
     private static Set<BlockPos> toPositions(LongArrayList packedPositions) {
@@ -107,7 +107,7 @@ class ChainMiningTemplate extends BaseTemplate {
     }
 
     @Override
-    Stream<BlockPos> getBaseAreaStream(int @NotNull [] params) {
+    Stream<BlockPos> getBaseAreaStream(int @NotNull [] miningSize) {
         return Stream.of(BlockPos.ZERO);
     }
 }

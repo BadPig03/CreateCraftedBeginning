@@ -26,12 +26,15 @@ import java.util.function.Consumer;
 @MethodsReturnNonnullByDefault
 public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<EndIncinerationBlowerStructuralBlockEntity> {
     private static final String COMPOUND_KEY_SHOW_OUTLINE = "ShowOutline";
+
     private static Consumer<EndIncinerationBlowerBlockEntity> clientTicker = blower -> {};
 
-    protected final EndIncinerationBlowerEffectProcessor effectProcessor;
-    protected final EndIncinerationBlowerOwner ownerState;
-    protected final EndIncinerationBlowerVisualState visualState;
-    protected boolean showOutline;
+    private final EndIncinerationBlowerEffectProcessor effectProcessor;
+    private final EndIncinerationBlowerOwner ownerState;
+    private final EndIncinerationBlowerVisualState visualState;
+
+    private CCBAdvancementBehaviour advancementBehaviour;
+    private boolean showOutline;
 
     public EndIncinerationBlowerBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
@@ -41,16 +44,16 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         showOutline = true;
     }
 
-    public static void setClientTicker(Consumer<EndIncinerationBlowerBlockEntity> ticker) {
+    public static AABB calculateArea(BlockPos pos, float speed) {
+        return EndIncinerationBlowerRange.calculateArea(pos, speed);
+    }
+
+    static void setClientTicker(Consumer<EndIncinerationBlowerBlockEntity> ticker) {
         clientTicker = ticker;
     }
 
-    public static float calculateRange(float speed) {
+    static float calculateRange(float speed) {
         return EndIncinerationBlowerRange.calculateRange(speed);
-    }
-
-    public static AABB calculateArea(BlockPos pos, float speed) {
-        return EndIncinerationBlowerRange.calculateArea(pos, speed);
     }
 
     @Override
@@ -65,7 +68,7 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
     }
 
     @Override
-    public void updateStructural() {
+    protected void updateStructural() {
         convertCasingToStructural(CCBBlocks.END_INCINERATION_BLOWER_STRUCTURAL_BLOCK.getDefaultState());
     }
 
@@ -104,40 +107,40 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         ownerState.read(compoundTag);
     }
 
-    public void toggleShowOutline() {
+    void toggleShowOutline() {
         showOutline = !showOutline;
         notifyUpdate();
     }
 
-    public boolean isShowingOutline() {
-        return showOutline;
-    }
-
-    public void setOwner(UUID owner) {
-        if (!ownerState.setOwner(owner)) {
+    void setOwner(UUID ownerId) {
+        if (!ownerState.setOwner(ownerId)) {
             return;
         }
 
         setChanged();
     }
 
-    @Nullable public EndIncinerationBlowerStructuralBlockEntity getStructuralForEffect() {
+    boolean isShowingOutline() {
+        return showOutline;
+    }
+
+    @Nullable EndIncinerationBlowerStructuralBlockEntity getStructuralForEffect() {
         return getStructuralForUse();
     }
 
-    public FakePlayer getFakePlayer(ServerLevel level) {
+    FakePlayer getFakePlayer(ServerLevel level) {
         return ownerState.getFakePlayer(level, worldPosition);
     }
 
-    public void awardPrimaryEffectAdvancement() {
+    void awardPrimaryEffectAdvancement() {
         advancementBehaviour.awardPlayer(CCBAdvancements.HOT_HOT_HOT);
     }
 
-    public void awardWarmHeartedAdvancement() {
+    void awardWarmHeartedAdvancement() {
         advancementBehaviour.awardPlayer(CCBAdvancements.WARM_HEARTED);
     }
 
-    public void tickClientParticles() {
+    void tickClientParticles() {
         if (level == null || !level.isClientSide) {
             return;
         }
@@ -145,8 +148,11 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         visualState.tick(level, worldPosition, getSpeed(), this::getWorkingModeForVisuals);
     }
 
-    protected @Nullable BlowerWorkingMode getWorkingModeForVisuals() {
+    private @Nullable BlowerWorkingMode getWorkingModeForVisuals() {
         EndIncinerationBlowerStructuralBlockEntity structural = getStructuralForUse();
-        return structural == null ? null : structural.getBlowerWorkingMode().get();
+        if (structural == null) {
+            return null;
+        }
+        return structural.getBlowerWorkingMode().get();
     }
 }

@@ -47,8 +47,8 @@ public class RedstoneRequesterGhostIngredientHandler implements IGhostIngredient
         public GhostTarget(RedstoneRequesterScreen gui, int slotIndex) {
             this.gui = gui;
             this.slotIndex = slotIndex;
-            Slot slot = gui.getMenu().slots.get(slotIndex + PLAYER_INVENTORY_SLOTS);
-            area = new Rect2i(gui.getGuiLeft() + slot.x, gui.getGuiTop() + slot.y, 16, 16);
+            Slot menuSlot = gui.getMenu().slots.get(slotIndex + PLAYER_INVENTORY_SLOTS);
+            area = new Rect2i(gui.getGuiLeft() + menuSlot.x, gui.getGuiTop() + menuSlot.y, 16, 16);
         }
 
         @Override

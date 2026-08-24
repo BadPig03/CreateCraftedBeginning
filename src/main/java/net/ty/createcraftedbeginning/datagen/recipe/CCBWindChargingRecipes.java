@@ -22,9 +22,9 @@ import static net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargi
 public class CCBWindChargingRecipes extends WindChargingRecipeGen {
     private final GeneratedRecipe CAKE = create("cake", CHARGE, b -> b.require(Items.CAKE).duration(2434));
     private final GeneratedRecipe BUILDERS_TEA = create("builders_tea", CHARGE, b -> b.require(AllItems.BUILDERS_TEA).duration(288).output(Items.GLASS_BOTTLE));
-    public GeneratedRecipe MILK_BUCKET = create("milk_bucket", CLEAR_ILL, b -> b.require(Items.MILK_BUCKET));
-    public GeneratedRecipe MILK_ICE_CREAM = create("milk_ice_cream", CLEAR_ILL, b -> b.require(CCBItems.MILK_ICE_CREAM));
-    public GeneratedRecipe CREATIVE_ICE_CREAM = create("creative_ice_cream", CYCLE_CREATIVE, b -> b.require(CCBItems.CREATIVE_ICE_CREAM));
+    private final GeneratedRecipe MILK_BUCKET = create("milk_bucket", CLEAR_ILL, b -> b.require(Items.MILK_BUCKET));
+    private final GeneratedRecipe MILK_ICE_CREAM = create("milk_ice_cream", CLEAR_ILL, b -> b.require(CCBItems.MILK_ICE_CREAM));
+    private final GeneratedRecipe CREATIVE_ICE_CREAM = create("creative_ice_cream", CYCLE_CREATIVE, b -> b.require(CCBItems.CREATIVE_ICE_CREAM));
 
     public CCBWindChargingRecipes(PackOutput output, CompletableFuture<Provider> registries) {
         super(output, registries, CCBAPI.MOD_ID);

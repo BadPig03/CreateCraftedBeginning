@@ -10,11 +10,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public interface HumanoidArmorLayerAccess {
-    HumanoidModel<?> getInnerModel();
+    HumanoidModel<?> ccb$getInnerModel();
 
-    HumanoidModel<?> getOuterModel();
+    HumanoidModel<?> ccb$getOuterModel();
 
-    TextureAtlas getArmorTrimAtlas();
+    TextureAtlas ccb$getArmorTrimAtlas();
 
     void ccb$setPartVisibility(HumanoidModel<?> model, EquipmentSlot slot);
 }

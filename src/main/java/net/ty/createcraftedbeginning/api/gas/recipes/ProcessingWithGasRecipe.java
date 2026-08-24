@@ -43,6 +43,7 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
     protected NonNullList<GasStack> gasResults;
     protected int processingDuration;
     protected TemperatureCondition temperatureCondition;
+    protected TemperatureMatching temperatureMatching;
     private Supplier<ItemStack> forcedResult;
 
     public ProcessingWithGasRecipe(IRecipeTypeInfo typeInfo, P params) {
@@ -56,6 +57,7 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
         gasResults = params.gasResults;
         processingDuration = params.processingDuration;
         temperatureCondition = params.temperatureCondition;
+        temperatureMatching = params.temperatureMatching;
         type = typeInfo.getType();
         serializer = typeInfo.getSerializer();
         forcedResult = null;
@@ -105,16 +107,16 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
         if (outputCount > getMaxGasOutputCount()) {
             errors.add("Recipe has more gas outputs (" + outputCount + ") than supported (" + getMaxGasOutputCount() + ").");
         }
-
         validateSpecial(errors);
         if (processingDuration > 0 && !canSpecifyDuration()) {
             errors.add("Recipe specified a duration. Durations have no impact on this type of recipe.");
         }
-        if (temperatureCondition == TemperatureCondition.NONE || requireTemperatureCondition()) {
-            return errors;
+        if ((temperatureCondition != TemperatureCondition.NONE || temperatureMatching != TemperatureMatching.EXACT) && !requireTemperatureCondition()) {
+            errors.add("Recipe specified temperature requirements. Temperature requirements have no impact on this type of recipe.");
         }
-
-        errors.add("Recipe specified a temperature condition. Temperature conditions have no impact on this type of recipe.");
+        if (!temperatureMatching.isValidFor(temperatureCondition)) {
+            errors.add("Recipe cannot use compatible temperature matching with superheated or superchilled conditions.");
+        }
         return errors;
     }
 
@@ -169,6 +171,13 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
         return gasResults;
     }
 
+    public GasStack getPrimaryGasResult() {
+        if (gasResults.isEmpty()) {
+            return GasStack.EMPTY;
+        }
+        return gasResults.getFirst();
+    }
+
     public List<ProcessingOutput> getRollableResults() {
         return results;
     }
@@ -201,6 +210,10 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
 
     public TemperatureCondition getTemperatureCondition() {
         return temperatureCondition;
+    }
+
+    public TemperatureMatching getTemperatureMatching() {
+        return temperatureMatching;
     }
 
     @Override

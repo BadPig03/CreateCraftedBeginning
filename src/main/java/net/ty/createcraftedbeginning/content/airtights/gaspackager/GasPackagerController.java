@@ -18,43 +18,43 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasPackagerController {
+final class GasPackagerController {
     private final GasPackagerBlockEntity blockEntity;
     private final GasPackagerInventoryTracker inventoryTracker;
     private final GasPackagerPendingGas pendingGas;
 
-    public GasPackagerController(GasPackagerBlockEntity blockEntity, GasPackagerInventoryTracker inventoryTracker, GasPackagerPendingGas pendingGas) {
+    GasPackagerController(GasPackagerBlockEntity blockEntity, GasPackagerInventoryTracker inventoryTracker, GasPackagerPendingGas pendingGas) {
         this.blockEntity = blockEntity;
         this.inventoryTracker = inventoryTracker;
         this.pendingGas = pendingGas;
     }
 
-    public InventorySummary getAvailableItems() {
-        InventoryIdentifier identifier = blockEntity.getGasInventoryIdentifier();
-        if (identifier == null) {
+    InventorySummary getAvailableItems() {
+        InventoryIdentifier inventoryIdentifier = blockEntity.getGasInventoryIdentifier();
+        if (inventoryIdentifier == null) {
             return inventoryTracker.clearAvailableItems();
         }
 
-        IGasHandler handler = blockEntity.gasHandlerForController();
-        if (handler == null) {
+        IGasHandler gasHandler = blockEntity.gasHandlerForController();
+        if (gasHandler == null) {
             return inventoryTracker.clearAvailableItems();
         }
 
-        long currentTick = blockEntity.getLevel() == null ? Long.MIN_VALUE : blockEntity.getLevel().getGameTime();
-        ScanResult scan = inventoryTracker.scan(identifier, handler, currentTick);
-        if (scan.changed()) {
-            GasPackagerLogistics.submitNewGasArrivals(blockEntity.getLevel(), blockEntity.getBlockPos(), scan.previous(), identifier, scan.summary());
+        long gameTime = blockEntity.getLevel() == null ? Long.MIN_VALUE : blockEntity.getLevel().getGameTime();
+        ScanResult scanResult = inventoryTracker.scan(inventoryIdentifier, gasHandler, gameTime);
+        if (scanResult.changed()) {
+            GasPackagerLogistics.submitNewGasArrivals(blockEntity.getLevel(), blockEntity.getBlockPos(), scanResult.previous(), inventoryIdentifier, scanResult.summary());
         }
-        return scan.summary();
+        return scanResult.summary();
     }
 
-    public boolean unwrapBox(ItemStack box, boolean simulate) {
+    boolean unwrapBox(ItemStack box, boolean simulate) {
         if (blockEntity.isGasPackageAnimationActive() || !BalloonUtils.containsGasContents(box)) {
             return false;
         }
 
-        IGasHandler handler = blockEntity.gasHandlerForController();
-        if (handler == null || !pendingGas.canStage(box, handler)) {
+        IGasHandler gasHandler = blockEntity.gasHandlerForController();
+        if (gasHandler == null || !pendingGas.canStage(box, gasHandler)) {
             return false;
         }
 
@@ -69,7 +69,7 @@ public final class GasPackagerController {
         return true;
     }
 
-    public void attemptToSend(List<PackagingRequest> queuedRequests) {
+    void attemptToSend(List<PackagingRequest> queuedRequests) {
         if (queuedRequests.isEmpty()) {
             return;
         }
@@ -79,43 +79,43 @@ public final class GasPackagerController {
             return;
         }
 
-        IGasHandler handler = blockEntity.gasHandlerForController();
-        long capacity = BalloonUtils.getCapacity();
-        if (handler == null || capacity <= 0) {
+        IGasHandler gasHandler = blockEntity.gasHandlerForController();
+        long balloonCapacity = BalloonUtils.getCapacity();
+        if (gasHandler == null || balloonCapacity <= 0) {
             return;
         }
 
-        Result result = GasPackagerRequestProcessor.process(queuedRequests, handler, capacity);
-        if (result == null) {
+        Result packagingResult = GasPackagerRequestProcessor.process(queuedRequests, gasHandler, balloonCapacity);
+        if (packagingResult == null) {
             return;
         }
 
-        GasPackagerLogistics.deductFromAccurateGasSummary(blockEntity.getLevel(), blockEntity.getBlockPos(), result.deductions());
-        blockEntity.enqueueCreatedGasBalloon(result.balloon());
+        GasPackagerLogistics.deductFromAccurateGasSummary(blockEntity.getLevel(), blockEntity.getBlockPos(), packagingResult.deductions());
+        blockEntity.enqueueCreatedGasBalloon(packagingResult.balloon());
         blockEntity.markGasInventoryChanged();
         blockEntity.notifyGasPackageUpdate();
     }
 
-    public void attemptToPackageAnyGas() {
+    void attemptToPackageAnyGas() {
         if (!blockEntity.canStartGasPackage()) {
             return;
         }
 
-        IGasHandler handler = blockEntity.gasHandlerForController();
-        if (handler == null) {
+        IGasHandler gasHandler = blockEntity.gasHandlerForController();
+        if (gasHandler == null) {
             return;
         }
 
-        BalloonGasContents drained = GasPackagerUtils.drainContents(handler, BalloonUtils.getCapacity());
-        if (drained.isEmpty()) {
+        BalloonGasContents drainedContents = GasPackagerUtils.drainContents(gasHandler, BalloonUtils.getCapacity());
+        if (drainedContents.isEmpty()) {
             return;
         }
 
-        ItemStack balloon = BalloonUtils.containing(drained);
+        ItemStack balloon = BalloonUtils.containing(drainedContents);
         PackageItem.clearAddress(balloon);
-        String address = blockEntity.signAddressForGasPackage();
-        if (!address.isBlank()) {
-            PackageItem.addAddress(balloon, address);
+        String outputAddress = blockEntity.signAddressForGasPackage();
+        if (!outputAddress.isBlank()) {
+            PackageItem.addAddress(balloon, outputAddress);
         }
 
         blockEntity.enqueueCreatedGasBalloon(balloon);
@@ -123,14 +123,14 @@ public final class GasPackagerController {
         blockEntity.notifyGasPackageUpdate();
     }
 
-    public void performPendingGasInsertion() {
-        InsertionResult result = pendingGas.insertInto(blockEntity.gasHandlerForController(), blockEntity.pendingUnwrappedPackage());
-        if (!result.returnedPackage().isEmpty()) {
-            blockEntity.enqueueReturnedGasBalloon(result.returnedPackage());
+    void performPendingGasInsertion() {
+        InsertionResult insertionResult = pendingGas.insertInto(blockEntity.gasHandlerForController(), blockEntity.pendingUnwrappedPackage());
+        if (!insertionResult.returnedPackage().isEmpty()) {
+            blockEntity.enqueueReturnedGasBalloon(insertionResult.returnedPackage());
         }
         pendingGas.clear();
 
-        if (result.inventoryChanged()) {
+        if (insertionResult.inventoryChanged()) {
             blockEntity.markGasInventoryChanged();
         }
         else {
@@ -139,7 +139,7 @@ public final class GasPackagerController {
         blockEntity.notifyGasPackageUpdate();
     }
 
-    public void invalidateInventoryCache() {
+    void invalidateInventoryCache() {
         inventoryTracker.invalidate();
     }
 }

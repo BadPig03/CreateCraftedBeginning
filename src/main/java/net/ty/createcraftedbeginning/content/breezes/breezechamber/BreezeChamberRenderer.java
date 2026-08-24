@@ -37,16 +37,16 @@ public class BreezeChamberRenderer extends SmartBlockEntityRenderer<BreezeChambe
         super(context);
     }
 
-    public static void renderInContraption(MovementContext context, ContraptionMatrices matrices, MultiBufferSource bufferSource, LerpedFloat headAngle, boolean conductor, VirtualRenderWorld renderWorld) {
+    static void renderInContraption(MovementContext context, ContraptionMatrices matrices, MultiBufferSource bufferSource, LerpedFloat headAngle, boolean isConductor, VirtualRenderWorld renderWorld) {
         Level level = context.world;
         boolean drawGoggles = context.blockEntityData.contains(COMPOUND_KEY_GOGGLES) && context.blockEntityData.getBoolean(COMPOUND_KEY_GOGGLES);
-        boolean drawHat = conductor || context.blockEntityData.contains(COMPOUND_KEY_TRAIN_HAT) && context.blockEntityData.getBoolean(COMPOUND_KEY_TRAIN_HAT);
-        renderShared(matrices.getViewProjection(), matrices.getModel(), bufferSource, level, context.state, WindLevel.GALE, 0, AngleHelper.rad(headAngle.getValue(AnimationTickHolder.getPartialTicks(level))), drawGoggles, drawHat ? CCBPartialModels.BREEZE_TRAIN_HAT : null, false, 0, context.hashCode(), LevelRenderer.getLightColor(renderWorld, context.localPos), matrices.getWorld());
+        boolean shouldDrawHat = isConductor || context.blockEntityData.contains(COMPOUND_KEY_TRAIN_HAT) && context.blockEntityData.getBoolean(COMPOUND_KEY_TRAIN_HAT);
+        renderShared(matrices.getViewProjection(), matrices.getModel(), bufferSource, level, context.state, WindLevel.GALE, 0, AngleHelper.rad(headAngle.getValue(AnimationTickHolder.getPartialTicks(level))), drawGoggles, shouldDrawHat ? CCBPartialModels.BREEZE_TRAIN_HAT : null, false, 0, context.hashCode(), LevelRenderer.getLightColor(renderWorld, context.localPos), matrices.getWorld());
     }
 
-    public static void renderShared(PoseStack ms, @Nullable PoseStack modelTransform, MultiBufferSource bufferSource, Level level, BlockState blockState, WindLevel windLevel, float animation, float horizontalAngle, boolean drawGoggles, @Nullable PartialModel drawHat, boolean drawWind, float windSpeed, int hashCode, int light, @Nullable Matrix4f matrixWorld) {
+    static void renderShared(PoseStack ms, @Nullable PoseStack modelTransform, MultiBufferSource bufferSource, Level level, BlockState blockState, WindLevel windLevel, float animation, float horizontalAngle, boolean drawGoggles, @Nullable PartialModel hatModel, boolean drawWind, float windSpeed, int animationSeed, int light, @Nullable Matrix4f matrixWorld) {
         float renderTime = AnimationTickHolder.getRenderTime(level);
-        float headY = Mth.sin((renderTime + hashCode % 13 * 16) / 16 % Mth.TWO_PI) / (windLevel.isAtLeast(WindLevel.GALE) ? 64 : 16) - animation * 0.75f;
+        float headY = Mth.sin((renderTime + animationSeed % 13 * 16) / 16 % Mth.TWO_PI) / (windLevel.isActive() ? 64 : 16) - animation * 0.75f;
 
         ms.pushPose();
 
@@ -62,7 +62,7 @@ public class BreezeChamberRenderer extends SmartBlockEntityRenderer<BreezeChambe
         }
 
         if (drawGoggles) {
-            SuperByteBuffer gogglesBuffer = CachedBuffers.partial(windLevel.isAtLeast(WindLevel.GALE) ? CCBPartialModels.BREEZE_CHAMBER_GOGGLES : CCBPartialModels.BREEZE_CHAMBER_GOGGLES_SMALL, blockState);
+            SuperByteBuffer gogglesBuffer = CachedBuffers.partial(windLevel.isActive() ? CCBPartialModels.BREEZE_CHAMBER_GOGGLES : CCBPartialModels.BREEZE_CHAMBER_GOGGLES_SMALL, blockState);
             if (modelTransform != null) {
                 gogglesBuffer.transform(modelTransform);
             }
@@ -73,8 +73,8 @@ public class BreezeChamberRenderer extends SmartBlockEntityRenderer<BreezeChambe
             }
         }
 
-        if (drawHat != null) {
-            SuperByteBuffer hatBuffer = CachedBuffers.partial(drawHat, blockState);
+        if (hatModel != null) {
+            SuperByteBuffer hatBuffer = CachedBuffers.partial(hatModel, blockState);
             if (modelTransform != null) {
                 hatBuffer.transform(modelTransform);
             }
@@ -106,9 +106,9 @@ public class BreezeChamberRenderer extends SmartBlockEntityRenderer<BreezeChambe
         ms.popPose();
     }
 
-    public static PartialModel getBreezeModel(WindLevel windLevel, boolean blockBelow) {
-        if (windLevel.isAtLeast(WindLevel.GALE)) {
-            return blockBelow ? CCBPartialModels.BREEZE_GALE_ACTIVE : CCBPartialModels.BREEZE_GALE;
+    static PartialModel getBreezeModel(WindLevel windLevel, boolean useActiveModel) {
+        if (windLevel.isActive()) {
+            return useActiveModel ? CCBPartialModels.BREEZE_GALE_ACTIVE : CCBPartialModels.BREEZE_GALE;
         }
 
         if (windLevel == WindLevel.CALM) {
@@ -125,7 +125,7 @@ public class BreezeChamberRenderer extends SmartBlockEntityRenderer<BreezeChambe
         }
 
         WindLevel windLevel = be.getWindLevel();
-        boolean isGale = windLevel.isAtLeast(WindLevel.GALE);
-        renderShared(ms, null, bufferSource, level, be.getBlockState(), be.getWindLevelForRender(), be.getHeadAnimation().getValue(partialTicks) * 0.175f, AngleHelper.rad(be.headAngle.getValue(partialTicks)), be.hasGoggles(), be.hasTrainHat() ? CCBPartialModels.BREEZE_TRAIN_HAT : null, isGale, isGale ? 24 : 0, be.hashCode(), light, null);
+        boolean isGale = windLevel.isActive();
+        renderShared(ms, null, bufferSource, level, be.getBlockState(), be.getWindLevelForRender(), be.getHeadAnimation().getValue(partialTicks) * 0.175f, AngleHelper.rad(be.getHeadAngle().getValue(partialTicks)), be.hasGoggles(), be.hasTrainHat() ? CCBPartialModels.BREEZE_TRAIN_HAT : null, isGale, isGale ? 24 : 0, be.hashCode(), light, null);
     }
 }

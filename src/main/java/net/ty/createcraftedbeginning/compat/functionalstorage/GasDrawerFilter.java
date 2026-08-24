@@ -37,23 +37,23 @@ public final class GasDrawerFilter implements INBTSerializable<CompoundTag> {
 
     @Override
     public CompoundTag serializeNBT(Provider provider) {
-        CompoundTag tag = new CompoundTag();
+        CompoundTag filterTag = new CompoundTag();
         for (int slot = 0; slot < filters.length; slot++) {
-            GasStack filter = filters[slot];
-            if (filter.isEmpty()) {
+            GasStack filterGas = filters[slot];
+            if (filterGas.isEmpty()) {
                 continue;
             }
 
-            tag.put(Integer.toString(slot), filter.saveOptional(provider));
+            filterTag.put(Integer.toString(slot), filterGas.saveOptional(provider));
         }
-        return tag;
+        return filterTag;
     }
 
     @Override
     public void deserializeNBT(Provider provider, CompoundTag nbt) {
         for (int slot = 0; slot < filters.length; slot++) {
-            String key = Integer.toString(slot);
-            set(slot, nbt.contains(key) ? GasStack.parseOptional(provider, nbt.getCompound(key)) : GasStack.EMPTY);
+            String slotKey = Integer.toString(slot);
+            set(slot, nbt.contains(slotKey) ? GasStack.parseOptional(provider, nbt.getCompound(slotKey)) : GasStack.EMPTY);
         }
     }
 }

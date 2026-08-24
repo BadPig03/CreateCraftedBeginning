@@ -18,22 +18,10 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class SturdyCrateBlockEntity extends FilteredCrateBlockEntity {
-    protected CCBAdvancementBehaviour advancementBehaviour;
+    private CCBAdvancementBehaviour advancementBehaviour;
 
     public SturdyCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state, () -> CCBConfig.server().crates.maxSturdyCapacity.get());
-    }
-
-    public boolean hasStoredData() {
-        return SturdyCratePortableStorage.hasStoredData(this);
-    }
-
-    public void saveToItem(ItemStack crate) {
-        SturdyCratePortableStorage.saveToItem(this, crate);
-    }
-
-    public void loadFromItem(ItemStack crate) {
-        SturdyCratePortableStorage.loadFromItem(this, crate);
     }
 
     @Override
@@ -54,5 +42,17 @@ public class SturdyCrateBlockEntity extends FilteredCrateBlockEntity {
             advancementBehaviour.awardPlayer(CCBAdvancements.PORTABLE_LAVA_SEA);
         }
         super.onInventoryChanged();
+    }
+
+    boolean hasStoredData() {
+        return SturdyCratePortableStorage.hasStoredData(this);
+    }
+
+    void saveToItem(ItemStack crateItem) {
+        SturdyCratePortableStorage.saveToItem(this, crateItem);
+    }
+
+    void loadFromItem(ItemStack crateItem) {
+        SturdyCratePortableStorage.loadFromItem(this, crateItem);
     }
 }

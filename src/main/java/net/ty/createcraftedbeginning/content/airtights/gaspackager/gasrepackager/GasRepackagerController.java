@@ -14,45 +14,45 @@ import java.util.Map.Entry;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasRepackagerController {
+final class GasRepackagerController {
     private final GasRepackagerBlockEntity blockEntity;
 
-    public GasRepackagerController(GasRepackagerBlockEntity blockEntity) {
+    GasRepackagerController(GasRepackagerBlockEntity blockEntity) {
         this.blockEntity = blockEntity;
     }
 
-    public void attemptToRepackage(IItemHandler targetInv) {
-        ScanResult scan = GasRepackagerUtils.scanPackages(targetInv);
-        if (tryHandleCompletedOrder(targetInv, scan) || tryRepackageSimpleGasGroup(targetInv, scan)) {
+    void attemptToRepackage(IItemHandler targetInv) {
+        ScanResult scanResult = GasRepackagerUtils.scanPackages(targetInv);
+        if (tryHandleCompletedOrder(targetInv, scanResult) || tryRepackageSimpleGasGroup(targetInv, scanResult)) {
             return;
         }
 
-        passThroughFirstReadyPackage(targetInv, scan);
+        passThroughFirstReadyPackage(targetInv, scanResult);
     }
 
     private boolean tryHandleCompletedOrder(IItemHandler targetInv, ScanResult scan) {
-        for (Entry<Integer, List<Candidate>> entry : scan.orderedPackagesByOrder().entrySet()) {
-            int orderId = entry.getKey();
-            List<Candidate> candidates = entry.getValue();
+        for (Entry<Integer, List<Candidate>> orderEntry : scan.orderedPackagesByOrder().entrySet()) {
+            int orderId = orderEntry.getKey();
+            List<Candidate> candidates = orderEntry.getValue();
             if (!GasRepackagerUtils.isOrderComplete(candidates)) {
                 continue;
             }
 
             boolean hasGasPackage = candidates.stream().anyMatch(Candidate::isGasPackage);
-            List<BigItemStack> output;
+            List<BigItemStack> outputPackages;
             if (hasGasPackage) {
                 boolean hasNonStandalonePackage = candidates.stream().anyMatch(candidate -> !GasRepackagerUtils.isStandaloneFinalOrderPackage(candidate.box()));
                 if (!hasNonStandalonePackage) {
                     continue;
                 }
 
-                output = GasRepackagerUtils.createMixedOrderOutput(orderId, candidates);
+                outputPackages = GasRepackagerUtils.createMixedOrderOutput(orderId, candidates);
             }
             else {
-                output = GasRepackagerUtils.createItemOrderPassThroughOutput(candidates);
+                outputPackages = GasRepackagerUtils.createItemOrderPassThroughOutput(candidates);
             }
 
-            if (output.isEmpty()) {
+            if (outputPackages.isEmpty()) {
                 continue;
             }
 
@@ -61,10 +61,10 @@ public final class GasRepackagerController {
             }
 
             if (hasGasPackage) {
-                blockEntity.enqueueRepackagedBoxes(output);
+                blockEntity.enqueueRepackagedBoxes(outputPackages);
             }
             else {
-                blockEntity.enqueuePassThroughBoxes(output);
+                blockEntity.enqueuePassThroughBoxes(outputPackages);
             }
             return true;
         }
@@ -78,8 +78,8 @@ public final class GasRepackagerController {
             }
 
             String address = blockEntity.resolveGasOutputAddress(group.address());
-            List<BigItemStack> output = GasRepackagerUtils.createBalloons(group.outputTemplate(), group.contents(), address);
-            if (!GasRepackagerUtils.isRepackUseful(group, output)) {
+            List<BigItemStack> outputPackages = GasRepackagerUtils.createBalloons(group.outputTemplate(), group.contents(), address);
+            if (!GasRepackagerUtils.isRepackUseful(group, outputPackages)) {
                 continue;
             }
 
@@ -87,7 +87,7 @@ public final class GasRepackagerController {
                 return false;
             }
 
-            blockEntity.enqueueRepackagedBoxes(output);
+            blockEntity.enqueueRepackagedBoxes(outputPackages);
             return true;
         }
         return false;
@@ -103,12 +103,12 @@ public final class GasRepackagerController {
     }
 
     private boolean extractCandidatesTransactionally(IItemHandler targetInv, List<Candidate> candidates) {
-        ExtractionResult result = GasRepackagerUtils.extractCandidates(targetInv, candidates);
-        if (result.committed()) {
+        ExtractionResult extractionResult = GasRepackagerUtils.extractCandidates(targetInv, candidates);
+        if (extractionResult.committed()) {
             return true;
         }
 
-        blockEntity.restoreRollbackRemainders(result.rollbackRemainders());
+        blockEntity.restoreRollbackRemainders(extractionResult.rollbackRemainders());
         return false;
     }
 }

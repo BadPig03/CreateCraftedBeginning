@@ -37,8 +37,8 @@ public final class AirtightHandheldDrillRenderHandler {
     }
 
     private static void onRenderPlayerHand(RenderHandEvent event) {
-        ItemStack drill = event.getItemStack();
-        if (!drill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
+        ItemStack drillStack = event.getItemStack();
+        if (!drillStack.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
             return;
         }
 
@@ -48,15 +48,15 @@ public final class AirtightHandheldDrillRenderHandler {
             return;
         }
 
-        PoseStack ms = event.getPoseStack();
-        boolean rightHand = event.getHand() == InteractionHand.MAIN_HAND ^ player.getMainArm() == HumanoidArm.LEFT;
-        float flip = rightHand ? 1 : -1;
-        ItemDisplayContext displayContext = rightHand ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
+        PoseStack poseStack = event.getPoseStack();
+        boolean isRightHand = event.getHand() == InteractionHand.MAIN_HAND ^ player.getMainArm() == HumanoidArm.LEFT;
+        float handSign = isRightHand ? 1 : -1;
+        ItemDisplayContext displayContext = isRightHand ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
 
-        ms.pushPose();
-        ms.translate(flip * 0.56, -0.52 + event.getEquipProgress() * -0.6, -0.72);
-        minecraft.getEntityRenderDispatcher().getItemInHandRenderer().renderItem(player, drill, displayContext, !rightHand, ms, event.getMultiBufferSource(), event.getPackedLight());
-        ms.popPose();
+        poseStack.pushPose();
+        poseStack.translate(handSign * 0.56, -0.52 + event.getEquipProgress() * -0.6, -0.72);
+        minecraft.getEntityRenderDispatcher().getItemInHandRenderer().renderItem(player, drillStack, displayContext, !isRightHand, poseStack, event.getMultiBufferSource(), event.getPackedLight());
+        poseStack.popPose();
 
         event.setCanceled(true);
     }

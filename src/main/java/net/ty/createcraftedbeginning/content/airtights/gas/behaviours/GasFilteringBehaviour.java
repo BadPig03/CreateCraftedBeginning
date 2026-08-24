@@ -43,32 +43,19 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
     private static final String COMPOUND_KEY_FILTER = "Filter";
     private static final String COMPOUND_KEY_FILTERING = "Filtering";
 
-    protected final Predicate<ItemStack> predicate = GasFilterUtils::isFilter;
-    protected final ValueBoxTransform slotPositioning;
+    private final Predicate<ItemStack> predicate = GasFilterUtils::isFilter;
+    private final ValueBoxTransform slotPositioning;
 
-    protected FilterItemStack filter;
-    protected Predicate<GasStack> compiledFilter;
-    protected Consumer<ItemStack> callback;
+    private FilterItemStack filter;
+    private Predicate<GasStack> compiledFilter;
+    private Consumer<ItemStack> callback;
 
     public GasFilteringBehaviour(SmartBlockEntity be, ValueBoxTransform slot) {
         super(be);
         filter = FilterItemStack.empty();
         compiledFilter = GasFilterUtils.compile(ItemStack.EMPTY);
         slotPositioning = slot;
-        callback = $ -> {};
-    }
-
-    public GasFilteringBehaviour withCallback(Consumer<ItemStack> filterCallback) {
-        callback = filterCallback;
-        return this;
-    }
-
-    public boolean test(GasStack stack) {
-        return compiledFilter.test(stack);
-    }
-
-    protected void rebuildCompiledFilter() {
-        compiledFilter = GasFilterUtils.compile(filter.item());
+        callback = ignoredStack -> {};
     }
 
     @Override
@@ -173,13 +160,17 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
     @Override
     public void onShortInteract(Player player, InteractionHand hand, Direction side, BlockHitResult hitResult) {
         Level level = getWorld();
-        ItemStack toApply = player.getItemInHand(hand).copy();
-        if (AllBlocks.MECHANICAL_ARM.isIn(toApply) || toApply.is(Items.TOOLS_WRENCH) || level.isClientSide) {
+        if (level.isClientSide) {
             return;
         }
 
-        if (!setFilter(side, toApply)) {
-            GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_item", toApply.getHoverName());
+        ItemStack heldItem = player.getItemInHand(hand).copy();
+        if (AllBlocks.MECHANICAL_ARM.isIn(heldItem) || heldItem.is(Items.TOOLS_WRENCH)) {
+            return;
+        }
+
+        if (!setFilter(side, heldItem)) {
+            GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_item", heldItem.getHoverName());
             return;
         }
 
@@ -191,16 +182,30 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
         return 2;
     }
 
-    public ItemStack getFilter(Direction ignored) {
+    public boolean test(GasStack gasStack) {
+        return compiledFilter.test(gasStack);
+    }
+
+    @SuppressWarnings("unused")
+    private GasFilteringBehaviour withCallback(Consumer<ItemStack> filterCallback) {
+        callback = filterCallback;
+        return this;
+    }
+
+    private void rebuildCompiledFilter() {
+        compiledFilter = GasFilterUtils.compile(filter.item());
+    }
+
+    private ItemStack getFilter(Direction ignoredSide) {
         return getFilter();
     }
 
-    public boolean setFilter(Direction ignored, ItemStack stack) {
-        return setFilter(stack);
+    private boolean setFilter(Direction ignoredSide, ItemStack filterStack) {
+        return setFilter(filterStack);
     }
 
-    public boolean setFilter(ItemStack stack) {
-        ItemStack filterItem = GasFilterUtils.normalizeStack(stack);
+    private boolean setFilter(ItemStack filterStack) {
+        ItemStack filterItem = GasFilterUtils.normalizeStack(filterStack);
         if (!filterItem.isEmpty() && !predicate.test(filterItem)) {
             return false;
         }

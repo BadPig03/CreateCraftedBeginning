@@ -25,7 +25,7 @@ import java.util.Map;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightPumpPressureNetwork {
+final class AirtightPumpPressureNetwork {
     private static final int DIRECTION_COUNT = Direction.values().length;
     private static final PressureTopologyEdge[] NO_TOPOLOGY_EDGES = new PressureTopologyEdge[0];
     private static final WorldAttached<PressureTopologyBatch> PRESSURE_TOPOLOGY_BATCHES = new WorldAttached<>($ -> new PressureTopologyBatch());
@@ -33,26 +33,26 @@ public final class AirtightPumpPressureNetwork {
     private AirtightPumpPressureNetwork() {
     }
 
-    public static PressureDistributionResult distributePressureTo(AirtightPumpBlockEntity pump, Direction side) {
+    static PressureDistributionResult distributePressureTo(AirtightPumpBlockEntity pump, Direction direction) {
         Level level = pump.getLevel();
-        if (!pump.isPumpRunning() || level == null) {
+        if (level == null || !pump.isPumpRunning()) {
             return new PressureDistributionResult(false, false);
         }
 
-        boolean pull = AirtightPumpPressureController.isPullingOnSide(pump.isFront(side));
-        PressureBuildContext context = PressureBuildContext.forLevel(level, pull);
-        Direction entryFace = side.getOpposite();
+        boolean isPulling = AirtightPumpPressureController.isPullingOnSide(pump.isFront(direction));
+        PressureBuildContext context = PressureBuildContext.forLevel(level, isPulling);
+        Direction entryFace = direction.getOpposite();
         BlockPos pumpPos = pump.getBlockPos();
-        BlockPos startPos = pumpPos.relative(side);
+        BlockPos startPos = pumpPos.relative(direction);
         if (!context.isLoaded(startPos)) {
             return new PressureDistributionResult(false, true);
         }
 
-        if (!pull) {
+        if (!isPulling) {
             GasPropagator.resetAffectedNetworks(level, pumpPos, entryFace);
         }
-        AdjacentTarget startTarget = GasPropagator.resolveAdjacentTarget(level, pumpPos, side);
-        if (hasReachedValidEndpoint(level, startTarget, pull)) {
+        AdjacentTarget startTarget = GasPropagator.resolveAdjacentTarget(level, pumpPos, direction);
+        if (hasReachedValidEndpoint(level, startTarget, isPulling)) {
             return new PressureDistributionResult(true, false);
         }
 
@@ -64,9 +64,9 @@ public final class AirtightPumpPressureNetwork {
         return new PressureDistributionResult(validPath, traversal.topologyIncomplete);
     }
 
-    private static boolean hasReachedValidEndpoint(Level level, AdjacentTarget target, boolean pull) {
+    private static boolean hasReachedValidEndpoint(Level level, AdjacentTarget target, boolean isPulling) {
         if (target.isAlignedPump() && level.getBlockEntity(target.pos()) instanceof AirtightPumpBlockEntity pump) {
-            return pump.isPumpRunning() && AirtightPumpPressureController.isPullingOnSide(pump.isFront(target.connectedFace())) != pull;
+            return pump.isPumpRunning() && AirtightPumpPressureController.isPullingOnSide(pump.isFront(target.connectedFace())) != isPulling;
         }
         return !target.canFlowToward() && (target.hasGasCapability() || target.isOpenEnded());
     }
@@ -94,7 +94,7 @@ public final class AirtightPumpPressureNetwork {
                     continue;
                 }
 
-                if (edge.isEndpoint(context.topology.level, context.pull)) {
+                if (edge.isEndpoint(context.topology.level, context.isPulling)) {
                     traversal.markEndpoint(current, edge.face);
                     continue;
                 }
@@ -127,8 +127,8 @@ public final class AirtightPumpPressureNetwork {
             return false;
         }
 
-        for (int i = traversal.visitedCount - 1; i >= 0; i--) {
-            PressureTopologyNode current = traversal.visitedNodes[i];
+        for (int nodeIndex = traversal.visitedCount - 1; nodeIndex >= 0; nodeIndex--) {
+            PressureTopologyNode current = traversal.visitedNodes[nodeIndex];
             boolean reachable = traversal.endpointMask(current) != 0;
             if (!reachable) {
                 int nextDistance = traversal.distance(current) + 1;
@@ -180,7 +180,7 @@ public final class AirtightPumpPressureNetwork {
 
             traversal.markPressureApplied(current);
             long currentPressureUnits = traversal.pendingPressure(current);
-            addPressureToPipe(context, pumpPos, current.pipe.pos, current.entryFace, !context.pull, currentPressureUnits);
+            addPressureToPipe(context, pumpPos, current.pipe.pos, current.entryFace, !context.isPulling, currentPressureUnits);
 
             int validEdgeIndex = 0;
             int endpointMask = traversal.endpointMask(current);
@@ -191,15 +191,15 @@ public final class AirtightPumpPressureNetwork {
                 }
 
                 int faceMask = 1 << edge.face.ordinal();
-                boolean endpoint = (endpointMask & faceMask) != 0;
+                boolean isEndpoint = (endpointMask & faceMask) != 0;
                 PressureTopologyNode next = edge.target;
-                boolean reachesChild = !endpoint && next != null && traversal.distance(next) == nextDistance && traversal.isReachable(next);
-                if (!endpoint && !reachesChild) {
+                boolean reachesChild = !isEndpoint && next != null && traversal.distance(next) == nextDistance && traversal.isReachable(next);
+                if (!isEndpoint && !reachesChild) {
                     continue;
                 }
 
                 long branchPressureUnits = GasPressure.splitShare(currentPressureUnits, validEdgeCount, validEdgeIndex++);
-                addPressureToPipe(context, pumpPos, current.pipe.pos, edge.face, context.pull, branchPressureUnits);
+                addPressureToPipe(context, pumpPos, current.pipe.pos, edge.face, context.isPulling, branchPressureUnits);
                 if (!reachesChild || traversal.isPressureApplied(next) || branchPressureUnits <= 0) {
                     continue;
                 }
@@ -231,9 +231,11 @@ public final class AirtightPumpPressureNetwork {
             }
 
             PressureTopologyNode next = edge.target;
-            if (next != null && traversal.distance(next) == nextDistance && traversal.isReachable(next)) {
-                validEdgeCount++;
+            if (next == null || traversal.distance(next) != nextDistance || !traversal.isReachable(next)) {
+                continue;
             }
+
+            validEdgeCount++;
         }
         return validEdgeCount;
     }
@@ -251,16 +253,16 @@ public final class AirtightPumpPressureNetwork {
         pipe.behaviour.addPressureUnits(pipeSide, inbound, pressureUnits);
     }
 
-    private enum EndpointKind {
+    private enum EndpointType {
         NONE,
         STATIC,
         ALIGNED_PUMP
     }
 
-    public record PressureDistributionResult(boolean validPath, boolean topologyIncomplete) {}
+    record PressureDistributionResult(boolean validPath, boolean topologyIncomplete) {}
 
-    private record PressureBuildContext(PressureTopologyCache topology, boolean pull) {
-        private static PressureBuildContext forLevel(Level level, boolean pull) {
+    private record PressureBuildContext(PressureTopologyCache topology, boolean isPulling) {
+        private static PressureBuildContext forLevel(Level level, boolean isPulling) {
             PressureTopologyBatch batch = PRESSURE_TOPOLOGY_BATCHES.get(level);
             long gameTime = level.getGameTime();
             long revision = GasPropagator.getPressureTopologyRevision(level);
@@ -271,7 +273,7 @@ public final class AirtightPumpPressureNetwork {
                 batch.revision = revision;
                 batch.topology = new WeakReference<>(topology);
             }
-            return new PressureBuildContext(topology, pull);
+            return new PressureBuildContext(topology, isPulling);
         }
 
         private boolean isLoaded(BlockPos pos) {
@@ -284,7 +286,7 @@ public final class AirtightPumpPressureNetwork {
         }
 
         private PressureTopologyNode topologyNode(PressurePipeSnapshot pipe, Direction entryFace) {
-            return PressureTopologyCache.topologyNode(pipe, entryFace, pull);
+            return PressureTopologyCache.topologyNode(pipe, entryFace, isPulling);
         }
     }
 
@@ -297,50 +299,50 @@ public final class AirtightPumpPressureNetwork {
             this.level = level;
         }
 
-        private static EndpointKind endpointKind(AdjacentTarget target) {
+        private static EndpointType endpointKind(AdjacentTarget target) {
             if (target.isAlignedPump()) {
-                return EndpointKind.ALIGNED_PUMP;
+                return EndpointType.ALIGNED_PUMP;
             }
-            return !target.canFlowToward() && (target.hasGasCapability() || target.isOpenEnded()) ? EndpointKind.STATIC : EndpointKind.NONE;
+            return !target.canFlowToward() && (target.hasGasCapability() || target.isOpenEnded()) ? EndpointType.STATIC : EndpointType.NONE;
         }
 
-        private static boolean allowsEntryFlow(PressurePipeSnapshot pipe, Direction face, boolean pull) {
-            return pull ? pipe.allowsOutbound(face) : pipe.allowsInbound(face);
+        private static boolean allowsEntryFlow(PressurePipeSnapshot pipe, Direction face, boolean isPulling) {
+            return isPulling ? pipe.allowsOutbound(face) : pipe.allowsInbound(face);
         }
 
-        private static boolean allowsExitFlowWithoutLevel(PressurePipeSnapshot pipe, Direction face, boolean pull) {
-            return pull ? pipe.allowsInboundWithoutLevel(face) : pipe.allowsOutboundWithoutLevel(face);
+        private static boolean allowsExitFlowWithoutLevel(PressurePipeSnapshot pipe, Direction face, boolean isPulling) {
+            return isPulling ? pipe.allowsInboundWithoutLevel(face) : pipe.allowsOutboundWithoutLevel(face);
         }
 
-        private static boolean allowsExitFlow(PressurePipeSnapshot pipe, Direction face, boolean pull) {
-            return pull ? pipe.allowsInbound(face) : pipe.allowsOutbound(face);
+        private static boolean allowsExitFlow(PressurePipeSnapshot pipe, Direction face, boolean isPulling) {
+            return isPulling ? pipe.allowsInbound(face) : pipe.allowsOutbound(face);
         }
 
-        private static boolean allowsBoundaryFlow(PressurePipeSnapshot pipe, Direction face, boolean pull) {
-            return pull ? pipe.allowsOutbound(face) : pipe.allowsInbound(face);
+        private static boolean allowsBoundaryFlow(PressurePipeSnapshot pipe, Direction face, boolean isPulling) {
+            return isPulling ? pipe.allowsOutbound(face) : pipe.allowsInbound(face);
         }
 
-        private static PressureTopologyNode topologyNode(PressurePipeSnapshot pipe, Direction entryFace, boolean pull) {
-            PressureTopologyNode[] nodes = pull ? pipe.pullTopologyNodes : pipe.pushTopologyNodes;
-            if (nodes == null) {
-                nodes = new PressureTopologyNode[DIRECTION_COUNT];
-                if (pull) {
-                    pipe.pullTopologyNodes = nodes;
+        private static PressureTopologyNode topologyNode(PressurePipeSnapshot pipe, Direction entryFace, boolean isPulling) {
+            PressureTopologyNode[] topologyNodes = isPulling ? pipe.pullTopologyNodes : pipe.pushTopologyNodes;
+            if (topologyNodes == null) {
+                topologyNodes = new PressureTopologyNode[DIRECTION_COUNT];
+                if (isPulling) {
+                    pipe.pullTopologyNodes = topologyNodes;
                 }
                 else {
-                    pipe.pushTopologyNodes = nodes;
+                    pipe.pushTopologyNodes = topologyNodes;
                 }
             }
 
-            int index = entryFace.ordinal();
-            PressureTopologyNode node = nodes[index];
-            if (node != null) {
-                return node;
+            int faceIndex = entryFace.ordinal();
+            PressureTopologyNode topologyNode = topologyNodes[faceIndex];
+            if (topologyNode != null) {
+                return topologyNode;
             }
 
-            node = new PressureTopologyNode(pipe, entryFace, pull);
-            nodes[index] = node;
-            return node;
+            topologyNode = new PressureTopologyNode(pipe, entryFace, isPulling);
+            topologyNodes[faceIndex] = topologyNode;
+            return topologyNode;
         }
 
         private boolean isLoaded(BlockPos pos) {
@@ -354,7 +356,7 @@ public final class AirtightPumpPressureNetwork {
             if (!isLoaded(key)) {
                 return null;
             }
-            return pipesByPos.computeIfAbsent(key, ignored -> new PressurePipeSnapshot(key, level.getBlockState(key), GasPropagator.getBehaviour(level, key)));
+            return pipesByPos.computeIfAbsent(key, pipePos -> new PressurePipeSnapshot(pipePos, level.getBlockState(pipePos), GasPropagator.getBehaviour(level, pipePos)));
         }
 
         private PressurePipeSnapshot pipe(AdjacentTarget target) {
@@ -371,30 +373,30 @@ public final class AirtightPumpPressureNetwork {
         }
 
         private AdjacentTarget adjacentTarget(PressurePipeSnapshot pipe, Direction face) {
-            int index = face.ordinal();
+            int faceIndex = face.ordinal();
             if (pipe.adjacentTargets != null) {
-                AdjacentTarget target = pipe.adjacentTargets[index];
-                if (target != null) {
-                    return target;
+                AdjacentTarget cachedTarget = pipe.adjacentTargets[faceIndex];
+                if (cachedTarget != null) {
+                    return cachedTarget;
                 }
             }
             else {
                 pipe.adjacentTargets = new AdjacentTarget[DIRECTION_COUNT];
             }
-            AdjacentTarget target = GasPropagator.resolveAdjacentTarget(level, pipe.pos, face);
-            pipe.adjacentTargets[index] = target;
-            return target;
+            AdjacentTarget adjacentTarget = GasPropagator.resolveAdjacentTarget(level, pipe.pos, face);
+            pipe.adjacentTargets[faceIndex] = adjacentTarget;
+            return adjacentTarget;
         }
 
         private PressureTopologyEdge[] buildEdges(PressureTopologyNode node) {
             PressurePipeSnapshot currentPipe = node.pipe;
-            if (!allowsEntryFlow(currentPipe, node.entryFace, node.pull)) {
+            if (!allowsEntryFlow(currentPipe, node.entryFace, node.isPulling)) {
                 return NO_TOPOLOGY_EDGES;
             }
 
             List<PressureTopologyEdge> edges = null;
             for (Direction face : Iterate.directions) {
-                if (face == node.entryFace || !allowsExitFlowWithoutLevel(currentPipe, face, node.pull)) {
+                if (face == node.entryFace || !allowsExitFlowWithoutLevel(currentPipe, face, node.isPulling)) {
                     continue;
                 }
 
@@ -403,30 +405,30 @@ public final class AirtightPumpPressureNetwork {
                     node.hasUnloadedBoundary = true;
                     continue;
                 }
-                if (!allowsExitFlow(currentPipe, face, node.pull)) {
+                if (!allowsExitFlow(currentPipe, face, node.isPulling)) {
                     continue;
                 }
 
                 AdjacentTarget target = adjacentTarget(currentPipe, face);
-                EndpointKind endpointKind = endpointKind(target);
+                EndpointType endpointType = endpointKind(target);
                 PressureTopologyNode connectedNode = null;
-                if (endpointKind == EndpointKind.NONE) {
+                if (endpointType == EndpointType.NONE) {
                     PressurePipeSnapshot connectedPipe = pipe(target);
                     if (connectedPipe.behaviour != null && !(connectedPipe.behaviour instanceof AirtightPumpTransportBehaviour)) {
                         Direction connectedFace = target.connectedFace();
-                        if (allowsBoundaryFlow(connectedPipe, connectedFace, node.pull)) {
-                            connectedNode = topologyNode(connectedPipe, connectedFace, node.pull);
+                        if (allowsBoundaryFlow(connectedPipe, connectedFace, node.isPulling)) {
+                            connectedNode = topologyNode(connectedPipe, connectedFace, node.isPulling);
                         }
                     }
                 }
 
-                if (endpointKind == EndpointKind.NONE && connectedNode == null) {
+                if (endpointType == EndpointType.NONE && connectedNode == null) {
                     continue;
                 }
                 if (edges == null) {
                     edges = new ArrayList<>();
                 }
-                edges.add(new PressureTopologyEdge(face, target, endpointKind, connectedNode));
+                edges.add(new PressureTopologyEdge(face, target, endpointType, connectedNode));
             }
 
             if (edges == null) {
@@ -474,46 +476,46 @@ public final class AirtightPumpPressureNetwork {
         }
 
         private boolean allowsInbound(Direction face) {
-            int mask = 1 << face.ordinal();
-            if ((inboundKnownMask & mask) != 0) {
-                return (inboundTrueMask & mask) != 0;
+            int faceMask = 1 << face.ordinal();
+            if ((inboundKnownMask & faceMask) != 0) {
+                return (inboundTrueMask & faceMask) != 0;
             }
 
-            boolean value = behaviour != null && behaviour.allowsInboundFlow(state, face);
-            inboundKnownMask |= mask;
-            if (value) {
-                inboundTrueMask |= mask;
+            boolean allowsInbound = behaviour != null && behaviour.allowsInboundFlow(state, face);
+            inboundKnownMask |= faceMask;
+            if (allowsInbound) {
+                inboundTrueMask |= faceMask;
             }
-            return value;
+            return allowsInbound;
         }
 
         private boolean allowsOutbound(Direction face) {
-            int mask = 1 << face.ordinal();
-            if ((outboundKnownMask & mask) != 0) {
-                return (outboundTrueMask & mask) != 0;
+            int faceMask = 1 << face.ordinal();
+            if ((outboundKnownMask & faceMask) != 0) {
+                return (outboundTrueMask & faceMask) != 0;
             }
 
-            boolean value = behaviour != null && behaviour.allowsOutboundFlow(state, face);
-            outboundKnownMask |= mask;
-            if (value) {
-                outboundTrueMask |= mask;
+            boolean allowsOutbound = behaviour != null && behaviour.allowsOutboundFlow(state, face);
+            outboundKnownMask |= faceMask;
+            if (allowsOutbound) {
+                outboundTrueMask |= faceMask;
             }
-            return value;
+            return allowsOutbound;
         }
     }
 
     private static final class PressureTopologyNode {
         private final PressurePipeSnapshot pipe;
         private final Direction entryFace;
-        private final boolean pull;
+        private final boolean isPulling;
         private boolean hasUnloadedBoundary;
         @Nullable
         private PressureTopologyEdge[] edges;
 
-        private PressureTopologyNode(PressurePipeSnapshot pipe, Direction entryFace, boolean pull) {
+        private PressureTopologyNode(PressurePipeSnapshot pipe, Direction entryFace, boolean isPulling) {
             this.pipe = pipe;
             this.entryFace = entryFace;
-            this.pull = pull;
+            this.isPulling = isPulling;
         }
 
         private PressureTopologyEdge[] edges(PressureTopologyCache topology) {
@@ -524,9 +526,9 @@ public final class AirtightPumpPressureNetwork {
         }
     }
 
-    private record PressureTopologyEdge(Direction face, AdjacentTarget adjacentTarget, EndpointKind endpointKind, @Nullable PressureTopologyNode target) {
-        private boolean isEndpoint(Level level, boolean pull) {
-            return endpointKind == EndpointKind.STATIC || endpointKind == EndpointKind.ALIGNED_PUMP && level.getBlockEntity(adjacentTarget.pos()) instanceof AirtightPumpBlockEntity pump && pump.isPumpRunning() && AirtightPumpPressureController.isPullingOnSide(pump.isFront(adjacentTarget.connectedFace())) != pull;
+    private record PressureTopologyEdge(Direction face, AdjacentTarget adjacentTarget, EndpointType endpointType, @Nullable PressureTopologyNode target) {
+        private boolean isEndpoint(Level level, boolean isPulling) {
+            return endpointType == EndpointType.STATIC || endpointType == EndpointType.ALIGNED_PUMP && level.getBlockEntity(adjacentTarget.pos()) instanceof AirtightPumpBlockEntity pump && pump.isPumpRunning() && AirtightPumpPressureController.isPullingOnSide(pump.isFront(adjacentTarget.connectedFace())) != isPulling;
         }
     }
 
@@ -652,6 +654,7 @@ public final class AirtightPumpPressureNetwork {
                 if (key == null) {
                     return -1;
                 }
+
                 if (key == node) {
                     return indexValues[slot] - 1;
                 }
@@ -680,8 +683,8 @@ public final class AirtightPumpPressureNetwork {
             indexKeys = new PressureTopologyNode[newCapacity];
             indexValues = new int[newCapacity];
             int mask = newCapacity - 1;
-            for (int i = 0; i < oldKeys.length; i++) {
-                PressureTopologyNode key = oldKeys[i];
+            for (int oldSlot = 0; oldSlot < oldKeys.length; oldSlot++) {
+                PressureTopologyNode key = oldKeys[oldSlot];
                 if (key == null) {
                     continue;
                 }
@@ -691,7 +694,7 @@ public final class AirtightPumpPressureNetwork {
                     slot = slot + 1 & mask;
                 }
                 indexKeys[slot] = key;
-                indexValues[slot] = oldValues[i];
+                indexValues[slot] = oldValues[oldSlot];
             }
         }
 

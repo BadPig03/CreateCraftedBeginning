@@ -43,19 +43,19 @@ public class BoilerSteamOutletBlock extends FaceAttachedHorizontalDirectionalBlo
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(POWERED, false));
     }
 
-    public static Direction getFacing(BlockState state) {
-        return getConnectedDirection(state);
-    }
-
-    public static BlockPos getAttachedTankPos(BlockState state, BlockPos pos) {
-        return pos.relative(getFacing(state).getOpposite());
-    }
-
     public static boolean isActive(BlockState state) {
         return state.getBlock() instanceof BoilerSteamOutletBlock && !state.getValue(POWERED);
     }
 
-    public static void refreshBoiler(BlockState state, Level level, BlockPos pos) {
+    static Direction getFacing(BlockState state) {
+        return getConnectedDirection(state);
+    }
+
+    static BlockPos getAttachedTankPos(BlockState state, BlockPos pos) {
+        return pos.relative(getFacing(state).getOpposite());
+    }
+
+    private static void refreshBoiler(BlockState state, Level level, BlockPos pos) {
         FluidTankBlock.updateBoilerState(state, level, getAttachedTankPos(state, pos));
     }
 
@@ -112,12 +112,12 @@ public class BoilerSteamOutletBlock extends FaceAttachedHorizontalDirectionalBlo
             return;
         }
 
-        boolean powered = level.hasNeighborSignal(pos);
-        if (powered == state.getValue(POWERED)) {
+        boolean isPowered = level.hasNeighborSignal(pos);
+        if (isPowered == state.getValue(POWERED)) {
             return;
         }
 
-        BlockState updatedState = state.setValue(POWERED, powered);
+        BlockState updatedState = state.setValue(POWERED, isPowered);
         level.setBlock(pos, updatedState, UPDATE_ALL);
         if (level.isClientSide) {
             return;

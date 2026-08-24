@@ -45,7 +45,7 @@ import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOv
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberRecipeIndex;
 import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.foundation.client.outliner.CCBOutliner;
-import net.ty.createcraftedbeginning.mixin.client.accessor.CreativeModeInventoryScreenAccessor;
+import net.ty.createcraftedbeginning.platform.access.CreativeModeInventoryScreenAccess;
 import net.ty.createcraftedbeginning.platform.access.ItemPickerMenuAccess;
 import net.ty.createcraftedbeginning.ponder.CCBPonderPlugin;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout;
@@ -131,11 +131,11 @@ public class CCBClientEvents {
 
     @SubscribeEvent
     public static void onRenderForeground(Foreground event) {
-        if (!(event.getContainerScreen() instanceof CreativeModeInventoryScreen screen) || !(screen instanceof CreativeModeInventoryScreenAccessor screenAccessor) || !(screen.getMenu() instanceof ItemPickerMenuAccess menuAccessor)) {
+        if (!(event.getContainerScreen() instanceof CreativeModeInventoryScreen screen) || !(screen instanceof CreativeModeInventoryScreenAccess screenAccessor) || !(screen.getMenu() instanceof ItemPickerMenuAccess menuAccessor)) {
             return;
         }
 
-        CreativeModeTab selectedTab = CreativeModeInventoryScreenAccessor.ccb$getSelectedTab();
+        CreativeModeTab selectedTab = screenAccessor.ccb$getSelectedTab();
         if (selectedTab != CCBCreativeTabs.CREATIVE_TAB.get()) {
             return;
         }
@@ -153,8 +153,8 @@ public class CCBClientEvents {
         }
     }
 
-    private static void onTick(boolean isPreEvent) {
-        if (isPreEvent || Minecraft.getInstance().level == null || Minecraft.getInstance().player == null) {
+    private static void onTick(boolean isPreTick) {
+        if (isPreTick || Minecraft.getInstance().level == null || Minecraft.getInstance().player == null) {
             return;
         }
 
@@ -170,13 +170,13 @@ public class CCBClientEvents {
         CCBOutliner.INSTANCE.tickOutlines();
     }
 
-    private static void onRenderWorld(PoseStack ms) {
-        ms.pushPose();
+    private static void onRenderWorld(PoseStack poseStack) {
+        poseStack.pushPose();
 
         SuperRenderTypeBuffer buffer = DefaultSuperRenderTypeBuffer.getInstance();
-        CCBOutliner.INSTANCE.renderOutlines(ms, buffer, Minecraft.getInstance().gameRenderer.getMainCamera().getPosition(), AnimationTickHolder.getPartialTicks());
+        CCBOutliner.INSTANCE.renderOutlines(poseStack, buffer, Minecraft.getInstance().gameRenderer.getMainCamera().getPosition(), AnimationTickHolder.getPartialTicks());
         buffer.draw();
 
-        ms.popPose();
+        poseStack.popPose();
     }
 }

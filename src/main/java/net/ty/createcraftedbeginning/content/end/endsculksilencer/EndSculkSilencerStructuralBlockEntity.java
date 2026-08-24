@@ -18,7 +18,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class EndSculkSilencerStructuralBlockEntity extends EndMechanicalStructuralBlockEntity<EndSculkSilencerBlockEntity> {
-    protected ScrollOptionBehaviour<SilencerWorkingRange> silencerWorkingRange;
+    private ScrollOptionBehaviour<SilencerWorkingRange> silencerWorkingRange;
 
     public EndSculkSilencerStructuralBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
@@ -42,24 +42,24 @@ public class EndSculkSilencerStructuralBlockEntity extends EndMechanicalStructur
         behaviours.add(silencerWorkingRange);
     }
 
-    public short getWorkingRange() {
+    short getWorkingRange() {
         return silencerWorkingRange == null ? SilencerWorkingRange.ONE_BY_ONE.getWorkingRange() : silencerWorkingRange.get().getWorkingRange();
     }
 
-    protected void onWorkingRangeChanged(int ignored) {
+    private void onWorkingRangeChanged(int ignored) {
         if (level == null || level.isClientSide) {
             return;
         }
 
-        EndSculkSilencerBlockEntity master = getMasterForUse();
-        if (master == null) {
+        EndSculkSilencerBlockEntity silencer = getMasterForUse();
+        if (silencer == null) {
             return;
         }
 
-        master.refreshSilencerState();
+        silencer.refreshSilencerState();
     }
 
-    protected enum SilencerWorkingRange implements INamedIconOptions {
+    private enum SilencerWorkingRange implements INamedIconOptions {
         ONE_BY_ONE(CCBIcons.I_1X1, 1),
         THREE_BY_THREE(CCBIcons.I_3X3, 2),
         FIVE_BY_FIVE(CCBIcons.I_5X5, 3);
@@ -84,7 +84,7 @@ public class EndSculkSilencerStructuralBlockEntity extends EndMechanicalStructur
             return translationKey;
         }
 
-        public short getWorkingRange() {
+        private short getWorkingRange() {
             return workingRange;
         }
     }

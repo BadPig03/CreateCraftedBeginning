@@ -13,7 +13,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class CCBFluidClientExtensionRegistry {
-    private static final List<Registration> REGISTRATIONS = new ArrayList<>();
+    private static final List<FluidRegistration> REGISTRATIONS = new ArrayList<>();
 
     private CCBFluidClientExtensionRegistry() {
     }
@@ -22,18 +22,18 @@ public final class CCBFluidClientExtensionRegistry {
         REGISTRATIONS.add(new SimpleRegistration(fluidType, stillTexture, flowingTexture));
     }
 
-    public static void registerTinted(TintedFluidType fluidType) {
-        REGISTRATIONS.add(new TintedRegistration(fluidType));
-    }
-
     @Contract(pure = true)
-    public static @Unmodifiable List<Registration> registrations() {
+    public static @Unmodifiable List<FluidRegistration> registrations() {
         return List.copyOf(REGISTRATIONS);
     }
 
-    public sealed interface Registration permits SimpleRegistration, TintedRegistration {}
+    static void registerTinted(TintedFluidType fluidType) {
+        REGISTRATIONS.add(new TintedRegistration(fluidType));
+    }
 
-    public record SimpleRegistration(FluidType fluidType, ResourceLocation stillTexture, ResourceLocation flowingTexture) implements Registration {}
+    public sealed interface FluidRegistration permits SimpleRegistration, TintedRegistration {}
 
-    public record TintedRegistration(TintedFluidType fluidType) implements Registration {}
+    public record SimpleRegistration(FluidType fluidType, ResourceLocation stillTexture, ResourceLocation flowingTexture) implements FluidRegistration {}
+
+    public record TintedRegistration(TintedFluidType fluidType) implements FluidRegistration {}
 }

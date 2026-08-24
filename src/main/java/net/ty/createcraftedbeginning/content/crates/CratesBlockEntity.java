@@ -25,8 +25,8 @@ import java.util.function.Predicate;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class CratesBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ThresholdSwitchObservable {
-    protected final CrateBlockEntityStorage storage;
-    protected final CrateDisplay display;
+    private final CrateBlockEntityStorage storage;
+    private final CrateDisplay display;
 
     protected CratesBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, IntSupplier maxCountSupplier) {
         this(type, pos, state, maxCountSupplier, null);
@@ -40,33 +40,6 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
 
     public static <T extends CratesBlockEntity> void registerCapabilities(RegisterCapabilitiesEvent event, BlockEntityType<T> type) {
         event.registerBlockEntity(ItemHandler.BLOCK, type, (be, context) -> be.getHandler());
-    }
-
-    public final CrateItemStackHandler getHandler() {
-        return storage.handler();
-    }
-
-    public final ItemStack getStoredItem() {
-        return storage.storedItem();
-    }
-
-    public final int getStoredCount() {
-        return storage.storedCount();
-    }
-
-    public final void setStoredItems(ItemStack content, int count) {
-        storage.setStoredItems(content, count);
-    }
-
-    protected boolean canStoreItem(ItemStack stack) {
-        return true;
-    }
-
-    protected void onInventoryChanged() {
-        notifyUpdate();
-    }
-
-    protected void onTrackedItemDiscarded() {
     }
 
     @Override
@@ -134,5 +107,32 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
     public void invalidate() {
         super.invalidate();
         invalidateCapabilities();
+    }
+
+    public final ItemStack getStoredItem() {
+        return storage.storedItem();
+    }
+
+    public final int getStoredCount() {
+        return storage.storedCount();
+    }
+
+    public final void setStoredItems(ItemStack content, int count) {
+        storage.setStoredItems(content, count);
+    }
+
+    protected boolean canStoreItem(ItemStack stack) {
+        return true;
+    }
+
+    protected void onInventoryChanged() {
+        notifyUpdate();
+    }
+
+    protected void onTrackedItemDiscarded() {
+    }
+
+    final CrateItemStackHandler getHandler() {
+        return storage.handler();
     }
 }

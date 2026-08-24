@@ -21,11 +21,11 @@ public class DeployerApplicationWithGasRecipe extends ItemApplicationWithGasReci
     @Override
     @OnlyIn(Dist.CLIENT)
     public Component getDescriptionForAssembly() {
-        ItemStack[] stacks = getRequiredHeldItem().getItems();
-        if (stacks.length == 0) {
+        ItemStack[] heldItemStacks = getRequiredHeldItem().getItems();
+        if (heldItemStacks.length == 0) {
             return Component.literal("Invalid");
         }
-        return CreateLang.translateDirect("recipe.assembly.deploying_item", Component.translatable(stacks[0].getDescriptionId()).getString());
+        return CreateLang.translateDirect("recipe.assembly.deploying_item", Component.translatable(heldItemStacks[0].getDescriptionId()).getString());
     }
 
 }

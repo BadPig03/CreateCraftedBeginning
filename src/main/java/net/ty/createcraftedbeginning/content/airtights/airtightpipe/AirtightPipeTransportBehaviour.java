@@ -7,8 +7,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightPipeTransportBehaviour extends AxisGasTransportBehaviour {
-    public AirtightPipeTransportBehaviour(SmartBlockEntity blockEntity) {
+class AirtightPipeTransportBehaviour extends AxisGasTransportBehaviour {
+    AirtightPipeTransportBehaviour(SmartBlockEntity blockEntity) {
         super(blockEntity);
     }
 }

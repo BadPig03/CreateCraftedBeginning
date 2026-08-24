@@ -9,20 +9,20 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class TeslaTurbineController {
+final class TeslaTurbineController {
     private final TeslaTurbineCore core;
     private final TeslaTurbineBlockEntity turbine;
 
-    private boolean saveDirty;
-    private boolean clientDirty;
+    private boolean needsSave;
+    private boolean needsClientSync;
     private float lastGeneratedSpeed = Float.NaN;
 
-    public TeslaTurbineController(TeslaTurbineCore core, TeslaTurbineBlockEntity turbine) {
+    TeslaTurbineController(TeslaTurbineCore core, TeslaTurbineBlockEntity turbine) {
         this.core = core;
         this.turbine = turbine;
     }
 
-    public void tick() {
+    void tick() {
         Level level = turbine.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -30,15 +30,10 @@ public final class TeslaTurbineController {
 
         core.getFlowMeter().tick();
         flushDirtyState();
-        if (turbine.isOverStressed()) {
-            lastGeneratedSpeed = Float.NaN;
-            return;
-        }
-
         refreshGeneratedRotationIfNeeded();
     }
 
-    public void lazyTick() {
+    void lazyTick() {
         Level level = turbine.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -47,12 +42,12 @@ public final class TeslaTurbineController {
         core.getStructureManager().tick();
     }
 
-    public void initialize() {
+    void initialize() {
         lastGeneratedSpeed = Float.NaN;
         refreshGeneratedRotationIfNeeded();
     }
 
-    public void onSpeedChanged() {
+    void onSpeedChanged() {
         Level level = turbine.getLevel();
         if (level == null || level.isClientSide || turbine.getSpeed() == 0 || getGeneratedSpeed() == 0) {
             return;
@@ -70,29 +65,29 @@ public final class TeslaTurbineController {
         turbine.getAdvancementBehaviour().awardPlayer(CCBAdvancements.MIRACLE_OF_ENGINEERING);
     }
 
-    public float getGeneratedSpeed() {
-        int direction = core.getFlowMeter().isClockwiseFlow() ? -1 : 1;
-        int modifier = turbine.getBlockState().getValue(TeslaTurbineBlock.AXIS) == Axis.Z ? -1 : 1;
-        return TeslaTurbineUtils.BASE_ROTATION_SPEED * core.getLevelCalculator().getCurrentLevel() * direction * modifier;
+    void markForSave() {
+        needsSave = true;
     }
 
-    public void markForSave() {
-        saveDirty = true;
+    void markForClientSync() {
+        needsClientSync = true;
     }
 
-    public void markForClientSync() {
-        clientDirty = true;
+    void markForSaveAndClientSync() {
+        needsSave = true;
+        needsClientSync = true;
     }
 
-    public void markForSaveAndClientSync() {
-        saveDirty = true;
-        clientDirty = true;
-    }
-
-    public void onReadComplete() {
-        saveDirty = false;
-        clientDirty = false;
+    void onReadComplete() {
+        needsSave = false;
+        needsClientSync = false;
         lastGeneratedSpeed = Float.NaN;
+    }
+
+    float getGeneratedSpeed() {
+        int flowDirectionMultiplier = core.getFlowMeter().isClockwiseFlow() ? -1 : 1;
+        int axisDirectionMultiplier = turbine.getBlockState().getValue(TeslaTurbineBlock.AXIS) == Axis.Z ? -1 : 1;
+        return TeslaTurbineUtils.BASE_ROTATION_SPEED * core.getLevelCalculator().getCurrentLevel() * flowDirectionMultiplier * axisDirectionMultiplier;
     }
 
     private void refreshGeneratedRotationIfNeeded() {
@@ -111,15 +106,15 @@ public final class TeslaTurbineController {
     }
 
     private void flushDirtyState() {
-        if (saveDirty) {
+        if (needsSave) {
             turbine.setChanged();
-            saveDirty = false;
+            needsSave = false;
         }
-        if (!clientDirty) {
+        if (!needsClientSync) {
             return;
         }
 
         turbine.sendData();
-        clientDirty = false;
+        needsClientSync = false;
     }
 }

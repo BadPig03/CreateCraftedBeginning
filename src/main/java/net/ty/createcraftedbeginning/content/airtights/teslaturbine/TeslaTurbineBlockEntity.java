@@ -24,9 +24,9 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implements IHaveGoggleInformation {
     private static final String COMPOUND_KEY_CORE = "Core";
-    protected final TeslaTurbineCore core;
+    private final TeslaTurbineCore core;
 
-    protected CCBAdvancementBehaviour advancementBehaviour;
+    private CCBAdvancementBehaviour advancementBehaviour;
 
     public TeslaTurbineBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -34,11 +34,11 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
         setLazyTickRate(TeslaTurbineUtils.LAZY_TICK_RATE);
     }
 
-    public static float calculateStressCapacity(float generatedSpeed) {
-        float speed = Math.abs(generatedSpeed);
-        int maxSpeed = AllConfigs.server().kinetics.maxRotationSpeed.get();
-        double baseCapacity = BlockStressValues.getCapacity(CCBBlocks.TESLA_TURBINE_BLOCK.get());
-        return (float) (speed * baseCapacity / maxSpeed);
+    private static float calculateStressCapacity(float generatedSpeed) {
+        float absoluteSpeed = Math.abs(generatedSpeed);
+        int maxRotationSpeed = AllConfigs.server().kinetics.maxRotationSpeed.get();
+        double baseStressCapacity = BlockStressValues.getCapacity(CCBBlocks.TESLA_TURBINE_BLOCK.get());
+        return absoluteSpeed * (float) baseStressCapacity / maxRotationSpeed;
     }
 
     @Override
@@ -66,9 +66,9 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
 
     @Override
     public float calculateAddedStressCapacity() {
-        float capacity = calculateStressCapacity(getGeneratedSpeed());
-        lastCapacityProvided = capacity;
-        return capacity;
+        float stressCapacity = calculateStressCapacity(getGeneratedSpeed());
+        lastCapacityProvided = stressCapacity;
+        return stressCapacity;
     }
 
     @Override
@@ -78,7 +78,7 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
     }
 
     @Override
-    public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
         compoundTag.put(COMPOUND_KEY_CORE, core.write(provider, clientPacket));
     }
@@ -102,19 +102,15 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
         behaviours.add(advancementBehaviour);
     }
 
-    public TeslaTurbineCore getCore() {
-        return core;
-    }
-
-    public CCBAdvancementBehaviour getAdvancementBehaviour() {
-        return advancementBehaviour;
-    }
-
     public IGasHandler createGasHandler(boolean clockwise) {
         return core.createGasHandler(clockwise);
     }
 
-    public void refreshStructure() {
+    CCBAdvancementBehaviour getAdvancementBehaviour() {
+        return advancementBehaviour;
+    }
+
+    void refreshStructure() {
         core.getStructureManager().tick();
     }
 }

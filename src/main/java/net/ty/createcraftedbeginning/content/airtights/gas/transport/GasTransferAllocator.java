@@ -8,73 +8,73 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasTransferAllocator {
+final class GasTransferAllocator {
     private GasTransferAllocator() {
     }
 
-    public static Result allocate(long availableAmount, long[] capacities, int cursor) {
+    static Result allocate(long availableAmount, long[] capacities, int cursor) {
         long[] allocations = new long[capacities.length];
         if (availableAmount <= 0 || capacities.length == 0) {
             return new Result(allocations, cursor);
         }
 
-        List<Integer> uncapped = new ArrayList<>(capacities.length);
-        for (int i = 0; i < capacities.length; i++) {
-            if (capacities[i] <= 0) {
+        List<Integer> uncappedIndices = new ArrayList<>(capacities.length);
+        for (int targetIndex = 0; targetIndex < capacities.length; targetIndex++) {
+            if (capacities[targetIndex] <= 0) {
                 continue;
             }
 
-            uncapped.add(i);
+            uncappedIndices.add(targetIndex);
         }
-        if (uncapped.isEmpty()) {
+        if (uncappedIndices.isEmpty()) {
             return new Result(allocations, cursor);
         }
 
-        long remaining = availableAmount;
-        while (!uncapped.isEmpty() && remaining > 0) {
-            long equalShare = remaining / uncapped.size();
-            boolean removedTarget = false;
-            for (int i = uncapped.size() - 1; i >= 0; i--) {
-                int index = uncapped.get(i);
-                long capacity = capacities[index];
-                if (capacity > equalShare) {
+        long remainingAmount = availableAmount;
+        while (!uncappedIndices.isEmpty() && remainingAmount > 0) {
+            long equalShare = remainingAmount / uncappedIndices.size();
+            boolean removedCappedTarget = false;
+            for (int uncappedIndex = uncappedIndices.size() - 1; uncappedIndex >= 0; uncappedIndex--) {
+                int targetIndex = uncappedIndices.get(uncappedIndex);
+                long targetCapacity = capacities[targetIndex];
+                if (targetCapacity > equalShare) {
                     continue;
                 }
 
-                allocations[index] = capacity;
-                remaining -= capacity;
-                uncapped.remove(i);
-                removedTarget = true;
+                allocations[targetIndex] = targetCapacity;
+                remainingAmount -= targetCapacity;
+                uncappedIndices.remove(uncappedIndex);
+                removedCappedTarget = true;
             }
-            if (!removedTarget) {
+            if (!removedCappedTarget) {
                 break;
             }
         }
 
         int nextCursor = cursor;
-        if (!uncapped.isEmpty() && remaining > 0) {
-            long equalShare = remaining / uncapped.size();
-            long remainder = remaining % uncapped.size();
+        if (!uncappedIndices.isEmpty() && remainingAmount > 0) {
+            long equalShare = remainingAmount / uncappedIndices.size();
+            long remainderAmount = remainingAmount % uncappedIndices.size();
             if (equalShare > 0) {
-                for (int index : uncapped) {
-                    allocations[index] = equalShare;
+                for (int targetIndex : uncappedIndices) {
+                    allocations[targetIndex] = equalShare;
                 }
             }
 
-            int remainderStart = Math.floorMod(cursor, uncapped.size());
-            for (int i = 0; i < remainder; i++) {
-                int index = uncapped.get((remainderStart + i) % uncapped.size());
-                allocations[index]++;
+            int remainderStartIndex = Math.floorMod(cursor, uncappedIndices.size());
+            for (int offset = 0; offset < remainderAmount; offset++) {
+                int targetIndex = uncappedIndices.get((remainderStartIndex + offset) % uncappedIndices.size());
+                allocations[targetIndex]++;
             }
-            if (remainder <= 0) {
+            if (remainderAmount <= 0) {
                 return new Result(allocations, nextCursor);
             }
 
-            nextCursor = (remainderStart + (int) remainder) % uncapped.size();
+            nextCursor = (remainderStartIndex + (int) remainderAmount) % uncappedIndices.size();
         }
 
         return new Result(allocations, nextCursor);
     }
 
-    public record Result(long[] allocations, int nextCursor) {}
+    record Result(long[] allocations, int nextCursor) {}
 }

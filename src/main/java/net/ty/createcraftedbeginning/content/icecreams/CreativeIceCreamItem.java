@@ -12,7 +12,7 @@ import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.recipe.CreativeCoolingSource;
+import net.ty.createcraftedbeginning.recipe.interfaces.CreativeCoolingSource;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -29,22 +29,22 @@ public class CreativeIceCreamItem extends Item implements CreativeCoolingSource 
     }
 
     @Override
-    public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
-        ItemStack result = super.finishUsingItem(stack, level, entity);
-        if (level.isClientSide || !(entity instanceof ServerPlayer player)) {
-            return result;
+    public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity livingEntity) {
+        ItemStack finishedStack = super.finishUsingItem(stack, level, livingEntity);
+        if (level.isClientSide || !(livingEntity instanceof ServerPlayer serverPlayer)) {
+            return finishedStack;
         }
 
-        if (player.isCreative()) {
-            return result;
+        if (serverPlayer.isCreative()) {
+            return finishedStack;
         }
 
-        if (player.server.getProfilePermissions(player.getGameProfile()) < 2) {
-            return result;
+        if (serverPlayer.server.getProfilePermissions(serverPlayer.getGameProfile()) < 2) {
+            return finishedStack;
         }
 
-        player.setGameMode(GameType.CREATIVE);
-        return result;
+        serverPlayer.setGameMode(GameType.CREATIVE);
+        return finishedStack;
     }
 
     @Override

@@ -9,11 +9,13 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
+import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberOperationState.OperationType;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe.RecipeMatch;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,199 +25,194 @@ import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchambe
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasInjectionChamberOperationPlanner {
+final class GasInjectionChamberOperationPlanner {
     private final GasInjectionChamberBlockEntity chamber;
-    private final GasInjectionChamberOperationState operation;
     private final GasInjectionChamberFilterState filter;
 
-    public GasInjectionChamberOperationPlanner(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation, GasInjectionChamberFilterState filter) {
+    GasInjectionChamberOperationPlanner(GasInjectionChamberBlockEntity chamber, GasInjectionChamberFilterState filter) {
         this.chamber = chamber;
-        this.operation = operation;
         this.filter = filter;
     }
 
-    private static void addResultStack(List<ItemStack> results, ItemStack stack) {
-        if (stack.isEmpty()) {
+    private static void addResultStack(List<ItemStack> resultStacks, ItemStack stackToAdd) {
+        if (stackToAdd.isEmpty()) {
             return;
         }
 
-        ItemStack remaining = stack.copy();
-        for (ItemStack existing : results) {
-            if (!ItemStack.isSameItemSameComponents(existing, remaining)) {
+        ItemStack remainingStack = stackToAdd.copy();
+        for (ItemStack existingStack : resultStacks) {
+            if (!ItemStack.isSameItemSameComponents(existingStack, remainingStack)) {
                 continue;
             }
 
-            int space = existing.getMaxStackSize() - existing.getCount();
-            if (space <= 0) {
+            int availableSpace = existingStack.getMaxStackSize() - existingStack.getCount();
+            if (availableSpace <= 0) {
                 continue;
             }
 
-            int moved = Math.min(space, remaining.getCount());
-            existing.grow(moved);
-            remaining.shrink(moved);
-            if (remaining.isEmpty()) {
+            int movedCount = Math.min(availableSpace, remainingStack.getCount());
+            existingStack.grow(movedCount);
+            remainingStack.shrink(movedCount);
+            if (remainingStack.isEmpty()) {
                 return;
             }
         }
 
-        while (!remaining.isEmpty()) {
-            int count = Math.min(remaining.getCount(), remaining.getMaxStackSize());
-            results.add(remaining.split(count));
+        while (!remainingStack.isEmpty()) {
+            int splitCount = Math.min(remainingStack.getCount(), remainingStack.getMaxStackSize());
+            resultStacks.add(remainingStack.split(splitCount));
         }
     }
 
-    public boolean prepareOperation(ItemStack itemStack) {
-        if (chamber.getLevel() == null) {
-            return false;
+    Optional<BeltPlan> createPlan(ItemStack itemStack) {
+        if (chamber.getLevel() == null || itemStack.isEmpty()) {
+            return Optional.empty();
         }
 
         GasStack tankGas = chamber.getGasInTank();
-        return !tankGas.isEmpty() && (prepareCanisterOperation(itemStack, tankGas) || prepareRecipeOperation(itemStack, tankGas) || prepareFanProcessingOperation(itemStack, tankGas));
+        if (tankGas.isEmpty()) {
+            return Optional.empty();
+        }
+
+        BeltPlan canisterPlan = createCanisterPlan(itemStack, tankGas);
+        if (canisterPlan != null) {
+            return Optional.of(canisterPlan);
+        }
+
+        BeltPlan recipePlan = createRecipePlan(itemStack, tankGas);
+        if (recipePlan != null) {
+            return Optional.of(recipePlan);
+        }
+
+        return Optional.ofNullable(createFanProcessingPlan(itemStack, tankGas));
     }
 
-    public boolean prepareOperationResultsIfNeeded(ItemStack itemStack) {
-        return operation.resultPrepared || switch (operation.type) {
-            case ITEM_RECIPE -> prepareRecipeResults(itemStack);
-            case FAN_PROCESSING -> prepareFanProcessingResults();
-            case BASIN_RECIPE, CANISTER, NONE -> true;
-        };
+    Optional<List<ItemStack>> createResults(BeltPlan plan) {
+        if (chamber.getLevel() == null) {
+            return Optional.empty();
+        }
+
+        List<ItemStack> resultStacks = new ArrayList<>();
+        switch (plan.type()) {
+            case ITEM_RECIPE -> {
+                GasInjectionRecipe recipe = plan.recipe();
+                if (recipe == null) {
+                    return Optional.empty();
+                }
+
+                for (int resultIndex = 0; resultIndex < plan.batchSize(); resultIndex++) {
+                    addResultStack(resultStacks, recipe.rollFirstResult(chamber.getLevel()));
+                }
+            }
+            case FAN_PROCESSING -> {
+                ResourceLocation fanProcessingTypeId = plan.fanProcessingTypeId();
+                if (!isFanProcessingOperationStillValid(fanProcessingTypeId)) {
+                    return Optional.empty();
+                }
+
+                Optional<FanProcessingType> processingType = GasInjectionChamberUtils.getFanProcessingType(fanProcessingTypeId);
+                if (processingType.isEmpty()) {
+                    return Optional.empty();
+                }
+
+                List<ItemStack> processedStacks = processingType.get().process(plan.input().copy(), chamber.getLevel());
+                if (processedStacks == null) {
+                    return Optional.empty();
+                }
+                processedStacks.forEach(resultStack -> addResultStack(resultStacks, resultStack));
+            }
+            case CANISTER, BASIN_RECIPE, NONE -> {
+                return Optional.of(resultStacks);
+            }
+        }
+        return Optional.of(resultStacks);
     }
 
-    public boolean wasProcessedByInstalledFilter(TransportedItemStack transported) {
+    boolean wasProcessedByInstalledFilter(TransportedItemStack transported) {
         return transported.processedBy != null && transported.processingTime == -1 && filter.getFanProcessingType().flatMap(GasInjectionChamberUtils::getFanProcessingType).filter(type -> type == transported.processedBy).isPresent();
     }
 
-    public boolean isFanProcessingOperationStillValid(@Nullable ResourceLocation typeId) {
+    boolean isFanProcessingOperationStillValid(@Nullable ResourceLocation typeId) {
         return typeId != null && filter.getFanProcessingType().filter(typeId::equals).isPresent();
     }
 
-    private boolean prepareCanisterOperation(ItemStack itemStack, GasStack tankGas) {
-        IGasCanisterContainer canister = itemStack.getCapability(GasHandler.ITEM);
-        if (canister == null) {
-            return false;
+    private @Nullable BeltPlan createCanisterPlan(ItemStack itemStack, GasStack tankGas) {
+        IGasCanisterContainer canisterContents = itemStack.getCapability(GasHandler.ITEM);
+        if (canisterContents == null) {
+            return null;
         }
 
-        long amount = GasCanisterUtils.getInjectableAmount(canister, tankGas, chamber.getGasTank().getCapacity());
-        if (amount <= 0) {
-            return false;
+        long injectableAmount = GasCanisterUtils.getInjectableAmount(canisterContents, tankGas, chamber.getGasTank().getCapacity());
+        if (injectableAmount <= 0) {
+            return null;
         }
-
-        operation.setOperation(CANISTER, itemStack, 1, tankGas, amount, null, null);
-        chamber.setChanged();
-        return true;
+        return new BeltPlan(CANISTER, itemStack.copyWithCount(1), tankGas.copy(), injectableAmount, null, null);
     }
 
-    private boolean prepareRecipeOperation(ItemStack itemStack, GasStack tankGas) {
+    private @Nullable BeltPlan createRecipePlan(ItemStack itemStack, GasStack tankGas) {
         if (chamber.getLevel() == null) {
-            return false;
+            return null;
         }
 
         Optional<RecipeMatch> recipeMatch = GasInjectionRecipe.findRecipeMatch(chamber.getLevel(), itemStack, tankGas);
         if (recipeMatch.isEmpty()) {
-            return false;
+            return null;
         }
 
-        RecipeMatch match = recipeMatch.get();
-        long gasPerItem = match.recipe().getGasIngredient().amount();
+        GasInjectionRecipe recipe = recipeMatch.get().recipe();
+        long gasPerItem = recipe.getGasIngredient().amount();
         int batchSize = getRecipeBatchSize(itemStack, gasPerItem);
         if (batchSize <= 0) {
-            return false;
+            return null;
         }
-
-        operation.setOperation(ITEM_RECIPE, itemStack, batchSize, tankGas, gasPerItem * batchSize, match.sequencedAssembly() ? null : match.recipe(), null);
-        chamber.setChanged();
-        return true;
+        return new BeltPlan(ITEM_RECIPE, itemStack.copyWithCount(batchSize), tankGas.copy(), gasPerItem * batchSize, recipe, null);
     }
 
-    private boolean prepareFanProcessingOperation(ItemStack itemStack, GasStack tankGas) {
+    private @Nullable BeltPlan createFanProcessingPlan(ItemStack itemStack, GasStack tankGas) {
         if (chamber.getLevel() == null || itemStack.isEmpty() || tankGas.isEmpty()) {
-            return false;
+            return null;
         }
 
-        Optional<ResourceLocation> typeId = filter.getFanProcessingType();
-        if (typeId.isEmpty()) {
-            return false;
+        Optional<ResourceLocation> fanProcessingTypeId = filter.getFanProcessingType();
+        if (fanProcessingTypeId.isEmpty()) {
+            return null;
         }
 
-        Optional<FanProcessingType> processingType = GasInjectionChamberUtils.getFanProcessingType(typeId.get());
+        Optional<FanProcessingType> processingType = GasInjectionChamberUtils.getFanProcessingType(fanProcessingTypeId.get());
         if (processingType.isEmpty() || !processingType.get().canProcess(itemStack, chamber.getLevel())) {
-            return false;
+            return null;
         }
 
         int desiredCount = Math.min(itemStack.getCount(), itemStack.getMaxStackSize());
-        int batchSize = GasInjectionChamberUtils.getMaxFanProcessingBatchSize(tankGas, desiredCount);
+        int batchSize = GasInjectionChamberUtils.getMaxFanProcessingBatchSize(tankGas, desiredCount, chamber.getGasTank().getCapacity());
         if (batchSize <= 0) {
-            return false;
+            return null;
         }
 
         long gasCost = GasInjectionChamberUtils.getFanProcessingGasCost(tankGas, batchSize);
-        long gasAmount = gasCost == 0 ? 1 : gasCost;
-        operation.setOperation(FAN_PROCESSING, itemStack, batchSize, tankGas, gasAmount, null, typeId.get());
-        chamber.setChanged();
-        return true;
+        return new BeltPlan(FAN_PROCESSING, itemStack.copyWithCount(batchSize), tankGas.copy(), gasCost, null, fanProcessingTypeId.get());
     }
 
-    private int getRecipeBatchSize(ItemStack input, long gasPerItem) {
+    private int getRecipeBatchSize(ItemStack inputStack, long gasPerItem) {
         if (gasPerItem <= 0) {
             return 0;
         }
 
-        int desiredCount = Math.min(input.getCount(), input.getMaxStackSize());
+        int desiredCount = Math.min(inputStack.getCount(), inputStack.getMaxStackSize());
         return Math.clamp(chamber.getGasTank().getCapacity() / gasPerItem, 0, desiredCount);
     }
 
-    private boolean prepareRecipeResults(ItemStack itemStack) {
-        if (chamber.getLevel() == null) {
-            return false;
+    record BeltPlan(OperationType type, ItemStack input, GasStack gas, long requiredGas, @Nullable GasInjectionRecipe recipe, @Nullable ResourceLocation fanProcessingTypeId) {
+        int batchSize() {
+            return input.getCount();
         }
 
-        int inputCount = operation.input.getCount();
-        GasInjectionRecipe recipe = operation.recipe;
-        if (recipe == null) {
-            Optional<RecipeMatch> recipeMatch = GasInjectionRecipe.findRecipeMatch(chamber.getLevel(), itemStack, operation.gas);
-            if (recipeMatch.isEmpty()) {
-                return false;
-            }
-
-            GasInjectionRecipe matchedRecipe = recipeMatch.get().recipe();
-            long expectedGas = matchedRecipe.getGasIngredient().amount() * inputCount;
-            if (expectedGas != operation.gas.getAmount()) {
-                return false;
-            }
-
-            recipe = matchedRecipe;
+        boolean hasRequiredGas() {
+            return requiredGas <= 0 || gas.getAmount() >= requiredGas;
         }
 
-        for (int i = 0; i < inputCount; i++) {
-            addResultStack(operation.results, recipe.rollFirstResult(chamber.getLevel()));
+        GasStack gasRequest() {
+            return requiredGas <= 0 ? GasStack.EMPTY : gas.copyWithAmount(requiredGas);
         }
-        operation.resultPrepared = true;
-        operation.recipe = null;
-        chamber.setChanged();
-        return true;
-    }
-
-    private boolean prepareFanProcessingResults() {
-        ResourceLocation typeId = operation.fanProcessingTypeId;
-        if (chamber.getLevel() == null || !isFanProcessingOperationStillValid(typeId)) {
-            return false;
-        }
-
-        Optional<FanProcessingType> processingType = GasInjectionChamberUtils.getFanProcessingType(typeId);
-        if (processingType.isEmpty()) {
-            return false;
-        }
-
-        List<ItemStack> results = processingType.get().process(operation.input.copy(), chamber.getLevel());
-        if (results == null) {
-            return false;
-        }
-
-        for (ItemStack result : results) {
-            addResultStack(operation.results, result);
-        }
-        operation.resultPrepared = true;
-        chamber.setChanged();
-        return true;
     }
 }

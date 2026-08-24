@@ -86,10 +86,10 @@ public final class SableSubLevelCompat implements Service {
         private static boolean intersects(OrientedBox first, OrientedBox second, double[] rotation, double[] absoluteRotation, double[] translatedCenter) {
             for (int firstAxis = 0; firstAxis < 3; firstAxis++) {
                 for (int secondAxis = 0; secondAxis < 3; secondAxis++) {
-                    int index = firstAxis * 3 + secondAxis;
+                    int rotationIndex = firstAxis * 3 + secondAxis;
                     double dot = first.axis(firstAxis).dot(second.axis(secondAxis));
-                    rotation[index] = dot;
-                    absoluteRotation[index] = Math.abs(dot) + SAT_EPSILON;
+                    rotation[rotationIndex] = dot;
+                    absoluteRotation[rotationIndex] = Math.abs(dot) + SAT_EPSILON;
                 }
             }
 
@@ -112,9 +112,9 @@ public final class SableSubLevelCompat implements Service {
                 double firstRadius = 0;
                 double projectedCenter = 0;
                 for (int firstAxis = 0; firstAxis < 3; firstAxis++) {
-                    int index = firstAxis * 3 + secondAxis;
-                    firstRadius += first.extent(firstAxis) * absoluteRotation[index];
-                    projectedCenter += translatedCenter[firstAxis] * rotation[index];
+                    int rotationIndex = firstAxis * 3 + secondAxis;
+                    firstRadius += first.extent(firstAxis) * absoluteRotation[rotationIndex];
+                    projectedCenter += translatedCenter[firstAxis] * rotation[rotationIndex];
                 }
                 if (Math.abs(projectedCenter) > firstRadius + second.extent(secondAxis)) {
                     return false;
@@ -148,16 +148,16 @@ public final class SableSubLevelCompat implements Service {
     }
 
     private record OrientedBox(Vec3 center, Vec3 axisX, Vec3 axisY, Vec3 axisZ, double extentX, double extentY, double extentZ) {
-        private Vec3 axis(int index) {
-            return switch (index) {
+        private Vec3 axis(int axisIndex) {
+            return switch (axisIndex) {
                 case 0 -> axisX;
                 case 1 -> axisY;
                 default -> axisZ;
             };
         }
 
-        private double extent(int index) {
-            return switch (index) {
+        private double extent(int axisIndex) {
+            return switch (axisIndex) {
                 case 0 -> extentX;
                 case 1 -> extentY;
                 default -> extentZ;

@@ -76,8 +76,8 @@ public class AnimatedGasInjectionChamber extends AnimatedKinetics {
 
         poseStack.popPose();
 
-        BlockState state = isBasin ? AllBlocks.BASIN.getDefaultState() : AllBlocks.DEPOT.getDefaultState();
-        blockElement(state).atLocal(0, 2, 0).scale(SCALE).render(graphics);
+        BlockState supportState = isBasin ? AllBlocks.BASIN.getDefaultState() : AllBlocks.DEPOT.getDefaultState();
+        blockElement(supportState).atLocal(0, 2, 0).scale(SCALE).render(graphics);
 
         poseStack.popPose();
     }

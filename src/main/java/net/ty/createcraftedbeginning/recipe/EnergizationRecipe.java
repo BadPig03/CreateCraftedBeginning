@@ -13,29 +13,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class EnergizationRecipe extends StandardProcessingWithGasRecipe<SingleRecipeInput> {
-    public EnergizationRecipe(ProcessingWithGasRecipeParams params) {
+    EnergizationRecipe(ProcessingWithGasRecipeParams params) {
         super(CCBRecipeTypes.ENERGIZATION, params);
     }
 
     @Override
     public boolean matches(SingleRecipeInput input, Level level) {
         return true;
-    }
-
-    public SizedGasIngredient getGasIngredient() {
-        if (gasIngredients.isEmpty()) {
-            throw new IllegalStateException("Energization Recipe has no gas ingredient!");
-        }
-
-        return gasIngredients.getFirst();
-    }
-
-    public GasStack getGasResult() {
-        if (gasResults.isEmpty()) {
-            throw new IllegalStateException("Energization Recipe has no gas result!");
-        }
-
-        return gasResults.getFirst();
     }
 
     @Override
@@ -56,5 +40,21 @@ public class EnergizationRecipe extends StandardProcessingWithGasRecipe<SingleRe
     @Override
     protected int getMaxGasOutputCount() {
         return 1;
+    }
+
+    public SizedGasIngredient getGasIngredient() {
+        if (gasIngredients.isEmpty()) {
+            throw new IllegalStateException("Energization Recipe has no gas ingredient!");
+        }
+
+        return gasIngredients.getFirst();
+    }
+
+    public GasStack getGasResult() {
+        if (gasResults.isEmpty()) {
+            throw new IllegalStateException("Energization Recipe has no gas result!");
+        }
+
+        return gasResults.getFirst();
     }
 }

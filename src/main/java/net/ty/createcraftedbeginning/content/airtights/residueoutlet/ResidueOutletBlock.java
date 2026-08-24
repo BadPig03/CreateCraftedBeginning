@@ -78,12 +78,12 @@ public class ResidueOutletBlock extends HorizontalDirectionalBlock implements IB
         BlockPos pos = context.getClickedPos();
         Direction clickedFace = context.getClickedFace();
         Direction horizontalFacing = context.getHorizontalDirection();
-        BlockState state = switch (clickedFace) {
+        BlockState placementState = switch (clickedFace) {
             case UP -> defaultBlockState().setValue(FACE, AttachFace.FLOOR).setValue(FACING, horizontalFacing);
             case DOWN -> defaultBlockState().setValue(FACE, AttachFace.CEILING).setValue(FACING, horizontalFacing);
             default -> defaultBlockState().setValue(FACE, AttachFace.WALL).setValue(FACING, clickedFace.getOpposite());
         };
-        return ProperWaterloggedBlock.withWater(level, state, pos);
+        return ProperWaterloggedBlock.withWater(level, placementState, pos);
     }
 
     @Override

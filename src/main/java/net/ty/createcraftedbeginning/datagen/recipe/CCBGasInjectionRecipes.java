@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBGasInjectionRecipes extends GasInjectionRecipeGen {
-    public GeneratedRecipe WIND_CHARGE = create("wind_charge", builder -> builder.require(Items.BLAZE_POWDER).require(CCBGases.NATURAL_AIR.get(), 500).output(Items.WIND_CHARGE, 2));
+    private final GeneratedRecipe WIND_CHARGE = create("wind_charge", builder -> builder.require(Items.BLAZE_POWDER).require(CCBGases.NATURAL_AIR.get(), 500).output(Items.WIND_CHARGE, 2));
     private final GeneratedRecipe WIND_CHARGE_PRESSURIZED = create("wind_charge_pressurized", builder -> builder.require(Items.BLAZE_POWDER).require(CCBGases.PRESSURIZED_NATURAL_AIR.get(), 25).output(Items.WIND_CHARGE, 2));
     private final GeneratedRecipe BREEZE_ROD = create("breeze_rod", builder -> builder.require(Tags.Items.RODS_BLAZE).require(CCBGases.NATURAL_AIR.get(), 500).output(Items.BREEZE_ROD));
     private final GeneratedRecipe BREEZE_ROD_PRESSURIZED = create("breeze_rod_pressurized", builder -> builder.require(Tags.Items.RODS_BLAZE).require(CCBGases.PRESSURIZED_NATURAL_AIR.get(), 25).output(Items.BREEZE_ROD));
@@ -31,7 +31,7 @@ public class CCBGasInjectionRecipes extends GasInjectionRecipeGen {
 
     private final GeneratedRecipe GRASS_BLOCK = create("grass_block", builder -> builder.require(Blocks.DIRT).require(CCBGases.ENERGIZED_NATURAL_AIR.get(), 100).output(Blocks.GRASS_BLOCK));
     private final GeneratedRecipe GRASS_BLOCK_PRESSURIZED = create("grass_block_pressurized", builder -> builder.require(Blocks.DIRT).require(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get(), 5).output(Blocks.GRASS_BLOCK));
-    public GeneratedRecipe PODZOL = create("podzol", builder -> builder.require(Blocks.GRASS_BLOCK).require(CCBGases.ENERGIZED_NATURAL_AIR.get(), 100).output(Blocks.PODZOL));
+    private final GeneratedRecipe PODZOL = create("podzol", builder -> builder.require(Blocks.GRASS_BLOCK).require(CCBGases.ENERGIZED_NATURAL_AIR.get(), 100).output(Blocks.PODZOL));
     private final GeneratedRecipe PODZOL_PRESSURIZED = create("podzol_pressurized", builder -> builder.require(Blocks.GRASS_BLOCK).require(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get(), 5).output(Blocks.PODZOL));
     private final GeneratedRecipe CALCITE = create("calcite", builder -> builder.require(Blocks.DRIPSTONE_BLOCK).require(CCBGases.ENERGIZED_NATURAL_AIR.get(), 100).output(Blocks.CALCITE));
     private final GeneratedRecipe CALCITE_PRESSURIZED = create("calcite_pressurized", builder -> builder.require(Blocks.DRIPSTONE_BLOCK).require(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get(), 5).output(Blocks.CALCITE));
@@ -100,7 +100,7 @@ public class CCBGasInjectionRecipes extends GasInjectionRecipeGen {
     private final GeneratedRecipe HORN_CORAL_BLOCK = create("horn_coral_block", builder -> builder.require(Blocks.HORN_CORAL).require(CCBGases.ENERGIZED_NATURAL_AIR.get(), 100).output(Blocks.HORN_CORAL_BLOCK));
     private final GeneratedRecipe HORN_CORAL_BLOCK_PRESSURIZED = create("horn_coral_block_pressurized", builder -> builder.require(Blocks.HORN_CORAL).require(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get(), 5).output(Blocks.HORN_CORAL_BLOCK));
 
-    public GeneratedRecipe DEEPSLATE = create("deepslate", builder -> builder.require(Blocks.STONE).require(CCBGases.ENERGIZED_ULTRAWARM_AIR.get(), 100).output(Blocks.DEEPSLATE));
+    private final GeneratedRecipe DEEPSLATE = create("deepslate", builder -> builder.require(Blocks.STONE).require(CCBGases.ENERGIZED_ULTRAWARM_AIR.get(), 100).output(Blocks.DEEPSLATE));
     private final GeneratedRecipe DEEPSLATE_PRESSURIZED = create("deepslate_pressurized", builder -> builder.require(Blocks.STONE).require(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get(), 5).output(Blocks.DEEPSLATE));
     private final GeneratedRecipe TUFF = create("tuff", builder -> builder.require(Blocks.GRAVEL).require(CCBGases.ENERGIZED_ULTRAWARM_AIR.get(), 100).output(Blocks.TUFF));
     private final GeneratedRecipe TUFF_PRESSURIZED = create("tuff_pressurized", builder -> builder.require(Blocks.GRAVEL).require(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get(), 5).output(Blocks.TUFF));
@@ -122,7 +122,7 @@ public class CCBGasInjectionRecipes extends GasInjectionRecipeGen {
     private final GeneratedRecipe OCHRE_FROGLIGHT = create("ochre_froglight", builder -> builder.require(Blocks.VERDANT_FROGLIGHT).require(CCBGases.ENERGIZED_ETHEREAL_AIR.get(), 100).output(Blocks.OCHRE_FROGLIGHT));
     private final GeneratedRecipe OCHRE_FROGLIGHT_PRESSURIZED = create("ochre_froglight_pressurized", builder -> builder.require(Blocks.VERDANT_FROGLIGHT).require(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR.get(), 5).output(Blocks.OCHRE_FROGLIGHT));
 
-    public GeneratedRecipe MYCELIUM = create("mycelium", builder -> builder.require(Blocks.GRASS_BLOCK).require(CCBGases.SPORE_AIR.get(), 500).output(Blocks.MYCELIUM));
+    private final GeneratedRecipe MYCELIUM = create("mycelium", builder -> builder.require(Blocks.GRASS_BLOCK).require(CCBGases.SPORE_AIR.get(), 500).output(Blocks.MYCELIUM));
     private final GeneratedRecipe ROOTED_DIRT = create("rooted_dirt", builder -> builder.require(Blocks.DIRT).require(CCBGases.SPORE_AIR.get(), 500).output(Blocks.ROOTED_DIRT));
     private final GeneratedRecipe MOSS_BLOCK = create("moss_block", builder -> builder.require(Blocks.STONE).require(CCBGases.SPORE_AIR.get(), 500).output(Blocks.MOSS_BLOCK));
     private final GeneratedRecipe CRIMSON_NYLIUM_FROM_NETHERRACK = create("crimson_nylium_from_netherrack", builder -> builder.require(Blocks.NETHERRACK).require(CCBGases.SPORE_AIR.get(), 500).output(Blocks.CRIMSON_NYLIUM));
@@ -150,10 +150,10 @@ public class CCBGasInjectionRecipes extends GasInjectionRecipeGen {
     private final GeneratedRecipe HORN_CORAL_BLOCK_REVIVED = create("horn_coral_block_revived", builder -> builder.require(Blocks.DEAD_HORN_CORAL_BLOCK).require(CCBGases.MOIST_AIR.get(), 500).output(Blocks.HORN_CORAL_BLOCK));
     private final GeneratedRecipe WET_SPONGE = create("wet_sponge", builder -> builder.require(Blocks.SPONGE).require(CCBGases.MOIST_AIR.get(), 500).output(Blocks.WET_SPONGE));
 
-    public GeneratedRecipe SUNNY_FLARE = create("sunny_flare", builder -> builder.require(CCBItems.UNFILLED_WEATHER_FLARE).require(CCBGases.ULTRAWARM_AIR.get(), 500).output(CCBItems.SUNNY_FLARE));
+    private final GeneratedRecipe SUNNY_FLARE = create("sunny_flare", builder -> builder.require(CCBItems.UNFILLED_WEATHER_FLARE).require(CCBGases.ULTRAWARM_AIR.get(), 500).output(CCBItems.SUNNY_FLARE));
     private final GeneratedRecipe SUNNY_FLARE_PRESSURIZED = create("sunny_flare_pressurized", builder -> builder.require(CCBItems.UNFILLED_WEATHER_FLARE).require(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get(), 25).output(CCBItems.SUNNY_FLARE));
-    public GeneratedRecipe RAIN_FLARE = create("rain_flare", builder -> builder.require(CCBItems.UNFILLED_WEATHER_FLARE).require(CCBGases.MOIST_AIR.get(), 500).output(CCBItems.RAIN_FLARE));
-    public GeneratedRecipe THUNDERSTORM_FLARE = create("thunderstorm_flare", builder -> builder.require(CCBItems.UNFILLED_WEATHER_FLARE).require(CCBGases.ETHEREAL_AIR.get(), 500).output(CCBItems.THUNDERSTORM_FLARE));
+    private final GeneratedRecipe RAIN_FLARE = create("rain_flare", builder -> builder.require(CCBItems.UNFILLED_WEATHER_FLARE).require(CCBGases.MOIST_AIR.get(), 500).output(CCBItems.RAIN_FLARE));
+    private final GeneratedRecipe THUNDERSTORM_FLARE = create("thunderstorm_flare", builder -> builder.require(CCBItems.UNFILLED_WEATHER_FLARE).require(CCBGases.ETHEREAL_AIR.get(), 500).output(CCBItems.THUNDERSTORM_FLARE));
     private final GeneratedRecipe THUNDERSTORM_FLARE_PRESSURIZED = create("thunderstorm_flare_pressurized", builder -> builder.require(CCBItems.UNFILLED_WEATHER_FLARE).require(CCBGases.PRESSURIZED_ETHEREAL_AIR.get(), 25).output(CCBItems.THUNDERSTORM_FLARE));
 
     private final GeneratedRecipe LAVA_TO_BRIMSTONE = create("lava_to_brimstone", builder -> builder.require(Fluids.LAVA, 1000).require(CCBGases.ENERGIZED_ULTRAWARM_AIR.get(), 500).output(CCBFluids.BRIMSTONE.get(), 100));

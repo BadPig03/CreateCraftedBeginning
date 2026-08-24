@@ -16,6 +16,14 @@ public class SequencedAssemblyWithGasItem extends Item {
         super(properties.stacksTo(1));
     }
 
+    private static float getProgress(ItemStack stack) {
+        SequencedAssemblyWithGas assemblyData = stack.get(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS);
+        if (assemblyData == null) {
+            return 0;
+        }
+        return assemblyData.progress();
+    }
+
     @Override
     public boolean isBarVisible(ItemStack stack) {
         return true;
@@ -29,10 +37,5 @@ public class SequencedAssemblyWithGasItem extends Item {
     @Override
     public int getBarColor(ItemStack stack) {
         return Color.mixColors(0xFFFFC074, 0xFF46FFE0, getProgress(stack));
-    }
-
-    public float getProgress(ItemStack stack) {
-        SequencedAssemblyWithGas data = stack.get(CCBRecipeDataComponents.SEQUENCED_ASSEMBLY_WITH_GAS);
-        return data == null ? 0 : data.progress();
     }
 }

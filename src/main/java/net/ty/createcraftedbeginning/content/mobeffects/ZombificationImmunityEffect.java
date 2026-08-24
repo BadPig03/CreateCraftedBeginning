@@ -26,9 +26,8 @@ public class ZombificationImmunityEffect extends MobEffect {
     }
 
     @SubscribeEvent
-    public static void onEffectExpired(Expired event) {
-        MobEffectInstance effect = event.getEffectInstance();
-        if (!isZombificationImmunity(effect)) {
+    static void onEffectExpired(Expired event) {
+        if (!isZombificationImmunity(event.getEffectInstance())) {
             return;
         }
 
@@ -36,25 +35,24 @@ public class ZombificationImmunityEffect extends MobEffect {
     }
 
     @SubscribeEvent
-    public static void onEffectRemove(Remove event) {
-        MobEffectInstance effect = event.getEffectInstance();
-        if (!isZombificationImmunity(effect)) {
+    static void onEffectRemove(Remove event) {
+        if (!isZombificationImmunity(event.getEffectInstance())) {
             return;
         }
 
         setZombificationImmunity(event.getEntity(), false);
     }
 
-    private static boolean isZombificationImmunity(@Nullable MobEffectInstance effect) {
-        return effect != null && effect.is(CCBMobEffects.ZOMBIFICATION_IMMUNITY);
+    private static boolean isZombificationImmunity(@Nullable MobEffectInstance effectInstance) {
+        return effectInstance != null && effectInstance.is(CCBMobEffects.ZOMBIFICATION_IMMUNITY);
     }
 
-    private static void setZombificationImmunity(LivingEntity entity, boolean immune) {
-        if (entity instanceof AbstractPiglin piglin) {
-            piglin.setImmuneToZombification(immune);
+    private static void setZombificationImmunity(LivingEntity livingEntity, boolean isImmune) {
+        if (livingEntity instanceof AbstractPiglin piglin) {
+            piglin.setImmuneToZombification(isImmune);
         }
-        else if (entity instanceof Hoglin hoglin) {
-            hoglin.setImmuneToZombification(immune);
+        else if (livingEntity instanceof Hoglin hoglin) {
+            hoglin.setImmuneToZombification(isImmune);
         }
     }
 

@@ -8,20 +8,20 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightReactorKettleCore {
+class AirtightReactorKettleCore {
     private static final String COMPOUND_KEY_STRUCTURE_MANAGER = "StructureManager";
 
     private final AirtightReactorKettleBlockEntity kettle;
     private final AirtightReactorKettleStructureManager structureManager;
     private final AirtightReactorKettleTooltipBuilder tooltipBuilder;
 
-    public AirtightReactorKettleCore(AirtightReactorKettleBlockEntity kettle) {
+    AirtightReactorKettleCore(AirtightReactorKettleBlockEntity kettle) {
         this.kettle = kettle;
         structureManager = new AirtightReactorKettleStructureManager(kettle);
         tooltipBuilder = new AirtightReactorKettleTooltipBuilder(this, kettle);
     }
 
-    public void lazyTick() {
+    void lazyTick() {
         Level level = kettle.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -30,21 +30,21 @@ public class AirtightReactorKettleCore {
         structureManager.tick();
     }
 
-    public CompoundTag write() {
-        CompoundTag tag = new CompoundTag();
-        tag.put(COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.write());
-        return tag;
+    CompoundTag write() {
+        CompoundTag compoundTag = new CompoundTag();
+        compoundTag.put(COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.write());
+        return compoundTag;
     }
 
-    public void read(CompoundTag tag) {
-        structureManager.read(tag.getCompound(COMPOUND_KEY_STRUCTURE_MANAGER));
+    void read(CompoundTag compoundTag) {
+        structureManager.read(compoundTag.getCompound(COMPOUND_KEY_STRUCTURE_MANAGER));
     }
 
-    public AirtightReactorKettleStructureManager getStructureManager() {
+    AirtightReactorKettleStructureManager getStructureManager() {
         return structureManager;
     }
 
-    public AirtightReactorKettleTooltipBuilder getTooltipBuilder() {
+    AirtightReactorKettleTooltipBuilder getTooltipBuilder() {
         return tooltipBuilder;
     }
 }

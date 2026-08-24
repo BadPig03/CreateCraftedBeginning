@@ -16,28 +16,28 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class BreezeCoolerInteractionPoint extends DepositOnlyArmInteractionPoint {
-    public BreezeCoolerInteractionPoint(ArmInteractionPointType type, Level level, BlockPos pos, BlockState state) {
+    private BreezeCoolerInteractionPoint(ArmInteractionPointType type, Level level, BlockPos pos, BlockState state) {
         super(type, level, pos, state);
     }
 
     @Override
     public ItemStack insert(ArmBlockEntity armBlockEntity, ItemStack stack, boolean simulate) {
-        ItemStack input = stack.copy();
-        var result = BreezeCoolerBlock.tryInsert(cachedState, level, pos, input, false, false, simulate);
-        ItemStack remainder = result.getObject();
-        if (simulate && result.getResult().consumesAction()) {
-            input.shrink(1);
+        ItemStack inputStack = stack.copy();
+        var insertResult = BreezeCoolerBlock.tryInsert(cachedState, level, pos, inputStack, false, false, simulate);
+        ItemStack remainder = insertResult.getObject();
+        if (simulate && insertResult.getResult().consumesAction()) {
+            inputStack.shrink(1);
         }
-        if (input.isEmpty()) {
+        if (inputStack.isEmpty()) {
             return remainder;
         }
 
         if (simulate) {
-            return input;
+            return inputStack;
         }
 
         Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), remainder);
-        return input;
+        return inputStack;
     }
 
     public static class BreezeCoolerType extends ArmInteractionPointType {

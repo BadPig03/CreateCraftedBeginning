@@ -28,7 +28,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class EmptyBreezeCoolerBlock extends HorizontalDirectionalBlock implements SimpleWaterloggedBlock, IWrenchable {
-    public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
+    private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     public EmptyBreezeCoolerBlock(Properties properties) {
         super(properties);

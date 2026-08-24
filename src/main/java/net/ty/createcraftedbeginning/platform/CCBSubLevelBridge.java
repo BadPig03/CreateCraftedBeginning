@@ -9,7 +9,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Objects;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -21,7 +20,7 @@ public final class CCBSubLevelBridge {
     }
 
     public static void install(Service implementation) {
-        service = Objects.requireNonNull(implementation, "implementation");
+        service = implementation;
     }
 
     public static Projection resolve(Level level, Position position) {

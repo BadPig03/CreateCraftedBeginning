@@ -21,20 +21,20 @@ public class AirtightReactorKettleBlockItem extends BlockItem {
 
     @Override
     public InteractionResult place(BlockPlaceContext context) {
-        InteractionResult result = super.place(context);
-        if (result != InteractionResult.FAIL || !(getBlock() instanceof AirtightReactorKettleBlock)) {
-            return result;
+        InteractionResult placementResult = super.place(context);
+        if (placementResult != InteractionResult.FAIL || !(getBlock() instanceof AirtightReactorKettleBlock)) {
+            return placementResult;
         }
 
-        Direction face = context.getClickedFace();
-        BlockPos adjacentPos = context.getClickedPos().relative(face);
-        result = super.place(BlockPlaceContext.at(context, adjacentPos, face));
-        if (result != InteractionResult.FAIL || !context.getLevel().isClientSide()) {
-            return result;
+        Direction clickedFace = context.getClickedFace();
+        BlockPos adjacentPos = context.getClickedPos().relative(clickedFace);
+        placementResult = super.place(BlockPlaceContext.at(context, adjacentPos, clickedFace));
+        if (placementResult != InteractionResult.FAIL || !context.getLevel().isClientSide()) {
+            return placementResult;
         }
 
         CCBClientBridge.showAirtightReactorKettlePlacementBounds(context);
-        return result;
+        return placementResult;
     }
 
 }

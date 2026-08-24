@@ -21,7 +21,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
-    protected final GasRepackagerController controller;
+    private final GasRepackagerController controller;
 
     public GasRepackagerBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
@@ -42,33 +42,33 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
         controller.attemptToRepackage(targetInv);
     }
 
-    public String resolveGasOutputAddress(String originalAddress) {
+    String resolveGasOutputAddress(String originalAddress) {
         updateSignAddress();
         return signBasedAddress.isBlank() ? originalAddress : signBasedAddress;
     }
 
-    public void acceptPassThroughPackage(ItemStack packageStack) {
-        ItemStack box = packageStack.copy();
-        if (PackageItem.hasOrderData(box)) {
-            queuedExitingPackages.add(new BigItemStack(box, 1));
+    void acceptPassThroughPackage(ItemStack packageStack) {
+        ItemStack packageCopy = packageStack.copy();
+        if (PackageItem.hasOrderData(packageCopy)) {
+            queuedExitingPackages.add(new BigItemStack(packageCopy, 1));
             notifyUpdate();
             return;
         }
 
-        heldBox = box;
+        heldBox = packageCopy;
         animationInward = false;
         animationTicks = CYCLE;
         notifyUpdate();
     }
 
-    public void restoreRollbackRemainders(List<ItemStack> remainders) {
-        boolean changed = false;
+    void restoreRollbackRemainders(List<ItemStack> remainders) {
+        boolean restoredAnyRemainder = false;
         for (ItemStack remainder : remainders) {
             if (remainder.isEmpty()) {
                 continue;
             }
 
-            changed = true;
+            restoredAnyRemainder = true;
             if (PackageItem.isPackage(remainder)) {
                 queuedExitingPackages.addFirst(new BigItemStack(remainder.copyWithCount(1), remainder.getCount()));
                 continue;
@@ -78,14 +78,14 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
                 Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), remainder.copy());
             }
         }
-        if (!changed) {
+        if (!restoredAnyRemainder) {
             return;
         }
 
         notifyUpdate();
     }
 
-    public void enqueuePassThroughBoxes(List<BigItemStack> boxes) {
+    void enqueuePassThroughBoxes(List<BigItemStack> boxes) {
         if (boxes.isEmpty()) {
             return;
         }
@@ -94,7 +94,7 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
         notifyUpdate();
     }
 
-    public void enqueueRepackagedBoxes(List<BigItemStack> boxes) {
+    void enqueueRepackagedBoxes(List<BigItemStack> boxes) {
         if (boxes.isEmpty()) {
             return;
         }

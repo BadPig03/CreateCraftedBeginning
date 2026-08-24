@@ -67,12 +67,12 @@ public final class GasDrawerTank extends GasTank {
 
         boolean sameStoredIdentity = !gas.isEmpty() && GasStack.isSameGasSameComponents(gas, resource);
         boolean lockedIdentity = owner.isLocked() && isGasValid(resource);
-        long accepted = super.fill(resource, action);
+        long acceptedAmount = super.fill(resource, action);
         if (!owner.isVoid()) {
-            return accepted;
+            return acceptedAmount;
         }
-        if (!sameStoredIdentity && !lockedIdentity && accepted <= 0) {
-            return accepted;
+        if (!sameStoredIdentity && !lockedIdentity && acceptedAmount <= 0) {
+            return acceptedAmount;
         }
         return resource.getAmount();
     }

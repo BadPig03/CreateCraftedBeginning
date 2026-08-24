@@ -123,12 +123,12 @@ public class CCBPartialModels {
     public static final Map<AirtightPipeAttachmentPartial, Map<Direction, PartialModel>> AIRTIGHT_PIPE_ATTACHMENTS = new EnumMap<>(AirtightPipeAttachmentPartial.class);
 
     static {
-        for (AirtightPipeAttachmentPartial type : AirtightPipeAttachmentPartial.values()) {
-            Map<Direction, PartialModel> map = new HashMap<>();
+        for (AirtightPipeAttachmentPartial attachmentType : AirtightPipeAttachmentPartial.values()) {
+            Map<Direction, PartialModel> modelsByDirection = new HashMap<>();
             for (Direction direction : Iterate.directions) {
-                map.put(direction, block("airtight_pipe/" + Lang.asId(type.name()) + '/' + Lang.asId(direction.getSerializedName())));
+                modelsByDirection.put(direction, block("airtight_pipe/" + Lang.asId(attachmentType.name()) + '/' + Lang.asId(direction.getSerializedName())));
             }
-            AIRTIGHT_PIPE_ATTACHMENTS.put(type, map);
+            AIRTIGHT_PIPE_ATTACHMENTS.put(attachmentType, modelsByDirection);
         }
     }
 

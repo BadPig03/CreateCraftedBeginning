@@ -16,7 +16,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CrateFilterSlot extends ValueBoxTransform {
+class CrateFilterSlot extends ValueBoxTransform {
     @Contract(value = "_, _, _ -> new", pure = true)
     @Override
     public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, BlockState state) {

@@ -52,7 +52,7 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_HATCH.get(), (be, context) -> be.tankBehaviour.getCapability());
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_HATCH.get(), (hatch, context) -> hatch.tankBehaviour.getCapability());
     }
 
     @Override
@@ -134,14 +134,14 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     @Nullable IGasHandler getTargetGasHandler(Level level) {
-        BlockState state = getBlockState();
-        BlockPos pos = getBlockPos();
-        if (!AirtightHatchBlock.hasValidAttachment(level, pos, state)) {
+        BlockState hatchState = getBlockState();
+        BlockPos hatchPos = getBlockPos();
+        if (!AirtightHatchBlock.hasValidAttachment(level, hatchPos, hatchState)) {
             return null;
         }
 
-        Direction facing = state.getValue(AirtightHatchBlock.FACING);
-        BlockPos targetPos = pos.relative(facing);
+        Direction facing = hatchState.getValue(AirtightHatchBlock.FACING);
+        BlockPos targetPos = hatchPos.relative(facing);
         return level.getCapability(GasHandler.BLOCK, targetPos, facing.getOpposite());
     }
 
@@ -197,7 +197,7 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         return getBlockState().getValue(AirtightHatchBlock.CANISTER_TYPE);
     }
     private void updateTransferModeRange() {
-        int maxMode = isCreative() ? AirtightHatchTransferMode.OUTPUT_ONLY.ordinal() : AirtightHatchTransferMode.STAY_HALF.ordinal();
-        hatchTransferMode.between(AirtightHatchTransferMode.NO_TRANSFER.ordinal(), maxMode);
+        int maxModeValue = isCreative() ? AirtightHatchTransferMode.OUTPUT_ONLY.ordinal() : AirtightHatchTransferMode.STAY_HALF.ordinal();
+        hatchTransferMode.between(AirtightHatchTransferMode.NO_TRANSFER.ordinal(), maxModeValue);
     }
 }

@@ -36,17 +36,17 @@ public final class EndSculkSilencerEvents {
     }
 
     @SubscribeEvent
-    public static void onServerStarting(ServerStartingEvent event) {
+    private static void onServerStarting(ServerStartingEvent event) {
         GlobalEndSculkSilencerManager.clear();
     }
 
     @SubscribeEvent
-    public static void onPostTick(Post event) {
+    private static void onPostTick(Post event) {
         GlobalEndSculkSilencerManager.tick(event.getLevel());
     }
 
     @SubscribeEvent
-    public static void onVanillaGameEvent(VanillaGameEvent event) {
+    private static void onVanillaGameEvent(VanillaGameEvent event) {
         if (!isSilenceableGameEvent(event.getVanillaEvent())) {
             return;
         }
@@ -66,22 +66,22 @@ public final class EndSculkSilencerEvents {
     }
 
     @SubscribeEvent
-    public static void onPlayerLoggedIn(PlayerLoggedInEvent event) {
+    private static void onPlayerLoggedIn(PlayerLoggedInEvent event) {
         syncPlayer(event.getEntity());
     }
 
     @SubscribeEvent
-    public static void onPlayerChangedDimension(PlayerChangedDimensionEvent event) {
+    private static void onPlayerChangedDimension(PlayerChangedDimensionEvent event) {
         syncPlayer(event.getEntity());
     }
 
     @SubscribeEvent
-    public static void onPlayerRespawn(PlayerRespawnEvent event) {
+    private static void onPlayerRespawn(PlayerRespawnEvent event) {
         syncPlayer(event.getEntity());
     }
 
     @SubscribeEvent
-    public static void onUnload(Unload event) {
+    private static void onUnload(Unload event) {
         if (!(event.getLevel() instanceof ServerLevel serverLevel)) {
             return;
         }
@@ -99,12 +99,7 @@ public final class EndSculkSilencerEvents {
 
     public static boolean isWithinSilencedArea(Level level, Position position) {
         ResourceLocation dimension = level.dimension().location();
-        if (!GlobalEndSculkSilencerManager.hasCoverage(dimension)) {
-            return false;
-        }
-
-        BlockPos projectedPos = CCBSubLevelBridge.resolve(level, position).blockPos();
-        return GlobalEndSculkSilencerManager.checkWithinRange(projectedPos, dimension);
+        return GlobalEndSculkSilencerManager.hasCoverage(dimension) && GlobalEndSculkSilencerManager.checkWithinRange(CCBSubLevelBridge.resolve(level, position).blockPos(), dimension);
     }
 
     private static void syncPlayer(Player player) {
@@ -120,8 +115,8 @@ public final class EndSculkSilencerEvents {
             return;
         }
 
-        int radius = event.getVanillaEvent().value().notificationRadius();
-        if (serverLevel.getEntitiesOfClass(Warden.class, new AABB(sourcePos).inflate(radius)).isEmpty()) {
+        int notificationRadius = event.getVanillaEvent().value().notificationRadius();
+        if (serverLevel.getEntitiesOfClass(Warden.class, new AABB(sourcePos).inflate(notificationRadius)).isEmpty()) {
             return;
         }
 

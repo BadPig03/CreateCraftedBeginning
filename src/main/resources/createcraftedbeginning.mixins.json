@@ -10,6 +10,7 @@
     "server.accessor.SmithingTrimRecipeAccessor",
     "server.accessor.ZombieAccessor",
     "server.create.BasinBlockEntityMixin",
+    "server.create.BasinTransactionAccessMixin",
     "server.create.BeltMovementHandlerMixin",
     "server.create.BracketBlockMixin",
     "server.create.FactoryPanelBehaviourMixin",

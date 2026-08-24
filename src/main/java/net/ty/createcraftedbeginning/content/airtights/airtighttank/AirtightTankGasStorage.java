@@ -12,37 +12,37 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightTankGasStorage {
+final class AirtightTankGasStorage {
     private final AbstractAirtightTankBlockEntity owner;
     private final IGasHandler gasCapability = new ControllerAwareGasHandler();
     private GasTank tankInventory;
 
-    public AirtightTankGasStorage(AbstractAirtightTankBlockEntity owner) {
+    AirtightTankGasStorage(AbstractAirtightTankBlockEntity owner) {
         this.owner = owner;
     }
 
-    public void initialize(GasTank tankInventory) {
+    void initialize(GasTank tankInventory) {
         this.tankInventory = tankInventory;
         refreshCapability();
     }
 
-    public GasTank getTankInventory() {
+    GasTank getTankInventory() {
         return tankInventory;
     }
 
-    public IGasHandler getCapability() {
+    IGasHandler getCapability() {
         return gasCapability;
     }
 
-    public void refreshCapability() {
+    void refreshCapability() {
         owner.invalidateGasCapabilities();
     }
 
-    public void invalidate() {
+    void invalidate() {
         owner.invalidateGasCapabilities();
     }
 
-    public void onGasStackChanged(GasStack ignored) {
+    void onGasStackChanged(GasStack ignored) {
         if (!owner.isController() || owner.getLevel() == null || owner.getLevel().isClientSide) {
             return;
         }
@@ -99,11 +99,11 @@ public final class AirtightTankGasStorage {
                 return tankInventory != null ? tankInventory : EmptyGasHandler.INSTANCE;
             }
 
-            AbstractAirtightTankBlockEntity controller = owner.getControllerBE();
-            if (controller == null || controller.isRemoved() || !controller.isController()) {
+            AbstractAirtightTankBlockEntity controllerTank = owner.getControllerBE();
+            if (controllerTank == null || controllerTank.isRemoved() || !controllerTank.isController()) {
                 return EmptyGasHandler.INSTANCE;
             }
-            return controller.getTankInventory();
+            return controllerTank.getTankInventory();
         }
     }
 }

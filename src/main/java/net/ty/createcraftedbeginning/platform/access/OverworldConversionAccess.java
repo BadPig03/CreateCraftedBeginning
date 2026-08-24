@@ -1,16 +1,13 @@
 package net.ty.createcraftedbeginning.platform.access;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.world.item.crafting.Ingredient;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface SmithingTransformRecipeAccess {
-    Ingredient getTemplate();
+public interface OverworldConversionAccess {
+    int ccb$getTimeInOverworld();
 
-    Ingredient getBase();
-
-    Ingredient getAddition();
+    void ccb$setTimeInOverworld(int timeInOverworld);
 }

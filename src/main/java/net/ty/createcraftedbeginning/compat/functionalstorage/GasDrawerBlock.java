@@ -78,9 +78,9 @@ public final class GasDrawerBlock extends Drawer<GasDrawerBlockEntity> {
 
     @Override
     public List<VoxelShape> getBoundingBoxes(BlockState state, BlockGetter source, BlockPos pos) {
-        List<VoxelShape> shapes = new ArrayList<>(DrawerBlock.getDefaultHitShapes(drawerType, state));
-        shapes.add(Shapes.block());
-        return shapes;
+        List<VoxelShape> boundingBoxes = new ArrayList<>(DrawerBlock.getDefaultHitShapes(drawerType, state));
+        boundingBoxes.add(Shapes.block());
+        return boundingBoxes;
     }
 
     @Override
@@ -105,17 +105,17 @@ public final class GasDrawerBlock extends Drawer<GasDrawerBlockEntity> {
 
     private void appendContentsTooltip(CompoundTag tileTag, List<Component> tooltip) {
         tooltip.add(CONTENTS_HEADER);
-        CompoundTag storage = tileTag.getCompound(GasDrawerStorage.COMPOUND_KEY_STORAGE);
+        CompoundTag storageTag = tileTag.getCompound(GasDrawerStorage.COMPOUND_KEY_STORAGE);
         boolean hasContents = false;
         for (int slot = 0; slot < drawerType.getSlots(); slot++) {
-            GasStack gas = GasDrawerStorage.readStoredGas(storage, slot, Utils.registryAccess());
-            if (gas.isEmpty()) {
+            GasStack storedGas = GasDrawerStorage.readStoredGas(storageTag, slot, Utils.registryAccess());
+            if (storedGas.isEmpty()) {
                 continue;
             }
 
             hasContents = true;
-            tooltip.add(Component.literal("- ").withStyle(ChatFormatting.GRAY).append(Component.literal(GasAmounts.formatCompact(gas.getAmount())).withStyle(ChatFormatting.YELLOW)).append(Component.literal(" ")).append(gas.getHoverName().copy().withStyle(ChatFormatting.GOLD)));
-            if (gas.isComponentsPatchEmpty()) {
+            tooltip.add(Component.literal("- ").withStyle(ChatFormatting.GRAY).append(Component.literal(GasAmounts.formatCompact(storedGas.getAmount())).withStyle(ChatFormatting.YELLOW)).append(Component.literal(" ")).append(storedGas.getHoverName().copy().withStyle(ChatFormatting.GOLD)));
+            if (storedGas.isComponentsPatchEmpty()) {
                 continue;
             }
 

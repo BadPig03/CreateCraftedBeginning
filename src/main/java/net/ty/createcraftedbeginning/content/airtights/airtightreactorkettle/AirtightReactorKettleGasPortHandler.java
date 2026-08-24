@@ -56,7 +56,11 @@ record AirtightReactorKettleGasPortHandler(IGasHandler input, IGasHandler output
         if (tank < 0 || tank >= getTanks()) {
             throw new IndexOutOfBoundsException("Tank " + tank + " not in valid range [0," + getTanks() + ')');
         }
-        return tank < input.getTanks() ? input : output;
+
+        if (tank < input.getTanks()) {
+            return input;
+        }
+        return output;
     }
 
     private int getLocalTank(int tank) {

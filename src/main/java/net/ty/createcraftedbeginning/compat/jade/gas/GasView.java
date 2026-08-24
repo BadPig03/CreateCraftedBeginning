@@ -59,16 +59,16 @@ public class GasView {
     }
 
     public static CompoundTag writeDefault(GasObject gasObject, long capacity, boolean creative) {
-        CompoundTag data = new CompoundTag();
+        CompoundTag viewData = new CompoundTag();
         if (capacity > 0) {
-            data.put(STORAGE_GAS_KEY, GasObject.CODEC.encodeStart(NbtOps.INSTANCE, gasObject).result().orElseThrow());
-            data.putLong(STORAGE_CAPACITY_KEY, capacity);
+            viewData.put(STORAGE_GAS_KEY, GasObject.CODEC.encodeStart(NbtOps.INSTANCE, gasObject).result().orElseThrow());
+            viewData.putLong(STORAGE_CAPACITY_KEY, capacity);
         }
         if (!creative) {
-            return data;
+            return viewData;
         }
 
-        data.putBoolean(STORAGE_CREATIVE_KEY, true);
-        return data;
+        viewData.putBoolean(STORAGE_CREATIVE_KEY, true);
+        return viewData;
     }
 }

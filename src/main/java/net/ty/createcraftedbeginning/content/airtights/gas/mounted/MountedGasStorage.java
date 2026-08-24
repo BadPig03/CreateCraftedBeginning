@@ -19,7 +19,7 @@ import java.util.Objects;
 @MethodsReturnNonnullByDefault
 public abstract class MountedGasStorage implements IGasHandler {
     public static final Codec<MountedGasStorage> CODEC = MountedGasStorageType.CODEC.dispatch(storage -> storage.type, type -> type.codec);
-    public static final StreamCodec<RegistryFriendlyByteBuf, MountedGasStorage> STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
+    static final StreamCodec<RegistryFriendlyByteBuf, MountedGasStorage> STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
 
     public final MountedGasStorageType<? extends MountedGasStorage> type;
 

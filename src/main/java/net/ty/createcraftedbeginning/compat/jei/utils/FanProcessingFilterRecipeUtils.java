@@ -52,35 +52,35 @@ public final class FanProcessingFilterRecipeUtils {
     }
 
     private static <R extends StandardProcessingRecipe<?>> void registerStandardRecipe(IRecipeRegistration registration, RecipeType<RecipeHolder<R>> jeiRecipeType, ResourceLocation fanProcessingTypeId, Factory<R> factory) {
-        ItemStack result = createProcessedFilter(fanProcessingTypeId);
-        if (result.isEmpty()) {
+        ItemStack processedFilter = createProcessedFilter(fanProcessingTypeId);
+        if (processedFilter.isEmpty()) {
             return;
         }
 
         ResourceLocation recipeId = displayRecipeId(fanProcessingTypeId);
-        R recipe = new Builder<>(factory, recipeId).withItemIngredients(Ingredient.of(CCBItems.GAS_INJECTION_CHAMBER_FILTER.get())).withSingleItemOutput(result).build();
+        R recipe = new Builder<>(factory, recipeId).withItemIngredients(Ingredient.of(CCBItems.GAS_INJECTION_CHAMBER_FILTER.get())).withSingleItemOutput(processedFilter).build();
         registration.addRecipes(jeiRecipeType, List.of(new RecipeHolder<>(recipeId, recipe)));
     }
 
     private static void registerSmokingRecipe(IRecipeRegistration registration) {
-        ItemStack result = createProcessedFilter(SMOKING);
-        if (result.isEmpty()) {
+        ItemStack processedFilter = createProcessedFilter(SMOKING);
+        if (processedFilter.isEmpty()) {
             return;
         }
 
         ResourceLocation recipeId = displayRecipeId(SMOKING);
-        SmokingRecipe recipe = new SmokingRecipe("", CookingBookCategory.MISC, Ingredient.of(CCBItems.GAS_INJECTION_CHAMBER_FILTER.get()), result, 0, 100);
+        SmokingRecipe recipe = new SmokingRecipe("", CookingBookCategory.MISC, Ingredient.of(CCBItems.GAS_INJECTION_CHAMBER_FILTER.get()), processedFilter, 0, 100);
         registration.addRecipes(FAN_SMOKING, List.of(new RecipeHolder<>(recipeId, recipe)));
     }
 
     private static void registerBlastingRecipe(IRecipeRegistration registration) {
-        ItemStack result = createProcessedFilter(BLASTING);
-        if (result.isEmpty()) {
+        ItemStack processedFilter = createProcessedFilter(BLASTING);
+        if (processedFilter.isEmpty()) {
             return;
         }
 
         ResourceLocation recipeId = displayRecipeId(BLASTING);
-        BlastingRecipe recipe = new BlastingRecipe("", CookingBookCategory.MISC, Ingredient.of(CCBItems.GAS_INJECTION_CHAMBER_FILTER.get()), result, 0, 100);
+        BlastingRecipe recipe = new BlastingRecipe("", CookingBookCategory.MISC, Ingredient.of(CCBItems.GAS_INJECTION_CHAMBER_FILTER.get()), processedFilter, 0, 100);
         RecipeHolder<AbstractCookingRecipe> holder = new RecipeHolder<>(recipeId, recipe);
         registration.addRecipes(FAN_BLASTING, List.of(holder));
     }

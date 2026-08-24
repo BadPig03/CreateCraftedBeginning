@@ -18,30 +18,14 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CardboardCrateBlockEntity extends CratesBlockEntity {
-    protected CCBAdvancementBehaviour advancementBehaviour;
+    private CCBAdvancementBehaviour advancementBehaviour;
 
     public CardboardCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state, () -> CCBConfig.server().crates.maxCardboardCapacity.get(), CardboardCrateBlockEntity::isPackage);
     }
 
-    public static boolean isPackage(ItemStack stack) {
+    static boolean isPackage(ItemStack stack) {
         return !stack.isEmpty() && stack.getItem() instanceof PackageItem;
-    }
-
-    public void awardPackageDisposal() {
-        if (advancementBehaviour == null) {
-            return;
-        }
-
-        advancementBehaviour.awardPlayer(CCBAdvancements.CUT_FROM_THE_SAME_CARDBOARD);
-    }
-
-    public void awardStoredPackageDisposal() {
-        if (getStoredCount() <= 0 || !isPackage(getStoredItem())) {
-            return;
-        }
-
-        awardPackageDisposal();
     }
 
     @Override
@@ -54,5 +38,21 @@ public class CardboardCrateBlockEntity extends CratesBlockEntity {
         super.addBehaviours(behaviours);
         advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.CUT_FROM_THE_SAME_CARDBOARD);
         behaviours.add(advancementBehaviour);
+    }
+
+    void awardPackageDisposal() {
+        if (advancementBehaviour == null) {
+            return;
+        }
+
+        advancementBehaviour.awardPlayer(CCBAdvancements.CUT_FROM_THE_SAME_CARDBOARD);
+    }
+
+    void awardStoredPackageDisposal() {
+        if (getStoredCount() <= 0 || !isPackage(getStoredItem())) {
+            return;
+        }
+
+        awardPackageDisposal();
     }
 }

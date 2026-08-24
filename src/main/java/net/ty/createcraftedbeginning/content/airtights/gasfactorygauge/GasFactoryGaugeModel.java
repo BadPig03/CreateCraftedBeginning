@@ -35,12 +35,12 @@ public class GasFactoryGaugeModel extends FactoryPanelModel {
     @Override
     public void addPanel(List<BakedQuad> quads, BlockState state, PanelSlot slot, PanelType type, PanelState panelState, RandomSource random, ModelData data, RenderType renderType, boolean ponder) {
         boolean isNetworkPanel = type == PanelType.NETWORK;
-        PartialModel panel = switch (panelState) {
+        PartialModel panelModel = switch (panelState) {
             case PASSIVE -> isNetworkPanel ? CCBPartialModels.GAS_FACTORY_GAUGE_PANEL : CCBPartialModels.GAS_FACTORY_GAUGE_PANEL_RESTOCKER;
             case ACTIVE -> isNetworkPanel ? CCBPartialModels.GAS_FACTORY_GAUGE_PANEL_WITH_BULB : CCBPartialModels.GAS_FACTORY_GAUGE_PANEL_RESTOCKER_WITH_BULB;
         };
 
-        List<BakedQuad> panelQuads = panel.get().getQuads(state, null, random, data, RenderType.solid());
+        List<BakedQuad> panelQuads = panelModel.get().getQuads(state, null, random, data, RenderType.solid());
         float xRot = Mth.RAD_TO_DEG * FactoryPanelBlock.getXRot(state);
         float yRot = Mth.RAD_TO_DEG * FactoryPanelBlock.getYRot(state);
         for (BakedQuad quad : panelQuads) {
@@ -50,22 +50,22 @@ public class GasFactoryGaugeModel extends FactoryPanelModel {
             quadNormal = VecHelper.rotate(quadNormal, 180, Axis.Y);
             quadNormal = VecHelper.rotate(quadNormal, xRot + 90, Axis.X);
             quadNormal = VecHelper.rotate(quadNormal, yRot, Axis.Y);
-            for (int i = 0; i < vertices.length / BakedQuadHelper.VERTEX_STRIDE; i++) {
-                Vec3 vertex = BakedQuadHelper.getXYZ(vertices, i);
+            for (int vertexIndex = 0; vertexIndex < vertices.length / BakedQuadHelper.VERTEX_STRIDE; vertexIndex++) {
+                Vec3 vertex = BakedQuadHelper.getXYZ(vertices, vertexIndex);
                 vertex = vertex.add(slot.xOffset * 0.5, 0, slot.yOffset * 0.5);
                 vertex = VecHelper.rotateCentered(vertex, 180, Axis.Y);
                 vertex = VecHelper.rotateCentered(vertex, xRot + 90, Axis.X);
                 vertex = VecHelper.rotateCentered(vertex, yRot, Axis.Y);
-                BakedQuadHelper.setXYZ(transformedVertices, i, vertex);
-                BakedQuadHelper.setNormalXYZ(transformedVertices, i, new Vec3(0, 1, 0));
+                BakedQuadHelper.setXYZ(transformedVertices, vertexIndex, vertex);
+                BakedQuadHelper.setNormalXYZ(transformedVertices, vertexIndex, new Vec3(0, 1, 0));
             }
 
-            Direction normal = Direction.fromDelta((int) Math.round(quadNormal.x), (int) Math.round(quadNormal.y), (int) Math.round(quadNormal.z));
-            if (normal == null) {
+            Direction transformedDirection = Direction.fromDelta((int) Math.round(quadNormal.x), (int) Math.round(quadNormal.y), (int) Math.round(quadNormal.z));
+            if (transformedDirection == null) {
                 continue;
             }
 
-            quads.add(new BakedQuad(transformedVertices, quad.getTintIndex(), normal, quad.getSprite(), !ponder && quad.isShade()));
+            quads.add(new BakedQuad(transformedVertices, quad.getTintIndex(), transformedDirection, quad.getSprite(), !ponder && quad.isShade()));
         }
     }
 }

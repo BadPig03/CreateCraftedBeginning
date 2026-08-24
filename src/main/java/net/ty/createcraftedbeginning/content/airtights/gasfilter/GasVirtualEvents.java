@@ -13,11 +13,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID)
-public class GasVirtualEvents {
+final class GasVirtualEvents {
+    private GasVirtualEvents() {
+    }
+
     @SubscribeEvent
-    public static void onDropGasVirtualItems(ItemTossEvent event) {
-        ItemStack stack = event.getEntity().getItem();
-        if (!GasVirtualUtils.isVirtualItem(stack)) {
+    private static void onDropGasVirtualItems(ItemTossEvent event) {
+        if (!GasVirtualUtils.isVirtualItem(event.getEntity().getItem())) {
             return;
         }
 
@@ -25,17 +27,17 @@ public class GasVirtualEvents {
     }
 
     @SubscribeEvent
-    public static void onClickOnGasVirtualItems(ItemStackedOnOtherEvent event) {
-        ItemStack carried = event.getCarriedItem();
+    private static void onClickOnGasVirtualItems(ItemStackedOnOtherEvent event) {
+        ItemStack carriedStack = event.getCarriedItem();
         boolean shouldCancel = false;
-        if (GasVirtualUtils.isVirtualItem(carried)) {
-            carried.shrink(1);
+        if (GasVirtualUtils.isVirtualItem(carriedStack)) {
+            carriedStack.shrink(1);
             shouldCancel = true;
         }
 
-        ItemStack stackedOn = event.getStackedOnItem();
-        if (GasVirtualUtils.isVirtualItem(stackedOn)) {
-            stackedOn.shrink(1);
+        ItemStack stackedOnStack = event.getStackedOnItem();
+        if (GasVirtualUtils.isVirtualItem(stackedOnStack)) {
+            stackedOnStack.shrink(1);
             shouldCancel = true;
         }
         event.setCanceled(shouldCancel);

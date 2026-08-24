@@ -20,23 +20,26 @@ public class GasCanisterPackOverrides {
     private static final int LEFT_DOWN = 4;
     private static final int RIGHT_DOWN = 8;
 
-    public static int calculateFlags(boolean leftUp, boolean rightUp, boolean leftDown, boolean rightDown) {
-        int flags = 0;
+    private GasCanisterPackOverrides() {
+    }
+
+    static int calculateFlags(boolean leftUp, boolean rightUp, boolean leftDown, boolean rightDown) {
+        int occupancyFlags = 0;
         if (leftUp) {
-            flags |= LEFT_UP;
+            occupancyFlags |= LEFT_UP;
         }
         if (rightUp) {
-            flags |= RIGHT_UP;
+            occupancyFlags |= RIGHT_UP;
         }
         if (leftDown) {
-            flags |= LEFT_DOWN;
+            occupancyFlags |= LEFT_DOWN;
         }
         if (!rightDown) {
-            return flags;
+            return occupancyFlags;
         }
 
-        flags |= RIGHT_DOWN;
-        return flags;
+        occupancyFlags |= RIGHT_DOWN;
+        return occupancyFlags;
     }
 
     public enum GasCanisterPackType implements StringRepresentable {
@@ -57,8 +60,8 @@ public class GasCanisterPackOverrides {
         _1110,
         _1111;
 
-        public static final Codec<GasCanisterPackType> CODEC = StringRepresentable.fromValues(GasCanisterPackType::values);
-        public static final StreamCodec<ByteBuf, GasCanisterPackType> STREAM_CODEC = CatnipStreamCodecBuilders.ofEnum(GasCanisterPackType.class);
+        private static final Codec<GasCanisterPackType> CODEC = StringRepresentable.fromValues(GasCanisterPackType::values);
+        private static final StreamCodec<ByteBuf, GasCanisterPackType> STREAM_CODEC = CatnipStreamCodecBuilders.ofEnum(GasCanisterPackType.class);
         public static final ResourceLocation TYPE = CCBAPI.asResource("gas_canister_pack_type");
 
         public static GasCanisterPackType getTypeFromFlags(int flags) {

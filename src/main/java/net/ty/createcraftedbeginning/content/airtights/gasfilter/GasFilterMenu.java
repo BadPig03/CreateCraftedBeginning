@@ -17,6 +17,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterUtils.GasFilterData;
+import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.Contract;
 
@@ -28,24 +29,24 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu {
     private static final int PLAYER_INVENTORY_SLOTS = Inventory.INVENTORY_SIZE;
-
-    protected ItemStackHandler filterInventory;
-    protected boolean blacklist;
+    boolean blacklist;
+    boolean respectData;
+    private ItemStackHandler filterInventory;
 
     public GasFilterMenu(int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
         this(CCBMenuTypes.GAS_FILTER_MENU.get(), id, inv, extraData);
     }
 
-    public GasFilterMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
+    private GasFilterMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
         super(type, id, inv, extraData);
     }
 
-    public GasFilterMenu(MenuType<?> type, int id, Inventory inv, ItemStack stack) {
+    private GasFilterMenu(MenuType<?> type, int id, Inventory inv, ItemStack stack) {
         super(type, id, inv, stack);
     }
 
     @Contract("_, _, _ -> new")
-    public static GasFilterMenu create(int id, Inventory inv, ItemStack filter) {
+    static GasFilterMenu create(int id, Inventory inv, ItemStack filter) {
         return new GasFilterMenu(CCBMenuTypes.GAS_FILTER_MENU.get(), id, inv, filter);
     }
 
@@ -56,9 +57,10 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
 
     @Override
     protected void initAndReadInventory(ItemStack filter) {
-        GasFilterData data = GasFilterItem.getFilterData(filter);
-        filterInventory = GasFilterItem.createFilterInventory(data);
-        blacklist = data.blacklist();
+        GasFilterData filterData = GasFilterItem.getFilterData(filter);
+        filterInventory = GasFilterItem.createFilterInventory(filterData);
+        blacklist = filterData.blacklist();
+        respectData = filterData.respectData();
     }
 
     @Override
@@ -73,17 +75,23 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
 
     @Override
     protected void saveData(ItemStack filter) {
-        List<GasStack> gases = new ArrayList<>(filterInventory.getSlots());
-        for (int i = 0; i < filterInventory.getSlots(); i++) {
-            GasStack gas = GasVirtualUtils.getGasType(filterInventory.getStackInSlot(i));
-            if (gas.isEmpty()) {
+        List<GasStack> configuredGases = new ArrayList<>(filterInventory.getSlots());
+        for (int slotIndex = 0; slotIndex < filterInventory.getSlots(); slotIndex++) {
+            GasStack configuredGas = GasVirtualUtils.getGasType(filterInventory.getStackInSlot(slotIndex));
+            if (configuredGas.isEmpty()) {
                 continue;
             }
 
-            gases.add(gas);
+            configuredGases.add(configuredGas);
         }
 
-        GasFilterItem.setFilterData(filter, new GasFilterData(blacklist, gases));
+        GasFilterData filterData = new GasFilterData(blacklist, respectData, configuredGases);
+        if (filterData.isDefault()) {
+            filter.remove(CCBDataComponents.GAS_FILTER_DATA);
+            return;
+        }
+
+        filter.set(CCBDataComponents.GAS_FILTER_DATA, filterData);
     }
 
     @Override
@@ -93,8 +101,8 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
 
     @Override
     public void clearContents() {
-        for (int i = 0; i < filterInventory.getSlots(); i++) {
-            filterInventory.setStackInSlot(i, ItemStack.EMPTY);
+        for (int slotIndex = 0; slotIndex < filterInventory.getSlots(); slotIndex++) {
+            filterInventory.setStackInSlot(slotIndex, ItemStack.EMPTY);
         }
     }
 
@@ -110,12 +118,12 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
             return ItemStack.EMPTY;
         }
 
-        ItemStack stack = slots.get(index).getItem();
-        if (!mayPlace(stack)) {
+        ItemStack sourceStack = slots.get(index).getItem();
+        if (!CanisterContainerSuppliers.isValidCanisterContainer(sourceStack)) {
             return ItemStack.EMPTY;
         }
 
-        tryToInsert(stack);
+        tryToInsert(sourceStack);
         return ItemStack.EMPTY;
     }
 
@@ -134,19 +142,19 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
             return;
         }
 
-        ItemStack carried = getCarried();
-        if (carried.isEmpty()) {
+        ItemStack carriedStack = getCarried();
+        if (carriedStack.isEmpty()) {
             filterInventory.setStackInSlot(slotId - PLAYER_INVENTORY_SLOTS, ItemStack.EMPTY);
             getSlot(slotId).setChanged();
             return;
         }
 
-        tryToInsert(carried);
+        tryToInsert(carriedStack);
     }
 
     @Override
     public boolean canTakeItemForPickAll(ItemStack stack, Slot slot) {
-        return super.canTakeItemForPickAll(stack, slot) && !isHeldFilterSlot(slot.index);
+        return super.canTakeItemForPickAll(stack, slot) && !isHeldFilterSlot(slot);
     }
 
     @Override
@@ -156,7 +164,7 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
 
     @Override
     public boolean canDragTo(Slot slotIn) {
-        return slotIn.container == playerInventory && !isHeldFilterSlot(slotIn.index);
+        return slotIn.container == playerInventory && !isHeldFilterSlot(slotIn);
     }
 
     public void setGas(int slotIndex, GasStack gasStack) {
@@ -178,58 +186,63 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
         getSlot(slotIndex + PLAYER_INVENTORY_SLOTS).setChanged();
     }
 
-    protected void tryToInsert(ItemStack stack) {
-        if (!CanisterContainerSuppliers.isValidCanisterContainer(stack)) {
+    private void tryToInsert(ItemStack canisterStack) {
+        if (!CanisterContainerSuppliers.isValidCanisterContainer(canisterStack)) {
             return;
         }
 
-        IGasCanisterContainer container = stack.getCapability(GasHandler.ITEM);
-        if (container == null) {
+        IGasCanisterContainer canisterContainer = canisterStack.getCapability(GasHandler.ITEM);
+        if (canisterContainer == null) {
             return;
         }
 
-        for (ItemStack virtualItem : container.getVirtualItems()) {
-            GasStack gas = GasVirtualUtils.getGasType(virtualItem);
-            if (gas.isEmpty()) {
+        for (ItemStack virtualItem : canisterContainer.getVirtualItems()) {
+            GasStack gasType = GasVirtualUtils.getGasType(virtualItem);
+            if (gasType.isEmpty()) {
                 continue;
             }
 
-            int emptySlot = findFirstEmptySlot();
-            if (emptySlot < 0) {
+            int targetSlot = findFirstEmptySlot();
+            if (targetSlot < 0) {
                 return;
             }
 
-            setGas(emptySlot, gas);
+            setGas(targetSlot, gasType);
         }
     }
 
-    protected boolean isHeldFilterSlot(int index) {
-        return index >= 27 && index - 27 == playerInventory.selected;
+    private boolean isHeldFilterSlot(int slotId) {
+        return slotId >= 0 && slotId < slots.size() && isHeldFilterSlot(slots.get(slotId));
     }
 
-    protected boolean mayPlace(ItemStack stack) {
-        return CanisterContainerSuppliers.isValidCanisterContainer(stack);
+    private boolean isHeldFilterSlot(Slot slot) {
+        return slot.container == playerInventory && slot.index == playerInventory.selected;
     }
 
-    protected int findFirstEmptySlot() {
-        for (int i = 0; i < filterInventory.getSlots(); i++) {
-            if (!filterInventory.getStackInSlot(i).isEmpty()) {
+    private int findFirstEmptySlot() {
+        for (int slotIndex = 0; slotIndex < filterInventory.getSlots(); slotIndex++) {
+            if (!filterInventory.getStackInSlot(slotIndex).isEmpty()) {
                 continue;
             }
 
-            return i;
+            return slotIndex;
         }
         return -1;
     }
 
-    protected boolean containsGas(GasStack gas, int ignoredSlot) {
-        for (int i = 0; i < filterInventory.getSlots(); i++) {
-            if (i == ignoredSlot) {
+    private boolean containsGas(GasStack gasType, int ignoredSlot) {
+        for (int slotIndex = 0; slotIndex < filterInventory.getSlots(); slotIndex++) {
+            if (slotIndex == ignoredSlot) {
                 continue;
             }
 
-            GasStack existing = GasVirtualUtils.getGasType(filterInventory.getStackInSlot(i));
-            if (existing.isEmpty() || !GasStack.isSameGasSameComponents(existing, gas)) {
+            GasStack existingGas = GasVirtualUtils.getGasType(filterInventory.getStackInSlot(slotIndex));
+            if (existingGas.isEmpty()) {
+                continue;
+            }
+
+            boolean matchesGas = respectData ? GasStack.isSameGasSameComponents(existingGas, gasType) : GasStack.isSameGas(existingGas, gasType);
+            if (!matchesGas) {
                 continue;
             }
 

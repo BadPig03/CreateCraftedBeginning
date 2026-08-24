@@ -51,9 +51,9 @@ public enum GasCanisterOverlay implements Layer {
             return;
         }
 
-        ItemStack pack = PACK.copy();
-        pack.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, packType);
-        GuiGameElement.of(pack).at(xOffset, yOffset).render(guiGraphics);
+        ItemStack packStack = PACK.copy();
+        packStack.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, packType);
+        GuiGameElement.of(packStack).at(xOffset, yOffset).render(guiGraphics);
     }
 
     private static MutableComponent getAmountText(boolean isCreative, long amount, long capacity) {
@@ -75,9 +75,9 @@ public enum GasCanisterOverlay implements Layer {
             return;
         }
 
-        DisplayedGasState state = CanisterContainerClients.getSyncedDisplayedGasState();
-        long capacity = state.capacity();
-        if (!state.synced() || capacity < 0) {
+        DisplayedGasState displayedState = CanisterContainerClients.getSyncedDisplayedGasState();
+        long capacity = displayedState.capacity();
+        if (!displayedState.synced() || capacity < 0) {
             return;
         }
 
@@ -88,15 +88,15 @@ public enum GasCanisterOverlay implements Layer {
 
         int xOffset = CCBConfig.client().gasInfoXOffset.get();
         int yOffset = CCBConfig.client().gasInfoYOffset.get();
-        renderCanister(guiGraphics, state.packType(), xOffset, yOffset);
+        renderCanister(guiGraphics, displayedState.packType(), xOffset, yOffset);
 
-        GasStack content = state.content();
-        long amount = content.getAmount();
+        GasStack displayedGas = displayedState.content();
+        long amount = displayedGas.getAmount();
 
         Font font = mc.font;
-        guiGraphics.drawString(font, CCBLang.gasName(content).style(ChatFormatting.GOLD).component(), 17 + xOffset, yOffset + (content.isEmpty() ? font.lineHeight / 2 : 0), 0);
+        guiGraphics.drawString(font, CCBLang.gasName(displayedGas).style(ChatFormatting.GOLD).component(), 17 + xOffset, yOffset + (displayedGas.isEmpty() ? font.lineHeight / 2 : 0), 0);
 
-        MutableComponent amountText = getAmountText(state.creative(), amount, capacity);
+        MutableComponent amountText = getAmountText(displayedState.creative(), amount, capacity);
         guiGraphics.drawString(font, amountText, 17 + xOffset, font.lineHeight + yOffset, 0);
 
         poseStack.popPose();

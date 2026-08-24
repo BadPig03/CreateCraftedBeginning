@@ -83,6 +83,7 @@ public interface AirtightUpgrade {
         return status.isInstalled() && status.isEnabled();
     }
 
+    @SuppressWarnings("unused")
     default boolean isInstalled(ItemStack item) {
         return getUpgradeStatus(item).isInstalled();
     }
@@ -92,20 +93,20 @@ public interface AirtightUpgrade {
     }
 
     default AirtightUpgradeStatus getUpgradeStatus(ItemStack item) {
-        List<AirtightUpgradeStatus> statuses = item.get(CCBDataComponents.AIRTIGHT_UPGRADE_STATUS);
-        if (statuses == null) {
-            statuses = AirtightArmorsUtils.getDefaultUpgradeList(item);
+        List<AirtightUpgradeStatus> upgradeStatuses = item.get(CCBDataComponents.AIRTIGHT_UPGRADE_STATUS);
+        if (upgradeStatuses == null) {
+            upgradeStatuses = AirtightArmorsUtils.getDefaultUpgradeList(item);
         }
 
-        ResourceLocation id = getID();
-        for (int i = statuses.size() - 1; i >= 0; i--) {
-            AirtightUpgradeStatus status = statuses.get(i);
-            if (!status.id().equals(id)) {
+        ResourceLocation upgradeId = getID();
+        for (int statusIndex = upgradeStatuses.size() - 1; statusIndex >= 0; statusIndex--) {
+            AirtightUpgradeStatus status = upgradeStatuses.get(statusIndex);
+            if (!status.id().equals(upgradeId)) {
                 continue;
             }
 
             return status;
         }
-        return new AirtightUpgradeStatus(id, startsEnabled(), startsInstalled());
+        return new AirtightUpgradeStatus(upgradeId, startsEnabled(), startsInstalled());
     }
 }

@@ -19,18 +19,18 @@ import java.util.function.Consumer;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasInjectionChamberVisual extends AbstractBlockEntityVisual<GasInjectionChamberBlockEntity> implements SimpleDynamicVisual {
-    protected final TransformedInstance nozzle;
-    protected final TransformedInstance nozzleTop;
-    protected final TransformedInstance nozzleBottom;
+    private final TransformedInstance nozzle;
+    private final TransformedInstance nozzleTop;
+    private final TransformedInstance nozzleBottom;
 
     @Nullable
-    protected TransformedInstance filter;
+    private TransformedInstance filter;
     @Nullable
-    protected TransformedInstance filterInner;
+    private TransformedInstance filterInner;
 
-    protected float lastNozzleOffset = Float.NaN;
-    protected float lastPartOffset = Float.NaN;
-    protected int lastFilterColor = Integer.MIN_VALUE;
+    private float lastNozzleOffset = Float.NaN;
+    private float lastPartOffset = Float.NaN;
+    private int lastFilterColor = Integer.MIN_VALUE;
 
     public GasInjectionChamberVisual(VisualizationContext context, GasInjectionChamberBlockEntity blockEntity, float partialTick) {
         super(context, blockEntity, partialTick);
@@ -39,72 +39,6 @@ public class GasInjectionChamberVisual extends AbstractBlockEntityVisual<GasInje
         nozzleTop = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE_TOP)).createInstance();
         nozzleBottom = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE_BOTTOM)).createInstance();
         animate(partialTick);
-    }
-
-    protected void animate(float partialTick) {
-        ItemStack installedFilter = blockEntity.getInstalledFilter();
-        boolean filterInstancesChanged = updateFilterInstances(installedFilter);
-
-        float ticks = blockEntity.getRenderedProcessingTicks(partialTick);
-        float nozzleOffset = GasInjectionChamberRenderer.getNozzleSqueeze(ticks);
-        float partOffset = GasInjectionChamberRenderer.getNozzleSqueezePart(ticks);
-        if (filterInstancesChanged || nozzleOffset != lastNozzleOffset || partOffset != lastPartOffset) {
-            updateTransforms(nozzleOffset, partOffset);
-            lastNozzleOffset = nozzleOffset;
-            lastPartOffset = partOffset;
-        }
-
-        if (filterInner == null) {
-            return;
-        }
-
-        int color = installedFilter.getOrDefault(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_COLOR, 0xFFFFFFFF);
-        if (color == lastFilterColor) {
-            return;
-        }
-
-        filterInner.color(color >> 16 & 0xFF, color >> 8 & 0xFF, color & 0xFF, 0xFF);
-        filterInner.setChanged();
-        lastFilterColor = color;
-    }
-
-    protected boolean updateFilterInstances(ItemStack installedFilter) {
-        if (installedFilter.isEmpty()) {
-            if (filter == null || filterInner == null) {
-                return false;
-            }
-
-            filter.delete();
-            filterInner.delete();
-            filter = null;
-            filterInner = null;
-            lastFilterColor = Integer.MIN_VALUE;
-            return true;
-        }
-
-        if (filter != null && filterInner != null) {
-            return false;
-        }
-
-        filter = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.GAS_INJECTION_CHAMBER_FILTER)).createInstance();
-        filterInner = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.GAS_INJECTION_CHAMBER_FILTER_INNER)).createInstance();
-        relight(filter, filterInner);
-        lastFilterColor = Integer.MIN_VALUE;
-        return true;
-    }
-
-    protected void updateTransforms(float nozzleOffset, float partOffset) {
-        nozzle.setIdentityTransform().translate(getVisualPosition()).translateY(nozzleOffset).setChanged();
-
-        float attachedOffset = nozzleOffset + partOffset;
-        nozzleTop.setIdentityTransform().translate(getVisualPosition()).translateY(attachedOffset).setChanged();
-        nozzleBottom.setIdentityTransform().translate(getVisualPosition()).translateY(attachedOffset).setChanged();
-        if (filter == null || filterInner == null) {
-            return;
-        }
-
-        filter.setIdentityTransform().translate(getVisualPosition()).translateY(attachedOffset).setChanged();
-        filterInner.setIdentityTransform().translate(getVisualPosition()).translateY(attachedOffset).setChanged();
     }
 
     @Override
@@ -145,5 +79,71 @@ public class GasInjectionChamberVisual extends AbstractBlockEntityVisual<GasInje
 
         consumer.accept(filter);
         consumer.accept(filterInner);
+    }
+
+    private void animate(float partialTick) {
+        ItemStack installedFilter = blockEntity.getInstalledFilter();
+        boolean filterInstancesChanged = updateFilterInstances(installedFilter);
+
+        float processingTicks = blockEntity.getRenderedProcessingTicks(partialTick);
+        float nozzleOffset = GasInjectionChamberRenderer.getNozzleSqueeze(processingTicks);
+        float nozzlePartOffset = GasInjectionChamberRenderer.getNozzleSqueezePart(processingTicks);
+        if (filterInstancesChanged || nozzleOffset != lastNozzleOffset || nozzlePartOffset != lastPartOffset) {
+            updateTransforms(nozzleOffset, nozzlePartOffset);
+            lastNozzleOffset = nozzleOffset;
+            lastPartOffset = nozzlePartOffset;
+        }
+
+        if (filterInner == null) {
+            return;
+        }
+
+        int filterColor = installedFilter.getOrDefault(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_COLOR, 0xFFFFFFFF);
+        if (filterColor == lastFilterColor) {
+            return;
+        }
+
+        filterInner.color(filterColor >> 16 & 0xFF, filterColor >> 8 & 0xFF, filterColor & 0xFF, 0xFF);
+        filterInner.setChanged();
+        lastFilterColor = filterColor;
+    }
+
+    private boolean updateFilterInstances(ItemStack installedFilter) {
+        if (installedFilter.isEmpty()) {
+            if (filter == null || filterInner == null) {
+                return false;
+            }
+
+            filter.delete();
+            filterInner.delete();
+            filter = null;
+            filterInner = null;
+            lastFilterColor = Integer.MIN_VALUE;
+            return true;
+        }
+
+        if (filter != null && filterInner != null) {
+            return false;
+        }
+
+        filter = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.GAS_INJECTION_CHAMBER_FILTER)).createInstance();
+        filterInner = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.GAS_INJECTION_CHAMBER_FILTER_INNER)).createInstance();
+        relight(filter, filterInner);
+        lastFilterColor = Integer.MIN_VALUE;
+        return true;
+    }
+
+    private void updateTransforms(float nozzleOffset, float partOffset) {
+        nozzle.setIdentityTransform().translate(getVisualPosition()).translateY(nozzleOffset).setChanged();
+
+        float attachedOffset = nozzleOffset + partOffset;
+        nozzleTop.setIdentityTransform().translate(getVisualPosition()).translateY(attachedOffset).setChanged();
+        nozzleBottom.setIdentityTransform().translate(getVisualPosition()).translateY(attachedOffset).setChanged();
+        if (filter == null || filterInner == null) {
+            return;
+        }
+
+        filter.setIdentityTransform().translate(getVisualPosition()).translateY(attachedOffset).setChanged();
+        filterInner.setIdentityTransform().translate(getVisualPosition()).translateY(attachedOffset).setChanged();
     }
 }

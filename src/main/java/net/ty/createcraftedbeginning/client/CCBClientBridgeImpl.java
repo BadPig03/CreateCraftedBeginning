@@ -70,8 +70,8 @@ public final class CCBClientBridgeImpl implements CCBService {
             return;
         }
 
-        BlockPos pos = context.getClickedPos().relative(context.getClickedFace());
-        Outliner.getInstance().showAABB(Pair.of("airtight_forging_press", pos), new AABB(pos).inflate(1)).colored(COLOR_RED);
+        BlockPos placementPos = context.getClickedPos().relative(context.getClickedFace());
+        Outliner.getInstance().showAABB(Pair.of("airtight_forging_press", placementPos), new AABB(placementPos).inflate(1)).colored(COLOR_RED);
         CCBLang.translate("gui.warnings.clear_blocks_for_placement").color(COLOR_RED).sendStatus(localPlayer);
     }
 
@@ -81,8 +81,8 @@ public final class CCBClientBridgeImpl implements CCBService {
             return;
         }
 
-        BlockPos pos = context.getClickedPos().relative(context.getClickedFace());
-        Outliner.getInstance().showAABB(Pair.of("airtight_reactor_kettle", pos), new AABB(pos).inflate(1)).colored(COLOR_RED);
+        BlockPos placementPos = context.getClickedPos().relative(context.getClickedFace());
+        Outliner.getInstance().showAABB(Pair.of("airtight_reactor_kettle", placementPos), new AABB(placementPos).inflate(1)).colored(COLOR_RED);
         CCBLang.translate("gui.warnings.clear_blocks_for_placement").color(COLOR_RED).sendStatus(localPlayer);
     }
 
@@ -97,9 +97,9 @@ public final class CCBClientBridgeImpl implements CCBService {
             return;
         }
 
-        Vec3 contract = Vec3.atLowerCornerOf(Direction.get(AxisDirection.POSITIVE, axis).getNormal());
-        BlockPos pos = context.getClickedPos();
-        Outliner.getInstance().showAABB(Pair.of("tesla_turbine", pos), new AABB(pos).inflate(1).deflate(contract.x, contract.y, contract.z)).colored(COLOR_RED);
+        Vec3 axisDeflation = Vec3.atLowerCornerOf(Direction.get(AxisDirection.POSITIVE, axis).getNormal());
+        BlockPos placementPos = context.getClickedPos();
+        Outliner.getInstance().showAABB(Pair.of("tesla_turbine", placementPos), new AABB(placementPos).inflate(1).deflate(axisDeflation.x, axisDeflation.y, axisDeflation.z)).colored(COLOR_RED);
         CCBLang.translate("gui.warnings.clear_blocks_for_placement").color(COLOR_RED).sendStatus(localPlayer);
     }
 
@@ -109,9 +109,9 @@ public final class CCBClientBridgeImpl implements CCBService {
             return;
         }
 
-        AABB area = new AABB(pos.relative(direction)).inflate(inflation);
+        AABB outlineBounds = new AABB(pos.relative(direction)).inflate(inflation);
         Object outlineSlot = Pair.of(GasAreaOutlinePacket.class, Pair.of(pos, direction));
-        Outliner.getInstance().chaseAABB(outlineSlot, area).colored(color).withFaceTextures(AllSpecialTextures.CHECKERED, AllSpecialTextures.HIGHLIGHT_CHECKERED).lineWidth(0.0625f);
+        Outliner.getInstance().chaseAABB(outlineSlot, outlineBounds).colored(color).withFaceTextures(AllSpecialTextures.CHECKERED, AllSpecialTextures.HIGHLIGHT_CHECKERED).lineWidth(0.0625f);
     }
 
     @Override
@@ -145,8 +145,7 @@ public final class CCBClientBridgeImpl implements CCBService {
             return null;
         }
 
-        FactoryPanelPosition position = FactoryPanelPosition.STREAM_CODEC.decode(extraData);
-        FactoryPanelBehaviour panel = FactoryPanelBehaviour.at(level, position);
-        return panel instanceof GasFactoryGaugeBehaviour gasGauge ? gasGauge : null;
+        FactoryPanelPosition panelPosition = FactoryPanelPosition.STREAM_CODEC.decode(extraData);
+        return FactoryPanelBehaviour.at(level, panelPosition) instanceof GasFactoryGaugeBehaviour gasGauge ? gasGauge : null;
     }
 }

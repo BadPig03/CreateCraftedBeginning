@@ -27,8 +27,8 @@ public record AirtightHandheldDrillGhostItemSubmitPacket(ItemStack item) impleme
             return;
         }
 
-        ItemStack filter = item.isEmpty() ? ItemStack.EMPTY : item.copyWithCount(1);
-        menu.getMenuInventory().setStackInSlot(AirtightHandheldDrillMenu.FILTER_SLOT_INDEX, filter);
+        ItemStack filterStack = item.isEmpty() ? ItemStack.EMPTY : item.copyWithCount(1);
+        menu.getMenuInventory().setStackInSlot(AirtightHandheldDrillMenu.FILTER_SLOT_INDEX, filterStack);
         menu.getSlot(PLAYER_INVENTORY_SLOTS + AirtightHandheldDrillMenu.FILTER_SLOT_INDEX).setChanged();
     }
 

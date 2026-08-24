@@ -12,7 +12,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightReactorKettleInteractionPoint extends ArmInteractionPoint {
-    public AirtightReactorKettleInteractionPoint(ArmInteractionPointType type, Level level, BlockPos pos, BlockState state) {
+    private AirtightReactorKettleInteractionPoint(ArmInteractionPointType type, Level level, BlockPos pos, BlockState state) {
         super(type, level, pos, state);
     }
 

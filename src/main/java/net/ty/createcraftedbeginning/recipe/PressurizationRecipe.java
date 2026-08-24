@@ -22,60 +22,42 @@ import java.util.WeakHashMap;
 public class PressurizationRecipe extends StandardProcessingWithGasRecipe<SingleRecipeInput> {
     private static final Map<RecipeManager, Map<GasStack, Optional<RecipeHolder<PressurizationRecipe>>>> RECIPE_CACHES = new WeakHashMap<>();
 
-    public PressurizationRecipe(ProcessingWithGasRecipeParams params) {
+    PressurizationRecipe(ProcessingWithGasRecipeParams params) {
         super(CCBRecipeTypes.PRESSURIZATION, params);
     }
 
-    public static Optional<PressurizationRecipe> findRecipe(Level level, GasStack input) {
-        return findRecipeHolder(level, input).map(RecipeHolder::value);
+    public static Optional<PressurizationRecipe> findRecipe(Level level, GasStack gasStack) {
+        return findRecipeHolder(level, gasStack).map(RecipeHolder::value);
     }
 
-    public static synchronized Optional<RecipeHolder<PressurizationRecipe>> findRecipeHolder(Level level, GasStack input) {
-        if (input.isEmpty()) {
+    public static synchronized Optional<RecipeHolder<PressurizationRecipe>> findRecipeHolder(Level level, GasStack gasStack) {
+        if (gasStack.isEmpty()) {
             return Optional.empty();
         }
 
-        RecipeManager manager = level.getRecipeManager();
-        Map<GasStack, Optional<RecipeHolder<PressurizationRecipe>>> cache = RECIPE_CACHES.computeIfAbsent(manager, ignored -> new HashMap<>());
-        return cache.computeIfAbsent(input.copyWithAmount(1), ignored -> findUncached(level, input));
-    }
-
-    private static Optional<RecipeHolder<PressurizationRecipe>> findUncached(Level level, GasStack input) {
-        List<RecipeHolder<PressurizationRecipe>> recipes = level.getRecipeManager().getAllRecipesFor(CCBRecipeTypes.PRESSURIZATION.getType());
-        for (RecipeHolder<PressurizationRecipe> holder : recipes) {
-            PressurizationRecipe recipe = holder.value();
-            if (!recipe.getGasIngredient().ingredient().test(input)) {
-                continue;
-            }
-
-            return Optional.of(holder);
-        }
-        return Optional.empty();
+        Map<GasStack, Optional<RecipeHolder<PressurizationRecipe>>> recipeCache = RECIPE_CACHES.computeIfAbsent(level.getRecipeManager(), ignored -> new HashMap<>());
+        return recipeCache.computeIfAbsent(gasStack.copyWithAmount(1), ignored -> findUncached(level, gasStack));
     }
 
     public static synchronized void invalidateCaches() {
         RECIPE_CACHES.clear();
     }
 
+    private static Optional<RecipeHolder<PressurizationRecipe>> findUncached(Level level, GasStack gasStack) {
+        for (RecipeHolder<PressurizationRecipe> recipeHolder : level.getRecipeManager().<SingleRecipeInput, PressurizationRecipe>getAllRecipesFor(CCBRecipeTypes.PRESSURIZATION.getType())) {
+            PressurizationRecipe recipe = recipeHolder.value();
+            if (!recipe.getGasIngredient().ingredient().test(gasStack)) {
+                continue;
+            }
+
+            return Optional.of(recipeHolder);
+        }
+        return Optional.empty();
+    }
+
     @Override
     public boolean matches(SingleRecipeInput input, Level level) {
         return true;
-    }
-
-    public SizedGasIngredient getGasIngredient() {
-        if (gasIngredients.isEmpty()) {
-            throw new IllegalStateException("Pressurization Recipe has no gas ingredient!");
-        }
-
-        return gasIngredients.getFirst();
-    }
-
-    public GasStack getGasResult() {
-        if (gasResults.isEmpty()) {
-            throw new IllegalStateException("Pressurization Recipe has no gas result!");
-        }
-
-        return gasResults.getFirst();
     }
 
     @Override
@@ -110,5 +92,21 @@ public class PressurizationRecipe extends StandardProcessingWithGasRecipe<Single
         else if (gasResults.getFirst().isEmpty()) {
             errors.add("Pressurization recipe gas output must not be empty.");
         }
+    }
+
+    public SizedGasIngredient getGasIngredient() {
+        if (gasIngredients.isEmpty()) {
+            throw new IllegalStateException("Pressurization Recipe has no gas ingredient!");
+        }
+
+        return gasIngredients.getFirst();
+    }
+
+    public GasStack getGasResult() {
+        if (gasResults.isEmpty()) {
+            throw new IllegalStateException("Pressurization Recipe has no gas result!");
+        }
+
+        return gasResults.getFirst();
     }
 }

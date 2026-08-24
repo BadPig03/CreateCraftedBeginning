@@ -1,13 +1,13 @@
 package net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.FrostLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity.CoolantType;
+import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerController.CoolingSyncMode;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe.CoolingData;
 
@@ -37,9 +37,14 @@ public class InactiveCoolerState extends BaseCoolerState {
             return InteractionResult.FAIL;
         }
 
-        CoolingData data = CoolingRecipe.getCoolingTime(level, stack, null);
-        int time = data.time();
-        if (time <= 0) {
+        CoolingData coolingData = CoolingRecipe.getCoolingTime(level, stack, null);
+        int coolingTime = coolingData.time();
+        if (coolingTime <= 0) {
+            return InteractionResult.FAIL;
+        }
+
+        long newRemainingTime = (long) remainingTime + coolingTime;
+        if (!forceOverflow && shouldRejectAutomaticOverflow(remainingTime, newRemainingTime)) {
             return InteractionResult.FAIL;
         }
 
@@ -47,7 +52,7 @@ public class InactiveCoolerState extends BaseCoolerState {
             return InteractionResult.SUCCESS;
         }
 
-        cooler.setCoolerState(new ChilledCoolerState(Mth.clamp(time, 1, BreezeCoolerBlockEntity.getMaxCoolantCapacity()), false));
+        updateRemainingTime(cooler, newRemainingTime, CoolingSyncMode.IMMEDIATE);
         cooler.playSound();
         cooler.spawnParticleBurst();
         return InteractionResult.SUCCESS;
@@ -61,11 +66,11 @@ public class InactiveCoolerState extends BaseCoolerState {
         }
 
         int snowballCoolingTime = BreezeCoolerBlockEntity.getSnowballCoolingTime();
-        if (snowballCoolingTime <= 0) {
+        if (snowballCoolingTime <= 0 || shouldRejectAutomaticOverflow(remainingTime, snowballCoolingTime)) {
             return false;
         }
 
-        cooler.setCoolerState(new ChilledCoolerState(Math.min(snowballCoolingTime, BreezeCoolerBlockEntity.getMaxCoolantCapacity()), false));
+        updateRemainingTime(cooler, snowballCoolingTime, CoolingSyncMode.IMMEDIATE);
         cooler.playSound();
         cooler.spawnParticleBurst();
         return true;

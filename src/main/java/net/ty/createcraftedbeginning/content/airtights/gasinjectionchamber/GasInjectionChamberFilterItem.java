@@ -26,7 +26,7 @@ public class GasInjectionChamberFilterItem extends Item {
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltips, TooltipFlag flag) {
         super.appendHoverText(stack, context, tooltips, flag);
-        Optional<ResourceLocation> optionalTypeId = GasInjectionChamberUtils.getFanProcessingTypeId(stack);
-        tooltips.add(CCBLang.translateDirect("gui.gas_injection_chamber_filter.processing_type", optionalTypeId.map(location -> GasInjectionChamberUtils.getFanProcessingTypeName(location).copy().withStyle(ChatFormatting.AQUA)).orElseGet(() -> Component.translatable("fan_processing_type.empty").withStyle(ChatFormatting.GRAY))).withStyle(ChatFormatting.GRAY));
+        Optional<ResourceLocation> fanProcessingTypeId = GasInjectionChamberUtils.getFanProcessingTypeId(stack);
+        tooltips.add(CCBLang.translateDirect("gui.gas_injection_chamber_filter.processing_type", fanProcessingTypeId.map(typeId -> GasInjectionChamberUtils.getFanProcessingTypeName(typeId).copy().withStyle(ChatFormatting.AQUA)).orElseGet(() -> Component.translatable("fan_processing_type.empty").withStyle(ChatFormatting.GRAY))).withStyle(ChatFormatting.GRAY));
     }
 }

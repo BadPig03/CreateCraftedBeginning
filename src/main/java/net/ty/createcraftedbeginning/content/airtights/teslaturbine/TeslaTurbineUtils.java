@@ -13,18 +13,18 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class TeslaTurbineUtils {
-    public static final int MAX_ROTORS = 8;
-    public static final int LEVELS_PER_ROTOR = 2;
-    public static final int MAX_LEVEL = MAX_ROTORS * LEVELS_PER_ROTOR;
     public static final int BASE_STRESS_CAPACITY = 4096;
     public static final int BASE_ROTATION_SPEED = 16;
+    public static final int MAX_LEVEL = 16;
 
-    public static final int FLOW_SAMPLE_RATE = 5;
-    public static final int FLOW_SAMPLE_COUNT = 10;
-    public static final float MIN_GAS_SUPPLY_THRESHOLD = 0.01f;
+    static final int MAX_ROTORS = 8;
+    static final int LEVELS_PER_ROTOR = 2;
+    static final int FLOW_SAMPLE_RATE = 5;
+    static final int FLOW_SAMPLE_COUNT = 10;
+    static final float MIN_GAS_SUPPLY_THRESHOLD = 0.01f;
 
-    public static final int LAZY_TICK_RATE = 4;
-    public static final int MAX_NOZZLES_PER_DIRECTION = (int) Arrays.stream(NozzlePort.values()).filter(NozzlePort::clockwise).count();
+    static final int LAZY_TICK_RATE = 4;
+    static final int MAX_NOZZLES_PER_DIRECTION = 8;
 
     private static final List<NozzlePort> NOZZLE_PORTS = List.copyOf(Arrays.asList(NozzlePort.values()));
     private static final List<NozzlePort> CLOCKWISE_NOZZLE_PORTS = NOZZLE_PORTS.stream().filter(NozzlePort::clockwise).toList();
@@ -33,20 +33,12 @@ public final class TeslaTurbineUtils {
     private TeslaTurbineUtils() {
     }
 
-    public static BlockPos calculateStructurePos(BlockPos pos, Axis axis, int u, int v) {
+    public static BlockPos calculateStructurePos(BlockPos turbinePos, Axis axis, int u, int v) {
         return switch (axis) {
-            case X -> new BlockPos(pos.getX(), pos.getY() + v, pos.getZ() + u);
-            case Z -> new BlockPos(pos.getX() + u, pos.getY() + v, pos.getZ());
-            default -> new BlockPos(pos.getX() + u, pos.getY(), pos.getZ() + v);
+            case X -> new BlockPos(turbinePos.getX(), turbinePos.getY() + v, turbinePos.getZ() + u);
+            case Z -> new BlockPos(turbinePos.getX() + u, turbinePos.getY() + v, turbinePos.getZ());
+            default -> new BlockPos(turbinePos.getX() + u, turbinePos.getY(), turbinePos.getZ() + v);
         };
-    }
-
-    public static List<NozzlePort> getNozzlePorts() {
-        return NOZZLE_PORTS;
-    }
-
-    public static List<NozzlePort> getNozzlePorts(boolean clockwise) {
-        return clockwise ? CLOCKWISE_NOZZLE_PORTS : COUNTER_CLOCKWISE_NOZZLE_PORTS;
     }
 
     public static @Nullable NozzlePort findNozzlePort(BlockPos masterPos, Axis axis, BlockPos nozzlePos) {
@@ -58,6 +50,14 @@ public final class TeslaTurbineUtils {
             return port;
         }
         return null;
+    }
+
+    static List<NozzlePort> getNozzlePorts() {
+        return NOZZLE_PORTS;
+    }
+
+    static List<NozzlePort> getNozzlePorts(boolean clockwise) {
+        return clockwise ? CLOCKWISE_NOZZLE_PORTS : COUNTER_CLOCKWISE_NOZZLE_PORTS;
     }
 
     public enum NozzlePort {
@@ -84,11 +84,11 @@ public final class TeslaTurbineUtils {
             return clockwise;
         }
 
-        public BlockPos getWorldPosition(BlockPos masterPos, Axis axis) {
+        BlockPos getWorldPosition(BlockPos masterPos, Axis axis) {
             return calculateStructurePos(masterPos, axis, u, v);
         }
 
-        public Direction getOutwardDirection(Axis axis) {
+        Direction getOutwardDirection(Axis axis) {
             if (Math.abs(u) > Math.abs(v)) {
                 return switch (axis) {
                     case X -> u > 0 ? Direction.SOUTH : Direction.NORTH;

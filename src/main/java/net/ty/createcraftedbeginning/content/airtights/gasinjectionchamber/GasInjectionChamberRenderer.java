@@ -30,7 +30,7 @@ public class GasInjectionChamberRenderer extends SmartBlockEntityRenderer<GasInj
         super(context);
     }
 
-    public static float getNozzleSqueeze(float ticks) {
+    static float getNozzleSqueeze(float ticks) {
         if (ticks < 0) {
             return 0;
         }
@@ -46,7 +46,7 @@ public class GasInjectionChamberRenderer extends SmartBlockEntityRenderer<GasInj
         return 0;
     }
 
-    public static float getNozzleSqueezePart(float ticks) {
+    static float getNozzleSqueezePart(float ticks) {
         int squeezeTime = NOZZLE_PART_TIME - NOZZLE_IDLE_TIME;
         int squeezeEnd = NOZZLE_TIME + squeezeTime;
         int releaseStart = PROCESSING_TIME - NOZZLE_TIME - squeezeTime;
@@ -73,15 +73,12 @@ public class GasInjectionChamberRenderer extends SmartBlockEntityRenderer<GasInj
         CachedBuffers.partial(model, state).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
     }
 
-    private static void renderInstalledFilter(ItemStack filter, BlockState state, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+    private static void renderInstalledFilter(ItemStack filterStack, BlockState blockState, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         VertexConsumer vertexConsumer = buffer.getBuffer(RenderType.cutoutMipped());
-        CachedBuffers.partial(CCBPartialModels.GAS_INJECTION_CHAMBER_FILTER, state).light(light).overlay(overlay).renderInto(poseStack, vertexConsumer);
+        CachedBuffers.partial(CCBPartialModels.GAS_INJECTION_CHAMBER_FILTER, blockState).light(light).overlay(overlay).renderInto(poseStack, vertexConsumer);
 
-        int color = filter.getOrDefault(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_COLOR, 0xFFFFFFFF);
-        int red = color >> 16 & 0xFF;
-        int green = color >> 8 & 0xFF;
-        int blue = color & 0xFF;
-        CachedBuffers.partial(CCBPartialModels.GAS_INJECTION_CHAMBER_FILTER_INNER, state).color(red, green, blue, 0xFF).light(light).overlay(overlay).renderInto(poseStack, vertexConsumer);
+        int filterColor = filterStack.getOrDefault(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_COLOR, 0xFFFFFFFF);
+        CachedBuffers.partial(CCBPartialModels.GAS_INJECTION_CHAMBER_FILTER_INNER, blockState).color(filterColor >> 16 & 0xFF, filterColor >> 8 & 0xFF, filterColor & 0xFF, 0xFF).light(light).overlay(overlay).renderInto(poseStack, vertexConsumer);
     }
 
     @Override
@@ -93,18 +90,18 @@ public class GasInjectionChamberRenderer extends SmartBlockEntityRenderer<GasInj
 
         poseStack.pushPose();
 
-        BlockState state = blockEntity.getBlockState();
-        float ticks = blockEntity.getRenderedProcessingTicks(partialTicks);
+        BlockState blockState = blockEntity.getBlockState();
+        float processingTicks = blockEntity.getRenderedProcessingTicks(partialTicks);
 
-        poseStack.translate(0, getNozzleSqueeze(ticks), 0);
-        renderPart(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE, state, poseStack, buffer, light);
-        poseStack.translate(0, getNozzleSqueezePart(ticks), 0);
-        renderPart(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE_TOP, state, poseStack, buffer, light);
-        renderPart(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE_BOTTOM, state, poseStack, buffer, light);
+        poseStack.translate(0, getNozzleSqueeze(processingTicks), 0);
+        renderPart(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE, blockState, poseStack, buffer, light);
+        poseStack.translate(0, getNozzleSqueezePart(processingTicks), 0);
+        renderPart(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE_TOP, blockState, poseStack, buffer, light);
+        renderPart(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE_BOTTOM, blockState, poseStack, buffer, light);
 
-        ItemStack filter = blockEntity.getInstalledFilter();
-        if (!filter.isEmpty()) {
-            renderInstalledFilter(filter, state, poseStack, buffer, light, overlay);
+        ItemStack installedFilter = blockEntity.getInstalledFilter();
+        if (!installedFilter.isEmpty()) {
+            renderInstalledFilter(installedFilter, blockState, poseStack, buffer, light, overlay);
         }
 
         poseStack.popPose();

@@ -14,30 +14,32 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class SolidRenderedPlaceableFluidType extends TintedFluidType {
-    protected Vector3f fogColor;
-    protected Supplier<Float> fogDistance;
+    private final Vector3f fogColor;
+    private final Supplier<Float> fogDistance;
 
-    protected SolidRenderedPlaceableFluidType(Properties properties, ResourceLocation stillTexture, ResourceLocation flowingTexture) {
+    protected SolidRenderedPlaceableFluidType(Properties properties, ResourceLocation stillTexture, ResourceLocation flowingTexture, Vector3f fogColor, Supplier<Float> fogDistance) {
         super(properties, stillTexture, flowingTexture);
+        this.fogColor = fogColor;
+        this.fogDistance = fogDistance;
     }
 
     @Override
-    protected int getTintColor(FluidStack stack) {
+    int getTintColor(FluidStack stack) {
         return 0xFFFFFFFF;
     }
 
     @Override
-    public int getTintColor(FluidState state, BlockAndTintGetter world, BlockPos pos) {
+    int getTintColor(FluidState state, BlockAndTintGetter getter, BlockPos pos) {
         return 0x00FFFFFF;
     }
 
     @Override
-    protected Vector3f getCustomFogColor() {
+    Vector3f getCustomFogColor() {
         return fogColor;
     }
 
     @Override
-    protected float getFogDistanceModifier() {
+    float getFogDistanceModifier() {
         return fogDistance.get();
     }
 }

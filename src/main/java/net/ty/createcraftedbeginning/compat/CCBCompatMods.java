@@ -28,8 +28,8 @@ public enum CCBCompatMods {
         return id;
     }
 
-    public Item getItem(String id) {
-        return BuiltInRegistries.ITEM.get(asResource(id));
+    public Item getItem(String path) {
+        return BuiltInRegistries.ITEM.get(asResource(path));
     }
 
     @Contract("_ -> new")
@@ -37,19 +37,19 @@ public enum CCBCompatMods {
         return ResourceLocation.fromNamespaceAndPath(id, path);
     }
 
-    public Item getItem(ResourceLocation id) {
-        return BuiltInRegistries.ITEM.get(id);
+    public Item getItem(ResourceLocation itemId) {
+        return BuiltInRegistries.ITEM.get(itemId);
     }
 
     public boolean isLoaded() {
         return ModList.get().isLoaded(id);
     }
 
-    public void executeIfInstalled(Supplier<Runnable> toExecute) {
+    public void executeIfInstalled(Supplier<Runnable> actionSupplier) {
         if (!isLoaded()) {
             return;
         }
 
-        toExecute.get().run();
+        actionSupplier.get().run();
     }
 }

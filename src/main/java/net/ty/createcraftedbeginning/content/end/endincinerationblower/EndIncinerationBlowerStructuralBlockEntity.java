@@ -18,7 +18,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class EndIncinerationBlowerStructuralBlockEntity extends EndMechanicalStructuralBlockEntity<EndIncinerationBlowerBlockEntity> {
-    protected ScrollOptionBehaviour<BlowerWorkingMode> blowerWorkingMode;
+    private ScrollOptionBehaviour<BlowerWorkingMode> blowerWorkingMode;
 
     public EndIncinerationBlowerStructuralBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
@@ -36,11 +36,11 @@ public class EndIncinerationBlowerStructuralBlockEntity extends EndMechanicalStr
         behaviours.add(blowerWorkingMode);
     }
 
-    public ScrollOptionBehaviour<BlowerWorkingMode> getBlowerWorkingMode() {
+    ScrollOptionBehaviour<BlowerWorkingMode> getBlowerWorkingMode() {
         return blowerWorkingMode;
     }
 
-    public enum BlowerWorkingMode implements INamedIconOptions {
+    enum BlowerWorkingMode implements INamedIconOptions {
         SMOKING(CCBIcons.I_SMOKING),
         BLASTING(CCBIcons.I_BLASTING),
         IGNITION(CCBIcons.I_IGNITION);

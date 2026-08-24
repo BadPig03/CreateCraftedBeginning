@@ -19,16 +19,16 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasInjectionChamberDisplay {
+final class GasInjectionChamberDisplay {
     private final GasInjectionChamberBlockEntity chamber;
     private final GasInjectionChamberOperationState operation;
 
-    public GasInjectionChamberDisplay(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation) {
+    GasInjectionChamberDisplay(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation) {
         this.chamber = chamber;
         this.operation = operation;
     }
 
-    public boolean addToGoggleTooltip(List<Component> tooltip) {
+    boolean addToGoggleTooltip(List<Component> tooltip) {
         if (chamber.getLevel() == null) {
             return false;
         }
@@ -46,19 +46,19 @@ public final class GasInjectionChamberDisplay {
         return true;
     }
 
-    public int getMaxValue() {
+    int getMaxValue() {
         return GasAmounts.toMillibucketsClamped(chamber.getGasTankBehaviour().getPrimaryHandler().getCapacity());
     }
 
-    public int getCurrentValue() {
+    int getCurrentValue() {
         return GasAmounts.toMillibucketsClamped(chamber.getGasTankBehaviour().getPrimaryHandler().getGasAmount());
     }
 
-    public MutableComponent format(int value) {
+    MutableComponent format(int value) {
         return GasAmounts.precise(value).component();
     }
 
-    public float getRenderedProcessingTicks(float partialTicks) {
+    float getRenderedProcessingTicks(float partialTicks) {
         int processingTicks = operation.getProcessingTicks();
         if (processingTicks < 0) {
             return -1;
@@ -68,15 +68,15 @@ public final class GasInjectionChamberDisplay {
         return previousProcessingTicks < 0 ? processingTicks : Mth.lerp(partialTicks, previousProcessingTicks, processingTicks);
     }
 
-    public void spawnCloud(int color) {
+    void spawnCloud(int color) {
         Level level = chamber.getLevel();
         if (level == null || !level.isClientSide || chamber.isVirtual()) {
             return;
         }
 
         Vec3 cloudPos = VecHelper.getCenterOf(chamber.getBlockPos()).subtract(0, 1.6875, 0);
-        int count = level.random.nextInt(3, 6);
-        for (int i = 0; i < count; i++) {
+        int particleCount = level.random.nextInt(3, 6);
+        for (int particleIndex = 0; particleIndex < particleCount; particleIndex++) {
             Vec3 velocity = VecHelper.offsetRandomly(Vec3.ZERO, level.random, 0.125f);
             velocity = new Vec3(velocity.x, Math.abs(velocity.y), velocity.z);
             level.addAlwaysVisibleParticle(new ColoredBreezeCloudParticleOptions(color), cloudPos.x, cloudPos.y, cloudPos.z, velocity.x, velocity.y, velocity.z);

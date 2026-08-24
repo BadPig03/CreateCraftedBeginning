@@ -13,24 +13,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class DissipationRecipe extends StandardProcessingWithGasRecipe<SingleRecipeInput> {
-    public DissipationRecipe(ProcessingWithGasRecipeParams params) {
+    DissipationRecipe(ProcessingWithGasRecipeParams params) {
         super(CCBRecipeTypes.DISSIPATION, params);
-    }
-
-    public SizedGasIngredient getGasIngredient() {
-        if (gasIngredients.isEmpty()) {
-            throw new IllegalStateException("Dissipation Recipe has no gas ingredient!");
-        }
-
-        return gasIngredients.getFirst();
-    }
-
-    public GasStack getGasResult() {
-        if (gasResults.isEmpty()) {
-            throw new IllegalStateException("Dissipation Recipe has no gas result!");
-        }
-
-        return gasResults.getFirst();
     }
 
     @Override
@@ -56,5 +40,21 @@ public class DissipationRecipe extends StandardProcessingWithGasRecipe<SingleRec
     @Override
     public boolean matches(SingleRecipeInput input, Level level) {
         return true;
+    }
+
+    public SizedGasIngredient getGasIngredient() {
+        if (gasIngredients.isEmpty()) {
+            throw new IllegalStateException("Dissipation Recipe has no gas ingredient!");
+        }
+
+        return gasIngredients.getFirst();
+    }
+
+    public GasStack getGasResult() {
+        if (gasResults.isEmpty()) {
+            throw new IllegalStateException("Dissipation Recipe has no gas result!");
+        }
+
+        return gasResults.getFirst();
     }
 }

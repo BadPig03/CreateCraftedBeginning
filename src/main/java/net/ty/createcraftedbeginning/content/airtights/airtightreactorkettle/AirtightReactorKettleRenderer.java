@@ -44,7 +44,6 @@ import java.util.List;
 public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<AirtightReactorKettleBlockEntity> {
     private static final float MIN_RADIUS = 0.08f;
     private static final float MAX_RADIUS = 1.1f;
-    private static final int MAX_RENDERED_COPIES = 4;
     private static final int MAX_RENDERED_ITEM_SLOTS = 64;
     private static final double FULL_ITEM_DETAIL_DISTANCE_SQR = 256;
     private static final ItemPlacement[] ITEM_PLACEMENTS = createItemPlacements();
@@ -77,21 +76,21 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
         return yMax;
     }
 
-    private static float renderFluidTank(SmartFluidTankBehaviour behaviour, float totalUnits, float partialTicks, float xMin, float yMin, float yMax, float zMax, PoseStack poseStack, MultiBufferSource buffer, int light) {
-        for (TankSegment segment : behaviour.getTanks()) {
-            FluidStack fluid = segment.getRenderedFluid();
-            if (fluid.isEmpty()) {
+    private static float renderFluidTank(SmartFluidTankBehaviour tankBehaviour, float totalUnits, float partialTicks, float xMin, float yMin, float yMax, float zMax, PoseStack poseStack, MultiBufferSource buffer, int light) {
+        for (TankSegment tankSegment : tankBehaviour.getTanks()) {
+            FluidStack renderedFluid = tankSegment.getRenderedFluid();
+            if (renderedFluid.isEmpty()) {
                 continue;
             }
 
-            float units = segment.getTotalUnits(partialTicks);
-            if (units < 1) {
+            float fluidUnits = tankSegment.getTotalUnits(partialTicks);
+            if (fluidUnits < 1) {
                 continue;
             }
 
-            float partial = Mth.clamp(units / totalUnits, 0, 1);
-            float xMax = xMin + partial * 2.75f;
-            NeoForgeCatnipServices.FLUID_RENDERER.renderFluidBox(fluid, xMin, yMin, -0.875f, xMax, yMax, zMax, buffer, poseStack, light, false, true);
+            float widthFraction = Mth.clamp(fluidUnits / totalUnits, 0, 1);
+            float xMax = xMin + widthFraction * 2.75f;
+            NeoForgeCatnipServices.FLUID_RENDERER.renderFluidBox(renderedFluid, xMin, yMin, -0.875f, xMax, yMax, zMax, buffer, poseStack, light, false, true);
             xMin = xMax;
         }
         return xMin;
@@ -104,40 +103,40 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
         TransformStack.of(poseStack).rotateYDegrees(kettle.getIngredientRotation().getValue(partialTicks) + blockRotation);
 
         float itemSurfaceY = fluidLevel <= 0 ? 0.05f : fluidLevel - 0.13f;
-        IItemHandler inventory = kettle.getAvailableItems();
+        IItemHandler items = kettle.getAvailableItems();
         Minecraft minecraft = Minecraft.getInstance();
-        ItemRenderer renderer = minecraft.getItemRenderer();
-        ClientLevel level = minecraft.level;
-        boolean renderSingleCopy = isBeyondFullItemDetailDistance(kettle, minecraft.cameraEntity);
-        for (int slot = 0; slot < inventory.getSlots(); slot++) {
-            ItemStack stack = inventory.getStackInSlot(slot);
-            if (stack.isEmpty()) {
+        ItemRenderer itemRenderer = minecraft.getItemRenderer();
+        ClientLevel clientLevel = minecraft.level;
+        boolean shouldRenderSingleCopy = isBeyondFullItemDetailDistance(kettle, minecraft.cameraEntity);
+        for (int slot = 0; slot < items.getSlots(); slot++) {
+            ItemStack itemStack = items.getStackInSlot(slot);
+            if (itemStack.isEmpty()) {
                 continue;
             }
 
-            ItemPlacement placement = ITEM_PLACEMENTS[slot % ITEM_PLACEMENTS.length];
-            float angle = placement.angle();
-            Vec3 itemPosition = placement.position();
+            ItemPlacement itemPlacement = ITEM_PLACEMENTS[slot % ITEM_PLACEMENTS.length];
+            float itemAngle = itemPlacement.angle();
+            Vec3 itemPosition = itemPlacement.position();
 
             poseStack.pushPose();
 
             float itemOffset = 0.035f;
-            if (!renderer.getModel(stack, null, null, 0).isGui3d()) {
+            if (!itemRenderer.getModel(itemStack, null, null, 0).isGui3d()) {
                 itemOffset -= 0.1f;
             }
             if (fluidLevel > 0) {
-                itemOffset += Mth.sin(AnimationTickHolder.getRenderTime(kettle.getLevel()) / 12 + angle) * 0.025f;
+                itemOffset += Mth.sin(AnimationTickHolder.getRenderTime(kettle.getLevel()) / 12 + itemAngle) * 0.025f;
             }
             poseStack.translate(itemPosition.x, itemSurfaceY + itemOffset, itemPosition.z);
-            TransformStack.of(poseStack).rotateYDegrees(angle + 35).rotateXDegrees(90);
+            TransformStack.of(poseStack).rotateYDegrees(itemAngle + 35).rotateXDegrees(90);
 
-            int copies = renderSingleCopy ? 1 : getRenderedCopyCount(stack.getCount());
-            for (int i = 0; i < copies; i++) {
+            int copyCount = shouldRenderSingleCopy ? 1 : getRenderedCopyCount(itemStack.getCount());
+            for (int copyIndex = 0; copyIndex < copyCount; copyIndex++) {
                 poseStack.pushPose();
 
-                Vec3 offset = placement.copyOffsets()[i];
-                poseStack.translate(offset.x, offset.y, offset.z);
-                renderer.renderStatic(stack, ItemDisplayContext.GROUND, light, overlay, poseStack, buffer, level, 0);
+                Vec3 copyOffset = itemPlacement.copyOffsets()[copyIndex];
+                poseStack.translate(copyOffset.x, copyOffset.y, copyOffset.z);
+                itemRenderer.renderStatic(itemStack, ItemDisplayContext.GROUND, light, overlay, poseStack, buffer, clientLevel, 0);
 
                 poseStack.popPose();
             }
@@ -153,23 +152,22 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
     }
 
     private static void renderMixerModels(AirtightReactorKettleBlockEntity kettle, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light) {
-        BlockState state = kettle.getBlockState();
-        SuperByteBuffer mixerModel = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_MIXER, state);
-        float angle = kettle.getMixerRotation().getValue(partialTicks) * Mth.DEG_TO_RAD;
-        float offset = kettle.getMixerOffset(partialTicks);
-        mixerModel.translate(0, -offset, 0).rotateCentered(angle, Direction.UP).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
+        SuperByteBuffer mixerModel = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_MIXER, kettle.getBlockState());
+        float mixerAngle = kettle.getMixerRotation().getValue(partialTicks) * Mth.DEG_TO_RAD;
+        float mixerOffset = kettle.getMixerOffset(partialTicks);
+        mixerModel.translate(0, -mixerOffset, 0).rotateCentered(mixerAngle, Direction.UP).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
     }
 
     private static void renderWindowsModels(AirtightReactorKettleBlockEntity kettle, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light) {
-        BlockState state = kettle.getBlockState();
-        SuperByteBuffer leftWindowModel = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_LEFT_WINDOW, state);
-        SuperByteBuffer rightWindowModel = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_RIGHT_WINDOW, state);
-        float distanceScale = kettle.getWindowDistance().getValue(partialTicks);
+        BlockState blockState = kettle.getBlockState();
+        SuperByteBuffer leftWindowModel = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_LEFT_WINDOW, blockState);
+        SuperByteBuffer rightWindowModel = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_RIGHT_WINDOW, blockState);
+        float windowDistance = kettle.getWindowDistance().getValue(partialTicks);
         for (Direction direction : Iterate.horizontalDirections) {
             Vec3i leftDistance = direction.getClockWise().getNormal();
             Vec3i rightDistance = direction.getCounterClockWise().getNormal();
-            leftWindowModel.translate(direction.getNormal()).translate(leftDistance.getX() * distanceScale, leftDistance.getY() * distanceScale, leftDistance.getZ() * distanceScale).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
-            rightWindowModel.translate(direction.getNormal()).translate(rightDistance.getX() * distanceScale, rightDistance.getY() * distanceScale, rightDistance.getZ() * distanceScale).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
+            leftWindowModel.translate(direction.getNormal()).translate(leftDistance.getX() * windowDistance, leftDistance.getY() * windowDistance, leftDistance.getZ() * windowDistance).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
+            rightWindowModel.translate(direction.getNormal()).translate(rightDistance.getX() * windowDistance, rightDistance.getY() * windowDistance, rightDistance.getZ() * windowDistance).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
         }
     }
 
@@ -189,19 +187,19 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
         Vec3 bestPosition = Vec3.ZERO;
         float bestAngle = 0;
         double bestScore = -Double.MAX_VALUE;
-        for (int i = 0; i < 24; i++) {
-            float angle = random.nextFloat() * 360;
+        for (int attempt = 0; attempt < 24; attempt++) {
+            float candidateAngle = random.nextFloat() * 360;
             float radiusRandom = random.nextFloat();
             float radius = Mth.lerp(radiusRandom * radiusRandom, MIN_RADIUS, MAX_RADIUS);
             if (random.nextFloat() < 0.25f) {
                 radius = Mth.lerp(random.nextFloat(), MIN_RADIUS, MAX_RADIUS);
             }
 
-            Vec3 candidate = VecHelper.rotate(new Vec3(radius, 0, 0), angle, Axis.Y);
+            Vec3 candidatePosition = VecHelper.rotate(new Vec3(radius, 0, 0), candidateAngle, Axis.Y);
             double nearestDistanceSqr = MAX_RADIUS * MAX_RADIUS;
-            for (Vec3 occupied : occupiedPositions) {
-                double dx = candidate.x - occupied.x;
-                double dz = candidate.z - occupied.z;
+            for (Vec3 occupiedPosition : occupiedPositions) {
+                double dx = candidatePosition.x - occupiedPosition.x;
+                double dz = candidatePosition.z - occupiedPosition.z;
                 nearestDistanceSqr = Math.min(nearestDistanceSqr, dx * dx + dz * dz);
             }
 
@@ -213,11 +211,11 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
             }
 
             bestScore = score;
-            bestPosition = candidate;
-            bestAngle = angle;
+            bestPosition = candidatePosition;
+            bestAngle = candidateAngle;
         }
 
-        Vec3[] copyOffsets = new Vec3[MAX_RENDERED_COPIES];
+        Vec3[] copyOffsets = new Vec3[4];
         copyOffsets[0] = Vec3.ZERO;
         for (int copy = 1; copy < copyOffsets.length; copy++) {
             copyOffsets[copy] = VecHelper.offsetRandomly(Vec3.ZERO, random, 0.0625f);
@@ -237,18 +235,18 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
         if (count <= 32) {
             return 3;
         }
-        return MAX_RENDERED_COPIES;
+        return 4;
     }
 
     @Override
     protected void renderSafe(AirtightReactorKettleBlockEntity kettle, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         super.renderSafe(kettle, partialTicks, poseStack, buffer, light, overlay);
-        boolean visualizeModels = VisualizationManager.supportsVisualization(kettle.getLevel());
-        if (!visualizeModels) {
+        boolean useVisualization = VisualizationManager.supportsVisualization(kettle.getLevel());
+        if (!useVisualization) {
             renderMixerModels(kettle, partialTicks, poseStack, buffer, light);
         }
         float fluidLevel = renderFluids(kettle, partialTicks, poseStack, buffer, light);
-        if (!visualizeModels) {
+        if (!useVisualization) {
             renderWindowsModels(kettle, partialTicks, poseStack, buffer, light);
         }
         renderItems(kettle, fluidLevel, partialTicks, poseStack, buffer, light, overlay);

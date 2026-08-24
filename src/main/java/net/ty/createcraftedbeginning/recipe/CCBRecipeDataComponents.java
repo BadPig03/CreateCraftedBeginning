@@ -21,9 +21,9 @@ public final class CCBRecipeDataComponents {
     }
 
     private static DataComponentType<SequencedAssemblyWithGas> registerSequencedAssembly() {
-        DataComponentType<SequencedAssemblyWithGas> type = DataComponentType.<SequencedAssemblyWithGas>builder().persistent(SequencedAssemblyWithGas.CODEC).networkSynchronized(SequencedAssemblyWithGas.STREAM_CODEC).build();
-        COMPONENTS.register("sequenced_assembly_with_gas", () -> type);
-        return type;
+        DataComponentType<SequencedAssemblyWithGas> componentType = DataComponentType.<SequencedAssemblyWithGas>builder().persistent(SequencedAssemblyWithGas.CODEC).networkSynchronized(SequencedAssemblyWithGas.STREAM_CODEC).build();
+        COMPONENTS.register("sequenced_assembly_with_gas", () -> componentType);
+        return componentType;
     }
 
     public static void register(IEventBus eventBus) {

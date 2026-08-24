@@ -15,9 +15,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class SlushVirtualFluid extends BaseFlowingFluid {
-    protected final boolean isSource;
+    private final boolean isSource;
 
-    public SlushVirtualFluid(Properties properties, boolean isSource) {
+    private SlushVirtualFluid(Properties properties, boolean isSource) {
         super(properties);
         this.isSource = isSource;
     }

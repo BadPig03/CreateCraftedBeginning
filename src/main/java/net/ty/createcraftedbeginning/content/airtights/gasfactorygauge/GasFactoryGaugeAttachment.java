@@ -13,47 +13,47 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasFactoryGaugeAttachment {
+final class GasFactoryGaugeAttachment {
     private final GasFactoryGaugeBlockEntity blockEntity;
 
-    public GasFactoryGaugeAttachment(GasFactoryGaugeBlockEntity blockEntity) {
+    GasFactoryGaugeAttachment(GasFactoryGaugeBlockEntity blockEntity) {
         this.blockEntity = blockEntity;
     }
 
-    public Detection detectAttachedPackager() {
+    Detection detectAttachedPackager() {
         Level level = blockEntity.getLevel();
-        BlockState state = blockEntity.getBlockState();
-        if (level == null || !(state.getBlock() instanceof GasFactoryGaugeBlock)) {
+        BlockState blockState = blockEntity.getBlockState();
+        if (level == null || !(blockState.getBlock() instanceof GasFactoryGaugeBlock)) {
             return Detection.UNAVAILABLE;
         }
 
-        BlockPos packagerPos = getAttachedPosition(state);
+        BlockPos packagerPos = getAttachedPosition(blockState);
         if (!level.isLoaded(packagerPos)) {
             return Detection.UNAVAILABLE;
         }
         return level.getBlockEntity(packagerPos) instanceof GasPackagerBlockEntity ? Detection.ATTACHED : Detection.DETACHED;
     }
 
-    @Nullable public GasPackagerBlockEntity findAttachedPackager() {
+    @Nullable GasPackagerBlockEntity findAttachedPackager() {
         Level level = blockEntity.getLevel();
-        BlockState state = blockEntity.getBlockState();
-        if (level == null || !(state.getBlock() instanceof GasFactoryGaugeBlock)) {
+        BlockState blockState = blockEntity.getBlockState();
+        if (level == null || !(blockState.getBlock() instanceof GasFactoryGaugeBlock)) {
             return null;
         }
 
-        BlockPos packagerPos = getAttachedPosition(state);
+        BlockPos packagerPos = getAttachedPosition(blockState);
         if (!level.isLoaded(packagerPos)) {
             return null;
         }
         return level.getBlockEntity(packagerPos) instanceof GasPackagerBlockEntity packager ? packager : null;
     }
 
-    private BlockPos getAttachedPosition(BlockState state) {
-        Direction direction = FactoryPanelBlock.connectedDirection(state).getOpposite();
-        return blockEntity.getBlockPos().relative(direction);
+    private BlockPos getAttachedPosition(BlockState blockState) {
+        Direction packagerDirection = FactoryPanelBlock.connectedDirection(blockState).getOpposite();
+        return blockEntity.getBlockPos().relative(packagerDirection);
     }
 
-    public enum Detection {
+    enum Detection {
         UNAVAILABLE,
         ATTACHED,
         DETACHED

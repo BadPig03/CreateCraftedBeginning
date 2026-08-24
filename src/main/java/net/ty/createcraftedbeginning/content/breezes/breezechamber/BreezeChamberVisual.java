@@ -29,18 +29,18 @@ import java.util.function.Consumer;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class BreezeChamberVisual extends AbstractBlockEntityVisual<BreezeChamberBlockEntity> implements SimpleDynamicVisual, SimpleTickableVisual {
-    protected final TransformedInstance head;
-    protected WindLevel windLevel;
+    private final TransformedInstance head;
+    private WindLevel windLevel;
     @Nullable
-    protected TransformedInstance goggles;
+    private TransformedInstance goggles;
     @Nullable
-    protected PartialModel gogglesModel;
+    private PartialModel gogglesModel;
     @Nullable
-    protected TransformedInstance hat;
+    private TransformedInstance hat;
     @Nullable
-    protected TransformedInstance wind;
+    private TransformedInstance wind;
 
-    protected boolean controllerActive;
+    private boolean controllerActive;
 
     public BreezeChamberVisual(VisualizationContext ctx, BreezeChamberBlockEntity blockEntity, float partialTick) {
         super(ctx, blockEntity, partialTick);
@@ -48,67 +48,6 @@ public class BreezeChamberVisual extends AbstractBlockEntityVisual<BreezeChamber
         controllerActive = blockEntity.isControllerActive();
         head = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(BreezeChamberRenderer.getBreezeModel(windLevel, controllerActive))).createInstance();
         animate(partialTick);
-    }
-
-    protected void animate(float partialTicks) {
-        float animation = blockEntity.getHeadAnimation().getValue(partialTicks) * 0.175f;
-        boolean active = animation > 0.125f;
-        WindLevel renderWindLevel = blockEntity.getWindLevelForRender();
-        if (active != controllerActive || renderWindLevel != windLevel) {
-            controllerActive = active;
-            instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(BreezeChamberRenderer.getBreezeModel(renderWindLevel, active))).stealInstance(head);
-            windLevel = renderWindLevel;
-        }
-
-        PartialModel desiredGogglesModel = renderWindLevel.isAtLeast(WindLevel.GALE) ? CCBPartialModels.BREEZE_CHAMBER_GOGGLES : CCBPartialModels.BREEZE_CHAMBER_GOGGLES_SMALL;
-        boolean hasGoggles = blockEntity.hasGoggles();
-        if (hasGoggles && goggles == null) {
-            goggles = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredGogglesModel)).createInstance();
-            gogglesModel = desiredGogglesModel;
-        }
-        else if (hasGoggles && gogglesModel != desiredGogglesModel) {
-            instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredGogglesModel)).stealInstance(goggles);
-            gogglesModel = desiredGogglesModel;
-        }
-        else if (!hasGoggles && goggles != null) {
-            goggles.delete();
-            goggles = null;
-            gogglesModel = null;
-        }
-
-        boolean hatPresent = blockEntity.hasTrainHat();
-        if (hatPresent && hat == null) {
-            hat = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.BREEZE_TRAIN_HAT)).createInstance();
-        }
-        else if (!hatPresent && hat != null) {
-            hat.delete();
-            hat = null;
-        }
-
-        boolean hasWind = blockEntity.getWindLevel().isAtLeast(WindLevel.GALE);
-        if (hasWind && wind == null) {
-            wind = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.BREEZE_CHAMBER_WIND)).createInstance();
-        }
-        else if (!hasWind && wind != null) {
-            wind.delete();
-            wind = null;
-        }
-
-        float renderTime = AnimationTickHolder.getRenderTime(level);
-        float headY = Mth.sin((renderTime + blockEntity.hashCode() % 13 * 16) / 16 % (2 * Mth.PI)) / (renderWindLevel.isAtLeast(WindLevel.GALE) ? 64 : 16) - animation * 0.75f;
-        float horizontalAngle = AngleHelper.rad(blockEntity.headAngle.getValue(partialTicks));
-        head.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle).translateBack(Translate.CENTER).setChanged();
-        if (goggles != null) {
-            goggles.setIdentityTransform().translate(getVisualPosition()).translateY(headY + 0.5f).translate(Translate.CENTER).rotateY(horizontalAngle).translateBack(Translate.CENTER).setChanged();
-        }
-        if (hat != null) {
-            hat.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translateY(0.75f).rotateCentered(horizontalAngle + Mth.PI, Direction.UP).translate(0.5f, 0, 0.5f).setChanged();
-        }
-        if (wind == null) {
-            return;
-        }
-
-        wind.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle + AngleHelper.rad(renderTime * (hasWind ? 24 : 0) % 360)).translateBack(Translate.CENTER).setChanged();
     }
 
     @Override
@@ -148,5 +87,66 @@ public class BreezeChamberVisual extends AbstractBlockEntityVisual<BreezeChamber
         }
 
         wind.delete();
+    }
+
+    private void animate(float partialTicks) {
+        float headAnimation = blockEntity.getHeadAnimation().getValue(partialTicks) * 0.175f;
+        boolean shouldUseActiveModel = headAnimation > 0.125f;
+        WindLevel currentWindLevel = blockEntity.getWindLevelForRender();
+        if (shouldUseActiveModel != controllerActive || currentWindLevel != windLevel) {
+            controllerActive = shouldUseActiveModel;
+            instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(BreezeChamberRenderer.getBreezeModel(currentWindLevel, shouldUseActiveModel))).stealInstance(head);
+            windLevel = currentWindLevel;
+        }
+
+        PartialModel desiredGogglesModel = currentWindLevel.isActive() ? CCBPartialModels.BREEZE_CHAMBER_GOGGLES : CCBPartialModels.BREEZE_CHAMBER_GOGGLES_SMALL;
+        boolean hasGoggles = blockEntity.hasGoggles();
+        if (hasGoggles && goggles == null) {
+            goggles = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredGogglesModel)).createInstance();
+            gogglesModel = desiredGogglesModel;
+        }
+        else if (hasGoggles && gogglesModel != desiredGogglesModel) {
+            instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredGogglesModel)).stealInstance(goggles);
+            gogglesModel = desiredGogglesModel;
+        }
+        else if (!hasGoggles && goggles != null) {
+            goggles.delete();
+            goggles = null;
+            gogglesModel = null;
+        }
+
+        boolean hasHat = blockEntity.hasTrainHat();
+        if (hasHat && hat == null) {
+            hat = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.BREEZE_TRAIN_HAT)).createInstance();
+        }
+        else if (!hasHat && hat != null) {
+            hat.delete();
+            hat = null;
+        }
+
+        boolean hasWind = blockEntity.getWindLevel().isActive();
+        if (hasWind && wind == null) {
+            wind = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.BREEZE_CHAMBER_WIND)).createInstance();
+        }
+        else if (!hasWind && wind != null) {
+            wind.delete();
+            wind = null;
+        }
+
+        float renderTime = AnimationTickHolder.getRenderTime(level);
+        float headY = Mth.sin((renderTime + blockEntity.hashCode() % 13 * 16) / 16 % (2 * Mth.PI)) / (currentWindLevel.isActive() ? 64 : 16) - headAnimation * 0.75f;
+        float horizontalAngle = AngleHelper.rad(blockEntity.getHeadAngle().getValue(partialTicks));
+        head.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle).translateBack(Translate.CENTER).setChanged();
+        if (goggles != null) {
+            goggles.setIdentityTransform().translate(getVisualPosition()).translateY(headY + 0.5f).translate(Translate.CENTER).rotateY(horizontalAngle).translateBack(Translate.CENTER).setChanged();
+        }
+        if (hat != null) {
+            hat.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translateY(0.75f).rotateCentered(horizontalAngle + Mth.PI, Direction.UP).translate(0.5f, 0, 0.5f).setChanged();
+        }
+        if (wind == null) {
+            return;
+        }
+
+        wind.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle + AngleHelper.rad(renderTime * (hasWind ? 24 : 0) % 360)).translateBack(Translate.CENTER).setChanged();
     }
 }

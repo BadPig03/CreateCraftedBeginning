@@ -32,8 +32,8 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
             return null;
         }
 
-        Axis axis = state.getValue(HorizontalAirtightTankBlock.HORIZONTAL_AXIS);
-        return axis.isHorizontal() ? axis : null;
+        Axis horizontalAxis = state.getValue(HorizontalAirtightTankBlock.HORIZONTAL_AXIS);
+        return horizontalAxis.isHorizontal() ? horizontalAxis : null;
     }
 
     private static int coordinate(BlockPos pos, Axis axis) {
@@ -49,22 +49,22 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
     }
 
     @Override
-    protected void tryMultiPlace(BlockPlaceContext context) {
+    void tryMultiPlace(BlockPlaceContext context) {
         Player player = context.getPlayer();
         if (player == null || player.isShiftKeyDown()) {
             return;
         }
 
-        Direction face = context.getClickedFace();
-        Axis faceAxis = face.getAxis();
-        if (!faceAxis.isHorizontal()) {
+        Direction clickedFace = context.getClickedFace();
+        Axis clickedAxis = clickedFace.getAxis();
+        if (!clickedAxis.isHorizontal()) {
             return;
         }
 
-        ItemStack stack = context.getItemInHand();
+        ItemStack tankStack = context.getItemInHand();
         Level level = context.getLevel();
-        BlockPos pos = context.getClickedPos();
-        BlockPos placedOnPos = pos.relative(face.getOpposite());
+        BlockPos placementPos = context.getClickedPos();
+        BlockPos placedOnPos = placementPos.relative(clickedFace.getOpposite());
         BlockState placedOnState = level.getBlockState(placedOnPos);
         if (placedOnState.getBlock() != getBlock()) {
             return;
@@ -75,13 +75,12 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
             return;
         }
 
-        HorizontalAirtightTankBlockEntity tank = GasConnectivityHandler.partAt(CCBBlockEntities.HORIZONTAL_AIRTIGHT_TANK.get(), level, placedOnPos);
-        if (tank == null) {
+        HorizontalAirtightTankBlockEntity placedOnTank = GasConnectivityHandler.partAt(CCBBlockEntities.HORIZONTAL_AIRTIGHT_TANK.get(), level, placedOnPos);
+        if (placedOnTank == null) {
             return;
         }
 
-        AirtightTankBlockEntity controller = tank.getControllerBE();
-        if (!(controller instanceof HorizontalAirtightTankBlockEntity horizontalController)) {
+        if (!(placedOnTank.getControllerBE() instanceof HorizontalAirtightTankBlockEntity horizontalController)) {
             return;
         }
 
@@ -90,7 +89,7 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
             return;
         }
 
-        if (faceAxis != tankAxis) {
+        if (clickedAxis != tankAxis) {
             return;
         }
 
@@ -99,32 +98,32 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
             return;
         }
 
-        Direction positive = Direction.fromAxisAndDirection(tankAxis, AxisDirection.POSITIVE);
+        Direction positiveDirection = Direction.fromAxisAndDirection(tankAxis, AxisDirection.POSITIVE);
         BlockPos controllerPos = horizontalController.getBlockPos();
-        BlockPos startPos = face == positive.getOpposite() ? controllerPos.relative(positive.getOpposite()) : controllerPos.relative(positive, horizontalController.getHeight());
-        if (coordinate(startPos, tankAxis) != coordinate(pos, tankAxis)) {
+        BlockPos layerStartPos = clickedFace == positiveDirection.getOpposite() ? controllerPos.relative(positiveDirection.getOpposite()) : controllerPos.relative(positiveDirection, horizontalController.getHeight());
+        if (coordinate(layerStartPos, tankAxis) != coordinate(placementPos, tankAxis)) {
             return;
         }
 
-        int tanksToPlace = countTanksToPlace(level, startPos, tankAxis, width);
-        if (tanksToPlace == INVALID_PLACEMENT || !player.isCreative() && stack.getCount() < tanksToPlace) {
+        int tanksToPlace = countTanksToPlace(level, layerStartPos, tankAxis, width);
+        if (tanksToPlace == INVALID_PLACEMENT || !player.isCreative() && tankStack.getCount() < tanksToPlace) {
             return;
         }
 
-        placeTankLayer(context, level, startPos, face, tankAxis, width);
+        placeTankLayer(context, level, layerStartPos, clickedFace, tankAxis, width);
     }
 
-    protected int countTanksToPlace(Level level, BlockPos startPos, Axis axis, int width) {
+    private int countTanksToPlace(Level level, BlockPos startPos, Axis tankAxis, int width) {
         int tanksToPlace = 0;
         for (int uOffset = 0; uOffset < width; uOffset++) {
             for (int vOffset = 0; vOffset < width; vOffset++) {
-                BlockPos offsetPos = offsetLayer(startPos, axis, uOffset, vOffset);
-                BlockState state = level.getBlockState(offsetPos);
-                if (isCompatibleHorizontalTank(state, axis)) {
+                BlockPos targetPos = offsetLayer(startPos, tankAxis, uOffset, vOffset);
+                BlockState targetState = level.getBlockState(targetPos);
+                if (isCompatibleHorizontalTank(targetState, tankAxis)) {
                     continue;
                 }
 
-                if (state.getBlock() == getBlock() || !state.canBeReplaced()) {
+                if (targetState.getBlock() == getBlock() || !targetState.canBeReplaced()) {
                     return INVALID_PLACEMENT;
                 }
 
@@ -134,26 +133,26 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
         return tanksToPlace;
     }
 
-    protected void placeTankLayer(BlockPlaceContext context, Level level, BlockPos startPos, Direction face, Axis axis, int width) {
+    private void placeTankLayer(BlockPlaceContext context, Level level, BlockPos startPos, Direction face, Axis tankAxis, int width) {
         for (int uOffset = 0; uOffset < width; uOffset++) {
             for (int vOffset = 0; vOffset < width; vOffset++) {
-                BlockPos offsetPos = offsetLayer(startPos, axis, uOffset, vOffset);
-                BlockState state = level.getBlockState(offsetPos);
-                if (isCompatibleHorizontalTank(state, axis)) {
+                BlockPos targetPos = offsetLayer(startPos, tankAxis, uOffset, vOffset);
+                BlockState targetState = level.getBlockState(targetPos);
+                if (isCompatibleHorizontalTank(targetState, tankAxis)) {
                     continue;
                 }
 
-                placeSingleBlock(BlockPlaceContext.at(context, offsetPos, face));
+                placeSingleBlock(BlockPlaceContext.at(context, targetPos, face));
             }
         }
     }
 
-    protected boolean isCompatibleHorizontalTank(BlockState state, Axis axis) {
-        if (state.getBlock() != getBlock()) {
+    private boolean isCompatibleHorizontalTank(BlockState candidateState, Axis tankAxis) {
+        if (candidateState.getBlock() != getBlock()) {
             return false;
         }
 
-        Axis stateAxis = getHorizontalAxis(state);
-        return stateAxis == axis;
+        Axis candidateAxis = getHorizontalAxis(candidateState);
+        return candidateAxis == tankAxis;
     }
 }

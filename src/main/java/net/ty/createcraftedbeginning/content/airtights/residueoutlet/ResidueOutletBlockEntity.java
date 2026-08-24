@@ -19,26 +19,23 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
-import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction.Participant;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
-import java.util.Objects;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ResidueOutletInsertionTarget {
     private static final int LAZY_TICK_RATE = 20;
 
-    protected final ResidueOutletInventory inventory;
-    protected final ResidueOutletInsertionPlanner insertionPlanner;
-    protected final ResidueOutletSerialization serialization;
-    protected final ResidueOutletTooltip tooltip;
+    private final ResidueOutletInventory inventory;
+    private final ResidueOutletInsertionPlanner insertionPlanner;
+    private final ResidueOutletSerialization serialization;
+    private final ResidueOutletTooltip tooltip;
 
-    protected SmartFluidTankBehaviour fluidTankBehaviour;
+    private SmartFluidTankBehaviour fluidTankBehaviour;
 
     public ResidueOutletBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -54,7 +51,7 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
         event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.RESIDUE_OUTLET.get(), (outlet, context) -> outlet.inventory.getExtractionCapability());
     }
 
-    public static int getMaxCapacity() {
+    private static int getMaxCapacity() {
         return CCBConfig.server().airtights.residueOutletCapacity.get() * FluidType.BUCKET_VOLUME;
     }
 
@@ -76,8 +73,8 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
             return;
         }
 
-        BlockState state = getBlockState();
-        if (state.getBlock() instanceof ResidueOutletBlock outlet && outlet.canSurvive(state, level, getBlockPos())) {
+        BlockState outletState = getBlockState();
+        if (outletState.getBlock() instanceof ResidueOutletBlock outlet && outlet.canSurvive(outletState, level, getBlockPos())) {
             return;
         }
 
@@ -111,33 +108,15 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
         return fluidTankBehaviour.getPrimaryHandler().fill(fluidStack, action);
     }
 
-    public ResidueOutletInventory getInventory() {
+    ResidueOutletInventory getInventory() {
         return inventory;
     }
 
-    public SmartFluidTankBehaviour getFluidTankBehaviour() {
+    SmartFluidTankBehaviour getFluidTankBehaviour() {
         return fluidTankBehaviour;
     }
 
-    public FluidStack getStoredFluid() {
+    FluidStack getStoredFluid() {
         return fluidTankBehaviour.getPrimaryHandler().getFluidInTank(0);
-    }
-
-    public record ResidueInsertionPlan(int plannedAmount, Participant<?> participant) implements net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueInsertionPlan {
-        public ResidueInsertionPlan {
-            if (plannedAmount <= 0) {
-                throw new IllegalArgumentException("A residue insertion plan must contain a positive amount.");
-            }
-            Objects.requireNonNull(participant, "participant");
-        }
-
-        private static <S> void addParticipant(ResourceTransaction transaction, Participant<S> participant) {
-            transaction.add(participant);
-        }
-
-        @Override
-        public void addTo(ResourceTransaction transaction) {
-            addParticipant(transaction, participant);
-        }
     }
 }

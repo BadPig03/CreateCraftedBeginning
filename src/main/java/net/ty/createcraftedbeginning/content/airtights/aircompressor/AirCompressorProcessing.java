@@ -12,8 +12,8 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorState.WorkState;
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gas.transaction.MachineResourceSnapshots;
-import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
+import net.ty.createcraftedbeginning.core.MachineResourceSnapshots;
+import net.ty.createcraftedbeginning.core.ResourceTransaction;
 import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
 import org.jetbrains.annotations.Nullable;
 
@@ -86,10 +86,10 @@ final class AirCompressorProcessing {
             GasStack simulatedInputGas = inputTankBehaviour.getInternalGasHandler().forceDrain(totalInputAmount, GasAction.SIMULATE);
             long simulatedOutputAmount = outputTankBehaviour.getInternalGasHandler().forceFill(outputGas, GasAction.SIMULATE);
             return simulatedInputGas.getAmount() == totalInputAmount && plan.recipe().getGasIngredient().ingredient().test(simulatedInputGas) && simulatedOutputAmount == totalOutputAmount;
-        }, () -> MachineResourceSnapshots.snapshotGasContents(inputTankBehaviour, outputTankBehaviour), () -> {
+        }, () -> MachineResourceSnapshots.snapshotGasTanks(inputTankBehaviour, outputTankBehaviour), () -> {
             GasStack drainedInputGas = inputTankBehaviour.getInternalGasHandler().forceDrain(totalInputAmount, GasAction.EXECUTE);
             return drainedInputGas.getAmount() == totalInputAmount && plan.recipe().getGasIngredient().ingredient().test(drainedInputGas) && outputTankBehaviour.getInternalGasHandler().forceFill(outputGas, GasAction.EXECUTE) == totalOutputAmount;
-        }, snapshot -> MachineResourceSnapshots.restoreGasContents(snapshot, inputTankBehaviour, outputTankBehaviour)));
+        }, snapshot -> MachineResourceSnapshots.restoreGasTanks(snapshot, inputTankBehaviour, outputTankBehaviour)));
 
         if (!transaction.commit()) {
             return new WorkState(plan.recipeId(), accumulatedWork);

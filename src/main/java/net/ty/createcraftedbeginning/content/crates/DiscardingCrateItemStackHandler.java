@@ -10,16 +10,16 @@ import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
+class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
     private static final int STORAGE_SLOT = 0;
     private static final int DISCARD_SLOT = 1;
     private static final int SLOT_COUNT = 2;
     private static final int VIRTUAL_DISCARD_SLOT_LIMIT = Integer.MAX_VALUE;
 
-    protected final Predicate<ItemStack> trackedItemPredicate;
-    protected final Runnable trackedDiscardListener;
+    private final Predicate<ItemStack> trackedItemPredicate;
+    private final Runnable trackedDiscardListener;
 
-    public DiscardingCrateItemStackHandler(IntSupplier maxCountSupplier, Predicate<ItemStack> itemValidator, Runnable contentsChangedListener, Predicate<ItemStack> trackedDiscardPredicate, Runnable trackedDiscardListener) {
+    DiscardingCrateItemStackHandler(IntSupplier maxCountSupplier, Predicate<ItemStack> itemValidator, Runnable contentsChangedListener, Predicate<ItemStack> trackedDiscardPredicate, Runnable trackedDiscardListener) {
         super(maxCountSupplier, itemValidator, contentsChangedListener);
         trackedItemPredicate = Objects.requireNonNull(trackedDiscardPredicate);
         this.trackedDiscardListener = Objects.requireNonNull(trackedDiscardListener);
@@ -50,13 +50,13 @@ public class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
             return stack;
         }
 
-        DiscardingCrateInsertionPlan plan = DiscardingCrateInsertionPlan.plan(content, count, stack, getMaxCount(), trackedItemPredicate);
+        DiscardingCrateInsertionPlan insertionPlan = DiscardingCrateInsertionPlan.plan(content, count, stack, getConfiguredCapacity(), trackedItemPredicate);
         if (simulate) {
             return ItemStack.EMPTY;
         }
 
-        setStoredItems(STORAGE_SLOT, plan.content(), plan.count());
-        if (!plan.trackedDiscard()) {
+        setStoredItems(STORAGE_SLOT, insertionPlan.content(), insertionPlan.count());
+        if (!insertionPlan.trackedDiscard()) {
             return ItemStack.EMPTY;
         }
 
@@ -89,7 +89,7 @@ public class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
     }
 
     @Override
-    public ItemStack getStoredItem(int slot) {
+    ItemStack getStoredItem(int slot) {
         validateSlotIndex(slot);
         if (slot == DISCARD_SLOT) {
             return ItemStack.EMPTY;
@@ -109,7 +109,7 @@ public class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
     }
 
     @Override
-    public int getCountInSlot(int slot) {
+    int getCountInSlot(int slot) {
         validateSlotIndex(slot);
         if (slot == DISCARD_SLOT) {
             return 0;
@@ -118,7 +118,7 @@ public class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
     }
 
     @Override
-    public void setStoredItems(int slot, ItemStack stack, int newCount) {
+    void setStoredItems(int slot, ItemStack stack, int newCount) {
         validateSlotIndex(slot);
         if (slot == DISCARD_SLOT) {
             if (stack.isEmpty() || newCount <= 0) {
@@ -133,7 +133,7 @@ public class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
     }
 
     @Override
-    protected void validateSlotIndex(int slot) {
+    void validateSlotIndex(int slot) {
         if (slot >= 0 && slot < SLOT_COUNT) {
             return;
         }

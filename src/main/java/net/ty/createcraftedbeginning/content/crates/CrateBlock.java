@@ -31,8 +31,11 @@ public abstract class CrateBlock<T extends CratesBlockEntity> extends Horizontal
 
     @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
-        BlockState state = super.getStateForPlacement(context);
-        return state == null ? null : state.setValue(FACING, context.getHorizontalDirection().getOpposite());
+        BlockState placementState = super.getStateForPlacement(context);
+        if (placementState == null) {
+            return null;
+        }
+        return placementState.setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
 
     @Override
@@ -73,9 +76,7 @@ public abstract class CrateBlock<T extends CratesBlockEntity> extends Horizontal
         if (!blockEntityClass.isInstance(blockEntity)) {
             return 0;
         }
-
-        T crate = blockEntityClass.cast(blockEntity);
-        return CrateContainersUtils.calculateRedstoneSignal(crate.getHandler());
+        return CrateContainersUtils.calculateRedstoneSignal(blockEntityClass.cast(blockEntity).getHandler());
     }
 
     @Override

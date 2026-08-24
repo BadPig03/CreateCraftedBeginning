@@ -17,11 +17,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class BrassCrateMountedStorage extends FilteredCrateMountedItemStorage<BrassCrateBlockEntity> {
     public static final MapCodec<BrassCrateMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(ItemStack.OPTIONAL_CODEC.fieldOf("content").forGetter(BrassCrateMountedStorage::getStoredItem), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("count").forGetter(BrassCrateMountedStorage::getStoredCount), ItemStack.OPTIONAL_CODEC.fieldOf("filterItem").forGetter(BrassCrateMountedStorage::getFilterItem)).apply(instance, BrassCrateMountedStorage::new));
 
-    public BrassCrateMountedStorage(ItemStack content, int count, ItemStack filterItem) {
+    private BrassCrateMountedStorage(ItemStack content, int count, ItemStack filterItem) {
         this(CCBMountedStorage.BRASS_CRATE.get(), content, count, filterItem);
     }
 
-    protected BrassCrateMountedStorage(MountedItemStorageType<?> type, ItemStack content, int count, ItemStack filterItem) {
+    private BrassCrateMountedStorage(MountedItemStorageType<?> type, ItemStack content, int count, ItemStack filterItem) {
         super(type, BrassCrateBlockEntity.class, content, count, filterItem, () -> CCBConfig.server().crates.maxBrassCapacity.get());
     }
 

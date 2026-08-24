@@ -11,7 +11,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes.AttachmentTypes;
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -34,8 +33,8 @@ public abstract class AxisGasTransportBehaviour extends GasTransportBehaviour {
             return false;
         }
 
-        BlockPos otherPos = blockEntity.getBlockPos().relative(direction);
-        return level.isLoaded(otherPos) && isValidAirtightComponents(level, otherPos, level.getBlockState(otherPos), direction);
+        BlockPos adjacentPos = blockEntity.getBlockPos().relative(direction);
+        return level.isLoaded(adjacentPos) && isValidAirtightComponents(level, adjacentPos, level.getBlockState(adjacentPos), direction);
     }
 
     @Override
@@ -44,22 +43,22 @@ public abstract class AxisGasTransportBehaviour extends GasTransportBehaviour {
     }
 
     @Override
-    public AttachmentTypes getRenderedRimAttachment(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction direction) {
+    public AirtightPipeAttachmentTypes getRenderedRimAttachment(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction direction) {
         if (isIncorrectAxis(state, direction)) {
-            return AttachmentTypes.NONE;
+            return AirtightPipeAttachmentTypes.NONE;
         }
 
-        BlockPos otherPos = pos.relative(direction);
-        BlockState otherState = level.getBlockState(otherPos);
-        Block otherBlock = otherState.getBlock();
+        BlockPos adjacentPos = pos.relative(direction);
+        BlockState adjacentState = level.getBlockState(adjacentPos);
+        Block adjacentBlock = adjacentState.getBlock();
         Axis pipeAxis = state.getValue(BlockStateProperties.AXIS);
-        if (otherBlock instanceof IAxisPipe axisPipe && axisPipe.getAxis(otherState) == pipeAxis) {
-            return AttachmentTypes.NONE;
+        if (adjacentBlock instanceof IAxisPipe axisPipe && axisPipe.getAxis(adjacentState) == pipeAxis) {
+            return AirtightPipeAttachmentTypes.NONE;
         }
 
-        if (otherBlock instanceof IAirtightPipeDrain drain && drain.shouldRenderDrain(level, otherPos, otherState, direction.getOpposite())) {
-            return AttachmentTypes.DRAIN;
+        if (adjacentBlock instanceof IAirtightPipeDrain drain && drain.shouldRenderDrain(level, adjacentPos, adjacentState, direction.getOpposite())) {
+            return AirtightPipeAttachmentTypes.DRAIN;
         }
-        return AttachmentTypes.RIM;
+        return AirtightPipeAttachmentTypes.RIM;
     }
 }

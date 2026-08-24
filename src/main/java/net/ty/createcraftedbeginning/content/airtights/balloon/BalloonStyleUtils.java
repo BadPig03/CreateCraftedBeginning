@@ -16,9 +16,6 @@ import java.util.Random;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class BalloonStyleUtils {
-    public static final List<PackageItem> REGULAR_BALLOONS = new ArrayList<>();
-    public static final List<PackageItem> RARE_BALLOONS = new ArrayList<>();
-
     public static final PackageStyle BALLOON_10_8 = new PackageStyle("balloon", 10, 8, 20, true);
     public static final PackageStyle BALLOON_10_12 = new PackageStyle("balloon", 10, 12, 20, true);
     public static final PackageStyle BALLOON_12_10 = new PackageStyle("balloon", 12, 10, 20, true);
@@ -36,6 +33,9 @@ public final class BalloonStyleUtils {
     public static final PackageStyle BALLOON_RARE_POWERFUL = new PackageStyle("rare_powerful", 12, 10, 20, true);
     public static final PackageStyle BALLOON_RARE_CHEESE = new PackageStyle("rare_cheese", 12, 10, 20, true);
 
+    static final List<PackageItem> REGULAR_BALLOONS = new ArrayList<>();
+    static final List<PackageItem> RARE_BALLOONS = new ArrayList<>();
+
     private static final Random RANDOM = new Random();
     private static final int RARE_CHANCE = 2003;
 
@@ -46,11 +46,6 @@ public final class BalloonStyleUtils {
         return new ItemStack(CCBItems.BALLOON_10X12.asItem());
     }
 
-    public static ItemStack getRandomBalloon() {
-        List<PackageItem> balloons = RANDOM.nextInt(RARE_CHANCE) == 0 ? RARE_BALLOONS : REGULAR_BALLOONS;
-        return new ItemStack(balloons.get(RANDOM.nextInt(balloons.size())));
-    }
-
     public static boolean isRareBalloon(ItemStack stack) {
         return stack.getItem() instanceof BalloonItem balloon && balloon.isRare();
     }
@@ -59,45 +54,50 @@ public final class BalloonStyleUtils {
         return stack.getItem() instanceof BalloonItem balloon && !balloon.isRare();
     }
 
-    public static float getHookDistance(ItemStack box) {
-        if (!(box.getItem() instanceof BalloonItem balloon)) {
+    public static float getHookDistance(ItemStack balloon) {
+        if (!(balloon.getItem() instanceof BalloonItem balloonItem)) {
             return 1;
         }
-        return balloon.style.riggingOffset() / 16.0f;
+        return balloonItem.style.riggingOffset() / 16.0f;
     }
 
-    public static float getBoxDistance(ItemStack box) {
-        if (!(box.getItem() instanceof BalloonItem balloon)) {
+    public static float getBoxDistance(ItemStack balloon) {
+        if (!(balloon.getItem() instanceof BalloonItem balloonItem)) {
             return 1;
         }
-        return 0.6875f + (balloon.style.width() - 12) / 32.0f;
+        return 0.6875f + (balloonItem.style.width() - 12) / 32.0f;
     }
 
-    public static float getFrogportHookDistance(Vec3 diff, float distance, ItemStack box) {
-        return getHookDistance(box) * getFrogportChainBlend(diff, distance);
+    public static float getFrogportHookDistance(Vec3 travelVector, float itemDistance, ItemStack balloon) {
+        return getHookDistance(balloon) * getFrogportChainBlend(travelVector, itemDistance);
     }
 
-    public static float getFrogportBoxDistance(Vec3 diff, float distance, ItemStack box) {
-        return getBoxDistance(box) * getFrogportChainBlend(diff, distance);
+    public static float getFrogportBoxDistance(Vec3 travelVector, float itemDistance, ItemStack balloon) {
+        return getBoxDistance(balloon) * getFrogportChainBlend(travelVector, itemDistance);
     }
 
-    public static float getFrogportBaseY(Vec3 diff, float distance, boolean depositing) {
-        if (!depositing) {
+    public static float getFrogportBaseY(Vec3 travelVector, float itemDistance, boolean isDepositing) {
+        if (!isDepositing) {
             return 0.1875f;
         }
-        return Mth.lerp(getFrogportChainBlend(diff, distance), 0.1875f, 0.625f);
+        return Mth.lerp(getFrogportChainBlend(travelVector, itemDistance), 0.1875f, 0.625f);
     }
 
-    public static Vec3 getPackageOffset(Vec3 diff, float distance, boolean depositing) {
-        Vec3 direction = diff.lengthSqr() < 1.0E-6 ? Vec3.ZERO : diff.normalize();
-        Vec3 offset = direction.scale(distance);
-        if (!depositing) {
+    public static Vec3 getPackageOffset(Vec3 travelVector, float itemDistance, boolean isDepositing) {
+        Vec3 travelDirection = travelVector.lengthSqr() < 1.0E-6 ? Vec3.ZERO : travelVector.normalize();
+        Vec3 offset = travelDirection.scale(itemDistance);
+        if (!isDepositing) {
             return offset;
         }
         return offset.subtract(0, 0.75, 0);
     }
 
-    private static float getFrogportChainBlend(Vec3 diff, float itemDistance) {
-        return Mth.clamp(itemDistance / Math.max((float) diff.length(), 1), 0, 1);
+    static ItemStack getRandomBalloon() {
+        List<PackageItem> balloonPool = RANDOM.nextInt(RARE_CHANCE) == 0 ? RARE_BALLOONS : REGULAR_BALLOONS;
+        return new ItemStack(balloonPool.get(RANDOM.nextInt(balloonPool.size())));
+    }
+
+    private static float getFrogportChainBlend(Vec3 travelVector, float itemDistance) {
+        return Mth.clamp(itemDistance / Math.max((float) travelVector.length(), 1), 0, 1);
     }
 }

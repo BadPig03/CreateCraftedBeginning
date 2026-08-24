@@ -18,12 +18,12 @@ import java.util.function.Consumer;
 @MethodsReturnNonnullByDefault
 public class AirtightReactorKettleStructuralCogVisual extends KineticBlockEntityVisual<AirtightReactorKettleStructuralCogBlockEntity> implements SimpleTickableVisual {
     @Nullable
-    protected final RotatingInstance rotatingModel;
+    private final RotatingInstance rotatingModel;
 
     public AirtightReactorKettleStructuralCogVisual(VisualizationContext context, AirtightReactorKettleStructuralCogBlockEntity blockEntity, float partialTick) {
         super(context, blockEntity, partialTick);
-        AirtightReactorKettleStructuralPosition position = blockEntity.getBlockState().getValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION);
-        if (position == AirtightReactorKettleStructuralPosition.TOP_CENTER) {
+        AirtightReactorKettleStructuralPosition structuralPosition = blockEntity.getBlockState().getValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION);
+        if (structuralPosition == AirtightReactorKettleStructuralPosition.TOP_CENTER) {
             rotatingModel = null;
             return;
         }

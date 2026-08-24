@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber;
 
 import com.simibubi.create.content.processing.basin.BasinBlockEntity;
-import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.neoforged.neoforge.fluids.FluidStack;
@@ -9,9 +8,8 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.content.airtights.gas.transaction.MachineResourceSnapshots;
-import net.ty.createcraftedbeginning.content.airtights.gas.transaction.MachineResourceSnapshots.FluidTankSnapshot;
-import net.ty.createcraftedbeginning.core.transaction.ResourceTransaction;
+import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBasinCompat.TransactionView;
+import net.ty.createcraftedbeginning.core.ResourceTransaction;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe.RecipeMatch;
 import org.jetbrains.annotations.Nullable;
@@ -21,87 +19,137 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberOperationState.OperationType.BASIN_RECIPE;
+
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasInjectionChamberBasinProcessor {
+final class GasInjectionChamberBasinProcessor {
     private final GasInjectionChamberBlockEntity chamber;
     private final GasInjectionChamberOperationState operation;
 
-    public GasInjectionChamberBasinProcessor(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation) {
+    GasInjectionChamberBasinProcessor(GasInjectionChamberBlockEntity chamber, GasInjectionChamberOperationState operation) {
         this.chamber = chamber;
         this.operation = operation;
     }
 
-    private static @Nullable List<FluidStack> createFluidDrainPlan(SizedFluidIngredient ingredient, IFluidHandler fluids) {
-        int remaining = ingredient.amount();
-        if (remaining <= 0) {
+    private static @Nullable List<FluidStack> createFluidDrainPlan(SizedFluidIngredient ingredient, IFluidHandler fluids, int batchSize) {
+        if (batchSize <= 0) {
             return null;
         }
 
-        List<FluidStack> plan = new ArrayList<>();
-        for (int tank = 0; tank < fluids.getTanks() && remaining > 0; tank++) {
-            FluidStack stack = fluids.getFluidInTank(tank);
-            if (stack.isEmpty() || !ingredient.test(stack)) {
+        long requiredAmount = (long) ingredient.amount() * batchSize;
+        if (requiredAmount <= 0 || requiredAmount > Integer.MAX_VALUE) {
+            return null;
+        }
+
+        int remainingAmount = (int) requiredAmount;
+        List<FluidStack> drainPlan = new ArrayList<>();
+        for (int tankIndex = 0; tankIndex < fluids.getTanks() && remainingAmount > 0; tankIndex++) {
+            FluidStack fluidStack = fluids.getFluidInTank(tankIndex);
+            if (fluidStack.isEmpty() || !ingredient.test(fluidStack)) {
                 continue;
             }
 
-            int amount = Math.min(remaining, stack.getAmount());
-            if (amount <= 0) {
+            int drainAmount = Math.min(remainingAmount, fluidStack.getAmount());
+            if (drainAmount <= 0) {
                 continue;
             }
 
-            FluidStack request = stack.copyWithAmount(amount);
-            boolean merged = false;
-            for (FluidStack planned : plan) {
-                if (!FluidStack.isSameFluidSameComponents(planned, request)) {
+            FluidStack drainRequest = fluidStack.copyWithAmount(drainAmount);
+            boolean mergedWithExisting = false;
+            for (FluidStack plannedDrain : drainPlan) {
+                if (!FluidStack.isSameFluidSameComponents(plannedDrain, drainRequest)) {
                     continue;
                 }
 
-                planned.setAmount(planned.getAmount() + amount);
-                merged = true;
+                plannedDrain.setAmount(plannedDrain.getAmount() + drainAmount);
+                mergedWithExisting = true;
                 break;
             }
-            if (!merged) {
-                plan.add(request);
+            if (!mergedWithExisting) {
+                drainPlan.add(drainRequest);
             }
-            remaining -= amount;
+            remainingAmount -= drainAmount;
         }
-        return remaining == 0 ? plan : null;
+        if (remainingAmount != 0) {
+            return null;
+        }
+        return drainPlan;
     }
 
-    private static boolean canDrainFluids(IFluidHandler fluids, List<FluidStack> plan) {
-        for (FluidStack request : plan) {
-            FluidStack drained = fluids.drain(request, FluidAction.SIMULATE);
-            if (drained.getAmount() != request.getAmount() || !FluidStack.isSameFluidSameComponents(drained, request)) {
-                return false;
+    private static boolean canDrainFluids(IFluidHandler fluids, List<FluidStack> drainPlan) {
+        for (FluidStack drainRequest : drainPlan) {
+            FluidStack simulatedDrain = fluids.drain(drainRequest, FluidAction.SIMULATE);
+            if (simulatedDrain.getAmount() == drainRequest.getAmount() && FluidStack.isSameFluidSameComponents(simulatedDrain, drainRequest)) {
+                continue;
             }
+
+            return false;
         }
         return true;
     }
 
-    private static BasinFluidSnapshot snapshotBasinFluids(BasinBlockEntity basin, SmartFluidTankBehaviour outputTank, BasinTransactionAccess transactionAccess, Provider provider) {
-        List<FluidStack> outputBuffer = transactionAccess.ccb$getTransactionFluidOverflow().stream().map(FluidStack::copy).toList();
-        return new BasinFluidSnapshot(MachineResourceSnapshots.snapshotFluidTanks(provider, basin.inputTank, outputTank), outputBuffer);
+    private static boolean consumeBasinFluids(IFluidHandler fluids, List<FluidStack> drainPlan) {
+        for (FluidStack drainRequest : drainPlan) {
+            FluidStack executedDrain = fluids.drain(drainRequest, FluidAction.EXECUTE);
+            if (executedDrain.getAmount() == drainRequest.getAmount() && FluidStack.isSameFluidSameComponents(executedDrain, drainRequest)) {
+                continue;
+            }
+
+            return false;
+        }
+        return true;
     }
 
-    private static void restoreBasinFluids(BasinBlockEntity basin, SmartFluidTankBehaviour outputTank, BasinTransactionAccess transactionAccess, Provider provider, BasinFluidSnapshot snapshot) {
-        MachineResourceSnapshots.restoreFluidTanks(provider, snapshot.tanks(), basin.inputTank, outputTank);
-        List<FluidStack> outputBuffer = transactionAccess.ccb$getTransactionFluidOverflow();
-        outputBuffer.clear();
-        snapshot.outputBuffer().stream().map(FluidStack::copy).forEach(outputBuffer::add);
+    private static long getMatchingFluidAmount(SizedFluidIngredient ingredient, IFluidHandler fluids) {
+        long matchingAmount = 0;
+        for (int tankIndex = 0; tankIndex < fluids.getTanks(); tankIndex++) {
+            FluidStack fluidStack = fluids.getFluidInTank(tankIndex);
+            if (fluidStack.isEmpty() || !ingredient.test(fluidStack)) {
+                continue;
+            }
+
+            matchingAmount += fluidStack.getAmount();
+        }
+        return matchingAmount;
     }
 
-    public void tryStartOperation() {
-        Optional<BasinBlockEntity> basin = getBasin();
-        if (basin.isEmpty() || !prepareOperation(basin.get())) {
+    private static FluidStack getBatchResult(GasInjectionRecipe recipe, int batchSize) {
+        FluidStack resultPerBatch = recipe.getFluidResult();
+        if (resultPerBatch.isEmpty() || batchSize <= 0) {
+            return FluidStack.EMPTY;
+        }
+
+        long resultAmount = (long) resultPerBatch.getAmount() * batchSize;
+        if (resultAmount <= 0 || resultAmount > Integer.MAX_VALUE) {
+            return FluidStack.EMPTY;
+        }
+        return resultPerBatch.copyWithAmount((int) resultAmount);
+    }
+
+    private static boolean canProcessBatch(BasinBlockEntity basin, IFluidHandler fluids, GasInjectionRecipe recipe, int batchSize) {
+        List<FluidStack> drainPlan = createFluidDrainPlan(recipe.getFluidIngredient(), fluids, batchSize);
+        FluidStack batchResult = getBatchResult(recipe, batchSize);
+        return drainPlan != null && !batchResult.isEmpty() && canDrainFluids(fluids, drainPlan) && basin.acceptOutputs(List.of(), List.of(batchResult), true);
+    }
+
+    void tryStartOperation() {
+        Optional<BasinBlockEntity> basinOptional = getBasin();
+        if (basinOptional.isEmpty()) {
             return;
         }
 
-        operation.setProcessingTicks(GasInjectionChamberBlockEntity.PROCESSING_TIME + GasInjectionChamberBlockEntity.NOZZLE_IDLE_TIME);
+        Optional<BasinPlan> planOptional = createPlan(basinOptional.get());
+        if (planOptional.isEmpty() || !planOptional.get().hasRequiredGas()) {
+            return;
+        }
+
+        operation.startProcessing(BASIN_RECIPE, GasInjectionChamberBlockEntity.PROCESSING_TIME + GasInjectionChamberBlockEntity.NOZZLE_IDLE_TIME);
+        chamber.setChanged();
         chamber.notifyUpdate();
     }
 
-    public boolean executeRecipeOperation() {
+    boolean executeCurrentState() {
         if (chamber.getLevel() == null) {
             return false;
         }
@@ -112,20 +160,24 @@ public final class GasInjectionChamberBasinProcessor {
         }
 
         BasinBlockEntity basin = basinOptional.get();
+        Optional<BasinPlan> planOptional = createPlan(basin);
+        if (planOptional.isEmpty() || !planOptional.get().hasRequiredGas()) {
+            return false;
+        }
+
+        BasinPlan plan = planOptional.get();
         if (basin.inputTank == null) {
             return false;
         }
 
-        IFluidHandler fluids = basin.inputTank.getCapability();
-        FluidStack result = operation.fluidResult.copy();
-        if (result.isEmpty() || basin.getFilter() == null || !basin.getFilter().test(result)) {
+        IFluidHandler inputFluids = basin.inputTank.getCapability();
+        TransactionView transactionView = GasInjectionChamberBasinCompat.getTransactionView(basin);
+        if (transactionView == null) {
             return false;
         }
 
-        BasinTransactionAccess transactionAccess = (BasinTransactionAccess) basin;
-        SmartFluidTankBehaviour outputTank = transactionAccess.ccb$getTransactionOutputTank();
-        Provider provider = chamber.getLevel().registryAccess();
-        ResourceTransaction transaction = new ResourceTransaction().add(GasInjectionChamberTransactions.operationGasParticipant(chamber, operation, provider)).add(ResourceTransaction.participant(() -> canDrainFluids(fluids, operation.fluidInputs) && basin.acceptOutputs(List.of(), List.of(result), true), () -> snapshotBasinFluids(basin, outputTank, transactionAccess, provider), () -> consumeBasinFluids(fluids) && basin.acceptOutputs(List.of(), List.of(result), false), snapshot -> restoreBasinFluids(basin, outputTank, transactionAccess, provider, snapshot)));
+        Provider registryProvider = chamber.getLevel().registryAccess();
+        ResourceTransaction transaction = new ResourceTransaction().add(GasInjectionChamberTransactions.gasParticipant(chamber, plan.gasRequest())).add(ResourceTransaction.participant(() -> canDrainFluids(inputFluids, plan.fluidInputs()) && basin.acceptOutputs(List.of(), List.of(plan.result()), true), () -> transactionView.snapshot(registryProvider), () -> consumeBasinFluids(inputFluids, plan.fluidInputs()) && basin.acceptOutputs(List.of(), List.of(plan.result()), false), snapshot -> transactionView.restore(registryProvider, snapshot)));
         if (!transaction.commit()) {
             return false;
         }
@@ -146,52 +198,74 @@ public final class GasInjectionChamberBasinProcessor {
         return Optional.empty();
     }
 
-    private boolean prepareOperation(BasinBlockEntity basin) {
+    private Optional<BasinPlan> createPlan(BasinBlockEntity basin) {
         if (chamber.getLevel() == null || basin.inputTank == null) {
-            return false;
+            return Optional.empty();
         }
 
-        GasStack tankGas = chamber.getGasInTank();
-        if (tankGas.isEmpty()) {
-            return false;
+        GasStack availableGas = chamber.getGasInTank();
+        if (availableGas.isEmpty()) {
+            return Optional.empty();
         }
 
-        IFluidHandler fluids = basin.inputTank.getCapability();
-        Optional<RecipeMatch> recipeMatch = GasInjectionRecipe.findFluidRecipeMatch(chamber.getLevel(), fluids, tankGas);
-        if (recipeMatch.isEmpty()) {
-            return false;
+        IFluidHandler inputFluids = basin.inputTank.getCapability();
+        Optional<RecipeMatch> recipeMatch = GasInjectionRecipe.findFluidRecipeMatch(chamber.getLevel(), inputFluids, availableGas);
+        if (recipeMatch.isEmpty() || GasInjectionChamberBasinCompat.getTransactionView(basin) == null) {
+            return Optional.empty();
         }
 
         GasInjectionRecipe recipe = recipeMatch.get().recipe();
-        long requiredGas = recipe.getGasIngredient().amount();
-        if (requiredGas <= 0 || tankGas.getAmount() < requiredGas) {
-            return false;
+        int batchSize = getMaxBatchSize(basin, inputFluids, recipe);
+        if (batchSize <= 0) {
+            return Optional.empty();
         }
 
-        List<FluidStack> fluidDrainPlan = createFluidDrainPlan(recipe.getFluidIngredient(), fluids);
-        if (fluidDrainPlan == null || !canDrainFluids(fluids, fluidDrainPlan)) {
-            return false;
+        long requiredGasAmount = recipe.getGasIngredient().amount() * batchSize;
+        GasStack gasRequest = availableGas.copyWithAmount(requiredGasAmount);
+        List<FluidStack> fluidDrainPlan = createFluidDrainPlan(recipe.getFluidIngredient(), inputFluids, batchSize);
+        FluidStack batchResult = getBatchResult(recipe, batchSize);
+        if (gasRequest.isEmpty() || fluidDrainPlan == null || batchResult.isEmpty() || !canDrainFluids(inputFluids, fluidDrainPlan) || !basin.acceptOutputs(List.of(), List.of(batchResult), true)) {
+            return Optional.empty();
         }
 
-        FluidStack result = recipe.getFluidResult().copy();
-        if (result.isEmpty() || basin.getFilter() == null || !basin.getFilter().test(result) || !basin.acceptOutputs(List.of(), List.of(result), true)) {
-            return false;
-        }
-
-        operation.setBasinOperation(tankGas, requiredGas, fluidDrainPlan, result);
-        chamber.setChanged();
-        return true;
+        return Optional.of(new BasinPlan(availableGas.copy(), gasRequest, fluidDrainPlan, batchResult));
     }
 
-    private boolean consumeBasinFluids(IFluidHandler fluids) {
-        for (FluidStack request : operation.fluidInputs) {
-            FluidStack drained = fluids.drain(request, FluidAction.EXECUTE);
-            if (drained.getAmount() != request.getAmount() || !FluidStack.isSameFluidSameComponents(drained, request)) {
-                return false;
+    private int getMaxBatchSize(BasinBlockEntity basin, IFluidHandler fluids, GasInjectionRecipe recipe) {
+        long gasPerBatch = recipe.getGasIngredient().amount();
+        SizedFluidIngredient fluidIngredient = recipe.getFluidIngredient();
+        FluidStack resultPerBatch = recipe.getFluidResult();
+        int fluidPerBatch = fluidIngredient.amount();
+        int outputPerBatch = resultPerBatch.getAmount();
+        if (gasPerBatch <= 0 || fluidPerBatch <= 0 || resultPerBatch.isEmpty() || outputPerBatch <= 0 || basin.getFilter() == null || !basin.getFilter().test(resultPerBatch)) {
+            return 0;
+        }
+
+        long maxByGas = chamber.getGasTank().getCapacity() / gasPerBatch;
+        long maxByInput = getMatchingFluidAmount(fluidIngredient, fluids) / fluidPerBatch;
+        long maxByFluidStack = Integer.MAX_VALUE / (long) Math.max(fluidPerBatch, outputPerBatch);
+        long theoreticalMaximum = Math.min(maxByGas, Math.min(maxByInput, maxByFluidStack));
+        if (theoreticalMaximum <= 0) {
+            return 0;
+        }
+
+        int minimumBatchSize = 0;
+        int maximumBatchSize = (int) theoreticalMaximum;
+        while (minimumBatchSize < maximumBatchSize) {
+            int candidateBatchSize = minimumBatchSize + (maximumBatchSize - minimumBatchSize + 1) / 2;
+            if (!canProcessBatch(basin, fluids, recipe, candidateBatchSize)) {
+                maximumBatchSize = candidateBatchSize - 1;
+                continue;
             }
+
+            minimumBatchSize = candidateBatchSize;
         }
-        return true;
+        return minimumBatchSize;
     }
 
-    private record BasinFluidSnapshot(FluidTankSnapshot tanks, List<FluidStack> outputBuffer) {}
+    private record BasinPlan(GasStack availableGas, GasStack gasRequest, List<FluidStack> fluidInputs, FluidStack result) {
+        private boolean hasRequiredGas() {
+            return availableGas.getAmount() >= gasRequest.getAmount();
+        }
+    }
 }

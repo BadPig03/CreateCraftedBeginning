@@ -40,7 +40,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile implements ItemSupplier, IEntityWithComplexSpawn {
-    protected static final double MIN_DELTA_MOVEMENT_LENGTH = 0.01;
+    private static final double MIN_DELTA_MOVEMENT_LENGTH = 0.01;
     private static final double MIN_DELTA_MOVEMENT_LENGTH_SQR = MIN_DELTA_MOVEMENT_LENGTH * MIN_DELTA_MOVEMENT_LENGTH;
     private static final double MIN_WEATHER_DURATION_RATIO = MIN_DELTA_MOVEMENT_LENGTH;
     private static final float DEFAULT_SIZE = 0.25f;
@@ -52,10 +52,10 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
     private static final String COMPOUND_KEY_START_Y = "StartY";
     private static final String COMPOUND_KEY_COPIED = "Copied";
 
-    protected ItemStack itemStack;
-    protected int lifeTime;
-    protected double startY;
-    protected boolean copied;
+    private ItemStack itemStack;
+    private int lifeTime;
+    private double startY;
+    private boolean copied;
 
     public WeatherFlareProjectileEntity(EntityType<WeatherFlareProjectileEntity> entityType, Level level) {
         super(entityType, level);
@@ -63,10 +63,10 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
         itemStack = getDefaultItem();
     }
 
-    public WeatherFlareProjectileEntity(Level level, Item item, double startY) {
+    public WeatherFlareProjectileEntity(Level level, Item flareItem, double startY) {
         super(CCBEntityTypes.WEATHER_FLARE_PROJECTILE.get(), level);
         accelerationPower = 0;
-        itemStack = new ItemStack(item);
+        itemStack = new ItemStack(flareItem);
         this.startY = startY;
     }
 
@@ -77,10 +77,6 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
 
     public static void build(EntityType.Builder<WeatherFlareProjectileEntity> builder) {
         builder.sized(DEFAULT_SIZE, DEFAULT_SIZE).eyeHeight(0);
-    }
-
-    public void setCopied(boolean copied) {
-        this.copied = copied;
     }
 
     @Override
@@ -194,19 +190,19 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
 
     @Override
     public void writeSpawnData(RegistryFriendlyByteBuf buffer) {
-        CompoundTag tag = new CompoundTag();
-        addAdditionalSaveData(tag);
-        buffer.writeNbt(tag);
+        CompoundTag spawnTag = new CompoundTag();
+        addAdditionalSaveData(spawnTag);
+        buffer.writeNbt(spawnTag);
     }
 
     @Override
     public void readSpawnData(RegistryFriendlyByteBuf buffer) {
-        CompoundTag tag = buffer.readNbt();
-        if (tag == null) {
+        CompoundTag spawnTag = buffer.readNbt();
+        if (spawnTag == null) {
             return;
         }
 
-        readAdditionalSaveData(tag);
+        readAdditionalSaveData(spawnTag);
     }
 
     @Override
@@ -215,37 +211,41 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
     }
 
     @Override
-    protected void onHitEntity(EntityHitResult result) {
-        super.onHitEntity(result);
+    protected void onHitEntity(EntityHitResult hitResult) {
+        super.onHitEntity(hitResult);
         destroy();
     }
 
     @Override
-    protected void onHitBlock(BlockHitResult result) {
-        super.onHitBlock(result);
+    protected void onHitBlock(BlockHitResult hitResult) {
+        super.onHitBlock(hitResult);
         destroy();
     }
 
     @Override
-    public DoubleDoubleImmutablePair calculateHorizontalHurtKnockbackDirection(LivingEntity entity, DamageSource damageSource) {
-        return DoubleDoubleImmutablePair.of(entity.position().x - position().x, entity.position().z - position().z);
+    public DoubleDoubleImmutablePair calculateHorizontalHurtKnockbackDirection(LivingEntity target, DamageSource damageSource) {
+        return DoubleDoubleImmutablePair.of(target.position().x - position().x, target.position().z - position().z);
     }
 
-    protected void explode() {
+    public void setCopied(boolean copied) {
+        this.copied = copied;
+    }
+
+    private void explode() {
         if (!(level() instanceof ServerLevel level) || !(itemStack.getItem() instanceof IWeatherFlare flare)) {
             return;
         }
 
-        Vec3 pos = position();
+        Vec3 flarePos = position();
         boolean wasStormy = level.isRaining() || level.isThundering();
-        level.explode(null, pos.x, pos.y, pos.z, 0, ExplosionInteraction.NONE);
-        double ratio = Mth.clamp((pos.y - startY) / DEFAULT_Y, MIN_WEATHER_DURATION_RATIO, 16);
-        flare.setWeather(level, ratio);
+        level.explode(null, flarePos.x, flarePos.y, flarePos.z, 0, ExplosionInteraction.NONE);
+        double weatherDurationRatio = Mth.clamp((flarePos.y - startY) / DEFAULT_Y, MIN_WEATHER_DURATION_RATIO, 16);
+        flare.setWeather(level, weatherDurationRatio);
         grantAdvancements(level, wasStormy);
         discard();
     }
 
-    protected void grantAdvancements(ServerLevel level, boolean wasStormy) {
+    private void grantAdvancements(ServerLevel level, boolean wasStormy) {
         if (!(getOwner() instanceof Player player)) {
             return;
         }
@@ -263,18 +263,18 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
         CCBAdvancements.I_AM_THE_STORM_THAT_IS_APPROACHING.awardTo(player);
     }
 
-    protected void destroy() {
+    private void destroy() {
         Level level = level();
         if (level.isClientSide) {
             return;
         }
 
-        Vec3 pos = position();
+        Vec3 projectilePos = position();
         if (copied) {
-            level.explode(null, pos.x, pos.y, pos.z, 0, ExplosionInteraction.NONE);
+            level.explode(null, projectilePos.x, projectilePos.y, projectilePos.z, 0, ExplosionInteraction.NONE);
         }
         else {
-            level.addFreshEntity(new ItemEntity(level, pos.x, pos.y, pos.z, itemStack.copy()));
+            level.addFreshEntity(new ItemEntity(level, projectilePos.x, projectilePos.y, projectilePos.z, itemStack.copy()));
         }
         discard();
     }

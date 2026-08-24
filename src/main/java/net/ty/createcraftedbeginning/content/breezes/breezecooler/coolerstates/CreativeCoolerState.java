@@ -13,17 +13,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class CreativeCoolerState extends BaseCoolerState {
     private final CoolantType creativeType;
 
-    public CreativeCoolerState(CoolantType type) {
-        super(switch (type) {
+    public CreativeCoolerState(CoolantType coolantType) {
+        super(switch (coolantType) {
             case NONE -> 0;
             case NORMAL -> BreezeCoolerBlockEntity.getMaxCoolantCapacity();
         }, true);
-        creativeType = type;
+        creativeType = coolantType;
     }
 
     @Contract(pure = true)
-    public static CoolantType getNextCoolantType(CoolantType coolantTypeType) {
-        return switch (coolantTypeType) {
+    public static CoolantType getNextCoolantType(CoolantType coolantType) {
+        return switch (coolantType) {
             case NORMAL -> CoolantType.NONE;
             case NONE -> CoolantType.NORMAL;
         };

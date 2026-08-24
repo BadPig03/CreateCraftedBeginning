@@ -30,15 +30,15 @@ import java.util.List;
 public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
     private static final String COMPOUND_KEY_CANISTER = "Canister";
 
-    protected ItemStack canister = ItemStack.EMPTY;
-    protected SmartGasTankBehaviour tankBehaviour;
+    private ItemStack canister = ItemStack.EMPTY;
+    private SmartGasTankBehaviour tankBehaviour;
 
     public GasCanisterBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.GAS_CANISTER.get(), (blockEntity, context) -> blockEntity.tankBehaviour.getCapability());
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.GAS_CANISTER.get(), (canister, ignoredDirection) -> canister.tankBehaviour.getCapability());
     }
 
     @Override
@@ -70,51 +70,52 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
         invalidateCapabilities();
     }
 
-    public void setCanisterContent(ItemStack itemStack) {
-        canister = itemStack.copy();
-        if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents contents)) {
-            return;
-        }
-
-        tankBehaviour.getPrimaryHandler().setCapacity(contents.getTankCapacity(0));
-        tankBehaviour.getInternalGasHandler().forceFill(contents.getGasInTank(0), GasAction.EXECUTE);
-        notifyUpdate();
-    }
-
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         if (level == null) {
             return false;
         }
 
-        SmartGasTank tank = tankBehaviour.getPrimaryHandler();
+        SmartGasTank gasTank = tankBehaviour.getPrimaryHandler();
         CCBLang.translate("gui.gas_container").forGoggles(tooltip);
 
-        GasStack content = tank.getGasStack();
-        if (content.isEmpty()) {
-            CCBLang.translate("gui.gas_container.capacity").add(GasAmounts.precise(tank.getCapacity()).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+        GasStack storedGas = gasTank.getGasStack();
+        if (storedGas.isEmpty()) {
+            CCBLang.translate("gui.gas_container.capacity").add(GasAmounts.precise(gasTank.getCapacity()).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
             return true;
         }
 
-        CCBLang.gasName(content).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-        GasAmounts.precise(content.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmounts.precise(tank.getCapacity()).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+        CCBLang.gasName(storedGas).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+        GasAmounts.precise(storedGas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmounts.precise(gasTank.getCapacity()).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
         return true;
     }
 
-    public ItemStack getCanister() {
+    void setCanisterContent(ItemStack placedCanister) {
+        canister = placedCanister.copy();
+        if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
+            return;
+        }
+
+        tankBehaviour.getPrimaryHandler().setCapacity(canisterContents.getTankCapacity(0));
+        tankBehaviour.getInternalGasHandler().forceFill(canisterContents.getGasInTank(0), GasAction.EXECUTE);
+        notifyUpdate();
+    }
+
+    ItemStack getCanister() {
         return canister;
     }
 
-    protected void updateCapacity() {
-        if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents contents)) {
+    private void updateCapacity() {
+        if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
             return;
         }
 
-        long newCapacity = contents.getTankCapacity(0);
-        if (tankBehaviour.getPrimaryHandler().getCapacity() == newCapacity) {
+        SmartGasTank gasTank = tankBehaviour.getPrimaryHandler();
+        long canisterCapacity = canisterContents.getTankCapacity(0);
+        if (gasTank.getCapacity() == canisterCapacity) {
             return;
         }
 
-        tankBehaviour.getPrimaryHandler().setCapacity(newCapacity);
+        gasTank.setCapacity(canisterCapacity);
     }
 }
