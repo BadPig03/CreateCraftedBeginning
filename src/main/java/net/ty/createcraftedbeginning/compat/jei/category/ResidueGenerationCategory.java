@@ -15,7 +15,7 @@ import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightEngine;
-import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
 import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -34,8 +34,8 @@ public class ResidueGenerationCategory extends CCBRecipeCategory<ResidueGenerati
 
     @Override
     protected void draw(ResidueGenerationRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
-        CCBGUITextures.JEI_SHADOW.render(graphics, 61, 54);
-        CCBGUITextures.JEI_LONG_ARROW.render(graphics, 52, 77);
+        CCBJEITextures.JEI_SHADOW.render(graphics, 61, 54);
+        CCBJEITextures.JEI_LONG_ARROW.render(graphics, 52, 77);
         engine.draw(graphics, background.getWidth() / 2 - 13, 39);
         if (recipe.hasResidueOutput()) {
             return;

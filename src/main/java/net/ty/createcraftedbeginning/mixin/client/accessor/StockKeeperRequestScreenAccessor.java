@@ -6,7 +6,7 @@ import com.simibubi.create.content.logistics.stockTicker.StockTickerBlockEntity;
 import net.createmod.catnip.data.Couple;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.platform.access.StockKeeperRequestScreenAccess;
+import net.ty.createcraftedbeginning.platform.access.client.StockKeeperRequestScreenAccess;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;

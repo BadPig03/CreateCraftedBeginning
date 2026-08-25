@@ -1,11 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.gascanisterpack;
 
-import com.mojang.serialization.Codec;
-import io.netty.buffer.ByteBuf;
-import net.createmod.catnip.codecs.stream.CatnipStreamCodecBuilders;
 import net.createmod.catnip.lang.Lang;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
 import net.ty.createcraftedbeginning.api.CCBAPI;
@@ -60,8 +56,6 @@ public class GasCanisterPackOverrides {
         _1110,
         _1111;
 
-        private static final Codec<GasCanisterPackType> CODEC = StringRepresentable.fromValues(GasCanisterPackType::values);
-        private static final StreamCodec<ByteBuf, GasCanisterPackType> STREAM_CODEC = CatnipStreamCodecBuilders.ofEnum(GasCanisterPackType.class);
         public static final ResourceLocation TYPE = CCBAPI.asResource("gas_canister_pack_type");
 
         public static GasCanisterPackType getTypeFromFlags(int flags) {

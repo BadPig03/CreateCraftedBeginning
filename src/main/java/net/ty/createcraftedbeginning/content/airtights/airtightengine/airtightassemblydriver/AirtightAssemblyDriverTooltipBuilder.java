@@ -11,7 +11,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverLevelCalculator.LevelKey;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
-import net.ty.createcraftedbeginning.platform.CCBClientBridge;
+import net.ty.createcraftedbeginning.platform.client.ClientRenderBridge;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -48,7 +48,7 @@ class AirtightAssemblyDriverTooltipBuilder {
         int maxValue = levels.getOrDefault(LevelKey.MAX_VALUE, AirtightAssemblyDriverCore.MAX_LEVEL);
         List<MutableComponent> labels = List.of(createLabel("supply"), createLabel("wind_charging"), createLabel("residue"));
         List<MutableComponent> bars = List.of(createProgressBar(levels.getOrDefault(LevelKey.SUPPLY, 0), minValue, maxValue), createProgressBar(levels.getOrDefault(LevelKey.WIND_CHARGING, 0), minValue, maxValue), createProgressBar(levels.getOrDefault(LevelKey.RESIDUE, 0), minValue, maxValue));
-        if (CCBClientBridge.addAlignedTooltipBars(tooltip, 1, labels, bars)) {
+        if (ClientRenderBridge.addAlignedTooltipBars(tooltip, 1, labels, bars)) {
             return;
         }
 

@@ -8,7 +8,8 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Block;
-import net.ty.createcraftedbeginning.platform.CCBClientBridge;
+import net.minecraft.world.phys.AABB;
+import net.ty.createcraftedbeginning.platform.client.ClientRenderBridge;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -33,7 +34,7 @@ public class AirtightReactorKettleBlockItem extends BlockItem {
             return placementResult;
         }
 
-        CCBClientBridge.showAirtightReactorKettlePlacementBounds(context);
+        ClientRenderBridge.showPlacementBounds(context, "airtight_reactor_kettle", adjacentPos, new AABB(adjacentPos).inflate(1));
         return placementResult;
     }
 

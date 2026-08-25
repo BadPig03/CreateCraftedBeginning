@@ -40,7 +40,6 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.client.CCBClientRecipeUtils;
 import net.ty.createcraftedbeginning.compat.CCBCompatMods;
-import net.ty.createcraftedbeginning.compat.functionalstorage.client.FunctionalStorageJEICompat;
 import net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory.Builder;
 import net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory.Factory;
@@ -57,6 +56,7 @@ import net.ty.createcraftedbeginning.compat.jei.category.SequencedAssemblyWithGa
 import net.ty.createcraftedbeginning.compat.jei.category.WindChargingCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.gas.GasStackHelper;
 import net.ty.createcraftedbeginning.compat.jei.category.gas.GasStackRenderer;
+import net.ty.createcraftedbeginning.compat.jei.functionalstorage.FunctionalStorageJEICompat;
 import net.ty.createcraftedbeginning.compat.jei.utils.AirtightHandheldDrillGhostIngredientHandler;
 import net.ty.createcraftedbeginning.compat.jei.utils.FanProcessingFilterRecipeUtils;
 import net.ty.createcraftedbeginning.compat.jei.utils.GasFilterGhostIngredientHandler;
@@ -209,12 +209,6 @@ public class CCBJEIPlugin implements IModPlugin {
         runtime = null;
     }
 
-    private static final class FunctionalStorageHook {
-        private static void registerItemSubtypes(ISubtypeRegistration registration) {
-            FunctionalStorageJEICompat.registerItemSubtypes(registration);
-        }
-    }
-
     private void loadCategories() {
         allCategories.clear();
         builder(CoolingRecipe.class).addTypedRecipes(CCBRecipeTypes.COOLING).catalyst(CCBBlocks.BREEZE_COOLER_BLOCK::get).itemIcon(CCBBlocks.BREEZE_COOLER_BLOCK).emptyBackground(177, 50).build("cooling", CoolingCategory::new);
@@ -236,6 +230,12 @@ public class CCBJEIPlugin implements IModPlugin {
     @Contract("_ -> new")
     private <T extends Recipe<? extends RecipeInput>> @NotNull CategoryBuilder<T> builder(Class<T> recipeClass) {
         return new CategoryBuilder<>(recipeClass);
+    }
+
+    private static final class FunctionalStorageHook {
+        private static void registerItemSubtypes(ISubtypeRegistration registration) {
+            FunctionalStorageJEICompat.registerItemSubtypes(registration);
+        }
     }
 
     private class CategoryBuilder<T extends Recipe<?>> extends Builder<T> {

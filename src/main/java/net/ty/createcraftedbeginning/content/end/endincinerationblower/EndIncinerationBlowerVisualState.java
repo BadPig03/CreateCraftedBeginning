@@ -14,8 +14,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerStructuralBlockEntity.BlowerWorkingMode;
-import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge;
-import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge.EntityArea;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge.EntityArea;
 import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,7 +53,7 @@ final class EndIncinerationBlowerVisualState {
         }
 
         AABB processingArea = EndIncinerationBlowerRange.calculateArea(pos, absSpeed);
-        EntityArea entityArea = CCBSubLevelBridge.createEntityArea(level, pos, processingArea);
+        EntityArea entityArea = SubLevelBridge.createEntityArea(level, pos, processingArea);
         switch (workingMode) {
             case SMOKING -> spawnFanProcessingParticles(level, AllFanProcessingTypes.SMOKING, processingArea, entityArea);
             case BLASTING -> spawnFanProcessingParticles(level, AllFanProcessingTypes.BLASTING, processingArea, entityArea);

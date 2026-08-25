@@ -18,7 +18,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.recipes.TemperatureCondition;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
-import net.ty.createcraftedbeginning.platform.CCBClientBridge;
+import net.ty.createcraftedbeginning.platform.client.ClientContextBridge;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -47,7 +47,7 @@ class AirtightReactorKettleTooltipBuilder {
 
     boolean addToTooltip(List<Component> tooltip) {
         AirtightReactorKettleStructureManager structureManager = core.getStructureManager();
-        if (structureManager.getOverstressed() && CCBClientBridge.isOverstressedTooltipEnabled()) {
+        if (structureManager.getOverstressed() && ClientContextBridge.isOverstressedTooltipEnabled()) {
             CCBLang.translate("gui.overstressed").style(ChatFormatting.GOLD).forGoggles(tooltip);
             CCBLang.addToGoggles(tooltip, "gui.network_overstressed");
             return true;
@@ -87,7 +87,7 @@ class AirtightReactorKettleTooltipBuilder {
         int contentsStartIndex = tooltip.size();
         CCBLang.translate("gui.airtight_reactor_kettle.contents").style(ChatFormatting.GRAY).forGoggles(tooltip);
 
-        int maxItemDisplay = CCBClientBridge.getMaxItemStackDisplay();
+        int maxItemDisplay = ClientContextBridge.getMaxItemStackDisplay();
         int itemCount = addItemInfo(tooltip, maxItemDisplay);
         if (itemCount > maxItemDisplay) {
             CCBLang.translate("gui.airtight_reactor_kettle.more", itemCount - maxItemDisplay).style(ChatFormatting.DARK_GRAY).forGoggles(tooltip, 1);

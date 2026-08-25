@@ -11,6 +11,9 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.compat.CCBCompatMods;
+import net.ty.createcraftedbeginning.compat.createdragonsplus.CreateDragonsPlusCompat;
+import net.ty.createcraftedbeginning.compat.dndesires.DnDesiresCompat;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,26 +35,12 @@ public class FanProcessingFilterRecipeLookupPlugin implements IRecipeManagerPlug
         PROCESSING_TYPES.put(Create.asResource("blasting"), Create.asResource("fan_blasting"));
         PROCESSING_TYPES.put(Create.asResource("haunting"), Create.asResource("fan_haunting"));
         PROCESSING_TYPES.put(CCBAPI.asResource("chilling"), CCBAPI.asResource("chilling"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_white"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_light_gray"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_gray"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_black"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_brown"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_red"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_orange"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_yellow"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_lime"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_green"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_cyan"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_light_blue"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_blue"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_purple"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_magenta"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_pink"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "ending"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "ending"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "sanding"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "sanding"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "freezing"), ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "freezing"));
-        PROCESSING_TYPES.put(ResourceLocation.fromNamespaceAndPath("dndesires", "seething"), Create.asResource("fan_seething"));
+        if (CCBCompatMods.CREATE_DRAGONS_PLUS.isLoaded()) {
+            CreateDragonsPlusCompat.registerJeiFanProcessingCategories(PROCESSING_TYPES::put);
+        }
+        if (CCBCompatMods.DNDESIRES.isLoaded()) {
+            DnDesiresCompat.registerJeiFanProcessingCategories(PROCESSING_TYPES::put);
+        }
     }
 
     private final Supplier<IJeiRuntime> runtimeSupplier;

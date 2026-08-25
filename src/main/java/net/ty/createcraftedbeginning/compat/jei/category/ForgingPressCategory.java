@@ -24,7 +24,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightForgingPress;
-import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
 import net.ty.createcraftedbeginning.recipe.ForgingPressRecipe;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -165,13 +165,13 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
         NonNullList<SizedGasIngredient> gasIngredients = recipe.getGasIngredients();
         int inputCount = recipe.getIngredients().size() + fluidIngredients.size() + gasIngredients.size();
         if (inputCount > 1) {
-            CCBGUITextures.JEI_PRESS_HEAD_TOOL.render(graphics, 24, 43);
+            CCBJEITextures.JEI_PRESS_HEAD_TOOL.render(graphics, 24, 43);
         }
         if (inputCount > 2) {
-            CCBGUITextures.JEI_DOWN_ARROW.render(graphics, 73, 10);
+            CCBJEITextures.JEI_DOWN_ARROW.render(graphics, 73, 10);
         }
-        CCBGUITextures.JEI_SHADOW.render(graphics, 66, 66);
-        CCBGUITextures.JEI_LONG_ARROW.render(graphics, background.getWidth() / 2 - 35, 86);
+        CCBJEITextures.JEI_SHADOW.render(graphics, 66, 66);
+        CCBJEITextures.JEI_LONG_ARROW.render(graphics, background.getWidth() / 2 - 35, 86);
         forgingPress.draw(graphics, background.getWidth() / 2 - 8, 58);
     }
 

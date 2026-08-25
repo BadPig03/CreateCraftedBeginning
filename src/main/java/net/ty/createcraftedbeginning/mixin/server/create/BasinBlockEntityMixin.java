@@ -2,7 +2,7 @@ package net.ty.createcraftedbeginning.mixin.server.create;
 
 import com.simibubi.create.content.processing.basin.BasinBlockEntity;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBasinCompat;
+import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBasinIntegration;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,6 +17,6 @@ public abstract class BasinBlockEntityMixin {
     @SuppressWarnings("DataFlowIssue")
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Ljava/util/Optional;ifPresent(Ljava/util/function/Consumer;)V", ordinal = 0), require = 0)
     private void ccb$tick(CallbackInfo ci) {
-        GasInjectionChamberBasinCompat.onBasinContentsChanged((BasinBlockEntity) (Object) this);
+        GasInjectionChamberBasinIntegration.onBasinContentsChanged((BasinBlockEntity) (Object) this);
     }
 }

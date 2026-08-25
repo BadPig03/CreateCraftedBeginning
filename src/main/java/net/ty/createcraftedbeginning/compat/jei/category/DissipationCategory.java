@@ -12,7 +12,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedBreezeChamberWithTank;
-import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
 import net.ty.createcraftedbeginning.recipe.DissipationRecipe;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -30,8 +30,8 @@ public class DissipationCategory extends CCBRecipeCategory<DissipationRecipe> {
 
     @Override
     public void draw(DissipationRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
-        CCBGUITextures.JEI_SHADOW.render(graphics, 61, 41);
-        CCBGUITextures.JEI_LONG_ARROW.render(graphics, 52, 54);
+        CCBJEITextures.JEI_SHADOW.render(graphics, 61, 41);
+        CCBJEITextures.JEI_LONG_ARROW.render(graphics, 52, 54);
         chamber.draw(graphics, background.getWidth() / 2 - 17, 24);
     }
 

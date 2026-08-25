@@ -50,7 +50,7 @@ public enum BreezeChamberProvider implements IBlockComponentProvider, IServerDat
         boolean isCreative = serverData.getBoolean(COMPOUND_KEY_IS_CREATIVE);
         if (windLevel == WindLevel.ILL) {
             tooltip.add(elementHelper.smallItem(ILL_ICON));
-            tooltip.append(isCreative ? IThemeHelper.get().info(Component.translatable("jade.gas.infinity_mark")) : IThemeHelper.get().seconds(remainingTicks, tickRate).withStyle(ChatFormatting.RED));
+            tooltip.append(isCreative ? IThemeHelper.get().info(Component.translatable("createcraftedbeginning.generic.infinity_mark")) : IThemeHelper.get().seconds(remainingTicks, tickRate).withStyle(ChatFormatting.RED));
             return;
         }
 
@@ -59,7 +59,7 @@ public enum BreezeChamberProvider implements IBlockComponentProvider, IServerDat
         }
 
         tooltip.add(elementHelper.smallItem(GALE_ICON));
-        tooltip.append(isCreative ? IThemeHelper.get().info(Component.translatable("jade.gas.infinity_mark")) : IThemeHelper.get().seconds(remainingTicks, tickRate));
+        tooltip.append(isCreative ? IThemeHelper.get().info(Component.translatable("createcraftedbeginning.generic.infinity_mark")) : IThemeHelper.get().seconds(remainingTicks, tickRate));
     }
 
     @Override

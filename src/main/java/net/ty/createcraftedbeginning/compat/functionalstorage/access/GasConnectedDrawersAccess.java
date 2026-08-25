@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.compat.functionalstorage;
+package net.ty.createcraftedbeginning.compat.functionalstorage.access;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;

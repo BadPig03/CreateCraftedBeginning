@@ -10,7 +10,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
-import net.minecraft.world.item.CreativeModeTab;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -45,8 +44,8 @@ import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOv
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberRecipeIndex;
 import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.foundation.client.outliner.CCBOutliner;
-import net.ty.createcraftedbeginning.platform.access.CreativeModeInventoryScreenAccess;
-import net.ty.createcraftedbeginning.platform.access.ItemPickerMenuAccess;
+import net.ty.createcraftedbeginning.platform.client.CreativeInventoryBridge;
+import net.ty.createcraftedbeginning.platform.client.CreativeInventoryBridge.View;
 import net.ty.createcraftedbeginning.ponder.CCBPonderPlugin;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.PositionedSection;
@@ -131,17 +130,16 @@ public class CCBClientEvents {
 
     @SubscribeEvent
     public static void onRenderForeground(Foreground event) {
-        if (!(event.getContainerScreen() instanceof CreativeModeInventoryScreen screen) || !(screen instanceof CreativeModeInventoryScreenAccess screenAccessor) || !(screen.getMenu() instanceof ItemPickerMenuAccess menuAccessor)) {
+        if (!(event.getContainerScreen() instanceof CreativeModeInventoryScreen screen)) {
             return;
         }
 
-        CreativeModeTab selectedTab = screenAccessor.ccb$getSelectedTab();
-        if (selectedTab != CCBCreativeTabs.CREATIVE_TAB.get()) {
+        View creativeView = CreativeInventoryBridge.getView(screen);
+        if (creativeView == null || creativeView.selectedTab() != CCBCreativeTabs.CREATIVE_TAB.get()) {
             return;
         }
 
-        float scrollOffset = screenAccessor.ccb$getScrollOffs();
-        int firstVisibleRow = menuAccessor.ccb$getRowIndexForScroll(scrollOffset);
+        int firstVisibleRow = creativeView.firstVisibleRow();
         for (PositionedSection section : CCBCreativeTabLayout.positionedSections()) {
             int visibleRow = section.bannerRow() - firstVisibleRow;
             if (visibleRow < 0 || visibleRow >= CCBCreativeTabLayout.VISIBLE_ROW_COUNT) {

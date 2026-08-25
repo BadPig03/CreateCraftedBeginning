@@ -4,7 +4,6 @@ import com.simibubi.create.content.processing.basin.BasinBlockEntity;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.ty.createcraftedbeginning.platform.access.BasinTransactionAccess;
-import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBasinCompat;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
@@ -20,13 +19,11 @@ public abstract class BasinTransactionAccessMixin implements BasinTransactionAcc
 
     @Override
     public List<FluidStack> ccb$copyTransactionFluidOverflow() {
-        GasInjectionChamberBasinCompat.markAccessVerified();
         return spoutputFluidBuffer.stream().map(FluidStack::copy).toList();
     }
 
     @Override
     public void ccb$restoreTransactionFluidOverflow(List<FluidStack> snapshot) {
-        GasInjectionChamberBasinCompat.markAccessVerified();
         spoutputFluidBuffer.clear();
         snapshot.stream().map(FluidStack::copy).forEach(spoutputFluidBuffer::add);
     }

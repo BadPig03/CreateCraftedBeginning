@@ -1,13 +1,15 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightforgingpress;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Block;
-import net.ty.createcraftedbeginning.platform.CCBClientBridge;
+import net.minecraft.world.phys.AABB;
+import net.ty.createcraftedbeginning.platform.client.ClientRenderBridge;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -31,7 +33,8 @@ public class AirtightForgingPressBlockItem extends BlockItem {
             return placementResult;
         }
 
-        CCBClientBridge.showAirtightForgingPressPlacementBounds(context);
+        BlockPos placementPos = context.getClickedPos().relative(clickedFace);
+        ClientRenderBridge.showPlacementBounds(context, "airtight_forging_press", placementPos, new AABB(placementPos).inflate(1));
         return placementResult;
     }
 

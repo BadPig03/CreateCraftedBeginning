@@ -12,7 +12,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.level.ServerLevel;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.platform.CCBClientBridge;
+import net.ty.createcraftedbeginning.platform.client.ClientRenderBridge;
 import net.ty.createcraftedbeginning.registry.CCBPackets;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -29,7 +29,7 @@ public record GasAreaOutlinePacket(BlockPos pos, Direction direction, float infl
     @Override
     @OnlyIn(Dist.CLIENT)
     public void handle(LocalPlayer player) {
-        CCBClientBridge.showGasAreaOutline(player, pos, direction, inflation, color);
+        ClientRenderBridge.showGasAreaOutline(player, pos, direction, inflation, color);
     }
 
     @Override

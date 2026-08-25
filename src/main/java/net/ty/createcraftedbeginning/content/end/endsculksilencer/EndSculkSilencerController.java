@@ -3,8 +3,8 @@ package net.ty.createcraftedbeginning.content.end.endsculksilencer;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge;
-import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge.Projection;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge.Projection;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -23,7 +23,7 @@ final class EndSculkSilencerController {
             return;
         }
 
-        Projection projection = CCBSubLevelBridge.resolve(serverLevel, silencer.getBlockPos());
+        Projection projection = SubLevelBridge.resolve(serverLevel, silencer.getBlockPos());
         isInSubLevel = projection.inSubLevel();
         refresh(serverLevel, projection.blockPos());
     }
@@ -33,7 +33,7 @@ final class EndSculkSilencerController {
             return;
         }
 
-        Projection projection = CCBSubLevelBridge.resolve(serverLevel, silencer.getBlockPos());
+        Projection projection = SubLevelBridge.resolve(serverLevel, silencer.getBlockPos());
         isInSubLevel = projection.inSubLevel();
         refresh(serverLevel, projection.blockPos());
     }

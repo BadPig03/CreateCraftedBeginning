@@ -34,7 +34,7 @@ import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlareSupplierUtils;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
-import net.ty.createcraftedbeginning.platform.CCBClientBridge;
+import net.ty.createcraftedbeginning.platform.client.ClientRenderBridge;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Nullable;
 
@@ -83,7 +83,7 @@ public class AirtightCannonItem extends Item implements CustomArmPoseItem {
             return InteractionResultHolder.success(cannon);
         }
 
-        CCBClientBridge.dontAnimateAirtightCannon(hand);
+        ClientRenderBridge.dontAnimateAirtightCannon(hand);
         return InteractionResultHolder.success(cannon);
     }
 

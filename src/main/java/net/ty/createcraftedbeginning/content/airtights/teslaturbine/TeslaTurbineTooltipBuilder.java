@@ -8,7 +8,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineLevelCalculator.LevelKey;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
-import net.ty.createcraftedbeginning.platform.CCBClientBridge;
+import net.ty.createcraftedbeginning.platform.client.ClientRenderBridge;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -44,7 +44,7 @@ class TeslaTurbineTooltipBuilder {
         int maximumLevel = levels.getOrDefault(LevelKey.MAX_VALUE, MAX_LEVEL);
         List<MutableComponent> labels = List.of(createLabel("supply"), createLabel("rotor"), createLabel("type"));
         List<MutableComponent> bars = List.of(createProgressBar(levels.getOrDefault(LevelKey.SUPPLY, 0), minimumLevel, maximumLevel), createProgressBar(levels.getOrDefault(LevelKey.ROTOR, 0), minimumLevel, maximumLevel), createProgressBar(levels.getOrDefault(LevelKey.TYPE, 0), minimumLevel, maximumLevel));
-        if (CCBClientBridge.addAlignedTooltipBars(tooltip, 1, labels, bars)) {
+        if (ClientRenderBridge.addAlignedTooltipBars(tooltip, 1, labels, bars)) {
             return;
         }
 

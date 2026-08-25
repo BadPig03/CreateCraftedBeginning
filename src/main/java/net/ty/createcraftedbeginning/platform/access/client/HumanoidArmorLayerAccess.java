@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.platform.access;
+package net.ty.createcraftedbeginning.platform.access.client;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.model.HumanoidModel;

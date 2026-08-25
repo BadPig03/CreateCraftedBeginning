@@ -28,7 +28,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterUtils;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
-import net.ty.createcraftedbeginning.platform.CCBClientBridge;
+import net.ty.createcraftedbeginning.platform.client.ClientContextBridge;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -232,6 +232,6 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
     }
 
     public float getRenderDistance() {
-        return CCBClientBridge.getFilterItemRenderDistance();
+        return ClientContextBridge.getFilterItemRenderDistance();
     }
 }

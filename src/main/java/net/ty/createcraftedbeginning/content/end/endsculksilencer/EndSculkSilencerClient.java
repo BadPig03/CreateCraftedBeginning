@@ -12,8 +12,8 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge;
-import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge.Projection;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge.Projection;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -40,7 +40,7 @@ public final class EndSculkSilencerClient {
             return;
         }
 
-        Projection projection = CCBSubLevelBridge.resolve(silencerLevel, silencer.getBlockPos());
+        Projection projection = SubLevelBridge.resolve(silencerLevel, silencer.getBlockPos());
         Vec3 projectedCenter = projection.worldPosition();
         if (player.distanceToSqr(projectedCenter.x, projectedCenter.y, projectedCenter.z) > 9216) {
             return;

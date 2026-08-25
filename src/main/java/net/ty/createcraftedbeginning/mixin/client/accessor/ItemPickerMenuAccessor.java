@@ -2,7 +2,7 @@ package net.ty.createcraftedbeginning.mixin.client.accessor;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen.ItemPickerMenu;
-import net.ty.createcraftedbeginning.platform.access.ItemPickerMenuAccess;
+import net.ty.createcraftedbeginning.platform.access.client.ItemPickerMenuAccess;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 

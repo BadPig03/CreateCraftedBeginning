@@ -14,7 +14,7 @@ import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent.LoggingOut;
 import net.neoforged.neoforge.client.event.ClientTickEvent.Post;
 import net.neoforged.neoforge.client.event.sound.PlaySoundEvent;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.IdentityHashMap;
@@ -134,6 +134,6 @@ final class EndSculkSilencerClientEvents {
     }
 
     private static boolean isWithinRange(ClientLevel level, Vec3 worldPosition, ResourceLocation dimension) {
-        return ClientEndSculkSilencerCache.INSTANCE.checkWithinRange(CCBSubLevelBridge.resolve(level, worldPosition).blockPos(), dimension);
+        return ClientEndSculkSilencerCache.INSTANCE.checkWithinRange(SubLevelBridge.resolve(level, worldPosition).blockPos(), dimension);
     }
 }

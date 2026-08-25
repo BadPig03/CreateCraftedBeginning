@@ -15,7 +15,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
 import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.recipe.ChillingRecipe;
@@ -42,10 +42,10 @@ public class ChillingCategory extends CCBRecipeCategory<ChillingRecipe> {
 
     @Override
     protected void draw(ChillingRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
-        CCBGUITextures.JEI_SHADOW.render(graphics, 46, 29);
-        CCBGUITextures.JEI_SHADOW.render(graphics, 65, 39);
+        CCBJEITextures.JEI_SHADOW.render(graphics, 46, 29);
+        CCBJEITextures.JEI_SHADOW.render(graphics, 65, 39);
         int resultCount = recipe.getRollableResultsAsItemStacks().size();
-        CCBGUITextures.JEI_LONG_ARROW.render(graphics, 7 * (1 - Math.min(3, resultCount)) + 54, 51);
+        CCBJEITextures.JEI_LONG_ARROW.render(graphics, 7 * (1 - Math.min(3, resultCount)) + 54, 51);
 
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();

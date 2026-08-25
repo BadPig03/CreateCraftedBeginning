@@ -10,7 +10,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor.ARGB32;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
@@ -38,29 +37,13 @@ public final class GasInjectionChamberUtils {
         COLORS.put(Create.asResource("blasting"), ARGB32.average(0xFFFF4400, 0xFFFF8855));
         COLORS.put(Create.asResource("haunting"), ARGB32.average(0xFF000000, 0xFF126568));
         COLORS.put(CCBAPI.asResource("chilling"), 0xFFEBF6FF);
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_white"), 0xFF000000 | DyeColor.WHITE.getFireworkColor());
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_light_gray"), 0xFF000000 | DyeColor.LIGHT_GRAY.getFireworkColor());
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_gray"), 0xFF000000 | DyeColor.GRAY.getFireworkColor());
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_black"), 0xFF000000 | DyeColor.BLACK.getFireworkColor());
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_brown"), 0xFF000000 | DyeColor.BROWN.getFireworkColor());
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_red"), 0xFF000000 | DyeColor.RED.getFireworkColor());
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_orange"), 0xFF000000 | DyeColor.ORANGE.getFireworkColor());
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_yellow"), 0xFF000000 | DyeColor.YELLOW.getFireworkColor());
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_lime"), 0xFF000000 | DyeColor.LIME.getFireworkColor());
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_green"), 0xFF000000 | DyeColor.GREEN.getFireworkColor());
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_cyan"), 0xFF000000 | DyeColor.CYAN.getFireworkColor());
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_light_blue"), 0xFF000000 | DyeColor.LIGHT_BLUE.getFireworkColor());
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_blue"), 0xFF000000 | DyeColor.BLUE.getFireworkColor());
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_purple"), 0xFF000000 | DyeColor.PURPLE.getFireworkColor());
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_magenta"), 0xFF000000 | DyeColor.MAGENTA.getFireworkColor());
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "coloring_pink"), 0xFF000000 | DyeColor.PINK.getFireworkColor());
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "ending"), ARGB32.average(0xFFB700D2, 0xFFDF00F9));
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "sanding"), 0xFFDBD3A0);
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("create_dragons_plus", "freezing"), ARGB32.average(0xFFFFFFFF, 0xFF8ADCE8));
-        COLORS.put(ResourceLocation.fromNamespaceAndPath("dndesires", "seething"), ARGB32.average(0xFF64C9FD, 0xFF3F74E8));
     }
 
     private GasInjectionChamberUtils() {
+    }
+
+    public static void registerFanProcessingColor(ResourceLocation typeId, int color) {
+        COLORS.put(typeId, color);
     }
 
     public static boolean isFilter(ItemStack stack) {

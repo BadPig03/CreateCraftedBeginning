@@ -44,7 +44,7 @@ public enum BreezeCoolerProvider implements IBlockComponentProvider, IServerData
 
         tooltip.add(IElementHelper.get().smallItem(ICON));
         boolean isCreative = serverData.getBoolean(COMPOUND_KEY_IS_CREATIVE);
-        tooltip.append(isCreative ? IThemeHelper.get().info(Component.translatable("jade.gas.infinity_mark")) : IThemeHelper.get().seconds(remainingTicks, accessor.tickRate()));
+        tooltip.append(isCreative ? IThemeHelper.get().info(Component.translatable("createcraftedbeginning.generic.infinity_mark")) : IThemeHelper.get().seconds(remainingTicks, accessor.tickRate()));
     }
 
     @Override

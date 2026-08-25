@@ -11,7 +11,6 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
-import net.ty.createcraftedbeginning.platform.access.RedstoneRequesterScreenAccess;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -62,7 +61,7 @@ public class RedstoneRequesterGhostIngredientHandler implements IGhostIngredient
                 return;
             }
 
-            GasRequestClientUtils.submitVirtualItem((RedstoneRequesterScreenAccess) gui, gui.getMenu(), GasVirtualUtils.createVirtualItem(gasStack), slotIndex, GasRequestClientUtils.getScrollStep());
+            GasRequestClientUtils.submitVirtualItem(gui, gui.getMenu(), GasVirtualUtils.createVirtualItem(gasStack), slotIndex, GasRequestClientUtils.getScrollStep());
         }
     }
 }

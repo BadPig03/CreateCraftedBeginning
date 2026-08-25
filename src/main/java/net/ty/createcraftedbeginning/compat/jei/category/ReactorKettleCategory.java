@@ -26,7 +26,7 @@ import net.ty.createcraftedbeginning.api.gas.recipes.TemperatureCondition;
 import net.ty.createcraftedbeginning.api.gas.recipes.TemperatureMatching;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightReactorKettle;
-import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -117,13 +117,13 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
     protected void draw(ReactorKettleRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         int outputCount = recipe.getFluidResults().size() + recipe.getGasResults().size() + recipe.getRollableResults().size();
         if (outputCount <= 3) {
-            CCBGUITextures.JEI_DOWN_ARROW.render(graphics, 136, -19 * ((1 + outputCount) / 2 - 1) + 32);
+            CCBJEITextures.JEI_DOWN_ARROW.render(graphics, 136, -19 * ((1 + outputCount) / 2 - 1) + 32);
         }
-        CCBGUITextures.JEI_SHADOW.render(graphics, 76, 66);
+        CCBJEITextures.JEI_SHADOW.render(graphics, 76, 66);
 
         TemperatureCondition condition = recipe.getTemperatureCondition();
         int color = condition.getColor();
-        CCBGUITextures.JEI_HEAT_BAR.render(graphics, 4, 80, new Color(color));
+        CCBJEITextures.JEI_HEAT_BAR.render(graphics, 4, 80, new Color(color));
         graphics.drawString(Minecraft.getInstance().font, getTemperatureDisplay(recipe), 9, 86, color, false);
 
         if (recipe.getGasIngredients().isEmpty() && recipe.getGasResults().isEmpty()) {

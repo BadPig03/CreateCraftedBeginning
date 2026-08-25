@@ -25,7 +25,8 @@ import net.minecraft.world.item.armortrim.ArmorTrim;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.platform.access.HumanoidArmorLayerAccess;
+import net.ty.createcraftedbeginning.platform.client.ArmorLayerRenderBridge;
+import net.ty.createcraftedbeginning.platform.client.ArmorLayerRenderBridge.RenderState;
 import net.ty.createcraftedbeginning.registry.CCBArmorMaterials;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
@@ -58,29 +59,26 @@ class AirtightChestplateArmorItem extends ArmorItem implements CustomRenderedArm
     }
 
     @OnlyIn(Dist.CLIENT)
-    @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public void renderArmorPiece(HumanoidArmorLayer<?, ?, ?> layer, PoseStack poseStack, MultiBufferSource bufferSource, LivingEntity entity, EquipmentSlot slot, int light, HumanoidModel<?> originalModel, ItemStack stack) {
         if (!stack.is(CCBItems.AIRTIGHT_CHESTPLATE)) {
             return;
         }
 
-        HumanoidArmorLayerAccess accessor = (HumanoidArmorLayerAccess) layer;
-        HumanoidModel<?> parentModel = layer.getParentModel();
+        RenderState renderState = ArmorLayerRenderBridge.prepare(layer, slot);
+        if (renderState == null) {
+            return;
+        }
 
-        HumanoidModel<?> innerModel = accessor.ccb$getInnerModel();
-        parentModel.copyPropertiesTo((HumanoidModel) innerModel);
-        accessor.ccb$setPartVisibility(innerModel, slot);
+        HumanoidModel<?> innerModel = renderState.innerModel();
         renderModel(poseStack, bufferSource, light, innerModel, INNER_TEXTURE);
 
-        HumanoidModel<?> outerModel = accessor.ccb$getOuterModel();
-        parentModel.copyPropertiesTo((HumanoidModel) outerModel);
-        accessor.ccb$setPartVisibility(outerModel, slot);
+        HumanoidModel<?> outerModel = renderState.outerModel();
         renderModel(poseStack, bufferSource, light, outerModel, OUTER_TEXTURE);
 
         ArmorTrim trim = stack.get(DataComponents.TRIM);
         if (trim != null) {
-            TextureAtlas trimAtlas = accessor.ccb$getArmorTrimAtlas();
+            TextureAtlas trimAtlas = renderState.armorTrimAtlas();
             renderTrim(trimAtlas, poseStack, bufferSource, light, trim, outerModel, false);
             renderTrim(trimAtlas, poseStack, bufferSource, light, trim, innerModel, true);
         }

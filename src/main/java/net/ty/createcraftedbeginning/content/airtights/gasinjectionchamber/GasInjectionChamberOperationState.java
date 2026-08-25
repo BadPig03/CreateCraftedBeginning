@@ -51,9 +51,9 @@ final class GasInjectionChamberOperationState {
         executionAttempted = true;
     }
 
-    void startProcessing(OperationType type, int ticks) {
+    void startProcessing(OperationType type) {
         this.type = type;
-        processingTicks = ticks;
+        processingTicks = GasInjectionChamberBlockEntity.PROCESSING_TIME + GasInjectionChamberBlockEntity.NOZZLE_IDLE_TIME;
         executionAttempted = false;
     }
 

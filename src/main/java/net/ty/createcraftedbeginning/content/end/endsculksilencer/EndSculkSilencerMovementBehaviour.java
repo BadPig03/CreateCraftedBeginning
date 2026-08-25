@@ -17,7 +17,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -108,7 +108,7 @@ public final class EndSculkSilencerMovementBehaviour implements MovementBehaviou
             return;
         }
 
-        BlockPos effectCenter = CCBSubLevelBridge.resolve(serverLevel, context.position).blockPos();
+        BlockPos effectCenter = SubLevelBridge.resolve(serverLevel, context.position).blockPos();
         GlobalEndSculkSilencerManager.updateMoving(serverLevel, registrationPos, effectCenter, MOVING_RANGE);
     }
 

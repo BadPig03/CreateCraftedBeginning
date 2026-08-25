@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager;
 
-import com.simibubi.create.compat.computercraft.events.RepackageEvent;
 import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.box.PackageItem;
 import com.simibubi.create.content.logistics.packager.repackager.RepackagerBlockEntity;
@@ -13,6 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.items.IItemHandler;
+import net.ty.createcraftedbeginning.compat.computercraft.ComputerCraftPackagerCompat;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -99,9 +99,7 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
             return;
         }
 
-        if (computerBehaviour != null && computerBehaviour.hasAttachedComputer()) {
-            boxes.forEach(box -> computerBehaviour.prepareComputerEvent(new RepackageEvent(box.stack, box.count)));
-        }
+        ComputerCraftPackagerCompat.emitRepackage(this, boxes);
         queuedExitingPackages.addAll(boxes);
         notifyUpdate();
     }

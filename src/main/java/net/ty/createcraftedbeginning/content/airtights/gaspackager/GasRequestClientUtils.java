@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.gaspackager;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.redstoneRequester.RedstoneRequesterMenu;
+import com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestScreen;
 import com.simibubi.create.content.logistics.redstoneRequester.RedstoneRequesterMenu.SorterProofSlot;
 import com.simibubi.create.foundation.gui.menu.GhostItemSubmitPacket;
 import net.createmod.catnip.platform.CatnipServices;
@@ -23,8 +24,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
-import net.ty.createcraftedbeginning.platform.access.RedstoneRequesterScreenAccess;
-import net.ty.createcraftedbeginning.platform.access.StockKeeperRequestScreenAccess;
+import net.ty.createcraftedbeginning.platform.client.RequestScreenBridge;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -70,7 +70,7 @@ public final class GasRequestClientUtils {
     }
 
     public static boolean onSlotClicked(AbstractContainerScreen<?> screen, RedstoneRequesterMenu requesterMenu, @Nullable Slot slot, int mouseButton, ClickType clickType) {
-        if (!(screen instanceof RedstoneRequesterScreenAccess screenAccessor) || !(slot instanceof SorterProofSlot requestSlot)) {
+        if (!RequestScreenBridge.supportsRequesterAmounts(screen) || !(slot instanceof SorterProofSlot requestSlot)) {
             return false;
         }
 
@@ -83,7 +83,7 @@ public final class GasRequestClientUtils {
         ItemStack carriedStack = requesterMenu.getCarried();
         ItemStack currentStack = inventory.getStackInSlot(slotIndex);
         if (GasVirtualUtils.isVirtualItem(currentStack)) {
-            return handleVirtualSlot(screenAccessor, requesterMenu, carriedStack, slotIndex, clickType);
+            return handleVirtualSlot(screen, requesterMenu, carriedStack, slotIndex, clickType);
         }
 
         boolean isRightClickPickup = clickType == ClickType.PICKUP && mouseButton == InputConstants.MOUSE_BUTTON_RIGHT;
@@ -102,69 +102,68 @@ public final class GasRequestClientUtils {
         }
 
         if (isRightQuickCraft) {
-            submitVirtualItem(screenAccessor, requesterMenu, virtualGasItems.getFirst(), slotIndex, getScrollStep());
+            submitVirtualItem(screen, requesterMenu, virtualGasItems.getFirst(), slotIndex, getScrollStep());
             return true;
         }
 
-        fillRequesterSlots(screenAccessor, requesterMenu, inventory, virtualGasItems, slotIndex);
+        fillRequesterSlots(screen, requesterMenu, inventory, virtualGasItems, slotIndex);
         return true;
     }
 
-    private static boolean handleVirtualSlot(RedstoneRequesterScreenAccess screenAccessor, RedstoneRequesterMenu requesterMenu, ItemStack carriedStack, int slotIndex, ClickType clickType) {
+    private static boolean handleVirtualSlot(AbstractContainerScreen<?> screen, RedstoneRequesterMenu requesterMenu, ItemStack carriedStack, int slotIndex, ClickType clickType) {
         if (clickType == ClickType.CLONE || clickType == ClickType.THROW) {
             return true;
         }
 
         if (carriedStack.isEmpty()) {
-            resetRequesterSlot(screenAccessor, requesterMenu, slotIndex, true);
+            resetRequesterSlot(screen, requesterMenu, slotIndex, true);
             return true;
         }
 
         List<ItemStack> virtualGasItems = GasVirtualUtils.getVirtualItems(carriedStack);
         if (virtualGasItems.isEmpty()) {
-            resetRequesterSlot(screenAccessor, requesterMenu, slotIndex, false);
+            resetRequesterSlot(screen, requesterMenu, slotIndex, false);
             return false;
         }
 
-        submitVirtualItem(screenAccessor, requesterMenu, virtualGasItems.getFirst(), slotIndex, -1);
+        submitVirtualItem(screen, requesterMenu, virtualGasItems.getFirst(), slotIndex, -1);
         return true;
     }
 
-    private static void fillRequesterSlots(RedstoneRequesterScreenAccess screenAccessor, RedstoneRequesterMenu requesterMenu, ItemStackHandler inventory, List<ItemStack> virtualGasItems, int firstSlot) {
+    private static void fillRequesterSlots(AbstractContainerScreen<?> screen, RedstoneRequesterMenu requesterMenu, ItemStackHandler inventory, List<ItemStack> virtualGasItems, int firstSlot) {
         int virtualItemIndex = 0;
         for (int targetSlot = firstSlot; targetSlot < inventory.getSlots() && virtualItemIndex < virtualGasItems.size(); targetSlot++) {
             if (!inventory.getStackInSlot(targetSlot).isEmpty()) {
                 continue;
             }
 
-            submitVirtualItem(screenAccessor, requesterMenu, virtualGasItems.get(virtualItemIndex), targetSlot, getScrollStep());
+            submitVirtualItem(screen, requesterMenu, virtualGasItems.get(virtualItemIndex), targetSlot, getScrollStep());
             virtualItemIndex++;
         }
     }
 
-    public static void submitVirtualItem(RedstoneRequesterScreenAccess screenAccessor, RedstoneRequesterMenu requesterMenu, ItemStack stack, int slotIndex, int amount) {
-        List<Integer> requestedAmounts = screenAccessor.ccb$getAmounts();
-        if (slotIndex < 0 || slotIndex >= requestedAmounts.size()) {
+    public static void submitVirtualItem(AbstractContainerScreen<?> screen, RedstoneRequesterMenu requesterMenu, ItemStack stack, int slotIndex, int amount) {
+        if (!RequestScreenBridge.hasRequesterAmountSlot(screen, slotIndex)) {
             return;
         }
 
         ItemStack submittedItem = stack.copyWithCount(1);
         requesterMenu.ghostInventory.setStackInSlot(slotIndex, submittedItem);
         if (amount > 0) {
-            requestedAmounts.set(slotIndex, amount);
+            RequestScreenBridge.setRequesterAmount(screen, slotIndex, amount);
         }
 
         CatnipServices.NETWORK.sendToServer(new GhostItemSubmitPacket(submittedItem, slotIndex));
     }
 
-    public static List<Component> getTooltipLines(StockKeeperRequestScreenAccess accessor, BigItemStack entry, boolean orderHovered) {
+    public static List<Component> getTooltipLines(StockKeeperRequestScreen screen, BigItemStack entry, boolean orderHovered) {
         List<Component> tooltipLines = new ArrayList<>();
         ItemStack virtualItem = entry.stack;
         tooltipLines.add(CCBLang.itemName(virtualItem).component());
 
-        int availableAmount = accessor.ccb$getBlockEntity().getLastClientsideStockSnapshotAsSummary().getCountOf(virtualItem);
+        int availableAmount = RequestScreenBridge.getAvailableAmount(screen, virtualItem);
         if (orderHovered) {
-            BigItemStack requestedOrderItem = accessor.ccb$getOrderForItem(virtualItem);
+            BigItemStack requestedOrderItem = RequestScreenBridge.getRequestedOrder(screen, virtualItem);
             if (requestedOrderItem != null && requestedOrderItem.count > 0) {
                 tooltipLines.add(CCBLang.translate("gui.gas_virtual_item.requested", GasRequestUtils.formatPrecise(requestedOrderItem.count)).style(ChatFormatting.DARK_GRAY).component());
             }
@@ -200,8 +199,10 @@ public final class GasRequestClientUtils {
         tooltipLines.add(CCBLang.translate(key, GasAmounts.formatPrecise(amount)).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
     }
 
-    private static void resetRequesterSlot(RedstoneRequesterScreenAccess screenAccessor, RedstoneRequesterMenu requesterMenu, int slotIndex, boolean shouldClear) {
-        screenAccessor.ccb$getAmounts().set(slotIndex, 1);
+    private static void resetRequesterSlot(AbstractContainerScreen<?> screen, RedstoneRequesterMenu requesterMenu, int slotIndex, boolean shouldClear) {
+        if (!RequestScreenBridge.setRequesterAmount(screen, slotIndex, 1)) {
+            return;
+        }
         if (!shouldClear) {
             return;
         }

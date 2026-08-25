@@ -12,15 +12,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class CCBSubLevelBridge {
-    private static final Service VANILLA = createService();
+public final class SubLevelBridge {
+    private static final Service VANILLA = new Service() {};
     private static volatile Service service = VANILLA;
 
-    private CCBSubLevelBridge() {
+    private SubLevelBridge() {
     }
 
-    public static void install(Service implementation) {
-        service = implementation;
+    public static void install(Service service) {
+        SubLevelBridge.service = service;
     }
 
     public static Projection resolve(Level level, Position position) {
@@ -33,10 +33,6 @@ public final class CCBSubLevelBridge {
 
     public static EntityArea createEntityArea(Level level, BlockPos origin, AABB localBounds) {
         return service.createEntityArea(level, origin, localBounds);
-    }
-
-    public static Service createService() {
-        return new Service() {};
     }
 
     @FunctionalInterface

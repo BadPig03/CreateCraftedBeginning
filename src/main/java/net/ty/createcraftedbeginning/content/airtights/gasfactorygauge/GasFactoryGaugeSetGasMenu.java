@@ -16,7 +16,7 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
-import net.ty.createcraftedbeginning.platform.CCBClientBridge;
+import net.ty.createcraftedbeginning.platform.client.ClientScreenBridge;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
@@ -57,7 +57,7 @@ public class GasFactoryGaugeSetGasMenu extends GhostItemMenu<GasFactoryGaugeBeha
     @Override
     @OnlyIn(Dist.CLIENT)
     protected @Nullable GasFactoryGaugeBehaviour createOnClient(RegistryFriendlyByteBuf extraData) {
-        return CCBClientBridge.createGasFactoryGaugeBehaviour(extraData) instanceof GasFactoryGaugeBehaviour behaviour ? behaviour : null;
+        return ClientScreenBridge.resolveFactoryPanelBehaviour(extraData) instanceof GasFactoryGaugeBehaviour behaviour ? behaviour : null;
     }
 
     @Override

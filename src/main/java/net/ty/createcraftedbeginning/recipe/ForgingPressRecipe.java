@@ -11,8 +11,6 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.SmithingRecipe;
-import net.minecraft.world.item.crafting.SmithingTransformRecipe;
-import net.minecraft.world.item.crafting.SmithingTrimRecipe;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
@@ -24,7 +22,8 @@ import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
 import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.platform.access.SmithingRecipeAccess;
+import net.ty.createcraftedbeginning.platform.SmithingRecipeBridge;
+import net.ty.createcraftedbeginning.platform.SmithingRecipeBridge.Ingredients;
 import net.ty.createcraftedbeginning.recipe.interfaces.ForgingPressRecipeContext;
 import net.ty.createcraftedbeginning.recipe.interfaces.ForgingPressRecipeContext.ConsumptionPlan;
 import net.ty.createcraftedbeginning.recipe.interfaces.ForgingPressRecipeContext.OutputPlan;
@@ -49,14 +48,15 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
     }
 
     public static boolean canConvertSmithingRecipe(Recipe<?> source) {
-        return (source instanceof SmithingTransformRecipe || source instanceof SmithingTrimRecipe) && source instanceof SmithingRecipeAccess;
+        return SmithingRecipeBridge.getIngredients(source) != null;
     }
 
     public static RecipeHolder<ForgingPressRecipe> convertToForgingPressRecipe(RecipeHolder<?> sourceHolder) {
         Builder<ForgingPressRecipe> builder = new Builder<>(ForgingPressRecipe::new, sourceHolder.id());
         Recipe<?> sourceRecipe = sourceHolder.value();
-        if ((sourceRecipe instanceof SmithingTransformRecipe || sourceRecipe instanceof SmithingTrimRecipe) && sourceRecipe instanceof SmithingRecipe smithingRecipe && sourceRecipe instanceof SmithingRecipeAccess accessor) {
-            ForgingPressRecipe forgingRecipe = builder.require(accessor.ccb$getBase()).require(accessor.ccb$getTemplate()).require(accessor.ccb$getAddition()).build().setSmithingRecipe(smithingRecipe);
+        Ingredients smithingIngredients = SmithingRecipeBridge.getIngredients(sourceRecipe);
+        if (sourceRecipe instanceof SmithingRecipe smithingRecipe && smithingIngredients != null) {
+            ForgingPressRecipe forgingRecipe = builder.require(smithingIngredients.base()).require(smithingIngredients.template()).require(smithingIngredients.addition()).build().setSmithingRecipe(smithingRecipe);
             return new RecipeHolder<>(sourceHolder.id(), forgingRecipe);
         }
 

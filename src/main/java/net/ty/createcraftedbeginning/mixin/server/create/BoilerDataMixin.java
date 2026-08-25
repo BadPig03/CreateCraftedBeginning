@@ -9,7 +9,7 @@ import com.tterrag.registrate.util.entry.BlockEntry;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.content.airtights.boilersteamoutlet.BoilerSteamOutletBlock;
-import net.ty.createcraftedbeginning.content.airtights.boilersteamoutlet.BoilerSteamOutletCompat;
+import net.ty.createcraftedbeginning.content.airtights.boilersteamoutlet.BoilerSteamOutletIntegration;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -36,20 +36,20 @@ public abstract class BoilerDataMixin {
             return originalResult;
         }
 
-        BoilerSteamOutletCompat.markVerified();
+        BoilerSteamOutletIntegration.markVerified();
         return originalResult || BoilerSteamOutletBlock.isActive(state);
     }
 
     @Inject(method = "evaluate", at = @At("HEAD"))
     private void ccb$evaluateHead(FluidTankBlockEntity controller, CallbackInfoReturnable<Boolean> cir) {
         int previousCount = ccb$attachedSteamOutlets;
-        ccb$attachedSteamOutlets = BoilerSteamOutletCompat.scanAttachedSteamOutlets(controller);
+        ccb$attachedSteamOutlets = BoilerSteamOutletIntegration.scanAttachedSteamOutlets(controller);
         ccb$steamOutletCountChanged = previousCount != ccb$attachedSteamOutlets;
     }
 
     @Inject(method = "evaluate", at = @At("RETURN"), cancellable = true)
     private void ccb$evaluateReturn(FluidTankBlockEntity controller, CallbackInfoReturnable<Boolean> cir) {
-        if (!BoilerSteamOutletCompat.isVerified()) {
+        if (!BoilerSteamOutletIntegration.isVerified()) {
             ccb$attachedSteamOutlets = 0;
         }
 

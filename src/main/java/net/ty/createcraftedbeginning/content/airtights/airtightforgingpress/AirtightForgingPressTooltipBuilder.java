@@ -17,7 +17,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
-import net.ty.createcraftedbeginning.platform.CCBClientBridge;
+import net.ty.createcraftedbeginning.platform.client.ClientContextBridge;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -42,7 +42,7 @@ class AirtightForgingPressTooltipBuilder {
 
     boolean addToTooltip(List<Component> tooltip) {
         AirtightForgingPressStructureManager structureManager = core.getStructureManager();
-        if (structureManager.getOverstressed() && CCBClientBridge.isOverstressedTooltipEnabled()) {
+        if (structureManager.getOverstressed() && ClientContextBridge.isOverstressedTooltipEnabled()) {
             CCBLang.translate("gui.overstressed").style(ChatFormatting.GOLD).forGoggles(tooltip);
             CCBLang.addToGoggles(tooltip, "gui.network_overstressed");
             return true;
@@ -80,7 +80,7 @@ class AirtightForgingPressTooltipBuilder {
     }
 
     private void addItemStorage(List<Component> tooltip) {
-        int maxDisplayedStacks = CCBClientBridge.getMaxItemStackDisplay();
+        int maxDisplayedStacks = ClientContextBridge.getMaxItemStackDisplay();
         int stackCount = 0;
         IItemHandler itemHandler = press.getInputOutputCapability();
         for (int slot = 0; slot < itemHandler.getSlots(); slot++) {

@@ -13,7 +13,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedBreezeChamber;
-import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingAction;
@@ -41,11 +41,11 @@ public class WindChargingCategory extends CCBRecipeCategory<WindChargingRecipe> 
     public void draw(WindChargingRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         Font font = Minecraft.getInstance().font;
         int chamberX = background.getWidth() / 2 + 44;
-        CCBGUITextures.JEI_SHADOW.render(graphics, 122, 37);
-        CCBGUITextures.JEI_LONG_ARROW.render(graphics, 42, 30);
-        CCBGUITextures.JEI_WIND_CHARGING_BACKGROUND.render(graphics, 16, 8);
+        CCBJEITextures.JEI_SHADOW.render(graphics, 122, 37);
+        CCBJEITextures.JEI_LONG_ARROW.render(graphics, 42, 30);
+        CCBJEITextures.JEI_WIND_CHARGING_BACKGROUND.render(graphics, 16, 8);
         if (recipe.getAction() == WindChargingAction.CYCLE_CREATIVE) {
-            MutableComponent text = Component.translatable("jade.gas.infinity_mark");
+            MutableComponent text = Component.translatable("createcraftedbeginning.generic.infinity_mark");
             graphics.drawString(font, text, background.getWidth() / 2 - font.width(text) / 2 - 12, 22, COLOR_NORMAL, false);
             galeChamber.draw(graphics, chamberX, 18);
             return;

@@ -117,7 +117,7 @@ final class GasInjectionChamberBeltProcessor {
             return HOLD;
         }
 
-        operation.startProcessing(plan.type(), GasInjectionChamberBlockEntity.PROCESSING_TIME + GasInjectionChamberBlockEntity.NOZZLE_IDLE_TIME);
+        operation.startProcessing(plan.type());
         chamber.setChanged();
         chamber.notifyUpdate();
         return HOLD;

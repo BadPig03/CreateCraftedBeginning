@@ -1,14 +1,18 @@
 package net.ty.createcraftedbeginning.content.airtights.teslaturbine;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Block;
-import net.ty.createcraftedbeginning.platform.CCBClientBridge;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.ty.createcraftedbeginning.platform.client.ClientRenderBridge;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -36,7 +40,12 @@ public class TeslaTurbineBlockItem extends BlockItem {
             return placementResult;
         }
 
-        CCBClientBridge.showTeslaTurbinePlacementBounds(context);
+        if (turbineAxis != null) {
+            BlockPos placementPos = context.getClickedPos();
+            Vec3 axisDeflation = Vec3.atLowerCornerOf(Direction.get(AxisDirection.POSITIVE, turbineAxis).getNormal());
+            AABB bounds = new AABB(placementPos).inflate(1).deflate(axisDeflation.x, axisDeflation.y, axisDeflation.z);
+            ClientRenderBridge.showPlacementBounds(context, "tesla_turbine", placementPos, bounds);
+        }
         return placementResult;
     }
 

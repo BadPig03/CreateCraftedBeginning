@@ -22,8 +22,6 @@ import net.neoforged.neoforge.registries.RegisterEvent;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.compat.CCBCompatBootstrap;
-import net.ty.createcraftedbeginning.compat.CCBCompatMods;
-import net.ty.createcraftedbeginning.compat.jei.CCBJEIEvents;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralBlockEntity;
@@ -158,7 +156,6 @@ public class CCBCommonEvents {
             return;
         }
 
-        CCBCompatMods.JEI.executeIfInstalled(() -> CCBJEIEvents::registerMysteriousItemConversions);
         Schedule.CONDITION_TYPES.add(3, Pair.of(CCBAPI.asResource("gas_threshold"), GasThresholdCondition::new));
     }
 }

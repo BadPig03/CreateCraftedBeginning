@@ -43,7 +43,7 @@ final class BoilerSteamOutletProduction {
     }
 
     private static double getFullLoadProductionRate() {
-        return BoilerSteamOutletCompat.getSteamEngineFullLoadStressCapacity() / STRESS_PER_STEAM_MB;
+        return BoilerSteamOutletIntegration.getSteamEngineFullLoadStressCapacity() / STRESS_PER_STEAM_MB;
     }
 
     boolean ensureCurrentTick() {
@@ -113,7 +113,7 @@ final class BoilerSteamOutletProduction {
         }
 
         FluidTankBlockEntity controllerTank = getControllerTank();
-        if (controllerTank == null || !BoilerSteamOutletCompat.ensureVerified(controllerTank) || !controllerTank.boiler.isActive()) {
+        if (controllerTank == null || !BoilerSteamOutletIntegration.ensureVerified(controllerTank) || !controllerTank.boiler.isActive()) {
             return 0;
         }
 

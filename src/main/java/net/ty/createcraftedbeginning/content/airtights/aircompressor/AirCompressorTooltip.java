@@ -10,7 +10,7 @@ import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
-import net.ty.createcraftedbeginning.platform.CCBClientBridge;
+import net.ty.createcraftedbeginning.platform.client.ClientContextBridge;
 import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Nullable;
@@ -31,7 +31,7 @@ final class AirCompressorTooltip {
             CCBLang.addToGoggles(tooltip, "gui.air_compressor.invalid_gas", inputGas.getHoverName());
             hasInvalidGasWarning = true;
         }
-        if (overStressed && CCBClientBridge.isOverstressedTooltipEnabled()) {
+        if (overStressed && ClientContextBridge.isOverstressedTooltipEnabled()) {
             if (hasInvalidGasWarning) {
                 tooltip.add(CommonComponents.EMPTY);
             }

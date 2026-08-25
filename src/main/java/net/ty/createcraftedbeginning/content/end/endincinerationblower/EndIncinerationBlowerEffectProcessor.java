@@ -17,8 +17,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge;
-import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge.EntityArea;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge.EntityArea;
 import net.ty.createcraftedbeginning.registry.CCBDamageTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -97,12 +97,12 @@ final class EndIncinerationBlowerEffectProcessor {
     }
 
     private boolean applyFanProcessing(ServerLevel level, FanProcessingType processingType, AABB effectArea) {
-        EntityArea entityArea = CCBSubLevelBridge.createEntityArea(level, blower.getBlockPos(), effectArea);
+        EntityArea entityArea = SubLevelBridge.createEntityArea(level, blower.getBlockPos(), effectArea);
         return applyFanProcessing(level, processingType, effectArea, entityArea, targetCache.getAffectedItems(level, effectArea, entityArea), targetCache.getTransportedHandlers(level, blower.getSpeed()));
     }
 
     private boolean applyIgnition(ServerLevel level, AABB effectArea) {
-        EntityArea entityArea = CCBSubLevelBridge.createEntityArea(level, blower.getBlockPos(), effectArea);
+        EntityArea entityArea = SubLevelBridge.createEntityArea(level, blower.getBlockPos(), effectArea);
         FakePlayer fakePlayer = blower.getFakePlayer(level);
         boolean effectApplied = false;
         boolean shouldAffectPlayers = CCBConfig.server().endDevices.ignitionAffectsPlayers.get();

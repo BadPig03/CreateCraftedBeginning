@@ -35,7 +35,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightch
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
-import net.ty.createcraftedbeginning.platform.CCBClientBridge;
+import net.ty.createcraftedbeginning.platform.client.ClientContextBridge;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.Nullable;
 
@@ -121,7 +121,7 @@ public class AirtightChestplateItem extends AirtightChestplateArmorItem implemen
 
     @Override
     public void appendHoverText(ItemStack chestplate, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
-        Player player = CCBClientBridge.getClientPlayer();
+        Player player = ClientContextBridge.getClientPlayer();
         if (player == null) {
             return;
         }

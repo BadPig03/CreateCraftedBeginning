@@ -8,7 +8,7 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBasinCompat.TransactionView;
+import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBasinIntegration.TransactionView;
 import net.ty.createcraftedbeginning.core.ResourceTransaction;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe.RecipeMatch;
@@ -144,7 +144,7 @@ final class GasInjectionChamberBasinProcessor {
             return;
         }
 
-        operation.startProcessing(BASIN_RECIPE, GasInjectionChamberBlockEntity.PROCESSING_TIME + GasInjectionChamberBlockEntity.NOZZLE_IDLE_TIME);
+        operation.startProcessing(BASIN_RECIPE);
         chamber.setChanged();
         chamber.notifyUpdate();
     }
@@ -171,7 +171,7 @@ final class GasInjectionChamberBasinProcessor {
         }
 
         IFluidHandler inputFluids = basin.inputTank.getCapability();
-        TransactionView transactionView = GasInjectionChamberBasinCompat.getTransactionView(basin);
+        TransactionView transactionView = GasInjectionChamberBasinIntegration.getTransactionView(basin);
         if (transactionView == null) {
             return false;
         }
@@ -210,7 +210,7 @@ final class GasInjectionChamberBasinProcessor {
 
         IFluidHandler inputFluids = basin.inputTank.getCapability();
         Optional<RecipeMatch> recipeMatch = GasInjectionRecipe.findFluidRecipeMatch(chamber.getLevel(), inputFluids, availableGas);
-        if (recipeMatch.isEmpty() || GasInjectionChamberBasinCompat.getTransactionView(basin) == null) {
+        if (recipeMatch.isEmpty() || GasInjectionChamberBasinIntegration.getTransactionView(basin) == null) {
             return Optional.empty();
         }
 

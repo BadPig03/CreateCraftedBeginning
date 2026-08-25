@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.compat.functionalstorage.client;
+package net.ty.createcraftedbeginning.compat.jei.functionalstorage;
 
 import com.buuz135.functionalstorage.item.FSAttachments;
 import mezz.jei.api.ingredients.subtypes.ISubtypeInterpreter;

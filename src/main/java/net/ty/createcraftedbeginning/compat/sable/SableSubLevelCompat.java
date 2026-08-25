@@ -10,10 +10,10 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge;
-import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge.EntityArea;
-import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge.Projection;
-import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge.Service;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge.EntityArea;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge.Projection;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge.Service;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -30,7 +30,7 @@ public final class SableSubLevelCompat implements Service {
     }
 
     public static void install() {
-        CCBSubLevelBridge.install(new SableSubLevelCompat());
+        SubLevelBridge.install(new SableSubLevelCompat());
     }
 
     private static OrientedBox createOrientedBox(AABB bounds, @Nullable SubLevelAccess subLevel) {
@@ -116,9 +116,11 @@ public final class SableSubLevelCompat implements Service {
                     firstRadius += first.extent(firstAxis) * absoluteRotation[rotationIndex];
                     projectedCenter += translatedCenter[firstAxis] * rotation[rotationIndex];
                 }
-                if (Math.abs(projectedCenter) > firstRadius + second.extent(secondAxis)) {
-                    return false;
+                if (!(Math.abs(projectedCenter) > firstRadius + second.extent(secondAxis))) {
+                    continue;
                 }
+
+                return false;
             }
 
             for (int firstAxis = 0; firstAxis < 3; firstAxis++) {
@@ -130,9 +132,11 @@ public final class SableSubLevelCompat implements Service {
                     double firstRadius = first.extent(firstNext) * absoluteRotation[firstLast * 3 + secondAxis] + first.extent(firstLast) * absoluteRotation[firstNext * 3 + secondAxis];
                     double secondRadius = second.extent(secondNext) * absoluteRotation[firstAxis * 3 + secondLast] + second.extent(secondLast) * absoluteRotation[firstAxis * 3 + secondNext];
                     double projectedCenter = Math.abs(translatedCenter[firstLast] * rotation[firstNext * 3 + secondAxis] - translatedCenter[firstNext] * rotation[firstLast * 3 + secondAxis]);
-                    if (projectedCenter > firstRadius + secondRadius) {
-                        return false;
+                    if (!(projectedCenter > firstRadius + secondRadius)) {
+                        continue;
                     }
+
+                    return false;
                 }
             }
 

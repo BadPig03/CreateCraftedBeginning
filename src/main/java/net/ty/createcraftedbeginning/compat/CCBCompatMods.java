@@ -1,9 +1,7 @@
 package net.ty.createcraftedbeginning.compat;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import net.neoforged.fml.ModList;
 import org.jetbrains.annotations.Contract;
 
@@ -13,10 +11,15 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public enum CCBCompatMods {
+    COMPUTERCRAFT("computercraft"),
+    CREATE_DRAGONS_PLUS("create_dragons_plus"),
     CREATE_FLUID_LOGISTICS("fluidlogistics"),
+    DNDESIRES("dndesires"),
+    FUNCTIONAL_STORAGE("functionalstorage"),
+    JADE("jade"),
     JEI("jei"),
-    SABLE("sable"),
-    FUNCTIONAL_STORAGE("functionalstorage");
+    KUBEJS("kubejs"),
+    SABLE("sable");
 
     private final String id;
 
@@ -28,17 +31,9 @@ public enum CCBCompatMods {
         return id;
     }
 
-    public Item getItem(String path) {
-        return BuiltInRegistries.ITEM.get(asResource(path));
-    }
-
     @Contract("_ -> new")
     public ResourceLocation asResource(String path) {
         return ResourceLocation.fromNamespaceAndPath(id, path);
-    }
-
-    public Item getItem(ResourceLocation itemId) {
-        return BuiltInRegistries.ITEM.get(itemId);
     }
 
     public boolean isLoaded() {

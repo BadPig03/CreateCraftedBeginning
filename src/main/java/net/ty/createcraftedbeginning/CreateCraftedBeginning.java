@@ -114,6 +114,7 @@ public class CreateCraftedBeginning {
     }
 
     public static void init(FMLCommonSetupEvent event) {
+        CCBCompatBootstrap.commonSetup(event);
         CCBFluids.registerFluidInteractions();
         EndCasingBlock.registerPlacementHelpers();
 

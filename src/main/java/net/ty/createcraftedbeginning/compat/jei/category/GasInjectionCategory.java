@@ -12,7 +12,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedGasInjectionChamber;
-import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -33,8 +33,8 @@ public class GasInjectionCategory extends CCBRecipeCategory<GasInjectionRecipe> 
 
     @Override
     public void draw(GasInjectionRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
-        CCBGUITextures.JEI_SHADOW.render(graphics, 62, 57);
-        CCBGUITextures.JEI_DOWN_ARROW.render(graphics, 126, 29);
+        CCBJEITextures.JEI_SHADOW.render(graphics, 62, 57);
+        CCBJEITextures.JEI_DOWN_ARROW.render(graphics, 126, 29);
 
         if (recipe.isFluidInjection()) {
             basinChamber.draw(graphics, background.getWidth() / 2 - 13, 22);

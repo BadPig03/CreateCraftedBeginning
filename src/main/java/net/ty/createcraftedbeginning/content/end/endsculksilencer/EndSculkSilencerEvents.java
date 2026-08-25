@@ -23,7 +23,7 @@ import net.neoforged.neoforge.event.level.LevelEvent.Unload;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent.Post;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.platform.CCBSubLevelBridge;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -56,7 +56,7 @@ public final class EndSculkSilencerEvents {
             return;
         }
 
-        BlockPos sourcePos = CCBSubLevelBridge.resolve(event.getLevel(), event.getEventPosition()).blockPos();
+        BlockPos sourcePos = SubLevelBridge.resolve(event.getLevel(), event.getEventPosition()).blockPos();
         if (!GlobalEndSculkSilencerManager.checkWithinRange(sourcePos, dimension)) {
             return;
         }
@@ -99,7 +99,7 @@ public final class EndSculkSilencerEvents {
 
     public static boolean isWithinSilencedArea(Level level, Position position) {
         ResourceLocation dimension = level.dimension().location();
-        return GlobalEndSculkSilencerManager.hasCoverage(dimension) && GlobalEndSculkSilencerManager.checkWithinRange(CCBSubLevelBridge.resolve(level, position).blockPos(), dimension);
+        return GlobalEndSculkSilencerManager.hasCoverage(dimension) && GlobalEndSculkSilencerManager.checkWithinRange(SubLevelBridge.resolve(level, position).blockPos(), dimension);
     }
 
     private static void syncPlayer(Player player) {

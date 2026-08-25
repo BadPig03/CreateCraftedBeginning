@@ -3,7 +3,7 @@ package net.ty.createcraftedbeginning.mixin.client.accessor;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.world.item.CreativeModeTab;
-import net.ty.createcraftedbeginning.platform.access.CreativeModeInventoryScreenAccess;
+import net.ty.createcraftedbeginning.platform.access.client.CreativeModeInventoryScreenAccess;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 

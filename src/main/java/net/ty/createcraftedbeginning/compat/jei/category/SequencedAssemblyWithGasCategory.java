@@ -26,7 +26,7 @@ import net.ty.createcraftedbeginning.compat.jei.category.SequencedAssemblyWithGa
 import net.ty.createcraftedbeginning.compat.jei.category.SequencedAssemblyWithGasSubCategory.AssemblyInjecting;
 import net.ty.createcraftedbeginning.compat.jei.category.SequencedAssemblyWithGasSubCategory.AssemblyPressing;
 import net.ty.createcraftedbeginning.compat.jei.category.SequencedAssemblyWithGasSubCategory.AssemblySpouting;
-import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
@@ -133,7 +133,7 @@ public class SequencedAssemblyWithGasCategory extends CCBRecipeCategory<Sequence
         poseStack.translate(0, 15, 0);
         boolean hasGuaranteedOutput = recipe.getOutputChance() == 1;
         int xOffset = hasGuaranteedOutput ? 0 : RANDOM_OUTPUT_OFFSET;
-        CCBGUITextures.JEI_LONG_ARROW.render(graphics, 52 + xOffset, 79);
+        CCBJEITextures.JEI_LONG_ARROW.render(graphics, 52 + xOffset, 79);
         if (!hasGuaranteedOutput) {
             AllGuiTextures.JEI_CHANCE_SLOT.render(graphics, 150 + xOffset, 75);
             Component component = Component.literal("?").withStyle(ChatFormatting.BOLD);

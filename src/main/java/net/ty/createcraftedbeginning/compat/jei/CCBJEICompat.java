@@ -10,8 +10,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class CCBJEIEvents {
-    private CCBJEIEvents() {
+public final class CCBJEICompat {
+    private CCBJEICompat() {
     }
 
     public static void registerMysteriousItemConversions() {

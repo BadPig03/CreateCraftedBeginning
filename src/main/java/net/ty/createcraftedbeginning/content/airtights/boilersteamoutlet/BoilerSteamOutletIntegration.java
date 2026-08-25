@@ -17,11 +17,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class BoilerSteamOutletCompat {
+public final class BoilerSteamOutletIntegration {
     private static volatile boolean verified;
     private static volatile boolean verificationAttempted;
 
-    private BoilerSteamOutletCompat() {
+    private BoilerSteamOutletIntegration() {
     }
 
     public static void markVerified() {

@@ -26,7 +26,8 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.ClientHooks;
 import net.neoforged.neoforge.client.event.RenderHandEvent;
 import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
-import net.ty.createcraftedbeginning.platform.access.ItemInHandRendererAccess;
+import net.ty.createcraftedbeginning.platform.client.FirstPersonItemRenderBridge;
+import net.ty.createcraftedbeginning.platform.client.FirstPersonItemRenderBridge.HandItems;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -89,16 +90,17 @@ public class AirtightExtendArmRenderHandler {
     private void updatePose() {
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
-        if (player == null || !(minecraft.getEntityRenderDispatcher().getItemInHandRenderer() instanceof ItemInHandRendererAccess accessor)) {
+        HandItems handItems = FirstPersonItemRenderBridge.getHandItems(minecraft);
+        if (player == null || handItems == null) {
             return;
         }
 
         pose = CCBPartialModels.AIRTIGHT_EXTEND_ARM_PUNCHING;
-        if (!accessor.ccb$getOffHandItem().is(CCBItems.AIRTIGHT_EXTEND_ARM)) {
+        if (!handItems.offHandItem().is(CCBItems.AIRTIGHT_EXTEND_ARM)) {
             return;
         }
 
-        ItemStack mainHandItem = accessor.ccb$getMainHandItem();
+        ItemStack mainHandItem = handItems.mainHandItem();
         if (mainHandItem.isEmpty() || !(mainHandItem.getItem() instanceof BlockItem) || !minecraft.getItemRenderer().getModel(mainHandItem, null, null, 0).isGui3d()) {
             return;
         }
@@ -113,11 +115,12 @@ public class AirtightExtendArmRenderHandler {
 
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
-        if (player == null || !(minecraft.getEntityRenderDispatcher().getItemInHandRenderer() instanceof ItemInHandRendererAccess accessor)) {
+        HandItems handItems = FirstPersonItemRenderBridge.getHandItems(minecraft);
+        if (player == null || handItems == null) {
             return;
         }
 
-        ItemStack offhandItem = accessor.ccb$getOffHandItem();
+        ItemStack offhandItem = handItems.offHandItem();
         ItemStack heldItem = event.getItemStack();
         boolean isArmInOffhand = offhandItem.is(CCBItems.AIRTIGHT_EXTEND_ARM);
         if (!isArmInOffhand && !heldItem.is(CCBItems.AIRTIGHT_EXTEND_ARM)) {

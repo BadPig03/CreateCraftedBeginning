@@ -11,7 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.ty.createcraftedbeginning.api.drainagehandlers.AirtightDrainageHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.platform.access.ZombieAccess;
+import net.ty.createcraftedbeginning.platform.EntityConversionBridge;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -43,8 +43,8 @@ public class MoistAirEffectHandler implements AirtightDrainageHandler {
             if (entity instanceof WaterAnimal || entity instanceof Axolotl) {
                 entity.setAirSupply(entity.getMaxAirSupply());
             }
-            if (entity instanceof Zombie zombie && !zombie.isUnderWaterConverting() && entity instanceof ZombieAccess zombieAccessor && zombieAccessor.ccb$convertsInWater()) {
-                zombieAccessor.ccb$startUnderWaterConversion(300);
+            if (entity instanceof Zombie zombie) {
+                EntityConversionBridge.tryStartUnderwaterConversion(zombie, 300);
             }
         }
     }

@@ -1,8 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.gaspackager;
 
 import com.simibubi.create.api.packager.InventoryIdentifier;
-import com.simibubi.create.compat.computercraft.ComputerCraftProxy;
-import com.simibubi.create.compat.computercraft.events.PackageEvent;
 import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.packager.IdentifiedInventory;
 import com.simibubi.create.content.logistics.packager.InventorySummary;
@@ -27,6 +25,7 @@ import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.compat.computercraft.ComputerCraftPackagerCompat;
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasManipulationBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -63,8 +62,7 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         behaviours.add(targetInventory);
 
         behaviours.add(new CCBAdvancementBehaviour(this));
-        computerBehaviour = ComputerCraftProxy.behaviour(this);
-        behaviours.add(computerBehaviour);
+        ComputerCraftPackagerCompat.addBehaviour(this, behaviours);
     }
 
     @Override
@@ -185,11 +183,7 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
     }
 
     void emitGasPackageReceivedEvent(ItemStack box) {
-        if (computerBehaviour == null) {
-            return;
-        }
-
-        computerBehaviour.prepareComputerEvent(new PackageEvent(box, "package_received"));
+        ComputerCraftPackagerCompat.emitPackageReceived(this, box);
     }
 
     void enqueueCreatedGasBalloon(ItemStack balloon) {
@@ -197,9 +191,7 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
             return;
         }
 
-        if (computerBehaviour != null) {
-            computerBehaviour.prepareComputerEvent(new PackageEvent(balloon, "package_created"));
-        }
+        ComputerCraftPackagerCompat.emitPackageCreated(this, balloon);
         if (!heldBox.isEmpty() || animationTicks != 0) {
             queuedExitingPackages.add(new BigItemStack(balloon, 1));
             return;

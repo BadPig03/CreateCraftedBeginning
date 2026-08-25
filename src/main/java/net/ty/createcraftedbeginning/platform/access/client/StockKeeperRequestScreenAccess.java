@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.platform.access;
+package net.ty.createcraftedbeginning.platform.access.client;
 
 import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.stockTicker.StockTickerBlockEntity;

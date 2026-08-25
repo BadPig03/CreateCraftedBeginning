@@ -13,6 +13,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.CombinedGasTankWrapper;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.compat.functionalstorage.access.GasControllerAccess;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -84,11 +85,6 @@ public final class ControllerGasHandler implements IGasHandler {
         for (int drawerIndex = 0; drawerIndex < begunTransactions; drawerIndex++) {
             drawers.get(drawerIndex).endTransaction(commit);
         }
-    }
-
-    public void refresh(List<IGasHandler> handlers) {
-        this.handlers = List.copyOf(handlers);
-        delegate = new CombinedGasTankWrapper(this.handlers.toArray(IGasHandler[]::new));
     }
 
     @Override
@@ -167,6 +163,11 @@ public final class ControllerGasHandler implements IGasHandler {
         return delegate.getTankCapacity(tank);
     }
 
+    public void refresh(List<IGasHandler> handlers) {
+        this.handlers = List.copyOf(handlers);
+        delegate = new CombinedGasTankWrapper(this.handlers.toArray(IGasHandler[]::new));
+    }
+
     private long fillExisting(GasStack resource, GasAction action) {
         for (IGasHandler handler : handlers) {
             for (int tankIndex = 0; tankIndex < handler.getTanks(); tankIndex++) {
@@ -209,6 +210,7 @@ public final class ControllerGasHandler implements IGasHandler {
             if (!(handler instanceof GasDrawerHandler drawer)) {
                 return false;
             }
+            
             drawers.add(drawer);
         }
         return true;

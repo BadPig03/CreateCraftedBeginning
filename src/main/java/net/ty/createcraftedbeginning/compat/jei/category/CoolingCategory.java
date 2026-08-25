@@ -12,7 +12,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedBreezeCooler;
-import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 
@@ -31,7 +31,7 @@ public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
 
     private static MutableComponent getProcessingTime(CoolingRecipe recipe) {
         if (!recipe.isFluidIngredients() && recipe.isCreativeIceCream()) {
-            return Component.translatable("jade.gas.infinity_mark");
+            return Component.translatable("createcraftedbeginning.generic.infinity_mark");
         }
         return CCBLang.secondsWithGameTicks(recipe.getProcessingDuration(), 20).component();
     }
@@ -39,9 +39,9 @@ public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
     @Override
     public void draw(CoolingRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         Font font = Minecraft.getInstance().font;
-        CCBGUITextures.JEI_SHADOW.render(graphics, 122, 37);
-        CCBGUITextures.JEI_LONG_ARROW.render(graphics, 42, 30);
-        CCBGUITextures.JEI_COOLING_BACKGROUND.render(graphics, 16, 8);
+        CCBJEITextures.JEI_SHADOW.render(graphics, 122, 37);
+        CCBJEITextures.JEI_LONG_ARROW.render(graphics, 42, 30);
+        CCBJEITextures.JEI_COOLING_BACKGROUND.render(graphics, 16, 8);
 
         MutableComponent time = getProcessingTime(recipe);
         int textX = background.getWidth() / 2 - font.width(time) / 2 - 12;

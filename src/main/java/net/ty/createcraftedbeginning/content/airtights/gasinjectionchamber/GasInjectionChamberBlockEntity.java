@@ -98,10 +98,6 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     @Override
     public void lazyTick() {
         super.lazyTick();
-        if (GasInjectionChamberBasinCompat.isHookVerified()) {
-            return;
-        }
-
         scheduleBasinCheck();
     }
 

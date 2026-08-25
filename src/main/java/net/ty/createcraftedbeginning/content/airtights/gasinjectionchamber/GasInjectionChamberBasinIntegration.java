@@ -9,7 +9,8 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.core.MachineResourceSnapshots;
 import net.ty.createcraftedbeginning.core.MachineResourceSnapshots.FluidTankSnapshot;
-import net.ty.createcraftedbeginning.platform.access.BasinTransactionAccess;
+import net.ty.createcraftedbeginning.platform.BasinTransactionBridge;
+import net.ty.createcraftedbeginning.platform.BasinTransactionBridge.TransactionHandle;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -17,20 +18,13 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasInjectionChamberBasinCompat {
-    private static volatile boolean accessVerified;
+public final class GasInjectionChamberBasinIntegration {
     private static volatile boolean failureLogged;
-    private static volatile boolean hookVerified;
 
-    private GasInjectionChamberBasinCompat() {
-    }
-
-    public static void markAccessVerified() {
-        accessVerified = true;
+    private GasInjectionChamberBasinIntegration() {
     }
 
     public static void onBasinContentsChanged(BasinBlockEntity basin) {
-        markHookVerified();
         Level level = basin.getLevel();
         if (level == null || level.isClientSide) {
             return;
@@ -43,32 +37,16 @@ public final class GasInjectionChamberBasinCompat {
         chamber.scheduleBasinCheck();
     }
 
-    static boolean isHookVerified() {
-        return hookVerified;
-    }
-
     static @Nullable TransactionView getTransactionView(BasinBlockEntity basin) {
-        if (!(basin instanceof BasinTransactionAccess transactionAccess)) {
+        TransactionHandle transaction = BasinTransactionBridge.createHandle(basin);
+        if (transaction == null) {
             logTransactionAccessFailure();
             return null;
         }
 
-        try {
-            SmartFluidTankBehaviour inputTank = basin.getTanks().getFirst();
-            SmartFluidTankBehaviour outputTank = basin.getTanks().getSecond();
-            if (!accessVerified) {
-                transactionAccess.ccb$copyTransactionFluidOverflow();
-                markAccessVerified();
-            }
-            return new TransactionView(inputTank, outputTank, transactionAccess);
-        } catch (RuntimeException | LinkageError exception) {
-            logTransactionAccessFailure(exception);
-            return null;
-        }
-    }
-
-    private static void markHookVerified() {
-        hookVerified = true;
+        SmartFluidTankBehaviour inputTank = basin.getTanks().getFirst();
+        SmartFluidTankBehaviour outputTank = basin.getTanks().getSecond();
+        return new TransactionView(inputTank, outputTank, transaction);
     }
 
     private static void logTransactionAccessFailure() {
@@ -80,25 +58,16 @@ public final class GasInjectionChamberBasinCompat {
         CCBAPI.LOGGER.error("Gas injection chamber integration with Create's BasinBlockEntity transaction state is unavailable.");
     }
 
-    private static void logTransactionAccessFailure(Throwable throwable) {
-        if (failureLogged) {
-            return;
-        }
-
-        failureLogged = true;
-        CCBAPI.LOGGER.error("Gas injection chamber integration with Create's BasinBlockEntity transaction state is unavailable.", throwable);
-    }
-
-    record TransactionView(SmartFluidTankBehaviour inputTank, SmartFluidTankBehaviour outputTank, BasinTransactionAccess transactionAccess) {
+    record TransactionView(SmartFluidTankBehaviour inputTank, SmartFluidTankBehaviour outputTank, TransactionHandle transaction) {
         TransactionSnapshot snapshot(Provider provider) {
-            List<FluidStack> outputBuffer = transactionAccess.ccb$copyTransactionFluidOverflow();
+            List<FluidStack> outputBuffer = transaction.snapshotFluidOverflow();
             FluidTankSnapshot tanks = MachineResourceSnapshots.snapshotFluidTanks(provider, inputTank, outputTank);
             return new TransactionSnapshot(tanks, outputBuffer);
         }
 
         void restore(Provider provider, TransactionSnapshot snapshot) {
             MachineResourceSnapshots.restoreFluidTanks(provider, snapshot.tanks(), inputTank, outputTank);
-            transactionAccess.ccb$restoreTransactionFluidOverflow(snapshot.outputBuffer());
+            transaction.restoreFluidOverflow(snapshot.outputBuffer());
         }
     }
 
