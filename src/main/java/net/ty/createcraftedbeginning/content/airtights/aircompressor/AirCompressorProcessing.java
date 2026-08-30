@@ -14,6 +14,7 @@ import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompress
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.core.MachineResourceSnapshots;
 import net.ty.createcraftedbeginning.core.ResourceTransaction;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
 import org.jetbrains.annotations.Nullable;
 
@@ -65,7 +66,7 @@ final class AirCompressorProcessing {
         long accumulatedWork = workState.matches(plan.recipeId()) ? workState.accumulatedWork() : 0;
         float scaledWork = Mth.abs(speed) * getPressurizationRateMultiplier() * overheatState.getEfficiencyPercent();
         long workIncrement = Math.max(0, Mth.floor(scaledWork));
-        long updatedAccumulatedWork = workIncrement >= Long.MAX_VALUE - accumulatedWork ? Long.MAX_VALUE : accumulatedWork + workIncrement;
+        long updatedAccumulatedWork = CCBMathUtils.saturatedAdd(accumulatedWork, workIncrement);
         return new WorkState(plan.recipeId(), updatedAccumulatedWork);
     }
 

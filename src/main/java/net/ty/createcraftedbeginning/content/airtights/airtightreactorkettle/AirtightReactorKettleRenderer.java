@@ -33,6 +33,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -63,7 +64,7 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
 
         poseStack.pushPose();
         poseStack.translate(0, -1, 0);
-        float fluidLevel = Mth.clamp(totalUnits / totalCapacity, 0, 1);
+        float fluidLevel = CCBMathUtils.clampUnit(totalUnits / totalCapacity);
         fluidLevel = 1 - (1 - fluidLevel) * (1 - fluidLevel);
         float xMin = -0.875f;
         float yMin = 0.125f;
@@ -88,7 +89,7 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
                 continue;
             }
 
-            float widthFraction = Mth.clamp(fluidUnits / totalUnits, 0, 1);
+            float widthFraction = CCBMathUtils.clampUnit(fluidUnits / totalUnits);
             float xMax = xMin + widthFraction * 2.75f;
             NeoForgeCatnipServices.FLUID_RENDERER.renderFluidBox(renderedFluid, xMin, yMin, -0.875f, xMax, yMax, zMax, buffer, poseStack, light, false, true);
             xMin = xMax;
@@ -183,7 +184,7 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
     }
 
     private static ItemPlacement pickSeparatedItemPlacement(int slot, List<Vec3> occupiedPositions) {
-        RandomSource random = RandomSource.create(31 + slot * 9973L);
+        RandomSource random = RandomSource.create(31 + slot * 9973);
         Vec3 bestPosition = Vec3.ZERO;
         float bestAngle = 0;
         double bestScore = -Double.MAX_VALUE;

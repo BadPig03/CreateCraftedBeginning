@@ -25,12 +25,15 @@ import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightForgingPressScenes {
+    private static final String COMPOUND_KEY_HELD_ITEM = "HeldItem";
+
     public static void placement(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
@@ -280,7 +283,7 @@ public class AirtightForgingPressScenes {
         scene.world().modifyBlockEntity(corePos, AirtightForgingPressBlockEntity.class, AirtightForgingPressBlockEntity::startProcessInPonderLevel);
 
         scene.idle(20);
-        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> compoundTag.put("HeldItem", templateItem.copy().saveOptional(scene.world().getHolderLookupProvider())));
+        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_HELD_ITEM, templateItem.copy().saveOptional(scene.world().getHolderLookupProvider())));
         scene.world().showSection(deployerSelection, Direction.WEST);
 
         scene.idle(20);
@@ -293,7 +296,7 @@ public class AirtightForgingPressScenes {
 
         scene.idle(20);
         scene.world().modifyBlockEntity(corePos, AirtightForgingPressBlockEntity.class, be -> be.getPressHeadInventory().insertItem(0, templateItem.copy(), false));
-        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> compoundTag.put("HeldItem", ItemStack.EMPTY.saveOptional(scene.world().getHolderLookupProvider())));
+        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_HELD_ITEM, ItemStack.EMPTY.saveOptional(scene.world().getHolderLookupProvider())));
         scene.world().moveDeployer(deployerPos, -1, 20);
 
         scene.idle(20);

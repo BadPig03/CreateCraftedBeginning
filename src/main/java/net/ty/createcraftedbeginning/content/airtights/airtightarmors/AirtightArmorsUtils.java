@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightarmors;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -13,10 +12,11 @@ import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthe
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.upgrades.HelmetResistanceUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.AirtightLeggingsUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.LeggingsResistanceUpgrade;
-import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.AirtightHandheldDrillUpgradeRegistry;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.AirtightHandheldDrillUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
 import net.ty.createcraftedbeginning.registry.CCBItems;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -117,6 +117,6 @@ public final class AirtightArmorsUtils {
         if (paidLevels == 0) {
             return currentDamage;
         }
-        return currentDamage * Mth.clamp(1 - paidLevels * RESISTANCE_REDUCTION_PER_LEVEL, 0, 1);
+        return currentDamage * CCBMathUtils.clampUnit(1 - paidLevels * RESISTANCE_REDUCTION_PER_LEVEL);
     }
 }

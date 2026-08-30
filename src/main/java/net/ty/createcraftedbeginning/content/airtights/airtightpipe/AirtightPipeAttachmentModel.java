@@ -71,7 +71,6 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
         BlockPos adjacentPos = pos.relative(direction);
         BlockState adjacentState = level.getBlockState(adjacentPos);
         Block adjacentBlock = adjacentState.getBlock();
-
         if (state.getBlock() instanceof AirtightPumpBlock) {
             if (adjacentBlock instanceof IAirtightPipeDrain drain && drain.shouldRenderDrain(level, adjacentPos, adjacentState, direction.getOpposite())) {
                 return AirtightPipeAttachmentTypes.DRAIN;
@@ -132,7 +131,10 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
 
     @Override
     public TriState useAmbientOcclusion(BlockState state, ModelData data, RenderType renderType) {
-        return ambientOcclusion ? TriState.TRUE : TriState.FALSE;
+        if (!ambientOcclusion) {
+            return TriState.FALSE;
+        }
+        return TriState.TRUE;
     }
 
     @Override

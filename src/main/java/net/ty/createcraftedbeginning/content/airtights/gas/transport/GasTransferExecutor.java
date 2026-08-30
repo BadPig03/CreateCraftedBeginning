@@ -4,6 +4,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -34,7 +35,10 @@ final class GasTransferExecutor {
         }
 
         GasStack simulatedDrain = sourceHandler.drain(maxAmount, GasAction.SIMULATE);
-        return !simulatedDrain.isEmpty() && GasStack.isSameGasSameComponents(simulatedDrain, gasType) ? simulatedDrain : GasStack.EMPTY;
+        if (simulatedDrain.isEmpty() || !GasStack.isSameGasSameComponents(simulatedDrain, gasType)) {
+            return GasStack.EMPTY;
+        }
+        return simulatedDrain;
     }
 
     static GasStack executeTransferPlan(IGasHandler sourceHandler, GasStack gasType, List<PlannedTransfer> transferPlan) {
@@ -71,7 +75,7 @@ final class GasTransferExecutor {
             }
 
             long filledAmount = plannedTransfer.handler.fill(remainingGas.copyWithAmount(offeredAmount), GasAction.EXECUTE);
-            filledAmount = Math.clamp(filledAmount, 0, offeredAmount);
+            filledAmount = CCBMathUtils.clampNonNegative(filledAmount, offeredAmount);
             remainingGas.shrink(filledAmount);
             remainingBudget -= filledAmount;
         }

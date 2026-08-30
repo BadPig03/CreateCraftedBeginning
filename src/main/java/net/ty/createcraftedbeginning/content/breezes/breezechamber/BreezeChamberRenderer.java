@@ -21,6 +21,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock.WindLevel;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -39,8 +40,8 @@ public class BreezeChamberRenderer extends SmartBlockEntityRenderer<BreezeChambe
 
     static void renderInContraption(MovementContext context, ContraptionMatrices matrices, MultiBufferSource bufferSource, LerpedFloat headAngle, boolean isConductor, VirtualRenderWorld renderWorld) {
         Level level = context.world;
-        boolean drawGoggles = context.blockEntityData.contains(COMPOUND_KEY_GOGGLES) && context.blockEntityData.getBoolean(COMPOUND_KEY_GOGGLES);
-        boolean shouldDrawHat = isConductor || context.blockEntityData.contains(COMPOUND_KEY_TRAIN_HAT) && context.blockEntityData.getBoolean(COMPOUND_KEY_TRAIN_HAT);
+        boolean drawGoggles = CCBNbtUtils.getBooleanOrDefault(context.blockEntityData, COMPOUND_KEY_GOGGLES, false);
+        boolean shouldDrawHat = isConductor || CCBNbtUtils.getBooleanOrDefault(context.blockEntityData, COMPOUND_KEY_TRAIN_HAT, false);
         renderShared(matrices.getViewProjection(), matrices.getModel(), bufferSource, level, context.state, WindLevel.GALE, 0, AngleHelper.rad(headAngle.getValue(AnimationTickHolder.getPartialTicks(level))), drawGoggles, shouldDrawHat ? CCBPartialModels.BREEZE_TRAIN_HAT : null, false, 0, context.hashCode(), LevelRenderer.getLightColor(renderWorld, context.localPos), matrices.getWorld());
     }
 

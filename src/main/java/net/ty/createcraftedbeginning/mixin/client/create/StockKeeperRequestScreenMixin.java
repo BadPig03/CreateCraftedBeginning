@@ -42,6 +42,7 @@ import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBl
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerRenderer;
 import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -106,7 +107,7 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
             next = current - transfer;
         }
         else {
-            next = current + Math.clamp(available - current, 0, transfer);
+            next = current + CCBMathUtils.clampNonNegative(available - current, transfer);
         }
 
         if (next <= 0) {

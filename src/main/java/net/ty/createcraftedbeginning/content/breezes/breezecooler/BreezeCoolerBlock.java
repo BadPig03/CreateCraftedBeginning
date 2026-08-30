@@ -172,7 +172,10 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
 
     @Override
     public FluidState getFluidState(BlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.defaultFluidState() : super.getFluidState(state);
+        if (!state.getValue(WATERLOGGED)) {
+            return Fluids.EMPTY.defaultFluidState();
+        }
+        return Fluids.WATER.defaultFluidState();
     }
 
     @Override
@@ -182,17 +185,26 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
 
     @Override
     public int getAnalogOutputSignal(BlockState state, Level level, BlockPos blockPos) {
-        return state.getValue(FROST_LEVEL) == FrostLevel.CHILLED ? 15 : 0;
+        if (state.getValue(FROST_LEVEL) != FrostLevel.CHILLED) {
+            return 0;
+        }
+        return 15;
     }
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter reader, BlockPos pos, CollisionContext context) {
-        return state.getValue(ATTACHED) ? CCBShapes.COOLER_BLOCK_COOLER_SHAPE : CCBShapes.COOLER_BLOCK_SHAPE;
+        if (!state.getValue(ATTACHED)) {
+            return CCBShapes.COOLER_BLOCK_SHAPE;
+        }
+        return CCBShapes.COOLER_BLOCK_COOLER_SHAPE;
     }
 
     @Override
     public VoxelShape getCollisionShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
-        return context == CollisionContext.empty() ? CCBShapes.COOLER_BLOCK_SPECIAL_COLLISION_SHAPE : getShape(blockState, level, blockPos, context);
+        if (context != CollisionContext.empty()) {
+            return getShape(blockState, level, blockPos, context);
+        }
+        return CCBShapes.COOLER_BLOCK_SPECIAL_COLLISION_SHAPE;
     }
 
     @Override

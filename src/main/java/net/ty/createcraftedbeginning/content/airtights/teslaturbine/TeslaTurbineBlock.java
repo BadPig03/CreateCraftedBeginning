@@ -174,7 +174,10 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
 
     @Override
     public FluidState getFluidState(BlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.defaultFluidState() : super.getFluidState(state);
+        if (!state.getValue(WATERLOGGED)) {
+            return Fluids.EMPTY.defaultFluidState();
+        }
+        return Fluids.WATER.defaultFluidState();
     }
 
     @Override

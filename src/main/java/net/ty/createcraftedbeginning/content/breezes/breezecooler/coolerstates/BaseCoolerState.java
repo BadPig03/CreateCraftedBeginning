@@ -20,6 +20,8 @@ import net.ty.createcraftedbeginning.core.ResourceTransaction;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe.CoolingData;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -52,8 +54,8 @@ public abstract class BaseCoolerState {
     }
 
     public void save(CompoundTag compoundTag) {
-        compoundTag.putInt(COMPOUND_KEY_REMAINING_TIME, remainingTime);
-        compoundTag.putBoolean(COMPOUND_KEY_IS_CREATIVE, isCreative);
+        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_REMAINING_TIME, remainingTime);
+        CCBNbtUtils.putBoolean(compoundTag, COMPOUND_KEY_IS_CREATIVE, isCreative);
     }
 
     public boolean tick(BreezeCoolerBlockEntity cooler) {
@@ -129,7 +131,7 @@ public abstract class BaseCoolerState {
         }
 
         int maxCoolantCapacity = BreezeCoolerBlockEntity.getMaxCoolantCapacity();
-        int clampedRemainingTime = Math.clamp(newRemainingTime, 0, maxCoolantCapacity);
+        int clampedRemainingTime = CCBMathUtils.clampNonNegative(newRemainingTime, maxCoolantCapacity);
         if (clampedRemainingTime <= 0 && getFrostLevel() == FrostLevel.CHILLED) {
             cooler.setCoolerState(new InactiveCoolerState());
             return;

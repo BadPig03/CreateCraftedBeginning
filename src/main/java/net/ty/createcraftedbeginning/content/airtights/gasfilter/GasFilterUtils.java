@@ -32,7 +32,10 @@ public final class GasFilterUtils {
     }
 
     public static ItemStack normalizeStack(ItemStack stack) {
-        return stack.isEmpty() ? ItemStack.EMPTY : stack.copyWithCount(1);
+        if (stack.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+        return stack.copyWithCount(1);
     }
 
     public static Predicate<GasStack> compile(ItemStack filterStack) {

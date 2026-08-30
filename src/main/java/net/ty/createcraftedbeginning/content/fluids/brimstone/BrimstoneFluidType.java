@@ -33,7 +33,7 @@ public final class BrimstoneFluidType extends SolidRenderedPlaceableFluidType {
     @Override
     public void setItemMovement(ItemEntity entity) {
         Vec3 movement = entity.getDeltaMovement();
-        double verticalSpeed = movement.y + (movement.y < 0.06 ? 5.0e-4 : 0);
+        double verticalSpeed = movement.y + (movement.y < 0.06 ? 5E-4 : 0);
         entity.setDeltaMovement(movement.x * 0.8, verticalSpeed, movement.z * 0.8);
     }
 }

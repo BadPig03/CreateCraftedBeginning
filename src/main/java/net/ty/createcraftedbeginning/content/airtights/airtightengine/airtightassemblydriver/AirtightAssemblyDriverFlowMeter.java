@@ -11,6 +11,8 @@ import net.ty.createcraftedbeginning.api.enginehandlers.DefaultEngineHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
@@ -51,16 +53,22 @@ class AirtightAssemblyDriverFlowMeter {
     }
 
     private static AirtightEngineHandler getHandler(GasStack gasStack) {
-        return gasStack.isEmpty() ? DefaultEngineHandler.INSTANCE : AirtightEngineHandlerUtils.of(gasStack);
+        if (gasStack.isEmpty()) {
+            return DefaultEngineHandler.INSTANCE;
+        }
+        return AirtightEngineHandlerUtils.of(gasStack);
     }
 
     private static double getWorkFactor(AirtightEngineHandler engineHandler) {
         double workFactor = engineHandler.getWorkFactor();
-        return GasConsumptions.isFinite(workFactor) && workFactor > 0 ? workFactor : 0;
+        if (!GasConsumptions.isFinite(workFactor) || workFactor <= 0) {
+            return 0;
+        }
+        return workFactor;
     }
 
     private static int getMaxLevel(AirtightEngineHandler engineHandler) {
-        return Math.clamp(engineHandler.getMaxLevel(), 0, AirtightAssemblyDriverCore.MAX_LEVEL);
+        return CCBMathUtils.clampNonNegative(engineHandler.getMaxLevel(), AirtightAssemblyDriverCore.MAX_LEVEL);
     }
 
     private static long getMaxInput(AirtightEngineHandler engineHandler) {
@@ -78,12 +86,15 @@ class AirtightAssemblyDriverFlowMeter {
     }
 
     private static GasStack readNormalizedGas(CompoundTag compoundTag, Provider provider) {
-        if (!compoundTag.contains(COMPOUND_KEY_GAS)) {
+        if (!CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_GAS)) {
             return GasStack.EMPTY;
         }
 
-        GasStack storedGas = GasStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_GAS));
-        return storedGas.isEmpty() ? GasStack.EMPTY : storedGas.copyWithAmount(1);
+        GasStack storedGas = GasStack.parseOptional(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_GAS));
+        if (storedGas.isEmpty()) {
+            return GasStack.EMPTY;
+        }
+        return storedGas.copyWithAmount(1);
     }
 
     long fill(GasStack resource, GasAction action) {
@@ -140,16 +151,16 @@ class AirtightAssemblyDriverFlowMeter {
 
     CompoundTag write(Provider provider, boolean clientPacket) {
         CompoundTag tag = new CompoundTag();
-        tag.put(COMPOUND_KEY_GAS, gasType.saveOptional(provider));
+        CCBNbtUtils.putTag(tag, COMPOUND_KEY_GAS, gasType.saveOptional(provider));
         if (clientPacket) {
-            tag.putFloat(COMPOUND_KEY_GAS_SUPPLY, gasSupply);
+            CCBNbtUtils.putFloat(tag, COMPOUND_KEY_GAS_SUPPLY, gasSupply);
             return tag;
         }
 
-        tag.putInt(COMPOUND_KEY_CURRENT_INDEX, currentIndex);
-        tag.putInt(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE, ticksUntilNextSample);
-        tag.putLong(COMPOUND_KEY_GATHERED_SUPPLY, gatheredSupply);
-        tag.putLongArray(COMPOUND_KEY_SAMPLES, suppliedPerSample);
+        CCBNbtUtils.putInt(tag, COMPOUND_KEY_CURRENT_INDEX, currentIndex);
+        CCBNbtUtils.putInt(tag, COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE, ticksUntilNextSample);
+        CCBNbtUtils.putLong(tag, COMPOUND_KEY_GATHERED_SUPPLY, gatheredSupply);
+        CCBNbtUtils.putLongArray(tag, COMPOUND_KEY_SAMPLES, suppliedPerSample);
         return tag;
     }
 
@@ -205,8 +216,8 @@ class AirtightAssemblyDriverFlowMeter {
 
     private void readClient(CompoundTag compoundTag, Provider provider) {
         gasType = readNormalizedGas(compoundTag, provider);
-        float storedSupply = compoundTag.contains(COMPOUND_KEY_GAS_SUPPLY) ? compoundTag.getFloat(COMPOUND_KEY_GAS_SUPPLY) : 0;
-        gasSupply = GasConsumptions.isFinite(storedSupply) ? Math.clamp(storedSupply, 0, getMaxDisplayedGasSupply()) : 0;
+        float storedSupply = CCBNbtUtils.getFloatOrDefault(compoundTag, COMPOUND_KEY_GAS_SUPPLY, 0);
+        gasSupply = GasConsumptions.isFinite(storedSupply) ? CCBMathUtils.clampNonNegative(storedSupply, getMaxDisplayedGasSupply()) : 0;
         if (!gasType.isEmpty()) {
             return;
         }
@@ -225,10 +236,10 @@ class AirtightAssemblyDriverFlowMeter {
         }
 
         long maxInput = getMaxInput(engineHandler);
-        currentIndex = Math.floorMod(compoundTag.getInt(COMPOUND_KEY_CURRENT_INDEX), SAMPLES_COUNT);
-        ticksUntilNextSample = compoundTag.contains(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE) ? Math.clamp(compoundTag.getInt(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE), 1, SAMPLE_RATE) : SAMPLE_RATE;
-        long storedGatheredSupply = compoundTag.getLong(COMPOUND_KEY_GATHERED_SUPPLY);
-        gatheredSupply = Math.clamp(storedGatheredSupply, 0, maxInput);
+        currentIndex = Math.floorMod(CCBNbtUtils.getInt(compoundTag, COMPOUND_KEY_CURRENT_INDEX), SAMPLES_COUNT);
+        ticksUntilNextSample = Math.clamp(CCBNbtUtils.getIntOrDefault(compoundTag, COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE, SAMPLE_RATE), 1, SAMPLE_RATE);
+        long storedGatheredSupply = CCBNbtUtils.getLong(compoundTag, COMPOUND_KEY_GATHERED_SUPPLY);
+        gatheredSupply = CCBMathUtils.clampNonNegative(storedGatheredSupply, maxInput);
         readSamples(compoundTag, maxInput);
         if (rollingSupply == 0 && gatheredSupply == 0) {
             gasType = GasStack.EMPTY;
@@ -238,10 +249,10 @@ class AirtightAssemblyDriverFlowMeter {
 
     private void readSamples(CompoundTag compoundTag, long maxInput) {
         Arrays.fill(suppliedPerSample, 0);
-        if (compoundTag.contains(COMPOUND_KEY_SAMPLES)) {
-            long[] storedSamples = compoundTag.getLongArray(COMPOUND_KEY_SAMPLES);
+        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_SAMPLES)) {
+            long[] storedSamples = CCBNbtUtils.getLongArray(compoundTag, COMPOUND_KEY_SAMPLES);
             for (int sampleIndex = 0; sampleIndex < Math.min(SAMPLES_COUNT, storedSamples.length); sampleIndex++) {
-                suppliedPerSample[sampleIndex] = Math.clamp(storedSamples[sampleIndex], 0, maxInput);
+                suppliedPerSample[sampleIndex] = CCBMathUtils.clampNonNegative(storedSamples[sampleIndex], maxInput);
             }
         }
 

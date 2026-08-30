@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -32,12 +33,12 @@ class AirtightReactorKettleCore {
 
     CompoundTag write() {
         CompoundTag compoundTag = new CompoundTag();
-        compoundTag.put(COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.write());
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.write());
         return compoundTag;
     }
 
     void read(CompoundTag compoundTag) {
-        structureManager.read(compoundTag.getCompound(COMPOUND_KEY_STRUCTURE_MANAGER));
+        structureManager.read(CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_STRUCTURE_MANAGER));
     }
 
     AirtightReactorKettleStructureManager getStructureManager() {

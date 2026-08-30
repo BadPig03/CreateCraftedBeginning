@@ -26,12 +26,13 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonStyleUtils;
-import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.client.GasFactoryGaugeClientUtils;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUtils;
 import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
@@ -91,22 +92,33 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         tooltips.add(CCBLang.translate(key).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
     }
 
-    private void updateConfigs() {
-        if (minecraft == null) {
+    private static void adjustAmount(BigItemStack entry, double scrollY) {
+        if (scrollY == 0) {
             return;
         }
 
-        ClientLevel level = minecraft.level;
-        if (level == null) {
-            return;
+        boolean isVirtualItem = GasVirtualUtils.isVirtualItem(entry.stack);
+        boolean controlDown = hasControlDown();
+        boolean shiftDown = hasShiftDown();
+        int currentAmount = entry.count;
+        int step = isVirtualItem ? GasRequestClientUtils.getStep(hasAltDown(), controlDown, shiftDown) : shiftDown ? 10 : 1;
+        if (!controlDown && scrollY > 0 && currentAmount == 1 && step > 1) {
+            step--;
         }
 
-        connections = new ArrayList<>(behaviour.targetedBy.values());
-        outputConfig = new BigItemStack(behaviour.getFilter(), behaviour.recipeOutput);
-        inputConfig = connections.stream().map(connection -> {
-            FactoryPanelBehaviour inputBehaviour = FactoryPanelBehaviour.at(level, connection.from);
-            return inputBehaviour == null ? new BigItemStack(ItemStack.EMPTY, 0) : new BigItemStack(inputBehaviour.getFilter(), connection.amount);
-        }).toList();
+        int delta = scrollY > 0 ? step : -step;
+        int maxAmount = isVirtualItem ? GasFactoryGaugeBehaviour.MAX_TARGET_AMOUNT : 64;
+        entry.count = Mth.clamp(currentAmount + delta, 1, maxAmount);
+    }
+
+    private static String format(BigItemStack entry, boolean prefix) {
+        String amount = GasVirtualUtils.isVirtualItem(entry.stack) ? GasRequestUtils.format(entry.count, false) : Integer.toString(entry.count);
+        return (prefix ? "x" : "") + amount;
+    }
+
+    private static String formatPrecise(BigItemStack entry) {
+        String amount = GasVirtualUtils.isVirtualItem(entry.stack) ? GasRequestUtils.formatPrecise(entry.count) : Integer.toString(entry.count);
+        return 'x' + amount;
     }
 
     @Override
@@ -220,156 +232,6 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         poseStack.popPose();
     }
 
-    private void renderPromises(GuiGraphics graphics, int mouseX, int mouseY, int x, int y) {
-        int expirationState = promiseExpiration.getState();
-        MutableComponent expirationText = CCBLang.text(expirationState == -1 ? " /" : expirationState == 0 ? "30s" : expirationState + "m").component();
-        graphics.drawString(font, expirationText, promiseExpiration.getX() + 3, promiseExpiration.getY() + 4, 0xFFEEEEEE, true);
-
-        ItemStack balloon = BalloonStyleUtils.getDefaultBalloon();
-        int itemX = x + 68;
-        int itemY = y + windowHeight - 8;
-        int promisedAmount = behaviour.getPromised();
-        graphics.renderItem(balloon, itemX, itemY);
-        graphics.renderItemDecorations(font, balloon, itemX, itemY, GasRequestUtils.format(promisedAmount, false));
-        if (mouseX < itemX || mouseX >= itemX + 16 || mouseY < itemY || mouseY >= itemY + 16) {
-            return;
-        }
-
-        List<Component> tooltips = new ArrayList<>();
-        if (promisedAmount == 0) {
-            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.no_open_promises").color(ScrollInput.HEADER_RGB).component());
-            tooltips.add(CCBLang.translate(restocker ? "gui.gas_factory_gauge.restocker_promises_tip" : "gui.gas_factory_gauge.recipe_promises_tip").style(ChatFormatting.GRAY).component());
-            tooltips.add(CCBLang.translate(restocker ? "gui.gas_factory_gauge.restocker_promises_tip_1" : "gui.gas_factory_gauge.recipe_promises_tip_1").style(ChatFormatting.GRAY).component());
-            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.promise_prevents_oversending").style(ChatFormatting.GRAY).component());
-        }
-        else {
-            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.promised_items").color(ScrollInput.HEADER_RGB).component());
-            ItemStack gasToken = behaviour.getFilter();
-            BigItemStack promisedGas = new BigItemStack(gasToken, promisedAmount);
-            tooltips.add(CCBLang.text(gasToken.getHoverName().getString() + ' ' + GasFactoryGaugeClientUtils.formatPrecise(promisedGas)).component());
-            addActionTooltip(tooltips, "gui.gas_factory_gauge.left_click_reset");
-        }
-        graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
-    }
-
-    private void renderLinks(GuiGraphics graphics, int mouseX, int mouseY, int x, int y) {
-        int itemX = x + 9;
-        int itemY = y + windowHeight - 24;
-        AllGuiTextures.FROGPORT_SLOT.render(graphics, itemX - 1, itemY - 1);
-        graphics.renderItem(new ItemStack(AllBlocks.REDSTONE_LINK), itemX, itemY);
-        if (mouseX < itemX || mouseX >= itemX + 16 || mouseY < itemY || mouseY >= itemY + 16) {
-            return;
-        }
-
-        List<Component> tooltips = new ArrayList<>();
-        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.has_link_connections").color(ScrollInput.HEADER_RGB).component());
-        addActionTooltip(tooltips, "gui.gas_factory_gauge.left_click_disconnect");
-        graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
-    }
-
-    private void renderOutputs(GuiGraphics graphics, int mouseX, int mouseY, int inputSlot, int x, int y) {
-        if (restocker) {
-            renderInputItem(graphics, inputSlot, new BigItemStack(behaviour.getFilter(), 1), mouseX, mouseY);
-            return;
-        }
-
-        int outputX = x + 160;
-        int outputY = y + 48;
-        graphics.renderItem(outputConfig.stack, outputX, outputY);
-        graphics.renderItemDecorations(font, behaviour.getFilter(), outputX, outputY, GasFactoryGaugeClientUtils.format(outputConfig, false));
-        if (mouseX <= outputX || mouseX > outputX + 18 || mouseY <= outputY || mouseY > outputY + 18) {
-            return;
-        }
-
-        List<Component> tooltips = new ArrayList<>();
-        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.expected_output", CCBLang.itemName(outputConfig.stack).add(CCBLang.text(' ' + GasFactoryGaugeClientUtils.formatPrecise(outputConfig)))).color(ScrollInput.HEADER_RGB).component());
-        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.expected_output_tip").style(ChatFormatting.GRAY).component());
-        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.expected_output_tip_1").style(ChatFormatting.GRAY).component());
-        addGasScrollTooltips(tooltips);
-        graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
-    }
-
-    private int renderInputs(GuiGraphics graphics, int mouseX, int mouseY) {
-        int inputSlot = 0;
-        for (BigItemStack inputEntry : inputConfig) {
-            renderInputItem(graphics, inputSlot++, inputEntry, mouseX, mouseY);
-        }
-        if (!inputConfig.isEmpty()) {
-            return inputSlot;
-        }
-
-        int inputX = guiLeft + (restocker ? 88 : 68 + inputSlot % 3 * 20);
-        int inputY = guiTop + (restocker ? 12 : 28) + inputSlot / 3 * 20;
-        if (restocker || mouseY <= inputY || mouseY >= inputY + 60 || mouseX <= inputX || mouseX >= inputX + 60) {
-            return inputSlot;
-        }
-
-        List<Component> tooltips = new ArrayList<>();
-        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.unconfigured_input").color(ScrollInput.HEADER_RGB).component());
-        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.unconfigured_input_tip").style(ChatFormatting.GRAY).component());
-        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.unconfigured_input_tip_1").style(ChatFormatting.GRAY).component());
-        graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
-        return inputSlot;
-    }
-
-    private void renderInputItem(GuiGraphics graphics, int slotIndex, BigItemStack inputEntry, int mouseX, int mouseY) {
-        int inputX = guiLeft + (restocker ? 88 : 68 + slotIndex % 3 * 20);
-        int inputY = guiTop + (restocker ? 33 : 28) + slotIndex / 3 * 20;
-        graphics.renderItem(inputEntry.stack, inputX, inputY);
-        if (!restocker && !inputEntry.stack.isEmpty()) {
-            graphics.renderItemDecorations(font, inputEntry.stack, inputX, inputY, GasFactoryGaugeClientUtils.format(inputEntry, false));
-        }
-        if (mouseX < inputX - 2 || mouseX >= inputX - 2 + 20 || mouseY < inputY - 2 || mouseY >= inputY - 2 + 20) {
-            return;
-        }
-
-        List<Component> tooltips = new ArrayList<>();
-        if (inputEntry.stack.isEmpty()) {
-            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.empty_panel").color(ScrollInput.HEADER_RGB).component());
-            addActionTooltip(tooltips, "gui.gas_factory_gauge.left_click_disconnect");
-            graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
-            return;
-        }
-
-        if (restocker) {
-            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.sending_item", CCBLang.itemName(inputEntry.stack)).color(ScrollInput.HEADER_RGB).component());
-            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.sending_item_tip").style(ChatFormatting.GRAY).component());
-            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.sending_item_tip_1").style(ChatFormatting.GRAY).component());
-            graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
-            return;
-        }
-
-        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.sending_item", CCBLang.itemName(inputEntry.stack).add(CCBLang.text(' ' + GasFactoryGaugeClientUtils.format(inputEntry, true)))).color(ScrollInput.HEADER_RGB).component());
-        addItemScrollTooltips(tooltips);
-        addActionTooltip(tooltips, "gui.gas_factory_gauge.left_click_disconnect");
-        graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
-    }
-
-    private void renderAddressBoxTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
-        List<Component> tooltips = new ArrayList<>();
-        if (!addressBox.getValue().isBlank()) {
-            tooltips.add(CCBLang.translate(restocker ? "gui.gas_factory_gauge.restocker_address_given" : "gui.gas_factory_gauge.recipe_address_given").color(ScrollInput.HEADER_RGB).component());
-            tooltips.add(CCBLang.text('\'' + addressBox.getValue() + '\'').style(ChatFormatting.GRAY).component());
-            graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
-            return;
-        }
-
-        if (restocker) {
-            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.restocker_address").color(ScrollInput.HEADER_RGB).component());
-            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.restocker_address_tip").style(ChatFormatting.GRAY).component());
-            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.restocker_address_tip_1").style(ChatFormatting.GRAY).component());
-            addActionTooltip(tooltips, "gui.gas_factory_gauge.left_mouse_to_edit");
-            graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
-            return;
-        }
-
-        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.recipe_address").color(ScrollInput.HEADER_RGB).component());
-        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.recipe_address_tip").style(ChatFormatting.GRAY).component());
-        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.recipe_address_tip_1").style(ChatFormatting.GRAY).component());
-        addActionTooltip(tooltips, "gui.gas_factory_gauge.left_mouse_to_edit");
-        graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
-    }
-
     @SuppressWarnings("ConstantValue")
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -435,7 +297,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
                 return true;
             }
 
-            GasFactoryGaugeClientUtils.adjustAmount(inputEntry, scrollY);
+            adjustAmount(inputEntry, scrollY);
             return true;
         }
 
@@ -449,7 +311,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
             return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
         }
 
-        GasFactoryGaugeClientUtils.adjustAmount(outputConfig, scrollY);
+        adjustAmount(outputConfig, scrollY);
         return true;
     }
 
@@ -457,6 +319,174 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
     public void removed() {
         sendIt(null, false);
         super.removed();
+    }
+
+    private void updateConfigs() {
+        if (minecraft == null) {
+            return;
+        }
+
+        ClientLevel level = minecraft.level;
+        if (level == null) {
+            return;
+        }
+
+        connections = new ArrayList<>(behaviour.targetedBy.values());
+        outputConfig = new BigItemStack(behaviour.getFilter(), behaviour.recipeOutput);
+        inputConfig = connections.stream().map(connection -> {
+            FactoryPanelBehaviour inputBehaviour = FactoryPanelBehaviour.at(level, connection.from);
+            return inputBehaviour == null ? new BigItemStack(ItemStack.EMPTY, 0) : new BigItemStack(inputBehaviour.getFilter(), connection.amount);
+        }).toList();
+    }
+
+    private void renderPromises(GuiGraphics graphics, int mouseX, int mouseY, int x, int y) {
+        int expirationState = promiseExpiration.getState();
+        MutableComponent expirationText = CCBLang.text(expirationState == -1 ? " /" : expirationState == 0 ? "30s" : expirationState + "m").component();
+        graphics.drawString(font, expirationText, promiseExpiration.getX() + 3, promiseExpiration.getY() + 4, 0xFFEEEEEE, true);
+
+        ItemStack balloon = BalloonStyleUtils.getDefaultBalloon();
+        int itemX = x + 68;
+        int itemY = y + windowHeight - 8;
+        int promisedAmount = behaviour.getPromised();
+        graphics.renderItem(balloon, itemX, itemY);
+        graphics.renderItemDecorations(font, balloon, itemX, itemY, GasRequestUtils.format(promisedAmount, false));
+        if (mouseX < itemX || mouseX >= itemX + 16 || mouseY < itemY || mouseY >= itemY + 16) {
+            return;
+        }
+
+        List<Component> tooltips = new ArrayList<>();
+        if (promisedAmount == 0) {
+            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.no_open_promises").color(ScrollInput.HEADER_RGB).component());
+            tooltips.add(CCBLang.translate(restocker ? "gui.gas_factory_gauge.restocker_promises_tip" : "gui.gas_factory_gauge.recipe_promises_tip").style(ChatFormatting.GRAY).component());
+            tooltips.add(CCBLang.translate(restocker ? "gui.gas_factory_gauge.restocker_promises_tip_1" : "gui.gas_factory_gauge.recipe_promises_tip_1").style(ChatFormatting.GRAY).component());
+            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.promise_prevents_oversending").style(ChatFormatting.GRAY).component());
+        }
+        else {
+            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.promised_items").color(ScrollInput.HEADER_RGB).component());
+            ItemStack gasToken = behaviour.getFilter();
+            BigItemStack promisedGas = new BigItemStack(gasToken, promisedAmount);
+            tooltips.add(CCBLang.text(gasToken.getHoverName().getString() + ' ' + formatPrecise(promisedGas)).component());
+            addActionTooltip(tooltips, "gui.gas_factory_gauge.left_click_reset");
+        }
+        graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
+    }
+
+    private void renderLinks(GuiGraphics graphics, int mouseX, int mouseY, int x, int y) {
+        int itemX = x + 9;
+        int itemY = y + windowHeight - 24;
+        AllGuiTextures.FROGPORT_SLOT.render(graphics, itemX - 1, itemY - 1);
+        graphics.renderItem(new ItemStack(AllBlocks.REDSTONE_LINK), itemX, itemY);
+        if (mouseX < itemX || mouseX >= itemX + 16 || mouseY < itemY || mouseY >= itemY + 16) {
+            return;
+        }
+
+        List<Component> tooltips = new ArrayList<>();
+        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.has_link_connections").color(ScrollInput.HEADER_RGB).component());
+        addActionTooltip(tooltips, "gui.gas_factory_gauge.left_click_disconnect");
+        graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
+    }
+
+    private void renderOutputs(GuiGraphics graphics, int mouseX, int mouseY, int inputSlot, int x, int y) {
+        if (restocker) {
+            renderInputItem(graphics, inputSlot, new BigItemStack(behaviour.getFilter(), 1), mouseX, mouseY);
+            return;
+        }
+
+        int outputX = x + 160;
+        int outputY = y + 48;
+        graphics.renderItem(outputConfig.stack, outputX, outputY);
+        graphics.renderItemDecorations(font, behaviour.getFilter(), outputX, outputY, format(outputConfig, false));
+        if (mouseX <= outputX || mouseX > outputX + 18 || mouseY <= outputY || mouseY > outputY + 18) {
+            return;
+        }
+
+        List<Component> tooltips = new ArrayList<>();
+        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.expected_output", CCBLang.itemName(outputConfig.stack).add(CCBLang.text(' ' + formatPrecise(outputConfig)))).color(ScrollInput.HEADER_RGB).component());
+        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.expected_output_tip").style(ChatFormatting.GRAY).component());
+        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.expected_output_tip_1").style(ChatFormatting.GRAY).component());
+        addGasScrollTooltips(tooltips);
+        graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
+    }
+
+    private int renderInputs(GuiGraphics graphics, int mouseX, int mouseY) {
+        int inputSlot = 0;
+        for (BigItemStack inputEntry : inputConfig) {
+            renderInputItem(graphics, inputSlot++, inputEntry, mouseX, mouseY);
+        }
+        if (!inputConfig.isEmpty()) {
+            return inputSlot;
+        }
+
+        int inputX = guiLeft + (restocker ? 88 : 68 + inputSlot % 3 * 20);
+        int inputY = guiTop + (restocker ? 12 : 28) + inputSlot / 3 * 20;
+        if (restocker || mouseY <= inputY || mouseY >= inputY + 60 || mouseX <= inputX || mouseX >= inputX + 60) {
+            return inputSlot;
+        }
+
+        List<Component> tooltips = new ArrayList<>();
+        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.unconfigured_input").color(ScrollInput.HEADER_RGB).component());
+        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.unconfigured_input_tip").style(ChatFormatting.GRAY).component());
+        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.unconfigured_input_tip_1").style(ChatFormatting.GRAY).component());
+        graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
+        return inputSlot;
+    }
+
+    private void renderInputItem(GuiGraphics graphics, int slotIndex, BigItemStack inputEntry, int mouseX, int mouseY) {
+        int inputX = guiLeft + (restocker ? 88 : 68 + slotIndex % 3 * 20);
+        int inputY = guiTop + (restocker ? 33 : 28) + slotIndex / 3 * 20;
+        graphics.renderItem(inputEntry.stack, inputX, inputY);
+        if (!restocker && !inputEntry.stack.isEmpty()) {
+            graphics.renderItemDecorations(font, inputEntry.stack, inputX, inputY, format(inputEntry, false));
+        }
+        if (mouseX < inputX - 2 || mouseX >= inputX - 2 + 20 || mouseY < inputY - 2 || mouseY >= inputY - 2 + 20) {
+            return;
+        }
+
+        List<Component> tooltips = new ArrayList<>();
+        if (inputEntry.stack.isEmpty()) {
+            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.empty_panel").color(ScrollInput.HEADER_RGB).component());
+            addActionTooltip(tooltips, "gui.gas_factory_gauge.left_click_disconnect");
+            graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
+            return;
+        }
+
+        if (restocker) {
+            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.sending_item", CCBLang.itemName(inputEntry.stack)).color(ScrollInput.HEADER_RGB).component());
+            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.sending_item_tip").style(ChatFormatting.GRAY).component());
+            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.sending_item_tip_1").style(ChatFormatting.GRAY).component());
+            graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
+            return;
+        }
+
+        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.sending_item", CCBLang.itemName(inputEntry.stack).add(CCBLang.text(' ' + format(inputEntry, true)))).color(ScrollInput.HEADER_RGB).component());
+        addItemScrollTooltips(tooltips);
+        addActionTooltip(tooltips, "gui.gas_factory_gauge.left_click_disconnect");
+        graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
+    }
+
+    private void renderAddressBoxTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
+        List<Component> tooltips = new ArrayList<>();
+        if (!addressBox.getValue().isBlank()) {
+            tooltips.add(CCBLang.translate(restocker ? "gui.gas_factory_gauge.restocker_address_given" : "gui.gas_factory_gauge.recipe_address_given").color(ScrollInput.HEADER_RGB).component());
+            tooltips.add(CCBLang.text('\'' + addressBox.getValue() + '\'').style(ChatFormatting.GRAY).component());
+            graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
+            return;
+        }
+
+        if (restocker) {
+            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.restocker_address").color(ScrollInput.HEADER_RGB).component());
+            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.restocker_address_tip").style(ChatFormatting.GRAY).component());
+            tooltips.add(CCBLang.translate("gui.gas_factory_gauge.restocker_address_tip_1").style(ChatFormatting.GRAY).component());
+            addActionTooltip(tooltips, "gui.gas_factory_gauge.left_mouse_to_edit");
+            graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
+            return;
+        }
+
+        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.recipe_address").color(ScrollInput.HEADER_RGB).component());
+        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.recipe_address_tip").style(ChatFormatting.GRAY).component());
+        tooltips.add(CCBLang.translate("gui.gas_factory_gauge.recipe_address_tip_1").style(ChatFormatting.GRAY).component());
+        addActionTooltip(tooltips, "gui.gas_factory_gauge.left_mouse_to_edit");
+        graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
     }
 
     private void playButtonSound() {

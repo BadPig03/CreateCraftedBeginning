@@ -78,8 +78,8 @@
     }
   },
   "textures": {
-    "fiber": "createcraftedbeginning:block/photo-stress_bearing/particle",
-    "particle": "createcraftedbeginning:block/photo-stress_bearing/particle"
+    "fiber": "createcraftedbeginning:block/optical_power/particle",
+    "particle": "createcraftedbeginning:block/optical_power/particle"
   },
   "elements": [
     {

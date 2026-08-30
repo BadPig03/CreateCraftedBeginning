@@ -73,8 +73,8 @@ public final class AirtightAssemblyDriverCore {
         return serialization.write(provider, clientPacket);
     }
 
-    public void read(CompoundTag tag, Provider provider, boolean clientPacket) {
-        serialization.read(tag, provider, clientPacket);
+    public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        serialization.read(compoundTag, provider, clientPacket);
     }
 
     AirtightAssemblyDriverFlowMeter getFlowMeter() {

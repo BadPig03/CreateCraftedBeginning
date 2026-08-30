@@ -11,6 +11,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IVentingGasSource;
 import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasTransferBudget.Step;
 import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasTransferExecutor.PlannedTransfer;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -220,7 +221,7 @@ final class GasNetwork {
         }
 
         long returnedAmount = sourceHandler.fill(pendingTransfer.copy(), GasAction.EXECUTE);
-        returnedAmount = Math.clamp(returnedAmount, 0, pendingTransfer.getAmount());
+        returnedAmount = CCBMathUtils.clampNonNegative(returnedAmount, pendingTransfer.getAmount());
         if (returnedAmount <= 0) {
             pendingSourceProvider = sourceProvider;
             return false;

@@ -16,6 +16,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.Vec3;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -24,6 +25,8 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
+    private static final String COMPOUND_KEY_CLOCKWISE = "Clockwise";
+
     protected boolean isActive;
     protected boolean isClockwise;
     protected int airTimer;
@@ -37,7 +40,6 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
     @Override
     public void initialize() {
         super.initialize();
-
         if (hasSource() && getGeneratedSpeed() <= getTheoreticalSpeed()) {
             return;
         }
@@ -52,23 +54,26 @@ public class PneumaticEngineBlockEntity extends GeneratingKineticBlockEntity {
             return;
         }
 
-        compoundTag.putBoolean("Clockwise", isClockwise);
+        CCBNbtUtils.putBoolean(compoundTag, COMPOUND_KEY_CLOCKWISE, isClockwise);
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        if (clientPacket || !compoundTag.contains("Clockwise")) {
+        if (clientPacket) {
             return;
         }
 
-        isClockwise = compoundTag.getBoolean("Clockwise");
+        isClockwise = CCBNbtUtils.getBooleanOrDefault(compoundTag, COMPOUND_KEY_CLOCKWISE, isClockwise);
     }
 
     @Override
     public float getGeneratedSpeed() {
         int speedDirection = isClockwise ? 1 : -1;
-        return isActive ? speedDirection * 48 : 0;
+        if (!isActive) {
+            return 0;
+        }
+        return speedDirection * 48;
     }
 
     @Override

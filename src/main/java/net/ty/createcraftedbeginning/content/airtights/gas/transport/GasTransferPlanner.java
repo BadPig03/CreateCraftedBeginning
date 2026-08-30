@@ -10,6 +10,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.content.airtights.gas.flowsources.GasFlowSource;
 import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasTransferAllocator.Result;
 import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasTransferExecutor.PlannedTransfer;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -51,7 +52,7 @@ final class GasTransferPlanner {
 
         List<TargetCapacity> targetCapacities = new ArrayList<>();
         for (TransferTarget target : availableTargets) {
-            long fillCapacity = Math.clamp(target.handler.fill(availableGas.copy(), GasAction.SIMULATE), 0, availableGas.getAmount());
+            long fillCapacity = CCBMathUtils.clampNonNegative(target.handler.fill(availableGas.copy(), GasAction.SIMULATE), availableGas.getAmount());
             if (fillCapacity <= 0) {
                 continue;
             }

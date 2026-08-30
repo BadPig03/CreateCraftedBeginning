@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -91,7 +92,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
     }
 
     private static void updateClientConnection(MovementContext context, BlockPos movingPos, PortableGasInterfaceBlockEntity stationary) {
-        context.data.put(COMPOUND_KEY_CLIENT_PREVIOUS_POSITION, NbtUtils.writeBlockPos(movingPos));
+        CCBNbtUtils.putTag(context.data, COMPOUND_KEY_CLIENT_PREVIOUS_POSITION, NbtUtils.writeBlockPos(movingPos));
         boolean shouldAnimateConnection = context.contraption instanceof CarriageContraption || context.contraption.entity.isStalled() || context.motion.lengthSqr() == 0;
         if (!shouldAnimateConnection) {
             return;
@@ -173,7 +174,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
             return false;
         }
 
-        context.data.put(COMPOUND_KEY_WORKING_POSITION, NbtUtils.writeBlockPos(stationary.getBlockPos()));
+        CCBNbtUtils.putTag(context.data, COMPOUND_KEY_WORKING_POSITION, NbtUtils.writeBlockPos(stationary.getBlockPos()));
         if (context.world.isClientSide) {
             updateClientConnection(context, pos, stationary);
             return true;

@@ -13,6 +13,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.compat.jade.gas.GasDataProvider;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.ICreativeGasContainer;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlockEntity;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IComponentProvider;
 import snownee.jade.api.IServerDataProvider;
@@ -44,11 +45,11 @@ public enum GasTooltipProvider implements IServerDataProvider<BlockAccessor>, IC
     @Override
     public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
         CompoundTag serverData = accessor.getServerData();
-        if (!serverData.contains(GasDataProvider.STORAGE_KEY) || !serverData.contains(GasDataProvider.STORAGE_UID_KEY)) {
+        if (!CCBNbtUtils.contains(serverData, GasDataProvider.STORAGE_KEY) || !CCBNbtUtils.contains(serverData, GasDataProvider.STORAGE_UID_KEY)) {
             return;
         }
 
-        if (!JadePlugin.GAS_BLOCK_TOOLTIP.toString().equals(serverData.getString(GasDataProvider.STORAGE_UID_KEY))) {
+        if (!JadePlugin.GAS_BLOCK_TOOLTIP.toString().equals(CCBNbtUtils.getString(serverData, GasDataProvider.STORAGE_UID_KEY))) {
             return;
         }
 

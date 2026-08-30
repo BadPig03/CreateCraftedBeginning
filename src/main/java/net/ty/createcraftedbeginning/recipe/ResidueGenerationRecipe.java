@@ -133,11 +133,17 @@ public class ResidueGenerationRecipe extends StandardProcessingWithGasRecipe<Sin
         }
 
         private static ResidueOutput item(ItemStack itemStack) {
-            return itemStack.isEmpty() ? EMPTY : new ResidueOutput(itemStack, FluidStack.EMPTY);
+            if (itemStack.isEmpty()) {
+                return EMPTY;
+            }
+            return new ResidueOutput(itemStack, FluidStack.EMPTY);
         }
 
         private static ResidueOutput fluid(FluidStack fluidStack) {
-            return fluidStack.isEmpty() ? EMPTY : new ResidueOutput(ItemStack.EMPTY, fluidStack);
+            if (fluidStack.isEmpty()) {
+                return EMPTY;
+            }
+            return new ResidueOutput(ItemStack.EMPTY, fluidStack);
         }
 
         public boolean hasItem() {

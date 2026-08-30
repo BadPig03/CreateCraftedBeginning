@@ -15,7 +15,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightBootsMenu extends AirtightArmorMenu {
-    private static final UpgradeRegistryAccess UPGRADES = upgradeRegistry(AirtightBootsUpgradeRegistry::getByID, AirtightBootsUpgradeRegistry::getByStack, AirtightBootsUpgradeRegistry::getDefaultUpgradeList, AirtightBootsUpgradeRegistry::getAll);
+    private static final UpgradeRegistryAccess UPGRADES = upgradeRegistry(AirtightBootsUpgradeRegistry::getById, AirtightBootsUpgradeRegistry::getByStack, AirtightBootsUpgradeRegistry::getDefaultUpgradeList, AirtightBootsUpgradeRegistry::getAll);
 
     public AirtightBootsMenu(int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
         this(CCBMenuTypes.AIRTIGHT_BOOTS_MENU.get(), id, inv, extraData);

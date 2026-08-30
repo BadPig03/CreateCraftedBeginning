@@ -149,7 +149,10 @@ public final class ControllerGasHandler implements IGasHandler {
             }
             boolean filledAllResources = fillAll(resources);
             shouldCommit = filledAllResources && action.execute();
-            return filledAllResources ? AtomicFillResult.SUCCESS : AtomicFillResult.REJECTED;
+            if (!filledAllResources) {
+                return AtomicFillResult.REJECTED;
+            }
+            return AtomicFillResult.SUCCESS;
         } finally {
             if (!shouldCommit) {
                 restoreContents(drawers, snapshots);

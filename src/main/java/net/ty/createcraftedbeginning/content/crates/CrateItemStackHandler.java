@@ -4,6 +4,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
@@ -23,6 +24,7 @@ class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INB
     private final IntSupplier maxCountSupplier;
     private final Predicate<ItemStack> itemValidator;
     private final Runnable contentsChangedListener;
+
     ItemStack content = ItemStack.EMPTY;
     int count;
     private int batchDepth;
@@ -36,25 +38,22 @@ class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INB
 
     @Override
     public CompoundTag serializeNBT(Provider provider) {
-        CompoundTag tag = new CompoundTag();
+        CompoundTag compoundTag = new CompoundTag();
         if (content.isEmpty()) {
-            return tag;
+            return compoundTag;
         }
 
-        tag.put(COMPOUND_KEY_CONTENT, content.saveOptional(provider));
-        tag.putInt(COMPOUND_KEY_COUNT, count);
-        return tag;
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_CONTENT, content.saveOptional(provider));
+        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_COUNT, count);
+        return compoundTag;
     }
 
     @Override
     public void deserializeNBT(Provider provider, CompoundTag compoundTag) {
         ItemStack storedContent = ItemStack.EMPTY;
-        int storedCount = 0;
-        if (compoundTag.contains(COMPOUND_KEY_CONTENT)) {
-            storedContent = ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_CONTENT));
-        }
-        if (compoundTag.contains(COMPOUND_KEY_COUNT)) {
-            storedCount = compoundTag.getInt(COMPOUND_KEY_COUNT);
+        int storedCount = CCBNbtUtils.getIntOrDefault(compoundTag, COMPOUND_KEY_COUNT, 0);
+        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_CONTENT)) {
+            storedContent = ItemStack.parseOptional(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_CONTENT));
         }
         applyStoredItems(storedContent, storedCount, false);
         onLoad();
@@ -68,7 +67,10 @@ class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INB
     @Override
     public ItemStack getStackInSlot(int slot) {
         validateSlotIndex(slot);
-        return content.isEmpty() ? ItemStack.EMPTY : content.copyWithCount(count);
+        if (content.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+        return content.copyWithCount(count);
     }
 
     @Override
@@ -89,7 +91,10 @@ class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INB
                 applyStoredItems(stack, insertCount, true);
             }
             int remainingCount = stack.getCount() - insertCount;
-            return remainingCount > 0 ? stack.copyWithCount(remainingCount) : ItemStack.EMPTY;
+            if (remainingCount <= 0) {
+                return ItemStack.EMPTY;
+            }
+            return stack.copyWithCount(remainingCount);
         }
 
         int remainingCapacity = getRemainingCapacity();
@@ -103,7 +108,10 @@ class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INB
         }
 
         int remainingCount = stack.getCount() - insertCount;
-        return remainingCount > 0 ? stack.copyWithCount(remainingCount) : ItemStack.EMPTY;
+        if (remainingCount <= 0) {
+            return ItemStack.EMPTY;
+        }
+        return stack.copyWithCount(remainingCount);
     }
 
     @Override
@@ -115,7 +123,6 @@ class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INB
 
         int extractCount = Math.min(Math.min(amount, count), content.getMaxStackSize());
         ItemStack extractedStack = content.copyWithCount(extractCount);
-
         if (simulate) {
             return extractedStack;
         }
@@ -143,7 +150,10 @@ class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INB
 
     ItemStack getStoredItem(int slot) {
         validateSlotIndex(slot);
-        return content.isEmpty() ? ItemStack.EMPTY : content.copy();
+        if (content.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+        return content.copy();
     }
 
     int getCountInSlot(int slot) {

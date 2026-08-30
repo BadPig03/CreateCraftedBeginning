@@ -22,7 +22,7 @@ public final class AirtightLeggingsUpgradeRegistry {
     private AirtightLeggingsUpgradeRegistry() {
     }
 
-    public static @Nullable AirtightUpgrade getByID(ResourceLocation id) {
+    public static @Nullable AirtightUpgrade getById(ResourceLocation id) {
         return REGISTRY.getById(id);
     }
 

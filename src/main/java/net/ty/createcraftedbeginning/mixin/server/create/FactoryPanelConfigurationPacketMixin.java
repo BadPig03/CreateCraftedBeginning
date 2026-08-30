@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -45,7 +46,7 @@ public abstract class FactoryPanelConfigurationPacketMixin {
                 continue;
             }
 
-            entry.setValue(Mth.clamp(entry.getValue(), 0, GasFactoryGaugeBehaviour.MAX_TARGET_AMOUNT));
+            entry.setValue(CCBMathUtils.clampNonNegative(entry.getValue(), GasFactoryGaugeBehaviour.MAX_TARGET_AMOUNT));
         }
     }
 

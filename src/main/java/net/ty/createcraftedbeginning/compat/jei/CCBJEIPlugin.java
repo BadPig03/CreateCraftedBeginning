@@ -64,7 +64,7 @@ import net.ty.createcraftedbeginning.compat.jei.utils.RedstoneRequesterGhostIngr
 import net.ty.createcraftedbeginning.compat.jei.utils.StockKeeperRequestGasGuiHandler;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressUtils;
-import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillScreen;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillScreen;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreen;
 import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
 import net.ty.createcraftedbeginning.recipe.ChillingRecipe;

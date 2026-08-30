@@ -10,6 +10,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonGasContents;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonUtils;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -24,7 +25,10 @@ final class GasPackagerPendingGas {
     private BalloonGasContents pendingGases = BalloonGasContents.EMPTY;
 
     private static ItemStack copyOrEmpty(ItemStack stack) {
-        return stack.isEmpty() ? ItemStack.EMPTY : stack.copy();
+        if (stack.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+        return stack.copy();
     }
 
     boolean isEmpty() {
@@ -81,11 +85,11 @@ final class GasPackagerPendingGas {
     }
 
     void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        if (!compoundTag.contains(COMPOUND_KEY_PENDING_GASES) || clientPacket) {
+        if (!CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_PENDING_GASES) || clientPacket) {
             return;
         }
 
-        Tag pendingTag = compoundTag.get(COMPOUND_KEY_PENDING_GASES);
+        Tag pendingTag = CCBNbtUtils.getTag(compoundTag, COMPOUND_KEY_PENDING_GASES);
         pendingGases = pendingTag == null ? BalloonGasContents.EMPTY : BalloonGasContents.parseOptional(provider, pendingTag);
     }
 
@@ -94,7 +98,7 @@ final class GasPackagerPendingGas {
             return;
         }
 
-        compoundTag.put(COMPOUND_KEY_PENDING_GASES, pendingGases.saveOptional(provider));
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_PENDING_GASES, pendingGases.saveOptional(provider));
     }
 
     void clear() {

@@ -84,7 +84,10 @@ final class AirtightTankMultiblockController {
     }
 
     BlockPos getController() {
-        return isController() ? owner.getBlockPos() : controllerPos;
+        if (!isController()) {
+            return controllerPos;
+        }
+        return owner.getBlockPos();
     }
 
     @SuppressWarnings("unchecked")

@@ -6,6 +6,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.util.Mth;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -22,7 +23,7 @@ final class EndSculkSilencerAnimationState {
         }
 
         float unclampedTargetSpeed = Math.signum(kineticSpeed) * 2 * Mth.ceil(Math.log10(absoluteSpeed) + Math.sqrt(absoluteSpeed));
-        return Mth.clamp(unclampedTargetSpeed, -MAX_ANIMATION_SPEED, MAX_ANIMATION_SPEED);
+        return CCBMathUtils.clampMagnitude(unclampedTargetSpeed, MAX_ANIMATION_SPEED);
     }
 
     LerpedFloat getAnimation() {

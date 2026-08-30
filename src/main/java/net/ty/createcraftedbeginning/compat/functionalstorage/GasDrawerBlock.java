@@ -25,6 +25,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.compat.functionalstorage.registry.CCBFunctionalStorageBlockEntities;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -52,11 +53,11 @@ public final class GasDrawerBlock extends Drawer<GasDrawerBlockEntity> {
     private static void appendUpgradesTooltip(CompoundTag tileTag, List<Component> tooltip) {
         tooltip.add(UPGRADES_HEADER);
         boolean hasUpgrades = false;
-        if (tileTag.getBoolean(COMPOUND_KEY_CREATIVE)) {
+        if (CCBNbtUtils.getBoolean(tileTag, COMPOUND_KEY_CREATIVE)) {
             tooltip.add(Component.literal("- ").withStyle(ChatFormatting.GRAY).append(Component.translatable("drawer.block.upgrades.is_creative").withStyle(ChatFormatting.LIGHT_PURPLE)));
             hasUpgrades = true;
         }
-        if (tileTag.getBoolean(COMPOUND_KEY_VOID)) {
+        if (CCBNbtUtils.getBoolean(tileTag, COMPOUND_KEY_VOID)) {
             tooltip.add(Component.literal("- ").withStyle(ChatFormatting.GRAY).append(Component.translatable("drawer.block.upgrades.is_void").withStyle(ChatFormatting.BLUE)));
             hasUpgrades = true;
         }
@@ -68,7 +69,7 @@ public final class GasDrawerBlock extends Drawer<GasDrawerBlockEntity> {
     }
 
     public static GasStack readStoredGas(CompoundTag tileTag, int slot, Provider provider) {
-        return GasDrawerStorage.readStoredGas(tileTag.getCompound(GasDrawerStorage.COMPOUND_KEY_STORAGE), slot, provider);
+        return GasDrawerStorage.readStoredGas(CCBNbtUtils.getCompound(tileTag, GasDrawerStorage.COMPOUND_KEY_STORAGE), slot, provider);
     }
 
     @Override
@@ -105,7 +106,7 @@ public final class GasDrawerBlock extends Drawer<GasDrawerBlockEntity> {
 
     private void appendContentsTooltip(CompoundTag tileTag, List<Component> tooltip) {
         tooltip.add(CONTENTS_HEADER);
-        CompoundTag storageTag = tileTag.getCompound(GasDrawerStorage.COMPOUND_KEY_STORAGE);
+        CompoundTag storageTag = CCBNbtUtils.getCompound(tileTag, GasDrawerStorage.COMPOUND_KEY_STORAGE);
         boolean hasContents = false;
         for (int slot = 0; slot < drawerType.getSlots(); slot++) {
             GasStack storedGas = GasDrawerStorage.readStoredGas(storageTag, slot, Utils.registryAccess());

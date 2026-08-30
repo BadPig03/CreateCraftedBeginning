@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.breezes.breezechamber;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity.ChargerType;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates.BaseChamberState;
@@ -11,6 +10,8 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates.GaleChamberState;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates.IllChamberState;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates.InactiveChamberState;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -31,11 +32,11 @@ final class BreezeChamberSerialization {
     }
 
     private static BaseChamberState readState(CompoundTag compoundTag) {
-        CompoundTag stateData = compoundTag.getCompound(STATE_DATA);
+        CompoundTag stateData = CCBNbtUtils.getCompound(compoundTag, STATE_DATA);
         ChargerType chargerType = ChargerType.fromTag(compoundTag, STATE_TYPE);
-        boolean isCreative = stateData.contains(IS_CREATIVE, Tag.TAG_BYTE) && stateData.getBoolean(IS_CREATIVE);
+        boolean isCreative = CCBNbtUtils.getBooleanOrDefault(stateData, IS_CREATIVE, false);
         int maxWindCapacity = BreezeChamberBlockEntity.getMaxWindCapacity();
-        int remainingTime = stateData.contains(REMAINING_TIME, Tag.TAG_ANY_NUMERIC) ? Mth.clamp(stateData.getInt(REMAINING_TIME), -maxWindCapacity, maxWindCapacity) : 0;
+        int remainingTime = CCBMathUtils.clampMagnitude(CCBNbtUtils.getIntOrDefault(stateData, REMAINING_TIME, 0), maxWindCapacity);
         return createState(chargerType, remainingTime, isCreative);
     }
 
@@ -65,28 +66,28 @@ final class BreezeChamberSerialization {
         BaseChamberState chamberState = chamber.getChamberStateInternal();
         CompoundTag stateTag = new CompoundTag();
         chamberState.save(stateTag);
-        compoundTag.put(STATE_DATA, stateTag);
-        compoundTag.putString(STATE_TYPE, chamberState.getChargerType().name());
-        compoundTag.putBoolean(GOGGLES, chamber.hasGoggles());
-        compoundTag.putBoolean(TRAIN_HAT, chamber.hasTrainHat());
+        CCBNbtUtils.putTag(compoundTag, STATE_DATA, stateTag);
+        CCBNbtUtils.putString(compoundTag, STATE_TYPE, chamberState.getChargerType().name());
+        CCBNbtUtils.putBoolean(compoundTag, GOGGLES, chamber.hasGoggles());
+        CCBNbtUtils.putBoolean(compoundTag, TRAIN_HAT, chamber.hasTrainHat());
         CompoundTag gasProcessingTag = new CompoundTag();
         chamber.getGasProcessorInternal().writePendingProcessing(gasProcessingTag);
-        compoundTag.put(GAS_PROCESSING, gasProcessingTag);
+        CCBNbtUtils.putTag(compoundTag, GAS_PROCESSING, gasProcessingTag);
     }
 
     void read(BreezeChamberBlockEntity chamber, CompoundTag compoundTag) {
-        if (compoundTag.contains(STATE_DATA, Tag.TAG_COMPOUND)) {
+        if (CCBNbtUtils.contains(compoundTag, STATE_DATA, Tag.TAG_COMPOUND)) {
             chamber.setChamberStateFromSerialization(readState(compoundTag));
         }
-        chamber.getGasProcessorInternal().readPendingProcessing(compoundTag.contains(GAS_PROCESSING, Tag.TAG_COMPOUND) ? compoundTag.getCompound(GAS_PROCESSING) : new CompoundTag());
-        if (compoundTag.contains(GOGGLES, Tag.TAG_BYTE)) {
-            chamber.setGogglesFromSerialization(compoundTag.getBoolean(GOGGLES));
+        chamber.getGasProcessorInternal().readPendingProcessing(CCBNbtUtils.getCompoundOrEmpty(compoundTag, GAS_PROCESSING));
+        if (CCBNbtUtils.contains(compoundTag, GOGGLES, Tag.TAG_BYTE)) {
+            chamber.setGogglesFromSerialization(CCBNbtUtils.getBoolean(compoundTag, GOGGLES));
         }
-        if (!compoundTag.contains(TRAIN_HAT, Tag.TAG_BYTE)) {
+        if (!CCBNbtUtils.contains(compoundTag, TRAIN_HAT, Tag.TAG_BYTE)) {
             return;
         }
 
-        chamber.setTrainHatFromSerialization(compoundTag.getBoolean(TRAIN_HAT));
+        chamber.setTrainHatFromSerialization(CCBNbtUtils.getBoolean(compoundTag, TRAIN_HAT));
     }
 
     void saveToItem(BreezeChamberBlockEntity chamber, ItemStack stack) {

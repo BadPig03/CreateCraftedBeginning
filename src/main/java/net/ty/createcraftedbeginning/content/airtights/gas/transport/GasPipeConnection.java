@@ -22,6 +22,8 @@ import net.ty.createcraftedbeginning.content.airtights.gas.flowsources.GasFlowSo
 import net.ty.createcraftedbeginning.content.airtights.gas.flowsources.OpenEndedSource;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IVentingGasSource;
 import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPropagator.AdjacentTarget;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -67,16 +69,16 @@ public final class GasPipeConnection {
 
     @Nullable
     public static GasPipeConnection readRetiredData(CompoundTag retiredData, Provider provider) {
-        if (!retiredData.contains(COMPOUND_KEY_SIDE, Tag.TAG_INT) || !retiredData.contains(COMPOUND_KEY_PENDING_TRANSFER, Tag.TAG_COMPOUND)) {
+        if (!CCBNbtUtils.contains(retiredData, COMPOUND_KEY_SIDE, Tag.TAG_INT) || !CCBNbtUtils.contains(retiredData, COMPOUND_KEY_PENDING_TRANSFER, Tag.TAG_COMPOUND)) {
             return null;
         }
 
-        GasStack retiredTransfer = GasStack.parseOptional(provider, retiredData.getCompound(COMPOUND_KEY_PENDING_TRANSFER));
+        GasStack retiredTransfer = GasStack.parseOptional(provider, CCBNbtUtils.getCompound(retiredData, COMPOUND_KEY_PENDING_TRANSFER));
         if (retiredTransfer.isEmpty()) {
             return null;
         }
 
-        int retiredSideId = retiredData.getInt(COMPOUND_KEY_SIDE);
+        int retiredSideId = CCBNbtUtils.getInt(retiredData, COMPOUND_KEY_SIDE);
         Direction retiredSide = null;
         for (Direction direction : Direction.values()) {
             if (direction.get3DDataValue() != retiredSideId) {
@@ -98,11 +100,8 @@ public final class GasPipeConnection {
     }
 
     private static PendingTransferOrigin readPendingTransferOrigin(CompoundTag connectionData) {
-        if (!connectionData.contains(COMPOUND_KEY_PENDING_TRANSFER_ORIGIN, Tag.TAG_STRING)) {
-            return PendingTransferOrigin.ANY_ENDPOINT;
-        }
-
-        return PendingTransferOrigin.fromSerializedName(connectionData.getString(COMPOUND_KEY_PENDING_TRANSFER_ORIGIN));
+        String serializedOrigin = CCBNbtUtils.getStringOrDefault(connectionData, COMPOUND_KEY_PENDING_TRANSFER_ORIGIN, PendingTransferOrigin.ANY_ENDPOINT.getSerializedName());
+        return PendingTransferOrigin.fromSerializedName(serializedOrigin);
     }
 
     public Direction getSide() {
@@ -257,10 +256,10 @@ public final class GasPipeConnection {
 
         pressureContributed = true;
         if (inbound) {
-            inboundPressureUnits = GasPressure.addSaturated(inboundPressureUnits, newAmountUnits);
+            inboundPressureUnits = CCBMathUtils.saturatedAdd(inboundPressureUnits, newAmountUnits);
         }
         else {
-            outwardPressureUnits = GasPressure.addSaturated(outwardPressureUnits, newAmountUnits);
+            outwardPressureUnits = CCBMathUtils.saturatedAdd(outwardPressureUnits, newAmountUnits);
         }
         normalizeOpposingPressure();
     }
@@ -316,15 +315,15 @@ public final class GasPipeConnection {
         else {
             writePersistentData(connectionData, provider);
         }
-        if (connectionData.isEmpty()) {
+        if (CCBNbtUtils.isEmpty(connectionData)) {
             return;
         }
 
-        compoundTag.put(side.getName(), connectionData);
+        CCBNbtUtils.putTag(compoundTag, side.getName(), connectionData);
     }
 
     public void read(CompoundTag compoundTag, Provider provider, BlockPos blockPos, boolean clientPacket) {
-        CompoundTag connectionData = compoundTag.contains(side.getName(), Tag.TAG_COMPOUND) ? compoundTag.getCompound(side.getName()) : new CompoundTag();
+        CompoundTag connectionData = CCBNbtUtils.getCompoundOrEmpty(compoundTag, side.getName());
         if (clientPacket) {
             readClientData(connectionData, provider);
             return;
@@ -339,7 +338,7 @@ public final class GasPipeConnection {
         }
 
         CompoundTag retiredData = new CompoundTag();
-        retiredData.putInt(COMPOUND_KEY_SIDE, side.get3DDataValue());
+        CCBNbtUtils.putInt(retiredData, COMPOUND_KEY_SIDE, side.get3DDataValue());
         writePendingTransferData(retiredData, provider);
         return retiredData;
     }
@@ -461,9 +460,9 @@ public final class GasPipeConnection {
         }
 
         CompoundTag flowTag = new CompoundTag();
-        flowTag.put(COMPOUND_KEY_GAS, flow.gas.saveOptional(provider));
-        flowTag.putBoolean(COMPOUND_KEY_INBOUND, flow.inbound);
-        connectionData.put(COMPOUND_KEY_AIR_FLOW, flowTag);
+        CCBNbtUtils.putTag(flowTag, COMPOUND_KEY_GAS, flow.gas.saveOptional(provider));
+        CCBNbtUtils.putBoolean(flowTag, COMPOUND_KEY_INBOUND, flow.inbound);
+        CCBNbtUtils.putTag(connectionData, COMPOUND_KEY_AIR_FLOW, flowTag);
     }
 
     private void writePersistentData(CompoundTag connectionData, Provider provider) {
@@ -476,8 +475,8 @@ public final class GasPipeConnection {
         }
         if (openEndedSource != null) {
             CompoundTag openEndTag = openEndedSource.write(provider);
-            if (!openEndTag.isEmpty()) {
-                connectionData.put(COMPOUND_KEY_OPEN_END, openEndTag);
+            if (!CCBNbtUtils.isEmpty(openEndTag)) {
+                CCBNbtUtils.putTag(connectionData, COMPOUND_KEY_OPEN_END, openEndTag);
             }
         }
 
@@ -490,27 +489,27 @@ public final class GasPipeConnection {
         }
 
         capturePendingTransferOrigin();
-        connectionData.put(COMPOUND_KEY_PENDING_TRANSFER, pendingTransfer.saveOptional(provider));
+        CCBNbtUtils.putTag(connectionData, COMPOUND_KEY_PENDING_TRANSFER, pendingTransfer.saveOptional(provider));
         if (pendingTransferOrigin != PendingTransferOrigin.UNSPECIFIED && pendingTransferOrigin != PendingTransferOrigin.ANY_ENDPOINT) {
-            connectionData.putString(COMPOUND_KEY_PENDING_TRANSFER_ORIGIN, pendingTransferOrigin.serializedName);
+            CCBNbtUtils.putString(connectionData, COMPOUND_KEY_PENDING_TRANSFER_ORIGIN, pendingTransferOrigin.serializedName);
         }
     }
 
     private void readClientData(CompoundTag connectionData, Provider provider) {
         source = null;
-        if (!connectionData.contains(COMPOUND_KEY_AIR_FLOW, Tag.TAG_COMPOUND)) {
+        if (!CCBNbtUtils.contains(connectionData, COMPOUND_KEY_AIR_FLOW, Tag.TAG_COMPOUND)) {
             flow = null;
             return;
         }
 
-        CompoundTag flowTag = connectionData.getCompound(COMPOUND_KEY_AIR_FLOW);
-        GasStack flowGas = GasStack.parseOptional(provider, flowTag.getCompound(COMPOUND_KEY_GAS));
+        CompoundTag flowTag = CCBNbtUtils.getCompound(connectionData, COMPOUND_KEY_AIR_FLOW);
+        GasStack flowGas = GasStack.parseOptional(provider, CCBNbtUtils.getCompound(flowTag, COMPOUND_KEY_GAS));
         if (flowGas.isEmpty()) {
             flow = null;
             return;
         }
 
-        boolean isInbound = flowTag.getBoolean(COMPOUND_KEY_INBOUND);
+        boolean isInbound = CCBNbtUtils.getBoolean(flowTag, COMPOUND_KEY_INBOUND);
         if (flow == null) {
             flow = new GasFlow(isInbound, flowGas);
             return;
@@ -528,13 +527,13 @@ public final class GasPipeConnection {
         network = null;
         source = null;
         previousSource = null;
-        pendingTransfer = connectionData.contains(COMPOUND_KEY_PENDING_TRANSFER, Tag.TAG_COMPOUND) ? GasStack.parseOptional(provider, connectionData.getCompound(COMPOUND_KEY_PENDING_TRANSFER)) : GasStack.EMPTY;
+        pendingTransfer = CCBNbtUtils.contains(connectionData, COMPOUND_KEY_PENDING_TRANSFER, Tag.TAG_COMPOUND) ? GasStack.parseOptional(provider, CCBNbtUtils.getCompound(connectionData, COMPOUND_KEY_PENDING_TRANSFER)) : GasStack.EMPTY;
         pendingTransferOrigin = pendingTransfer.isEmpty() ? PendingTransferOrigin.UNSPECIFIED : readPendingTransferOrigin(connectionData);
-        if (!connectionData.contains(COMPOUND_KEY_OPEN_END, Tag.TAG_COMPOUND)) {
+        if (!CCBNbtUtils.contains(connectionData, COMPOUND_KEY_OPEN_END, Tag.TAG_COMPOUND)) {
             return;
         }
 
-        OpenEndedSource openEndedSource = OpenEndedSource.read(connectionData.getCompound(COMPOUND_KEY_OPEN_END), provider, new BlockFace(blockPos, side));
+        OpenEndedSource openEndedSource = OpenEndedSource.read(CCBNbtUtils.getCompound(connectionData, COMPOUND_KEY_OPEN_END), provider, new BlockFace(blockPos, side));
         source = openEndedSource;
         previousSource = openEndedSource;
     }
@@ -575,7 +574,7 @@ public final class GasPipeConnection {
         }
 
         long returnedAmount = sourceHandler.fill(pendingTransfer.copy(), GasAction.EXECUTE);
-        returnedAmount = Math.clamp(returnedAmount, 0, pendingTransfer.getAmount());
+        returnedAmount = CCBMathUtils.clampNonNegative(returnedAmount, pendingTransfer.getAmount());
         if (returnedAmount <= 0) {
             return false;
         }
@@ -641,6 +640,10 @@ public final class GasPipeConnection {
                 }
             }
             return ANY_ENDPOINT;
+        }
+
+        public String getSerializedName() {
+            return serializedName;
         }
 
         private boolean accepts(GasFlowSource flowSource) {

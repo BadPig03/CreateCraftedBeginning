@@ -29,6 +29,7 @@ import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -113,7 +114,7 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
                 continue;
             }
 
-            double probability = Math.clamp(possibleEffect.probability(), 0, 1);
+            double probability = CCBMathUtils.clampUnit(possibleEffect.probability());
             if (probability <= 0) {
                 continue;
             }
@@ -121,7 +122,10 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
             double amplifierLevel = instance.getAmplifier() + 1;
             score += effectSign * amplifierLevel * probability * getDurationFactor(instance);
         }
-        return Math.abs(score) < 1.0E-9 ? 0 : score;
+        if (Math.abs(score) < 1E-9) {
+            return 0;
+        }
+        return score;
     }
 
     private static double getDurationFactor(MobEffectInstance instance) {

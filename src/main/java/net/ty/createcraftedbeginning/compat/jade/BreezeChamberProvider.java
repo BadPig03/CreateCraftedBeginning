@@ -13,6 +13,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock.WindLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IBlockComponentProvider;
 import snownee.jade.api.IServerDataProvider;
@@ -39,15 +40,15 @@ public enum BreezeChamberProvider implements IBlockComponentProvider, IServerDat
     @OnlyIn(Dist.CLIENT)
     public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
         CompoundTag serverData = accessor.getServerData();
-        if (!serverData.contains(COMPOUND_KEY_WIND_LEVEL) || !serverData.contains(COMPOUND_KEY_WIND_TIME_REMAINING) || !serverData.contains(COMPOUND_KEY_IS_CREATIVE)) {
+        if (!CCBNbtUtils.contains(serverData, COMPOUND_KEY_WIND_LEVEL) || !CCBNbtUtils.contains(serverData, COMPOUND_KEY_WIND_TIME_REMAINING) || !CCBNbtUtils.contains(serverData, COMPOUND_KEY_IS_CREATIVE)) {
             return;
         }
 
         IElementHelper elementHelper = IElementHelper.get();
         float tickRate = accessor.tickRate();
-        int remainingTicks = Mth.abs(serverData.getInt(COMPOUND_KEY_WIND_TIME_REMAINING));
-        WindLevel windLevel = WindLevel.values()[serverData.getInt(COMPOUND_KEY_WIND_LEVEL)];
-        boolean isCreative = serverData.getBoolean(COMPOUND_KEY_IS_CREATIVE);
+        int remainingTicks = Mth.abs(CCBNbtUtils.getInt(serverData, COMPOUND_KEY_WIND_TIME_REMAINING));
+        WindLevel windLevel = WindLevel.values()[CCBNbtUtils.getInt(serverData, COMPOUND_KEY_WIND_LEVEL)];
+        boolean isCreative = CCBNbtUtils.getBoolean(serverData, COMPOUND_KEY_IS_CREATIVE);
         if (windLevel == WindLevel.ILL) {
             tooltip.add(elementHelper.smallItem(ILL_ICON));
             tooltip.append(isCreative ? IThemeHelper.get().info(Component.translatable("createcraftedbeginning.generic.infinity_mark")) : IThemeHelper.get().seconds(remainingTicks, tickRate).withStyle(ChatFormatting.RED));
@@ -68,9 +69,9 @@ public enum BreezeChamberProvider implements IBlockComponentProvider, IServerDat
             return;
         }
 
-        compoundTag.putInt(COMPOUND_KEY_WIND_LEVEL, chamber.getWindLevelFromBlock().ordinal());
-        compoundTag.putInt(COMPOUND_KEY_WIND_TIME_REMAINING, chamber.getWindRemainingTime());
-        compoundTag.putBoolean(COMPOUND_KEY_IS_CREATIVE, chamber.isCreative());
+        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_WIND_LEVEL, chamber.getWindLevelFromBlock().ordinal());
+        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_WIND_TIME_REMAINING, chamber.getWindRemainingTime());
+        CCBNbtUtils.putBoolean(compoundTag, COMPOUND_KEY_IS_CREATIVE, chamber.isCreative());
     }
 
     @Override

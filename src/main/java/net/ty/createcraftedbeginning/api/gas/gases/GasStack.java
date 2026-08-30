@@ -24,6 +24,7 @@ import net.minecraft.util.ExtraCodecs;
 import net.neoforged.neoforge.common.MutableDataComponentHolder;
 import net.neoforged.neoforge.common.util.DataComponentUtil;
 import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -139,7 +140,10 @@ public final class GasStack implements MutableDataComponentHolder {
     }
 
     public static GasStack parseOptional(Provider lookupProvider, CompoundTag compoundTag) {
-        return compoundTag.isEmpty() ? EMPTY : parse(lookupProvider, compoundTag).orElse(EMPTY);
+        if (CCBNbtUtils.isEmpty(compoundTag)) {
+            return EMPTY;
+        }
+        return parse(lookupProvider, compoundTag).orElse(EMPTY);
     }
 
     public static Optional<GasStack> parse(Provider lookupProvider, Tag tag) {
@@ -170,7 +174,10 @@ public final class GasStack implements MutableDataComponentHolder {
     }
 
     public Holder<Gas> getGasHolder() {
-        return isEmpty() || gasHolder == null ? Gas.EMPTY_GAS_HOLDER : gasHolder;
+        if (isEmpty() || gasHolder == null) {
+            return Gas.EMPTY_GAS_HOLDER;
+        }
+        return gasHolder;
     }
 
     public boolean isEmpty() {
@@ -198,16 +205,25 @@ public final class GasStack implements MutableDataComponentHolder {
     }
 
     public Gas getGasType() {
-        return isEmpty() ? Gas.EMPTY_GAS_HOLDER.value() : getGasHolder().value();
+        if (isEmpty()) {
+            return Gas.EMPTY_GAS_HOLDER.value();
+        }
+        return getGasHolder().value();
     }
 
     @Override
     public PatchedDataComponentMap getComponents() {
-        return isEmpty() ? new PatchedDataComponentMap(DataComponentMap.EMPTY) : components;
+        if (isEmpty()) {
+            return new PatchedDataComponentMap(DataComponentMap.EMPTY);
+        }
+        return components;
     }
 
     public DataComponentPatch getComponentsPatch() {
-        return isEmpty() ? DataComponentPatch.EMPTY : components.asPatch();
+        if (isEmpty()) {
+            return DataComponentPatch.EMPTY;
+        }
+        return components.asPatch();
     }
 
     public boolean isComponentsPatchEmpty() {
@@ -225,11 +241,17 @@ public final class GasStack implements MutableDataComponentHolder {
     }
 
     public GasStack copy() {
-        return isEmpty() ? EMPTY : new GasStack(getGasHolder(), getAmount(), components.copy());
+        if (isEmpty()) {
+            return EMPTY;
+        }
+        return new GasStack(getGasHolder(), getAmount(), components.copy());
     }
 
     public long getAmount() {
-        return isEmpty() ? 0 : amount;
+        if (isEmpty()) {
+            return 0;
+        }
+        return amount;
     }
 
     public void setAmount(long amount) {
@@ -269,7 +291,10 @@ public final class GasStack implements MutableDataComponentHolder {
     }
 
     public Tag saveOptional(Provider provider) {
-        return isEmpty() ? new CompoundTag() : save(provider, new CompoundTag());
+        if (isEmpty()) {
+            return new CompoundTag();
+        }
+        return save(provider, new CompoundTag());
     }
 
     public Tag save(Provider provider, Tag tag) {

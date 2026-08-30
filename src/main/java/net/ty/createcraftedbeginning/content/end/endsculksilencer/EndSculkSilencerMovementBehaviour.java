@@ -77,8 +77,11 @@ public final class EndSculkSilencerMovementBehaviour implements MovementBehaviou
     }
 
     private static int unpackSignedCoordinate(long packedCoordinate) {
-        int coordinate = (int) (packedCoordinate & 0x3FFFFFFL);
-        return coordinate >= 0x2000000 ? coordinate - 0x4000000 : coordinate;
+        int coordinate = (int) (packedCoordinate & 0x3FFFFFF);
+        if (coordinate < 0x2000000) {
+            return coordinate;
+        }
+        return coordinate - 0x4000000;
     }
 
     private static long mix64(long value) {

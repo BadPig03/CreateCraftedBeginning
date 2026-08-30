@@ -94,7 +94,10 @@ public final class GasDrawerHandler implements IGasHandler {
 
     @Override
     public GasStack getGasInTank(int tank) {
-        return isValidTank(tank) ? tanks[tank].getGasInTank(0) : GasStack.EMPTY;
+        if (!isValidTank(tank)) {
+            return GasStack.EMPTY;
+        }
+        return tanks[tank].getGasInTank(0);
     }
 
     @Override
@@ -169,7 +172,10 @@ public final class GasDrawerHandler implements IGasHandler {
         try {
             filledAllResources = fillAll(resources);
             shouldCommit = filledAllResources && action.execute();
-            return filledAllResources ? AtomicFillResult.SUCCESS : AtomicFillResult.REJECTED;
+            if (!filledAllResources) {
+                return AtomicFillResult.REJECTED;
+            }
+            return AtomicFillResult.SUCCESS;
         } finally {
             if (!shouldCommit) {
                 restoreContents(contentSnapshot);
@@ -180,7 +186,10 @@ public final class GasDrawerHandler implements IGasHandler {
 
     @Override
     public long getTankCapacity(int tank) {
-        return isValidTank(tank) ? tanks[tank].getTankCapacity(0) : 0;
+        if (!isValidTank(tank)) {
+            return 0;
+        }
+        return tanks[tank].getTankCapacity(0);
     }
 
     private boolean fillAll(List<GasStack> resources) {

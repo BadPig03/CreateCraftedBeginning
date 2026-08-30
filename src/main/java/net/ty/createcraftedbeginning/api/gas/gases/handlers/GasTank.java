@@ -7,6 +7,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTank;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Predicate;
@@ -29,21 +30,22 @@ public class GasTank implements IGasHandler, IGasTank {
         this.validator = validator;
     }
 
+    @SuppressWarnings("unused")
     public GasTank setValidator(Predicate<GasStack> predicate) {
         validator = predicate;
         return this;
     }
 
     public void read(Provider provider, CompoundTag compoundTag) {
-        if (!compoundTag.contains(COMPOUND_KEY_GAS)) {
+        if (!CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_GAS)) {
             return;
         }
 
-        gas = GasStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_GAS));
+        gas = GasStack.parseOptional(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_GAS));
     }
 
     public CompoundTag write(Provider provider, CompoundTag compoundTag) {
-        compoundTag.put(COMPOUND_KEY_GAS, gas.saveOptional(provider));
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_GAS, gas.saveOptional(provider));
         return compoundTag;
     }
 
@@ -54,7 +56,10 @@ public class GasTank implements IGasHandler, IGasTank {
 
     @Override
     public GasStack drain(GasStack resource, GasAction action) {
-        return resource.isEmpty() || !GasStack.isSameGasSameComponents(resource, gas) ? GasStack.EMPTY : drain(resource.getAmount(), action);
+        if (resource.isEmpty() || !GasStack.isSameGasSameComponents(resource, gas)) {
+            return GasStack.EMPTY;
+        }
+        return drain(resource.getAmount(), action);
     }
 
     @Override

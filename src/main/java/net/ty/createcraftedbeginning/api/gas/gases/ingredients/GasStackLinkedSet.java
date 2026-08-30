@@ -16,7 +16,10 @@ public class GasStackLinkedSet {
     public static final Strategy<? super GasStack> TYPE = new Strategy<>() {
         @Override
         public int hashCode(@Nullable GasStack stack) {
-            return stack == null || stack.isEmpty() ? 0 : stack.getGasHolder().hashCode();
+            if (stack == null || stack.isEmpty()) {
+                return 0;
+            }
+            return stack.getGasHolder().hashCode();
         }
 
         @Override

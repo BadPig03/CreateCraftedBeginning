@@ -31,6 +31,7 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates.InactiveChamberState;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.ref.WeakReference;
@@ -114,15 +115,15 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     @Override
-    protected void write(CompoundTag tag, Provider provider, boolean clientPacket) {
-        serialization.write(this, tag);
-        super.write(tag, provider, clientPacket);
+    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        serialization.write(this, compoundTag);
+        super.write(compoundTag, provider, clientPacket);
     }
 
     @Override
-    protected void read(CompoundTag tag, Provider provider, boolean clientPacket) {
-        serialization.read(this, tag);
-        super.read(tag, provider, clientPacket);
+    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        serialization.read(this, compoundTag);
+        super.read(compoundTag, provider, clientPacket);
     }
 
     @Override
@@ -297,18 +298,18 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         NORMAL;
 
         static ChargerType fromTag(CompoundTag compoundTag, String key) {
-            if (compoundTag.contains(key, Tag.TAG_STRING)) {
+            if (CCBNbtUtils.contains(compoundTag, key, Tag.TAG_STRING)) {
                 try {
-                    return valueOf(compoundTag.getString(key));
+                    return valueOf(CCBNbtUtils.getString(compoundTag, key));
                 } catch (IllegalArgumentException ignored) {
                     return NONE;
                 }
             }
-            if (!compoundTag.contains(key, Tag.TAG_ANY_NUMERIC)) {
+            if (!CCBNbtUtils.contains(compoundTag, key, Tag.TAG_ANY_NUMERIC)) {
                 return NONE;
             }
 
-            int chargerTypeOrdinal = compoundTag.getInt(key);
+            int chargerTypeOrdinal = CCBNbtUtils.getInt(compoundTag, key);
             if (chargerTypeOrdinal < 0 || chargerTypeOrdinal >= values().length) {
                 return NONE;
             }

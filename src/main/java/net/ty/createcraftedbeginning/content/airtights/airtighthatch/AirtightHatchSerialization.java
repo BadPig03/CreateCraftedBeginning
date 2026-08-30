@@ -4,6 +4,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -23,7 +24,7 @@ final class AirtightHatchSerialization {
 
     void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         if (clientPacket) {
-            compoundTag.putLong(COMPOUND_KEY_CAPACITY, hatch.getHatchCapacity());
+            CCBNbtUtils.putLong(compoundTag, COMPOUND_KEY_CAPACITY, hatch.getHatchCapacity());
             return;
         }
 
@@ -31,22 +32,22 @@ final class AirtightHatchSerialization {
             return;
         }
 
-        compoundTag.put(COMPOUND_KEY_CANISTER, canisterManager.getStoredCanister().saveOptional(provider));
-        compoundTag.putLong(COMPOUND_KEY_CAPACITY, hatch.getHatchCapacity());
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_CANISTER, canisterManager.getStoredCanister().saveOptional(provider));
+        CCBNbtUtils.putLong(compoundTag, COMPOUND_KEY_CAPACITY, hatch.getHatchCapacity());
     }
 
     void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         if (clientPacket) {
-            if (compoundTag.contains(COMPOUND_KEY_CAPACITY)) {
-                hatch.getGasTankBehaviour().getPrimaryHandler().setCapacity(Math.max(0, compoundTag.getLong(COMPOUND_KEY_CAPACITY)));
+            if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_CAPACITY)) {
+                hatch.getGasTankBehaviour().getPrimaryHandler().setCapacity(Math.max(0, CCBNbtUtils.getLong(compoundTag, COMPOUND_KEY_CAPACITY)));
             }
             return;
         }
 
-        ItemStack storedCanister = compoundTag.contains(COMPOUND_KEY_CANISTER) ? ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_CANISTER)) : ItemStack.EMPTY;
+        ItemStack storedCanister = CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_CANISTER) ? ItemStack.parseOptional(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_CANISTER)) : ItemStack.EMPTY;
         canisterManager.setStoredCanister(storedCanister);
-        if (!canisterManager.isEmpty() && compoundTag.contains(COMPOUND_KEY_CAPACITY)) {
-            hatch.getGasTankBehaviour().getPrimaryHandler().setCapacity(Math.max(0, compoundTag.getLong(COMPOUND_KEY_CAPACITY)));
+        if (!canisterManager.isEmpty() && CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_CAPACITY)) {
+            hatch.getGasTankBehaviour().getPrimaryHandler().setCapacity(Math.max(0, CCBNbtUtils.getLong(compoundTag, COMPOUND_KEY_CAPACITY)));
         }
         canisterManager.updateCapacity(false);
     }

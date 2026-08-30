@@ -11,6 +11,7 @@ import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTranspo
 import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPressure;
 import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPropagator;
 import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPropagator.AdjacentTarget;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -303,23 +304,39 @@ final class AirtightPumpPressureNetwork {
             if (target.isAlignedPump()) {
                 return EndpointType.ALIGNED_PUMP;
             }
-            return !target.canFlowToward() && (target.hasGasCapability() || target.isOpenEnded()) ? EndpointType.STATIC : EndpointType.NONE;
+
+            if (!target.canFlowToward() && (target.hasGasCapability() || target.isOpenEnded())) {
+                return EndpointType.STATIC;
+            }
+            return EndpointType.NONE;
         }
 
         private static boolean allowsEntryFlow(PressurePipeSnapshot pipe, Direction face, boolean isPulling) {
-            return isPulling ? pipe.allowsOutbound(face) : pipe.allowsInbound(face);
+            if (!isPulling) {
+                return pipe.allowsInbound(face);
+            }
+            return pipe.allowsOutbound(face);
         }
 
         private static boolean allowsExitFlowWithoutLevel(PressurePipeSnapshot pipe, Direction face, boolean isPulling) {
-            return isPulling ? pipe.allowsInboundWithoutLevel(face) : pipe.allowsOutboundWithoutLevel(face);
+            if (!isPulling) {
+                return pipe.allowsOutboundWithoutLevel(face);
+            }
+            return pipe.allowsInboundWithoutLevel(face);
         }
 
         private static boolean allowsExitFlow(PressurePipeSnapshot pipe, Direction face, boolean isPulling) {
-            return isPulling ? pipe.allowsInbound(face) : pipe.allowsOutbound(face);
+            if (!isPulling) {
+                return pipe.allowsOutbound(face);
+            }
+            return pipe.allowsInbound(face);
         }
 
         private static boolean allowsBoundaryFlow(PressurePipeSnapshot pipe, Direction face, boolean isPulling) {
-            return isPulling ? pipe.allowsOutbound(face) : pipe.allowsInbound(face);
+            if (!isPulling) {
+                return pipe.allowsInbound(face);
+            }
+            return pipe.allowsOutbound(face);
         }
 
         private static PressureTopologyNode topologyNode(PressurePipeSnapshot pipe, Direction entryFace, boolean isPulling) {
@@ -631,7 +648,7 @@ final class AirtightPumpPressureNetwork {
 
         private void addPendingPressure(PressureTopologyNode node, long pressureUnits) {
             int index = requiredIndex(node);
-            pendingPressureUnits[index] = GasPressure.addSaturated(pendingPressureUnits[index], pressureUnits);
+            pendingPressureUnits[index] = CCBMathUtils.saturatedAdd(pendingPressureUnits[index], pressureUnits);
         }
 
         private long pendingPressure(PressureTopologyNode node) {

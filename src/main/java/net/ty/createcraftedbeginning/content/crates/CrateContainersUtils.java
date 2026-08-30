@@ -7,6 +7,7 @@ import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.core.ResourceTransaction;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -44,7 +45,7 @@ final class CrateContainersUtils {
         if (capacity <= 0) {
             return 0;
         }
-        return Mth.clamp(Mth.floor((double) storedCount / capacity * 14) + 1, 0, 15);
+        return CCBMathUtils.clampNonNegative(Mth.floor((double) storedCount / capacity * 14) + 1, 15);
     }
 
     static boolean defaultUnpack(Level level, BlockPos pos, List<ItemStack> items, boolean simulate) {

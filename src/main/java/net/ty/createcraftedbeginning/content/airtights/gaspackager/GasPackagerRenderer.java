@@ -39,7 +39,10 @@ public class GasPackagerRenderer extends SmartBlockEntityRenderer<GasPackagerBlo
     }
 
     static PartialModel getHatchModel(GasPackagerBlockEntity be) {
-        return isHatchOpen(be) ? CCBPartialModels.GAS_PACKAGER_HATCH_OPEN : CCBPartialModels.GAS_PACKAGER_HATCH_CLOSED;
+        if (!isHatchOpen(be)) {
+            return CCBPartialModels.GAS_PACKAGER_HATCH_CLOSED;
+        }
+        return CCBPartialModels.GAS_PACKAGER_HATCH_OPEN;
     }
 
     private static boolean isHatchOpen(GasPackagerBlockEntity be) {

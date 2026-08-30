@@ -47,15 +47,15 @@ import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipe
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlockItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralCogBlock;
-import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankCTBehavior;
+import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankCTBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankItem;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankBlock;
-import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankCTBehavior;
+import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankCTBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankItem;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentCTBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.boilersteamoutlet.BoilerSteamOutletBlock;
-import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankCTBehavior;
+import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankCTBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankItem;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IDirectionalPipe;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IDirectionalPipe.DirectionalFacing;
@@ -71,7 +71,7 @@ import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBl
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockItem;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.EmptyBreezeCoolerBlock;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlockItem;
-import net.ty.createcraftedbeginning.content.photostresses.opticalfiber.OpticalFiberBlock;
+import net.ty.createcraftedbeginning.content.opticalpower.opticalfiber.OpticalFiberBlock;
 import net.ty.createcraftedbeginning.foundation.texture.CCBSpriteShifts;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -143,13 +143,18 @@ public final class CCBBlockModelTransformer {
     }
 
     @Contract(pure = true)
-    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> photoSail() {
-        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().transform(ModelGen.customItemModel("photo_sail", "item"));
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> solarCollector() {
+        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().transform(ModelGen.customItemModel("solar_collector", "item"));
     }
 
     @Contract(pure = true)
-    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> photoStressBearing() {
-        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().transform(ModelGen.customItemModel("photo-stress_bearing", "item"));
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> laserEmitter() {
+        return builder -> builder.blockstate((c, p) -> p.directionalBlock(c.getEntry(), p.models().getExistingFile(p.modLoc("block/laser_emitter/block")))).item().transform(ModelGen.customItemModel("laser_emitter", "item"));
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> laserReceiver() {
+        return builder -> builder.blockstate((c, p) -> p.directionalBlock(c.getEntry(), p.models().getExistingFile(p.modLoc("block/laser_receiver/block")))).item().transform(ModelGen.customItemModel("laser_receiver", "item"));
     }
 
     @Contract(pure = true)
@@ -278,7 +283,7 @@ public final class CCBBlockModelTransformer {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtightTank() {
-        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.standardModel(c, p))).onRegister(CreateRegistrate.connectedTextures(AirtightTankCTBehavior::new)).item(AirtightTankItem::new).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.standardModel(c, p))).onRegister(CreateRegistrate.connectedTextures(AirtightTankCTBehaviour::new)).item(AirtightTankItem::new).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)
@@ -286,12 +291,12 @@ public final class CCBBlockModelTransformer {
         return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
             int rotationY = state.getValue(HorizontalAirtightTankBlock.HORIZONTAL_AXIS) == Axis.X ? 90 : 0;
             return ConfiguredModel.builder().modelFile(AssetLookup.standardModel(context, provider)).rotationY(rotationY).build();
-        })).onRegister(CreateRegistrate.connectedTextures(HorizontalAirtightTankCTBehavior::new)).item(HorizontalAirtightTankItem::new).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+        })).onRegister(CreateRegistrate.connectedTextures(HorizontalAirtightTankCTBehaviour::new)).item(HorizontalAirtightTankItem::new).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> creativeAirtightTank() {
-        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.standardModel(c, p))).onRegister(CreateRegistrate.connectedTextures(CreativeAirtightTankCTBehavior::new)).item(CreativeAirtightTankItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.standardModel(c, p))).onRegister(CreateRegistrate.connectedTextures(CreativeAirtightTankCTBehaviour::new)).item(CreativeAirtightTankItem::new).properties(p -> p.rarity(Rarity.EPIC).fireResistant()).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)

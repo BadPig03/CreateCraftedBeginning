@@ -25,6 +25,9 @@ public class AirtightBaseArmorItem extends ArmorItem {
 
     @Override
     public @Nullable ResourceLocation getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot, Layer layer, boolean innerModel) {
-        return slot == EquipmentSlot.LEGS ? INNER_TEXTURE : OUTER_TEXTURE;
+        if (slot != EquipmentSlot.LEGS) {
+            return OUTER_TEXTURE;
+        }
+        return INNER_TEXTURE;
     }
 }

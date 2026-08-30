@@ -22,7 +22,7 @@ public final class AirtightChestplateUpgradeRegistry {
     private AirtightChestplateUpgradeRegistry() {
     }
 
-    public static @Nullable AirtightUpgrade getByID(ResourceLocation id) {
+    public static @Nullable AirtightUpgrade getById(ResourceLocation id) {
         return REGISTRY.getById(id);
     }
 

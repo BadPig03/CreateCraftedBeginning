@@ -57,6 +57,9 @@ public final class RequestScreenBridge {
     }
 
     public static @Nullable BigItemStack getRequestedOrder(StockKeeperRequestScreen screen, ItemStack stack) {
-        return screen instanceof StockKeeperRequestScreenAccess access ? access.ccb$getOrderForItem(stack) : null;
+        if (!(screen instanceof StockKeeperRequestScreenAccess access)) {
+            return null;
+        }
+        return access.ccb$getOrderForItem(stack);
     }
 }

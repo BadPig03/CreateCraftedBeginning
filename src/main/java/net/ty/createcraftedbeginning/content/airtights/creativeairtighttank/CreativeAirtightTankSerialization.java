@@ -4,6 +4,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankSerializationSupport;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -24,7 +25,7 @@ final class CreativeAirtightTankSerialization {
             return;
         }
 
-        compoundTag.put(AirtightTankSerializationSupport.TANK_CONTENT, owner.getTankInventory().write(provider, new CompoundTag()));
+        CCBNbtUtils.putTag(compoundTag, AirtightTankSerializationSupport.TANK_CONTENT, owner.getTankInventory().write(provider, new CompoundTag()));
     }
 
     void writeSafe(CompoundTag compoundTag) {
@@ -35,8 +36,8 @@ final class CreativeAirtightTankSerialization {
         boolean clientStructureChanged = AirtightTankSerializationSupport.readMultiblock(owner, compoundTag, clientPacket);
         if (owner.isController()) {
             storage.resetCapacity();
-            if (compoundTag.contains(AirtightTankSerializationSupport.TANK_CONTENT)) {
-                owner.getTankInventory().read(provider, compoundTag.getCompound(AirtightTankSerializationSupport.TANK_CONTENT));
+            if (CCBNbtUtils.contains(compoundTag, AirtightTankSerializationSupport.TANK_CONTENT)) {
+                owner.getTankInventory().read(provider, CCBNbtUtils.getCompound(compoundTag, AirtightTankSerializationSupport.TANK_CONTENT));
             }
         }
         if (!clientStructureChanged) {

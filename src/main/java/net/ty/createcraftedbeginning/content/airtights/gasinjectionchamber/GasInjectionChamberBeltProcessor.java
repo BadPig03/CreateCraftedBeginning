@@ -86,7 +86,11 @@ final class GasInjectionChamberBeltProcessor {
         if (planner.wasProcessedByInstalledFilter(transported)) {
             return PASS;
         }
-        return planner.createPlan(transported.stack).isPresent() ? HOLD : PASS;
+
+        if (planner.createPlan(transported.stack).isEmpty()) {
+            return PASS;
+        }
+        return HOLD;
     }
 
     ProcessingResult onItemHeld(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {

@@ -53,10 +53,16 @@ record AirtightForgingPressPortHandler(IItemHandlerModifiable input, IItemHandle
         if (slot < 0 || slot >= getSlots()) {
             throw new IndexOutOfBoundsException("Slot " + slot + " not in valid range [0," + getSlots() + ')');
         }
-        return slot < input.getSlots() ? input : output;
+        if (slot < input.getSlots()) {
+            return input;
+        }
+        return output;
     }
 
     private int getLocalSlot(int slot) {
-        return slot < input.getSlots() ? slot : slot - input.getSlots();
+        if (slot < input.getSlots()) {
+            return slot;
+        }
+        return slot - input.getSlots();
     }
 }

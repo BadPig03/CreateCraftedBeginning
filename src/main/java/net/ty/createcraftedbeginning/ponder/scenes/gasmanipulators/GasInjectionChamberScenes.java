@@ -20,12 +20,15 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasInjectionChamberScenes {
+    private static final String COMPOUND_KEY_PROCESSING_TICKS = "ProcessingTicks";
+
     public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
         RandomSource random = RandomSource.create();
@@ -102,7 +105,7 @@ public class GasInjectionChamberScenes {
         scene.overlay().showControls(chamberTargetVec, Pointing.UP, 30).withItem(blazePowderItem.copyWithCount(16));
 
         scene.idle(30);
-		scene.world().modifyBlockEntityNBT(chamberSelection, GasInjectionChamberBlockEntity.class, compoundTag -> compoundTag.putInt("ProcessingTicks", 60));
+		scene.world().modifyBlockEntityNBT(chamberSelection, GasInjectionChamberBlockEntity.class, compoundTag -> CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_PROCESSING_TICKS, 60));
 
         scene.idle(25);
         scene.world().removeItemsFromBelt(chamberTargetPos);

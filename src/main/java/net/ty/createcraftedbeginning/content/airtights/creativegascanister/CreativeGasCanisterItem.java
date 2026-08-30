@@ -78,12 +78,18 @@ public class CreativeGasCanisterItem extends Item implements IGasFilter {
 
     @Override
     public int getBarWidth(ItemStack canister) {
-        return hasGas(canister) ? 13 : 0;
+        if (!hasGas(canister)) {
+            return 0;
+        }
+        return 13;
     }
 
     @Override
     public int getBarColor(ItemStack canister) {
-        return hasGas(canister) ? GasCanisterUtils.COLOR_WHITE : 0;
+        if (!hasGas(canister)) {
+            return 0;
+        }
+        return GasCanisterUtils.COLOR_WHITE;
     }
 
     @Override

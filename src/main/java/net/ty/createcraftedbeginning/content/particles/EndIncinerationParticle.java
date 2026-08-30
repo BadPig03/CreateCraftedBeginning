@@ -26,7 +26,7 @@ public class EndIncinerationParticle extends TextureSheetParticle {
         yd = ySpeed;
         zd = zSpeed;
         quadSize *= random.nextFloat() * 2 + 0.2f;
-        lifetime = (int) (16.0 / (random.nextDouble() * 0.8 + 0.2));
+        lifetime = (int) (16 / (random.nextDouble() * 0.8 + 0.2));
     }
 
     @Override

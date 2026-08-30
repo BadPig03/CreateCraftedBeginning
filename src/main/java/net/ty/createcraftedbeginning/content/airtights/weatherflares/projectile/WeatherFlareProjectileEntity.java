@@ -29,9 +29,11 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.api.weatherflares.IWeatherFlare;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBEntityTypes;
 import net.ty.createcraftedbeginning.registry.CCBItems;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -155,37 +157,29 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
     }
 
     @Override
-    public void addAdditionalSaveData(CompoundTag tag) {
-        super.addAdditionalSaveData(tag);
-        tag.put(COMPOUND_KEY_ITEM, itemStack.save(registryAccess()));
-        tag.putInt(COMPOUND_KEY_LIFE_TIME, lifeTime);
-        tag.putDouble(COMPOUND_KEY_START_Y, startY);
-        tag.putBoolean(COMPOUND_KEY_COPIED, copied);
+    public void addAdditionalSaveData(CompoundTag compoundTag) {
+        super.addAdditionalSaveData(compoundTag);
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_ITEM, itemStack.save(registryAccess()));
+        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_LIFE_TIME, lifeTime);
+        CCBNbtUtils.putDouble(compoundTag, COMPOUND_KEY_START_Y, startY);
+        CCBNbtUtils.putBoolean(compoundTag, COMPOUND_KEY_COPIED, copied);
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundTag tag) {
-        super.readAdditionalSaveData(tag);
-        if (tag.contains(COMPOUND_KEY_ITEM, Tag.TAG_COMPOUND)) {
-            itemStack = ItemStack.parse(registryAccess(), tag.getCompound(COMPOUND_KEY_ITEM)).orElseGet(WeatherFlareProjectileEntity::getDefaultItem);
+    public void readAdditionalSaveData(CompoundTag compoundTag) {
+        super.readAdditionalSaveData(compoundTag);
+        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_ITEM, Tag.TAG_COMPOUND)) {
+            itemStack = ItemStack.parse(registryAccess(), CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_ITEM)).orElseGet(WeatherFlareProjectileEntity::getDefaultItem);
         }
         else {
             itemStack = getDefaultItem();
         }
-        if (tag.contains(COMPOUND_KEY_LIFE_TIME, Tag.TAG_ANY_NUMERIC)) {
-            lifeTime = Math.clamp(tag.getInt(COMPOUND_KEY_LIFE_TIME), 0, MAX_LIFE_TIME);
+        lifeTime = CCBMathUtils.clampNonNegative(CCBNbtUtils.getIntOrDefault(compoundTag, COMPOUND_KEY_LIFE_TIME, lifeTime), MAX_LIFE_TIME);
+        double storedStartY = CCBNbtUtils.getDoubleOrDefault(compoundTag, COMPOUND_KEY_START_Y, startY);
+        if (GasConsumptions.isFinite(storedStartY)) {
+            startY = storedStartY;
         }
-        if (tag.contains(COMPOUND_KEY_START_Y, Tag.TAG_ANY_NUMERIC)) {
-            double storedStartY = tag.getDouble(COMPOUND_KEY_START_Y);
-            if (GasConsumptions.isFinite(storedStartY)) {
-                startY = storedStartY;
-            }
-        }
-        if (!tag.contains(COMPOUND_KEY_COPIED, Tag.TAG_BYTE)) {
-            return;
-        }
-
-        copied = tag.getBoolean(COMPOUND_KEY_COPIED);
+        copied = CCBNbtUtils.getBooleanOrDefault(compoundTag, COMPOUND_KEY_COPIED, copied);
     }
 
     @Override

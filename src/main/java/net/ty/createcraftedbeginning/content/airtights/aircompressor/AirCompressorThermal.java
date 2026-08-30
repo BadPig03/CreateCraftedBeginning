@@ -13,6 +13,7 @@ import net.ty.createcraftedbeginning.api.coolantshandlers.AirtightCoolantHandler
 import net.ty.createcraftedbeginning.api.coolantshandlers.AirtightCoolantHandlerUtils;
 import net.ty.createcraftedbeginning.api.coolantshandlers.CoolantEfficiency;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -27,7 +28,7 @@ final class AirCompressorThermal {
     }
 
     static int clampStoredHeat(int storedHeat) {
-        return Math.clamp(storedHeat, 0, getMaxStoredHeat());
+        return CCBMathUtils.clampNonNegative(storedHeat, getMaxStoredHeat());
     }
 
     static int getNextStateHeat(OverheatState overheatState) {
@@ -44,7 +45,7 @@ final class AirCompressorThermal {
     static int updateStoredHeat(int storedHeat, float speed, boolean isOperating, CoolantEfficiency coolantEfficiency, Level level) {
         int netHeatChange = getHeatAdded(speed, isOperating) - coolantEfficiency.getHeatReduced(level);
         long updatedStoredHeat = storedHeat + netHeatChange;
-        return (int) Mth.clamp(0, updatedStoredHeat, getMaxStoredHeat());
+        return CCBMathUtils.clampNonNegative(updatedStoredHeat, getMaxStoredHeat());
     }
 
     static boolean isMeltdownPreventedByCoolant(int storedHeat, float speed, boolean isOperating, CoolantEfficiency coolantEfficiency, Level level) {
@@ -74,7 +75,7 @@ final class AirCompressorThermal {
         BlockState coolantState = level.getBlockState(coolantPos);
         AirtightCoolantHandler coolantHandler = AirtightCoolantHandlerUtils.of(coolantState.getBlock());
         CoolantEfficiency coolantEfficiency = coolantHandler.getCoolantEfficiency(level, coolantPos, coolantState);
-        float coolantConsumptionChance = Mth.clamp(CCBConfig.server().airtights.coolantConsumptionChance.getF(), 0, 1);
+        float coolantConsumptionChance = CCBMathUtils.clampUnit(CCBConfig.server().airtights.coolantConsumptionChance.getF());
         if (coolantEfficiency == CoolantEfficiency.NONE || !shouldConsumeCoolant || random.nextFloat() >= coolantConsumptionChance) {
             return coolantEfficiency;
         }
@@ -104,7 +105,7 @@ final class AirCompressorThermal {
 
         float mediumSpeed = Math.max(1, SpeedLevel.MEDIUM.getSpeedValue());
         float maximumSpeed = Math.max(mediumSpeed, AllConfigs.server().kinetics.maxRotationSpeed.get());
-        float speedProgress = maximumSpeed == mediumSpeed ? 1 : Mth.clamp((Mth.abs(speed) - mediumSpeed) / (maximumSpeed - mediumSpeed), 0, 1);
+        float speedProgress = maximumSpeed == mediumSpeed ? 1 : CCBMathUtils.clampUnit((Mth.abs(speed) - mediumSpeed) / (maximumSpeed - mediumSpeed));
         return Mth.floor(Mth.lerp(speedProgress, 3, 5) + 0.5f);
     }
 }

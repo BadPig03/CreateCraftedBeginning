@@ -20,7 +20,10 @@ final class CrateFilterController {
         }
 
         ItemStack filterItem = filteringBehaviour.getFilter();
-        return filterItem.isEmpty() ? ItemStack.EMPTY : filterItem.copyWithCount(1);
+        if (filterItem.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+        return filterItem.copyWithCount(1);
     }
 
     void setFilterItem(ItemStack filterItem) {
@@ -28,7 +31,8 @@ final class CrateFilterController {
             return;
         }
 
-        filteringBehaviour.setFilter(filterItem.isEmpty() ? ItemStack.EMPTY : filterItem.copyWithCount(1));
+        ItemStack filter = filterItem.isEmpty() ? ItemStack.EMPTY : filterItem.copyWithCount(1);
+        filteringBehaviour.setFilter(filter);
     }
 
     boolean canStoreItem(ItemStack stack) {

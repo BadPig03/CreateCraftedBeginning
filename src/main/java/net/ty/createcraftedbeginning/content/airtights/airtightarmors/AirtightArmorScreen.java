@@ -28,9 +28,16 @@ public abstract class AirtightArmorScreen<T extends AirtightArmorMenu> extends A
 
     private static State getIndicatorState(AirtightUpgradeStatus status, boolean canInstall) {
         if (!status.isInstalled()) {
-            return canInstall ? State.YELLOW : State.OFF;
+            if (!canInstall) {
+                return State.OFF;
+            }
+            return State.YELLOW;
         }
-        return status.isEnabled() ? State.GREEN : State.RED;
+
+        if (!status.isEnabled()) {
+            return State.RED;
+        }
+        return State.GREEN;
     }
 
     @Override

@@ -29,6 +29,7 @@ import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUt
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterUtils;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.platform.client.ClientContextBridge;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -66,7 +67,7 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
     @Override
     public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        FilterItemStack savedFilter = FilterItemStack.of(provider, compoundTag.getCompound(COMPOUND_KEY_FILTER));
+        FilterItemStack savedFilter = FilterItemStack.of(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_FILTER));
         filter = FilterItemStack.of(GasFilterUtils.normalizeStack(savedFilter.item()));
         rebuildCompiledFilter();
     }
@@ -74,7 +75,7 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
     @Override
     public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        compoundTag.put(COMPOUND_KEY_FILTER, getFilter().saveOptional(provider));
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_FILTER, getFilter().saveOptional(provider));
     }
 
     @Override
@@ -84,7 +85,10 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
 
     @Override
     public ItemRequirement getRequiredItems() {
-        return filter.isFilterItem() ? new ItemRequirement(ItemUseType.CONSUME, filter.item()) : ItemRequirement.NONE;
+        if (!filter.isFilterItem()) {
+            return ItemRequirement.NONE;
+        }
+        return new ItemRequirement(ItemUseType.CONSUME, filter.item());
     }
 
     public ItemStack getFilter() {
@@ -134,7 +138,7 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
     @Override
     public boolean writeToClipboard(Provider provider, CompoundTag compoundTag, Direction side) {
         ValueSettingsBehaviour.super.writeToClipboard(provider, compoundTag, side);
-        compoundTag.put(COMPOUND_KEY_FILTER, getFilter(side).saveOptional(provider));
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_FILTER, getFilter(side).saveOptional(provider));
         return true;
     }
 
@@ -145,7 +149,7 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
         }
 
         boolean upstreamResult = ValueSettingsBehaviour.super.readFromClipboard(registries, compoundTag, player, side, simulate);
-        if (!compoundTag.contains(COMPOUND_KEY_FILTER)) {
+        if (!CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_FILTER)) {
             return upstreamResult;
         }
 
@@ -153,7 +157,7 @@ public class GasFilteringBehaviour extends BlockEntityBehaviour implements Value
             return true;
         }
 
-        ItemStack filterItem = ItemStack.parseOptional(registries, compoundTag.getCompound(COMPOUND_KEY_FILTER));
+        ItemStack filterItem = ItemStack.parseOptional(registries, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_FILTER));
         return setFilter(side, filterItem);
     }
 

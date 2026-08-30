@@ -65,7 +65,10 @@ final class GasInjectionChamberDisplay {
         }
 
         int previousProcessingTicks = operation.getPreviousProcessingTicks();
-        return previousProcessingTicks < 0 ? processingTicks : Mth.lerp(partialTicks, previousProcessingTicks, processingTicks);
+        if (previousProcessingTicks < 0) {
+            return processingTicks;
+        }
+        return Mth.lerp(partialTicks, previousProcessingTicks, processingTicks);
     }
 
     void spawnCloud(int color) {

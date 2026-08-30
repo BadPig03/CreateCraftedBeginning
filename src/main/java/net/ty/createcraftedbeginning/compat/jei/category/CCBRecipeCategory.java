@@ -75,7 +75,10 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
     }
 
     public static IDrawable getRenderedSlot(float chance) {
-        return chance == 1 ? BASIC_SLOT : CHANCE_SLOT;
+        if (chance != 1) {
+            return CHANCE_SLOT;
+        }
+        return BASIC_SLOT;
     }
 
     public static ItemStack getResultItem(Recipe<?> recipe) {

@@ -180,7 +180,10 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
 
     @Override
     public FluidState getFluidState(BlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.defaultFluidState() : super.getFluidState(state);
+        if (!state.getValue(WATERLOGGED)) {
+            return Fluids.EMPTY.defaultFluidState();
+        }
+        return Fluids.WATER.defaultFluidState();
     }
 
     @Override
@@ -199,7 +202,10 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
 
     @Override
     public BlockPos getInformationSource(Level level, BlockPos pos, BlockState state) {
-        return stillValid(level, pos, state, false) ? getMaster(pos, state) : pos;
+        if (!stillValid(level, pos, state, false)) {
+            return pos;
+        }
+        return getMaster(pos, state);
     }
 
     public boolean stillValid(BlockGetter level, BlockPos pos, BlockState state, boolean ignored) {

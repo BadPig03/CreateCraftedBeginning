@@ -61,7 +61,7 @@ public final class CCBCreativeTabBanners {
     public static BannerLayout getBanner(CCBCreativeTabSection section) {
         return switch (section) {
             case AIRTIGHTS -> banner("airtights_banner", "item_groups.airtights_creative_tab", 0xFF878FAA, 0xBB313436);
-            case PHOTO_STRESSES -> banner("photo_stresses_banner", "item_groups.photo_stresses_creative_tab", DEFAULT_SECONDARY_TITLE_COLOR, DEFAULT_TITLE_BACKGROUND);
+            case OPTICAL_POWER -> banner("optical_power_banner", "item_groups.optical_power_creative_tab", DEFAULT_SECONDARY_TITLE_COLOR, DEFAULT_TITLE_BACKGROUND);
             case ENDS -> banner("ends_banner", "item_groups.ends_creative_tab", DEFAULT_SECONDARY_TITLE_COLOR, DEFAULT_TITLE_BACKGROUND);
             case DECORATIONS -> banner("decorations_banner", "item_groups.decorations_creative_tab", DEFAULT_SECONDARY_TITLE_COLOR, DEFAULT_TITLE_BACKGROUND);
             case CANISTERS -> banner("canisters_banner", "item_groups.canisters_creative_tab", 0xFFB160AA, 0xBB5B2E64);

@@ -26,6 +26,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonStyleUtils;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonUtils;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -79,8 +80,8 @@ public abstract class ChainConveyorRendererMixin {
         SuperByteBuffer boxBuffer = CachedBuffers.partial(AllPartialModels.PACKAGES.get(physicsData.modelKey), blockState);
         float yaw = AngleHelper.angleLerp(partialTicks, physicsData.prevYaw, physicsData.yaw);
         Vec3 dangleDiff = VecHelper.rotate(targetPosition.add(0, 0.5, 0).subtract(position), -yaw, Axis.Y);
-        float zRot = Mth.clamp(Mth.wrapDegrees((float) Mth.atan2(-dangleDiff.x, dangleDiff.y) * Mth.RAD_TO_DEG) / 2, -25, 25);
-        float xRot = Mth.clamp(Mth.wrapDegrees((float) Mth.atan2(dangleDiff.z, dangleDiff.y) * Mth.RAD_TO_DEG) / 2, -25, 25);
+        float zRot = CCBMathUtils.clampMagnitude(Mth.wrapDegrees((float) Mth.atan2(-dangleDiff.x, dangleDiff.y) * Mth.RAD_TO_DEG) / 2, 25);
+        float xRot = CCBMathUtils.clampMagnitude(Mth.wrapDegrees((float) Mth.atan2(dangleDiff.z, dangleDiff.y) * Mth.RAD_TO_DEG) / 2, 25);
         int light = LightTexture.pack(level.getBrightness(LightLayer.BLOCK, containingPos), level.getBrightness(LightLayer.SKY, containingPos));
 
         for (SuperByteBuffer buf : new SuperByteBuffer[]{rigBuffer, boxBuffer}) {

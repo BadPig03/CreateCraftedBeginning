@@ -60,7 +60,10 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
 
     @Override
     public long getTankCapacity(int tankIndex) {
-        return isInvalidTank(tankIndex) ? 0 : CAPACITY;
+        if (isInvalidTank(tankIndex)) {
+            return 0;
+        }
+        return CAPACITY;
     }
 
     @Override

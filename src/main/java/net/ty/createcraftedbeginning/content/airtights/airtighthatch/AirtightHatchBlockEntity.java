@@ -77,15 +77,15 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     @Override
-    protected void write(CompoundTag tag, Provider provider, boolean clientPacket) {
-        super.write(tag, provider, clientPacket);
-        serialization.write(tag, provider, clientPacket);
+    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.write(compoundTag, provider, clientPacket);
+        serialization.write(compoundTag, provider, clientPacket);
     }
 
     @Override
-    protected void read(CompoundTag tag, Provider provider, boolean clientPacket) {
-        super.read(tag, provider, clientPacket);
-        serialization.read(tag, provider, clientPacket);
+    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.read(compoundTag, provider, clientPacket);
+        serialization.read(compoundTag, provider, clientPacket);
     }
 
     @Override

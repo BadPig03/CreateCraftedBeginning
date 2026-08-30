@@ -21,10 +21,10 @@ public class BubbleWithoutWaterParticle extends TextureSheetParticle {
         super(level, x, y, z);
         setSize(0.02f, 0.02f);
         quadSize *= random.nextFloat() * 0.6f + 0.2f;
-        xd = xSpeed * 0.2 + (Math.random() * 2 - 1) * 0.02;
-        yd = ySpeed * 0.2 + (Math.random() * 2 - 1) * 0.02;
-        zd = zSpeed * 0.2 + (Math.random() * 2 - 1) * 0.02;
-        lifetime = (int) (8 / (Math.random() * 0.8 + 0.2));
+        xd = xSpeed * 0.2 + (random.nextDouble() * 2 - 1) * 0.02;
+        yd = ySpeed * 0.2 + (random.nextDouble() * 2 - 1) * 0.02;
+        zd = zSpeed * 0.2 + (random.nextDouble() * 2 - 1) * 0.02;
+        lifetime = (int) (8 / (random.nextDouble() * 0.8 + 0.2));
     }
 
     @Override

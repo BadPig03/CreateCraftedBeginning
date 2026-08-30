@@ -9,10 +9,10 @@ import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.client.particle.TextureSheetParticle;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.util.FastColor.ARGB32;
-import net.minecraft.util.Mth;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.content.particles.ColoredBreezeCloudParticleType.ColoredBreezeCloudParticleOptions;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -27,7 +27,7 @@ public class BreezeCloudParticle extends TextureSheetParticle {
     }
 
     private BreezeCloudParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, SpriteSet sprites, int color) {
-        super(level, x, y, z, 0.0, 0.0, 0.0);
+        super(level, x, y, z, 0, 0, 0);
         friction = 0.96f;
         this.sprites = sprites;
         xd *= 0.1;
@@ -37,14 +37,14 @@ public class BreezeCloudParticle extends TextureSheetParticle {
         yd += ySpeed;
         zd += zSpeed;
 
-        float brightness = 1 - (float) (Math.random() * 0.3);
+        float brightness = 1 - (float) (random.nextDouble() * 0.3);
         rCol = ARGB32.red(color) / 255.0f * brightness;
         gCol = ARGB32.green(color) / 255.0f * brightness;
         bCol = ARGB32.blue(color) / 255.0f * brightness;
         alpha = ARGB32.alpha(color) / 255.0f;
 
         quadSize *= 1.875f;
-        int baseLifetime = (int) (8.0 / (Math.random() * 0.8 + 0.3));
+        int baseLifetime = (int) (8 / (random.nextDouble() * 0.8 + 0.3));
         lifetime = (int) Math.max((float) baseLifetime * 2.5f, 1);
         hasPhysics = false;
         setSpriteFromAge(sprites);
@@ -53,7 +53,7 @@ public class BreezeCloudParticle extends TextureSheetParticle {
     @Override
     public float getQuadSize(float scaleFactor) {
         float progress = ((float) age + scaleFactor) / (float) lifetime * 32;
-        return quadSize * Mth.clamp(progress, 0, 1);
+        return quadSize * CCBMathUtils.clampUnit(progress);
     }
 
     @Override

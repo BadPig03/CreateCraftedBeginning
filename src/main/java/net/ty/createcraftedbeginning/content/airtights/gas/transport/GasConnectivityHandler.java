@@ -353,7 +353,10 @@ public final class GasConnectivityHandler {
 
     public static <T extends BlockEntity & IGasTankMultiBlockEntityContainer> @Nullable T partAt(BlockEntityType<T> type, BlockGetter level, BlockPos pos) {
         T blockEntity = type.getBlockEntity(level, pos);
-        return blockEntity != null && !blockEntity.isRemoved() ? blockEntity : null;
+        if (blockEntity == null || blockEntity.isRemoved()) {
+            return null;
+        }
+        return blockEntity;
     }
 
     private static @Nullable IGasTankMultiBlockEntityContainer tankAt(BlockEntityType<?> type, BlockGetter level, BlockPos pos) {

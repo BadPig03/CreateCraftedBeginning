@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.api.gascanisters;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.math.BigDecimal;
@@ -9,7 +10,7 @@ import java.math.RoundingMode;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasConsumptions {
-    private static final double INTEGER_TOLERANCE = 1.0e-9;
+    private static final double INTEGER_TOLERANCE = 1E-9;
     private static final long MAX_SAFE_GAS_COST = 92233720368547757L;
     private static final int DISPLAY_SCALE = 2;
 
@@ -42,7 +43,7 @@ public final class GasConsumptions {
         if (rounded < 0) {
             return -1;
         }
-        return Math.clamp(rounded, 0, Integer.MAX_VALUE);
+        return CCBMathUtils.clampToNonNegativeInt(rounded);
     }
 
     public static boolean isFinite(float value) {

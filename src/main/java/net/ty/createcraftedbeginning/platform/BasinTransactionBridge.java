@@ -16,7 +16,10 @@ public final class BasinTransactionBridge {
     }
 
     public static @Nullable TransactionHandle createHandle(BasinBlockEntity basin) {
-        return basin instanceof BasinTransactionAccess access ? new TransactionHandle(access) : null;
+        if (!(basin instanceof BasinTransactionAccess access)) {
+            return null;
+        }
+        return new TransactionHandle(access);
     }
 
     public static final class TransactionHandle {

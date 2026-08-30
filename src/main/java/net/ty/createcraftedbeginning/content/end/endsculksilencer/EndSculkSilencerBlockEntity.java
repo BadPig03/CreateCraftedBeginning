@@ -16,6 +16,7 @@ import net.minecraft.world.phys.AABB;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalBlockEntity;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
@@ -122,17 +123,13 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
     @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        compoundTag.putBoolean(COMPOUND_KEY_SHOW_OUTLINE, showOutline);
+        CCBNbtUtils.putBoolean(compoundTag, COMPOUND_KEY_SHOW_OUTLINE, showOutline);
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        if (!compoundTag.contains(COMPOUND_KEY_SHOW_OUTLINE)) {
-            return;
-        }
-
-        showOutline = compoundTag.getBoolean(COMPOUND_KEY_SHOW_OUTLINE);
+        showOutline = CCBNbtUtils.getBooleanOrDefault(compoundTag, COMPOUND_KEY_SHOW_OUTLINE, showOutline);
     }
 
     @Override
@@ -182,6 +179,9 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
         }
 
         short workingRange = structural.getWorkingRange();
-        return meetsRequiredSpeed(getSpeed(), workingRange) ? workingRange : 0;
+        if (!meetsRequiredSpeed(getSpeed(), workingRange)) {
+            return 0;
+        }
+        return workingRange;
     }
 }

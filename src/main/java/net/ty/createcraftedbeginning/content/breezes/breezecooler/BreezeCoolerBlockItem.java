@@ -39,14 +39,17 @@ public class BreezeCoolerBlockItem extends BlockItem {
 
     private static void giveCoolerItemTo(Player player, ItemStack heldItem, InteractionHand hand) {
         ItemStack coolerItem = new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK);
-        if (!player.isCreative()) {
-            heldItem.shrink(1);
+        if (player.isCreative()) {
+            ItemHandlerHelper.giveItemToPlayer(player, coolerItem);
+            return;
         }
-        if (heldItem.isEmpty()) {
+
+        if (heldItem.getCount() == 1) {
             player.setItemInHand(hand, coolerItem);
             return;
         }
 
+        heldItem.shrink(1);
         ItemHandlerHelper.giveItemToPlayer(player, coolerItem);
     }
 

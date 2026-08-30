@@ -29,6 +29,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.registry.CCBEntityTypes;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -43,7 +44,7 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
     private static final String COMPOUND_KEY_INIT_MOTION = "InitMotion";
     private static final float DEFAULT_SIZE = 0.3125f;
     private static final int MOTION_CHECK_INTERVAL = 5;
-    private static final double MIN_INITIAL_MOTION_SQR = 1.0e-8;
+    private static final double MIN_INITIAL_MOTION_SQR = 1E-8;
     private static final double EXTERNAL_IMPULSE_THRESHOLD = 0.05;
     private static final double EXTERNAL_IMPULSE_THRESHOLD_SQR = EXTERNAL_IMPULSE_THRESHOLD * EXTERNAL_IMPULSE_THRESHOLD;
 
@@ -72,13 +73,13 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
     }
 
     @Override
-    public void addAdditionalSaveData(CompoundTag tag) {
-        super.addAdditionalSaveData(tag);
-        tag.put(COMPOUND_KEY_INIT_MOTION, createMotionTag());
-        tag.putFloat(COMPOUND_KEY_MULTIPLIER, multiplier);
-        tag.putFloat(COMPOUND_KEY_KNOCKBACK, knockback);
-        tag.putBoolean(COMPOUND_KEY_FLAME, flame);
-        Gas.HOLDER_CODEC.encodeStart(NbtOps.INSTANCE, gasHolder).resultOrPartial(err -> CCBAPI.LOGGER.error("Failed to encode gas holder: {}", err)).ifPresent(gasTag -> tag.put(COMPOUND_KEY_GAS_HOLDER, gasTag));
+    public void addAdditionalSaveData(CompoundTag compoundTag) {
+        super.addAdditionalSaveData(compoundTag);
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_INIT_MOTION, createMotionTag());
+        CCBNbtUtils.putFloat(compoundTag, COMPOUND_KEY_MULTIPLIER, multiplier);
+        CCBNbtUtils.putFloat(compoundTag, COMPOUND_KEY_KNOCKBACK, knockback);
+        CCBNbtUtils.putBoolean(compoundTag, COMPOUND_KEY_FLAME, flame);
+        Gas.HOLDER_CODEC.encodeStart(NbtOps.INSTANCE, gasHolder).resultOrPartial(err -> CCBAPI.LOGGER.error("Failed to encode gas holder: {}", err)).ifPresent(gasTag -> CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_GAS_HOLDER, gasTag));
     }
 
     @Override
@@ -86,20 +87,20 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         super.readAdditionalSaveData(compoundTag);
         readInitialMotion(compoundTag);
 
-        if (compoundTag.contains(COMPOUND_KEY_MULTIPLIER)) {
-            float storedEffectMultiplier = compoundTag.getFloat(COMPOUND_KEY_MULTIPLIER);
+        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_MULTIPLIER)) {
+            float storedEffectMultiplier = CCBNbtUtils.getFloat(compoundTag, COMPOUND_KEY_MULTIPLIER);
             if (GasConsumptions.isFinite(storedEffectMultiplier) && storedEffectMultiplier > 0) {
                 multiplier = storedEffectMultiplier;
             }
         }
-        if (compoundTag.contains(COMPOUND_KEY_KNOCKBACK)) {
-            float storedKnockbackMultiplier = compoundTag.getFloat(COMPOUND_KEY_KNOCKBACK);
+        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_KNOCKBACK)) {
+            float storedKnockbackMultiplier = CCBNbtUtils.getFloat(compoundTag, COMPOUND_KEY_KNOCKBACK);
             if (GasConsumptions.isFinite(storedKnockbackMultiplier) && storedKnockbackMultiplier >= 0) {
                 knockback = storedKnockbackMultiplier;
             }
         }
-        if (compoundTag.contains(COMPOUND_KEY_FLAME)) {
-            flame = compoundTag.getBoolean(COMPOUND_KEY_FLAME);
+        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_FLAME)) {
+            flame = CCBNbtUtils.getBoolean(compoundTag, COMPOUND_KEY_FLAME);
         }
 
         readGasHolder(compoundTag);
@@ -243,7 +244,7 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         }
 
         double initialSpeed = Math.sqrt(initialSpeedSqr);
-        Vec3 initialDirection = initMotion.scale(1.0 / initialSpeed);
+        Vec3 initialDirection = initMotion.scale(1 / initialSpeed);
         double parallelSpeed = currentMotion.dot(initialDirection);
         Vec3 lateralMotion = currentMotion.subtract(initialDirection.scale(parallelSpeed));
         boolean hasLateralImpulse = lateralMotion.lengthSqr() > EXTERNAL_IMPULSE_THRESHOLD_SQR;
@@ -259,12 +260,12 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         return motionTag;
     }
 
-    private void readInitialMotion(CompoundTag tag) {
-        if (!tag.contains(COMPOUND_KEY_INIT_MOTION)) {
+    private void readInitialMotion(CompoundTag compoundTag) {
+        if (!CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_INIT_MOTION)) {
             return;
         }
 
-        ListTag motionTag = tag.getList(COMPOUND_KEY_INIT_MOTION, Tag.TAG_DOUBLE);
+        ListTag motionTag = CCBNbtUtils.getList(compoundTag, COMPOUND_KEY_INIT_MOTION, Tag.TAG_DOUBLE);
         if (motionTag.size() < 3) {
             return;
         }
@@ -279,8 +280,8 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         initMotion = new Vec3(motionX, motionY, motionZ);
     }
 
-    private void readGasHolder(CompoundTag tag) {
-        Tag gasTag = tag.get(COMPOUND_KEY_GAS_HOLDER);
+    private void readGasHolder(CompoundTag compoundTag) {
+        Tag gasTag = CCBNbtUtils.getTag(compoundTag, COMPOUND_KEY_GAS_HOLDER);
         if (gasTag == null) {
             return;
         }

@@ -16,6 +16,7 @@ import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -80,13 +81,13 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
     @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        compoundTag.put(COMPOUND_KEY_CORE, core.write(provider, clientPacket));
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_CORE, core.write(provider, clientPacket));
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        CompoundTag coreTag = compoundTag.contains(COMPOUND_KEY_CORE) ? compoundTag.getCompound(COMPOUND_KEY_CORE) : new CompoundTag();
+        CompoundTag coreTag = CCBNbtUtils.getCompoundOrEmpty(compoundTag, COMPOUND_KEY_CORE);
         core.read(coreTag, provider, clientPacket);
     }
 

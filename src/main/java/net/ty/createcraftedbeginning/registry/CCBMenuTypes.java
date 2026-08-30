@@ -14,7 +14,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightbo
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateMenu;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.AirtightHelmetMenu;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.AirtightLeggingsMenu;
-import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillMenu;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillMenu;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackMenu;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeSetGasMenu;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterMenu;

@@ -5,6 +5,7 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -21,11 +22,11 @@ public final class GasDrawerStorage implements INBTSerializable<CompoundTag> {
     }
 
     public static GasStack readStoredGas(CompoundTag storageTag, int slot, Provider provider) {
-        CompoundTag tankTag = storageTag.getCompound(Integer.toString(slot));
-        if (!tankTag.contains(COMPOUND_KEY_GAS)) {
+        CompoundTag tankTag = CCBNbtUtils.getCompound(storageTag, Integer.toString(slot));
+        if (!CCBNbtUtils.contains(tankTag, COMPOUND_KEY_GAS)) {
             return GasStack.EMPTY;
         }
-        return GasStack.parseOptional(provider, tankTag.getCompound(COMPOUND_KEY_GAS));
+        return GasStack.parseOptional(provider, CCBNbtUtils.getCompound(tankTag, COMPOUND_KEY_GAS));
     }
 
     @Override
@@ -38,7 +39,7 @@ public final class GasDrawerStorage implements INBTSerializable<CompoundTag> {
                 continue;
             }
 
-            storageTag.put(Integer.toString(tankIndex), drawerTank.write(provider, new CompoundTag()));
+            CCBNbtUtils.putTag(storageTag, Integer.toString(tankIndex), drawerTank.write(provider, new CompoundTag()));
         }
         return storageTag;
     }
@@ -48,8 +49,8 @@ public final class GasDrawerStorage implements INBTSerializable<CompoundTag> {
         GasDrawerTank[] drawerTanks = handler.getInternalTanks();
         for (int tankIndex = 0; tankIndex < drawerTanks.length; tankIndex++) {
             String tankKey = Integer.toString(tankIndex);
-            if (nbt.contains(tankKey)) {
-                drawerTanks[tankIndex].read(provider, nbt.getCompound(tankKey));
+            if (CCBNbtUtils.contains(nbt, tankKey)) {
+                drawerTanks[tankIndex].read(provider, CCBNbtUtils.getCompound(nbt, tankKey));
                 continue;
             }
 

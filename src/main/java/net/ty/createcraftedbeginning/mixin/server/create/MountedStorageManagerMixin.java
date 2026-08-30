@@ -27,6 +27,7 @@ import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasSto
 import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorageType;
 import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorageWrapper;
 import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedStorageSyncWithGasPacket;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -46,6 +47,21 @@ import java.util.Set;
 @MethodsReturnNonnullByDefault
 @Mixin(value = MountedStorageManager.class, remap = false)
 public abstract class MountedStorageManagerMixin implements IMountedStorageManagerWithGas {
+    @Unique
+    private static final String ccb$COMPOUND_KEY_POSITION = "pos";
+    @Unique
+    private static final String ccb$COMPOUND_KEY_STORAGE = "storage";
+    @Unique
+    private static final String ccb$COMPOUND_KEY_GASES = "gases";
+    @Unique
+    private static final String ccb$COMPOUND_KEY_INTERACTABLE_POSITIONS = "interactable_positions";
+    @Unique
+    private static final String ccb$COMPOUND_KEY_X = "X";
+    @Unique
+    private static final String ccb$COMPOUND_KEY_Y = "Y";
+    @Unique
+    private static final String ccb$COMPOUND_KEY_Z = "Z";
+
     @Unique
     private Map<BlockPos, MountedGasStorage> ccb$gasesBuilder;
     @Unique
@@ -221,44 +237,44 @@ public abstract class MountedStorageManagerMixin implements IMountedStorageManag
                 if (!clientPacket || storage instanceof SyncedMountedStorage) {
                     MountedGasStorage.CODEC.encodeStart(NbtOps.INSTANCE, storage).resultOrPartial(err -> CCBAPI.LOGGER.error("Failed to serialize mounted gas storage: {}", err)).ifPresent(encoded -> {
                         CompoundTag tag = new CompoundTag();
-                        tag.put("pos", NbtUtils.writeBlockPos(pos));
-                        tag.put("storage", encoded);
+                        CCBNbtUtils.putTag(tag, ccb$COMPOUND_KEY_POSITION, NbtUtils.writeBlockPos(pos));
+                        CCBNbtUtils.putTag(tag, ccb$COMPOUND_KEY_STORAGE, encoded);
                         gases.add(tag);
                     });
                 }
             });
         }
         if (!gases.isEmpty()) {
-            compoundTag.put("gases", gases);
+            CCBNbtUtils.putTag(compoundTag, ccb$COMPOUND_KEY_GASES, gases);
         }
         if (!clientPacket || ccb$getGases().storages == null) {
             return;
         }
 
-        ListTag list = compoundTag.getList("interactable_positions", Tag.TAG_COMPOUND);
+        ListTag list = CCBNbtUtils.getList(compoundTag, ccb$COMPOUND_KEY_INTERACTABLE_POSITIONS, Tag.TAG_COMPOUND);
         Set<BlockPos> positions = new HashSet<>();
-        NBTHelper.iterateCompoundList(list, tag -> positions.add(new BlockPos(tag.getInt("X"), tag.getInt("Y"), tag.getInt("Z"))));
+        NBTHelper.iterateCompoundList(list, tag -> positions.add(new BlockPos(CCBNbtUtils.getInt(tag, ccb$COMPOUND_KEY_X), CCBNbtUtils.getInt(tag, ccb$COMPOUND_KEY_Y), CCBNbtUtils.getInt(tag, ccb$COMPOUND_KEY_Z))));
         for (BlockPos pos : ccb$getGases().storages.keySet()) {
             if (!positions.add(pos)) {
                 continue;
             }
 
             CompoundTag tag = new CompoundTag();
-            tag.putInt("X", pos.getX());
-            tag.putInt("Y", pos.getY());
-            tag.putInt("Z", pos.getZ());
+            CCBNbtUtils.putInt(tag, ccb$COMPOUND_KEY_X, pos.getX());
+            CCBNbtUtils.putInt(tag, ccb$COMPOUND_KEY_Y, pos.getY());
+            CCBNbtUtils.putInt(tag, ccb$COMPOUND_KEY_Z, pos.getZ());
             list.add(tag);
         }
-        compoundTag.put("interactable_positions", list);
+        CCBNbtUtils.putTag(compoundTag, ccb$COMPOUND_KEY_INTERACTABLE_POSITIONS, list);
     }
 
     @Inject(method = "read", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/MountedStorageManager;initialize()V", shift = Shift.BEFORE))
     private void ccb$readOnInitialization(CompoundTag nbt, Provider provider, boolean clientPacket, Contraption contraption, CallbackInfo ci) {
         try {
-            if (nbt.contains("gases")) {
-                NBTHelper.iterateCompoundList(nbt.getList("gases", Tag.TAG_COMPOUND), tag -> {
-                    BlockPos pos = NBTHelper.readBlockPos(tag, "pos");
-                    CompoundTag data = tag.getCompound("storage");
+            if (CCBNbtUtils.contains(nbt, ccb$COMPOUND_KEY_GASES)) {
+                NBTHelper.iterateCompoundList(CCBNbtUtils.getList(nbt, ccb$COMPOUND_KEY_GASES, Tag.TAG_COMPOUND), tag -> {
+                    BlockPos pos = NBTHelper.readBlockPos(tag, ccb$COMPOUND_KEY_POSITION);
+                    CompoundTag data = CCBNbtUtils.getCompound(tag, ccb$COMPOUND_KEY_STORAGE);
                     MountedGasStorage.CODEC.decode(NbtOps.INSTANCE, data).resultOrPartial(err -> CCBAPI.LOGGER.error("Failed to deserialize mounted gas storage: {}", err)).map(Pair::getFirst).ifPresent(storage -> ccb$addStorage(storage, pos));
                 });
             }

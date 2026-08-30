@@ -21,7 +21,9 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IMountedStorageManagerWithGas;
 import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorageWrapper;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -35,13 +37,6 @@ public class GasThresholdCondition extends CargoThresholdCondition {
 
     private ItemStack filterItem = ItemStack.EMPTY;
     private Predicate<GasStack> compiledFilter = GasFilterUtils.compile(ItemStack.EMPTY);
-
-    private static long saturatedAdd(long currentAmount, long addedAmount) {
-        if (addedAmount <= 0) {
-            return currentAmount;
-        }
-        return currentAmount > Long.MAX_VALUE - addedAmount ? Long.MAX_VALUE : currentAmount + addedAmount;
-    }
 
     private static boolean testLong(Ops operator, long currentAmount, long targetAmount) {
         return switch (operator) {
@@ -68,7 +63,7 @@ public class GasThresholdCondition extends CargoThresholdCondition {
                     continue;
                 }
 
-                totalAmount = saturatedAdd(totalAmount, storedGas.getAmount());
+                totalAmount = CCBMathUtils.saturatedAdd(totalAmount, storedGas.getAmount());
             }
         }
 
@@ -96,22 +91,22 @@ public class GasThresholdCondition extends CargoThresholdCondition {
     @Override
     protected void writeAdditional(Provider provider, CompoundTag compoundTag) {
         super.writeAdditional(provider, compoundTag);
-        compoundTag.put(COMPOUND_KEY_GAS_FILTER, filterItem.saveOptional(provider));
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_GAS_FILTER, filterItem.saveOptional(provider));
     }
 
     @Override
     protected void readAdditional(Provider provider, CompoundTag compoundTag) {
         super.readAdditional(provider, compoundTag);
         ItemStack savedFilter = ItemStack.EMPTY;
-        if (compoundTag.contains(COMPOUND_KEY_GAS_FILTER)) {
-            savedFilter = ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_GAS_FILTER));
+        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_GAS_FILTER)) {
+            savedFilter = ItemStack.parseOptional(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_GAS_FILTER));
         }
         updateFilter(savedFilter);
     }
 
     @Override
-    public MutableComponent getWaitingStatus(Level level, Train train, CompoundTag tag) {
-        int lastDisplaySnapshot = getLastDisplaySnapshot(tag);
+    public MutableComponent getWaitingStatus(Level level, Train train, CompoundTag compoundTag) {
+        int lastDisplaySnapshot = getLastDisplaySnapshot(compoundTag);
         if (lastDisplaySnapshot == -1) {
             return Component.empty();
         }

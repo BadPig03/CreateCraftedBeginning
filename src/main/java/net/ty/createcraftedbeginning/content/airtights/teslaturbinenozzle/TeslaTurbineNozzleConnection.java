@@ -92,6 +92,9 @@ final class TeslaTurbineNozzleConnection {
         }
 
         BlockPos masterPos = TeslaTurbineStructuralBlock.getMaster(structurePos, structureState);
-        return level.getBlockEntity(masterPos) instanceof TeslaTurbineBlockEntity master ? master : null;
+        if (!(level.getBlockEntity(masterPos) instanceof TeslaTurbineBlockEntity master)) {
+            return null;
+        }
+        return master;
     }
 }

@@ -71,7 +71,10 @@ public class GasFactoryGaugeBlockEntity extends FactoryPanelBlockEntity {
     @Override
     @Nullable
     public GasPackagerBlockEntity getRestockedPackager() {
-        return restocker ? attachment.findAttachedPackager() : null;
+        if (!restocker) {
+            return null;
+        }
+        return attachment.findAttachedPackager();
     }
 
     @Override

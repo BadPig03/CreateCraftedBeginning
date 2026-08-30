@@ -23,7 +23,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightbo
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.AirtightChestplateUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.upgrades.AirtightHelmetUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.AirtightLeggingsUpgradeRegistry;
-import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.upgrades.AirtightHandheldDrillUpgradeRegistry;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.AirtightHandheldDrillUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.handlers.CCBBuiltInAirtightHandlers;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndCasingBlock;
 import net.ty.createcraftedbeginning.datagen.CCBDataGen;

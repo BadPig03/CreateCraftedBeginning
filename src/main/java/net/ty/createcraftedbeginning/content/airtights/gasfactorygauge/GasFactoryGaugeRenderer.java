@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Con
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -39,7 +40,7 @@ public class GasFactoryGaugeRenderer extends SmartBlockEntityRenderer<GasFactory
             return;
         }
 
-        glow = Mth.clamp(1 - 2 * Mth.square(glow - 0.75f), -1, 1);
+        glow = CCBMathUtils.clampMagnitude(1 - 2 * Mth.square(glow - 0.75f), 1);
         int glowColor = (int) (200 * glow);
         CachedBuffers.partial(bulbModel, blockState).rotateCentered(yRot, Direction.UP).rotateCentered(xRot, Direction.EAST).rotateCentered(Mth.PI, Direction.UP).translate(behaviour.slot.xOffset * 0.5, 0, behaviour.slot.yOffset * 0.5).light(LightTexture.FULL_BRIGHT).color(glowColor, glowColor, glowColor, 255).overlay(overlay).renderInto(poseStack, buffer.getBuffer(RenderTypes.additive()));
     }

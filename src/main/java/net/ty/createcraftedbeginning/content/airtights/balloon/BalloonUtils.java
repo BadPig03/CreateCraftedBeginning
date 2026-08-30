@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.airtights.balloon;
 import com.simibubi.create.content.logistics.box.PackageEntity;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -18,6 +17,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonGasContents.GasEntry;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -50,7 +50,10 @@ public final class BalloonUtils {
         }
 
         BalloonGasContents contents = stack.getOrDefault(CCBDataComponents.BALLOON_GAS_CONTENTS, BalloonGasContents.EMPTY);
-        return contents.isEmpty() ? BalloonGasContents.EMPTY : contents;
+        if (contents.isEmpty()) {
+            return BalloonGasContents.EMPTY;
+        }
+        return contents;
     }
 
     public static ItemStack containing(BalloonGasContents contents) {
@@ -110,7 +113,7 @@ public final class BalloonUtils {
 
         BalloonGasContents contents = getGasContents(balloon.getBox());
         long capacity = getCapacity();
-        double fillRatio = capacity <= 0 ? 0 : Mth.clamp(contents.totalAmount() / (double) capacity, 0, 1);
+        double fillRatio = capacity <= 0 ? 0 : CCBMathUtils.clampUnit(contents.totalAmount() / (double) capacity);
         Vec3 currentMovement = balloon.getDeltaMovement();
         balloon.setDeltaMovement(currentMovement.x * 0.85, currentMovement.y + 0.003 + 0.007 * Math.sqrt(fillRatio), currentMovement.z * 0.85);
         balloon.setOnGround(false);
@@ -126,7 +129,7 @@ public final class BalloonUtils {
             return;
         }
 
-        if (balloon.getDeltaMovement().lengthSqr() < 1.0E-4 || (balloon.tickCount & 1) != 0) {
+        if (balloon.getDeltaMovement().lengthSqr() < 1E-4 || (balloon.tickCount & 1) != 0) {
             return;
         }
 
@@ -151,7 +154,7 @@ public final class BalloonUtils {
             return;
         }
 
-        float burstMultiplier = Mth.clamp((float) totalAmount / capacity, 0, 1) * 2;
+        float burstMultiplier = CCBMathUtils.clampUnit((float) totalAmount / capacity) * 2;
         Level level = balloon.level();
         Vec3 burstPosition = balloon.position();
         for (GasEntry gas : contents.gases()) {

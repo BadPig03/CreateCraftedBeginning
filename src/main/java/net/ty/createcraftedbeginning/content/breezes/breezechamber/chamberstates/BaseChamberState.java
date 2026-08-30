@@ -10,9 +10,11 @@ import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock.WindLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity.ChargerType;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingAction;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingData;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -50,7 +52,7 @@ public abstract class BaseChamberState {
 
     private static void applyRemainingTime(BreezeChamberBlockEntity chamber, long updatedTime) {
         int maxWindCapacity = BreezeChamberBlockEntity.getMaxWindCapacity();
-        int clampedTime = Math.clamp(updatedTime, -maxWindCapacity, maxWindCapacity);
+        int clampedTime = CCBMathUtils.clampMagnitude((int) updatedTime, maxWindCapacity);
         if (clampedTime > 0) {
             chamber.setChamberState(new GaleChamberState(clampedTime, false));
         }
@@ -86,8 +88,8 @@ public abstract class BaseChamberState {
     }
 
     public void save(CompoundTag compoundTag) {
-        compoundTag.putInt(COMPOUND_KEY_REMAINING_TIME, remainingTime);
-        compoundTag.putBoolean(COMPOUND_KEY_IS_CREATIVE, isCreative);
+        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_REMAINING_TIME, remainingTime);
+        CCBNbtUtils.putBoolean(compoundTag, COMPOUND_KEY_IS_CREATIVE, isCreative);
     }
 
     public void tick(BreezeChamberBlockEntity chamber) {

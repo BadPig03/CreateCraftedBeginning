@@ -66,7 +66,10 @@ public class CCBStress extends ConfigBase {
     private static @Nullable DoubleSupplier getValue(Block block, Map<ResourceLocation, ConfigValue<Double>> values) {
         ResourceLocation id = RegisteredObjectsHelper.getKeyOrThrow(block);
         ConfigValue<Double> value = values.get(id);
-        return value == null ? null : value::get;
+        if (value == null) {
+            return null;
+        }
+        return value::get;
     }
 
     @Override

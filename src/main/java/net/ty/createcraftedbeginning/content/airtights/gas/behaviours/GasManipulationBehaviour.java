@@ -38,7 +38,10 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
     }
 
     private static boolean matchesFilter(GasStack gasStack, @Nullable GasFilteringBehaviour gasFilter, @Nullable Predicate<GasStack> itemFilter) {
-        return gasFilter != null ? gasFilter.test(gasStack) : itemFilter == null || itemFilter.test(gasStack);
+        if (gasFilter == null) {
+            return itemFilter == null || itemFilter.test(gasStack);
+        }
+        return gasFilter.test(gasStack);
     }
 
     @Override
@@ -82,7 +85,10 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<IGasH
         }
 
         ItemStack filterStack = itemFilter.getFilter();
-        return filterStack.isEmpty() ? null : getCompiledFilter(filterStack);
+        if (filterStack.isEmpty()) {
+            return null;
+        }
+        return getCompiledFilter(filterStack);
     }
 
     private Predicate<GasStack> getCompiledFilter(ItemStack filterStack) {

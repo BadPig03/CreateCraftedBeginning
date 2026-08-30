@@ -33,7 +33,10 @@ final class AirtightHatchCanisterManager {
     }
 
     private static CanisterType toBlockCanisterType(HatchCanisterType canisterType) {
-        return canisterType == HatchCanisterType.CREATIVE ? CanisterType.CREATIVE : CanisterType.NORMAL;
+        if (canisterType != HatchCanisterType.CREATIVE) {
+            return CanisterType.NORMAL;
+        }
+        return CanisterType.CREATIVE;
     }
 
     private static boolean isSameSnapshot(GasStack expectedGas, GasStack actualGas) {
@@ -53,7 +56,10 @@ final class AirtightHatchCanisterManager {
 
     CanisterType getStoredCanisterType() {
         IAirtightHatchCanister hatchCanister = AirtightHatchCanisters.get(canister);
-        return hatchCanister == null ? CanisterType.EMPTY : toBlockCanisterType(hatchCanister.getAirtightHatchType());
+        if (hatchCanister == null) {
+            return CanisterType.EMPTY;
+        }
+        return toBlockCanisterType(hatchCanister.getAirtightHatchType());
     }
 
     boolean isEmpty() {
@@ -133,7 +139,10 @@ final class AirtightHatchCanisterManager {
 
         hatchCanister.save();
         IAirtightHatchCanister savedCanister = AirtightHatchCanisters.get(canisterStack);
-        return savedCanister != null && isSameSnapshot(gasSnapshot, savedCanister.getAirtightHatchContents()) ? canisterStack : ItemStack.EMPTY;
+        if (savedCanister == null || !isSameSnapshot(gasSnapshot, savedCanister.getAirtightHatchContents())) {
+            return ItemStack.EMPTY;
+        }
+        return canisterStack;
     }
 
     boolean giveCanisterToPlayer(Player player) {

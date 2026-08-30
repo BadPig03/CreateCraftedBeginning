@@ -17,12 +17,15 @@ import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock.WindLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class BreezeChamberScenes {
+    private static final String COMPOUND_KEY_HELD_ITEM = "HeldItem";
+
     public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
@@ -95,7 +98,7 @@ public class BreezeChamberScenes {
 		scene.overlay().showText(60).text("Improper foods reduce duration and may cause the Breeze ill").colored(PonderPalette.RED).pointAt(chamberVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> compoundTag.put("HeldItem", beetrootSoupItem.copy().saveOptional(scene.world().getHolderLookupProvider())));
+        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_HELD_ITEM, beetrootSoupItem.copy().saveOptional(scene.world().getHolderLookupProvider())));
         scene.world().showSection(deployerSelection, Direction.WEST);
 
         scene.idle(3);

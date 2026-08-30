@@ -6,6 +6,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Nullable;
 import snownee.jade.api.ui.IElement;
 
@@ -34,12 +35,12 @@ public class GasView {
 
     @Nullable
     public static GasView readDefault(CompoundTag compoundTag) {
-        long capacity = compoundTag.getLong(STORAGE_CAPACITY_KEY);
+        long capacity = CCBNbtUtils.getLong(compoundTag, STORAGE_CAPACITY_KEY);
         if (capacity <= 0) {
             return null;
         }
 
-        GasObject gas = GasObject.CODEC.parse(NbtOps.INSTANCE, compoundTag.get(STORAGE_GAS_KEY)).result().orElse(null);
+        GasObject gas = GasObject.CODEC.parse(NbtOps.INSTANCE, CCBNbtUtils.getTag(compoundTag, STORAGE_GAS_KEY)).result().orElse(null);
         if (gas == null) {
             return null;
         }
@@ -49,7 +50,7 @@ public class GasView {
         view.current = GasAmounts.formatLosslessCompact(gas.amount());
         view.max = GasAmounts.formatLosslessCompact(capacity);
         view.ratio = (float) gas.amount() / capacity;
-        view.creative = compoundTag.getBoolean(STORAGE_CREATIVE_KEY);
+        view.creative = CCBNbtUtils.getBoolean(compoundTag, STORAGE_CREATIVE_KEY);
         if (!gas.isEmpty()) {
             return view;
         }
@@ -61,14 +62,14 @@ public class GasView {
     public static CompoundTag writeDefault(GasObject gasObject, long capacity, boolean creative) {
         CompoundTag viewData = new CompoundTag();
         if (capacity > 0) {
-            viewData.put(STORAGE_GAS_KEY, GasObject.CODEC.encodeStart(NbtOps.INSTANCE, gasObject).result().orElseThrow());
-            viewData.putLong(STORAGE_CAPACITY_KEY, capacity);
+            CCBNbtUtils.putTag(viewData, STORAGE_GAS_KEY, GasObject.CODEC.encodeStart(NbtOps.INSTANCE, gasObject).result().orElseThrow());
+            CCBNbtUtils.putLong(viewData, STORAGE_CAPACITY_KEY, capacity);
         }
         if (!creative) {
             return viewData;
         }
 
-        viewData.putBoolean(STORAGE_CREATIVE_KEY, true);
+        CCBNbtUtils.putBoolean(viewData, STORAGE_CREATIVE_KEY, true);
         return viewData;
     }
 }

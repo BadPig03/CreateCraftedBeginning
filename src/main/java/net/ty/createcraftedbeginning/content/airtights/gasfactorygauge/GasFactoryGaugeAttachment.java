@@ -31,7 +31,11 @@ final class GasFactoryGaugeAttachment {
         if (!level.isLoaded(packagerPos)) {
             return Detection.UNAVAILABLE;
         }
-        return level.getBlockEntity(packagerPos) instanceof GasPackagerBlockEntity ? Detection.ATTACHED : Detection.DETACHED;
+
+        if (!(level.getBlockEntity(packagerPos) instanceof GasPackagerBlockEntity)) {
+            return Detection.DETACHED;
+        }
+        return Detection.ATTACHED;
     }
 
     @Nullable GasPackagerBlockEntity findAttachedPackager() {
@@ -42,10 +46,10 @@ final class GasFactoryGaugeAttachment {
         }
 
         BlockPos packagerPos = getAttachedPosition(blockState);
-        if (!level.isLoaded(packagerPos)) {
+        if (!level.isLoaded(packagerPos) || !(level.getBlockEntity(packagerPos) instanceof GasPackagerBlockEntity packager)) {
             return null;
         }
-        return level.getBlockEntity(packagerPos) instanceof GasPackagerBlockEntity packager ? packager : null;
+        return packager;
     }
 
     private BlockPos getAttachedPosition(BlockState blockState) {

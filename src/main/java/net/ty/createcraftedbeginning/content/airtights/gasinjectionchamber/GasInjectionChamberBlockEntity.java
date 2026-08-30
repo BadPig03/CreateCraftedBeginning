@@ -180,7 +180,10 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     }
 
     boolean isFilterLocked() {
-        return level != null && level.isClientSide ? filter.isClientLocked() : operation.type == FAN_PROCESSING;
+        if (level == null || !level.isClientSide) {
+            return operation.type == FAN_PROCESSING;
+        }
+        return filter.isClientLocked();
     }
 
     boolean installFilter(ItemStack stack) {

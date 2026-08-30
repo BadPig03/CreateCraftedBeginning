@@ -181,7 +181,10 @@ public class AirtightForgingPressStructuralShaftBlock extends KineticBlock imple
 
     @Override
     public BlockPos getInformationSource(Level level, BlockPos pos, BlockState state) {
-        return stillValid(level, pos, state) ? AirtightForgingPressUtils.getMaster(pos, state) : pos;
+        if (!stillValid(level, pos, state)) {
+            return pos;
+        }
+        return AirtightForgingPressUtils.getMaster(pos, state);
     }
 
     @Override

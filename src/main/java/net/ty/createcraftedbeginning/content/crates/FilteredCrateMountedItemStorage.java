@@ -24,6 +24,9 @@ public class FilteredCrateMountedItemStorage<B extends FilteredCrateBlockEntity>
     }
 
     protected final ItemStack getFilterItem() {
-        return filterItem.isEmpty() ? ItemStack.EMPTY : filterItem.copy();
+        if (filterItem.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+        return filterItem.copy();
     }
 }

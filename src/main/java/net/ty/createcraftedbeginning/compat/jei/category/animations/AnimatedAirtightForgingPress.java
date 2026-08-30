@@ -12,6 +12,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.Airt
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralShaftBlock;
 import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -21,14 +22,14 @@ public class AnimatedAirtightForgingPress extends AnimatedKinetics {
     private static final int SCALE = 12;
 
     private static float getSqueeze(float cycle) {
-        float ticks = Mth.clamp(cycle, 0, 30);
+        float ticks = CCBMathUtils.clampNonNegative(cycle, 30);
         float distance;
         if (ticks < 20) {
             float progress = ticks / 15;
-            distance = Mth.clamp(Mth.square(progress) * progress, 0, 1);
+            distance = CCBMathUtils.clampUnit(Mth.square(progress) * progress);
         }
         else {
-            distance = Mth.clamp((30 - ticks) / 10, 0, 1);
+            distance = CCBMathUtils.clampUnit((30 - ticks) / 10);
         }
         return distance * 8;
     }

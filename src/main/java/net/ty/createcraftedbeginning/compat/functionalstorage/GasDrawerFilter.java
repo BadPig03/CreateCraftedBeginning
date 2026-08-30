@@ -5,6 +5,7 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
@@ -44,7 +45,7 @@ public final class GasDrawerFilter implements INBTSerializable<CompoundTag> {
                 continue;
             }
 
-            filterTag.put(Integer.toString(slot), filterGas.saveOptional(provider));
+            CCBNbtUtils.putTag(filterTag, Integer.toString(slot), filterGas.saveOptional(provider));
         }
         return filterTag;
     }
@@ -53,7 +54,7 @@ public final class GasDrawerFilter implements INBTSerializable<CompoundTag> {
     public void deserializeNBT(Provider provider, CompoundTag nbt) {
         for (int slot = 0; slot < filters.length; slot++) {
             String slotKey = Integer.toString(slot);
-            set(slot, nbt.contains(slotKey) ? GasStack.parseOptional(provider, nbt.getCompound(slotKey)) : GasStack.EMPTY);
+            set(slot, CCBNbtUtils.contains(nbt, slotKey) ? GasStack.parseOptional(provider, CCBNbtUtils.getCompound(nbt, slotKey)) : GasStack.EMPTY);
         }
     }
 }

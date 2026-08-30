@@ -54,7 +54,10 @@ final class AirtightAssemblyDriverGasHandler implements IGasHandler {
 
     @Override
     public long fill(GasStack resource, GasAction action) {
-        return isGasValid(0, resource) ? flowMeter.fill(resource, action) : 0;
+        if (!isGasValid(0, resource)) {
+            return 0;
+        }
+        return flowMeter.fill(resource, action);
     }
 
     @Override

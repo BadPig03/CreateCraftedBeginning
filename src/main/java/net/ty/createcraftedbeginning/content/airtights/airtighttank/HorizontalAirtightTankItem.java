@@ -33,7 +33,10 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
         }
 
         Axis horizontalAxis = state.getValue(HorizontalAirtightTankBlock.HORIZONTAL_AXIS);
-        return horizontalAxis.isHorizontal() ? horizontalAxis : null;
+        if (!horizontalAxis.isHorizontal()) {
+            return null;
+        }
+        return horizontalAxis;
     }
 
     private static int coordinate(BlockPos pos, Axis axis) {

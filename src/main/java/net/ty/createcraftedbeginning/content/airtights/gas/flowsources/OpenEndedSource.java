@@ -20,9 +20,11 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasTransporter;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 import net.ty.createcraftedbeginning.registry.gas.CCBGases;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -57,14 +59,12 @@ public final class OpenEndedSource extends GasFlowSource {
 
     public static OpenEndedSource read(CompoundTag sourceTag, Provider provider, BlockFace location) {
         OpenEndedSource source = new OpenEndedSource(location);
-        if (sourceTag.contains(COMPOUND_KEY_EFFECT_PROGRESS, Tag.TAG_LONG)) {
-            source.effectProgress = Math.clamp(sourceTag.getLong(COMPOUND_KEY_EFFECT_PROGRESS), 0, EFFECT_INTERVAL - 1);
-        }
-        if (!sourceTag.contains(COMPOUND_KEY_EFFECT_GAS, Tag.TAG_COMPOUND)) {
+        source.effectProgress = CCBMathUtils.clampNonNegative(CCBNbtUtils.getLongOrDefault(sourceTag, COMPOUND_KEY_EFFECT_PROGRESS, 0), EFFECT_INTERVAL - 1);
+        if (!CCBNbtUtils.contains(sourceTag, COMPOUND_KEY_EFFECT_GAS, Tag.TAG_COMPOUND)) {
             return source;
         }
 
-        source.effectGas = GasStack.parseOptional(provider, sourceTag.getCompound(COMPOUND_KEY_EFFECT_GAS));
+        source.effectGas = GasStack.parseOptional(provider, CCBNbtUtils.getCompound(sourceTag, COMPOUND_KEY_EFFECT_GAS));
         if (source.effectGas.isEmpty()) {
             return source;
         }
@@ -94,8 +94,8 @@ public final class OpenEndedSource extends GasFlowSource {
             return sourceTag;
         }
 
-        sourceTag.putLong(COMPOUND_KEY_EFFECT_PROGRESS, effectProgress);
-        sourceTag.put(COMPOUND_KEY_EFFECT_GAS, effectGas.saveOptional(provider));
+        CCBNbtUtils.putLong(sourceTag, COMPOUND_KEY_EFFECT_PROGRESS, effectProgress);
+        CCBNbtUtils.putTag(sourceTag, COMPOUND_KEY_EFFECT_GAS, effectGas.saveOptional(provider));
         return sourceTag;
     }
 
@@ -120,7 +120,10 @@ public final class OpenEndedSource extends GasFlowSource {
 
         @Override
         public GasStack getGasInTank(int tank) {
-            return tank == 0 ? getWorldGas() : GasStack.EMPTY;
+            if (tank != 0) {
+                return GasStack.EMPTY;
+            }
+            return getWorldGas();
         }
 
         @Override
@@ -147,7 +150,10 @@ public final class OpenEndedSource extends GasFlowSource {
 
         @Override
         public long getTankCapacity(int tank) {
-            return tank == 0 ? EFFECT_INTERVAL : 0;
+            if (tank != 0) {
+                return 0;
+            }
+            return EFFECT_INTERVAL;
         }
 
         private GasStack drainWorld(long maxDrainAmount, @Nullable GasStack requestedGas, GasAction action) {

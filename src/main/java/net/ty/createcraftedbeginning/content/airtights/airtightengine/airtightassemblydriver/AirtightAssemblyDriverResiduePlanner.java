@@ -36,7 +36,10 @@ final class AirtightAssemblyDriverResiduePlanner {
             lastOutletIndex = outletIndex;
         }
 
-        return remainingAmount == 0 ? new GenerationPlan(List.copyOf(insertions), lastOutletIndex) : null;
+        if (remainingAmount != 0) {
+            return null;
+        }
+        return new GenerationPlan(List.copyOf(insertions), lastOutletIndex);
     }
 
     static boolean commit(GenerationPlan plan) {

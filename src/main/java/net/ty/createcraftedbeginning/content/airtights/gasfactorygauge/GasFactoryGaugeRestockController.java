@@ -44,24 +44,27 @@ final class GasFactoryGaugeRestockController {
         BigItemStack orderedGas = new BigItemStack(gasToken, orderAmount);
         PackageOrderWithCrafts packageOrder = PackageOrderWithCrafts.simple(List.of(orderedGas));
         boolean requestAccepted = LogisticsManager.broadcastPackageRequest(network, RequestType.RESTOCK, packageOrder, excludedInventory, recipeAddress);
-        return requestAccepted ? Result.accepted(orderedGas) : Result.failed();
+        if (!requestAccepted) {
+            return Result.failed();
+        }
+        return Result.accepted(orderedGas);
     }
 
-    enum Effect {
+    enum Status {
         NONE,
         SUCCESS,
         FAILURE
     }
 
-    record Result(Effect effect, @Nullable BigItemStack promisedGas) {
-        private static final Result NONE = new Result(Effect.NONE, null);
+    record Result(Status status, @Nullable BigItemStack promisedGas) {
+        private static final Result NONE = new Result(Status.NONE, null);
 
         private static Result accepted(BigItemStack orderedGas) {
-            return new Result(Effect.SUCCESS, orderedGas);
+            return new Result(Status.SUCCESS, orderedGas);
         }
 
         private static Result failed() {
-            return new Result(Effect.FAILURE, null);
+            return new Result(Status.FAILURE, null);
         }
     }
 }

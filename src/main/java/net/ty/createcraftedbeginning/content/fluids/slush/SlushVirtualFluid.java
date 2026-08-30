@@ -34,12 +34,18 @@ public class SlushVirtualFluid extends BaseFlowingFluid {
 
     @Override
     public Fluid getFlowing() {
-        return isSource ? super.getFlowing() : this;
+        if (!isSource) {
+            return this;
+        }
+        return super.getFlowing();
     }
 
     @Override
     public Fluid getSource() {
-        return isSource ? this : super.getSource();
+        if (!isSource) {
+            return super.getSource();
+        }
+        return this;
     }
 
     @Override

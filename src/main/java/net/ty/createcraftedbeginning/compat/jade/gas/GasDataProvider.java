@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.compat.jade.gas;
 
-import com.google.common.math.LongMath;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
@@ -10,6 +9,8 @@ import net.minecraft.util.Tuple;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Unmodifiable;
 import snownee.jade.api.ITooltip;
@@ -35,6 +36,8 @@ import java.util.stream.Stream;
 public class GasDataProvider {
     public static final String STORAGE_KEY = "JadeGasStorage";
     public static final String STORAGE_UID_KEY = "JadeGasStorageUid";
+
+    private static final String COMPOUND_KEY_HIDDEN_TANK_COUNT = "+";
 
     private static final ResourceLocation ICON = CCBAPI.asResource("icon");
 
@@ -72,7 +75,7 @@ public class GasDataProvider {
             return List.of(group);
         }
 
-        group.getExtraData().putInt("+", hiddenTankCount);
+        CCBNbtUtils.putInt(group.getExtraData(), COMPOUND_KEY_HIDDEN_TANK_COUNT, hiddenTankCount);
         return List.of(group);
     }
 
@@ -82,7 +85,7 @@ public class GasDataProvider {
             groups.addAll(fromGasHandler(gasHandler, creative));
         }
         ViewGroup.saveList(data, STORAGE_KEY, groups, Function.identity());
-        data.putString(STORAGE_UID_KEY, location.toString());
+        CCBNbtUtils.putString(data, STORAGE_UID_KEY, location.toString());
     }
 
     public static void appendData(ITooltip tooltip, CompoundTag data, boolean showDetails) {
@@ -138,7 +141,7 @@ public class GasDataProvider {
             }
 
             collectedGases.emptyTankCount++;
-            collectedGases.emptyCapacity = LongMath.saturatedAdd(collectedGases.emptyCapacity, capacity);
+            collectedGases.emptyCapacity = CCBMathUtils.saturatedAdd(collectedGases.emptyCapacity, capacity);
         }
 
         if (collectedGases.tankCount == 0) {

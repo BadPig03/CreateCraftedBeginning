@@ -4,6 +4,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock.VentState;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -21,21 +22,25 @@ final class AirVentLouverState {
         return 1 << direction.get3DDataValue();
     }
 
-    void load(CompoundTag tag) {
-        louverMask = tag.getInt(COMPOUND_KEY_LOUVER_MASK) & VALID_DIRECTION_MASK;
-        openedMask = tag.getInt(COMPOUND_KEY_OPENED_MASK) & louverMask;
+    void load(CompoundTag compoundTag) {
+        louverMask = CCBNbtUtils.getInt(compoundTag, COMPOUND_KEY_LOUVER_MASK) & VALID_DIRECTION_MASK;
+        openedMask = CCBNbtUtils.getInt(compoundTag, COMPOUND_KEY_OPENED_MASK) & louverMask;
     }
 
-    void save(CompoundTag tag) {
-        tag.putInt(COMPOUND_KEY_LOUVER_MASK, louverMask);
-        tag.putInt(COMPOUND_KEY_OPENED_MASK, openedMask);
+    void save(CompoundTag compoundTag) {
+        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_LOUVER_MASK, louverMask);
+        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_OPENED_MASK, openedMask);
     }
 
     VentState getLouverState(Direction direction) {
         if (!hasLouver(direction)) {
             return VentState.EMPTY;
         }
-        return isLouverOpen(direction) ? VentState.OPENED : VentState.CLOSED;
+
+        if (!isLouverOpen(direction)) {
+            return VentState.CLOSED;
+        }
+        return VentState.OPENED;
     }
 
     boolean hasLouver(Direction direction) {

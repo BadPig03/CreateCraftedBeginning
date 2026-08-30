@@ -30,7 +30,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
-import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeRestockController.Effect;
+import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeRestockController.Status;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeRestockController.Result;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBlockEntity;
@@ -38,6 +38,7 @@ import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUti
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.platform.client.ClientScreenBridge;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -55,8 +56,8 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
     }
 
     private static int toGasAmount(ValueSettings settings) {
-        int row = Mth.clamp(settings.row(), 0, ROW_MULTIPLIERS.length - 1);
-        int settingValue = Mth.clamp(settings.value(), 0, BOARD_MAX_VALUE);
+        int row = CCBMathUtils.clampNonNegative(settings.row(), ROW_MULTIPLIERS.length - 1);
+        int settingValue = CCBMathUtils.clampNonNegative(settings.value(), BOARD_MAX_VALUE);
         return Math.min(settingValue * ROW_MULTIPLIERS[row], MAX_TARGET_AMOUNT);
     }
 
@@ -99,7 +100,7 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
         super.read(compoundTag, provider, clientPacket);
         activeCraftingArrangement = List.of();
         upTo = true;
-        count = Mth.clamp(count, 0, MAX_TARGET_AMOUNT);
+        count = CCBMathUtils.clampNonNegative(count, MAX_TARGET_AMOUNT);
         ItemStack gasFilter = getFilter();
         if (gasFilter.isEmpty() || GasVirtualUtils.isVirtualItem(gasFilter)) {
             return;
@@ -149,7 +150,7 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
 
     @Override
     public ValueSettings getValueSettings() {
-        int targetAmount = Mth.clamp(count, 0, MAX_TARGET_AMOUNT);
+        int targetAmount = CCBMathUtils.clampNonNegative(count, MAX_TARGET_AMOUNT);
         if (targetAmount == 0) {
             return new ValueSettings(0, 0);
         }
@@ -199,7 +200,10 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
 
     @Override
     public ItemRequirement getRequiredItems() {
-        return isActive() ? new ItemRequirement(ItemUseType.CONSUME, new ItemStack(CCBBlocks.GAS_FACTORY_GAUGE_BLOCK)) : ItemRequirement.NONE;
+        if (!isActive()) {
+            return ItemRequirement.NONE;
+        }
+        return new ItemRequirement(ItemUseType.CONSUME, new ItemStack(CCBBlocks.GAS_FACTORY_GAUGE_BLOCK));
     }
 
     @Override
@@ -219,8 +223,8 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
         }
 
         Result restockResult = GasFactoryGaugeRestockController.request(network, gasToken, packager, count, getPromised(), getLevelInStorage(), recipeAddress);
-        if (restockResult.effect() != Effect.NONE) {
-            sendGasEffect(restockResult.effect() == Effect.SUCCESS);
+        if (restockResult.status() != Status.NONE) {
+            sendGasStatus(restockResult.status() == Status.SUCCESS);
         }
         if (restockResult.promisedGas() == null) {
             return;
@@ -248,7 +252,7 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
         }
     }
 
-    private void sendGasEffect(boolean success) {
+    private void sendGasStatus(boolean success) {
         if (!(getWorld() instanceof ServerLevel serverLevel)) {
             return;
         }

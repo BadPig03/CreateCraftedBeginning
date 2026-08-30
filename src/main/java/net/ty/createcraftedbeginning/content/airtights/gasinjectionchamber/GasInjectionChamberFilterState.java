@@ -5,6 +5,7 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Optional;
@@ -53,16 +54,16 @@ final class GasInjectionChamberFilterState {
         this.clientLocked = clientLocked;
     }
 
-    void writeInstalledFilter(CompoundTag tag, Provider provider) {
+    void writeInstalledFilter(CompoundTag compoundTag, Provider provider) {
         if (installedFilter.isEmpty()) {
             return;
         }
 
-        tag.put(COMPOUND_KEY_INSTALLED_FILTER, installedFilter.saveOptional(provider));
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_INSTALLED_FILTER, installedFilter.saveOptional(provider));
     }
 
-    void readInstalledFilter(CompoundTag tag, Provider provider) {
-        installedFilter = tag.contains(COMPOUND_KEY_INSTALLED_FILTER) ? ItemStack.parseOptional(provider, tag.getCompound(COMPOUND_KEY_INSTALLED_FILTER)) : ItemStack.EMPTY;
+    void readInstalledFilter(CompoundTag compoundTag, Provider provider) {
+        installedFilter = CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_INSTALLED_FILTER) ? ItemStack.parseOptional(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_INSTALLED_FILTER)) : ItemStack.EMPTY;
         if (GasInjectionChamberUtils.isFilter(installedFilter)) {
             return;
         }

@@ -101,9 +101,9 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (blockEntity, direction) -> blockEntity.itemPortCapability);
-        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (blockEntity, direction) -> blockEntity.fluidPortCapability);
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (blockEntity, direction) -> blockEntity.gasPortCapability);
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (be, direction) -> be.itemPortCapability);
+        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (be, direction) -> be.fluidPortCapability);
+        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (be, direction) -> be.gasPortCapability);
     }
 
     static int getFluidCapacity() {

@@ -188,10 +188,16 @@ public class CombinedGasTankWrapper implements IGasHandler {
     }
 
     protected IGasHandler getHandlerFromIndex(int index) {
-        return index < 0 || index >= gasHandlers.length ? EmptyGasHandler.INSTANCE : gasHandlers[index];
+        if (index < 0 || index >= gasHandlers.length) {
+            return EmptyGasHandler.INSTANCE;
+        }
+        return gasHandlers[index];
     }
 
     protected int getSlotFromIndex(int slot, int index) {
-        return index <= 0 || index >= baseIndex.length ? slot : slot - baseIndex[index - 1];
+        if (index <= 0 || index >= baseIndex.length) {
+            return slot;
+        }
+        return slot - baseIndex[index - 1];
     }
 }

@@ -11,6 +11,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverCore;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -64,12 +65,12 @@ final class AirtightEngineDriveController {
         return persistedGeneratedSpeed;
     }
 
-    void writePersistent(CompoundTag tag) {
-        tag.putFloat(COMPOUND_KEY_GENERATED_SPEED, persistedGeneratedSpeed);
+    void writePersistent(CompoundTag compoundTag) {
+        CCBNbtUtils.putFloat(compoundTag, COMPOUND_KEY_GENERATED_SPEED, persistedGeneratedSpeed);
     }
 
-    void readPersistent(CompoundTag tag) {
-        float storedGeneratedSpeed = tag.contains(COMPOUND_KEY_GENERATED_SPEED) ? tag.getFloat(COMPOUND_KEY_GENERATED_SPEED) : 0;
+    void readPersistent(CompoundTag compoundTag) {
+        float storedGeneratedSpeed = CCBNbtUtils.getFloatOrDefault(compoundTag, COMPOUND_KEY_GENERATED_SPEED, 0);
         restoredGeneratedSpeed = GasConsumptions.isFinite(storedGeneratedSpeed) ? storedGeneratedSpeed : 0;
         persistedGeneratedSpeed = restoredGeneratedSpeed;
     }
@@ -86,7 +87,10 @@ final class AirtightEngineDriveController {
 
     @Nullable AirtightAssemblyDriverCore getDriverCore() {
         AirtightTankBlockEntity tankController = getTankController();
-        return tankController == null ? null : tankController.getCore();
+        if (tankController == null) {
+            return null;
+        }
+        return tankController.getCore();
     }
 
     private void refreshGeneratedRotationIfNeeded() {

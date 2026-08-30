@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.crates;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
 
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Predicate;
 
@@ -18,7 +19,7 @@ record DiscardingCrateInsertionPlan(ItemStack content, int count, boolean tracke
         }
 
         if (ItemStack.isSameItemSameComponents(storedContent, incomingStack)) {
-            int acceptedCount = Math.clamp(maxCount - storedCount, 0, incomingCount);
+            int acceptedCount = CCBMathUtils.clampNonNegative(maxCount - storedCount, incomingCount);
             int nextCount = storedCount + acceptedCount;
             boolean trackedDiscard = trackedItemPredicate.test(incomingStack) && acceptedCount < incomingCount;
             return new DiscardingCrateInsertionPlan(storedContent, nextCount, trackedDiscard);

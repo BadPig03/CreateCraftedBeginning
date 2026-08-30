@@ -12,7 +12,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -28,6 +27,7 @@ import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlareSupplierUtils
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
 import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBItems;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.ref.WeakReference;
@@ -128,7 +128,7 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
         boolean isUsing = player.getUseItem() == cannon;
         int useTime = isUsing ? cannon.getUseDuration(player) - player.getUseItemRemainingTicks() : 0;
         float chargeTime = useTime + (isUsing ? partialTick : 0);
-        float barrelOffset = Mth.clamp(chargeTime / AirtightCannonUtils.getEfficientUseTime(cannon), 0, 2) / 10;
+        float barrelOffset = CCBMathUtils.clampNonNegative(chargeTime / AirtightCannonUtils.getEfficientUseTime(cannon), 2) / 10;
 
         poseStack.pushPose();
         poseStack.translate(0, 0, barrelOffset);
@@ -137,7 +137,7 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
 
         boolean isLeftHanded = player.getMainArm() == HumanoidArm.LEFT;
         float pistonAnimation = AirtightCannonRenderHandler.INSTANCE.getAnimation(isInMainHand ^ isLeftHanded, partialTick);
-        float pistonOffset = Mth.clamp(pistonAnimation * 2, 0, 1) / 8;
+        float pistonOffset = CCBMathUtils.clampUnit(pistonAnimation * 2) / 8;
 
         poseStack.pushPose();
         poseStack.translate(pistonOffset, 0, 0);

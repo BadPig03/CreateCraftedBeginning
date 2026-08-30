@@ -38,8 +38,8 @@ import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCa
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonRenderHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtightencasedpipe.AirtightEncasedPipeOutlineRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.AirtightExtendArmRenderHandler;
-import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillOutlineRenderer;
-import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillRenderHandler;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillOutlineRenderer;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillRenderHandler;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlay;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberRecipeIndex;
 import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
@@ -120,7 +120,12 @@ public class CCBClientEvents {
     @SubscribeEvent
     public static void onRegisterItemColors(Item event) {
         event.register((stack, tintIndex) -> stack.getOrDefault(CCBDataComponents.GAS_VIRTUAL_ITEM_COLOR, 0xFFFFFFFF), CCBItems.GAS_VIRTUAL_ITEM.get());
-        event.register((stack, tintIndex) -> tintIndex != 0 ? 0xFFFFFFFF : stack.getOrDefault(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_COLOR, 0xFFFFFFFF), CCBItems.GAS_INJECTION_CHAMBER_FILTER.get());
+        event.register((stack, tintIndex) -> {
+            if (tintIndex != 0) {
+                return 0xFFFFFFFF;
+            }
+            return stack.getOrDefault(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_COLOR, 0xFFFFFFFF);
+        }, CCBItems.GAS_INJECTION_CHAMBER_FILTER.get());
     }
 
     @SubscribeEvent

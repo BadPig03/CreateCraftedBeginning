@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.airtightengine.airtighta
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -22,52 +23,52 @@ final class AirtightAssemblyDriverSerialization {
 
     CompoundTag write(Provider provider, boolean clientPacket) {
         CompoundTag tag = new CompoundTag();
-        tag.put(COMPOUND_KEY_FLOW_METER, driverCore.getFlowMeter().write(provider, clientPacket));
-        tag.put(COMPOUND_KEY_LEVEL_CALCULATOR, driverCore.getLevelCalculator().write(clientPacket));
+        CCBNbtUtils.putTag(tag, COMPOUND_KEY_FLOW_METER, driverCore.getFlowMeter().write(provider, clientPacket));
+        CCBNbtUtils.putTag(tag, COMPOUND_KEY_LEVEL_CALCULATOR, driverCore.getLevelCalculator().write(clientPacket));
         if (clientPacket) {
-            tag.put(COMPOUND_KEY_STRUCTURE_MANAGER, driverCore.getStructureManager().writeClient());
+            CCBNbtUtils.putTag(tag, COMPOUND_KEY_STRUCTURE_MANAGER, driverCore.getStructureManager().writeClient());
         }
         else {
-            tag.put(COMPOUND_KEY_RESIDUE_MANAGER, driverCore.getResidueManager().writePersistent());
+            CCBNbtUtils.putTag(tag, COMPOUND_KEY_RESIDUE_MANAGER, driverCore.getResidueManager().writePersistent());
         }
         return tag;
     }
 
-    void read(CompoundTag tag, Provider provider, boolean clientPacket) {
+    void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         if (clientPacket) {
-            readClient(tag, provider);
+            readClient(compoundTag, provider);
         }
         else {
-            readPersistent(tag, provider);
+            readPersistent(compoundTag, provider);
         }
         driverCore.getController().onReadComplete();
     }
 
-    private void readClient(CompoundTag tag, Provider provider) {
-        if (tag.contains(COMPOUND_KEY_FLOW_METER)) {
-            driverCore.getFlowMeter().read(tag.getCompound(COMPOUND_KEY_FLOW_METER), provider, true);
+    private void readClient(CompoundTag compoundTag, Provider provider) {
+        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_FLOW_METER)) {
+            driverCore.getFlowMeter().read(CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_FLOW_METER), provider, true);
         }
-        if (tag.contains(COMPOUND_KEY_STRUCTURE_MANAGER)) {
-            driverCore.getStructureManager().readClient(tag.getCompound(COMPOUND_KEY_STRUCTURE_MANAGER));
+        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_STRUCTURE_MANAGER)) {
+            driverCore.getStructureManager().readClient(CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_STRUCTURE_MANAGER));
         }
-        if (!tag.contains(COMPOUND_KEY_LEVEL_CALCULATOR)) {
+        if (!CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_LEVEL_CALCULATOR)) {
             return;
         }
 
-        driverCore.getLevelCalculator().read(tag.getCompound(COMPOUND_KEY_LEVEL_CALCULATOR), true);
+        driverCore.getLevelCalculator().read(CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_LEVEL_CALCULATOR), true);
     }
 
-    private void readPersistent(CompoundTag tag, Provider provider) {
-        CompoundTag levelTag = tag.contains(COMPOUND_KEY_LEVEL_CALCULATOR) ? tag.getCompound(COMPOUND_KEY_LEVEL_CALCULATOR) : new CompoundTag();
+    private void readPersistent(CompoundTag compoundTag, Provider provider) {
+        CompoundTag levelTag = CCBNbtUtils.getCompoundOrEmpty(compoundTag, COMPOUND_KEY_LEVEL_CALCULATOR);
         driverCore.getLevelCalculator().read(levelTag, false);
-        if (tag.contains(COMPOUND_KEY_FLOW_METER)) {
-            driverCore.getFlowMeter().read(tag.getCompound(COMPOUND_KEY_FLOW_METER), provider, false);
+        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_FLOW_METER)) {
+            driverCore.getFlowMeter().read(CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_FLOW_METER), provider, false);
         }
         else {
             driverCore.getFlowMeter().loadEmptyState();
         }
-        if (tag.contains(COMPOUND_KEY_RESIDUE_MANAGER)) {
-            driverCore.getResidueManager().readPersistent(tag.getCompound(COMPOUND_KEY_RESIDUE_MANAGER));
+        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_RESIDUE_MANAGER)) {
+            driverCore.getResidueManager().readPersistent(CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_RESIDUE_MANAGER));
         }
         else {
             driverCore.getResidueManager().loadEmptyPersistentState();

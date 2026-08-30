@@ -43,7 +43,10 @@ final class CreativeAirtightTankDisplay {
     }
 
     int getMaxValue() {
-        return owner.getControllerBE() == null ? 0 : GasAmounts.toWholeBucketsClamped(CreativeAirtightTankBlockEntity.getCapacityPerTank());
+        if (owner.getControllerBE() == null) {
+            return 0;
+        }
+        return GasAmounts.toWholeBucketsClamped(CreativeAirtightTankBlockEntity.getCapacityPerTank());
     }
 
     int getCurrentValue() {

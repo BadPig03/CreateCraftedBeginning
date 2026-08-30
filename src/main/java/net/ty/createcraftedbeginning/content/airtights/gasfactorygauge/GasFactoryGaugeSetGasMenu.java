@@ -57,7 +57,10 @@ public class GasFactoryGaugeSetGasMenu extends GhostItemMenu<GasFactoryGaugeBeha
     @Override
     @OnlyIn(Dist.CLIENT)
     protected @Nullable GasFactoryGaugeBehaviour createOnClient(RegistryFriendlyByteBuf extraData) {
-        return ClientScreenBridge.resolveFactoryPanelBehaviour(extraData) instanceof GasFactoryGaugeBehaviour behaviour ? behaviour : null;
+        if (!(ClientScreenBridge.resolveFactoryPanelBehaviour(extraData) instanceof GasFactoryGaugeBehaviour behaviour)) {
+            return null;
+        }
+        return behaviour;
     }
 
     @Override

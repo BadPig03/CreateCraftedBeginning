@@ -299,7 +299,7 @@ final class AirtightReactorKettleController {
         else {
             int recipeDuration = currentRecipe.getProcessingDuration();
             float minimumSpeed = SpeedLevel.FAST.getSpeedValue();
-            float speedMultiplier = Math.max(1.0f, processingSpeed / minimumSpeed);
+            float speedMultiplier = Math.max(1, processingSpeed / minimumSpeed);
             processingTicks = recipeDuration <= 0 ? 1 : Mth.clamp(Mth.ceil(recipeDuration / speedMultiplier), 1, 1_000_000);
         }
 

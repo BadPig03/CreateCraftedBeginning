@@ -18,6 +18,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.items.IItemHandler;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
@@ -86,7 +87,7 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
         for (int slot = 0; slot < itemHandler.getSlots(); slot++) {
             maxItemCount += itemHandler.getSlotLimit(slot);
         }
-        return Math.clamp(maxItemCount, 0, Integer.MAX_VALUE);
+        return CCBMathUtils.clampToNonNegativeInt(maxItemCount);
     }
 
     @Override
@@ -110,7 +111,7 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
         for (int slot = 0; slot < itemHandler.getSlots(); slot++) {
             storedItemCount += itemHandler.getStackInSlot(slot).getCount();
         }
-        return Math.clamp(storedItemCount, 0, Integer.MAX_VALUE);
+        return CCBMathUtils.clampToNonNegativeInt(storedItemCount);
     }
 
     @Override

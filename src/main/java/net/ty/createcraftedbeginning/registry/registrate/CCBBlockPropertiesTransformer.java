@@ -15,8 +15,8 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.material.MapColor;
 import net.ty.createcraftedbeginning.config.CCBStress;
-import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankMovementBehavior;
-import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankMovementBehavior;
+import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankMovementBehaviour;
+import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankMovementBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorageType;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceMovement;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineUtils;
@@ -87,17 +87,17 @@ public final class CCBBlockPropertiesTransformer {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> airtightTank() {
-        return builder -> applyAirtightComponent(builder).transform(MountedGasStorageType.mountedGasStorage(CCBMountedStorage.AIRTIGHT_TANK)).onRegister(MovementBehaviour.movementBehaviour(new AirtightTankMovementBehavior()));
+        return builder -> applyAirtightComponent(builder).transform(MountedGasStorageType.mountedGasStorage(CCBMountedStorage.AIRTIGHT_TANK)).onRegister(MovementBehaviour.movementBehaviour(new AirtightTankMovementBehaviour()));
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> horizontalAirtightTank() {
-        return builder -> applyAirtightComponent(builder).transform(MountedGasStorageType.mountedGasStorage(CCBMountedStorage.HORIZONTAL_AIRTIGHT_TANK)).onRegister(MovementBehaviour.movementBehaviour(new AirtightTankMovementBehavior()));
+        return builder -> applyAirtightComponent(builder).transform(MountedGasStorageType.mountedGasStorage(CCBMountedStorage.HORIZONTAL_AIRTIGHT_TANK)).onRegister(MovementBehaviour.movementBehaviour(new AirtightTankMovementBehaviour()));
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> creativeAirtightTank() {
-        return builder -> applyAirtightComponent(builder).transform(MountedGasStorageType.mountedGasStorage(CCBMountedStorage.CREATIVE_AIRTIGHT_TANK)).onRegister(MovementBehaviour.movementBehaviour(new CreativeAirtightTankMovementBehavior()));
+        return builder -> applyAirtightComponent(builder).transform(MountedGasStorageType.mountedGasStorage(CCBMountedStorage.CREATIVE_AIRTIGHT_TANK)).onRegister(MovementBehaviour.movementBehaviour(new CreativeAirtightTankMovementBehaviour()));
     }
 
     @Contract(pure = true)
@@ -156,13 +156,18 @@ public final class CCBBlockPropertiesTransformer {
     }
 
     @Contract(pure = true)
-    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> photoSail() {
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> solarCollector() {
         return builder -> pickaxeOnly(builder.initialProperties(CCBSharedProperties::stone)).properties(properties -> properties.mapColor(MapColor.COLOR_PURPLE).noOcclusion());
     }
 
     @Contract(pure = true)
-    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> photoStressBearing() {
-        return builder -> pickaxeOnly(builder.initialProperties(CCBSharedProperties::stone)).transform(CCBStress.setCapacity(8)).properties(properties -> properties.mapColor(MapColor.COLOR_PURPLE).noOcclusion());
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> laserEmitter() {
+        return builder -> pickaxeOnly(builder.initialProperties(CCBSharedProperties::stone)).properties(properties -> properties.mapColor(MapColor.COLOR_PURPLE).noOcclusion());
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CCBRegistrate>> laserReceiver() {
+        return builder -> pickaxeOnly(builder.initialProperties(CCBSharedProperties::stone)).transform(CCBStress.setCapacity(128)).properties(properties -> properties.mapColor(MapColor.COLOR_PURPLE).noOcclusion());
     }
 
     @Contract(pure = true)

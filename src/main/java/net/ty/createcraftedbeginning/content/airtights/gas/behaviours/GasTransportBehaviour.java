@@ -25,6 +25,7 @@ import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPipeConn
 import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPipeConnection.GasFlow;
 import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPropagator;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBBlockTags;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -389,11 +390,11 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
 
     private void readRetiredConnections(CompoundTag compoundTag, Provider provider) {
         retiredConnections = null;
-        if (!compoundTag.contains(COMPOUND_KEY_RETIRED_CONNECTIONS, Tag.TAG_LIST)) {
+        if (!CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_RETIRED_CONNECTIONS, Tag.TAG_LIST)) {
             return;
         }
 
-        ListTag retiredData = compoundTag.getList(COMPOUND_KEY_RETIRED_CONNECTIONS, Tag.TAG_COMPOUND);
+        ListTag retiredData = CCBNbtUtils.getList(compoundTag, COMPOUND_KEY_RETIRED_CONNECTIONS, Tag.TAG_COMPOUND);
         for (int connectionIndex = 0; connectionIndex < retiredData.size(); connectionIndex++) {
             GasPipeConnection connection = GasPipeConnection.readRetiredData(retiredData.getCompound(connectionIndex), provider);
             if (connection == null) {
@@ -415,7 +416,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         ListTag retiredData = new ListTag();
         for (GasPipeConnection connection : retiredConnections) {
             CompoundTag connectionData = connection.writeRetiredData(provider);
-            if (connectionData.isEmpty()) {
+            if (CCBNbtUtils.isEmpty(connectionData)) {
                 continue;
             }
 
@@ -425,7 +426,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
             return;
         }
 
-        compoundTag.put(COMPOUND_KEY_RETIRED_CONNECTIONS, retiredData);
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_RETIRED_CONNECTIONS, retiredData);
     }
 
     private void updateSources(Level level, BlockPos pos, Collection<GasPipeConnection> connections) {

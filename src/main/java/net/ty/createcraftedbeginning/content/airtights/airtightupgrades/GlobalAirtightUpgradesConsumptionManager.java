@@ -42,7 +42,10 @@ public final class GlobalAirtightUpgradesConsumptionManager {
 
     private static double getRawGasConsumption(Player player, AirtightUpgrade upgrade, EquipmentSlot equipmentSlot, float baseConsumption, AirtightArmorsHandler armorHandler) {
         double rawGasConsumption = baseConsumption * armorHandler.getConsumptionMultiplier(equipmentSlot) * upgrade.getGasConsumptionMultiplier(player);
-        return GasConsumptions.isNonNegativeFinite(rawGasConsumption) ? rawGasConsumption : -1;
+        if (!GasConsumptions.isNonNegativeFinite(rawGasConsumption)) {
+            return -1;
+        }
+        return rawGasConsumption;
     }
 
     private static void clearExpired(Player player) {

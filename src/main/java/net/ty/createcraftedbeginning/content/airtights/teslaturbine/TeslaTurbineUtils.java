@@ -57,7 +57,10 @@ public final class TeslaTurbineUtils {
     }
 
     static List<NozzlePort> getNozzlePorts(boolean clockwise) {
-        return clockwise ? CLOCKWISE_NOZZLE_PORTS : COUNTER_CLOCKWISE_NOZZLE_PORTS;
+        if (!clockwise) {
+            return COUNTER_CLOCKWISE_NOZZLE_PORTS;
+        }
+        return CLOCKWISE_NOZZLE_PORTS;
     }
 
     public enum NozzlePort {

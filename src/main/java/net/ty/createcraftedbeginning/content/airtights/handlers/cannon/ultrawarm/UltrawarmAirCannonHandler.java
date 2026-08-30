@@ -26,6 +26,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCa
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBDamageTypes;
 import net.ty.createcraftedbeginning.registry.CCBItems;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -40,7 +41,7 @@ public class UltrawarmAirCannonHandler implements AirtightCannonHandler, Airtigh
     protected static void addIgnition(List<LivingEntity> entities, int duration, float multiplier) {
         int ignitionTime = Math.round(duration * multiplier);
         for (LivingEntity entity : entities) {
-            entity.igniteForTicks(Math.clamp(entity.getRemainingFireTicks() + ignitionTime, 0, Short.MAX_VALUE));
+            entity.igniteForTicks(CCBMathUtils.clampNonNegative(entity.getRemainingFireTicks() + ignitionTime, Short.MAX_VALUE));
         }
     }
 

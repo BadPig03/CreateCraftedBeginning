@@ -5,6 +5,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.coolantshandlers.CoolantEfficiency;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,38 +26,36 @@ final class AirCompressorState {
     private WorkState workState = WorkState.EMPTY;
 
     private static OverheatState readClientOverheatState(CompoundTag compoundTag) {
-        if (!compoundTag.contains(CLIENT_KEY_OVERHEAT_STATE)) {
-            return OverheatState.NORMAL;
-        }
-        return OverheatState.fromName(compoundTag.getString(CLIENT_KEY_OVERHEAT_STATE));
+        String serializedState = CCBNbtUtils.getStringOrDefault(compoundTag, CLIENT_KEY_OVERHEAT_STATE, OverheatState.NORMAL.getSerializedName());
+        return OverheatState.fromName(serializedState);
     }
 
     private static int readStoredHeat(CompoundTag compoundTag) {
-        return AirCompressorThermal.clampStoredHeat(compoundTag.getInt(COMPOUND_KEY_STORED_HEAT));
+        return AirCompressorThermal.clampStoredHeat(CCBNbtUtils.getInt(compoundTag, COMPOUND_KEY_STORED_HEAT));
     }
 
     private static WorkState readWorkState(CompoundTag compoundTag) {
-        if (!compoundTag.contains(COMPOUND_KEY_WORK_STATE)) {
+        if (!CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_WORK_STATE)) {
             return WorkState.EMPTY;
         }
 
-        CompoundTag workTag = compoundTag.getCompound(COMPOUND_KEY_WORK_STATE);
-        ResourceLocation recipeId = ResourceLocation.tryParse(workTag.getString(COMPOUND_KEY_WORK_RECIPE));
-        long accumulatedWork = workTag.getLong(COMPOUND_KEY_ACCUMULATED_WORK);
+        CompoundTag workTag = CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_WORK_STATE);
+        ResourceLocation recipeId = ResourceLocation.tryParse(CCBNbtUtils.getString(workTag, COMPOUND_KEY_WORK_RECIPE));
+        long accumulatedWork = CCBNbtUtils.getLong(workTag, COMPOUND_KEY_ACCUMULATED_WORK);
         return new WorkState(recipeId, accumulatedWork);
     }
 
     private static void writeWorkState(CompoundTag compoundTag, WorkState workState) {
         ResourceLocation recipeId = workState.recipeId();
         if (recipeId == null) {
-            compoundTag.remove(COMPOUND_KEY_WORK_STATE);
+            CCBNbtUtils.remove(compoundTag, COMPOUND_KEY_WORK_STATE);
             return;
         }
 
         CompoundTag workTag = new CompoundTag();
-        workTag.putString(COMPOUND_KEY_WORK_RECIPE, recipeId.toString());
-        workTag.putLong(COMPOUND_KEY_ACCUMULATED_WORK, workState.accumulatedWork());
-        compoundTag.put(COMPOUND_KEY_WORK_STATE, workTag);
+        CCBNbtUtils.putString(workTag, COMPOUND_KEY_WORK_RECIPE, recipeId.toString());
+        CCBNbtUtils.putLong(workTag, COMPOUND_KEY_ACCUMULATED_WORK, workState.accumulatedWork());
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_WORK_STATE, workTag);
     }
 
     CoolantEfficiency getCoolantEfficiency() {
@@ -98,11 +97,11 @@ final class AirCompressorState {
 
     void write(CompoundTag compoundTag, boolean clientPacket) {
         if (clientPacket) {
-            compoundTag.putString(CLIENT_KEY_OVERHEAT_STATE, overheatState.getSerializedName());
+            CCBNbtUtils.putString(compoundTag, CLIENT_KEY_OVERHEAT_STATE, overheatState.getSerializedName());
             return;
         }
 
-        compoundTag.putInt(COMPOUND_KEY_STORED_HEAT, AirCompressorThermal.clampStoredHeat(storedHeat));
+        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_STORED_HEAT, AirCompressorThermal.clampStoredHeat(storedHeat));
         writeWorkState(compoundTag, workState);
     }
 

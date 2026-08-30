@@ -70,7 +70,10 @@ final class GasNetworkTraversal {
         }
 
         int zComparison = Integer.compare(firstPos.getZ(), secondPos.getZ());
-        return zComparison != 0 ? zComparison : Integer.compare(first.getFace().ordinal(), second.getFace().ordinal());
+        if (zComparison != 0) {
+            return zComparison;
+        }
+        return Integer.compare(first.getFace().ordinal(), second.getFace().ordinal());
     }
 
     void reset() {
@@ -133,7 +136,10 @@ final class GasNetworkTraversal {
 
     boolean hasTransferTargets() {
         promoteStableTopology();
-        return sharedTopology == null ? !targets.isEmpty() : !sharedTopology.isEmpty();
+        if (sharedTopology == null) {
+            return !targets.isEmpty();
+        }
+        return !sharedTopology.isEmpty();
     }
 
     List<BlockFace> claimTargetProbeWindow(int maxTargets) {

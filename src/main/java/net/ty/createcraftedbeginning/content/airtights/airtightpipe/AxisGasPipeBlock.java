@@ -210,7 +210,10 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
 
     @Override
     public FluidState getFluidState(BlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.defaultFluidState() : super.getFluidState(state);
+        if (!state.getValue(WATERLOGGED)) {
+            return super.getFluidState(state);
+        }
+        return Fluids.WATER.defaultFluidState();
     }
 
     @Override

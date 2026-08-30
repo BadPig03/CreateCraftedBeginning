@@ -3,13 +3,14 @@ package net.ty.createcraftedbeginning.content.airtights.airtightengine.airtighta
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverResiduePlanner.GenerationPlan;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletInsertionTarget;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe;
 import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe.ResidueOutput;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -66,11 +67,11 @@ class AirtightAssemblyDriverResidueManager {
     }
 
     private static int readBoundedInt(CompoundTag compoundTag, String key, int fallback, int max) {
-        return compoundTag.contains(key) ? Mth.clamp(compoundTag.getInt(key), 0, max) : fallback;
+        return CCBMathUtils.clampNonNegative(CCBNbtUtils.getIntOrDefault(compoundTag, key, fallback), max);
     }
 
     private static Set<BlockPos> readOutletPositions(CompoundTag compoundTag) {
-        long[] storedPositions = compoundTag.getLongArray(COMPOUND_KEY_VERIFIED_OUTLET_POSITIONS);
+        long[] storedPositions = CCBNbtUtils.getLongArray(compoundTag, COMPOUND_KEY_VERIFIED_OUTLET_POSITIONS);
         if (storedPositions.length == 0) {
             return Set.of();
         }
@@ -165,12 +166,12 @@ class AirtightAssemblyDriverResidueManager {
 
     CompoundTag writePersistent() {
         CompoundTag tag = new CompoundTag();
-        tag.putInt(COMPOUND_KEY_GENERATION_COOLDOWN, generationCooldown);
-        tag.putInt(COMPOUND_KEY_CONSECUTIVE_FAILURE_TICKS, consecutiveFailureTicks);
-        tag.putInt(COMPOUND_KEY_SUCCESS_COUNT, successCount);
-        tag.putInt(COMPOUND_KEY_ITEM_DISTRIBUTION_CURSOR, itemDistributionCursor);
-        tag.putInt(COMPOUND_KEY_FLUID_DISTRIBUTION_CURSOR, fluidDistributionCursor);
-        tag.putLongArray(COMPOUND_KEY_VERIFIED_OUTLET_POSITIONS, verifiedOutletPositions.stream().mapToLong(BlockPos::asLong).sorted().toArray());
+        CCBNbtUtils.putInt(tag, COMPOUND_KEY_GENERATION_COOLDOWN, generationCooldown);
+        CCBNbtUtils.putInt(tag, COMPOUND_KEY_CONSECUTIVE_FAILURE_TICKS, consecutiveFailureTicks);
+        CCBNbtUtils.putInt(tag, COMPOUND_KEY_SUCCESS_COUNT, successCount);
+        CCBNbtUtils.putInt(tag, COMPOUND_KEY_ITEM_DISTRIBUTION_CURSOR, itemDistributionCursor);
+        CCBNbtUtils.putInt(tag, COMPOUND_KEY_FLUID_DISTRIBUTION_CURSOR, fluidDistributionCursor);
+        CCBNbtUtils.putLongArray(tag, COMPOUND_KEY_VERIFIED_OUTLET_POSITIONS, verifiedOutletPositions.stream().mapToLong(BlockPos::asLong).sorted().toArray());
         return tag;
     }
 
@@ -180,8 +181,8 @@ class AirtightAssemblyDriverResidueManager {
         generationCooldown = readBoundedInt(compoundTag, COMPOUND_KEY_GENERATION_COOLDOWN, GENERATION_INTERVAL_TICKS, GENERATION_INTERVAL_TICKS);
         consecutiveFailureTicks = readBoundedInt(compoundTag, COMPOUND_KEY_CONSECUTIVE_FAILURE_TICKS, 0, FAILURE_PENALTY_TICKS);
         successCount = readBoundedInt(compoundTag, COMPOUND_KEY_SUCCESS_COUNT, 0, CONSECUTIVE_SUCCESSES_COUNT);
-        itemDistributionCursor = compoundTag.contains(COMPOUND_KEY_ITEM_DISTRIBUTION_CURSOR) ? Math.max(0, compoundTag.getInt(COMPOUND_KEY_ITEM_DISTRIBUTION_CURSOR)) : 0;
-        fluidDistributionCursor = compoundTag.contains(COMPOUND_KEY_FLUID_DISTRIBUTION_CURSOR) ? Math.max(0, compoundTag.getInt(COMPOUND_KEY_FLUID_DISTRIBUTION_CURSOR)) : 0;
+        itemDistributionCursor = Math.max(0, CCBNbtUtils.getIntOrDefault(compoundTag, COMPOUND_KEY_ITEM_DISTRIBUTION_CURSOR, 0));
+        fluidDistributionCursor = Math.max(0, CCBNbtUtils.getIntOrDefault(compoundTag, COMPOUND_KEY_FLUID_DISTRIBUTION_CURSOR, 0));
     }
 
     private void scanAndGenerateResidues(Level level) {
@@ -293,14 +294,14 @@ class AirtightAssemblyDriverResidueManager {
 
     private void addResidueLevel(int levelIncrease) {
         AirtightAssemblyDriverLevelCalculator levelCalculator = driverCore.getLevelCalculator();
-        int updatedResidueLevel = Mth.clamp(levelCalculator.getResidueLevel() + levelIncrease, 0, MAX_LEVEL);
+        int updatedResidueLevel = CCBMathUtils.clampNonNegative(levelCalculator.getResidueLevel() + levelIncrease, MAX_LEVEL);
         levelCalculator.updateResidueLevel(updatedResidueLevel);
         resetProgress();
     }
 
     private void removeResidueLevel(boolean clearAll) {
         AirtightAssemblyDriverLevelCalculator levelCalculator = driverCore.getLevelCalculator();
-        int updatedResidueLevel = clearAll ? 0 : Mth.clamp(levelCalculator.getResidueLevel() - 1, 0, MAX_LEVEL);
+        int updatedResidueLevel = clearAll ? 0 : CCBMathUtils.clampNonNegative(levelCalculator.getResidueLevel() - 1, MAX_LEVEL);
         levelCalculator.updateResidueLevel(updatedResidueLevel);
         resetProgress();
     }
@@ -319,7 +320,10 @@ class AirtightAssemblyDriverResidueManager {
 
     private int getTotalFluidGenerationAmount() {
         int currentLevel = driverCore.getLevelCalculator().getCurrentLevel();
-        return currentLevel == 0 ? 0 : Math.max(0, currentLevel * getFluidQuantityMultiplier());
+        if (currentLevel == 0) {
+            return 0;
+        }
+        return Math.max(0, currentLevel * getFluidQuantityMultiplier());
     }
 
     private int getTotalItemGenerationUnits() {

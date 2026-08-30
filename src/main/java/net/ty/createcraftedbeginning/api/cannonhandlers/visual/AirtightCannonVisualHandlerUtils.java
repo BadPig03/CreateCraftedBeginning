@@ -25,7 +25,10 @@ public final class AirtightCannonVisualHandlerUtils {
         }
 
         AirtightCannonVisualHandler handler = AirtightCannonVisualHandler.REGISTRY.get(gasType);
-        return handler != null ? handler : DefaultCannonHandler.INSTANCE;
+        if (handler == null) {
+            return DefaultCannonHandler.INSTANCE;
+        }
+        return handler;
     }
 
     public static void register(ResourceLocation location, AirtightCannonVisualHandler handler) {

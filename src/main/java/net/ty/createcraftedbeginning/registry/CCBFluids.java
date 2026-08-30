@@ -40,7 +40,7 @@ public class CCBFluids {
     private static final DeferredRegister<FluidType> FLUID_TYPES = DeferredRegister.create(Keys.FLUID_TYPES, CCBAPI.MOD_ID);
 
     static {
-        CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.PHOTO_STRESSES);
+        CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.OPTICAL_POWER);
     }
 
     public static final FluidEntry<AmethystSuspensionVirtualFluid> AMETHYST_SUSPENSION = CCB_REGISTRATE.amethyst_suspension_fluid("amethyst_suspension").lang("Amethyst Suspension").bucket(AmethystSuspensionBucketItem::new).build().register();

@@ -79,7 +79,10 @@ public final class GasDrawerTank extends GasTank {
 
     @Override
     public long getTankCapacity(int ignoredTank) {
-        return owner.isCreative() ? Long.MAX_VALUE : capacity;
+        if (owner.isCreative()) {
+            return Long.MAX_VALUE;
+        }
+        return capacity;
     }
 
     @Override
@@ -89,12 +92,18 @@ public final class GasDrawerTank extends GasTank {
 
     @Override
     public long getCapacity() {
-        return owner.isCreative() ? Long.MAX_VALUE : capacity;
+        if (owner.isCreative()) {
+            return Long.MAX_VALUE;
+        }
+        return capacity;
     }
 
     @Override
     public long getGasAmount() {
-        return gas.isEmpty() || !owner.isCreative() ? gas.getAmount() : Long.MAX_VALUE;
+        if (!gas.isEmpty() && owner.isCreative()) {
+            return Long.MAX_VALUE;
+        }
+        return gas.getAmount();
     }
 
     @Override

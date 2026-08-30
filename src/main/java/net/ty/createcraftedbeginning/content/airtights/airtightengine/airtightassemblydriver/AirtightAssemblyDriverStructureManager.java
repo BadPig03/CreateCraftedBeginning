@@ -2,10 +2,11 @@ package net.ty.createcraftedbeginning.content.airtights.airtightengine.airtighta
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverStructureScanner.ScanResult;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -53,8 +54,8 @@ class AirtightAssemblyDriverStructureManager {
         return getMaxAttachedChambers() * MAX_LEVEL;
     }
 
-    private static int readBoundedInt(CompoundTag tag, String key, int max) {
-        return tag.contains(key) ? Mth.clamp(tag.getInt(key), 0, max) : 0;
+    private static int readBoundedInt(CompoundTag compoundTag, String key, int max) {
+        return CCBMathUtils.clampNonNegative(CCBNbtUtils.getIntOrDefault(compoundTag, key, 0), max);
     }
 
     void tick(AirtightTankBlockEntity controller) {
@@ -124,21 +125,21 @@ class AirtightAssemblyDriverStructureManager {
 
     CompoundTag writeClient() {
         CompoundTag tag = new CompoundTag();
-        tag.putInt(COMPOUND_KEY_ATTACHED_ENGINES, attachedEngines);
-        tag.putInt(COMPOUND_KEY_ATTACHED_OUTLETS, attachedOutlets);
-        tag.putInt(COMPOUND_KEY_ATTACHED_CHAMBERS, attachedChambers);
-        tag.putInt(COMPOUND_KEY_ATTACHED_WIND_CHARGING_LEVEL, attachedWindChargingLevel);
-        tag.putBoolean(COMPOUND_KEY_STRUCTURE_VALID, structureValid);
+        CCBNbtUtils.putInt(tag, COMPOUND_KEY_ATTACHED_ENGINES, attachedEngines);
+        CCBNbtUtils.putInt(tag, COMPOUND_KEY_ATTACHED_OUTLETS, attachedOutlets);
+        CCBNbtUtils.putInt(tag, COMPOUND_KEY_ATTACHED_CHAMBERS, attachedChambers);
+        CCBNbtUtils.putInt(tag, COMPOUND_KEY_ATTACHED_WIND_CHARGING_LEVEL, attachedWindChargingLevel);
+        CCBNbtUtils.putBoolean(tag, COMPOUND_KEY_STRUCTURE_VALID, structureValid);
         return tag;
     }
 
-    void readClient(CompoundTag tag) {
+    void readClient(CompoundTag compoundTag) {
         int maxAttachedSurfaceBlocks = getMaxAttachedSurfaceBlocks();
-        attachedEngines = readBoundedInt(tag, COMPOUND_KEY_ATTACHED_ENGINES, maxAttachedSurfaceBlocks);
-        attachedOutlets = readBoundedInt(tag, COMPOUND_KEY_ATTACHED_OUTLETS, maxAttachedSurfaceBlocks);
-        attachedChambers = readBoundedInt(tag, COMPOUND_KEY_ATTACHED_CHAMBERS, getMaxAttachedChambers());
-        attachedWindChargingLevel = readBoundedInt(tag, COMPOUND_KEY_ATTACHED_WIND_CHARGING_LEVEL, getMaxAttachedWindChargingLevel());
-        structureValid = tag.getBoolean(COMPOUND_KEY_STRUCTURE_VALID);
+        attachedEngines = readBoundedInt(compoundTag, COMPOUND_KEY_ATTACHED_ENGINES, maxAttachedSurfaceBlocks);
+        attachedOutlets = readBoundedInt(compoundTag, COMPOUND_KEY_ATTACHED_OUTLETS, maxAttachedSurfaceBlocks);
+        attachedChambers = readBoundedInt(compoundTag, COMPOUND_KEY_ATTACHED_CHAMBERS, getMaxAttachedChambers());
+        attachedWindChargingLevel = readBoundedInt(compoundTag, COMPOUND_KEY_ATTACHED_WIND_CHARGING_LEVEL, getMaxAttachedWindChargingLevel());
+        structureValid = CCBNbtUtils.getBoolean(compoundTag, COMPOUND_KEY_STRUCTURE_VALID);
         evaluationRequired = false;
         evaluationCooldown = 0;
     }

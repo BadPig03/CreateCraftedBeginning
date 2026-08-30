@@ -30,7 +30,7 @@ public class CCBPonderTags {
 
         PonderTagRegistrationHelper<RegistryEntry<?, ?>> entryHelper = helper.withKeyFunction(RegistryEntry::getId);
         entryHelper.addToTag(AllCreatePonderTags.CREATIVE).add(CCBBlocks.CREATIVE_AIRTIGHT_TANK_BLOCK);
-        entryHelper.addToTag(AllCreatePonderTags.KINETIC_SOURCES).add(CCBBlocks.PHOTO_STRESS_BEARING_BLOCK).add(CCBBlocks.AIRTIGHT_ENGINE_BLOCK).add(CCBBlocks.TESLA_TURBINE_BLOCK);
+        entryHelper.addToTag(AllCreatePonderTags.KINETIC_SOURCES).add(CCBBlocks.AIRTIGHT_ENGINE_BLOCK).add(CCBBlocks.TESLA_TURBINE_BLOCK);
         entryHelper.addToTag(AllCreatePonderTags.KINETIC_APPLIANCES).add(CCBBlocks.AIR_COMPRESSOR_BLOCK).add(CCBBlocks.END_INCINERATION_BLOWER_BLOCK).add(CCBBlocks.END_SCULK_SILENCER_BLOCK);
         entryHelper.addToTag(AllCreatePonderTags.HIGH_LOGISTICS).add(CCBBlocks.GAS_PACKAGER_BLOCK).add(CCBBlocks.GAS_REPACKAGER_BLOCK).add(CCBBlocks.GAS_FACTORY_GAUGE_BLOCK);
 

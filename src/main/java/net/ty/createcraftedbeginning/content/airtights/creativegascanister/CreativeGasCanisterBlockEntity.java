@@ -22,6 +22,7 @@ import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.ICre
 import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -49,19 +50,19 @@ public class CreativeGasCanisterBlockEntity extends SmartBlockEntity implements 
     }
 
     @Override
-    protected void write(CompoundTag tag, Provider provider, boolean clientPacket) {
-        super.write(tag, provider, clientPacket);
-        tag.put(COMPOUND_KEY_CANISTER, canister.saveOptional(provider));
+    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.write(compoundTag, provider, clientPacket);
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_CANISTER, canister.saveOptional(provider));
     }
 
     @Override
-    protected void read(CompoundTag tag, Provider provider, boolean clientPacket) {
-        super.read(tag, provider, clientPacket);
-        if (!tag.contains(COMPOUND_KEY_CANISTER)) {
+    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.read(compoundTag, provider, clientPacket);
+        if (!CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_CANISTER)) {
             return;
         }
 
-        canister = ItemStack.parseOptional(provider, tag.getCompound(COMPOUND_KEY_CANISTER));
+        canister = ItemStack.parseOptional(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_CANISTER));
         updateCapacity();
     }
 

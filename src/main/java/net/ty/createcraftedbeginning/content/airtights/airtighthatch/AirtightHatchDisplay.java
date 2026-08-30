@@ -58,11 +58,17 @@ final class AirtightHatchDisplay {
     }
 
     int getMaxValue() {
-        return hatch.isEmpty() ? 0 : GasAmounts.toWholeBucketsClamped(hatch.getHatchCapacity());
+        if (hatch.isEmpty()) {
+            return 0;
+        }
+        return GasAmounts.toWholeBucketsClamped(hatch.getHatchCapacity());
     }
 
     int getCurrentValue() {
-        return hatch.isEmpty() ? 0 : GasAmounts.toWholeBucketsClamped(hatch.getHatchGasContent().getAmount());
+        if (hatch.isEmpty()) {
+            return 0;
+        }
+        return GasAmounts.toWholeBucketsClamped(hatch.getHatchGasContent().getAmount());
     }
 
     MutableComponent format(int value) {

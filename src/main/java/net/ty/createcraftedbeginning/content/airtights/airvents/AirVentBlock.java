@@ -187,7 +187,10 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
 
         BooleanProperty connectionProperty = PROPERTY_BY_DIRECTION.get(direction);
         boolean shouldConnect = neighbourState.getBlock() instanceof AirVentBlock;
-        return state.getValue(connectionProperty) == shouldConnect ? state : state.setValue(connectionProperty, shouldConnect);
+        if (state.getValue(connectionProperty) != shouldConnect) {
+            return state.setValue(connectionProperty, shouldConnect);
+        }
+        return state;
     }
 
     @Override
@@ -227,7 +230,10 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
 
     @Override
     public FluidState getFluidState(BlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : Fluids.EMPTY.defaultFluidState();
+        if (!state.getValue(WATERLOGGED)) {
+            return Fluids.EMPTY.defaultFluidState();
+        }
+        return Fluids.WATER.getSource(false);
     }
 
     @Override

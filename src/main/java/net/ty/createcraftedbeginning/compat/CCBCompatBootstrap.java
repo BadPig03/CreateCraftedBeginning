@@ -22,36 +22,29 @@ public final class CCBCompatBootstrap {
     public static void initialize() {
         CCBCompatMods.CREATE_DRAGONS_PLUS.executeIfInstalled(() -> CreateDragonsPlusCompat::register);
         CCBCompatMods.DNDESIRES.executeIfInstalled(() -> DnDesiresCompat::register);
-        CCBCompatMods.SABLE.executeIfInstalled(() -> SableSubLevelCompat::install);
-        if (!CCBCompatMods.FUNCTIONAL_STORAGE.isLoaded()) {
-            return;
-        }
-
-        FunctionalStorageHook.register();
+        CCBCompatMods.SABLE.executeIfInstalled(() -> SableSubLevelCompat::register);
+        CCBCompatMods.FUNCTIONAL_STORAGE.executeIfInstalled(() -> FunctionalStorageHook::register);
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        if (!CCBCompatMods.FUNCTIONAL_STORAGE.isLoaded()) {
-            return;
-        }
-
-        FunctionalStorageHook.registerCapabilities(event);
+        CCBCompatMods.FUNCTIONAL_STORAGE.executeIfInstalled(() -> {
+            FunctionalStorageHook.registerCapabilities(event);
+            return () -> {};
+        });
     }
 
     public static void commonSetup(FMLCommonSetupEvent event) {
-        if (!CCBCompatMods.JEI.isLoaded()) {
-            return;
-        }
-
-        event.enqueueWork(JEIHook::registerMysteriousItemConversions);
+        CCBCompatMods.JEI.executeIfInstalled(() -> {
+            event.enqueueWork(JEIHook::registerMysteriousItemConversions);
+            return () -> {};
+        });
     }
 
     public static void registerClientListeners(IEventBus modEventBus) {
-        if (!CCBCompatMods.FUNCTIONAL_STORAGE.isLoaded()) {
-            return;
-        }
-
-        FunctionalStorageClientHook.registerListeners(modEventBus);
+        CCBCompatMods.FUNCTIONAL_STORAGE.executeIfInstalled(() -> {
+            FunctionalStorageClientHook.registerListeners(modEventBus);
+            return () -> {};
+        });
     }
 
     private static final class FunctionalStorageHook {

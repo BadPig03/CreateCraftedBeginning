@@ -231,7 +231,11 @@ public abstract class ProcessingWithGasRecipe<I extends RecipeInput, P extends P
         if (forcedResult != null) {
             return forcedResult.get();
         }
-        return getRollableResults().isEmpty() ? ItemStack.EMPTY : getRollableResults().getFirst().getStack();
+
+        if (getRollableResults().isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+        return getRollableResults().getFirst().getStack();
     }
 
     @Override

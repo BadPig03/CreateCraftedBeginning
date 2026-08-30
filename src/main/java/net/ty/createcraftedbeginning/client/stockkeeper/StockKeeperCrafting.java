@@ -110,7 +110,10 @@ public final class StockKeeperCrafting {
             int availableCount = stockSummary.getCountOf(requirement.stack) - alreadyOrdered;
             maxSets = Math.min(maxSets, availableCount / requirement.count);
         }
-        return maxSets == Integer.MAX_VALUE ? 0 : Math.max(0, maxSets);
+        if (maxSets == Integer.MAX_VALUE) {
+            return 0;
+        }
+        return Math.max(0, maxSets);
     }
 
     public static void updateCraftableAmounts(AbstractContainerScreen<?> screen) {
@@ -204,7 +207,10 @@ public final class StockKeeperCrafting {
             int availableCount = orderedItems.getCountOf(requirement.stack) - usedItems.getCountOf(requirement.stack);
             maxSets = Math.min(maxSets, availableCount / requirement.count);
         }
-        return maxSets == Integer.MAX_VALUE ? 0 : Math.max(0, maxSets);
+        if (maxSets == Integer.MAX_VALUE) {
+            return 0;
+        }
+        return Math.max(0, maxSets);
     }
 
     private static void refreshScreen(StockKeeperRequestScreen screen) {

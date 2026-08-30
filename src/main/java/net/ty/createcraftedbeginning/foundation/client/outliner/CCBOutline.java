@@ -250,7 +250,10 @@ public abstract class CCBOutline {
         }
 
         public float getLineWidth() {
-            return fadeLineWidth ? alpha * lineWidth : lineWidth;
+            if (fadeLineWidth) {
+                return alpha * lineWidth;
+            }
+            return lineWidth;
         }
 
         public void loadColor(Vector4f targetColor) {

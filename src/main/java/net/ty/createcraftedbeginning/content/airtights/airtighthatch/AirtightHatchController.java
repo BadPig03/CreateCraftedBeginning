@@ -7,6 +7,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -68,7 +69,7 @@ final class AirtightHatchController {
         }
 
         long acceptedAmount = shouldVoidTarget ? offeredGas.getAmount() : target.fill(offeredGas, GasAction.SIMULATE);
-        acceptedAmount = Math.clamp(acceptedAmount, 0, offeredGas.getAmount());
+        acceptedAmount = CCBMathUtils.clampNonNegative(acceptedAmount, offeredGas.getAmount());
         if (acceptedAmount == 0) {
             return;
         }
@@ -84,7 +85,7 @@ final class AirtightHatchController {
         }
 
         long filledAmount = target.fill(drainedGas, GasAction.EXECUTE);
-        filledAmount = Math.clamp(filledAmount, 0, drainedGas.getAmount());
+        filledAmount = CCBMathUtils.clampNonNegative(filledAmount, drainedGas.getAmount());
         if (isInfiniteSource || filledAmount >= drainedGas.getAmount()) {
             return;
         }

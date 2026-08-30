@@ -176,7 +176,10 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
 
     private static @Nullable ItemStack getConsumableStack(IItemHandler inventory, Ingredient ingredient) {
         if (ingredient.isEmpty()) {
-            return inventory.getStackInSlot(0).isEmpty() ? ItemStack.EMPTY : null;
+            if (!inventory.getStackInSlot(0).isEmpty()) {
+                return null;
+            }
+            return ItemStack.EMPTY;
         }
 
         ItemStack extractedStack = inventory.extractItem(0, 1, true);
@@ -193,7 +196,10 @@ public class ForgingPressRecipe extends StandardProcessingWithGasRecipe<RecipeIn
 
     private static int getAvailableCrafts(IItemHandler inventory, Ingredient ingredient, int maxCrafts) {
         if (ingredient.isEmpty()) {
-            return inventory.getStackInSlot(0).isEmpty() ? maxCrafts : 0;
+            if (!inventory.getStackInSlot(0).isEmpty()) {
+                return 0;
+            }
+            return maxCrafts;
         }
 
         ItemStack extractedStack = inventory.extractItem(0, maxCrafts, true);

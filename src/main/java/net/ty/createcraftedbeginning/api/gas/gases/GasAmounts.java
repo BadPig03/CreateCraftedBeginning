@@ -6,6 +6,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.MutableComponent;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -68,13 +69,12 @@ public final class GasAmounts {
         return formatPrecise(mb);
     }
 
-
     public static int toWholeBucketsClamped(long mb) {
-        return Math.clamp(mb / MILLIBUCKETS_PER_BUCKET, 0, Integer.MAX_VALUE);
+        return CCBMathUtils.clampToNonNegativeInt(mb / MILLIBUCKETS_PER_BUCKET);
     }
 
     public static int toMillibucketsClamped(long mb) {
-        return Math.clamp(mb, 0, Integer.MAX_VALUE);
+        return CCBMathUtils.clampToNonNegativeInt(mb);
     }
 
     public static MutableComponent formatWholeBuckets(long b) {
@@ -85,6 +85,9 @@ public final class GasAmounts {
         long tenths = amount / (unit / 10);
         long whole = tenths / 10;
         long fraction = tenths % 10;
-        return fraction == 0 ? Long.toString(whole) : whole + "." + fraction;
+        if (fraction == 0) {
+            return Long.toString(whole);
+        }
+        return whole + "." + fraction;
     }
 }

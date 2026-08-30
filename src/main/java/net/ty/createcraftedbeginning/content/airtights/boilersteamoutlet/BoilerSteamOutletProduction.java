@@ -7,6 +7,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -79,20 +81,20 @@ final class BoilerSteamOutletProduction {
 
     void write(CompoundTag compoundTag, boolean clientPacket) {
         if (clientPacket) {
-            compoundTag.putDouble(COMPOUND_KEY_PRODUCTION_RATE, currentProductionRate);
+            CCBNbtUtils.putDouble(compoundTag, COMPOUND_KEY_PRODUCTION_RATE, currentProductionRate);
             return;
         }
 
-        compoundTag.putDouble(COMPOUND_KEY_PRODUCTION_REMAINDER, productionRemainder);
+        CCBNbtUtils.putDouble(compoundTag, COMPOUND_KEY_PRODUCTION_REMAINDER, productionRemainder);
     }
 
     void read(CompoundTag compoundTag, boolean clientPacket) {
         if (clientPacket) {
-            currentProductionRate = Math.max(0, compoundTag.getDouble(COMPOUND_KEY_PRODUCTION_RATE));
+            currentProductionRate = Math.max(0, CCBNbtUtils.getDouble(compoundTag, COMPOUND_KEY_PRODUCTION_RATE));
         }
         else {
             currentProductionRate = 0;
-            double savedProductionRemainder = compoundTag.getDouble(COMPOUND_KEY_PRODUCTION_REMAINDER);
+            double savedProductionRemainder = CCBNbtUtils.getDouble(compoundTag, COMPOUND_KEY_PRODUCTION_REMAINDER);
             productionRemainder = GasConsumptions.isFinite(savedProductionRemainder) && savedProductionRemainder >= 0 && savedProductionRemainder < 1 ? savedProductionRemainder : 0;
         }
         resetTickAccounting();
@@ -122,7 +124,7 @@ final class BoilerSteamOutletProduction {
             return 0;
         }
 
-        double productionRate = getFullLoadProductionRate() * Mth.clamp(boilerEfficiency, 0, 1);
+        double productionRate = getFullLoadProductionRate() * CCBMathUtils.clampUnit(boilerEfficiency);
         if (!GasConsumptions.isFinite(productionRate) || productionRate <= 0) {
             return 0;
         }

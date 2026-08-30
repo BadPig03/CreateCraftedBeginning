@@ -16,7 +16,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightle
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.windcharge.AirtightCannonWindChargeItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.AirtightExtendArmItem;
-import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillItem;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillItem;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonItem;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonStyleUtils;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterItem;
@@ -97,7 +97,7 @@ public class CCBItems {
     public static final ItemEntry<AnchorFlareItem> ANCHOR_FLARE = CCB_REGISTRATE.item("anchor_flare", AnchorFlareItem::new).transform(CCBItemPropertiesTransformer.anchorFlare()).register();
 
     static {
-        CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.PHOTO_STRESSES);
+        CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.OPTICAL_POWER);
     }
 
     public static final ItemEntry<Item> POWDERED_AMETHYST = CCB_REGISTRATE.item("powdered_amethyst", Item::new).transform(CCBItemPropertiesTransformer.tags(CCBItemTags.DUSTS.tag, CCBItemTags.DUSTS_AMETHYST.tag)).register();
@@ -179,7 +179,7 @@ public class CCBItems {
 
     public static void register() {
         CCBCreativeTabs.registerSectionInit(CCBCreativeTabSection.AIRTIGHTS, AIRTIGHT_SHEET);
-        CCBCreativeTabs.registerSectionInit(CCBCreativeTabSection.PHOTO_STRESSES, POWDERED_AMETHYST, AMETHYST_CRYSTAL_SHEET);
+        CCBCreativeTabs.registerSectionInit(CCBCreativeTabSection.OPTICAL_POWER, POWDERED_AMETHYST, AMETHYST_CRYSTAL_SHEET);
         CCBCreativeTabs.registerSectionInit(CCBCreativeTabSection.ENDS, END_ALLOY, END_ALLOY_SHEET);
     }
 }

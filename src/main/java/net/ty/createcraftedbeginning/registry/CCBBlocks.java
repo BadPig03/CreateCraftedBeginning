@@ -54,9 +54,10 @@ import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilenc
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerMovementBehaviour;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerStructuralBlock;
 import net.ty.createcraftedbeginning.content.obsolete.pneumaticengine.PneumaticEngineBlock;
-import net.ty.createcraftedbeginning.content.photostresses.opticalfiber.OpticalFiberBlock;
-import net.ty.createcraftedbeginning.content.photostresses.photosail.PhotoSailBlock;
-import net.ty.createcraftedbeginning.content.photostresses.phohostressbearing.PhotoStressBearingBlock;
+import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterBlock;
+import net.ty.createcraftedbeginning.content.opticalpower.laserreceiver.LaserReceiverBlock;
+import net.ty.createcraftedbeginning.content.opticalpower.opticalfiber.OpticalFiberBlock;
+import net.ty.createcraftedbeginning.content.opticalpower.solarcollector.SolarCollectorBlock;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.CCBCreativeTabSection;
 import net.ty.createcraftedbeginning.registry.registrate.CCBBlockModelTransformer;
 import net.ty.createcraftedbeginning.registry.registrate.CCBBlockPropertiesTransformer;
@@ -121,14 +122,15 @@ public class CCBBlocks {
     public static final BlockEntry<CreativeGasCanisterBlock> CREATIVE_GAS_CANISTER_BLOCK = CCB_REGISTRATE.block("creative_gas_canister", CreativeGasCanisterBlock::new).transform(CCBBlockModelTransformer.creativeGasCanister()).transform(CCBBlockPropertiesTransformer.airtightMetal()).register();
 
     static {
-        CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.PHOTO_STRESSES);
+        CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.OPTICAL_POWER);
     }
 
     public static final BlockEntry<ColoredFallingBlock> POWDERED_AMETHYST_BLOCK = CCB_REGISTRATE.block("powdered_amethyst_block", properties -> new ColoredFallingBlock(new ColorRGBA(0xFF8D6ACC), properties)).transform(CCBBlockModelTransformer.powderedAmethystBlock()).transform(CCBBlockPropertiesTransformer.powderedAmethystBlock()).register();
 
     public static final BlockEntry<OpticalFiberBlock> OPTICAL_FIBER_BLOCK = CCB_REGISTRATE.block("optical_fiber", OpticalFiberBlock::new).transform(CCBBlockModelTransformer.opticalFiber()).transform(CCBBlockPropertiesTransformer.opticalFiber()).register();
-    public static final BlockEntry<PhotoSailBlock> PHOTO_SAIL_BLOCK = CCB_REGISTRATE.block("photo_sail", PhotoSailBlock::new).transform(CCBBlockModelTransformer.photoSail()).transform(CCBBlockPropertiesTransformer.photoSail()).register();
-    public static final BlockEntry<PhotoStressBearingBlock> PHOTO_STRESS_BEARING_BLOCK = CCB_REGISTRATE.block("photo-stress_bearing", PhotoStressBearingBlock::new).transform(CCBBlockModelTransformer.photoStressBearing()).transform(CCBBlockPropertiesTransformer.photoStressBearing()).register();
+    public static final BlockEntry<SolarCollectorBlock> SOLAR_COLLECTOR_BLOCK = CCB_REGISTRATE.block("solar_collector", SolarCollectorBlock::new).transform(CCBBlockModelTransformer.solarCollector()).transform(CCBBlockPropertiesTransformer.solarCollector()).register();
+    public static final BlockEntry<LaserEmitterBlock> LASER_EMITTER_BLOCK = CCB_REGISTRATE.block("laser_emitter", LaserEmitterBlock::new).transform(CCBBlockModelTransformer.laserEmitter()).transform(CCBBlockPropertiesTransformer.laserEmitter()).register();
+    public static final BlockEntry<LaserReceiverBlock> LASER_RECEIVER_BLOCK = CCB_REGISTRATE.block("laser_receiver", LaserReceiverBlock::new).transform(CCBBlockModelTransformer.laserReceiver()).transform(CCBBlockPropertiesTransformer.laserReceiver()).register();
 
     static {
         CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.ENDS);

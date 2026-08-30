@@ -15,12 +15,16 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceBlockEntity;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class PortableGasInterfaceScenes {
+    private static final String COMPOUND_KEY_DISTANCE = "Distance";
+    private static final String COMPOUND_KEY_TIMER = "Timer";
+
     public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
@@ -95,12 +99,12 @@ public class PortableGasInterfaceScenes {
 
         scene.idle(30);
         scene.world().modifyBlockEntityNBT(bothInterfaceSelection, PortableGasInterfaceBlockEntity.class, compoundTag -> {
-			compoundTag.putFloat("Distance", 1);
-			compoundTag.putFloat("Timer", 14);
+			CCBNbtUtils.putFloat(compoundTag, COMPOUND_KEY_DISTANCE, 1);
+			CCBNbtUtils.putFloat(compoundTag, COMPOUND_KEY_TIMER, 14);
 		});
 
         scene.idle(80);
-        scene.world().modifyBlockEntityNBT(bothInterfaceSelection, PortableGasInterfaceBlockEntity.class, compoundTag -> compoundTag.putFloat("Timer", 2));
+        scene.world().modifyBlockEntityNBT(bothInterfaceSelection, PortableGasInterfaceBlockEntity.class, compoundTag -> CCBNbtUtils.putFloat(compoundTag, COMPOUND_KEY_TIMER, 2));
         scene.world().rotateBearing(bearingPos, 360, 60);
 		scene.world().rotateSection(contraption, 0, 360, 0, 60);
 

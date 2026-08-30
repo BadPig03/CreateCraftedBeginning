@@ -97,7 +97,7 @@ final class EndIncinerationBlowerVisualState {
         for (int i = 0; i < particleCount; i++) {
             Vec3 offset = VecHelper.offsetRandomly(center, level.random, range * 0.9f);
             Vec3 direction = center.subtract(offset);
-            if (direction.lengthSqr() < 1.0E-6) {
+            if (direction.lengthSqr() < 1E-6) {
                 continue;
             }
 

@@ -40,6 +40,7 @@ import net.ty.createcraftedbeginning.content.airtights.gascanister.container.Can
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers;
 import net.ty.createcraftedbeginning.content.airtights.weatherflares.projectile.WeatherFlareProjectileEntity;
 import net.ty.createcraftedbeginning.registry.CCBItems;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -95,7 +96,7 @@ public final class AirtightCannonUtils {
         if (timeCharged < minimumUseTime) {
             return Optional.empty();
         }
-        return Optional.of(Mth.clamp((float) timeCharged / efficientUseTime, 0, 2));
+        return Optional.of(CCBMathUtils.clampNonNegative((float) timeCharged / efficientUseTime, 2));
     }
 
     static int getEfficientUseTime(ItemStack cannon) {
@@ -193,7 +194,7 @@ public final class AirtightCannonUtils {
 
     private static boolean isRayClear(Level level, Vec3 sourcePos, Vec3 targetPos, Entity source) {
         Vec3 rayOffset = targetPos.subtract(sourcePos);
-        Vec3 rayStart = rayOffset.lengthSqr() > 1.0e-8 ? sourcePos.add(rayOffset.normalize().scale(1.0e-4)) : sourcePos;
+        Vec3 rayStart = rayOffset.lengthSqr() > 1E-8 ? sourcePos.add(rayOffset.normalize().scale(1E-4)) : sourcePos;
         ClipContext clipContext = new ClipContext(rayStart, targetPos, Block.COLLIDER, Fluid.NONE, source);
         return level.clip(clipContext).getType() == Type.MISS;
     }

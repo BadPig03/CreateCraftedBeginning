@@ -43,7 +43,8 @@ import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncine
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerStructuralBlockEntity;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerBlockEntity;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerStructuralBlockEntity;
-import net.ty.createcraftedbeginning.content.photostresses.phohostressbearing.PhotoStressBearingBlockEntity;
+import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterBlockEntity;
+import net.ty.createcraftedbeginning.content.opticalpower.laserreceiver.LaserReceiverBlockEntity;
 import net.ty.createcraftedbeginning.content.obsolete.pneumaticengine.PneumaticEngineBlockEntity;
 import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrate;
 
@@ -95,7 +96,8 @@ public class CCBBlockEntities {
     public static final BlockEntityEntry<GasCanisterBlockEntity> GAS_CANISTER = CCB_REGISTRATE.blockEntity("gas_canister", GasCanisterBlockEntity::new).validBlock(CCBBlocks.GAS_CANISTER_BLOCK).register();
     public static final BlockEntityEntry<CreativeGasCanisterBlockEntity> CREATIVE_GAS_CANISTER = CCB_REGISTRATE.blockEntity("creative_gas_canister", CreativeGasCanisterBlockEntity::new).validBlock(CCBBlocks.CREATIVE_GAS_CANISTER_BLOCK).register();
 
-    public static final BlockEntityEntry<PhotoStressBearingBlockEntity> PHOTO_STRESS_BEARING = CCB_REGISTRATE.blockEntity("photo-stress_bearing", PhotoStressBearingBlockEntity::new).validBlock(CCBBlocks.PHOTO_STRESS_BEARING_BLOCK).register();
+    public static final BlockEntityEntry<LaserEmitterBlockEntity> LASER_EMITTER = CCB_REGISTRATE.blockEntity("laser_emitter", LaserEmitterBlockEntity::new).validBlock(CCBBlocks.LASER_EMITTER_BLOCK).register();
+    public static final BlockEntityEntry<LaserReceiverBlockEntity> LASER_RECEIVER = CCB_REGISTRATE.blockEntity("laser_receiver", LaserReceiverBlockEntity::new).validBlock(CCBBlocks.LASER_RECEIVER_BLOCK).register();
 
     public static final BlockEntityEntry<EndIncinerationBlowerBlockEntity> END_INCINERATION_BLOWER = CCB_REGISTRATE.blockEntity("end_incineration_blower", EndIncinerationBlowerBlockEntity::new).validBlock(CCBBlocks.END_INCINERATION_BLOWER_BLOCK).register();
     public static final BlockEntityEntry<EndIncinerationBlowerStructuralBlockEntity> END_INCINERATION_BLOWER_STRUCTURAL = CCB_REGISTRATE.blockEntity("end_incineration_blower_structural", EndIncinerationBlowerStructuralBlockEntity::new).validBlock(CCBBlocks.END_INCINERATION_BLOWER_STRUCTURAL_BLOCK).register();

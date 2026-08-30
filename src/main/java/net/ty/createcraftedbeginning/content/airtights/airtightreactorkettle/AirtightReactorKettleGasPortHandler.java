@@ -64,6 +64,9 @@ record AirtightReactorKettleGasPortHandler(IGasHandler input, IGasHandler output
     }
 
     private int getLocalTank(int tank) {
-        return tank < input.getTanks() ? tank : tank - input.getTanks();
+        if (tank < input.getTanks()) {
+            return tank;
+        }
+        return tank - input.getTanks();
     }
 }

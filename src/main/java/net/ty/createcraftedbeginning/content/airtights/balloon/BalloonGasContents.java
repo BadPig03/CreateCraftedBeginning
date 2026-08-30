@@ -15,6 +15,8 @@ import net.minecraft.network.codec.StreamCodec;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -72,7 +74,7 @@ public final class BalloonGasContents {
     }
 
     public static BalloonGasContents parseOptional(Provider provider, Tag tag) {
-        if (tag instanceof CompoundTag compoundTag && compoundTag.isEmpty()) {
+        if (tag instanceof CompoundTag compoundTag && CCBNbtUtils.isEmpty(compoundTag)) {
             return EMPTY;
         }
         return CODEC.parse(provider.createSerializationContext(NbtOps.INSTANCE), tag).resultOrPartial(error -> CCBAPI.LOGGER.error("Tried to parse invalid balloon gas contents: '{}'", error)).orElse(EMPTY);
@@ -97,7 +99,7 @@ public final class BalloonGasContents {
             }
 
             GasStack existing = merged.get(matchingIndex);
-            merged.set(matchingIndex, existing.copyWithAmount(saturatedAdd(existing.getAmount(), copy.getAmount())));
+            merged.set(matchingIndex, existing.copyWithAmount(CCBMathUtils.saturatedAdd(existing.getAmount(), copy.getAmount())));
         }
 
         if (merged.isEmpty()) {
@@ -109,7 +111,7 @@ public final class BalloonGasContents {
         for (GasStack gas : merged) {
             GasEntry entry = GasEntry.from(gas);
             entries.add(entry);
-            totalAmount = saturatedAdd(totalAmount, entry.getAmount());
+            totalAmount = CCBMathUtils.saturatedAdd(totalAmount, entry.getAmount());
         }
         return new NormalizedContents(List.copyOf(entries), totalAmount);
     }
@@ -123,17 +125,6 @@ public final class BalloonGasContents {
             return gasIndex;
         }
         return -1;
-    }
-
-    private static long saturatedAdd(long currentAmount, long amountToAdd) {
-        if (currentAmount <= 0) {
-            return Math.max(0, amountToAdd);
-        }
-
-        if (amountToAdd <= 0) {
-            return currentAmount;
-        }
-        return currentAmount > Long.MAX_VALUE - amountToAdd ? Long.MAX_VALUE : currentAmount + amountToAdd;
     }
 
     @Override

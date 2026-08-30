@@ -85,12 +85,18 @@ final class EndSculkSilencerIndex {
     synchronized List<EndSculkSilencerInstance> removeDimension(ResourceLocation dimension) {
         Map<BlockPos, EndSculkSilencerInstance> removedInstances = instancesByDimension.remove(dimension);
         coveredChunksByDimension.remove(dimension);
-        return removedInstances == null ? List.of() : List.copyOf(removedInstances.values());
+        if (removedInstances == null) {
+            return List.of();
+        }
+        return List.copyOf(removedInstances.values());
     }
 
     synchronized List<EndSculkSilencerInstance> getInstances(ResourceLocation dimension) {
         Map<BlockPos, EndSculkSilencerInstance> instances = instancesByDimension.get(dimension);
-        return instances == null ? List.of() : List.copyOf(instances.values());
+        if (instances == null) {
+            return List.of();
+        }
+        return List.copyOf(instances.values());
     }
 
     synchronized void clear() {

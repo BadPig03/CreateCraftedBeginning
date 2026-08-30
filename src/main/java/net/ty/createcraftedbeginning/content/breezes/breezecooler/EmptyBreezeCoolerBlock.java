@@ -52,7 +52,10 @@ public class EmptyBreezeCoolerBlock extends HorizontalDirectionalBlock implement
 
     @Override
     public FluidState getFluidState(BlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.defaultFluidState() : super.getFluidState(state);
+        if (!state.getValue(WATERLOGGED)) {
+            return Fluids.EMPTY.defaultFluidState();
+        }
+        return Fluids.WATER.defaultFluidState();
     }
 
     @Override
@@ -62,7 +65,10 @@ public class EmptyBreezeCoolerBlock extends HorizontalDirectionalBlock implement
 
     @Override
     public VoxelShape getCollisionShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
-        return context == CollisionContext.empty() ? CCBShapes.COOLER_BLOCK_SPECIAL_COLLISION_SHAPE : getShape(blockState, level, blockPos, context);
+        if (context != CollisionContext.empty()) {
+            return getShape(blockState, level, blockPos, context);
+        }
+        return CCBShapes.COOLER_BLOCK_SPECIAL_COLLISION_SHAPE;
     }
 
     @Override

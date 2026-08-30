@@ -165,7 +165,10 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
 
     @Override
     public FluidState getFluidState(BlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.defaultFluidState() : super.getFluidState(state);
+        if (!state.getValue(WATERLOGGED)) {
+            return Fluids.EMPTY.defaultFluidState();
+        }
+        return Fluids.WATER.defaultFluidState();
     }
 
     @Override

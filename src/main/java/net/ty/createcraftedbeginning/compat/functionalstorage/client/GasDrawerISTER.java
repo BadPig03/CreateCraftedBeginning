@@ -16,12 +16,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.compat.functionalstorage.GasDrawerBlock;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasDrawerISTER extends FunctionalStorageISTER {
+    private static final String COMPOUND_KEY_DRAWER_OPTIONS = "drawerOptions";
+    private static final String COMPOUND_KEY_CREATIVE = "isCreative";
+
     public static final GasDrawerISTER SLOT_1 = new GasDrawerISTER(DrawerType.X_1);
     public static final GasDrawerISTER SLOT_2 = new GasDrawerISTER(DrawerType.X_2);
     public static final GasDrawerISTER SLOT_4 = new GasDrawerISTER(DrawerType.X_4);
@@ -66,8 +70,8 @@ public final class GasDrawerISTER extends FunctionalStorageISTER {
         }
 
         DrawerOptions drawerOptions = new DrawerOptions();
-        drawerOptions.deserializeNBT(access, tileTag.getCompound("drawerOptions"));
-        boolean isCreative = tileTag.getBoolean("isCreative");
+        drawerOptions.deserializeNBT(access, CCBNbtUtils.getCompound(tileTag, COMPOUND_KEY_DRAWER_OPTIONS));
+        boolean isCreative = CCBNbtUtils.getBoolean(tileTag, COMPOUND_KEY_CREATIVE);
         poseStack.mulPose(Axis.YP.rotationDegrees(-90));
         poseStack.mulPose(Axis.XP.rotationDegrees(90));
         poseStack.translate(0, -1, -1);

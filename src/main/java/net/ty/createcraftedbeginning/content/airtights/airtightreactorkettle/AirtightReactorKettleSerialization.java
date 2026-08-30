@@ -4,6 +4,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -28,37 +29,37 @@ final class AirtightReactorKettleSerialization {
     }
 
     void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        compoundTag.put(COMPOUND_KEY_CORE, kettle.getCore().write());
-        compoundTag.put(COMPOUND_KEY_FILTER, kettle.getRecipeFilter().saveOptional(provider));
-        compoundTag.put(COMPOUND_KEY_INPUT_ITEMS, kettle.getInputInventory().serializeNBT(provider));
-        compoundTag.put(COMPOUND_KEY_OUTPUT_ITEMS, kettle.getOutputInventory().serializeNBT(provider));
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_CORE, kettle.getCore().write());
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_FILTER, kettle.getRecipeFilter().saveOptional(provider));
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_INPUT_ITEMS, kettle.getInputInventory().serializeNBT(provider));
+        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_OUTPUT_ITEMS, kettle.getOutputInventory().serializeNBT(provider));
         if (!clientPacket) {
             return;
         }
 
-        compoundTag.putInt(COMPOUND_KEY_OPERATING_TICKS, controller.getOperatingTicks());
-        compoundTag.putInt(COMPOUND_KEY_PROCESSING_TICKS, controller.getProcessingTicks());
-        compoundTag.putBoolean(COMPOUND_KEY_OPERATING, controller.isOperating());
-        compoundTag.putBoolean(COMPOUND_KEY_OPEN_STATE, controller.getWindowsOpenState());
+        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_OPERATING_TICKS, controller.getOperatingTicks());
+        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_PROCESSING_TICKS, controller.getProcessingTicks());
+        CCBNbtUtils.putBoolean(compoundTag, COMPOUND_KEY_OPERATING, controller.isOperating());
+        CCBNbtUtils.putBoolean(compoundTag, COMPOUND_KEY_OPEN_STATE, controller.getWindowsOpenState());
     }
 
     void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        if (compoundTag.contains(COMPOUND_KEY_CORE)) {
-            kettle.getCore().read(compoundTag.getCompound(COMPOUND_KEY_CORE));
+        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_CORE)) {
+            kettle.getCore().read(CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_CORE));
         }
-        boolean hasSerializedFilter = compoundTag.contains(COMPOUND_KEY_FILTER);
-        kettle.loadRecipeFilter(hasSerializedFilter ? ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_FILTER)) : ItemStack.EMPTY, hasSerializedFilter);
-        if (compoundTag.contains(COMPOUND_KEY_INPUT_ITEMS)) {
-            kettle.getInputInventory().deserializeNBT(provider, compoundTag.getCompound(COMPOUND_KEY_INPUT_ITEMS));
+        boolean hasSerializedFilter = CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_FILTER);
+        kettle.loadRecipeFilter(hasSerializedFilter ? ItemStack.parseOptional(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_FILTER)) : ItemStack.EMPTY, hasSerializedFilter);
+        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_INPUT_ITEMS)) {
+            kettle.getInputInventory().deserializeNBT(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_INPUT_ITEMS));
         }
-        if (compoundTag.contains(COMPOUND_KEY_OUTPUT_ITEMS)) {
-            kettle.getOutputInventory().deserializeNBT(provider, compoundTag.getCompound(COMPOUND_KEY_OUTPUT_ITEMS));
+        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_OUTPUT_ITEMS)) {
+            kettle.getOutputInventory().deserializeNBT(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_OUTPUT_ITEMS));
         }
 
-        int operatingTicks = compoundTag.contains(COMPOUND_KEY_OPERATING_TICKS) ? compoundTag.getInt(COMPOUND_KEY_OPERATING_TICKS) : controller.getOperatingTicks();
-        int processingTicks = compoundTag.contains(COMPOUND_KEY_PROCESSING_TICKS) ? compoundTag.getInt(COMPOUND_KEY_PROCESSING_TICKS) : controller.getProcessingTicks();
-        boolean isOperating = compoundTag.contains(COMPOUND_KEY_OPERATING) ? compoundTag.getBoolean(COMPOUND_KEY_OPERATING) : controller.isOperating();
-        boolean windowsOpen = compoundTag.contains(COMPOUND_KEY_OPEN_STATE) ? compoundTag.getBoolean(COMPOUND_KEY_OPEN_STATE) : controller.getWindowsOpenState();
+        int operatingTicks = CCBNbtUtils.getIntOrDefault(compoundTag, COMPOUND_KEY_OPERATING_TICKS, controller.getOperatingTicks());
+        int processingTicks = CCBNbtUtils.getIntOrDefault(compoundTag, COMPOUND_KEY_PROCESSING_TICKS, controller.getProcessingTicks());
+        boolean isOperating = CCBNbtUtils.getBooleanOrDefault(compoundTag, COMPOUND_KEY_OPERATING, controller.isOperating());
+        boolean windowsOpen = CCBNbtUtils.getBooleanOrDefault(compoundTag, COMPOUND_KEY_OPEN_STATE, controller.getWindowsOpenState());
         controller.loadOperationState(isOperating, operatingTicks, processingTicks, windowsOpen, clientPacket);
     }
 }

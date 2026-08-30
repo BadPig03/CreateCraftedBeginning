@@ -25,7 +25,10 @@ public class SturdyCrateBlockItem extends BlockItem {
 
     @Override
     public int getMaxStackSize(ItemStack stack) {
-        return stack.has(CCBDataComponents.STURDY_CRATE_CONTENTS) ? 1 : super.getMaxStackSize(stack);
+        if (!stack.has(CCBDataComponents.STURDY_CRATE_CONTENTS)) {
+            return super.getMaxStackSize(stack);
+        }
+        return 1;
     }
 
     @Override

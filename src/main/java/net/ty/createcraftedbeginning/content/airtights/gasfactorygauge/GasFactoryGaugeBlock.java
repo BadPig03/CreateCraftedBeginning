@@ -21,11 +21,13 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.FaceAttachedHorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
@@ -135,6 +137,11 @@ public class GasFactoryGaugeBlock extends FactoryPanelBlock {
     @Override
     protected MapCodec<? extends FaceAttachedHorizontalDirectionalBlock> codec() {
         return simpleCodec(GasFactoryGaugeBlock::new);
+    }
+
+    @Override
+    public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
+        return CCBBlocks.GAS_FACTORY_GAUGE_BLOCK.asStack();
     }
 
     private boolean tryDestroyGasSubPanelFirst(BlockState state, Level level, BlockPos pos, Player player) {

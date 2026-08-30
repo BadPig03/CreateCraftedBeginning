@@ -6,6 +6,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IVentingGasSource;
 import net.ty.createcraftedbeginning.registry.gas.CCBGases;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -21,7 +22,7 @@ final class SteamOutletGasHandler implements IGasHandler, IVentingGasSource {
     }
 
     void setAvailableSteamThisTick(long availableSteam) {
-        availableSteamThisTick = Math.clamp(availableSteam, 0, BoilerSteamOutletProduction.getMaximumOutputCapacity());
+        availableSteamThisTick = CCBMathUtils.clampNonNegative(availableSteam, BoilerSteamOutletProduction.getMaximumOutputCapacity());
     }
 
     @Override
@@ -85,11 +86,14 @@ final class SteamOutletGasHandler implements IGasHandler, IVentingGasSource {
     @Override
     public long getTankCapacity(int tankIndex) {
         outlet.ensureCurrentTick();
-        return tankIndex == 0 ? BoilerSteamOutletProduction.getMaximumOutputCapacity() : 0;
+        if (tankIndex != 0) {
+            return 0;
+        }
+        return BoilerSteamOutletProduction.getMaximumOutputCapacity();
     }
 
     private GasStack drainAvailable(long maxDrain, GasAction action) {
-        long drainedAmount = Math.clamp(maxDrain, 0, availableSteamThisTick);
+        long drainedAmount = CCBMathUtils.clampNonNegative(maxDrain, availableSteamThisTick);
         if (drainedAmount <= 0) {
             return GasStack.EMPTY;
         }
@@ -102,6 +106,9 @@ final class SteamOutletGasHandler implements IGasHandler, IVentingGasSource {
     }
 
     private GasStack getAvailableSteamStack() {
-        return availableSteamThisTick <= 0 ? GasStack.EMPTY : new GasStack(CCBGases.STEAM.get(), availableSteamThisTick);
+        if (availableSteamThisTick <= 0) {
+            return GasStack.EMPTY;
+        }
+        return new GasStack(CCBGases.STEAM.get(), availableSteamThisTick);
     }
 }

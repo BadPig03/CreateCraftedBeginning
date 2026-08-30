@@ -57,6 +57,9 @@ record AirtightReactorKettleFluidPortHandler(IFluidHandler input, IFluidHandler 
     }
 
     private int getLocalTank(int tank) {
-        return tank < input.getTanks() ? tank : tank - input.getTanks();
+        if (tank < input.getTanks()) {
+            return tank;
+        }
+        return tank - input.getTanks();
     }
 }

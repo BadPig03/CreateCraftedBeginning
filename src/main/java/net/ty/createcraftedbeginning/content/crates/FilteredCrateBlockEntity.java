@@ -33,7 +33,10 @@ public abstract class FilteredCrateBlockEntity extends CratesBlockEntity {
     }
 
     public final ItemStack getFilterItem() {
-        return filterController == null ? ItemStack.EMPTY : filterController.getFilterItem();
+        if (filterController == null) {
+            return ItemStack.EMPTY;
+        }
+        return filterController.getFilterItem();
     }
 
     public final void setFilterItem(ItemStack filterItem) {

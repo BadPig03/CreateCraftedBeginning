@@ -139,7 +139,10 @@ final class AirtightExtendArmUtils {
         }
 
         ConsumptionResult consumptionResult = consumeCurrentFuelAndRefresh(player);
-        return consumptionResult.success() ? PowerUseResult.consumed() : PowerUseResult.insufficient(consumptionResult.attemptedGas());
+        if (!consumptionResult.success()) {
+            return PowerUseResult.insufficient(consumptionResult.attemptedGas());
+        }
+        return PowerUseResult.consumed();
     }
 
     private static ConsumptionResult consumeCurrentFuelAndRefresh(Player player) {

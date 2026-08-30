@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Optional;
@@ -25,18 +26,15 @@ final class GasInjectionChamberVisualState {
             return;
         }
 
-        compoundTag.putBoolean(COMPOUND_KEY_CLOUD, true);
-        compoundTag.putInt(COMPOUND_KEY_CLOUD_COLOR, cloudColor);
+        CCBNbtUtils.putBoolean(compoundTag, COMPOUND_KEY_CLOUD, true);
+        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_CLOUD_COLOR, cloudColor);
         sendCloud = false;
     }
 
     Optional<Integer> readCloud(CompoundTag compoundTag, boolean clientPacket) {
-        if (!clientPacket || !compoundTag.contains(COMPOUND_KEY_CLOUD)) {
+        if (!clientPacket || !CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_CLOUD)) {
             return Optional.empty();
         }
-        if (!compoundTag.contains(COMPOUND_KEY_CLOUD_COLOR)) {
-            return Optional.of(0xFFFFFFFF);
-        }
-        return Optional.of(compoundTag.getInt(COMPOUND_KEY_CLOUD_COLOR));
+        return Optional.of(CCBNbtUtils.getIntOrDefault(compoundTag, COMPOUND_KEY_CLOUD_COLOR, 0xFFFFFFFF));
     }
 }

@@ -13,7 +13,6 @@ import net.minecraft.client.gui.LayeredDraw.Layer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -26,6 +25,7 @@ import net.ty.createcraftedbeginning.content.airtights.gascanister.container.Can
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -60,7 +60,7 @@ public enum GasCanisterOverlay implements Layer {
         if (isCreative) {
             return CCBLang.translateDirect("gui.gas_container.infinity").withStyle(ChatFormatting.GOLD);
         }
-        return GasAmounts.precise(amount).color(Color.mixColors(GasCanisterUtils.COLOR_RED, GasCanisterUtils.COLOR_WHITE, Mth.clamp(2.0f * amount / capacity, 0, 1))).add(CCBLang.text(" / ").style(ChatFormatting.WHITE)).add(GasAmounts.precise(capacity).style(ChatFormatting.GRAY)).component();
+        return GasAmounts.precise(amount).color(Color.mixColors(GasCanisterUtils.COLOR_RED, GasCanisterUtils.COLOR_WHITE, CCBMathUtils.clampUnit(2.0f * amount / capacity))).add(CCBLang.text(" / ").style(ChatFormatting.WHITE)).add(GasAmounts.precise(capacity).style(ChatFormatting.GRAY)).component();
     }
 
     @Override

@@ -2,9 +2,10 @@ package net.ty.createcraftedbeginning.content.airtights.teslaturbine;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.util.Mth;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.turbinehandlers.AirtightTurbineHandlerUtils;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.EnumMap;
@@ -30,11 +31,7 @@ class TeslaTurbineLevelCalculator {
     }
 
     private static int readLevel(CompoundTag compoundTag, String key) {
-        return compoundTag.contains(key) ? clampLevel(compoundTag.getInt(key)) : 0;
-    }
-
-    private static int clampLevel(int level) {
-        return Mth.clamp(level, 0, MAX_LEVEL);
+        return CCBMathUtils.clampNonNegative(CCBNbtUtils.getIntOrDefault(compoundTag, key, 0), MAX_LEVEL);
     }
 
     void updateSupplyLevel(int newLevel) {
@@ -76,8 +73,8 @@ class TeslaTurbineLevelCalculator {
 
     CompoundTag write() {
         CompoundTag compoundTag = new CompoundTag();
-        compoundTag.putInt(COMPOUND_KEY_SUPPLY_LEVEL, supplyLevel);
-        compoundTag.putInt(COMPOUND_KEY_TYPE_LEVEL, typeLevel);
+        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_SUPPLY_LEVEL, supplyLevel);
+        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_TYPE_LEVEL, typeLevel);
         return compoundTag;
     }
 
@@ -102,11 +99,11 @@ class TeslaTurbineLevelCalculator {
 
     private int getRotorLevel() {
         int rotorCount = turbine.getBlockState().getValue(TeslaTurbineBlock.ROTOR);
-        return clampLevel(rotorCount * LEVELS_PER_ROTOR);
+        return CCBMathUtils.clampNonNegative(rotorCount * LEVELS_PER_ROTOR, MAX_LEVEL);
     }
 
     private boolean setSupplyLevel(int newLevel) {
-        int clampedLevel = clampLevel(newLevel);
+        int clampedLevel = CCBMathUtils.clampNonNegative(newLevel, MAX_LEVEL);
         if (supplyLevel == clampedLevel) {
             return false;
         }
@@ -116,7 +113,7 @@ class TeslaTurbineLevelCalculator {
     }
 
     private void setTypeLevel(int newLevel) {
-        int clampedLevel = clampLevel(newLevel);
+        int clampedLevel = CCBMathUtils.clampNonNegative(newLevel, MAX_LEVEL);
         if (typeLevel == clampedLevel) {
             return;
         }

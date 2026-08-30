@@ -13,6 +13,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -40,7 +41,7 @@ final class AirtightReactorKettleAnimationState {
     }
 
     void updateTargets(boolean moving, int operatingTicks, boolean windowsOpen) {
-        float rotationSpeed = Mth.clamp(kettle.getCore().getStructureManager().getSpeed() * 0.5f, -64, 64);
+        float rotationSpeed = CCBMathUtils.clampMagnitude(kettle.getCore().getStructureManager().getSpeed() * 0.5f, 64);
         if (kettle.getLevel() instanceof PonderLevel) {
             rotationSpeed = SpeedLevel.FAST.getSpeedValue() * 0.5f;
         }

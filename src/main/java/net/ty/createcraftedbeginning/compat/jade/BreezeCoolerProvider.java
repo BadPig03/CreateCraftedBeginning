@@ -11,6 +11,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.FrostLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IBlockComponentProvider;
 import snownee.jade.api.IServerDataProvider;
@@ -36,14 +37,14 @@ public enum BreezeCoolerProvider implements IBlockComponentProvider, IServerData
     @OnlyIn(Dist.CLIENT)
     public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
         CompoundTag serverData = accessor.getServerData();
-        FrostLevel frostLevel = FrostLevel.values()[serverData.getInt(COMPOUND_KEY_FROST_LEVEL)];
-        int remainingTicks = serverData.getInt(COMPOUND_KEY_COOL_TIME_REMAINING);
+        FrostLevel frostLevel = FrostLevel.values()[CCBNbtUtils.getInt(serverData, COMPOUND_KEY_FROST_LEVEL)];
+        int remainingTicks = CCBNbtUtils.getInt(serverData, COMPOUND_KEY_COOL_TIME_REMAINING);
         if (!frostLevel.isAtLeast(FrostLevel.CHILLED) || remainingTicks == 0) {
             return;
         }
 
         tooltip.add(IElementHelper.get().smallItem(ICON));
-        boolean isCreative = serverData.getBoolean(COMPOUND_KEY_IS_CREATIVE);
+        boolean isCreative = CCBNbtUtils.getBoolean(serverData, COMPOUND_KEY_IS_CREATIVE);
         tooltip.append(isCreative ? IThemeHelper.get().info(Component.translatable("createcraftedbeginning.generic.infinity_mark")) : IThemeHelper.get().seconds(remainingTicks, accessor.tickRate()));
     }
 
@@ -53,9 +54,9 @@ public enum BreezeCoolerProvider implements IBlockComponentProvider, IServerData
             return;
         }
 
-        data.putInt(COMPOUND_KEY_FROST_LEVEL, cooler.getFrostLevelFromBlock().ordinal());
-        data.putInt(COMPOUND_KEY_COOL_TIME_REMAINING, cooler.getCoolRemainingTime());
-        data.putBoolean(COMPOUND_KEY_IS_CREATIVE, cooler.isCreative());
+        CCBNbtUtils.putInt(data, COMPOUND_KEY_FROST_LEVEL, cooler.getFrostLevelFromBlock().ordinal());
+        CCBNbtUtils.putInt(data, COMPOUND_KEY_COOL_TIME_REMAINING, cooler.getCoolRemainingTime());
+        CCBNbtUtils.putBoolean(data, COMPOUND_KEY_IS_CREATIVE, cooler.isCreative());
     }
 
     @Override

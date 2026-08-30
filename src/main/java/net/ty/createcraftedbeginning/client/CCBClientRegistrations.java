@@ -22,7 +22,7 @@ import net.ty.createcraftedbeginning.client.blockextensions.AirtightReactorKettl
 import net.ty.createcraftedbeginning.client.blockextensions.TeslaTurbineClientExtensions;
 import net.ty.createcraftedbeginning.client.blockextensions.TeslaTurbineStructuralClientExtensions;
 import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorRenderer;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.AirtightBootScreen;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.AirtightBootsScreen;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateScreen;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.AirtightHelmetScreen;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.AirtightLeggingsScreen;
@@ -33,7 +33,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.Airt
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralShaftRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralShaftVisual;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressVisual;
-import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillScreen;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillScreen;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentModel;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleRenderer;
@@ -68,7 +68,8 @@ import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncine
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerRenderer;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerVisual;
 import net.ty.createcraftedbeginning.content.obsolete.pneumaticengine.PneumaticEngineRenderer;
-import net.ty.createcraftedbeginning.content.photostresses.phohostressbearing.PhotoStressBearingRenderer;
+import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterRenderer;
+import net.ty.createcraftedbeginning.content.opticalpower.laserreceiver.LaserReceiverRenderer;
 import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -107,7 +108,7 @@ public final class CCBClientRegistrations {
         event.register(CCBMenuTypes.AIRTIGHT_HELMET_MENU.get(), AirtightHelmetScreen::new);
         event.register(CCBMenuTypes.AIRTIGHT_CHESTPLATE_MENU.get(), AirtightChestplateScreen::new);
         event.register(CCBMenuTypes.AIRTIGHT_LEGGINGS_MENU.get(), AirtightLeggingsScreen::new);
-        event.register(CCBMenuTypes.AIRTIGHT_BOOTS_MENU.get(), AirtightBootScreen::new);
+        event.register(CCBMenuTypes.AIRTIGHT_BOOTS_MENU.get(), AirtightBootsScreen::new);
         event.register(CCBMenuTypes.AIRTIGHT_HANDHELD_DRILL_MENU.get(), AirtightHandheldDrillScreen::new);
         event.register(CCBMenuTypes.GAS_CANISTER_PACK_MENU.get(), GasCanisterPackScreen::new);
         event.register(CCBMenuTypes.GAS_FILTER_MENU.get(), GasFilterScreen::new);
@@ -133,7 +134,8 @@ public final class CCBClientRegistrations {
         event.registerBlockEntityRenderer(CCBBlockEntities.GAS_PACKAGER.get(), GasPackagerRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.GAS_REPACKAGER.get(), GasRepackagerRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.GAS_FACTORY_GAUGE.get(), GasFactoryGaugeRenderer::new);
-        event.registerBlockEntityRenderer(CCBBlockEntities.PHOTO_STRESS_BEARING.get(), PhotoStressBearingRenderer::new);
+        event.registerBlockEntityRenderer(CCBBlockEntities.LASER_EMITTER.get(), LaserEmitterRenderer::new);
+        event.registerBlockEntityRenderer(CCBBlockEntities.LASER_RECEIVER.get(), LaserReceiverRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.END_INCINERATION_BLOWER.get(), EndIncinerationBlowerRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.END_INCINERATION_BLOWER_STRUCTURAL.get(), EndIncinerationBlowerStructuralRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.END_SCULK_SILENCER.get(), EndSculkSilencerRenderer::new);
@@ -165,7 +167,7 @@ public final class CCBClientRegistrations {
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_INJECTION_CHAMBER.get()).factory(GasInjectionChamberVisual::new).neverSkipVanillaRender().apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_PACKAGER.get()).factory(GasPackagerVisual::new).neverSkipVanillaRender().apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_REPACKAGER.get()).factory(GasRepackagerVisual::new).neverSkipVanillaRender().apply();
-        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.PHOTO_STRESS_BEARING.get()).factory((ctx, blockEntity, partialTick) -> new OrientedRotatingVisual<>(ctx, blockEntity, partialTick, Direction.SOUTH, Direction.DOWN, Models.partial(AllPartialModels.SHAFT_HALF))).skipVanillaRender(be -> true).apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.LASER_RECEIVER.get()).factory((ctx, blockEntity, partialTick) -> new OrientedRotatingVisual<>(ctx, blockEntity, partialTick, Direction.SOUTH, blockEntity.getOutputDirection(), Models.partial(AllPartialModels.SHAFT_HALF))).skipVanillaRender(be -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.PORTABLE_GAS_INTERFACE.get()).factory(PortableGasInterfaceVisual::new).skipVanillaRender(be -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.TESLA_TURBINE.get()).factory(TeslaTurbineVisual::new).skipVanillaRender(be -> true).apply();
     }

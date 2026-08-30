@@ -17,6 +17,8 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamber
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity.ChargerType;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberRecipeIndex.GasConversion;
 import net.ty.createcraftedbeginning.core.ResourceTransaction;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -50,7 +52,7 @@ final class BreezeChamberGasProcessor {
         }
 
         int maxProcessingRate = CCBConfig.server().airtights.maxProcessingRate.get();
-        float windStrength = Mth.clamp((float) Mth.abs(windTime) / BreezeChamberBlockEntity.getMaxEffectiveThreshold(), 0, 1);
+        float windStrength = CCBMathUtils.clampUnit((float) Mth.abs(windTime) / BreezeChamberBlockEntity.getMaxEffectiveThreshold());
         return Mth.clamp((int) (maxProcessingRate * windStrength), 1, maxProcessingRate);
     }
 
@@ -142,9 +144,9 @@ final class BreezeChamberGasProcessor {
             return;
         }
 
-        compoundTag.putLong(PENDING_WORK, pendingProcessingWork);
-        compoundTag.putInt(PENDING_TICKS, pendingProcessingTicks);
-        compoundTag.putString(PENDING_CHARGER_TYPE, pendingChargerType.name());
+        CCBNbtUtils.putLong(compoundTag, PENDING_WORK, pendingProcessingWork);
+        CCBNbtUtils.putInt(compoundTag, PENDING_TICKS, pendingProcessingTicks);
+        CCBNbtUtils.putString(compoundTag, PENDING_CHARGER_TYPE, pendingChargerType.name());
     }
 
     void readPendingProcessing(CompoundTag compoundTag) {
@@ -154,8 +156,8 @@ final class BreezeChamberGasProcessor {
             return;
         }
 
-        int pendingTicks = compoundTag.contains(PENDING_TICKS, Tag.TAG_ANY_NUMERIC) ? Mth.clamp(compoundTag.getInt(PENDING_TICKS), 0, GAS_PROCESSING_INTERVAL - 1) : 0;
-        long pendingWork = compoundTag.contains(PENDING_WORK, Tag.TAG_ANY_NUMERIC) ? Math.max(0, compoundTag.getLong(PENDING_WORK)) : 0;
+        int pendingTicks = CCBMathUtils.clampNonNegative(CCBNbtUtils.getIntOrDefault(compoundTag, PENDING_TICKS, 0), GAS_PROCESSING_INTERVAL - 1);
+        long pendingWork = Math.max(0, CCBNbtUtils.getLongOrDefault(compoundTag, PENDING_WORK, 0));
         if (pendingTicks <= 0 || pendingWork <= 0) {
             return;
         }

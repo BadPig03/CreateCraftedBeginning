@@ -15,7 +15,7 @@ import net.ty.createcraftedbeginning.client.CCBParticleProviders;
 import net.ty.createcraftedbeginning.compat.CCBCompatBootstrap;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonRenderHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.AirtightExtendArmRenderHandler;
-import net.ty.createcraftedbeginning.content.airtights.airtighthanddrill.AirtightHandheldDrillRenderHandler;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillRenderHandler;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.client.BreezeChamberClientAnimation;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.client.BreezeCoolerClientAnimation;
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerClient;

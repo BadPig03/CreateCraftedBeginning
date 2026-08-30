@@ -7,6 +7,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.registry.CCBItems;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -84,7 +85,7 @@ public final class BalloonStyleUtils {
     }
 
     public static Vec3 getPackageOffset(Vec3 travelVector, float itemDistance, boolean isDepositing) {
-        Vec3 travelDirection = travelVector.lengthSqr() < 1.0E-6 ? Vec3.ZERO : travelVector.normalize();
+        Vec3 travelDirection = travelVector.lengthSqr() < 1E-6 ? Vec3.ZERO : travelVector.normalize();
         Vec3 offset = travelDirection.scale(itemDistance);
         if (!isDepositing) {
             return offset;
@@ -98,6 +99,6 @@ public final class BalloonStyleUtils {
     }
 
     private static float getFrogportChainBlend(Vec3 travelVector, float itemDistance) {
-        return Mth.clamp(itemDistance / Math.max((float) travelVector.length(), 1), 0, 1);
+        return CCBMathUtils.clampUnit(itemDistance / Math.max((float) travelVector.length(), 1));
     }
 }

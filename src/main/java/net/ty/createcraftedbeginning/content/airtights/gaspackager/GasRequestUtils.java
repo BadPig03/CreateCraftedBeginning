@@ -4,6 +4,7 @@ import com.simibubi.create.content.logistics.BigItemStack;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -30,6 +31,6 @@ public final class GasRequestUtils {
     }
 
     public static int toLogisticsAmount(long gasAmount) {
-        return Math.clamp(gasAmount, 0, BigItemStack.INF);
+        return CCBMathUtils.clampNonNegative(gasAmount, BigItemStack.INF);
     }
 }

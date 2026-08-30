@@ -84,7 +84,7 @@ public final class CCBCreativeTabLayout {
 
     public enum CCBCreativeTabSection {
         AIRTIGHTS,
-        PHOTO_STRESSES,
+        OPTICAL_POWER,
         ENDS,
         DECORATIONS,
         CANISTERS

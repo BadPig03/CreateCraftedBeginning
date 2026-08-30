@@ -3,12 +3,13 @@ package net.ty.createcraftedbeginning.content.breezes.breezecooler;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.util.Mth;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity.CoolantType;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates.BaseCoolerState;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates.ChilledCoolerState;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates.CreativeCoolerState;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates.InactiveCoolerState;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -22,11 +23,11 @@ final class BreezeCoolerSerialization {
     private static final String IS_CREATIVE = "isCreative";
     private static final String REMAINING_TIME = "RemainingTime";
 
-    private static BaseCoolerState readState(CompoundTag tag) {
-        CompoundTag stateData = tag.getCompound(STATE_DATA);
-        CoolantType coolantType = CoolantType.fromTag(tag, STATE_TYPE, CoolantType.NONE);
-        boolean isCreative = stateData.contains(IS_CREATIVE, Tag.TAG_BYTE) && stateData.getBoolean(IS_CREATIVE);
-        int remainingTime = stateData.contains(REMAINING_TIME, Tag.TAG_ANY_NUMERIC) ? Mth.clamp(stateData.getInt(REMAINING_TIME), 0, BreezeCoolerBlockEntity.getMaxCoolantCapacity()) : 0;
+    private static BaseCoolerState readState(CompoundTag compoundTag) {
+        CompoundTag stateData = CCBNbtUtils.getCompound(compoundTag, STATE_DATA);
+        CoolantType coolantType = CoolantType.fromTag(compoundTag, STATE_TYPE, CoolantType.NONE);
+        boolean isCreative = CCBNbtUtils.getBooleanOrDefault(stateData, IS_CREATIVE, false);
+        int remainingTime = CCBMathUtils.clampNonNegative(CCBNbtUtils.getIntOrDefault(stateData, REMAINING_TIME, 0), BreezeCoolerBlockEntity.getMaxCoolantCapacity());
         if (isCreative && coolantType != CoolantType.NONE) {
             return new CreativeCoolerState(coolantType);
         }
@@ -40,23 +41,23 @@ final class BreezeCoolerSerialization {
         BaseCoolerState coolerState = cooler.getCurrentState();
         CompoundTag stateData = new CompoundTag();
         coolerState.save(stateData);
-        compoundTag.put(STATE_DATA, stateData);
-        compoundTag.putString(STATE_TYPE, coolerState.getCoolantType().name());
-        compoundTag.putBoolean(GOGGLES, cooler.hasGoggles());
-        compoundTag.putBoolean(TRAIN_HAT, cooler.hasTrainHat());
+        CCBNbtUtils.putTag(compoundTag, STATE_DATA, stateData);
+        CCBNbtUtils.putString(compoundTag, STATE_TYPE, coolerState.getCoolantType().name());
+        CCBNbtUtils.putBoolean(compoundTag, GOGGLES, cooler.hasGoggles());
+        CCBNbtUtils.putBoolean(compoundTag, TRAIN_HAT, cooler.hasTrainHat());
     }
 
     void read(BreezeCoolerBlockEntity cooler, CompoundTag compoundTag) {
-        if (compoundTag.contains(STATE_DATA, Tag.TAG_COMPOUND)) {
+        if (CCBNbtUtils.contains(compoundTag, STATE_DATA, Tag.TAG_COMPOUND)) {
             cooler.setCoolerStateFromSerialization(readState(compoundTag));
         }
-        if (compoundTag.contains(GOGGLES, Tag.TAG_BYTE)) {
-            cooler.setGogglesFromSerialization(compoundTag.getBoolean(GOGGLES));
+        if (CCBNbtUtils.contains(compoundTag, GOGGLES, Tag.TAG_BYTE)) {
+            cooler.setGogglesFromSerialization(CCBNbtUtils.getBoolean(compoundTag, GOGGLES));
         }
-        if (!compoundTag.contains(TRAIN_HAT, Tag.TAG_BYTE)) {
+        if (!CCBNbtUtils.contains(compoundTag, TRAIN_HAT, Tag.TAG_BYTE)) {
             return;
         }
 
-        cooler.setTrainHatFromSerialization(compoundTag.getBoolean(TRAIN_HAT));
+        cooler.setTrainHatFromSerialization(CCBNbtUtils.getBoolean(compoundTag, TRAIN_HAT));
     }
 }

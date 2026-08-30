@@ -4,7 +4,6 @@ import net.createmod.catnip.nbt.NBTHelper;
 import net.createmod.catnip.theme.Color;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
@@ -15,6 +14,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
 import net.ty.createcraftedbeginning.platform.client.ClientContextBridge;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -62,7 +62,10 @@ public final class CanisterContainerClients {
     @OnlyIn(Dist.CLIENT)
     public static int getBarWidth() {
         float gasRatio = getDisplayedGasRatio();
-        return gasRatio == 0 ? 0 : Math.round(BAR_WIDTH * gasRatio);
+        if (gasRatio == 0) {
+            return 0;
+        }
+        return Math.round(BAR_WIDTH * gasRatio);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -84,7 +87,7 @@ public final class CanisterContainerClients {
         if (displayedState.capacity() <= 0) {
             return 0;
         }
-        return Mth.clamp((float) displayedState.content().getAmount() / displayedState.capacity(), 0, 1);
+        return CCBMathUtils.clampUnit((float) displayedState.content().getAmount() / displayedState.capacity());
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -118,7 +121,7 @@ public final class CanisterContainerClients {
             return 0;
         }
 
-        float gasRatio = Mth.clamp((float) amount / capacity, 0, 1);
+        float gasRatio = CCBMathUtils.clampUnit((float) amount / capacity);
         return Color.mixColors(GasCanisterUtils.COLOR_CYAN, GasCanisterUtils.COLOR_WHITE, gasRatio);
     }
 
@@ -133,7 +136,7 @@ public final class CanisterContainerClients {
             return 0;
         }
 
-        float gasRatio = Mth.clamp((float) amount / capacity, 0, 1);
+        float gasRatio = CCBMathUtils.clampUnit((float) amount / capacity);
         return Math.round(BAR_WIDTH * gasRatio);
     }
 

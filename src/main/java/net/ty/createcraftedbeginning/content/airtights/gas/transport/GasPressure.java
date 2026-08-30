@@ -8,7 +8,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasPressure {
-    static final long UNITS_PER_PRESSURE = 1048576L;
+    static final long UNITS_PER_PRESSURE = 1048576;
     private static final long ZERO_EPSILON_UNITS = 8;
 
     private GasPressure() {
@@ -29,17 +29,6 @@ public final class GasPressure {
             return 0;
         }
         return units;
-    }
-
-    public static long addSaturated(long first, long second) {
-        if (second <= 0) {
-            return Math.max(0, first);
-        }
-
-        if (first >= Long.MAX_VALUE - second) {
-            return Long.MAX_VALUE;
-        }
-        return Math.max(0, first) + second;
     }
 
     public static long splitShare(long totalUnits, int partCount, int partIndex) {

@@ -5,7 +5,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.Level.ExplosionInteraction;
 import net.minecraft.world.level.block.state.BlockState;
@@ -14,6 +13,8 @@ import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbine
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineUtils.NozzlePort;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlock;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -150,16 +151,16 @@ class TeslaTurbineStructureManager {
 
     CompoundTag writeClient() {
         CompoundTag compoundTag = new CompoundTag();
-        compoundTag.putInt(COMPOUND_KEY_CLOCKWISE_NOZZLES, attachedClockwiseNozzles);
-        compoundTag.putInt(COMPOUND_KEY_COUNTER_CLOCKWISE_NOZZLES, attachedCounterClockwiseNozzles);
-        compoundTag.putBoolean(COMPOUND_KEY_VALID, structureValid);
+        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_CLOCKWISE_NOZZLES, attachedClockwiseNozzles);
+        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_COUNTER_CLOCKWISE_NOZZLES, attachedCounterClockwiseNozzles);
+        CCBNbtUtils.putBoolean(compoundTag, COMPOUND_KEY_VALID, structureValid);
         return compoundTag;
     }
 
     void readClient(CompoundTag compoundTag) {
-        attachedClockwiseNozzles = Mth.clamp(compoundTag.getInt(COMPOUND_KEY_CLOCKWISE_NOZZLES), 0, TeslaTurbineUtils.MAX_NOZZLES_PER_DIRECTION);
-        attachedCounterClockwiseNozzles = Mth.clamp(compoundTag.getInt(COMPOUND_KEY_COUNTER_CLOCKWISE_NOZZLES), 0, TeslaTurbineUtils.MAX_NOZZLES_PER_DIRECTION);
-        structureValid = compoundTag.getBoolean(COMPOUND_KEY_VALID);
+        attachedClockwiseNozzles = CCBMathUtils.clampNonNegative(CCBNbtUtils.getInt(compoundTag, COMPOUND_KEY_CLOCKWISE_NOZZLES), TeslaTurbineUtils.MAX_NOZZLES_PER_DIRECTION);
+        attachedCounterClockwiseNozzles = CCBMathUtils.clampNonNegative(CCBNbtUtils.getInt(compoundTag, COMPOUND_KEY_COUNTER_CLOCKWISE_NOZZLES), TeslaTurbineUtils.MAX_NOZZLES_PER_DIRECTION);
+        structureValid = CCBNbtUtils.getBoolean(compoundTag, COMPOUND_KEY_VALID);
         previousClockwiseNozzles = attachedClockwiseNozzles;
         previousCounterClockwiseNozzles = attachedCounterClockwiseNozzles;
     }

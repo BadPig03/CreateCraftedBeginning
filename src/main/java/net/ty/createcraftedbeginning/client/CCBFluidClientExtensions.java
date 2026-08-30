@@ -74,7 +74,10 @@ public final class CCBFluidClientExtensions {
             @Override
             public Vector3f modifyFogColor(Camera camera, float partialTick, ClientLevel level, int renderDistance, float darkenWorldAmount, Vector3f fogColor) {
                 Vector3f customFogColor = fluidType.clientCustomFogColor();
-                return customFogColor == null ? fogColor : customFogColor;
+                if (customFogColor == null) {
+                    return fogColor;
+                }
+                return customFogColor;
             }
 
             @Override

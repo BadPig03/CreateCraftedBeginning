@@ -12,6 +12,7 @@ import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUt
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberOperationState.OperationType;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe.RecipeMatch;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -199,7 +200,7 @@ final class GasInjectionChamberOperationPlanner {
         }
 
         int desiredCount = Math.min(inputStack.getCount(), inputStack.getMaxStackSize());
-        return Math.clamp(chamber.getGasTank().getCapacity() / gasPerItem, 0, desiredCount);
+        return CCBMathUtils.clampNonNegative(chamber.getGasTank().getCapacity() / gasPerItem, desiredCount);
     }
 
     record BeltPlan(OperationType type, ItemStack input, GasStack gas, long requiredGas, @Nullable GasInjectionRecipe recipe, @Nullable ResourceLocation fanProcessingTypeId) {
@@ -212,7 +213,10 @@ final class GasInjectionChamberOperationPlanner {
         }
 
         GasStack gasRequest() {
-            return requiredGas <= 0 ? GasStack.EMPTY : gas.copyWithAmount(requiredGas);
+            if (requiredGas <= 0) {
+                return GasStack.EMPTY;
+            }
+            return gas.copyWithAmount(requiredGas);
         }
     }
 }

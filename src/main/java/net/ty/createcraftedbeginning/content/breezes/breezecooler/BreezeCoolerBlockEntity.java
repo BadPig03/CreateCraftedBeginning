@@ -12,7 +12,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -28,6 +27,7 @@ import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBl
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerController.CoolingSyncMode;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates.BaseCoolerState;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.coolerstates.InactiveCoolerState;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe.CoolingData;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -113,15 +113,15 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     @Override
-    protected void write(CompoundTag tag, Provider provider, boolean clientPacket) {
-        serialization.write(this, tag);
-        super.write(tag, provider, clientPacket);
+    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        serialization.write(this, compoundTag);
+        super.write(compoundTag, provider, clientPacket);
     }
 
     @Override
-    protected void read(CompoundTag tag, Provider provider, boolean clientPacket) {
-        serialization.read(this, tag);
-        super.read(tag, provider, clientPacket);
+    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        serialization.read(this, compoundTag);
+        super.read(compoundTag, provider, clientPacket);
     }
 
     @Override
@@ -183,7 +183,10 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     public FrostLevel getFrostLevelForRender() {
-        return isStockKeeper() ? FrostLevel.CHILLED : getFrostLevelFromBlock();
+        if (!isStockKeeper()) {
+            return getFrostLevelFromBlock();
+        }
+        return FrostLevel.CHILLED;
     }
 
     public FrostLevel getFrostLevelFromBlock() {
@@ -204,8 +207,8 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
             return remainingTime;
         }
 
-        long elapsedTicks = Math.max(0L, level.getGameTime() - clientCoolingSyncGameTime);
-        return (int) Math.max(1L, (long) remainingTime - elapsedTicks);
+        long elapsedTicks = Math.max(0, level.getGameTime() - clientCoolingSyncGameTime);
+        return (int) Math.max(1, (long) remainingTime - elapsedTicks);
     }
 
     public LerpedFloat getHeadAnimation() {
@@ -297,12 +300,8 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         NORMAL;
 
         static CoolantType fromTag(CompoundTag compoundTag, String key, CoolantType fallback) {
-            if (!compoundTag.contains(key, Tag.TAG_STRING)) {
-                return fallback;
-            }
-
             try {
-                return valueOf(compoundTag.getString(key));
+                return valueOf(CCBNbtUtils.getStringOrDefault(compoundTag, key, fallback.name()));
             } catch (IllegalArgumentException ignored) {
                 return fallback;
             }

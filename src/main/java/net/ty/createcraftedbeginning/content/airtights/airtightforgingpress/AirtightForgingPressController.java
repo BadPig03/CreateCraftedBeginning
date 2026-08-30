@@ -18,6 +18,7 @@ import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.recipe.ForgingPressRecipe;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Optional;
@@ -149,14 +150,14 @@ final class AirtightForgingPressController {
             return PRESS_HEAD_IDLE_OFFSET;
         }
 
-        float cycleTicks = Mth.clamp(operatingTicks + partialTicks * getOperationSpeed(), 0, CYCLE_DURATION);
+        float cycleTicks = CCBMathUtils.clampNonNegative(operatingTicks + partialTicks * getOperationSpeed(), CYCLE_DURATION);
         float distance;
         if (cycleTicks < 20) {
             float progress = cycleTicks / CYCLE_DURATION * 2;
-            distance = Mth.clamp(Mth.square(progress) * progress, 0, 1);
+            distance = CCBMathUtils.clampUnit(Mth.square(progress) * progress);
         }
         else {
-            distance = Mth.clamp((CYCLE_DURATION - cycleTicks) / CYCLE_DURATION * 3, 0, 1);
+            distance = CCBMathUtils.clampUnit((CYCLE_DURATION - cycleTicks) / CYCLE_DURATION * 3);
         }
         return PRESS_HEAD_IDLE_OFFSET + distance * PRESS_HEAD_TRAVEL;
     }
@@ -212,7 +213,7 @@ final class AirtightForgingPressController {
         }
 
         float previousOperatingTicks = operatingTicks;
-        operatingTicks = Mth.clamp(operatingTicks + operationSpeed, 0, CYCLE_DURATION);
+        operatingTicks = CCBMathUtils.clampNonNegative(operatingTicks + operationSpeed, CYCLE_DURATION);
         Level level = press.getLevel();
         if (level == null || level.isClientSide) {
             return;

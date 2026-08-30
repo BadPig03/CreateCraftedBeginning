@@ -18,6 +18,7 @@ import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasInventoryIdentifierProvider;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
@@ -66,7 +67,7 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
         for (int tank = 0; tank < gasHandler.getTanks(); tank++) {
             totalCapacity += gasHandler.getTankCapacity(tank);
         }
-        return Math.clamp(totalCapacity, 0, Integer.MAX_VALUE);
+        return CCBMathUtils.clampToNonNegativeInt(totalCapacity);
     }
 
     @Override
@@ -98,7 +99,7 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
         for (int tank = 0; tank < gasHandler.getTanks(); tank++) {
             storedAmount += gasHandler.getGasInTank(tank).getAmount();
         }
-        return Math.clamp(storedAmount, 0, Integer.MAX_VALUE);
+        return CCBMathUtils.clampToNonNegativeInt(storedAmount);
     }
 
     @Override

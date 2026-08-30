@@ -25,6 +25,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -66,12 +67,12 @@ public class BreezeCoolerMovementBehaviour implements MovementBehaviour {
 
     private static boolean shouldRenderHat(MovementContext context) {
         CompoundTag movementData = context.data;
-        if (movementData.contains(COMPOUND_KEY_CONDUCTOR)) {
-            return movementData.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
+        if (CCBNbtUtils.contains(movementData, COMPOUND_KEY_CONDUCTOR)) {
+            return CCBNbtUtils.getBoolean(movementData, COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
         }
 
-        movementData.putBoolean(COMPOUND_KEY_CONDUCTOR, determineIfConducting(context));
-        return movementData.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
+        CCBNbtUtils.putBoolean(movementData, COMPOUND_KEY_CONDUCTOR, determineIfConducting(context));
+        return CCBNbtUtils.getBoolean(movementData, COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
     }
 
     private static boolean determineIfConducting(MovementContext context) {

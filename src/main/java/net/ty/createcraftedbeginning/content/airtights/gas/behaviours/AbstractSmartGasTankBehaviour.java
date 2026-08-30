@@ -15,6 +15,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.CombinedGasTankWrapper;
 import net.ty.createcraftedbeginning.api.gas.gases.handlers.SmartGasTank;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -23,6 +24,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour {
     private static final String COMPOUND_KEY_TANK_CONTENT = "TankContent";
+    private static final String COMPOUND_KEY_TANKS_SUFFIX = "Tanks";
 
     private static final int SYNC_RATE = 8;
 
@@ -79,7 +81,7 @@ abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour {
         super.read(compoundTag, provider, clientPacket);
         TankSegmentBase[] tankSegments = getTankSegmentsForLifecycle();
         MutableInt tankIndex = new MutableInt(0);
-        ListTag tankData = compoundTag.getList(getType().getName() + "Tanks", Tag.TAG_COMPOUND);
+        ListTag tankData = CCBNbtUtils.getList(compoundTag, getTankDataKey(), Tag.TAG_COMPOUND);
         NBTHelper.iterateCompoundList(tankData, tankTag -> {
             if (tankIndex.intValue() >= tankSegments.length) {
                 return;
@@ -97,7 +99,11 @@ abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour {
         for (TankSegmentBase tankSegment : getTankSegmentsForLifecycle()) {
             tankData.add(tankSegment.write(provider));
         }
-        compoundTag.put(getType().getName() + "Tanks", tankData);
+        CCBNbtUtils.putTag(compoundTag, getTankDataKey(), tankData);
+    }
+
+    private String getTankDataKey() {
+        return getType().getName() + COMPOUND_KEY_TANKS_SUFFIX;
     }
 
     @Override
@@ -165,16 +171,16 @@ abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour {
 
         private CompoundTag write(Provider provider) {
             CompoundTag tankTag = new CompoundTag();
-            tankTag.put(COMPOUND_KEY_TANK_CONTENT, getTank().write(provider, new CompoundTag()));
+            CCBNbtUtils.putTag(tankTag, COMPOUND_KEY_TANK_CONTENT, getTank().write(provider, new CompoundTag()));
             return tankTag;
         }
 
         private void read(CompoundTag compoundTag, Provider provider) {
-            if (!compoundTag.contains(COMPOUND_KEY_TANK_CONTENT)) {
+            if (!CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_TANK_CONTENT)) {
                 return;
             }
 
-            getTank().read(provider, compoundTag.getCompound(COMPOUND_KEY_TANK_CONTENT));
+            getTank().read(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_TANK_CONTENT));
         }
     }
 

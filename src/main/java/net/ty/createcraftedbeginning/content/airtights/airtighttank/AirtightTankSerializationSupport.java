@@ -6,6 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.util.Mth;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -27,25 +28,25 @@ public final class AirtightTankSerializationSupport {
     public static void writeMultiblock(AbstractAirtightTankBlockEntity tank, CompoundTag compoundTag, boolean clientPacket) {
         AirtightTankMultiblockController multiblock = tank.multiblockController();
         if (tank.isController()) {
-            compoundTag.putInt(WIDTH, multiblock.getWidth());
-            compoundTag.putInt(HEIGHT, multiblock.getHeight());
+            CCBNbtUtils.putInt(compoundTag, WIDTH, multiblock.getWidth());
+            CCBNbtUtils.putInt(compoundTag, HEIGHT, multiblock.getHeight());
         }
         else {
             BlockPos controllerPos = Objects.requireNonNull(multiblock.getControllerPos());
-            compoundTag.put(CONTROLLER_POS, NbtUtils.writeBlockPos(controllerPos));
+            CCBNbtUtils.putTag(compoundTag, CONTROLLER_POS, NbtUtils.writeBlockPos(controllerPos));
         }
 
         if (clientPacket) {
             return;
         }
 
-        compoundTag.putBoolean(UPDATE_CONNECTIVITY, multiblock.isUpdateConnectivity());
+        CCBNbtUtils.putBoolean(compoundTag, UPDATE_CONNECTIVITY, multiblock.isUpdateConnectivity());
         BlockPos lastKnownPos = multiblock.getLastKnownPos();
         if (lastKnownPos == null) {
             return;
         }
 
-        compoundTag.put(LAST_KNOWN_POS, NbtUtils.writeBlockPos(lastKnownPos));
+        CCBNbtUtils.putTag(compoundTag, LAST_KNOWN_POS, NbtUtils.writeBlockPos(lastKnownPos));
     }
 
     public static void writeSafeMultiblock(AbstractAirtightTankBlockEntity tank, CompoundTag compoundTag) {
@@ -53,39 +54,36 @@ public final class AirtightTankSerializationSupport {
             return;
         }
 
-        compoundTag.putInt(WIDTH, tank.getWidth());
-        compoundTag.putInt(HEIGHT, tank.getHeight());
+        CCBNbtUtils.putInt(compoundTag, WIDTH, tank.getWidth());
+        CCBNbtUtils.putInt(compoundTag, HEIGHT, tank.getHeight());
     }
 
-    public static boolean readMultiblock(AbstractAirtightTankBlockEntity tank, CompoundTag tag, boolean clientPacket) {
+    public static boolean readMultiblock(AbstractAirtightTankBlockEntity tank, CompoundTag compoundTag, boolean clientPacket) {
         AirtightTankMultiblockController multiblock = tank.multiblockController();
         BlockPos previousControllerPos = multiblock.getControllerPos();
         int previousWidth = multiblock.getWidth();
         int previousHeight = multiblock.getHeight();
         if (!clientPacket) {
-            multiblock.setUpdateConnectivity(tag.getBoolean(UPDATE_CONNECTIVITY));
-            multiblock.setLastKnownPos(readOptionalBlockPos(tag, LAST_KNOWN_POS));
+            multiblock.setUpdateConnectivity(CCBNbtUtils.getBoolean(compoundTag, UPDATE_CONNECTIVITY));
+            multiblock.setLastKnownPos(readOptionalBlockPos(compoundTag, LAST_KNOWN_POS));
         }
-        multiblock.setControllerPos(readOptionalBlockPos(tag, CONTROLLER_POS));
+        multiblock.setControllerPos(readOptionalBlockPos(compoundTag, CONTROLLER_POS));
         if (tank.isController()) {
-            multiblock.setWidth(readDimension(tag, WIDTH, AbstractAirtightTankBlockEntity.configuredMaxWidth()));
-            multiblock.setHeight(readDimension(tag, HEIGHT, AbstractAirtightTankBlockEntity.configuredMaxLength()));
+            multiblock.setWidth(readDimension(compoundTag, WIDTH, AbstractAirtightTankBlockEntity.configuredMaxWidth()));
+            multiblock.setHeight(readDimension(compoundTag, HEIGHT, AbstractAirtightTankBlockEntity.configuredMaxLength()));
         }
         multiblock.requestCapabilityRefresh();
         return clientPacket && (!Objects.equals(previousControllerPos, multiblock.getControllerPos()) || previousWidth != multiblock.getWidth() || previousHeight != multiblock.getHeight());
     }
 
     private static @Nullable BlockPos readOptionalBlockPos(CompoundTag compoundTag, String key) {
-        if (!compoundTag.contains(key)) {
+        if (!CCBNbtUtils.contains(compoundTag, key)) {
             return null;
         }
         return NBTHelper.readBlockPos(compoundTag, key);
     }
 
     private static int readDimension(CompoundTag compoundTag, String key, int maxDimension) {
-        if (!compoundTag.contains(key)) {
-            return 1;
-        }
-        return Mth.clamp(compoundTag.getInt(key), 1, maxDimension);
+        return Mth.clamp(CCBNbtUtils.getIntOrDefault(compoundTag, key, 1), 1, maxDimension);
     }
 }

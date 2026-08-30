@@ -4,12 +4,13 @@ import com.simibubi.create.foundation.blockEntity.ItemHandlerContainer;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.neoforged.neoforge.items.ItemStackHandler;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -101,12 +102,12 @@ class ResidueOutletInventory extends ItemHandlerContainer implements IItemHandle
     @Override
     public CompoundTag serializeNBT(Provider provider) {
         CompoundTag inventoryTag = ((InternalStackHandler) inv).serializeNBT(provider);
-        inventoryTag.putInt(COMPOUND_KEY_PARTIAL_ITEM_UNITS, partialItemUnits);
+        CCBNbtUtils.putInt(inventoryTag, COMPOUND_KEY_PARTIAL_ITEM_UNITS, partialItemUnits);
         if (partialItem.isEmpty()) {
             return inventoryTag;
         }
 
-        inventoryTag.put(COMPOUND_KEY_PARTIAL_ITEM, partialItem.saveOptional(provider));
+        CCBNbtUtils.putTag(inventoryTag, COMPOUND_KEY_PARTIAL_ITEM, partialItem.saveOptional(provider));
         return inventoryTag;
     }
 
@@ -114,12 +115,12 @@ class ResidueOutletInventory extends ItemHandlerContainer implements IItemHandle
     public void deserializeNBT(Provider provider, CompoundTag compoundTag) {
         ((InternalStackHandler) inv).deserializeNBT(provider, compoundTag);
         partialItem = ItemStack.EMPTY;
-        partialItemUnits = Mth.clamp(compoundTag.getInt(COMPOUND_KEY_PARTIAL_ITEM_UNITS), 0, ITEM_PROGRESS_UNITS_PER_ITEM - 1);
+        partialItemUnits = CCBMathUtils.clampNonNegative(CCBNbtUtils.getInt(compoundTag, COMPOUND_KEY_PARTIAL_ITEM_UNITS), ITEM_PROGRESS_UNITS_PER_ITEM - 1);
         if (partialItemUnits <= 0) {
             return;
         }
 
-        ItemStack storedPartialItem = compoundTag.contains(COMPOUND_KEY_PARTIAL_ITEM) ? ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_PARTIAL_ITEM)) : ItemStack.EMPTY;
+        ItemStack storedPartialItem = CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_PARTIAL_ITEM) ? ItemStack.parseOptional(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_PARTIAL_ITEM)) : ItemStack.EMPTY;
         if (storedPartialItem.isEmpty()) {
             partialItemUnits = 0;
             return;
@@ -146,7 +147,7 @@ class ResidueOutletInventory extends ItemHandlerContainer implements IItemHandle
         int storedItemCount = storedItem.isEmpty() ? 0 : storedItem.getCount();
         int availableWholeItems = Math.max(0, slotLimit - storedItemCount);
         int capacityUnits = availableWholeItems * ITEM_PROGRESS_UNITS_PER_ITEM + ITEM_PROGRESS_UNITS_PER_ITEM - 1 - partialItemUnits;
-        return Math.clamp(capacityUnits, 0, Integer.MAX_VALUE);
+        return CCBMathUtils.clampToNonNegativeInt(capacityUnits);
     }
 
     int addPartialItemUnits(int requestedUnits, ItemStack itemStack) {
@@ -165,7 +166,7 @@ class ResidueOutletInventory extends ItemHandlerContainer implements IItemHandle
         int insertedItems = insertWholeItems(itemStack, wholeItemsToInsert);
 
         int maxAcceptedUnits = insertedItems * ITEM_PROGRESS_UNITS_PER_ITEM + ITEM_PROGRESS_UNITS_PER_ITEM - 1 - previousPartialUnits;
-        int acceptedUnits = Math.clamp(maxAcceptedUnits, 0, insertableUnits);
+        int acceptedUnits = CCBMathUtils.clampNonNegative(maxAcceptedUnits, insertableUnits);
         int remainingPartialUnits = previousPartialUnits + acceptedUnits - insertedItems * ITEM_PROGRESS_UNITS_PER_ITEM;
         setPartialItemProgress(itemStack, remainingPartialUnits);
         return acceptedUnits;
@@ -193,7 +194,7 @@ class ResidueOutletInventory extends ItemHandlerContainer implements IItemHandle
     }
 
     private void setPartialItemProgress(ItemStack itemStack, int partialUnits) {
-        int clampedUnits = Mth.clamp(partialUnits, 0, ITEM_PROGRESS_UNITS_PER_ITEM - 1);
+        int clampedUnits = CCBMathUtils.clampNonNegative(partialUnits, ITEM_PROGRESS_UNITS_PER_ITEM - 1);
         ItemStack newPartialItem = clampedUnits > 0 ? itemStack.copyWithCount(1) : ItemStack.EMPTY;
         boolean partialProgressChanged = partialItemUnits != clampedUnits || !ItemStack.isSameItemSameComponents(partialItem, newPartialItem);
         partialItemUnits = clampedUnits;

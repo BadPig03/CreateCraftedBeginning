@@ -43,7 +43,10 @@ public class EndSculkSilencerStructuralBlockEntity extends EndMechanicalStructur
     }
 
     short getWorkingRange() {
-        return silencerWorkingRange == null ? SilencerWorkingRange.ONE_BY_ONE.getWorkingRange() : silencerWorkingRange.get().getWorkingRange();
+        if (silencerWorkingRange == null) {
+            return SilencerWorkingRange.ONE_BY_ONE.getWorkingRange();
+        }
+        return silencerWorkingRange.get().getWorkingRange();
     }
 
     private void onWorkingRangeChanged(int ignored) {

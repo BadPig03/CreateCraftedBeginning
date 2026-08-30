@@ -208,7 +208,10 @@ public class AirtightReactorKettleStructuralBlock extends Block implements IBE<A
 
     @Override
     public BlockPos getInformationSource(Level level, BlockPos pos, BlockState state) {
-        return stillValid(level, pos, state) ? AirtightReactorKettleUtils.getMaster(pos, state) : pos;
+        if (!stillValid(level, pos, state)) {
+            return pos;
+        }
+        return AirtightReactorKettleUtils.getMaster(pos, state);
     }
 
     @Override

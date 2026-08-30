@@ -71,7 +71,10 @@ public class PortableGasInterfaceRenderer extends SafeBlockEntityRenderer<Portab
     }
 
     static PartialModel getMiddleForState(boolean lit) {
-        return lit ? CCBPartialModels.PORTABLE_GAS_INTERFACE_MIDDLE_POWERED : CCBPartialModels.PORTABLE_GAS_INTERFACE_MIDDLE;
+        if (!lit) {
+            return CCBPartialModels.PORTABLE_GAS_INTERFACE_MIDDLE;
+        }
+        return CCBPartialModels.PORTABLE_GAS_INTERFACE_MIDDLE_POWERED;
     }
 
     @Override

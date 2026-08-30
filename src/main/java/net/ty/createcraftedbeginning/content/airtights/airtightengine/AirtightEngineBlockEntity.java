@@ -103,23 +103,23 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
     }
 
     @Override
-    protected void write(CompoundTag tag, Provider provider, boolean clientPacket) {
-        super.write(tag, provider, clientPacket);
+    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.write(compoundTag, provider, clientPacket);
         if (clientPacket) {
             return;
         }
 
-        driveController.writePersistent(tag);
+        driveController.writePersistent(compoundTag);
     }
 
     @Override
-    protected void read(CompoundTag tag, Provider provider, boolean clientPacket) {
-        super.read(tag, provider, clientPacket);
+    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.read(compoundTag, provider, clientPacket);
         if (clientPacket) {
             return;
         }
 
-        driveController.readPersistent(tag);
+        driveController.readPersistent(compoundTag);
     }
 
     @Override

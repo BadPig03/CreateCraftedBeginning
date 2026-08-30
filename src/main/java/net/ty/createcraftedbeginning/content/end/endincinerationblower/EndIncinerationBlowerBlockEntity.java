@@ -13,6 +13,7 @@ import net.neoforged.neoforge.common.util.FakePlayer;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalBlockEntity;
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerStructuralBlockEntity.BlowerWorkingMode;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Nullable;
@@ -94,16 +95,14 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
     @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        compoundTag.putBoolean(COMPOUND_KEY_SHOW_OUTLINE, showOutline);
+        CCBNbtUtils.putBoolean(compoundTag, COMPOUND_KEY_SHOW_OUTLINE, showOutline);
         ownerState.write(compoundTag);
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        if (compoundTag.contains(COMPOUND_KEY_SHOW_OUTLINE)) {
-            showOutline = compoundTag.getBoolean(COMPOUND_KEY_SHOW_OUTLINE);
-        }
+        showOutline = CCBNbtUtils.getBooleanOrDefault(compoundTag, COMPOUND_KEY_SHOW_OUTLINE, showOutline);
         ownerState.read(compoundTag);
     }
 

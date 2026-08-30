@@ -12,6 +12,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.common.util.FakePlayer;
+import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -96,11 +97,11 @@ public class CCBAdvancementBehaviour extends BlockEntityBehaviour {
     @Override
     public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        if (!compoundTag.contains(COMPOUND_KEY_OWNER)) {
+        if (!CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_OWNER)) {
             return;
         }
 
-        playerId = compoundTag.getUUID(COMPOUND_KEY_OWNER);
+        playerId = CCBNbtUtils.getUUID(compoundTag, COMPOUND_KEY_OWNER);
     }
 
     @Override
@@ -110,7 +111,7 @@ public class CCBAdvancementBehaviour extends BlockEntityBehaviour {
             return;
         }
 
-        compoundTag.putUUID(COMPOUND_KEY_OWNER, playerId);
+        CCBNbtUtils.putUUID(compoundTag, COMPOUND_KEY_OWNER, playerId);
     }
 
     private void removeAwarded() {

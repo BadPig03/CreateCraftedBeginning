@@ -193,7 +193,10 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
 
     @Override
     public FluidState getFluidState(BlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : Fluids.EMPTY.defaultFluidState();
+        if (!state.getValue(WATERLOGGED)) {
+            return Fluids.EMPTY.defaultFluidState();
+        }
+        return Fluids.WATER.getSource(false);
     }
 
     @Override

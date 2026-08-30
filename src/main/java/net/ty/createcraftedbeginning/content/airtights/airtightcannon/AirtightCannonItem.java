@@ -190,6 +190,9 @@ public class AirtightCannonItem extends Item implements CustomArmPoseItem {
     @Override
     @Nullable
     public ArmPose getArmPose(ItemStack cannon, AbstractClientPlayer player, InteractionHand hand) {
-        return player.swinging ? null : ArmPose.CROSSBOW_HOLD;
+        if (player.swinging) {
+            return null;
+        }
+        return ArmPose.CROSSBOW_HOLD;
     }
 }

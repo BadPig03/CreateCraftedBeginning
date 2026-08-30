@@ -47,7 +47,7 @@ public class CCBShapes {
     public static final VoxelShape AIRTIGHT_FORGING_PRESS_BOTTOM_CENTER_SHAPE = shape(0, 0, 0, 16, 13, 16).build();
     public static final VoxelShape AIRTIGHT_FORGING_PRESS_CENTER_SHAPE = shape(-2, 10, -2, 18, 16, 18).build();
 
-    public static final VoxelShape PHOTO_SAIL_SHAPE = shape(0, 7, 0, 16, 9, 16).build();
+    public static final VoxelShape SOLAR_COLLECTOR_SHAPE = shape(0, 7, 0, 16, 9, 16).build();
 
     public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_TOP_CORNER = shape(0, 0, 0, 16, 16, 16).remove(2, 0, 2, 16, 2, 16).add(4, 0, 4, 8, 2, 8).add(2, 0, 4, 4, 2, 13).add(4, 0, 2, 13, 2, 4).add(2, 0, 13, 3, 2, 16).add(13, 0, 2, 16, 2, 3).forHorizontal(Direction.NORTH);
     public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_TOP_MID = shape(0, 0, 0, 16, 16, 16).remove(0, 0, 2, 16, 2, 16).forHorizontal(Direction.NORTH);

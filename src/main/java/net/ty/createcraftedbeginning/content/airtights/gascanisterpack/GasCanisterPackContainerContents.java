@@ -124,7 +124,10 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
 
     @Override
     public int getPriority() {
-        return isEmpty() ? EMPTY_PACK : NON_EMPTY_PACK;
+        if (isEmpty()) {
+            return EMPTY_PACK;
+        }
+        return NON_EMPTY_PACK;
     }
 
     @Override
@@ -233,11 +236,10 @@ public class GasCanisterPackContainerContents implements IGasCanisterContainer {
     }
 
     private @Nullable GasCanisterContainerContents getCanisterContents(int tankIndex) {
-        if (isInvalidTank(tankIndex)) {
+        if (isInvalidTank(tankIndex) || !(canisters.get(tankIndex).getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
             return null;
         }
-
-        return canisters.get(tankIndex).getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents ? canisterContents : null;
+        return canisterContents;
     }
 
     private @Unmodifiable List<ItemStack> copyCanisters() {

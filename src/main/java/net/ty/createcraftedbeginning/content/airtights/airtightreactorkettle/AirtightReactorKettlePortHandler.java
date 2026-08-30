@@ -61,6 +61,9 @@ record AirtightReactorKettlePortHandler(IItemHandlerModifiable input, IItemHandl
     }
 
     private int getLocalSlot(int slot) {
-        return slot < input.getSlots() ? slot : slot - input.getSlots();
+        if (slot < input.getSlots()) {
+            return slot;
+        }
+        return slot - input.getSlots();
     }
 }

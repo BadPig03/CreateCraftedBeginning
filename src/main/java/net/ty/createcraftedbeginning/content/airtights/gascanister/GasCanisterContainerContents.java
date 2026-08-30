@@ -4,7 +4,6 @@ import com.simibubi.create.AllEnchantments;
 import it.unimi.dsi.fastutil.objects.Object2IntMap.Entry;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Holder;
-import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
@@ -15,6 +14,7 @@ import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBEnchantments;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -80,7 +80,7 @@ public class GasCanisterContainerContents implements IAirtightHatchCanister {
             break;
         }
 
-        return 100 - Mth.clamp(economizeLevel, 0, ECONOMIZE_MAX_LEVEL) * 20;
+        return 100 - CCBMathUtils.clampNonNegative(economizeLevel, ECONOMIZE_MAX_LEVEL) * 20;
     }
 
     @Override
@@ -126,12 +126,18 @@ public class GasCanisterContainerContents implements IAirtightHatchCanister {
 
     @Override
     public GasStack getGasInTank(int tankIndex) {
-        return isInvalidTank(tankIndex) ? GasStack.EMPTY : gas.copy();
+        if (isInvalidTank(tankIndex)) {
+            return GasStack.EMPTY;
+        }
+        return gas.copy();
     }
 
     @Override
     public int getPriority() {
-        return isEmpty() ? EMPTY_CANISTER : NON_EMPTY_CANISTER;
+        if (isEmpty()) {
+            return EMPTY_CANISTER;
+        }
+        return NON_EMPTY_CANISTER;
     }
 
     @Override
@@ -185,7 +191,10 @@ public class GasCanisterContainerContents implements IAirtightHatchCanister {
 
     @Override
     public long getTankCapacity(int tankIndex) {
-        return isInvalidTank(tankIndex) ? 0 : Math.max(0, getEnchantedCapacity(canister));
+        if (isInvalidTank(tankIndex)) {
+            return 0;
+        }
+        return Math.max(0, getEnchantedCapacity(canister));
     }
 
     @Override
