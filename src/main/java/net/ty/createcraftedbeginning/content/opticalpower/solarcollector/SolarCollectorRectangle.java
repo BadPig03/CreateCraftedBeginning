@@ -176,6 +176,10 @@ record SolarCollectorRectangle(BlockPos anchor, int minX, int maxX, int minZ, in
         return 1 << CCBMathUtils.clampNonNegative(shortSide - 1, 4);
     }
 
+    boolean contains(BlockPos pos) {
+        return pos.getY() == anchor.getY() && pos.getX() >= minX && pos.getX() <= maxX && pos.getZ() >= minZ && pos.getZ() <= maxZ;
+    }
+
     int width() {
         return maxX - minX + 1;
     }

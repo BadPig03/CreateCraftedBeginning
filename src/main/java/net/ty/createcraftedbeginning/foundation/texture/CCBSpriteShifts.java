@@ -21,6 +21,7 @@ public class CCBSpriteShifts {
     public static final CTSpriteShiftEntry HORIZONTAL_AIRTIGHT_TANK = rectangle("airtight_tank/horizontal/vertical");
     public static final CTSpriteShiftEntry CREATIVE_AIRTIGHT_TANK_TOP = rectangle("airtight_tank/creative_top");
     public static final CTSpriteShiftEntry CREATIVE_AIRTIGHT_TANK = rectangle("airtight_tank/creative_vertical");
+    public static final CTSpriteShiftEntry SOLAR_COLLECTOR_PANEL = rectangle("optical_power/panel");
 
     private static CTSpriteShiftEntry omni(String blockTextureName) {
         return getCT(blockTextureName);

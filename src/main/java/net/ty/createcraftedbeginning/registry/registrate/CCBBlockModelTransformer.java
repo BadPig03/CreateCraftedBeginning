@@ -72,6 +72,7 @@ import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBl
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.EmptyBreezeCoolerBlock;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlockItem;
 import net.ty.createcraftedbeginning.content.opticalpower.opticalfiber.OpticalFiberBlock;
+import net.ty.createcraftedbeginning.content.opticalpower.solarcollector.SolarCollectorCTBehaviour;
 import net.ty.createcraftedbeginning.foundation.texture.CCBSpriteShifts;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -144,7 +145,11 @@ public final class CCBBlockModelTransformer {
 
     @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> solarCollector() {
-        return builder -> builder.blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p))).item().transform(ModelGen.customItemModel("solar_collector", "item"));
+        return builder -> builder
+                .blockstate((c, p) -> p.simpleBlock(c.getEntry(), AssetLookup.partialBaseModel(c, p)))
+                .onRegister(CreateRegistrate.connectedTextures(SolarCollectorCTBehaviour::new))
+                .item()
+                .transform(ModelGen.customItemModel("solar_collector", "item"));
     }
 
     @Contract(pure = true)

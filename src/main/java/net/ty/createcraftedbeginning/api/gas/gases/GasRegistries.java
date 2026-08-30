@@ -28,7 +28,6 @@ public final class GasRegistries {
 
     @SuppressWarnings("deprecation")
     public static final DefaultedRegistry<Gas> GAS_REGISTRY = (DefaultedRegistry<Gas>) new RegistryBuilder<>(GAS_REGISTRY_KEY).defaultKey(EMPTY_GAS_KEY).sync(true).withIntrusiveHolders().create();
-
     public static final DeferredRegister<GasIngredientType<?>> GAS_INGREDIENT_TYPES = DeferredRegister.create(GAS_INGREDIENT_TYPES_KEY, CCBAPI.MOD_ID);
     public static final DeferredHolder<GasIngredientType<?>, GasIngredientType<SingleGasIngredient>> SINGLE_GAS_INGREDIENT_TYPE = GAS_INGREDIENT_TYPES.register("single", () -> new GasIngredientType<>(SingleGasIngredient.CODEC));
     public static final DeferredHolder<GasIngredientType<?>, GasIngredientType<TagGasIngredient>> TAG_GAS_INGREDIENT_TYPE = GAS_INGREDIENT_TYPES.register("tag", () -> new GasIngredientType<>(TagGasIngredient.CODEC));

@@ -7,8 +7,10 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
 import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer.InjectionMode;
@@ -17,7 +19,6 @@ import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
-import net.ty.createcraftedbeginning.registry.gas.CCBGases;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -29,9 +30,9 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasCanisterUtils {
-    static final int COLOR_RED = 0xFFFF5D6C;
     public static final int COLOR_CYAN = 0xFF71C7D5;
     public static final int COLOR_WHITE = 0xFFEFEFEF;
+    static final int COLOR_RED = 0xFFFF5D6C;
 
     private GasCanisterUtils() {
     }
@@ -78,8 +79,9 @@ public final class GasCanisterUtils {
     }
 
     public static List<ItemStack> getAllCanisters() {
+        List<Gas> gases = GasRegistries.GAS_REGISTRY.stream().filter(gas -> !gas.isEmpty()).toList();
         List<ItemStack> canisters = new ArrayList<>(List.of(new ItemStack(CCBItems.GAS_CANISTER.asItem())));
-        CCBGases.GAS_REGISTER.getEntries().forEach(gasEntry -> {
+        gases.forEach(gasEntry -> {
             ItemStack canister = new ItemStack(CCBItems.GAS_CANISTER.asItem());
             if (canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents contents) {
                 contents.fill(0, new GasStack(gasEntry, contents.getTankCapacity(0)), GasAction.EXECUTE);
@@ -88,14 +90,13 @@ public final class GasCanisterUtils {
         });
 
         canisters.add(new ItemStack(CCBItems.CREATIVE_GAS_CANISTER.asItem()));
-        CCBGases.GAS_REGISTER.getEntries().forEach(gasEntry -> {
+        gases.forEach(gasEntry -> {
             ItemStack canister = new ItemStack(CCBItems.CREATIVE_GAS_CANISTER.asItem());
             if (canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents) {
                 contents.setGasInTank(0, new GasStack(gasEntry, contents.getTankCapacity(0)));
             }
             canisters.add(canister);
         });
-
         return canisters;
     }
 

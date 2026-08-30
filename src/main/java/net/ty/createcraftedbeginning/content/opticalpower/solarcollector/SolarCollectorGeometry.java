@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Plane;
 import net.minecraft.core.Vec3i;
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
@@ -18,6 +19,7 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -31,7 +33,15 @@ record SolarCollectorGeometry(BlockPos anchor, List<BlockPos> dependencies, List
     }
 
     static SolarCollectorGeometry findGeometry(Level level, BlockPos origin) {
-        if (!level.isLoaded(origin) || !(level.getBlockState(origin).getBlock() instanceof SolarCollectorBlock)) {
+        return findGeometry(origin, pos -> level.isLoaded(pos) && isCollector(level, pos));
+    }
+
+    static SolarCollectorGeometry findGeometry(BlockAndTintGetter level, BlockPos origin) {
+        return findGeometry(origin, pos -> isCollector(level, pos));
+    }
+
+    private static SolarCollectorGeometry findGeometry(BlockPos origin, Predicate<BlockPos> isCollector) {
+        if (!isCollector.test(origin)) {
             return invalid(origin, List.of());
         }
 
@@ -60,7 +70,7 @@ record SolarCollectorGeometry(BlockPos anchor, List<BlockPos> dependencies, List
 
             for (Direction direction : Plane.HORIZONTAL) {
                 BlockPos neighbor = current.relative(direction);
-                if (!level.isLoaded(neighbor) || !(level.getBlockState(neighbor).getBlock() instanceof SolarCollectorBlock) || visited.contains(neighbor)) {
+                if (visited.contains(neighbor) || !isCollector.test(neighbor)) {
                     continue;
                 }
 
@@ -98,6 +108,10 @@ record SolarCollectorGeometry(BlockPos anchor, List<BlockPos> dependencies, List
         return new SolarCollectorRectangle(new BlockPos(minX, first.getY(), minZ), minX, maxX, minZ, maxZ);
     }
 
+    private static boolean isCollector(BlockAndTintGetter level, BlockPos pos) {
+        return level.getBlockState(pos).getBlock() instanceof SolarCollectorBlock;
+    }
+
     private static @Unmodifiable List<BlockPos> sortedDependencies(Set<BlockPos> positions) {
         List<BlockPos> dependencies = new ArrayList<>(positions);
         dependencies.sort(POSITION_ORDER);
@@ -119,5 +133,9 @@ record SolarCollectorGeometry(BlockPos anchor, List<BlockPos> dependencies, List
     @Contract("_, _ -> new")
     private static SolarCollectorGeometry invalid(BlockPos anchor, List<BlockPos> dependencies) {
         return new SolarCollectorGeometry(anchor, dependencies, List.of(), null, false);
+    }
+
+    boolean isActive(BlockPos pos) {
+        return topologyValid && activeRectangle != null && activeRectangle.contains(pos);
     }
 }
